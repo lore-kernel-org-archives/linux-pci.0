@@ -1,71 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:41669 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751009Ab2GRE2m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jul 2012 00:28:42 -0400
-Received: from /spool/local
-	by e5.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Wed, 18 Jul 2012 00:28:41 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 775596E804F
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 00:28:40 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6I4Se9m49479806
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 00:28:40 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6I9xWFs007837
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 05:59:33 -0400
-Date: Wed, 18 Jul 2012 12:28:34 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	bhelgaas@google.com, yinghai@kernel.org
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120718042834.GB2375@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
- <20120717050547.GD2369@ram-ThinkPad-T61>
- <20120717052333.GE2369@ram-ThinkPad-T61>
- <20120717053648.GA18497@shangw>
- <20120717055715.GF2369@ram-ThinkPad-T61>
- <1342516619.3669.5.camel@pasglop>
- <20120717100314.GB25613@ram-ThinkPad-T61>
- <1342521498.3669.7.camel@pasglop>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56072 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932349Ab2GEWjk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 18:39:40 -0400
+Received: by lbbgm6 with SMTP id gm6so13668054lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2012 15:39:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342521498.3669.7.camel@pasglop>
+In-Reply-To: <201207060000.51762.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1207051727430.13212-100000@netrider.rowland.org> <201207060000.51762.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 5 Jul 2012 16:39:18 -0600
+Message-ID: <CAErSpo6AJEdCem2oAv6z0wGiGTZSLQAs5sJN+_rN1d9uqyT7BQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Quirk for ASUS S3 issue
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	AceLan Kao <acelan.kao@canonical.com>,
+	linux-pci@vger.kernel.org,
+	=?UTF-8?B?5rSqKEFsZXgp6IyC6ICV?= <alex.hung@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2012 at 08:38:18PM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2012-07-17 at 18:03 +0800, Ram Pai wrote:
-> >         Lets say we passed that 'type' flag to size the minimum
-> >         alignment constraints for that b_res.  And window_alignment(bus,
-> >         type) of your platform  used that 'type' information to
-> >         determine whether to use the alignment constraints of 32-bit
-> >         window or 64-bit window.
-> > 
-> >         However, later when the b_res is actually allocated a resource,
-> >         the pci_assign_resource() has no idea whether to allocate 32-bit
-> >         window resource or 64-bit window resource, because the 'type'
-> >         information is not captured anywhere in b_res.
-> > 
-> >         You would basically have a disconnect between what is sized and 
-> >         what is allocated. Unless offcourse you pass that 'type' to
-> >         the b_res->flags, which is currently not the case. 
-> 
-> Right, we ideally would need the core to query the alignment once per
-> "apertures" it tries as a candidate to allocate a given resource... but
-> that's for later.
-> 
-> For now we can probably live with giving out the max of the minimum
-> alignment we support for M64 and our M32 segment size.
+On Thu, Jul 5, 2012 at 4:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, July 05, 2012, Alan Stern wrote:
+>> On Thu, 5 Jul 2012, Bjorn Helgaas wrote:
+>>
+>> > I wish we knew more about what's really going on here.  I looked
+>> > through the bug reports AceLan dug up, and I don't get the feeling
+>> > that anybody really has a grand unified theory about why Windows works
+>> > but Linux doesn't.  But I'm willing to apply one of these patches if
+>> > you and/or Alan sign off on it.
+>>
+>> His description seems to make sense, even if it may not be complete.
+>>
+>> Windows sets the COMMAND register to 0 before suspending, so it doesn't
+>> trigger the BIOS bus.  Linux doesn't, so the BIOS tries to quiesce the
+>> EHCI controller.  This involves doing various MMIO accesses, which of
+>> course don't work if the controller is already in D3.
 
-Its an approximation, which may not be terribly bad. But not comforting enough.
+Should we clear the COMMAND register for more than just EHCI devices?
+It seems like known differences from Windows are just waiting to bite
+us.
 
-RP
+I like your patch and explanation for how this can cause a hang...
+that helps make sense of things.
 
+>> For obvious reasons, I'm in favor of my two-line change over AceLan's
+>> new PCI quirk.  So far there have been positive responses from a few
+>> volunteers testing the patch.
+>
+> The two-liner is good enough, I think, and tested.  We can always add a quirk
+> based on it in the future.
+
+Cool, do you want to send me a patch with Signed-off-by, etc?
