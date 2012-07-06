@@ -1,63 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3190 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750732Ab2GBEOk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 Jul 2012 00:14:40 -0400
-Message-ID: <1341202460.1207.384.camel@bling.home>
-Subject: Re: Request VFIO inclusion in linux-next
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	kvm <kvm@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	qemu-devel <qemu-devel@nongnu.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Gibson <david@gibson.dropbear.id.au>,
-	chrisw <chrisw@sous-sol.org>,
-	"Roedel, Joerg" <Joerg.Roedel@amd.com>, linux-next@vger.kernel.org
-Date: Sun, 01 Jul 2012 22:14:20 -0600
-In-Reply-To: <4FF11855.2060605@ozlabs.ru>
-References: <1340686552.1207.128.camel@bling.home>
-	 <20120627123733.GA5449@mwanda> <4FF11855.2060605@ozlabs.ru>
-Content-Type: text/plain; charset="UTF-8"
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:40910 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754299Ab2GFLay (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2012 07:30:54 -0400
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 4BBA53EE0B6
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jul 2012 20:30:53 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 315E945DE51
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jul 2012 20:30:53 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 0CEC545DE4F
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jul 2012 20:30:53 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id D76101DB802F
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jul 2012 20:30:52 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 8BE05E08002
+	for <linux-pci@vger.kernel.org>; Fri,  6 Jul 2012 20:30:52 +0900 (JST)
+Date: Fri, 6 Jul 2012 20:30:42 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH 2/2] pci: reserve extra bus resource for hotplug bridge
+Message-Id: <20120706203042.1fd87367.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CAE9FiQXJF09N+2-YJsN7_QWjB8k+2f5BhEvFgaPiqyN+the59A@mail.gmail.com>
+References: <20120702134901.83708415.izumi.taku@jp.fujitsu.com>
+	<20120704121639.d3949763.izumi.taku@jp.fujitsu.com>
+	<CAE9FiQXJF09N+2-YJsN7_QWjB8k+2f5BhEvFgaPiqyN+the59A@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-07-02 at 13:41 +1000, Alexey Kardashevskiy wrote:
-> On 27/06/12 22:37, Dan Carpenter wrote:
-> > On Mon, Jun 25, 2012 at 10:55:52PM -0600, Alex Williamson wrote:
-> >> Hi,
-> >>
-> >> VFIO has been kicking around for well over a year now and has been
-> >> posted numerous times for review.  The pre-requirements are finally
-> >> available in linux-next (or will be in the 20120626 build) so I'd like
-> >> to request a new branch be included in linux-next with a goal of being
-> >> accepted into v3.6.
-> >>
-> > 
-> > Could you run Sparse over the driver?
-> > http://lwn.net/Articles/205624/
-> > 
-> > It reports a bunch of endian problems.  Some are definitely bugs
-> > like:
-> > 	*prev |= cpu_to_le32((u32)epos << 20);
-> 
-> 
-> What is wrong here?
+On Tue, 3 Jul 2012 21:06:53 -0700
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-I believe the only thing wrong here was that prev was a u32* instead of
-a __le32*.  The new version in my tree has much better endian annotation
-after going through all the sparse errors.  The only bug I found in the
-cleanup was the handling of rbar.  It was missing the le32_to_cpu as we
-copied it out of vconfig.  This is later used with
-pci_user_write_config_dword, so it needs to be in native endian.
-Thanks,
+> On Tue, Jul 3, 2012 at 8:16 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >
+> > Currently I/O ports and I/O memory resources are reserved for
+> > hotplug bridges and we can tune their size by using hpiosize
+> > and hpmemsize boot option.
+> >
+> > This patch extends feature so that we can reserve additional
+> > bus number resources for hotplug bridges and tune it by
+> > using "hpbussize" option.
+> >
+> > Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> > ---
+> >  Documentation/kernel-parameters.txt |    4 ++++
+> >  drivers/pci/pci.c                   |    6 +++++-
+> >  drivers/pci/probe.c                 |    4 ++++
+> >  include/linux/pci.h                 |    1 +
+> >  4 files changed, 14 insertions(+), 1 deletion(-)
+> >
+> > Index: linux/drivers/pci/pci.c
+> > ===================================================================
+> > --- linux.orig/drivers/pci/pci.c        2012-06-26 14:37:22.000000000 +0900
+> > +++ linux/drivers/pci/pci.c     2012-07-04 10:00:50.708002757 +0900
+> > @@ -74,9 +74,11 @@ unsigned long pci_cardbus_mem_size = DEF
+> >
+> >  #define DEFAULT_HOTPLUG_IO_SIZE                (256)
+> >  #define DEFAULT_HOTPLUG_MEM_SIZE       (2*1024*1024)
+> > -/* pci=hpmemsize=nnM,hpiosize=nn can override this */
+> > +#define DEFAULT_HOTPLUG_BUS_SIZE       (0)
+> > +/* pci=hpmemsize=nnM,hpiosize=nn,hpbussize=n can override this */
+> >  unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
+> >  unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
+> > +unsigned int pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
+> >
+> >  enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
+> >
+> > @@ -4022,6 +4024,8 @@ static int __init pci_setup(char *str)
+> >                                 pci_hotplug_io_size = memparse(str + 9, &str);
+> >                         } else if (!strncmp(str, "hpmemsize=", 10)) {
+> >                                 pci_hotplug_mem_size = memparse(str + 10, &str);
+> > +                       } else if (!strncmp(str, "hpbussize=", 10)) {
+> > +                               pci_hotplug_bus_size = memparse(str + 10, &str);
+> >                         } else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
+> >                                 pcie_bus_config = PCIE_BUS_TUNE_OFF;
+> >                         } else if (!strncmp(str, "pcie_bus_safe", 13)) {
+> > Index: linux/drivers/pci/probe.c
+> > ===================================================================
+> > --- linux.orig/drivers/pci/probe.c      2012-06-26 14:37:22.000000000 +0900
+> > +++ linux/drivers/pci/probe.c   2012-07-04 10:00:50.718002632 +0900
+> > @@ -867,6 +867,10 @@ int __devinit pci_scan_bridge(struct pci
+> >                 /*
+> >                  * Set the subordinate bus number to its real value.
+> >                  */
+> > +               if (dev->is_hotplug_bridge) {
+> > +                       if (max + pci_hotplug_bus_size < child->busn_res.end)
+> > +                               max += pci_hotplug_bus_size;
+> > +               }
+> 
+> again, that adding is not safe.
+> 
+> please drop this one now.
+>
+> or you can prepare one against busn_alloc and I put new version in the
+> busn_alloc branch.
 
-Alex
+ OK, I'll do it. 
+
+
+Best regards,
+Taku Izumi <izumi.taku@jp.fujitsu.com>
 
