@@ -1,78 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:37139 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753194Ab2G2QWo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2012 12:22:44 -0400
-Message-ID: <5015634E.5050007@gmail.com>
-Date: Mon, 30 Jul 2012 00:22:38 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from info.physics.ubc.ca ([142.103.234.23]:40186 "EHLO
+	info.physics.ubc.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698Ab2GFXhQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2012 19:37:16 -0400
+Date: Fri, 6 Jul 2012 16:37:15 -0700 (PDT)
+From: Bill Unruh <unruh@physics.ubc.ca>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
+Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic
+ Toughbook S10
+In-Reply-To: <20120706180635.GB17196@google.com>
+Message-ID: <Pine.LNX.4.64.1207061631270.26974@info>
+References: <Pine.LNX.4.64.1205311412210.11510@info>
+ <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
+ <Pine.LNX.4.64.1206010915580.26561@info> <4FC988CF.5030602@gmail.com>
+ <20120706180635.GB17196@google.com>
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v2 04/32] PCI: add PCIe capabilities access functions
- to hide differences among PCIe specs
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com> <1343147504-25891-5-git-send-email-jiang.liu@huawei.com> <500F0FBF.9080903@redhat.com>
-In-Reply-To: <500F0FBF.9080903@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/25/2012 05:12 AM, Don Dutile wrote:
-> On 07/24/2012 12:31 PM, Jiang Liu wrote:
->> +int pci_pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
->> +{
->> +    int ret = 0;
->> +
->> +    *val = 0;
->> +    if (pos&  1)
->> +        return -EINVAL;
->> +
->> +    if (pci_pcie_capability_reg_implemented(dev, pos)) {
->> +        ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
->> +        /*
->> +         * Reset *val to 0 if pci_read_config_word() fails, it may
->> +         * have been written as 0xFFFF if hardware error happens
->> +         * during pci_read_config_word().
->> +         */
->> +        if (ret)
->> +            *val = 0;
->> +    } else if (pos == PCI_EXP_SLTSTA&&
->> +         pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
->> +        *val = PCI_EXP_SLTSTA_PDS;
->> +    }
-> Don't you want the above if check done 1st, and not the
-> pci_pcie_capability_reg_implemented(dev, pos) check ?
-> Isn't PCI_EXP_SLTCTL an implemented register, looking at this snippet?:
->> +    switch (pos) {
->         <snip>
->> +    case PCI_EXP_SLTCAP:
->> +    case PCI_EXP_SLTCTL:
->> +    case PCI_EXP_SLTSTA:
->> +        return pci_pcie_cap_has_sltctl(dev);
->   and the above function is:
-> 
->> +static inline bool pci_pcie_cap_has_sltctl(const struct pci_dev *dev)
->> +{
->> +    int type = pci_pcie_type(dev);
->> +
->> +    return pci_pcie_cap_version(dev)>  1 ||
->> +           type == PCI_EXP_TYPE_ROOT_PORT ||
->> +           (type == PCI_EXP_TYPE_DOWNSTREAM&&
->> +        dev->pcie_flags_reg&  PCI_EXP_FLAGS_SLOT);
->> +}
-> 
-> or is PCI_EXP_FLAGS_SLOT not set when it should be, then the first condition
-> fails, and this function forces the val to 1b ?
-Hi Don,
-	Yes, that's the purpose. PCIe spec v2/v3 defines that hardware should return
-a value with bit PCI_EXP_SLTSTA_PDS set if PCI_EXP_SLTSTA register is not implemented.
-So for PCIe v1 hardwares, we try to behave in the same way as v2/v3.
-	Regards!
-	Gerry
+On Fri, 6 Jul 2012, Bjorn Helgaas wrote:
+
+> On Sat, Jun 02, 2012 at 11:30:23AM +0800, Jiang Liu wrote:
+>> ... address range 0xfed98000-0xfed9ffff has been reserved by motherboard
+>> device(PNP0C02).  I guess that BIOS has assigned address "0xfed98000" to
+>> 0000:00:04.0 for thermal management functionality. The BAR0 of
+>> 0000:00:04.0 may be locked down (can't be changed by OS) because the ACPI
+>> BIOS may have dependency on the assigned address ranges.
+>
+> I don't think the BAR can be completely read-only.  If it were, we wouldn't
+> have any way to determine its size.  We believe it is 32K in size:
+>
+>    pci 0000:00:04.0: reg 10: [mem 0xfed98000-0xfed9ffff 64bit]
+>
+> so we should have written 0xffffffff to the low 32 bits of the BAR and read
+> back 0xffff8004 (32K = 2^15, so the low-order 15 bits should be read-only,
+> including the prefetchable bit (0), the type bits (10 for 64-bit), and the
+> memory space indicator (0)).
+>
+> Can you experiment with setting that BAR manually, e.g., by running these
+> commands as root:
+>
+>    # setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
+>    # setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
+>    # setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+
+
+planet:0[root]>setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
+0006
+fed98004
+00000000
+planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
+planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+fed98004
+00000000
+planet:0[root]
+
+
+So it seems to work but does  not change the base address (or was that what
+you meant by "does not work")
+
+
+
+>
+> That's basically what the kernel does in pci_update_resource(), so this
+> will likely fail, too.
+>
+> In __pci_read_base(), where we size the BAR, we disable decoding first,
+> which we *don't* do in pci_update_resource().  So if the above doesn't
+> work, can you try this:
+>
+>    # setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
+>    # setpci -s 00:04.0 COMMAND=0
+>    # setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
+>    # setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+
+planet:0[root]>setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
+0006
+fed98004
+00000000
+planet:0[root]>setpci -s 00:04.0 COMMAND=0
+planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
+planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+fed98004
+00000000
+planet:0[root]>
+
+Ie, same thing-- no change in the address.
+
+
