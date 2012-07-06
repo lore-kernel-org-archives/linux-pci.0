@@ -1,98 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH 10/14] PME/PCI: use PCIe cap access functions to simplify implementation
-Date: Tue, 10 Jul 2012 23:54:11 +0800
-Message-Id: <1341935655-5381-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:37964 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932123Ab2GFVeo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2012 17:34:44 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+	<20120313081235.GC15333@redhat.com>
+	<CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
+	<CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
+	<20120528140448.GA22783@redhat.com>
+	<CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
+	<20120529092154.GA2441@redhat.com>
+	<CAErSpo6Xxq_kcEYACKUsuNDOJDhEDnxWgBUateOJEBcfqufhSg@mail.gmail.com>
+	<CANHD2=o-eyd2JR7oK4gJgQi3Mi-a=R1RKuGsuWzzR_WosQaNEA@mail.gmail.com>
+	<20120702053110.GA2500@redhat.com>
+	<CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
+	<CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
+Date: Fri, 6 Jul 2012 14:34:42 -0700
+Message-ID: <CAE9FiQXwx7L2H=BBcUbH2t3NyfAGZtrm4LG_uQ0OdoSTAZUgTw@mail.gmail.com>
+Subject: Re: Initializing iwl3945 error
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kamil Grzebien <ciptok@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Fri, Jul 6, 2012 at 1:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>  pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
+> -pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0200000-0xf03fffff 64bit pref]
+> +pci 0000:00:1c.1: bridge window [io  0x1000-0x0fff] to [bus 0b-0b]
+> add_size 1000
+> +pci 0000:00:1c.1: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus
+> 0b-0b] add_size 200000
+> +pci 0000:00:1c.1: res[15]=[mem 0x00100000-0x000fffff 64bit pref]
+> get_res_add_size add_size 200000
+> +pci 0000:00:1c.1: res[13]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
+> +pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0400000-0xf05fffff 64bit pref]
+>  pci_bus 0000:0b: resource 1 [mem 0xf1e00000-0xf1efffff]
+> -pci_bus 0000:0b: resource 2 [mem 0xf0200000-0xf03fffff 64bit pref]
+> +pci_bus 0000:0b: resource 2 [mem 0xf0400000-0xf05fffff 64bit pref]
 
-Use PCIe cap access functions to simplify PCIe PME implementation
+Those wild print out about add_size is used to double check if the
+option size is passed correctly.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/pme.c |   17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+diff between 3.3 and 3.4:
+in kernel 3.4, 1c.0 pref mem64 get allocated before 1c.1 pref mem64.
+that should be caused by: We replaced local version resource list with
+generic list.
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index 30897bf..d561d16 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -57,17 +57,14 @@ struct pcie_pme_service_data {
-  */
- void pcie_pme_interrupt_enable(struct pci_dev *dev, bool enable)
- {
--	int rtctl_pos;
- 	u16 rtctl;
- 
--	rtctl_pos = pci_pcie_cap(dev) + PCI_EXP_RTCTL;
--
--	pci_read_config_word(dev, rtctl_pos, &rtctl);
-+	pci_pcie_cap_read_word(dev, PCI_EXP_RTCTL, &rtctl);
- 	if (enable)
- 		rtctl |= PCI_EXP_RTCTL_PMEIE;
- 	else
- 		rtctl &= ~PCI_EXP_RTCTL_PMEIE;
--	pci_write_config_word(dev, rtctl_pos, rtctl);
-+	pci_pcie_cap_write_word(dev, PCI_EXP_RTCTL, rtctl);
- }
- 
- /**
-@@ -226,18 +223,15 @@ static void pcie_pme_work_fn(struct work_struct *work)
- 	struct pcie_pme_service_data *data =
- 			container_of(work, struct pcie_pme_service_data, work);
- 	struct pci_dev *port = data->srv->port;
--	int rtsta_pos;
- 	u32 rtsta;
- 
--	rtsta_pos = pci_pcie_cap(port) + PCI_EXP_RTSTA;
--
- 	spin_lock_irq(&data->lock);
- 
- 	for (;;) {
- 		if (data->noirq)
- 			break;
- 
--		pci_read_config_dword(port, rtsta_pos, &rtsta);
-+		pci_pcie_cap_read_dword(port, PCI_EXP_RTSTA, &rtsta);
- 		if (rtsta & PCI_EXP_RTSTA_PME) {
- 			/*
- 			 * Clear PME status of the port.  If there are other
-@@ -276,17 +270,14 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
- {
- 	struct pci_dev *port;
- 	struct pcie_pme_service_data *data;
--	int rtsta_pos;
- 	u32 rtsta;
- 	unsigned long flags;
- 
- 	port = ((struct pcie_device *)context)->port;
- 	data = get_service_data((struct pcie_device *)context);
- 
--	rtsta_pos = pci_pcie_cap(port) + PCI_EXP_RTSTA;
--
- 	spin_lock_irqsave(&data->lock, flags);
--	pci_read_config_dword(port, rtsta_pos, &rtsta);
-+	pci_pcie_cap_read_dword(port, PCI_EXP_RTSTA, &rtsta);
- 
- 	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
- 		spin_unlock_irqrestore(&data->lock, flags);
--- 
-1.7.9.5
+But that should not be reason for why 3.3 does not work on Kamil's setup.
 
+I would suspect that pci pm change fixes the problem.
+
+Thanks
+
+Yinghai
