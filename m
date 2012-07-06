@@ -1,51 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51290 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754973Ab2GQKie (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Jul 2012 06:38:34 -0400
-Message-ID: <1342521498.3669.7.camel@pasglop>
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, bhelgaas@google.com, yinghai@kernel.org
-Date: Tue, 17 Jul 2012 20:38:18 +1000
-In-Reply-To: <20120717100314.GB25613@ram-ThinkPad-T61>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
-	 <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
-	 <20120717050547.GD2369@ram-ThinkPad-T61>
-	 <20120717052333.GE2369@ram-ThinkPad-T61> <20120717053648.GA18497@shangw>
-	 <20120717055715.GF2369@ram-ThinkPad-T61> <1342516619.3669.5.camel@pasglop>
-	 <20120717100314.GB25613@ram-ThinkPad-T61>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:65081 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932264Ab2GFAOu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 20:14:50 -0400
+Received: by vbbff1 with SMTP id ff1so5815726vbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2012 17:14:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5_srroOSahe3tdeD_UQVfbqe4ixZtKfVJqc7a9-j3SQg@mail.gmail.com>
+References: <CAJkVMNoYYb3vpP1T5Sq3nmzpwLJUG7oRxUyX5=M9byQQjW1aew@mail.gmail.com>
+	<CAErSpo6PVQdu+nRJs43TJ2fCTk4papaeVLMyHZ1KbnRDCVtd0A@mail.gmail.com>
+	<CAJkVMNpZaMKm8tc+axdOBySpp68_j=EegEUOO+B=cYudsxNCgw@mail.gmail.com>
+	<CAErSpo5_srroOSahe3tdeD_UQVfbqe4ixZtKfVJqc7a9-j3SQg@mail.gmail.com>
+Date: Thu, 5 Jul 2012 17:14:49 -0700
+Message-ID: <CAE9FiQWCeBRfwA2D+GoLCv+97KbzA5c-Fv76NZz7BOyLE7HoWQ@mail.gmail.com>
+Subject: Re: 64 bit address to a pcie card
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: sumit chaudhary <flyingbee.linux@gmail.com>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-07-17 at 18:03 +0800, Ram Pai wrote:
->         Lets say we passed that 'type' flag to size the minimum
->         alignment constraints for that b_res.  And window_alignment(bus,
->         type) of your platform  used that 'type' information to
->         determine whether to use the alignment constraints of 32-bit
->         window or 64-bit window.
-> 
->         However, later when the b_res is actually allocated a resource,
->         the pci_assign_resource() has no idea whether to allocate 32-bit
->         window resource or 64-bit window resource, because the 'type'
->         information is not captured anywhere in b_res.
-> 
->         You would basically have a disconnect between what is sized and 
->         what is allocated. Unless offcourse you pass that 'type' to
->         the b_res->flags, which is currently not the case. 
+On Thu, Jul 5, 2012 at 8:16 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [Added back cc: linux-pci so others can help, too]
+>
+> What exactly is the problem?  Is there a device that isn't working as expected?
+>
+> The device at 07:00.0 does indeed have 64-bit BARs, and they happen to
+> be assigned addresses below 4GB:
+>
+> pci 0000:07:00.0: reg 10: [mem 0xfddff000-0xfddfffff 64bit]
+> pci 0000:07:00.0: reg 18: [mem 0xbf000000-0xbfffffff 64bit pref]
+> pci 0000:07:00.0: reg 20: [mem 0x40000000-0x7fffffff 64bit pref]
+>
+> This is perfectly normal.  The fact that the BAR supports a full
+> 64-bit address doesn't mean it has to be assigned space above 4GB.
+> The BIOS assigned these addresses, and Linux found no reason to change
+> them, so we just left them alone.
 
-Right, we ideally would need the core to query the alignment once per
-"apertures" it tries as a candidate to allocate a given resource... but
-that's for later.
+The system only has 1G ram installed, and the card need 1G 64bit pref.
 
-For now we can probably live with giving out the max of the minimum
-alignment we support for M64 and our M32 segment size.
+Maybe BIOS could push that above 4G, if the system get 4G RAM installed.
 
-Cheers,
-Ben.
-
-
+Yinghai
