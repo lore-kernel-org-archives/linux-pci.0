@@ -1,64 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57847 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362Ab2GZBlG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 21:41:06 -0400
-Received: by pbbrp8 with SMTP id rp8so2347858pbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 25 Jul 2012 18:41:06 -0700 (PDT)
-Message-ID: <5010A025.5000002@gmail.com>
-Date: Thu, 26 Jul 2012 09:40:53 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38400 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911Ab2GGNl7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 7 Jul 2012 09:41:59 -0400
+Received: by lbbgm6 with SMTP id gm6so16982149lbb.19
+        for <linux-pci@vger.kernel.org>; Sat, 07 Jul 2012 06:41:58 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: PCI mini-summit
-References: <CAErSpo5Ea_Rd2QSUXT13riDgHrkMGiN43+QiFTZYepHi-rg0Vw@mail.gmail.com>
-In-Reply-To: <CAErSpo5Ea_Rd2QSUXT13riDgHrkMGiN43+QiFTZYepHi-rg0Vw@mail.gmail.com>
+In-Reply-To: <CAE9FiQV5DHZoeXf-bSfuYGUSzmwtdVqGNfhHh7LJ3LBax++Rig@mail.gmail.com>
+References: <Pine.LNX.4.64.1205311412210.11510@info> <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
+ <Pine.LNX.4.64.1206010915580.26561@info> <4FC988CF.5030602@gmail.com>
+ <20120706180635.GB17196@google.com> <Pine.LNX.4.64.1207061631270.26974@info> <CAE9FiQV5DHZoeXf-bSfuYGUSzmwtdVqGNfhHh7LJ3LBax++Rig@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 7 Jul 2012 07:41:37 -0600
+Message-ID: <CAErSpo6ukXYGUm3J25Uq5qLJPOym2sMPkWKD4QVC7CmXqhUg5w@mail.gmail.com>
+Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic
+ Toughbook S10
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bill Unruh <unruh@physics.ubc.ca>, Jiang Liu <liuj97@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bugzilla-daemon@bugzilla.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-	Really want to attend the mini-summit, have strong interests in host 
-bridge hotplug and PCI hotplug core rework. But it may be a little later
-for me to apply for VISA:(
-	I'll try to send out a draft version for PCI hotplug rework for
-comments soon.
+> because it is locked down by BIOS to chipset, readback should be 0xfed98004.
+>
+> and pci_size will return 32k for 0xfed98000.
 
-	Thanks!
-	Gerry
+A device with a read-only BAR doesn't conform to the PCI spec.  We
+can't determine how much space the device consumes.
+It's just an accident that BIOS put it at an address that we happen to
+interpret as 32K.  We have no idea if the device consumes 4K, 8K, 16K,
+or 32K.
 
-On 07/25/2012 11:33 AM, Bjorn Helgaas wrote:
-> We're planning a PCI mini-summit on Tuesday, August 28, in San Diego.
-> If you'd like an invitation, let me know.
-> 
-> We haven't drafted an agenda yet, but based on ideas we've heard so
-> far, we'll likely talk about some of the following topics:
-> 
->       Host bridge hotplug
->       PCI hotplug core rework
->       VFIO v2 for KVM
->       Dynamic resource assignment
->       SRIOV
->           Management: driver (module parms) vs core (sysfs?)
->           Dynamic/static: changing number of VFs requires driver cooperation
->       Candidates for unification/moving from arch code to the core:
->           res->parent usage
->           Claiming resources
->           Unassigned BAR detection
->           ECAM (a.k.a. MMCONFIG)
->           Domain (a.k.a. PCI segment) support
->           MPS config
->           MPS safety with respect to hotplug
-> 
-> I've also heard that PCI-on-ARM may be of interest, so if you want to
-> talk about that and possibly add some topics, let me know.
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> so try get one update bios that could return resource for root bus.
+>
+> or you could try to live with booting with pci=nocrs before your get new BIOS.
 
+A BIOS update is not a useful answer.  The point is that we need
+better reporting of the situation so we don't have to spend all this
+time debugging this issue again.  We need to figure out how to
+identify this as a non spec-compliant device and continue as best we
+can.  We probably need to report it to the user because if there's a
+device of unknown size consuming address space, we're liable to cause
+a conflict by placing another device on top of it.
