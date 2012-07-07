@@ -1,114 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:36463 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076Ab2GGAzv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2012 20:55:51 -0400
 MIME-Version: 1.0
-In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
-References: <20120709213554.8975.60552.stgit@amt.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Jul 2012 21:22:06 -0600
-Message-ID: <CAErSpo5jdd2CAKOx-Ri=jqUkQC49xbvPnHsjBepNcWUUaLYD5g@mail.gmail.com>
-Subject: Re: [PATCH -v2 0/8] PCI: Add 'pci_fixup_final' quirks into hot-plug paths
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.64.1207061631270.26974@info>
+References: <Pine.LNX.4.64.1205311412210.11510@info>
+	<CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
+	<Pine.LNX.4.64.1206010915580.26561@info>
+	<4FC988CF.5030602@gmail.com>
+	<20120706180635.GB17196@google.com>
+	<Pine.LNX.4.64.1207061631270.26974@info>
+Date: Fri, 6 Jul 2012 17:55:50 -0700
+Message-ID: <CAE9FiQV5DHZoeXf-bSfuYGUSzmwtdVqGNfhHh7LJ3LBax++Rig@mail.gmail.com>
+Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic
+ Toughbook S10
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bill Unruh <unruh@physics.ubc.ca>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <liuj97@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bugzilla-daemon@bugzilla.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2012 at 3:35 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> PCI's final quirks (pci_fixup_final) are currently invoked by
-> pci_apply_final_quirk() which traverses the platform's list of PCI
-> devices.  The calling mechanism, and to some point the use of the device
-> list, limits the quirk invocations to a single instance during boot.  As
-> such, hot-plugable devices do not have their associated final quirks
-> called upon hot-plug events.
+On Fri, Jul 6, 2012 at 4:37 PM, Bill Unruh <unruh@physics.ubc.ca> wrote:
+> On Fri, 6 Jul 2012, Bjorn Helgaas wrote:
 >
-> This series implements a interim solution to integrate pci_fixup_final
-> quirks into the various hot-plug event paths[1].
->
-> The series basis is
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
->
->   -v2: Re-worked PATCH 1/9 based on Bjorn's suggestion:
->        http://marc.info/?l=linux-pci&m=134074984925361&w=2
->        There is some more opportunity to clean this up even further
->        if we re-work the script that gathers initcall data to accept
->        'dev_dbg()' structured output.
->
->        Replaced PATCHes 3/9-8/9 with 3/8-7/8 (I don't know what I
->        was thinking with the original set).
->
->
-> [1] I intended to come up with a single, uniform, solution that would
-> satisfy both the boot path and the various hot-plug event paths with
-> respect to final quirks.  From an architectural perspective, the proper
-> placement for the final quirks is somewhere just prior to when drivers can
-> probe and attach which would be the device_add path: pci_bus_add_devices
-> or pci_bus_add device.
->
-> I originally started with that approach but eventually realized that there
-> are issues with moving the quirks into the device_add path with respect to
-> booting.  Using the 'initcall_debug' boot command instrumentation, one
-> can see that moving the final quirks into the device_add path would cause
-> the quirks to be called substantially earlier during boot.  While there
-> may be additional issues, two that were especially concerning were that
-> the final quirks would be called *before* both 'pci_subsys_init' and
-> 'pcibios_assign_resources'.
->
-> Calling the quirks prior to resource assignment seems fraught with
-> potential issues so I started looking into the various hot-plug paths and
-> quickly noticed asymmetry with respect to PCI device setup between the
-> boot path and the hot-plug paths.
->
-> Currently, the boot path scans the PCI devices, adds the devices, assigns
-> resources, and then call the final quirks whereas the hot-plug paths scan,
-> assign resources, and then add the devices which is better sequencing with
-> respect to the assignment of resources and the addition of devices (i.e.
-> resource assignment occurs *before* a driver can probe and attach).
->
-> All of this suggests that we should change PCI device setup in the boot
-> path to be more like hot-plug: scan, assign resources, (final fixups,)
-> then add.  While I think that is the correct approach, and something that
-> we should be addressing, it will require a lot of work.  So until that
-> occurs, this series should serve as a stop-gap solution for the interim.
->
-> When the boot path's PCI device setup is addressed we should end up with a
-> single, uniform, device_add based solution for applying final quirks
-> after:
->   o  removing 'fs_initcall_sync(pci_apply_final_quirks);',
->   o  removing the global variable 'pci_fixup_final_inited' and all
->      of its usages,
->   o  renaming, and moving, the 'pci_cache_line_size' related code
->      currently embedded in 'pci_apply_final_quirks()'.
->
-> Note: I do not have a cross-compile environment so I have only tested x86.
-> ---
->
-> Myron Stowe (8):
->       PCI: Integrate 'pci_fixup_final' quirks into hot-plug paths
->       PCI: Move final fixup quirks from __init to __devinit
->       x86/PCI: Move final fixup quirks from __init to __devinit
->       MIPS/PCI: Move final fixup quirks from __init to __devinit
->       alpha/PCI: Move final fixup quirks from __init to __devinit
->       PCI: Adjust section annotations of various quirks
->       PCI: release temporary reference in __nv_msi_ht_cap_quirk()
->       PCI: Restructure 'pci_do_fixups()'
->
->
->  arch/alpha/kernel/pci.c         |    2 -
->  arch/mips/mti-malta/malta-pci.c |    2 -
->  arch/mips/pci/ops-tx4927.c      |    2 -
->  arch/mips/txx9/generic/pci.c    |    4 +
->  arch/x86/kernel/quirks.c        |    2 -
->  drivers/pci/bus.c               |    4 +
->  drivers/pci/quirks.c            |  107 ++++++++++++++++++++++++++-------------
->  7 files changed, 81 insertions(+), 42 deletions(-)
->
-> --
+>> On Sat, Jun 02, 2012 at 11:30:23AM +0800, Jiang Liu wrote:
+>>>
+>>> ... address range 0xfed98000-0xfed9ffff has been reserved by motherboard
+>>> device(PNP0C02).
 
-Thanks, I added this to my "next" branch and pushed it.
+No, pnp resource reservation is after pci bar reservation.
 
-The alpha quirks fix was already in my "next" branch, so I dropped that patch:
-http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=8ff255afb022b8e183c7aa1ecc4ba8d0563e1e17
+>>>I guess that BIOS has assigned address "0xfed98000" to
+>>> 0000:00:04.0 for thermal management functionality. The BAR0 of
+>>> 0000:00:04.0 may be locked down (can't be changed by OS) because the ACPI
+>>> BIOS may have dependency on the assigned address ranges.
+>>
+>>
+>> I don't think the BAR can be completely read-only.  If it were, we
+>> wouldn't
+>> have any way to determine its size.  We believe it is 32K in size:
+>>
+>>    pci 0000:00:04.0: reg 10: [mem 0xfed98000-0xfed9ffff 64bit]
+>>
+>> so we should have written 0xffffffff to the low 32 bits of the BAR and
+>> read
+>> back 0xffff8004 (32K = 2^15, so the low-order 15 bits should be read-only,
+>> including the prefetchable bit (0), the type bits (10 for 64-bit), and the
+>> memory space indicator (0)).
 
-Bjorn
+because it is locked down by BIOS to chipset, readback should be 0xfed98004.
+
+and pci_size will return 32k for 0xfed98000.
+
+>>
+>> Can you experiment with setting that BAR manually, e.g., by running these
+>> commands as root:
+>>
+>>    # setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
+>>    # setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
+>>    # setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+>
+>
+>
+> planet:0[root]>setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
+> 0006
+> fed98004
+> 00000000
+> planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
+> planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+> fed98004
+> 00000000
+> planet:0[root]
+
+BIOS _CRS
+
+[    1.956431] PCI: Using host bridge windows from ACPI; if necessary,
+use "pci=nocrs" and report a bug
+[    1.956921] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-3e])
+[    1.957225] pci_root PNP0A08:00: host bridge window [io  0x0000-0x0cf7]
+[    1.957227] pci_root PNP0A08:00: host bridge window [io  0x0d00-0xffff]
+[    1.957229] pci_root PNP0A08:00: host bridge window [mem
+0x000a0000-0x000bffff]
+[    1.957232] pci_root PNP0A08:00: host bridge window [mem
+0x000d4000-0x000d7fff]
+[    1.957234] pci_root PNP0A08:00: host bridge window [mem
+0x000d8000-0x000dbfff]
+[    1.957235] pci_root PNP0A08:00: host bridge window [mem
+0x000dc000-0x000dffff]
+[    1.957237] pci_root PNP0A08:00: host bridge window [mem
+0xdfa00000-0xfeafffff]
+[    1.957239] pci_root PNP0A08:00: host bridge window [mem
+0xfed40000-0xfed44fff]
+
+and it does not include 0xfed98000 for the 00:04.0, so kernel can not
+reserve it,
+and kernel will reject it and try to get new range for 00:04.0 but
+bios lock down
+that in chipset setting register.
+
+so try get one update bios that could return resource for root bus.
+
+or you could try to live with booting with pci=nocrs before your get new BIOS.
+
+Thanks
+
+Yinghai
