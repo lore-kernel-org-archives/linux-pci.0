@@ -1,98 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:45128 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346Ab2GQF5Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Jul 2012 01:57:24 -0400
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Tue, 17 Jul 2012 01:57:23 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 5C75D6E804C
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 01:57:21 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6H5vLWS360242
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 01:57:21 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HBSDrN013541
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 07:28:14 -0400
-Date: Tue, 17 Jul 2012 13:57:15 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, bhelgaas@google.com,
-	benh@kernel.crashing.org, yinghai@kernel.org
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120717055715.GF2369@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
- <20120717050547.GD2369@ram-ThinkPad-T61>
- <20120717052333.GE2369@ram-ThinkPad-T61>
- <20120717053648.GA18497@shangw>
+Received: from iolanthe.rowland.org ([192.131.102.54]:38408 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754145Ab2GIPJW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 11:09:22 -0400
+Date: Mon, 9 Jul 2012 11:09:21 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: AceLan Kao <acelan.kao@canonical.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	=?UTF-8?Q?D=C3=A2niel_Fraga?= <fragabr@gmail.com>,
+	Javier Marcet <jmarcet@gmail.com>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Oleksij Rempel <bug-track@fisher-privat.net>,
+	Pavel Pisa <pisa@cmp.felk.cvut.cz>,
+	<linux-pci@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
+Subject: [PATCH] PCI: EHCI: fix crash during suspend on ASUS computers
+Message-ID: <Pine.LNX.4.44L0.1207091106430.1954-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120717053648.GA18497@shangw>
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2012 at 01:36:49PM +0800, Gavin Shan wrote:
-> On Tue, Jul 17, 2012 at 01:23:33PM +0800, Ram Pai wrote:
-> >On Tue, Jul 17, 2012 at 01:05:47PM +0800, Ram Pai wrote:
-> >> On Tue, Jul 17, 2012 at 10:23:17AM +0800, Gavin Shan wrote:
-> >> > The patch changes function pbus_size_io() and pbus_size_mem() to
-> >> > do resource (I/O, memory and prefetchable memory) reassignment
-> >> > based on the minimal alignments for the p2p bridge, which was
-> >> > retrieved by function window_alignment().
-> >> > 
-> >> > Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> 
-> [snip]
-> 
-> >> > @@ -772,11 +775,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> >> >  		return;
-> >> >  	}
-> >> >  	/* Alignment of the IO window is always 4K */
-> >> > -	b_res->start = 4096;
-> >> > +	b_res->start = io_align;
-> >> >  	b_res->end = b_res->start + size0 - 1;
-> >> >  	b_res->flags |= IORESOURCE_STARTALIGN;
-> >> >  	if (size1 > size0 && realloc_head) {
-> >> > -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-> >> > +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
-> >> >  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
-> >> >  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
-> >> >  				 bus->secondary, bus->subordinate, size1-size0);
-> >> > @@ -875,6 +878,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> >> >  			min_align = align1 >> 1;
-> >> >  		align += aligns[order];
-> >> >  	}
-> >> > +
-> >> > +	min_align = max(min_align, window_alignment(bus, type));
-> >> 
-> >>   'type' can sometimes be (IORESOURCE_MEM | IORESOURCE_PREFETCH), which
-> >>   can lead to unpredictable results depending on how window_alignment()
-> >>   is implemented... Hence to be on the safer side I suggest
-> >> 
-> >> 	min_align = max(min_align, window_alignment(bus, b_res->flags & mask));
-> 
-> Sorry, Ram. I didn't see your concern in last reply. So I have to
-> cover your conver in this reply.
-> 
-> I think it'd better to pass "type" directly because platform (e.g. powernv)
-> expects both IORESOURCE_MEM as well as IORESOURCE_PREFETCH. 
-> In future, powernv platform will return M32 segment size for IORESOURCE_MEM, but
-> might return M64 segment size for (IORESOURCE_MEM | IORESOURCE_PREFETCH).
+Quite a few ASUS computers experience a nasty problem, related to the
+EHCI controllers, when going into system suspend.  It was observed
+that the problem didn't occur if the controllers were not put into the
+D3 power state before starting the suspend, and commit
+151b61284776be2d6f02d48c23c3625678960b97 (USB: EHCI: fix crash during
+suspend on ASUS computers) was created to do this.
 
-Hmm.. this code is not about determining what kind of segment the
-platform is returning. This code is about using the right alignment
-constraints for the type of segment from which resource will be
-allocated. right?
+It turned out this approach messed up other computers that didn't have
+the problem -- it prevented USB wakeup from working.  Consequently
+commit c2fb8a3fa25513de8fedb38509b1f15a5bbee47b (USB: add
+NO_D3_DURING_SLEEP flag and revert 151b61284776be2) was merged; it
+reverted the earlier commit and added a whitelist of known good board
+names.
 
-b_res is the resource that is being sized. b_res already knows
-what kind of resource it is, i.e IORESOURCE_MEM or IORESOURCE_PREFETCH.
-Hence we should be exactly using the same alignment constraints as
-that dictated by the type of b_res. no?
+Now we know the actual cause of the problem.  Thanks to AceLan Kao for
+tracking it down.
 
-RP
+According to him, an engineer at ASUS explained that some of their
+BIOSes contain a bug that was added in an attempt to work around a
+problem in early versions of Windows.  When the computer goes into S3
+suspend, the BIOS tries to verify that the EHCI controllers were first
+quiesced by the OS.  Nothing's wrong with this, but the BIOS does it
+by checking that the PCI COMMAND registers contain 0 without checking
+the controllers' power state.  If the register isn't 0, the BIOS
+assumes the controller needs to be quiesced and tries to do so.  This
+involves making various MMIO accesses to the controller, which don't
+work very well if the controller is already in D3.  The end result is
+a system hang or memory corruption.
+
+Since the value in the PCI COMMAND register doesn't matter once the
+controller has been suspended, and since the value will be restored
+anyway when the controller is resumed, we can work around the BIOS bug
+simply by setting the register to 0 during system suspend.  This patch
+(as1590) does so and also reverts the second commit mentioned above,
+which is now unnecessary.
+
+In theory we could do this for every PCI device.  However to avoid
+introducing new problems, the patch restricts itself to EHCI host
+controllers.
+
+Finally the affected systems can suspend with USB wakeup working
+properly.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Tested-by: Dâniel Fraga <fragabr@gmail.com>
+Tested-by: Javier Marcet <jmarcet@gmail.com>
+Tested-by: Andrey Rahmatullin <wrar@wrar.name>
+Tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
+Tested-by: Pavel Pisa <pisa@cmp.felk.cvut.cz>
+CC: <stable@vger.kernel.org>
+
+---
+
+ drivers/pci/pci-driver.c |   12 ++++++++++++
+ drivers/pci/pci.c        |    5 -----
+ drivers/pci/quirks.c     |   26 --------------------------
+ include/linux/pci.h      |    2 --
+ 4 files changed, 12 insertions(+), 33 deletions(-)
+
+Index: usb-3.4/drivers/pci/pci.c
+==================================================================
+--- usb-3.4.orig/drivers/pci/pci.c
++++ usb-3.4/drivers/pci/pci.c
+@@ -1744,11 +1744,6 @@ int pci_prepare_to_sleep(struct pci_dev
+ 	if (target_state == PCI_POWER_ERROR)
+ 		return -EIO;
+ 
+-	/* Some devices mustn't be in D3 during system sleep */
+-	if (target_state == PCI_D3hot &&
+-			(dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP))
+-		return 0;
+-
+ 	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
+ 
+ 	error = pci_set_power_state(dev, target_state);
+Index: usb-3.4/drivers/pci/quirks.c
+===================================================================
+--- usb-3.4.orig/drivers/pci/quirks.c
++++ usb-3.4/drivers/pci/quirks.c
+@@ -2929,32 +2929,6 @@ static void __devinit disable_igfx_irq(s
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+ 
+-/*
+- * The Intel 6 Series/C200 Series chipset's EHCI controllers on many
+- * ASUS motherboards will cause memory corruption or a system crash
+- * if they are in D3 while the system is put into S3 sleep.
+- */
+-static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
+-{
+-	const char *sys_info;
+-	static const char good_Asus_board[] = "P8Z68-V";
+-
+-	if (dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP)
+-		return;
+-	if (dev->subsystem_vendor != PCI_VENDOR_ID_ASUSTEK)
+-		return;
+-	sys_info = dmi_get_system_info(DMI_BOARD_NAME);
+-	if (sys_info && memcmp(sys_info, good_Asus_board,
+-			sizeof(good_Asus_board) - 1) == 0)
+-		return;
+-
+-	dev_info(&dev->dev, "broken D3 during system sleep on ASUS\n");
+-	dev->dev_flags |= PCI_DEV_FLAGS_NO_D3_DURING_SLEEP;
+-	device_set_wakeup_capable(&dev->dev, false);
+-}
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
+-
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
+ {
+Index: usb-3.4/include/linux/pci.h
+===================================================================
+--- usb-3.4.orig/include/linux/pci.h
++++ usb-3.4/include/linux/pci.h
+@@ -176,8 +176,6 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
+ 	/* Provide indication device is assigned by a Virtual Machine Manager */
+ 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
+-	/* Device causes system crash if in D3 during S3 sleep */
+-	PCI_DEV_FLAGS_NO_D3_DURING_SLEEP = (__force pci_dev_flags_t) 8,
+ };
+ 
+ enum pci_irq_reroute_variant {
+Index: usb-3.4/drivers/pci/pci-driver.c
+===================================================================
+--- usb-3.4.orig/drivers/pci/pci-driver.c
++++ usb-3.4/drivers/pci/pci-driver.c
+@@ -748,6 +748,18 @@ static int pci_pm_suspend_noirq(struct d
+ 
+ 	pci_pm_set_unknown_state(pci_dev);
+ 
++	/*
++	 * Some BIOSes from ASUS have a bug: If a USB EHCI host controller's
++	 * PCI COMMAND register isn't 0, the BIOS assumes that the controller
++	 * hasn't been quiesced and tries to turn it off.  If the controller
++	 * is already in D3, this can hang or cause memory corruption.
++	 *
++	 * Since the value of the COMMAND register doesn't matter once the
++	 * device has been suspended, we can safely set it to 0 here.
++	 */
++	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
++		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
++
+ 	return 0;
+ }
+ 
 
