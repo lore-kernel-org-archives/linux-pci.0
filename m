@@ -1,84 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:45738 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750912Ab2GREZV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 00:25:21 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Tue, 17 Jul 2012 22:25:21 -0600
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 7A4F33E40026
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 04:25:18 +0000 (WET)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6I4PI9Q230694
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 22:25:18 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6I4PGfL010384
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 22:25:18 -0600
-Date: Wed, 18 Jul 2012 12:25:12 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	yinghai@kernel.org
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120718042512.GA2375@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
- <20120717050547.GD2369@ram-ThinkPad-T61>
- <20120717052333.GE2369@ram-ThinkPad-T61>
- <20120717053648.GA18497@shangw>
- <20120717055715.GF2369@ram-ThinkPad-T61>
- <1342516619.3669.5.camel@pasglop>
- <20120717100314.GB25613@ram-ThinkPad-T61>
- <1342521498.3669.7.camel@pasglop>
- <CAErSpo4AS=QCRE3w-QBzuuSSEK8VeQ+PXxyp3mTyDAEvASxQcQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 5/8] MIPS/PCI: Move final fixup quirks from __init to
+	__devinit
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	yinghai@kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:36:27 -0600
+Message-ID: <20120709213627.8975.4902.stgit@amt.stowe>
+In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
+References: <20120709213554.8975.60552.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4AS=QCRE3w-QBzuuSSEK8VeQ+PXxyp3mTyDAEvASxQcQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2012 at 11:14:51AM -0600, Bjorn Helgaas wrote:
-> On Tue, Jul 17, 2012 at 4:38 AM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> > On Tue, 2012-07-17 at 18:03 +0800, Ram Pai wrote:
-> >>         Lets say we passed that 'type' flag to size the minimum
-> >>         alignment constraints for that b_res.  And window_alignment(bus,
-> >>         type) of your platform  used that 'type' information to
-> >>         determine whether to use the alignment constraints of 32-bit
-> >>         window or 64-bit window.
-> >>
-> >>         However, later when the b_res is actually allocated a resource,
-> >>         the pci_assign_resource() has no idea whether to allocate 32-bit
-> >>         window resource or 64-bit window resource, because the 'type'
-> >>         information is not captured anywhere in b_res.
-> >>
-> >>         You would basically have a disconnect between what is sized and
-> >>         what is allocated. Unless offcourse you pass that 'type' to
-> >>         the b_res->flags, which is currently not the case.
-> >
-> > Right, we ideally would need the core to query the alignment once per
-> > "apertures" it tries as a candidate to allocate a given resource... but
-> > that's for later.
-> >
-> > For now we can probably live with giving out the max of the minimum
-> > alignment we support for M64 and our M32 segment size.
-> 
-> We already know the aperture we're proposing to allocate from (the
-> result of find_free_bus_resource()), don't we?  What if we passed it
-> to pcibios_window_alignment() along with the struct pci_bus *, e.g.:
-> 
->   resource_size_t pcibios_window_alignment(struct pci_bus *bus, struct
-> resource *window)
+The PCI subsystem's final fixups are executed once during boot, after the
+pci-device is found.  As long as the system does not support hot-plug,
+specifying __init is fine.
 
-Hmm..'struct resource *window' may not yet know which aperature it is
-allocated from. Will it? We are still in the sizing process, the allocation will
-be done much later.
+With hot-plug, either physically based hot-plug events or pseudo hot-plug
+events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+PCI bus during run time and have it rediscovered which will require the
+call of the fixups again in order for the device to function properly.
 
-RP
+This patch prepares specific quirk(s) for use with hot-plug events.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ arch/mips/mti-malta/malta-pci.c |    2 +-
+ arch/mips/pci/ops-tx4927.c      |    2 +-
+ arch/mips/txx9/generic/pci.c    |    4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/mips/mti-malta/malta-pci.c b/arch/mips/mti-malta/malta-pci.c
+index bf80921..b663402 100644
+--- a/arch/mips/mti-malta/malta-pci.c
++++ b/arch/mips/mti-malta/malta-pci.c
+@@ -253,7 +253,7 @@ void __init mips_pcibios_init(void)
+ }
+ 
+ /* Enable PCI 2.1 compatibility in PIIX4 */
+-static void __init quirk_dlcsetup(struct pci_dev *dev)
++static void __devinit quirk_dlcsetup(struct pci_dev *dev)
+ {
+ 	u8 odlc, ndlc;
+ 	(void) pci_read_config_byte(dev, 0x82, &odlc);
+diff --git a/arch/mips/pci/ops-tx4927.c b/arch/mips/pci/ops-tx4927.c
+index a1e7e6d..bc13e29 100644
+--- a/arch/mips/pci/ops-tx4927.c
++++ b/arch/mips/pci/ops-tx4927.c
+@@ -495,7 +495,7 @@ irqreturn_t tx4927_pcierr_interrupt(int irq, void *dev_id)
+ }
+ 
+ #ifdef CONFIG_TOSHIBA_FPCIB0
+-static void __init tx4927_quirk_slc90e66_bridge(struct pci_dev *dev)
++static void __devinit tx4927_quirk_slc90e66_bridge(struct pci_dev *dev)
+ {
+ 	struct tx4927_pcic_reg __iomem *pcicptr = pci_bus_to_pcicptr(dev->bus);
+ 
+diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
+index 682efb0..ce1ee50 100644
+--- a/arch/mips/txx9/generic/pci.c
++++ b/arch/mips/txx9/generic/pci.c
+@@ -256,7 +256,7 @@ static irqreturn_t i8259_interrupt(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int __init
++static int __devinit
+ txx9_i8259_irq_setup(int irq)
+ {
+ 	int err;
+@@ -269,7 +269,7 @@ txx9_i8259_irq_setup(int irq)
+ 	return err;
+ }
+ 
+-static void __init quirk_slc90e66_bridge(struct pci_dev *dev)
++static void __devinit quirk_slc90e66_bridge(struct pci_dev *dev)
+ {
+ 	int irq;	/* PCI/ISA Bridge interrupt */
+ 	u8 reg_64;
 
