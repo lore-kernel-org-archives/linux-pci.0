@@ -1,72 +1,104 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 20/32] PCI/niu: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:31:32 +0800
-Message-Id: <1343147504-25891-21-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 1/8] PCI: Restructure 'pci_do_fixups()'
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	yinghai@kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:36:02 -0600
+Message-ID: <20120709213602.8975.58935.stgit@amt.stowe>
+In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
+References: <20120709213554.8975.60552.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+It's a bit ugly that we have two possible call sites for the quirk: either
+inside do_one_fixup_debug() or directly in pci_do_fixups().
 
-Use PCIe capabilities access functions to simplify niu driver's
-implementation.
+This patch restructures pci_do_fixups()'s quirk invocations in the style
+of initcall_debug_start() and initcall_debug_report().
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/net/ethernet/sun/niu.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
-index 703c8cc..3f914c1 100644
---- a/drivers/net/ethernet/sun/niu.c
-+++ b/drivers/net/ethernet/sun/niu.c
-@@ -9768,7 +9768,7 @@ static int __devinit niu_pci_init_one(struct pci_dev *pdev,
- 	union niu_parent_id parent_id;
- 	struct net_device *dev;
- 	struct niu *np;
--	int err, pos;
-+	int err;
- 	u64 dma_mask;
- 	u16 val16;
+ drivers/pci/quirks.c |   46 ++++++++++++++++++++++++++++++----------------
+ 1 files changed, 30 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 194b243..0f5ca86 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2879,20 +2879,34 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
  
-@@ -9793,8 +9793,7 @@ static int __devinit niu_pci_init_one(struct pci_dev *pdev,
- 		goto err_out_disable_pdev;
- 	}
  
--	pos = pci_pcie_cap(pdev);
--	if (pos <= 0) {
-+	if (!pci_is_pcie(pdev)) {
- 		dev_err(&pdev->dev, "Cannot find PCI Express capability, aborting\n");
- 		goto err_out_free_res;
- 	}
-@@ -9819,14 +9818,14 @@ static int __devinit niu_pci_init_one(struct pci_dev *pdev,
- 		goto err_out_free_dev;
- 	}
+-static void do_one_fixup_debug(void (*fn)(struct pci_dev *dev), struct pci_dev *dev)
++static ktime_t fixup_debug_start(struct pci_dev *dev,
++				 void (*fn)(struct pci_dev *dev))
+ {
+-	ktime_t calltime, delta, rettime;
++	ktime_t calltime = ktime_set(0, 0);
++
++	dev_dbg(&dev->dev, "calling %pF\n", fn);
++	if (initcall_debug) {
++		pr_debug("calling  %pF @ %i for %s\n",
++			 fn, task_pid_nr(current), dev_name(&dev->dev));
++		calltime = ktime_get();
++	}
++
++	return calltime;
++}
++
++static void fixup_debug_report(struct pci_dev *dev, ktime_t calltime,
++			       void (*fn)(struct pci_dev *dev))
++{
++	ktime_t delta, rettime;
+ 	unsigned long long duration;
  
--	pci_read_config_word(pdev, pos + PCI_EXP_DEVCTL, &val16);
-+	pci_pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &val16);
- 	val16 &= ~PCI_EXP_DEVCTL_NOSNOOP_EN;
- 	val16 |= (PCI_EXP_DEVCTL_CERE |
- 		  PCI_EXP_DEVCTL_NFERE |
- 		  PCI_EXP_DEVCTL_FERE |
- 		  PCI_EXP_DEVCTL_URRE |
- 		  PCI_EXP_DEVCTL_RELAX_EN);
--	pci_write_config_word(pdev, pos + PCI_EXP_DEVCTL, val16);
-+	pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL, val16);
+-	printk(KERN_DEBUG "calling  %pF @ %i for %s\n",
+-			fn, task_pid_nr(current), dev_name(&dev->dev));
+-	calltime = ktime_get();
+-	fn(dev);
+-	rettime = ktime_get();
+-	delta = ktime_sub(rettime, calltime);
+-	duration = (unsigned long long) ktime_to_ns(delta) >> 10;
+-	printk(KERN_DEBUG "pci fixup %pF returned after %lld usecs for %s\n",
+-			fn, duration, dev_name(&dev->dev));
++	if (initcall_debug) {
++		rettime = ktime_get();
++		delta = ktime_sub(rettime, calltime);
++		duration = (unsigned long long) ktime_to_ns(delta) >> 10;
++		pr_debug("pci fixup %pF returned after %lld usecs for %s\n",
++			 fn, duration, dev_name(&dev->dev));
++	}
+ }
  
- 	dma_mask = DMA_BIT_MASK(44);
- 	err = pci_set_dma_mask(pdev, dma_mask);
--- 
-1.7.9.5
+ /*
+@@ -2958,6 +2972,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
+ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 			  struct pci_fixup *end)
+ {
++	ktime_t calltime;
++
+ 	for (; f < end; f++)
+ 		if ((f->class == (u32) (dev->class >> f->class_shift) ||
+ 		     f->class == (u32) PCI_ANY_ID) &&
+@@ -2965,11 +2981,9 @@ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+ 		     f->vendor == (u16) PCI_ANY_ID) &&
+ 		    (f->device == dev->device ||
+ 		     f->device == (u16) PCI_ANY_ID)) {
+-			dev_dbg(&dev->dev, "calling %pF\n", f->hook);
+-			if (initcall_debug)
+-				do_one_fixup_debug(f->hook, dev);
+-			else
+-				f->hook(dev);
++			calltime = fixup_debug_start(dev, f->hook);
++			f->hook(dev);
++			fixup_debug_report(dev, calltime, f->hook);
+ 		}
+ }
+ 
 
