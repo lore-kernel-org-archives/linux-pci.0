@@ -1,50 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:25831 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752676Ab2HACSq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 22:18:46 -0400
-From: "Jiang, Dave" <dave.jiang@intel.com>
-To: Jianbin Kang <kjbmail@gmail.com>
-CC: "Mason, Jon" <jon.mason@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-Date: Wed, 1 Aug 2012 02:18:45 +0000
-Message-ID: <98D21DD6-3BDE-402D-8DC1-0AAD79502B8F@intel.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
-	<1343607994-32415-2-git-send-email-jon.mason@intel.com>
-	<CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
-	<20120730181542.GA987@jonmason-lab>
-	<CAF8raN6M0_TWyCCzjyXZcFYP=vgFaqQg4hNmNpBxSM+D0C_Bpg@mail.gmail.com>
-	<20120731163308.GA13610@jonmason-lab>,<CAF8raN4QFnQ+9k_OGEkYexnK=knQESRSbOgsErNiA8z9MXzZ3A@mail.gmail.com>
-In-Reply-To: <CAF8raN4QFnQ+9k_OGEkYexnK=knQESRSbOgsErNiA8z9MXzZ3A@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:60069 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547Ab2GIRFg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 13:05:36 -0400
+Received: by lbbgm6 with SMTP id gm6so20429156lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 10:05:34 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4FFAACF8.8040801@huawei.com>
+References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
+ <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+ <4FF34CEF.3090400@redhat.com> <CAErSpo7=BzPX87qgKS_xkJg4o8BGDan-o7D9NqRiqKvH0kLjfQ@mail.gmail.com>
+ <4FFAACF8.8040801@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Jul 2012 11:05:14 -0600
+Message-ID: <CAErSpo5dV+ZPRmOBmdmTf1hEPXvqtXyTyNj4m2nDFEkKi5NmGQ@mail.gmail.com>
+Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
+ ports without native PCIe hotplug capability
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Don Dutile <ddutile@redhat.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jul 9, 2012 at 4:05 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> Hi Bjorn and Yinghai,
+>         What's the policy to export a symbol by EXPORT_SYMBOL()
+> or EXPORT_SYMBOL_GPL()? I know the legal difference, but don't
+> know when I should mark a symbol as GPL.
 
-On Jul 31, 2012, at 7:10 PM, "Jianbin Kang" <kjbmail@gmail.com> wrote:
+>From Documentation/DocBook/kernel-hacking.tmpl,
 
->> Actually this is what I'm working on now, using async_tx to replace the
->> memcpy.  I believe the changes shouldn't be that significant.
->> 
->> Is the "hardware that can setup dma" you refer to something that does
->> not use this interface?
->> 
-> 
-> Yes, they use this interface, but split 'memcpy_toio' to two operation:
->     1. setup dma
->     2. wait/poll for the dma to finish.
-> So maybe it need to provide a generic function 'tx' for different hardwares.
-> 
-It's not worth it to do sync DMA. The performance is terrible. 
+    EXPORT_SYMBOL_GPL implies that the function is considered
+    an internal implementation issue, and not really an interface.
 
-> If async_tx is available, it's much better than this 'sync dma/memcpy'.
-> One problem with async_tx is, it can't detect memcpy error.
-> If the remote ntb goes down when async_memcpy is in operation, async_tx
-> will trigger an oops.
+So I use EXPORT_SYMBOL_GPL unless I'm willing to support the symbol as
+an interface indefinitely.
 
-Yes that is something that needs to be addressed when we get async DMA support working. 
+Bjorn
