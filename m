@@ -1,67 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38162 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277Ab2GBSyp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2012 14:54:45 -0400
-Received: by lbbgm6 with SMTP id gm6so8030201lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jul 2012 11:54:44 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 3/8] PCI: Adjust section annotations of various quirks
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	yinghai@kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:36:14 -0600
+Message-ID: <20120709213614.8975.28410.stgit@amt.stowe>
+In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
+References: <20120709213554.8975.60552.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVzYCwAAEnhZSVotiB3R+XYGcT=SJ8ySBndvo0OpRXP7w@mail.gmail.com>
-References: <bug-15362-41252@https.bugzilla.kernel.org/> <20120627140641.2187711F8B0@bugzilla.kernel.org>
- <CAErSpo4T5rBwoE7X2h1-CG9GoEPzXO+_1R7YVyv8wiL2qZW+XA@mail.gmail.com> <CAE9FiQVzYCwAAEnhZSVotiB3R+XYGcT=SJ8ySBndvo0OpRXP7w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Jul 2012 12:54:24 -0600
-Message-ID: <CAErSpo67JZf81_Xco-r0R493Lmu4d5+2XBapT91tciuek2MskQ@mail.gmail.com>
-Subject: Re: [Bug 15362] MPT Fusion SCSI drives no longer appear - suspect PCI
- bus scan bug
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>, 543308@bugs.debian.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> in short: the bios is broken, it return wrong segment in DSDT.
+PCI's quirk types 'pci_fixup_enable', 'pci_fixup_resume',
+'pci_fixup_suspend', and 'pci_fixup_resume_early' can not be __init or
+__devinit; they must be in normal text because they can be called at any
+time.
 
-I *think* what Yinghai is saying is:
+This patch removes the '__init' section annotation of such quirks.
 
-  - MMCONFIG is not used either in 2.6.26 or 2.6.32.
-  - BIOS reports these host bridges via DSDT PNP0A08 devices:
-        [PCI0] leading to segment 0000 bus 00
-        [PCI1] leading to segment 0001 bus 40
-        [PCI2] leading to segment 0002 bus 80
-  - Buses 40 and 80 are actually in segment 0, not segments 1 and 2.
-  - When we enumerate bus 40 and bus 80, we pass seg=1 and seg=2,
-respectively, to pci_conf1_read(), but 2.6.26 ignores seg.  For
-example, when we think we're reading 0001:40:01.0 config space, 2.6.26
-actually reads 0000:40:01.0 config space instead.
-  - In 2.6.32, instead of ignoring seg, we return an error if it is
-not zero.  Therefore, we fail to find anything on bus 40 and bus 80.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-Sean, what system and BIOS version is this?  (The 3.4.x dmesg log or
-the "dmidecode" output will contain this information.)  I don't expect
-HP to change the BIOS, and it wouldn't be reasonable to require users
-to debug this issue and upgrade their BIOS in any case.
+ drivers/pci/quirks.c |   28 ++++++++++++++--------------
+ 1 files changed, 14 insertions(+), 14 deletions(-)
 
-But I would like to read the release notes or help text that mentions
-this issue.  If all the buses were in fact in segment 0, the DSDT
-would typically not have any _SEG methods at all, because segment 0 is
-the default.  Yinghai is assuming that HP went to the trouble to *add*
-_SEG methods that returned incorrect values.  But the fact that HP was
-aware of the issue and provided the BIOS "disable ACPI bus
-segmentation" option makes it less likely that this is the case.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8b2d553..8014091 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1039,7 +1039,7 @@ static void quirk_disable_pxb(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82454NX,	quirk_disable_pxb);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82454NX,	quirk_disable_pxb);
+ 
+-static void __devinit quirk_amd_ide_mode(struct pci_dev *pdev)
++static void quirk_amd_ide_mode(struct pci_dev *pdev)
+ {
+ 	/* set SBX00/Hudson-2 SATA in IDE mode to AHCI mode */
+ 	u8 tmp;
+@@ -2104,7 +2104,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
+ 			PCI_DEVICE_ID_NX2_5709S,
+ 			quirk_brcm_570x_limit_vpd);
+ 
+-static void __devinit quirk_brcm_5719_limit_mrrs(struct pci_dev *dev)
++static void quirk_brcm_5719_limit_mrrs(struct pci_dev *dev)
+ {
+ 	u32 rev;
+ 
+@@ -2217,7 +2217,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x9601, quirk_amd_780_apc_msi);
+ 
+ /* Go through the list of Hypertransport capabilities and
+  * return 1 if a HT MSI capability is found and enabled */
+-static int __devinit msi_ht_cap_enabled(struct pci_dev *dev)
++static int msi_ht_cap_enabled(struct pci_dev *dev)
+ {
+ 	int pos, ttl = 48;
+ 
+@@ -2241,7 +2241,7 @@ static int __devinit msi_ht_cap_enabled(struct pci_dev *dev)
+ }
+ 
+ /* Check the hypertransport MSI mapping to know whether MSI is enabled or not */
+-static void __devinit quirk_msi_ht_cap(struct pci_dev *dev)
++static void quirk_msi_ht_cap(struct pci_dev *dev)
+ {
+ 	if (dev->subordinate && !msi_ht_cap_enabled(dev)) {
+ 		dev_warn(&dev->dev, "MSI quirk detected; "
+@@ -2255,7 +2255,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT2
+ /* The nVidia CK804 chipset may have 2 HT MSI mappings.
+  * MSI are supported if the MSI capability set in any of these mappings.
+  */
+-static void __devinit quirk_nvidia_ck804_msi_ht_cap(struct pci_dev *dev)
++static void quirk_nvidia_ck804_msi_ht_cap(struct pci_dev *dev)
+ {
+ 	struct pci_dev *pdev;
+ 
+@@ -2279,7 +2279,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_CK804_PCIE,
+ 			quirk_nvidia_ck804_msi_ht_cap);
+ 
+ /* Force enable MSI mapping capability on HT bridges */
+-static void __devinit ht_enable_msi_mapping(struct pci_dev *dev)
++static void ht_enable_msi_mapping(struct pci_dev *dev)
+ {
+ 	int pos, ttl = 48;
+ 
+@@ -2359,7 +2359,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
+ 			PCI_DEVICE_ID_NVIDIA_MCP55_BRIDGE_V4,
+ 			nvbridge_check_legacy_irq_routing);
+ 
+-static int __devinit ht_check_msi_mapping(struct pci_dev *dev)
++static int ht_check_msi_mapping(struct pci_dev *dev)
+ {
+ 	int pos, ttl = 48;
+ 	int found = 0;
+@@ -2387,7 +2387,7 @@ static int __devinit ht_check_msi_mapping(struct pci_dev *dev)
+ 	return found;
+ }
+ 
+-static int __devinit host_bridge_with_leaf(struct pci_dev *host_bridge)
++static int host_bridge_with_leaf(struct pci_dev *host_bridge)
+ {
+ 	struct pci_dev *dev;
+ 	int pos;
+@@ -2421,7 +2421,7 @@ static int __devinit host_bridge_with_leaf(struct pci_dev *host_bridge)
+ #define PCI_HT_CAP_SLAVE_CTRL0     4    /* link control */
+ #define PCI_HT_CAP_SLAVE_CTRL1     8    /* link control to */
+ 
+-static int __devinit is_end_of_ht_chain(struct pci_dev *dev)
++static int is_end_of_ht_chain(struct pci_dev *dev)
+ {
+ 	int pos, ctrl_off;
+ 	int end = 0;
+@@ -2445,7 +2445,7 @@ out:
+ 	return end;
+ }
+ 
+-static void __devinit nv_ht_enable_msi_mapping(struct pci_dev *dev)
++static void nv_ht_enable_msi_mapping(struct pci_dev *dev)
+ {
+ 	struct pci_dev *host_bridge;
+ 	int pos;
+@@ -2484,7 +2484,7 @@ out:
+ 	pci_dev_put(host_bridge);
+ }
+ 
+-static void __devinit ht_disable_msi_mapping(struct pci_dev *dev)
++static void ht_disable_msi_mapping(struct pci_dev *dev)
+ {
+ 	int pos, ttl = 48;
+ 
+@@ -2504,7 +2504,7 @@ static void __devinit ht_disable_msi_mapping(struct pci_dev *dev)
+ 	}
+ }
+ 
+-static void __devinit __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
++static void __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
+ {
+ 	struct pci_dev *host_bridge;
+ 	int pos;
+@@ -2555,12 +2555,12 @@ out:
+ 	pci_dev_put(host_bridge);
+ }
+ 
+-static void __devinit nv_msi_ht_cap_quirk_all(struct pci_dev *dev)
++static void nv_msi_ht_cap_quirk_all(struct pci_dev *dev)
+ {
+ 	return __nv_msi_ht_cap_quirk(dev, 1);
+ }
+ 
+-static void __devinit nv_msi_ht_cap_quirk_leaf(struct pci_dev *dev)
++static void nv_msi_ht_cap_quirk_leaf(struct pci_dev *dev)
+ {
+ 	return __nv_msi_ht_cap_quirk(dev, 0);
+ }
 
-Also, the system was very likely tested with Windows, and the fact
-that the BIOS option is to *disable* segmentation suggests that the
-default is "segmentation enabled."  So my guess is that segmentation
-does work with Windows.  Sean, can you confirm or deny that?  The
-AIDA64 tool (free trial version at http://www.aida64.com/) generates a
-report with useful information.
-
-I agree with Jonathan's assertion here:
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=543308#87 that the
-BIOS switch is not adequate.  Neither is a patched DSDT.
-
-I think it's likely that Windows works with segmentation, using
-MMCONFIG, and that Linux is a bit too quick to disable MMCONFIG in
-this case.
