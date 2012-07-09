@@ -1,97 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52589 "EHLO mga01.intel.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:59895 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754422Ab2GWSkx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jul 2012 14:40:53 -0400
-From: "Rose, Gregory V" <gregory.v.rose@intel.com>
-To: Stephen Hemminger <shemminger@vyatta.com>,
-	Chris Friesen <chris.friesen@genband.com>
-CC: Don Dutile <ddutile@redhat.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Miller <davem@davemloft.net>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: New commands to configure IOV features
-Date: Mon, 23 Jul 2012 18:40:51 +0000
-Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
-References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
-	<5005D45D.1040302@genband.com>
-	<20120717.141153.46613285253481776.davem@davemloft.net>
-	<500978C7.5050004@genband.com>	<50097FBD.9080202@redhat.com>
-	<1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-	<5009B186.6000806@genband.com>
-	<1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-	<5009ECDF.4090305@genband.com>	<500D59BF.9040006@redhat.com>
-	<500D6932.8090306@genband.com>
- <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
-In-Reply-To: <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752413Ab2GIQov convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 12:44:51 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: EHCI: fix crash during suspend on ASUS computers
+Date: Mon, 9 Jul 2012 18:50:24 +0200
+Cc: AceLan Kao <acelan.kao@canonical.com>,
+	=?utf-8?q?D=C3=A2niel_Fraga?= <fragabr@gmail.com>,
+	Javier Marcet <jmarcet@gmail.com>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Oleksij Rempel <bug-track@fisher-privat.net>,
+	Pavel Pisa <pisa@cmp.felk.cvut.cz>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1207091106430.1954-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1207091106430.1954-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201207091850.24550.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Stephen Hemminger [mailto:shemminger@vyatta.com]
-> Sent: Monday, July 23, 2012 11:36 AM
-> To: Chris Friesen
-> Cc: Don Dutile; Ben Hutchings; David Miller; yuvalmin@broadcom.com; Rose,
-> Gregory V; netdev@vger.kernel.org; linux-pci@vger.kernel.org
-> Subject: Re: New commands to configure IOV features
+On Monday, July 09, 2012, Alan Stern wrote:
+> Quite a few ASUS computers experience a nasty problem, related to the
+> EHCI controllers, when going into system suspend.  It was observed
+> that the problem didn't occur if the controllers were not put into the
+> D3 power state before starting the suspend, and commit
+> 151b61284776be2d6f02d48c23c3625678960b97 (USB: EHCI: fix crash during
+> suspend on ASUS computers) was created to do this.
 > 
-> On Mon, 23 Jul 2012 09:09:38 -0600
-> Chris Friesen <chris.friesen@genband.com> wrote:
+> It turned out this approach messed up other computers that didn't have
+> the problem -- it prevented USB wakeup from working.  Consequently
+> commit c2fb8a3fa25513de8fedb38509b1f15a5bbee47b (USB: add
+> NO_D3_DURING_SLEEP flag and revert 151b61284776be2) was merged; it
+> reverted the earlier commit and added a whitelist of known good board
+> names.
 > 
-> > On 07/23/2012 08:03 AM, Don Dutile wrote:
-> > > On 07/20/2012 07:42 PM, Chris Friesen wrote:
-> > >>
-> > >> I actually have a use-case where the guest needs to be able to
-> > >> modify the MAC addresses of network devices that are actually VFs.
-> > >>
-> > >> The guest is bonding the network devices together, so the bonding
-> > >> driver in the guest expects to be able to set all the slaves to the
-> > >> same MAC address.
-> > >>
-> > >> As I read the ixgbe driver, this should be possible as long as the
-> > >> host hasn't explicitly set the MAC address of the VF. Is that
-> correct?
-> > >>
-> > >> Chris
-> > >
-> > > Interesting tug of war: hypervisors will want to set the macaddrs
-> > > for security reasons,
-> > >                         some guests may want to set macaddr for
-> > > (valid?) config reasons.
-> > >
-> >
-> > In our case we have control over both guest an host anyways, so it's
-> > less of a security issue.  In the general case though I could see it
-> > being an interesting problem.
-> >
-> > Back to the original discussion though--has anyone got any ideas about
-> > the best way to trigger runtime creation of VFs?  I don't know what
-> > the binary APIs looks like, but via sysfs I could see something like
-> >
-> > echo number_of_new_vfs_to_create >
-> > /sys/bus/pci/devices/<address>/create_vfs
-> >
-> > Something else that occurred to me--is there buy-in from driver
-> > maintainers?  I know the Intel ethernet drivers (what I'm most
-> > familiar
-> > with) would need to be substantially modified to support on-the-fly
-> > addition of new vfs.  Currently they assume that the number of vfs is
-> > known at module init time.
-> >
+> Now we know the actual cause of the problem.  Thanks to AceLan Kao for
+> tracking it down.
 > 
-> Why couldn't rtnl_link_ops be used for this. It is already the preferred
-> interface to create vlan's, bond devices, and other virtual devices?
-> The one issue is that do the created VF's exist in kernel as devices or
-> only visible to guest?
+> According to him, an engineer at ASUS explained that some of their
+> BIOSes contain a bug that was added in an attempt to work around a
+> problem in early versions of Windows.  When the computer goes into S3
+> suspend, the BIOS tries to verify that the EHCI controllers were first
+> quiesced by the OS.  Nothing's wrong with this, but the BIOS does it
+> by checking that the PCI COMMAND registers contain 0 without checking
+> the controllers' power state.  If the register isn't 0, the BIOS
+> assumes the controller needs to be quiesced and tries to do so.  This
+> involves making various MMIO accesses to the controller, which don't
+> work very well if the controller is already in D3.  The end result is
+> a system hang or memory corruption.
+> 
+> Since the value in the PCI COMMAND register doesn't matter once the
+> controller has been suspended, and since the value will be restored
+> anyway when the controller is resumed, we can work around the BIOS bug
+> simply by setting the register to 0 during system suspend.  This patch
+> (as1590) does so and also reverts the second commit mentioned above,
+> which is now unnecessary.
+> 
+> In theory we could do this for every PCI device.  However to avoid
+> introducing new problems, the patch restricts itself to EHCI host
+> controllers.
+> 
+> Finally the affected systems can suspend with USB wakeup working
+> properly.
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Tested-by: Dâniel Fraga <fragabr@gmail.com>
+> Tested-by: Javier Marcet <jmarcet@gmail.com>
+> Tested-by: Andrey Rahmatullin <wrar@wrar.name>
+> Tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> Tested-by: Pavel Pisa <pisa@cmp.felk.cvut.cz>
+> CC: <stable@vger.kernel.org>
 
-I would say that rtnl_link_ops are network oriented and not appropriate for something like a storage controller or graphics device, which are two other common SR-IOV capable devices.
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-I think it should be oriented toward the PCIe interface and subsystems in the kernel.
-
-- Greg
-
+> 
+> ---
+> 
+>  drivers/pci/pci-driver.c |   12 ++++++++++++
+>  drivers/pci/pci.c        |    5 -----
+>  drivers/pci/quirks.c     |   26 --------------------------
+>  include/linux/pci.h      |    2 --
+>  4 files changed, 12 insertions(+), 33 deletions(-)
+> 
+> Index: usb-3.4/drivers/pci/pci.c
+> ==================================================================
+> --- usb-3.4.orig/drivers/pci/pci.c
+> +++ usb-3.4/drivers/pci/pci.c
+> @@ -1744,11 +1744,6 @@ int pci_prepare_to_sleep(struct pci_dev
+>  	if (target_state == PCI_POWER_ERROR)
+>  		return -EIO;
+>  
+> -	/* Some devices mustn't be in D3 during system sleep */
+> -	if (target_state == PCI_D3hot &&
+> -			(dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP))
+> -		return 0;
+> -
+>  	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
+>  
+>  	error = pci_set_power_state(dev, target_state);
+> Index: usb-3.4/drivers/pci/quirks.c
+> ===================================================================
+> --- usb-3.4.orig/drivers/pci/quirks.c
+> +++ usb-3.4/drivers/pci/quirks.c
+> @@ -2929,32 +2929,6 @@ static void __devinit disable_igfx_irq(s
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+>  
+> -/*
+> - * The Intel 6 Series/C200 Series chipset's EHCI controllers on many
+> - * ASUS motherboards will cause memory corruption or a system crash
+> - * if they are in D3 while the system is put into S3 sleep.
+> - */
+> -static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
+> -{
+> -	const char *sys_info;
+> -	static const char good_Asus_board[] = "P8Z68-V";
+> -
+> -	if (dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP)
+> -		return;
+> -	if (dev->subsystem_vendor != PCI_VENDOR_ID_ASUSTEK)
+> -		return;
+> -	sys_info = dmi_get_system_info(DMI_BOARD_NAME);
+> -	if (sys_info && memcmp(sys_info, good_Asus_board,
+> -			sizeof(good_Asus_board) - 1) == 0)
+> -		return;
+> -
+> -	dev_info(&dev->dev, "broken D3 during system sleep on ASUS\n");
+> -	dev->dev_flags |= PCI_DEV_FLAGS_NO_D3_DURING_SLEEP;
+> -	device_set_wakeup_capable(&dev->dev, false);
+> -}
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
+> -
+>  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
+>  			  struct pci_fixup *end)
+>  {
+> Index: usb-3.4/include/linux/pci.h
+> ===================================================================
+> --- usb-3.4.orig/include/linux/pci.h
+> +++ usb-3.4/include/linux/pci.h
+> @@ -176,8 +176,6 @@ enum pci_dev_flags {
+>  	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
+>  	/* Provide indication device is assigned by a Virtual Machine Manager */
+>  	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
+> -	/* Device causes system crash if in D3 during S3 sleep */
+> -	PCI_DEV_FLAGS_NO_D3_DURING_SLEEP = (__force pci_dev_flags_t) 8,
+>  };
+>  
+>  enum pci_irq_reroute_variant {
+> Index: usb-3.4/drivers/pci/pci-driver.c
+> ===================================================================
+> --- usb-3.4.orig/drivers/pci/pci-driver.c
+> +++ usb-3.4/drivers/pci/pci-driver.c
+> @@ -748,6 +748,18 @@ static int pci_pm_suspend_noirq(struct d
+>  
+>  	pci_pm_set_unknown_state(pci_dev);
+>  
+> +	/*
+> +	 * Some BIOSes from ASUS have a bug: If a USB EHCI host controller's
+> +	 * PCI COMMAND register isn't 0, the BIOS assumes that the controller
+> +	 * hasn't been quiesced and tries to turn it off.  If the controller
+> +	 * is already in D3, this can hang or cause memory corruption.
+> +	 *
+> +	 * Since the value of the COMMAND register doesn't matter once the
+> +	 * device has been suspended, we can safely set it to 0 here.
+> +	 */
+> +	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+> +		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+> +
+>  	return 0;
+>  }
+>  
+> 
+> 
+> 
 
