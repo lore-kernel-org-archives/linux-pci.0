@@ -1,52 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39198 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752928Ab2GPQPS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 12:15:18 -0400
-Received: by lbbgm6 with SMTP id gm6so8886849lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 09:15:16 -0700 (PDT)
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:56688 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754106Ab2GIVnS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 17:43:18 -0400
 MIME-Version: 1.0
-In-Reply-To: <201207152225.49154.rjw@sisk.pl>
-References: <5002BC55.3050107@gmx.de> <201207152225.49154.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 16 Jul 2012 10:14:56 -0600
-Message-ID: <CAErSpo6Ka6XBakVZH7ge-==XY86FrOHP_dqGoa+zAFNgnnnFTA@mail.gmail.com>
-Subject: Re: PCI ACPI/IRQ-routing broken on H77 chipset + Ivy Bridge (kernel
- 3.5-rc7 and earlier)
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: =?ISO-8859-1?Q?Malte_Schr=F6der?= <maltesch@gmx.de>,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120709203208.28178.94320.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
+	<20120709203208.28178.94320.stgit@bhelgaas.mtv.corp.google.com>
+Date: Mon, 9 Jul 2012 14:43:16 -0700
+Message-ID: <CAE9FiQXN00en27i3F16GL+HJoqVT=DenUWLCg0u4v-7vqcBTcQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: reimplement P2P bridge 1K I/O windows (Intel P64H2)
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Daniel Yeisley <dan.yeisley@unisys.com>,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: multipart/mixed; boundary=bcaec5015fe17056b904c46c80bc
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[CC +tglx]
+--bcaec5015fe17056b904c46c80bc
+Content-Type: text/plain; charset=ISO-8859-1
 
-On Sun, Jul 15, 2012 at 2:25 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> CC-ing linux-pci and Bjorn.
+On Mon, Jul 9, 2012 at 1:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> On Sunday, July 15, 2012, Malte Schröder wrote:
->> Hello,
->> this is yet another try to get someone to look at this ;)
->>
->> I can't get PCI-devices to work on my DH77KC mainboard. I tested this
->> using an AVM B1 ISDN card, a Fritz!PCI card and an old 3Com 905c NIC.
->> I attached some dumps in case it helps. The CPU is a Core i7 3770.
->>
->> PCI hardware is detected by the kernel, but it gives IRQ errors. Using
->> irqpoll allows the PCI card to somewhat work, but it is unreliable.
->>
->> There are some reports in Intel's support forums that also report
->> PCI-problems with this mainboard, but Intel doesn't seem to be
->> interested. So I hope this is something that is fixable on the kernel side.
->>
->> If there is more information needed, please let me know.
->>
->>
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Note that the bridge window assignment code, e.g., pbus_size_io(), should
+> pay attention to dev->io_window_1k, too, but I didn't fix that.
+
+Please check attached patch that will fix pbus_size_io.
+
+You may fold the patch in your patch, or could split your patch to
+two. First one
+only add io_window_1k, and second one will use io_window_1k. Then could put my
+patch between them.
+
+Thanks
+
+Yinghai
+
+--bcaec5015fe17056b904c46c80bc
+Content-Type: application/octet-stream; name="io_window_1k.patch"
+Content-Disposition: attachment; filename="io_window_1k.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h4g2r4jn0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IHVwZGF0ZSBwYnVzX3NpemVfaW8oKSB0byBzdXBwb3J0IGlv
+X3dpbmRvd18xawoKU28gaWYgY2hpbGRyZW4gZGV2aWNlIGFsaWdubWVudCBpcyBzbWFsbCB0aGFu
+IDFrLCB3ZSBjb3VsZCB1c2UgMWsgYXMgYnJpZGdlCmFsaWdubWVudC4KClNpZ25lZC1vZmYtYnk6
+IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAt
+YnVzLmMgfCAgIDIyICsrKysrKysrKysrKysrKysrLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxNyBp
+bnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3Bj
+aS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9z
+ZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC03MTcs
+MTAgKzcxNywxMyBAQCBzdGF0aWMgdm9pZCBwYnVzX3NpemVfaW8oc3RydWN0IHBjaV9idXMKIAlz
+dHJ1Y3QgcmVzb3VyY2UgKmJfcmVzID0gZmluZF9mcmVlX2J1c19yZXNvdXJjZShidXMsIElPUkVT
+T1VSQ0VfSU8pOwogCXVuc2lnbmVkIGxvbmcgc2l6ZSA9IDAsIHNpemUwID0gMCwgc2l6ZTEgPSAw
+OwogCXJlc291cmNlX3NpemVfdCBjaGlsZHJlbl9hZGRfc2l6ZSA9IDA7CisJcmVzb3VyY2Vfc2l6
+ZV90IG1pbl9hbGlnbiA9IDQwOTYsIGFsaWduOwogCiAJaWYgKCFiX3JlcykKICAJCXJldHVybjsK
+IAorCWlmIChidXMtPnNlbGYtPmlvX3dpbmRvd18xaykKKwkJbWluX2FsaWduID0gMTAyNDsKIAls
+aXN0X2Zvcl9lYWNoX2VudHJ5KGRldiwgJmJ1cy0+ZGV2aWNlcywgYnVzX2xpc3QpIHsKIAkJaW50
+IGk7CiAKQEAgLTczOCwxNyArNzQxLDI1IEBAIHN0YXRpYyB2b2lkIHBidXNfc2l6ZV9pbyhzdHJ1
+Y3QgcGNpX2J1cwogCQkJZWxzZQogCQkJCXNpemUxICs9IHJfc2l6ZTsKIAorCQkJYWxpZ24gPSBw
+Y2lfcmVzb3VyY2VfYWxpZ25tZW50KGRldiwgcik7CisJCQlpZiAoYWxpZ24gPiBtaW5fYWxpZ24p
+CisJCQkJbWluX2FsaWduID0gYWxpZ247CisKIAkJCWlmIChyZWFsbG9jX2hlYWQpCiAJCQkJY2hp
+bGRyZW5fYWRkX3NpemUgKz0gZ2V0X3Jlc19hZGRfc2l6ZShyZWFsbG9jX2hlYWQsIHIpOwogCQl9
+CiAJfQorCisJaWYgKG1pbl9hbGlnbiA+IDQwOTYpCisJCW1pbl9hbGlnbiA9IDQwOTY7CisKIAlz
+aXplMCA9IGNhbGN1bGF0ZV9pb3NpemUoc2l6ZSwgbWluX3NpemUsIHNpemUxLAotCQkJcmVzb3Vy
+Y2Vfc2l6ZShiX3JlcyksIDQwOTYpOworCQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGln
+bik7CiAJaWYgKGNoaWxkcmVuX2FkZF9zaXplID4gYWRkX3NpemUpCiAJCWFkZF9zaXplID0gY2hp
+bGRyZW5fYWRkX3NpemU7CiAJc2l6ZTEgPSAoIXJlYWxsb2NfaGVhZCB8fCAocmVhbGxvY19oZWFk
+ICYmICFhZGRfc2l6ZSkpID8gc2l6ZTAgOgogCQljYWxjdWxhdGVfaW9zaXplKHNpemUsIG1pbl9z
+aXplLCBhZGRfc2l6ZSArIHNpemUxLAotCQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIDQwOTYpOwor
+CQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGlnbik7CiAJaWYgKCFzaXplMCAmJiAhc2l6
+ZTEpIHsKIAkJaWYgKGJfcmVzLT5zdGFydCB8fCBiX3Jlcy0+ZW5kKQogCQkJZGV2X2luZm8oJmJ1
+cy0+c2VsZi0+ZGV2LCAiZGlzYWJsaW5nIGJyaWRnZSB3aW5kb3cgIgpAQCAtNzU3LDEyICs3Njgs
+MTMgQEAgc3RhdGljIHZvaWQgcGJ1c19zaXplX2lvKHN0cnVjdCBwY2lfYnVzCiAJCWJfcmVzLT5m
+bGFncyA9IDA7CiAJCXJldHVybjsKIAl9Ci0JLyogQWxpZ25tZW50IG9mIHRoZSBJTyB3aW5kb3cg
+aXMgYWx3YXlzIDRLICovCi0JYl9yZXMtPnN0YXJ0ID0gNDA5NjsKKwkvKiBBbGlnbm1lbnQgb2Yg
+dGhlIElPIHdpbmRvdyBzaG91bGQgYmUgNEssIGJ1dCBjb3VsZCBiZSAxSyBzb21ldGltZXMgKi8K
+KwliX3Jlcy0+c3RhcnQgPSBtaW5fYWxpZ247CiAJYl9yZXMtPmVuZCA9IGJfcmVzLT5zdGFydCAr
+IHNpemUwIC0gMTsKIAliX3Jlcy0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9TVEFSVEFMSUdOOwogCWlm
+IChzaXplMSA+IHNpemUwICYmIHJlYWxsb2NfaGVhZCkgewotCQlhZGRfdG9fbGlzdChyZWFsbG9j
+X2hlYWQsIGJ1cy0+c2VsZiwgYl9yZXMsIHNpemUxLXNpemUwLCA0MDk2KTsKKwkJYWRkX3RvX2xp
+c3QocmVhbGxvY19oZWFkLCBidXMtPnNlbGYsIGJfcmVzLCBzaXplMS1zaXplMCwKKwkJCQkgbWlu
+X2FsaWduKTsKIAkJZGV2X3ByaW50ayhLRVJOX0RFQlVHLCAmYnVzLT5zZWxmLT5kZXYsICJicmlk
+Z2Ugd2luZG93ICIKIAkJCQkgIiVwUiB0byAlcFIgYWRkX3NpemUgJWx4XG4iLCBiX3JlcywKIAkJ
+CQkgJmJ1cy0+YnVzbl9yZXMsIHNpemUxLXNpemUwKTsK
+--bcaec5015fe17056b904c46c80bc--
