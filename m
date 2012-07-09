@@ -1,48 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:37234 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037Ab2GJTas (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 15:30:48 -0400
-Received: by vbbff1 with SMTP id ff1so257803vbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 12:30:47 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:48863 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348Ab2GIKIn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 06:08:43 -0400
+Message-ID: <4FFAACF8.8040801@huawei.com>
+Date: Mon, 9 Jul 2012 18:05:44 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-Date: Tue, 10 Jul 2012 12:30:47 -0700
-Message-ID: <CAE9FiQXK=ByAkjVU53ftMYchsGSKD-yCLUpCLNZoZA_7=bzWOw@mail.gmail.com>
-Subject: Re: [PATCH 0/5] PCI: hotplug related misc patches
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+CC: Don Dutile <ddutile@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
+ ports without native PCIe hotplug capability
+References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com> <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com> <4FF34CEF.3090400@redhat.com> <CAErSpo7=BzPX87qgKS_xkJg4o8BGDan-o7D9NqRiqKvH0kLjfQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7=BzPX87qgKS_xkJg4o8BGDan-o7D9NqRiqKvH0kLjfQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 23, 2012 at 12:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> minor changes that should be safe for 3.6
->
-> could get from
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-next
->
-> Yinghai Lu (5):
->   PCI, acpiphp: remove not used res_lock
->   pciehp: Don't enable presence notification while surprise removal is
->     not supported.
->   PCI, acpiphp: Merge acpiphp_debug and debug
->   PCI, acpiphp: add is_hotplug_bridge detection
->   PCI: add root bus children dev's res to fail list
->
->  drivers/pci/hotplug/acpiphp.h      |    4 +---
->  drivers/pci/hotplug/acpiphp_core.c |    7 ++-----
->  drivers/pci/hotplug/acpiphp_glue.c |   30 ++++++++++++++++++++++++++----
->  drivers/pci/hotplug/pciehp_hpc.c   |    5 +++--
->  drivers/pci/setup-bus.c            |    2 +-
->  5 files changed, 33 insertions(+), 15 deletions(-)
+Hi Bjorn and Yinghai,
+	What's the policy to export a symbol by EXPORT_SYMBOL()
+or EXPORT_SYMBOL_GPL()? I know the legal difference, but don't
+know when I should mark a symbol as GPL.
+	Thanks!
 
-can you put those 5 patches into pci/next?
 
-Those should be safe for v3.6 merging window.
-
-Thanks
-
-Yinghai
