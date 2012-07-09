@@ -1,53 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:41416 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755954Ab2GKGJd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 02:09:33 -0400
-Received: by vcbf11 with SMTP id f11so530237vcb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 23:09:32 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 6/8] x86/PCI: Move final fixup quirks from __init to
+	__devinit
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	yinghai@kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:36:33 -0600
+Message-ID: <20120709213633.8975.74128.stgit@amt.stowe>
+In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
+References: <20120709213554.8975.60552.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <OF259177D8.B20ED592-ONC1257A38.00167C85-C1257A38.0016C890@transmode.se>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
-	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
-	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>
-	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-	<OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se>
-	<CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
-	<OF259177D8.B20ED592-ONC1257A38.00167C85-C1257A38.0016C890@transmode.se>
-Date: Tue, 10 Jul 2012 23:09:32 -0700
-Message-ID: <CAE9FiQUq-ZSiAK_wfTe=s=dpdYDsQe7pOWF_iMcsZg2dUtLRUg@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joakim Tjernlund <joakim.tjernlund@transmode.se>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 9:08 PM, Joakim Tjernlund
-<joakim.tjernlund@transmode.se> wrote:
->> please check link disable patch at
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-pci-pcie-link
->
-> Thanks, that was really quick. However, the patches does not apply on my
-> 3.4 kernel and it looks non trivial to me fixup.
->
-> Could you create (even quick and dirty) patches on top of 3.4?
+The PCI subsystem's final fixups are executed once during boot, after the
+pci-device is found.  As long as the system does not support hot-plug,
+specifying __init is fine.
 
-you can just use that branch instead.
+With hot-plug, either physically based hot-plug events or pseudo hot-plug
+events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
+PCI bus during run time and have it rediscovered which will require the
+call of the fixups again in order for the device to function properly.
 
-mkdir linux-2.6 || exit -1
-cd linux-2.6
+This patch prepares specific quirk(s) for use with hot-plug events.
 
-git init-db
-# Add Linus's tree as a remote
-git remote add linus
-git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-git remote add yh
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+ arch/x86/kernel/quirks.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-git remote update
+diff --git a/arch/x86/kernel/quirks.c b/arch/x86/kernel/quirks.c
+index 03920a1..1b27de5 100644
+--- a/arch/x86/kernel/quirks.c
++++ b/arch/x86/kernel/quirks.c
+@@ -512,7 +512,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 
+ #if defined(CONFIG_PCI) && defined(CONFIG_NUMA)
+ /* Set correct numa_node information for AMD NB functions */
+-static void __init quirk_amd_nb_node(struct pci_dev *dev)
++static void __devinit quirk_amd_nb_node(struct pci_dev *dev)
+ {
+ 	struct pci_dev *nb_ht;
+ 	unsigned int devfn;
 
-git checkout -b yh_2012_07_10 yh/for-pci-pcie-link
