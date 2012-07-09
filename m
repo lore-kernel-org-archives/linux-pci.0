@@ -1,49 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53058 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756553Ab2GKAIx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 20:08:53 -0400
-Received: by pbbrp8 with SMTP id rp8so1047445pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 17:08:53 -0700 (PDT)
-Date: Tue, 10 Jul 2012 17:08:50 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-Message-ID: <20120711000850.GD18128@kroah.com>
-References: <201204292244.16467.rjw@sisk.pl>
+Received: from mail-wi0-f202.google.com ([209.85.212.202]:60114 "EHLO
+	mail-wi0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab2GISUU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 14:20:20 -0400
+Received: by wibhr14 with SMTP id hr14so173510wib.1
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 11:20:19 -0700 (PDT)
+Subject: [PATCH 1/2] PCI: leave MEM and IO decoding disabled during 64-bit BAR
+	sizing, too
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Robert Hancock <hancockrwd@gmail.com>
+Date: Mon, 09 Jul 2012 12:20:18 -0600
+Message-ID: <20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201204292244.16467.rjw@sisk.pl>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 29, 2012 at 10:44:16PM +0200, Rafael J. Wysocki wrote:
-> From: Oleksij Rempel <bug-track@fisher-privat.net>
-> 
-> This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> more closely and fixes suspend bug found on ASUS Zenbook UX31E.
-> 
-> Some OEM use _SxD fileds do blacklist brocken Dx states.
-> If _SxD/_SxW return values are check before suspend as appropriate,
-> some nasty suspend/resume issues may be avoided.
-> 
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
-> 
-> Bjorn, Len,
-> 
-> This is -stable material and therefore v3.4 as well, IMO.  Please let me
-> know if one of you can take it or whether you want me to handle it all the
-> way to Linus.
+After 253d2e5498, we disable MEM and IO decoding for most devices while we
+size 32-bit BARs.  However, we restore the original COMMAND register before
+we size the upper 32 bits of 64-bit BARs, so we can still cause a conflict.
 
-What ever hapened to this patch?
+This patch waits to restore the original COMMAND register until we're
+completely finished sizing the BAR.
 
-greg k-h
+Reference: https://lkml.org/lkml/2007/8/25/154
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 658ac97..66b3a6f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -152,9 +152,6 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	pci_read_config_dword(dev, pos, &sz);
+ 	pci_write_config_dword(dev, pos, l);
+ 
+-	if (!dev->mmio_always_on)
+-		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+-
+ 	/*
+ 	 * All bits set in sz means the device isn't working properly.
+ 	 * If the BAR isn't implemented, all bits must be 0.  If it's a
+@@ -239,6 +236,9 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	}
+ 
+  out:
++	if (!dev->mmio_always_on)
++		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
++
+ 	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
+  fail:
+ 	res->flags = 0;
+
