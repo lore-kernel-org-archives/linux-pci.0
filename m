@@ -1,64 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:51028 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab2G3Quf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2012 12:50:35 -0400
-Received: by lbbgm6 with SMTP id gm6so3605584lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 30 Jul 2012 09:50:33 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 2/8] PCI: release temporary reference in
+	__nv_msi_ht_cap_quirk()
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	yinghai@kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:36:08 -0600
+Message-ID: <20120709213608.8975.90022.stgit@amt.stowe>
+In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
+References: <20120709213554.8975.60552.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <1343607994-32415-2-git-send-email-jon.mason@intel.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com> <1343607994-32415-2-git-send-email-jon.mason@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 30 Jul 2012 10:50:13 -0600
-Message-ID: <CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 29, 2012 at 6:26 PM, Jon Mason <jon.mason@intel.com> wrote:
-> A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
-> connecting 2 systems, providing electrical isolation between the two subsystems.
-> A non-transparent bridge is functionally similar to a transparent bridge except
-> that both sides of the bridge have their own independent address domains.  The
-> host on one side of the bridge will not have the visibility of the complete
-> memory or I/O space on the other side of the bridge.  To communicate across the
-> non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
-> the local system.  Writes to these apertures are mirrored to memory on the
-> remote system.  Communications can also occur through the use of doorbell
-> registers that initiate interrupts to the alternate domain, and scratch-pad
-> registers accessible from both sides.
->
-> The NTB device driver is needed to configure these memory windows, doorbell, and
-> scratch-pad registers as well as use them in such a way as they can be turned
-> into a viable communication channel to the remote system.  ntb_hw.[ch]
-> determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
-> the underlying hardware to provide access and a common interface to the doorbell
-> registers, scratch pads, and memory windows.  These hardware interfaces are
-> exported so that other, non-mainlined kernel drivers can access these.
-> ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
-> communication channel(s) and provide a reliable way of transferring data from
-> one side to the other, which it then exports so that "client" drivers can access
-> them.  These client drivers are used to provide a standard kernel interface
-> (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
-> system to the other in a standard way.
->
-> Signed-off-by: Jon Mason <jon.mason@intel.com>
-> ---
->  MAINTAINERS                 |    6 +
->  drivers/Kconfig             |    2 +
->  drivers/Makefile            |    1 +
->  drivers/ntb/Kconfig         |   13 +
->  drivers/ntb/Makefile        |    3 +
->  drivers/ntb/ntb_hw.c        | 1178 ++++++++++++++++++++++++++++++++++++
->  drivers/ntb/ntb_hw.h        |  206 +++++++
->  drivers/ntb/ntb_regs.h      |  150 +++++
->  drivers/ntb/ntb_transport.c | 1387 +++++++++++++++++++++++++++++++++++++++++++
->  include/linux/ntb.h         |   92 +++
+__nv_msi_ht_cap_quirk() acquires a temporary reference via
+'pci_get_bus_and_slot()' that is never released.
 
-Where will drivers for non-Intel NTBs fit in this hierarchy?  It seems
-a bit presumptuous to claim the generic "ntb" names just for Intel
-devices.
+This patch releases the temporary reference.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ drivers/pci/quirks.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0f5ca86..8b2d553 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2541,15 +2541,18 @@ static void __devinit __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
+ 			else
+ 				nv_ht_enable_msi_mapping(dev);
+ 		}
+-		return;
++		goto out;
+ 	}
+ 
+ 	/* HT MSI is not enabled */
+ 	if (found == 1)
+-		return;
++		goto out;
+ 
+ 	/* Host bridge is not to HT, disable HT MSI mapping on this device */
+ 	ht_disable_msi_mapping(dev);
++
++out:
++	pci_dev_put(host_bridge);
+ }
+ 
+ static void __devinit nv_msi_ht_cap_quirk_all(struct pci_dev *dev)
+
