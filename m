@@ -1,53 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:51439 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917Ab2GIR0l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 13:26:41 -0400
-Received: by lbbgm6 with SMTP id gm6so20470563lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 10:26:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVDW23eLzjNk6ibGq+8KAG9kC2=7g-Eh6p0k3GrxG0LmQ@mail.gmail.com>
-References: <Pine.LNX.4.64.1205311412210.11510@info> <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
- <Pine.LNX.4.64.1206010915580.26561@info> <4FC988CF.5030602@gmail.com>
- <20120706180635.GB17196@google.com> <Pine.LNX.4.64.1207061631270.26974@info>
- <CAE9FiQV5DHZoeXf-bSfuYGUSzmwtdVqGNfhHh7LJ3LBax++Rig@mail.gmail.com>
- <Pine.LNX.4.64.1207070017440.13732@info> <CAE9FiQVDW23eLzjNk6ibGq+8KAG9kC2=7g-Eh6p0k3GrxG0LmQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 2/2] PCI: disable MEM decoding while updating 64-bit MEM BARs
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Jul 2012 11:26:19 -0600
-Message-ID: <CAErSpo6F6V3pzJTMy1Ay1wr8xZCMjgWD78RUDM7yb=DgGNmSUg@mail.gmail.com>
-Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic
- Toughbook S10
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bill Unruh <unruh@physics.ubc.ca>, Jiang Liu <liuj97@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bugzilla-daemon@bugzilla.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Robert Hancock <hancockrwd@gmail.com>
+Date: Mon, 09 Jul 2012 12:20:23 -0600
+Message-ID: <20120709182023.18165.95880.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> looks like they do not bios update for S10 yet.
->
-> http://www.panasonic.com/business/toughbook/computer-support-bios.asp#CF-U1
->
-> maybe you can try to email or call their support.
+When we update 64-bit BARs, we have to perform two config writes.  Between
+the writes, the half-written BAR value could match a MEM access intended
+for another device.  This could result in corruption of this device (for
+writes) or an unexpected response machine check (for reads).
 
-Please stop suggesting a BIOS upgrade.  The BIOS is totally out of our
-control, and if the current BIOS works with Windows but not Linux,
-99.99% of users will just run Windows.  Those users will just give up
-on Linux, and we'll never even hear about it.
+To prevent this, disable MEM decoding while updating such BARs.  This uses
+the same safety test as 253d2e5498, which disables both MEM and IO while
+sizing BARs, namely, we don't disable decoding for host bridge devices.
 
-Fortunately, Bill is a sophisticated user who cared enough to report
-the issue, so we have a chance to do something about it.  What we need
-is for Linux to deal with this situation better, and that *IS* in our
-control.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/setup-res.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-For example, we could detect the BAR being read-only when we size it.
-We could use the read-only address to derive the worst-case BAR size
-(32K in this case).  We could mark it as IORESOURCE_PCI_FIXED and use
-that to avoid trying to move it.  We could log a message to this
-effect so the next time it will take 10 minutes instead of 6 weeks to
-diagnose the problem.
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index eea85da..1a0e60e 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -30,6 +30,8 @@
+ void pci_update_resource(struct pci_dev *dev, int resno)
+ {
+ 	struct pci_bus_region region;
++	bool disable;
++	u16 cmd;
+ 	u32 new, check, mask;
+ 	int reg;
+ 	enum pci_bar_type type;
+@@ -67,6 +69,18 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 		new |= PCI_ROM_ADDRESS_ENABLE;
+ 	}
+ 
++	/*
++	 * We can't update a 64-bit BAR atomically, so when possible,
++	 * disable decoding so that a half-updated BAR won't conflict
++	 * with another device.
++	 */
++	disable = (res->flags & IORESOURCE_MEM_64) && !dev->mmio_always_on;
++	if (disable) {
++		pci_read_config_word(dev, PCI_COMMAND, &cmd);
++		pci_write_config_word(dev, PCI_COMMAND,
++				      cmd & ~PCI_COMMAND_MEMORY);
++	}
++
+ 	pci_write_config_dword(dev, reg, new);
+ 	pci_read_config_dword(dev, reg, &check);
+ 
+@@ -84,6 +98,10 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 			       "(high %#08x != %#08x)\n", resno, new, check);
+ 		}
+ 	}
++
++	if (disable)
++		pci_write_config_word(dev, PCI_COMMAND, cmd);
++
+ 	res->flags &= ~IORESOURCE_UNSET;
+ 	dev_dbg(&dev->dev, "BAR %d: set to %pR (PCI address [%#llx-%#llx])\n",
+ 		resno, res, (unsigned long long)region.start,
 
-The end result for Bill will be the same (an unexpected message while
-booting), but we can at least make the message intelligible rather
-than "BAR 0: error updating (0xdfa00004 != 0xfed98004)".
