@@ -1,46 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:37285 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755476Ab2GKSt1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 14:49:27 -0400
-Received: by vbbff1 with SMTP id ff1so982752vbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 11:49:27 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH -v2 8/8] PCI: Integrate 'pci_fixup_final' quirks into hot-plug
+	paths
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
+	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	yinghai@kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 09 Jul 2012 15:36:46 -0600
+Message-ID: <20120709213645.8975.9613.stgit@amt.stowe>
+In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
+References: <20120709213554.8975.60552.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
-	<20120711162120.GA17988@google.com>
-	<CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
-	<CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
-Date: Wed, 11 Jul 2012 11:49:26 -0700
-Message-ID: <CAE9FiQVbaYszsqq6WYENQu18a52m2fD9svtdFV2y4DeDnYWJcA@mail.gmail.com>
-Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 11:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> What's the connection with HP_SUPR_RM()?  Is it just a coincidence
-> that chipsets that set the "Hot-Plug Surprise" bit don't have this
-> problem with the Presence Detect State bit?
->
-> Using HP_SUPR_RM() seems like a totally bogus way to work around a
-> presence detect issue.
+PCI's final quirks (pci_fixup_final) are currently invoked by
+pci_apply_final_quirk() which traverses the platform's list of PCI
+devices.  The calling mechanism limits the quirk invocations to a single
+instance during boot.  As such, hot-plugable devices do not have their
+associated final quirks called upon hot-plug events.
 
-then we should blame the spec.
+This series implements a interim solution[1] to integrate pci_fixup_final
+quirks into the various hot-plug event paths.
 
-and if you do the above changing, when plug the card into system,
-kernel will bring that card online automatically without press
-attention button.
-that will be big change.
+As I intend for the global variable introduced by this patch to be
+temporary I purposely chose not to include its 'extern' declaration within
+a header file (i.e. include/linux/pci.h).
 
-Thanks
 
-Yinghai
+[1] I intended to come up with a single, uniform, solution that would
+satisfy both the boot path and the various hot-plug event paths with
+respect to final quirks.  From an architectural perspective, the proper
+placement for the final quirks is somewhere just prior to, or within, the
+device_add path.
+
+I originally started with that approach but eventually realized that there
+are issues with moving the quirks into the device_add path with respect to
+the boot path.  Currently, the boot path scans the PCI devices, adds the
+devices, assigns resources, and then call the final quirks whereas the
+hot-plug paths scan, assign resources, and then add the devices which is
+better sequencing with respect to the assignment of resources and the
+addition of devices.
+
+All of this suggests that we should change PCI device setup in the boot
+path to be more like hot-plug: scan, assign resources, (final fixups),
+then add.  While I think that is the correct approach, and something that
+we should be addressing, it will require a lot of work.  So until that
+occurs, this series should serve as a stop-gap solution for the interim by
+keeping the current boot path sequencing in place and then adding the
+final quirk processing into the device_add path for hot-plug events via a
+(temporary) global variable qualifier.
+
+When the boot path's PCI device setup is addressed we should end up with a
+single, uniform, device_add based solution for applying final quirks
+by:
+  o  removing 'fs_initcall_sync(pci_apply_final_quirks);',
+  o  removing the global variable 'pci_fixup_final_inited' and all
+     of its usages,
+  o  renaming, and moving, the 'pci_cache_line_size' related code
+     currently embedded in 'pci_apply_final_quirks()'.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ drivers/pci/bus.c    |    4 ++++
+ drivers/pci/quirks.c |   18 ++++++++++++++++++
+ 2 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4ce5ef2..b511bd4 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -164,6 +164,10 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ int pci_bus_add_device(struct pci_dev *dev)
+ {
+ 	int retval;
++	extern bool pci_fixup_final_inited;
++
++	if (pci_fixup_final_inited)
++		pci_fixup_device(pci_fixup_final, dev);
+ 	retval = device_add(&dev->dev);
+ 	if (retval)
+ 		return retval;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d19e522..1850eb5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3054,6 +3054,22 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_fixup_device);
+ 
++
++/*
++ * The global variable 'pci_fixup_final_inited' is being used as a interim
++ * solution for calling the final quirks only during hot-plug events (not
++ * during boot processing).
++ *
++ * When the boot path's PCI device setup sequencing is addressed, we can
++ * remove the instance, and usages of, 'pci_fixup_final_inited' along with
++ * removing 'fs_initcall_sync(pci_apply_final_quirks);' and end up with a
++ * single, uniform, solution that satisfies both the boot path and the
++ * various hot-plug event paths.
++ *
++ * ToDo: Remove 'pci_fixup_final_inited'
++ */
++bool pci_fixup_final_inited;
++
+ static int __init pci_apply_final_quirks(void)
+ {
+ 	struct pci_dev *dev = NULL;
+@@ -3084,6 +3100,8 @@ static int __init pci_apply_final_quirks(void)
+ 			pci_cache_line_size = pci_dfl_cache_line_size;
+ 		}
+ 	}
++	pci_fixup_final_inited = 1;
++
+ 	if (!pci_cache_line_size) {
+ 		printk(KERN_DEBUG "PCI: CLS %u bytes, default %u\n",
+ 		       cls << 2, pci_dfl_cache_line_size << 2);
+
