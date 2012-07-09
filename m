@@ -1,75 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 7/8] PCI: Move final fixup quirks from __init to __devinit
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:36:39 -0600
-Message-ID: <20120709213639.8975.9566.stgit@amt.stowe>
-In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
-References: <20120709213554.8975.60552.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:65360 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751904Ab2GIUS0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 Jul 2012 16:18:26 -0400
+Date: Mon, 9 Jul 2012 13:18:18 -0700
+From: Jacob Pan <jacob.jun.pan@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH 1/2] PCI: leave MEM and IO decoding disabled during
+ 64-bit BAR sizing, too
+Message-ID: <20120709131818.72799bcb@chromoly>
+In-Reply-To: <20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+	<20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem's final fixups are executed once during boot, after the
-pci-device is found.  As long as the system does not support hot-plug,
-specifying __init is fine.
+On Mon, 09 Jul 2012 12:20:18 -0600
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-With hot-plug, either physically based hot-plug events or pseudo hot-plug
-events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-PCI bus during run time and have it rediscovered which will require the
-call of the fixups again in order for the device to function properly.
+> After 253d2e5498, we disable MEM and IO decoding for most devices
+> while we size 32-bit BARs.  However, we restore the original COMMAND
+> register before we size the upper 32 bits of 64-bit BARs, so we can
+> still cause a conflict.
+> 
+> This patch waits to restore the original COMMAND register until we're
+> completely finished sizing the BAR.
+agreed.
 
-This patch prepares specific quirk(s) for use with hot-plug events.
+Thanks,
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
-
- drivers/pci/quirks.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8014091..d19e522 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -253,7 +253,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA,	PCI_DEVICE_ID_VIA_82C576,	quirk_vsfx)
-  *	workaround applied too
-  *	[Info kindly provided by ALi]
-  */	
--static void __init quirk_alimagik(struct pci_dev *dev)
-+static void __devinit quirk_alimagik(struct pci_dev *dev)
- {
- 	if ((pci_pci_problems&PCIPCI_ALIMAGIK)==0) {
- 		dev_info(&dev->dev, "Limiting direct PCI/PCI transfers\n");
-@@ -789,7 +789,7 @@ static void __devinit quirk_amd_ioapic(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD,	PCI_DEVICE_ID_AMD_VIPER_7410,	quirk_amd_ioapic);
- 
--static void __init quirk_ioapic_rmw(struct pci_dev *dev)
-+static void __devinit quirk_ioapic_rmw(struct pci_dev *dev)
- {
- 	if (dev->devfn == 0 && dev->bus->number == 0)
- 		sis_apic_bug = 1;
-@@ -801,7 +801,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI,	PCI_ANY_ID,			quirk_ioapic_rmw);
-  * Some settings of MMRBC can lead to data corruption so block changes.
-  * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
-  */
--static void __init quirk_amd_8131_mmrbc(struct pci_dev *dev)
-+static void __devinit quirk_amd_8131_mmrbc(struct pci_dev *dev)
- {
- 	if (dev->subordinate && dev->revision <= 0x12) {
- 		dev_info(&dev->dev, "AMD8131 rev %x detected; "
-@@ -2169,7 +2169,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_PLX, 0x8624, quirk_tile_plx_gen1);
-  * aware of it.  Instead of setting the flag on all busses in the
-  * machine, simply disable MSI globally.
-  */
--static void __init quirk_disable_all_msi(struct pci_dev *dev)
-+static void __devinit quirk_disable_all_msi(struct pci_dev *dev)
- {
- 	pci_no_msi();
- 	dev_warn(&dev->dev, "MSI quirk detected; MSI disabled\n");
-
+Jacob
