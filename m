@@ -1,78 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15062 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751985Ab2GTUQF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 Jul 2012 16:16:05 -0400
-Message-ID: <5009BC7D.9000608@redhat.com>
-Date: Fri, 20 Jul 2012 16:15:57 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:48741 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755112Ab2GJXkP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 19:40:15 -0400
+Received: by vbbff1 with SMTP id ff1so397302vbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 16:40:14 -0700 (PDT)
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: Chris Friesen <chris.friesen@genband.com>,
-	David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
-	gregory.v.rose@intel.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: New commands to configure IOV features
-References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>			<5005D45D.1040302@genband.com>		 <20120717.141153.46613285253481776.davem@davemloft.net>		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>	 <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAErSpo40FOgXrMJBv9TRHtd8hX6muGLMipf8dq+h7oPOzD35Ug@mail.gmail.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
+	<CAE9FiQVX+CnRchXNe8PF8fz7hbc=UTzP8nCxEAzAzrJTeZk-Tg@mail.gmail.com>
+	<CAErSpo40FOgXrMJBv9TRHtd8hX6muGLMipf8dq+h7oPOzD35Ug@mail.gmail.com>
+Date: Tue, 10 Jul 2012 16:40:14 -0700
+Message-ID: <CAE9FiQV0NM+9pQVUETSnQg=2qcMswCYMjLEguYnaaMjyjn+teQ@mail.gmail.com>
+Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
+ surprise removal is not supported.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/20/2012 04:01 PM, Ben Hutchings wrote:
-> On Fri, 2012-07-20 at 13:29 -0600, Chris Friesen wrote:
->> On 07/20/2012 11:42 AM, Ben Hutchings wrote:
->>>
->>> The ethtool API is typically used for net device operations that can be
->>> largely devolved to individual drivers, and which the network stack can
->>> mostly ignore (though offload features are an historical exception to
->>> this).  It started with Ethernet link settings, but many operations are
->>> applicable (and implemented by) other types of network device.
+On Tue, Jul 10, 2012 at 4:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jul 10, 2012 at 5:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Interesting, that means after card is plugged in, we don't need to
+>> press attention button to bring
+>> it online.
 >>
->> That (potentially) accounts for all network devices, but it leaves all
->> the other devices that could export virtual functions.
->>
->> Why should I need to use a different API to enable virtual functions on
->> my network device and my storage controller?
+>> And other oses like windows and solaris do need to press the button
+>> like current linux doing.
 >
-> Indeed; I was merely making the point that it would be quite valid to
-> use that means for setting VF network parameters for any network device
-> that supports IOV.
+> The attention button is apparently optional, depending on the form factor.
 >
-Yes, I read Ben's reply as supporting the proposition of VF enablement
-at the PCI level.
+> I would guess that on a platform with no attention button and Hot-Plug
+> Surprise == 0, Linux would be unable to do a hot-add.
 
->> (And why should "ethtool" or "ip" care that it's a virtual function?)
->
-> VFs may be assigned to a guest which is not fully trusted by the
-> hypervisor or privileged domain.  (This can sometimes be true for PFs
-> too, depending on the capabilities of the hypervisor and guest OS.)
-> Some configuration may therefore need to be done via a trusted PF.
->
-Correct!  The security domain (for KVM) is the host, thus, the host
-assignes VF attributes *before* they are given to the guest.... The guest
-is just a consumer, at least that's been my experience with VF devices to date,
-but I could see how an improper VF design could allow untrusted/guest
-(ethtool/netlink) ops on the VF.
-
->> What Don and I are suggesting is that the concept of virtual functions
->> is a PCI thing, so it should be dealt with at the PCI layer.  Regardless
->> of the type of device the export of virtual functions is conceptually
->> the same thing, so it should use the same API.
->>
->> Once the device exists, then domain-specific APIs would be used to
->> configure it the same way that they would configure a physical device.
->
-> To an extent, but not entirely.
->
-> Currently, the assigned MAC address and (optional) VLAN tag for each
-> networking VF are configured via the PF net device (though this is done
-> though the rtnetlink API rather than ethtool).
-Yes, through the PF, which is suppose to remain in the trusted host/hypervisor
-domain.  (Do a 'man ip' on RHEL6 and look at 'ip link set'  where it then mentions
-the parameter 'vf'.).
-
->
-> Ben.
->
-
+yes.
