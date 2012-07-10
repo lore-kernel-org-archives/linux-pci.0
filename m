@@ -1,65 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:64964 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595Ab2GZTz1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 15:55:27 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 02/10] ARM: pci: Keep pci_common_init() around after init
-Date: Thu, 26 Jul 2012 21:55:04 +0200
-Message-Id: <1343332512-28762-3-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH 07/14] hotplug/PCI: use PCIe cap access functions to simplify implementation
+Date: Tue, 10 Jul 2012 23:54:08 +0800
+Message-Id: <1341935655-5381-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using deferred driver probing, PCI host controller drivers may
-actually require this function after the init stage.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Use PCIe cap access functions to simplify pcihp_slot.c
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
-Changes in v3:
-- none
+ drivers/pci/hotplug/pcihp_slot.c |   17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-Changes in v2:
-- use __devinit annotations
-
- arch/arm/kernel/bios32.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 70dabb9..5c3dd59 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -456,7 +456,7 @@ static int __init pcibios_init_resources(int busnr, struct pci_sys_data *sys)
- 	return 0;
- }
+diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+index 8c05a18..08ca019 100644
+--- a/drivers/pci/hotplug/pcihp_slot.c
++++ b/drivers/pci/hotplug/pcihp_slot.c
+@@ -103,8 +103,7 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 		return;
  
--static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
-+static void __devinit pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- {
- 	struct pci_sys_data *sys = NULL;
- 	int ret;
-@@ -504,7 +504,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 	/* Find PCI Express capability */
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_is_pcie(dev))
+ 		return;
+ 
+ 	if (hpp->revision > 1) {
+@@ -114,16 +113,18 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
  	}
- }
  
--void __init pci_common_init(struct hw_pci *hw)
-+void __devinit pci_common_init(struct hw_pci *hw)
- {
- 	struct pci_sys_data *sys;
- 	LIST_HEAD(head);
+ 	/* Initialize Device Control Register */
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
++	if (pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &reg16))
++		return;
+ 	reg16 = (reg16 & hpp->pci_exp_devctl_and) | hpp->pci_exp_devctl_or;
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
++	pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, reg16);
+ 
+ 	/* Initialize Link Control Register */
+ 	if (dev->subordinate) {
+-		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &reg16);
+-		reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
+-			| hpp->pci_exp_lnkctl_or;
+-		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, reg16);
++		if (pci_pcie_cap_read_word(dev, PCI_EXP_LNKCTL, &reg16)) {
++			reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
++				| hpp->pci_exp_lnkctl_or;
++			pci_pcie_cap_write_word(dev, PCI_EXP_LNKCTL, reg16);
++		}
+ 	}
+ 
+ 	/* Find Advanced Error Reporting Enhanced Capability */
 -- 
-1.7.11.2
+1.7.9.5
 
