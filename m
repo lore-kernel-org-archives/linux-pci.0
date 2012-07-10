@@ -7,55 +7,102 @@ Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 29/32] PCI/radeon: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:41:14 +0800
-Message-Id: <1343148077-25941-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
-References: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
+Subject: [RFC PATCH 13/14] r8169/PCI: use PCIe cap access functions to simplify implementation
+Date: Tue, 10 Jul 2012 23:54:14 +0800
+Message-Id: <1341935655-5381-14-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 From: Jiang Liu <jiang.liu@huawei.com>
 
-Use PCIe capabilities access functions to simplify radeon driver's
-implementation.
+Use PCIe cap access functions to simplify r8169 driver implementation
 
 Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/gpu/drm/radeon/evergreen.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/ethernet/realtek/r8169.c |   38 +++++++++++-----------------------
+ 1 file changed, 12 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-index 01550d0..d7a1f95 100644
---- a/drivers/gpu/drm/radeon/evergreen.c
-+++ b/drivers/gpu/drm/radeon/evergreen.c
-@@ -77,13 +77,12 @@ void evergreen_tiling_fields(unsigned tiling_flags, unsigned *bankw,
- void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index 9757ce3..c9a7146 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -807,14 +807,11 @@ static void rtl_unlock_work(struct rtl8169_private *tp)
+ 
+ static void rtl_tx_performance_tweak(struct pci_dev *pdev, u16 force)
  {
- 	u16 ctl, v;
--	int cap, err;
-+	int err;
+-	int cap = pci_pcie_cap(pdev);
++	u16 ctl;
  
--	cap = pci_pcie_cap(rdev->pdev);
--	if (!cap)
-+	if (!pci_is_pcie(rdev->pdev))
- 		return;
- 
--	err = pci_read_config_word(rdev->pdev, cap + PCI_EXP_DEVCTL, &ctl);
-+	err = pci_pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
- 	if (err)
- 		return;
- 
-@@ -95,7 +94,7 @@ void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
- 	if ((v == 0) || (v == 6) || (v == 7)) {
- 		ctl &= ~PCI_EXP_DEVCTL_READRQ;
- 		ctl |= (2 << 12);
--		pci_write_config_word(rdev->pdev, cap + PCI_EXP_DEVCTL, ctl);
-+		pci_pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
+-	if (cap) {
+-		u16 ctl;
+-
+-		pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl);
++	if (!pci_pcie_cap_read_word(pdev, PCI_EXP_DEVCTL, &ctl)) {
+ 		ctl = (ctl & ~PCI_EXP_DEVCTL_READRQ) | force;
+-		pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl);
++		pci_pcie_cap_write_word(pdev, PCI_EXP_DEVCTL, ctl);
  	}
  }
+ 
+@@ -4504,27 +4501,21 @@ static void rtl_ephy_init(void __iomem *ioaddr, const struct ephy_info *e, int l
+ 
+ static void rtl_disable_clock_request(struct pci_dev *pdev)
+ {
+-	int cap = pci_pcie_cap(pdev);
+-
+-	if (cap) {
+-		u16 ctl;
++	u16 ctl;
+ 
+-		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
++	if (!pci_pcie_cap_read_word(pdev, PCI_EXP_LNKCTL, &ctl)) {
+ 		ctl &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
+-		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
++		pci_pcie_cap_write_word(pdev, PCI_EXP_LNKCTL, ctl);
+ 	}
+ }
+ 
+ static void rtl_enable_clock_request(struct pci_dev *pdev)
+ {
+-	int cap = pci_pcie_cap(pdev);
+-
+-	if (cap) {
+-		u16 ctl;
++	u16 ctl;
+ 
+-		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
++	if (!pci_pcie_cap_read_word(pdev, PCI_EXP_LNKCTL, &ctl)) {
+ 		ctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
+-		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
++		pci_pcie_cap_write_word(pdev, PCI_EXP_LNKCTL, ctl);
+ 	}
+ }
+ 
+@@ -5132,14 +5123,9 @@ static void rtl_hw_start_8101(struct net_device *dev)
+ 		tp->event_slow &= ~RxFIFOOver;
+ 
+ 	if (tp->mac_version == RTL_GIGA_MAC_VER_13 ||
+-	    tp->mac_version == RTL_GIGA_MAC_VER_16) {
+-		int cap = pci_pcie_cap(pdev);
+-
+-		if (cap) {
+-			pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL,
+-					      PCI_EXP_DEVCTL_NOSNOOP_EN);
+-		}
+-	}
++	    tp->mac_version == RTL_GIGA_MAC_VER_16)
++		pci_pcie_cap_write_word(pdev, PCI_EXP_DEVCTL,
++					PCI_EXP_DEVCTL_NOSNOOP_EN);
+ 
+ 	RTL_W8(Cfg9346, Cfg9346_Unlock);
  
 -- 
 1.7.9.5
