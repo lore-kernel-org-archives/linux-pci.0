@@ -1,100 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48148 "EHLO mx1.redhat.com"
+Received: from gate.crashing.org ([63.228.1.57]:46966 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752253Ab2GLFSr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 12 Jul 2012 01:18:47 -0400
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH RFC] pci: ACS quirk for AMD southbridge
-To: linux-pci@vger.kernel.org, Joerg.Roedel@amd.com
-Cc: andihartmann@01019freenet.de, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 11 Jul 2012 23:18:41 -0600
-Message-ID: <20120712050653.20439.11009.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1752629Ab2GJPtv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 11:49:51 -0400
+Subject: Re: [PATCH] PCI: Add pcie_irq=other to enable non MSI/INTx interrupt for port service driver
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+From: Kumar Gala <galak@kernel.crashing.org>
+In-Reply-To: <4FFC4AD0.3070201@freescale.com>
+Date: Tue, 10 Jul 2012 10:49:42 -0500
+Cc: Liu Shengzhou-B36685 <B36685@freescale.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Message-Id: <009D8F85-2036-47C1-A19E-3E8D3EB8462F@kernel.crashing.org>
+References: <1341830970-12779-1-git-send-email-Shengzhou.Liu@freescale.com> <4FFB0927.7080406@freescale.com> <3F453DDFF675A64A89321A1F3528102176B4BF@039-SN1MPN1-003.039d.mgd.msft.net> <4FFC4AD0.3070201@freescale.com>
+To: Scott Wood <scottwood@freescale.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We've confirmed that peer-to-peer between these devices is
-not possible.  We can therefore claim that they support a
-subset of ACS.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: Joerg Roedel <Joerg.Roedel@amd.com>
----
+On Jul 10, 2012, at 10:31 AM, Scott Wood wrote:
 
-Two things about this patch make me a little nervous.  The
-first is that I'd really like to have a pci_is_pcie() test
-in pci_mf_no_p2p_acs_enabled(), but these devices don't
-have a PCIe capability.  That means that if there was a
-topology where these devices sit on a legacy PCI bus,
-we incorrectly return that we're ACS safe here.  That leads
-to my second problem, pciids seems to suggest that some of
-these functions have been around for a while.  Is it just
-this package that's peer-to-peer safe, or is it safe to
-assume that any previous assembly of these functions is
-also p2p safe.  Maybe we need to factor in device revs if
-that uniquely identifies this package?
+> On 07/10/2012 01:13 AM, Liu Shengzhou-B36685 wrote:
+>> 
+>> 
+>>> -----Original Message-----
+>>> From: Wood Scott-B07421
+>>> Sent: Tuesday, July 10, 2012 12:39 AM
+>>> To: Liu Shengzhou-B36685
+>>> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linuxppc-
+>>> dev@lists.ozlabs.org
+>>> Subject: Re: [PATCH] PCI: Add pcie_irq=other to enable non MSI/INTx interrupt
+>>> for port service driver
+>>> 
+>>> On 07/09/2012 05:49 AM, Shengzhou Liu wrote:
+>>>> On some platforms, in RC mode, root port has neither MSI/MSI-X nor
+>>>> INTx interrupt generated, which are available only in EP mode on those
+>>> platform.
+>>>> In this case, we try to use other interrupt if supported (i.e. there
+>>>> is the shared error interrupt on platform P1010, P3041, P4080, etc) to
+>>>> have AER, Hot-plug, etc, services to work.
+>>>> 
+>>>> Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+>>>> ---
+>>>> Documentation/kernel-parameters.txt |    4 ++++
+>>>> drivers/pci/pcie/portdrv_core.c     |   19 +++++++++++++++++++
+>>>> 2 files changed, 23 insertions(+), 0 deletions(-)
+>>>> 
+>>>> diff --git a/Documentation/kernel-parameters.txt
+>>>> b/Documentation/kernel-parameters.txt
+>>>> index a92c5eb..af97c81 100644
+>>>> --- a/Documentation/kernel-parameters.txt
+>>>> +++ b/Documentation/kernel-parameters.txt
+>>>> @@ -2218,6 +2218,10 @@ bytes respectively. Such letter suffixes can also be
+>>> entirely omitted.
+>>>> 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
+>>>> 			all PCIe root ports use INTx for all services).
+>>>> 
+>>>> +	pcie_irq=	[PCIE] Native PCIe root port interrupt options:
+>>>> +		other	Try to use other interrupt when root port has
+>>>> +			neither MSI/MSI-X nor INTx support.
+>>> 
+>>> Why does the user need to specify this?  Shouldn't this be a matter of
+>>> communication between kernel internals?
+>>> 
+>> 
+>> The "other interrupt" appears a non-standard interrupt way compared to MSI/MSI-X and INTx in point of PCIe spec.
+> 
+> It still shouldn't be the user's responsibility to pass this in.
 
-Looks like another useful device to potentially quirk
-would be:
+I agree with Scott, this should be done in board code or as a PCI fixup, not as a command line arg.
 
-00:15.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 0)
-00:15.1 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB700/SB800/SB900 PCI to PCI bridge (PCIE port 1)
-00:15.2 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 2)
-00:15.3 PCI bridge: Advanced Micro Devices [AMD] nee ATI SB900 PCI to PCI bridge (PCIE port 3)
+>> The intent of specifying this is to have an intervention and
+>> confirmation manually to avoid causing unexpected issue on some
+>> unknown platforms.
+>> 
+>> I'm glad to remove the specified kernel parameter if it would be accepted upstream.
+> 
+> Hopefully someone will comment if there is harm in doing this
+> unconditionally.  If there is, then we should handle this via a quirk or
+> similar mechanism.
+> 
+> -Scott
 
-00:15.0 0604: 1002:43a0
-00:15.1 0604: 1002:43a1
-00:15.2 0604: 1002:43a2
-00:15.3 0604: 1002:43a3
+If we need to do it via quirk, wondering if we can use the pci_dev_flags and set the flag in a quirk.
 
- drivers/pci/quirks.c |   29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4ebc865..2c84961 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3271,11 +3271,40 @@ struct pci_dev *pci_get_dma_source(struct pci_dev *dev)
- 	return pci_dev_get(dev);
- }
- 
-+/*
-+ * Multifunction devices that do not support peer-to-peer between
-+ * functions can claim to support a subset of ACS.  Such devices
-+ * effectively enable request redirect (RR) and completion redirect (CR)
-+ * since all transactions are redirected to the upstream root complex.
-+ */
-+static int pci_mf_no_p2p_acs_enabled(struct pci_dev *dev, u16 acs_flags)
-+{
-+	if (!dev->multifunction)
-+		return -ENODEV;
-+
-+	/* Filter out flags not applicable to multifunction */
-+	acs_flags &= (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC | PCI_ACS_DT);
-+
-+	return acs_flags & ~(PCI_ACS_RR | PCI_ACS_CR) ? 0 : 1;
-+}
-+
- static const struct pci_dev_acs_enabled {
- 	u16 vendor;
- 	u16 device;
- 	int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
- } pci_dev_acs_enabled[] = {
-+	/*
-+	 * AMD/ATI multifunction southbridge devices.  AMD has confirmed
-+	 * that peer-to-peer between these devices is not possible, so
-+	 * they do support a subset of ACS even though the capability is
-+	 * not exposed in config space.
-+	 */
-+	{ PCI_VENDOR_ID_ATI, 0x4385, pci_mf_no_p2p_acs_enabled },
-+	{ PCI_VENDOR_ID_ATI, 0x439c, pci_mf_no_p2p_acs_enabled },
-+	{ PCI_VENDOR_ID_ATI, 0x4383, pci_mf_no_p2p_acs_enabled },
-+	{ PCI_VENDOR_ID_ATI, 0x439d, pci_mf_no_p2p_acs_enabled },
-+	{ PCI_VENDOR_ID_ATI, 0x4384, pci_mf_no_p2p_acs_enabled },
-+	{ PCI_VENDOR_ID_ATI, 0x4399, pci_mf_no_p2p_acs_enabled },
- 	{ 0 }
- };
- 
-
+- k
