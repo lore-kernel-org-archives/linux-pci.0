@@ -1,52 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50514 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56310 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094Ab2GJWU6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 18:20:58 -0400
-Received: by lbbgm6 with SMTP id gm6so1200561lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 15:20:57 -0700 (PDT)
+	with ESMTP id S1751512Ab2GJSgU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 14:36:20 -0400
+Received: by mail-lb0-f174.google.com with SMTP id gm6so803197lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 11:36:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
- <CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
- <OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se> <CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
+In-Reply-To: <1341935655-5381-8-git-send-email-jiang.liu@huawei.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+ <1341935655-5381-1-git-send-email-jiang.liu@huawei.com> <1341935655-5381-8-git-send-email-jiang.liu@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Jul 2012 16:20:36 -0600
-Message-ID: <CAErSpo7UmgG636R7Nz142g4WfFMw9Gi-kEWYfNmbbyWNfx55=A@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Joakim Tjernlund <joakim.tjernlund@transmode.se>,
-	linux-pci@vger.kernel.org
+Date: Tue, 10 Jul 2012 12:35:59 -0600
+Message-ID: <CAErSpo6+JuA9ySsB+Qt70AVC6mNvzbpptJS=zpOZAT2RD=1AdA@mail.gmail.com>
+Subject: Re: [RFC PATCH 07/14] hotplug/PCI: use PCIe cap access functions to
+ simplify implementation
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 4:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Jul 10, 2012 at 2:42 PM, Joakim Tjernlund
-> <joakim.tjernlund@transmode.se> wrote:
->> yhlu.kernel@gmail.com wrote on 2012/07/10 20:22:09:
->>
->>>
->>> On Tue, Jul 10, 2012 at 10:29 AM, Joakim Tjernlund
->>> <joakim.tjernlund@transmode.se> wrote:
->>> >
->>> > I got an PCIe device that is woken up by user space, clocks needs to configured in various ways before the
->>> > device enables its PCIe interface.
->>> >
->>> > The device is connected to a built in root bridge on a P2010(mpc85xx) CPU.
->>> > To enable HP in Linux we need to apply some minor hacks.
->>>
->>> can you post lspci -vvxxx -s BB:DD:F of the two devices?
->>
->> Not really, this is an embedded device with limited SW. I got
->> busybox and its lspci but that is very limited:
->> # > ./busybox lspci -mk
->> 00:00.0 "Class 0604" "1957" "0079" "0000" "0000" "pcieport"
->> 01:00.0 "Class 0200" "14e4" "b540" "14e4" "b540"
->>
->> Does that tell you anything?
+On Tue, Jul 10, 2012 at 9:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
 >
-> No. Can you compile lspci util as static and run it ?
+> Use PCIe cap access functions to simplify pcihp_slot.c
+>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/pci/hotplug/pcihp_slot.c |   17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+> index 8c05a18..08ca019 100644
+> --- a/drivers/pci/hotplug/pcihp_slot.c
+> +++ b/drivers/pci/hotplug/pcihp_slot.c
+> @@ -103,8 +103,7 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>                 return;
+>
+>         /* Find PCI Express capability */
 
-You might also be able to get this info as console output by booting
-with "pci=earlydump".
+Drop the comment, too.
+
+> -       pos = pci_pcie_cap(dev);
+> -       if (!pos)
+> +       if (!pci_is_pcie(dev))
+>                 return;
+>
+>         if (hpp->revision > 1) {
+> @@ -114,16 +113,18 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>         }
+>
+>         /* Initialize Device Control Register */
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
+> +       if (pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &reg16))
+> +               return;
+>         reg16 = (reg16 & hpp->pci_exp_devctl_and) | hpp->pci_exp_devctl_or;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, reg16);
+>
+>         /* Initialize Link Control Register */
+>         if (dev->subordinate) {
+> -               pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &reg16);
+> -               reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
+> -                       | hpp->pci_exp_lnkctl_or;
+> -               pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, reg16);
+> +               if (pci_pcie_cap_read_word(dev, PCI_EXP_LNKCTL, &reg16)) {
+> +                       reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
+> +                               | hpp->pci_exp_lnkctl_or;
+> +                       pci_pcie_cap_write_word(dev, PCI_EXP_LNKCTL, reg16);
+> +               }
+>         }
+>
+>         /* Find Advanced Error Reporting Enhanced Capability */
+> --
+> 1.7.9.5
+>
