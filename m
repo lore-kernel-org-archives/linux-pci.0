@@ -1,117 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32900 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379Ab2GZQPS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Jul 2012 12:15:18 -0400
-Message-ID: <1343319288.3125.24.camel@ul30vt>
-Subject: [GIT PULL (PATCH 0/4) v2] VFIO driver for v3.6
-From: Alex Williamson <alex.williamson@redhat.com>
-To: torvalds@linux-foundation.org
-Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
-	david@gibson.dropbear.id.au, gregkh@linuxfoundation.org,
-	joerg.roedel@amd.com, dwmw2@infradead.org, chrisw@sous-sol.org,
-	agraf@suse.de, benve@cisco.com, aafabbri@cisco.com,
-	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
-	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	ddutile@redhat.com
-Date: Thu, 26 Jul 2012 10:14:48 -0600
-In-Reply-To: <20120725142254.12800.61860.stgit@bling.home>
-References: <20120725142254.12800.61860.stgit@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:53973 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754144Ab2GJQrA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 12:47:00 -0400
+Received: by lbbgm6 with SMTP id gm6so637675lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 09:46:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <Pine.LNX.4.44L0.1207101209150.1308-100000@iolanthe.rowland.org>
+References: <20120710160042.GA17949@kroah.com> <Pine.LNX.4.44L0.1207101209150.1308-100000@iolanthe.rowland.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Jul 2012 10:46:39 -0600
+Message-ID: <CAErSpo6qfMft+32HcRSYhaKjNDBzGu=rUDb+a=wM7+=Fr-Fe+Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI: EHCI: fix crash during suspend on ASUS computers
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	AceLan Kao <acelan.kao@canonical.com>,
+	=?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>,
+	Javier Marcet <jmarcet@gmail.com>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Oleksij Rempel <bug-track@fisher-privat.net>,
+	Pavel Pisa <pisa@cmp.felk.cvut.cz>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-07-25 at 08:53 -0600, Alex Williamson wrote:
-> Hi Linus,
-> 
-> This series includes the VFIO userspace driver interface for the
-> 3.6 kernel merge window.  This driver is intended to provide a
-> secure interface for device access using IOMMU protection for
-> applications like assignment of physical devices to virtual
-> machines.  Qemu will be the first user of this interface, enabling
-> assignment of PCI devices to Qemu guests.  This interface is
-> intended to eventually replace the x86-specific assignment mechanism
-> currently available in KVM.  This interface has the advantage of
-> being more secure, by working with IOMMU groups to ensure device
-> isolation and providing it's own filtered resource access mechanism,
-> and also more flexible, in not being x86 or KVM specific (extensions
-> to enable POWER are already working).
-> 
-> As a new driver, I'm including both the individual patches in email,
-> as well as a branch to pull from:
-> 
-> git://github.com/awilliam/linux-vfio.git for-linus
-> 
-> This driver is originally the work of Tom Lyon, but has since been
-> handed over to me and gone through a complete overhaul thanks to the
-> input from David Gibson, Ben Herrenschmidt, Chris Wright, Joerg
-> Roedel, and others.  This driver has been available in linux-next for
-> the last month.  Thanks,
+On Tue, Jul 10, 2012 at 10:11 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 10 Jul 2012, Greg KH wrote:
+>
+>> > I'm fine with this patch.  I was going to add these:
+>> >
+>> >     Based-on-patch-by: AceLan Kao <acelan.kao@canonical.com>
+>> >     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=37632
+>> >     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+>> >
+>> > I don't have the previous iteration (c2fb8a3fa25513d) in my "next"
+>
+> The commit is already in 3.5-rc6.  And I intended this fix to get into
+> 3.5-final, not into Linux-next (I should have said so explicitly in the
+> patch).
+>
+>> > branch.  I think it went through you, Greg.  Do you want to handle
+>> > this one as well?
+>>
+>> I can easily take it if you don't want to.
+>>
+>> > I *could* do it, but it looks like a messy merge -- I think I'd have
+>> > to rebase almost everything in my "next" branch -- so I'd rather not.
+>> > Of course, I do have some D3-related updates in pci_prepare_to_sleep()
+>> > which will conflict with this, too, so I guess it will be a bit of
+>> > work for somebody either way.
+>>
+>> Ick, no, don't rebase anything.
+>>
+>> If I take this then we will have merge issues in linux-next, which we
+>> can work out, and then we will have the same issues for 3.6-rc1 as well.
+>>
+>> Or, Alan can redo the patch based on your next branch, which might make
+>> it easier for everyone involved?
+>
+> If Bjorn's "next" branch diverged from Linus's tree before c2fb8a3 was
+> added, that would make things more difficult.
 
-randconfig testing in next found a dependency issue that I've fix in the
-for-linus branch above.  Change from v1 is:
-
-diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-index cc7db62..5980758 100644
---- a/drivers/vfio/pci/Kconfig
-+++ b/drivers/vfio/pci/Kconfig
-@@ -1,6 +1,6 @@
- config VFIO_PCI
- 	tristate "VFIO support for PCI devices"
--	depends on VFIO && PCI
-+	depends on VFIO && PCI && EVENTFD
- 	help
- 	  Support for the PCI VFIO bus driver.  This is required to make
- 	  use of PCI drivers using the VFIO framework.
-
-If anyone wants a full resend of v2 to the list with this change, please
-let me know.  Thanks,
-
-Alex
-
-> ---
-> 
-> Alex Williamson (4):
->       vfio: Add PCI device driver
->       vfio: Type1 IOMMU implementation
->       vfio: Add documentation
->       vfio: VFIO core
-> 
-> 
->  Documentation/ioctl/ioctl-number.txt |    1 
->  Documentation/vfio.txt               |  314 +++++++
->  MAINTAINERS                          |    8 
->  drivers/Kconfig                      |    2 
->  drivers/Makefile                     |    1 
->  drivers/vfio/Kconfig                 |   16 
->  drivers/vfio/Makefile                |    3 
->  drivers/vfio/pci/Kconfig             |    8 
->  drivers/vfio/pci/Makefile            |    4 
->  drivers/vfio/pci/vfio_pci.c          |  579 +++++++++++++
->  drivers/vfio/pci/vfio_pci_config.c   | 1540 ++++++++++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_intrs.c    |  740 ++++++++++++++++
->  drivers/vfio/pci/vfio_pci_private.h  |   91 ++
->  drivers/vfio/pci/vfio_pci_rdwr.c     |  269 ++++++
->  drivers/vfio/vfio.c                  | 1420 +++++++++++++++++++++++++++++++
->  drivers/vfio/vfio_iommu_type1.c      |  753 +++++++++++++++++
->  include/linux/vfio.h                 |  445 ++++++++++
->  17 files changed, 6194 insertions(+)
->  create mode 100644 Documentation/vfio.txt
->  create mode 100644 drivers/vfio/Kconfig
->  create mode 100644 drivers/vfio/Makefile
->  create mode 100644 drivers/vfio/pci/Kconfig
->  create mode 100644 drivers/vfio/pci/Makefile
->  create mode 100644 drivers/vfio/pci/vfio_pci.c
->  create mode 100644 drivers/vfio/pci/vfio_pci_config.c
->  create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
->  create mode 100644 drivers/vfio/pci/vfio_pci_private.h
->  create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
->  create mode 100644 drivers/vfio/vfio.c
->  create mode 100644 drivers/vfio/vfio_iommu_type1.c
->  create mode 100644 include/linux/vfio.h
-
-
-
+It did.  My "next" branch is based on v3.5-rc2, and I think c2fb8a3
+first appeared in -rc3.
