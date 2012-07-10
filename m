@@ -1,170 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:65207 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:58807 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932097Ab2GCERU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 00:17:20 -0400
-Received: by lbbgm6 with SMTP id gm6so8660327lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jul 2012 21:17:19 -0700 (PDT)
+	with ESMTP id S1751290Ab2GJSpC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 14:45:02 -0400
+Received: by lbbgm6 with SMTP id gm6so817196lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 11:45:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
-References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+ <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Jul 2012 22:16:58 -0600
-Message-ID: <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
-Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
- ports without native PCIe hotplug capability
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+Date: Tue, 10 Jul 2012 12:44:39 -0600
+Message-ID: <CAErSpo7zftEkExQMND_a7V-nJKqvuncNGnC_rfFtxQfywUO4jA@mail.gmail.com>
+Subject: Re: [RFC PATCH 00/14] improve PCIe capabilities registers handling
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-> ignore root bridges using PCIe native hotplug) added code that made the
-> acpiphp driver completely ignore PCIe root complexes for which the kernel
-> had been granted control of the native PCIe hotplug feature by the BIOS
-> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-> the constraints to allow acpiphp driver handle non-PCIe bridges under
-> such a complex. The constraint needs to be relaxed further to allow
-> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
+On Tue, Jul 10, 2012 at 9:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <liuj97@gmail.com>
 >
-> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-> switches and may migrate downstream ports among virtual switches.
-> To migrate a downstream port from the source virtual switch to the target,
-> the port needs to be hot-removed from the source and hot-added into the
-> target. pciehp driver can't be used here because there's no slots within
-> the virtual PCIe switch. So acpiphp driver is used to support downstream
-> port migration. A typical configuration is as below:
-> [Root w/o native PCIe HP]
->         [Upstream port of vswitch w/o native PCIe HP]
->                 [Downstream port of vswitch w/ native PCIe HP]
->                         [PCIe enpoint]
+> As suggested by Bjorn Helgaas and Don Dutile in threads
+> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
+> to PCIe capabilities register in to way:
+> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
+>    repeatedly reading this register because it's read only.
+> 2) provide access functions for PCIe Capabilities registers to hide differences
+>    among PCIe base specifications, so the caller don't need to handle those
+>    differences.
 >
-> Here acpiphp driver will be used to handle root ports and upstream port
-> in the virtual switch, and pciehp driver will be used to handle downstream
-> ports in the virtual switch.
+> This patch set applies to
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
 >
-> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> These patch set is still RFC. It provides the new interfaces and has made the
+> major changes to adopt those new interfaces. But there are still several device
+> drivers left untouched. Any comments about the new interfaces are welcomed,
+> especially about function names:). Once we reach an agreement, I will send out
+> a formal version with all needed work done.
 >
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
->  1 files changed, 39 insertions(+), 10 deletions(-)
+> Jiang Liu (11):
+>   PCI: refine and move pcie_cap_has_*() macros to include/linux/pci.h
+>   PCI: add access functions for PCIe capabilities to hide PCIe spec
+>     differences
+>   PCI: use PCIe cap access functions to simplify PCI core
+>     implementation
+>   hotplug/PCI: use PCIe cap access functions to simplify implementation
+>   portdrv/PCI: use PCIe cap access functions to simplify implementation
+>   pciehp/PCI: use PCIe cap access functions to simplify implementation
+>   PME/PCI: use PCIe cap access functions to simplify implementation
+>   AER/PCI: use PCIe cap access functions to simplify implementation
+>   ASPM/PCI: use PCIe cap access functions to simplify implementation
+>   r8169/PCI: use PCIe cap access functions to simplify implementation
+>   qib/PCI: use PCIe cap access functions to simplify implementation
 >
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 806c44f..4889448 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
->         .handler = handle_hotplug_event_func,
->  };
+> Yijing Wang (1):
+>   PCI: add pcie_flags into struct pci_dev to cache PCIe capabilities
+>     register
+>   PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
+>   PCI: remove unused field pcie_type from struct pci_dev
 >
-> +/* Check whether device is managed by native PCIe hotplug driver */
-> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-> +{
-> +       int pos;
-> +       u16 reg16;
-> +       u32 reg32;
-> +       acpi_handle tmp;
-> +       struct acpi_pci_root *root;
-> +
-> +       if (!pci_is_pcie(pdev))
-> +               return false;
-> +
-> +       /* Check whether PCIe port supports native PCIe hotplug */
-> +       pos = pci_pcie_cap(pdev);
+>  arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
+>  drivers/infiniband/hw/qib/qib_pcie.c               |   34 ++-
+>  drivers/iommu/intel-iommu.c                        |    6 +-
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
+>  .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
+>  drivers/net/ethernet/realtek/r8169.c               |   38 +--
+>  drivers/pci/access.c                               |   88 +++++++
+>  drivers/pci/hotplug/pciehp_acpi.c                  |    5 +-
+>  drivers/pci/hotplug/pciehp_hpc.c                   |    8 +-
+>  drivers/pci/hotplug/pcihp_slot.c                   |   17 +-
+>  drivers/pci/iov.c                                  |    6 +-
+>  drivers/pci/pci.c                                  |  265 +++++---------------
+>  drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
+>  drivers/pci/pcie/aer/aerdrv.c                      |   23 +-
+>  drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
+>  drivers/pci/pcie/aer/aerdrv_core.c                 |   47 ++--
+>  drivers/pci/pcie/aspm.c                            |  110 ++++----
+>  drivers/pci/pcie/pme.c                             |   23 +-
+>  drivers/pci/pcie/portdrv_bus.c                     |    2 +-
+>  drivers/pci/pcie/portdrv_core.c                    |   24 +-
+>  drivers/pci/pcie/portdrv_pci.c                     |   15 +-
+>  drivers/pci/probe.c                                |   30 +--
+>  drivers/pci/quirks.c                               |    8 +-
+>  drivers/pci/search.c                               |    2 +-
+>  include/linux/pci.h                                |   65 ++++-
+>  include/linux/pci_regs.h                           |   19 +-
+>  26 files changed, 401 insertions(+), 444 deletions(-)
 
-Add "if (!pos) return false;" here and you can drop the "if
-(!pci_is_pcie())" test above.
-
-> +       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
-> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-
-I think this is unsafe.  Per the PCIe v3.0 spec, sec 7.8.2 on p648,
-the "Slot Implemented" bit is undefined except for Downstream Ports,
-so we're using an undefined bit to decide whether to read
-PCI_EXP_SLTCAP.
-
-If the device has a v1 PCIe Capability, it is not required to even
-implement PCI_EXP_SLTCAP, so we could be reading garbage out of an
-unrelated capability.  This is in sec 7.8, p363, of the v1.1 PCIe
-spec.  I think v3.0 of the spec is dangerously incomplete because it
-doesn't include enough information to handle the v1 PCIe Capability
-correctly.
-
-There's a fair amount of work to fix this.  I started doing it, but
-decided I didn't have time to complete it.  Here's what I think we
-(and by "we," I'm afraid I mean "you" :)) should do:
-
-  - Add a "u16 pcie_flags" field in struct pci_dev and save the "PCI
-Express Capabilities Register" there in set_pcie_port_type().  All
-fields in that register are read-only, so it should be safe to cache
-it.
-  - Remove pcie_type from struct pci_dev and replace it with a
-pcie_type() inline that extracts it from pcie_flags.
-  - Rework the pcie_cap_has_*() macros in drivers/pci/pci.c to take a
-struct pci_dev * and use pcie_flags instead of type and flags.  This
-will remove the need for callers to read the flags themselves.
-  - Move the pcie_cap_has_*() macros to include/linux/pci_reg.h so
-they can be shared.
-  - Audit all uses of the Link registers (PCI_EXP_LNKCAP,
-PCI_EXP_LNKCTL, PCI_EXP_LNKSTA), Slot registers (PCI_EXP_SLTCAP,
-PCI_EXP_SLTCTL, PCI_EXP_SLTSTA), and Root registers (PCI_EXP_RTCAP,
-PCI_EXP_RTCTL, PCI_EXP_RTSTA) to make sure the register exists, either
-by using pcie_cap_has_*() or some other knowledge of the device.
-
-> +               return false;
-> +       pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP, &reg32);
-> +       if (!(reg32 & PCI_EXP_SLTCAP_HPC))
-> +               return false;
-> +
-> +       /*
-> +        * Check whether native PCIe hotplug has been enabled for
-> +        * this PCIe hierarchy.
-> +        */
-> +       tmp = acpi_find_root_bridge_handle(pdev);
-> +       if (!tmp)
-> +               return false;
-> +       root = acpi_pci_find_root(tmp);
-> +       if (!root)
-> +               return false;
-> +       if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> +               return false;
-> +
-> +       return true;
-> +}
-> +
->  /* callback routine to register each ACPI PCI slot object */
->  static acpi_status
->  register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-> @@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
->                 return AE_OK;
->
->         pdev = pbus->self;
-> -       if (pdev && pci_is_pcie(pdev)) {
-> -               tmp = acpi_find_root_bridge_handle(pdev);
-> -               if (tmp) {
-> -                       struct acpi_pci_root *root = acpi_pci_find_root(tmp);
-> -
-> -                       if (root && (root->osc_control_set &
-> -                                       OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> -                               return AE_OK;
-> -               }
-> -       }
-> +       if (pdev && device_is_managed_by_native_pciehp(pdev))
-> +               return AE_OK;
->
->         acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
->         device = (adr >> 16) & 0xffff;
-> --
-> 1.7.1
->
->
+Very nice; I like this a lot.
