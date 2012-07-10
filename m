@@ -1,61 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:51991 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751488Ab2GRFD1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 18 Jul 2012 01:03:27 -0400
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Wed, 18 Jul 2012 01:03:24 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id B6A5DC90026
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 01:02:35 -0400 (EDT)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6I52Y7I24772738
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 01:02:34 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6I52WLW020521
-	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 02:02:34 -0300
-Date: Wed, 18 Jul 2012 13:02:27 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, yinghai@kernel.org
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120718050227.GC2375@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
- <20120717050547.GD2369@ram-ThinkPad-T61>
- <20120717052333.GE2369@ram-ThinkPad-T61>
- <20120717053648.GA18497@shangw>
- <20120717055715.GF2369@ram-ThinkPad-T61>
- <1342516619.3669.5.camel@pasglop>
- <20120717100314.GB25613@ram-ThinkPad-T61>
- <1342521498.3669.7.camel@pasglop>
- <CAErSpo4AS=QCRE3w-QBzuuSSEK8VeQ+PXxyp3mTyDAEvASxQcQ@mail.gmail.com>
- <20120718010746.GA4238@shangw>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:57819 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753075Ab2GJDYs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 23:24:48 -0400
+Received: by lbbgm6 with SMTP id gm6so21398803lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 20:24:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120718010746.GA4238@shangw>
+In-Reply-To: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 9 Jul 2012 21:24:26 -0600
+Message-ID: <CAErSpo7zprm-iHMRbCp0xh0so_ozqvN1uF8P4UhsDV5c0tu_nw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] PCI: P2P bridge window fixes
+To: linux-pci@vger.kernel.org
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 18, 2012 at 09:07:46AM +0800, Gavin Shan wrote:
-> 4. Either "b_res->flags & mask" or "type" to be used for window_alignment(),
->    I don't think it's big deal because "b_res->flags & mask == type" for
->    current implementation. However, I'm not sure I still need change it
->    to "type"?
-> 
->    min_align = max(min_align, window_alignment(bus, b_res->flags & mask));
+On Mon, Jul 9, 2012 at 2:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Two fixes here:
+>
+> 1) Zero is a legal P2P bridge window base and BAR value and is likely to
+> occur when there is an offset between bus addresses and CPU addresses.
+> Stop disallowing it.
+>
+> 2) The Intel-specific 1K I/O window granularity for P2P bridges was
+> implemented in a way that precluded reassignment of the window after
+> FINAL quirks.  Fix that.
+>
+> And also replace the sparc pci_cfg_fake_ranges() with the functionally
+> equivalent generic version.
+>
+> ---
+>
+> Bjorn Helgaas (3):
+>       PCI: allow P2P bridge windows starting at PCI bus address zero
+>       PCI: reimplement P2P bridge 1K I/O windows (Intel P64H2)
+>       sparc/PCI: replace pci_cfg_fake_ranges() with pci_read_bridge_bases()
+>
+>
+>  arch/sparc/kernel/pci.c  |   89 +---------------------------------------------
+>  drivers/pci/probe.c      |   31 +++++++++-------
+>  drivers/pci/quirks.c     |   39 +-------------------
+>  drivers/pci/setup-bus.c  |   11 +++++-
+>  include/linux/pci.h      |    1 +
+>  include/linux/pci_regs.h |    3 +-
+>  6 files changed, 31 insertions(+), 143 deletions(-)
 
-Ah. you are right.
+I applied these, as well as Yinghai's patch for 1K support in
+pbus_size_io(), to my "next" branch.  Thanks, Yinghai!
 
-(b_res->flags & mask) or type, either one is ok. I had a wrong
-assumption about b_res->flags. I thought it has either IORESOURCE_MEM
-set or IORESOURCE_PREFETCH set, but not both.
-
-Whatever concern I had, i dont have it any more.
-RP
-
+Bjorn
