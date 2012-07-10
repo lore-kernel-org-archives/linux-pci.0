@@ -1,85 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56971 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752888Ab2GaNpv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 09:45:51 -0400
-Received: by lahd3 with SMTP id d3so4034705lah.19
-        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2012 06:45:49 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120730181542.GA987@jonmason-lab>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
- <1343607994-32415-2-git-send-email-jon.mason@intel.com> <CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
- <20120730181542.GA987@jonmason-lab>
+In-Reply-To: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 31 Jul 2012 07:45:29 -0600
-Message-ID: <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Date: Mon, 9 Jul 2012 21:23:03 -0600
+Message-ID: <CAErSpo6aOq5Ph9yJ_Oa2Uo2TBdvG9MbXcZe8zrXVOU4=Dne4Xw@mail.gmail.com>
+Subject: Re: [PATCH 0/2] PCI: decode disable fixes
+To: linux-pci@vger.kernel.org
+Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Robert Hancock <hancockrwd@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2012 at 12:15 PM, Jon Mason <jon.mason@intel.com> wrote:
-> On Mon, Jul 30, 2012 at 10:50:13AM -0600, Bjorn Helgaas wrote:
->> On Sun, Jul 29, 2012 at 6:26 PM, Jon Mason <jon.mason@intel.com> wrote:
->> > A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
->> > connecting 2 systems, providing electrical isolation between the two subsystems.
->> > A non-transparent bridge is functionally similar to a transparent bridge except
->> > that both sides of the bridge have their own independent address domains.  The
->> > host on one side of the bridge will not have the visibility of the complete
->> > memory or I/O space on the other side of the bridge.  To communicate across the
->> > non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
->> > the local system.  Writes to these apertures are mirrored to memory on the
->> > remote system.  Communications can also occur through the use of doorbell
->> > registers that initiate interrupts to the alternate domain, and scratch-pad
->> > registers accessible from both sides.
->> >
->> > The NTB device driver is needed to configure these memory windows, doorbell, and
->> > scratch-pad registers as well as use them in such a way as they can be turned
->> > into a viable communication channel to the remote system.  ntb_hw.[ch]
->> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
->> > the underlying hardware to provide access and a common interface to the doorbell
->> > registers, scratch pads, and memory windows.  These hardware interfaces are
->> > exported so that other, non-mainlined kernel drivers can access these.
->> > ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
->> > communication channel(s) and provide a reliable way of transferring data from
->> > one side to the other, which it then exports so that "client" drivers can access
->> > them.  These client drivers are used to provide a standard kernel interface
->> > (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
->> > system to the other in a standard way.
->> >
->> > Signed-off-by: Jon Mason <jon.mason@intel.com>
->> > ---
->> >  MAINTAINERS                 |    6 +
->> >  drivers/Kconfig             |    2 +
->> >  drivers/Makefile            |    1 +
->> >  drivers/ntb/Kconfig         |   13 +
->> >  drivers/ntb/Makefile        |    3 +
->> >  drivers/ntb/ntb_hw.c        | 1178 ++++++++++++++++++++++++++++++++++++
->> >  drivers/ntb/ntb_hw.h        |  206 +++++++
->> >  drivers/ntb/ntb_regs.h      |  150 +++++
->> >  drivers/ntb/ntb_transport.c | 1387 +++++++++++++++++++++++++++++++++++++++++++
->> >  include/linux/ntb.h         |   92 +++
->>
->> Where will drivers for non-Intel NTBs fit in this hierarchy?  It seems
->> a bit presumptuous to claim the generic "ntb" names just for Intel
->> devices.
+On Mon, Jul 9, 2012 at 12:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Since 2.6.36 (253d2e5498), we've disabled MEM & IO decoding while we size
+> BARs (except for host bridge devices).  These patches tweak this in two
+> ways:
 >
-> I've tried to make it all generic enough that non-Intel NTBs should plug in with
-> minimal changes to ntb_hw.c.  If their design is too divergent, then a slight
-> redesign of ntb_hw.c might be necessary.  But from what I've seen of other
-> designs on the internet, they appear to be extremely similar.  The transport and
-> client drivers were written with the hardware abstracted away as much as
-> possible to prevent the need to modify it for different hardware.  If there is
-> anything which is Intel hardware specific, I'd be happy to change it to make it
-> more generic.
+> 1) We only kept decoding disabled while sizing the low-order dword
+> of 64-bit BARs.  I think we should keep it disabled while we do the
+> high-order dword also.
+>
+> 2) I think we should also disable decoding while updating 64-bit BARs,
+> e.g., when we move a device into an aperture of an upstream bridge.  I'm
+> only proposing to disable decoding for 64-bit BAR updates because 32-bit
+> ones can be done atomically, while 64-bit updates require two writes and
+> the half-written state is a potential problem.
+>
+> I'm considering these changes for the 3.6 merge window, which is
+> approaching fast, so let me know if you see issues with either of these.
+>
+> ---
+>
+> Bjorn Helgaas (2):
+>       PCI: leave MEM and IO decoding disabled during 64-bit BAR sizing, too
+>       PCI: disable MEM decoding while updating 64-bit MEM BARs
+>
+>
+>  drivers/pci/probe.c     |    6 +++---
+>  drivers/pci/setup-res.c |   18 ++++++++++++++++++
+>  2 files changed, 21 insertions(+), 3 deletions(-)
 
-That makes sense from a technical point of view, but I think it's
-going to cause maintenance issues.  For example, assume PLX NTB
-support is added.  Will PLX be happy about having to convince you to
-accept changes?  Will Intel be happy about having to release a new
-driver for their hardware just to incorporate a PLX bug fix?  Will
-users of PLX hardware accept a new driver release that only benefits
-Intel users?
+I applied these to my "next" branch.
