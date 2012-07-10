@@ -1,93 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:52023 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752209Ab2GZTzz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 15:55:55 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-Date: Thu, 26 Jul 2012 21:55:02 +0200
-Message-Id: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44505 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069Ab2GJQlI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 12:41:08 -0400
+Received: by bkwj10 with SMTP id j10so223925bkw.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 09:41:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120710161727.GA18361@kroah.com>
+References: <20120710160042.GA17949@kroah.com> <Pine.LNX.4.44L0.1207101209150.1308-100000@iolanthe.rowland.org>
+ <20120710161727.GA18361@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Jul 2012 10:40:46 -0600
+Message-ID: <CAErSpo63O_d1j5aMPJyEQNcx5y_U-CZfAHgr=SbypBPfh9sCfA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: EHCI: fix crash during suspend on ASUS computers
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	AceLan Kao <acelan.kao@canonical.com>,
+	=?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>,
+	Javier Marcet <jmarcet@gmail.com>,
+	Andrey Rahmatullin <wrar@wrar.name>,
+	Oleksij Rempel <bug-track@fisher-privat.net>,
+	Pavel Pisa <pisa@cmp.felk.cvut.cz>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for device tree based probing of the PCIe
-controller found on Tegra SoCs.
+On Tue, Jul 10, 2012 at 10:17 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Tue, Jul 10, 2012 at 12:11:41PM -0400, Alan Stern wrote:
+>> On Tue, 10 Jul 2012, Greg KH wrote:
+>>
+>> > > I'm fine with this patch.  I was going to add these:
+>> > >
+>> > >     Based-on-patch-by: AceLan Kao <acelan.kao@canonical.com>
+>> > >     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=37632
+>> > >     Reference: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+>> > >
+>> > > I don't have the previous iteration (c2fb8a3fa25513d) in my "next"
+>>
+>> The commit is already in 3.5-rc6.  And I intended this fix to get into
+>> 3.5-final, not into Linux-next (I should have said so explicitly in the
+>> patch).
+>
+> Ah, ok, if so, and Bjorn doesn't mind, I can add it to the other USB
+> patches that I have queued up to go in before 3.5-final is released.
+>
+> Bjorn, want me to take it?  If so, can I get your ack?
 
-Patches 1 and 2 keep the pci_fixup_irqs() and ARM-specific
-pci_common_init() functions around after init. This is required to
-support driver probe deferral, which may cause built-in drivers to be
-probed after __init data has already been freed.
+Yes, please.
 
-Patch 3 allows a driver's probe function to pass per-controller private
-data when calling the pci_common_init() function.
-
-Patch 4 is trivial and has already been Acked-by: Stephen Warren before.
-
-Patch 5 adds a flag to mark a struct resource as defining a PCI
-configuration space. The flag will be used subsequently to differentiate
-between memory-mapped I/O regions and PCI configuration space.
-
-Patch 6 rewrites PCIe support as a driver and switches the Harmony and
-TrimSlice boards to add the proper platform device instead of calling
-the tegra_pcie_init() function. Patch 7 adds MSI support as an IRQ
-domain.
-
-Patches 8 and 9 add code to support the new PCIe controller binding used
-by patch 10 to instantiate the controller from DT.
-
-
-Thierry Reding (10):
-  PCI: Keep pci_fixup_irqs() around after init
-  ARM: pci: Keep pci_common_init() around after init
-  ARM: pci: Allow passing per-controller private data
-  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
-  resource: add PCI configuration space support
-  ARM: tegra: Rewrite PCIe support as a driver
-  ARM: tegra: pcie: Add MSI support
-  of/address: Handle #address-cells > 2 specially
-  of: Add of_pci_parse_ranges()
-  ARM: tegra: pcie: Add device tree support
-
- .../bindings/pci/nvidia,tegra20-pcie.txt           |   94 ++
- arch/arm/boot/dts/tegra20.dtsi                     |   62 +
- arch/arm/include/asm/mach/pci.h                    |    1 +
- arch/arm/kernel/bios32.c                           |    7 +-
- arch/arm/mach-tegra/Kconfig                        |    1 +
- arch/arm/mach-tegra/board-dt-tegra20.c             |    7 +-
- arch/arm/mach-tegra/board-harmony-pcie.c           |   30 +-
- arch/arm/mach-tegra/board-harmony.c                |    1 +
- arch/arm/mach-tegra/board-harmony.h                |    1 +
- arch/arm/mach-tegra/board-trimslice.c              |   11 +-
- arch/arm/mach-tegra/board.h                        |    2 +-
- arch/arm/mach-tegra/devices.c                      |  142 ++
- arch/arm/mach-tegra/devices.h                      |    3 +
- arch/arm/mach-tegra/include/mach/iomap.h           |    3 -
- arch/arm/mach-tegra/include/mach/irqs.h            |    5 +-
- arch/arm/mach-tegra/include/mach/pci-tegra.h       |   38 +
- arch/arm/mach-tegra/pcie.c                         | 1406 ++++++++++++++------
- arch/arm/mach-tegra/pmc.c                          |   16 +
- arch/arm/mach-tegra/pmc.h                          |    1 +
- drivers/of/address.c                               |    8 +
- drivers/of/of_pci.c                                |   84 +-
- drivers/pci/setup-irq.c                            |    4 +-
- include/linux/ioport.h                             |    2 +-
- include/linux/of_pci.h                             |    2 +
- 24 files changed, 1485 insertions(+), 446 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
- create mode 100644 arch/arm/mach-tegra/include/mach/pci-tegra.h
-
--- 
-1.7.11.2
-
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
