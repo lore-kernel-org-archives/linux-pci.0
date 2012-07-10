@@ -1,78 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:12509 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753342Ab2GWQhX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jul 2012 12:37:23 -0400
-From: "Rose, Gregory V" <gregory.v.rose@intel.com>
-To: Don Dutile <ddutile@redhat.com>,
-	Chris Friesen <chris.friesen@genband.com>
-CC: Ben Hutchings <bhutchings@solarflare.com>,
-	David Miller <davem@davemloft.net>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: New commands to configure IOV features
-Date: Mon, 23 Jul 2012 16:37:21 +0000
-Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A070C7D873D@ORSMSX106.amr.corp.intel.com>
-References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
-			<5005D45D.1040302@genband.com>
-		 <20120717.141153.46613285253481776.davem@davemloft.net>
-		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
-	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-	 <5009B186.6000806@genband.com>
- <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
- <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
-In-Reply-To: <500D59BF.9040006@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33240 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755010Ab2GJX2r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 19:28:47 -0400
+Received: by lbbgm6 with SMTP id gm6so1316452lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 16:28:46 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVX+CnRchXNe8PF8fz7hbc=UTzP8nCxEAzAzrJTeZk-Tg@mail.gmail.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+ <1340437325-29282-3-git-send-email-yinghai@kernel.org> <CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
+ <CAE9FiQVX+CnRchXNe8PF8fz7hbc=UTzP8nCxEAzAzrJTeZk-Tg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Jul 2012 17:28:25 -0600
+Message-ID: <CAErSpo40FOgXrMJBv9TRHtd8hX6muGLMipf8dq+h7oPOzD35Ug@mail.gmail.com>
+Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
+ surprise removal is not supported.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Don Dutile [mailto:ddutile@redhat.com]
-> Sent: Monday, July 23, 2012 7:04 AM
-> To: Chris Friesen
-> Cc: Ben Hutchings; David Miller; yuvalmin@broadcom.com; Rose, Gregory V;
-> netdev@vger.kernel.org; linux-pci@vger.kernel.org
-> Subject: Re: New commands to configure IOV features
-> 
-> On 07/20/2012 07:42 PM, Chris Friesen wrote:
-> > On 07/20/2012 02:01 PM, Ben Hutchings wrote:
-> >> On Fri, 2012-07-20 at 13:29 -0600, Chris Friesen wrote:
-> >
-> >>> Once the device exists, then domain-specific APIs would be used to
-> >>> configure it the same way that they would configure a physical device.
-> >>
-> >> To an extent, but not entirely.
-> >>
-> >> Currently, the assigned MAC address and (optional) VLAN tag for each
-> >> networking VF are configured via the PF net device (though this is
-> >> done though the rtnetlink API rather than ethtool).
-> >
-> > I actually have a use-case where the guest needs to be able to modify
-> the MAC addresses of network devices that are actually VFs.
-> >
-> > The guest is bonding the network devices together, so the bonding driver
-> in the guest expects to be able to set all the slaves to the same MAC
-> address.
-> >
-> > As I read the ixgbe driver, this should be possible as long as the host
-> hasn't explicitly set the MAC address of the VF. Is that correct?
-> >
-> > Chris
-> 
-> Interesting tug of war: hypervisors will want to set the macaddrs for
-> security reasons,
->                          some guests may want to set macaddr for (valid?)
-> config reasons.
+On Tue, Jul 10, 2012 at 5:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Jul 10, 2012 at 3:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> If surprise removal is not supported, that event get dropped later.
+>>> So there is no point to enable that.
+>>>
+>>> Also some sick chipset have those bit flip around when the card is not present.
+>>> and make log full of useless warning.
+>>
+>> HP_SUPR_RM tests the Slot Capabilities "Hot-Plug Surprise" bit, which
+>> indicates that an adapter might be *removed* without prior
+>> notification (sec 7.8.9).
+>>
+>> PCI_EXP_SLTCTL_PDCE is the Slot Control "Presence Detect Changed
+>> Enable" bit, which enables interrupts for any change in the Slot
+>> Status "Presence Detect State", i.e., we may get interrupts for either
+>> add or remove events.
+>>
+>> In interrupt_event_handler(), we drop both add and remove events if
+>> !HP_SUPR_RM().  Specifically, we drop *add* events if surprise
+>> *removal* isn't supported.  That seems strange -- just from reading
+>> the spec, it seems that a surprise *add* could occur even if the
+>> "Hot-Plug Surprise" bit is not set.
+>
+> Interesting, that means after card is plugged in, we don't need to
+> press attention button to bring
+> it online.
+>
+> And other oses like windows and solaris do need to press the button
+> like current linux doing.
 
-It is a matter of trust.  The ability to set your own MAC address filters is a potential security issue, so host administrators have the ability to determine whether they trust the VF (and implicitly, the domain in which the VF resides).  There is also a sort of half-way solution.  By turning off anti-spoofing you can allow the VF to use source MAC addresses that are not actually assigned in HW filters.  This was done to support some bonding scenarios where the VF will need to transmit with a different source address.
+The attention button is apparently optional, depending on the form factor.
 
-Many applications using SR-IOV are embedded devices such as switches, edge relay devices, IP forwarding/filtering appliances, routers, etc.  More often than not the host administrator can trust domains that the VFs are assigned to because those domains are completely under the control of the local host.  In those cases the VFs are trusted and can be allowed to set their own MAC filters and use any source MAC address they please.
+I would guess that on a platform with no attention button and Hot-Plug
+Surprise == 0, Linux would be unable to do a hot-add.
 
-Other applications might need to assign VF devices to non-trusted domains.  Perhaps a service provider has leased a virtual machine domain to a subscriber who has purchased QoS levels that can only be met with the performance levels available with SR-IOV VF devices.  Other scenarios exist.  In these cases it is worthwhile to be able to restrict the VF's ability to set MAC filters and use source MAD addresses not assigned to it.
+>> So I'm not convinced that we should even bother looking at the
+>> "Hot-Plug Surprise" bit...  Maybe we'd be better off if we just
+>> removed that HP_SUPR_RM() test in interrupt_event_handler() and always
+>> called handle_surprise_event().
+>
+> Ah, that means some system with chip problem will keep feeding
+> pciehp_wq with pciehp_disable_slot and pciehp_enable_slot.
+>
+> Anyway please drop this patch now.
 
-Rather than a tug of war I just view it as balancing security concerns with levels of additional capability and functionality.  That goes on all the time.
-
-- Greg
-
+Dropped.
