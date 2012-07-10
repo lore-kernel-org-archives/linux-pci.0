@@ -1,116 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47098 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756056Ab2GaS3J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Jul 2012 14:29:09 -0400
-Message-ID: <1343752385.3368.8.camel@ul30vt>
-Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Paul Mackerras <paulus@samba.org>, benh@kernel.crashing.org,
-	aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	ddutile@redhat.com
-Date: Tue, 31 Jul 2012 10:33:05 -0600
-In-Reply-To: <1343746415.3368.5.camel@ul30vt>
-References: <20120725142254.12800.61860.stgit@bling.home>
-	 <20120727053206.GC11870@drongo> <1343690279.8073.215.camel@ul30vt>
-	 <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
-	 <1343746415.3368.5.camel@ul30vt>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:36560 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753103Ab2GJVmY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 17:42:24 -0400
+Received: by lbbgm6 with SMTP id gm6so1120848lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 14:42:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FFC8174.8050208@redhat.com>
+References: <CAD-6qVV0jqqKo729MtWpSxsvfo6r3mB68o+dnZv9MHtvYJq6Fg@mail.gmail.com>
+	<4FFC8174.8050208@redhat.com>
+Date: Tue, 10 Jul 2012 14:42:22 -0700
+Message-ID: <CAD-6qVW-=GPjCs8BTz42sWj5+guCVNSETBrXqnu5ph-W7MTsQg@mail.gmail.com>
+Subject: Re: how to do mmap for cacheable PCIe BAR on x86
+From: Alex <solomatnikov@gmail.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-07-31 at 08:53 -0600, Alex Williamson wrote:
-> On Mon, 2012-07-30 at 22:11 -0700, Linus Torvalds wrote:
-> > On Mon, Jul 30, 2012 at 4:17 PM, Alex Williamson
-> > <alex.williamson@redhat.com> wrote:
-> > >
-> > > I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
-> > > including this in 3.6?  Thanks,
-> > 
-> > I just pulled it, but then I unpulled again when I realized it's not a
-> > signed tag and it's on github.
-> > 
-> > Please, people. Do tagged releases with proper signatures if you're
-> > not using kernel.org or other controlled servers. In fact, I prefer
-> > signed tags even if you *do* use kernel.org etc.
-> 
-> Sorry about that, Linus.  I think this is a properly signed tag, please
-> let me know if I'm still screwing up.  Thanks,
-> 
-> Alex
-> 
-> The following changes since commit 2e3ee613480563a6d5c01b57d342e65cc58c06df:
-> 
->   Merge tag 'writeback-proportions' of git://git.kernel.org/pub/scm/linux/kernel/git/wfg/linux (2012-07-30 22:14:04 -0700)
-> 
-> are available in the git repository at:
-> 
-> 
->   git@github.com:awilliam/linux-vfio.git tags/vfio-for-v3.6
+On Tue, Jul 10, 2012 at 12:24 PM, Don Dutile <ddutile@redhat.com> wrote:
+> On 07/10/2012 01:12 PM, Alex wrote:
+>>
+>> I am trying to write a driver with custom mmap() function for PCIe
+>> BAR, with the goal to make this BAR cacheable in the processor cache.
+>> I am aware this is not the best way to achieve highest bandwidth and
+>> that the order of writes is unpredictable (neither are the issues in
+>> this case).
+>>
+>> The processor is Sandy Bridge i7, PCIe device is Altera Stratix IV dev.
+>> board.
+>>
+>> First, I tried to do it on CentOS 5 (2.6.18). I changed the MTRR
+>> settings to make sure the BAR is not within uncacheable MTRR and used
+>> io_remap_pfn_range() with _PAGE_PCD and _PAGE_PWT bits cleared. Reads
+>> worked as expected: reads returned correct values and second read to
+>> the same address does not necessarily cause the read to go to PCIe
+>> (read counter was checked in FPGA). However, the writes caused the
+>> system to freeze and then reboot.
+>>
+>> Second, I tried to do it on CentOS 6 (2.6.32), which has PAT support.
+>> The result is the same: reads work correctly, writes cause system
+>> freeze and reboot. Interestingly, non-temporal/write-combining full
+>> cache line writes (AVX/SSE) work as expected, i.e. they always go to
+>> FPGA and FPGA observes full cache line writes, reads return correct
+>> values afterwards. However, simple 64-bit writes still cause system
+>> freeze/reboot.
+>>
+>> The message on the screen: Machine Check Exception: 5 Bank 5:
+>> be2000000003110a.
+>>
+>> Third, I also tried to ioremap_cache() and then iowrite32() inside the
+>> driver code. The result is the same.
+>>
+>>
+>> I also tried to do the same thing on 2-socket Sandy Bridge (Romley):
+>> reads and non-temporal write behavior is the same, simple writes do
+>> not cause MCE/crash but have no effect on system state, i.e. value in
+>> memory does not change.
+>>
+>> Also, I tried the same code on older 2-socket Nehalem system: simple
+>> writes also cause MCE, although the codes are different.
+>>
+>>
+>> I think it is a hardware issue but I would appreciate if somebody can
+>> share any ideas about what's going on.
+>> Alex
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Once moving the registers into cacheable address space, your
+> device may be getting a full cache block write with varying byte masks
+> set.  Does your FPGA handle such a large write packet with varying byte
+> masks?  or does it cause a PCIe error that gets translated into the
+> Machine-checks your seeing under various write cases?
+> i.e., even an iowrite32() will write an entire cache block with
+>       a large number of byte mask bits not set.
+>
+FPGA does handle full and partial line writes correctly.
 
-Ack, git pull-request snuck this by me, obviously this should be:
-
-git://github.com/awilliam/linux-vfio.git tags/vfio-for-v3.6
-
-Thanks,
-Alex
-
-> for you to fetch changes up to 89e1f7d4c66d85f42c3d52ea3866eb10cadf6153:
-> 
->   vfio: Add PCI device driver (2012-07-31 08:16:24 -0600)
-> 
-> ----------------------------------------------------------------
-> VFIO for v3.6
-> 
-> ----------------------------------------------------------------
-> Alex Williamson (4):
->       vfio: VFIO core
->       vfio: Add documentation
->       vfio: Type1 IOMMU implementation
->       vfio: Add PCI device driver
-> 
->  Documentation/ioctl/ioctl-number.txt |    1 +
->  Documentation/vfio.txt               |  314 +++++++
->  MAINTAINERS                          |    8 +
->  drivers/Kconfig                      |    2 +
->  drivers/Makefile                     |    1 +
->  drivers/vfio/Kconfig                 |   16 +
->  drivers/vfio/Makefile                |    3 +
->  drivers/vfio/pci/Kconfig             |    8 +
->  drivers/vfio/pci/Makefile            |    4 +
->  drivers/vfio/pci/vfio_pci.c          |  579 +++++++++++++
->  drivers/vfio/pci/vfio_pci_config.c   | 1540 ++++++++++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_intrs.c    |  740 ++++++++++++++++
->  drivers/vfio/pci/vfio_pci_private.h  |   91 ++
->  drivers/vfio/pci/vfio_pci_rdwr.c     |  269 ++++++
->  drivers/vfio/vfio.c                  | 1420 +++++++++++++++++++++++++++++++
->  drivers/vfio/vfio_iommu_type1.c      |  753 +++++++++++++++++
->  include/linux/vfio.h                 |  445 ++++++++++
->  17 files changed, 6194 insertions(+)
->  create mode 100644 Documentation/vfio.txt
->  create mode 100644 drivers/vfio/Kconfig
->  create mode 100644 drivers/vfio/Makefile
->  create mode 100644 drivers/vfio/pci/Kconfig
->  create mode 100644 drivers/vfio/pci/Makefile
->  create mode 100644 drivers/vfio/pci/vfio_pci.c
->  create mode 100644 drivers/vfio/pci/vfio_pci_config.c
->  create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
->  create mode 100644 drivers/vfio/pci/vfio_pci_private.h
->  create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
->  create mode 100644 drivers/vfio/vfio.c
->  create mode 100644 drivers/vfio/vfio_iommu_type1.c
->  create mode 100644 include/linux/vfio.h
-> 
-> 
-
-
-
+In fact, in the beginning FPGA setup was tested with uncached and
+write-combining BAR mappings and full and partial line (with byte
+mask) writes were extensively tested.
