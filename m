@@ -1,93 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38953 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758001Ab2GFUig (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2012 16:38:36 -0400
-Received: by lbbgm6 with SMTP id gm6so15955499lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 06 Jul 2012 13:38:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com> <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
- <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
- <20120528140448.GA22783@redhat.com> <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
- <20120529092154.GA2441@redhat.com> <CAErSpo6Xxq_kcEYACKUsuNDOJDhEDnxWgBUateOJEBcfqufhSg@mail.gmail.com>
- <CANHD2=o-eyd2JR7oK4gJgQi3Mi-a=R1RKuGsuWzzR_WosQaNEA@mail.gmail.com>
- <20120702053110.GA2500@redhat.com> <CANHD2=pEham5SZ6EguurMd9MBuyptyx5CGF1RDhU8Ow9CaRoXA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 6 Jul 2012 14:38:14 -0600
-Message-ID: <CAErSpo6Jq0oaq0Scq46C=_6LNhMyBv76QxHQDpujsuq-bizytQ@mail.gmail.com>
-Subject: Re: Initializing iwl3945 error
-To: Kamil Grzebien <ciptok@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:61396 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464Ab2GJPyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 11:54:38 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [RFC PATCH 00/14] improve PCIe capabilities registers handling
+Date: Tue, 10 Jul 2012 23:54:01 +0800
+Message-Id: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 2, 2012 at 2:49 PM, Kamil Grzebien <ciptok@gmail.com> wrote:
-> On Mon, Jul 2, 2012 at 6:31 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Sun, Jul 01, 2012 at 07:01:58PM +0100, Kamil Grzebien wrote:
->>> I haven't tried your patch yet, but wanted to share with one thing.
->>> Currently I use new kernel 3.4.3, where the problem doesn't exist
->>> anymore. However I still would like to know what was the cause and
->>> which change brought the solution. Is there anything which comes to
->>> your mind in terms of recent changes in kernel? I also added logs from
->>> the newest kernel, so it might be easier for track it.
->>
->> Below is the diff from working kernel and non working kernel.
->> You are using PAE kernel what influence PCI mappings. Is this fixed also
->> on 3.4 non-PAE kernel?
->
-> The problem is also fixed in non-PAE kernel. I've attached the logs
-> from that kernel also. Besides that currently I was comparing both PAE
-> kernels installed on my machine - kernel 3.3.7 (problem exist) and
-> kernel 3.4.3 (problem solved). There must be something that has
-> changed either in the code or maybe kernel configuration!?
+From: Jiang Liu <liuj97@gmail.com>
 
-I compared your 3.3.0 and 3.4.3 logs:
+As suggested by Bjorn Helgaas and Don Dutile in threads
+http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
+to PCIe capabilities register in to way:
+1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
+   repeatedly reading this register because it's read only.
+2) provide access functions for PCIe Capabilities registers to hide differences
+   among PCIe base specifications, so the caller don't need to handle those
+   differences.
 
-    -Linux version 3.3.0-4.fc16.i686
-(mockbuild@x86-04.phx2.fedoraproject.org) gcc version 4.6.2 20111027
-(Red Hat 4.6.2-1) (GCC) ) #1 SMP Tue Mar 20 18:45:14 UTC 2012
-    +Linux version 3.4.3-1.fc17.i686
-(mockbuild@x86-04.phx2.fedoraproject.org) gcc
-version 4.7.0 20120507 (Red Hat 4.7.0-5) (GCC) ) #1 SMP Mon Jun 18
-20:52:37 UTC 2012
+This patch set applies to
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
 
-I don't see much that's different, except this:
+These patch set is still RFC. It provides the new interfaces and has made the
+major changes to adopt those new interfaces. But there are still several device
+drivers left untouched. Any comments about the new interfaces are welcomed,
+especially about function names:). Once we reach an agreement, I will send out
+a formal version with all needed work done.
 
-    -pci 0000:03:09.1: reg 10: [mem 0xf1bff400-0xf1bff4ff]
-    +pci 0000:03:09.1: reg 10: [mem 0xf1bff500-0xf1bff5ff]
+Jiang Liu (11):
+  PCI: refine and move pcie_cap_has_*() macros to include/linux/pci.h
+  PCI: add access functions for PCIe capabilities to hide PCIe spec
+    differences
+  PCI: use PCIe cap access functions to simplify PCI core
+    implementation
+  hotplug/PCI: use PCIe cap access functions to simplify implementation
+  portdrv/PCI: use PCIe cap access functions to simplify implementation
+  pciehp/PCI: use PCIe cap access functions to simplify implementation
+  PME/PCI: use PCIe cap access functions to simplify implementation
+  AER/PCI: use PCIe cap access functions to simplify implementation
+  ASPM/PCI: use PCIe cap access functions to simplify implementation
+  r8169/PCI: use PCIe cap access functions to simplify implementation
+  qib/PCI: use PCIe cap access functions to simplify implementation
 
-which hints that the BIOS configured that device (an SD Host
-controller) differently.  Is it possible that a BIOS setup change is
-what made the difference?  Can you reproduce the failure and success
-on the exact same hardware & BIOS setup?  I also notice the 3.3.0
-failure was apparently on battery power and the 3.4.3 success was with
-AC power.  Shouldn't matter, but obviously *something* that shouldn't
-matter does matter in this case.
+Yijing Wang (1):
+  PCI: add pcie_flags into struct pci_dev to cache PCIe capabilities
+    register
+  PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
+  PCI: remove unused field pcie_type from struct pci_dev
 
-The problem device is 0000:0b:00.0, and the bridge 00:1c.1 leads to
-bus 0b.  There's a little bit more noise in 3.4.3 related to 1c.1
-bridge windows, but the ultimate configuration is the same except for
-the 64-bit pref window, which 0b:00.0 doesn't use anyway:
+ arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
+ drivers/infiniband/hw/qib/qib_pcie.c               |   34 ++-
+ drivers/iommu/intel-iommu.c                        |    6 +-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
+ .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
+ drivers/net/ethernet/realtek/r8169.c               |   38 +--
+ drivers/pci/access.c                               |   88 +++++++
+ drivers/pci/hotplug/pciehp_acpi.c                  |    5 +-
+ drivers/pci/hotplug/pciehp_hpc.c                   |    8 +-
+ drivers/pci/hotplug/pcihp_slot.c                   |   17 +-
+ drivers/pci/iov.c                                  |    6 +-
+ drivers/pci/pci.c                                  |  265 +++++---------------
+ drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
+ drivers/pci/pcie/aer/aerdrv.c                      |   23 +-
+ drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
+ drivers/pci/pcie/aer/aerdrv_core.c                 |   47 ++--
+ drivers/pci/pcie/aspm.c                            |  110 ++++----
+ drivers/pci/pcie/pme.c                             |   23 +-
+ drivers/pci/pcie/portdrv_bus.c                     |    2 +-
+ drivers/pci/pcie/portdrv_core.c                    |   24 +-
+ drivers/pci/pcie/portdrv_pci.c                     |   15 +-
+ drivers/pci/probe.c                                |   30 +--
+ drivers/pci/quirks.c                               |    8 +-
+ drivers/pci/search.c                               |    2 +-
+ include/linux/pci.h                                |   65 ++++-
+ include/linux/pci_regs.h                           |   19 +-
+ 26 files changed, 401 insertions(+), 444 deletions(-)
 
- pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
--pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0200000-0xf03fffff 64bit pref]
-+pci 0000:00:1c.1: bridge window [io  0x1000-0x0fff] to [bus 0b-0b]
-add_size 1000
-+pci 0000:00:1c.1: bridge window [mem 0x00100000-0x000fffff 64bit pref] to [bus
-0b-0b] add_size 200000
-+pci 0000:00:1c.1: res[15]=[mem 0x00100000-0x000fffff 64bit pref]
-get_res_add_size add_size 200000
-+pci 0000:00:1c.1: res[13]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-+pci 0000:00:1c.1: BAR 15: assigned [mem 0xf0400000-0xf05fffff 64bit pref]
- pci_bus 0000:0b: resource 1 [mem 0xf1e00000-0xf1efffff]
--pci_bus 0000:0b: resource 2 [mem 0xf0200000-0xf03fffff 64bit pref]
-+pci_bus 0000:0b: resource 2 [mem 0xf0400000-0xf05fffff 64bit pref]
+-- 
+1.7.9.5
 
-Any ideas, Yinghai?
-
-Bjorn
