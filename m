@@ -1,32 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 31 Jul 2012 15:25:55 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20120731222555.GB19134@kroah.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
- <1343607994-32415-2-git-send-email-jon.mason@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:57951 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515Ab2GJRMY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 13:12:24 -0400
+Received: by bkwj10 with SMTP id j10so266180bkw.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 10:12:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343607994-32415-2-git-send-email-jon.mason@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Tue, 10 Jul 2012 10:12:22 -0700
+Message-ID: <CAD-6qVV0jqqKo729MtWpSxsvfo6r3mB68o+dnZv9MHtvYJq6Fg@mail.gmail.com>
+Subject: how to do mmap for cacheable PCIe BAR on x86
+From: Alex <solomatnikov@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 29, 2012 at 05:26:33PM -0700, Jon Mason wrote:
-> +struct ntb_transport_qp;
-> +
-> +struct ntb_client {
-> +	char *name;
-> +	int (*probe) (struct pci_dev *pdev);
-> +	void (*remove) (struct pci_dev *pdev);
-> +};
+I am trying to write a driver with custom mmap() function for PCIe
+BAR, with the goal to make this BAR cacheable in the processor cache.
+I am aware this is not the best way to achieve highest bandwidth and
+that the order of writes is unpredictable (neither are the issues in
+this case).
 
-Why isn't this tied into the driver model?  That looks like you really
-want to use a 'struct device' here, right?
+The processor is Sandy Bridge i7, PCIe device is Altera Stratix IV dev. board.
 
-Then you have drivers that bind to them, and your devices show up in
-sysfs, which is probably a requirement you have, right?
+First, I tried to do it on CentOS 5 (2.6.18). I changed the MTRR
+settings to make sure the BAR is not within uncacheable MTRR and used
+io_remap_pfn_range() with _PAGE_PCD and _PAGE_PWT bits cleared. Reads
+worked as expected: reads returned correct values and second read to
+the same address does not necessarily cause the read to go to PCIe
+(read counter was checked in FPGA). However, the writes caused the
+system to freeze and then reboot.
 
-greg k-h
+Second, I tried to do it on CentOS 6 (2.6.32), which has PAT support.
+The result is the same: reads work correctly, writes cause system
+freeze and reboot. Interestingly, non-temporal/write-combining full
+cache line writes (AVX/SSE) work as expected, i.e. they always go to
+FPGA and FPGA observes full cache line writes, reads return correct
+values afterwards. However, simple 64-bit writes still cause system
+freeze/reboot.
+
+The message on the screen: Machine Check Exception: 5 Bank 5: be2000000003110a.
+
+Third, I also tried to ioremap_cache() and then iowrite32() inside the
+driver code. The result is the same.
+
+
+I also tried to do the same thing on 2-socket Sandy Bridge (Romley):
+reads and non-temporal write behavior is the same, simple writes do
+not cause MCE/crash but have no effect on system state, i.e. value in
+memory does not change.
+
+Also, I tried the same code on older 2-socket Nehalem system: simple
+writes also cause MCE, although the codes are different.
+
+
+I think it is a hardware issue but I would appreciate if somebody can
+share any ideas about what's going on.
+Alex
