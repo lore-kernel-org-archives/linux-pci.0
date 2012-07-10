@@ -1,144 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:38228 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab2G1Loe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jul 2012 07:44:34 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
-To: Len Brown <lenb@kernel.org>, Tony Luck <tony.luch@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH 0/3] ACPI based system device hotplug framework
-Date: Sat, 28 Jul 2012 19:42:49 +0800
-Message-Id: <1343475772-21345-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH 01/14] PCI: add pcie_flags into struct pci_dev to cache PCIe capabilities register
+Date: Tue, 10 Jul 2012 23:54:02 +0800
+Message-Id: <1341935655-5381-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+From: Yijing Wang <wangyijing@huawei.com>
 
-The patchset is based on v3.5-rc6 and you may pull them from:
-git://github.com/jiangliu/linux.git acpihp
+From: Yijing Wang <wangyijing@huawei.com>
 
-Modern high-end server may support advanced hotplug features for system
-devices, including physical processor, memory board, IO extension board
-and/or computer node. The ACPI specifications have provided standard
-interfaces between firmware and OS to support device hotplug at runtime.
-This patch series provide an ACPI based hotplug framework to support system
-device hotplug at runtime, which will replace current existing ACPI device
-driver based CPU/memory/CONTAINER hotplug mechanism.
+Since PCI Express Capabilities Register is read only, cache its value
+into struct pci_dev to avoid repeatedly calling pci_read_config_*().
 
-The new ACPI based hotplug framework is modelled after PCI hotplug
-architecture and target to achieve following goals:
-1) Provide a mechanism to detect hotplug slots by checking ACPI _EJ0 method,
-ACPI PRCT (platform RAS capabilities table) and other platform specific
-mechanisms.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/probe.c |    1 +
+ include/linux/pci.h |    1 +
+ 2 files changed, 2 insertions(+)
 
-2) Unify the way to enumerate ACPI based hotplug slots. All hotplug slots
-will be enumerated by the enumeration driver, instead of by ACPI device
-drivers.
-
-3) Dynamically create/destroy ACPI hotplug slots. For example, new ACPI
-hotplug slots may be created when hot-adding a computer node if the node
-contains some memory hotplug slots.
-
-4) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
-for system devices will be handled by a generic ACPI hotplug driver,
-instead of handled by ACPI device drivers.
-
-5) Solve dependencies among hotplug slots. You need first to remove the
-memory device before removing a physical processor if a hotpluggable memory
-device is connected to a hotpluggable physical processor.
-
-6) Provide better error handling and recover.
-
-7) Provide interface to cancel ongoing hotplug operations. It may take a
-very long time to remove a memory device, so provide interface to cancel
-the operation.
-
-8) Support new RAS features, such as socket/memory migration.
-
-9) Provide better user interfaces to the hotplug functionalities.
-
-The new hotplug framework includes four logical components.
-
-The first is an ACPI hotplug slot enumerator, which enumerates ACPI hotplug
-slots on load and provides callbacks to manage those hotplug slots. An ACPI
-hotplug slot is an abstraction of receptacles, where a group of system
-devices could be connected to.
-
-The second is a device class for ACPI hotplug slots, named acpihp_slot_class.
-All ACPI hotplug slot devices will be associated with acpihp_slot_class.
-
-The third is a platform independent class driver for ACPI hotplug slots,
-which registers itself onto acpihp_slot_class and manages all ACPI hotplug
-slots in system. This hotplug driver handles ACPI hotplug events, processes
-user requests and manages slot state machine accoring to user requests.
-
-The fourth is a series of ACPI device drivers, for CPU, memory, PCI host
-bridge, IOAPIC and ACPI CONTAINER. These ACPI device drivers provide device
-specific callbacks for the hotplug driver to add/remove system devices at
-runtime.
-
-This patch set implements the first and second parts, which enumerates
-hotplug slots and creates sysfs entries for each slot as below.
-
-linux-drf:/sys/devices/LNXSYSTM:00/acpihp # ll
-drwxr-xr-x 4 root root 0 Jul 28 16:00 NODE00
-drwxr-xr-x 3 root root 0 Jul 28 16:00 NODE01
-drwxr-xr-x 3 root root 0 Jul 28 16:00 NODE02
-
-linux-drf:/sys/devices/LNXSYSTM:00/acpihp/NODE00 # ll
-drwxr-xr-x 3 root root     0 Jul 28 16:00 IOX01
--r--r--r-- 1 root root 65536 Jul 28 16:01 capabilities
-lrwxrwxrwx 1 root root     0 Jul 28 16:00 device -> ../../../LNXSYSTM:00
--r--r--r-- 1 root root 65536 Jul 28 16:01 object
-drwxr-xr-x 2 root root     0 Jul 28 16:01 power
--r--r--r-- 1 root root 65536 Jul 28 16:01 state
--r--r--r-- 1 root root 65536 Jul 28 16:01 status
-lrwxrwxrwx 1 root root     0 Jul 28 16:00 subsystem -> ../../../../class/acpihp
--r--r--r-- 1 root root 65536 Jul 28 16:01 type
--rw-r--r-- 1 root root 65536 Jul 28 16:01 uevent
-
-linux-drf:/sys/bus/acpi/acpihp # ls
-NODE00  NODE00.IOX01  NODE01  NODE02
-
-linux-drf:/sys/bus/acpi/acpihp # ll
-lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE00 ->
-		../../../devices/LNXSYSTM:00/acpihp/NODE00
-lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE00.IOX01 ->
-		../../../devices/LNXSYSTM:00/acpihp/NODE00/IOX01
-lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE01 ->
-		../../../devices/LNXSYSTM:00/acpihp/NODE01
-lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE02 ->
-		../../../devices/LNXSYSTM:00/acpihp/NODE02
-
-Jiang Liu (3):
-  ACPIHP: introduce a framework for ACPI based system device hotplug
-  ACPIHP: ACPI system device hotplug slot enumerator
-  ACPIHP: detect ACPI hotplug slots by checking ACPI _EJ0 method
-
- drivers/acpi/Kconfig                 |   33 ++
- drivers/acpi/Makefile                |    2 +
- drivers/acpi/hotplug/Makefile        |   10 +
- drivers/acpi/hotplug/core.c          |  590 ++++++++++++++++++++++++++++++++++
- drivers/acpi/hotplug/slot_enum.c     |  469 +++++++++++++++++++++++++++
- drivers/acpi/hotplug/slot_enum_ej0.c |  113 +++++++
- include/acpi/acpi_hotplug.h          |  191 +++++++++++
- 7 files changed, 1408 insertions(+)
- create mode 100644 drivers/acpi/hotplug/Makefile
- create mode 100644 drivers/acpi/hotplug/core.c
- create mode 100644 drivers/acpi/hotplug/slot_enum.c
- create mode 100644 drivers/acpi/hotplug/slot_enum_ej0.c
- create mode 100644 include/acpi/acpi_hotplug.h
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6c143b4..65e82e3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -929,6 +929,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 	pdev->is_pcie = 1;
+ 	pdev->pcie_cap = pos;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
++	pdev->pcie_flags = reg16;
+ 	pdev->pcie_type = (reg16 & PCI_EXP_FLAGS_TYPE) >> 4;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+ 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..f4a7ad6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -258,6 +258,7 @@ struct pci_dev {
+ 	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
+ 	u8		rom_base_reg;	/* which config register controls the ROM */
+ 	u8		pin;  		/* which interrupt pin this device uses */
++	u16		pcie_flags;	/* cached PCI-E Capabilities Register */
+ 
+ 	struct pci_driver *driver;	/* which driver has allocated this device */
+ 	u64		dma_mask;	/* Mask of the bits of bus address this
 -- 
 1.7.9.5
 
