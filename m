@@ -1,174 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gw1.transmode.se ([195.58.98.146]:62914 "EHLO gw1.transmode.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753199Ab2GKBHT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Jul 2012 21:07:19 -0400
-In-Reply-To: <CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
-	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se> <CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, yhlu.kernel@gmail.com
-Message-ID: <OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se>
-From: Joakim Tjernlund <joakim.tjernlund@transmode.se>
-Date: Wed, 11 Jul 2012 03:07:15 +0200
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:7718
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751770Ab2GJGNr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 02:13:47 -0400
+From: Liu Shengzhou-B36685 <B36685@freescale.com>
+To: Wood Scott-B07421 <B07421@freescale.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH] PCI: Add pcie_irq=other to enable non MSI/INTx
+ interrupt for port service driver
+Date: Tue, 10 Jul 2012 06:13:44 +0000
+Message-ID: <3F453DDFF675A64A89321A1F3528102176B4BF@039-SN1MPN1-003.039d.mgd.msft.net>
+References: <1341830970-12779-1-git-send-email-Shengzhou.Liu@freescale.com>
+ <4FFB0927.7080406@freescale.com>
+In-Reply-To: <4FFB0927.7080406@freescale.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-yhlu.kernel@gmail.com wrote on 2012/07/11 00:09:00:
->
-> On Tue, Jul 10, 2012 at 2:42 PM, Joakim Tjernlund
-> <joakim.tjernlund@transmode.se> wrote:
-> > yhlu.kernel@gmail.com wrote on 2012/07/10 20:22:09:
-> >
-> >>
-> >> On Tue, Jul 10, 2012 at 10:29 AM, Joakim Tjernlund
-> >> <joakim.tjernlund@transmode.se> wrote:
-> >> >
-> >> > I got an PCIe device that is woken up by user space, clocks needs to configured in various ways before the
-> >> > device enables its PCIe interface.
-> >> >
-> >> > The device is connected to a built in root bridge on a P2010(mpc85xx) CPU.
-> >> > To enable HP in Linux we need to apply some minor hacks.
-> >>
-> >> can you post lspci -vvxxx -s BB:DD:F of the two devices?
-> >
-> > Not really, this is an embedded device with limited SW. I got
-> > busybox and its lspci but that is very limited:
-> > # > ./busybox lspci -mk
-> > 00:00.0 "Class 0604" "1957" "0079" "0000" "0000" "pcieport"
-> > 01:00.0 "Class 0200" "14e4" "b540" "14e4" "b540"
-> >
-> > Does that tell you anything?
->
-> No. Can you compile lspci util as static and run it ?
-
-That wasn't so hard so here:
-
-root@P2020RDB ~ # ./lspci  -vvxxx
-00:00.0 Class 0604: Device 1957:0079 (rev 21)
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 32 bytes
-	Region 0: Memory at <ignored> (32-bit, non-prefetchable)
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-	I/O behind bridge: 00000000-00000fff
-	Memory behind bridge: 80000000-9fffffff
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [44] Power Management version 2
-		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
-		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag- RBE- FLReset-
-		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-		RootCap: CRSVisible-
-		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-	Capabilities: [100 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Kernel driver in use: pcieport
-00: 57 19 79 00 06 01 10 00 21 00 20 0b 08 00 01 00
-10: 00 00 f0 ff 00 00 00 00 00 01 01 00 00 00 00 00
-20: 00 80 f0 9f f1 ff 01 00 00 00 00 00 00 00 00 00
-30: 00 00 00 00 44 00 00 00 00 00 00 00 00 00 00 00
-40: 00 00 00 00 01 4c 02 fe 00 00 00 00 10 00 41 00
-50: 01 00 00 00 1f 28 00 00 41 d4 03 00 08 00 21 00
-60: c0 07 00 00 c8 03 40 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-01:00.0 Class 0200: Device 14e4:b540 (rev 02)
-	Subsystem: Device 14e4:b540
-	Physical Slot: 0
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 16
-	Region 0: Memory at 80000000 (64-bit, non-prefetchable) [size=256K]
-	Capabilities: [48] Power Management version 3
-		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [50] Vital Product Data
-pcilib: sysfs_read_vpd: read failed: Connection timed out
-		Not readable
-	Capabilities: [58] MSI: Enable- Count=1/1 Maskable- 64bit+
-		Address: 0000000000000000  Data: 0000
-	Capabilities: [ac] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM L0s L1, Latency L0 <4us, L1 <4us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+, LTR-, OBFF Not Supported
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Capabilities: [100 v1] Device Serial Number 00-00-00-00-00-00-00-00
-	Capabilities: [110 v1] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
-	Capabilities: [150 v1] Power Budgeting <?>
-	Capabilities: [160 v1] Virtual Channel
-		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
-		Arb:	Fixed- WRR32- WRR64- WRR128-
-		Ctrl:	ArbSelect=Fixed
-		Status:	InProgress-
-		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-			Status:	NegoPending- InProgress-
-00: e4 14 40 b5 06 00 10 00 02 00 00 02 08 00 00 00
-10: 04 00 00 80 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 e4 14 40 b5
-30: 00 00 00 00 48 00 00 00 00 00 00 00 00 01 00 00
-40: 00 00 00 00 00 00 00 00 01 50 03 c8 08 20 00 00
-50: 03 58 00 00 00 00 00 00 05 ac 80 00 00 00 00 00
-60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 11 00 00 00 00 00 00 00 00 00 00 00 10 00 02 00
-b0: 02 80 3c 00 10 2c 10 00 22 6c 01 00 00 00 21 10
-c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-d0: 1f 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00
-e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
+MjENCj4gU2VudDogVHVlc2RheSwgSnVseSAxMCwgMjAxMiAxMjozOSBBTQ0KPiBUbzogTGl1IFNo
+ZW5nemhvdS1CMzY2ODUNCj4gQ2M6IGJoZWxnYWFzQGdvb2dsZS5jb207IGxpbnV4LXBjaUB2Z2Vy
+Lmtlcm5lbC5vcmc7IGxpbnV4cHBjLQ0KPiBkZXZAbGlzdHMub3psYWJzLm9yZw0KPiBTdWJqZWN0
+OiBSZTogW1BBVENIXSBQQ0k6IEFkZCBwY2llX2lycT1vdGhlciB0byBlbmFibGUgbm9uIE1TSS9J
+TlR4IGludGVycnVwdA0KPiBmb3IgcG9ydCBzZXJ2aWNlIGRyaXZlcg0KPiANCj4gT24gMDcvMDkv
+MjAxMiAwNTo0OSBBTSwgU2hlbmd6aG91IExpdSB3cm90ZToNCj4gPiBPbiBzb21lIHBsYXRmb3Jt
+cywgaW4gUkMgbW9kZSwgcm9vdCBwb3J0IGhhcyBuZWl0aGVyIE1TSS9NU0ktWCBub3INCj4gPiBJ
+TlR4IGludGVycnVwdCBnZW5lcmF0ZWQsIHdoaWNoIGFyZSBhdmFpbGFibGUgb25seSBpbiBFUCBt
+b2RlIG9uIHRob3NlDQo+IHBsYXRmb3JtLg0KPiA+IEluIHRoaXMgY2FzZSwgd2UgdHJ5IHRvIHVz
+ZSBvdGhlciBpbnRlcnJ1cHQgaWYgc3VwcG9ydGVkIChpLmUuIHRoZXJlDQo+ID4gaXMgdGhlIHNo
+YXJlZCBlcnJvciBpbnRlcnJ1cHQgb24gcGxhdGZvcm0gUDEwMTAsIFAzMDQxLCBQNDA4MCwgZXRj
+KSB0bw0KPiA+IGhhdmUgQUVSLCBIb3QtcGx1ZywgZXRjLCBzZXJ2aWNlcyB0byB3b3JrLg0KPiA+
+DQo+ID4gU2lnbmVkLW9mZi1ieTogU2hlbmd6aG91IExpdSA8U2hlbmd6aG91LkxpdUBmcmVlc2Nh
+bGUuY29tPg0KPiA+IC0tLQ0KPiA+ICBEb2N1bWVudGF0aW9uL2tlcm5lbC1wYXJhbWV0ZXJzLnR4
+dCB8ICAgIDQgKysrKw0KPiA+ICBkcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jICAgICB8
+ICAgMTkgKysrKysrKysrKysrKysrKysrKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDIzIGluc2Vy
+dGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRh
+dGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQNCj4gPiBiL0RvY3VtZW50YXRpb24va2VybmVsLXBh
+cmFtZXRlcnMudHh0DQo+ID4gaW5kZXggYTkyYzVlYi4uYWY5N2M4MSAxMDA2NDQNCj4gPiAtLS0g
+YS9Eb2N1bWVudGF0aW9uL2tlcm5lbC1wYXJhbWV0ZXJzLnR4dA0KPiA+ICsrKyBiL0RvY3VtZW50
+YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0DQo+ID4gQEAgLTIyMTgsNiArMjIxOCwxMCBAQCBi
+eXRlcyByZXNwZWN0aXZlbHkuIFN1Y2ggbGV0dGVyIHN1ZmZpeGVzIGNhbiBhbHNvIGJlDQo+IGVu
+dGlyZWx5IG9taXR0ZWQuDQo+ID4gIAkJbm9tc2kJRG8gbm90IHVzZSBNU0kgZm9yIG5hdGl2ZSBQ
+Q0llIFBNRSBzaWduYWxpbmcgKHRoaXMgbWFrZXMNCj4gPiAgCQkJYWxsIFBDSWUgcm9vdCBwb3J0
+cyB1c2UgSU5UeCBmb3IgYWxsIHNlcnZpY2VzKS4NCj4gPg0KPiA+ICsJcGNpZV9pcnE9CVtQQ0lF
+XSBOYXRpdmUgUENJZSByb290IHBvcnQgaW50ZXJydXB0IG9wdGlvbnM6DQo+ID4gKwkJb3RoZXIJ
+VHJ5IHRvIHVzZSBvdGhlciBpbnRlcnJ1cHQgd2hlbiByb290IHBvcnQgaGFzDQo+ID4gKwkJCW5l
+aXRoZXIgTVNJL01TSS1YIG5vciBJTlR4IHN1cHBvcnQuDQo+IA0KPiBXaHkgZG9lcyB0aGUgdXNl
+ciBuZWVkIHRvIHNwZWNpZnkgdGhpcz8gIFNob3VsZG4ndCB0aGlzIGJlIGEgbWF0dGVyIG9mDQo+
+IGNvbW11bmljYXRpb24gYmV0d2VlbiBrZXJuZWwgaW50ZXJuYWxzPw0KPiANCg0KVGhlICJvdGhl
+ciBpbnRlcnJ1cHQiIGFwcGVhcnMgYSBub24tc3RhbmRhcmQgaW50ZXJydXB0IHdheSBjb21wYXJl
+ZCB0byBNU0kvTVNJLVggYW5kIElOVHggaW4gcG9pbnQgb2YgUENJZSBzcGVjLg0KVGhlIGludGVu
+dCBvZiBzcGVjaWZ5aW5nIHRoaXMgaXMgdG8gaGF2ZSBhbiBpbnRlcnZlbnRpb24gYW5kIGNvbmZp
+cm1hdGlvbiBtYW51YWxseSB0byBhdm9pZCBjYXVzaW5nIHVuZXhwZWN0ZWQgaXNzdWUgb24gc29t
+ZSB1bmtub3duIHBsYXRmb3Jtcy4NCkknbSBnbGFkIHRvIHJlbW92ZSB0aGUgc3BlY2lmaWVkIGtl
+cm5lbCBwYXJhbWV0ZXIgaWYgaXQgd291bGQgYmUgYWNjZXB0ZWQgdXBzdHJlYW0uDQoNCj4gPiBA
+QCAtMjE2LDYgKzIyNywxNCBAQCBzdGF0aWMgaW50IGluaXRfc2VydmljZV9pcnFzKHN0cnVjdCBw
+Y2lfZGV2ICpkZXYsIGludA0KPiAqaXJxcywgaW50IG1hc2spDQo+ID4gIAlpZiAoIXBjaV9lbmFi
+bGVfbXNpKGRldikgfHwgZGV2LT5waW4pDQo+ID4gIAkJaXJxID0gZGV2LT5pcnE7DQo+ID4NCj4g
+PiArCS8qDQo+ID4gKwkgKiBPbiBzb21lIHBsYXRmb3Jtcywgcm9vdCBwb3J0IGhhcyBuZWl0aGVy
+IE1TSS9NU0ktWCBub3IgSU5UeA0KPiA+ICsJICogaW50ZXJydXB0IHN1cHBvcnQgaW4gUkMgbW9k
+ZSwgc28gdHJ5IHRvIHVzZSBvdGhlciBpbnRlcnJ1cHQoaS5lLg0KPiA+ICsJICogc2hhcmVkIGlu
+dGVycnVwdCBpZiBzdXBwb3J0ZWQpLg0KPiA+ICsJICovDQo+ID4gKwllbHNlIGlmIChwb3J0X290
+aGVyX2ludGVycnVwdF9lbmFibGVkICYmIGRldi0+aXJxKQ0KPiA+ICsJCWlycSA9IGRldi0+aXJx
+Ow0KPiANCj4gSXMgdGhlcmUgYW55IHJlYXNvbiB0byBub3QgdXNlIGRldi0+aXJxIGlmIGl0IGlz
+IG5vbi16ZXJvPw0KPiANCj4gLVNjb3R0DQoNCkkgZ3Vlc3MgYSB0aGlua2luZyBvZiB0aGUgb3Jp
+Z2luYWwgYXV0aG9yIGRpZCBzbyBpcyBiYXNlZCBvbiB0aGUgcG9pbnQgb2YgUENJZSBzcGVjLCB3
+aGV0aGVyIElOVHggaXMgc3VwcG9ydGVkIG9yIG5vdCBpcyBkZWNpZGVkIGJ5IHRoZSAiUENJIEV4
+cHJlc3MgSW50ZXJydXB0IFBpbiBSZWdpc3RlcihSZWFkIG9ubHkpIi4NCg0KSXMgdGhlcmUgdGhl
+IGNhc2Ugb24gc29tZSBvdGhlciB1bmtub3duIHBsYXRmb3JtcyB0aGF0IGRldi0+aXJxIGlzIG5v
+bi16ZXJvIGR1ZSB0byBpbmNvcnJlY3QgaW5pdGlhbGl6YXRpb24gb2YgaXJxIGFsbG9jYXRpb24s
+IGJ1dCBhY3R1YWxseSBpdCBkb2Vzbid0IHN1cHBvcnQgTVNJL01TSVgvSU5UeCBvciBhbnkgb3Ro
+ZXIgaW50ZXJydXB0PyAgDQpJZiB3ZSBkb24ndCBuZWVkIHRvIGNvbnNpZGVyIHRoaXMgY2FzZSwg
+d2UgY2FuIHVzZSBkZXYtPmlycSBkaXJlY3RseSBpbnN0ZWFkIG9mIGRldi0+cGluIHRvIHN1cHBv
+cnQgIm90aGVyIGludGVycnVwdCIuDQoNClRoYW5rcywNClNoZW5nemhvdQ0K
 
