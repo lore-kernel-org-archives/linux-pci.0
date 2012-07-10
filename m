@@ -1,48 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33437 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752142Ab2GZQQZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 Jul 2012 12:16:25 -0400
-Message-ID: <1343319381.3125.26.camel@ul30vt>
-Subject: Re: linux-next: Tree for July 26 (vfio)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Thu, 26 Jul 2012 10:16:21 -0600
-In-Reply-To: <50116598.5070404@xenotime.net>
-References: <20120726150419.0de645e8750e3a15fa0f1aaa@canb.auug.org.au>
-	 <50116598.5070404@xenotime.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43454 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464Ab2GJPzL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 11:55:11 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH 03/14] PCI: remove unused field pcie_type from struct pci_dev
+Date: Tue, 10 Jul 2012 23:54:04 +0800
+Message-Id: <1341935655-5381-4-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-07-26 at 08:43 -0700, Randy Dunlap wrote:
-> On 07/25/2012 10:04 PM, Stephen Rothwell wrote:
-> 
-> > Hi all,
-> > 
-> > 
-> > Changes since 20120725:
-> > 
-> > 
-> 
-> 
-> on x86_64:
-> 
->   CC [M]  drivers/vfio/pci/vfio_pci_intrs.o
-> drivers/vfio/pci/vfio_pci_intrs.c: In function 'virqfd_enable':
-> drivers/vfio/pci/vfio_pci_intrs.c:142:2: error: implicit declaration of function 'eventfd_fget'
-> drivers/vfio/pci/vfio_pci_intrs.c:142:7: warning: assignment makes pointer from integer without a cast
-> drivers/vfio/pci/vfio_pci_intrs.c:148:2: error: implicit declaration of function 'eventfd_ctx_fileget'
-> drivers/vfio/pci/vfio_pci_intrs.c:148:6: warning: assignment makes pointer from integer without a cast
-> make[4]: *** [drivers/vfio/pci/vfio_pci_intrs.o] Error 1
+From: Yijing Wang <wangyijing@huawei.com>
 
-Thanks!  vfio-pci is useless without CONFIG_EVENTFD so I've added that
-to the Kconfig depends.  Should be fixed in tomorrows tree.  Thanks,
+With introduction of pci_pcie_type(), pci_dev->pcie_type field becomes
+redundant, so remove it.
 
-Alex
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/probe.c |    1 -
+ include/linux/pci.h |    1 -
+ 2 files changed, 2 deletions(-)
 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3d958e6..446933d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -930,7 +930,6 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 	pdev->pcie_cap = pos;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+ 	pdev->pcie_flags = reg16;
+-	pdev->pcie_type = (reg16 & PCI_EXP_FLAGS_TYPE) >> 4;
+ 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+ 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fc2034d..1837354 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -254,7 +254,6 @@ struct pci_dev {
+ 	u8		revision;	/* PCI revision, low byte of class word */
+ 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
+ 	u8		pcie_cap;	/* PCI-E capability offset */
+-	u8		pcie_type:4;	/* PCI-E device/port type */
+ 	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
+ 	u8		rom_base_reg;	/* which config register controls the ROM */
+ 	u8		pin;  		/* which interrupt pin this device uses */
+-- 
+1.7.9.5
 
