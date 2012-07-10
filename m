@@ -1,114 +1,642 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:59441 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753458Ab2GQFGO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 Jul 2012 01:06:14 -0400
-Received: from /spool/local
-	by e1.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Tue, 17 Jul 2012 01:06:12 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 24C536E8070
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 01:05:53 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6H55qn4281892
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 01:05:52 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HAaiIK003163
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 06:36:45 -0400
-Date: Tue, 17 Jul 2012 13:05:47 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	bhelgaas@google.com, benh@kernel.crashing.org, yinghai@kernel.org,
-	linuxram@us.ibm.com
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120717050547.GD2369@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:40722 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab2GJSgN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 14:36:13 -0400
+Received: by mail-lb0-f174.google.com with SMTP id gm6so803198lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 11:36:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1341935655-5381-7-git-send-email-jiang.liu@huawei.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+ <1341935655-5381-1-git-send-email-jiang.liu@huawei.com> <1341935655-5381-7-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 10 Jul 2012 12:35:51 -0600
+Message-ID: <CAErSpo5bx8+tdx5NFUuJurYRVDA42h2Bbrn0EdBJBF=J-8Muqg@mail.gmail.com>
+Subject: Re: [RFC PATCH 06/14] PCI: use PCIe cap access functions to simplify
+ PCI core implementation
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2012 at 10:23:17AM +0800, Gavin Shan wrote:
-> The patch changes function pbus_size_io() and pbus_size_mem() to
-> do resource (I/O, memory and prefetchable memory) reassignment
-> based on the minimal alignments for the p2p bridge, which was
-> retrieved by function window_alignment().
-> 
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+On Tue, Jul 10, 2012 at 9:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
+>
+> Use PCIe cap access functions to simplify PCI core implementation.
+>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
 > ---
->  drivers/pci/setup-bus.c |   13 +++++++++----
->  1 files changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index c0fb9da..a29483a 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -731,6 +731,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
->  	unsigned long size = 0, size0 = 0, size1 = 0;
->  	resource_size_t children_add_size = 0;
-> +	resource_size_t io_align;
-> 
->  	if (!b_res)
->   		return;
-> @@ -756,13 +757,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  				children_add_size += get_res_add_size(realloc_head, r);
->  		}
->  	}
+>  drivers/pci/pci.c    |  237 ++++++++++++++------------------------------------
+>  drivers/pci/probe.c  |   19 ++--
+>  drivers/pci/quirks.c |    8 +-
+>  3 files changed, 73 insertions(+), 191 deletions(-)
+
+Nice!
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 4c6ab70..b8142f1 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -254,34 +254,6 @@ int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap)
+>  }
+>
+>  /**
+> - * pci_pcie_cap2 - query for devices' PCI_CAP_ID_EXP v2 capability structure
+> - * @dev: PCI device to check
+> - *
+> - * Like pci_pcie_cap() but also checks that the PCIe capability version is
+> - * >= 2.  Note that v1 capability structures could be sparse in that not
+> - * all register fields were required.  v2 requires the entire structure to
+> - * be present size wise, while still allowing for non-implemented registers
+> - * to exist but they must be hardwired to 0.
+> - *
+> - * Due to the differences in the versions of capability structures, one
+> - * must be careful not to try and access non-existant registers that may
+> - * exist in early versions - v1 - of Express devices.
+> - *
+> - * Returns the offset of the PCIe capability structure as long as the
+> - * capability version is >= 2; otherwise 0 is returned.
+> - */
+> -static int pci_pcie_cap2(struct pci_dev *dev)
+> -{
+> -       int pos;
+> -
+> -       pos = pci_pcie_cap(dev);
+> -       if (pos && !pci_pcie_cap_has_cap2(dev))
+> -               pos = 0;
+> -
+> -       return pos;
+> -}
+> -
+> -/**
+>   * pci_find_ext_capability - Find an extended capability
+>   * @dev: PCI device to query
+>   * @cap: capability code
+> @@ -866,12 +838,11 @@ static struct pci_cap_saved_state *pci_find_saved_cap(
+>
+>  static int pci_save_pcie_state(struct pci_dev *dev)
+>  {
+> -       int pos, i = 0;
+> +       int i = 0;
+>         struct pci_cap_saved_state *save_state;
+>         u16 *cap;
+>
+> -       pos = pci_pcie_cap(dev);
+> -       if (!pos)
+> +       if (!pci_is_pcie(dev))
+>                 return 0;
+>
+>         save_state = pci_find_saved_cap(dev, PCI_CAP_ID_EXP);
+> @@ -881,54 +852,35 @@ static int pci_save_pcie_state(struct pci_dev *dev)
+>         }
+>         cap = (u16 *)&save_state->cap.data[0];
+>
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &cap[i++]);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_LNKCTL, &cap[i++]);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_SLTCTL, &cap[i++]);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_RTCTL,  &cap[i++]);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &cap[i++]);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_LNKCTL2, &cap[i++]);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_SLTCTL2, &cap[i++]);
+>
+> -       if (pci_pcie_cap_has_devctl(dev))
+> -               pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &cap[i++]);
+> -       if (pci_pcie_cap_has_lnkctl(dev))
+> -               pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &cap[i++]);
+> -       if (pci_pcie_cap_has_sltctl(dev))
+> -               pci_read_config_word(dev, pos + PCI_EXP_SLTCTL, &cap[i++]);
+> -       if (pci_pcie_cap_has_rtctl(dev))
+> -               pci_read_config_word(dev, pos + PCI_EXP_RTCTL, &cap[i++]);
+> -
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> -               return 0;
+> -
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &cap[i++]);
+> -       pci_read_config_word(dev, pos + PCI_EXP_LNKCTL2, &cap[i++]);
+> -       pci_read_config_word(dev, pos + PCI_EXP_SLTCTL2, &cap[i++]);
+
+Very nice!  I love this simplification.
+
+>         return 0;
+>  }
+>
+>  static void pci_restore_pcie_state(struct pci_dev *dev)
+>  {
+> -       int i = 0, pos;
+> +       int i = 0;
+>         struct pci_cap_saved_state *save_state;
+>         u16 *cap;
+>
+>         save_state = pci_find_saved_cap(dev, PCI_CAP_ID_EXP);
+> -       pos = pci_find_capability(dev, PCI_CAP_ID_EXP);
+> -       if (!save_state || pos <= 0)
+> +       if (!save_state)
+>                 return;
+>         cap = (u16 *)&save_state->cap.data[0];
+>
+> -       if (pci_pcie_cap_has_devctl(dev))
+> -               pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, cap[i++]);
+> -       if (pci_pcie_cap_has_lnkctl(dev))
+> -               pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, cap[i++]);
+> -       if (pci_pcie_cap_has_sltctl(dev))
+> -               pci_write_config_word(dev, pos + PCI_EXP_SLTCTL, cap[i++]);
+> -       if (pci_pcie_cap_has_rtctl(dev))
+> -               pci_write_config_word(dev, pos + PCI_EXP_RTCTL, cap[i++]);
+> -
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> -               return;
+> -
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, cap[i++]);
+> -       pci_write_config_word(dev, pos + PCI_EXP_LNKCTL2, cap[i++]);
+> -       pci_write_config_word(dev, pos + PCI_EXP_SLTCTL2, cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_LNKCTL, cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_SLTCTL, cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_RTCTL,  cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_LNKCTL2, cap[i++]);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_SLTCTL2, cap[i++]);
+>  }
+>
+>
+> @@ -2042,7 +1994,6 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+>   */
+>  void pci_enable_ari(struct pci_dev *dev)
+>  {
+> -       int pos;
+>         u32 cap;
+>         u16 ctrl;
+>         struct pci_dev *bridge;
+> @@ -2050,8 +2001,7 @@ void pci_enable_ari(struct pci_dev *dev)
+>         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+>                 return;
+>
+> -       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
+> -       if (!pos)
+> +       if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
+
+What's going on here?  This looks wrong, and unrelated to the rest of the patch.
+
+>                 return;
+>
+>         bridge = dev->bus->self;
+> @@ -2059,17 +2009,14 @@ void pci_enable_ari(struct pci_dev *dev)
+>                 return;
+>
+>         /* ARI is a PCIe cap v2 feature */
+
+If we're doing this right, we should be able to remove this comment
+(and similar ones below).
+
+> -       pos = pci_pcie_cap2(bridge);
+> -       if (!pos)
+> +       if (pci_pcie_cap_read_dword(bridge, PCI_EXP_DEVCAP2, &cap) ||
+> +          !(cap & PCI_EXP_DEVCAP2_ARI))
+
+I don't think there's any point in checking every return from
+pci_pcie_cap_read_dword().  We've already checked pci_is_pcie() above,
+and checking here just clutters the code.  In cases like this, my
+opinion is that clean code leads to fewer bugs, and that benefit
+outweighs whatever technical "every return must be checked" benefit
+there might be.
+
+>                 return;
+>
+> -       pci_read_config_dword(bridge, pos + PCI_EXP_DEVCAP2, &cap);
+> -       if (!(cap & PCI_EXP_DEVCAP2_ARI))
+> +       if (pci_pcie_cap_read_word(bridge, PCI_EXP_DEVCTL2, &ctrl))
+>                 return;
+> -
+> -       pci_read_config_word(bridge, pos + PCI_EXP_DEVCTL2, &ctrl);
+>         ctrl |= PCI_EXP_DEVCTL2_ARI;
+> -       pci_write_config_word(bridge, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       pci_pcie_cap_write_word(bridge, PCI_EXP_DEVCTL2, ctrl);
+>
+>         bridge->ari_enabled = 1;
+>  }
+> @@ -2085,20 +2032,16 @@ void pci_enable_ari(struct pci_dev *dev)
+>   */
+>  void pci_enable_ido(struct pci_dev *dev, unsigned long type)
+>  {
+> -       int pos;
+>         u16 ctrl;
+>
+>         /* ID-based Ordering is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> +       if (pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &ctrl))
+>                 return;
+> -
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
+>         if (type & PCI_EXP_IDO_REQUEST)
+>                 ctrl |= PCI_EXP_IDO_REQ_EN;
+>         if (type & PCI_EXP_IDO_COMPLETION)
+>                 ctrl |= PCI_EXP_IDO_CMP_EN;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
+>  }
+>  EXPORT_SYMBOL(pci_enable_ido);
+>
+> @@ -2109,20 +2052,16 @@ EXPORT_SYMBOL(pci_enable_ido);
+>   */
+>  void pci_disable_ido(struct pci_dev *dev, unsigned long type)
+>  {
+> -       int pos;
+>         u16 ctrl;
+>
+>         /* ID-based Ordering is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> +       if (pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &ctrl))
+>                 return;
+> -
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
+>         if (type & PCI_EXP_IDO_REQUEST)
+>                 ctrl &= ~PCI_EXP_IDO_REQ_EN;
+>         if (type & PCI_EXP_IDO_COMPLETION)
+>                 ctrl &= ~PCI_EXP_IDO_CMP_EN;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
+>  }
+>  EXPORT_SYMBOL(pci_disable_ido);
+>
+> @@ -2147,18 +2086,12 @@ EXPORT_SYMBOL(pci_disable_ido);
+>   */
+>  int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
+>  {
+> -       int pos;
+>         u32 cap;
+>         u16 ctrl;
+>         int ret;
+>
+> -       /* OBFF is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> -               return -ENOTSUPP;
+> -
+> -       pci_read_config_dword(dev, pos + PCI_EXP_DEVCAP2, &cap);
+> -       if (!(cap & PCI_EXP_OBFF_MASK))
+> +       if (pci_pcie_cap_read_dword(dev, PCI_EXP_DEVCAP2, &cap) ||
+> +           !(cap & PCI_EXP_OBFF_MASK))
+>                 return -ENOTSUPP; /* no OBFF support at all */
+>
+>         /* Make sure the topology supports OBFF as well */
+> @@ -2168,7 +2101,7 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
+>                         return ret;
+>         }
+>
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &ctrl);
+>         if (cap & PCI_EXP_OBFF_WAKE)
+>                 ctrl |= PCI_EXP_OBFF_WAKE_EN;
+>         else {
+> @@ -2186,7 +2119,7 @@ int pci_enable_obff(struct pci_dev *dev, enum pci_obff_signal_type type)
+>                         return -ENOTSUPP;
+>                 }
+>         }
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
+>
+>         return 0;
+>  }
+> @@ -2200,17 +2133,13 @@ EXPORT_SYMBOL(pci_enable_obff);
+>   */
+>  void pci_disable_obff(struct pci_dev *dev)
+>  {
+> -       int pos;
+>         u16 ctrl;
+>
+>         /* OBFF is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> -               return;
+> -
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
+> -       ctrl &= ~PCI_EXP_OBFF_WAKE_EN;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       if (!pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &ctrl)) {
+> +               ctrl &= ~PCI_EXP_OBFF_WAKE_EN;
+> +               pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
+> +       }
+>  }
+>  EXPORT_SYMBOL(pci_disable_obff);
+>
+> @@ -2223,17 +2152,14 @@ EXPORT_SYMBOL(pci_disable_obff);
+>   */
+>  static bool pci_ltr_supported(struct pci_dev *dev)
+>  {
+> -       int pos;
+>         u32 cap;
+>
+>         /* LTR is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> +       if (pci_pcie_cap_read_dword(dev, PCI_EXP_DEVCAP2, &cap) ||
+> +           !(cap & PCI_EXP_DEVCAP2_LTR))
+>                 return false;
+
+How about if you restructure this to avoid the double negatives?  E.g.,
+
+    pci_pcie_cap_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
+    if (cap & PCI_EXP_DEVCAP2_LTR)
+            return true;
+
+    return false;
+
+>
+> -       pci_read_config_dword(dev, pos + PCI_EXP_DEVCAP2, &cap);
+> -
+> -       return cap & PCI_EXP_DEVCAP2_LTR;
+> +       return true;
+>  }
+>
+>  /**
+> @@ -2248,22 +2174,16 @@ static bool pci_ltr_supported(struct pci_dev *dev)
+>   */
+>  int pci_enable_ltr(struct pci_dev *dev)
+>  {
+> -       int pos;
+>         u16 ctrl;
+>         int ret;
+>
+> -       if (!pci_ltr_supported(dev))
+> -               return -ENOTSUPP;
+> -
+> -       /* LTR is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> -               return -ENOTSUPP;
+> -
+>         /* Only primary function can enable/disable LTR */
+>         if (PCI_FUNC(dev->devfn) != 0)
+>                 return -EINVAL;
+>
+> +       if (!pci_ltr_supported(dev))
+> +               return -ENOTSUPP;
 > +
-> +	io_align = window_alignment(bus, IORESOURCE_IO);
-
-this should also be
-	io_align = max(4096, window_alignment(bus, IORESOURCE_IO));
-
-right?
-
-
->  	size0 = calculate_iosize(size, min_size, size1,
-> -			resource_size(b_res), 4096);
-> +			resource_size(b_res), io_align);
->  	if (children_add_size > add_size)
->  		add_size = children_add_size;
->  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->  		calculate_iosize(size, min_size, add_size + size1,
-> -			resource_size(b_res), 4096);
-> +			resource_size(b_res), io_align);
->  	if (!size0 && !size1) {
->  		if (b_res->start || b_res->end)
->  			dev_info(&bus->self->dev, "disabling bridge window "
-> @@ -772,11 +775,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  		return;
->  	}
->  	/* Alignment of the IO window is always 4K */
-> -	b_res->start = 4096;
-> +	b_res->start = io_align;
->  	b_res->end = b_res->start + size0 - 1;
->  	b_res->flags |= IORESOURCE_STARTALIGN;
->  	if (size1 > size0 && realloc_head) {
-> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-> +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
->  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
->  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
->  				 bus->secondary, bus->subordinate, size1-size0);
-> @@ -875,6 +878,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  			min_align = align1 >> 1;
->  		align += aligns[order];
->  	}
+>         /* Enable upstream ports first */
+>         if (dev->bus->self) {
+>                 ret = pci_enable_ltr(dev->bus->self);
+> @@ -2271,9 +2191,10 @@ int pci_enable_ltr(struct pci_dev *dev)
+>                         return ret;
+>         }
+>
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
+> +       if (pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &ctrl))
+> +               return -ENOTSUPP;
+>         ctrl |= PCI_EXP_LTR_EN;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
+>
+>         return 0;
+>  }
+> @@ -2285,24 +2206,19 @@ EXPORT_SYMBOL(pci_enable_ltr);
+>   */
+>  void pci_disable_ltr(struct pci_dev *dev)
+>  {
+> -       int pos;
+>         u16 ctrl;
+>
+> -       if (!pci_ltr_supported(dev))
+> -               return;
+> -
+> -       /* LTR is a PCIe cap v2 feature */
+> -       pos = pci_pcie_cap2(dev);
+> -       if (!pos)
+> -               return;
+> -
+>         /* Only primary function can enable/disable LTR */
+>         if (PCI_FUNC(dev->devfn) != 0)
+>                 return;
+>
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL2, &ctrl);
+> -       ctrl &= ~PCI_EXP_LTR_EN;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL2, ctrl);
+> +       if (!pci_ltr_supported(dev))
+> +               return;
 > +
-> +	min_align = max(min_align, window_alignment(bus, type));
-
-  'type' can sometimes be (IORESOURCE_MEM | IORESOURCE_PREFETCH), which
-  can lead to unpredictable results depending on how window_alignment()
-  is implemented... Hence to be on the safer side I suggest
-
-	min_align = max(min_align, window_alignment(bus, b_res->flags & mask));
-
-  
-
-RP
-
+> +       if (!pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL2, &ctrl)) {
+> +               ctrl &= ~PCI_EXP_LTR_EN;
+> +               pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL2, ctrl);
+> +       }
+>  }
+>  EXPORT_SYMBOL(pci_disable_ltr);
+>
+> @@ -3152,16 +3068,11 @@ EXPORT_SYMBOL(pci_set_dma_seg_boundary);
+>  static int pcie_flr(struct pci_dev *dev, int probe)
+>  {
+>         int i;
+> -       int pos;
+>         u32 cap;
+>         u16 status, control;
+>
+> -       pos = pci_pcie_cap(dev);
+> -       if (!pos)
+> -               return -ENOTTY;
+> -
+> -       pci_read_config_dword(dev, pos + PCI_EXP_DEVCAP, &cap);
+> -       if (!(cap & PCI_EXP_DEVCAP_FLR))
+> +       if (pci_pcie_cap_read_dword(dev, PCI_EXP_DEVCAP, &cap) ||
+> +           !(cap & PCI_EXP_DEVCAP_FLR))
+>                 return -ENOTTY;
+>
+>         if (probe)
+> @@ -3172,7 +3083,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>                 if (i)
+>                         msleep((1 << (i - 1)) * 100);
+>
+> -               pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
+> +               pci_pcie_cap_read_word(dev, PCI_EXP_DEVSTA, &status);
+>                 if (!(status & PCI_EXP_DEVSTA_TRPND))
+>                         goto clear;
+>         }
+> @@ -3181,9 +3092,9 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>                         "proceeding with reset anyway\n");
+>
+>  clear:
+> -       pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &control);
+> +       pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &control);
+>         control |= PCI_EXP_DEVCTL_BCR_FLR;
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, control);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, control);
+>
+>         msleep(100);
+>
+> @@ -3551,14 +3462,10 @@ EXPORT_SYMBOL(pcix_set_mmrbc);
+>   */
+>  int pcie_get_readrq(struct pci_dev *dev)
+>  {
+> -       int ret, cap;
+> +       int ret;
+>         u16 ctl;
+>
+> -       cap = pci_pcie_cap(dev);
+> -       if (!cap)
+> -               return -EINVAL;
+> -
+> -       ret = pci_read_config_word(dev, cap + PCI_EXP_DEVCTL, &ctl);
+> +       ret = pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+>         if (!ret)
+>                 ret = 128 << ((ctl & PCI_EXP_DEVCTL_READRQ) >> 12);
+>
+> @@ -3576,17 +3483,13 @@ EXPORT_SYMBOL(pcie_get_readrq);
+>   */
+>  int pcie_set_readrq(struct pci_dev *dev, int rq)
+>  {
+> -       int cap, err = -EINVAL;
+> +       int err = -EINVAL;
+>         u16 ctl, v;
+>
+>         if (rq < 128 || rq > 4096 || !is_power_of_2(rq))
+>                 goto out;
+>
+> -       cap = pci_pcie_cap(dev);
+> -       if (!cap)
+> -               goto out;
+> -
+> -       err = pci_read_config_word(dev, cap + PCI_EXP_DEVCTL, &ctl);
+> +       err = pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+>         if (err)
+>                 goto out;
+>         /*
+> @@ -3609,7 +3512,7 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+>         if ((ctl & PCI_EXP_DEVCTL_READRQ) != v) {
+>                 ctl &= ~PCI_EXP_DEVCTL_READRQ;
+>                 ctl |= v;
+> -               err = pci_write_config_word(dev, cap + PCI_EXP_DEVCTL, ctl);
+> +               err = pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, ctl);
+>         }
+>
+>  out:
+> @@ -3626,14 +3529,10 @@ EXPORT_SYMBOL(pcie_set_readrq);
+>   */
+>  int pcie_get_mps(struct pci_dev *dev)
+>  {
+> -       int ret, cap;
+> +       int ret;
+>         u16 ctl;
+>
+> -       cap = pci_pcie_cap(dev);
+> -       if (!cap)
+> -               return -EINVAL;
+> -
+> -       ret = pci_read_config_word(dev, cap + PCI_EXP_DEVCTL, &ctl);
+> +       ret = pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+>         if (!ret)
+>                 ret = 128 << ((ctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5);
+>
+> @@ -3650,7 +3549,7 @@ int pcie_get_mps(struct pci_dev *dev)
+>   */
+>  int pcie_set_mps(struct pci_dev *dev, int mps)
+>  {
+> -       int cap, err = -EINVAL;
+> +       int err = -EINVAL;
+>         u16 ctl, v;
+>
+>         if (mps < 128 || mps > 4096 || !is_power_of_2(mps))
+> @@ -3661,18 +3560,14 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>                 goto out;
+>         v <<= 5;
+>
+> -       cap = pci_pcie_cap(dev);
+> -       if (!cap)
+> -               goto out;
+> -
+> -       err = pci_read_config_word(dev, cap + PCI_EXP_DEVCTL, &ctl);
+> +       err = pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+>         if (err)
+>                 goto out;
+>
+>         if ((ctl & PCI_EXP_DEVCTL_PAYLOAD) != v) {
+>                 ctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+>                 ctl |= v;
+> -               err = pci_write_config_word(dev, cap + PCI_EXP_DEVCTL, ctl);
+> +               err = pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, ctl);
+>         }
+>  out:
+>         return err;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 446933d..5112ff5 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -603,10 +603,10 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>                 u32 linkcap;
+>                 u16 linksta;
+>
+> -               pci_read_config_dword(bridge, pos + PCI_EXP_LNKCAP, &linkcap);
+> +               pci_pcie_cap_read_dword(bridge, PCI_EXP_LNKCAP, &linkcap);
+>                 bus->max_bus_speed = pcie_link_speed[linkcap & 0xf];
+>
+> -               pci_read_config_word(bridge, pos + PCI_EXP_LNKSTA, &linksta);
+> +               pci_pcie_cap_read_word(bridge, PCI_EXP_LNKSTA, &linksta);
+>                 pcie_update_link_speed(bus, linksta);
+>         }
+>  }
+> @@ -936,18 +936,10 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>
+>  void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+>  {
+> -       int pos;
+> -       u16 reg16;
+>         u32 reg32;
+>
+> -       pos = pci_pcie_cap(pdev);
+> -       if (!pos)
+> -               return;
+> -       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+> -       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
+> -               return;
+> -       pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP, &reg32);
+> -       if (reg32 & PCI_EXP_SLTCAP_HPC)
+> +       if (!pci_pcie_cap_read_dword(pdev, PCI_EXP_SLTCAP, &reg32) &&
+> +           (reg32 & PCI_EXP_SLTCAP_HPC))
+>                 pdev->is_hotplug_bridge = 1;
+>  }
+>
+> @@ -1160,8 +1152,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
+>         if (class == PCI_CLASS_BRIDGE_HOST)
+>                 return pci_cfg_space_size_ext(dev);
+>
+> -       pos = pci_pcie_cap(dev);
+> -       if (!pos) {
+> +       if (!pci_is_pcie(dev)) {
+>                 pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+>                 if (!pos)
+>                         goto fail;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 52f44b5..7586c24 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3093,17 +3093,13 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
+>
+>  static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+>  {
+> -       int pos;
+> -
+> -       pos = pci_find_capability(dev, PCI_CAP_ID_EXP);
+> -       if (!pos)
+> +       if (!pci_is_pcie(dev))
+>                 return -ENOTTY;
+>
+>         if (probe)
+>                 return 0;
+>
+> -       pci_write_config_word(dev, pos + PCI_EXP_DEVCTL,
+> -                               PCI_EXP_DEVCTL_BCR_FLR);
+> +       pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+>         msleep(100);
+>
+>         return 0;
+> --
+> 1.7.9.5
+>
