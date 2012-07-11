@@ -1,94 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:46437
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752578Ab2GLKXl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jul 2012 06:23:41 -0400
-From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linuxppc-dev@lists.ozlabs.org>,
-	Shengzhou Liu <Shengzhou.Liu@freescale.com>
-Subject: [PATCH][upstream] PCI: Add PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ to enable non MSI/INTx interrupt
-Date: Thu, 12 Jul 2012 18:02:22 +0800
-Message-ID: <1342087342-14748-1-git-send-email-Shengzhou.Liu@freescale.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+Date: Wed, 11 Jul 2012 11:07:56 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
+	LKML <linux-kernel@vger.kernel.org>
+References: <201204292244.16467.rjw@sisk.pl> <20120711000850.GD18128@kroah.com>
+In-Reply-To: <20120711000850.GD18128@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201207111107.56500.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, in RC mode, root port has neither MSI/MSI-X nor INTx
-interrupt generated, which are available only in EP mode on those platform.
-In this case, we try to use other interrupt for port service driver to have
-AER, Hot-plug, etc, services to work. (i.e. there is the shared error interrupt
-on platform P1010/P3041/P4080 etc)
+On Wednesday, July 11, 2012, Greg KH wrote:
+> On Sun, Apr 29, 2012 at 10:44:16PM +0200, Rafael J. Wysocki wrote:
+> > From: Oleksij Rempel <bug-track@fisher-privat.net>
+> > 
+> > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> > 
+> > Some OEM use _SxD fileds do blacklist brocken Dx states.
+> > If _SxD/_SxW return values are check before suspend as appropriate,
+> > some nasty suspend/resume issues may be avoided.
+> > 
+> > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> > 
+> > Bjorn, Len,
+> > 
+> > This is -stable material and therefore v3.4 as well, IMO.  Please let me
+> > know if one of you can take it or whether you want me to handle it all the
+> > way to Linus.
+> 
+> What ever hapened to this patch?
 
-Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
----
- drivers/pci/pcie/portdrv_core.c |   10 ++++++++--
- drivers/pci/quirks.c            |   12 ++++++++++++
- include/linux/pci.h             |    5 +++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+It was split and partially merged.  As far as the other part is concerned,
+the jury is still out.
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 75915b3..837ad15 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -212,8 +212,14 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 	if (!pcie_port_enable_msix(dev, irqs, mask))
- 		return 0;
- 
--	/* We're not going to use MSI-X, so try MSI and fall back to INTx */
--	if (!pci_enable_msi(dev) || dev->pin)
-+	/*
-+	 * We're not going to use MSI-X, so try MSI and fall back to INTx.
-+	 * Eventually, if neither MSI/MSI-X nor INTx available, try other
-+	 * interrupt. (On some platforms, root port doesn't support generating
-+	 * MSI/MSI-X/INTx in RC mode)
-+	 */
-+	if (!pci_enable_msi(dev) || dev->pin || ((dev->dev_flags &
-+			PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ) && dev->irq))
- 		irq = dev->irq;
- 
-  no_msi:
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2a75216..df54e2f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2640,6 +2640,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1083,
- 			quirk_msi_intx_disable_bug);
- #endif /* CONFIG_PCI_MSI */
- 
-+/*
-+ * Under some circumstances, root port has neither MSI/MSI-X nor INTx generated,
-+ * so try other interrupt if supported.
-+ */
-+static void __devinit quirk_enable_non_msi_intx_interrupt(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ;
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
-+				quirk_enable_non_msi_intx_interrupt);
-+
- /* Allow manual resource allocation for PCI hotplug bridges
-  * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
-  * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d8c379d..f051a66 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -176,6 +176,11 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
- 	/* Provide indication device is assigned by a Virtual Machine Manager */
- 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
-+	/*
-+	 * Use other interrupt (i.e. system shared interrupt) when MSI/MSI-X
-+	 * and INTx are not supported in RC mode on some platforms.
-+	 */
-+	PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ = (__force pci_dev_flags_t) 8,
- };
- 
- enum pci_irq_reroute_variant {
--- 
-1.6.4
-
-
+Thanks,
+Rafael
