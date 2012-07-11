@@ -1,70 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:36068 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932392Ab2GKTXd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Jul 2012 15:23:33 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-Date: Wed, 11 Jul 2012 21:29:09 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
-References: <201204292244.16467.rjw@sisk.pl> <201207112104.49173.rjw@sisk.pl> <20120711192016.GA2857@kroah.com>
-In-Reply-To: <20120711192016.GA2857@kroah.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:46942 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242Ab2GKU2u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 16:28:50 -0400
+Received: by vcbf11 with SMTP id f11so1043672vcb.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 13:28:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201207112129.09397.rjw@sisk.pl>
+In-Reply-To: <CAErSpo7f1hvQ2sg8TTu-d2dy1ST8xNEfR0odESihQtRh=KMi5A@mail.gmail.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
+	<20120711162120.GA17988@google.com>
+	<CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
+	<CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
+	<CAE9FiQVbaYszsqq6WYENQu18a52m2fD9svtdFV2y4DeDnYWJcA@mail.gmail.com>
+	<CAErSpo7f1hvQ2sg8TTu-d2dy1ST8xNEfR0odESihQtRh=KMi5A@mail.gmail.com>
+Date: Wed, 11 Jul 2012 13:28:49 -0700
+Message-ID: <CAE9FiQU3RbdnBssTT6tiGP9GjtyLHBbdaor2qF=26d8WLf72cw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
+ surprise removal is not supported.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, July 11, 2012, Greg KH wrote:
-> On Wed, Jul 11, 2012 at 09:04:48PM +0200, Rafael J. Wysocki wrote:
-> > On Wednesday, July 11, 2012, Greg KH wrote:
-> > > On Wed, Jul 11, 2012 at 11:07:56AM +0200, Rafael J. Wysocki wrote:
-> > > > On Wednesday, July 11, 2012, Greg KH wrote:
-> > > > > On Sun, Apr 29, 2012 at 10:44:16PM +0200, Rafael J. Wysocki wrote:
-> > > > > > From: Oleksij Rempel <bug-track@fisher-privat.net>
-> > > > > > 
-> > > > > > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> > > > > > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
-> > > > > > 
-> > > > > > Some OEM use _SxD fileds do blacklist brocken Dx states.
-> > > > > > If _SxD/_SxW return values are check before suspend as appropriate,
-> > > > > > some nasty suspend/resume issues may be avoided.
-> > > > > > 
-> > > > > > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> > > > > > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> > > > > > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > > > > > ---
-> > > > > > 
-> > > > > > Bjorn, Len,
-> > > > > > 
-> > > > > > This is -stable material and therefore v3.4 as well, IMO.  Please let me
-> > > > > > know if one of you can take it or whether you want me to handle it all the
-> > > > > > way to Linus.
-> > > > > 
-> > > > > What ever hapened to this patch?
-> > > > 
-> > > > It was split and partially merged.  As far as the other part is concerned,
-> > > > the jury is still out.
-> > > 
-> > > Ok, I'll wait for someone to ask for it to be added to the stable tree
-> > > before I do anything.
-> > 
-> > In fact, it should have been marked as -stable material, so please add:
-> > 
-> > commit dbe9a2edd17d843d80faf2b99f20a691c1853418
-> > Author: Rafael J. Wysocki <rjw@sisk.pl>
-> > Date:   Tue May 29 21:21:07 2012 +0200
-> > 
-> >     ACPI / PM: Make acpi_pm_device_sleep_state() follow the specification
-> 
-> Ah, the name changed, that's why I couldn't find it.  Thanks, I've now
-> queued it up.
+On Wed, Jul 11, 2012 at 12:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jul 11, 2012 at 12:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Jul 11, 2012 at 11:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>> What's the connection with HP_SUPR_RM()?  Is it just a coincidence
+>>> that chipsets that set the "Hot-Plug Surprise" bit don't have this
+>>> problem with the Presence Detect State bit?
+>>>
+>>> Using HP_SUPR_RM() seems like a totally bogus way to work around a
+>>> presence detect issue.
+>>
+>> then we should blame the spec.
+>
+> What specifically are you referring to?  I see this Presence Detect State text:
+>
+>   Presence Detect State – This bit indicates the presence of an
+>   adapter in the slot, reflected by the logical “OR” of the Physical
+>   Layer in-band presence detect mechanism and, if present, any
+>   out-of-band presence detect mechanism defined for the slot’s
+>   corresponding form factor. Note that the in-band presence
+>   detect mechanism requires that power be applied to an adapter
+>   for its presence to be detected. Consequently, form factors that
+>   require a power controller for hot-plug must implement a
+>   physical pin presence detect mechanism.
+>
+> But I don't yet see the connection with the Hot-Plug Surprise bit.
 
-Thanks!
+Spec does not mention about surprise add clearly.
+
+>
+>> and if you do the above changing, when plug the card into system,
+>> kernel will bring that card online automatically without press
+>> attention button.
+>> that will be big change.
+>
+> I don't want to make a fundamental change in behavior like that.  I'm
+> just trying to understand why we should handle Presence Detect
+> differently based on the Hot-Plug Surprise bit.
+
+When hotplug surprise is supported, attention button may not there.
+So have to use present bit to trigger the sequence online work, and
+offline clean up work.
+
+When hotplug surprise is not there, why should we handle Presence Bit change?
+
+>
+> The attention button is optional.  What happens today when you plug a
+> card into a slot with no attention button?
+if the slot support hotplug surprise, that card will be online automatically.
+if the slot does not support hotplug surprise, but that slot have
+power control,  then could use need sw interface /sys/..../power to
+turn on the power and bring that card online.
+
+
+Yinghai
