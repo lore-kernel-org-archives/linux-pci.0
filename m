@@ -1,90 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:56688 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754106Ab2GIVnS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 17:43:18 -0400
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:58241 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752802Ab2GKWx1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 18:53:27 -0400
+Received: by lbbgm6 with SMTP id gm6so3170904lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 15:53:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120709203208.28178.94320.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
-	<20120709203208.28178.94320.stgit@bhelgaas.mtv.corp.google.com>
-Date: Mon, 9 Jul 2012 14:43:16 -0700
-Message-ID: <CAE9FiQXN00en27i3F16GL+HJoqVT=DenUWLCg0u4v-7vqcBTcQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: reimplement P2P bridge 1K I/O windows (Intel P64H2)
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Daniel Yeisley <dan.yeisley@unisys.com>,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: multipart/mixed; boundary=bcaec5015fe17056b904c46c80bc
+In-Reply-To: <1340657687.36341.178.camel@localhost.localdomain>
+References: <1340222160.77018.19.camel@localhost.localdomain>
+ <1340322477.56127.2.camel@localhost.localdomain> <CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
+ <1340657687.36341.178.camel@localhost.localdomain>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 11 Jul 2012 16:53:05 -0600
+Message-ID: <CAErSpo49u=NP0MwY6AVPJJC0YqvDmo092cbV4DzTT10m4jPHSA@mail.gmail.com>
+Subject: Re: [PATCH] pci: support alignments upto 8Gb in pbus_size_mem()
+To: Nikhil P Rao <nikhil.rao@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---bcaec5015fe17056b904c46c80bc
-Content-Type: text/plain; charset=ISO-8859-1
-
-On Mon, Jul 9, 2012 at 1:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Mon, Jun 25, 2012 at 2:54 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
+> On Sat, 2012-06-23 at 12:15 -0600, Bjorn Helgaas wrote:
+>> On Thu, Jun 21, 2012 at 5:47 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
+>> > I ran into the "disabling BAR .." error message when
+>> > trying to use a 8Gb PCIe card on a system with a BIOS
+>> > that didnt have support for BAR size > 2Gb.
+>>
+>> So the BIOS left the 8Gb BAR unassigned, and you got the "disabling
+>> BAR ... (bad alignment)" message when Linux tried to enable it?
 >
-> Note that the bridge window assignment code, e.g., pbus_size_io(), should
-> pay attention to dev->io_window_1k, too, but I didn't fix that.
+> Yes.
+>
+>> How do we know 8Gb is the correct new limit?  Are we going to be
+>> fixing this again when we see a 16Gb or a 32Gb BAR?  Do we need a
+>> better algorithm that doesn't have a limit like this?
+>>
+>
+> The original error message seems applicable to 32bit archs. and not to
+> 64 bit archs. How about the patch below - is aligns[44] (256bytes more)
+> acceptable ?
+>
+>
+> From: Nikhil P Rao <nikhil.rao@intel.com>
+> Date: Mon, 25 Jun 2012 13:33:55 -0700
+> Subject: [PATCH] pci: fix resource size check
+>
+> Support a PCI BAR alignment of > 2Gb, the original check was
+> only applicable to 32 bit kernels,
+>
+> Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
+> ---
+>  drivers/pci/setup-bus.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 8fa2d4b..9f8d9ea 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -780,7 +780,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  {
+>         struct pci_dev *dev;
+>         resource_size_t min_align, align, size, size0, size1;
+> -       resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
+> +       resource_size_t aligns[44];     /* Alignments from 1Mb to 2^63 */
+>         int order, max_order;
+>         struct resource *b_res = find_free_bus_resource(bus, type);
+>         unsigned int mem64_mask = 0;
+> @@ -819,7 +819,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>                         /* For bridges size != alignment */
+>                         align = pci_resource_alignment(dev, r);
+>                         order = __ffs(align) - 20;
+> -                       if (order > 11) {
+> +                       if ((sizeof(size_t) == 4 && order > 11) ||
+> +                                       (sizeof(size_t) == 8 && order > 43)) {
+>                                 dev_warn(&dev->dev, "disabling BAR %d: %pR "
+>                                          "(bad alignment %#llx)\n", i, r,
+>                                          (unsigned long long) align);
 
-Please check attached patch that will fix pbus_size_io.
+Yinghai, what's your opinion on this?  The aligns[] array on the stack
+is currently 96 bytes and would grow to 352 with this patch, which
+does seem like quite a bit.
 
-You may fold the patch in your patch, or could split your patch to
-two. First one
-only add io_window_1k, and second one will use io_window_1k. Then could put my
-patch between them.
+I do think the 2GB limit here is out-of-date.
 
-Thanks
-
-Yinghai
-
---bcaec5015fe17056b904c46c80bc
-Content-Type: application/octet-stream; name="io_window_1k.patch"
-Content-Disposition: attachment; filename="io_window_1k.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h4g2r4jn0
-
-U3ViamVjdDogW1BBVENIXSBQQ0k6IHVwZGF0ZSBwYnVzX3NpemVfaW8oKSB0byBzdXBwb3J0IGlv
-X3dpbmRvd18xawoKU28gaWYgY2hpbGRyZW4gZGV2aWNlIGFsaWdubWVudCBpcyBzbWFsbCB0aGFu
-IDFrLCB3ZSBjb3VsZCB1c2UgMWsgYXMgYnJpZGdlCmFsaWdubWVudC4KClNpZ25lZC1vZmYtYnk6
-IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvc2V0dXAt
-YnVzLmMgfCAgIDIyICsrKysrKysrKysrKysrKysrLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxNyBp
-bnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3Bj
-aS9zZXR1cC1idXMuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9z
-ZXR1cC1idXMuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jCkBAIC03MTcs
-MTAgKzcxNywxMyBAQCBzdGF0aWMgdm9pZCBwYnVzX3NpemVfaW8oc3RydWN0IHBjaV9idXMKIAlz
-dHJ1Y3QgcmVzb3VyY2UgKmJfcmVzID0gZmluZF9mcmVlX2J1c19yZXNvdXJjZShidXMsIElPUkVT
-T1VSQ0VfSU8pOwogCXVuc2lnbmVkIGxvbmcgc2l6ZSA9IDAsIHNpemUwID0gMCwgc2l6ZTEgPSAw
-OwogCXJlc291cmNlX3NpemVfdCBjaGlsZHJlbl9hZGRfc2l6ZSA9IDA7CisJcmVzb3VyY2Vfc2l6
-ZV90IG1pbl9hbGlnbiA9IDQwOTYsIGFsaWduOwogCiAJaWYgKCFiX3JlcykKICAJCXJldHVybjsK
-IAorCWlmIChidXMtPnNlbGYtPmlvX3dpbmRvd18xaykKKwkJbWluX2FsaWduID0gMTAyNDsKIAls
-aXN0X2Zvcl9lYWNoX2VudHJ5KGRldiwgJmJ1cy0+ZGV2aWNlcywgYnVzX2xpc3QpIHsKIAkJaW50
-IGk7CiAKQEAgLTczOCwxNyArNzQxLDI1IEBAIHN0YXRpYyB2b2lkIHBidXNfc2l6ZV9pbyhzdHJ1
-Y3QgcGNpX2J1cwogCQkJZWxzZQogCQkJCXNpemUxICs9IHJfc2l6ZTsKIAorCQkJYWxpZ24gPSBw
-Y2lfcmVzb3VyY2VfYWxpZ25tZW50KGRldiwgcik7CisJCQlpZiAoYWxpZ24gPiBtaW5fYWxpZ24p
-CisJCQkJbWluX2FsaWduID0gYWxpZ247CisKIAkJCWlmIChyZWFsbG9jX2hlYWQpCiAJCQkJY2hp
-bGRyZW5fYWRkX3NpemUgKz0gZ2V0X3Jlc19hZGRfc2l6ZShyZWFsbG9jX2hlYWQsIHIpOwogCQl9
-CiAJfQorCisJaWYgKG1pbl9hbGlnbiA+IDQwOTYpCisJCW1pbl9hbGlnbiA9IDQwOTY7CisKIAlz
-aXplMCA9IGNhbGN1bGF0ZV9pb3NpemUoc2l6ZSwgbWluX3NpemUsIHNpemUxLAotCQkJcmVzb3Vy
-Y2Vfc2l6ZShiX3JlcyksIDQwOTYpOworCQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGln
-bik7CiAJaWYgKGNoaWxkcmVuX2FkZF9zaXplID4gYWRkX3NpemUpCiAJCWFkZF9zaXplID0gY2hp
-bGRyZW5fYWRkX3NpemU7CiAJc2l6ZTEgPSAoIXJlYWxsb2NfaGVhZCB8fCAocmVhbGxvY19oZWFk
-ICYmICFhZGRfc2l6ZSkpID8gc2l6ZTAgOgogCQljYWxjdWxhdGVfaW9zaXplKHNpemUsIG1pbl9z
-aXplLCBhZGRfc2l6ZSArIHNpemUxLAotCQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIDQwOTYpOwor
-CQkJcmVzb3VyY2Vfc2l6ZShiX3JlcyksIG1pbl9hbGlnbik7CiAJaWYgKCFzaXplMCAmJiAhc2l6
-ZTEpIHsKIAkJaWYgKGJfcmVzLT5zdGFydCB8fCBiX3Jlcy0+ZW5kKQogCQkJZGV2X2luZm8oJmJ1
-cy0+c2VsZi0+ZGV2LCAiZGlzYWJsaW5nIGJyaWRnZSB3aW5kb3cgIgpAQCAtNzU3LDEyICs3Njgs
-MTMgQEAgc3RhdGljIHZvaWQgcGJ1c19zaXplX2lvKHN0cnVjdCBwY2lfYnVzCiAJCWJfcmVzLT5m
-bGFncyA9IDA7CiAJCXJldHVybjsKIAl9Ci0JLyogQWxpZ25tZW50IG9mIHRoZSBJTyB3aW5kb3cg
-aXMgYWx3YXlzIDRLICovCi0JYl9yZXMtPnN0YXJ0ID0gNDA5NjsKKwkvKiBBbGlnbm1lbnQgb2Yg
-dGhlIElPIHdpbmRvdyBzaG91bGQgYmUgNEssIGJ1dCBjb3VsZCBiZSAxSyBzb21ldGltZXMgKi8K
-KwliX3Jlcy0+c3RhcnQgPSBtaW5fYWxpZ247CiAJYl9yZXMtPmVuZCA9IGJfcmVzLT5zdGFydCAr
-IHNpemUwIC0gMTsKIAliX3Jlcy0+ZmxhZ3MgfD0gSU9SRVNPVVJDRV9TVEFSVEFMSUdOOwogCWlm
-IChzaXplMSA+IHNpemUwICYmIHJlYWxsb2NfaGVhZCkgewotCQlhZGRfdG9fbGlzdChyZWFsbG9j
-X2hlYWQsIGJ1cy0+c2VsZiwgYl9yZXMsIHNpemUxLXNpemUwLCA0MDk2KTsKKwkJYWRkX3RvX2xp
-c3QocmVhbGxvY19oZWFkLCBidXMtPnNlbGYsIGJfcmVzLCBzaXplMS1zaXplMCwKKwkJCQkgbWlu
-X2FsaWduKTsKIAkJZGV2X3ByaW50ayhLRVJOX0RFQlVHLCAmYnVzLT5zZWxmLT5kZXYsICJicmlk
-Z2Ugd2luZG93ICIKIAkJCQkgIiVwUiB0byAlcFIgYWRkX3NpemUgJWx4XG4iLCBiX3JlcywKIAkJ
-CQkgJmJ1cy0+YnVzbl9yZXMsIHNpemUxLXNpemUwKTsK
---bcaec5015fe17056b904c46c80bc--
+Bjorn
