@@ -1,80 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:35373 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754136Ab2GWSgf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 Jul 2012 14:36:35 -0400
-Date: Mon, 23 Jul 2012 11:36:07 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: Chris Friesen <chris.friesen@genband.com>
-Cc: Don Dutile <ddutile@redhat.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
-	gregory.v.rose@intel.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: New commands to configure IOV features
-Message-ID: <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
-In-Reply-To: <500D6932.8090306@genband.com>
-References: <5003DC9B.8000706@broadcom.com>
-	<5005BD00.4090106@redhat.com>
-	<5005D45D.1040302@genband.com>
-	<20120717.141153.46613285253481776.davem@davemloft.net>
-	<500978C7.5050004@genband.com>
-	<50097FBD.9080202@redhat.com>
-	<1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-	<5009B186.6000806@genband.com>
-	<1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-	<5009ECDF.4090305@genband.com>
-	<500D59BF.9040006@redhat.com>
-	<500D6932.8090306@genband.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:59174 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755088Ab2GKBdG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 21:33:06 -0400
+Received: by vbbff1 with SMTP id ff1so440314vbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 18:33:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se>
+References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
+	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
+	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>
+	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
+	<OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se>
+Date: Tue, 10 Jul 2012 18:33:05 -0700
+Message-ID: <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
+Subject: Re: PICe hotplug problems
+From: Yinghai Lu <yinghai@kernel.org>
+To: Joakim Tjernlund <joakim.tjernlund@transmode.se>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 Jul 2012 09:09:38 -0600
-Chris Friesen <chris.friesen@genband.com> wrote:
+On Tue, Jul 10, 2012 at 6:07 PM, Joakim Tjernlund
+<joakim.tjernlund@transmode.se> wrote:
+> yhlu.kernel@gmail.com wrote on 2012/07/11 00:09:00:
 
-> On 07/23/2012 08:03 AM, Don Dutile wrote:
-> > On 07/20/2012 07:42 PM, Chris Friesen wrote:
-> >>
-> >> I actually have a use-case where the guest needs to be able to modify 
-> >> the MAC addresses of network devices that are actually VFs.
-> >>
-> >> The guest is bonding the network devices together, so the bonding 
-> >> driver in the guest expects to be able to set all the slaves to the 
-> >> same MAC address.
-> >>
-> >> As I read the ixgbe driver, this should be possible as long as the 
-> >> host hasn't explicitly set the MAC address of the VF. Is that correct?
-> >>
-> >> Chris
-> >
-> > Interesting tug of war: hypervisors will want to set the macaddrs for 
-> > security reasons,
-> >                         some guests may want to set macaddr for 
-> > (valid?) config reasons.
-> >
-> 
-> In our case we have control over both guest an host anyways, so it's 
-> less of a security issue.  In the general case though I could see it 
-> being an interesting problem.
-> 
-> Back to the original discussion though--has anyone got any ideas about 
-> the best way to trigger runtime creation of VFs?  I don't know what the 
-> binary APIs looks like, but via sysfs I could see something like
-> 
-> echo number_of_new_vfs_to_create >  
-> /sys/bus/pci/devices/<address>/create_vfs
-> 
-> Something else that occurred to me--is there buy-in from driver 
-> maintainers?  I know the Intel ethernet drivers (what I'm most familiar 
-> with) would need to be substantially modified to support on-the-fly 
-> addition of new vfs.  Currently they assume that the number of vfs is 
-> known at module init time.
-> 
+>> No. Can you compile lspci util as static and run it ?
+>
+> That wasn't so hard so here:
+>
+> root@P2020RDB ~ # ./lspci  -vvxxx
+> 00:00.0 Class 0604: Device 1957:0079 (rev 21)
+>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 32 bytes
+>         Region 0: Memory at <ignored> (32-bit, non-prefetchable)
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>         I/O behind bridge: 00000000-00000fff
+>         Memory behind bridge: 80000000-9fffffff
+>         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+>         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [44] Power Management version 2
+>                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+>                         ExtTag- RBE- FLReset-
+>                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
+>                         ClockPM- Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
 
-Why couldn't rtnl_link_ops be used for this. It is already the preferred
-interface to create vlan's, bond devices, and other virtual devices?
-The one issue is that do the created VF's exist in kernel as devices
-or only visible to guest?
+There is no slot cap etc, so pciehp will not be loaded.
+the power of you child device can not be turned off/on.
 
+Not sure if can use link off/on make the clock effective.
+
+You can turn off and on the pcie link like following:
+
+1. remove the child device
+     echo 1 > /sys/..../0000:01:00.0/remove
+2. disable link
+     echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
+3. enable link
+     echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
+4. rescan the pci bus.
+     echo 1 > /sys/..../0000:00:00.0/rescan_bridge
+
+please check link disable patch at
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-pcie-link
+
+| Subject: [PATCH] PCI: Add link_disable in /sysfs for pcie device
+|
+| Found PCIe cards from one vendor, will not respond to scan from bridge,
+| if we change bus number setting in bridge device.
+|
+| Have to do link disable/enable on the pcie root port.
+|
+|  So try to expose link disable bit of pcie link control register. We can use
+|  echo 1 > /sys/..../link_disable
+|  echo 0 > /sys/..../link_disable
+| to bring the pcie device back to respond to scan.
