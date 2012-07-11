@@ -1,41 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:36899 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549Ab2HACKB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 22:10:01 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:49139 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513Ab2GKUtA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 16:49:00 -0400
+Received: by bkwj10 with SMTP id j10so1583252bkw.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 13:48:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120731163308.GA13610@jonmason-lab>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
-	<1343607994-32415-2-git-send-email-jon.mason@intel.com>
-	<CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
-	<20120730181542.GA987@jonmason-lab>
-	<CAF8raN6M0_TWyCCzjyXZcFYP=vgFaqQg4hNmNpBxSM+D0C_Bpg@mail.gmail.com>
-	<20120731163308.GA13610@jonmason-lab>
-Date: Wed, 1 Aug 2012 10:10:00 +0800
-Message-ID: <CAF8raN4QFnQ+9k_OGEkYexnK=knQESRSbOgsErNiA8z9MXzZ3A@mail.gmail.com>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-From: Jianbin Kang <kjbmail@gmail.com>
-To: Jon Mason <jon.mason@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dave Jiang <dave.jiang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAE9FiQU3RbdnBssTT6tiGP9GjtyLHBbdaor2qF=26d8WLf72cw@mail.gmail.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+ <1340437325-29282-3-git-send-email-yinghai@kernel.org> <CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
+ <20120711162120.GA17988@google.com> <CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
+ <CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
+ <CAE9FiQVbaYszsqq6WYENQu18a52m2fD9svtdFV2y4DeDnYWJcA@mail.gmail.com>
+ <CAErSpo7f1hvQ2sg8TTu-d2dy1ST8xNEfR0odESihQtRh=KMi5A@mail.gmail.com> <CAE9FiQU3RbdnBssTT6tiGP9GjtyLHBbdaor2qF=26d8WLf72cw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 11 Jul 2012 14:48:36 -0600
+Message-ID: <CAErSpo6rEcu3gwScEDxJ7DXzeMpT4DBGgAyhNE9qpPo4wEMouw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
+ surprise removal is not supported.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Actually this is what I'm working on now, using async_tx to replace the
-> memcpy.  I believe the changes shouldn't be that significant.
+On Wed, Jul 11, 2012 at 2:28 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jul 11, 2012 at 12:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Wed, Jul 11, 2012 at 12:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, Jul 11, 2012 at 11:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>
+>>>> What's the connection with HP_SUPR_RM()?  Is it just a coincidence
+>>>> that chipsets that set the "Hot-Plug Surprise" bit don't have this
+>>>> problem with the Presence Detect State bit?
+>>>>
+>>>> Using HP_SUPR_RM() seems like a totally bogus way to work around a
+>>>> presence detect issue.
+>>>
+>>> then we should blame the spec.
+>>
+>> What specifically are you referring to?  I see this Presence Detect State text:
+>>
+>>   Presence Detect State – This bit indicates the presence of an
+>>   adapter in the slot, reflected by the logical “OR” of the Physical
+>>   Layer in-band presence detect mechanism and, if present, any
+>>   out-of-band presence detect mechanism defined for the slot’s
+>>   corresponding form factor. Note that the in-band presence
+>>   detect mechanism requires that power be applied to an adapter
+>>   for its presence to be detected. Consequently, form factors that
+>>   require a power controller for hot-plug must implement a
+>>   physical pin presence detect mechanism.
+>>
+>> But I don't yet see the connection with the Hot-Plug Surprise bit.
 >
-> Is the "hardware that can setup dma" you refer to something that does
-> not use this interface?
+> Spec does not mention about surprise add clearly.
+
+No, in fact the Hot-Plug Surprise description mentions *removal* twice
+and doesn't mention *add* at all.
+
+>>> and if you do the above changing, when plug the card into system,
+>>> kernel will bring that card online automatically without press
+>>> attention button.
+>>> that will be big change.
+>>
+>> I don't want to make a fundamental change in behavior like that.  I'm
+>> just trying to understand why we should handle Presence Detect
+>> differently based on the Hot-Plug Surprise bit.
 >
+> When hotplug surprise is supported, attention button may not there.
+> So have to use present bit to trigger the sequence online work, and
+> offline clean up work.
 
-Yes, they use this interface, but split 'memcpy_toio' to two operation:
-     1. setup dma
-     2. wait/poll for the dma to finish.
-So maybe it need to provide a generic function 'tx' for different hardwares.
+Well, there is an "Attention Button Present" bit.  Why wouldn't we use
+that instead of trying to infer the button's presence from Hot-Plug
+Surprise?
 
-If async_tx is available, it's much better than this 'sync dma/memcpy'.
-One problem with async_tx is, it can't detect memcpy error.
-If the remote ntb goes down when async_memcpy is in operation, async_tx
-will trigger an oops.
+> When hotplug surprise is not there, why should we handle Presence Bit change?
+>
+>>
+>> The attention button is optional.  What happens today when you plug a
+>> card into a slot with no attention button?
+> if the slot support hotplug surprise, that card will be online automatically.
+> if the slot does not support hotplug surprise, but that slot have
+> power control,  then could use need sw interface /sys/..../power to
+> turn on the power and bring that card online.
+>
+>
+> Yinghai
