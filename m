@@ -1,246 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52618 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755065Ab2GXQd4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2012 12:33:56 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 04/32] PCI: add PCIe capabilities access functions to hide differences among PCIe specs
-Date: Wed, 25 Jul 2012 00:31:16 +0800
-Message-Id: <1343147504-25891-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:65343 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932121Ab2GKSpG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Jul 2012 14:45:06 -0400
+Date: Wed, 11 Jul 2012 13:14:58 -0400
+From: Jason Baron <jbaron@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
+Message-ID: <20120711171458.GA14610@redhat.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+ <1340437325-29282-5-git-send-email-yinghai@kernel.org>
+ <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Jul 11, 2012 at 09:50:19AM -0600, Bjorn Helgaas wrote:
+> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > When system support hotplug bridge with children hotplug slots, we need to make sure
+> > that parent bridge get preallocated resource so later when device is plugged into
+> > children slot, those children devices will get resource allocated.
+> >
+> > We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
+> > pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
+> >
+> > Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > Acked-by: Jason Baron <jbaron@redhat.com>
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
+> >  1 files changed, 26 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> > index ad6fd66..0f2b72d 100644
+> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+> >         }
+> >  }
+> >
+> > +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
+> > +{
+> > +       struct acpiphp_func *func;
+> > +
+> > +       if (!dev->subordinate)
+> > +               return;
+> > +
+> > +       /* quirk, or pcie could set it already */
+> > +       if (dev->is_hotplug_bridge)
+> > +               return;
+> > +
+> > +       if (PCI_SLOT(dev->devfn) != slot->device)
+> > +               return;
+> > +
+> > +       list_for_each_entry(func, &slot->funcs, sibling) {
+> > +               if (PCI_FUNC(dev->devfn) == func->function) {
+> > +                       /* check if this bridge has ejectable slots */
+> > +                       if ((detect_ejectable_slots(func->handle) > 0))
+> > +                               dev->is_hotplug_bridge = 1;
+> > +                       break;
+> > +               }
+> > +       }
+> > +}
+> >  /**
+> >   * enable_device - enable, configure a slot
+> >   * @slot: slot to be enabled
+> > @@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+> >                         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+> >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+> >                                 max = pci_scan_bridge(bus, dev, max, pass);
+> > -                               if (pass && dev->subordinate)
+> > +                               if (pass && dev->subordinate) {
+> > +                                       check_hotplug_bridge(slot, dev);
+> 
+> I don't like this patch because it increases the differences between
+> the hotplug drivers, rather than decreasing them.
+> 
+> For PCI Express devices, we set dev->is_hotplug_bridge in the
+> pci_setup_device() path (in set_pcie_hotplug_bridge()).  I think it
+> would make sense to try to expand that path to also handle SHPC and
+> ACPI hotplug as well.  ACPI is harder because it's not PCI-specified,
+> so we'd need some sort of pcibios or other optional hook.
+> 
+> I don't have a clear picture of how this works -- if I understand
+> correctly, the situation is that we have a bridge managed by acpiphp.
+> That part makes sense because the bridge is on the motherboard and can
+> have a DSDT device.  Now we plug something into the slot below the
+> bridge.  I *think* this patch handles the case where this new
+> hot-added thing is also a bridge managed by acpiphp.  But where does
+> the ACPI device for this hot-added bridge come from?  It's an
+> arbitrary device the BIOS knows nothing about, so it can't be in the
+> DSDT.
+> 
 
-Introduce five configuration access functions for PCIe capabilities registers
-to hide differences among PCIe Base Spec versions.
+So this came up while I was developing pci bridge hotplug for qemu.
+Currently, there is a top level host bus (with ACPI device definitions), where
+devices can be hot-plugged. What I've done is added a second level
+of hotplug pci busses (again with ACPI device definitions). Thus, we can
+now hotplug a bridge into the top-level bus and then devices behind it.
+Effectively increasing the hot-plug space from n -> n^2.
 
-Function pci_pcie_capability_read_word/dword() stores the PCIe Capabilities
-register value by the passed parameter val. If related PCIe Capabilities
-register is not implemented on the PCIe device, the passed parameter val
-will be set 0.
+Before the above pci patch, the devices behind the bridge would not
+configure their PCI BARs properly, since there were no i/o, mem resources
+assigned to the bridge. However, with the above patch in place things
+work as expected.
 
-Function pci_pcie_capability_write_word/dowrd() writes the value to PCIe
-Capability register.
+Using the same code base I was able to do acpi hotplug on Windows 7,
+which correctly configured the both the bridge window and devices behind
+it on hot-plug. So currently, the above usage pattern works on Windows
+7, but not on Linux.
 
-Function pci_pcie_capability_reg_implemeneted() checks whether a Capabilities
-register is implemented by the PCIe device.
+Thanks,
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/access.c     |  157 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h      |    6 ++
- include/linux/pci_regs.h |    2 +
- 3 files changed, 165 insertions(+)
+-Jason
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index ba91a7e..59409e8 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -469,3 +469,160 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
- 	raw_spin_unlock_irqrestore(&pci_lock, flags);
- }
- EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
-+
-+static inline int pci_pcie_cap_version(const struct pci_dev *dev)
-+{
-+	return dev->pcie_flags_reg & PCI_EXP_FLAGS_VERS;
-+}
-+
-+static inline bool pci_pcie_cap_has_devctl(const struct pci_dev *dev)
-+{
-+	return true;
-+}
-+
-+static inline bool pci_pcie_cap_has_lnkctl(const struct pci_dev *dev)
-+{
-+	int type = pci_pcie_type(dev);
-+
-+	return pci_pcie_cap_version(dev) > 1 ||
-+	       type == PCI_EXP_TYPE_ROOT_PORT ||
-+	       type == PCI_EXP_TYPE_ENDPOINT ||
-+	       type == PCI_EXP_TYPE_LEG_END;
-+}
-+
-+static inline bool pci_pcie_cap_has_sltctl(const struct pci_dev *dev)
-+{
-+	int type = pci_pcie_type(dev);
-+
-+	return pci_pcie_cap_version(dev) > 1 ||
-+	       type == PCI_EXP_TYPE_ROOT_PORT ||
-+	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
-+		dev->pcie_flags_reg & PCI_EXP_FLAGS_SLOT);
-+}
-+
-+static inline bool pci_pcie_cap_has_rtctl(const struct pci_dev *dev)
-+{
-+	int type = pci_pcie_type(dev);
-+
-+	return pci_pcie_cap_version(dev) > 1 ||
-+	       type == PCI_EXP_TYPE_ROOT_PORT ||
-+	       type == PCI_EXP_TYPE_RC_EC;
-+}
-+
-+bool pci_pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
-+{
-+	if (!pci_is_pcie(dev))
-+		return false;
-+
-+	switch (pos) {
-+	case PCI_EXP_FLAGS_TYPE:
-+		return true;
-+	case PCI_EXP_DEVCAP:
-+	case PCI_EXP_DEVCTL:
-+	case PCI_EXP_DEVSTA:
-+		return pci_pcie_cap_has_devctl(dev);
-+	case PCI_EXP_LNKCAP:
-+	case PCI_EXP_LNKCTL:
-+	case PCI_EXP_LNKSTA:
-+		return pci_pcie_cap_has_lnkctl(dev);
-+	case PCI_EXP_SLTCAP:
-+	case PCI_EXP_SLTCTL:
-+	case PCI_EXP_SLTSTA:
-+		return pci_pcie_cap_has_sltctl(dev);
-+	case PCI_EXP_RTCTL:
-+	case PCI_EXP_RTCAP:
-+	case PCI_EXP_RTSTA:
-+		return pci_pcie_cap_has_rtctl(dev);
-+	case PCI_EXP_DEVCAP2:
-+	case PCI_EXP_DEVCTL2:
-+	case PCI_EXP_LNKCAP2:
-+	case PCI_EXP_LNKCTL2:
-+	case PCI_EXP_LNKSTA2:
-+		return pci_pcie_cap_version(dev) > 1;
-+	default:
-+		return false;
-+	}
-+}
-+EXPORT_SYMBOL(pci_pcie_capability_reg_implemented);
-+
-+/*
-+ * Quotation from PCIe Base Spec 3.0:
-+ * For Functions that do not implement the Slot Capabilities,
-+ * Slot Status, and Slot Control registers, these spaces must
-+ * be hardwired to 0b, with the exception of the Presence Detect
-+ * State bit in the Slot Status register of Downstream Ports,
-+ * which must be hardwired to 1b.
-+ */
-+int pci_pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
-+{
-+	int ret = 0;
-+
-+	*val = 0;
-+	if (pos & 1)
-+		return -EINVAL;
-+
-+	if (pci_pcie_capability_reg_implemented(dev, pos)) {
-+		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
-+		/*
-+		 * Reset *val to 0 if pci_read_config_word() fails, it may
-+		 * have been written as 0xFFFF if hardware error happens
-+		 * during pci_read_config_word().
-+		 */
-+		if (ret)
-+			*val = 0;
-+	} else if (pos == PCI_EXP_SLTSTA &&
-+		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
-+		*val = PCI_EXP_SLTSTA_PDS;
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_pcie_capability_read_word);
-+
-+int pci_pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
-+{
-+	int ret = 0;
-+
-+	*val = 0;
-+	if (pos & 3)
-+		return -EINVAL;
-+
-+	if (pci_pcie_capability_reg_implemented(dev, pos)) {
-+		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
-+		/*
-+		 * Reset *val to 0 if pci_read_config_dword() fails, it may
-+		 * have been written as 0xFFFFFFFF if hardware error happens
-+		 * during pci_read_config_dword().
-+		 */
-+		if (ret)
-+			*val = 0;
-+	} else if (pos == PCI_EXP_SLTCTL &&
-+		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
-+		*val = PCI_EXP_SLTSTA_PDS;
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_pcie_capability_read_dword);
-+
-+int pci_pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
-+{
-+	if (pos & 1)
-+		return -EINVAL;
-+	else if (!pci_pcie_capability_reg_implemented(dev, pos))
-+		return 0;
-+
-+	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
-+}
-+EXPORT_SYMBOL(pci_pcie_capability_write_word);
-+
-+int pci_pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
-+{
-+	if (pos & 3)
-+		return -EINVAL;
-+	else if (!pci_pcie_capability_reg_implemented(dev, pos))
-+		return 0;
-+
-+	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
-+}
-+EXPORT_SYMBOL(pci_pcie_capability_write_dword);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9807da5..a9b7605 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -816,6 +816,12 @@ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
- 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
- }
- 
-+int pci_pcie_capability_read_word(struct pci_dev *dev, int where, u16 *val);
-+int pci_pcie_capability_read_dword(struct pci_dev *dev, int where, u32 *val);
-+int pci_pcie_capability_write_word(struct pci_dev *dev, int where, u16 val);
-+int pci_pcie_capability_write_dword(struct pci_dev *dev, int where, u32 val);
-+bool pci_pcie_capability_reg_implemented(struct pci_dev *dev, int where);
-+
- /* user-space driven config access */
- int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
- int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
-diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-index 53274bf..5300fdf 100644
---- a/include/linux/pci_regs.h
-+++ b/include/linux/pci_regs.h
-@@ -543,7 +543,9 @@
- #define  PCI_EXP_OBFF_MSGB_EN	0x4000	/* OBFF enable with Message type B */
- #define  PCI_EXP_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
- #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
-+#define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
- #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
-+#define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
- #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
- 
- /* Extended Capabilities (PCI-X 2.0 and Express) */
--- 
-1.7.9.5
 
