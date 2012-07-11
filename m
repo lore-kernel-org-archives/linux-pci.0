@@ -1,98 +1,43 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <201207052357.44494.rjw@sisk.pl>
-References: <201206281201.02414.rjw@sisk.pl> <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
- <201207052357.44494.rjw@sisk.pl>
+In-Reply-To: <1340222160.77018.19.camel@localhost.localdomain>
+References: <1340222160.77018.19.camel@localhost.localdomain>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 5 Jul 2012 16:31:17 -0600
-Message-ID: <CAErSpo4ngEgbcSq=hR6WXq8700a95sGLvMu=SnU+phi1tr6FzA@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Restore the original behavior of pci_set_power_state()
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Linux PM mailing list <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Huang Ying <ying.huang@intel.com>
+Date: Wed, 11 Jul 2012 17:12:53 -0600
+Message-ID: <CAErSpo5wdxqc7w0Zn-Z9-Uog8GyDqJytV5a5Uxdf39BwaXF2Hw@mail.gmail.com>
+Subject: Re: [PATCH] pci: 64bit resource fix in setup-res.c
+To: Nikhil P Rao <nikhil.rao@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 3:57 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, July 05, 2012, Bjorn Helgaas wrote:
->> On Thu, Jun 28, 2012 at 4:01 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > From: Rafael J. Wysocki <rjw@sisk.pl>
->> >
->> > Commit cc2893b6 (PCI: Ensure we re-enable devices on resume)
->> > addressed the problem with USB not being powered after resume on
->> > recent Lenovo machines, but it did that in a suboptimal way.
->> > Namely, it should have changed the relevant code paths only,
->> > which are pci_pm_resume_noirq() and pci_pm_restore_noirq() supposed
->> > to restore the device's power and standard configuration registers
->> > after system resume from suspend or hibernation.  Instead, however,
->> > it modified pci_set_power_state() which is executed in several
->> > other situations too.  That resulted in some undesirable effects,
->> > like attempting to change a device's power state in the same way
->> > multiple times in a row (up to as many as 4 times in a row in the
->> > snd_hda_intel driver).
->> >
->> > Fix the bug addressed by commit cc2893b6 in an alternative way,
->> > by forcibly powering up all devices in pci_pm_default_resume_early(),
->> > which is called by pci_pm_resume_noirq() and pci_pm_restore_noirq()
->> > to restore the device's power and standard configuration registers,
->> > and modifying pci_pm_runtime_resume() to avoid the forcible power-up
->> > if not necessary.  Then, revert the changes made by commit cc2893b6
->> > to make the confusion introduced by it go away.
->> >
->> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
->> > ---
->> >  drivers/pci/pci-driver.c |   14 ++++++++------
->> >  drivers/pci/pci.c        |   19 ++++++++++++++++++-
->> >  drivers/pci/pci.h        |    1 +
->> >  3 files changed, 27 insertions(+), 7 deletions(-)
->> >
->> > Index: linux/drivers/pci/pci.c
->> > ===================================================================
->> > --- linux.orig/drivers/pci/pci.c
->> > +++ linux/drivers/pci/pci.c
->> > @@ -662,6 +662,19 @@ void pci_update_current_state(struct pci
->> >  }
->> >
->> >  /**
->> > + * pci_power_up - Put the given device into D0 forcibly
->> > + * @dev: PCI device to power up
->> > + */
->> > +void pci_power_up(struct pci_dev *dev)
->> > +{
->> > +       if (platform_pci_power_manageable(dev))
->> > +               platform_pci_set_power_state(dev, PCI_D0);
->> > +
->> > +       pci_raw_set_power_state(dev, PCI_D0);
->> > +       pci_update_current_state(dev, PCI_D0);
->> > +}
->> > +
->> > +/**
->> >   * pci_platform_power_transition - Use platform to change device power state
->> >   * @dev: PCI device to handle.
->> >   * @state: State to put the device into.
->> > @@ -707,7 +720,7 @@ static void __pci_start_power_transition
->> >   */
->> >  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
->> >  {
->> > -       return state >= PCI_D0 ?
->> > +       return state > PCI_D0 ?
->> >                         pci_platform_power_transition(dev, state) : -EINVAL;
->>
->> This hunk conflicted with Huang's D3_COLD patches.  I fixed it up; can
->> you check and make sure I did it correctly?
->>
->> I pushed the resolution to here:
->> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git on the
->> pci/rafael-pci_set_power_state-rebase branch.
+On Wed, Jun 20, 2012 at 1:56 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
+> size parameter of _pci_assign_resource() needs to be
+> of type resource_size_t rather than int
 >
-> Yes, it looks good.  The point is to make __pci_complete_power_transition()
-> return the error code for PCI_DO too.
+> Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
+> ---
+>  drivers/pci/setup-res.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index eea85da..9f6bbec 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -206,7 +206,8 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
+>         return ret;
+>  }
+>
+> -static int _pci_assign_resource(struct pci_dev *dev, int resno, int size, resource_size_t min_align)
+> +static int _pci_assign_resource(struct pci_dev *dev, int resno,
+> +               resource_size_t size, resource_size_t min_align)
+>  {
+>         struct resource *res = dev->resource + resno;
+>         struct pci_bus *bus;
 
-Applied to my "next" branch and pushed, thanks a lot!
+I applied this, thanks!  Sorry it took so long.
 
 Bjorn
