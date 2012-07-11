@@ -1,85 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:43706 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab2GCBod (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jul 2012 21:44:33 -0400
-Received: by lbbgm6 with SMTP id gm6so8515537lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jul 2012 18:44:31 -0700 (PDT)
+Received: from gw1.transmode.se ([195.58.98.146]:50177 "EHLO gw1.transmode.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751289Ab2GKEIy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 Jul 2012 00:08:54 -0400
+In-Reply-To: <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
+References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
+	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
+	<OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se> <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
+Subject: Re: PICe hotplug problems
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, yhlu.kernel@gmail.com
+Message-ID: <OF259177D8.B20ED592-ONC1257A38.00167C85-C1257A38.0016C890@transmode.se>
+From: Joakim Tjernlund <joakim.tjernlund@transmode.se>
+Date: Wed, 11 Jul 2012 06:08:51 +0200
 MIME-Version: 1.0
-In-Reply-To: <20120628100231.GA21288@mail.eitzenberger.org>
-References: <20120628100231.GA21288@mail.eitzenberger.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 2 Jul 2012 19:44:11 -0600
-Message-ID: <CAErSpo7x84-r_7fX72+SWdxjZgO+nFc0AGqkKdGaRkbi4doEsQ@mail.gmail.com>
-Subject: Re: pciutils: problem identifying PCI devices uniquely
-To: linux-pci@vger.kernel.org
-Cc: =?ISO-8859-2?Q?Martin_Mare=B9?= <mj@ucw.cz>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Martin, pciutils maintainer]
 
-On Thu, Jun 28, 2012 at 4:02 AM, Holger Eitzenberger
-<holger@eitzenberger.org> wrote:
-> Hi,
->
-> I have a problem identifying PCI devices (NICs in this case) on some
-> hardware.
->
-> In case the questions I have are too stupid please just ignore this
-> email.
->
-> While I usually use the bus:device.function to identify the hardware
-> this is not possible on some hardware, because the bus numbers are
-> changing.  And this is all because the box has 4 slots, and each slot
-> can possibly hold one of 3 different types of modules, differing in
-> the number of NICs they hold.
->
-> I found out that this is a well known problem, which is due to the
-> fact that the different modules have a different number of PCI bridges
-> on them.  In my case from 2 to 7 PCI bridges per module.
->
-> And then I came across the Chassis Capability (id 04).  On first read
-> this sounded as it would solve the problem, making the ID unique again
-> if configured properly, irrespective of the actual slot module used.
-> Has anyone experience with the Chassis Capability?
 
-I think you're referring to the "Slot Identification" capability.  As
-far as I can tell, the kernel ignores it.
+yhlu.kernel@gmail.com wrote on 2012/07/11 03:33:05:
+>
+> On Tue, Jul 10, 2012 at 6:07 PM, Joakim Tjernlund
+> <joakim.tjernlund@transmode.se> wrote:
+> > yhlu.kernel@gmail.com wrote on 2012/07/11 00:09:00:
+>
+> >> No. Can you compile lspci util as static and run it ?
+> >
+> > That wasn't so hard so here:
+> >
+> > root@P2020RDB ~ # ./lspci  -vvxxx
+> > 00:00.0 Class 0604: Device 1957:0079 (rev 21)
+> >         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> >         Latency: 0, Cache Line Size: 32 bytes
+> >         Region 0: Memory at <ignored> (32-bit, non-prefetchable)
+> >         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> >         I/O behind bridge: 00000000-00000fff
+> >         Memory behind bridge: 80000000-9fffffff
+> >         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+> >         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+> >                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+> >         Capabilities: [44] Power Management version 2
+> >                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+> >                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+> >         Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
+> >                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+> >                         ExtTag- RBE- FLReset-
+> >                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+> >                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+> >                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+> >                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+> >                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
+> >                         ClockPM- Surprise- LLActRep- BwNot-
+> >                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
+> >                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> >                 LnkSta: Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+> >                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+> >                 RootCap: CRSVisible-
+> >                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+>
+> There is no slot cap etc, so pciehp will not be loaded.
+> the power of you child device can not be turned off/on.
+>
+> Not sure if can use link off/on make the clock effective.
+>
+> You can turn off and on the pcie link like following:
+>
+> 1. remove the child device
+>      echo 1 > /sys/..../0000:01:00.0/remove
+> 2. disable link
+>      echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
+> 3. enable link
+>      echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
+> 4. rescan the pci bus.
+>      echo 1 > /sys/..../0000:00:00.0/rescan_bridge
+>
+> please check link disable patch at
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-pcie-link
 
-I don't see spec details about it; the PCI spec v3 says it's fully
-documented in the PCI to PCI Bridge spec, but I don't see anything in
-the P2P bridge spec v1.2.  But I suppose if pciutils knows how to
-decode it, it must be documented *somewhere*.
+Thanks, that was really quick. However, the patches does not apply on my
+3.4 kernel and it looks non trivial to me fixup.
 
-> In my understanding the Chassis Capability is transparent to the OS,
-> the devices can still be identified by bus:device.function, correct?
+Could you create (even quick and dirty) patches on top of 3.4?
 
-Yes.  The kernel uses segment/bus/device/function to identify a PCI device.
+ Jocke
 
-I'm not sure exactly what your objective is, but maybe this is
-related: https://fedoraproject.org/wiki/Features/ConsistentNetworkDeviceNaming
-
-> According to the lspci source it should show something like:
->
->   Capabilities: [04] Slot ID: 8 slots, First1, chassis 42
->
-> I was unable to find some sample lspci output when googling, a sample
-> output would be helpfull as well.
->
-> What I found helpfull, without the Chassis Capability, was a small tool
-> I wrote (derived from pciutils/examle.c), which is able to identify
-> the devices with a "path walk" from the PCI Root Port to the actual
-> device.  So e. g. when specifying:
->
->  ./example -s '/00:02.0/:05.0/:01.1/:05.1'
->
-> In this case '00:02.0' is the Root Port, the other device except the
-> last are PCI bridges, specified with a wildcard for the bus number.
->
-> Would this be a feature of interest for pciutils in general?
->
-> Thanks!
->
->  /Holger
