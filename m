@@ -1,38 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:13754 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233Ab2GYWpb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 18:45:31 -0400
-Message-ID: <50107709.2000301@tilera.com>
-Date: Wed, 25 Jul 2012 18:45:29 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
+Date: Wed, 11 Jul 2012 21:04:48 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+References: <201204292244.16467.rjw@sisk.pl> <201207111107.56500.rjw@sisk.pl> <20120711135333.GA19410@kroah.com>
+In-Reply-To: <20120711135333.GA19410@kroah.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] tilegx pci: fix semantic merge conflict with 3527ed81c
-References: <201207251946.q6PJklUm016228@farm-0002.internal.tilera.com> <CAErSpo7P4jCw=gTDR3JabY1F46xWiTF6ru90T86NzuT7Pxu1_A@mail.gmail.com>
-In-Reply-To: <CAErSpo7P4jCw=gTDR3JabY1F46xWiTF6ru90T86NzuT7Pxu1_A@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201207112104.49173.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/25/2012 5:16 PM, Bjorn Helgaas wrote:
-> On Wed, Jul 25, 2012 at 1:40 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
->> > Yinghai Lu removed pci_bus.subordinate in pci-next, which meant that
->> > the tile-next changes to add tilegx PCI support don't build.  This
->> > was expected (seen in linux-next) and this one-line fix is along
->> > the same lines as commit b918c62e for all other architectures.
->> >
->> > Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> You pushed the other tile changes, so I assume you'll do the same with
-> this one.  
+On Wednesday, July 11, 2012, Greg KH wrote:
+> On Wed, Jul 11, 2012 at 11:07:56AM +0200, Rafael J. Wysocki wrote:
+> > On Wednesday, July 11, 2012, Greg KH wrote:
+> > > On Sun, Apr 29, 2012 at 10:44:16PM +0200, Rafael J. Wysocki wrote:
+> > > > From: Oleksij Rempel <bug-track@fisher-privat.net>
+> > > > 
+> > > > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
+> > > > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
+> > > > 
+> > > > Some OEM use _SxD fileds do blacklist brocken Dx states.
+> > > > If _SxD/_SxW return values are check before suspend as appropriate,
+> > > > some nasty suspend/resume issues may be avoided.
+> > > > 
+> > > > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+> > > > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> > > > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > > > ---
+> > > > 
+> > > > Bjorn, Len,
+> > > > 
+> > > > This is -stable material and therefore v3.4 as well, IMO.  Please let me
+> > > > know if one of you can take it or whether you want me to handle it all the
+> > > > way to Linus.
+> > > 
+> > > What ever hapened to this patch?
+> > 
+> > It was split and partially merged.  As far as the other part is concerned,
+> > the jury is still out.
+> 
+> Ok, I'll wait for someone to ask for it to be added to the stable tree
+> before I do anything.
 
-I will, thanks!
+In fact, it should have been marked as -stable material, so please add:
 
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
+commit dbe9a2edd17d843d80faf2b99f20a691c1853418
+Author: Rafael J. Wysocki <rjw@sisk.pl>
+Date:   Tue May 29 21:21:07 2012 +0200
 
+    ACPI / PM: Make acpi_pm_device_sleep_state() follow the specification
+
+Thanks,
+Rafael
