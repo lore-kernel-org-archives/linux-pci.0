@@ -1,109 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:37936 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861Ab2GIIlq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 04:41:46 -0400
-Received: by vbbff1 with SMTP id ff1so7172568vbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 01:41:45 -0700 (PDT)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:46643 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932159Ab2GKWZN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 18:25:13 -0400
+Received: by lbbgm6 with SMTP id gm6so3132380lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 15:25:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAJkVMNo4MwCXY0iHwua3hR82D14dGnALGwXkujgONPQDzaRTdQ@mail.gmail.com>
-References: <CAJkVMNoYYb3vpP1T5Sq3nmzpwLJUG7oRxUyX5=M9byQQjW1aew@mail.gmail.com>
-	<CAErSpo6PVQdu+nRJs43TJ2fCTk4papaeVLMyHZ1KbnRDCVtd0A@mail.gmail.com>
-	<CAJkVMNpZaMKm8tc+axdOBySpp68_j=EegEUOO+B=cYudsxNCgw@mail.gmail.com>
-	<CAErSpo5_srroOSahe3tdeD_UQVfbqe4ixZtKfVJqc7a9-j3SQg@mail.gmail.com>
-	<CAJkVMNo4MwCXY0iHwua3hR82D14dGnALGwXkujgONPQDzaRTdQ@mail.gmail.com>
-Date: Mon, 9 Jul 2012 01:41:45 -0700
-Message-ID: <CAE9FiQUbALKRWA2QsTapJOYArX0XBjU7DDxX6OSfhjXs+BGjmw@mail.gmail.com>
-Subject: Re: 64 bit address to a pcie card
-From: Yinghai Lu <yinghai@kernel.org>
-To: sumit chaudhary <flyingbee.linux@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: multipart/mixed; boundary=f46d043be15676a30604c461959f
+In-Reply-To: <CAE9FiQXTjEqLLGx=EzxoWNqKTPF+g4=PNMiiTLkdUyf0LX-JUg@mail.gmail.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+ <1340437325-29282-3-git-send-email-yinghai@kernel.org> <CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
+ <20120711162120.GA17988@google.com> <CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
+ <CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
+ <CAE9FiQVbaYszsqq6WYENQu18a52m2fD9svtdFV2y4DeDnYWJcA@mail.gmail.com>
+ <CAErSpo7f1hvQ2sg8TTu-d2dy1ST8xNEfR0odESihQtRh=KMi5A@mail.gmail.com>
+ <CAE9FiQU3RbdnBssTT6tiGP9GjtyLHBbdaor2qF=26d8WLf72cw@mail.gmail.com>
+ <CAErSpo6rEcu3gwScEDxJ7DXzeMpT4DBGgAyhNE9qpPo4wEMouw@mail.gmail.com> <CAE9FiQXTjEqLLGx=EzxoWNqKTPF+g4=PNMiiTLkdUyf0LX-JUg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 11 Jul 2012 16:24:51 -0600
+Message-ID: <CAErSpo4=W7kejZ9BsUeZfu5R0=R8tzq5+q96aOX+VbOsOY6CLw@mail.gmail.com>
+Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
+ surprise removal is not supported.
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---f46d043be15676a30604c461959f
-Content-Type: text/plain; charset=ISO-8859-1
-
-On Sun, Jul 8, 2012 at 10:39 PM, sumit chaudhary
-<flyingbee.linux@gmail.com> wrote:
->  Hi Bjorn,
+On Wed, Jul 11, 2012 at 2:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jul 11, 2012 at 1:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>> When hotplug surprise is supported, attention button may not there.
+>>> So have to use present bit to trigger the sequence online work, and
+>>> offline clean up work.
+>>
+>> Well, there is an "Attention Button Present" bit.  Why wouldn't we use
+>> that instead of trying to infer the button's presence from Hot-Plug
+>> Surprise?
 >
->  Device is working as expected but problem is that I want to test this
->  device  with real 64 bit addresses that lies above 4GB.
->  is there a way to allocate addresses above 4GB range ?
->  If I try to allocate BAR size more than 2GB i.e. to push allocated
->  address above 4GB, I increase resource size asked from OS
->  than host system stopped booting and hangs.
->  I also tried enumerating PCI subsystem using kernel command line
->  option pci_assign = buses, but same problem persist.
->  I also tried  Increasing RAM of my system to 4 GB but still address
->  allocation is in 32 bit range.
+> so you want this ?
+>
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c
+> b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 27f4429..f103a4ca 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -463,7 +463,7 @@ static void interrupt_event_handler(struct
+> work_struct *work)
+>                 break;
+>         case INT_PRESENCE_ON:
+>         case INT_PRESENCE_OFF:
+> -               if (!HP_SUPR_RM(ctrl))
+> +               if (ATTN_BUTTN(ctrl))
+>                         break;
+>                 ctrl_dbg(ctrl, "Surprise Removal\n");
+>                 handle_surprise_event(p_slot);
+>
+> that should keep current user expected behavior that kernel only bring
+> the card online after press the button.
 
-you can check my for-pci-res_alloc branch and attached patch.
+Well, I was actually only interested in reviewing your original patch,
+and this seemed like a possible bug.  If it's not a bug, I don't want
+to change anything.
 
-	git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-res-alloc
+If we *do* want to change something there, I don't like the proposal
+above any better.  It's still basically saying "presence detect is
+only reliable when X is set" when X is not clearly related to presence
+detect.
 
-and you need to boot with pci=pref_bar. it will clear pref_bar and
-assign mem64 bar to above at first.
+I think it's better to disable the presence detect interrupt
+completely if it's not reliable, as your original patch did.  My
+complaint with that is that HP_SUPR_RM() doesn't seem like the right
+test for "the interrupt is not reliable."
 
-Thanks
+Having a "Presence Detect State" bit and an interrupt that tells you
+when it changed is only meaningful if that bit gives you useful
+information.  If hardware supplies that bit but it toggles all the
+time when the slot is empty because it's hooked up to link training
+attempts, that just means the hardware screwed up.  The hardware
+*should* have included some logic to filter out the attempts and
+toggle the bit only when a card is actually added or removed.  I
+believe the functionality of "Presence Detect State" is logically
+independent of "Hot-Plug Surprise" and "Attention Button Present."
 
-Yinghai
+So if we want to disable the "Presence Detect Changed" interrupt,
+that's fine, but I think we should do it based on a quirk or
+blacklist, or based on the fact that we have no need for it.  One
+reason to want the interrupt is if "Hot-Plug Surprise" is set,
+indicating that an adapter might be removed without notice, and if
+that's the only reason, we could use your original patch.  But if we
+do, I think we should change interrupt_event_handler() to look
+something like this:
 
---f46d043be15676a30604c461959f
-Content-Type: application/octet-stream; name="pci_assign_pref.patch"
-Content-Disposition: attachment; filename="pci_assign_pref.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h4fauo9y0
+    case INT_PRESENCE_ON:
+        if (!ATTN_BUTTN(ctrl))
+            handle_surprise_event(p_slot);  /* omit this if you don't
+think it's useful */
+        break;
+    case INT_PRESENCE_OFF:
+        handle_surprise_event(p_slot);
+        break;
 
-U3ViamVjdDogW1BBVENIXSBQQ0ksIHg4NjogQWRkIHBjaT1wcmVmX2JhciB0byByZWFsbG9jIHBy
-ZWYgYmFycwoKU28gY291bGQgcmVhbGxvY2F0ZSA2NGJpdCBwcmVmIG1lbSBhYm92ZSA0Zy4KClNp
-Z25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogYXJjaC94
-ODYvaW5jbHVkZS9hc20vcGNpX3g4Ni5oIHwgICAgMSArCiBhcmNoL3g4Ni9wY2kvY29tbW9uLmMg
-ICAgICAgICAgfCAgICAzICsrKwogYXJjaC94ODYvcGNpL2kzODYuYyAgICAgICAgICAgIHwgICAy
-MCArKysrKysrKysrKysrLS0tLS0tLQogMyBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCsp
-LCA3IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9w
-Y2lfeDg2LmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC94ODYvaW5jbHVkZS9h
-c20vcGNpX3g4Ni5oCisrKyBsaW51eC0yLjYvYXJjaC94ODYvaW5jbHVkZS9hc20vcGNpX3g4Ni5o
-CkBAIC0zNSw2ICszNSw3IEBAIGRvIHsJCQkJCQlcCiAjZGVmaW5lIFBDSV9OT0FTU0lHTl9ST01T
-CTB4ODAwMDAKICNkZWZpbmUgUENJX1JPT1RfTk9fQ1JTCQkweDEwMDAwMAogI2RlZmluZSBQQ0lf
-Tk9BU1NJR05fQkFSUwkweDIwMDAwMAorI2RlZmluZSBQQ0lfQVNTSUdOX1BSRUZfQkFSUwkweDQw
-MDAwMAogCiBleHRlcm4gdW5zaWduZWQgaW50IHBjaV9wcm9iZTsKIGV4dGVybiB1bnNpZ25lZCBs
-b25nIHBpcnFfdGFibGVfYWRkcjsKSW5kZXg6IGxpbnV4LTIuNi9hcmNoL3g4Ni9wY2kvY29tbW9u
-LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC94ODYvcGNpL2NvbW1vbi5jCisr
-KyBsaW51eC0yLjYvYXJjaC94ODYvcGNpL2NvbW1vbi5jCkBAIC01NzMsNiArNTczLDkgQEAgY2hh
-ciAqIF9fZGV2aW5pdCAgcGNpYmlvc19zZXR1cChjaGFyICpzdAogCX0gZWxzZSBpZiAoIXN0cmNt
-cChzdHIsICJhc3NpZ24tYnVzc2VzIikpIHsKIAkJcGNpX3Byb2JlIHw9IFBDSV9BU1NJR05fQUxM
-X0JVU1NFUzsKIAkJcmV0dXJuIE5VTEw7CisJfSBlbHNlIGlmICghc3RyY21wKHN0ciwgInByZWZf
-YmFyIikpIHsKKwkJcGNpX3Byb2JlIHw9IFBDSV9BU1NJR05fUFJFRl9CQVJTOworCQlyZXR1cm4g
-TlVMTDsKIAl9IGVsc2UgaWYgKCFzdHJjbXAoc3RyLCAidXNlX2NycyIpKSB7CiAJCXBjaV9wcm9i
-ZSB8PSBQQ0lfVVNFX19DUlM7CiAJCXJldHVybiBOVUxMOwpJbmRleDogbGludXgtMi42L2FyY2gv
-eDg2L3BjaS9pMzg2LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvYXJjaC94ODYvcGNp
-L2kzODYuYworKysgbGludXgtMi42L2FyY2gveDg2L3BjaS9pMzg2LmMKQEAgLTIxMiw3ICsyMTIs
-OSBAQCBzdGF0aWMgdm9pZCBwY2liaW9zX2FsbG9jYXRlX2JyaWRnZV9yZXNvCiAJCQljb250aW51
-ZTsKIAkJaWYgKCFyLT5mbGFncykKIAkJCWNvbnRpbnVlOwotCQlpZiAoIXItPnN0YXJ0IHx8IHBj
-aV9jbGFpbV9yZXNvdXJjZShkZXYsIGlkeCkgPCAwKSB7CisJCWlmICgoKHItPmZsYWdzICYgSU9S
-RVNPVVJDRV9QUkVGRVRDSCkgJiYKKwkJICAgICAocGNpX3Byb2JlICYgUENJX0FTU0lHTl9QUkVG
-X0JBUlMpKSB8fAorCQkgICAgIXItPnN0YXJ0IHx8IHBjaV9jbGFpbV9yZXNvdXJjZShkZXYsIGlk
-eCkgPCAwKSB7CiAJCQkvKgogCQkJICogU29tZXRoaW5nIGlzIHdyb25nIHdpdGggdGhlIHJlZ2lv
-bi4KIAkJCSAqIEludmFsaWRhdGUgdGhlIHJlc291cmNlIHRvIHByZXZlbnQKQEAgLTI1MywxNSAr
-MjU1LDE5IEBAIHN0YXRpYyB2b2lkIHBjaWJpb3NfYWxsb2NhdGVfZGV2X3Jlc291cmMKIAkJZWxz
-ZQogCQkJZGlzYWJsZWQgPSAhKGNvbW1hbmQgJiBQQ0lfQ09NTUFORF9NRU1PUlkpOwogCQlpZiAo
-cGFzcyA9PSBkaXNhYmxlZCkgeworCQkJaWYgKChyLT5mbGFncyAmIElPUkVTT1VSQ0VfUFJFRkVU
-Q0gpICYmCisJCQkgICAgKHBjaV9wcm9iZSAmIFBDSV9BU1NJR05fUFJFRl9CQVJTKSkKKwkJCQln
-b3RvIGNsZWFyX3N0YXJ0OwogCQkJZGV2X2RiZygmZGV2LT5kZXYsCiAJCQkJIkJBUiAlZDogcmVz
-ZXJ2aW5nICVwciAoZD0lZCwgcD0lZClcbiIsCiAJCQkJaWR4LCByLCBkaXNhYmxlZCwgcGFzcyk7
-Ci0JCQlpZiAocGNpX2NsYWltX3Jlc291cmNlKGRldiwgaWR4KSA8IDApIHsKLQkJCQkvKiBXZSds
-bCBhc3NpZ24gYSBuZXcgYWRkcmVzcyBsYXRlciAqLwotCQkJCXBjaWJpb3Nfc2F2ZV9md19hZGRy
-KGRldiwgaWR4LCByLT5zdGFydCk7Ci0JCQkJci0+ZW5kIC09IHItPnN0YXJ0OwotCQkJCXItPnN0
-YXJ0ID0gMDsKLQkJCX0KKwkJCWlmICghcGNpX2NsYWltX3Jlc291cmNlKGRldiwgaWR4KSkKKwkJ
-CQljb250aW51ZTsKK2NsZWFyX3N0YXJ0OgorCQkJLyogV2UnbGwgYXNzaWduIGEgbmV3IGFkZHJl
-c3MgbGF0ZXIgKi8KKwkJCXBjaWJpb3Nfc2F2ZV9md19hZGRyKGRldiwgaWR4LCByLT5zdGFydCk7
-CisJCQlyLT5lbmQgLT0gci0+c3RhcnQ7CisJCQlyLT5zdGFydCA9IDA7CiAJCX0KIAl9CiAJaWYg
-KCFwYXNzKSB7Cg==
---f46d043be15676a30604c461959f--
+If you did make a change like this, I propose (as a separate patch)
+passing info->event_type into handle_surprise_event().  We've already
+read the "Presence Detect State" bit, so there's no need for
+handle_surprise_event() to do it again.
