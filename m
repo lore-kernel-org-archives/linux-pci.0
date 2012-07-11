@@ -1,68 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:62298 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852Ab2GJXMW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 19:12:22 -0400
-Received: by vbbff1 with SMTP id ff1so385903vbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 16:12:21 -0700 (PDT)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:58870 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755264Ab2GKPul (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 11:50:41 -0400
+Received: by lbbgm6 with SMTP id gm6so2579026lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 08:50:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
-Date: Tue, 10 Jul 2012 16:12:21 -0700
-Message-ID: <CAE9FiQVX+CnRchXNe8PF8fz7hbc=UTzP8nCxEAzAzrJTeZk-Tg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+In-Reply-To: <1340437325-29282-5-git-send-email-yinghai@kernel.org>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org> <1340437325-29282-5-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 11 Jul 2012 09:50:19 -0600
+Message-ID: <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, Jason Baron <jbaron@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 3:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> If surprise removal is not supported, that event get dropped later.
->> So there is no point to enable that.
->>
->> Also some sick chipset have those bit flip around when the card is not present.
->> and make log full of useless warning.
+On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> When system support hotplug bridge with children hotplug slots, we need to make sure
+> that parent bridge get preallocated resource so later when device is plugged into
+> children slot, those children devices will get resource allocated.
 >
-> HP_SUPR_RM tests the Slot Capabilities "Hot-Plug Surprise" bit, which
-> indicates that an adapter might be *removed* without prior
-> notification (sec 7.8.9).
+> We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
+> pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
 >
-> PCI_EXP_SLTCTL_PDCE is the Slot Control "Presence Detect Changed
-> Enable" bit, which enables interrupts for any change in the Slot
-> Status "Presence Detect State", i.e., we may get interrupts for either
-> add or remove events.
+> Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Acked-by: Jason Baron <jbaron@redhat.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
+>  1 files changed, 26 insertions(+), 1 deletions(-)
 >
-> In interrupt_event_handler(), we drop both add and remove events if
-> !HP_SUPR_RM().  Specifically, we drop *add* events if surprise
-> *removal* isn't supported.  That seems strange -- just from reading
-> the spec, it seems that a surprise *add* could occur even if the
-> "Hot-Plug Surprise" bit is not set.
-
-Interesting, that means after card is plugged in, we don't need to
-press attention button to bring
-it online.
-
-And other oses like windows and solaris do need to press the button
-like current linux doing.
-
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index ad6fd66..0f2b72d 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+>         }
+>  }
 >
-> So I'm not convinced that we should even bother looking at the
-> "Hot-Plug Surprise" bit...  Maybe we'd be better off if we just
-> removed that HP_SUPR_RM() test in interrupt_event_handler() and always
-> called handle_surprise_event().
+> +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
+> +{
+> +       struct acpiphp_func *func;
+> +
+> +       if (!dev->subordinate)
+> +               return;
+> +
+> +       /* quirk, or pcie could set it already */
+> +       if (dev->is_hotplug_bridge)
+> +               return;
+> +
+> +       if (PCI_SLOT(dev->devfn) != slot->device)
+> +               return;
+> +
+> +       list_for_each_entry(func, &slot->funcs, sibling) {
+> +               if (PCI_FUNC(dev->devfn) == func->function) {
+> +                       /* check if this bridge has ejectable slots */
+> +                       if ((detect_ejectable_slots(func->handle) > 0))
+> +                               dev->is_hotplug_bridge = 1;
+> +                       break;
+> +               }
+> +       }
+> +}
+>  /**
+>   * enable_device - enable, configure a slot
+>   * @slot: slot to be enabled
+> @@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>                         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+>                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+>                                 max = pci_scan_bridge(bus, dev, max, pass);
+> -                               if (pass && dev->subordinate)
+> +                               if (pass && dev->subordinate) {
+> +                                       check_hotplug_bridge(slot, dev);
 
-Ah, that means some system with chip problem will keep feeding
-pciehp_wq with pciehp_disable_slot and pciehp_enable_slot.
+I don't like this patch because it increases the differences between
+the hotplug drivers, rather than decreasing them.
 
-Anyway please drop this patch now.
+For PCI Express devices, we set dev->is_hotplug_bridge in the
+pci_setup_device() path (in set_pcie_hotplug_bridge()).  I think it
+would make sense to try to expand that path to also handle SHPC and
+ACPI hotplug as well.  ACPI is harder because it's not PCI-specified,
+so we'd need some sort of pcibios or other optional hook.
 
-Thanks
+I don't have a clear picture of how this works -- if I understand
+correctly, the situation is that we have a bridge managed by acpiphp.
+That part makes sense because the bridge is on the motherboard and can
+have a DSDT device.  Now we plug something into the slot below the
+bridge.  I *think* this patch handles the case where this new
+hot-added thing is also a bridge managed by acpiphp.  But where does
+the ACPI device for this hot-added bridge come from?  It's an
+arbitrary device the BIOS knows nothing about, so it can't be in the
+DSDT.
 
-Yinghai
+>                                         pci_bus_size_bridges(dev->subordinate);
+> +                               }
+>                         }
+>                 }
+>         }
+> --
+> 1.7.7
+>
