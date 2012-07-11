@@ -1,115 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:37384 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522Ab2GKJB0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 05:01:26 -0400
+Date: Wed, 11 Jul 2012 18:01:12 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 07/32] PCI/portdrv: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:31:19 +0800
-Message-Id: <1343147504-25891-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH 01/14] PCI: add pcie_flags into struct pci_dev to
+ cache PCIe capabilities register
+Message-Id: <20120711180112.3ae76a2e.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <1341935655-5381-2-git-send-email-jiang.liu@huawei.com>
+References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
+	<1341935655-5381-2-git-send-email-jiang.liu@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Tue, 10 Jul 2012 23:54:02 +0800
+Jiang Liu <liuj97@gmail.com> wrote:
 
-Use PCIe capabilities access functions to simplify PCIe portdrv implementation.
+> From: Yijing Wang <wangyijing@huawei.com>
+> 
+> From: Yijing Wang <wangyijing@huawei.com>
+> 
+> Since PCI Express Capabilities Register is read only, cache its value
+> into struct pci_dev to avoid repeatedly calling pci_read_config_*().
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/pci/probe.c |    1 +
+>  include/linux/pci.h |    1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6c143b4..65e82e3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -929,6 +929,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  	pdev->is_pcie = 1;
+>  	pdev->pcie_cap = pos;
+>  	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+> +	pdev->pcie_flags = reg16;
+>  	pdev->pcie_type = (reg16 & PCI_EXP_FLAGS_TYPE) >> 4;
+>  	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
+>  	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5faa831..f4a7ad6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -258,6 +258,7 @@ struct pci_dev {
+>  	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
+>  	u8		rom_base_reg;	/* which config register controls the ROM */
+>  	u8		pin;  		/* which interrupt pin this device uses */
+> +	u16		pcie_flags;	/* cached PCI-E Capabilities Register */
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/portdrv_core.c |   20 ++++++++------------
- drivers/pci/pcie/portdrv_pci.c  |    7 ++-----
- 2 files changed, 10 insertions(+), 17 deletions(-)
+ "xxx_flags" sounds like a bit flag. This variable stores a value of PCIe capability 
+ register, doesn't it?   How about "pcie_cap_reg" ?
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index bf320a9..37bff83 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -76,7 +76,6 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- 	struct msix_entry *msix_entries;
- 	int idx[PCIE_PORT_DEVICE_MAXSERVICES];
- 	int nr_entries, status, pos, i, nvec;
--	u16 reg16;
- 	u32 reg32;
- 
- 	nr_entries = pci_msix_table_size(dev);
-@@ -120,9 +119,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
- 		 * the value in this field indicates which MSI-X Table entry is
- 		 * used to generate the interrupt message."
- 		 */
--		pos = pci_pcie_cap(dev);
--		pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
--		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
-+		entry = (dev->pcie_flags_reg & PCI_EXP_FLAGS_IRQ) >> 9;
- 		if (entry >= nr_entries)
- 			goto Error;
- 
-@@ -246,7 +243,7 @@ static void cleanup_service_irqs(struct pci_dev *dev)
-  */
- static int get_port_device_capability(struct pci_dev *dev)
- {
--	int services = 0, pos;
-+	int services = 0;
- 	u16 reg16;
- 	u32 reg32;
- 	int cap_mask = 0;
-@@ -265,11 +262,9 @@ static int get_port_device_capability(struct pci_dev *dev)
- 			return 0;
- 	}
- 
--	pos = pci_pcie_cap(dev);
--	pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
- 	/* Hot-Plug Capable */
--	if ((cap_mask & PCIE_PORT_SERVICE_HP) && (reg16 & PCI_EXP_FLAGS_SLOT)) {
--		pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP, &reg32);
-+	if ((cap_mask & PCIE_PORT_SERVICE_HP)) {
-+		pci_pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
- 		if (reg32 & PCI_EXP_SLTCAP_HPC) {
- 			services |= PCIE_PORT_SERVICE_HP;
- 			/*
-@@ -277,10 +272,11 @@ static int get_port_device_capability(struct pci_dev *dev)
- 			 * enabled by the BIOS and the hot-plug service driver
- 			 * is not loaded.
- 			 */
--			pos += PCI_EXP_SLTCTL;
--			pci_read_config_word(dev, pos, &reg16);
-+			pci_pcie_capability_read_word(dev,
-+						      PCI_EXP_SLTCTL, &reg16);
- 			reg16 &= ~(PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
--			pci_write_config_word(dev, pos, reg16);
-+			pci_pcie_capability_write_word(dev,
-+						       PCI_EXP_SLTCTL, reg16);
- 		}
- 	}
- 	/* AER capable */
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 24d1463..1b2b378 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -64,14 +64,11 @@ __setup("pcie_ports=", pcie_port_setup);
-  */
- void pcie_clear_root_pme_status(struct pci_dev *dev)
- {
--	int rtsta_pos;
- 	u32 rtsta;
- 
--	rtsta_pos = pci_pcie_cap(dev) + PCI_EXP_RTSTA;
--
--	pci_read_config_dword(dev, rtsta_pos, &rtsta);
-+	pci_pcie_capability_read_dword(dev, PCI_EXP_RTSTA, &rtsta);
- 	rtsta |= PCI_EXP_RTSTA_PME;
--	pci_write_config_dword(dev, rtsta_pos, rtsta);
-+	pci_pcie_capability_write_dword(dev, PCI_EXP_RTSTA, rtsta);
- }
- 
- static int pcie_portdrv_restore_config(struct pci_dev *dev)
+>  
+>  	struct pci_driver *driver;	/* which driver has allocated this device */
+>  	u64		dma_mask;	/* Mask of the bits of bus address this
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-1.7.9.5
+Taku Izumi <izumi.taku@jp.fujitsu.com>
 
