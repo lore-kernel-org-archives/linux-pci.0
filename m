@@ -1,50 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:36813 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:37479 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab2GMPnz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2012 11:43:55 -0400
-Received: by lbbgm6 with SMTP id gm6so5981120lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 13 Jul 2012 08:43:53 -0700 (PDT)
+	with ESMTP id S1756325Ab2GLUtY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jul 2012 16:49:24 -0400
+Received: by lbbgm6 with SMTP id gm6so4761968lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 12 Jul 2012 13:49:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1342151381-15255-1-git-send-email-gerg@snapgear.com>
-References: <1342151381-15255-1-git-send-email-gerg@snapgear.com>
+In-Reply-To: <4FFE3CEC.80804@huawei.com>
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+ <1341935655-5381-1-git-send-email-jiang.liu@huawei.com> <1341935655-5381-6-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7k3=nUSTR+n1iX0Rddv2FQm+HzcqnC5VHxh1JKUdoNAw@mail.gmail.com>
+ <4FFCEDDE.2080907@huawei.com> <CAErSpo4JrgU2RHoNDWcm13otgdKVXuGxahE0pbuAD73nZvTZFQ@mail.gmail.com>
+ <4FFD1FE7.6010504@huawei.com> <CAErSpo7ZtrYtz_8iB8=8nbQBtntPtyi8BLg6K+D7mQjnfj-KCg@mail.gmail.com>
+ <4FFE3CEC.80804@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 13 Jul 2012 09:43:32 -0600
-Message-ID: <CAErSpo56ueJApLdesi+GVBe=pDfFnQfL84FcPcqWC-Az0cfwgg@mail.gmail.com>
-Subject: Re: [PATCH] pci: add pci resource code to build for M68K architecture
-To: gerg@snapgear.com
-Cc: linux-pci@vger.kernel.org, linux-m68k@vger.kernel.org,
-	Greg Ungerer <gerg@uclinux.org>
+Date: Thu, 12 Jul 2012 14:49:02 -0600
+Message-ID: <CAErSpo4Adjo8e3YmSJCvNjosouUzuAQqpTm1rm=CAYvFmuDpyg@mail.gmail.com>
+Subject: Re: [RFC PATCH 05/14] PCI: add access functions for PCIe capabilities
+ to hide PCIe spec differences
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 12, 2012 at 9:49 PM,  <gerg@snapgear.com> wrote:
-> From: Greg Ungerer <gerg@uclinux.org>
->
-> The ColdFire M54xx family of CPU cores (supported by the m68k arch code)
-> have PCI bus harwdare. We want to be able to use this and will need the
-> setup-bus.c and setup-irq.c helper functions. So when CONFIG_M68K is enabled
-> add them to the objs build list.
->
-> Signed-off-by: Greg Ungerer <gerg@uclinux.org>
-> ---
->  drivers/pci/Makefile |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 01c001f..8d688b2 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -49,6 +49,7 @@ obj-$(CONFIG_MN10300) += setup-bus.o
->  obj-$(CONFIG_MICROBLAZE) += setup-bus.o
->  obj-$(CONFIG_TILE) += setup-bus.o setup-irq.o
->  obj-$(CONFIG_SPARC_LEON) += setup-bus.o setup-irq.o
-> +obj-$(CONFIG_M68K) += setup-bus.o setup-irq.o
->
->  #
->  # ACPI Related PCI FW Functions
+On Wed, Jul 11, 2012 at 8:56 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> On 2012-7-12 1:52, Bjorn Helgaas wrote:
+>>> Hi Bjorn,
+>>>         Seems it would be better to return error code for unimplemented
+>>> registers, otherwise following code will becomes more complex. A special
+>>> error code for unimplemented registers, such as -EIO?
+>>
+>> I think you're asking about returning error for *reads* of
+>> unimplemented registers?  I guess I still think it's OK to completely
+>> hide the v1 nastiness inside these accessors, and return success with
+>> a zero value when reading.  Having several different error returns
+>> seems like overkill for this case.  Nobody wants to distinguish
+>> between different reasons for failure.
+>>
+>> I'm actually not sure that it's worth returning an error even when
+>> *writing* an unimplemented register.  What if we return success and
+>> just drop the write?
+>>
+>> Maybe these should even be void functions.  It feels like the only
+>> real use of the return value is to detect programmer error, and I
+>> don't think that's very effective.  If we remove the return values,
+>> people will have to focus on the *data*, which seems more important
+>> anyway.
+> Hi Bjorn,
+>         It's a little risk to change these PCIe capabilities access
+> functions as void. On some platform with hardware error detecting/correcting
+> capabilities, such as EEH on Power, it would be better to return
+> error code if hardware error happens during accessing configuration registers.
+>         As I know, coming Intel Xeon processor may provide PCIe hardware
+> error detecting capability similar to EEH on power.
 
-Applied to my "next" branch, thanks!
+I guess I'm playing devil's advocate here.  As a general rule, people
+don't check the return value of pci_read_config_*() or
+pci_write_config_*().  Unless you change them all, most callers of
+pci_pcie_capability_read_*() and _write_*() won't check the returns
+either.  So I'm not sure return values are an effective way to detect
+those hardware errors.
 
-Bjorn
+How do these EEH errors get detected or reported today?  Do the
+drivers check every config access for success?  Adding those checks
+and figuring out how to handle errors at every possible point doesn't
+seem like a recipe for success.
+
+>>> static void rtl_disable_clock_request(struct pci_dev *pdev)
+>>> {
+>>>         u16 ctl;
+>>>
+>>>         if (!pci_pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &ctl)) {
+>>>                 ctl &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
+>>>                 pci_pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, ctl);
+>>>         }
+>>> }
+>>
+>> I would write that as:
+>>
+>>     if (!pci_is_pcie(pdev)
+>>         return;
+>>
+>>     pci_pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &ctl);
+>>     if (ctl & PCI_EXP_LNKCTL_CLKREQ_EN)
+>>         pci_pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, ctl &
+>> ~PCI_EXP_LNKCTL_CLKREQ_EN);
+>>
+>> which does the right thing regardless of what we do for return values,
+>> and saves a config write in the case where LNKCTL is implemented and
+>> CLKREQ_EN is already cleared.
+> When clearing a flag, we could do that. But if we are trying to set a
+> flag, it would be better to make sure the target register does exist.
+>
