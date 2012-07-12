@@ -1,76 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:52921 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735Ab2GCHB3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 03:01:29 -0400
-Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Tue, 3 Jul 2012 01:01:28 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3327A19D804A
-	for <linux-pci@vger.kernel.org>; Tue,  3 Jul 2012 07:01:23 +0000 (WET)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6371E0V176852
-	for <linux-pci@vger.kernel.org>; Tue, 3 Jul 2012 01:01:14 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6371AET017022
-	for <linux-pci@vger.kernel.org>; Tue, 3 Jul 2012 01:01:13 -0600
-Date: Tue, 3 Jul 2012 15:01:06 +0800
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	bhelgaas@google.com, yinghai@kernel.org, benh@kernel.crashing.org,
-	linuxram@us.ibm.com
-Subject: Re: [PATCH V5 0/7] minimal alignment for p2p bars
-Message-ID: <20120703070106.GA13892@shangw>
-Reply-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:46437
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752578Ab2GLKXl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jul 2012 06:23:41 -0400
+From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linuxppc-dev@lists.ozlabs.org>,
+	Shengzhou Liu <Shengzhou.Liu@freescale.com>
+Subject: [PATCH][upstream] PCI: Add PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ to enable non MSI/INTx interrupt
+Date: Thu, 12 Jul 2012 18:02:22 +0800
+Message-ID: <1342087342-14748-1-git-send-email-Shengzhou.Liu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On some platforms, in RC mode, root port has neither MSI/MSI-X nor INTx
+interrupt generated, which are available only in EP mode on those platform.
+In this case, we try to use other interrupt for port service driver to have
+AER, Hot-plug, etc, services to work. (i.e. there is the shared error interrupt
+on platform P1010/P3041/P4080 etc)
 
-Could you please review it when you have time?
+Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+---
+ drivers/pci/pcie/portdrv_core.c |   10 ++++++++--
+ drivers/pci/quirks.c            |   12 ++++++++++++
+ include/linux/pci.h             |    5 +++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
-Thanks,
-Gavin
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 75915b3..837ad15 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -212,8 +212,14 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	if (!pcie_port_enable_msix(dev, irqs, mask))
+ 		return 0;
+ 
+-	/* We're not going to use MSI-X, so try MSI and fall back to INTx */
+-	if (!pci_enable_msi(dev) || dev->pin)
++	/*
++	 * We're not going to use MSI-X, so try MSI and fall back to INTx.
++	 * Eventually, if neither MSI/MSI-X nor INTx available, try other
++	 * interrupt. (On some platforms, root port doesn't support generating
++	 * MSI/MSI-X/INTx in RC mode)
++	 */
++	if (!pci_enable_msi(dev) || dev->pin || ((dev->dev_flags &
++			PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ) && dev->irq))
+ 		irq = dev->irq;
+ 
+  no_msi:
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2a75216..df54e2f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2640,6 +2640,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1083,
+ 			quirk_msi_intx_disable_bug);
+ #endif /* CONFIG_PCI_MSI */
+ 
++/*
++ * Under some circumstances, root port has neither MSI/MSI-X nor INTx generated,
++ * so try other interrupt if supported.
++ */
++static void __devinit quirk_enable_non_msi_intx_interrupt(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ;
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
++				quirk_enable_non_msi_intx_interrupt);
++
+ /* Allow manual resource allocation for PCI hotplug bridges
+  * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
+  * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d8c379d..f051a66 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -176,6 +176,11 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
+ 	/* Provide indication device is assigned by a Virtual Machine Manager */
+ 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
++	/*
++	 * Use other interrupt (i.e. system shared interrupt) when MSI/MSI-X
++	 * and INTx are not supported in RC mode on some platforms.
++	 */
++	PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ = (__force pci_dev_flags_t) 8,
+ };
+ 
+ enum pci_irq_reroute_variant {
+-- 
+1.6.4
 
->v1 -> v2:
->	* Shorten the varaible names so that they looks more short.
->	* Changelog adjustment so that they looks more meaningful.
->
->v2 -> v3:
->	* Rebase to 3.5.RC4
->
->v3 -> v4:
->	* Merge Yinghai's patches.
->
->v3 -> v4:
->	* Split patch for easy review.
->	* Add function to retrieve the minimal alignment of p2p bridge. 
->
->Lu Yinghai(3):
->  pci: change variable name for find_pci_host_bridge
->  pci: argument pci_bus for find_pci_host_bridge
->  pci: fiddle with conversion of pci and CPU address
->
->Gavin Shan(4)
->  pci: make find_pci_host_bridge global
->  pci: minimal alignment for bars of P2P bridges
->  pci: function to retrieve alignment of p2p bars
->  pci: resource assignment based on p2p alignment
->
-> drivers/pci/host-bridge.c |   59 ++++++++++++++++++++++++++++++++++++---------
-> drivers/pci/probe.c       |    5 ++++
-> drivers/pci/setup-bus.c   |   22 +++++++++++------
-> include/linux/pci.h       |   15 +++++++++++-
-> 4 files changed, 81 insertions(+), 20 deletions(-)
->
->Thanks,
->Gavin
->
 
