@@ -1,66 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:6034 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204Ab2GRUOF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 16:14:05 -0400
-Message-ID: <50071834.2030408@tilera.com>
-Date: Wed, 18 Jul 2012 16:10:28 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
+Received: from mail-qc0-f202.google.com ([209.85.216.202]:57368 "EHLO
+	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414Ab2GMV5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2012 17:57:53 -0400
+Received: by qcqs25 with SMTP id s25so391435qcq.1
+        for <linux-pci@vger.kernel.org>; Fri, 13 Jul 2012 14:57:52 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
+	by wpzn3.hot.corp.google.com (Postfix) with ESMTP id C062D100048
+	for <linux-pci@vger.kernel.org>; Fri, 13 Jul 2012 14:57:50 -0700 (PDT)
+Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
+	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id 7590418004F
+	for <linux-pci@vger.kernel.org>; Fri, 13 Jul 2012 14:57:50 -0700 (PDT)
+Subject: [PATCH 2/2] PCI: add Vendor-Specific Extended Capability header info
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 13 Jul 2012 15:57:50 -0600
+Message-ID: <20120713215750.21756.21414.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120713215258.21756.42132.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120713215258.21756.42132.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: [PATCH 3/3] tile pci: enable IOMMU to support DMA for legacy
- devices
-References: <201206162036.q5GKacEK017774@lab-41.internal.tilera.com> <201206162037.q5GKbFg0017781@lab-41.internal.tilera.com> <CAErSpo6Sws6AeZiW=-OW-6_wUO0LuJ1FMxU=yuu-7srN0+TL3g@mail.gmail.com> <5000442B.7090208@tilera.com> <20120713172508.GA18587@google.com> <5006E133.5090100@tilera.com> <CAErSpo6XEwQcVFUBHAZO6R2wZvCSmG3w1G6va7FRcnrbc=nAfg@mail.gmail.com>
-In-Reply-To: <CAErSpo6XEwQcVFUBHAZO6R2wZvCSmG3w1G6va7FRcnrbc=nAfg@mail.gmail.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/18/2012 12:50 PM, Bjorn Helgaas wrote:
-> On Wed, Jul 18, 2012 at 10:15 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
->> On 7/13/2012 1:25 PM, Bjorn Helgaas wrote:
->>> On Fri, Jul 13, 2012 at 11:52:11AM -0400, Chris Metcalf wrote:
->>>> We use the same pci_iomem_resource for different domains or host
->>>> bridges, but the MMIO apertures for each bridge do not overlap because
->>>> non-overlapping resource ranges are allocated for each domains.
->>> You should not use the same pci_iomem_resource for different host bridges
->>> because that tells the PCI core that everything in pci_iomem_resource is
->>> available for devices under every host bridge, which I doubt is the case.
->>>
->>> The fact that your firmware assigns non-overlapping resources is good and
->>> works now, but if the kernel ever needs to allocate resources itself,
->> Actually, we were not using any firmware. It was indeed the kernel which
->> allocates resources from the shared pci_iomem_resource.
-> Wow.  I wonder how that managed to work.  Is there some information
-> that would have helped the PCI core do the right allocations?  Or
-> maybe the host bridges forward everything they receive to PCI,
-> regardless of address, and any given MMIO address is only routed to
-> one of the host bridges because of the routing info in the page
-> tables?
+This adds the fields in the Vendor-Specific Header: ID, Rev, and Length.
+There may be multiple Vendor-Specific capabilities, so drivers should use
+the VSEC ID to identify the one of interest.
 
-Since each host bridge contains non-overlapping ranges in its bridge config
-header, ioremap() locates the right host bridge for the target PCI resource
-address and programs the host bridge info into the MMIO mapping. The end
-result is the MMIO address is routed to the right host bridge. On Tile
-processors, different host bridges are like separate IO devices, in
-completely separate domains.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/pci_regs.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-> I guess in that case, the "apertures" would basically be
-> defined by the page tables, not by the host bridges.  But that still
-> doesn't explain how we would assign non-overlapping ranges to each
-> domain.
-
-Since all domains share the single resource, allocate_resource() "allocate
-empty slot in the resource tree", giving non-overlapping ranges to each
-devices.
-
-Just to confirm, I'm assuming I'll ask Linus to pull this code out of my
-tile tree when the merge window opens, right?  Would you like me to add
-your name to the commit as acked or reviewed?  Thanks!
-
--- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
+diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
+index 4b608f5..0f3e814 100644
+--- a/include/linux/pci_regs.h
++++ b/include/linux/pci_regs.h
+@@ -615,6 +615,12 @@
+ #define PCI_PWR_CAP		12	/* Capability */
+ #define  PCI_PWR_CAP_BUDGET(x)	((x) & 1)	/* Included in system budget */
+ 
++/* Vendor-Specific (VSEC, PCI_EXT_CAP_ID_VNDR) */
++#define PCI_VNDR_HEADER		4	/* Vendor-Specific Header */
++#define  PCI_VNDR_HEADER_ID(x)	((x) & 0xffff)
++#define  PCI_VNDR_HEADER_REV(x)	(((x) >> 16) & 0xf)
++#define  PCI_VNDR_HEADER_LEN(x)	(((x) >> 20) & 0xfff)
++
+ /*
+  * Hypertransport sub capability types
+  *
 
