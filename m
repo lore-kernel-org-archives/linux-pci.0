@@ -1,67 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38500 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484Ab2GNRKU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jul 2012 13:10:20 -0400
+Received: by pbbrp8 with SMTP id rp8so7410580pbb.19
+        for <linux-pci@vger.kernel.org>; Sat, 14 Jul 2012 10:10:20 -0700 (PDT)
+Date: Sat, 14 Jul 2012 10:10:15 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120714171015.GB25775@kroah.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <50071834.2030408@tilera.com>
-References: <201206162036.q5GKacEK017774@lab-41.internal.tilera.com>
- <201206162037.q5GKbFg0017781@lab-41.internal.tilera.com> <CAErSpo6Sws6AeZiW=-OW-6_wUO0LuJ1FMxU=yuu-7srN0+TL3g@mail.gmail.com>
- <5000442B.7090208@tilera.com> <20120713172508.GA18587@google.com>
- <5006E133.5090100@tilera.com> <CAErSpo6XEwQcVFUBHAZO6R2wZvCSmG3w1G6va7FRcnrbc=nAfg@mail.gmail.com>
- <50071834.2030408@tilera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 18 Jul 2012 14:30:03 -0600
-Message-ID: <CAErSpo7Vegj0MnTw=cjUXNWPZOFTXVSzH1V=4+-Qs80=1at5nA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] tile pci: enable IOMMU to support DMA for legacy devices
-To: Chris Metcalf <cmetcalf@tilera.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 18, 2012 at 2:10 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
-> On 7/18/2012 12:50 PM, Bjorn Helgaas wrote:
->> On Wed, Jul 18, 2012 at 10:15 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
->>> On 7/13/2012 1:25 PM, Bjorn Helgaas wrote:
->>>> On Fri, Jul 13, 2012 at 11:52:11AM -0400, Chris Metcalf wrote:
->>>>> We use the same pci_iomem_resource for different domains or host
->>>>> bridges, but the MMIO apertures for each bridge do not overlap because
->>>>> non-overlapping resource ranges are allocated for each domains.
->>>> You should not use the same pci_iomem_resource for different host bridges
->>>> because that tells the PCI core that everything in pci_iomem_resource is
->>>> available for devices under every host bridge, which I doubt is the case.
->>>>
->>>> The fact that your firmware assigns non-overlapping resources is good and
->>>> works now, but if the kernel ever needs to allocate resources itself,
->>> Actually, we were not using any firmware. It was indeed the kernel which
->>> allocates resources from the shared pci_iomem_resource.
->> Wow.  I wonder how that managed to work.  Is there some information
->> that would have helped the PCI core do the right allocations?  Or
->> maybe the host bridges forward everything they receive to PCI,
->> regardless of address, and any given MMIO address is only routed to
->> one of the host bridges because of the routing info in the page
->> tables?
->
-> Since each host bridge contains non-overlapping ranges in its bridge config
-> header, ioremap() locates the right host bridge for the target PCI resource
-> address and programs the host bridge info into the MMIO mapping. The end
-> result is the MMIO address is routed to the right host bridge. On Tile
-> processors, different host bridges are like separate IO devices, in
-> completely separate domains.
->
->> I guess in that case, the "apertures" would basically be
->> defined by the page tables, not by the host bridges.  But that still
->> doesn't explain how we would assign non-overlapping ranges to each
->> domain.
->
-> Since all domains share the single resource, allocate_resource() "allocate
-> empty slot in the resource tree", giving non-overlapping ranges to each
-> devices.
->
-> Just to confirm, I'm assuming I'll ask Linus to pull this code out of my
-> tile tree when the merge window opens, right?  Would you like me to add
-> your name to the commit as acked or reviewed?  Thanks!
+On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
+> +static int max_num_cbs = 2;
+> +module_param(max_num_cbs, uint, 0644);
+> +MODULE_PARM_DESC(max_num_cbs, "Maximum number of NTB transport connections");
+> +
+> +static bool no_msix;
+> +module_param(no_msix, bool, 0644);
+> +MODULE_PARM_DESC(no_msix, "Do not allow MSI-X interrupts to be selected");
 
-Yep, just ask Linus to pull it; I don't think there's any need to
-coordinate with my PCI tree since you're not using any interfaces we
-changed in this cycle.
+How would a user, or a distro, know to set these options?  Why are they
+even options at all?
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> +struct ntb_device {
+> +	struct pci_dev *pdev;
+> +	struct msix_entry *msix_entries;
+> +	void __iomem *reg_base;
+> +	struct ntb_mw mw[NTB_NUM_MW];
+> +	struct {
+> +		unsigned int max_spads;
+> +		unsigned int max_db_bits;
+> +		unsigned int msix_cnt;
+> +	} limits;
+> +	struct {
+> +		void __iomem *pdb;
+> +		void __iomem *pdb_mask;
+> +		void __iomem *sdb;
+> +		void __iomem *sbar2_xlat;
+> +		void __iomem *sbar4_xlat;
+> +		void __iomem *spad_write;
+> +		void __iomem *spad_read;
+> +		void __iomem *lnk_cntl;
+> +		void __iomem *lnk_stat;
+> +		void __iomem *spci_cmd;
+> +	} reg_ofs;
+> +	void *ntb_transport;
+> +	void (*event_cb)(void *handle, unsigned int event);
+
+Shouldn't the event be an enum?
+
+> +	struct ntb_db_cb *db_cb;
+> +	unsigned char hw_type;
+> +	unsigned char conn_type;
+> +	unsigned char dev_type;
+> +	unsigned char num_msix;
+> +	unsigned char bits_per_vector;
+> +	unsigned char max_cbs;
+> +	unsigned char link_status;
+> +	struct delayed_work hb_timer;
+> +	unsigned long last_ts;
+> +};
+
+Why isn't this either a 'struct device' itself, or why isn't the 'struct
+pci_device' embedded within it?  What controls the lifetime of this
+device?  Why doesn't it show up in sysfs?  Don't you want it to show up
+in the global device tree?
+
+> +static DEFINE_PCI_DEVICE_TABLE(ntb_pci_tbl) = {
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_B2B_BWD)},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_B2B_JSF)},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_CLASSIC_JSF)},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_RP_JSF)},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_RP_SNB)},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_B2B_SNB)},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_CLASSIC_SNB)},
+> +	{0}
+> +};
+> +MODULE_DEVICE_TABLE(pci, ntb_pci_tbl);
+> +
+> +static struct ntb_device *ntbdev;
+
+You can really only have just one of these in the whole system?  Is that
+wise?  Why isn't it dynamic and tied to the pci device itself as a
+child?
+
+thanks,
+
+greg k-h
