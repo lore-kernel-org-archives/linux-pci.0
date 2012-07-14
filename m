@@ -1,50 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:59023 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828Ab2GYWhF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 18:37:05 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Huang Ying <ying.huang@intel.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB hotplug failure
-References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
-	<CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
-	<874now7xi8.fsf@nemi.mork.no> <201207252202.22302.rjw@sisk.pl>
-Date: Thu, 26 Jul 2012 00:36:45 +0200
-In-Reply-To: <201207252202.22302.rjw@sisk.pl> (Rafael J. Wysocki's message of
-	"Wed, 25 Jul 2012 22:02:22 +0200")
-Message-ID: <87pq7j79j6.fsf@nemi.mork.no>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from einhorn.in-berlin.de ([192.109.42.8]:39556 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab2GNNJR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jul 2012 09:09:17 -0400
+Date: Sat, 14 Jul 2012 15:09:11 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [Bug 43247] O2 micro SD/MMC+1394 controller: 1394 device can't
+ work (Register access failure)
+Message-ID: <20120714150911.666409bf@stein>
+In-Reply-To: <20120710110216.83BDF11FA14@bugzilla.kernel.org>
+References: <bug-43247-52301@https.bugzilla.kernel.org/>
+	<20120710110216.83BDF11FA14@bugzilla.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Rafael J. Wysocki" <rjw@sisk.pl> writes:
+On Jul 10 bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=43247
+> 
+> --- Comment #19 from jennifer <jennifer.li@o2micro.com>  2012-07-10 11:02:16 ---
+[...]
+> > Do you mean by that that
+> > the original Linux driver works for you if you boot Linux but do not let
+> > the driver be automatically loaded during boot, but instead load the driver
+> > later by 'modprobe firewire-ohci' after the rest of the system has finished
+> > booting up?
+> 
+> Yes.
+> 
+> > 
+> > And if yes, did you also need to load the sdhci-pci driver manually this
+> > way?  
+> 
+> There are 4 ways which can pass the issue.
+> 1. Load 1394 by OS + Load sdhci-pci by manually.
+> 2. Load sdhci-pci by OS + Load 1394 by manually.
+> 3. Load 1394 by manually + load sdhci-pci by manually.
+> 4. Load sdhci-pci by manually + load 1394 by manually.
+> 
+> > And further, does it matter whether sdhci-pci is loaded before
+> > firewire-ohci or the other way around?
+> 
+> According to our test result, if we load the driver by manually and the issue
+> will disappear. It didn't has the relationship about the loaded priority.
+> But, if we load those drivers by OS and the issue will happen.
 
-> This is not really necessary.  The problem is the change of behavior I was
-> worried about some time ago.
->
-> Namely, the device in question apparently doesn't support ACPI D3_hot,
-> so acpi_pm_device_sleep_state() returns D2 as the target state, where it
-> would return D3(cold) before the commit in question.
->
-> To fix the regression, we'd need to reverse the current initial value of
-> the d3cold_allowed flag so that it is set to "true" by default and only
-> set to "false" for devices where we suspect there may be problems with
-> D3_cold (like PCI Express ports).
 
-Good.  May I also request a few lines describing d3cold_allowed in e.g
-Documentation/ABI/testing/sysfs-bus-pci?  I must admit that I thought
-that was the policy for any new sysfs file, but it seems that is only
-in the USB subsystem?
+Could somebody at linux-pci@vger.kernel.org please advise?
 
-Anyway, I believe it ought to be a requirement.  If we are meant to
-tweak some knob, then we must known how and when to do so.  If not, then
-why add it in the first place?
+1.)  Is there a kernel parameter which Jennifer could try in order to
+force serialized PCI driver probing?
+
+2.)  If there is one and if this turns out to cure the issue in testing:
+How can I implement serialization between the O2Micro FireWire .probe()
+and .resume() on one hand and the O2Micro SDHCI .probe() and .resume() on
+the other hand?
 
 
-Bjørn
+[If you reply to this via bugzilla mail, please add
+    Cc: linux-pci@vger.kernel.org
+in your reply.  I am not aware of a way to add it to bugzilla.kernel.org's
+Cc list of bug 43247.]
+-- 
+Stefan Richter
+-=====-===-- -=== -===-
+http://arcgraph.de/sr/
