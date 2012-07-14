@@ -1,101 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:34397 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932567Ab2GDIIS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 04:08:18 -0400
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id EFA0A3EE0BB
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:08:17 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id D82C045DEA6
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:08:17 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id B81AA45DEB9
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:08:17 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id A82251DB803B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:08:17 +0900 (JST)
-Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 43AB31DB8047
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:08:17 +0900 (JST)
-Date: Wed, 4 Jul 2012 17:08:11 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH 3/7] ACPI, PCI: Use normal list for struct acpi_pci_driver
-Message-Id: <20120704170811.98ec88dc.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
-References: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:55720
+	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754236Ab2GNQnZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jul 2012 12:43:25 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 5/6] drivers/pci/hotplug: ensure a consistent return value in error case
+Date: Sat, 14 Jul 2012 18:43:07 +0200
+Message-Id: <1342284188-19176-6-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-    ACPI, PCI: Use normal list for struct acpi_pci_driver
-    
-    Use normal list for struct acpi_pci_driver to simplify code.
-    
-    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Typically, the return value desired for the failure of a function with an
+integer return value is a negative integer.  In these cases, the return
+value is sometimes a negative integer and sometimes 0, due to a subsequent
+initialization of the return variable within the loop.
 
-Index: linux/drivers/acpi/pci_root.c
-===================================================================
---- linux.orig/drivers/acpi/pci_root.c	2012-07-04 09:54:52.061486507 +0900
-+++ linux/drivers/acpi/pci_root.c	2012-07-04 09:55:45.697815965 +0900
-@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_
- };
+A simplified version of the semantic match that finds this problem is:
+(http://coccinelle.lip6.fr/)
+
+//<smpl>
+@r exists@
+identifier ret;
+position p;
+constant C;
+expression e1,e3,e4;
+statement S;
+@@
+
+ret = -C
+... when != ret = e3
+    when any
+if@p (...) S
+... when any
+if (\(ret != 0\|ret < 0\|ret > 0\) || ...) { ... return ...; }
+... when != ret = e3
+    when any
+*if@p (...)
+{
+  ... when != ret = e4
+  return ret;
+}
+//</smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/pci/hotplug/cpqphp_core.c    |   14 ++++++++++----
+ drivers/pci/hotplug/pcihp_skeleton.c |   14 ++++++++++----
+ drivers/pci/hotplug/shpchp_core.c    |   14 ++++++++++----
+ 3 files changed, 30 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+index 187a199..c8eaeb4 100644
+--- a/drivers/pci/hotplug/cpqphp_core.c
++++ b/drivers/pci/hotplug/cpqphp_core.c
+@@ -611,7 +611,7 @@ static int ctrl_slot_setup(struct controller *ctrl,
+ 	u32 tempdword;
+ 	char name[SLOT_NAME_SIZE];
+ 	void __iomem *slot_entry= NULL;
+-	int result = -ENOMEM;
++	int result;
  
- static LIST_HEAD(acpi_pci_roots);
-+static LIST_HEAD(acpi_pci_drivers);
+ 	dbg("%s\n", __func__);
  
--static struct acpi_pci_driver *sub_driver;
- static DEFINE_MUTEX(osc_lock);
+@@ -623,19 +623,25 @@ static int ctrl_slot_setup(struct controller *ctrl,
  
- int acpi_pci_register_driver(struct acpi_pci_driver *driver)
-@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi
- 	int n = 0;
- 	struct acpi_pci_root *root;
+ 	while (number_of_slots) {
+ 		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+-		if (!slot)
++		if (!slot) {
++			result = -ENOMEM;
+ 			goto error;
++		}
  
--	struct acpi_pci_driver **pptr = &sub_driver;
--	while (*pptr)
--		pptr = &(*pptr)->next;
--	*pptr = driver;
-+	list_add_tail(&driver->node, &acpi_pci_drivers);
+ 		slot->hotplug_slot = kzalloc(sizeof(*(slot->hotplug_slot)),
+ 						GFP_KERNEL);
+-		if (!slot->hotplug_slot)
++		if (!slot->hotplug_slot) {
++			result = -ENOMEM;
+ 			goto error_slot;
++		}
+ 		hotplug_slot = slot->hotplug_slot;
  
- 	if (!driver->add)
- 		return 0;
-@@ -103,14 +100,7 @@ void acpi_pci_unregister_driver(struct a
- {
- 	struct acpi_pci_root *root;
+ 		hotplug_slot->info = kzalloc(sizeof(*(hotplug_slot->info)),
+ 							GFP_KERNEL);
+-		if (!hotplug_slot->info)
++		if (!hotplug_slot->info) {
++			result = -ENOMEM;
+ 			goto error_hpslot;
++		}
+ 		hotplug_slot_info = hotplug_slot->info;
  
--	struct acpi_pci_driver **pptr = &sub_driver;
--	while (*pptr) {
--		if (*pptr == driver)
--			break;
--		pptr = &(*pptr)->next;
--	}
--	BUG_ON(!*pptr);
--	*pptr = (*pptr)->next;
-+	list_del(&driver->node);
+ 		slot->ctrl = ctrl;
+diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
+index b20ceaa..1f00b93 100644
+--- a/drivers/pci/hotplug/pcihp_skeleton.c
++++ b/drivers/pci/hotplug/pcihp_skeleton.c
+@@ -252,7 +252,7 @@ static int __init init_slots(void)
+ 	struct slot *slot;
+ 	struct hotplug_slot *hotplug_slot;
+ 	struct hotplug_slot_info *info;
+-	int retval = -ENOMEM;
++	int retval;
+ 	int i;
  
- 	if (!driver->remove)
- 		return;
-Index: linux/include/linux/acpi.h
-===================================================================
---- linux.orig/include/linux/acpi.h	2012-07-04 09:54:52.061486507 +0900
-+++ linux/include/linux/acpi.h	2012-07-04 09:55:45.697815965 +0900
-@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int 
- void acpi_pci_irq_disable (struct pci_dev *dev);
+ 	/*
+@@ -261,17 +261,23 @@ static int __init init_slots(void)
+ 	 */
+ 	for (i = 0; i < num_slots; ++i) {
+ 		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+-		if (!slot)
++		if (!slot) {
++			retval = -ENOMEM;
+ 			goto error;
++		}
  
- struct acpi_pci_driver {
--	struct acpi_pci_driver *next;
-+	struct list_head node;
- 	int (*add)(acpi_handle handle);
- 	void (*remove)(acpi_handle handle);
- };
+ 		hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
+-		if (!hotplug_slot)
++		if (!hotplug_slot) {
++			retval = -ENOMEM;
+ 			goto error_slot;
++		}
+ 		slot->hotplug_slot = hotplug_slot;
+ 
+ 		info = kzalloc(sizeof(*info), GFP_KERNEL);
+-		if (!info)
++		if (!info) {
++			retval = -ENOMEM;
+ 			goto error_hpslot;
++		}
+ 		hotplug_slot->info = info;
+ 
+ 		slot->number = i;
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 7414fd9..b6de307 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -99,22 +99,28 @@ static int init_slots(struct controller *ctrl)
+ 	struct hotplug_slot *hotplug_slot;
+ 	struct hotplug_slot_info *info;
+ 	char name[SLOT_NAME_SIZE];
+-	int retval = -ENOMEM;
++	int retval;
+ 	int i;
+ 
+ 	for (i = 0; i < ctrl->num_slots; i++) {
+ 		slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+-		if (!slot)
++		if (!slot) {
++			retval = -ENOMEM;
+ 			goto error;
++		}
+ 
+ 		hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
+-		if (!hotplug_slot)
++		if (!hotplug_slot) {
++			retval = -ENOMEM;
+ 			goto error_slot;
++		}
+ 		slot->hotplug_slot = hotplug_slot;
+ 
+ 		info = kzalloc(sizeof(*info), GFP_KERNEL);
+-		if (!info)
++		if (!info) {
++			retval = -ENOMEM;
+ 			goto error_hpslot;
++		}
+ 		hotplug_slot->info = info;
+ 
+ 		slot->hp_slot = i;
 
