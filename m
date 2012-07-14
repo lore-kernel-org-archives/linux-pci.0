@@ -1,188 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:13995 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:42163 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753995Ab2G3DPz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Jul 2012 23:15:55 -0400
-Message-ID: <1343618131.3874.37.camel@yhuang-dev>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
- hotplug failure
-From: Huang Ying <ying.huang@intel.com>
-To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: huang ying <huang.ying.caritas@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Date: Mon, 30 Jul 2012 11:15:31 +0800
-In-Reply-To: <87sjcd4lgs.fsf@nemi.mork.no>
-References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
-	 <87r4s0opck.fsf@nemi.mork.no> <87pq7ko532.fsf@nemi.mork.no>
-	 <1343190864.10311.26.camel@yhuang-dev> <87k3xskvqq.fsf@nemi.mork.no>
-	 <CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
-	 <874now7xi8.fsf@nemi.mork.no> <1343292851.3874.12.camel@yhuang-dev>
-	 <87k3xqyfm3.fsf@nemi.mork.no> <1343367309.3874.21.camel@yhuang-dev>
-	 <87sjcd4lgs.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753329Ab2GNGTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 14 Jul 2012 02:19:55 -0400
+Date: Fri, 13 Jul 2012 23:19:54 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120714061953.GD4808@jonmason-lab>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+ <20120713171344.1066d3b1@nehalam.linuxnetplumber.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120713171344.1066d3b1@nehalam.linuxnetplumber.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-07-27 at 11:11 +0200, Bjørn Mork wrote:
-> Huang Ying <ying.huang@intel.com> writes:
+On Fri, Jul 13, 2012 at 05:13:44PM -0700, Stephen Hemminger wrote:
+> On Fri, 13 Jul 2012 14:44:59 -0700
+> Jon Mason <jon.mason@intel.com> wrote:
 > 
-> > Do you have time to try the following patch?
-> >
-> > Best Regards,
-> > Huang Ying
-> >
-> > ---
-> >  drivers/pci/pci-driver.c |    6 ++++++
-> >  1 file changed, 6 insertions(+)
-> >
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -280,8 +280,12 @@ static long local_pci_probe(void *_ddi)
-> >  {
-> >  	struct drv_dev_and_id *ddi = _ddi;
-> >  	struct device *dev = &ddi->dev->dev;
-> > +	struct device *parent = dev->parent;
-> >  	int rc;
-> >  
-> > +	/* The parent bridge must be in active state when probing */
-> > +	if (parent)
-> > +		pm_runtime_get_sync(parent);
-> >  	/* Unbound PCI devices are always set to disabled and suspended.
-> >  	 * During probe, the device is set to enabled and active and the
-> >  	 * usage count is incremented.  If the driver supports runtime PM,
-> > @@ -298,6 +302,8 @@ static long local_pci_probe(void *_ddi)
-> >  		pm_runtime_set_suspended(dev);
-> >  		pm_runtime_put_noidle(dev);
-> >  	}
-> > +	if (parent)
-> > +		pm_runtime_put(parent);
-> >  	return rc;
-> >  }
-> >  
+> > A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+> > connecting 2 systems, providing electrical isolation between the two subsystems.
+> > A non-transparent bridge is functionally similar to a transparent bridge except
+> > that both sides of the bridge have their own independent address domains.  The
+> > host on one side of the bridge will not have the visibility of the complete
+> > memory or I/O space on the other side of the bridge.  To communicate across the
+> > non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+> > the local system.  Writes to these apertures are mirrored to memory on the
+> > remote system.  Communications can also occur through the use of doorbell
+> > registers that initiate interrupts to the alternate domain, and scratch-pad
+> > registers accessible from both sides.
+> > 
+> > The NTB device driver is needed to configure these memory windows, doorbell, and
+> > scratch-pad registers as well as use them in such a way as they can be turned
+> > into a viable communication channel to the remote system.  ntb_hw.[ch]
+> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> > the underlying hardware to provide access and a common interface to the doorbell
+> > registers, scratch pads, and memory windows.  These hardware interfaces are
+> > exported so that other, non-mainlined kernel drivers can access these.
+> > ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+> > communication channel(s) and provide a reliable way of transferring data from
+> > one side to the other, which it then exports so that "client" drivers can access
+> > them.  These client drivers are used to provide a standard kernel interface
+> > (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+> > system to the other in a standard way.
+> > 
+> > Signed-off-by: Jon Mason <jon.mason@intel.com>
+> 
+> This driver does some reimplementing of standard type operations is this
+> because you are trying to use the same code on multiple platforms?
+> 
+> Example:
+> +
+> +static void ntb_list_add_head(spinlock_t *lock, struct list_head *entry,
+> +			      struct list_head *list)
+> +{
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(lock, flags);
+> +	list_add(entry, list);
+> +	spin_unlock_irqrestore(lock, flags);
+> +}
+> +
+> +static void ntb_list_add_tail(spinlock_t *lock, struct list_head *entry,
+> +			      struct list_head *list)
+> +{
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(lock, flags);
+> +	list_add_tail(entry, list);
+> +	spin_unlock_irqrestore(lock, flags);
+> +}
+> 
+> Which are used on skb's and yet we already have sk_buff_head with locking?
+> 
+> I know you probably are committed to this API, but is there some way to
+> reuse existing shared memory used by virtio-net between two ports?
 > 
 > 
-> Yup, that worked in the quick test I just did.
-> 
->  lspci reading the device config will still not wake the bridge, but I
-> assume that is intentional?  But loading the device driver now wakes
-> both the bridge and the device, so that works.
+The intention is to be able to have multiple client drivers/virtual devices that are able to use NTB as the transport to the remote system.  This is the reason why a void* is passed into the transport instead of skb*, making all of the extra book keeping necessary.  Currently, only the virtual Ethernet has been done, which may be part of the confusion.  I'd like to be able to find a way to have the virtio devices use ntb (and save me the work of reinventing the wheel), but step one is getting this code accepted :)
 
-Do you have time to test the following patch to fix the lspci issue?
-
-Subject: [BUGFIX] PCI/PM: Keep parent bridge active when read/write config reg
-
-This patch fixes the following bug:
-
-http://marc.info/?l=linux-pci&m=134338059022620&w=2
-
-Where lspci does not work properly if a device and the corresponding
-parent bridge (such as PCIe port) is suspended.  This is because the
-device configuration space registers will be not accessible if the
-corresponding parent bridge is suspended.
-
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before read/write configuration space registers.
-
-To avoid resume/suspend PCIe port for each configuration register
-read/write, a small delay is added before the PCIe port to go
-suspended.
-
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci-sysfs.c        |   14 ++++++++++++++
- drivers/pci/pcie/portdrv_pci.c |    9 +++++++++
- 2 files changed, 23 insertions(+)
-
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -464,6 +464,7 @@ pci_read_config(struct file *filp, struc
- 		char *buf, loff_t off, size_t count)
- {
- 	struct pci_dev *dev = to_pci_dev(container_of(kobj,struct device,kobj));
-+	struct device *parent = dev->dev.parent;
- 	unsigned int size = 64;
- 	loff_t init_off = off;
- 	u8 *data = (u8*) buf;
-@@ -484,6 +485,9 @@ pci_read_config(struct file *filp, struc
- 		size = count;
- 	}
- 
-+	if (parent)
-+		pm_runtime_get_sync(parent);
-+
- 	if ((off & 1) && size) {
- 		u8 val;
- 		pci_user_read_config_byte(dev, off, &val);
-@@ -529,6 +533,9 @@ pci_read_config(struct file *filp, struc
- 		--size;
- 	}
- 
-+	if (parent)
-+		pm_runtime_put(parent);
-+
- 	return count;
- }
- 
-@@ -538,6 +545,7 @@ pci_write_config(struct file* filp, stru
- 		 char *buf, loff_t off, size_t count)
- {
- 	struct pci_dev *dev = to_pci_dev(container_of(kobj,struct device,kobj));
-+	struct device *parent = dev->dev.parent;
- 	unsigned int size = count;
- 	loff_t init_off = off;
- 	u8 *data = (u8*) buf;
-@@ -549,6 +557,9 @@ pci_write_config(struct file* filp, stru
- 		count = size;
- 	}
- 	
-+	if (parent)
-+		pm_runtime_get_sync(parent);
-+
- 	if ((off & 1) && size) {
- 		pci_user_write_config_byte(dev, off, data[off - init_off]);
- 		off++;
-@@ -587,6 +598,9 @@ pci_write_config(struct file* filp, stru
- 		--size;
- 	}
- 
-+	if (parent)
-+		pm_runtime_put(parent);
-+
- 	return count;
- }
- 
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -140,9 +140,17 @@ static int pcie_port_runtime_resume(stru
- {
- 	return 0;
- }
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	/* Delay for a short while to prevent too frequent suspend/resume */
-+	pm_schedule_suspend(dev, 10);
-+	return -EBUSY;
-+}
- #else
- #define pcie_port_runtime_suspend	NULL
- #define pcie_port_runtime_resume	NULL
-+#define pcie_port_runtime_idle		NULL
- #endif
- 
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-@@ -155,6 +163,7 @@ static const struct dev_pm_ops pcie_port
- 	.resume_noirq	= pcie_port_resume_noirq,
- 	.runtime_suspend = pcie_port_runtime_suspend,
- 	.runtime_resume = pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-
-
+Thanks,
+Jon
