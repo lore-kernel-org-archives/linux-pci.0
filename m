@@ -1,57 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:33353 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753021Ab2G2O7H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2012 10:59:07 -0400
-Date: Sun, 29 Jul 2012 07:59:05 -0700
-From: Greg KH <greg@kroah.com>
-To: Shlomo Pongratz <shlomopongratz@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org
-Subject: Re: Cabled PCIE device hotplug/hot-removal
-Message-ID: <20120729145905.GC5945@kroah.com>
-References: <CAHzK-V0XpkVJHgqWiWpYP1jx5DPX=voE0eymK+5FG-zhrJOwAQ@mail.gmail.com>
- <20120726170925.GA24751@kroah.com>
- <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
+Received: from mail.vyatta.com ([76.74.103.46]:51082 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756017Ab2GNAIs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Jul 2012 20:08:48 -0400
+Date: Fri, 13 Jul 2012 17:08:26 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 2/2] net: Add support for NTB virtual ethernet device
+Message-ID: <20120713170826.09210b80@nehalam.linuxnetplumber.net>
+In-Reply-To: <1342215900-3358-2-git-send-email-jon.mason@intel.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+	<1342215900-3358-2-git-send-email-jon.mason@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 29, 2012 at 03:36:09PM +0300, Shlomo Pongratz wrote:
-> On Thu, Jul 26, 2012 at 8:09 PM, Greg KH <greg@kroah.com> wrote:
-> > On Thu, Jul 26, 2012 at 08:03:09PM +0300, Shlomo Pongratz wrote:
-> >> Hi,
-> >>
-> >> I have a  PCIe device connected with cables to a host (kernel 3.5.0-rc7+).
-> >> What are the handler I need to add to a driver in order to catch cable
-> >> pull-out / push-in?
-> >
-> > You shouldn't need anything special, aren't you already getting probe
-> > and disconnect callbacks when the device is discovered and removed?
+On Fri, 13 Jul 2012 14:45:00 -0700
+Jon Mason <jon.mason@intel.com> wrote:
+
+> A virtual ethernet device that uses the NTB transport API to send/receive data.
 > 
-> When the device is loaded the probe is called
-> When I "echo 1" to the remove sysfs entry the remove callback is called.
-> But when I power down the card no callback is called.
+> Signed-off-by: Jon Mason <jon.mason@intel.com>
+> ---
+>  drivers/net/Kconfig      |    4 +
+>  drivers/net/Makefile     |    1 +
+>  drivers/net/ntb_netdev.c |  411 ++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 416 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/net/ntb_netdev.c
 
-Then I would blame your pci hotplug controller, that is its
-responsibility.
 
-> >> The pcisig presentation
-> >> "http://www.pcisig.com/developers/main/training_materials/get_document?doc_id=f4ca40ec1721aa7fadd05e2903b0172c36656294"
-> >> talks about PERST# detection for cabled PCIe hotplug.
-> >>
-> >> Does the kernel detect it?
-> >>
-> >> None of the pci_driver or pci_error_handlers callbacks were called
-> >> when using powered down/up the device (electrically).
-> >
-> > Do you have the pciehp driver loaded properly when this happens?
-> 
-> My {dot}config includes it into the kernel, i.e.
-> CONFIG_HOTPLUG_PCI_PCIE=y
+> +static void ntb_get_drvinfo(__attribute__((unused)) struct net_device *dev,
+> +			    struct ethtool_drvinfo *info)
+> +{
+> +	strlcpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
+> +	strlcpy(info->version, NTB_NETDEV_VER, sizeof(info->version));
+> +}
+> +
+> +static const char ntb_nic_stats[][ETH_GSTRING_LEN] = {
+> +	"rx_packets", "rx_bytes", "rx_errors", "rx_dropped", "rx_length_errors",
+> +	"rx_frame_errors", "rx_fifo_errors",
+> +	"tx_packets", "tx_bytes", "tx_errors", "tx_dropped",
+> +};
+> +
+> +static int ntb_get_stats_count(__attribute__((unused)) struct net_device *dev)
+> +{
+> +	return ARRAY_SIZE(ntb_nic_stats);
+> +}
+> +
+> +static int ntb_get_sset_count(struct net_device *dev, int sset)
+> +{
+> +	switch (sset) {
+> +	case ETH_SS_STATS:
+> +		return ntb_get_stats_count(dev);
+> +	default:
+> +		return -EOPNOTSUPP;
+> +	}
+> +}
+> +
+> +static void ntb_get_strings(__attribute__((unused)) struct net_device *dev,
+> +			    u32 sset, u8 *data)
+> +{
+> +	switch (sset) {
+> +	case ETH_SS_STATS:
+> +		memcpy(data, *ntb_nic_stats, sizeof(ntb_nic_stats));
+> +	}
+> +}
+> +
+> +static void
+> +ntb_get_ethtool_stats(struct net_device *dev,
+> +		      __attribute__((unused)) struct ethtool_stats *stats,
+> +		      u64 *data)
+> +{
+> +	int i = 0;
+> +
+> +	data[i++] = dev->stats.rx_packets;
+> +	data[i++] = dev->stats.rx_bytes;
+> +	data[i++] = dev->stats.rx_errors;
+> +	data[i++] = dev->stats.rx_dropped;
+> +	data[i++] = dev->stats.rx_length_errors;
+> +	data[i++] = dev->stats.rx_frame_errors;
+> +	data[i++] = dev->stats.rx_fifo_errors;
+> +	data[i++] = dev->stats.tx_packets;
+> +	data[i++] = dev->stats.tx_bytes;
+> +	data[i++] = dev->stats.tx_errors;
+> +	data[i++] = dev->stats.tx_dropped;
+> +}
 
-And is it working properly?  Does your hardware support this (i.e. your
-BIOS?)
+These statistics add no value over existing network stats.
+Don't implement ethtool stats unless device has something more
+interesting to say.
 
-greg k-h
+> +static const struct ethtool_ops ntb_ethtool_ops = {
+> +	.get_drvinfo = ntb_get_drvinfo,
+> +	.get_sset_count = ntb_get_sset_count,
+> +	.get_strings = ntb_get_strings,
+> +	.get_ethtool_stats = ntb_get_ethtool_stats,
+> +	.get_link = ethtool_op_get_link,
+> +};
+
+If you want to implement bonding or bridging then implementing
+get_settings would help.
+
+> +static int __init ntb_netdev_init_module(void)
+> +{
+> +	struct ntb_netdev *dev;
+> +	int rc;
+> +
+> +	pr_info("%s: Probe\n", KBUILD_MODNAME);
+
+Useless message
+
+> +	netdev = alloc_etherdev(sizeof(struct ntb_netdev));
+> +	if (!netdev)
+> +		return -ENOMEM;
+> +
+> +	dev = netdev_priv(netdev);
+> +	dev->ndev = netdev;
+> +	netdev->features = NETIF_F_HIGHDMA;
+> +
+> +	netdev->hw_features = netdev->features;
+> +	netdev->watchdog_timeo = msecs_to_jiffies(NTB_TX_TIMEOUT_MS);
+> +
+> +	random_ether_addr(netdev->perm_addr);
+> +	memcpy(netdev->dev_addr, netdev->perm_addr, netdev->addr_len);
+> +
+> +	netdev->netdev_ops = &ntb_netdev_ops;
+> +	SET_ETHTOOL_OPS(netdev, &ntb_ethtool_ops);
+> +
+> +	dev->qp = ntb_transport_create_queue(ntb_netdev_rx_handler,
+> +					     ntb_netdev_tx_handler,
+> +					     ntb_netdev_event_handler);
+> +	if (!dev->qp) {
+> +		rc = -EIO;
+> +		goto err;
+> +	}
+> +
+> +	netdev->mtu = ntb_transport_max_size(dev->qp) - ETH_HLEN;
+> +
+> +	rc = register_netdev(netdev);
+> +	if (rc)
+> +		goto err1;
+> +
+> +	pr_info("%s: %s created\n", KBUILD_MODNAME, netdev->name);
+> +	return 0;
+> +
+> +err1:
+> +	ntb_transport_free_queue(dev->qp);
+> +err:
+> +	free_netdev(netdev);
+> +	return rc;
+> +}
+> +module_init(ntb_netdev_init_module);
+> +
+> +static void __exit ntb_netdev_exit_module(void)
+> +{
+> +	struct ntb_netdev *dev = netdev_priv(netdev);
+> +
+> +	unregister_netdev(netdev);
+> +	ntb_transport_free_queue(dev->qp);
+> +	free_netdev(netdev);
+> +
+> +	pr_info("%s: Driver removed\n", KBUILD_MODNAME);
+> +}
+> +module_exit(ntb_netdev_exit_module);
+
