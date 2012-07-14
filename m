@@ -1,93 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from info.physics.ubc.ca ([142.103.234.23]:40186 "EHLO
-	info.physics.ubc.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698Ab2GFXhQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jul 2012 19:37:16 -0400
-Date: Fri, 6 Jul 2012 16:37:15 -0700 (PDT)
-From: Bill Unruh <unruh@physics.ubc.ca>
-To: Bjorn Helgaas <bhelgaas@google.com>
-cc: Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
-Subject: Re: [Bug 43331] Re: Bug on bootup of Linux kernel on Panasonic
- Toughbook S10
-In-Reply-To: <20120706180635.GB17196@google.com>
-Message-ID: <Pine.LNX.4.64.1207061631270.26974@info>
-References: <Pine.LNX.4.64.1205311412210.11510@info>
- <CAErSpo7p6XGmsi0Q0PAbWofs9-91taz2Px=VxzL2KEoWWYJwSA@mail.gmail.com>
- <Pine.LNX.4.64.1206010915580.26561@info> <4FC988CF.5030602@gmail.com>
- <20120706180635.GB17196@google.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Scott Murray <scott@spiteful.org>
+Cc: kernel-janitors@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/6] drivers/pci/hotplug/cpci_hotplug_core.c: ensure a consistent return value in error case
+Date: Sat, 14 Jul 2012 18:43:03 +0200
+Message-Id: <1342284188-19176-2-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 6 Jul 2012, Bjorn Helgaas wrote:
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-> On Sat, Jun 02, 2012 at 11:30:23AM +0800, Jiang Liu wrote:
->> ... address range 0xfed98000-0xfed9ffff has been reserved by motherboard
->> device(PNP0C02).  I guess that BIOS has assigned address "0xfed98000" to
->> 0000:00:04.0 for thermal management functionality. The BAR0 of
->> 0000:00:04.0 may be locked down (can't be changed by OS) because the ACPI
->> BIOS may have dependency on the assigned address ranges.
->
-> I don't think the BAR can be completely read-only.  If it were, we wouldn't
-> have any way to determine its size.  We believe it is 32K in size:
->
->    pci 0000:00:04.0: reg 10: [mem 0xfed98000-0xfed9ffff 64bit]
->
-> so we should have written 0xffffffff to the low 32 bits of the BAR and read
-> back 0xffff8004 (32K = 2^15, so the low-order 15 bits should be read-only,
-> including the prefetchable bit (0), the type bits (10 for 64-bit), and the
-> memory space indicator (0)).
->
-> Can you experiment with setting that BAR manually, e.g., by running these
-> commands as root:
->
->    # setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
->    # setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
->    # setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+Typically, the return value desired for the failure of a function with an
+integer return value is a negative integer.  In these cases, the return
+value is sometimes a negative integer and sometimes 0, due to a subsequent
+initialization of the return variable within the loop.
 
+A simplified version of the semantic match that finds this problem is:
+(http://coccinelle.lip6.fr/)
 
-planet:0[root]>setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
-0006
-fed98004
-00000000
-planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
-planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
-fed98004
-00000000
-planet:0[root]
+//<smpl>
+@r exists@
+identifier ret;
+position p;
+constant C;
+expression e1,e3,e4;
+statement S;
+@@
 
+ret = -C
+... when != ret = e3
+    when any
+if@p (...) S
+... when any
+if (\(ret != 0\|ret < 0\|ret > 0\) || ...) { ... return ...; }
+... when != ret = e3
+    when any
+*if@p (...)
+{
+  ... when != ret = e4
+  return ret;
+}
+//</smpl>
 
-So it seems to work but does  not change the base address (or was that what
-you meant by "does not work")
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
+---
+ drivers/pci/hotplug/cpci_hotplug_core.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-
->
-> That's basically what the kernel does in pci_update_resource(), so this
-> will likely fail, too.
->
-> In __pci_read_base(), where we size the BAR, we disable decoding first,
-> which we *don't* do in pci_update_resource().  So if the above doesn't
-> work, can you try this:
->
->    # setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
->    # setpci -s 00:04.0 COMMAND=0
->    # setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
->    # setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
-
-planet:0[root]>setpci -s 00:04.0 COMMAND BASE_ADDRESS_0 BASE_ADDRESS_1
-0006
-fed98004
-00000000
-planet:0[root]>setpci -s 00:04.0 COMMAND=0
-planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0=0xdfa00000
-planet:0[root]>setpci -s 00:04.0 BASE_ADDRESS_0 BASE_ADDRESS_1
-fed98004
-00000000
-planet:0[root]>
-
-Ie, same thing-- no change in the address.
-
+diff --git a/drivers/pci/hotplug/cpci_hotplug_core.c b/drivers/pci/hotplug/cpci_hotplug_core.c
+index 3fadf2f..2b4c412 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_core.c
++++ b/drivers/pci/hotplug/cpci_hotplug_core.c
+@@ -225,7 +225,7 @@ cpci_hp_register_bus(struct pci_bus *bus, u8 first, u8 last)
+ 	struct hotplug_slot *hotplug_slot;
+ 	struct hotplug_slot_info *info;
+ 	char name[SLOT_NAME_SIZE];
+-	int status = -ENOMEM;
++	int status;
+ 	int i;
+ 
+ 	if (!(controller && bus))
+@@ -237,18 +237,24 @@ cpci_hp_register_bus(struct pci_bus *bus, u8 first, u8 last)
+ 	 */
+ 	for (i = first; i <= last; ++i) {
+ 		slot = kzalloc(sizeof (struct slot), GFP_KERNEL);
+-		if (!slot)
++		if (!slot) {
++			status = -ENOMEM;
+ 			goto error;
++		}
+ 
+ 		hotplug_slot =
+ 			kzalloc(sizeof (struct hotplug_slot), GFP_KERNEL);
+-		if (!hotplug_slot)
++		if (!hotplug_slot) {
++			status = -ENOMEM;
+ 			goto error_slot;
++		}
+ 		slot->hotplug_slot = hotplug_slot;
+ 
+ 		info = kzalloc(sizeof (struct hotplug_slot_info), GFP_KERNEL);
+-		if (!info)
++		if (!info) {
++			status = -ENOMEM;
+ 			goto error_hpslot;
++		}
+ 		hotplug_slot->info = info;
+ 
+ 		slot->bus = bus;
 
