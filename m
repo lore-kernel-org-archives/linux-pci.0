@@ -1,221 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f202.google.com ([209.85.213.202]:34398 "EHLO
-	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753281Ab2GIUcK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 16:32:10 -0400
-Received: by yenl3 with SMTP id l3so1240054yen.1
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 13:32:09 -0700 (PDT)
-Subject: [PATCH 2/3] PCI: reimplement P2P bridge 1K I/O windows (Intel P64H2)
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel Yeisley <dan.yeisley@unisys.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Mon, 09 Jul 2012 14:32:09 -0600
-Message-ID: <20120709203208.28178.94320.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.vyatta.com ([76.74.103.46]:38691 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756017Ab2GNABD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 13 Jul 2012 20:01:03 -0400
+Date: Fri, 13 Jul 2012 17:00:45 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120713170045.493dc213@nehalam.linuxnetplumber.net>
+In-Reply-To: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-9d265124d051 and 15a260d53f7c added quirks for P2P bridges that support
-I/O windows that start/end at 1K boundaries, not just the 4K boundaries
-defined by the PCI spec.  For details, see the IOBL_ADR register and the
-EN1K bit in the CNF register in the Intel 82870P2 (P64H2).
+On Fri, 13 Jul 2012 14:44:59 -0700
+Jon Mason <jon.mason@intel.com> wrote:
 
-These quirks complicate the code that reads P2P bridge windows
-(pci_read_bridge_io() and pci_cfg_fake_ranges()) because the bridge
-I/O resource is updated in the HEADER quirk, in pci_read_bridge_io(),
-in pci_setup_bridge(), and again in the FINAL quirk.  This is confusing
-and makes it impossible to reassign the bridge windows after FINAL
-quirks are run.
+> A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+> connecting 2 systems, providing electrical isolation between the two subsystems.
+> A non-transparent bridge is functionally similar to a transparent bridge except
+> that both sides of the bridge have their own independent address domains.  The
+> host on one side of the bridge will not have the visibility of the complete
+> memory or I/O space on the other side of the bridge.  To communicate across the
+> non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+> the local system.  Writes to these apertures are mirrored to memory on the
+> remote system.  Communications can also occur through the use of doorbell
+> registers that initiate interrupts to the alternate domain, and scratch-pad
+> registers accessible from both sides.
+> 
+> The NTB device driver is needed to configure these memory windows, doorbell, and
+> scratch-pad registers as well as use them in such a way as they can be turned
+> into a viable communication channel to the remote system.  ntb_hw.[ch]
+> determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> the underlying hardware to provide access and a common interface to the doorbell
+> registers, scratch pads, and memory windows.  These hardware interfaces are
+> exported so that other, non-mainlined kernel drivers can access these.
+> ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+> communication channel(s) and provide a reliable way of transferring data from
+> one side to the other, which it then exports so that "client" drivers can access
+> them.  These client drivers are used to provide a standard kernel interface
+> (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+> system to the other in a standard way.
+> 
+> Signed-off-by: Jon Mason <jon.mason@intel.com>
 
-This patch adds support for 1K windows in the generic paths, so the
-HEADER quirk only has to enable this support.  The FINAL quirk, which
-used to undo damage done by pci_setup_bridge(), is no longer needed.
+> +
+> +static int max_num_cbs = 2;
+> +module_param(max_num_cbs, uint, 0644);
+> +MODULE_PARM_DESC(max_num_cbs, "Maximum number of NTB transport connections");
 
-This removes "if (!res->start) res->start = ..." from pci_read_bridge_io();
-that was part of 9d265124d051 to avoid overwriting the resource filled in
-by the quirk.  Since pci_read_bridge_io() itself now knows about
-granularity, the quirk no longer updates the resource and this test is no
-longer needed.
+Rather than making it a fixed size, could you dynamically set these up
+with rtnl_link_ops?
 
-Note that the bridge window assignment code, e.g., pbus_size_io(), should
-pay attention to dev->io_window_1k, too, but I didn't fix that.
+> +static struct ntb_device *ntbdev;
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c      |   25 ++++++++++++++-----------
- drivers/pci/quirks.c     |   39 +--------------------------------------
- drivers/pci/setup-bus.c  |   11 +++++++++--
- include/linux/pci.h      |    1 +
- include/linux/pci_regs.h |    3 ++-
- 5 files changed, 27 insertions(+), 52 deletions(-)
+What about multiple boards in system?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9c5d2a9..ef24cf7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -269,15 +269,23 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- {
- 	struct pci_dev *dev = child->self;
- 	u8 io_base_lo, io_limit_lo;
--	unsigned long base, limit;
-+	unsigned long io_mask, io_granularity, base, limit;
- 	struct pci_bus_region region;
--	struct resource *res, res2;
-+	struct resource *res;
-+
-+	io_mask = PCI_IO_RANGE_MASK;
-+	io_granularity = 0x1000;
-+	if (dev->io_window_1k) {
-+		/* Support 1K I/O space granularity */
-+		io_mask = PCI_IO_1K_RANGE_MASK;
-+		io_granularity = 0x400;
-+	}
- 
- 	res = child->resource[0];
- 	pci_read_config_byte(dev, PCI_IO_BASE, &io_base_lo);
- 	pci_read_config_byte(dev, PCI_IO_LIMIT, &io_limit_lo);
--	base = (io_base_lo & PCI_IO_RANGE_MASK) << 8;
--	limit = (io_limit_lo & PCI_IO_RANGE_MASK) << 8;
-+	base = (io_base_lo & io_mask) << 8;
-+	limit = (io_limit_lo & io_mask) << 8;
- 
- 	if ((io_base_lo & PCI_IO_RANGE_TYPE_MASK) == PCI_IO_RANGE_TYPE_32) {
- 		u16 io_base_hi, io_limit_hi;
-@@ -289,14 +297,9 @@ static void __devinit pci_read_bridge_io(struct pci_bus *child)
- 
- 	if (base <= limit) {
- 		res->flags = (io_base_lo & PCI_IO_RANGE_TYPE_MASK) | IORESOURCE_IO;
--		res2.flags = res->flags;
- 		region.start = base;
--		region.end = limit + 0xfff;
--		pcibios_bus_to_resource(dev, &res2, &region);
--		if (!res->start)
--			res->start = res2.start;
--		if (!res->end)
--			res->end = res2.end;
-+		region.end = limit + io_granularity - 1;
-+		pcibios_bus_to_resource(dev, res, &region);
- 		dev_printk(KERN_DEBUG, &dev->dev, "  bridge window %pR\n", res);
- 	}
- }
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2a75216..356846b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1938,53 +1938,16 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, fixup_rev1
- static void __devinit quirk_p64h2_1k_io(struct pci_dev *dev)
- {
- 	u16 en1k;
--	u8 io_base_lo, io_limit_lo;
--	unsigned long base, limit;
--	struct resource *res = dev->resource + PCI_BRIDGE_RESOURCES;
- 
- 	pci_read_config_word(dev, 0x40, &en1k);
- 
- 	if (en1k & 0x200) {
- 		dev_info(&dev->dev, "Enable I/O Space to 1KB granularity\n");
--
--		pci_read_config_byte(dev, PCI_IO_BASE, &io_base_lo);
--		pci_read_config_byte(dev, PCI_IO_LIMIT, &io_limit_lo);
--		base = (io_base_lo & (PCI_IO_RANGE_MASK | 0x0c)) << 8;
--		limit = (io_limit_lo & (PCI_IO_RANGE_MASK | 0x0c)) << 8;
--
--		if (base <= limit) {
--			res->start = base;
--			res->end = limit + 0x3ff;
--		}
-+		dev->io_window_1k = 1;
- 	}
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	0x1460,		quirk_p64h2_1k_io);
- 
--/* Fix the IOBL_ADR for 1k I/O space granularity on the Intel P64H2
-- * The IOBL_ADR gets re-written to 4k boundaries in pci_setup_bridge()
-- * in drivers/pci/setup-bus.c
-- */
--static void __devinit quirk_p64h2_1k_io_fix_iobl(struct pci_dev *dev)
--{
--	u16 en1k, iobl_adr, iobl_adr_1k;
--	struct resource *res = dev->resource + PCI_BRIDGE_RESOURCES;
--
--	pci_read_config_word(dev, 0x40, &en1k);
--
--	if (en1k & 0x200) {
--		pci_read_config_word(dev, PCI_IO_BASE, &iobl_adr);
--
--		iobl_adr_1k = iobl_adr | (res->start >> 8) | (res->end & 0xfc00);
--
--		if (iobl_adr != iobl_adr_1k) {
--			dev_info(&dev->dev, "Fixing P64H2 IOBL_ADR from 0x%x to 0x%x for 1KB granularity\n",
--				iobl_adr,iobl_adr_1k);
--			pci_write_config_word(dev, PCI_IO_BASE, iobl_adr_1k);
--		}
--	}
--}
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	0x1460,		quirk_p64h2_1k_io_fix_iobl);
--
- /* Under some circumstances, AER is not linked with extended capabilities.
-  * Force it to be linked by setting the corresponding control bit in the
-  * config space.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8fa2d4b..dad5425 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -469,16 +469,23 @@ static void pci_setup_bridge_io(struct pci_bus *bus)
- 	struct pci_dev *bridge = bus->self;
- 	struct resource *res;
- 	struct pci_bus_region region;
-+	unsigned long io_mask;
-+	u8 io_base_lo, io_limit_lo;
- 	u32 l, io_upper16;
- 
-+	io_mask = PCI_IO_RANGE_MASK;
-+	if (bridge->io_window_1k)
-+		io_mask = PCI_IO_1K_RANGE_MASK;
-+
- 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
- 	res = bus->resource[0];
- 	pcibios_resource_to_bus(bridge, &region, res);
- 	if (res->flags & IORESOURCE_IO) {
- 		pci_read_config_dword(bridge, PCI_IO_BASE, &l);
- 		l &= 0xffff0000;
--		l |= (region.start >> 8) & 0x00f0;
--		l |= region.end & 0xf000;
-+		io_base_lo = (region.start >> 8) & io_mask;
-+		io_limit_lo = (region.end >> 8) & io_mask;
-+		l |= ((u32) io_limit_lo << 8) | io_base_lo;
- 		/* Set up upper 16 bits of I/O base/limit. */
- 		io_upper16 = (region.end & 0xffff0000) | (region.start >> 16);
- 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d8c379d..89b46fd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -324,6 +324,7 @@ struct pci_dev {
- 	unsigned int    is_hotplug_bridge:1;
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
-+	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
-diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
-index 4b608f5..88c9ea5 100644
---- a/include/linux/pci_regs.h
-+++ b/include/linux/pci_regs.h
-@@ -125,7 +125,8 @@
- #define  PCI_IO_RANGE_TYPE_MASK	0x0fUL	/* I/O bridging type */
- #define  PCI_IO_RANGE_TYPE_16	0x00
- #define  PCI_IO_RANGE_TYPE_32	0x01
--#define  PCI_IO_RANGE_MASK	(~0x0fUL)
-+#define  PCI_IO_RANGE_MASK	(~0x0fUL) /* Standard 4K I/O windows */
-+#define  PCI_IO_1K_RANGE_MASK	(~0x03UL) /* Intel 1K I/O windows */
- #define PCI_SEC_STATUS		0x1e	/* Secondary status register, only bit 14 used */
- #define PCI_MEMORY_BASE		0x20	/* Memory range behind */
- #define PCI_MEMORY_LIMIT	0x22
+> +/**
+> + * ntb_hw_link_status() - return the hardware link status
+> + * @ndev: pointer to ntb_device instance
+> + *
+> + * Returns true if the hardware is connected to the remote system
+> + *
+> + * RETURNS: true or false based on the hardware link state
+> + */
+> +bool ntb_hw_link_status(struct ntb_device *ndev)
+> +{
+> +	return ndev->link_status == NTB_LINK_UP;
+> +}
+> +EXPORT_SYMBOL(ntb_hw_link_status);
+
+Why isn't this inline in some header?
+
+> +/**
+> + * ntb_query_pdev() - return the pci_dev pointer
+> + * @ndev: pointer to ntb_device instance
+> + *
+> + * Given the ntb pointer return the pci_dev pointerfor the NTB hardware device
+> + *
+> + * RETURNS: a pointer to the ntb pci_dev
+> + */
+> +struct pci_dev *ntb_query_pdev(struct ntb_device *ndev)
+> +{
+> +	return ndev->pdev;
+> +}
+> +EXPORT_SYMBOL(ntb_query_pdev);
+> +
+> +/**
+> + * ntb_query_max_cbs() - return the maximum number of callback tuples
+> + * @ndev: pointer to ntb_device instance
+> + *
+> + * The number of callbacks can vary depending on the platform and MSI-X/MSI
+> + * enablement
+> + *
+> + * RETURNS: the maximum number of callback tuples (3, 15, or 33)
+> + */
+> +unsigned int ntb_query_max_cbs(struct ntb_device *ndev)
+> +{
+> +	return ndev->max_cbs > max_num_cbs ? max_num_cbs : ndev->max_cbs;
+> +}
+> +EXPORT_SYMBOL(ntb_query_max_cbs);
+> +
+> +/**
+> + * ntb_register_event_callback() - register event callback
+> + * @ndev: pointer to ntb_device instance
+> + * @func: callback function to register
+> + *
+> + * This function registers a callback for any HW driver events such as link
+> + * up/down, power management notices and etc.
+> + *
+> + * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
+> + */
+> +int ntb_register_event_callback(struct ntb_device *ndev,
+> +				void (*func)(void *handle, unsigned int event))
+> +{
+> +	if (ndev->event_cb)
+> +		return -EINVAL;
+> +
+> +	ndev->event_cb = func;
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(ntb_register_event_callback);
+> +
+> +/**
+> + * ntb_unregister_event_callback() - unregisters the event callback
+> + * @ndev: pointer to ntb_device instance
+> + *
+> + * This function unregisters the existing callback from transport
+> + */
+> +void ntb_unregister_event_callback(struct ntb_device *ndev)
+> +{
+> +	ndev->event_cb = NULL;
+> +}
+> +EXPORT_SYMBOL(ntb_unregister_event_callback);
+> +
 
