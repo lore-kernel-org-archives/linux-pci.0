@@ -1,40 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from blu0-omc4-s15.blu0.hotmail.com ([65.55.111.154]:13097 "EHLO
-	blu0-omc4-s15.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750829Ab2GETxJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 15:53:09 -0400
-Message-ID: <BLU0-SMTP4072281F8943F14DE4E72B1B7EF0@phx.gbl>
-Date: Thu, 5 Jul 2012 20:53:00 +0100
-From: Rob Allen <ra-kernel@hotmail.co.uk>
+Received: from mga14.intel.com ([143.182.124.37]:23038 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750748Ab2GOXul (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 15 Jul 2012 19:50:41 -0400
+Date: Sun, 15 Jul 2012 16:50:41 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Greg KH <greg@kroah.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120715235041.GB7551@jonmason-lab>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+ <20120714170411.GA25775@kroah.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: linuxram@us.ibm.com, stefanr@s5r6.in-berlin.de, clemens@ladisch.de,
-	linux1394-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
-Subject: Re: [Bug 43244] New: firewire_ohci prevents boot
-References: <20120513221357.7574ae79@stein> <4FB0A6F6.9050504@ladisch.de> <CAE9FiQXA4C8hACXChokL4CZVBDhdh17Qs7tngn5q-pS0U5=bPQ@mail.gmail.com> <BLU0-SMTP12B809D527F768CCC42B18B7180@phx.gbl> <4FB3B159.2090401@ladisch.de> <BLU0-SMTP47479D78AA811CB0B224ADFB71D0@phx.gbl> <4FBAA3A5.4070200@ladisch.de> <20120524202610.5c561d99@stein> <4FBE8146.1030803@hotmail.co.uk> <BLU0-SMTP435F81F04D60963F0755BA9B70F0@phx.gbl> <20120605025422.GB6637@ram-ThinkPad-T61> <BLU0-SMTP4409FB70A51AD516797B0B1B7FF0@phx.gbl> <BAY153-W382DF41517C8EA770817E4B7EB0@phx.gbl> <CAE9FiQXbo984cn-oXOZHZ6pbH4TsxZyKCwT3Fu5g_OJxGw4UZg@mail.gmail.com>
-In-Reply-To: <CAE9FiQXbo984cn-oXOZHZ6pbH4TsxZyKCwT3Fu5g_OJxGw4UZg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120714170411.GA25775@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/07/12 21:56, Yinghai Lu wrote:
-> working one:
-> 	Region 0: Memory at d0402000 (32-bit, non-prefetchable) [size=4K]
-> 	Region 1: Memory at d0403000 (32-bit, non-prefetchable) [size=2K]
-> not working one:
-> 	Region 0: Memory at d0401000 (32-bit, non-prefetchable) [disabled] [size=4K]
-> 	Region 1: Memory at d0403000 (32-bit, non-prefetchable) [disabled] [size=2K]
->
-> can not understand why could make a difference.
->
-> please try boot with pci=resource_alignment=13@a0:09.4
+On Sat, Jul 14, 2012 at 10:04:11AM -0700, Greg KH wrote:
+> On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
+> > The NTB device driver is needed to configure these memory windows, doorbell, and
+> > scratch-pad registers as well as use them in such a way as they can be turned
+> > into a viable communication channel to the remote system.  ntb_hw.[ch]
+> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> > the underlying hardware to provide access and a common interface to the doorbell
+> > registers, scratch pads, and memory windows.  These hardware interfaces are
+> > exported so that other, non-mainlined kernel drivers can access these.
+> 
+> Why would you have non-mainlined drivers?
+> 
+> Can you submit the drivers at the same time so we see how you are using
+> these new interfaces?
 
-I tried it with both the working and non-working kernels. No change in 
-overall behaviour: working still works, non-working still hangs. I 
-checked the memory layouts with lspci, and in each case they were 
-identical to those quoted above.
+There are none at this time.  In the near future, the transport will be modified to use IOAT instead of the CPU copy to improve throughput performance, and it may be beneficial to have that separate.  If you wish for me to remove the hooks until it is necessary for that, then I can.
 
-Do you need any log output from those? Is there anything else I can do?
+> 
+> > +++ b/drivers/ntb/ntb_hw.c
+> > @@ -0,0 +1,1283 @@
+> > +/*
+> > + * This file is provided under a dual BSD/GPLv2 license.  When using or
+> > + *   redistributing this file, you may do so under either license.
+> > + *
+> > + *   GPL LICENSE SUMMARY
+> > + *
+> > + *   Copyright(c) 2012 Intel Corporation. All rights reserved.
+> > + *
+> > + *   This program is free software; you can redistribute it and/or modify
+> > + *   it under the terms of version 2 of the GNU General Public License as
+> > + *   published by the Free Software Foundation.
+> > + *
+> > + *   This program is distributed in the hope that it will be useful, but
+> > + *   WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> > + *   General Public License for more details.
+> > + *
+> > + *   You should have received a copy of the GNU General Public License
+> > + *   along with this program; if not, write to the Free Software
+> > + *   Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+> > + *   The full GNU General Public License is included in this distribution
+> > + *   in the file called LICENSE.GPL.
+> 
+> You really want to track the office movements of the FSF for the next 40
+> years?  You should ask your lawyers if you can remove this paragraph.
 
-Thanks,
-Rob
+Standard boilerplate junk, but it never hurts to ask.
+ 
+> > +/**
+> > + * ntb_hw_link_status() - return the hardware link status
+> > + * @ndev: pointer to ntb_device instance
+> > + *
+> > + * Returns true if the hardware is connected to the remote system
+> > + *
+> > + * RETURNS: true or false based on the hardware link state
+> > + */
+> > +bool ntb_hw_link_status(struct ntb_device *ndev)
+> > +{
+> > +	return ndev->link_status == NTB_LINK_UP;
+> > +}
+> > +EXPORT_SYMBOL(ntb_hw_link_status);
+> 
+> EXPORT_SYMBOL_GPL() perhaps, for these, and the other symbols you are
+> creating?
+
+Will do.
+
+> 
+> thanks,
+> 
+> greg k-h
