@@ -1,155 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from zoneX.GCU-Squad.org ([194.213.125.0]:26429 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624Ab2GOLfy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2012 07:35:54 -0400
+Date: Sun, 15 Jul 2012 13:35:30 +0200
+From: Jean Delvare <khali@linux-fr.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Amaury =?UTF-8?B?RGVjcsOqbWU=?= <amaury.decreme@gmail.com>,
+	linux-i2c@vger.kernel.org, amalysh@web.de, nelson@sis.com,
+	ben-linux@fluff.org, w.sang@pengutronix.de, rob@landley.net,
+	jeffrey.t.kirsher@intel.com, akpm@linux-foundation.org,
+	davem@davemloft.net, joe@perches.com, ralf@linux-mips.org,
+	dirk.brandewie@gmail.com, jayachandranc@netlogicmicro.com,
+	Xiangzhen.Ye@csr.com, linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 10/32] PCI/AER: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:31:22 +0800
-Message-Id: <1343147504-25891-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	suzanne.decreme@gmail.com
+Subject: Re: [PATCH] i2c: sis964: bus driver
+Message-ID: <20120715133530.1ffc3f36@endymion.delvare>
+In-Reply-To: <CAErSpo5-ou3vjmHgjiOOd57PvWg_hez80U0k3AX_ydjb0pikvQ@mail.gmail.com>
+References: <1342172455-8530-1-git-send-email-amaury.decreme@gmail.com>
+	<CAErSpo5-ou3vjmHgjiOOd57PvWg_hez80U0k3AX_ydjb0pikvQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi Bjorn,
 
-Use PCIe capabilities access functions to simplify PCIe AER implementation.
+On Fri, 13 Jul 2012 09:36:07 -0600, Bjorn Helgaas wrote:
+> On Fri, Jul 13, 2012 at 3:40 AM, Amaury Decrême
+> <amaury.decreme@gmail.com> wrote:
+> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > index ab741b0..0ffc982 100644
+> > --- a/include/linux/pci_ids.h
+> > +++ b/include/linux/pci_ids.h
+> > @@ -699,6 +699,7 @@
+> >  #define PCI_DEVICE_ID_SI_961           0x0961
+> >  #define PCI_DEVICE_ID_SI_962           0x0962
+> >  #define PCI_DEVICE_ID_SI_963           0x0963
+> > +#define PCI_DEVICE_ID_SI_964           0x0964
+> 
+> Please read the comment at the top of this file; I don't think this
+> addition qualifies as something that should be added.
+> 
+> >  #define PCI_DEVICE_ID_SI_965           0x0965
+> >  #define PCI_DEVICE_ID_SI_966           0x0966
+> >  #define PCI_DEVICE_ID_SI_968           0x0968
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/aer/aerdrv.c      |   16 +++++++---------
- drivers/pci/pcie/aer/aerdrv_core.c |   25 ++++++++++---------------
- 2 files changed, 17 insertions(+), 24 deletions(-)
+When you reply to a large patch, please limit the quoting to the
+relevant portion.
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index f7c6245..cadee93 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -122,19 +122,18 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
- static void aer_enable_rootport(struct aer_rpc *rpc)
- {
- 	struct pci_dev *pdev = rpc->rpd->port;
--	int pos, aer_pos;
-+	int aer_pos;
- 	u16 reg16;
- 	u32 reg32;
- 
--	pos = pci_pcie_cap(pdev);
- 	/* Clear PCIe Capability's Device Status */
--	pci_read_config_word(pdev, pos+PCI_EXP_DEVSTA, &reg16);
--	pci_write_config_word(pdev, pos+PCI_EXP_DEVSTA, reg16);
-+	pci_pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &reg16);
-+	pci_pcie_capability_write_word(pdev, PCI_EXP_DEVSTA, reg16);
- 
- 	/* Disable system error generation in response to error messages */
--	pci_read_config_word(pdev, pos + PCI_EXP_RTCTL, &reg16);
-+	pci_pcie_capability_read_word(pdev, PCI_EXP_RTCTL, &reg16);
- 	reg16 &= ~(SYSTEM_ERROR_INTR_ON_MESG_MASK);
--	pci_write_config_word(pdev, pos + PCI_EXP_RTCTL, reg16);
-+	pci_pcie_capability_write_word(pdev, PCI_EXP_RTCTL, reg16);
- 
- 	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
- 	/* Clear error status */
-@@ -396,9 +395,8 @@ static void aer_error_resume(struct pci_dev *dev)
- 	u16 reg16;
- 
- 	/* Clean up Root device status */
--	pos = pci_pcie_cap(dev);
--	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &reg16);
--	pci_write_config_word(dev, pos + PCI_EXP_DEVSTA, reg16);
-+	pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-+	pci_pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
- 
- 	/* Clean AER Root Error Status */
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index f551534..a37e277 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -35,25 +35,22 @@ module_param(nosourceid, bool, 0);
- int pci_enable_pcie_error_reporting(struct pci_dev *dev)
- {
- 	u16 reg16 = 0;
--	int pos;
- 
- 	if (pcie_aer_get_firmware_first(dev))
- 		return -EIO;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
--	if (!pos)
-+	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
- 		return -EIO;
- 
--	pos = pci_pcie_cap(dev);
--	if (!pos)
-+	if (!pci_is_pcie(dev))
- 		return -EIO;
- 
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
-+	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
- 	reg16 |= (PCI_EXP_DEVCTL_CERE |
- 		PCI_EXP_DEVCTL_NFERE |
- 		PCI_EXP_DEVCTL_FERE |
- 		PCI_EXP_DEVCTL_URRE);
--	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
-+	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
- 
- 	return 0;
- }
-@@ -62,21 +59,19 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
- int pci_disable_pcie_error_reporting(struct pci_dev *dev)
- {
- 	u16 reg16 = 0;
--	int pos;
- 
- 	if (pcie_aer_get_firmware_first(dev))
- 		return -EIO;
- 
--	pos = pci_pcie_cap(dev);
--	if (!pos)
-+	if (!pci_is_pcie(dev))
- 		return -EIO;
- 
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
-+	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
- 	reg16 &= ~(PCI_EXP_DEVCTL_CERE |
- 		PCI_EXP_DEVCTL_NFERE |
- 		PCI_EXP_DEVCTL_FERE |
- 		PCI_EXP_DEVCTL_URRE);
--	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
-+	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
- 
- 	return 0;
- }
-@@ -151,18 +146,18 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	 */
- 	if (atomic_read(&dev->enable_cnt) == 0)
- 		return false;
--	pos = pci_pcie_cap(dev);
--	if (!pos)
-+	if (!pci_is_pcie(dev))
- 		return false;
- 
- 	/* Check if AER is enabled */
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
-+	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
- 	if (!(reg16 & (
- 		PCI_EXP_DEVCTL_CERE |
- 		PCI_EXP_DEVCTL_NFERE |
- 		PCI_EXP_DEVCTL_FERE |
- 		PCI_EXP_DEVCTL_URRE)))
- 		return false;
-+
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	if (!pos)
- 		return false;
+Thanks,
 -- 
-1.7.9.5
-
+Jean Delvare
