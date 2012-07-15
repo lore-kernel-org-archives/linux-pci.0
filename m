@@ -1,30 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:54856 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464Ab2GQVLz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2012 17:11:55 -0400
-Date: Tue, 17 Jul 2012 14:11:53 -0700 (PDT)
-Message-Id: <20120717.141153.46613285253481776.davem@davemloft.net>
-To: chris.friesen@genband.com
-Cc: ddutile@redhat.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: New commands to configure IOV features
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <5005D45D.1040302@genband.com>
-References: <5003DC9B.8000706@broadcom.com>
-	<5005BD00.4090106@redhat.com>
-	<5005D45D.1040302@genband.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:54342 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab2GOQro (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2012 12:47:44 -0400
+Message-ID: <5002F420.40801@gmail.com>
+Date: Mon, 16 Jul 2012 00:47:28 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@huawei.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH 05/14] PCI: add access functions for PCIe capabilities
+ to hide PCIe spec differences
+References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com> <1341935655-5381-1-git-send-email-jiang.liu@huawei.com> <1341935655-5381-6-git-send-email-jiang.liu@huawei.com> <CAErSpo7k3=nUSTR+n1iX0Rddv2FQm+HzcqnC5VHxh1JKUdoNAw@mail.gmail.com> <4FFCEDDE.2080907@huawei.com> <CAErSpo4JrgU2RHoNDWcm13otgdKVXuGxahE0pbuAD73nZvTZFQ@mail.gmail.com> <4FFD1FE7.6010504@huawei.com> <CAErSpo7ZtrYtz_8iB8=8nbQBtntPtyi8BLg6K+D7mQjnfj-KCg@mail.gmail.com> <4FFE3CEC.80804@huawei.com> <CAErSpo4Adjo8e3YmSJCvNjosouUzuAQqpTm1rm=CAYvFmuDpyg@mail.gmail.com>
+In-Reply-To: <CAErSpo4Adjo8e3YmSJCvNjosouUzuAQqpTm1rm=CAYvFmuDpyg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Chris Friesen <chris.friesen@genband.com>
-Date: Tue, 17 Jul 2012 15:08:45 -0600
+On 07/13/2012 04:49 AM, Bjorn Helgaas wrote:
+>> Hi Bjorn,
+>>         It's a little risk to change these PCIe capabilities access
+>> functions as void. On some platform with hardware error detecting/correcting
+>> capabilities, such as EEH on Power, it would be better to return
+>> error code if hardware error happens during accessing configuration registers.
+>>         As I know, coming Intel Xeon processor may provide PCIe hardware
+>> error detecting capability similar to EEH on power.
+> 
+> I guess I'm playing devil's advocate here.  As a general rule, people
+> don't check the return value of pci_read_config_*() or
+> pci_write_config_*().  Unless you change them all, most callers of
+> pci_pcie_capability_read_*() and _write_*() won't check the returns
+> either.  So I'm not sure return values are an effective way to detect
+> those hardware errors.
+> 
+> How do these EEH errors get detected or reported today?  Do the
+> drivers check every config access for success?  Adding those checks
+> and figuring out how to handle errors at every possible point doesn't
+> seem like a recipe for success.
 
-> From that perspective a sysfs-based interface is ideal since it is
-> directly scriptable.
+Hi Bjorn,
+	Sorry for later reply, on travel these days.
+	Yeah, it's true that most driver doesn't check return values of configuration
+access functions, but there are still some drivers which do check return value of
+pci_read_config_xxx(). For example, pciehp driver checks return value of CFG access
+functions.
 
-As is anything ethtool or netlink based, since we have 'ethtool'
-and 'ip' for scripting.
+	It's not realistic to enhance all drivers, but we may focus on a small set of
+drivers for hardwares on specific high-end servers. For RAS features, we can never provide
+perfect solutions, so we prefer some improvements. After all a small improvement is still
+an improvement:)
+
+	I'm only familiar with PCI on IA64 and x86. For PowerPC, I just know that the OS
+may query firmware whether there's some hardware faults if pci_cfg_read_xxx() returns
+all 1s. For PCI on IA64, SAL may handle PCI hardware errors and return error code to
+pci_cfg_read_xxx(). For x86, I think it will have some mechanisms to report hardware faults
+like SAL on IA64.
+
+	So how about keeping consistence with pci_cfg_read_xxx() and pci_user_cfg_read_xxx()?
+	Thanks!
+	Gerry
+
