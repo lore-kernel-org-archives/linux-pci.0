@@ -1,95 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:61396 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464Ab2GJPyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 11:54:38 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [RFC PATCH 00/14] improve PCIe capabilities registers handling
-Date: Tue, 10 Jul 2012 23:54:01 +0800
-Message-Id: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 15 Jul 2012 16:53:30 -0700
+From: Greg KH <greg@kroah.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120715235330.GA30641@kroah.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+ <20120714170411.GA25775@kroah.com>
+ <20120715235041.GB7551@jonmason-lab>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120715235041.GB7551@jonmason-lab>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Sun, Jul 15, 2012 at 04:50:41PM -0700, Jon Mason wrote:
+> On Sat, Jul 14, 2012 at 10:04:11AM -0700, Greg KH wrote:
+> > On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
+> > > The NTB device driver is needed to configure these memory windows, doorbell, and
+> > > scratch-pad registers as well as use them in such a way as they can be turned
+> > > into a viable communication channel to the remote system.  ntb_hw.[ch]
+> > > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> > > the underlying hardware to provide access and a common interface to the doorbell
+> > > registers, scratch pads, and memory windows.  These hardware interfaces are
+> > > exported so that other, non-mainlined kernel drivers can access these.
+> > 
+> > Why would you have non-mainlined drivers?
+> > 
+> > Can you submit the drivers at the same time so we see how you are using
+> > these new interfaces?
+> 
+> There are none at this time.  In the near future, the transport will
+> be modified to use IOAT instead of the CPU copy to improve throughput
+> performance, and it may be beneficial to have that separate.  If you
+> wish for me to remove the hooks until it is necessary for that, then I
+> can.
 
-As suggested by Bjorn Helgaas and Don Dutile in threads
-http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
-to PCIe capabilities register in to way:
-1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
-   repeatedly reading this register because it's read only.
-2) provide access functions for PCIe Capabilities registers to hide differences
-   among PCIe base specifications, so the caller don't need to handle those
-   differences.
+Yes, please do so, we don't add apis for things that are not in-kernel
+as they almost always need to change once we actually get a user of
+them, as you know.
 
-This patch set applies to
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+thanks,
 
-These patch set is still RFC. It provides the new interfaces and has made the
-major changes to adopt those new interfaces. But there are still several device
-drivers left untouched. Any comments about the new interfaces are welcomed,
-especially about function names:). Once we reach an agreement, I will send out
-a formal version with all needed work done.
-
-Jiang Liu (11):
-  PCI: refine and move pcie_cap_has_*() macros to include/linux/pci.h
-  PCI: add access functions for PCIe capabilities to hide PCIe spec
-    differences
-  PCI: use PCIe cap access functions to simplify PCI core
-    implementation
-  hotplug/PCI: use PCIe cap access functions to simplify implementation
-  portdrv/PCI: use PCIe cap access functions to simplify implementation
-  pciehp/PCI: use PCIe cap access functions to simplify implementation
-  PME/PCI: use PCIe cap access functions to simplify implementation
-  AER/PCI: use PCIe cap access functions to simplify implementation
-  ASPM/PCI: use PCIe cap access functions to simplify implementation
-  r8169/PCI: use PCIe cap access functions to simplify implementation
-  qib/PCI: use PCIe cap access functions to simplify implementation
-
-Yijing Wang (1):
-  PCI: add pcie_flags into struct pci_dev to cache PCIe capabilities
-    register
-  PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
-  PCI: remove unused field pcie_type from struct pci_dev
-
- arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
- drivers/infiniband/hw/qib/qib_pcie.c               |   34 ++-
- drivers/iommu/intel-iommu.c                        |    6 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
- .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
- drivers/net/ethernet/realtek/r8169.c               |   38 +--
- drivers/pci/access.c                               |   88 +++++++
- drivers/pci/hotplug/pciehp_acpi.c                  |    5 +-
- drivers/pci/hotplug/pciehp_hpc.c                   |    8 +-
- drivers/pci/hotplug/pcihp_slot.c                   |   17 +-
- drivers/pci/iov.c                                  |    6 +-
- drivers/pci/pci.c                                  |  265 +++++---------------
- drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
- drivers/pci/pcie/aer/aerdrv.c                      |   23 +-
- drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
- drivers/pci/pcie/aer/aerdrv_core.c                 |   47 ++--
- drivers/pci/pcie/aspm.c                            |  110 ++++----
- drivers/pci/pcie/pme.c                             |   23 +-
- drivers/pci/pcie/portdrv_bus.c                     |    2 +-
- drivers/pci/pcie/portdrv_core.c                    |   24 +-
- drivers/pci/pcie/portdrv_pci.c                     |   15 +-
- drivers/pci/probe.c                                |   30 +--
- drivers/pci/quirks.c                               |    8 +-
- drivers/pci/search.c                               |    2 +-
- include/linux/pci.h                                |   65 ++++-
- include/linux/pci_regs.h                           |   19 +-
- 26 files changed, 401 insertions(+), 444 deletions(-)
-
--- 
-1.7.9.5
-
+greg k-h
