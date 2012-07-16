@@ -1,79 +1,183 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:7718
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751770Ab2GJGNr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 02:13:47 -0400
-From: Liu Shengzhou-B36685 <B36685@freescale.com>
-To: Wood Scott-B07421 <B07421@freescale.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-Subject: RE: [PATCH] PCI: Add pcie_irq=other to enable non MSI/INTx
- interrupt for port service driver
-Date: Tue, 10 Jul 2012 06:13:44 +0000
-Message-ID: <3F453DDFF675A64A89321A1F3528102176B4BF@039-SN1MPN1-003.039d.mgd.msft.net>
-References: <1341830970-12779-1-git-send-email-Shengzhou.Liu@freescale.com>
- <4FFB0927.7080406@freescale.com>
-In-Reply-To: <4FFB0927.7080406@freescale.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1342284188-19176-6-git-send-email-Julia.Lawall@lip6.fr>
+References: <1342284188-19176-1-git-send-email-Julia.Lawall@lip6.fr> <1342284188-19176-6-git-send-email-Julia.Lawall@lip6.fr>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Jul 2012 09:54:26 -0600
+Message-ID: <CAErSpo5FKNXEWOps3YmEP0WVZURb0cVghaTaxEJqEioNxoywQw@mail.gmail.com>
+Subject: Re: [PATCH 5/6] drivers/pci/hotplug: ensure a consistent return value
+ in error case
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
-MjENCj4gU2VudDogVHVlc2RheSwgSnVseSAxMCwgMjAxMiAxMjozOSBBTQ0KPiBUbzogTGl1IFNo
-ZW5nemhvdS1CMzY2ODUNCj4gQ2M6IGJoZWxnYWFzQGdvb2dsZS5jb207IGxpbnV4LXBjaUB2Z2Vy
-Lmtlcm5lbC5vcmc7IGxpbnV4cHBjLQ0KPiBkZXZAbGlzdHMub3psYWJzLm9yZw0KPiBTdWJqZWN0
-OiBSZTogW1BBVENIXSBQQ0k6IEFkZCBwY2llX2lycT1vdGhlciB0byBlbmFibGUgbm9uIE1TSS9J
-TlR4IGludGVycnVwdA0KPiBmb3IgcG9ydCBzZXJ2aWNlIGRyaXZlcg0KPiANCj4gT24gMDcvMDkv
-MjAxMiAwNTo0OSBBTSwgU2hlbmd6aG91IExpdSB3cm90ZToNCj4gPiBPbiBzb21lIHBsYXRmb3Jt
-cywgaW4gUkMgbW9kZSwgcm9vdCBwb3J0IGhhcyBuZWl0aGVyIE1TSS9NU0ktWCBub3INCj4gPiBJ
-TlR4IGludGVycnVwdCBnZW5lcmF0ZWQsIHdoaWNoIGFyZSBhdmFpbGFibGUgb25seSBpbiBFUCBt
-b2RlIG9uIHRob3NlDQo+IHBsYXRmb3JtLg0KPiA+IEluIHRoaXMgY2FzZSwgd2UgdHJ5IHRvIHVz
-ZSBvdGhlciBpbnRlcnJ1cHQgaWYgc3VwcG9ydGVkIChpLmUuIHRoZXJlDQo+ID4gaXMgdGhlIHNo
-YXJlZCBlcnJvciBpbnRlcnJ1cHQgb24gcGxhdGZvcm0gUDEwMTAsIFAzMDQxLCBQNDA4MCwgZXRj
-KSB0bw0KPiA+IGhhdmUgQUVSLCBIb3QtcGx1ZywgZXRjLCBzZXJ2aWNlcyB0byB3b3JrLg0KPiA+
-DQo+ID4gU2lnbmVkLW9mZi1ieTogU2hlbmd6aG91IExpdSA8U2hlbmd6aG91LkxpdUBmcmVlc2Nh
-bGUuY29tPg0KPiA+IC0tLQ0KPiA+ICBEb2N1bWVudGF0aW9uL2tlcm5lbC1wYXJhbWV0ZXJzLnR4
-dCB8ICAgIDQgKysrKw0KPiA+ICBkcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jICAgICB8
-ICAgMTkgKysrKysrKysrKysrKysrKysrKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDIzIGluc2Vy
-dGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRh
-dGlvbi9rZXJuZWwtcGFyYW1ldGVycy50eHQNCj4gPiBiL0RvY3VtZW50YXRpb24va2VybmVsLXBh
-cmFtZXRlcnMudHh0DQo+ID4gaW5kZXggYTkyYzVlYi4uYWY5N2M4MSAxMDA2NDQNCj4gPiAtLS0g
-YS9Eb2N1bWVudGF0aW9uL2tlcm5lbC1wYXJhbWV0ZXJzLnR4dA0KPiA+ICsrKyBiL0RvY3VtZW50
-YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0DQo+ID4gQEAgLTIyMTgsNiArMjIxOCwxMCBAQCBi
-eXRlcyByZXNwZWN0aXZlbHkuIFN1Y2ggbGV0dGVyIHN1ZmZpeGVzIGNhbiBhbHNvIGJlDQo+IGVu
-dGlyZWx5IG9taXR0ZWQuDQo+ID4gIAkJbm9tc2kJRG8gbm90IHVzZSBNU0kgZm9yIG5hdGl2ZSBQ
-Q0llIFBNRSBzaWduYWxpbmcgKHRoaXMgbWFrZXMNCj4gPiAgCQkJYWxsIFBDSWUgcm9vdCBwb3J0
-cyB1c2UgSU5UeCBmb3IgYWxsIHNlcnZpY2VzKS4NCj4gPg0KPiA+ICsJcGNpZV9pcnE9CVtQQ0lF
-XSBOYXRpdmUgUENJZSByb290IHBvcnQgaW50ZXJydXB0IG9wdGlvbnM6DQo+ID4gKwkJb3RoZXIJ
-VHJ5IHRvIHVzZSBvdGhlciBpbnRlcnJ1cHQgd2hlbiByb290IHBvcnQgaGFzDQo+ID4gKwkJCW5l
-aXRoZXIgTVNJL01TSS1YIG5vciBJTlR4IHN1cHBvcnQuDQo+IA0KPiBXaHkgZG9lcyB0aGUgdXNl
-ciBuZWVkIHRvIHNwZWNpZnkgdGhpcz8gIFNob3VsZG4ndCB0aGlzIGJlIGEgbWF0dGVyIG9mDQo+
-IGNvbW11bmljYXRpb24gYmV0d2VlbiBrZXJuZWwgaW50ZXJuYWxzPw0KPiANCg0KVGhlICJvdGhl
-ciBpbnRlcnJ1cHQiIGFwcGVhcnMgYSBub24tc3RhbmRhcmQgaW50ZXJydXB0IHdheSBjb21wYXJl
-ZCB0byBNU0kvTVNJLVggYW5kIElOVHggaW4gcG9pbnQgb2YgUENJZSBzcGVjLg0KVGhlIGludGVu
-dCBvZiBzcGVjaWZ5aW5nIHRoaXMgaXMgdG8gaGF2ZSBhbiBpbnRlcnZlbnRpb24gYW5kIGNvbmZp
-cm1hdGlvbiBtYW51YWxseSB0byBhdm9pZCBjYXVzaW5nIHVuZXhwZWN0ZWQgaXNzdWUgb24gc29t
-ZSB1bmtub3duIHBsYXRmb3Jtcy4NCkknbSBnbGFkIHRvIHJlbW92ZSB0aGUgc3BlY2lmaWVkIGtl
-cm5lbCBwYXJhbWV0ZXIgaWYgaXQgd291bGQgYmUgYWNjZXB0ZWQgdXBzdHJlYW0uDQoNCj4gPiBA
-QCAtMjE2LDYgKzIyNywxNCBAQCBzdGF0aWMgaW50IGluaXRfc2VydmljZV9pcnFzKHN0cnVjdCBw
-Y2lfZGV2ICpkZXYsIGludA0KPiAqaXJxcywgaW50IG1hc2spDQo+ID4gIAlpZiAoIXBjaV9lbmFi
-bGVfbXNpKGRldikgfHwgZGV2LT5waW4pDQo+ID4gIAkJaXJxID0gZGV2LT5pcnE7DQo+ID4NCj4g
-PiArCS8qDQo+ID4gKwkgKiBPbiBzb21lIHBsYXRmb3Jtcywgcm9vdCBwb3J0IGhhcyBuZWl0aGVy
-IE1TSS9NU0ktWCBub3IgSU5UeA0KPiA+ICsJICogaW50ZXJydXB0IHN1cHBvcnQgaW4gUkMgbW9k
-ZSwgc28gdHJ5IHRvIHVzZSBvdGhlciBpbnRlcnJ1cHQoaS5lLg0KPiA+ICsJICogc2hhcmVkIGlu
-dGVycnVwdCBpZiBzdXBwb3J0ZWQpLg0KPiA+ICsJICovDQo+ID4gKwllbHNlIGlmIChwb3J0X290
-aGVyX2ludGVycnVwdF9lbmFibGVkICYmIGRldi0+aXJxKQ0KPiA+ICsJCWlycSA9IGRldi0+aXJx
-Ow0KPiANCj4gSXMgdGhlcmUgYW55IHJlYXNvbiB0byBub3QgdXNlIGRldi0+aXJxIGlmIGl0IGlz
-IG5vbi16ZXJvPw0KPiANCj4gLVNjb3R0DQoNCkkgZ3Vlc3MgYSB0aGlua2luZyBvZiB0aGUgb3Jp
-Z2luYWwgYXV0aG9yIGRpZCBzbyBpcyBiYXNlZCBvbiB0aGUgcG9pbnQgb2YgUENJZSBzcGVjLCB3
-aGV0aGVyIElOVHggaXMgc3VwcG9ydGVkIG9yIG5vdCBpcyBkZWNpZGVkIGJ5IHRoZSAiUENJIEV4
-cHJlc3MgSW50ZXJydXB0IFBpbiBSZWdpc3RlcihSZWFkIG9ubHkpIi4NCg0KSXMgdGhlcmUgdGhl
-IGNhc2Ugb24gc29tZSBvdGhlciB1bmtub3duIHBsYXRmb3JtcyB0aGF0IGRldi0+aXJxIGlzIG5v
-bi16ZXJvIGR1ZSB0byBpbmNvcnJlY3QgaW5pdGlhbGl6YXRpb24gb2YgaXJxIGFsbG9jYXRpb24s
-IGJ1dCBhY3R1YWxseSBpdCBkb2Vzbid0IHN1cHBvcnQgTVNJL01TSVgvSU5UeCBvciBhbnkgb3Ro
-ZXIgaW50ZXJydXB0PyAgDQpJZiB3ZSBkb24ndCBuZWVkIHRvIGNvbnNpZGVyIHRoaXMgY2FzZSwg
-d2UgY2FuIHVzZSBkZXYtPmlycSBkaXJlY3RseSBpbnN0ZWFkIG9mIGRldi0+cGluIHRvIHN1cHBv
-cnQgIm90aGVyIGludGVycnVwdCIuDQoNClRoYW5rcywNClNoZW5nemhvdQ0K
+On Sat, Jul 14, 2012 at 10:43 AM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> Typically, the return value desired for the failure of a function with an
+> integer return value is a negative integer.  In these cases, the return
+> value is sometimes a negative integer and sometimes 0, due to a subsequent
+> initialization of the return variable within the loop.
+>
+> A simplified version of the semantic match that finds this problem is:
+> (http://coccinelle.lip6.fr/)
+>
+> //<smpl>
+> @r exists@
+> identifier ret;
+> position p;
+> constant C;
+> expression e1,e3,e4;
+> statement S;
+> @@
+>
+> ret = -C
+> ... when != ret = e3
+>     when any
+> if@p (...) S
+> ... when any
+> if (\(ret != 0\|ret < 0\|ret > 0\) || ...) { ... return ...; }
+> ... when != ret = e3
+>     when any
+> *if@p (...)
+> {
+>   ... when != ret = e4
+>   return ret;
+> }
+> //</smpl>
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+>
+> ---
+>  drivers/pci/hotplug/cpqphp_core.c    |   14 ++++++++++----
+>  drivers/pci/hotplug/pcihp_skeleton.c |   14 ++++++++++----
+>  drivers/pci/hotplug/shpchp_core.c    |   14 ++++++++++----
+>  3 files changed, 30 insertions(+), 12 deletions(-)
 
+I squashed this patch and patch [1/6] (for the same problem in
+drivers/pci/hotplug/cpci_hotplug_core.c) and applied it to my "next"
+branch.  Thanks!
+
+> diff --git a/drivers/pci/hotplug/cpqphp_core.c b/drivers/pci/hotplug/cpqphp_core.c
+> index 187a199..c8eaeb4 100644
+> --- a/drivers/pci/hotplug/cpqphp_core.c
+> +++ b/drivers/pci/hotplug/cpqphp_core.c
+> @@ -611,7 +611,7 @@ static int ctrl_slot_setup(struct controller *ctrl,
+>         u32 tempdword;
+>         char name[SLOT_NAME_SIZE];
+>         void __iomem *slot_entry= NULL;
+> -       int result = -ENOMEM;
+> +       int result;
+>
+>         dbg("%s\n", __func__);
+>
+> @@ -623,19 +623,25 @@ static int ctrl_slot_setup(struct controller *ctrl,
+>
+>         while (number_of_slots) {
+>                 slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+> -               if (!slot)
+> +               if (!slot) {
+> +                       result = -ENOMEM;
+>                         goto error;
+> +               }
+>
+>                 slot->hotplug_slot = kzalloc(sizeof(*(slot->hotplug_slot)),
+>                                                 GFP_KERNEL);
+> -               if (!slot->hotplug_slot)
+> +               if (!slot->hotplug_slot) {
+> +                       result = -ENOMEM;
+>                         goto error_slot;
+> +               }
+>                 hotplug_slot = slot->hotplug_slot;
+>
+>                 hotplug_slot->info = kzalloc(sizeof(*(hotplug_slot->info)),
+>                                                         GFP_KERNEL);
+> -               if (!hotplug_slot->info)
+> +               if (!hotplug_slot->info) {
+> +                       result = -ENOMEM;
+>                         goto error_hpslot;
+> +               }
+>                 hotplug_slot_info = hotplug_slot->info;
+>
+>                 slot->ctrl = ctrl;
+> diff --git a/drivers/pci/hotplug/pcihp_skeleton.c b/drivers/pci/hotplug/pcihp_skeleton.c
+> index b20ceaa..1f00b93 100644
+> --- a/drivers/pci/hotplug/pcihp_skeleton.c
+> +++ b/drivers/pci/hotplug/pcihp_skeleton.c
+> @@ -252,7 +252,7 @@ static int __init init_slots(void)
+>         struct slot *slot;
+>         struct hotplug_slot *hotplug_slot;
+>         struct hotplug_slot_info *info;
+> -       int retval = -ENOMEM;
+> +       int retval;
+>         int i;
+>
+>         /*
+> @@ -261,17 +261,23 @@ static int __init init_slots(void)
+>          */
+>         for (i = 0; i < num_slots; ++i) {
+>                 slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+> -               if (!slot)
+> +               if (!slot) {
+> +                       retval = -ENOMEM;
+>                         goto error;
+> +               }
+>
+>                 hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
+> -               if (!hotplug_slot)
+> +               if (!hotplug_slot) {
+> +                       retval = -ENOMEM;
+>                         goto error_slot;
+> +               }
+>                 slot->hotplug_slot = hotplug_slot;
+>
+>                 info = kzalloc(sizeof(*info), GFP_KERNEL);
+> -               if (!info)
+> +               if (!info) {
+> +                       retval = -ENOMEM;
+>                         goto error_hpslot;
+> +               }
+>                 hotplug_slot->info = info;
+>
+>                 slot->number = i;
+> diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+> index 7414fd9..b6de307 100644
+> --- a/drivers/pci/hotplug/shpchp_core.c
+> +++ b/drivers/pci/hotplug/shpchp_core.c
+> @@ -99,22 +99,28 @@ static int init_slots(struct controller *ctrl)
+>         struct hotplug_slot *hotplug_slot;
+>         struct hotplug_slot_info *info;
+>         char name[SLOT_NAME_SIZE];
+> -       int retval = -ENOMEM;
+> +       int retval;
+>         int i;
+>
+>         for (i = 0; i < ctrl->num_slots; i++) {
+>                 slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+> -               if (!slot)
+> +               if (!slot) {
+> +                       retval = -ENOMEM;
+>                         goto error;
+> +               }
+>
+>                 hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
+> -               if (!hotplug_slot)
+> +               if (!hotplug_slot) {
+> +                       retval = -ENOMEM;
+>                         goto error_slot;
+> +               }
+>                 slot->hotplug_slot = hotplug_slot;
+>
+>                 info = kzalloc(sizeof(*info), GFP_KERNEL);
+> -               if (!info)
+> +               if (!info) {
+> +                       retval = -ENOMEM;
+>                         goto error_hpslot;
+> +               }
+>                 hotplug_slot->info = info;
+>
+>                 slot->hp_slot = i;
+>
