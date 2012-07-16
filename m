@@ -1,78 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <mjg@redhat.com>
-To: matt.fleming@intel.com
-Cc: linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH V2 4/4] X86: Use PCI setup data
-Date: Fri, 27 Jul 2012 12:52:14 -0400
-Message-Id: <1343407934-459-4-git-send-email-mjg@redhat.com>
-In-Reply-To: <1343407934-459-1-git-send-email-mjg@redhat.com>
-References: <1343407934-459-1-git-send-email-mjg@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:44756 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751888Ab2GPQFh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 12:05:37 -0400
+Received: by lbbgm6 with SMTP id gm6so8875063lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 09:05:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6Xdc-rDvvipJFzXbbF3V75zSBq4skMtZ2PDVsz1kxtdw@mail.gmail.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+ <1340437325-29282-5-git-send-email-yinghai@kernel.org> <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
+ <20120711171458.GA14610@redhat.com> <CAErSpo6Xdc-rDvvipJFzXbbF3V75zSBq4skMtZ2PDVsz1kxtdw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 16 Jul 2012 10:05:16 -0600
+Message-ID: <CAErSpo7_07Kun3re6qxV-Pz9cONzauhRN_GpUQattTp1vUk5+w@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
+To: Jason Baron <jbaron@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EFI can provide PCI ROMs out of band via boot services, which may not be
-available after boot. Add support for using the data handed off to us by
-the boot stub or bootloader.
+On Wed, Jul 11, 2012 at 1:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jul 11, 2012 at 11:14 AM, Jason Baron <jbaron@redhat.com> wrote:
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
-Tested-by: Seth Forshee <seth.forshee@canonical.com>
----
- arch/x86/pci/common.c |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+>> Using the same code base I was able to do acpi hotplug on Windows 7,
+>> which correctly configured the both the bridge window and devices behind
+>> it on hot-plug. So currently, the above usage pattern works on Windows
+>> 7, but not on Linux.
+>
+> Thanks, Jason.  Do you have "lspci -v" output and the DSDT AML handy?
+> I'd like to look in more detail at what we're missing.
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 720e973f..3d2752f 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -17,6 +17,7 @@
- #include <asm/io.h>
- #include <asm/smp.h>
- #include <asm/pci_x86.h>
-+#include <asm/setup.h>
- 
- unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
- 				PCI_PROBE_MMCONF;
-@@ -608,6 +609,38 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	struct setup_data *data;
-+	struct pci_setup_rom *rom;
-+	u64 pa_data;
-+
-+	if (boot_params.hdr.version < 0x0209)
-+		return 0;
-+
-+	pa_data = boot_params.hdr.setup_data;
-+	while (pa_data) {
-+		data = phys_to_virt(pa_data);
-+
-+		if (data->type == SETUP_PCI) {
-+			rom = (struct pci_setup_rom *)data;
-+
-+			if ((pci_domain_nr(dev->bus) == rom->segment) &&
-+			    (dev->bus->number == rom->bus) &&
-+			    (PCI_SLOT(dev->devfn) == rom->device) &&
-+			    (PCI_FUNC(dev->devfn) == rom->function) &&
-+			    (dev->vendor == rom->vendor) &&
-+			    (dev->device == rom->devid)) {
-+				dev->rom = (void *)(pa_data +
-+				      offsetof(struct pci_setup_rom, romdata));
-+				dev->romlen = rom->pcilen;
-+			}
-+		}
-+		pa_data = data->next;
-+	}
-+	return 0;
-+}
-+
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
- 	int err;
--- 
-1.7.10.4
-
+Ping?
