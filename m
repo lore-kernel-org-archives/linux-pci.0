@@ -1,107 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 15/32] PCI/r8169: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:31:27 +0800
-Message-Id: <1343147504-25891-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:42258 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584Ab2GPS0u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 14:26:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+Date: Mon, 16 Jul 2012 14:26:48 -0400
+Message-ID: <CAAsGZS7B5Ch40UQVjgjoRB=RVhkNS-nhi5gh04RSBwsUpZ-9kA@mail.gmail.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+From: chetan loke <loke.chetan@gmail.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Jon,
 
-Use PCIe capabilities access functions to simplify r8169 driver's
-implementation.
+On Fri, Jul 13, 2012 at 5:44 PM, Jon Mason <jon.mason@intel.com> wrote:
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/net/ethernet/realtek/r8169.c |   35 ++++++++++++----------------------
- 1 file changed, 12 insertions(+), 23 deletions(-)
+..............
 
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index 9757ce3..2f6ff78 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -807,14 +807,12 @@ static void rtl_unlock_work(struct rtl8169_private *tp)
- 
- static void rtl_tx_performance_tweak(struct pci_dev *pdev, u16 force)
- {
--	int cap = pci_pcie_cap(pdev);
--
--	if (cap) {
-+	if (pci_is_pcie(pdev)) {
- 		u16 ctl;
- 
--		pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl);
-+		pci_pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &ctl);
- 		ctl = (ctl & ~PCI_EXP_DEVCTL_READRQ) | force;
--		pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl);
-+		pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL, ctl);
- 	}
- }
- 
-@@ -4504,27 +4502,23 @@ static void rtl_ephy_init(void __iomem *ioaddr, const struct ephy_info *e, int l
- 
- static void rtl_disable_clock_request(struct pci_dev *pdev)
- {
--	int cap = pci_pcie_cap(pdev);
--
--	if (cap) {
-+	if (pci_is_pcie(pdev)) {
- 		u16 ctl;
- 
--		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
-+		pci_pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &ctl);
- 		ctl &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
--		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
-+		pci_pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, ctl);
- 	}
- }
- 
- static void rtl_enable_clock_request(struct pci_dev *pdev)
- {
--	int cap = pci_pcie_cap(pdev);
--
--	if (cap) {
-+	if (pci_is_pcie(pdev)) {
- 		u16 ctl;
- 
--		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
-+		pci_pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &ctl);
- 		ctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
--		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
-+		pci_pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, ctl);
- 	}
- }
- 
-@@ -5132,14 +5126,9 @@ static void rtl_hw_start_8101(struct net_device *dev)
- 		tp->event_slow &= ~RxFIFOOver;
- 
- 	if (tp->mac_version == RTL_GIGA_MAC_VER_13 ||
--	    tp->mac_version == RTL_GIGA_MAC_VER_16) {
--		int cap = pci_pcie_cap(pdev);
--
--		if (cap) {
--			pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL,
--					      PCI_EXP_DEVCTL_NOSNOOP_EN);
--		}
--	}
-+	    tp->mac_version == RTL_GIGA_MAC_VER_16)
-+		pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
-+					       PCI_EXP_DEVCTL_NOSNOOP_EN);
- 
- 	RTL_W8(Cfg9346, Cfg9346_Unlock);
- 
--- 
-1.7.9.5
+> +/**
+> + * ntb_ring_sdb() - Set the doorbell on the secondary/external side
+> + * @ndev: pointer to ntb_device instance
+> + * @db: doorbell to ring
+> + *
+> + * This function allows triggering of a doorbell on the secondary/external
+> + * side that will initiate an interrupt on the remote host
+> + *
+> + * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
+> + */
+> +int ntb_ring_sdb(struct ntb_device *ndev, unsigned int db)
+> +{
+> +       dev_dbg(&ndev->pdev->dev, "%s: ringing doorbell %d\n", __func__, db);
+> +
 
+> +       if (db >= ndev->max_cbs)
+> +               return -EINVAL;
+
+How about moving this max_cbs error check in the upper level
+callers(example in ntb_process_tx)?
+That way you won't have to defer handling some negative cases all the
+way till the end.
+
+So ntb_process_tx could now look like:
+
+.....
+error=0;
+if (entry->len > transport_mtu) {
+...
+error=1;
+}
+else if (qp->qp_num >= qp->ndev->max_cbs) {
+...
+error=1;
+}
+
+if (unlikely(error)) {
+      ntb_list_add_tail(&qp->txc_lock, &entry->entry, &qp->txc);
+      if (qp->tx_handler)
+           qp->tx_handler(qp);
+
+      return 0;
+}
+.................
+
+No further comments below
+
+> +
+> +static int ntb_process_tx(struct ntb_transport_qp *qp,
+> +                         struct ntb_queue_entry *entry)
+> +{
+> +       struct ntb_payload_header *hdr;
+> +       void *offset;
+> +
+> +       offset = qp->tx_offset;
+> +       hdr = offset;
+> +
+> +       pr_debug("%lld - offset %p, tx %p, entry len %d flags %x buff %p\n",
+> +                qp->tx_pkts, offset, qp->tx_offset, entry->len, entry->flags,
+> +                entry->buf);
+> +       if (hdr->flags) {
+> +               ntb_list_add_head(&qp->txq_lock, &entry->entry, &qp->txq);
+> +               qp->tx_ring_full++;
+> +               return -EAGAIN;
+> +       }
+> +
+> +       if (entry->len > transport_mtu) {
+> +               pr_err("Trying to send pkt size of %d\n", entry->len);
+> +               entry->flags = HW_ERROR_FLAG;
+> +
+> +               ntb_list_add_tail(&qp->txc_lock, &entry->entry, &qp->txc);
+> +
+> +               if (qp->tx_handler)
+> +                       qp->tx_handler(qp);
+> +
+> +               return 0;
+> +       }
+> +
+> +       ntb_tx_copy_task(qp, entry, offset);
+> +
+> +       qp->tx_offset =
+> +           (qp->tx_offset +
+> +            ((transport_mtu + sizeof(struct ntb_payload_header)) * 2) >=
+> +            qp->tx_mw_end) ? qp->tx_mw_begin : qp->tx_offset + transport_mtu +
+> +           sizeof(struct ntb_payload_header);
+> +
+> +       qp->tx_pkts++;
+> +
+> +       return 0;
+> +}
+> +
+
+
+Chetan Loke
