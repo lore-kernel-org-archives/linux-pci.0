@@ -1,50 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47809 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752468Ab2GaVFZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 17:05:25 -0400
-Date: Tue, 31 Jul 2012 17:05:24 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
- regression ...)
-In-Reply-To: <201207312231.19505.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1207311658340.1532-100000@iolanthe.rowland.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4185 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750754Ab2GPJUD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Jul 2012 05:20:03 -0400
+Message-ID: <5003DC9B.8000706@broadcom.com>
+Date: Mon, 16 Jul 2012 12:19:23 +0300
+From: "Yuval Mintz" <yuvalmin@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: "davem@davemloft.net" <davem@davemloft.net>
+cc: "Chris Friesen" <chris.friesen@genband.com>,
+	"Ben Hutchings" <bhutchings@solarflare.com>,
+	"Greg Rose" <gregory.v.rose@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: New commands to configure IOV features
+References: <4FA7AF62.8000405@broadcom.com>
+ <20120507081634.000003f8.gregory.v.rose@intel.com>
+ <4FE9A963.7020602@broadcom.com> <20120626101903.0000791c@unknown>
+ <1341859155.2535.43.camel@bwh-desktop.uk.solarflarecom.com>
+ <4FFB4985.3040507@genband.com>
+In-Reply-To: <4FFB4985.3040507@genband.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[CC: list trimmed]
 
-On Tue, 31 Jul 2012, Rafael J. Wysocki wrote:
+>>>> If I want to pick the RFCs and add support for configuring the number
+>>>> of VFs - do you think ethtool's the right place for such added
+>>>> support?
+>>>>
+>>> I think a PCI utility tool would be better, SR-IOV is not limited to
+>>> network devices.  That's one of the reasons I dropped the RFC.  I
+>>> haven't gotten back to the idea since then due to my day job keeping me
+>>> pretty busy.
+>>
+>> For what it's worth, I agree with this.
+> 
+> From my perspective it would be ideal if this could be exported via /sys or something
+> 
 
-> Now it occured to me that perhaps we don't need the current asynchronous
-> pm_runtime_get() at all.  The usefulness of it is quite questionable, because
-> either we want to resume the device immediately, for which pm_runtime_get_sync()
-> should be used, or we just want to bump up the usage counter, in which cases
-> pm_runtime_get_noresume() should always be sufficient.  I fail to see any
-> particularly compelling use case for pm_runtime_get() doing an asynchronous
-> resume at the moment, but perhaps that's just me.
 
-There are indeed valid uses for pm_runtime_get().  We are forced to use
-it in non-sleepable contexts when we want to resume the device as
-quickly as possible.  Example: a driver receives an I/O request from an
-interrupt handler.
+Well, obviously unless there was a sudden change in our stance regarding
+sysfs we will not head that way.
 
-> However, I receive reports of people using pm_runtime_get() where they really
-> should use pm_runtime_get_sync(), so I wonder if we can simply rename
-> pm_runtime_get_sync() as pm_runtime_get() and drop the asynchronous version
-> altogether?
+This thread got no replies from the pci community, and I'm unfamiliar
+with such a tool.
 
-Well, IMO the naming should have been the other way around from the
-start.  That is, we should have made pm_runtime_get be the synchronous
-routine and pm_runtime_get_async be the asynchronous one.  But it's too
-late to change now.
+Dave, What's your stance in the matter - do you wish us to continue pursuing
+some pci tool (which might or might not exist), or instead work on
+a networking solution to this issue?
 
-And no, we can't get rid of the async version.
+Do you happen to know such a tool?
 
-Alan Stern
+Thanks,
+Yuval
 
