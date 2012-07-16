@@ -1,54 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36736 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316Ab2G2Mga (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2012 08:36:30 -0400
+Received: from mga01.intel.com ([192.55.52.88]:44745 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753637Ab2GPRzH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Jul 2012 13:55:07 -0400
+Date: Mon, 16 Jul 2012 10:55:06 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120716175505.GF9598@jonmason-lab>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+ <20120714171015.GB25775@kroah.com>
+ <20120715235548.GC7551@jonmason-lab>
+ <20120716001921.GA19775@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <20120726170925.GA24751@kroah.com>
-References: <CAHzK-V0XpkVJHgqWiWpYP1jx5DPX=voE0eymK+5FG-zhrJOwAQ@mail.gmail.com>
- <20120726170925.GA24751@kroah.com>
-From: Shlomo Pongratz <shlomopongratz@gmail.com>
-Date: Sun, 29 Jul 2012 15:36:09 +0300
-Message-ID: <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
-Subject: Re: Cabled PCIE device hotplug/hot-removal
-To: Greg KH <greg@kroah.com>
-Cc: linux-pci@vger.kernel.org, linux-hotplug@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120716001921.GA19775@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 8:09 PM, Greg KH <greg@kroah.com> wrote:
-> On Thu, Jul 26, 2012 at 08:03:09PM +0300, Shlomo Pongratz wrote:
->> Hi,
->>
->> I have a  PCIe device connected with cables to a host (kernel 3.5.0-rc7+).
->> What are the handler I need to add to a driver in order to catch cable
->> pull-out / push-in?
->
-> You shouldn't need anything special, aren't you already getting probe
-> and disconnect callbacks when the device is discovered and removed?
+On Sun, Jul 15, 2012 at 05:19:21PM -0700, Greg KH wrote:
+> On Sun, Jul 15, 2012 at 04:55:48PM -0700, Jon Mason wrote:
+> > On Sat, Jul 14, 2012 at 10:10:15AM -0700, Greg KH wrote:
+> > > On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
+> > > > +static int max_num_cbs = 2;
+> > > > +module_param(max_num_cbs, uint, 0644);
+> > > > +MODULE_PARM_DESC(max_num_cbs, "Maximum number of NTB transport connections");
+> > > > +
+> > > > +static bool no_msix;
+> > > > +module_param(no_msix, bool, 0644);
+> > > > +MODULE_PARM_DESC(no_msix, "Do not allow MSI-X interrupts to be selected");
+> > > 
+> > > How would a user, or a distro, know to set these options?  Why are they
+> > > even options at all?
+> > 
+> > Good question.  There is actually a potential benefit to disabling
+> > MSI-X.  The NTB device on one of our platforms only has 3 MSI-X
+> > vectors.  In the current driver design, that would limit them to 3
+> > client/virtual devices.  However, there are 15bits in the ISR that can
+> > be used for the same purpose.  So, if you disable MSI-X, you can have
+> > 15 instead of 3.  
+> 
+> But again, how would a user, or a distro, know to set these?  Where is
+> the documentation describing it?  Why really have these options at all
+> and not just fix the platform issues (only 3 MSI-X vectors?  Really?)
 
-When the device is loaded the probe is called
-When I "echo 1" to the remove sysfs entry the remove callback is called.
-But when I power down the card no callback is called.
->
->> The pcisig presentation
->> "http://www.pcisig.com/developers/main/training_materials/get_document?doc_id=f4ca40ec1721aa7fadd05e2903b0172c36656294"
->> talks about PERST# detection for cabled PCIe hotplug.
->>
->> Does the kernel detect it?
->>
->> None of the pci_driver or pci_error_handlers callbacks were called
->> when using powered down/up the device (electrically).
->
-> Do you have the pciehp driver loaded properly when this happens?
+I believe we'll want multiple clients (or have multiqueue Ethernet).  I'm happy to add something to /Documentation to describe it and why it would be useful, or I can remove it and re-introduce it when I add multiqueue Ethernet.
 
-My {dot}config includes it into the kernel, i.e.
-CONFIG_HOTPLUG_PCI_PCIE=y
+3 MSI-X vectors (plus one for PCI-E link up/down) on Xeon NTB, and 33 for Atom NTB.  Yeah, really.
 
->
+> 
 > thanks,
->
+> 
 > greg k-h
-
-Thanks,
