@@ -1,40 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:62990 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753363Ab2G2UMz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2012 16:12:55 -0400
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:49463 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748Ab2GPATZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2012 20:19:25 -0400
+Received: by pbbrp8 with SMTP id rp8so9096094pbb.19
+        for <linux-pci@vger.kernel.org>; Sun, 15 Jul 2012 17:19:25 -0700 (PDT)
+Date: Sun, 15 Jul 2012 17:19:21 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120716001921.GA19775@kroah.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+ <20120714171015.GB25775@kroah.com>
+ <20120715235548.GC7551@jonmason-lab>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
-References: <201207291555.52749.rjw@sisk.pl>
-	<Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
-Date: Mon, 30 Jul 2012 01:42:55 +0530
-Message-ID: <CABb+yY2G7VurriJEbo-5WXY0kpyBB0cEWeACDDv++AHcKFZ+hQ@mail.gmail.com>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
- hotplug failure
-From: Jassi Brar <jassisinghbrar@gmail.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	=?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120715235548.GC7551@jonmason-lab>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 29, 2012 at 8:25 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
->
-> For me there's also an issue of style: If you do a synchronous get then it
-> looks odd not to do a synchronous put.  My feeling has always been that
-> the async routines are for use in non-process contexts, where the sync
-> routines can't be used.  Using them just to return a little more
-> quickly is a foreign idea.
->
-Another way of looking at it is - I need h/w to be active in order to
-proceed so I call get_sync but I don't care if the h/w is not put down
-immediately after I am done using it. So the put could be
-relaxed/async - At best, we could avoid an unnecessary suspend-resume
-cycle which could be expensive power and time wise. At worst, we
-return a bit quicker. Or so do I think.
+On Sun, Jul 15, 2012 at 04:55:48PM -0700, Jon Mason wrote:
+> On Sat, Jul 14, 2012 at 10:10:15AM -0700, Greg KH wrote:
+> > On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
+> > > +static int max_num_cbs = 2;
+> > > +module_param(max_num_cbs, uint, 0644);
+> > > +MODULE_PARM_DESC(max_num_cbs, "Maximum number of NTB transport connections");
+> > > +
+> > > +static bool no_msix;
+> > > +module_param(no_msix, bool, 0644);
+> > > +MODULE_PARM_DESC(no_msix, "Do not allow MSI-X interrupts to be selected");
+> > 
+> > How would a user, or a distro, know to set these options?  Why are they
+> > even options at all?
+> 
+> Good question.  There is actually a potential benefit to disabling
+> MSI-X.  The NTB device on one of our platforms only has 3 MSI-X
+> vectors.  In the current driver design, that would limit them to 3
+> client/virtual devices.  However, there are 15bits in the ISR that can
+> be used for the same purpose.  So, if you disable MSI-X, you can have
+> 15 instead of 3.  
+
+But again, how would a user, or a distro, know to set these?  Where is
+the documentation describing it?  Why really have these options at all
+and not just fix the platform issues (only 3 MSI-X vectors?  Really?)
+
+thanks,
+
+greg k-h
