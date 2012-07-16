@@ -1,126 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f202.google.com ([209.85.216.202]:60514 "EHLO
-	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611Ab2GQArS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 20:47:18 -0400
-Received: by qcqs25 with SMTP id s25so624913qcq.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 17:47:16 -0700 (PDT)
-Date: Mon, 16 Jul 2012 18:47:16 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	benh@kernel.crashing.org, yinghai@kernel.org, linuxram@us.ibm.com
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120717004716.GC32203@google.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
- <1342452631-21152-5-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:28627
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751087Ab2GPDxH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2012 23:53:07 -0400
+From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linuxppc-dev@lists.ozlabs.org>,
+	Shengzhou Liu <Shengzhou.Liu@freescale.com>
+Subject: [PATCH 1/2 v2] PCI: Add PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ to enable non MSI/INTx interrupt
+Date: Mon, 16 Jul 2012 11:31:26 +0800
+Message-ID: <1342409487-28256-1-git-send-email-Shengzhou.Liu@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342452631-21152-5-git-send-email-shangw@linux.vnet.ibm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 16, 2012 at 11:30:28PM +0800, Gavin Shan wrote:
-> The patch changes function pbus_size_io() and pbus_size_mem() to
-> do resource (I/O, memory and prefetchable memory) reassignment
-> based on the minimal alignments for the p2p bridge, which was
-> retrieved by function pcibios_window_alignment().
-> 
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> ---
->  drivers/pci/setup-bus.c |   22 +++++++++++++++-------
->  1 files changed, 15 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 8fa2d4b..6ccf31a 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -710,6 +710,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
->  	unsigned long size = 0, size0 = 0, size1 = 0;
->  	resource_size_t children_add_size = 0;
-> +	resource_size_t io_align;
->  
->  	if (!b_res)
->   		return;
-> @@ -735,13 +736,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  				children_add_size += get_res_add_size(realloc_head, r);
->  		}
->  	}
-> +
-> +	io_align = pcibios_window_alignment(bus, IORESOURCE_IO);
->  	size0 = calculate_iosize(size, min_size, size1,
-> -			resource_size(b_res), 4096);
-> +			resource_size(b_res), io_align);
->  	if (children_add_size > add_size)
->  		add_size = children_add_size;
->  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->  		calculate_iosize(size, min_size, add_size + size1,
-> -			resource_size(b_res), 4096);
-> +			resource_size(b_res), io_align);
->  	if (!size0 && !size1) {
->  		if (b_res->start || b_res->end)
->  			dev_info(&bus->self->dev, "disabling bridge window "
-> @@ -751,11 +754,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  		return;
->  	}
->  	/* Alignment of the IO window is always 4K */
-> -	b_res->start = 4096;
-> +	b_res->start = io_align;
->  	b_res->end = b_res->start + size0 - 1;
->  	b_res->flags |= IORESOURCE_STARTALIGN;
->  	if (size1 > size0 && realloc_head) {
-> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-> +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
->  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
->  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
->  				 bus->secondary, bus->subordinate, size1-size0);
-> @@ -785,10 +788,15 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  	struct resource *b_res = find_free_bus_resource(bus, type);
->  	unsigned int mem64_mask = 0;
->  	resource_size_t children_add_size = 0;
-> +	resource_size_t mem_align;
-> +	int mem_align_shift;
->  
->  	if (!b_res)
->  		return 0;
->  
-> +	mem_align = pcibios_window_alignment(bus, type);
-> +	mem_align_shift = __ffs(mem_align);
-> +
->  	memset(aligns, 0, sizeof(aligns));
->  	max_order = 0;
->  	size = 0;
-> @@ -818,8 +826,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  #endif
->  			/* For bridges size != alignment */
->  			align = pci_resource_alignment(dev, r);
-> -			order = __ffs(align) - 20;
-> -			if (order > 11) {
-> +			order = __ffs(align) - mem_align_shift;
-> +			if (order > (11 - (mem_align_shift - 20))) {
+On some platforms, in RC mode, root port has neither MSI/MSI-X nor INTx
+interrupt generated, which are available only in EP mode on those platform.
+In this case, we try to use other interrupt for port service driver to have
+AER, Hot-plug, etc, services to work.
 
-This doesn't seem right to me.  Aren't we accumulating the amount of
-space required at each alignment in aligns[]?  That should be independent
-of whatever arch-specific minimum alignment we have.
+Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+---
+v2: separated platform-specific part to arch/powerpc/sysdev.
 
-Does it have to be more complicated than something like this at the
-very end?
+ drivers/pci/pcie/portdrv_core.c |   10 ++++++++--
+ drivers/pci/quirks.c            |    9 +++++++++
+ include/linux/pci.h             |    5 +++++
+ 3 files changed, 22 insertions(+), 2 deletions(-)
 
-    min_align = max(min_align, pci_window_alignment(bus, IORESOURCE_MEM));
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 75915b3..837ad15 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -212,8 +212,14 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	if (!pcie_port_enable_msix(dev, irqs, mask))
+ 		return 0;
+ 
+-	/* We're not going to use MSI-X, so try MSI and fall back to INTx */
+-	if (!pci_enable_msi(dev) || dev->pin)
++	/*
++	 * We're not going to use MSI-X, so try MSI and fall back to INTx.
++	 * Eventually, if neither MSI/MSI-X nor INTx available, try other
++	 * interrupt. (On some platforms, root port doesn't support generating
++	 * MSI/MSI-X/INTx in RC mode)
++	 */
++	if (!pci_enable_msi(dev) || dev->pin || ((dev->dev_flags &
++			PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ) && dev->irq))
+ 		irq = dev->irq;
+ 
+  no_msi:
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 2a75216..2922cb8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2640,6 +2640,15 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1083,
+ 			quirk_msi_intx_disable_bug);
+ #endif /* CONFIG_PCI_MSI */
+ 
++/*
++ * Under some circumstances, root port has neither MSI/MSI-X nor INTx generated,
++ * so try other interrupt if supported.
++ */
++void __devinit quirk_enable_non_msi_intx_interrupt(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ;
++}
++
+ /* Allow manual resource allocation for PCI hotplug bridges
+  * via pci=hpmemsize=nnM and pci=hpiosize=nnM parameters. For
+  * some PCI-PCI hotplug bridges, like PLX 6254 (former HINT HB6),
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d8c379d..f051a66 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -176,6 +176,11 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
+ 	/* Provide indication device is assigned by a Virtual Machine Manager */
+ 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
++	/*
++	 * Use other interrupt (i.e. system shared interrupt) when MSI/MSI-X
++	 * and INTx are not supported in RC mode on some platforms.
++	 */
++	PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ = (__force pci_dev_flags_t) 8,
+ };
+ 
+ enum pci_irq_reroute_variant {
+-- 
+1.6.4
 
->  				dev_warn(&dev->dev, "disabling BAR %d: %pR "
->  					 "(bad alignment %#llx)\n", i, r,
->  					 (unsigned long long) align);
-> @@ -846,7 +854,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  	for (order = 0; order <= max_order; order++) {
->  		resource_size_t align1 = 1;
->  
-> -		align1 <<= (order + 20);
-> +		align1 <<= (order + mem_align_shift);
->  
->  		if (!align)
->  			min_align = align1;
-> -- 
-> 1.7.5.4
-> 
+
