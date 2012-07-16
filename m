@@ -1,57 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59116 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754663Ab2GKScw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 14:32:52 -0400
-Received: by lbbgm6 with SMTP id gm6so2801683lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 11:32:50 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:45699 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab2GPPxF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 11:53:05 -0400
+Received: by bkwj10 with SMTP id j10so4836055bkw.19
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 08:53:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXK=ByAkjVU53ftMYchsGSKD-yCLUpCLNZoZA_7=bzWOw@mail.gmail.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org> <CAE9FiQXK=ByAkjVU53ftMYchsGSKD-yCLUpCLNZoZA_7=bzWOw@mail.gmail.com>
+In-Reply-To: <5000A6E1.5070306@xenotime.net>
+References: <20120713202900.15160.23438.stgit@amt.stowe> <5000A6E1.5070306@xenotime.net>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 11 Jul 2012 12:32:28 -0600
-Message-ID: <CAErSpo4bh0kHSLGShdu5gsSQJqYkjQrA9y5-8-g7qxU+6v=wnw@mail.gmail.com>
-Subject: Re: [PATCH 0/5] PCI: hotplug related misc patches
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
+Date: Mon, 16 Jul 2012 09:52:43 -0600
+Message-ID: <CAErSpo43dYfNjWfvb_B3oUJwT2PS+6P8=FDt==96JzH-MaCaZA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix undefined reference to 'pci_fixup_final_inited'
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 1:30 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Jun 23, 2012 at 12:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> minor changes that should be safe for 3.6
+On Fri, Jul 13, 2012 at 4:53 PM, Randy Dunlap <rdunlap@xenotime.net> wrote:
+> On 07/13/2012 01:29 PM, Myron Stowe wrote:
+>
+>> My "PCI: Integrate 'pci_fixup_final' quirks into hot-plug paths" patch
+>> introduced an undefined reference to 'pci_fixup_final_inited' when
+>> CONFIG_PCI_QUIRKS is not enabled (on x86_64):
+>>   drivers/built-in.o: In function `pci_bus_add_device':
+>>   (.text+0x4f62): undefined reference to `pci_fixup_final_inited'
 >>
->> could get from
->>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-next
+>> This patch removes the external reference ending up with a result closer
+>> to what we ultimately want when the boot path issues described in the
+>> original patch are resolved.
 >>
->> Yinghai Lu (5):
->>   PCI, acpiphp: remove not used res_lock
->>   PCI, acpiphp: Merge acpiphp_debug and debug
-
-I merged the two patches above to my "next" branch.
-
->>   PCI, acpiphp: add is_hotplug_bridge detection
->>   pciehp: Don't enable presence notification while surprise removal is
->>     not supported.
->>   PCI: add root bus children dev's res to fail list
-
-The above seem to need more work.  We've discussed the acpiphp and
-pciehp patches on the list, and the last doesn't seem like enough of a
-cleanup to warrant a commit.  I hope that someday resource assignment
-becomes intelligible, but I don't want to do it one line at a time.
-
->>  drivers/pci/hotplug/acpiphp.h      |    4 +---
->>  drivers/pci/hotplug/acpiphp_core.c |    7 ++-----
->>  drivers/pci/hotplug/acpiphp_glue.c |   30 ++++++++++++++++++++++++++----
->>  drivers/pci/hotplug/pciehp_hpc.c   |    5 +++--
->>  drivers/pci/setup-bus.c            |    2 +-
->>  5 files changed, 33 insertions(+), 15 deletions(-)
+>> References:
+>>   https://lkml.org/lkml/2012/7/9/542    Original, offending, patch
+>>   https://lkml.org/lkml/2012/7/12/338 Randy's catch
+>>
+>> Reported-by: rdunlap@xenotime.net
+>> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 >
-> can you put those 5 patches into pci/next?
 >
-> Those should be safe for v3.6 merging window.
+> Acked-by: Randy Dunlap <rdunlap@xenotime.net>
 >
-> Thanks
+> Thanks.
+
+I added this to my "next" branch, thanks!
+
+>>
+>>  drivers/pci/bus.c    |    4 +---
+>>  drivers/pci/quirks.c |   20 ++++----------------
+>>  2 files changed, 5 insertions(+), 19 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index b511bd4..4b0970b 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -164,10 +164,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>>  int pci_bus_add_device(struct pci_dev *dev)
+>>  {
+>>       int retval;
+>> -     extern bool pci_fixup_final_inited;
+>>
+>> -     if (pci_fixup_final_inited)
+>> -             pci_fixup_device(pci_fixup_final, dev);
+>> +     pci_fixup_device(pci_fixup_final, dev);
+>>       retval = device_add(&dev->dev);
+>>       if (retval)
+>>               return retval;
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 52f44b5..003f356 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2956,6 +2956,7 @@ extern struct pci_fixup __end_pci_fixups_resume_early[];
+>>  extern struct pci_fixup __start_pci_fixups_suspend[];
+>>  extern struct pci_fixup __end_pci_fixups_suspend[];
+>>
+>> +static bool pci_apply_fixup_final_quirks;
+>>
+>>  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+>>  {
+>> @@ -2973,6 +2974,8 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+>>               break;
+>>
+>>       case pci_fixup_final:
+>> +             if (!pci_apply_fixup_final_quirks)
+>> +                     return;
+>>               start = __start_pci_fixups_final;
+>>               end = __end_pci_fixups_final;
+>>               break;
+>> @@ -3006,21 +3009,6 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
+>>  EXPORT_SYMBOL(pci_fixup_device);
+>>
+>>
+>> -/*
+>> - * The global variable 'pci_fixup_final_inited' is being used as a interim
+>> - * solution for calling the final quirks only during hot-plug events (not
+>> - * during boot processing).
+>> - *
+>> - * When the boot path's PCI device setup sequencing is addressed, we can
+>> - * remove the instance, and usages of, 'pci_fixup_final_inited' along with
+>> - * removing 'fs_initcall_sync(pci_apply_final_quirks);' and end up with a
+>> - * single, uniform, solution that satisfies both the boot path and the
+>> - * various hot-plug event paths.
+>> - *
+>> - * ToDo: Remove 'pci_fixup_final_inited'
+>> - */
+>> -bool pci_fixup_final_inited;
+>> -
+>>  static int __init pci_apply_final_quirks(void)
+>>  {
+>>       struct pci_dev *dev = NULL;
+>> @@ -3031,6 +3019,7 @@ static int __init pci_apply_final_quirks(void)
+>>               printk(KERN_DEBUG "PCI: CLS %u bytes\n",
+>>                      pci_cache_line_size << 2);
+>>
+>> +     pci_apply_fixup_final_quirks = true;
+>>       for_each_pci_dev(dev) {
+>>               pci_fixup_device(pci_fixup_final, dev);
+>>               /*
+>> @@ -3051,7 +3040,6 @@ static int __init pci_apply_final_quirks(void)
+>>                       pci_cache_line_size = pci_dfl_cache_line_size;
+>>               }
+>>       }
+>> -     pci_fixup_final_inited = 1;
+>>
+>>       if (!pci_cache_line_size) {
+>>               printk(KERN_DEBUG "PCI: CLS %u bytes, default %u\n",
+>>
 >
-> Yinghai
+>
+>
+> --
+> ~Randy
