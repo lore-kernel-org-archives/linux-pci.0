@@ -1,73 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:53376 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595Ab2GZTzg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 15:55:36 -0400
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 03/10] ARM: pci: Allow passing per-controller private data
-Date: Thu, 26 Jul 2012 21:55:05 +0200
-Message-Id: <1343332512-28762-4-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120716183816.GH9598@jonmason-lab>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+	<CAAsGZS5uMArBVa+Rog1H60FVfKq84eqt5G2dvafDWXTP-RdiwQ@mail.gmail.com>
+	<20120716183816.GH9598@jonmason-lab>
+Date: Mon, 16 Jul 2012 15:27:48 -0400
+Message-ID: <CAAsGZS43FkfTFkYnvFdaA+KSLD1ZVBfuFe7_2e7s29_X+rTmug@mail.gmail.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+From: chetan loke <loke.chetan@gmail.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to allow drivers to specify private data for each controller,
-this commit adds a private_data field to the struct hw_pci. This field
-is an array of nr_controllers pointers that will be used to initialize
-the private_data field of the corresponding controller's pci_sys_data
-structure.
+On Mon, Jul 16, 2012 at 2:38 PM, Jon Mason <jon.mason@intel.com> wrote:
+> On Mon, Jul 16, 2012 at 12:49:39PM -0400, chetan loke wrote:
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
-Changes in v3:
-- none
+....
 
-Changes in v2:
-- new patch
+>> Is it ok to rename the following vars for convenience sake?
+>>
+>> > +       struct list_head txq;
+>> tx_pend_q - (pending_queue) or tx_out_q - (outstanding_queue) - or
+>> pick any new string you like - other than a mono-syllable definition
+>>
+>> > +       struct list_head txc;
+>> tx_compl_q - completion queue
+>>
+>> > +       struct list_head txe;
+>> tx_avail_e - available entry queue
+>>
+>>
+>> > +       spinlock_t txq_lock;
+>> > +       spinlock_t txc_lock;
+>> > +       spinlock_t txe_lock;
+>>
+>> then match the variants accordingly.
+>>
+>> > +       struct list_head rxq;
+>> > +       struct list_head rxc;
+>> > +       struct list_head rxe;
+>> > +       spinlock_t rxq_lock;
+>> > +       spinlock_t rxc_lock;
+>> > +       spinlock_t rxe_lock;
+>>
+>> similarly the rx-counterpart
+>
+> Are they difficult to understand?  I can change them, but it seems rather moot since you seemed to immediately understand the logic behind the names.
+>
 
- arch/arm/include/asm/mach/pci.h | 1 +
- arch/arm/kernel/bios32.c        | 3 +++
- 2 files changed, 4 insertions(+)
+Immediately understand? Not at first glance. I had to re-read the
+functions. Its really is a minor change and variables will then become
+self-explanatory. I can almost feel that a developer who works on this
+code for the first time might end up choosing the wrong 'syllable' and
+locking an entirely different lock.
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 188fd58..31fab93 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -24,6 +24,7 @@ struct hw_pci {
- #endif
- 	struct pci_ops	*ops;
- 	int		nr_controllers;
-+	void		**private_data;
- 	int		(*setup)(int nr, struct pci_sys_data *);
- 	struct pci_bus *(*scan)(int nr, struct pci_sys_data *);
- 	void		(*preinit)(void);
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 5c3dd59..897b21a 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -475,6 +475,9 @@ static void __devinit pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 		sys->map_irq = hw->map_irq;
- 		INIT_LIST_HEAD(&sys->resources);
- 
-+		if (hw->private_data)
-+			sys->private_data = hw->private_data[nr];
-+
- 		ret = hw->setup(nr, sys);
- 
- 		if (ret > 0) {
--- 
-1.7.11.2
+Infact add a prefix 'ntb' to all the rx/tx locks. That way grep'ing
+output of lockstat also becomes easier.
 
+It now reads: ntb_tx_pend_lock
+
+>>
+>>
+>> ..................
+>>
+>> > +static void ntb_tx_copy_task(struct ntb_transport_qp *qp,
+>> > +                            struct ntb_queue_entry *entry,
+>> > +                            void *offset)
+>> > +{
+>> > +       struct ntb_payload_header *hdr = offset;
+>> > +       int rc;
+>> > +
+>> > +       offset += sizeof(struct ntb_payload_header);
+>> > +       memcpy_toio(offset, entry->buf, entry->len);
+>> > +
+>> > +       hdr->len = entry->len;
+>> > +       hdr->ver = qp->tx_pkts;
+>> > +
+>> > +       /* Ensure that the data is fully copied out before setting the flag */
+>> > +       wmb();
+>> > +       hdr->flags = entry->flags | DESC_DONE_FLAG;
+>> > +
+>> > +       rc = ntb_ring_sdb(qp->ndev, qp->qp_num);
+>> > +       if (rc)
+>> > +               pr_err("%s: error ringing db %d\n", __func__, qp->qp_num);
+>> > +
+>> > +       if (entry->len > 0) {
+>>
+>> how do you interpret this len variable and decide if it's a good/bad completion?
+>
+> The length of 0 is for messages from the remote system, which currently only consists of a "link down" message notifying the local system to no longer send any messages to the remote side.
+>
+
+May be I didn't read the code properly. Is there a length-comment that
+explains the above? If not then just by pure code inspection it would
+seem that a skb was leaked. So add the above comment that way we can
+save time for other netdev folks too.
+
+
+>>
+>> > +               qp->tx_bytes += entry->len;
+>> > +
+>> > +               /* Add fully transmitted data to completion queue */
+>> > +               ntb_list_add_tail(&qp->txc_lock, &entry->entry, &qp->txc);
+>> > +
+>> > +               if (qp->tx_handler)
+>> > +                       qp->tx_handler(qp);
+>> > +       } else
+>> > +               ntb_list_add_tail(&qp->txe_lock, &entry->entry, &qp->txe);
+>>
+>> I could be wrong but how is the original skb handled if the code path
+>> goes in the else clause?
+>
+> There is no skb is the length is zero.  Since the only client is virtual ethernet, it will always be > 60.  However, I should add a sanity check for 0 length in tx_enqueue.
+>
+>> Also, in the else clause, how about a ntb_list_add_head rather than a _tail.
+>
+> Why add to the head, it was just used?
+
+Yes, just re-use what's hot(best guess).
+
+>
+>> > +
+>> > +static int ntb_process_tx(struct ntb_transport_qp *qp,
+>> > +                         struct ntb_queue_entry *entry)
+>> > +{
+>> > +       struct ntb_payload_header *hdr;
+>> > +       void *offset;
+>> > +
+>> > +       offset = qp->tx_offset;
+>> > +       hdr = offset;
+>> > +
+>> > +       pr_debug("%lld - offset %p, tx %p, entry len %d flags %x buff %p\n",
+>> > +                qp->tx_pkts, offset, qp->tx_offset, entry->len, entry->flags,
+>> > +                entry->buf);
+>> > +       if (hdr->flags) {
+>> > +               ntb_list_add_head(&qp->txq_lock, &entry->entry, &qp->txq);
+>> > +               qp->tx_ring_full++;
+>> > +               return -EAGAIN;
+>> > +       }
+>> > +
+>> > +       if (entry->len > transport_mtu) {
+>> > +               pr_err("Trying to send pkt size of %d\n", entry->len);
+>> > +               entry->flags = HW_ERROR_FLAG;
+>> > +
+>> > +               ntb_list_add_tail(&qp->txc_lock, &entry->entry, &qp->txc);
+>> > +
+>> > +               if (qp->tx_handler)
+>> > +                       qp->tx_handler(qp);
+>> > +
+>> > +               return 0;
+>> > +       }
+>> > +
+>> > +       ntb_tx_copy_task(qp, entry, offset);
+>>
+>> what happens when ntb_sdb_ring returns an error? would you still want
+>> to increment tx_pkts below?
+>
+> It's not fatal if the remote side isn't notified.  It will hurt latency, since the next packet would be the one that triggers the next interrupt.  Also, the only way it could ever fail would be if it was an invalid interrupt bit being set, which should never happen.
+>
+
+What happens when the 'db >= ndev->max_cbs' check fails? Under what
+circumstances will that happen? When it does happen how does the
+remote side then gets notified or should it even get notified?
+
+'which should never happen'? FYI - I have seen and debugged(not this
+one but doorbells and what not) weirdness while working on CLARiiON +
+PCie-interconnects. Board bring-up is a PITA. So you get the idea ...
+
+>>
+>> > +void *ntb_transport_tx_dequeue(struct ntb_transport_qp *qp, unsigned int *len)
+>> > +{
+>> > +       struct ntb_queue_entry *entry;
+>> > +       void *buf;
+>> > +
+>> > +       if (!qp)
+>> > +               return NULL;
+>> > +
+>> > +       entry = ntb_list_rm_head(&qp->txc_lock, &qp->txc);
+>> > +       if (!entry)
+>> > +               return NULL;
+>> > +
+>> > +       buf = entry->callback_data;
+>> > +       if (entry->flags != HW_ERROR_FLAG)
+>> > +               *len = entry->len;
+>> > +       else
+>> > +               *len = -EIO;
+>> > +
+>> > +       ntb_list_add_tail(&qp->txe_lock, &entry->entry, &qp->txe);
+>>
+>> how about a ntb_list_add_head?
+>
+> Is there a benefit to adding to the head versus tail?  It makes more sense to me to pull from the head and add to the tail.
+>
+
+Yes, explained above. Today there are 100(..DEF_NUM...) entries.
+Tomorrow there could be more. So why not re-use what's hot? You could
+also think of this as yet another way of forcing detection of
+double-use corruption/bug. I'm not saying that there's a bug here but
+you get the idea.
+
+Chetan Loke
