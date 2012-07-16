@@ -1,98 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:34554 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754114Ab2GEVdh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 17:33:37 -0400
-Received: by mail-lb0-f174.google.com with SMTP id gm6so13543707lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2012 14:33:37 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:36291 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329Ab2GPSa1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 14:30:27 -0400
+Received: by pbbrp8 with SMTP id rp8so10418251pbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 11:30:27 -0700 (PDT)
+Date: Mon, 16 Jul 2012 11:30:23 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120716183023.GA28093@kroah.com>
+References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
+ <20120714171015.GB25775@kroah.com>
+ <20120715235548.GC7551@jonmason-lab>
+ <20120716001921.GA19775@kroah.com>
+ <20120716175505.GF9598@jonmason-lab>
 MIME-Version: 1.0
-In-Reply-To: <20120626033045.16434.17412.stgit@amt.stowe>
-References: <20120626033045.16434.17412.stgit@amt.stowe>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 5 Jul 2012 15:33:16 -0600
-Message-ID: <CAErSpo7ynY7vmG1SJFZ9KZxt5cGpWchzAMEhHE7+TCTEHPGCtA@mail.gmail.com>
-Subject: Re: [PATCH 00/16] PCI: Re-factor 'pcibios_setup()'
-To: Myron Stowe <myron.stowe@redhat.com>
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com,
-	linux@arm.linux.org.uk, starvik@axis.com, jesper.nilsson@axis.com,
-	tony.luck@intel.com, fenghua.yu@intel.com, monstr@monstr.eu,
-	ralf@linux-mips.org, yasutake.koichi@jp.panasonic.com,
-	jejb@parisc-linux.org, deller@gmx.de, benh@kernel.crashing.org,
-	paulus@samba.org, lethal@linux-sh.org, davem@davemloft.net,
-	cmetcalf@tilera.com, gxt@mprc.pku.edu.cn, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org, chris@zankel.net,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120716175505.GF9598@jonmason-lab>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 25, 2012 at 9:30 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> Currently, all of the architectures implement their own 'pcibios_setup()'
-> routine.  Most of the implementations do nothing so this patch introduces
-> a generic (__weak) routine into PCI's core that can be used by all
-> architectures as a default.  If necessary, it can then be over-ridden by
-> architecture-specific code.
->
-> This series also cleans up 'pcibios_setup()' as necessary to consistently
-> use the "__init" section annotation.
->
-> Suggested by Bjorn Helgaas -
-> http://marc.info/?l=linux-kernel&m=134023745124680&w=2
->
->
-> It looks as if there is a bug in the CRIS architecture's version of
-> 'pcibios_setup()'.  It implements pcibios_setup() such that pci_setup()
-> doesn't look for any generic options.  I included the fix for this in this
-> series.  If this ends up not being correct - i.e. PCI support for CRIS
-> should be dropped - then that specific patch (which I included last in the
-> series) can be dropped.
->
-> Note: I do not have a cross-compile environment so I have only tested x86.
-> ---
->
-> Myron Stowe (16):
->       cris/PCI: Factor 'pcibios_setup()' out of cris
->       xtensa/PCI: Factor 'pcibios_setup()' out of xtensa
->       x86/PCI: adjust section annotations for 'pcibios_setup()'
->       unicore32/PCI: adjust section annotations for 'pcibios_setup()'
->       tile/PCI: Factor 'pcibios_setup()' out of tile
->       sparc/PCI: Factor 'pcibios_setup()' out of sparc
->       sh/PCI: adjust section annotations for 'pcibios_setup()'
->       sh/PCI: Factor 'pcibios_setup()' out of sh
->       powerpc/PCI: Factor 'pcibios_setup()' out of powerpc
->       parisc/PCI: Factor 'pcibios_setup()' out of parisc
->       MIPS/PCI: adjust section annotations for 'pcibios_setup()'
->       MIPS/PCI: Factor 'pcibios_setup()' out of MIPS/pmc-sierra
->       microblaze/PCI: Factor 'pcibios_setup()' out of microblaze
->       ia64/PCI: Factor 'pcibios_setup' out of ia64
->       alpha/PCI: Factor 'pcibios_setup()' out of alpha
->       PCI: Pull 'pcibios_setup' up into PCI's core
->
->
->  arch/alpha/kernel/pci.c               |    6 ------
->  arch/cris/arch-v32/drivers/pci/bios.c |    5 -----
->  arch/ia64/pci/pci.c                   |    9 ---------
->  arch/microblaze/pci/pci-common.c      |    5 -----
->  arch/mips/pci/pci.c                   |    4 ++--
->  arch/mips/pmc-sierra/yosemite/ht.c    |   11 -----------
->  arch/mips/txx9/generic/pci.c          |    4 ++--
->  arch/parisc/kernel/pci.c              |    5 -----
->  arch/powerpc/kernel/pci-common.c      |    5 -----
->  arch/sh/drivers/pci/fixups-sdk7786.c  |    4 ++--
->  arch/sh/drivers/pci/pci.c             |    5 -----
->  arch/sparc/kernel/leon_pci.c          |    8 --------
->  arch/sparc/kernel/pci.c               |    5 -----
->  arch/sparc/kernel/pcic.c              |    8 --------
->  arch/tile/kernel/pci.c                |   10 ----------
->  arch/unicore32/kernel/pci.c           |    2 +-
->  arch/x86/pci/common.c                 |    2 +-
->  arch/xtensa/kernel/pci.c              |    6 ------
->  drivers/pci/pci.c                     |   12 ++++++++++++
->  include/linux/pci.h                   |    1 +
->  20 files changed, 21 insertions(+), 96 deletions(-)
+On Mon, Jul 16, 2012 at 10:55:06AM -0700, Jon Mason wrote:
+> On Sun, Jul 15, 2012 at 05:19:21PM -0700, Greg KH wrote:
+> > On Sun, Jul 15, 2012 at 04:55:48PM -0700, Jon Mason wrote:
+> > > On Sat, Jul 14, 2012 at 10:10:15AM -0700, Greg KH wrote:
+> > > > On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
+> > > > > +static int max_num_cbs = 2;
+> > > > > +module_param(max_num_cbs, uint, 0644);
+> > > > > +MODULE_PARM_DESC(max_num_cbs, "Maximum number of NTB transport connections");
+> > > > > +
+> > > > > +static bool no_msix;
+> > > > > +module_param(no_msix, bool, 0644);
+> > > > > +MODULE_PARM_DESC(no_msix, "Do not allow MSI-X interrupts to be selected");
+> > > > 
+> > > > How would a user, or a distro, know to set these options?  Why are they
+> > > > even options at all?
+> > > 
+> > > Good question.  There is actually a potential benefit to disabling
+> > > MSI-X.  The NTB device on one of our platforms only has 3 MSI-X
+> > > vectors.  In the current driver design, that would limit them to 3
+> > > client/virtual devices.  However, there are 15bits in the ISR that can
+> > > be used for the same purpose.  So, if you disable MSI-X, you can have
+> > > 15 instead of 3.  
+> > 
+> > But again, how would a user, or a distro, know to set these?  Where is
+> > the documentation describing it?  Why really have these options at all
+> > and not just fix the platform issues (only 3 MSI-X vectors?  Really?)
+> 
+> I believe we'll want multiple clients (or have multiqueue Ethernet).
+> I'm happy to add something to /Documentation to describe it and why it
+> would be useful, or I can remove it and re-introduce it when I add
+> multiqueue Ethernet.
 
-I pushed these to my -next branch, for inclusion in 3.6.  Thanks for
-the cleanups!
+I'd suggest waiting and adding it later if really needed (see previous
+comment about not adding code/features before they are actually needed.)
 
-Bjorn
+thanks,
+
+greg k-h
