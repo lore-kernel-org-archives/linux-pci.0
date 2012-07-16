@@ -1,63 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:63207 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753039Ab2GTRma (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 13:42:30 -0400
-Message-ID: <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: New commands to configure IOV features
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Don Dutile <ddutile@redhat.com>
-CC: Chris Friesen <chris.friesen@genband.com>,
-	David Miller <davem@davemloft.net>, <yuvalmin@broadcom.com>,
-	<gregory.v.rose@intel.com>, <netdev@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Date: Fri, 20 Jul 2012 18:42:26 +0100
-In-Reply-To: <50097FBD.9080202@redhat.com>
-References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
-		<5005D45D.1040302@genband.com>
-	 <20120717.141153.46613285253481776.davem@davemloft.net>
-	 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:35533
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751087Ab2GPDxN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2012 23:53:13 -0400
+From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linuxppc-dev@lists.ozlabs.org>,
+	Shengzhou Liu <Shengzhou.Liu@freescale.com>
+Subject: [PATCH 2/2 v2] powerpc/fsl: PCI: add quirk_enable_non_msi_intx_interrupt
+Date: Mon, 16 Jul 2012 11:31:27 +0800
+Message-ID: <1342409487-28256-2-git-send-email-Shengzhou.Liu@freescale.com>
+In-Reply-To: <1342409487-28256-1-git-send-email-Shengzhou.Liu@freescale.com>
+References: <1342409487-28256-1-git-send-email-Shengzhou.Liu@freescale.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-07-20 at 11:56 -0400, Don Dutile wrote:
-> On 07/20/2012 11:27 AM, Chris Friesen wrote:
-> > On 07/17/2012 03:11 PM, David Miller wrote:
-> >> From: Chris Friesen<chris.friesen@genband.com>
-> >> Date: Tue, 17 Jul 2012 15:08:45 -0600
-> >>
-> >>> From that perspective a sysfs-based interface is ideal since it is
-> >>> directly scriptable.
-> >>
-> >> As is anything ethtool or netlink based, since we have 'ethtool'
-> >> and 'ip' for scripting.
-> >
-> > I'm not picky...whatever works.
-> >
-> > To me the act of creating virtual functions seems generic enough (I'm aware of SR-IOV capable storage controllers, I'm sure there is other hardware as well) that ethtool/ip don't really seem like the most appropriate tools for the job.
-> >
-> Yes, and then there are 'other network' controllers too ... IB  which
-> I don't know if it adheres to ethtool, since it's not an Ethernet
-> device ... isn't that why they call it Infiniband ... ;-) )
-> In the telecom space, they use NTBs and PCI as a 'network' ... I know,
-> not common in Linux space, and VFs in that space aren't being
-> discussed (that I've ever heard), but another example where
-> 'network' != Ethernet, so ethtool doesn't solve PCI-level
-> configuration/use.
-[...]
+On current fsl powerpc platforms, the PCIe root port doesn't support
+generating MSI/MSI-X and INTx interrupt in RC mode (those interrupts
+are supported only in EP mode). So we use the shared error interrupt
+by flag PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ for PCIe port driver to
+support AER, Hot-plug etc, services.
 
-The ethtool API is typically used for net device operations that can be
-largely devolved to individual drivers, and which the network stack can
-mostly ignore (though offload features are an historical exception to
-this).  It started with Ethernet link settings, but many operations are
-applicable (and implemented by) other types of network device.
+Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+---
+v2: separated platform-specific part to arch/powerpc/sysdev.
 
-Ben.
+ arch/powerpc/sysdev/fsl_pci.c |    2 ++
+ arch/powerpc/sysdev/fsl_pci.h |    1 +
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
+diff --git a/arch/powerpc/sysdev/fsl_pci.c b/arch/powerpc/sysdev/fsl_pci.c
+index 6073288..fb8862f 100644
+--- a/arch/powerpc/sysdev/fsl_pci.c
++++ b/arch/powerpc/sysdev/fsl_pci.c
+@@ -498,6 +498,8 @@ int __init fsl_add_bridge(struct device_node *dev, int is_primary)
+ #endif /* CONFIG_FSL_SOC_BOOKE || CONFIG_PPC_86xx */
+ 
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, quirk_fsl_pcie_header);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID,
++			quirk_enable_non_msi_intx_interrupt);
+ 
+ #if defined(CONFIG_PPC_83xx) || defined(CONFIG_PPC_MPC512x)
+ struct mpc83xx_pcie_priv {
+diff --git a/arch/powerpc/sysdev/fsl_pci.h b/arch/powerpc/sysdev/fsl_pci.h
+index a39ed5c..a98c6d8 100644
+--- a/arch/powerpc/sysdev/fsl_pci.h
++++ b/arch/powerpc/sysdev/fsl_pci.h
+@@ -91,6 +91,7 @@ struct ccsr_pci {
+ extern int fsl_add_bridge(struct device_node *dev, int is_primary);
+ extern void fsl_pcibios_fixup_bus(struct pci_bus *bus);
+ extern int mpc83xx_add_bridge(struct device_node *dev);
++extern void __devinit quirk_enable_non_msi_intx_interrupt(struct pci_dev *dev);
+ u64 fsl_pci_immrbar_base(struct pci_controller *hose);
+ 
+ #endif /* __POWERPC_FSL_PCI_H */
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.6.4
+
 
