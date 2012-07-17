@@ -1,42 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:51312 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713Ab2GaFLo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 01:11:44 -0400
+Received: from mail-vb0-f74.google.com ([209.85.212.74]:59140 "EHLO
+	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab2GQAHg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 20:07:36 -0400
+Received: by vbnl22 with SMTP id l22so618182vbn.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 17:07:35 -0700 (PDT)
+Date: Mon, 16 Jul 2012 18:07:34 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+	benh@kernel.crashing.org, yinghai@kernel.org, linuxram@us.ibm.com
+Subject: Re: [PATCH 04/15] pci: weak function returns alignment
+Message-ID: <20120717000734.GB32203@google.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+ <1342452631-21152-4-git-send-email-shangw@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1343690279.8073.215.camel@ul30vt>
-References: <20120725142254.12800.61860.stgit@bling.home> <20120727053206.GC11870@drongo>
- <1343690279.8073.215.camel@ul30vt>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 30 Jul 2012 22:11:20 -0700
-Message-ID: <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
-Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Paul Mackerras <paulus@samba.org>, benh@kernel.crashing.org,
-	aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	ddutile@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342452631-21152-4-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 30, 2012 at 4:17 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
->
-> I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
-> including this in 3.6?  Thanks,
+On Mon, Jul 16, 2012 at 11:30:27PM +0800, Gavin Shan wrote:
+> The patch implements the weak function to return the default I/O
+> or memory alignment for P2P bridge. Currently, I/O window has 4KiB
+> alignment and memory window is 4MiB aligned by default. On the other
+> hand, those platforms (e.g. powernv) that have special requirements
+> on the alignment could override the function by themselves.
+> 
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/host-bridge.c |   17 +++++++++++++++++
+>  include/linux/pci.h       |    2 ++
+>  2 files changed, 19 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index abcf053..dcbc47d 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -105,3 +105,20 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>  }
+>  
+>  EXPORT_SYMBOL(pcibios_bus_to_resource);
+> +
+> +/*
+> + * Retrieve the default memory or I/O alignment for the
+> + * specific P2P bridge. The function has been implemented
+> + * as weak so that it can be overrided by platform that
+> + * has special requirments for memory and I/O alignment.
+> + */
+> +resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
+> +						unsigned long type)
 
-I just pulled it, but then I unpulled again when I realized it's not a
-signed tag and it's on github.
+This no longer has anything to do with the host bridge, so I think it
+could be moved to setup-bus.c and made static.  We shouldn't have to
+repeat the default 1M and 4K code in the arch versions, so maybe we
+could do something like this:
 
-Please, people. Do tagged releases with proper signatures if you're
-not using kernel.org or other controlled servers. In fact, I prefer
-signed tags even if you *do* use kernel.org etc.
+    resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus, unsigned long type)
+    {
+	return 1;
+    }
 
-             Linus
+    static resource_size_t window_alignment(struct pci_bus *bus, unsigned long type)
+    {
+	resource_size_t align = 1, arch_align;
+
+	if (type & IORESOURCE_MEM)
+	    align = 1024*1024;
+	else if (type & IORESOURCE_IO)
+	    align = 4*1024;
+    
+	arch_align = pcibios_window_alignment(bus, type);
+	return max(align, arch_align);
+    }
+
+I made the default 1, thinking of bus number apertures (though we don't use this
+path for bus numbers today).
+
+> +{
+> +	/* Memory windows must be 1MiB aligned */
+> +	if (type & IORESOURCE_MEM)
+> +		return 1024*1024;
+> +
+> +	/* I/O windows have default alignment of 4KiB */
+> +	return 4*1024;
+> +}
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9acea4b..283da11 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -662,6 +662,8 @@ void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+>  			       struct pci_bus_region *region);
+>  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+>  			     struct pci_bus_region *region);
+> +resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+> +					 unsigned long type);
+>  void pcibios_scan_specific_bus(int busn);
+>  extern struct pci_bus *pci_find_bus(int domain, int busnr);
+>  void pci_bus_add_devices(const struct pci_bus *bus);
+> -- 
+> 1.7.5.4
+> 
