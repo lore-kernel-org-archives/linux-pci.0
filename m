@@ -1,73 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH 07/14] hotplug/PCI: use PCIe cap access functions to simplify implementation
-Date: Tue, 10 Jul 2012 23:54:08 +0800
-Message-Id: <1341935655-5381-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:57554
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753869Ab2GQDBU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 23:01:20 -0400
+From: Liu Shengzhou-B36685 <B36685@freescale.com>
+To: Wood Scott-B07421 <B07421@freescale.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH 1/2 v2] PCI: Add PCI_DEV_FLAGS_USE_NON_MSI_INTX_IRQ to
+ enable non MSI/INTx interrupt
+Date: Tue, 17 Jul 2012 03:01:15 +0000
+Message-ID: <3F453DDFF675A64A89321A1F35281021770E00@039-SN1MPN1-003.039d.mgd.msft.net>
+References: <1342409487-28256-1-git-send-email-Shengzhou.Liu@freescale.com>
+ <50043790.6090605@freescale.com>
+In-Reply-To: <50043790.6090605@freescale.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
-
-Use PCIe cap access functions to simplify pcihp_slot.c
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/pcihp_slot.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
-index 8c05a18..08ca019 100644
---- a/drivers/pci/hotplug/pcihp_slot.c
-+++ b/drivers/pci/hotplug/pcihp_slot.c
-@@ -103,8 +103,7 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 		return;
- 
- 	/* Find PCI Express capability */
--	pos = pci_pcie_cap(dev);
--	if (!pos)
-+	if (!pci_is_pcie(dev))
- 		return;
- 
- 	if (hpp->revision > 1) {
-@@ -114,16 +113,18 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 	}
- 
- 	/* Initialize Device Control Register */
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
-+	if (pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &reg16))
-+		return;
- 	reg16 = (reg16 & hpp->pci_exp_devctl_and) | hpp->pci_exp_devctl_or;
--	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
-+	pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, reg16);
- 
- 	/* Initialize Link Control Register */
- 	if (dev->subordinate) {
--		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &reg16);
--		reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
--			| hpp->pci_exp_lnkctl_or;
--		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, reg16);
-+		if (pci_pcie_cap_read_word(dev, PCI_EXP_LNKCTL, &reg16)) {
-+			reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
-+				| hpp->pci_exp_lnkctl_or;
-+			pci_pcie_cap_write_word(dev, PCI_EXP_LNKCTL, reg16);
-+		}
- 	}
- 
- 	/* Find Advanced Error Reporting Enhanced Capability */
--- 
-1.7.9.5
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogV29vZCBTY290dC1CMDc0
+MjENCj4gU2VudDogTW9uZGF5LCBKdWx5IDE2LCAyMDEyIDExOjQ3IFBNDQo+IFRvOiBMaXUgU2hl
+bmd6aG91LUIzNjY4NQ0KPiBDYzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtcGNpQHZnZXIu
+a2VybmVsLm9yZzsgbGludXhwcGMtDQo+IGRldkBsaXN0cy5vemxhYnMub3JnDQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggMS8yIHYyXSBQQ0k6IEFkZCBQQ0lfREVWX0ZMQUdTX1VTRV9OT05fTVNJX0lO
+VFhfSVJRIHRvDQo+IGVuYWJsZSBub24gTVNJL0lOVHggaW50ZXJydXB0DQo+IA0KPiBPbiAwNy8x
+NS8yMDEyIDEwOjMxIFBNLCBTaGVuZ3pob3UgTGl1IHdyb3RlOg0KPiA+IE9uIHNvbWUgcGxhdGZv
+cm1zLCBpbiBSQyBtb2RlLCByb290IHBvcnQgaGFzIG5laXRoZXIgTVNJL01TSS1YIG5vcg0KPiA+
+IElOVHggaW50ZXJydXB0IGdlbmVyYXRlZCwgd2hpY2ggYXJlIGF2YWlsYWJsZSBvbmx5IGluIEVQ
+IG1vZGUgb24gdGhvc2UNCj4gcGxhdGZvcm0uDQo+ID4gSW4gdGhpcyBjYXNlLCB3ZSB0cnkgdG8g
+dXNlIG90aGVyIGludGVycnVwdCBmb3IgcG9ydCBzZXJ2aWNlIGRyaXZlciB0bw0KPiA+IGhhdmUg
+QUVSLCBIb3QtcGx1ZywgZXRjLCBzZXJ2aWNlcyB0byB3b3JrLg0KPiA+DQo+ID4gU2lnbmVkLW9m
+Zi1ieTogU2hlbmd6aG91IExpdSA8U2hlbmd6aG91LkxpdUBmcmVlc2NhbGUuY29tPg0KPiA+IC0t
+LQ0KPiA+IHYyOiBzZXBhcmF0ZWQgcGxhdGZvcm0tc3BlY2lmaWMgcGFydCB0byBhcmNoL3Bvd2Vy
+cGMvc3lzZGV2Lg0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3JlLmMgfCAg
+IDEwICsrKysrKysrLS0NCj4gPiAgZHJpdmVycy9wY2kvcXVpcmtzLmMgICAgICAgICAgICB8ICAg
+IDkgKysrKysrKysrDQo+ID4gIGluY2x1ZGUvbGludXgvcGNpLmggICAgICAgICAgICAgfCAgICA1
+ICsrKysrDQo+ID4gIDMgZmlsZXMgY2hhbmdlZCwgMjIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlv
+bnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29y
+ZS5jDQo+ID4gYi9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZfY29yZS5jIGluZGV4IDc1OTE1YjMu
+LjgzN2FkMTUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2X2NvcmUu
+Yw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3JlLmMNCj4gPiBAQCAtMjEy
+LDggKzIxMiwxNCBAQCBzdGF0aWMgaW50IGluaXRfc2VydmljZV9pcnFzKHN0cnVjdCBwY2lfZGV2
+ICpkZXYsIGludA0KPiAqaXJxcywgaW50IG1hc2spDQo+ID4gIAlpZiAoIXBjaWVfcG9ydF9lbmFi
+bGVfbXNpeChkZXYsIGlycXMsIG1hc2spKQ0KPiA+ICAJCXJldHVybiAwOw0KPiA+DQo+ID4gLQkv
+KiBXZSdyZSBub3QgZ29pbmcgdG8gdXNlIE1TSS1YLCBzbyB0cnkgTVNJIGFuZCBmYWxsIGJhY2sg
+dG8gSU5UeCAqLw0KPiA+IC0JaWYgKCFwY2lfZW5hYmxlX21zaShkZXYpIHx8IGRldi0+cGluKQ0K
+PiA+ICsJLyoNCj4gPiArCSAqIFdlJ3JlIG5vdCBnb2luZyB0byB1c2UgTVNJLVgsIHNvIHRyeSBN
+U0kgYW5kIGZhbGwgYmFjayB0byBJTlR4Lg0KPiA+ICsJICogRXZlbnR1YWxseSwgaWYgbmVpdGhl
+ciBNU0kvTVNJLVggbm9yIElOVHggYXZhaWxhYmxlLCB0cnkgb3RoZXINCj4gPiArCSAqIGludGVy
+cnVwdC4gKE9uIHNvbWUgcGxhdGZvcm1zLCByb290IHBvcnQgZG9lc24ndCBzdXBwb3J0IGdlbmVy
+YXRpbmcNCj4gPiArCSAqIE1TSS9NU0ktWC9JTlR4IGluIFJDIG1vZGUpDQo+ID4gKwkgKi8NCj4g
+PiArCWlmICghcGNpX2VuYWJsZV9tc2koZGV2KSB8fCBkZXYtPnBpbiB8fCAoKGRldi0+ZGV2X2Zs
+YWdzICYNCj4gPiArCQkJUENJX0RFVl9GTEFHU19VU0VfTk9OX01TSV9JTlRYX0lSUSkgJiYgZGV2
+LT5pcnEpKQ0KPiA+ICAJCWlycSA9IGRldi0+aXJxOw0KPiANCj4gSSBkaWRuJ3Qgc2VlIGEgcmVz
+cG9uc2Ugb24gdGhlIHF1ZXN0aW9uIGFib3V0IHdoYXQgd291bGQgaGFwcGVuIGlmIHdlIGRpZCB0
+aGlzDQo+IHVuY29uZGl0aW9uYWxseSAoaS5lLiBqdXN0IHMvZGV2LT5waW4vZGV2LT5pcnEvIGlu
+IHRoZSBvcmlnaW5hbCBjb2RlKS4gIFdlDQo+IHNob3VsZCBhdm9pZCBpbnRyb2R1Y2luZyBmbGFn
+cyBsaWtlIHRoaXMgdW5sZXNzIHRoZXJlJ3MgYSBnb29kIHJlYXNvbi4NCj4gDQo+IE1heWJlIHN1
+Ym1pdCBhIHBhdGNoIHRoYXQgZG9lcyBpdCB1bmNvbmRpdGlvbmFsbHksIGFuZCBzZWUgaWYgdGhh
+dCBkcmF3cyBhDQo+IGNvbXBsYWludC4NCj4gDQo+IC1TY290dA0KW1NoZW5nemhvdV0gDQpXZWxs
+LCB0aGUgcGF0Y2ggd2l0aG91dCBmbGFnIGNvbmRpdGlvbiBoYXZlIGJlZW4gcG9zdGVkIHRvIGRy
+YXcgbW9yZSBjb21tZW50cy4NCg==
 
