@@ -1,61 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:46461 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754842Ab2GKU4X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 16:56:23 -0400
-Received: by vcbf11 with SMTP id f11so1062003vcb.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 13:56:22 -0700 (PDT)
+Received: from mail-qc0-f202.google.com ([209.85.216.202]:60514 "EHLO
+	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab2GQArS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 20:47:18 -0400
+Received: by qcqs25 with SMTP id s25so624913qcq.1
+        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 17:47:16 -0700 (PDT)
+Date: Mon, 16 Jul 2012 18:47:16 -0600
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+	benh@kernel.crashing.org, yinghai@kernel.org, linuxram@us.ibm.com
+Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
+Message-ID: <20120717004716.GC32203@google.com>
+References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
+ <1342452631-21152-5-git-send-email-shangw@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6rEcu3gwScEDxJ7DXzeMpT4DBGgAyhNE9qpPo4wEMouw@mail.gmail.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
-	<20120711162120.GA17988@google.com>
-	<CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
-	<CAErSpo4nrhBg7SSknmtG=Ss+UGmUJthQ7EBuedNFdyV0PUQuxQ@mail.gmail.com>
-	<CAE9FiQVbaYszsqq6WYENQu18a52m2fD9svtdFV2y4DeDnYWJcA@mail.gmail.com>
-	<CAErSpo7f1hvQ2sg8TTu-d2dy1ST8xNEfR0odESihQtRh=KMi5A@mail.gmail.com>
-	<CAE9FiQU3RbdnBssTT6tiGP9GjtyLHBbdaor2qF=26d8WLf72cw@mail.gmail.com>
-	<CAErSpo6rEcu3gwScEDxJ7DXzeMpT4DBGgAyhNE9qpPo4wEMouw@mail.gmail.com>
-Date: Wed, 11 Jul 2012 13:56:22 -0700
-Message-ID: <CAE9FiQXTjEqLLGx=EzxoWNqKTPF+g4=PNMiiTLkdUyf0LX-JUg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342452631-21152-5-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 1:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> When hotplug surprise is supported, attention button may not there.
->> So have to use present bit to trigger the sequence online work, and
->> offline clean up work.
->
-> Well, there is an "Attention Button Present" bit.  Why wouldn't we use
-> that instead of trying to infer the button's presence from Hot-Plug
-> Surprise?
+On Mon, Jul 16, 2012 at 11:30:28PM +0800, Gavin Shan wrote:
+> The patch changes function pbus_size_io() and pbus_size_mem() to
+> do resource (I/O, memory and prefetchable memory) reassignment
+> based on the minimal alignments for the p2p bridge, which was
+> retrieved by function pcibios_window_alignment().
+> 
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/setup-bus.c |   22 +++++++++++++++-------
+>  1 files changed, 15 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 8fa2d4b..6ccf31a 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -710,6 +710,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>  	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+>  	unsigned long size = 0, size0 = 0, size1 = 0;
+>  	resource_size_t children_add_size = 0;
+> +	resource_size_t io_align;
+>  
+>  	if (!b_res)
+>   		return;
+> @@ -735,13 +736,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>  				children_add_size += get_res_add_size(realloc_head, r);
+>  		}
+>  	}
+> +
+> +	io_align = pcibios_window_alignment(bus, IORESOURCE_IO);
+>  	size0 = calculate_iosize(size, min_size, size1,
+> -			resource_size(b_res), 4096);
+> +			resource_size(b_res), io_align);
+>  	if (children_add_size > add_size)
+>  		add_size = children_add_size;
+>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+>  		calculate_iosize(size, min_size, add_size + size1,
+> -			resource_size(b_res), 4096);
+> +			resource_size(b_res), io_align);
+>  	if (!size0 && !size1) {
+>  		if (b_res->start || b_res->end)
+>  			dev_info(&bus->self->dev, "disabling bridge window "
+> @@ -751,11 +754,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>  		return;
+>  	}
+>  	/* Alignment of the IO window is always 4K */
+> -	b_res->start = 4096;
+> +	b_res->start = io_align;
+>  	b_res->end = b_res->start + size0 - 1;
+>  	b_res->flags |= IORESOURCE_STARTALIGN;
+>  	if (size1 > size0 && realloc_head) {
+> -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
+> +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
+>  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+>  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
+>  				 bus->secondary, bus->subordinate, size1-size0);
+> @@ -785,10 +788,15 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  	struct resource *b_res = find_free_bus_resource(bus, type);
+>  	unsigned int mem64_mask = 0;
+>  	resource_size_t children_add_size = 0;
+> +	resource_size_t mem_align;
+> +	int mem_align_shift;
+>  
+>  	if (!b_res)
+>  		return 0;
+>  
+> +	mem_align = pcibios_window_alignment(bus, type);
+> +	mem_align_shift = __ffs(mem_align);
+> +
+>  	memset(aligns, 0, sizeof(aligns));
+>  	max_order = 0;
+>  	size = 0;
+> @@ -818,8 +826,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  #endif
+>  			/* For bridges size != alignment */
+>  			align = pci_resource_alignment(dev, r);
+> -			order = __ffs(align) - 20;
+> -			if (order > 11) {
+> +			order = __ffs(align) - mem_align_shift;
+> +			if (order > (11 - (mem_align_shift - 20))) {
 
-so you want this ?
+This doesn't seem right to me.  Aren't we accumulating the amount of
+space required at each alignment in aligns[]?  That should be independent
+of whatever arch-specific minimum alignment we have.
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c
-b/drivers/pci/hotplug/pciehp_ctrl.c
-index 27f4429..f103a4ca 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -463,7 +463,7 @@ static void interrupt_event_handler(struct
-work_struct *work)
-                break;
-        case INT_PRESENCE_ON:
-        case INT_PRESENCE_OFF:
--               if (!HP_SUPR_RM(ctrl))
-+               if (ATTN_BUTTN(ctrl))
-                        break;
-                ctrl_dbg(ctrl, "Surprise Removal\n");
-                handle_surprise_event(p_slot);
+Does it have to be more complicated than something like this at the
+very end?
 
-that should keep current user expected behavior that kernel only bring
-the card online after press the button.
+    min_align = max(min_align, pci_window_alignment(bus, IORESOURCE_MEM));
+
+>  				dev_warn(&dev->dev, "disabling BAR %d: %pR "
+>  					 "(bad alignment %#llx)\n", i, r,
+>  					 (unsigned long long) align);
+> @@ -846,7 +854,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  	for (order = 0; order <= max_order; order++) {
+>  		resource_size_t align1 = 1;
+>  
+> -		align1 <<= (order + 20);
+> +		align1 <<= (order + mem_align_shift);
+>  
+>  		if (!align)
+>  			min_align = align1;
+> -- 
+> 1.7.5.4
+> 
