@@ -1,55 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from zoneX.GCU-Squad.org ([194.213.125.0]:26429 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624Ab2GOLfy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 15 Jul 2012 07:35:54 -0400
-Date: Sun, 15 Jul 2012 13:35:30 +0200
-From: Jean Delvare <khali@linux-fr.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Amaury =?UTF-8?B?RGVjcsOqbWU=?= <amaury.decreme@gmail.com>,
-	linux-i2c@vger.kernel.org, amalysh@web.de, nelson@sis.com,
-	ben-linux@fluff.org, w.sang@pengutronix.de, rob@landley.net,
-	jeffrey.t.kirsher@intel.com, akpm@linux-foundation.org,
-	davem@davemloft.net, joe@perches.com, ralf@linux-mips.org,
-	dirk.brandewie@gmail.com, jayachandranc@netlogicmicro.com,
-	Xiangzhen.Ye@csr.com, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	suzanne.decreme@gmail.com
-Subject: Re: [PATCH] i2c: sis964: bus driver
-Message-ID: <20120715133530.1ffc3f36@endymion.delvare>
-In-Reply-To: <CAErSpo5-ou3vjmHgjiOOd57PvWg_hez80U0k3AX_ydjb0pikvQ@mail.gmail.com>
-References: <1342172455-8530-1-git-send-email-amaury.decreme@gmail.com>
-	<CAErSpo5-ou3vjmHgjiOOd57PvWg_hez80U0k3AX_ydjb0pikvQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:31371 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756464Ab2GQT3L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Jul 2012 15:29:11 -0400
+Message-ID: <5005BD00.4090106@redhat.com>
+Date: Tue, 17 Jul 2012 15:29:04 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Yuval Mintz <yuvalmin@broadcom.com>
+CC: "davem@davemloft.net" <davem@davemloft.net>,
+	Chris Friesen <chris.friesen@genband.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: New commands to configure IOV features
+References: <4FA7AF62.8000405@broadcom.com> <20120507081634.000003f8.gregory.v.rose@intel.com> <4FE9A963.7020602@broadcom.com> <20120626101903.0000791c@unknown> <1341859155.2535.43.camel@bwh-desktop.uk.solarflarecom.com> <4FFB4985.3040507@genband.com> <5003DC9B.8000706@broadcom.com>
+In-Reply-To: <5003DC9B.8000706@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 07/16/2012 05:19 AM, Yuval Mintz wrote:
+>
+>>>>> If I want to pick the RFCs and add support for configuring the number
+>>>>> of VFs - do you think ethtool's the right place for such added
+>>>>> support?
+>>>>>
+>>>> I think a PCI utility tool would be better, SR-IOV is not limited to
+>>>> network devices.  That's one of the reasons I dropped the RFC.  I
+>>>> haven't gotten back to the idea since then due to my day job keeping me
+>>>> pretty busy.
+>>>
+>>> For what it's worth, I agree with this.
+>>
+>>  From my perspective it would be ideal if this could be exported via /sys or something
+>>
+>
+>
+> Well, obviously unless there was a sudden change in our stance regarding
+> sysfs we will not head that way.
+>
+> This thread got no replies from the pci community, and I'm unfamiliar
+> with such a tool.
+>
+> Dave, What's your stance in the matter - do you wish us to continue pursuing
+> some pci tool (which might or might not exist), or instead work on
+> a networking solution to this issue?
+>
+> Do you happen to know such a tool?
+>
+> Thanks,
+> Yuval
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yuval (et. al.),
 
-On Fri, 13 Jul 2012 09:36:07 -0600, Bjorn Helgaas wrote:
-> On Fri, Jul 13, 2012 at 3:40 AM, Amaury Decrême
-> <amaury.decreme@gmail.com> wrote:
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index ab741b0..0ffc982 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -699,6 +699,7 @@
-> >  #define PCI_DEVICE_ID_SI_961           0x0961
-> >  #define PCI_DEVICE_ID_SI_962           0x0962
-> >  #define PCI_DEVICE_ID_SI_963           0x0963
-> > +#define PCI_DEVICE_ID_SI_964           0x0964
-> 
-> Please read the comment at the top of this file; I don't think this
-> addition qualifies as something that should be added.
-> 
-> >  #define PCI_DEVICE_ID_SI_965           0x0965
-> >  #define PCI_DEVICE_ID_SI_966           0x0966
-> >  #define PCI_DEVICE_ID_SI_968           0x0968
+Not seeing the original thread on netdev,
+I just had a recent discussion w/Greg Rose about providing
+sysfs-based, VF enable/disable methods.
+I was told that historically, VF enablement started as a sysfs-based
+function, was debated and pushed toward a device/driver-specific method,
+as it is implemented today.   Now, with some experience with SRIOV and
+its use in the virtualization space, the discussion has renewed as to whether
+a sysfs-based enable/disable method should be resurrected, so it
+provides a more generic method for virtualization tools/api's to
+manage SRIOV/VF devices.
 
-When you reply to a large patch, please limit the quoting to the
-relevant portion.
+I was hoping to discuss this topic with a number of folks at
+LinuxCon/Plumbers/KS when the PCI mini-summit is held, to gain
+further insight, or be brought up to speed on past history,
+and review current uses/status of VFs.
 
-Thanks,
--- 
-Jean Delvare
+WRT SRIOV-nic devices, the thinking goes that protocol-level
+parameters associated with VFs should use protocol-specific interfaces,
+e.g., ethtool, ip link set, etc. for Ethernet VFs.
+Thus, the various protocol control functions/tools should
+be used to control VF parameters, as one would for a physical device
+of that protocol/class.
+
+- Don
