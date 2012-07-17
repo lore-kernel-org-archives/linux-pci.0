@@ -1,171 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:58973 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754062Ab2GXQdV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2012 12:33:21 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [RFC PATCH v2 00/32] provide interfaces to access PCIe capabilities registers
-Date: Wed, 25 Jul 2012 00:31:12 +0800
-Message-Id: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Received: from sc-mxserver.o2micro.com ([65.209.244.5]:7844 "EHLO
+	sc-mxserver.o2micro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906Ab2GQBzY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 21:55:24 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;charset="utf-8"
+Subject: FW: [Bug 43247] O2 micro SD/MMC+1394 controller: 1394 device can't work (Register access failure)
+Date: Tue, 17 Jul 2012 09:40:09 +0800
+Message-ID: <FC57104DF444434A9D1D8A7B4EBB29231353B632@HC-EXCHANGE.nt-fsrvr.o2micro.com>
+From: "Jennifer Li (TP)" <Jennifer.Li@o2micro.com>
+To: <linux-pci@vger.kernel.org>
+Cc: <stefanr@s5r6.in-berlin.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
-
-As suggested by Bjorn Helgaas and Don Dutile in threads
-http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
-to PCIe capabilities register in to way:
-1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
-   repeatedly reading this register because it's read only.
-2) provide access functions for PCIe Capabilities registers to hide differences
-   among PCIe base specifications, so the caller don't need to handle those
-   differences.
-
-This patch set applies to
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
-
-And you could pull the change set from
-https://github.com/jiangliu/linux.git topic/pcie-cap
-
-These patch set is still RFC. It provides the new interfaces and has made the
-major changes to adopt those new interfaces. But there are still several device
-drivers left untouched. Any comments about the new interfaces are welcomed,
-especially about function names:). Once we reach an agreement, I will send out
-a formal version with all needed work done.
-
-v2: 1) change return value to 0 when the register is not implemented by
-       V1 PCIe devices.
-    2) Change all driver in the source tree to use the new interfaces.
-
-Jiang Liu (29):
-  PCI: add PCIe capabilities access functions to hide differences among
-    PCIe specs
-  PCI/core: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/hotplug: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/portdrv: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/pciehp: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/PME: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/AER: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/ASPM: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/ARM: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/MIPS: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/tile: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/r8169: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/broadcom: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/igb: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/vxge: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/mlx4: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/niu: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/myri10ge: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/chelsio: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/atl1c: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/ath9k: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/iwl: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/mthca: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/qib: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/qla: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/radeon: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/tsi721: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/et131x: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/rtl8192e: use PCIe capabilities access functions to simplify
-    implementation
-
-Yijing Wang (3):
-  PCI: add pcie_flags_reg into struct pci_dev to cache PCIe
-    capabilities register
-  PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
-  PCI: remove unused field pcie_type from struct pci_dev
-
- arch/arm/mach-tegra/pcie.c                         |    7 +-
- arch/mips/pci/pci-octeon.c                         |    7 +-
- arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
- arch/tile/kernel/pci.c                             |   17 +-
- drivers/gpu/drm/radeon/evergreen.c                 |    9 +-
- drivers/infiniband/hw/mthca/mthca_reset.c          |    8 +-
- drivers/infiniband/hw/qib/qib_pcie.c               |   40 ++-
- drivers/iommu/intel-iommu.c                        |    6 +-
- drivers/net/ethernet/atheros/atl1c/atl1c_main.c    |    2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c   |   24 +-
- drivers/net/ethernet/broadcom/tg3.c                |   46 ++--
- drivers/net/ethernet/chelsio/cxgb3/t3_hw.c         |   19 +-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    |   10 +-
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c         |    7 +-
- drivers/net/ethernet/intel/e1000e/netdev.c         |   20 +-
- drivers/net/ethernet/intel/igb/igb_main.c          |   12 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
- drivers/net/ethernet/mellanox/mlx4/reset.c         |    8 +-
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c   |   21 +-
- drivers/net/ethernet/neterion/vxge/vxge-config.c   |    4 +-
- .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
- drivers/net/ethernet/realtek/r8169.c               |   35 +--
- drivers/net/ethernet/sun/niu.c                     |    9 +-
- drivers/net/wireless/ath/ath9k/pci.c               |   18 +-
- drivers/net/wireless/iwlegacy/common.h             |    5 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      |    4 +-
- drivers/net/wireless/rtlwifi/pci.c                 |    8 +-
- drivers/pci/access.c                               |  157 ++++++++++++
- drivers/pci/hotplug/pciehp_acpi.c                  |    6 +-
- drivers/pci/hotplug/pciehp_hpc.c                   |   10 +-
- drivers/pci/hotplug/pcihp_slot.c                   |   12 +-
- drivers/pci/iov.c                                  |    6 +-
- drivers/pci/pci.c                                  |  262 +++++---------------
- drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
- drivers/pci/pcie/aer/aerdrv.c                      |   23 +-
- drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
- drivers/pci/pcie/aer/aerdrv_core.c                 |   27 +-
- drivers/pci/pcie/aspm.c                            |  108 ++++----
- drivers/pci/pcie/pme.c                             |   23 +-
- drivers/pci/pcie/portdrv_bus.c                     |    2 +-
- drivers/pci/pcie/portdrv_core.c                    |   24 +-
- drivers/pci/pcie/portdrv_pci.c                     |   15 +-
- drivers/pci/probe.c                                |   29 +--
- drivers/pci/quirks.c                               |    9 +-
- drivers/pci/search.c                               |    2 +-
- drivers/rapidio/devices/tsi721.c                   |   13 +-
- drivers/scsi/qla2xxx/qla_init.c                    |    4 +-
- drivers/scsi/qla2xxx/qla_nx.c                      |    8 +-
- drivers/scsi/qla4xxx/ql4_nx.c                      |    4 +-
- drivers/staging/et131x/et131x.c                    |    9 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_pci.c        |    8 +-
- include/linux/pci.h                                |   17 +-
- include/linux/pci_regs.h                           |    2 +
- 53 files changed, 510 insertions(+), 626 deletions(-)
-
--- 
-1.7.9.5
-
+SGksDQoNCkFkZCBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQpEb2VzIGFueW9uZSBjYW4gaGVs
+cCB1cz8NCg0KQmVzdCByZWdhcmRzLA0KSmVubmZlcg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCkZyb206IGJ1Z3ppbGxhLWRhZW1vbkBidWd6aWxsYS5rZXJuZWwub3JnIFttYWlsdG86YnVn
+emlsbGEtZGFlbW9uQGJ1Z3ppbGxhLmtlcm5lbC5vcmddIA0KU2VudDogU2F0dXJkYXksIEp1bHkg
+MTQsIDIwMTIgOTowOSBQTQ0KVG86IEplbm5pZmVyIExpIChUUCkNClN1YmplY3Q6IFtCdWcgNDMy
+NDddIE8yIG1pY3JvIFNEL01NQysxMzk0IGNvbnRyb2xsZXI6IDEzOTQgZGV2aWNlIGNhbid0IHdv
+cmsgKFJlZ2lzdGVyIGFjY2VzcyBmYWlsdXJlKQ0KDQpodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5v
+cmcvc2hvd19idWcuY2dpP2lkPTQzMjQ3DQoNCg0KDQoNCg0KLS0tIENvbW1lbnQgIzIwIGZyb20g
+U3RlZmFuIFJpY2h0ZXIgPHN0ZWZhbnJAczVyNi5pbi1iZXJsaW4uZGU+ICAyMDEyLTA3LTE0IDEz
+OjA5OjE2IC0tLSBPbiBKdWwgMTAgYnVnemlsbGEtZGFlbW9uQGJ1Z3ppbGxhLmtlcm5lbC5vcmcg
+d3JvdGU6DQo+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NDMy
+NDcNCj4gDQo+IC0tLSBDb21tZW50ICMxOSBmcm9tIGplbm5pZmVyIDxqZW5uaWZlci5saUBvMm1p
+Y3JvLmNvbT4gIDIwMTItMDctMTAgDQo+IDExOjAyOjE2IC0tLQ0KWy4uLl0NCj4gPiBEbyB5b3Ug
+bWVhbiBieSB0aGF0IHRoYXQNCj4gPiB0aGUgb3JpZ2luYWwgTGludXggZHJpdmVyIHdvcmtzIGZv
+ciB5b3UgaWYgeW91IGJvb3QgTGludXggYnV0IGRvIG5vdCANCj4gPiBsZXQgdGhlIGRyaXZlciBi
+ZSBhdXRvbWF0aWNhbGx5IGxvYWRlZCBkdXJpbmcgYm9vdCwgYnV0IGluc3RlYWQgbG9hZCANCj4g
+PiB0aGUgZHJpdmVyIGxhdGVyIGJ5ICdtb2Rwcm9iZSBmaXJld2lyZS1vaGNpJyBhZnRlciB0aGUg
+cmVzdCBvZiB0aGUgDQo+ID4gc3lzdGVtIGhhcyBmaW5pc2hlZCBib290aW5nIHVwPw0KPiANCj4g
+WWVzLg0KPiANCj4gPiANCj4gPiBBbmQgaWYgeWVzLCBkaWQgeW91IGFsc28gbmVlZCB0byBsb2Fk
+IHRoZSBzZGhjaS1wY2kgZHJpdmVyIG1hbnVhbGx5IA0KPiA+IHRoaXMgd2F5Pw0KPiANCj4gVGhl
+cmUgYXJlIDQgd2F5cyB3aGljaCBjYW4gcGFzcyB0aGUgaXNzdWUuDQo+IDEuIExvYWQgMTM5NCBi
+eSBPUyArIExvYWQgc2RoY2ktcGNpIGJ5IG1hbnVhbGx5Lg0KPiAyLiBMb2FkIHNkaGNpLXBjaSBi
+eSBPUyArIExvYWQgMTM5NCBieSBtYW51YWxseS4NCj4gMy4gTG9hZCAxMzk0IGJ5IG1hbnVhbGx5
+ICsgbG9hZCBzZGhjaS1wY2kgYnkgbWFudWFsbHkuDQo+IDQuIExvYWQgc2RoY2ktcGNpIGJ5IG1h
+bnVhbGx5ICsgbG9hZCAxMzk0IGJ5IG1hbnVhbGx5Lg0KPiANCj4gPiBBbmQgZnVydGhlciwgZG9l
+cyBpdCBtYXR0ZXIgd2hldGhlciBzZGhjaS1wY2kgaXMgbG9hZGVkIGJlZm9yZSANCj4gPiBmaXJl
+d2lyZS1vaGNpIG9yIHRoZSBvdGhlciB3YXkgYXJvdW5kPw0KPiANCj4gQWNjb3JkaW5nIHRvIG91
+ciB0ZXN0IHJlc3VsdCwgaWYgd2UgbG9hZCB0aGUgZHJpdmVyIGJ5IG1hbnVhbGx5IGFuZCANCj4g
+dGhlIGlzc3VlIHdpbGwgZGlzYXBwZWFyLiBJdCBkaWRuJ3QgaGFzIHRoZSByZWxhdGlvbnNoaXAg
+YWJvdXQgdGhlIGxvYWRlZCBwcmlvcml0eS4NCj4gQnV0LCBpZiB3ZSBsb2FkIHRob3NlIGRyaXZl
+cnMgYnkgT1MgYW5kIHRoZSBpc3N1ZSB3aWxsIGhhcHBlbi4NCg0KDQpDb3VsZCBzb21lYm9keSBh
+dCBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnIHBsZWFzZSBhZHZpc2U/DQoNCjEuKSAgSXMgdGhl
+cmUgYSBrZXJuZWwgcGFyYW1ldGVyIHdoaWNoIEplbm5pZmVyIGNvdWxkIHRyeSBpbiBvcmRlciB0
+byBmb3JjZSBzZXJpYWxpemVkIFBDSSBkcml2ZXIgcHJvYmluZz8NCg0KMi4pICBJZiB0aGVyZSBp
+cyBvbmUgYW5kIGlmIHRoaXMgdHVybnMgb3V0IHRvIGN1cmUgdGhlIGlzc3VlIGluIHRlc3Rpbmc6
+DQpIb3cgY2FuIEkgaW1wbGVtZW50IHNlcmlhbGl6YXRpb24gYmV0d2VlbiB0aGUgTzJNaWNybyBG
+aXJlV2lyZSAucHJvYmUoKSBhbmQgLnJlc3VtZSgpIG9uIG9uZSBoYW5kIGFuZCB0aGUgTzJNaWNy
+byBTREhDSSAucHJvYmUoKSBhbmQgLnJlc3VtZSgpIG9uIHRoZSBvdGhlciBoYW5kPw0KDQoNCltJ
+ZiB5b3UgcmVwbHkgdG8gdGhpcyB2aWEgYnVnemlsbGEgbWFpbCwgcGxlYXNlIGFkZA0KICAgIENj
+OiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQppbiB5b3VyIHJlcGx5LiAgSSBhbSBub3QgYXdh
+cmUgb2YgYSB3YXkgdG8gYWRkIGl0IHRvIGJ1Z3ppbGxhLmtlcm5lbC5vcmcncyBDYyBsaXN0IG9m
+IGJ1ZyA0MzI0Ny5dDQoNCi0tDQpDb25maWd1cmUgYnVnbWFpbDogaHR0cHM6Ly9idWd6aWxsYS5r
+ZXJuZWwub3JnL3VzZXJwcmVmcy5jZ2k/dGFiPWVtYWlsDQotLS0tLS0tIFlvdSBhcmUgcmVjZWl2
+aW5nIHRoaXMgbWFpbCBiZWNhdXNlOiAtLS0tLS0tIFlvdSByZXBvcnRlZCB0aGUgYnVnLg0KDQoN
+Cg0KVW5sZXNzIG90aGVyd2lzZSBzdGF0ZWQsIHRoaXMgZS1tYWlsIG1lc3NhZ2UgZG9lcyBub3Qg
+Y29uc3RpdHV0ZSBhIHNvbGljaXRhdGlvbiB0byBidXkgb3Igc2VsbCBhbnkgcHJvZHVjdHMgb3Ig
+c2VydmljZXMsIG9yIHRvIHBhcnRpY2lwYXRlIGluIGFueSBwYXJ0aWN1bGFyIHRyYWRpbmcgc3Ry
+YXRlZ3kuIFRoaXMgZS1tYWlsIG1lc3NhZ2UgYW5kIGFueSBhdHRhY2htZW50cyBhcmUgaW50ZW5k
+ZWQgc29sZWx5IGZvciB0aGUgdXNlIG9mIHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGlj
+aCBpdCBpcyBhZGRyZXNzZWQgYW5kIG1heSBjb250YWluIGluZm9ybWF0aW9uIHRoYXQgaXMgY29u
+ZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVu
+ZGVkIHJlY2lwaWVudCwgeW91IGFyZSBoZXJlYnkgbm90aWZpZWQgdGhhdCBhbnkgZGlzc2VtaW5h
+dGlvbiwgZGlzdHJpYnV0aW9uLCBjb3B5aW5nIG9yIG90aGVyIHVzZSBvZiB0aGlzIG1lc3NhZ2Ug
+b3IgaXRzIGF0dGFjaG1lbnRzIGlzIHN0cmljdGx5IHByb2hpYml0ZWQuIElmIHlvdSBoYXZlIHJl
+Y2VpdmVkIHRoaXMgbWVzc2FnZSBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGlt
+bWVkaWF0ZWx5IGFuZCBwZXJtYW5lbnRseSBkZWxldGUgdGhpcyBtZXNzYWdlIGFuZCBhbnkgYXR0
+YWNobWVudHMuIE8yTWljcm8gSW50ZXJuYXRpb25hbCBMdGQuLCBhbmQgaXRzIHN1YnNpZGlhcmll
+cyBhbmQgYWZmaWxpYXRlcywgYXJlIG5laXRoZXIgbGlhYmxlIGZvciB0aGUgcHJvcGVyIGFuZCBj
+b21wbGV0ZSB0cmFuc21pc3Npb24gb2YgdGhlIGluZm9ybWF0aW9uIGNvbnRhaW5lZCBpbiB0aGlz
+IGNvbW11bmljYXRpb24sIHRoZSBhY2N1cmFjeSBvZiB0aGUgaW5mb3JtYXRpb24gY29udGFpbmVk
+IHRoZXJlaW4sIG5vciBmb3IgYW55IGRlbGF5IGluIGl0cyByZWNlaXB0LiAgDQoNCg0K
