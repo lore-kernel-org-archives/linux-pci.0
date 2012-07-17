@@ -1,110 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:44637 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755240Ab2GDILs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 04:11:48 -0400
-Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id CB4BB3EE0C1
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:11:47 +0900 (JST)
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id ABC7845DE52
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:11:47 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 96E8745DE50
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:11:47 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 8B63A1DB803F
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:11:47 +0900 (JST)
-Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 47EDC1DB803B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:11:47 +0900 (JST)
-Date: Wed, 4 Jul 2012 17:11:31 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH 7/7] ACPI, PCI: add resoruce-assign code for devices under
- hot-added hostbridge
-Message-Id: <20120704171131.bc416947.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
-References: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:45128 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751346Ab2GQF5Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 17 Jul 2012 01:57:24 -0400
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Tue, 17 Jul 2012 01:57:23 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 5C75D6E804C
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 01:57:21 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6H5vLWS360242
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 01:57:21 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6HBSDrN013541
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 07:28:14 -0400
+Date: Tue, 17 Jul 2012 13:57:15 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, bhelgaas@google.com,
+	benh@kernel.crashing.org, yinghai@kernel.org
+Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
+Message-ID: <20120717055715.GF2369@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
+ <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
+ <20120717050547.GD2369@ram-ThinkPad-T61>
+ <20120717052333.GE2369@ram-ThinkPad-T61>
+ <20120717053648.GA18497@shangw>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120717053648.GA18497@shangw>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jul 17, 2012 at 01:36:49PM +0800, Gavin Shan wrote:
+> On Tue, Jul 17, 2012 at 01:23:33PM +0800, Ram Pai wrote:
+> >On Tue, Jul 17, 2012 at 01:05:47PM +0800, Ram Pai wrote:
+> >> On Tue, Jul 17, 2012 at 10:23:17AM +0800, Gavin Shan wrote:
+> >> > The patch changes function pbus_size_io() and pbus_size_mem() to
+> >> > do resource (I/O, memory and prefetchable memory) reassignment
+> >> > based on the minimal alignments for the p2p bridge, which was
+> >> > retrieved by function window_alignment().
+> >> > 
+> >> > Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> 
+> [snip]
+> 
+> >> > @@ -772,11 +775,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >> >  		return;
+> >> >  	}
+> >> >  	/* Alignment of the IO window is always 4K */
+> >> > -	b_res->start = 4096;
+> >> > +	b_res->start = io_align;
+> >> >  	b_res->end = b_res->start + size0 - 1;
+> >> >  	b_res->flags |= IORESOURCE_STARTALIGN;
+> >> >  	if (size1 > size0 && realloc_head) {
+> >> > -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
+> >> > +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
+> >> >  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+> >> >  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
+> >> >  				 bus->secondary, bus->subordinate, size1-size0);
+> >> > @@ -875,6 +878,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+> >> >  			min_align = align1 >> 1;
+> >> >  		align += aligns[order];
+> >> >  	}
+> >> > +
+> >> > +	min_align = max(min_align, window_alignment(bus, type));
+> >> 
+> >>   'type' can sometimes be (IORESOURCE_MEM | IORESOURCE_PREFETCH), which
+> >>   can lead to unpredictable results depending on how window_alignment()
+> >>   is implemented... Hence to be on the safer side I suggest
+> >> 
+> >> 	min_align = max(min_align, window_alignment(bus, b_res->flags & mask));
+> 
+> Sorry, Ram. I didn't see your concern in last reply. So I have to
+> cover your conver in this reply.
+> 
+> I think it'd better to pass "type" directly because platform (e.g. powernv)
+> expects both IORESOURCE_MEM as well as IORESOURCE_PREFETCH. 
+> In future, powernv platform will return M32 segment size for IORESOURCE_MEM, but
+> might return M64 segment size for (IORESOURCE_MEM | IORESOURCE_PREFETCH).
 
-Devices under hot-added hostbridge have no chance to assign resources
-and to configure them, so this patch adds such code for hot-added 
-hostbridges at acpi_pci_root_start().
+Hmm.. this code is not about determining what kind of segment the
+platform is returning. This code is about using the right alignment
+constraints for the type of segment from which resource will be
+allocated. right?
 
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
----
- drivers/acpi/pci_root.c |   18 ++++++++++++++++++
- include/acpi/acpi_bus.h |    1 +
- 2 files changed, 19 insertions(+)
+b_res is the resource that is being sized. b_res already knows
+what kind of resource it is, i.e IORESOURCE_MEM or IORESOURCE_PREFETCH.
+Hence we should be exactly using the same alignment constraints as
+that dictated by the type of b_res. no?
 
-Index: linux/drivers/acpi/pci_root.c
-===================================================================
---- linux.orig/drivers/acpi/pci_root.c	2012-07-04 09:55:57.375674818 +0900
-+++ linux/drivers/acpi/pci_root.c	2012-07-04 09:56:00.771627515 +0900
-@@ -39,6 +39,7 @@
- #include <acpi/acpi_bus.h>
- #include <acpi/acpi_drivers.h>
- #include <acpi/apei.h>
-+#include <linux/pci_hotplug.h>
- 
- #define PREFIX "ACPI: "
- 
-@@ -462,6 +463,10 @@ static int __devinit acpi_pci_root_add(s
- 	if (!root)
- 		return -ENOMEM;
- 
-+	if (system_state != SYSTEM_BOOTING) {
-+		root->hot_added = true;
-+	}
-+
- 	segment = 0;
- 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
- 				       &segment);
-@@ -640,12 +645,25 @@ static int acpi_pci_root_start(struct ac
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
-+	struct pci_dev *pdev;
- 
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
- 			driver->add(device->handle);
- 
-+	/*
-+ 	 * Devices under hot-added hostbridge have no chance to assign
-+ 	 * resources and to configure them, so do that here
-+ 	 */
-+	if (root->hot_added) {
-+		pci_bus_size_bridges(root->bus);
-+		pci_bus_assign_resources(root->bus);
-+		list_for_each_entry(pdev, &root->bus->devices, bus_list)
-+			pci_configure_slot(pdev);
-+		pci_enable_bridges(root->bus);
-+	}
-+
- 	pci_bus_add_devices(root->bus);
- 	mutex_unlock(&acpi_pci_root_lock);
- 
-Index: linux/include/acpi/acpi_bus.h
-===================================================================
---- linux.orig/include/acpi/acpi_bus.h	2012-07-04 09:54:51.754490344 +0900
-+++ linux/include/acpi/acpi_bus.h	2012-07-04 09:56:00.772627502 +0900
-@@ -402,6 +402,7 @@ struct acpi_pci_root {
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
- 	phys_addr_t mcfg_addr;
-+	bool hot_added;
- };
- 
- /* helper */
+RP
 
