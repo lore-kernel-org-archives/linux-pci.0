@@ -1,110 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60290 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750917Ab2GOXzt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 15 Jul 2012 19:55:49 -0400
-Date: Sun, 15 Jul 2012 16:55:48 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20120715235548.GC7551@jonmason-lab>
-References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
- <20120714171015.GB25775@kroah.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:49349 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab2GQFXm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2012 01:23:42 -0400
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Mon, 16 Jul 2012 23:23:41 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 8C8A03E40051
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 05:23:38 +0000 (WET)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6H5NdvF055518
+	for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 23:23:39 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6H5NbmE007588
+	for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 23:23:38 -0600
+Date: Tue, 17 Jul 2012 13:23:33 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, bhelgaas@google.com,
+	benh@kernel.crashing.org, yinghai@kernel.org
+Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
+Message-ID: <20120717052333.GE2369@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
+ <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
+ <20120717050547.GD2369@ram-ThinkPad-T61>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120714171015.GB25775@kroah.com>
+In-Reply-To: <20120717050547.GD2369@ram-ThinkPad-T61>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 14, 2012 at 10:10:15AM -0700, Greg KH wrote:
-> On Fri, Jul 13, 2012 at 02:44:59PM -0700, Jon Mason wrote:
-> > +static int max_num_cbs = 2;
-> > +module_param(max_num_cbs, uint, 0644);
-> > +MODULE_PARM_DESC(max_num_cbs, "Maximum number of NTB transport connections");
+On Tue, Jul 17, 2012 at 01:05:47PM +0800, Ram Pai wrote:
+> On Tue, Jul 17, 2012 at 10:23:17AM +0800, Gavin Shan wrote:
+> > The patch changes function pbus_size_io() and pbus_size_mem() to
+> > do resource (I/O, memory and prefetchable memory) reassignment
+> > based on the minimal alignments for the p2p bridge, which was
+> > retrieved by function window_alignment().
+> > 
+> > Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> > ---
+> >  drivers/pci/setup-bus.c |   13 +++++++++----
+> >  1 files changed, 9 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > index c0fb9da..a29483a 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -731,6 +731,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >  	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
+> >  	unsigned long size = 0, size0 = 0, size1 = 0;
+> >  	resource_size_t children_add_size = 0;
+> > +	resource_size_t io_align;
+> > 
+> >  	if (!b_res)
+> >   		return;
+> > @@ -756,13 +757,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >  				children_add_size += get_res_add_size(realloc_head, r);
+> >  		}
+> >  	}
 > > +
-> > +static bool no_msix;
-> > +module_param(no_msix, bool, 0644);
-> > +MODULE_PARM_DESC(no_msix, "Do not allow MSI-X interrupts to be selected");
+> > +	io_align = window_alignment(bus, IORESOURCE_IO);
 > 
-> How would a user, or a distro, know to set these options?  Why are they
-> even options at all?
-
-Good question.  There is actually a potential benefit to disabling MSI-X.  The NTB device on one of our platforms only has 3 MSI-X vectors.  In the current driver design, that would limit them to 3 client/virtual devices.  However, there are 15bits in the ISR that can be used for the same purpose.  So, if you disable MSI-X, you can have 15 instead of 3.  
-
+> this should also be
+> 	io_align = max(4096, window_alignment(bus, IORESOURCE_IO));
+> 
+> right?
 > 
 > 
-> > +struct ntb_device {
-> > +	struct pci_dev *pdev;
-> > +	struct msix_entry *msix_entries;
-> > +	void __iomem *reg_base;
-> > +	struct ntb_mw mw[NTB_NUM_MW];
-> > +	struct {
-> > +		unsigned int max_spads;
-> > +		unsigned int max_db_bits;
-> > +		unsigned int msix_cnt;
-> > +	} limits;
-> > +	struct {
-> > +		void __iomem *pdb;
-> > +		void __iomem *pdb_mask;
-> > +		void __iomem *sdb;
-> > +		void __iomem *sbar2_xlat;
-> > +		void __iomem *sbar4_xlat;
-> > +		void __iomem *spad_write;
-> > +		void __iomem *spad_read;
-> > +		void __iomem *lnk_cntl;
-> > +		void __iomem *lnk_stat;
-> > +		void __iomem *spci_cmd;
-> > +	} reg_ofs;
-> > +	void *ntb_transport;
-> > +	void (*event_cb)(void *handle, unsigned int event);
-> 
-> Shouldn't the event be an enum?
-
-No, that would be too smart.
-
-> 
-> > +	struct ntb_db_cb *db_cb;
-> > +	unsigned char hw_type;
-> > +	unsigned char conn_type;
-> > +	unsigned char dev_type;
-> > +	unsigned char num_msix;
-> > +	unsigned char bits_per_vector;
-> > +	unsigned char max_cbs;
-> > +	unsigned char link_status;
-> > +	struct delayed_work hb_timer;
-> > +	unsigned long last_ts;
-> > +};
-> 
-> Why isn't this either a 'struct device' itself, or why isn't the 'struct
-> pci_device' embedded within it?  What controls the lifetime of this
-> device?  Why doesn't it show up in sysfs?  Don't you want it to show up
-> in the global device tree?
-> 
-> > +static DEFINE_PCI_DEVICE_TABLE(ntb_pci_tbl) = {
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_B2B_BWD)},
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_B2B_JSF)},
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_CLASSIC_JSF)},
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_RP_JSF)},
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_RP_SNB)},
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_B2B_SNB)},
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_NTB_CLASSIC_SNB)},
-> > +	{0}
-> > +};
-> > +MODULE_DEVICE_TABLE(pci, ntb_pci_tbl);
+> >  	size0 = calculate_iosize(size, min_size, size1,
+> > -			resource_size(b_res), 4096);
+> > +			resource_size(b_res), io_align);
+> >  	if (children_add_size > add_size)
+> >  		add_size = children_add_size;
+> >  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+> >  		calculate_iosize(size, min_size, add_size + size1,
+> > -			resource_size(b_res), 4096);
+> > +			resource_size(b_res), io_align);
+> >  	if (!size0 && !size1) {
+> >  		if (b_res->start || b_res->end)
+> >  			dev_info(&bus->self->dev, "disabling bridge window "
+> > @@ -772,11 +775,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+> >  		return;
+> >  	}
+> >  	/* Alignment of the IO window is always 4K */
+> > -	b_res->start = 4096;
+> > +	b_res->start = io_align;
+> >  	b_res->end = b_res->start + size0 - 1;
+> >  	b_res->flags |= IORESOURCE_STARTALIGN;
+> >  	if (size1 > size0 && realloc_head) {
+> > -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
+> > +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
+> >  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
+> >  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
+> >  				 bus->secondary, bus->subordinate, size1-size0);
+> > @@ -875,6 +878,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+> >  			min_align = align1 >> 1;
+> >  		align += aligns[order];
+> >  	}
 > > +
-> > +static struct ntb_device *ntbdev;
+> > +	min_align = max(min_align, window_alignment(bus, type));
 > 
-> You can really only have just one of these in the whole system?  Is that
-> wise?  Why isn't it dynamic and tied to the pci device itself as a
-> child?
-
-Good point, I will fix that up.
-
-Thanks for the review!
-
+>   'type' can sometimes be (IORESOURCE_MEM | IORESOURCE_PREFETCH), which
+>   can lead to unpredictable results depending on how window_alignment()
+>   is implemented... Hence to be on the safer side I suggest
 > 
-> thanks,
-> 
-> greg k-h
+> 	min_align = max(min_align, window_alignment(bus, b_res->flags & mask));
+
+While you are at it, can we move the min_align calculation into
+a separate function?
+
+Somewhat around the following patch
+
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8fa2d4b..426c8ad6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -762,6 +762,25 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	}
+ }
+ 
++static inline calculate_min_align(resource_size_t aligns *aligns, int max_order)
++{
++	resource_size_t align = 0;
++	resource_size_t min_align = 0;
++	int order;
++	for (order = 0; order <= max_order; order++) {
++		resource_size_t align1 = 1;
++
++		align1 <<= (order + 20);
++
++		if (!align)
++			min_align = align1;
++		else if (ALIGN(align + min_align, min_align) < align1)
++			min_align = align1 >> 1;
++		align += aligns[order];
++	}
++	return min_align;
++}
++
+ /**
+  * pbus_size_mem() - size the memory window of a given bus
+  *
+@@ -841,19 +860,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				children_add_size += get_res_add_size(realloc_head, r);
+ 		}
+ 	}
+-	align = 0;
+-	min_align = 0;
+-	for (order = 0; order <= max_order; order++) {
+-		resource_size_t align1 = 1;
+ 
+-		align1 <<= (order + 20);
++	min_align = calculate_min_align(aligns, max_order);
+ 
+-		if (!align)
+-			min_align = align1;
+-		else if (ALIGN(align + min_align, min_align) < align1)
+-			min_align = align1 >> 1;
+-		align += aligns[order];
+-	}
+ 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
+@@ -880,6 +889,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	return 1;
+ }
+
+ RP
+
