@@ -1,42 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50942 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246Ab2GIWVb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 18:21:31 -0400
-Received: by lbbgm6 with SMTP id gm6so20997056lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 15:21:29 -0700 (PDT)
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:57132 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753319Ab2GQDke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 Jul 2012 23:40:34 -0400
+Received: from /spool/local
+	by e3.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Mon, 16 Jul 2012 23:40:33 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 986AE38C803A
+	for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 23:40:31 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6H3eVcT378596
+	for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 23:40:31 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6H3eUIK005467
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 00:40:31 -0300
+Date: Tue, 17 Jul 2012 11:40:25 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+	bhelgaas@google.com, benh@kernel.crashing.org, yinghai@kernel.org,
+	linuxram@us.ibm.com
+Subject: Re: [PATCH v6 0/7] minimal alignment for p2p bars
+Message-ID: <20120717034025.GC2369@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXN00en27i3F16GL+HJoqVT=DenUWLCg0u4v-7vqcBTcQ@mail.gmail.com>
-References: <20120709202308.28178.58942.stgit@bhelgaas.mtv.corp.google.com>
- <20120709203208.28178.94320.stgit@bhelgaas.mtv.corp.google.com> <CAE9FiQXN00en27i3F16GL+HJoqVT=DenUWLCg0u4v-7vqcBTcQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Jul 2012 16:21:09 -0600
-Message-ID: <CAErSpo7pEh=_QSpdN3Q-vzPY3dkKW0yXuB4FM4SxZ7CnSVn5Gw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: reimplement P2P bridge 1K I/O windows (Intel P64H2)
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, Daniel Yeisley <dan.yeisley@unisys.com>,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2012 at 3:43 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Jul 9, 2012 at 1:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> Note that the bridge window assignment code, e.g., pbus_size_io(), should
->> pay attention to dev->io_window_1k, too, but I didn't fix that.
->
-> Please check attached patch that will fix pbus_size_io.
+On Tue, Jul 17, 2012 at 10:23:12AM +0800, Gavin Shan wrote:
+> v1 -> v2:
+> 	* Shorten the varaible names so that they looks more short.
+> 	* Changelog adjustment so that they looks more meaningful.
+> 
+> v2 -> v3:
+> 	* Rebase to 3.5.RC4
+> 
+> v3 -> v4:
+> 	* Merge Yinghai's patches.
+> 
+> v3 -> v4:
+> 	* Split patch for easy review.
+> 	* Add function to retrieve the minimal alignment of p2p bridge. 
+> 
+> v4 -> v5:
+> 	* Rebase to 3.5.RC7
+> 	* Introduce weak function pcibios_window_alignment() to retrieve
+> 	  I/O and memory alignment for P2P bridges.
+> 	* Introduce pcibios_window_alignment() for ppc to override the
+> 	  PCI function.
+> 	* Add ppc_md.pcibios_window_alignment() for specific platform like
+> 	  powernv can override ppc's pcibios_window_alignment().
+> 
+> v5 -> v6:
+> 	* Refactor pcibios_window_alignment() so the platform-specific
+> 	  implementation needn't return the default alignment according
+> 	  to Bjorn's suggestion.
+> 	* Simplify pbus_size_mem() according to Bjorn's suggestion: Just
+> 	  check the platform required alignment at very end and adjust
+> 	  the "min_align" if necessary.
+> 
+> Lu Yinghai(3):
+>   pci: change variable name for find_pci_host_bridge
+>   pci: argument pci_bus for find_pci_host_bridge
+>   pci: fiddle with conversion of pci and CPU address
 
-Thanks for posting this again.  I had looked for it, but couldn't find it.
 
-> You may fold the patch in your patch, or could split your patch to
-> two. First one
-> only add io_window_1k, and second one will use io_window_1k. Then could put my
-> patch between them.
+Gavin,
+	Do you need Yinghai's first 3 patches to implement your
+	functionality?
 
-What bad things would happen if I just appended your patch to the end
-of this series?  Would that break bisection in some scenario?
+	I dont see those new functions being called from anywhere
+	in your patches.
 
-Bjorn
+RP
+
