@@ -1,94 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:59174 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755088Ab2GKBdG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 21:33:06 -0400
-Received: by vbbff1 with SMTP id ff1so440314vbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 18:33:05 -0700 (PDT)
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:20443
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755960Ab2GQRlo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2012 13:41:44 -0400
+Message-ID: <5005A3D2.5060504@freescale.com>
+Date: Tue, 17 Jul 2012 12:41:38 -0500
+From: Scott Wood <scottwood@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
-	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
-	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>
-	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-	<OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se>
-Date: Tue, 10 Jul 2012 18:33:05 -0700
-Message-ID: <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joakim Tjernlund <joakim.tjernlund@transmode.se>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH] PCI: use dev->irq instead of dev->pin to enable non MSI/INTx
+ interrupt
+References: <1342492551-13766-1-git-send-email-Shengzhou.Liu@freescale.com>
+In-Reply-To: <1342492551-13766-1-git-send-email-Shengzhou.Liu@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 6:07 PM, Joakim Tjernlund
-<joakim.tjernlund@transmode.se> wrote:
-> yhlu.kernel@gmail.com wrote on 2012/07/11 00:09:00:
+On 07/16/2012 09:35 PM, Shengzhou Liu wrote:
+> On some platforms, root port has neither MSI/MSI-X nor INTx interrupt
+> generated in RC mode. In this case, we have to use other interrupt(i.e.
+> system shared interrupt) for port service irq to have AER, Hot-plug, etc,
+> services to work.
+> 
+> Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+> ---
+>  drivers/pci/pcie/portdrv_core.c |    9 +++++++--
+>  1 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 75915b3..a855254 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -212,8 +212,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+>  	if (!pcie_port_enable_msix(dev, irqs, mask))
+>  		return 0;
+>  
+> -	/* We're not going to use MSI-X, so try MSI and fall back to INTx */
+> -	if (!pci_enable_msi(dev) || dev->pin)
+> +	/*
+> +	 * We're not going to use MSI-X, so try MSI and fall back to INTx.
+> +	 * If neither MSI/MSI-X nor INTx available, try other interrupt. (On
+> +	 * some platforms, root port doesn't support generating MSI/MSI-X/INTx
+> +	 * in RC mode)
+> +	 */
+> +	if (!pci_enable_msi(dev) || dev->irq)
+>  		irq = dev->irq;
 
->> No. Can you compile lspci util as static and run it ?
->
-> That wasn't so hard so here:
->
-> root@P2020RDB ~ # ./lspci  -vvxxx
-> 00:00.0 Class 0604: Device 1957:0079 (rev 21)
->         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 32 bytes
->         Region 0: Memory at <ignored> (32-bit, non-prefetchable)
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         I/O behind bridge: 00000000-00000fff
->         Memory behind bridge: 80000000-9fffffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
->         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [44] Power Management version 2
->                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
->                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
->                         ExtTag- RBE- FLReset-
->                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
->                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
->                         MaxPayload 128 bytes, MaxReadReq 512 bytes
->                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
->                         ClockPM- Surprise- LLActRep- BwNot-
->                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
->                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
->                 RootCap: CRSVisible-
->                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+What about the other usage of dev->pin a few lines up?
 
-There is no slot cap etc, so pciehp will not be loaded.
-the power of you child device can not be turned off/on.
+-Scott
 
-Not sure if can use link off/on make the clock effective.
-
-You can turn off and on the pcie link like following:
-
-1. remove the child device
-     echo 1 > /sys/..../0000:01:00.0/remove
-2. disable link
-     echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
-3. enable link
-     echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
-4. rescan the pci bus.
-     echo 1 > /sys/..../0000:00:00.0/rescan_bridge
-
-please check link disable patch at
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-pcie-link
-
-| Subject: [PATCH] PCI: Add link_disable in /sysfs for pcie device
-|
-| Found PCIe cards from one vendor, will not respond to scan from bridge,
-| if we change bus number setting in bridge device.
-|
-| Have to do link disable/enable on the pcie root port.
-|
-|  So try to expose link disable bit of pcie link control register. We can use
-|  echo 1 > /sys/..../link_disable
-|  echo 0 > /sys/..../link_disable
-| to bring the pcie device back to respond to scan.
