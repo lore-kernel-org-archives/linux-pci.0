@@ -1,85 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:37384 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522Ab2GKJB0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 05:01:26 -0400
-Date: Wed, 11 Jul 2012 18:01:12 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH 01/14] PCI: add pcie_flags into struct pci_dev to
- cache PCIe capabilities register
-Message-Id: <20120711180112.3ae76a2e.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <1341935655-5381-2-git-send-email-jiang.liu@huawei.com>
-References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-	<1341935655-5381-2-git-send-email-jiang.liu@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from exprod7og104.obsmtp.com ([64.18.2.161]:51928 "EHLO
+	exprod7og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109Ab2GQVRG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2012 17:17:06 -0400
+Message-ID: <5005D45D.1040302@genband.com>
+Date: Tue, 17 Jul 2012 15:08:45 -0600
+From: Chris Friesen <chris.friesen@genband.com>
+MIME-Version: 1.0
+To: Don Dutile <ddutile@redhat.com>
+CC: Yuval Mintz <yuvalmin@broadcom.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: New commands to configure IOV features
+References: <4FA7AF62.8000405@broadcom.com> <20120507081634.000003f8.gregory.v.rose@intel.com> <4FE9A963.7020602@broadcom.com> <20120626101903.0000791c@unknown> <1341859155.2535.43.camel@bwh-desktop.uk.solarflarecom.com> <4FFB4985.3040507@genband.com> <5003DC9B.8000706@broadcom.com> <5005BD00.4090106@redhat.com>
+In-Reply-To: <5005BD00.4090106@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 10 Jul 2012 23:54:02 +0800
-Jiang Liu <liuj97@gmail.com> wrote:
+On 07/17/2012 01:29 PM, Don Dutile wrote:
 
-> From: Yijing Wang <wangyijing@huawei.com>
-> 
-> From: Yijing Wang <wangyijing@huawei.com>
-> 
-> Since PCI Express Capabilities Register is read only, cache its value
-> into struct pci_dev to avoid repeatedly calling pci_read_config_*().
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  drivers/pci/probe.c |    1 +
->  include/linux/pci.h |    1 +
->  2 files changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6c143b4..65e82e3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -929,6 +929,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  	pdev->is_pcie = 1;
->  	pdev->pcie_cap = pos;
->  	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
-> +	pdev->pcie_flags = reg16;
->  	pdev->pcie_type = (reg16 & PCI_EXP_FLAGS_TYPE) >> 4;
->  	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
->  	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5faa831..f4a7ad6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -258,6 +258,7 @@ struct pci_dev {
->  	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
->  	u8		rom_base_reg;	/* which config register controls the ROM */
->  	u8		pin;  		/* which interrupt pin this device uses */
-> +	u16		pcie_flags;	/* cached PCI-E Capabilities Register */
+> WRT SRIOV-nic devices, the thinking goes that protocol-level
+> parameters associated with VFs should use protocol-specific interfaces,
+> e.g., ethtool, ip link set, etc. for Ethernet VFs.
+> Thus, the various protocol control functions/tools should
+> be used to control VF parameters, as one would for a physical device
+> of that protocol/class.
 
- "xxx_flags" sounds like a bit flag. This variable stores a value of PCIe capability 
- register, doesn't it?   How about "pcie_cap_reg" ?
+It seems to me that the mere act of creating one or more VFs is 
+something generic, applicable to all devices that are capable of it. 
+The details of configuring those VFs can then be handled by 
+protocol-specific interfaces.
 
->  
->  	struct pci_driver *driver;	/* which driver has allocated this device */
->  	u64		dma_mask;	/* Mask of the bits of bus address this
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I'm not too worried about the exact mechanism of doing it, as long as 
+it's ultimately scriptable--that is, if it's a C API then it would be 
+appreciated if there was a standard tool to call that implements it. 
+ From that perspective a sysfs-based interface is ideal since it is 
+directly scriptable.
 
-
--- 
-Taku Izumi <izumi.taku@jp.fujitsu.com>
-
+Chris
