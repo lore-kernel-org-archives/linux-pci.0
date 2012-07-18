@@ -1,65 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:57018 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752259Ab2GYTp0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jul 2012 15:45:26 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI / PM: Fix messages printed by acpi_pci_set_power_state()
-Date: Wed, 25 Jul 2012 21:51:13 +0200
-Cc: huang ying <huang.ying.caritas@gmail.com>,
-	=?utf-8?q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org> <87k3xskvqq.fsf@nemi.mork.no> <CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
-In-Reply-To: <CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
+Received: from [213.199.154.205] ([213.199.154.205]:14657 "EHLO
+	am1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751675Ab2GRG3v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 02:29:51 -0400
+From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <linuxppc-dev@lists.ozlabs.org>,
+	Shengzhou Liu <Shengzhou.Liu@freescale.com>
+Subject: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non MSI/INTx interrupt
+Date: Wed, 18 Jul 2012 14:06:54 +0800
+Message-ID: <1342591614-1840-1-git-send-email-Shengzhou.Liu@freescale.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201207252151.14069.rjw@sisk.pl>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On some platforms, root port has neither MSI/MSI-X nor INTx interrupt
+generated in RC mode. In this case, we have to use other interrupt(e.g.
+system shared interrupt) for port service irq to have AER, Hot-plug, etc,
+services to work.
 
-If a PCI device is put into D3_cold by acpi_bus_set_power(),
-the message printed by acpi_pci_set_power_state() says that its
-power state has been changed to D4, which doesn't make sense.
-In turn, if the device is put into D3_hot, the message says just
-"D3" without specifying which variant of D3 it is.
-
-Fix that by using an array of state names corresponding to the
-PCI device power states instead of building the state name from
-the numeric value corresponding to the given state directly.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
 ---
- drivers/pci/pci-acpi.c |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ drivers/pci/pcie/portdrv_core.c |   16 ++++++++++++----
+ 1 files changed, 12 insertions(+), 4 deletions(-)
 
-Index: linux/drivers/pci/pci-acpi.c
-===================================================================
---- linux.orig/drivers/pci/pci-acpi.c
-+++ linux/drivers/pci/pci-acpi.c
-@@ -265,9 +265,17 @@ static int acpi_pci_set_power_state(stru
- 		error = acpi_bus_set_power(handle, state_conv[state]);
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 75915b3..49acf72 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -200,10 +200,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ {
+ 	int i, irq = -1;
+ 
+-	/* We have to use INTx if MSI cannot be used for PCIe PME or pciehp. */
++	/*
++	 * We have to use INTx or other interrupts(e.g. system shared interrupt)
++	 * if MSI cannot be used for PCIe PME or pciehp.
++	 */
+ 	if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
+ 	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
+-		if (dev->pin)
++		if (dev->irq)
+ 			irq = dev->irq;
+ 		goto no_msi;
  	}
+@@ -212,8 +215,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	if (!pcie_port_enable_msix(dev, irqs, mask))
+ 		return 0;
  
--	if (!error)
--		dev_printk(KERN_INFO, &dev->dev,
--				"power state changed by ACPI to D%d\n", state);
-+	if (!error) {
-+		static const char *state_name[] = {
-+			[PCI_D0] = "D0",
-+			[PCI_D1] = "D1",
-+			[PCI_D2] = "D2",
-+			[PCI_D3hot] = "D3hot",
-+			[PCI_D3cold] = "D3cold"
-+		};
-+		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
-+			 state_name[state]);
-+	}
+-	/* We're not going to use MSI-X, so try MSI and fall back to INTx */
+-	if (!pci_enable_msi(dev) || dev->pin)
++	/*
++	 * We're not going to use MSI-X, so try MSI and fall back to INTx.
++	 * If neither MSI/MSI-X nor INTx available, try other interrupt. (On
++	 * some platforms, root port doesn't support generating MSI/MSI-X/INTx
++	 * in RC mode)
++	 */
++	if (!pci_enable_msi(dev) || dev->irq)
+ 		irq = dev->irq;
  
- 	return error;
- }
+  no_msi:
+-- 
+1.6.4
+
+
