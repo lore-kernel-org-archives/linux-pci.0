@@ -1,98 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:58807 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751290Ab2GJSpC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 14:45:02 -0400
-Received: by lbbgm6 with SMTP id gm6so817196lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 11:45:00 -0700 (PDT)
+Received: from gw1.transmode.se ([195.58.98.146]:64459 "EHLO gw1.transmode.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754465Ab2GRNHN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 18 Jul 2012 09:07:13 -0400
+In-Reply-To: <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
+References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
+	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
+	<OF9DA7C6E4.12BE1316-ONC1257A38.000618C1-C1257A38.00062838@transmode.se> <CAE9FiQVYt5sp9rQ1=L6ak4LJG1ot4WQ_nq8-t3qvmtpT_TRJLg@mail.gmail.com>
+Subject: Re: PICe hotplug problems
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, yhlu.kernel@gmail.com
+Message-ID: <OF85CC1E00.6E804B96-ONC1257A3F.00477FD2-C1257A3F.0048111D@transmode.se>
+From: Joakim Tjernlund <joakim.tjernlund@transmode.se>
+Date: Wed, 18 Jul 2012 15:07:09 +0200
 MIME-Version: 1.0
-In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
- <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Jul 2012 12:44:39 -0600
-Message-ID: <CAErSpo7zftEkExQMND_a7V-nJKqvuncNGnC_rfFtxQfywUO4jA@mail.gmail.com>
-Subject: Re: [RFC PATCH 00/14] improve PCIe capabilities registers handling
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 9:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Jiang Liu <liuj97@gmail.com>
+yhlu.kernel@gmail.com wrote on 2012/07/11 03:33:05:
 >
-> As suggested by Bjorn Helgaas and Don Dutile in threads
-> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
-> to PCIe capabilities register in to way:
-> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
->    repeatedly reading this register because it's read only.
-> 2) provide access functions for PCIe Capabilities registers to hide differences
->    among PCIe base specifications, so the caller don't need to handle those
->    differences.
+> On Tue, Jul 10, 2012 at 6:07 PM, Joakim Tjernlund
+> <joakim.tjernlund@transmode.se> wrote:
+> > yhlu.kernel@gmail.com wrote on 2012/07/11 00:09:00:
 >
-> This patch set applies to
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+> >> No. Can you compile lspci util as static and run it ?
+> >
+> > That wasn't so hard so here:
+> >
+> > root@P2020RDB ~ # ./lspci  -vvxxx
+> > 00:00.0 Class 0604: Device 1957:0079 (rev 21)
+> >         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
+> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> >         Latency: 0, Cache Line Size: 32 bytes
+> >         Region 0: Memory at <ignored> (32-bit, non-prefetchable)
+> >         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+> >         I/O behind bridge: 00000000-00000fff
+> >         Memory behind bridge: 80000000-9fffffff
+> >         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+> >         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+> >                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+> >         Capabilities: [44] Power Management version 2
+> >                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+> >                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+> >         Capabilities: [4c] Express (v1) Root Port (Slot-), MSI 00
+> >                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+> >                         ExtTag- RBE- FLReset-
+> >                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported+
+> >                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+> >                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+> >                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+> >                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s, Latency L0 <2us, L1 unlimited
+> >                         ClockPM- Surprise- LLActRep- BwNot-
+> >                 LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk-
+> >                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> >                 LnkSta: Speed 2.5GT/s, Width x2, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+> >                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+> >                 RootCap: CRSVisible-
+> >                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
 >
-> These patch set is still RFC. It provides the new interfaces and has made the
-> major changes to adopt those new interfaces. But there are still several device
-> drivers left untouched. Any comments about the new interfaces are welcomed,
-> especially about function names:). Once we reach an agreement, I will send out
-> a formal version with all needed work done.
+> There is no slot cap etc, so pciehp will not be loaded.
+> the power of you child device can not be turned off/on.
 >
-> Jiang Liu (11):
->   PCI: refine and move pcie_cap_has_*() macros to include/linux/pci.h
->   PCI: add access functions for PCIe capabilities to hide PCIe spec
->     differences
->   PCI: use PCIe cap access functions to simplify PCI core
->     implementation
->   hotplug/PCI: use PCIe cap access functions to simplify implementation
->   portdrv/PCI: use PCIe cap access functions to simplify implementation
->   pciehp/PCI: use PCIe cap access functions to simplify implementation
->   PME/PCI: use PCIe cap access functions to simplify implementation
->   AER/PCI: use PCIe cap access functions to simplify implementation
->   ASPM/PCI: use PCIe cap access functions to simplify implementation
->   r8169/PCI: use PCIe cap access functions to simplify implementation
->   qib/PCI: use PCIe cap access functions to simplify implementation
+> Not sure if can use link off/on make the clock effective.
 >
-> Yijing Wang (1):
->   PCI: add pcie_flags into struct pci_dev to cache PCIe capabilities
->     register
->   PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
->   PCI: remove unused field pcie_type from struct pci_dev
+> You can turn off and on the pcie link like following:
 >
->  arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
->  drivers/infiniband/hw/qib/qib_pcie.c               |   34 ++-
->  drivers/iommu/intel-iommu.c                        |    6 +-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
->  .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
->  drivers/net/ethernet/realtek/r8169.c               |   38 +--
->  drivers/pci/access.c                               |   88 +++++++
->  drivers/pci/hotplug/pciehp_acpi.c                  |    5 +-
->  drivers/pci/hotplug/pciehp_hpc.c                   |    8 +-
->  drivers/pci/hotplug/pcihp_slot.c                   |   17 +-
->  drivers/pci/iov.c                                  |    6 +-
->  drivers/pci/pci.c                                  |  265 +++++---------------
->  drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
->  drivers/pci/pcie/aer/aerdrv.c                      |   23 +-
->  drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
->  drivers/pci/pcie/aer/aerdrv_core.c                 |   47 ++--
->  drivers/pci/pcie/aspm.c                            |  110 ++++----
->  drivers/pci/pcie/pme.c                             |   23 +-
->  drivers/pci/pcie/portdrv_bus.c                     |    2 +-
->  drivers/pci/pcie/portdrv_core.c                    |   24 +-
->  drivers/pci/pcie/portdrv_pci.c                     |   15 +-
->  drivers/pci/probe.c                                |   30 +--
->  drivers/pci/quirks.c                               |    8 +-
->  drivers/pci/search.c                               |    2 +-
->  include/linux/pci.h                                |   65 ++++-
->  include/linux/pci_regs.h                           |   19 +-
->  26 files changed, 401 insertions(+), 444 deletions(-)
+> 1. remove the child device
+>      echo 1 > /sys/..../0000:01:00.0/remove
+> 2. disable link
+>      echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
+> 3. enable link
+>      echo 1 > /sys/..../0000:00.00.0/pcie_link_disable
+> 4. rescan the pci bus.
+>      echo 1 > /sys/..../0000:00:00.0/rescan_bridge
+>
+> please check link disable patch at
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-pcie-link
+>
+> | Subject: [PATCH] PCI: Add link_disable in /sysfs for pcie device
+> |
+> | Found PCIe cards from one vendor, will not respond to scan from bridge,
+> | if we change bus number setting in bridge device.
+> |
+> | Have to do link disable/enable on the pcie root port.
+> |
+> |  So try to expose link disable bit of pcie link control register. We can use
+> |  echo 1 > /sys/..../link_disable
+> |  echo 0 > /sys/..../link_disable
+> | to bring the pcie device back to respond to scan.
 
-Very nice; I like this a lot.
+Sorry for the delay, got pulled into some high prio stuff.
+
+Anyhow, I have backported your patch to 3.4 as we cannot upgrade easily and
+I cannot make it work. I do
+
+# > echo 1 > /sys/devices/pci0000:00/0000:00:00.0/pcie_link_disable
+# > echo 0 > /sys/devices/pci0000:00/0000:00:00.0/pcie_link_disable
+# > echo 1 > /sys/devices/pci0000:00/0000:00:00.0/rescan
+
+# > lspci
+00:00.0 Class 0604: Device 1957:0079 (rev 21)
+
+#> dmesg
+pcieport 0000:00:00.0: pcie_link_disable_set: lnk_ctrl = 18
+pcieport 0000:00:00.0: pcie_link_disable_set: lnk_ctrl = 8
+
+find /sys -name pcie_link_disable
+find /sys -name remove
+find /sys -name rescan
+
+shows
+/sys/devices/pci0000:00/0000:00:00.0/pcie_link_disable
+/sys/devices/pci0000:00/0000:00:00.0/remove
+/sys/bus/pci/rescan
+/sys/devices/pci0000:00/0000:00:00.0/rescan
+/sys/devices/pci0000:00/0000:00:00.0/pci_bus/0000:01/rescan
+/sys/devices/pci0000:00/pci_bus/0000:00/rescan
+
+so something is missing, but what?
+
+ Jocke
+
