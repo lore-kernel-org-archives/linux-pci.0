@@ -1,64 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:39837 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933739Ab2GDIEA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jul 2012 04:04:00 -0400
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id F1AC23EE0C1
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:03:58 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id D895145DEA6
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:03:58 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id BF6C645DEB4
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:03:58 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id ACA5F1DB803E
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:03:58 +0900 (JST)
-Received: from m001.s.css.fujitsu.com (m001.s.css.fujitsu.com [10.23.4.39])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 5FABC1DB803B
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jul 2012 17:03:58 +0900 (JST)
-Date: Wed, 4 Jul 2012 17:03:45 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: [PATCH 0/7] acpi, pci: hostbridge hotplug support
-Message-Id: <20120704170345.07cd0ad7.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:1731
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751721Ab2GRGgU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 02:36:20 -0400
+From: Liu Shengzhou-B36685 <B36685@freescale.com>
+To: Wood Scott-B07421 <B07421@freescale.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCH] PCI: use dev->irq instead of dev->pin to enable non
+ MSI/INTx interrupt
+Date: Wed, 18 Jul 2012 06:36:14 +0000
+Message-ID: <3F453DDFF675A64A89321A1F35281021770F9B@039-SN1MPN1-003.039d.mgd.msft.net>
+References: <1342492551-13766-1-git-send-email-Shengzhou.Liu@freescale.com>
+ <5005A3D2.5060504@freescale.com>
+In-Reply-To: <5005A3D2.5060504@freescale.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
- Hi all,
-
- I'd like to merge hostbridge hotplug feature.
- I looked at Yinghai's branch and found that this branch contains 
- many work and can be split into some parts. 
- I believe it is good to merge step by step.
-
- My idea is splitting into the following 4 parts:
-   1. basic hostbirdge hotplug work
-   2. acpiphp work
-   3. /sysfs interface work (logical hotplug?)
-   4. cleanup
-
- This patchset is 1st step based on the following Yinghai's branch:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-root-bus-hotplug
-
-  * [PATCH 1/7] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
-  * [PATCH 2/7] PCI: Correctly clean up pci root buses in function pci_remove_bus()
-  * [PATCH 3/7] ACPI, PCI: Use normal list for struct acpi_pci_driver
-  * [PATCH 4/7] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
-  * [PATCH 5/7] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
-  * [PATCH 6/7] ACPI, PCI: add hostbridge removal function
-  * [PATCH 7/7] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
-
--- 
-Best regards,
-Taku Izumi <izumi.taku@jp.fujitsu.com>
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IFdvb2QgU2NvdHQtQjA3NDIx
+DQo+IFNlbnQ6IFdlZG5lc2RheSwgSnVseSAxOCwgMjAxMiAxOjQyIEFNDQo+IFRvOiBMaXUgU2hl
+bmd6aG91LUIzNjY4NQ0KPiBDYzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtcGNpQHZnZXIu
+a2VybmVsLm9yZzsgbGludXhwcGMtDQo+IGRldkBsaXN0cy5vemxhYnMub3JnDQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0hdIFBDSTogdXNlIGRldi0+aXJxIGluc3RlYWQgb2YgZGV2LT5waW4gdG8gZW5h
+YmxlIG5vbg0KPiBNU0kvSU5UeCBpbnRlcnJ1cHQNCj4gDQo+IE9uIDA3LzE2LzIwMTIgMDk6MzUg
+UE0sIFNoZW5nemhvdSBMaXUgd3JvdGU6DQo+ID4gT24gc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9y
+dCBoYXMgbmVpdGhlciBNU0kvTVNJLVggbm9yIElOVHggaW50ZXJydXB0DQo+ID4gZ2VuZXJhdGVk
+IGluIFJDIG1vZGUuIEluIHRoaXMgY2FzZSwgd2UgaGF2ZSB0byB1c2Ugb3RoZXIgaW50ZXJydXB0
+KGkuZS4NCj4gPiBzeXN0ZW0gc2hhcmVkIGludGVycnVwdCkgZm9yIHBvcnQgc2VydmljZSBpcnEg
+dG8gaGF2ZSBBRVIsIEhvdC1wbHVnLA0KPiA+IGV0Yywgc2VydmljZXMgdG8gd29yay4NCj4gPg0K
+PiA+IFNpZ25lZC1vZmYtYnk6IFNoZW5nemhvdSBMaXUgPFNoZW5nemhvdS5MaXVAZnJlZXNjYWxl
+LmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2X2NvcmUuYyB8ICAg
+IDkgKysrKysrKy0tDQo+ID4gIDEgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAyIGRl
+bGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRy
+dl9jb3JlLmMNCj4gPiBiL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydl9jb3JlLmMgaW5kZXggNzU5
+MTViMy4uYTg1NTI1NCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9wY2llL3BvcnRkcnZf
+Y29yZS5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2X2NvcmUuYw0KPiA+IEBA
+IC0yMTIsOCArMjEyLDEzIEBAIHN0YXRpYyBpbnQgaW5pdF9zZXJ2aWNlX2lycXMoc3RydWN0IHBj
+aV9kZXYgKmRldiwgaW50DQo+ICppcnFzLCBpbnQgbWFzaykNCj4gPiAgCWlmICghcGNpZV9wb3J0
+X2VuYWJsZV9tc2l4KGRldiwgaXJxcywgbWFzaykpDQo+ID4gIAkJcmV0dXJuIDA7DQo+ID4NCj4g
+PiAtCS8qIFdlJ3JlIG5vdCBnb2luZyB0byB1c2UgTVNJLVgsIHNvIHRyeSBNU0kgYW5kIGZhbGwg
+YmFjayB0byBJTlR4ICovDQo+ID4gLQlpZiAoIXBjaV9lbmFibGVfbXNpKGRldikgfHwgZGV2LT5w
+aW4pDQo+ID4gKwkvKg0KPiA+ICsJICogV2UncmUgbm90IGdvaW5nIHRvIHVzZSBNU0ktWCwgc28g
+dHJ5IE1TSSBhbmQgZmFsbCBiYWNrIHRvIElOVHguDQo+ID4gKwkgKiBJZiBuZWl0aGVyIE1TSS9N
+U0ktWCBub3IgSU5UeCBhdmFpbGFibGUsIHRyeSBvdGhlciBpbnRlcnJ1cHQuIChPbg0KPiA+ICsJ
+ICogc29tZSBwbGF0Zm9ybXMsIHJvb3QgcG9ydCBkb2Vzbid0IHN1cHBvcnQgZ2VuZXJhdGluZyBN
+U0kvTVNJLVgvSU5UeA0KPiA+ICsJICogaW4gUkMgbW9kZSkNCj4gPiArCSAqLw0KPiA+ICsJaWYg
+KCFwY2lfZW5hYmxlX21zaShkZXYpIHx8IGRldi0+aXJxKQ0KPiA+ICAJCWlycSA9IGRldi0+aXJx
+Ow0KPiANCj4gV2hhdCBhYm91dCB0aGUgb3RoZXIgdXNhZ2Ugb2YgZGV2LT5waW4gYSBmZXcgbGlu
+ZXMgdXA/DQo+IA0KPiAtU2NvdHQNClllcywgaXQgc2hvdWxkIGJlIGNvbnNpc3RlbnQgd2l0aCBi
+b3R0b20sIGRvbmUgaW4gdjIuDQpUaGFua3MsDQpTaGVuZ3pob3UNCg==
 
