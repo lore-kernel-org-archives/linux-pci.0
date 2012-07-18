@@ -1,32 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:60606 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031Ab2GJSWK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 14:22:10 -0400
-Received: by vcbf11 with SMTP id f11so210620vcb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 11:22:09 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
-Date: Tue, 10 Jul 2012 11:22:09 -0700
-Message-ID: <CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-From: Yinghai Lu <yinghai@kernel.org>
-To: Joakim Tjernlund <joakim.tjernlund@transmode.se>
-Cc: linux-pci@vger.kernel.org
+In-Reply-To: <50071834.2030408@tilera.com>
+References: <201206162036.q5GKacEK017774@lab-41.internal.tilera.com>
+ <201206162037.q5GKbFg0017781@lab-41.internal.tilera.com> <CAErSpo6Sws6AeZiW=-OW-6_wUO0LuJ1FMxU=yuu-7srN0+TL3g@mail.gmail.com>
+ <5000442B.7090208@tilera.com> <20120713172508.GA18587@google.com>
+ <5006E133.5090100@tilera.com> <CAErSpo6XEwQcVFUBHAZO6R2wZvCSmG3w1G6va7FRcnrbc=nAfg@mail.gmail.com>
+ <50071834.2030408@tilera.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 18 Jul 2012 14:30:03 -0600
+Message-ID: <CAErSpo7Vegj0MnTw=cjUXNWPZOFTXVSzH1V=4+-Qs80=1at5nA@mail.gmail.com>
+Subject: Re: [PATCH 3/3] tile pci: enable IOMMU to support DMA for legacy devices
+To: Chris Metcalf <cmetcalf@tilera.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Marek Szyprowski <m.szyprowski@samsung.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 10:29 AM, Joakim Tjernlund
-<joakim.tjernlund@transmode.se> wrote:
+On Wed, Jul 18, 2012 at 2:10 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+> On 7/18/2012 12:50 PM, Bjorn Helgaas wrote:
+>> On Wed, Jul 18, 2012 at 10:15 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+>>> On 7/13/2012 1:25 PM, Bjorn Helgaas wrote:
+>>>> On Fri, Jul 13, 2012 at 11:52:11AM -0400, Chris Metcalf wrote:
+>>>>> We use the same pci_iomem_resource for different domains or host
+>>>>> bridges, but the MMIO apertures for each bridge do not overlap because
+>>>>> non-overlapping resource ranges are allocated for each domains.
+>>>> You should not use the same pci_iomem_resource for different host bridges
+>>>> because that tells the PCI core that everything in pci_iomem_resource is
+>>>> available for devices under every host bridge, which I doubt is the case.
+>>>>
+>>>> The fact that your firmware assigns non-overlapping resources is good and
+>>>> works now, but if the kernel ever needs to allocate resources itself,
+>>> Actually, we were not using any firmware. It was indeed the kernel which
+>>> allocates resources from the shared pci_iomem_resource.
+>> Wow.  I wonder how that managed to work.  Is there some information
+>> that would have helped the PCI core do the right allocations?  Or
+>> maybe the host bridges forward everything they receive to PCI,
+>> regardless of address, and any given MMIO address is only routed to
+>> one of the host bridges because of the routing info in the page
+>> tables?
 >
-> I got an PCIe device that is woken up by user space, clocks needs to configured in various ways before the
-> device enables its PCIe interface.
+> Since each host bridge contains non-overlapping ranges in its bridge config
+> header, ioremap() locates the right host bridge for the target PCI resource
+> address and programs the host bridge info into the MMIO mapping. The end
+> result is the MMIO address is routed to the right host bridge. On Tile
+> processors, different host bridges are like separate IO devices, in
+> completely separate domains.
 >
-> The device is connected to a built in root bridge on a P2010(mpc85xx) CPU.
-> To enable HP in Linux we need to apply some minor hacks.
+>> I guess in that case, the "apertures" would basically be
+>> defined by the page tables, not by the host bridges.  But that still
+>> doesn't explain how we would assign non-overlapping ranges to each
+>> domain.
+>
+> Since all domains share the single resource, allocate_resource() "allocate
+> empty slot in the resource tree", giving non-overlapping ranges to each
+> devices.
+>
+> Just to confirm, I'm assuming I'll ask Linus to pull this code out of my
+> tile tree when the merge window opens, right?  Would you like me to add
+> your name to the commit as acked or reviewed?  Thanks!
 
-can you post lspci -vvxxx -s BB:DD:F of the two devices?
+Yep, just ask Linus to pull it; I don't think there's any need to
+coordinate with my PCI tree since you're not using any interfaces we
+changed in this cycle.
 
-Yinghai
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
