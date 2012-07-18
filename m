@@ -1,104 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 0/8] PCI: Add 'pci_fixup_final' quirks into hot-plug paths
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:35:55 -0600
-Message-ID: <20120709213554.8975.60552.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:45738 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab2GREZV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 00:25:21 -0400
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Tue, 17 Jul 2012 22:25:21 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 7A4F33E40026
+	for <linux-pci@vger.kernel.org>; Wed, 18 Jul 2012 04:25:18 +0000 (WET)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6I4PI9Q230694
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 22:25:18 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6I4PGfL010384
+	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 22:25:18 -0600
+Date: Wed, 18 Jul 2012 12:25:12 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ram Pai <linuxram@us.ibm.com>,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
+	yinghai@kernel.org
+Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
+Message-ID: <20120718042512.GA2375@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
+ <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
+ <20120717050547.GD2369@ram-ThinkPad-T61>
+ <20120717052333.GE2369@ram-ThinkPad-T61>
+ <20120717053648.GA18497@shangw>
+ <20120717055715.GF2369@ram-ThinkPad-T61>
+ <1342516619.3669.5.camel@pasglop>
+ <20120717100314.GB25613@ram-ThinkPad-T61>
+ <1342521498.3669.7.camel@pasglop>
+ <CAErSpo4AS=QCRE3w-QBzuuSSEK8VeQ+PXxyp3mTyDAEvASxQcQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4AS=QCRE3w-QBzuuSSEK8VeQ+PXxyp3mTyDAEvASxQcQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI's final quirks (pci_fixup_final) are currently invoked by
-pci_apply_final_quirk() which traverses the platform's list of PCI
-devices.  The calling mechanism, and to some point the use of the device
-list, limits the quirk invocations to a single instance during boot.  As
-such, hot-plugable devices do not have their associated final quirks
-called upon hot-plug events.
+On Tue, Jul 17, 2012 at 11:14:51AM -0600, Bjorn Helgaas wrote:
+> On Tue, Jul 17, 2012 at 4:38 AM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> > On Tue, 2012-07-17 at 18:03 +0800, Ram Pai wrote:
+> >>         Lets say we passed that 'type' flag to size the minimum
+> >>         alignment constraints for that b_res.  And window_alignment(bus,
+> >>         type) of your platform  used that 'type' information to
+> >>         determine whether to use the alignment constraints of 32-bit
+> >>         window or 64-bit window.
+> >>
+> >>         However, later when the b_res is actually allocated a resource,
+> >>         the pci_assign_resource() has no idea whether to allocate 32-bit
+> >>         window resource or 64-bit window resource, because the 'type'
+> >>         information is not captured anywhere in b_res.
+> >>
+> >>         You would basically have a disconnect between what is sized and
+> >>         what is allocated. Unless offcourse you pass that 'type' to
+> >>         the b_res->flags, which is currently not the case.
+> >
+> > Right, we ideally would need the core to query the alignment once per
+> > "apertures" it tries as a candidate to allocate a given resource... but
+> > that's for later.
+> >
+> > For now we can probably live with giving out the max of the minimum
+> > alignment we support for M64 and our M32 segment size.
+> 
+> We already know the aperture we're proposing to allocate from (the
+> result of find_free_bus_resource()), don't we?  What if we passed it
+> to pcibios_window_alignment() along with the struct pci_bus *, e.g.:
+> 
+>   resource_size_t pcibios_window_alignment(struct pci_bus *bus, struct
+> resource *window)
 
-This series implements a interim solution to integrate pci_fixup_final
-quirks into the various hot-plug event paths[1].
+Hmm..'struct resource *window' may not yet know which aperature it is
+allocated from. Will it? We are still in the sizing process, the allocation will
+be done much later.
 
-The series basis is
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+RP
 
-  -v2: Re-worked PATCH 1/9 based on Bjorn's suggestion:
-       http://marc.info/?l=linux-pci&m=134074984925361&w=2
-       There is some more opportunity to clean this up even further
-       if we re-work the script that gathers initcall data to accept
-       'dev_dbg()' structured output.
-
-       Replaced PATCHes 3/9-8/9 with 3/8-7/8 (I don't know what I
-       was thinking with the original set).
-
-
-[1] I intended to come up with a single, uniform, solution that would
-satisfy both the boot path and the various hot-plug event paths with
-respect to final quirks.  From an architectural perspective, the proper
-placement for the final quirks is somewhere just prior to when drivers can
-probe and attach which would be the device_add path: pci_bus_add_devices
-or pci_bus_add device.
-
-I originally started with that approach but eventually realized that there
-are issues with moving the quirks into the device_add path with respect to
-booting.  Using the 'initcall_debug' boot command instrumentation, one
-can see that moving the final quirks into the device_add path would cause
-the quirks to be called substantially earlier during boot.  While there
-may be additional issues, two that were especially concerning were that
-the final quirks would be called *before* both 'pci_subsys_init' and
-'pcibios_assign_resources'.
-
-Calling the quirks prior to resource assignment seems fraught with
-potential issues so I started looking into the various hot-plug paths and
-quickly noticed asymmetry with respect to PCI device setup between the
-boot path and the hot-plug paths.
-
-Currently, the boot path scans the PCI devices, adds the devices, assigns
-resources, and then call the final quirks whereas the hot-plug paths scan,
-assign resources, and then add the devices which is better sequencing with
-respect to the assignment of resources and the addition of devices (i.e.
-resource assignment occurs *before* a driver can probe and attach).
-
-All of this suggests that we should change PCI device setup in the boot
-path to be more like hot-plug: scan, assign resources, (final fixups,)
-then add.  While I think that is the correct approach, and something that
-we should be addressing, it will require a lot of work.  So until that
-occurs, this series should serve as a stop-gap solution for the interim.
-
-When the boot path's PCI device setup is addressed we should end up with a
-single, uniform, device_add based solution for applying final quirks
-after:
-  o  removing 'fs_initcall_sync(pci_apply_final_quirks);',
-  o  removing the global variable 'pci_fixup_final_inited' and all
-     of its usages,
-  o  renaming, and moving, the 'pci_cache_line_size' related code
-     currently embedded in 'pci_apply_final_quirks()'.
-
-Note: I do not have a cross-compile environment so I have only tested x86.
----
-
-Myron Stowe (8):
-      PCI: Integrate 'pci_fixup_final' quirks into hot-plug paths
-      PCI: Move final fixup quirks from __init to __devinit
-      x86/PCI: Move final fixup quirks from __init to __devinit
-      MIPS/PCI: Move final fixup quirks from __init to __devinit
-      alpha/PCI: Move final fixup quirks from __init to __devinit
-      PCI: Adjust section annotations of various quirks
-      PCI: release temporary reference in __nv_msi_ht_cap_quirk()
-      PCI: Restructure 'pci_do_fixups()'
-
-
- arch/alpha/kernel/pci.c         |    2 -
- arch/mips/mti-malta/malta-pci.c |    2 -
- arch/mips/pci/ops-tx4927.c      |    2 -
- arch/mips/txx9/generic/pci.c    |    4 +
- arch/x86/kernel/quirks.c        |    2 -
- drivers/pci/bus.c               |    4 +
- drivers/pci/quirks.c            |  107 ++++++++++++++++++++++++++-------------
- 7 files changed, 81 insertions(+), 42 deletions(-)
-
--- 
