@@ -1,46 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:65081 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932264Ab2GFAOu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 20:14:50 -0400
-Received: by vbbff1 with SMTP id ff1so5815726vbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2012 17:14:49 -0700 (PDT)
+Received: from usmamail.tilera.com ([12.216.194.151]:6034 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753204Ab2GRUOF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 16:14:05 -0400
+Message-ID: <50071834.2030408@tilera.com>
+Date: Wed, 18 Jul 2012 16:10:28 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5_srroOSahe3tdeD_UQVfbqe4ixZtKfVJqc7a9-j3SQg@mail.gmail.com>
-References: <CAJkVMNoYYb3vpP1T5Sq3nmzpwLJUG7oRxUyX5=M9byQQjW1aew@mail.gmail.com>
-	<CAErSpo6PVQdu+nRJs43TJ2fCTk4papaeVLMyHZ1KbnRDCVtd0A@mail.gmail.com>
-	<CAJkVMNpZaMKm8tc+axdOBySpp68_j=EegEUOO+B=cYudsxNCgw@mail.gmail.com>
-	<CAErSpo5_srroOSahe3tdeD_UQVfbqe4ixZtKfVJqc7a9-j3SQg@mail.gmail.com>
-Date: Thu, 5 Jul 2012 17:14:49 -0700
-Message-ID: <CAE9FiQWCeBRfwA2D+GoLCv+97KbzA5c-Fv76NZz7BOyLE7HoWQ@mail.gmail.com>
-Subject: Re: 64 bit address to a pcie card
-From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: sumit chaudhary <flyingbee.linux@gmail.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>
+Subject: Re: [PATCH 3/3] tile pci: enable IOMMU to support DMA for legacy
+ devices
+References: <201206162036.q5GKacEK017774@lab-41.internal.tilera.com> <201206162037.q5GKbFg0017781@lab-41.internal.tilera.com> <CAErSpo6Sws6AeZiW=-OW-6_wUO0LuJ1FMxU=yuu-7srN0+TL3g@mail.gmail.com> <5000442B.7090208@tilera.com> <20120713172508.GA18587@google.com> <5006E133.5090100@tilera.com> <CAErSpo6XEwQcVFUBHAZO6R2wZvCSmG3w1G6va7FRcnrbc=nAfg@mail.gmail.com>
+In-Reply-To: <CAErSpo6XEwQcVFUBHAZO6R2wZvCSmG3w1G6va7FRcnrbc=nAfg@mail.gmail.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 8:16 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [Added back cc: linux-pci so others can help, too]
->
-> What exactly is the problem?  Is there a device that isn't working as expected?
->
-> The device at 07:00.0 does indeed have 64-bit BARs, and they happen to
-> be assigned addresses below 4GB:
->
-> pci 0000:07:00.0: reg 10: [mem 0xfddff000-0xfddfffff 64bit]
-> pci 0000:07:00.0: reg 18: [mem 0xbf000000-0xbfffffff 64bit pref]
-> pci 0000:07:00.0: reg 20: [mem 0x40000000-0x7fffffff 64bit pref]
->
-> This is perfectly normal.  The fact that the BAR supports a full
-> 64-bit address doesn't mean it has to be assigned space above 4GB.
-> The BIOS assigned these addresses, and Linux found no reason to change
-> them, so we just left them alone.
+On 7/18/2012 12:50 PM, Bjorn Helgaas wrote:
+> On Wed, Jul 18, 2012 at 10:15 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+>> On 7/13/2012 1:25 PM, Bjorn Helgaas wrote:
+>>> On Fri, Jul 13, 2012 at 11:52:11AM -0400, Chris Metcalf wrote:
+>>>> We use the same pci_iomem_resource for different domains or host
+>>>> bridges, but the MMIO apertures for each bridge do not overlap because
+>>>> non-overlapping resource ranges are allocated for each domains.
+>>> You should not use the same pci_iomem_resource for different host bridges
+>>> because that tells the PCI core that everything in pci_iomem_resource is
+>>> available for devices under every host bridge, which I doubt is the case.
+>>>
+>>> The fact that your firmware assigns non-overlapping resources is good and
+>>> works now, but if the kernel ever needs to allocate resources itself,
+>> Actually, we were not using any firmware. It was indeed the kernel which
+>> allocates resources from the shared pci_iomem_resource.
+> Wow.  I wonder how that managed to work.  Is there some information
+> that would have helped the PCI core do the right allocations?  Or
+> maybe the host bridges forward everything they receive to PCI,
+> regardless of address, and any given MMIO address is only routed to
+> one of the host bridges because of the routing info in the page
+> tables?
 
-The system only has 1G ram installed, and the card need 1G 64bit pref.
+Since each host bridge contains non-overlapping ranges in its bridge config
+header, ioremap() locates the right host bridge for the target PCI resource
+address and programs the host bridge info into the MMIO mapping. The end
+result is the MMIO address is routed to the right host bridge. On Tile
+processors, different host bridges are like separate IO devices, in
+completely separate domains.
 
-Maybe BIOS could push that above 4G, if the system get 4G RAM installed.
+> I guess in that case, the "apertures" would basically be
+> defined by the page tables, not by the host bridges.  But that still
+> doesn't explain how we would assign non-overlapping ranges to each
+> domain.
 
-Yinghai
+Since all domains share the single resource, allocate_resource() "allocate
+empty slot in the resource tree", giving non-overlapping ranges to each
+devices.
+
+Just to confirm, I'm assuming I'll ask Linus to pull this code out of my
+tile tree when the merge window opens, right?  Would you like me to add
+your name to the commit as acked or reviewed?  Thanks!
+
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
+
