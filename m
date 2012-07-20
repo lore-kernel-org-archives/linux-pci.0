@@ -1,53 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:39160 "EHLO canardo.mork.no"
+Received: from mx1.redhat.com ([209.132.183.28]:25627 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753263Ab2G3Q5f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2012 12:57:35 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: huang ying <huang.ying.caritas@gmail.com>
-Cc: Huang Ying <ying.huang@intel.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB hotplug failure
-References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
-	<87r4s0opck.fsf@nemi.mork.no> <87pq7ko532.fsf@nemi.mork.no>
-	<1343190864.10311.26.camel@yhuang-dev> <87k3xskvqq.fsf@nemi.mork.no>
-	<CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
-	<874now7xi8.fsf@nemi.mork.no> <1343292851.3874.12.camel@yhuang-dev>
-	<87k3xqyfm3.fsf@nemi.mork.no> <1343367309.3874.21.camel@yhuang-dev>
-	<87sjcd4lgs.fsf@nemi.mork.no> <1343618131.3874.37.camel@yhuang-dev>
-	<871ujtr7rz.fsf@nemi.mork.no>
-	<CAC=cRTO7A2MSWX9hV3sR2xpJc5+c2-0+QhsyM0gURFhLfnNW-A@mail.gmail.com>
-Date: Mon, 30 Jul 2012 18:57:23 +0200
-In-Reply-To: <CAC=cRTO7A2MSWX9hV3sR2xpJc5+c2-0+QhsyM0gURFhLfnNW-A@mail.gmail.com>
-	(huang ying's message of "Mon, 30 Jul 2012 21:31:39 +0800")
-Message-ID: <873949p4p8.fsf@nemi.mork.no>
+	id S1751624Ab2GTP4y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 20 Jul 2012 11:56:54 -0400
+Message-ID: <50097FBD.9080202@redhat.com>
+Date: Fri, 20 Jul 2012 11:56:45 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Chris Friesen <chris.friesen@genband.com>
+CC: David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: New commands to configure IOV features
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>	<5005D45D.1040302@genband.com> <20120717.141153.46613285253481776.davem@davemloft.net> <500978C7.5050004@genband.com>
+In-Reply-To: <500978C7.5050004@genband.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-huang ying <huang.ying.caritas@gmail.com> writes:
-
-> On Mon, Jul 30, 2012 at 4:08 PM, Bjørn Mork <bjorn@mork.no> wrote:
->> Huang Ying <ying.huang@intel.com> writes:
+On 07/20/2012 11:27 AM, Chris Friesen wrote:
+> On 07/17/2012 03:11 PM, David Miller wrote:
+>> From: Chris Friesen<chris.friesen@genband.com>
+>> Date: Tue, 17 Jul 2012 15:08:45 -0600
 >>
->>> Do you have time to test the following patch to fix the lspci issue?
->>>
->>> Subject: [BUGFIX] PCI/PM: Keep parent bridge active when read/write config reg
+>>> From that perspective a sysfs-based interface is ideal since it is
+>>> directly scriptable.
 >>
->>
->> Sure.  But keep this going and I will file a request for modular build
->> of the PCI subsystem :-)
+>> As is anything ethtool or netlink based, since we have 'ethtool'
+>> and 'ip' for scripting.
 >
-> Why?  All not so old PC hardware has PCI/PCIe devices.
+> I'm not picky...whatever works.
+>
+> To me the act of creating virtual functions seems generic enough (I'm aware of SR-IOV capable storage controllers, I'm sure there is other hardware as well) that ethtool/ip don't really seem like the most appropriate tools for the job.
+>
+Yes, and then there are 'other network' controllers too ... IB  which I don't know if it adheres to ethtool, since it's not an Ethernet device ... isn't that why they call it Infiniband ... ;-) )
+In the telecom space, they use NTBs and PCI as a 'network' ... I know, not common in Linux space, and VFs in that space aren't being discussed (that I've ever heard), but another example where 'network' != Ethernet, so ethtool doesn't solve PCI-level configuration/use.
 
-So that I didn't have to reboot all the time to test your new patches...
+So, VFs are a PCI defined entity, so their enable/disablement should be handled by PCI.
 
-It was a (bad) joke.  I don't really think my laptop would work all that
-well without PCI.
+Conversely, when dealing with networking attributes of a PCI-VF ethernet-nic, networking tools should be used, not PCI tools.
 
+> I would have thought it would make more sense as a generic PCI functionality, in which case I'm not aware of an existing binary tool that would be a logical choice to extend.
+>
+> Chris
 
-Bjørn
