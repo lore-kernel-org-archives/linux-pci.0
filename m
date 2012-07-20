@@ -1,53 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:34501 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754354Ab2G3UJK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2012 16:09:10 -0400
-Received: by wgbdr13 with SMTP id dr13so5174369wgb.1
-        for <linux-pci@vger.kernel.org>; Mon, 30 Jul 2012 13:09:08 -0700 (PDT)
-Date: Mon, 30 Jul 2012 22:09:05 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC v2 2/2] net: Add support for NTB virtual ethernet device
-Message-ID: <20120730200905.GA1673@minipsycho.orion>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
- <1343607994-32415-3-git-send-email-jon.mason@intel.com>
- <20120730140216.GA1550@minipsycho.orion>
- <20120730181910.GB987@jonmason-lab>
+Received: from exprod7og111.obsmtp.com ([64.18.2.175]:56277 "EHLO
+	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076Ab2GTTaP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 15:30:15 -0400
+Message-ID: <5009B186.6000806@genband.com>
+Date: Fri, 20 Jul 2012 13:29:10 -0600
+From: Chris Friesen <chris.friesen@genband.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120730181910.GB987@jonmason-lab>
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: Don Dutile <ddutile@redhat.com>,
+	David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
+	gregory.v.rose@intel.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: New commands to configure IOV features
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>		<5005D45D.1040302@genband.com>	 <20120717.141153.46613285253481776.davem@davemloft.net>	 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com> <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+In-Reply-To: <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mon, Jul 30, 2012 at 08:19:11PM CEST, jon.mason@intel.com wrote:
->On Mon, Jul 30, 2012 at 04:02:16PM +0200, Jiri Pirko wrote:
->> Mon, Jul 30, 2012 at 02:26:34AM CEST, jon.mason@intel.com wrote:
->> >+static int __devinit ntb_netdev_probe(struct pci_dev *pdev)
->> >+{
->> >+	struct net_device *ndev;
->> >+	struct ntb_netdev *dev;
->> >+	int rc;
->> >+
->> >+	ndev = alloc_etherdev(sizeof(struct ntb_netdev));
->> >+	if (!ndev)
->> >+		return -ENOMEM;
->> >+
->> >+	dev = netdev_priv(ndev);
->> >+	dev->ndev = ndev;
->> >+	dev->pdev = pdev;
->> >+	BUG_ON(!dev->pdev);
->> >+	ndev->features = NETIF_F_HIGHDMA;
->> >+
->> >+	//ndev->priv_flags |= IFF_LIVE_ADDR_CHANGE;
->> 	^^ I guess you forgot to un-comment this.
+On 07/20/2012 11:42 AM, Ben Hutchings wrote:
 >
->Oops.  An easy fix.  Anything else?
+> The ethtool API is typically used for net device operations that can be
+> largely devolved to individual drivers, and which the network stack can
+> mostly ignore (though offload features are an historical exception to
+> this).  It started with Ethernet link settings, but many operations are
+> applicable (and implemented by) other types of network device.
 
-The rest looks good to me.
+That (potentially) accounts for all network devices, but it leaves all 
+the other devices that could export virtual functions.
 
->
->Thanks,
->Jon
+Why should I need to use a different API to enable virtual functions on 
+my network device and my storage controller?  (And why should "ethtool" 
+or "ip" care that it's a virtual function?)
+
+What Don and I are suggesting is that the concept of virtual functions 
+is a PCI thing, so it should be dealt with at the PCI layer.  Regardless 
+of the type of device the export of virtual functions is conceptually 
+the same thing, so it should use the same API.
+
+Once the device exists, then domain-specific APIs would be used to 
+configure it the same way that they would configure a physical device.
+
+Chris
