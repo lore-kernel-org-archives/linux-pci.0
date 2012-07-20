@@ -1,50 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from webmail.solarflare.com ([12.187.104.25]:63207 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753039Ab2GTRma (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 13:42:30 -0400
+Message-ID: <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: Re: New commands to configure IOV features
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Don Dutile <ddutile@redhat.com>
+CC: Chris Friesen <chris.friesen@genband.com>,
+	David Miller <davem@davemloft.net>, <yuvalmin@broadcom.com>,
+	<gregory.v.rose@intel.com>, <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Date: Fri, 20 Jul 2012 18:42:26 +0100
+In-Reply-To: <50097FBD.9080202@redhat.com>
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
+		<5005D45D.1040302@genband.com>
+	 <20120717.141153.46613285253481776.davem@davemloft.net>
+	 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 9 Jul 2012 21:23:03 -0600
-Message-ID: <CAErSpo6aOq5Ph9yJ_Oa2Uo2TBdvG9MbXcZe8zrXVOU4=Dne4Xw@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI: decode disable fixes
-To: linux-pci@vger.kernel.org
-Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Robert Hancock <hancockrwd@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2012 at 12:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Since 2.6.36 (253d2e5498), we've disabled MEM & IO decoding while we size
-> BARs (except for host bridge devices).  These patches tweak this in two
-> ways:
->
-> 1) We only kept decoding disabled while sizing the low-order dword
-> of 64-bit BARs.  I think we should keep it disabled while we do the
-> high-order dword also.
->
-> 2) I think we should also disable decoding while updating 64-bit BARs,
-> e.g., when we move a device into an aperture of an upstream bridge.  I'm
-> only proposing to disable decoding for 64-bit BAR updates because 32-bit
-> ones can be done atomically, while 64-bit updates require two writes and
-> the half-written state is a potential problem.
->
-> I'm considering these changes for the 3.6 merge window, which is
-> approaching fast, so let me know if you see issues with either of these.
->
-> ---
->
-> Bjorn Helgaas (2):
->       PCI: leave MEM and IO decoding disabled during 64-bit BAR sizing, too
->       PCI: disable MEM decoding while updating 64-bit MEM BARs
->
->
->  drivers/pci/probe.c     |    6 +++---
->  drivers/pci/setup-res.c |   18 ++++++++++++++++++
->  2 files changed, 21 insertions(+), 3 deletions(-)
+On Fri, 2012-07-20 at 11:56 -0400, Don Dutile wrote:
+> On 07/20/2012 11:27 AM, Chris Friesen wrote:
+> > On 07/17/2012 03:11 PM, David Miller wrote:
+> >> From: Chris Friesen<chris.friesen@genband.com>
+> >> Date: Tue, 17 Jul 2012 15:08:45 -0600
+> >>
+> >>> From that perspective a sysfs-based interface is ideal since it is
+> >>> directly scriptable.
+> >>
+> >> As is anything ethtool or netlink based, since we have 'ethtool'
+> >> and 'ip' for scripting.
+> >
+> > I'm not picky...whatever works.
+> >
+> > To me the act of creating virtual functions seems generic enough (I'm aware of SR-IOV capable storage controllers, I'm sure there is other hardware as well) that ethtool/ip don't really seem like the most appropriate tools for the job.
+> >
+> Yes, and then there are 'other network' controllers too ... IB  which
+> I don't know if it adheres to ethtool, since it's not an Ethernet
+> device ... isn't that why they call it Infiniband ... ;-) )
+> In the telecom space, they use NTBs and PCI as a 'network' ... I know,
+> not common in Linux space, and VFs in that space aren't being
+> discussed (that I've ever heard), but another example where
+> 'network' != Ethernet, so ethtool doesn't solve PCI-level
+> configuration/use.
+[...]
 
-I applied these to my "next" branch.
+The ethtool API is typically used for net device operations that can be
+largely devolved to individual drivers, and which the network stack can
+mostly ignore (though offload features are an historical exception to
+this).  It started with Ethernet link settings, but many operations are
+applicable (and implemented by) other types of network device.
+
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
