@@ -1,39 +1,30 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Mork <bjorn@mork.no>, Huang Ying <ying.huang@intel.com>
-Subject: [RFC] PCI/PM: Add ABI document for sysfs file d3cold_allowed
-Date: Fri, 27 Jul 2012 16:07:34 +0800
-Message-Id: <1343376454-28520-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58933 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751936Ab2GTNhI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 09:37:08 -0400
+Received: by wgbdr13 with SMTP id dr13so3653232wgb.1
+        for <linux-pci@vger.kernel.org>; Fri, 20 Jul 2012 06:37:07 -0700 (PDT)
+From: Bert van Leeuwen <bert@e.co.za>
+Content-Type: text/plain; charset=us-ascii
+Subject: pci_iomap bug?
+Date: Fri, 20 Jul 2012 15:37:03 +0200
+Message-Id: <C3F57A84-3334-4A30-8D55-773F11B0B511@e.co.za>
+To: linux-pci@vger.kernel.org
+Mime-Version: 1.0 (Apple Message framework v1278)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds ABI document for the following sysfs file:
+I noticed that the pci_iomap() function in the lib/iomap.c file seems (to me) do be doing the wrong thing here:
 
-/sys/bus/pci/devices/.../d3cold_allowed
+    if (flags & IORESOURCE_CACHEABLE)
+      return ioremap(start, len);
+    return ioremap_nocache(start, len);
 
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- Documentation/ABI/testing/sysfs-bus-pci |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+since, as of 2.6.26 or so, the ioremap() function is defined as:
+static inline void __iomem *ioremap(resource_size_t offset, unsigned long size)
+{
+  return ioremap_nocache(offset, size);
+}
 
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -210,3 +210,15 @@ Users:
- 		firmware assigned instance number of the PCI
- 		device that can help in understanding the firmware
- 		intended order of the PCI device.
-+
-+What:		/sys/bus/pci/devices/.../d3cold_allowed
-+Date:		July 2012
-+Contact:	Huang Ying <ying.huang@intel.com>
-+Description:
-+		d3cold_allowed is bit to control whether the corresponding PCI
-+		device can be put into D3Cold state.  If it is cleared, the
-+		device will never be put into D3Cold state.  If it is set, the
-+		device may be put into D3Cold state if other requirement are
-+		satisfied too.  Reading this attribute will show the current
-+		value of d3cold_allowed bit.  Writting this attribute will set
-+		the value of d3cold_allowed bit.
+So it seems to me that pci_iomap() is calling ioremap_nocache() regardless of the IORESOURCE_CACHEABLE flag?
