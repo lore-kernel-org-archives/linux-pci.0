@@ -1,71 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:37221 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752447Ab2GaUZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Jul 2012 16:25:34 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Tue, 31 Jul 2012 22:31:19 +0200
-Cc: Huang Ying <ying.huang@intel.com>,
-	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org> <201207292118.42547.rjw@sisk.pl>
-In-Reply-To: <201207292118.42547.rjw@sisk.pl>
+Received: from webmail.solarflare.com ([12.187.104.25]:43776 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752134Ab2GTUBR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 16:01:17 -0400
+Message-ID: <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: Re: New commands to configure IOV features
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Chris Friesen <chris.friesen@genband.com>
+CC: Don Dutile <ddutile@redhat.com>,
+	David Miller <davem@davemloft.net>, <yuvalmin@broadcom.com>,
+	<gregory.v.rose@intel.com>, <netdev@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Date: Fri, 20 Jul 2012 21:01:13 +0100
+In-Reply-To: <5009B186.6000806@genband.com>
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
+			<5005D45D.1040302@genband.com>
+		 <20120717.141153.46613285253481776.davem@davemloft.net>
+		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
+	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	 <5009B186.6000806@genband.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201207312231.19505.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, July 29, 2012, Rafael J. Wysocki wrote:
-> On Sunday, July 29, 2012, Alan Stern wrote:
-> > On Sun, 29 Jul 2012, Rafael J. Wysocki wrote:
-> > 
-> > > The difference is, if you use _put_sync(), you need to wait the extra 10 ms
-> > > for local_pci_probe() to return (if the parent is actually suspended),
-> > > although you might not need to wait for it if you used _put(), right?
-> > 
-> > Yes, that's the difference.  But who waits for local_pci_probe() to 
-> > return?  :-)
+On Fri, 2012-07-20 at 13:29 -0600, Chris Friesen wrote:
+> On 07/20/2012 11:42 AM, Ben Hutchings wrote:
+> >
+> > The ethtool API is typically used for net device operations that can be
+> > largely devolved to individual drivers, and which the network stack can
+> > mostly ignore (though offload features are an historical exception to
+> > this).  It started with Ethernet link settings, but many operations are
+> > applicable (and implemented by) other types of network device.
 > 
-> pci_register_driver() might, but that's not a big deal.  Hot-plug might
-> as well, though.
+> That (potentially) accounts for all network devices, but it leaves all 
+> the other devices that could export virtual functions.
 > 
-> > > Which, to me, means that using _put_sync() may not be always better.
-> > > It probably doesn't matter a lot, but then the workqueue overhead shouldn't
-> > > matter a lot either.
-> > 
-> > It's that in the end, the extra overhead is pretty small.  For me
-> > there's also an issue of style: If you do a synchronous get then it
-> > looks odd not to do a synchronous put.  My feeling has always been that
-> > the async routines are for use in non-process contexts, where the sync
-> > routines can't be used.  Using them just to return a little more
-> > quickly is a foreign idea.
-> 
-> I see. :-)
-> 
-> The reason for using sync get is quite obvious: we want to be able to access
-> the device later on.  For sync put that's not so clear, though. There are cases
-> when we definitely want to do it, like the failing .probe() in which we want to
-> disable runtime PM next to the put, but usually it doesn't hurt (too much) to
-> defer it IMO.
+> Why should I need to use a different API to enable virtual functions on 
+> my network device and my storage controller?
 
-Now it occured to me that perhaps we don't need the current asynchronous
-pm_runtime_get() at all.  The usefulness of it is quite questionable, because
-either we want to resume the device immediately, for which pm_runtime_get_sync()
-should be used, or we just want to bump up the usage counter, in which cases
-pm_runtime_get_noresume() should always be sufficient.  I fail to see any
-particularly compelling use case for pm_runtime_get() doing an asynchronous
-resume at the moment, but perhaps that's just me.
+Indeed; I was merely making the point that it would be quite valid to
+use that means for setting VF network parameters for any network device
+that supports IOV.
 
-However, I receive reports of people using pm_runtime_get() where they really
-should use pm_runtime_get_sync(), so I wonder if we can simply rename
-pm_runtime_get_sync() as pm_runtime_get() and drop the asynchronous version
-altogether?
+> (And why should "ethtool" or "ip" care that it's a virtual function?)
 
-Rafael
+VFs may be assigned to a guest which is not fully trusted by the
+hypervisor or privileged domain.  (This can sometimes be true for PFs
+too, depending on the capabilities of the hypervisor and guest OS.)
+Some configuration may therefore need to be done via a trusted PF.
+
+> What Don and I are suggesting is that the concept of virtual functions 
+> is a PCI thing, so it should be dealt with at the PCI layer.  Regardless 
+> of the type of device the export of virtual functions is conceptually 
+> the same thing, so it should use the same API.
+> 
+> Once the device exists, then domain-specific APIs would be used to 
+> configure it the same way that they would configure a physical device.
+
+To an extent, but not entirely.
+
+Currently, the assigned MAC address and (optional) VLAN tag for each
+networking VF are configured via the PF net device (though this is done
+though the rtnetlink API rather than ethtool).
+
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
