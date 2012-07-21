@@ -1,78 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15714 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:36748 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750821Ab2GYEe1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 Jul 2012 00:34:27 -0400
-Message-ID: <1343190864.10311.26.camel@yhuang-dev>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
- hotplug failure
-From: Huang Ying <ying.huang@intel.com>
-To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Date: Wed, 25 Jul 2012 12:34:24 +0800
-In-Reply-To: <87pq7ko532.fsf@nemi.mork.no>
-References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
-	 <87r4s0opck.fsf@nemi.mork.no> <87pq7ko532.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752178Ab2GUAwh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 20:52:37 -0400
+From: "Rose, Gregory V" <gregory.v.rose@intel.com>
+To: Chris Friesen <chris.friesen@genband.com>,
+	Ben Hutchings <bhutchings@solarflare.com>
+CC: Don Dutile <ddutile@redhat.com>,
+	David Miller <davem@davemloft.net>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: New commands to configure IOV features
+Date: Sat, 21 Jul 2012 00:52:36 +0000
+Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A070C7D6F47@ORSMSX106.amr.corp.intel.com>
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
+			<5005D45D.1040302@genband.com>
+		 <20120717.141153.46613285253481776.davem@davemloft.net>
+		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
+	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	 <5009B186.6000806@genband.com>
+ <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+ <5009ECDF.4090305@genband.com>
+In-Reply-To: <5009ECDF.4090305@genband.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Bjorn,
-
-On Wed, 2012-07-25 at 06:08 +0200, Bjørn Mork wrote:
-> Enabling autosuspend for USB causes hotplug failure in the current
-> linux-next. Newly plugged devices are not detected at all until the
-> port/controller is manually powered on by writing "on" to power/control.
-> Testing is pretty simple:
+> -----Original Message-----
+> From: Chris Friesen [mailto:chris.friesen@genband.com]
+> Sent: Friday, July 20, 2012 4:42 PM
+> To: Ben Hutchings
+> Cc: Don Dutile; David Miller; yuvalmin@broadcom.com; Rose, Gregory V;
+> netdev@vger.kernel.org; linux-pci@vger.kernel.org
+> Subject: Re: New commands to configure IOV features
 > 
->   1) for f in /sys/bus/usb/devices/*/power/control; do echo auto > $f; done
-
-Have you done:
-
-for f in /sys/bus/pci/devices/*/power/confol; do echo auto > $f; done
-
-?
-
-If not, the pci device will not be suspended at all.
-
->   2) wait for the controllers to suspend
->   3) plugin a new USB device
-
-After plugin the new USB device, is there anything in dmesg?
-
+> On 07/20/2012 02:01 PM, Ben Hutchings wrote:
+> > On Fri, 2012-07-20 at 13:29 -0600, Chris Friesen wrote:
 > 
-> I've bisected the regression down to this commit:
+> >> Once the device exists, then domain-specific APIs would be used to
+> >> configure it the same way that they would configure a physical device.
+> >
+> > To an extent, but not entirely.
+> >
+> > Currently, the assigned MAC address and (optional) VLAN tag for each
+> > networking VF are configured via the PF net device (though this is
+> > done though the rtnetlink API rather than ethtool).
 > 
+> I actually have a use-case where the guest needs to be able to modify the
+> MAC addresses of network devices that are actually VFs.
 > 
-> commit 448bd857d48e69b33ef323739dc6d8ca20d4cda7
-> Author: Huang Ying <ying.huang@intel.com>
-> Date:   Sat Jun 23 10:23:51 2012 +0800
+> The guest is bonding the network devices together, so the bonding driver
+> in the guest expects to be able to set all the slaves to the same MAC
+> address.
 > 
->     PCI/PM: add PCIe runtime D3cold support
->     
-> 
-> Looks like this somehow powers down my USB host controllers in such a
-> way that they are unable to detect connections to their ports.  The
-> system is a pretty standard 4 year old intel based laptop.  Full lspci
-> listing is attached.
->
-> Please let me know if you need further information.  And please fix this
-> before rc1.  It effectively makes USB non-functional if autosuspend is
-> enabled.
+> As I read the ixgbe driver, this should be possible as long as the host
+> hasn't explicitly set the MAC address of the VF.  Is that correct?
 
-Can you provide the output of the following command lines?
+That is correct.
 
-grep . /sys/bus/pci/devices/*/power/*
-grep . /sys/bus/usb/devices/*/power/*
-lsusb
-
-After the controllers suspended.
-
-Best Reards,
-Huang Ying
-
+- Greg
+Intel Corp.
+LAN Access Division
 
