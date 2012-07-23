@@ -1,69 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38141 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752546Ab2GYUC4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 16:02:56 -0400
-Date: Wed, 25 Jul 2012 16:02:55 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	=?utf-8?q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>,
-	Huang Ying <ying.huang@intel.com>,
-	Zheng Yan <zheng.z.yan@intel.com>, <linux-pci@vger.kernel.org>,
-	<linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Fix messages printed by acpi_pci_set_power_state()
-In-Reply-To: <201207252151.14069.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1207251600500.2008-100000@iolanthe.rowland.org>
+Received: from mga01.intel.com ([192.55.52.88]:52589 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754422Ab2GWSkx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jul 2012 14:40:53 -0400
+From: "Rose, Gregory V" <gregory.v.rose@intel.com>
+To: Stephen Hemminger <shemminger@vyatta.com>,
+	Chris Friesen <chris.friesen@genband.com>
+CC: Don Dutile <ddutile@redhat.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Miller <davem@davemloft.net>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: New commands to configure IOV features
+Date: Mon, 23 Jul 2012 18:40:51 +0000
+Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>
+	<5005D45D.1040302@genband.com>
+	<20120717.141153.46613285253481776.davem@davemloft.net>
+	<500978C7.5050004@genband.com>	<50097FBD.9080202@redhat.com>
+	<1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	<5009B186.6000806@genband.com>
+	<1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+	<5009ECDF.4090305@genband.com>	<500D59BF.9040006@redhat.com>
+	<500D6932.8090306@genband.com>
+ <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+In-Reply-To: <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 25 Jul 2012, Rafael J. Wysocki wrote:
+> -----Original Message-----
+> From: Stephen Hemminger [mailto:shemminger@vyatta.com]
+> Sent: Monday, July 23, 2012 11:36 AM
+> To: Chris Friesen
+> Cc: Don Dutile; Ben Hutchings; David Miller; yuvalmin@broadcom.com; Rose,
+> Gregory V; netdev@vger.kernel.org; linux-pci@vger.kernel.org
+> Subject: Re: New commands to configure IOV features
+> 
+> On Mon, 23 Jul 2012 09:09:38 -0600
+> Chris Friesen <chris.friesen@genband.com> wrote:
+> 
+> > On 07/23/2012 08:03 AM, Don Dutile wrote:
+> > > On 07/20/2012 07:42 PM, Chris Friesen wrote:
+> > >>
+> > >> I actually have a use-case where the guest needs to be able to
+> > >> modify the MAC addresses of network devices that are actually VFs.
+> > >>
+> > >> The guest is bonding the network devices together, so the bonding
+> > >> driver in the guest expects to be able to set all the slaves to the
+> > >> same MAC address.
+> > >>
+> > >> As I read the ixgbe driver, this should be possible as long as the
+> > >> host hasn't explicitly set the MAC address of the VF. Is that
+> correct?
+> > >>
+> > >> Chris
+> > >
+> > > Interesting tug of war: hypervisors will want to set the macaddrs
+> > > for security reasons,
+> > >                         some guests may want to set macaddr for
+> > > (valid?) config reasons.
+> > >
+> >
+> > In our case we have control over both guest an host anyways, so it's
+> > less of a security issue.  In the general case though I could see it
+> > being an interesting problem.
+> >
+> > Back to the original discussion though--has anyone got any ideas about
+> > the best way to trigger runtime creation of VFs?  I don't know what
+> > the binary APIs looks like, but via sysfs I could see something like
+> >
+> > echo number_of_new_vfs_to_create >
+> > /sys/bus/pci/devices/<address>/create_vfs
+> >
+> > Something else that occurred to me--is there buy-in from driver
+> > maintainers?  I know the Intel ethernet drivers (what I'm most
+> > familiar
+> > with) would need to be substantially modified to support on-the-fly
+> > addition of new vfs.  Currently they assume that the number of vfs is
+> > known at module init time.
+> >
+> 
+> Why couldn't rtnl_link_ops be used for this. It is already the preferred
+> interface to create vlan's, bond devices, and other virtual devices?
+> The one issue is that do the created VF's exist in kernel as devices or
+> only visible to guest?
 
-> 
-> If a PCI device is put into D3_cold by acpi_bus_set_power(),
-> the message printed by acpi_pci_set_power_state() says that its
-> power state has been changed to D4, which doesn't make sense.
-> In turn, if the device is put into D3_hot, the message says just
-> "D3" without specifying which variant of D3 it is.
-> 
-> Fix that by using an array of state names corresponding to the
-> PCI device power states instead of building the state name from
-> the numeric value corresponding to the given state directly.
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
->  drivers/pci/pci-acpi.c |   14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
-> 
-> Index: linux/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux.orig/drivers/pci/pci-acpi.c
-> +++ linux/drivers/pci/pci-acpi.c
-> @@ -265,9 +265,17 @@ static int acpi_pci_set_power_state(stru
->  		error = acpi_bus_set_power(handle, state_conv[state]);
->  	}
->  
-> -	if (!error)
-> -		dev_printk(KERN_INFO, &dev->dev,
-> -				"power state changed by ACPI to D%d\n", state);
-> +	if (!error) {
-> +		static const char *state_name[] = {
-> +			[PCI_D0] = "D0",
-> +			[PCI_D1] = "D1",
-> +			[PCI_D2] = "D2",
-> +			[PCI_D3hot] = "D3hot",
-> +			[PCI_D3cold] = "D3cold"
-> +		};
-> +		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
-> +			 state_name[state]);
-> +	}
+I would say that rtnl_link_ops are network oriented and not appropriate for something like a storage controller or graphics device, which are two other common SR-IOV capable devices.
 
-How about using the pci_power_name macro defined in
-include/linux/pci.h instead?
+I think it should be oriented toward the PCIe interface and subsystems in the kernel.
 
-Alan Stern
+- Greg
+
 
