@@ -1,100 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:55179 "EHLO ogre.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:28029 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756214Ab2GEVwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 Jul 2012 17:52:12 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI / PM: Restore the original behavior of pci_set_power_state()
-Date: Thu, 5 Jul 2012 23:57:44 +0200
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Linux PM mailing list <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	"linux-pci" <linux-pci@vger.kernel.org>,
-	Huang Ying <ying.huang@intel.com>
-References: <201206281201.02414.rjw@sisk.pl> <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
-In-Reply-To: <CAErSpo7yM3p7+pGuvhBMMsffGTVKF77=MCgfiN1OYr2sB259JA@mail.gmail.com>
+	id S1752769Ab2GWODz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jul 2012 10:03:55 -0400
+Message-ID: <500D59BF.9040006@redhat.com>
+Date: Mon, 23 Jul 2012 10:03:43 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201207052357.44494.rjw@sisk.pl>
+To: Chris Friesen <chris.friesen@genband.com>
+CC: Ben Hutchings <bhutchings@solarflare.com>,
+	David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
+	gregory.v.rose@intel.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: New commands to configure IOV features
+References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>			<5005D45D.1040302@genband.com>		 <20120717.141153.46613285253481776.davem@davemloft.net>		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>	 <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com> <5009ECDF.4090305@genband.com>
+In-Reply-To: <5009ECDF.4090305@genband.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, July 05, 2012, Bjorn Helgaas wrote:
-> On Thu, Jun 28, 2012 at 4:01 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> >
-> > Commit cc2893b6 (PCI: Ensure we re-enable devices on resume)
-> > addressed the problem with USB not being powered after resume on
-> > recent Lenovo machines, but it did that in a suboptimal way.
-> > Namely, it should have changed the relevant code paths only,
-> > which are pci_pm_resume_noirq() and pci_pm_restore_noirq() supposed
-> > to restore the device's power and standard configuration registers
-> > after system resume from suspend or hibernation.  Instead, however,
-> > it modified pci_set_power_state() which is executed in several
-> > other situations too.  That resulted in some undesirable effects,
-> > like attempting to change a device's power state in the same way
-> > multiple times in a row (up to as many as 4 times in a row in the
-> > snd_hda_intel driver).
-> >
-> > Fix the bug addressed by commit cc2893b6 in an alternative way,
-> > by forcibly powering up all devices in pci_pm_default_resume_early(),
-> > which is called by pci_pm_resume_noirq() and pci_pm_restore_noirq()
-> > to restore the device's power and standard configuration registers,
-> > and modifying pci_pm_runtime_resume() to avoid the forcible power-up
-> > if not necessary.  Then, revert the changes made by commit cc2893b6
-> > to make the confusion introduced by it go away.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > ---
-> >  drivers/pci/pci-driver.c |   14 ++++++++------
-> >  drivers/pci/pci.c        |   19 ++++++++++++++++++-
-> >  drivers/pci/pci.h        |    1 +
-> >  3 files changed, 27 insertions(+), 7 deletions(-)
-> >
-> > Index: linux/drivers/pci/pci.c
-> > ===================================================================
-> > --- linux.orig/drivers/pci/pci.c
-> > +++ linux/drivers/pci/pci.c
-> > @@ -662,6 +662,19 @@ void pci_update_current_state(struct pci
-> >  }
-> >
-> >  /**
-> > + * pci_power_up - Put the given device into D0 forcibly
-> > + * @dev: PCI device to power up
-> > + */
-> > +void pci_power_up(struct pci_dev *dev)
-> > +{
-> > +       if (platform_pci_power_manageable(dev))
-> > +               platform_pci_set_power_state(dev, PCI_D0);
-> > +
-> > +       pci_raw_set_power_state(dev, PCI_D0);
-> > +       pci_update_current_state(dev, PCI_D0);
-> > +}
-> > +
-> > +/**
-> >   * pci_platform_power_transition - Use platform to change device power state
-> >   * @dev: PCI device to handle.
-> >   * @state: State to put the device into.
-> > @@ -707,7 +720,7 @@ static void __pci_start_power_transition
-> >   */
-> >  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
-> >  {
-> > -       return state >= PCI_D0 ?
-> > +       return state > PCI_D0 ?
-> >                         pci_platform_power_transition(dev, state) : -EINVAL;
-> 
-> This hunk conflicted with Huang's D3_COLD patches.  I fixed it up; can
-> you check and make sure I did it correctly?
-> 
-> I pushed the resolution to here:
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git on the
-> pci/rafael-pci_set_power_state-rebase branch.
+On 07/20/2012 07:42 PM, Chris Friesen wrote:
+> On 07/20/2012 02:01 PM, Ben Hutchings wrote:
+>> On Fri, 2012-07-20 at 13:29 -0600, Chris Friesen wrote:
+>
+>>> Once the device exists, then domain-specific APIs would be used to
+>>> configure it the same way that they would configure a physical device.
+>>
+>> To an extent, but not entirely.
+>>
+>> Currently, the assigned MAC address and (optional) VLAN tag for each
+>> networking VF are configured via the PF net device (though this is done
+>> though the rtnetlink API rather than ethtool).
+>
+> I actually have a use-case where the guest needs to be able to modify the MAC addresses of network devices that are actually VFs.
+>
+> The guest is bonding the network devices together, so the bonding driver in the guest expects to be able to set all the slaves to the same MAC address.
+>
+> As I read the ixgbe driver, this should be possible as long as the host hasn't explicitly set the MAC address of the VF. Is that correct?
+>
+> Chris
 
-Yes, it looks good.  The point is to make __pci_complete_power_transition()
-return the error code for PCI_DO too.
+Interesting tug of war: hypervisors will want to set the macaddrs for security reasons,
+                         some guests may want to set macaddr for (valid?) config reasons.
 
-Thanks,
-Rafael
