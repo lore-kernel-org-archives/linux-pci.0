@@ -1,63 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:55514 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014Ab2GJWWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 18:22:40 -0400
-Received: by vbbff1 with SMTP id ff1so363612vbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 15:22:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7UmgG636R7Nz142g4WfFMw9Gi-kEWYfNmbbyWNfx55=A@mail.gmail.com>
-References: <OF15EE971A.73D0AED3-ONC1257A37.005D93BD-C1257A37.00601BF9@transmode.se>
-	<CAE9FiQV3-x64CbkPGVDNLzDkiuteQyvxpU56U_paVbyXavifmQ@mail.gmail.com>
-	<OF9D2FB397.4951E6E4-ONC1257A37.0076FA3B-C1257A37.0077405A@transmode.se>
-	<CAE9FiQXMaPBc7o0KhSBAoAHRP=+1aqemvUBZjJd3bANXoFtqyA@mail.gmail.com>
-	<CAErSpo7UmgG636R7Nz142g4WfFMw9Gi-kEWYfNmbbyWNfx55=A@mail.gmail.com>
-Date: Tue, 10 Jul 2012 15:22:39 -0700
-Message-ID: <CAE9FiQU1ijhZq3hBs0p13qxFqpTocdbRRZ6XX9j8Yjk7LiQzsQ@mail.gmail.com>
-Subject: Re: PICe hotplug problems
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joakim Tjernlund <joakim.tjernlund@transmode.se>,
+Received: from mail.vyatta.com ([76.74.103.46]:35373 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754136Ab2GWSgf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 23 Jul 2012 14:36:35 -0400
+Date: Mon, 23 Jul 2012 11:36:07 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Chris Friesen <chris.friesen@genband.com>
+Cc: Don Dutile <ddutile@redhat.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
+	gregory.v.rose@intel.com, netdev@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: New commands to configure IOV features
+Message-ID: <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+In-Reply-To: <500D6932.8090306@genband.com>
+References: <5003DC9B.8000706@broadcom.com>
+	<5005BD00.4090106@redhat.com>
+	<5005D45D.1040302@genband.com>
+	<20120717.141153.46613285253481776.davem@davemloft.net>
+	<500978C7.5050004@genband.com>
+	<50097FBD.9080202@redhat.com>
+	<1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	<5009B186.6000806@genband.com>
+	<1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+	<5009ECDF.4090305@genband.com>
+	<500D59BF.9040006@redhat.com>
+	<500D6932.8090306@genband.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 3:20 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jul 10, 2012 at 4:09 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, Jul 10, 2012 at 2:42 PM, Joakim Tjernlund
->> <joakim.tjernlund@transmode.se> wrote:
->>> yhlu.kernel@gmail.com wrote on 2012/07/10 20:22:09:
->>>
->>>>
->>>> On Tue, Jul 10, 2012 at 10:29 AM, Joakim Tjernlund
->>>> <joakim.tjernlund@transmode.se> wrote:
->>>> >
->>>> > I got an PCIe device that is woken up by user space, clocks needs to configured in various ways before the
->>>> > device enables its PCIe interface.
->>>> >
->>>> > The device is connected to a built in root bridge on a P2010(mpc85xx) CPU.
->>>> > To enable HP in Linux we need to apply some minor hacks.
->>>>
->>>> can you post lspci -vvxxx -s BB:DD:F of the two devices?
->>>
->>> Not really, this is an embedded device with limited SW. I got
->>> busybox and its lspci but that is very limited:
->>> # > ./busybox lspci -mk
->>> 00:00.0 "Class 0604" "1957" "0079" "0000" "0000" "pcieport"
->>> 01:00.0 "Class 0200" "14e4" "b540" "14e4" "b540"
->>>
->>> Does that tell you anything?
->>
->> No. Can you compile lspci util as static and run it ?
->
-> You might also be able to get this info as console output by booting
-> with "pci=earlydump".
+On Mon, 23 Jul 2012 09:09:38 -0600
+Chris Friesen <chris.friesen@genband.com> wrote:
 
-that is only for x86.
+> On 07/23/2012 08:03 AM, Don Dutile wrote:
+> > On 07/20/2012 07:42 PM, Chris Friesen wrote:
+> >>
+> >> I actually have a use-case where the guest needs to be able to modify 
+> >> the MAC addresses of network devices that are actually VFs.
+> >>
+> >> The guest is bonding the network devices together, so the bonding 
+> >> driver in the guest expects to be able to set all the slaves to the 
+> >> same MAC address.
+> >>
+> >> As I read the ixgbe driver, this should be possible as long as the 
+> >> host hasn't explicitly set the MAC address of the VF. Is that correct?
+> >>
+> >> Chris
+> >
+> > Interesting tug of war: hypervisors will want to set the macaddrs for 
+> > security reasons,
+> >                         some guests may want to set macaddr for 
+> > (valid?) config reasons.
+> >
+> 
+> In our case we have control over both guest an host anyways, so it's 
+> less of a security issue.  In the general case though I could see it 
+> being an interesting problem.
+> 
+> Back to the original discussion though--has anyone got any ideas about 
+> the best way to trigger runtime creation of VFs?  I don't know what the 
+> binary APIs looks like, but via sysfs I could see something like
+> 
+> echo number_of_new_vfs_to_create >  
+> /sys/bus/pci/devices/<address>/create_vfs
+> 
+> Something else that occurred to me--is there buy-in from driver 
+> maintainers?  I know the Intel ethernet drivers (what I'm most familiar 
+> with) would need to be substantially modified to support on-the-fly 
+> addition of new vfs.  Currently they assume that the number of vfs is 
+> known at module init time.
+> 
 
-and his setup is with P2010(mpc85xx) CPU.
+Why couldn't rtnl_link_ops be used for this. It is already the preferred
+interface to create vlan's, bond devices, and other virtual devices?
+The one issue is that do the created VF's exist in kernel as devices
+or only visible to guest?
 
-Thanks
-
-Yinghai
