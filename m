@@ -1,44 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:56079 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981Ab2GYDdy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2012 23:33:54 -0400
-Received: by lbbgm6 with SMTP id gm6so319889lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2012 20:33:52 -0700 (PDT)
-MIME-Version: 1.0
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 24 Jul 2012 21:33:32 -0600
-Message-ID: <CAErSpo5Ea_Rd2QSUXT13riDgHrkMGiN43+QiFTZYepHi-rg0Vw@mail.gmail.com>
-Subject: PCI mini-summit
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 06/32] PCI/hotplug: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:18 +0800
+Message-Id: <1343147504-25891-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We're planning a PCI mini-summit on Tuesday, August 28, in San Diego.
-If you'd like an invitation, let me know.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-We haven't drafted an agenda yet, but based on ideas we've heard so
-far, we'll likely talk about some of the following topics:
+Use PCIe capabilities access functions to simplify cpihp_slot.c.
 
-      Host bridge hotplug
-      PCI hotplug core rework
-      VFIO v2 for KVM
-      Dynamic resource assignment
-      SRIOV
-          Management: driver (module parms) vs core (sysfs?)
-          Dynamic/static: changing number of VFs requires driver cooperation
-      Candidates for unification/moving from arch code to the core:
-          res->parent usage
-          Claiming resources
-          Unassigned BAR detection
-          ECAM (a.k.a. MMCONFIG)
-          Domain (a.k.a. PCI segment) support
-          MPS config
-          MPS safety with respect to hotplug
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/pcihp_slot.c |   12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-I've also heard that PCI-on-ARM may be of interest, so if you want to
-talk about that and possibly add some topics, let me know.
+diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+index 8c05a18..b7bd558 100644
+--- a/drivers/pci/hotplug/pcihp_slot.c
++++ b/drivers/pci/hotplug/pcihp_slot.c
+@@ -102,9 +102,7 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	if (!hpp)
+ 		return;
+ 
+-	/* Find PCI Express capability */
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_is_pcie(dev))
+ 		return;
+ 
+ 	if (hpp->revision > 1) {
+@@ -114,16 +112,16 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	}
+ 
+ 	/* Initialize Device Control Register */
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+ 	reg16 = (reg16 & hpp->pci_exp_devctl_and) | hpp->pci_exp_devctl_or;
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
++	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
+ 
+ 	/* Initialize Link Control Register */
+ 	if (dev->subordinate) {
+-		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &reg16);
++		pci_pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &reg16);
+ 		reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
+ 			| hpp->pci_exp_lnkctl_or;
+-		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, reg16);
++		pci_pcie_capability_write_word(dev, PCI_EXP_LNKCTL, reg16);
+ 	}
+ 
+ 	/* Find Advanced Error Reporting Enhanced Capability */
+-- 
+1.7.9.5
 
-Bjorn
