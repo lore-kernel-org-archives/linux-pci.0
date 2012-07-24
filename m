@@ -7,159 +7,56 @@ Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH 11/14] AER/PCI: use PCIe cap access functions to simplify implementation
-Date: Tue, 10 Jul 2012 23:54:12 +0800
-Message-Id: <1341935655-5381-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-References: <1341935655-5381-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-References: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
+Subject: [RFC PATCH v2 29/32] PCI/radeon: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:41:14 +0800
+Message-Id: <1343148077-25941-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
+References: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 From: Jiang Liu <jiang.liu@huawei.com>
 
-Use PCIe cap access functions to simplify PCI AER implementation.
+Use PCIe capabilities access functions to simplify radeon driver's
+implementation.
 
 Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/pcie/aer/aerdrv.c      |   16 ++++++-------
- drivers/pci/pcie/aer/aerdrv_core.c |   45 ++++++++++++++----------------------
- 2 files changed, 24 insertions(+), 37 deletions(-)
+ drivers/gpu/drm/radeon/evergreen.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index f7c6245..27ec1bb 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -122,19 +122,18 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
- static void aer_enable_rootport(struct aer_rpc *rpc)
+diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
+index 01550d0..d7a1f95 100644
+--- a/drivers/gpu/drm/radeon/evergreen.c
++++ b/drivers/gpu/drm/radeon/evergreen.c
+@@ -77,13 +77,12 @@ void evergreen_tiling_fields(unsigned tiling_flags, unsigned *bankw,
+ void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
  {
- 	struct pci_dev *pdev = rpc->rpd->port;
--	int pos, aer_pos;
-+	int aer_pos;
- 	u16 reg16;
- 	u32 reg32;
+ 	u16 ctl, v;
+-	int cap, err;
++	int err;
  
--	pos = pci_pcie_cap(pdev);
- 	/* Clear PCIe Capability's Device Status */
--	pci_read_config_word(pdev, pos+PCI_EXP_DEVSTA, &reg16);
--	pci_write_config_word(pdev, pos+PCI_EXP_DEVSTA, reg16);
-+	pci_pcie_cap_read_word(pdev, PCI_EXP_DEVSTA, &reg16);
-+	pci_pcie_cap_write_word(pdev, PCI_EXP_DEVSTA, reg16);
+-	cap = pci_pcie_cap(rdev->pdev);
+-	if (!cap)
++	if (!pci_is_pcie(rdev->pdev))
+ 		return;
  
- 	/* Disable system error generation in response to error messages */
--	pci_read_config_word(pdev, pos + PCI_EXP_RTCTL, &reg16);
-+	pci_pcie_cap_read_word(pdev, PCI_EXP_RTCTL, &reg16);
- 	reg16 &= ~(SYSTEM_ERROR_INTR_ON_MESG_MASK);
--	pci_write_config_word(pdev, pos + PCI_EXP_RTCTL, reg16);
-+	pci_pcie_cap_write_word(pdev, PCI_EXP_RTCTL, reg16);
+-	err = pci_read_config_word(rdev->pdev, cap + PCI_EXP_DEVCTL, &ctl);
++	err = pci_pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
+ 	if (err)
+ 		return;
  
- 	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
- 	/* Clear error status */
-@@ -396,9 +395,8 @@ static void aer_error_resume(struct pci_dev *dev)
- 	u16 reg16;
- 
- 	/* Clean up Root device status */
--	pos = pci_pcie_cap(dev);
--	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &reg16);
--	pci_write_config_word(dev, pos + PCI_EXP_DEVSTA, reg16);
-+	pci_pcie_cap_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-+	pci_pcie_cap_write_word(dev, PCI_EXP_DEVSTA, reg16);
- 
- 	/* Clean AER Root Error Status */
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index f551534..5671fce 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -35,25 +35,20 @@ module_param(nosourceid, bool, 0);
- int pci_enable_pcie_error_reporting(struct pci_dev *dev)
- {
- 	u16 reg16 = 0;
--	int pos;
- 
- 	if (pcie_aer_get_firmware_first(dev))
- 		return -EIO;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
--	if (!pos)
--		return -EIO;
--
--	pos = pci_pcie_cap(dev);
--	if (!pos)
-+	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
- 		return -EIO;
- 
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
--	reg16 |= (PCI_EXP_DEVCTL_CERE |
--		PCI_EXP_DEVCTL_NFERE |
--		PCI_EXP_DEVCTL_FERE |
--		PCI_EXP_DEVCTL_URRE);
--	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
-+	if (!pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &reg16)) {
-+		reg16 |= (PCI_EXP_DEVCTL_CERE |
-+			PCI_EXP_DEVCTL_NFERE |
-+			PCI_EXP_DEVCTL_FERE |
-+			PCI_EXP_DEVCTL_URRE);
-+		pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, reg16);
-+	}
- 
- 	return 0;
+@@ -95,7 +94,7 @@ void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
+ 	if ((v == 0) || (v == 6) || (v == 7)) {
+ 		ctl &= ~PCI_EXP_DEVCTL_READRQ;
+ 		ctl |= (2 << 12);
+-		pci_write_config_word(rdev->pdev, cap + PCI_EXP_DEVCTL, ctl);
++		pci_pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
+ 	}
  }
-@@ -62,21 +57,17 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
- int pci_disable_pcie_error_reporting(struct pci_dev *dev)
- {
- 	u16 reg16 = 0;
--	int pos;
  
- 	if (pcie_aer_get_firmware_first(dev))
- 		return -EIO;
- 
--	pos = pci_pcie_cap(dev);
--	if (!pos)
--		return -EIO;
--
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
--	reg16 &= ~(PCI_EXP_DEVCTL_CERE |
--		PCI_EXP_DEVCTL_NFERE |
--		PCI_EXP_DEVCTL_FERE |
--		PCI_EXP_DEVCTL_URRE);
--	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
-+	if (!pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &reg16)) {
-+		reg16 &= ~(PCI_EXP_DEVCTL_CERE |
-+			PCI_EXP_DEVCTL_NFERE |
-+			PCI_EXP_DEVCTL_FERE |
-+			PCI_EXP_DEVCTL_URRE);
-+		pci_pcie_cap_write_word(dev, PCI_EXP_DEVCTL, reg16);
-+	}
- 
- 	return 0;
- }
-@@ -151,18 +142,16 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
- 	 */
- 	if (atomic_read(&dev->enable_cnt) == 0)
- 		return false;
--	pos = pci_pcie_cap(dev);
--	if (!pos)
--		return false;
- 
- 	/* Check if AER is enabled */
--	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
-+	pci_pcie_cap_read_word(dev, PCI_EXP_DEVCTL, &reg16);
- 	if (!(reg16 & (
- 		PCI_EXP_DEVCTL_CERE |
- 		PCI_EXP_DEVCTL_NFERE |
- 		PCI_EXP_DEVCTL_FERE |
- 		PCI_EXP_DEVCTL_URRE)))
- 		return false;
-+
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	if (!pos)
- 		return false;
 -- 
 1.7.9.5
 
