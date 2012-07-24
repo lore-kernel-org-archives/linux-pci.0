@@ -1,477 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10157 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786Ab2G3A0r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Jul 2012 20:26:47 -0400
-From: Jon Mason <jon.mason@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dave Jiang <dave.jiang@intel.com>
-Subject: [RFC v2 2/2] net: Add support for NTB virtual ethernet device
-Date: Sun, 29 Jul 2012 17:26:34 -0700
-Message-Id: <1343607994-32415-3-git-send-email-jon.mason@intel.com>
-In-Reply-To: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 14/32] PCI/tile: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:26 +0800
+Message-Id: <1343147504-25891-15-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A virtual ethernet device that uses the NTB transport API to send/receive data.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Jon Mason <jon.mason@intel.com>
+Use PCIe capabilities access functions to simplify PCIe tile implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- drivers/net/Kconfig      |    4 +
- drivers/net/Makefile     |    1 +
- drivers/net/ntb_netdev.c |  417 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 422 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/ntb_netdev.c
+ arch/tile/kernel/pci.c |   17 +++++------------
+ 1 file changed, 5 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index 0c2bd80..9bf8a71 100644
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -178,6 +178,10 @@ config NETPOLL_TRAP
- config NET_POLL_CONTROLLER
- 	def_bool NETPOLL
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index 0fdd99d..bf296cf 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -246,16 +246,13 @@ static void __devinit fixup_read_and_payload_sizes(void)
  
-+config NTB_NETDEV
-+	tristate "Virtual Ethernet over NTB"
-+	depends on NTB
-+
- config RIONET
- 	tristate "RapidIO Ethernet over messaging driver support"
- 	depends on RAPIDIO
-diff --git a/drivers/net/Makefile b/drivers/net/Makefile
-index 3d375ca..9890148 100644
---- a/drivers/net/Makefile
-+++ b/drivers/net/Makefile
-@@ -69,3 +69,4 @@ obj-$(CONFIG_USB_IPHETH)        += usb/
- obj-$(CONFIG_USB_CDC_PHONET)   += usb/
+ 	/* Scan for the smallest maximum payload size. */
+ 	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
+-		int pcie_caps_offset;
+ 		u32 devcap;
+ 		int max_payload;
  
- obj-$(CONFIG_HYPERV_NET) += hyperv/
-+obj-$(CONFIG_NTB_NETDEV) += ntb_netdev.o
-diff --git a/drivers/net/ntb_netdev.c b/drivers/net/ntb_netdev.c
-new file mode 100644
-index 0000000..cb19a0b
---- /dev/null
-+++ b/drivers/net/ntb_netdev.c
-@@ -0,0 +1,417 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ *   redistributing this file, you may do so under either license.
-+ *
-+ *   GPL LICENSE SUMMARY
-+ *
-+ *   Copyright(c) 2012 Intel Corporation. All rights reserved.
-+ *
-+ *   This program is free software; you can redistribute it and/or modify
-+ *   it under the terms of version 2 of the GNU General Public License as
-+ *   published by the Free Software Foundation.
-+ *
-+ *   This program is distributed in the hope that it will be useful, but
-+ *   WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *   General Public License for more details.
-+ *
-+ *   You should have received a copy of the GNU General Public License
-+ *   along with this program; if not, write to the Free Software
-+ *   Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *   The full GNU General Public License is included in this distribution
-+ *   in the file called LICENSE.GPL.
-+ *
-+ *   BSD LICENSE
-+ *
-+ *   Copyright(c) 2012 Intel Corporation. All rights reserved.
-+ *
-+ *   Redistribution and use in source and binary forms, with or without
-+ *   modification, are permitted provided that the following conditions
-+ *   are met:
-+ *
-+ *     * Redistributions of source code must retain the above copyright
-+ *       notice, this list of conditions and the following disclaimer.
-+ *     * Redistributions in binary form must reproduce the above copy
-+ *       notice, this list of conditions and the following disclaimer in
-+ *       the documentation and/or other materials provided with the
-+ *       distribution.
-+ *     * Neither the name of Intel Corporation nor the names of its
-+ *       contributors may be used to endorse or promote products derived
-+ *       from this software without specific prior written permission.
-+ *
-+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ * Intel PCIe NTB Network Linux driver
-+ *
-+ * Contact Information:
-+ * Jon Mason <jon.mason@intel.com>
-+ */
-+#include <linux/etherdevice.h>
-+#include <linux/ethtool.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/ntb.h>
-+
-+#define NTB_NETDEV_VER	"0.5"
-+
-+MODULE_DESCRIPTION(KBUILD_MODNAME);
-+MODULE_VERSION(NTB_NETDEV_VER);
-+MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_AUTHOR("Intel Corporation");
-+
-+struct ntb_netdev {
-+	struct list_head list;
-+	struct pci_dev *pdev;
-+	struct net_device *ndev;
-+	struct ntb_transport_qp *qp;
-+};
-+
-+#define	NTB_TX_TIMEOUT_MS	1000
-+#define	NTB_RXQ_SIZE		100
-+
-+static LIST_HEAD(dev_list);
-+
-+static void ntb_netdev_event_handler(void *data, int status)
-+{
-+	struct net_device *ndev = data;
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+
-+	netdev_dbg(ndev, "Event %x, Link %x\n", status,
-+		   ntb_transport_link_query(dev->qp));
-+
-+	/* Currently, only link status event is supported */
-+	if (status)
-+		netif_carrier_on(ndev);
-+	else
-+		netif_carrier_off(ndev);
-+}
-+
-+static void ntb_netdev_rx_handler(void *data, struct ntb_transport_qp *qp)
-+{
-+	struct net_device *ndev = data;
-+	struct sk_buff *skb;
-+	int len, rc;
-+
-+	while ((skb = ntb_transport_rx_dequeue(qp, &len))) {
-+		netdev_dbg(ndev, "%s: %d byte payload received\n", __func__,
-+			   len);
-+
-+		skb_put(skb, len);
-+		skb->protocol = eth_type_trans(skb, ndev);
-+		skb->ip_summed = CHECKSUM_NONE;
-+
-+		if (netif_rx(skb) == NET_RX_DROP) {
-+			ndev->stats.rx_errors++;
-+			ndev->stats.rx_dropped++;
-+		} else {
-+			ndev->stats.rx_packets++;
-+			ndev->stats.rx_bytes += len;
-+		}
-+
-+		skb = netdev_alloc_skb(ndev, ndev->mtu + ETH_HLEN);
-+		if (!skb) {
-+			ndev->stats.rx_errors++;
-+			ndev->stats.rx_frame_errors++;
-+			break;
-+		}
-+
-+		rc = ntb_transport_rx_enqueue(qp, skb, skb->data,
-+					      ndev->mtu + ETH_HLEN);
-+		if (rc) {
-+			ndev->stats.rx_errors++;
-+			ndev->stats.rx_fifo_errors++;
-+			break;
-+		}
-+	}
-+}
-+
-+static void ntb_netdev_tx_handler(void *data, struct ntb_transport_qp *qp)
-+{
-+	struct net_device *ndev = data;
-+	struct sk_buff *skb;
-+	int len;
-+
-+	while ((skb = ntb_transport_tx_dequeue(qp, &len))) {
-+		ndev->stats.tx_packets++;
-+		ndev->stats.tx_bytes += skb->len;
-+		dev_kfree_skb(skb);
-+	}
-+
-+	if (ndev && netif_queue_stopped(ndev))
-+		netif_wake_queue(ndev);
-+}
-+
-+static netdev_tx_t ntb_netdev_start_xmit(struct sk_buff *skb,
-+					 struct net_device *ndev)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	int rc;
-+
-+	netdev_dbg(ndev, "ntb_transport_tx_enqueue\n");
-+
-+	rc = ntb_transport_tx_enqueue(dev->qp, skb, skb->data, skb->len);
-+	if (rc)
-+		goto err;
-+
-+	return NETDEV_TX_OK;
-+
-+err:
-+	ndev->stats.tx_dropped++;
-+	ndev->stats.tx_errors++;
-+	netif_stop_queue(ndev);
-+	return NETDEV_TX_BUSY;
-+}
-+
-+static int ntb_netdev_open(struct net_device *ndev)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	struct sk_buff *skb;
-+	int rc, i, len;
-+
-+	/* Add some empty rx bufs */
-+	for (i = 0; i < NTB_RXQ_SIZE; i++) {
-+		skb = netdev_alloc_skb(ndev, ndev->mtu + ETH_HLEN);
-+		if (!skb) {
-+			rc = -ENOMEM;
-+			goto err;
-+		}
-+
-+		rc = ntb_transport_rx_enqueue(dev->qp, skb, skb->data,
-+					      ndev->mtu + ETH_HLEN);
-+		if (rc == -EINVAL)
-+			goto err;
-+	}
-+
-+	netif_carrier_off(ndev);
-+	ntb_transport_link_up(dev->qp);
-+
-+	return 0;
-+
-+err:
-+	while ((skb = ntb_transport_rx_remove(dev->qp, &len)))
-+		dev_kfree_skb(skb);
-+	return rc;
-+}
-+
-+static int ntb_netdev_close(struct net_device *ndev)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	struct sk_buff *skb;
-+	int len;
-+
-+	ntb_transport_link_down(dev->qp);
-+
-+	while ((skb = ntb_transport_rx_remove(dev->qp, &len)))
-+		dev_kfree_skb(skb);
-+
-+	return 0;
-+}
-+
-+static int ntb_netdev_change_mtu(struct net_device *ndev, int new_mtu)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	struct sk_buff *skb;
-+	int len, rc;
-+
-+	if (new_mtu > ntb_transport_max_size(dev->qp) - ETH_HLEN)
-+		return -EINVAL;
-+
-+	if (!netif_running(ndev)) {
-+		ndev->mtu = new_mtu;
-+		return 0;
-+	}
-+
-+	/* Bring down the link and dispose of posted rx entries */
-+	ntb_transport_link_down(dev->qp);
-+
-+	if (ndev->mtu < new_mtu) {
-+		int i;
-+
-+		for (i = 0; (skb = ntb_transport_rx_remove(dev->qp, &len)); i++)
-+			dev_kfree_skb(skb);
-+
-+		for (; i; i--) {
-+			skb = netdev_alloc_skb(ndev, new_mtu + ETH_HLEN);
-+			if (!skb) {
-+				rc = -ENOMEM;
-+				goto err;
-+			}
-+
-+			rc = ntb_transport_rx_enqueue(dev->qp, skb, skb->data,
-+						      new_mtu + ETH_HLEN);
-+			if (rc) {
-+				dev_kfree_skb(skb);
-+				goto err;
-+			}
-+		}
-+	}
-+
-+	ndev->mtu = new_mtu;
-+
-+	ntb_transport_link_up(dev->qp);
-+
-+	return 0;
-+
-+err:
-+	ntb_transport_link_down(dev->qp);
-+
-+	while ((skb = ntb_transport_rx_remove(dev->qp, &len)))
-+		dev_kfree_skb(skb);
-+
-+	netdev_err(ndev, "Error changing MTU, device inoperable\n");
-+	return rc;
-+}
-+
-+static void ntb_netdev_tx_timeout(struct net_device *ndev)
-+{
-+	if (netif_running(ndev))
-+		netif_wake_queue(ndev);
-+}
-+
-+static const struct net_device_ops ntb_netdev_ops = {
-+	.ndo_open = ntb_netdev_open,
-+	.ndo_stop = ntb_netdev_close,
-+	.ndo_start_xmit = ntb_netdev_start_xmit,
-+	.ndo_change_mtu = ntb_netdev_change_mtu,
-+	.ndo_tx_timeout = ntb_netdev_tx_timeout,
-+	.ndo_set_mac_address = eth_mac_addr,
-+};
-+
-+static void ntb_get_drvinfo(struct net_device *ndev,
-+			    struct ethtool_drvinfo *info)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+
-+	strlcpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
-+	strlcpy(info->version, NTB_NETDEV_VER, sizeof(info->version));
-+	strlcpy(info->bus_info, pci_name(dev->pdev), sizeof(info->bus_info));
-+}
-+
-+static int ntb_get_settings(struct net_device *dev, struct ethtool_cmd *cmd)
-+{
-+	cmd->supported = SUPPORTED_Backplane;
-+	cmd->advertising = ADVERTISED_Backplane;
-+	cmd->speed = SPEED_UNKNOWN;
-+	ethtool_cmd_speed_set(cmd, SPEED_UNKNOWN);
-+	cmd->duplex = DUPLEX_FULL;
-+	cmd->port = PORT_OTHER;
-+	cmd->phy_address = 0;
-+	cmd->transceiver = XCVR_DUMMY1;
-+	cmd->autoneg = AUTONEG_ENABLE;
-+	cmd->maxtxpkt = 0;
-+	cmd->maxrxpkt = 0;
-+
-+	return 0;
-+}
-+
-+static const struct ethtool_ops ntb_ethtool_ops = {
-+	.get_drvinfo = ntb_get_drvinfo,
-+	.get_link = ethtool_op_get_link,
-+	.get_settings = ntb_get_settings,
-+};
-+
-+static const struct ntb_queue_handlers ntb_netdev_handlers = {
-+	.tx_handler = ntb_netdev_tx_handler,
-+	.rx_handler = ntb_netdev_rx_handler,
-+	.event_handler = ntb_netdev_event_handler,
-+};
-+
-+static int __devinit ntb_netdev_probe(struct pci_dev *pdev)
-+{
-+	struct net_device *ndev;
-+	struct ntb_netdev *dev;
-+	int rc;
-+
-+	ndev = alloc_etherdev(sizeof(struct ntb_netdev));
-+	if (!ndev)
-+		return -ENOMEM;
-+
-+	dev = netdev_priv(ndev);
-+	dev->ndev = ndev;
-+	dev->pdev = pdev;
-+	BUG_ON(!dev->pdev);
-+	ndev->features = NETIF_F_HIGHDMA;
-+
-+	//ndev->priv_flags |= IFF_LIVE_ADDR_CHANGE;
-+
-+	ndev->hw_features = ndev->features;
-+	ndev->watchdog_timeo = msecs_to_jiffies(NTB_TX_TIMEOUT_MS);
-+
-+	random_ether_addr(ndev->perm_addr);
-+	memcpy(ndev->dev_addr, ndev->perm_addr, ndev->addr_len);
-+
-+	ndev->netdev_ops = &ntb_netdev_ops;
-+	SET_ETHTOOL_OPS(ndev, &ntb_ethtool_ops);
-+
-+	dev->qp = ntb_transport_create_queue(ndev, pdev, &ntb_netdev_handlers);
-+	if (!dev->qp) {
-+		rc = -EIO;
-+		goto err;
-+	}
-+
-+	ndev->mtu = ntb_transport_max_size(dev->qp) - ETH_HLEN;
-+
-+	rc = register_netdev(ndev);
-+	if (rc)
-+		goto err1;
-+
-+	list_add(&dev->list, &dev_list);
-+	pr_info("%s: %s created\n", KBUILD_MODNAME, ndev->name);
-+	return 0;
-+
-+err1:
-+	ntb_transport_free_queue(dev->qp);
-+err:
-+	free_netdev(ndev);
-+	return rc;
-+}
-+
-+static void __exit ntb_netdev_remove(struct pci_dev *pdev)
-+{
-+	struct net_device *ndev;
-+	struct ntb_netdev *dev;
-+
-+	list_for_each_entry(dev, &dev_list, list) {
-+		if (dev->pdev == pdev)
-+			break;
-+	}
-+	if (dev == NULL)
-+		return;
-+
-+	ndev = dev->ndev;
-+
-+	unregister_netdev(ndev);
-+	ntb_transport_free_queue(dev->qp);
-+	free_netdev(ndev);
-+}
-+
-+static struct ntb_client ntb_netdev_client = {
-+	.name = KBUILD_MODNAME,
-+	.probe = ntb_netdev_probe,
-+	.remove = ntb_netdev_remove,
-+};
-+
-+static int __init ntb_netdev_init_module(void)
-+{
-+	return register_ntb_client(&ntb_netdev_client);
-+}
-+
-+module_init(ntb_netdev_init_module);
-+
-+static void __exit ntb_netdev_exit_module(void)
-+{
-+	unregister_ntb_client(&ntb_netdev_client);
-+	pr_info("%s: Driver removed\n", KBUILD_MODNAME);
-+}
-+
-+module_exit(ntb_netdev_exit_module);
+-		pcie_caps_offset = pci_find_capability(dev, PCI_CAP_ID_EXP);
+-		if (pcie_caps_offset == 0)
++		if (!pci_is_pcie(dev))
+ 			continue;
+ 
+-		pci_read_config_dword(dev, pcie_caps_offset + PCI_EXP_DEVCAP,
+-				      &devcap);
++		pci_pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &devcap);
+ 		max_payload = devcap & PCI_EXP_DEVCAP_PAYLOAD;
+ 		if (max_payload < smallest_max_payload)
+ 			smallest_max_payload = max_payload;
+@@ -264,19 +261,15 @@ static void __devinit fixup_read_and_payload_sizes(void)
+ 	/* Now, set the max_payload_size for all devices to that value. */
+ 	new_values = (max_read_size << 12) | (smallest_max_payload << 5);
+ 	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
+-		int pcie_caps_offset;
+ 		u16 devctl;
+ 
+-		pcie_caps_offset = pci_find_capability(dev, PCI_CAP_ID_EXP);
+-		if (pcie_caps_offset == 0)
++		if (!pci_is_pcie(dev))
+ 			continue;
+ 
+-		pci_read_config_word(dev, pcie_caps_offset + PCI_EXP_DEVCTL,
+-				     &devctl);
++		pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &devctl);
+ 		devctl &= ~(PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ);
+ 		devctl |= new_values;
+-		pci_write_config_word(dev, pcie_caps_offset + PCI_EXP_DEVCTL,
+-				      devctl);
++		pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, devctl);
+ 	}
+ }
+ 
 -- 
-1.7.5.4
+1.7.9.5
 
