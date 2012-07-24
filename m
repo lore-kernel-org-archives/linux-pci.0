@@ -1,54 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42707 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754661Ab2GaW2h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 18:28:37 -0400
-Received: by yhmm54 with SMTP id m54so6672693yhm.19
-        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2012 15:28:36 -0700 (PDT)
-Date: Tue, 31 Jul 2012 15:28:32 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC v2 2/2] net: Add support for NTB virtual ethernet device
-Message-ID: <20120731222832.GC19134@kroah.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
- <1343607994-32415-3-git-send-email-jon.mason@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343607994-32415-3-git-send-email-jon.mason@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 31/32] PCI/et131x: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:41:16 +0800
+Message-Id: <1343148077-25941-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
+References: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 29, 2012 at 05:26:34PM -0700, Jon Mason wrote:
-> A virtual ethernet device that uses the NTB transport API to send/receive data.
-> 
-> Signed-off-by: Jon Mason <jon.mason@intel.com>
-> ---
->  drivers/net/Kconfig      |    4 +
->  drivers/net/Makefile     |    1 +
->  drivers/net/ntb_netdev.c |  417 ++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 422 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/net/ntb_netdev.c
-> 
-> diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-> index 0c2bd80..9bf8a71 100644
-> --- a/drivers/net/Kconfig
-> +++ b/drivers/net/Kconfig
-> @@ -178,6 +178,10 @@ config NETPOLL_TRAP
->  config NET_POLL_CONTROLLER
->  	def_bool NETPOLL
->  
-> +config NTB_NETDEV
-> +	tristate "Virtual Ethernet over NTB"
-> +	depends on NTB
+From: Jiang Liu <jiang.liu@huawei.com>
 
-How will this module be auto-loaded by a distro?  You need some way to
-detect this device on the "bus" right?  What is that method?  And why
-isn't it hooked up to the "traditional" method the kernel uses to
-determine this?
+Use PCIe capabilities access functions to simplify et131x driver's
+implementation.
 
-Don't expect distros to just always load this module, that's not going
-to work, sorry.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/staging/et131x/et131x.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-greg k-h
+diff --git a/drivers/staging/et131x/et131x.c b/drivers/staging/et131x/et131x.c
+index 5b11c5e..7410148 100644
+--- a/drivers/staging/et131x/et131x.c
++++ b/drivers/staging/et131x/et131x.c
+@@ -4001,7 +4001,6 @@ static void et131x_hwaddr_init(struct et131x_adapter *adapter)
+ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 						struct pci_dev *pdev)
+ {
+-	int cap = pci_pcie_cap(pdev);
+ 	u16 max_payload;
+ 	u16 ctl;
+ 	int i, rc;
+@@ -4010,7 +4009,7 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 	if (rc < 0)
+ 		goto out;
+ 
+-	if (!cap) {
++	if (!pci_is_pcie(pdev)) {
+ 		dev_err(&pdev->dev, "Missing PCIe capabilities\n");
+ 		goto err_out;
+ 	}
+@@ -4018,7 +4017,7 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 	/* Let's set up the PORT LOGIC Register.  First we need to know what
+ 	 * the max_payload_size is
+ 	 */
+-	if (pci_read_config_word(pdev, cap + PCI_EXP_DEVCAP, &max_payload)) {
++	if (pci_pcie_capability_read_word(pdev, PCI_EXP_DEVCAP, &max_payload)) {
+ 		dev_err(&pdev->dev,
+ 		    "Could not read PCI config space for Max Payload Size\n");
+ 		goto err_out;
+@@ -4055,7 +4054,7 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 	}
+ 
+ 	/* Change the max read size to 2k */
+-	if (pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl)) {
++	if (pci_pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &ctl)) {
+ 		dev_err(&pdev->dev,
+ 			"Could not read PCI config space for Max read size\n");
+ 		goto err_out;
+@@ -4063,7 +4062,7 @@ static int et131x_pci_init(struct et131x_adapter *adapter,
+ 
+ 	ctl = (ctl & ~PCI_EXP_DEVCTL_READRQ) | (0x04 << 12);
+ 
+-	if (pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl)) {
++	if (pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL, ctl)) {
+ 		dev_err(&pdev->dev,
+ 		      "Could not write PCI config space for Max read size\n");
+ 		goto err_out;
+-- 
+1.7.9.5
+
