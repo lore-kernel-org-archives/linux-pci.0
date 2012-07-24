@@ -1,73 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62053 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751876Ab2GJTYi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 10 Jul 2012 15:24:38 -0400
-Message-ID: <4FFC8174.8050208@redhat.com>
-Date: Tue, 10 Jul 2012 15:24:36 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Alex <solomatnikov@gmail.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: how to do mmap for cacheable PCIe BAR on x86
-References: <CAD-6qVV0jqqKo729MtWpSxsvfo6r3mB68o+dnZv9MHtvYJq6Fg@mail.gmail.com>
-In-Reply-To: <CAD-6qVV0jqqKo729MtWpSxsvfo6r3mB68o+dnZv9MHtvYJq6Fg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 10/32] PCI/AER: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:22 +0800
+Message-Id: <1343147504-25891-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/10/2012 01:12 PM, Alex wrote:
-> I am trying to write a driver with custom mmap() function for PCIe
-> BAR, with the goal to make this BAR cacheable in the processor cache.
-> I am aware this is not the best way to achieve highest bandwidth and
-> that the order of writes is unpredictable (neither are the issues in
-> this case).
->
-> The processor is Sandy Bridge i7, PCIe device is Altera Stratix IV dev. board.
->
-> First, I tried to do it on CentOS 5 (2.6.18). I changed the MTRR
-> settings to make sure the BAR is not within uncacheable MTRR and used
-> io_remap_pfn_range() with _PAGE_PCD and _PAGE_PWT bits cleared. Reads
-> worked as expected: reads returned correct values and second read to
-> the same address does not necessarily cause the read to go to PCIe
-> (read counter was checked in FPGA). However, the writes caused the
-> system to freeze and then reboot.
->
-> Second, I tried to do it on CentOS 6 (2.6.32), which has PAT support.
-> The result is the same: reads work correctly, writes cause system
-> freeze and reboot. Interestingly, non-temporal/write-combining full
-> cache line writes (AVX/SSE) work as expected, i.e. they always go to
-> FPGA and FPGA observes full cache line writes, reads return correct
-> values afterwards. However, simple 64-bit writes still cause system
-> freeze/reboot.
->
-> The message on the screen: Machine Check Exception: 5 Bank 5: be2000000003110a.
->
-> Third, I also tried to ioremap_cache() and then iowrite32() inside the
-> driver code. The result is the same.
->
->
-> I also tried to do the same thing on 2-socket Sandy Bridge (Romley):
-> reads and non-temporal write behavior is the same, simple writes do
-> not cause MCE/crash but have no effect on system state, i.e. value in
-> memory does not change.
->
-> Also, I tried the same code on older 2-socket Nehalem system: simple
-> writes also cause MCE, although the codes are different.
->
->
-> I think it is a hardware issue but I would appreciate if somebody can
-> share any ideas about what's going on.
-> Alex
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Once moving the registers into cacheable address space, your
-device may be getting a full cache block write with varying byte masks
-set.  Does your FPGA handle such a large write packet with varying byte
-masks?  or does it cause a PCIe error that gets translated into the
-Machine-checks your seeing under various write cases?
-i.e., even an iowrite32() will write an entire cache block with
-       a large number of byte mask bits not set.
+From: Jiang Liu <jiang.liu@huawei.com>
+
+Use PCIe capabilities access functions to simplify PCIe AER implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c      |   16 +++++++---------
+ drivers/pci/pcie/aer/aerdrv_core.c |   25 ++++++++++---------------
+ 2 files changed, 17 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index f7c6245..cadee93 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -122,19 +122,18 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
+ static void aer_enable_rootport(struct aer_rpc *rpc)
+ {
+ 	struct pci_dev *pdev = rpc->rpd->port;
+-	int pos, aer_pos;
++	int aer_pos;
+ 	u16 reg16;
+ 	u32 reg32;
+ 
+-	pos = pci_pcie_cap(pdev);
+ 	/* Clear PCIe Capability's Device Status */
+-	pci_read_config_word(pdev, pos+PCI_EXP_DEVSTA, &reg16);
+-	pci_write_config_word(pdev, pos+PCI_EXP_DEVSTA, reg16);
++	pci_pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &reg16);
++	pci_pcie_capability_write_word(pdev, PCI_EXP_DEVSTA, reg16);
+ 
+ 	/* Disable system error generation in response to error messages */
+-	pci_read_config_word(pdev, pos + PCI_EXP_RTCTL, &reg16);
++	pci_pcie_capability_read_word(pdev, PCI_EXP_RTCTL, &reg16);
+ 	reg16 &= ~(SYSTEM_ERROR_INTR_ON_MESG_MASK);
+-	pci_write_config_word(pdev, pos + PCI_EXP_RTCTL, reg16);
++	pci_pcie_capability_write_word(pdev, PCI_EXP_RTCTL, reg16);
+ 
+ 	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+ 	/* Clear error status */
+@@ -396,9 +395,8 @@ static void aer_error_resume(struct pci_dev *dev)
+ 	u16 reg16;
+ 
+ 	/* Clean up Root device status */
+-	pos = pci_pcie_cap(dev);
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &reg16);
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVSTA, reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
++	pci_pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+ 
+ 	/* Clean AER Root Error Status */
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index f551534..a37e277 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -35,25 +35,22 @@ module_param(nosourceid, bool, 0);
+ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ {
+ 	u16 reg16 = 0;
+-	int pos;
+ 
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-	if (!pos)
++	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
+ 		return -EIO;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_is_pcie(dev))
+ 		return -EIO;
+ 
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+ 	reg16 |= (PCI_EXP_DEVCTL_CERE |
+ 		PCI_EXP_DEVCTL_NFERE |
+ 		PCI_EXP_DEVCTL_FERE |
+ 		PCI_EXP_DEVCTL_URRE);
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
++	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
+ 
+ 	return 0;
+ }
+@@ -62,21 +59,19 @@ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+ {
+ 	u16 reg16 = 0;
+-	int pos;
+ 
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_is_pcie(dev))
+ 		return -EIO;
+ 
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+ 	reg16 &= ~(PCI_EXP_DEVCTL_CERE |
+ 		PCI_EXP_DEVCTL_NFERE |
+ 		PCI_EXP_DEVCTL_FERE |
+ 		PCI_EXP_DEVCTL_URRE);
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
++	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
+ 
+ 	return 0;
+ }
+@@ -151,18 +146,18 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	 */
+ 	if (atomic_read(&dev->enable_cnt) == 0)
+ 		return false;
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_is_pcie(dev))
+ 		return false;
+ 
+ 	/* Check if AER is enabled */
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+ 	if (!(reg16 & (
+ 		PCI_EXP_DEVCTL_CERE |
+ 		PCI_EXP_DEVCTL_NFERE |
+ 		PCI_EXP_DEVCTL_FERE |
+ 		PCI_EXP_DEVCTL_URRE)))
+ 		return false;
++
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	if (!pos)
+ 		return false;
+-- 
+1.7.9.5
 
