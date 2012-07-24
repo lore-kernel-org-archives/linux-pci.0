@@ -2,75 +2,44 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Don Dutile <ddutile@redhat.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 01/32] PCI: add pcie_flags_reg into struct pci_dev to cache PCIe capabilities register
-Date: Wed, 25 Jul 2012 00:31:13 +0800
-Message-Id: <1343147504-25891-2-git-send-email-jiang.liu@huawei.com>
+Subject: [RFC PATCH v2 23/32] PCI/atl1c: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:35 +0800
+Message-Id: <1343147504-25891-24-git-send-email-jiang.liu@huawei.com>
 In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
 References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+From: Jiang Liu <jiang.liu@huawei.com>
 
-From: Yijing Wang <wangyijing@huawei.com>
+Use PCIe capabilities access functions to simplify atl1c driver's
+implementation.
 
-Since PCI Express Capabilities Register is read only, cache its value
-into struct pci_dev to avoid repeatedly calling pci_read_config_*().
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- drivers/pci/probe.c |    1 +
- include/linux/pci.h |   10 ++++++++++
- 2 files changed, 11 insertions(+)
+ drivers/net/ethernet/atheros/atl1c/atl1c_main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6c143b4..6fd58df 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -929,6 +929,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
- 	pdev->is_pcie = 1;
- 	pdev->pcie_cap = pos;
- 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
-+	pdev->pcie_flags_reg = reg16;
- 	pdev->pcie_type = (reg16 & PCI_EXP_FLAGS_TYPE) >> 4;
- 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
- 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..95662b2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -258,6 +258,7 @@ struct pci_dev {
- 	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;  		/* which interrupt pin this device uses */
-+	u16		pcie_flags_reg;	/* cached PCI-E Capabilities Register */
- 
- 	struct pci_driver *driver;	/* which driver has allocated this device */
- 	u64		dma_mask;	/* Mask of the bits of bus address this
-@@ -1650,6 +1651,15 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
- 	return !!pci_pcie_cap(dev);
- }
- 
-+/**
-+ * pci_pcie_type - get the PCIe device/port type
-+ * @dev: PCI device
-+ */
-+static inline int pci_pcie_type(const struct pci_dev *dev)
-+{
-+	return (dev->pcie_flags_reg & PCI_EXP_FLAGS_TYPE) >> 4;
-+}
-+
- void pci_request_acs(void);
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
- bool pci_acs_path_enabled(struct pci_dev *start,
+diff --git a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
+index 9cc1570..1b7e1ff 100644
+--- a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
++++ b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
+@@ -149,7 +149,7 @@ static void atl1c_reset_pcie(struct atl1c_hw *hw, u32 flag)
+ 	data &= ~(PCI_ERR_UNC_DLP | PCI_ERR_UNC_FCP);
+ 	pci_write_config_dword(pdev, pos + PCI_ERR_UNCOR_SEVER, data);
+ 	/* clear error status */
+-	pci_write_config_word(pdev, pci_pcie_cap(pdev) + PCI_EXP_DEVSTA,
++	pci_pcie_capability_write_word(pdev, PCI_EXP_DEVSTA,
+ 			PCI_EXP_DEVSTA_NFED |
+ 			PCI_EXP_DEVSTA_FED |
+ 			PCI_EXP_DEVSTA_CED |
 -- 
 1.7.9.5
 
