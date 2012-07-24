@@ -1,55 +1,125 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 2/8] PCI: release temporary reference in
-	__nv_msi_ht_cap_quirk()
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:36:08 -0600
-Message-ID: <20120709213608.8975.90022.stgit@amt.stowe>
-In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
-References: <20120709213554.8975.60552.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 22/32] PCI/chelsio: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:34 +0800
+Message-Id: <1343147504-25891-23-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__nv_msi_ht_cap_quirk() acquires a temporary reference via
-'pci_get_bus_and_slot()' that is never released.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-This patch releases the temporary reference.
+Use PCIe capabilities access functions to simplify chelsio ethernet drivers'
+implementation.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
+ drivers/net/ethernet/chelsio/cxgb3/t3_hw.c      |   19 +++++++------------
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   10 +++-------
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |    7 +++----
+ 3 files changed, 13 insertions(+), 23 deletions(-)
 
- drivers/pci/quirks.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0f5ca86..8b2d553 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2541,15 +2541,18 @@ static void __devinit __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
- 			else
- 				nv_ht_enable_msi_mapping(dev);
- 		}
--		return;
-+		goto out;
+diff --git a/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c b/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
+index 44ac2f4..8fadbb3 100644
+--- a/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
+@@ -3289,22 +3289,18 @@ static void config_pcie(struct adapter *adap)
+ 	unsigned int log2_width, pldsize;
+ 	unsigned int fst_trn_rx, fst_trn_tx, acklat, rpllmt;
+ 
+-	pci_read_config_word(adap->pdev,
+-			     adap->pdev->pcie_cap + PCI_EXP_DEVCTL,
+-			     &val);
++	pci_pcie_capability_read_word(adap->pdev, PCI_EXP_DEVCTL, &val);
+ 	pldsize = (val & PCI_EXP_DEVCTL_PAYLOAD) >> 5;
+ 
+ 	pci_read_config_word(adap->pdev, 0x2, &devid);
+ 	if (devid == 0x37) {
+-		pci_write_config_word(adap->pdev,
+-				      adap->pdev->pcie_cap + PCI_EXP_DEVCTL,
++		pci_pcie_capability_write_word(adap->pdev, PCI_EXP_DEVCTL,
+ 				      val & ~PCI_EXP_DEVCTL_READRQ &
+ 				      ~PCI_EXP_DEVCTL_PAYLOAD);
+ 		pldsize = 0;
  	}
  
- 	/* HT MSI is not enabled */
- 	if (found == 1)
--		return;
-+		goto out;
+-	pci_read_config_word(adap->pdev, adap->pdev->pcie_cap + PCI_EXP_LNKCTL,
+-			     &val);
++	pci_pcie_capability_read_word(adap->pdev, PCI_EXP_LNKCTL, &val);
  
- 	/* Host bridge is not to HT, disable HT MSI mapping on this device */
- 	ht_disable_msi_mapping(dev);
-+
-+out:
-+	pci_dev_put(host_bridge);
+ 	fst_trn_tx = G_NUMFSTTRNSEQ(t3_read_reg(adap, A_PCIE_PEX_CTRL0));
+ 	fst_trn_rx = adap->params.rev == 0 ? fst_trn_tx :
+@@ -3425,15 +3421,14 @@ out_err:
+ static void get_pci_mode(struct adapter *adapter, struct pci_params *p)
+ {
+ 	static unsigned short speed_map[] = { 33, 66, 100, 133 };
+-	u32 pci_mode, pcie_cap;
++	u32 pci_mode;
+ 
+-	pcie_cap = pci_pcie_cap(adapter->pdev);
+-	if (pcie_cap) {
++	if (pci_is_pcie(adapter->pdev)) {
+ 		u16 val;
+ 
+ 		p->variant = PCI_VARIANT_PCIE;
+-		pci_read_config_word(adapter->pdev, pcie_cap + PCI_EXP_LNKSTA,
+-					&val);
++		pci_pcie_capability_read_word(adapter->pdev, PCI_EXP_LNKSTA,
++					      &val);
+ 		p->width = (val >> 4) & 0x3f;
+ 		return;
+ 	}
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index e1f96fb..074d3ea 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -3695,14 +3695,10 @@ static void __devinit print_port_info(const struct net_device *dev)
+ static void __devinit enable_pcie_relaxed_ordering(struct pci_dev *dev)
+ {
+ 	u16 v;
+-	int pos;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (pos > 0) {
+-		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &v);
+-		v |= PCI_EXP_DEVCTL_RELAX_EN;
+-		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, v);
+-	}
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
++	v |= PCI_EXP_DEVCTL_RELAX_EN;
++	pci_pcie_capability_write_word(dev, PCI_EXP_DEVCTL, v);
  }
  
- static void __devinit nv_msi_ht_cap_quirk_all(struct pci_dev *dev)
+ /*
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+index 32e1dd5..e5184e7 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+@@ -2741,11 +2741,10 @@ static void __devinit get_pci_mode(struct adapter *adapter,
+ 				   struct pci_params *p)
+ {
+ 	u16 val;
+-	u32 pcie_cap = pci_pcie_cap(adapter->pdev);
+ 
+-	if (pcie_cap) {
+-		pci_read_config_word(adapter->pdev, pcie_cap + PCI_EXP_LNKSTA,
+-				     &val);
++	if (pci_is_pcie(adapter->pdev)) {
++		pci_pcie_capability_read_word(adapter->pdev, PCI_EXP_LNKSTA,
++					      &val);
+ 		p->speed = val & PCI_EXP_LNKSTA_CLS;
+ 		p->width = (val & PCI_EXP_LNKSTA_NLW) >> 4;
+ 	}
+-- 
+1.7.9.5
 
