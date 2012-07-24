@@ -1,58 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:37289 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755602Ab2GQRPN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2012 13:15:13 -0400
-Received: by lbbgm6 with SMTP id gm6so879880lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 10:15:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1342521498.3669.7.camel@pasglop>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
- <20120717050547.GD2369@ram-ThinkPad-T61> <20120717052333.GE2369@ram-ThinkPad-T61>
- <20120717053648.GA18497@shangw> <20120717055715.GF2369@ram-ThinkPad-T61>
- <1342516619.3669.5.camel@pasglop> <20120717100314.GB25613@ram-ThinkPad-T61> <1342521498.3669.7.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Jul 2012 11:14:51 -0600
-Message-ID: <CAErSpo4AS=QCRE3w-QBzuuSSEK8VeQ+PXxyp3mTyDAEvASxQcQ@mail.gmail.com>
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Ram Pai <linuxram@us.ibm.com>,
-	Gavin Shan <shangw@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	yinghai@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 09/32] PCI/PME: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:21 +0800
+Message-Id: <1343147504-25891-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2012 at 4:38 AM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Tue, 2012-07-17 at 18:03 +0800, Ram Pai wrote:
->>         Lets say we passed that 'type' flag to size the minimum
->>         alignment constraints for that b_res.  And window_alignment(bus,
->>         type) of your platform  used that 'type' information to
->>         determine whether to use the alignment constraints of 32-bit
->>         window or 64-bit window.
->>
->>         However, later when the b_res is actually allocated a resource,
->>         the pci_assign_resource() has no idea whether to allocate 32-bit
->>         window resource or 64-bit window resource, because the 'type'
->>         information is not captured anywhere in b_res.
->>
->>         You would basically have a disconnect between what is sized and
->>         what is allocated. Unless offcourse you pass that 'type' to
->>         the b_res->flags, which is currently not the case.
->
-> Right, we ideally would need the core to query the alignment once per
-> "apertures" it tries as a candidate to allocate a given resource... but
-> that's for later.
->
-> For now we can probably live with giving out the max of the minimum
-> alignment we support for M64 and our M32 segment size.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-We already know the aperture we're proposing to allocate from (the
-result of find_free_bus_resource()), don't we?  What if we passed it
-to pcibios_window_alignment() along with the struct pci_bus *, e.g.:
+Use PCIe capabilities access functions to simplify PCIe PME implementation.
 
-  resource_size_t pcibios_window_alignment(struct pci_bus *bus, struct
-resource *window)
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/pme.c |   17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 30897bf..6cd6ab7 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -57,17 +57,14 @@ struct pcie_pme_service_data {
+  */
+ void pcie_pme_interrupt_enable(struct pci_dev *dev, bool enable)
+ {
+-	int rtctl_pos;
+ 	u16 rtctl;
+ 
+-	rtctl_pos = pci_pcie_cap(dev) + PCI_EXP_RTCTL;
+-
+-	pci_read_config_word(dev, rtctl_pos, &rtctl);
++	pci_pcie_capability_read_word(dev, PCI_EXP_RTCTL, &rtctl);
+ 	if (enable)
+ 		rtctl |= PCI_EXP_RTCTL_PMEIE;
+ 	else
+ 		rtctl &= ~PCI_EXP_RTCTL_PMEIE;
+-	pci_write_config_word(dev, rtctl_pos, rtctl);
++	pci_pcie_capability_write_word(dev, PCI_EXP_RTCTL, rtctl);
+ }
+ 
+ /**
+@@ -226,18 +223,15 @@ static void pcie_pme_work_fn(struct work_struct *work)
+ 	struct pcie_pme_service_data *data =
+ 			container_of(work, struct pcie_pme_service_data, work);
+ 	struct pci_dev *port = data->srv->port;
+-	int rtsta_pos;
+ 	u32 rtsta;
+ 
+-	rtsta_pos = pci_pcie_cap(port) + PCI_EXP_RTSTA;
+-
+ 	spin_lock_irq(&data->lock);
+ 
+ 	for (;;) {
+ 		if (data->noirq)
+ 			break;
+ 
+-		pci_read_config_dword(port, rtsta_pos, &rtsta);
++		pci_pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+ 		if (rtsta & PCI_EXP_RTSTA_PME) {
+ 			/*
+ 			 * Clear PME status of the port.  If there are other
+@@ -276,17 +270,14 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+ {
+ 	struct pci_dev *port;
+ 	struct pcie_pme_service_data *data;
+-	int rtsta_pos;
+ 	u32 rtsta;
+ 	unsigned long flags;
+ 
+ 	port = ((struct pcie_device *)context)->port;
+ 	data = get_service_data((struct pcie_device *)context);
+ 
+-	rtsta_pos = pci_pcie_cap(port) + PCI_EXP_RTSTA;
+-
+ 	spin_lock_irqsave(&data->lock, flags);
+-	pci_read_config_dword(port, rtsta_pos, &rtsta);
++	pci_pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+ 
+ 	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
+ 		spin_unlock_irqrestore(&data->lock, flags);
+-- 
+1.7.9.5
+
