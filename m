@@ -1,51 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:6722 "EHLO
-	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753333Ab2GQC5e (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 22:57:34 -0400
-From: Shengzhou Liu <Shengzhou.Liu@freescale.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <linuxppc-dev@lists.ozlabs.org>,
-	Shengzhou Liu <Shengzhou.Liu@freescale.com>
-Subject: [PATCH] PCI: use dev->irq instead of dev->pin to enable non MSI/INTx interrupt
-Date: Tue, 17 Jul 2012 10:35:51 +0800
-Message-ID: <1342492551-13766-1-git-send-email-Shengzhou.Liu@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 18/32] PCI/vxge: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:30 +0800
+Message-Id: <1343147504-25891-19-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, root port has neither MSI/MSI-X nor INTx interrupt
-generated in RC mode. In this case, we have to use other interrupt(i.e.
-system shared interrupt) for port service irq to have AER, Hot-plug, etc,
-services to work.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Shengzhou Liu <Shengzhou.Liu@freescale.com>
+Use PCIe capabilities access functions to simplify vxge driver's
+implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- drivers/pci/pcie/portdrv_core.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/ethernet/neterion/vxge/vxge-config.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 75915b3..a855254 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -212,8 +212,13 @@ static int init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- 	if (!pcie_port_enable_msix(dev, irqs, mask))
- 		return 0;
+diff --git a/drivers/net/ethernet/neterion/vxge/vxge-config.c b/drivers/net/ethernet/neterion/vxge/vxge-config.c
+index 98e2c10..f83f0a4 100644
+--- a/drivers/net/ethernet/neterion/vxge/vxge-config.c
++++ b/drivers/net/ethernet/neterion/vxge/vxge-config.c
+@@ -757,7 +757,7 @@ __vxge_hw_verify_pci_e_info(struct __vxge_hw_device *hldev)
+ 	u16 lnk;
  
--	/* We're not going to use MSI-X, so try MSI and fall back to INTx */
--	if (!pci_enable_msi(dev) || dev->pin)
-+	/*
-+	 * We're not going to use MSI-X, so try MSI and fall back to INTx.
-+	 * If neither MSI/MSI-X nor INTx available, try other interrupt. (On
-+	 * some platforms, root port doesn't support generating MSI/MSI-X/INTx
-+	 * in RC mode)
-+	 */
-+	if (!pci_enable_msi(dev) || dev->irq)
- 		irq = dev->irq;
+ 	/* Get the negotiated link width and speed from PCI config space */
+-	pci_read_config_word(dev, dev->pcie_cap + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnk);
  
-  no_msi:
+ 	if ((lnk & PCI_EXP_LNKSTA_CLS) != 1)
+ 		return VXGE_HW_ERR_INVALID_PCI_INFO;
+@@ -1982,7 +1982,7 @@ u16 vxge_hw_device_link_width_get(struct __vxge_hw_device *hldev)
+ 	struct pci_dev *dev = hldev->pdev;
+ 	u16 lnk;
+ 
+-	pci_read_config_word(dev, dev->pcie_cap + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnk);
+ 	return (lnk & VXGE_HW_PCI_EXP_LNKCAP_LNK_WIDTH) >> 4;
+ }
+ 
 -- 
-1.6.4
-
+1.7.9.5
 
