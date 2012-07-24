@@ -1,51 +1,209 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:53288 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752507Ab2G1QNA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jul 2012 12:13:00 -0400
-Date: Sat, 28 Jul 2012 12:12:58 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Huang Ying <ying.huang@intel.com>,
-	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
- hotplug failure
-In-Reply-To: <201207272154.20717.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1207281208050.23545-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 16/32] PCI/broadcom: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:28 +0800
+Message-Id: <1343147504-25891-17-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 27 Jul 2012, Rafael J. Wysocki wrote:
+From: Jiang Liu <jiang.liu@huawei.com>
 
-> > > > > +	if (parent)
-> > > > > +		pm_runtime_put(parent);
-> > > > 
-> > > > You should use pm_runtime_put_sync(), not pm_runtime_put().
-> > > 
-> > > Hmm, why exactly?
-> > 
-> > Because it's more efficient to do something directly than to run it in 
-> > a workqueue.
-> 
-> Well, depends.  If that results in a power off (the parent goes into
-> D3 for example), we may wait as long as 10 ms for that to complete.
+Use PCIe capabilities access functions to simplify broadcom ethernet drivers'
+implementation.
 
-True, but so what?  You'd also have to wait 10 ms for the workqueue
-item to complete if pm_runtime_put() was used, plus the additional
-overhead of scheduling the workqueue thread.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |   24 +++--------
+ drivers/net/ethernet/broadcom/tg3.c              |   46 +++++++++-------------
+ 2 files changed, 24 insertions(+), 46 deletions(-)
 
-Now, if the length of time required for the probe to run were an issue 
-then yes, the synchronous routine could make things take longer.  But 
-probing is generally done asynchronously anyway, right?  And usually 
-what matters is the time before the device becomes available, not the 
-time for the probe to run.
-
-Alan Stern
-
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index f755a66..be87aff 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -1142,14 +1142,9 @@ static int bnx2x_send_final_clnup(struct bnx2x *bp, u8 clnup_func,
+ 
+ static u8 bnx2x_is_pcie_pending(struct pci_dev *dev)
+ {
+-	int pos;
+ 	u16 status;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return false;
+-
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+ 	return status & PCI_EXP_DEVSTA_TRPND;
+ }
+ 
+@@ -6114,8 +6109,7 @@ static void bnx2x_init_pxp(struct bnx2x *bp)
+ 	u16 devctl;
+ 	int r_order, w_order;
+ 
+-	pci_read_config_word(bp->pdev,
+-			     pci_pcie_cap(bp->pdev) + PCI_EXP_DEVCTL, &devctl);
++	pci_pcie_capability_read_word(bp->pdev, PCI_EXP_DEVCTL, &devctl);
+ 	DP(NETIF_MSG_HW, "read 0x%x from devctl\n", devctl);
+ 	w_order = ((devctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5);
+ 	if (bp->mrrs == -1)
+@@ -9330,15 +9324,10 @@ static int __devinit bnx2x_prev_mark_path(struct bnx2x *bp)
+ 
+ static bool __devinit bnx2x_can_flr(struct bnx2x *bp)
+ {
+-	int pos;
+ 	u32 cap;
+ 	struct pci_dev *dev = bp->pdev;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return false;
+-
+-	pci_read_config_dword(dev, pos + PCI_EXP_DEVCAP, &cap);
++	pci_pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+ 	if (!(cap & PCI_EXP_DEVCAP_FLR))
+ 		return false;
+ 
+@@ -9347,7 +9336,7 @@ static bool __devinit bnx2x_can_flr(struct bnx2x *bp)
+ 
+ static int __devinit bnx2x_do_flr(struct bnx2x *bp)
+ {
+-	int i, pos;
++	int i;
+ 	u16 status;
+ 	struct pci_dev *dev = bp->pdev;
+ 
+@@ -9355,8 +9344,7 @@ static int __devinit bnx2x_do_flr(struct bnx2x *bp)
+ 	if (bnx2x_can_flr(bp))
+ 		return -ENOTTY;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_is_pcie(dev))
+ 		return -ENOTTY;
+ 
+ 	/* Wait for Transaction Pending bit clean */
+@@ -9364,7 +9352,7 @@ static int __devinit bnx2x_do_flr(struct bnx2x *bp)
+ 		if (i)
+ 			msleep((1 << (i - 1)) * 100);
+ 
+-		pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
++		pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+ 		if (!(status & PCI_EXP_DEVSTA_TRPND))
+ 			goto clear;
+ 	}
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index 09fa3c6..1f613ec 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -3544,13 +3544,11 @@ static int tg3_power_down_prepare(struct tg3 *tp)
+ 	if (tg3_flag(tp, CLKREQ_BUG)) {
+ 		u16 lnkctl;
+ 
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				     &lnkctl);
++		pci_pcie_capability_read_word(tp->pdev,
++					      PCI_EXP_LNKCTL, &lnkctl);
+ 		lnkctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
+-		pci_write_config_word(tp->pdev,
+-				      pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				      lnkctl);
++		pci_pcie_capability_write_word(tp->pdev,
++					       PCI_EXP_LNKCTL, lnkctl);
+ 	}
+ 
+ 	misc_host_ctrl = tr32(TG3PCI_MISC_HOST_CTRL);
+@@ -4324,18 +4322,16 @@ relink:
+ 	if (tg3_flag(tp, CLKREQ_BUG)) {
+ 		u16 oldlnkctl, newlnkctl;
+ 
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				     &oldlnkctl);
++		pci_pcie_capability_read_word(tp->pdev, PCI_EXP_LNKCTL,
++					      &oldlnkctl);
+ 		if (tp->link_config.active_speed == SPEED_100 ||
+ 		    tp->link_config.active_speed == SPEED_10)
+ 			newlnkctl = oldlnkctl & ~PCI_EXP_LNKCTL_CLKREQ_EN;
+ 		else
+ 			newlnkctl = oldlnkctl | PCI_EXP_LNKCTL_CLKREQ_EN;
+ 		if (newlnkctl != oldlnkctl)
+-			pci_write_config_word(tp->pdev,
+-					      pci_pcie_cap(tp->pdev) +
+-					      PCI_EXP_LNKCTL, newlnkctl);
++			pci_pcie_capability_write_word(tp->pdev, PCI_EXP_LNKCTL,
++						       newlnkctl);
+ 	}
+ 
+ 	if (current_link_up != netif_carrier_ok(tp->dev)) {
+@@ -7942,7 +7938,7 @@ static int tg3_chip_reset(struct tg3 *tp)
+ 
+ 	udelay(120);
+ 
+-	if (tg3_flag(tp, PCI_EXPRESS) && pci_pcie_cap(tp->pdev)) {
++	if (tg3_flag(tp, PCI_EXPRESS) && pci_is_pcie(tp->pdev)) {
+ 		u16 val16;
+ 
+ 		if (tp->pci_chip_rev_id == CHIPREV_ID_5750_A0) {
+@@ -7959,9 +7955,7 @@ static int tg3_chip_reset(struct tg3 *tp)
+ 		}
+ 
+ 		/* Clear the "no snoop" and "relaxed ordering" bits. */
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_DEVCTL,
+-				     &val16);
++		pci_pcie_capability_read_word(tp->pdev, PCI_EXP_DEVCTL, &val16);
+ 		val16 &= ~(PCI_EXP_DEVCTL_RELAX_EN |
+ 			   PCI_EXP_DEVCTL_NOSNOOP_EN);
+ 		/*
+@@ -7970,17 +7964,14 @@ static int tg3_chip_reset(struct tg3 *tp)
+ 		 */
+ 		if (!tg3_flag(tp, CPMU_PRESENT))
+ 			val16 &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-		pci_write_config_word(tp->pdev,
+-				      pci_pcie_cap(tp->pdev) + PCI_EXP_DEVCTL,
+-				      val16);
++		pci_pcie_capability_write_word(tp->pdev, PCI_EXP_DEVCTL, val16);
+ 
+ 		/* Clear error status */
+-		pci_write_config_word(tp->pdev,
+-				      pci_pcie_cap(tp->pdev) + PCI_EXP_DEVSTA,
+-				      PCI_EXP_DEVSTA_CED |
+-				      PCI_EXP_DEVSTA_NFED |
+-				      PCI_EXP_DEVSTA_FED |
+-				      PCI_EXP_DEVSTA_URD);
++		pci_pcie_capability_write_word(tp->pdev, PCI_EXP_DEVSTA,
++					       PCI_EXP_DEVSTA_CED |
++					       PCI_EXP_DEVSTA_NFED |
++					       PCI_EXP_DEVSTA_FED |
++					       PCI_EXP_DEVSTA_URD);
+ 	}
+ 
+ 	tg3_restore_pci_state(tp);
+@@ -14303,9 +14294,8 @@ static int __devinit tg3_get_invariants(struct tg3 *tp)
+ 
+ 		tg3_flag_set(tp, PCI_EXPRESS);
+ 
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				     &lnkctl);
++		pci_pcie_capability_read_word(tp->pdev,
++					      PCI_EXP_LNKCTL, &lnkctl);
+ 		if (lnkctl & PCI_EXP_LNKCTL_CLKREQ_EN) {
+ 			if (GET_ASIC_REV(tp->pci_chip_rev_id) ==
+ 			    ASIC_REV_5906) {
+-- 
+1.7.9.5
 
