@@ -1,27 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41928 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286Ab2G0PLJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jul 2012 11:11:09 -0400
-Date: Fri, 27 Jul 2012 10:11:06 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH 3/4] PCI: Add support for non-BAR ROMs
-Message-ID: <20120727151106.GB13122@thinkpad-t410>
-References: <1343340169-7772-1-git-send-email-mjg@redhat.com>
- <1343340169-7772-4-git-send-email-mjg@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343340169-7772-4-git-send-email-mjg@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 07/32] PCI/portdrv: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:19 +0800
+Message-Id: <1343147504-25891-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 06:02:48PM -0400, Matthew Garrett wrote:
-> +		return phys_to_virt(pdev->rom);
+From: Jiang Liu <jiang.liu@huawei.com>
 
-This line is giving me a "makes integer from pointer without a cast"
-warning.
+Use PCIe capabilities access functions to simplify PCIe portdrv implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/portdrv_core.c |   20 ++++++++------------
+ drivers/pci/pcie/portdrv_pci.c  |    7 ++-----
+ 2 files changed, 10 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index bf320a9..37bff83 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -76,7 +76,6 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 	struct msix_entry *msix_entries;
+ 	int idx[PCIE_PORT_DEVICE_MAXSERVICES];
+ 	int nr_entries, status, pos, i, nvec;
+-	u16 reg16;
+ 	u32 reg32;
+ 
+ 	nr_entries = pci_msix_table_size(dev);
+@@ -120,9 +119,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *vectors, int mask)
+ 		 * the value in this field indicates which MSI-X Table entry is
+ 		 * used to generate the interrupt message."
+ 		 */
+-		pos = pci_pcie_cap(dev);
+-		pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
+-		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
++		entry = (dev->pcie_flags_reg & PCI_EXP_FLAGS_IRQ) >> 9;
+ 		if (entry >= nr_entries)
+ 			goto Error;
+ 
+@@ -246,7 +243,7 @@ static void cleanup_service_irqs(struct pci_dev *dev)
+  */
+ static int get_port_device_capability(struct pci_dev *dev)
+ {
+-	int services = 0, pos;
++	int services = 0;
+ 	u16 reg16;
+ 	u32 reg32;
+ 	int cap_mask = 0;
+@@ -265,11 +262,9 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 			return 0;
+ 	}
+ 
+-	pos = pci_pcie_cap(dev);
+-	pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
+ 	/* Hot-Plug Capable */
+-	if ((cap_mask & PCIE_PORT_SERVICE_HP) && (reg16 & PCI_EXP_FLAGS_SLOT)) {
+-		pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP, &reg32);
++	if ((cap_mask & PCIE_PORT_SERVICE_HP)) {
++		pci_pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
+ 		if (reg32 & PCI_EXP_SLTCAP_HPC) {
+ 			services |= PCIE_PORT_SERVICE_HP;
+ 			/*
+@@ -277,10 +272,11 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 			 * enabled by the BIOS and the hot-plug service driver
+ 			 * is not loaded.
+ 			 */
+-			pos += PCI_EXP_SLTCTL;
+-			pci_read_config_word(dev, pos, &reg16);
++			pci_pcie_capability_read_word(dev,
++						      PCI_EXP_SLTCTL, &reg16);
+ 			reg16 &= ~(PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
+-			pci_write_config_word(dev, pos, reg16);
++			pci_pcie_capability_write_word(dev,
++						       PCI_EXP_SLTCTL, reg16);
+ 		}
+ 	}
+ 	/* AER capable */
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 24d1463..1b2b378 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -64,14 +64,11 @@ __setup("pcie_ports=", pcie_port_setup);
+  */
+ void pcie_clear_root_pme_status(struct pci_dev *dev)
+ {
+-	int rtsta_pos;
+ 	u32 rtsta;
+ 
+-	rtsta_pos = pci_pcie_cap(dev) + PCI_EXP_RTSTA;
+-
+-	pci_read_config_dword(dev, rtsta_pos, &rtsta);
++	pci_pcie_capability_read_dword(dev, PCI_EXP_RTSTA, &rtsta);
+ 	rtsta |= PCI_EXP_RTSTA_PME;
+-	pci_write_config_dword(dev, rtsta_pos, rtsta);
++	pci_pcie_capability_write_dword(dev, PCI_EXP_RTSTA, rtsta);
+ }
+ 
+ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+-- 
+1.7.9.5
 
