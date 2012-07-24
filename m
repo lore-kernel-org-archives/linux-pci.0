@@ -1,87 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:62003 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756546Ab2GNIiR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 14 Jul 2012 04:38:17 -0400
-Received: by weyx8 with SMTP id x8so2956392wey.19
-        for <linux-pci@vger.kernel.org>; Sat, 14 Jul 2012 01:38:16 -0700 (PDT)
-Date: Sat, 14 Jul 2012 10:30:33 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC 2/2] net: Add support for NTB virtual ethernet device
-Message-ID: <20120714083033.GA1676@minipsycho.orion>
-References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
- <1342215900-3358-2-git-send-email-jon.mason@intel.com>
- <20120713231403.GA1712@minipsycho.orion>
- <20120714055034.GB4808@jonmason-lab>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120714055034.GB4808@jonmason-lab>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 20/32] PCI/niu: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:32 +0800
+Message-Id: <1343147504-25891-21-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sat, Jul 14, 2012 at 07:50:35AM CEST, jon.mason@intel.com wrote:
->On Sat, Jul 14, 2012 at 01:14:03AM +0200, Jiri Pirko wrote:
->> Fri, Jul 13, 2012 at 11:45:00PM CEST, jon.mason@intel.com wrote:
->> >A virtual ethernet device that uses the NTB transport API to send/receive data.
->> >
->> >Signed-off-by: Jon Mason <jon.mason@intel.com>
->> >---
->> > drivers/net/Kconfig      |    4 +
->> > drivers/net/Makefile     |    1 +
->> > drivers/net/ntb_netdev.c |  411 ++++++++++++++++++++++++++++++++++++++++++++++
->> > 3 files changed, 416 insertions(+), 0 deletions(-)
->> > create mode 100644 drivers/net/ntb_netdev.c
+From: Jiang Liu <jiang.liu@huawei.com>
 
-<snip>
+Use PCIe capabilities access functions to simplify niu driver's
+implementation.
 
->> >+
->> >+static const struct net_device_ops ntb_netdev_ops = {
->> >+	.ndo_open = ntb_netdev_open,
->> >+	.ndo_stop = ntb_netdev_close,
->> >+	.ndo_start_xmit = ntb_netdev_start_xmit,
->> >+	.ndo_change_mtu = ntb_netdev_change_mtu,
->> >+	.ndo_tx_timeout = ntb_netdev_tx_timeout,
->> >+	.ndo_set_mac_address = eth_mac_addr,
->> 
->> Does your device support mac change while it's up and running?
->
->It's virtual ethernet, so there is no hardware limitation, only what is acceptable for the remote side to receive.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/net/ethernet/sun/niu.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-In that case, it would be good to do:
-dev->priv_flags |= IFF_LIVE_ADDR_CHANGE;
-
-This enables mac change in eth_mac_addr() when iface is running.
-
-<snip>
-
->> >+
->> >+static int __init ntb_netdev_init_module(void)
->> >+{
->> >+	struct ntb_netdev *dev;
->> >+	int rc;
->> >+
->> >+	pr_info("%s: Probe\n", KBUILD_MODNAME);
->> >+
->> >+	netdev = alloc_etherdev(sizeof(struct ntb_netdev));
->> 
->> I might be missing something but this place (module init) does not seems
->> like a good place to do alloc_etherdev(). Do you want to support only
->> one netdevice instance?
->> 
->> Anyway, I think that using "static netdev" should be avoided in any case.
->> 
->
->It would fail the probe if there is no underlying ntb hardware, but it would make sense to check for that before allocing the etherdev.
-
-But isn't there possible to have multiple ntb hardware devices? It would make
-sense to register ntb device here with ntb core and let the core call
-probe which would actually create new netdev.
-
-Is there a limitation that one underlying ntb hardware ~ one ntb netdevice?
-
-Thanks,
-Jiri
+diff --git a/drivers/net/ethernet/sun/niu.c b/drivers/net/ethernet/sun/niu.c
+index 703c8cc..3f914c1 100644
+--- a/drivers/net/ethernet/sun/niu.c
++++ b/drivers/net/ethernet/sun/niu.c
+@@ -9768,7 +9768,7 @@ static int __devinit niu_pci_init_one(struct pci_dev *pdev,
+ 	union niu_parent_id parent_id;
+ 	struct net_device *dev;
+ 	struct niu *np;
+-	int err, pos;
++	int err;
+ 	u64 dma_mask;
+ 	u16 val16;
+ 
+@@ -9793,8 +9793,7 @@ static int __devinit niu_pci_init_one(struct pci_dev *pdev,
+ 		goto err_out_disable_pdev;
+ 	}
+ 
+-	pos = pci_pcie_cap(pdev);
+-	if (pos <= 0) {
++	if (!pci_is_pcie(pdev)) {
+ 		dev_err(&pdev->dev, "Cannot find PCI Express capability, aborting\n");
+ 		goto err_out_free_res;
+ 	}
+@@ -9819,14 +9818,14 @@ static int __devinit niu_pci_init_one(struct pci_dev *pdev,
+ 		goto err_out_free_dev;
+ 	}
+ 
+-	pci_read_config_word(pdev, pos + PCI_EXP_DEVCTL, &val16);
++	pci_pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &val16);
+ 	val16 &= ~PCI_EXP_DEVCTL_NOSNOOP_EN;
+ 	val16 |= (PCI_EXP_DEVCTL_CERE |
+ 		  PCI_EXP_DEVCTL_NFERE |
+ 		  PCI_EXP_DEVCTL_FERE |
+ 		  PCI_EXP_DEVCTL_URRE |
+ 		  PCI_EXP_DEVCTL_RELAX_EN);
+-	pci_write_config_word(pdev, pos + PCI_EXP_DEVCTL, val16);
++	pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL, val16);
+ 
+ 	dma_mask = DMA_BIT_MASK(44);
+ 	err = pci_set_dma_mask(pdev, dma_mask);
+-- 
+1.7.9.5
 
