@@ -1,185 +1,269 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:38141 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932541Ab2GDCDN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 22:03:13 -0400
-Received: by vcbf11 with SMTP id f11so4620098vcb.19
-        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 19:03:12 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <500F0FBF.9080903@redhat.com>
+Date: Tue, 24 Jul 2012 17:12:31 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1207031605350.29825-100000@netrider.rowland.org>
-References: <CAErSpo61zd1Lv9s3CaTNTnmYemkhM=a8Lw_2bm4V=1GipJgzSw@mail.gmail.com>
-	<Pine.LNX.4.44L0.1207031605350.29825-100000@netrider.rowland.org>
-Date: Wed, 4 Jul 2012 10:03:12 +0800
-Message-ID: <CAMz9Wg9fBxcHCmcOocfyMXZ+xj6rhkPOJ++gKPER9e14Z5J66w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Quirk for ASUS S3 issue
-From: AceLan Kao <acelan.kao@canonical.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	=?Big5?B?rHgoQWxleCmtWq/R?= <alex.hung@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <liuj97@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v2 04/32] PCI: add PCIe capabilities access functions
+ to hide differences among PCIe specs
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com> <1343147504-25891-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-5-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn and Alan,
+On 07/24/2012 12:31 PM, Jiang Liu wrote:
+> From: Jiang Liu<jiang.liu@huawei.com>
+>
+> Introduce five configuration access functions for PCIe capabilities registers
+> to hide differences among PCIe Base Spec versions.
+>
+> Function pci_pcie_capability_read_word/dword() stores the PCIe Capabilities
+> register value by the passed parameter val. If related PCIe Capabilities
+> register is not implemented on the PCIe device, the passed parameter val
+> will be set 0.
+>
+> Function pci_pcie_capability_write_word/dowrd() writes the value to PCIe
+> Capability register.
+>
+> Function pci_pcie_capability_reg_implemeneted() checks whether a Capabilities
+> register is implemented by the PCIe device.
+>
+> Signed-off-by: Jiang Liu<liuj97@gmail.com>
+> Signed-off-by: Yijing Wang<wangyijing@huawei.com>
+> ---
+>   drivers/pci/access.c     |  157 ++++++++++++++++++++++++++++++++++++++++++++++
+>   include/linux/pci.h      |    6 ++
+>   include/linux/pci_regs.h |    2 +
+>   3 files changed, 165 insertions(+)
+>
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index ba91a7e..59409e8 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -469,3 +469,160 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
+>   	raw_spin_unlock_irqrestore(&pci_lock, flags);
+>   }
+>   EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
+> +
+> +static inline int pci_pcie_cap_version(const struct pci_dev *dev)
+> +{
+> +	return dev->pcie_flags_reg&  PCI_EXP_FLAGS_VERS;
+> +}
+> +
+> +static inline bool pci_pcie_cap_has_devctl(const struct pci_dev *dev)
+> +{
+> +	return true;
+> +}
+> +
+> +static inline bool pci_pcie_cap_has_lnkctl(const struct pci_dev *dev)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +
+> +	return pci_pcie_cap_version(dev)>  1 ||
+> +	       type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	       type == PCI_EXP_TYPE_ENDPOINT ||
+> +	       type == PCI_EXP_TYPE_LEG_END;
+> +}
+> +
+> +static inline bool pci_pcie_cap_has_sltctl(const struct pci_dev *dev)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +
+> +	return pci_pcie_cap_version(dev)>  1 ||
+> +	       type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	       (type == PCI_EXP_TYPE_DOWNSTREAM&&
+> +		dev->pcie_flags_reg&  PCI_EXP_FLAGS_SLOT);
+> +}
+> +
+> +static inline bool pci_pcie_cap_has_rtctl(const struct pci_dev *dev)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +
+> +	return pci_pcie_cap_version(dev)>  1 ||
+> +	       type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	       type == PCI_EXP_TYPE_RC_EC;
+> +}
+> +
+> +bool pci_pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
+> +{
+> +	if (!pci_is_pcie(dev))
+> +		return false;
+> +
+> +	switch (pos) {
+> +	case PCI_EXP_FLAGS_TYPE:
+> +		return true;
+> +	case PCI_EXP_DEVCAP:
+> +	case PCI_EXP_DEVCTL:
+> +	case PCI_EXP_DEVSTA:
+> +		return pci_pcie_cap_has_devctl(dev);
+> +	case PCI_EXP_LNKCAP:
+> +	case PCI_EXP_LNKCTL:
+> +	case PCI_EXP_LNKSTA:
+> +		return pci_pcie_cap_has_lnkctl(dev);
+> +	case PCI_EXP_SLTCAP:
+> +	case PCI_EXP_SLTCTL:
+> +	case PCI_EXP_SLTSTA:
+> +		return pci_pcie_cap_has_sltctl(dev);
+> +	case PCI_EXP_RTCTL:
+> +	case PCI_EXP_RTCAP:
+> +	case PCI_EXP_RTSTA:
+> +		return pci_pcie_cap_has_rtctl(dev);
+> +	case PCI_EXP_DEVCAP2:
+> +	case PCI_EXP_DEVCTL2:
+> +	case PCI_EXP_LNKCAP2:
+> +	case PCI_EXP_LNKCTL2:
+> +	case PCI_EXP_LNKSTA2:
+> +		return pci_pcie_cap_version(dev)>  1;
+> +	default:
+> +		return false;
+> +	}
+> +}
+> +EXPORT_SYMBOL(pci_pcie_capability_reg_implemented);
+> +
+> +/*
+> + * Quotation from PCIe Base Spec 3.0:
+> + * For Functions that do not implement the Slot Capabilities,
+> + * Slot Status, and Slot Control registers, these spaces must
+> + * be hardwired to 0b, with the exception of the Presence Detect
+> + * State bit in the Slot Status register of Downstream Ports,
+> + * which must be hardwired to 1b.
+> + */
+> +int pci_pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
+> +{
+> +	int ret = 0;
+> +
+> +	*val = 0;
+> +	if (pos&  1)
+> +		return -EINVAL;
+> +
+> +	if (pci_pcie_capability_reg_implemented(dev, pos)) {
+> +		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
+> +		/*
+> +		 * Reset *val to 0 if pci_read_config_word() fails, it may
+> +		 * have been written as 0xFFFF if hardware error happens
+> +		 * during pci_read_config_word().
+> +		 */
+> +		if (ret)
+> +			*val = 0;
+> +	} else if (pos == PCI_EXP_SLTSTA&&
+> +		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> +		*val = PCI_EXP_SLTSTA_PDS;
+> +	}
+Don't you want the above if check done 1st, and not the
+pci_pcie_capability_reg_implemented(dev, pos) check ?
+Isn't PCI_EXP_SLTCTL an implemented register, looking at this snippet?:
+> +	switch (pos) {
+         <snip>
+> +	case PCI_EXP_SLTCAP:
+> +	case PCI_EXP_SLTCTL:
+> +	case PCI_EXP_SLTSTA:
+> +		return pci_pcie_cap_has_sltctl(dev);
+   and the above function is:
 
-2012/7/4 Alan Stern <stern@rowland.harvard.edu>:
-> On Tue, 3 Jul 2012, Bjorn Helgaas wrote:
->
->> On Tue, Jul 3, 2012 at 2:55 AM, AceLan Kao <acelan.kao@canonical.com> wrote:
->> > Some of ASUS machines have problem to enter S3.
->>
->> This should include a specific description of the problem the user
->> sees.  From the code comment, it something like "Attempt to suspend
->> some ASUS systems causes hang.  Power cycle required to recover."
->> might be appropriate.
->>
->> The quirk you added is not specific to ASUS, though, so it must be
->> something that's safe on every system using the AMD and ATI devices
->> you specified.  I don't know whether that's the case.
->
-> Is this the same bug as the one addressed by commit c2fb8a3fa255 (USB:
-> add NO_D3_DURING_SLEEP flag and revert 151b61284776be2)?
->
-> That bug seemed to occur only when the affected systems were put into
-> S3 sleep while an EHCI controller was in power level D3.
-We contacted the ASUS' BIOS engineer and try to verify this issue, for
-it happened
-on many ASUS' machines. Then they found that the system hangs in their
-BIOS code.
-The code will try to disable the USB if they found the PCI COMMAND
-register is not zero.
+> +static inline bool pci_pcie_cap_has_sltctl(const struct pci_dev *dev)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +
+> +	return pci_pcie_cap_version(dev)>  1 ||
+> +	       type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	       (type == PCI_EXP_TYPE_DOWNSTREAM&&
+> +		dev->pcie_flags_reg&  PCI_EXP_FLAGS_SLOT);
+> +}
 
-That's not a correct behavior that BIOS should do, the PCI COMMAND
-register is not
-represent if the USB is disabled or not, It's a workaround they tried to fix
-another issue in windows long time ago, but ASUS' BIOS engineer refuse to remove
-that part of code. But windows will clear the PCI COMMAND register if
-windows is already
-disabled the USB.
-So, I try to write this quirk.
+or is PCI_EXP_FLAGS_SLOT not set when it should be, then the first condition
+fails, and this function forces the val to 1b ?
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(pci_pcie_capability_read_word);
+> +
+> +int pci_pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
+> +{
+> +	int ret = 0;
+> +
+> +	*val = 0;
+> +	if (pos&  3)
+> +		return -EINVAL;
+> +
+> +	if (pci_pcie_capability_reg_implemented(dev, pos)) {
+> +		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+> +		/*
+> +		 * Reset *val to 0 if pci_read_config_dword() fails, it may
+> +		 * have been written as 0xFFFFFFFF if hardware error happens
+> +		 * during pci_read_config_dword().
+> +		 */
+> +		if (ret)
+> +			*val = 0;
+> +	} else if (pos == PCI_EXP_SLTCTL&&
+> +		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> +		*val = PCI_EXP_SLTSTA_PDS;
+> +	}
+ditto above...
 
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(pci_pcie_capability_read_dword);
+> +
+> +int pci_pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
+> +{
+> +	if (pos&  1)
+> +		return -EINVAL;
+> +	else if (!pci_pcie_capability_reg_implemented(dev, pos))
+> +		return 0;
+> +
+> +	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
+> +}
+> +EXPORT_SYMBOL(pci_pcie_capability_write_word);
+> +
+> +int pci_pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
+> +{
+> +	if (pos&  3)
+> +		return -EINVAL;
+> +	else if (!pci_pcie_capability_reg_implemented(dev, pos))
+> +		return 0;
+> +
+> +	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+> +}
+> +EXPORT_SYMBOL(pci_pcie_capability_write_dword);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9807da5..a9b7605 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -816,6 +816,12 @@ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+>   	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+>   }
 >
->> > The root cause of this issue is result from the the BIOS will try to
->> > disable USBs which was already disabled by driver.
->> > BIOS will to check the EHCI command register, if it's not zero, then
+> +int pci_pcie_capability_read_word(struct pci_dev *dev, int where, u16 *val);
+> +int pci_pcie_capability_read_dword(struct pci_dev *dev, int where, u32 *val);
+> +int pci_pcie_capability_write_word(struct pci_dev *dev, int where, u16 val);
+> +int pci_pcie_capability_write_dword(struct pci_dev *dev, int where, u32 val);
+> +bool pci_pcie_capability_reg_implemented(struct pci_dev *dev, int where);
+> +
+>   /* user-space driven config access */
+>   int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+>   int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+> diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
+> index 53274bf..5300fdf 100644
+> --- a/include/linux/pci_regs.h
+> +++ b/include/linux/pci_regs.h
+> @@ -543,7 +543,9 @@
+>   #define  PCI_EXP_OBFF_MSGB_EN	0x4000	/* OBFF enable with Message type B */
+>   #define  PCI_EXP_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
+>   #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
+> +#define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
+>   #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
+> +#define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
+>   #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
 >
-> You don't mean "EHCI command register"; you mean "the EHCI controller's
-> PCI COMMAND register".  The EHCI command register is a completely
-> different register; it's part of the memory-mapped interface rather
-> than the PCI config space.
-Thank you very much, I'm not familiar with this.
-It's EHCI controller's PCI COMMAND register.
->
->> > BIOS will think the USB is not disabled yet, so it will try to disable
->> > USB again.
->
-> How do you know this?
-ASUS' BIOS engineer told me :p
+>   /* Extended Capabilities (PCI-X 2.0 and Express) */
 
->
-> Why should disabling an already-disabled USB controller cause the
-> system to hang?
-I don't know, it hangs in BIOS, not in kernel.
-
->
->> > To resolve this, we should clear the EHCI command register before
->> > entering S3. And this does no harm to the system, since it'll switch
->
-> Is there any reason not to clear the PCI COMMAND register of every PCI
-> USB host controller when entering S3?
-Quote from ASUS, they only mentioned EHCI
----------
-BIOS will check EHCI command register PCI regiter offset 04h to see if
-USB is disabled or not.
-Because regiter offset 04h is not cleared, BIOS think USB is not disabled.
-Then BIOS will try to disabled USB, but the USB is disabled by Ubuntu
-already. This conflict will cause system hang.
-ASUS think since Ubuntu will disable USB, it also need to clear the
-register too.
----------
->
->> > off the power after enter S3, so the value in memory is not important
->> > at all.
->>
->> System RAM is preserved in the S3 state (ACPI spec sec 7.3.4.4), so I
->> don't know how to interpret this statement.
-Sorry for my bad wording, it's not System RAM, it's PCI COMMAND register.
-H/W will reset it's value after wake up.
-I'm not pretty sure of this part, but I can verify it later.
-
->>
->> Please include a bugzilla or problem report URL if you have one.
-I didn't grep the bugzilla before sending out this patch, it's easy to find
-that there are plenty of them. I'll add them and rewording the patch description
-
-http://thread.gmane.org/gmane.linux.usb.general/61396/focus=61396 #
-ehci_hcd related S3 lockup on ASUS laptops, again
-https://bugzilla.kernel.org/show_bug.cgi?id=43064 # [00:1a.0 Intel
-USB] Asus U36SD kernel freeze at suspend
-https://bugzilla.kernel.org/show_bug.cgi?id=42883 # Unable to use
-suspension and hibernation on ASUS N53JQ-SZ197X
-https://bugzilla.kernel.org/show_bug.cgi?id=37632 # Many ASUS laptops
-can't suspend with ehci_hcd loaded
-http://www.mail-archive.com/acpi-bugzilla@lists.sourceforge.net/msg35833.html
-# New: suspend Asus P5N-E SLI
-
->>
->> I'm not a USB or suspend/resume expert, so please get folks like Alan
->> Stern and Rafael Wysocki to take a look at this (cc'd).
->
-> This really has nothing to do with USB, except the fact that the
-> affected parts are USB host controllers.  It's entirely a PCI issue.
->
->> Please read the comment at the top of pci_ids.h; I don't think you
->> need to change that file.
-Sorry, I'll remove the definition I added in pci_ids.h
-
->>
->> > Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
->> > ---
->> >  drivers/pci/quirks.c    |   15 +++++++++++++++
->> >  include/linux/pci_ids.h |    2 ++
->> >  2 files changed, 17 insertions(+)
->> >
->> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> > index 194b243a..684cd1f 100644
->> > --- a/drivers/pci/quirks.c
->> > +++ b/drivers/pci/quirks.c
->> > @@ -2955,6 +2955,21 @@ static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
->> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
->> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
->> >
->> > +/*
->> > + * ASUS BIOS will check EHCI command register to see if USB if disabled
->> > + * or not. BIOS will try to disable USB if the command register is not
->> > + * cleared. But, actually, USB is disabled by the driver while entering S3,
->> > + * so it'll hang in BIOS when it try to disable USB.
->
-> Why does the system hang?  There should be no problem clearing the PCI
-> COMMAND register even while the controller is in D3.
->
-> Does the BIOS try to access the memory-mapped registers while disabling
-> the controller?
->
->> > + * Since it's going to enter S3, so it does no harm to clear the command
->> > + * register.
->> > + */
->> > +static void asus_clear_pci_command(struct pci_dev *dev)
->> > +{
->> > +       pci_write_config_word(dev, PCI_COMMAND, 0);
->> > +}
->> > +DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON_EHCI, asus_clear_memory_bit);
->> > +DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_EHCI, asus_clear_memory_bit);
->
-> Why not do this for all EHCI controllers?  Or even all PCI devices?
->
-> Alan Stern
->
-
-
-
--- 
-Chia-Lin Kao(AceLan)
-http://blog.acelan.idv.tw/
-E-Mail: acelan.kaoATcanonical.com (s/AT/@/)
