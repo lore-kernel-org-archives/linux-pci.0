@@ -1,27 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41921 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004Ab2G0PKn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jul 2012 11:10:43 -0400
-Date: Fri, 27 Jul 2012 10:10:38 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-Message-ID: <20120727151038.GA13122@thinkpad-t410>
-References: <1343340169-7772-1-git-send-email-mjg@redhat.com>
- <1343340169-7772-2-git-send-email-mjg@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343340169-7772-2-git-send-email-mjg@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 19/32] PCI/mlx4: use PCIe capabilities access functions to simplify implementation
+Date: Wed, 25 Jul 2012 00:31:31 +0800
+Message-Id: <1343147504-25891-20-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 06:02:46PM -0400, Matthew Garrett wrote:
-> +		rom->data.next = NULL;
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Noticed today that I'm getting an "assignment makes integer from pointer
-without a cast" warning from this line.
+Use PCIe capabilities access functions to simplify mlx4 driver's
+implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/net/ethernet/mellanox/mlx4/reset.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/mellanox/mlx4/reset.c b/drivers/net/ethernet/mellanox/mlx4/reset.c
+index 11e7c1c..6895214 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/reset.c
++++ b/drivers/net/ethernet/mellanox/mlx4/reset.c
+@@ -141,16 +141,16 @@ int mlx4_reset(struct mlx4_dev *dev)
+ 	/* Now restore the PCI headers */
+ 	if (pcie_cap) {
+ 		devctl = hca_header[(pcie_cap + PCI_EXP_DEVCTL) / 4];
+-		if (pci_write_config_word(dev->pdev, pcie_cap + PCI_EXP_DEVCTL,
+-					   devctl)) {
++		if (pci_pcie_capability_write_word(dev->pdev, PCI_EXP_DEVCTL,
++						   devctl)) {
+ 			err = -ENODEV;
+ 			mlx4_err(dev, "Couldn't restore HCA PCI Express "
+ 				 "Device Control register, aborting.\n");
+ 			goto out;
+ 		}
+ 		linkctl = hca_header[(pcie_cap + PCI_EXP_LNKCTL) / 4];
+-		if (pci_write_config_word(dev->pdev, pcie_cap + PCI_EXP_LNKCTL,
+-					   linkctl)) {
++		if (pci_pcie_capability_write_word(dev->pdev, PCI_EXP_LNKCTL,
++						   linkctl)) {
+ 			err = -ENODEV;
+ 			mlx4_err(dev, "Couldn't restore HCA PCI Express "
+ 				 "Link control register, aborting.\n");
+-- 
+1.7.9.5
 
