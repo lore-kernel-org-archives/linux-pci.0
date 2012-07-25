@@ -1,100 +1,350 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1868 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752146Ab2HAAnY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Jul 2012 20:43:24 -0400
-Date: Wed, 1 Aug 2012 08:43:19 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>, Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: pci_get_subsys: GFP_KERNEL allocations with IRQs disabled
-Message-ID: <20120801004319.GA7043@localhost>
-References: <20120731121759.GA17822@localhost>
- <5017D19B.5080806@redhat.com>
- <1343738627.27983.30.camel@gandalf.stny.rr.com>
- <5017D4AB.3090107@redhat.com>
- <1343740419.27983.33.camel@gandalf.stny.rr.com>
- <20120731234336.GA5526@localhost>
- <1343778699.27983.70.camel@gandalf.stny.rr.com>
- <20120731235705.GW2422@linux.vnet.ibm.com>
- <1343779778.27983.73.camel@gandalf.stny.rr.com>
- <20120801001811.GX2422@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH 2/4] vfio: Add documentation
+To: torvalds@linux-foundation.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, gregkh@linuxfoundation.org,
+	joerg.roedel@amd.com, dwmw2@infradead.org, chrisw@sous-sol.org,
+	agraf@suse.de, benve@cisco.com, aafabbri@cisco.com,
+	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
+	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Wed, 25 Jul 2012 08:53:29 -0600
+Message-ID: <20120725145326.12800.23601.stgit@bling.home>
+In-Reply-To: <20120725142254.12800.61860.stgit@bling.home>
+References: <20120725142254.12800.61860.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120801001811.GX2422@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2012 at 05:18:11PM -0700, Paul E. McKenney wrote:
-> On Tue, Jul 31, 2012 at 08:09:38PM -0400, Steven Rostedt wrote:
-> > On Tue, 2012-07-31 at 16:57 -0700, Paul E. McKenney wrote:
-> > 
-> > > > What was the next lines? I bet you it was "PASSED". Which means it did
-> > > > not fail. This is the second bug you found that has to do with RCU being
-> > > > called in 'idle'. The one that Paul posted a patch for.
-> > > 
-> > > Though it needs another patch to actually use it in the right place...
-> > 
-> > Right. Something like this:
-> 
-> Looks good to me!
- 
-With all 3 patches applied, the warning on __update_max_tr finally
-goes away. Thanks!
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-However, this unrelated warning still reliably remains (the same config).
-I think it's pci_get_subsys() triggered this assert:
+ Documentation/vfio.txt |  314 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 314 insertions(+)
+ create mode 100644 Documentation/vfio.txt
 
-        /*
-         * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
-         */
-        if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
-                return;
+diff --git a/Documentation/vfio.txt b/Documentation/vfio.txt
+new file mode 100644
+index 0000000..0cb6685
+--- /dev/null
++++ b/Documentation/vfio.txt
+@@ -0,0 +1,314 @@
++VFIO - "Virtual Function I/O"[1]
++-------------------------------------------------------------------------------
++Many modern system now provide DMA and interrupt remapping facilities
++to help ensure I/O devices behave within the boundaries they've been
++allotted.  This includes x86 hardware with AMD-Vi and Intel VT-d,
++POWER systems with Partitionable Endpoints (PEs) and embedded PowerPC
++systems such as Freescale PAMU.  The VFIO driver is an IOMMU/device
++agnostic framework for exposing direct device access to userspace, in
++a secure, IOMMU protected environment.  In other words, this allows
++safe[2], non-privileged, userspace drivers.
++
++Why do we want that?  Virtual machines often make use of direct device
++access ("device assignment") when configured for the highest possible
++I/O performance.  From a device and host perspective, this simply
++turns the VM into a userspace driver, with the benefits of
++significantly reduced latency, higher bandwidth, and direct use of
++bare-metal device drivers[3].
++
++Some applications, particularly in the high performance computing
++field, also benefit from low-overhead, direct device access from
++userspace.  Examples include network adapters (often non-TCP/IP based)
++and compute accelerators.  Prior to VFIO, these drivers had to either
++go through the full development cycle to become proper upstream
++driver, be maintained out of tree, or make use of the UIO framework,
++which has no notion of IOMMU protection, limited interrupt support,
++and requires root privileges to access things like PCI configuration
++space.
++
++The VFIO driver framework intends to unify these, replacing both the
++KVM PCI specific device assignment code as well as provide a more
++secure, more featureful userspace driver environment than UIO.
++
++Groups, Devices, and IOMMUs
++-------------------------------------------------------------------------------
++
++Devices are the main target of any I/O driver.  Devices typically
++create a programming interface made up of I/O access, interrupts,
++and DMA.  Without going into the details of each of these, DMA is
++by far the most critical aspect for maintaining a secure environment
++as allowing a device read-write access to system memory imposes the
++greatest risk to the overall system integrity.
++
++To help mitigate this risk, many modern IOMMUs now incorporate
++isolation properties into what was, in many cases, an interface only
++meant for translation (ie. solving the addressing problems of devices
++with limited address spaces).  With this, devices can now be isolated
++from each other and from arbitrary memory access, thus allowing
++things like secure direct assignment of devices into virtual machines.
++
++This isolation is not always at the granularity of a single device
++though.  Even when an IOMMU is capable of this, properties of devices,
++interconnects, and IOMMU topologies can each reduce this isolation.
++For instance, an individual device may be part of a larger multi-
++function enclosure.  While the IOMMU may be able to distinguish
++between devices within the enclosure, the enclosure may not require
++transactions between devices to reach the IOMMU.  Examples of this
++could be anything from a multi-function PCI device with backdoors
++between functions to a non-PCI-ACS (Access Control Services) capable
++bridge allowing redirection without reaching the IOMMU.  Topology
++can also play a factor in terms of hiding devices.  A PCIe-to-PCI
++bridge masks the devices behind it, making transaction appear as if
++from the bridge itself.  Obviously IOMMU design plays a major factor
++as well.
++
++Therefore, while for the most part an IOMMU may have device level
++granularity, any system is susceptible to reduced granularity.  The
++IOMMU API therefore supports a notion of IOMMU groups.  A group is
++a set of devices which is isolatable from all other devices in the
++system.  Groups are therefore the unit of ownership used by VFIO.
++
++While the group is the minimum granularity that must be used to
++ensure secure user access, it's not necessarily the preferred
++granularity.  In IOMMUs which make use of page tables, it may be
++possible to share a set of page tables between different groups,
++reducing the overhead both to the platform (reduced TLB thrashing,
++reduced duplicate page tables), and to the user (programming only
++a single set of translations).  For this reason, VFIO makes use of
++a container class, which may hold one or more groups.  A container
++is created by simply opening the /dev/vfio/vfio character device.
++
++On its own, the container provides little functionality, with all
++but a couple version and extension query interfaces locked away.
++The user needs to add a group into the container for the next level
++of functionality.  To do this, the user first needs to identify the
++group associated with the desired device.  This can be done using
++the sysfs links described in the example below.  By unbinding the
++device from the host driver and binding it to a VFIO driver, a new
++VFIO group will appear for the group as /dev/vfio/$GROUP, where
++$GROUP is the IOMMU group number of which the device is a member.
++If the IOMMU group contains multiple devices, each will need to
++be bound to a VFIO driver before operations on the VFIO group
++are allowed (it's also sufficient to only unbind the device from
++host drivers if a VFIO driver is unavailable; this will make the
++group available, but not that particular device).  TBD - interface
++for disabling driver probing/locking a device.
++
++Once the group is ready, it may be added to the container by opening
++the VFIO group character device (/dev/vfio/$GROUP) and using the
++VFIO_GROUP_SET_CONTAINER ioctl, passing the file descriptor of the
++previously opened container file.  If desired and if the IOMMU driver
++supports sharing the IOMMU context between groups, multiple groups may
++be set to the same container.  If a group fails to set to a container
++with existing groups, a new empty container will need to be used
++instead.
++
++With a group (or groups) attached to a container, the remaining
++ioctls become available, enabling access to the VFIO IOMMU interfaces.
++Additionally, it now becomes possible to get file descriptors for each
++device within a group using an ioctl on the VFIO group file descriptor.
++
++The VFIO device API includes ioctls for describing the device, the I/O
++regions and their read/write/mmap offsets on the device descriptor, as
++well as mechanisms for describing and registering interrupt
++notifications.
++
++VFIO Usage Example
++-------------------------------------------------------------------------------
++
++Assume user wants to access PCI device 0000:06:0d.0
++
++$ readlink /sys/bus/pci/devices/0000:06:0d.0/iommu_group
++../../../../kernel/iommu_groups/26
++
++This device is therefore in IOMMU group 26.  This device is on the
++pci bus, therefore the user will make use of vfio-pci to manage the
++group:
++
++# modprobe vfio-pci
++
++Binding this device to the vfio-pci driver creates the VFIO group
++character devices for this group:
++
++$ lspci -n -s 0000:06:0d.0
++06:0d.0 0401: 1102:0002 (rev 08)
++# echo 0000:06:0d.0 > /sys/bus/pci/devices/0000:06:0d.0/driver/unbind
++# echo 1102 0002 > /sys/bus/pci/drivers/vfio/new_id
++
++Now we need to look at what other devices are in the group to free
++it for use by VFIO:
++
++$ ls -l /sys/bus/pci/devices/0000:06:0d.0/iommu_group/devices
++total 0
++lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:00:1e.0 ->
++	../../../../devices/pci0000:00/0000:00:1e.0
++lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:06:0d.0 ->
++	../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.0
++lrwxrwxrwx. 1 root root 0 Apr 23 16:13 0000:06:0d.1 ->
++	../../../../devices/pci0000:00/0000:00:1e.0/0000:06:0d.1
++
++This device is behind a PCIe-to-PCI bridge[4], therefore we also
++need to add device 0000:06:0d.1 to the group following the same
++procedure as above.  Device 0000:00:1e.0 is a bridge that does
++not currently have a host driver, therefore it's not required to
++bind this device to the vfio-pci driver (vfio-pci does not currently
++support PCI bridges).
++
++The final step is to provide the user with access to the group if
++unprivileged operation is desired (note that /dev/vfio/vfio provides
++no capabilities on its own and is therefore expected to be set to
++mode 0666 by the system).
++
++# chown user:user /dev/vfio/26
++
++The user now has full access to all the devices and the iommu for this
++group and can access them as follows:
++
++	int container, group, device, i;
++	struct vfio_group_status group_status =
++					{ .argsz = sizeof(group_status) };
++	struct vfio_iommu_x86_info iommu_info = { .argsz = sizeof(iommu_info) };
++	struct vfio_iommu_x86_dma_map dma_map = { .argsz = sizeof(dma_map) };
++	struct vfio_device_info device_info = { .argsz = sizeof(device_info) };
++
++	/* Create a new container */
++	container = open("/dev/vfio/vfio, O_RDWR);
++
++	if (ioctl(container, VFIO_GET_API_VERSION) != VFIO_API_VERSION)
++		/* Unknown API version */
++
++	if (!ioctl(container, VFIO_CHECK_EXTENSION, VFIO_X86_IOMMU))
++		/* Doesn't support the IOMMU driver we want. */
++
++	/* Open the group */
++	group = open("/dev/vfio/26", O_RDWR);
++
++	/* Test the group is viable and available */
++	ioctl(group, VFIO_GROUP_GET_STATUS, &group_status);
++
++	if (!(group_status.flags & VFIO_GROUP_FLAGS_VIABLE))
++		/* Group is not viable (ie, not all devices bound for vfio) */
++
++	/* Add the group to the container */
++	ioctl(group, VFIO_GROUP_SET_CONTAINER, &container);
++
++	/* Enable the IOMMU model we want */
++	ioctl(container, VFIO_SET_IOMMU, VFIO_X86_IOMMU)
++
++	/* Get addition IOMMU info */
++	ioctl(container, VFIO_IOMMU_GET_INFO, &iommu_info);
++
++	/* Allocate some space and setup a DMA mapping */
++	dma_map.vaddr = mmap(0, 1024 * 1024, PROT_READ | PROT_WRITE,
++			     MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
++	dma_map.size = 1024 * 1024;
++	dma_map.iova = 0; /* 1MB starting at 0x0 from device view */
++	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
++
++	ioctl(container, VFIO_IOMMU_MAP_DMA, &dma_map);
++
++	/* Get a file descriptor for the device */
++	device = ioctl(group, VFIO_GROUP_GET_DEVICE_FD, "0000:06:0d.0");
++
++	/* Test and setup the device */
++	ioctl(device, VFIO_DEVICE_GET_INFO, &device_info);
++
++	for (i = 0; i < device_info.num_regions; i++) {
++		struct vfio_region_info reg = { .argsz = sizeof(reg) };
++
++		reg.index = i;
++
++		ioctl(device, VFIO_DEVICE_GET_REGION_INFO, &reg);
++
++		/* Setup mappings... read/write offsets, mmaps
++		 * For PCI devices, config space is a region */
++	}
++
++	for (i = 0; i < device_info.num_irqs; i++) {
++		struct vfio_irq_info irq = { .argsz = sizeof(irq) };
++
++		irq.index = i;
++
++		ioctl(device, VFIO_DEVICE_GET_IRQ_INFO, &reg);
++
++		/* Setup IRQs... eventfds, VFIO_DEVICE_SET_IRQS */
++	}
++
++	/* Gratuitous device reset and go... */
++	ioctl(device, VFIO_DEVICE_RESET);
++
++VFIO User API
++-------------------------------------------------------------------------------
++
++Please see include/linux/vfio.h for complete API documentation.
++
++VFIO bus driver API
++-------------------------------------------------------------------------------
++
++VFIO bus drivers, such as vfio-pci make use of only a few interfaces
++into VFIO core.  When devices are bound and unbound to the driver,
++the driver should call vfio_add_group_dev() and vfio_del_group_dev()
++respectively:
++
++extern int vfio_add_group_dev(struct iommu_group *iommu_group,
++                              struct device *dev,
++                              const struct vfio_device_ops *ops,
++                              void *device_data);
++
++extern void *vfio_del_group_dev(struct device *dev);
++
++vfio_add_group_dev() indicates to the core to begin tracking the
++specified iommu_group and register the specified dev as owned by
++a VFIO bus driver.  The driver provides an ops structure for callbacks
++similar to a file operations structure:
++
++struct vfio_device_ops {
++	int	(*open)(void *device_data);
++	void	(*release)(void *device_data);
++	ssize_t	(*read)(void *device_data, char __user *buf,
++			size_t count, loff_t *ppos);
++	ssize_t	(*write)(void *device_data, const char __user *buf,
++			 size_t size, loff_t *ppos);
++	long	(*ioctl)(void *device_data, unsigned int cmd,
++			 unsigned long arg);
++	int	(*mmap)(void *device_data, struct vm_area_struct *vma);
++};
++
++Each function is passed the device_data that was originally registered
++in the vfio_add_group_dev() call above.  This allows the bus driver
++an easy place to store its opaque, private data.  The open/release
++callbacks are issued when a new file descriptor is created for a
++device (via VFIO_GROUP_GET_DEVICE_FD).  The ioctl interface provides
++a direct pass through for VFIO_DEVICE_* ioctls.  The read/write/mmap
++interfaces implement the device region access defined by the device's
++own VFIO_DEVICE_GET_REGION_INFO ioctl.
++
++-------------------------------------------------------------------------------
++
++[1] VFIO was originally an acronym for "Virtual Function I/O" in its
++initial implementation by Tom Lyon while as Cisco.  We've since
++outgrown the acronym, but it's catchy.
++
++[2] "safe" also depends upon a device being "well behaved".  It's
++possible for multi-function devices to have backdoors between
++functions and even for single function devices to have alternative
++access to things like PCI config space through MMIO registers.  To
++guard against the former we can include additional precautions in the
++IOMMU driver to group multi-function PCI devices together
++(iommu=group_mf).  The latter we can't prevent, but the IOMMU should
++still provide isolation.  For PCI, SR-IOV Virtual Functions are the
++best indicator of "well behaved", as these are designed for
++virtualization usage models.
++
++[3] As always there are trade-offs to virtual machine device
++assignment that are beyond the scope of VFIO.  It's expected that
++future IOMMU technologies will reduce some, but maybe not all, of
++these trade-offs.
++
++[4] In this case the device is below a PCI bridge, so transactions
++from either function of the device are indistinguishable to the iommu:
++
++-[0000:00]-+-1e.0-[06]--+-0d.0
++                        \-0d.1
++
++00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 90)
 
-[   91.282131] machine restart
-[   91.283895] ------------[ cut here ]------------
-[   91.284731] WARNING: at /c/wfg/linux/kernel/lockdep.c:2739 lockdep_trace_alloc+0x1fb/0x210()
-[   91.286132] Modules linked in:
-[   91.286703] Pid: 697, comm: reboot Not tainted 3.5.0-00024-g01ff5db-dirty #4
-[   91.287859] Call Trace:
-[   91.288289]  [<81050148>] warn_slowpath_common+0xb8/0x100
-[   91.289338]  [<8110acdb>] ? lockdep_trace_alloc+0x1fb/0x210
-[   91.290264]  [<8110acdb>] ? lockdep_trace_alloc+0x1fb/0x210
-[   91.291161]  [<810501ce>] warn_slowpath_null+0x3e/0x50
-[   91.292042]  [<8110acdb>] lockdep_trace_alloc+0x1fb/0x210
-[   91.292934]  [<81228e25>] kmem_cache_alloc_trace+0x55/0x600
-[   91.292934]  [<813025ca>] ? kobject_put+0x9a/0x160
-[   91.292934]  [<814e95e0>] ? klist_iter_exit+0x30/0x50
-[   91.292934]  [<81405881>] ? bus_find_device+0xf1/0x120
-[   91.292934]  [<81361a3c>] ? pci_get_subsys+0x11c/0x1b0
-[   91.292934]  [<81361a3c>] pci_get_subsys+0x11c/0x1b0
-[   91.292934]  [<81361afe>] pci_get_device+0x2e/0x40
-[   91.292934]  [<81033e25>] mach_reboot_fixups+0xa5/0xd0
-[   91.292934]  [<81027611>] native_machine_emergency_restart+0x1f1/0x590
-[   91.292934]  [<814f2e00>] ? printk+0x4b/0x5b
-[   91.292934]  [<810269ef>] native_machine_restart+0x6f/0x80
-[   91.292934]  [<810271cc>] machine_restart+0x1c/0x30
-[   91.292934]  [<810886e0>] kernel_restart+0x70/0xc0
-[   91.292934]  [<81088a85>] sys_reboot+0x325/0x380
-[   91.292934]  [<811f796c>] ? handle_pte_fault+0xdc/0x1740
-[   91.292934]  [<811f93e7>] ? handle_mm_fault+0x417/0x4a0
-[   91.292934]  [<8103e07b>] ? do_page_fault+0x7fb/0xb30
-[   91.292934]  [<810b33e7>] ? up_read+0x37/0x70
-[   91.292934]  [<8103e07b>] ? do_page_fault+0x7fb/0xb30
-[   91.292934]  [<8123c063>] ? do_sys_open+0x3a3/0x3f0
-[   91.292934]  [<8123c063>] ? do_sys_open+0x3a3/0x3f0
-[   91.292934]  [<810b0270>] ? update_rmtp+0xe0/0xe0
-[   91.292934]  [<8150376e>] ? restore_all+0xf/0xf
-[   91.292934]  [<8103d880>] ? vmalloc_sync_all+0x320/0x320
-[   91.292934]  [<81109fca>] ? trace_hardirqs_on_caller+0x28a/0x380
-[   91.292934]  [<81311594>] ? trace_hardirqs_on_thunk+0xc/0x10
-[   91.292934]  [<81503735>] syscall_call+0x7/0xb
-
-Thanks,
-Fengguang
