@@ -1,73 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47357 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932323Ab2GKTUV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 15:20:21 -0400
-Received: by pbbrp8 with SMTP id rp8so2429226pbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 12:20:21 -0700 (PDT)
-Date: Wed, 11 Jul 2012 12:20:16 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
+Received: from canardo.mork.no ([148.122.252.1]:59023 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828Ab2GYWhF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 18:37:05 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	"Oleksij Rempel (fishor)" <bug-track@fisher-privat.net>,
-	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH] ACPI / PCI: Make _SxD/_SxW check follow ACPI 4.0a spec
-Message-ID: <20120711192016.GA2857@kroah.com>
-References: <201204292244.16467.rjw@sisk.pl>
- <201207111107.56500.rjw@sisk.pl>
- <20120711135333.GA19410@kroah.com>
- <201207112104.49173.rjw@sisk.pl>
+Cc: Huang Ying <ying.huang@intel.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB hotplug failure
+References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
+	<CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
+	<874now7xi8.fsf@nemi.mork.no> <201207252202.22302.rjw@sisk.pl>
+Date: Thu, 26 Jul 2012 00:36:45 +0200
+In-Reply-To: <201207252202.22302.rjw@sisk.pl> (Rafael J. Wysocki's message of
+	"Wed, 25 Jul 2012 22:02:22 +0200")
+Message-ID: <87pq7j79j6.fsf@nemi.mork.no>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201207112104.49173.rjw@sisk.pl>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 09:04:48PM +0200, Rafael J. Wysocki wrote:
-> On Wednesday, July 11, 2012, Greg KH wrote:
-> > On Wed, Jul 11, 2012 at 11:07:56AM +0200, Rafael J. Wysocki wrote:
-> > > On Wednesday, July 11, 2012, Greg KH wrote:
-> > > > On Sun, Apr 29, 2012 at 10:44:16PM +0200, Rafael J. Wysocki wrote:
-> > > > > From: Oleksij Rempel <bug-track@fisher-privat.net>
-> > > > > 
-> > > > > This patch makes _SxD/_SxW check follow the ACPI 4.0a specification
-> > > > > more closely and fixes suspend bug found on ASUS Zenbook UX31E.
-> > > > > 
-> > > > > Some OEM use _SxD fileds do blacklist brocken Dx states.
-> > > > > If _SxD/_SxW return values are check before suspend as appropriate,
-> > > > > some nasty suspend/resume issues may be avoided.
-> > > > > 
-> > > > > References: https://bugzilla.kernel.org/show_bug.cgi?id=42728
-> > > > > Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> > > > > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > > > > ---
-> > > > > 
-> > > > > Bjorn, Len,
-> > > > > 
-> > > > > This is -stable material and therefore v3.4 as well, IMO.  Please let me
-> > > > > know if one of you can take it or whether you want me to handle it all the
-> > > > > way to Linus.
-> > > > 
-> > > > What ever hapened to this patch?
-> > > 
-> > > It was split and partially merged.  As far as the other part is concerned,
-> > > the jury is still out.
-> > 
-> > Ok, I'll wait for someone to ask for it to be added to the stable tree
-> > before I do anything.
-> 
-> In fact, it should have been marked as -stable material, so please add:
-> 
-> commit dbe9a2edd17d843d80faf2b99f20a691c1853418
-> Author: Rafael J. Wysocki <rjw@sisk.pl>
-> Date:   Tue May 29 21:21:07 2012 +0200
-> 
->     ACPI / PM: Make acpi_pm_device_sleep_state() follow the specification
+"Rafael J. Wysocki" <rjw@sisk.pl> writes:
 
-Ah, the name changed, that's why I couldn't find it.  Thanks, I've now
-queued it up.
+> This is not really necessary.  The problem is the change of behavior I was
+> worried about some time ago.
+>
+> Namely, the device in question apparently doesn't support ACPI D3_hot,
+> so acpi_pm_device_sleep_state() returns D2 as the target state, where it
+> would return D3(cold) before the commit in question.
+>
+> To fix the regression, we'd need to reverse the current initial value of
+> the d3cold_allowed flag so that it is set to "true" by default and only
+> set to "false" for devices where we suspect there may be problems with
+> D3_cold (like PCI Express ports).
 
-greg k-h
+Good.  May I also request a few lines describing d3cold_allowed in e.g
+Documentation/ABI/testing/sysfs-bus-pci?  I must admit that I thought
+that was the policy for any new sysfs file, but it seems that is only
+in the USB subsystem?
+
+Anyway, I believe it ought to be a requirement.  If we are meant to
+tweak some knob, then we must known how and when to do so.  If not, then
+why add it in the first place?
+
+
+Bjørn
