@@ -1,33 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:43816 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753665Ab2G2VxK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2012 17:53:10 -0400
-Date: Sun, 29 Jul 2012 22:53:01 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] Fix priority of non-BAR ROM data
-Message-ID: <20120729215301.GA27358@srcf.ucam.org>
-References: <1343407934-459-1-git-send-email-mjg@redhat.com>
- <1343407934-459-3-git-send-email-mjg@redhat.com>
- <1343598582.15288.4.camel@shinybook.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
+To: torvalds@linux-foundation.org
+Cc: benh@kernel.crashing.org, aik@ozlabs.ru,
+	david@gibson.dropbear.id.au, gregkh@linuxfoundation.org,
+	joerg.roedel@amd.com, dwmw2@infradead.org, chrisw@sous-sol.org,
+	agraf@suse.de, benve@cisco.com, aafabbri@cisco.com,
+	B08248@freescale.com, B07421@freescale.com, avi@redhat.com,
+	konrad.wilk@oracle.com, kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	ddutile@redhat.com, alex.williamson@redhat.com
+Date: Wed, 25 Jul 2012 08:53:06 -0600
+Message-ID: <20120725142254.12800.61860.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1343598582.15288.4.camel@shinybook.infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 29, 2012 at 10:49:42PM +0100, David Woodhouse wrote:
-> +	 * Some devices may provide ROMs via a source other than the BAR
-> +	 */
-> +	if (pdev->rom && pdev->romlen) {
-> +		*size = pdev->romlen;
-> +		return phys_to_virt(pdev->rom);
+Hi Linus,
 
-Needs casting. My mistake.
+This series includes the VFIO userspace driver interface for the
+3.6 kernel merge window.  This driver is intended to provide a
+secure interface for device access using IOMMU protection for
+applications like assignment of physical devices to virtual
+machines.  Qemu will be the first user of this interface, enabling
+assignment of PCI devices to Qemu guests.  This interface is
+intended to eventually replace the x86-specific assignment mechanism
+currently available in KVM.  This interface has the advantage of
+being more secure, by working with IOMMU groups to ensure device
+isolation and providing it's own filtered resource access mechanism,
+and also more flexible, in not being x86 or KVM specific (extensions
+to enable POWER are already working).
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+As a new driver, I'm including both the individual patches in email,
+as well as a branch to pull from:
+
+git://github.com/awilliam/linux-vfio.git for-linus
+
+This driver is originally the work of Tom Lyon, but has since been
+handed over to me and gone through a complete overhaul thanks to the
+input from David Gibson, Ben Herrenschmidt, Chris Wright, Joerg
+Roedel, and others.  This driver has been available in linux-next for
+the last month.  Thanks,
+
+Alex
+
+---
+
+Alex Williamson (4):
+      vfio: Add PCI device driver
+      vfio: Type1 IOMMU implementation
+      vfio: Add documentation
+      vfio: VFIO core
+
+
+ Documentation/ioctl/ioctl-number.txt |    1 
+ Documentation/vfio.txt               |  314 +++++++
+ MAINTAINERS                          |    8 
+ drivers/Kconfig                      |    2 
+ drivers/Makefile                     |    1 
+ drivers/vfio/Kconfig                 |   16 
+ drivers/vfio/Makefile                |    3 
+ drivers/vfio/pci/Kconfig             |    8 
+ drivers/vfio/pci/Makefile            |    4 
+ drivers/vfio/pci/vfio_pci.c          |  579 +++++++++++++
+ drivers/vfio/pci/vfio_pci_config.c   | 1540 ++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_intrs.c    |  740 ++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h  |   91 ++
+ drivers/vfio/pci/vfio_pci_rdwr.c     |  269 ++++++
+ drivers/vfio/vfio.c                  | 1420 +++++++++++++++++++++++++++++++
+ drivers/vfio/vfio_iommu_type1.c      |  753 +++++++++++++++++
+ include/linux/vfio.h                 |  445 ++++++++++
+ 17 files changed, 6194 insertions(+)
+ create mode 100644 Documentation/vfio.txt
+ create mode 100644 drivers/vfio/Kconfig
+ create mode 100644 drivers/vfio/Makefile
+ create mode 100644 drivers/vfio/pci/Kconfig
+ create mode 100644 drivers/vfio/pci/Makefile
+ create mode 100644 drivers/vfio/pci/vfio_pci.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_config.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_private.h
+ create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
+ create mode 100644 drivers/vfio/vfio.c
+ create mode 100644 drivers/vfio/vfio_iommu_type1.c
+ create mode 100644 include/linux/vfio.h
