@@ -1,123 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 8/8] PCI: Integrate 'pci_fixup_final' quirks into hot-plug
-	paths
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:36:46 -0600
-Message-ID: <20120709213645.8975.9613.stgit@amt.stowe>
-In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
-References: <20120709213554.8975.60552.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:57224 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751101Ab2GYUnL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jul 2012 16:43:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH][update] PCI / PM: Fix messages printed by acpi_pci_set_power_state()
+Date: Wed, 25 Jul 2012 22:48:52 +0200
+Cc: huang ying <huang.ying.caritas@gmail.com>,
+	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1207251600500.2008-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1207251600500.2008-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201207252248.52620.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI's final quirks (pci_fixup_final) are currently invoked by
-pci_apply_final_quirk() which traverses the platform's list of PCI
-devices.  The calling mechanism limits the quirk invocations to a single
-instance during boot.  As such, hot-plugable devices do not have their
-associated final quirks called upon hot-plug events.
+On Wednesday, July 25, 2012, Alan Stern wrote:
+> On Wed, 25 Jul 2012, Rafael J. Wysocki wrote:
+> 
+> > 
+> > If a PCI device is put into D3_cold by acpi_bus_set_power(),
+> > the message printed by acpi_pci_set_power_state() says that its
+> > power state has been changed to D4, which doesn't make sense.
+> > In turn, if the device is put into D3_hot, the message says just
+> > "D3" without specifying which variant of D3 it is.
+> > 
+> > Fix that by using an array of state names corresponding to the
+> > PCI device power states instead of building the state name from
+> > the numeric value corresponding to the given state directly.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >  drivers/pci/pci-acpi.c |   14 +++++++++++---
+> >  1 file changed, 11 insertions(+), 3 deletions(-)
+> > 
+> > Index: linux/drivers/pci/pci-acpi.c
+> > ===================================================================
+> > --- linux.orig/drivers/pci/pci-acpi.c
+> > +++ linux/drivers/pci/pci-acpi.c
+> > @@ -265,9 +265,17 @@ static int acpi_pci_set_power_state(stru
+> >  		error = acpi_bus_set_power(handle, state_conv[state]);
+> >  	}
+> >  
+> > -	if (!error)
+> > -		dev_printk(KERN_INFO, &dev->dev,
+> > -				"power state changed by ACPI to D%d\n", state);
+> > +	if (!error) {
+> > +		static const char *state_name[] = {
+> > +			[PCI_D0] = "D0",
+> > +			[PCI_D1] = "D1",
+> > +			[PCI_D2] = "D2",
+> > +			[PCI_D3hot] = "D3hot",
+> > +			[PCI_D3cold] = "D3cold"
+> > +		};
+> > +		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> > +			 state_name[state]);
+> > +	}
+> 
+> How about using the pci_power_name macro defined in
+> include/linux/pci.h instead?
 
-This series implements a interim solution[1] to integrate pci_fixup_final
-quirks into the various hot-plug event paths.
+That's even better, I forgot that the macro was there. :-)
 
-As I intend for the global variable introduced by this patch to be
-temporary I purposely chose not to include its 'extern' declaration within
-a header file (i.e. include/linux/pci.h).
+Updated patch follows.
 
+Thanks,
+Rafael
 
-[1] I intended to come up with a single, uniform, solution that would
-satisfy both the boot path and the various hot-plug event paths with
-respect to final quirks.  From an architectural perspective, the proper
-placement for the final quirks is somewhere just prior to, or within, the
-device_add path.
-
-I originally started with that approach but eventually realized that there
-are issues with moving the quirks into the device_add path with respect to
-the boot path.  Currently, the boot path scans the PCI devices, adds the
-devices, assigns resources, and then call the final quirks whereas the
-hot-plug paths scan, assign resources, and then add the devices which is
-better sequencing with respect to the assignment of resources and the
-addition of devices.
-
-All of this suggests that we should change PCI device setup in the boot
-path to be more like hot-plug: scan, assign resources, (final fixups),
-then add.  While I think that is the correct approach, and something that
-we should be addressing, it will require a lot of work.  So until that
-occurs, this series should serve as a stop-gap solution for the interim by
-keeping the current boot path sequencing in place and then adding the
-final quirk processing into the device_add path for hot-plug events via a
-(temporary) global variable qualifier.
-
-When the boot path's PCI device setup is addressed we should end up with a
-single, uniform, device_add based solution for applying final quirks
-by:
-  o  removing 'fs_initcall_sync(pci_apply_final_quirks);',
-  o  removing the global variable 'pci_fixup_final_inited' and all
-     of its usages,
-  o  renaming, and moving, the 'pci_cache_line_size' related code
-     currently embedded in 'pci_apply_final_quirks()'.
-
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
+From: Rafael J. Wysocki <rjw@sisk.pl>
+Subject: PCI / PM: Fix messages printed by acpi_pci_set_power_state()
 
- drivers/pci/bus.c    |    4 ++++
- drivers/pci/quirks.c |   18 ++++++++++++++++++
- 2 files changed, 22 insertions(+), 0 deletions(-)
+If a PCI device is put into D3_cold by acpi_bus_set_power(),
+the message printed by acpi_pci_set_power_state() says that its
+power state has been changed to D4, which doesn't make sense.
+In turn, if the device is put into D3_hot, the message simply
+says "D3" without specifying the variant of the D3 state.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4ce5ef2..b511bd4 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -164,6 +164,10 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- int pci_bus_add_device(struct pci_dev *dev)
- {
- 	int retval;
-+	extern bool pci_fixup_final_inited;
-+
-+	if (pci_fixup_final_inited)
-+		pci_fixup_device(pci_fixup_final, dev);
- 	retval = device_add(&dev->dev);
- 	if (retval)
- 		return retval;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index d19e522..1850eb5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3054,6 +3054,22 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_fixup_device);
- 
-+
-+/*
-+ * The global variable 'pci_fixup_final_inited' is being used as a interim
-+ * solution for calling the final quirks only during hot-plug events (not
-+ * during boot processing).
-+ *
-+ * When the boot path's PCI device setup sequencing is addressed, we can
-+ * remove the instance, and usages of, 'pci_fixup_final_inited' along with
-+ * removing 'fs_initcall_sync(pci_apply_final_quirks);' and end up with a
-+ * single, uniform, solution that satisfies both the boot path and the
-+ * various hot-plug event paths.
-+ *
-+ * ToDo: Remove 'pci_fixup_final_inited'
-+ */
-+bool pci_fixup_final_inited;
-+
- static int __init pci_apply_final_quirks(void)
- {
- 	struct pci_dev *dev = NULL;
-@@ -3084,6 +3100,8 @@ static int __init pci_apply_final_quirks(void)
- 			pci_cache_line_size = pci_dfl_cache_line_size;
- 		}
+Fix this by using the pci_power_name() macro for printing the state
+name instead of building it from the numeric value corresponding to
+the given state directly.
+
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/pci/pci-acpi.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: linux/drivers/pci/pci-acpi.c
+===================================================================
+--- linux.orig/drivers/pci/pci-acpi.c
++++ linux/drivers/pci/pci-acpi.c
+@@ -266,8 +266,8 @@ static int acpi_pci_set_power_state(stru
  	}
-+	pci_fixup_final_inited = 1;
-+
- 	if (!pci_cache_line_size) {
- 		printk(KERN_DEBUG "PCI: CLS %u bytes, default %u\n",
- 		       cls << 2, pci_dfl_cache_line_size << 2);
-
+ 
+ 	if (!error)
+-		dev_printk(KERN_INFO, &dev->dev,
+-				"power state changed by ACPI to D%d\n", state);
++		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
++			 pci_power_name(state));
+ 
+ 	return error;
+ }
