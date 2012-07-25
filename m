@@ -1,152 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:21691 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030280Ab2GKWIb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 18:08:31 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org,
+Received: from mx1.redhat.com ([209.132.183.28]:16715 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933227Ab2GYPMS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jul 2012 11:12:18 -0400
+Message-ID: <50100CC4.8010706@redhat.com>
+Date: Wed, 25 Jul 2012 11:12:04 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Jiang Liu <liuj97@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI, pciehp: Remove not used code
-Date: Wed, 11 Jul 2012 15:08:16 -0700
-Message-Id: <1342044496-2604-1-git-send-email-yinghai@kernel.org>
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v2 01/32] PCI: add pcie_flags_reg into struct pci_dev
+ to cache PCIe capabilities register
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com> <1343147504-25891-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343147504-25891-2-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+resending since i did a reply vs reply-all last time...
 
----
- drivers/pci/hotplug/pciehp.h     |    4 -
- drivers/pci/hotplug/pciehp_hpc.c |  101 ---------------------------------------
- 2 files changed, 105 deletions(-)
+On 07/24/2012 12:31 PM, Jiang Liu wrote:
+> From: Yijing Wang<wangyijing@huawei.com>
+>
+> From: Yijing Wang<wangyijing@huawei.com>
+>
+> Since PCI Express Capabilities Register is read only, cache its value
+> into struct pci_dev to avoid repeatedly calling pci_read_config_*().
+>
+> Signed-off-by: Yijing Wang<wangyijing@huawei.com>
+> Signed-off-by: Jiang Liu<liuj97@gmail.com>
+> ---
+>   drivers/pci/probe.c |    1 +
+>   include/linux/pci.h |   10 ++++++++++
+>   2 files changed, 11 insertions(+)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6c143b4..6fd58df 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -929,6 +929,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>   	pdev->is_pcie = 1;
+>   	pdev->pcie_cap = pos;
+>   	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS,&reg16);
+> +	pdev->pcie_flags_reg = reg16;
+>   	pdev->pcie_type = (reg16&  PCI_EXP_FLAGS_TYPE)>>  4;
+So, given the patch below, shouldn't the above line be ?
+     pdev->pcie_type = pci_pcie_type(pdev);
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp.h
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp.h
-+++ linux-2.6/drivers/pci/hotplug/pciehp.h
-@@ -149,10 +149,6 @@ int pciehp_get_attention_status(struct s
- int pciehp_set_attention_status(struct slot *slot, u8 status);
- int pciehp_get_latch_status(struct slot *slot, u8 *status);
- int pciehp_get_adapter_status(struct slot *slot, u8 *status);
--int pciehp_get_max_link_speed(struct slot *slot, enum pci_bus_speed *speed);
--int pciehp_get_max_link_width(struct slot *slot, enum pcie_link_width *val);
--int pciehp_get_cur_link_speed(struct slot *slot, enum pci_bus_speed *speed);
--int pciehp_get_cur_link_width(struct slot *slot, enum pcie_link_width *val);
- int pciehp_query_power_fault(struct slot *slot);
- void pciehp_green_led_on(struct slot *slot);
- void pciehp_green_led_off(struct slot *slot);
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -705,107 +705,6 @@ static irqreturn_t pcie_isr(int irq, voi
- 	return IRQ_HANDLED;
- }
- 
--int pciehp_get_max_lnk_width(struct slot *slot,
--				 enum pcie_link_width *value)
--{
--	struct controller *ctrl = slot->ctrl;
--	enum pcie_link_width lnk_wdth;
--	u32	lnk_cap;
--	int retval = 0;
--
--	retval = pciehp_readl(ctrl, PCI_EXP_LNKCAP, &lnk_cap);
--	if (retval) {
--		ctrl_err(ctrl, "%s: Cannot read LNKCAP register\n", __func__);
--		return retval;
--	}
--
--	switch ((lnk_cap & PCI_EXP_LNKSTA_NLW) >> 4){
--	case 0:
--		lnk_wdth = PCIE_LNK_WIDTH_RESRV;
--		break;
--	case 1:
--		lnk_wdth = PCIE_LNK_X1;
--		break;
--	case 2:
--		lnk_wdth = PCIE_LNK_X2;
--		break;
--	case 4:
--		lnk_wdth = PCIE_LNK_X4;
--		break;
--	case 8:
--		lnk_wdth = PCIE_LNK_X8;
--		break;
--	case 12:
--		lnk_wdth = PCIE_LNK_X12;
--		break;
--	case 16:
--		lnk_wdth = PCIE_LNK_X16;
--		break;
--	case 32:
--		lnk_wdth = PCIE_LNK_X32;
--		break;
--	default:
--		lnk_wdth = PCIE_LNK_WIDTH_UNKNOWN;
--		break;
--	}
--
--	*value = lnk_wdth;
--	ctrl_dbg(ctrl, "Max link width = %d\n", lnk_wdth);
--
--	return retval;
--}
--
--int pciehp_get_cur_lnk_width(struct slot *slot,
--				 enum pcie_link_width *value)
--{
--	struct controller *ctrl = slot->ctrl;
--	enum pcie_link_width lnk_wdth = PCIE_LNK_WIDTH_UNKNOWN;
--	int retval = 0;
--	u16 lnk_status;
--
--	retval = pciehp_readw(ctrl, PCI_EXP_LNKSTA, &lnk_status);
--	if (retval) {
--		ctrl_err(ctrl, "%s: Cannot read LNKSTATUS register\n",
--			 __func__);
--		return retval;
--	}
--
--	switch ((lnk_status & PCI_EXP_LNKSTA_NLW) >> 4){
--	case 0:
--		lnk_wdth = PCIE_LNK_WIDTH_RESRV;
--		break;
--	case 1:
--		lnk_wdth = PCIE_LNK_X1;
--		break;
--	case 2:
--		lnk_wdth = PCIE_LNK_X2;
--		break;
--	case 4:
--		lnk_wdth = PCIE_LNK_X4;
--		break;
--	case 8:
--		lnk_wdth = PCIE_LNK_X8;
--		break;
--	case 12:
--		lnk_wdth = PCIE_LNK_X12;
--		break;
--	case 16:
--		lnk_wdth = PCIE_LNK_X16;
--		break;
--	case 32:
--		lnk_wdth = PCIE_LNK_X32;
--		break;
--	default:
--		lnk_wdth = PCIE_LNK_WIDTH_UNKNOWN;
--		break;
--	}
--
--	*value = lnk_wdth;
--	ctrl_dbg(ctrl, "Current link width = %d\n", lnk_wdth);
--
--	return retval;
--}
--
- int pcie_enable_notification(struct controller *ctrl)
- {
- 	u16 cmd, mask;
+Missed part of patch ?
+
+>   	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP,&reg16);
+>   	pdev->pcie_mpss = reg16&  PCI_EXP_DEVCAP_PAYLOAD;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5faa831..95662b2 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -258,6 +258,7 @@ struct pci_dev {
+>   	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
+>   	u8		rom_base_reg;	/* which config register controls the ROM */
+>   	u8		pin;  		/* which interrupt pin this device uses */
+> +	u16		pcie_flags_reg;	/* cached PCI-E Capabilities Register */
+>
+>   	struct pci_driver *driver;	/* which driver has allocated this device */
+>   	u64		dma_mask;	/* Mask of the bits of bus address this
+> @@ -1650,6 +1651,15 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
+>   	return !!pci_pcie_cap(dev);
+>   }
+>
+> +/**
+> + * pci_pcie_type - get the PCIe device/port type
+> + * @dev: PCI device
+> + */
+> +static inline int pci_pcie_type(const struct pci_dev *dev)
+> +{
+> +	return (dev->pcie_flags_reg&  PCI_EXP_FLAGS_TYPE)>>  4;
+> +}
+> +
+>   void pci_request_acs(void);
+>   bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>   bool pci_acs_path_enabled(struct pci_dev *start,
+
