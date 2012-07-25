@@ -1,86 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH -v2 5/8] MIPS/PCI: Move final fixup quirks from __init to
-	__devinit
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rth@twiddle.net,
-	ink@jurassic.park.msu.ru, mattst88@gmail.com, ralf@linux-mips.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	yinghai@kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jul 2012 15:36:27 -0600
-Message-ID: <20120709213627.8975.4902.stgit@amt.stowe>
-In-Reply-To: <20120709213554.8975.60552.stgit@amt.stowe>
-References: <20120709213554.8975.60552.stgit@amt.stowe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:15714 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750821Ab2GYEe1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jul 2012 00:34:27 -0400
+Message-ID: <1343190864.10311.26.camel@yhuang-dev>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
+ hotplug failure
+From: Huang Ying <ying.huang@intel.com>
+To: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Date: Wed, 25 Jul 2012 12:34:24 +0800
+In-Reply-To: <87pq7ko532.fsf@nemi.mork.no>
+References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
+	 <87r4s0opck.fsf@nemi.mork.no> <87pq7ko532.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem's final fixups are executed once during boot, after the
-pci-device is found.  As long as the system does not support hot-plug,
-specifying __init is fine.
+Hi, Bjorn,
 
-With hot-plug, either physically based hot-plug events or pseudo hot-plug
-events such as "echo 1 > /sys/bus/pci/rescan", it is possible to remove a
-PCI bus during run time and have it rediscovered which will require the
-call of the fixups again in order for the device to function properly.
+On Wed, 2012-07-25 at 06:08 +0200, Bjørn Mork wrote:
+> Enabling autosuspend for USB causes hotplug failure in the current
+> linux-next. Newly plugged devices are not detected at all until the
+> port/controller is manually powered on by writing "on" to power/control.
+> Testing is pretty simple:
+> 
+>   1) for f in /sys/bus/usb/devices/*/power/control; do echo auto > $f; done
 
-This patch prepares specific quirk(s) for use with hot-plug events.
+Have you done:
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+for f in /sys/bus/pci/devices/*/power/confol; do echo auto > $f; done
 
- arch/mips/mti-malta/malta-pci.c |    2 +-
- arch/mips/pci/ops-tx4927.c      |    2 +-
- arch/mips/txx9/generic/pci.c    |    4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+?
 
-diff --git a/arch/mips/mti-malta/malta-pci.c b/arch/mips/mti-malta/malta-pci.c
-index bf80921..b663402 100644
---- a/arch/mips/mti-malta/malta-pci.c
-+++ b/arch/mips/mti-malta/malta-pci.c
-@@ -253,7 +253,7 @@ void __init mips_pcibios_init(void)
- }
- 
- /* Enable PCI 2.1 compatibility in PIIX4 */
--static void __init quirk_dlcsetup(struct pci_dev *dev)
-+static void __devinit quirk_dlcsetup(struct pci_dev *dev)
- {
- 	u8 odlc, ndlc;
- 	(void) pci_read_config_byte(dev, 0x82, &odlc);
-diff --git a/arch/mips/pci/ops-tx4927.c b/arch/mips/pci/ops-tx4927.c
-index a1e7e6d..bc13e29 100644
---- a/arch/mips/pci/ops-tx4927.c
-+++ b/arch/mips/pci/ops-tx4927.c
-@@ -495,7 +495,7 @@ irqreturn_t tx4927_pcierr_interrupt(int irq, void *dev_id)
- }
- 
- #ifdef CONFIG_TOSHIBA_FPCIB0
--static void __init tx4927_quirk_slc90e66_bridge(struct pci_dev *dev)
-+static void __devinit tx4927_quirk_slc90e66_bridge(struct pci_dev *dev)
- {
- 	struct tx4927_pcic_reg __iomem *pcicptr = pci_bus_to_pcicptr(dev->bus);
- 
-diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
-index 682efb0..ce1ee50 100644
---- a/arch/mips/txx9/generic/pci.c
-+++ b/arch/mips/txx9/generic/pci.c
-@@ -256,7 +256,7 @@ static irqreturn_t i8259_interrupt(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- }
- 
--static int __init
-+static int __devinit
- txx9_i8259_irq_setup(int irq)
- {
- 	int err;
-@@ -269,7 +269,7 @@ txx9_i8259_irq_setup(int irq)
- 	return err;
- }
- 
--static void __init quirk_slc90e66_bridge(struct pci_dev *dev)
-+static void __devinit quirk_slc90e66_bridge(struct pci_dev *dev)
- {
- 	int irq;	/* PCI/ISA Bridge interrupt */
- 	u8 reg_64;
+If not, the pci device will not be suspended at all.
+
+>   2) wait for the controllers to suspend
+>   3) plugin a new USB device
+
+After plugin the new USB device, is there anything in dmesg?
+
+> 
+> I've bisected the regression down to this commit:
+> 
+> 
+> commit 448bd857d48e69b33ef323739dc6d8ca20d4cda7
+> Author: Huang Ying <ying.huang@intel.com>
+> Date:   Sat Jun 23 10:23:51 2012 +0800
+> 
+>     PCI/PM: add PCIe runtime D3cold support
+>     
+> 
+> Looks like this somehow powers down my USB host controllers in such a
+> way that they are unable to detect connections to their ports.  The
+> system is a pretty standard 4 year old intel based laptop.  Full lspci
+> listing is attached.
+>
+> Please let me know if you need further information.  And please fix this
+> before rc1.  It effectively makes USB non-functional if autosuspend is
+> enabled.
+
+Can you provide the output of the following command lines?
+
+grep . /sys/bus/pci/devices/*/power/*
+grep . /sys/bus/usb/devices/*/power/*
+lsusb
+
+After the controllers suspended.
+
+Best Reards,
+Huang Ying
+
 
