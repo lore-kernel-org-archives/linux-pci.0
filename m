@@ -1,55 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42340 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083Ab2GRL6f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jul 2012 07:58:35 -0400
+Received: from usmamail.tilera.com ([12.216.194.151]:38379 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428Ab2GYTqt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 15:46:49 -0400
+Message-ID: <201207251946.q6PJklUm016228@farm-0002.internal.tilera.com>
+From: Chris Metcalf <cmetcalf@tilera.com>
+Date: Wed, 25 Jul 2012 15:40:50 -0400
+Subject: [PATCH] tilegx pci: fix semantic merge conflict with 3527ed81c
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120715133530.1ffc3f36@endymion.delvare>
-References: <1342172455-8530-1-git-send-email-amaury.decreme@gmail.com>
- <CAErSpo5-ou3vjmHgjiOOd57PvWg_hez80U0k3AX_ydjb0pikvQ@mail.gmail.com> <20120715133530.1ffc3f36@endymion.delvare>
-From: =?UTF-8?Q?Amaury_Decr=C3=AAme?= <amaury.decreme@gmail.com>
-Date: Wed, 18 Jul 2012 13:57:54 +0200
-Message-ID: <CAPXEm70iiU-OQ4DbmBaPzk-WTxBLzvEPSTrRwcn073q9DFs08A@mail.gmail.com>
-Subject: Re: [PATCH] i2c: sis964: bus driver
-To: Jean Delvare <khali@linux-fr.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-i2c@vger.kernel.org,
-	amalysh@web.de, nelson@sis.com, ben-linux@fluff.org,
-	w.sang@pengutronix.de, rob@landley.net,
-	jeffrey.t.kirsher@intel.com, akpm@linux-foundation.org,
-	davem@davemloft.net, joe@perches.com, ralf@linux-mips.org,
-	dirk.brandewie@gmail.com, jayachandranc@netlogicmicro.com,
-	Xiangzhen.Ye@csr.com, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	hi3766691@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Yinghai Lu removed pci_bus.subordinate in pci-next, which meant that
+the tile-next changes to add tilegx PCI support don't build.  This
+was expected (seen in linux-next) and this one-line fix is along
+the same lines as commit b918c62e for all other architectures.
 
+Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+---
+ arch/tile/kernel/pci_gx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-For the v2 of this patch, I will remove the modifications on
-include/linux/pci_ids.h
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index fa75264..0e213e3 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -853,7 +853,7 @@ int __init pcibios_init(void)
+ 		bus = pci_scan_root_bus(NULL, next_busno, controller->ops,
+ 					controller, &resources);
+ 		controller->root_bus = bus;
+-		next_busno = bus->subordinate + 1;
++		next_busno = bus->busn_res.end + 1;
+ 
+ 	}
+ 
+-- 
+1.7.10.3
 
- include/linux/pci_ids.h             |    1 +
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index ab741b0..0ffc982 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -699,6 +699,7 @@
- #define PCI_DEVICE_ID_SI_961           0x0961
- #define PCI_DEVICE_ID_SI_962           0x0962
- #define PCI_DEVICE_ID_SI_963           0x0963
-+#define PCI_DEVICE_ID_SI_964           0x0964
- #define PCI_DEVICE_ID_SI_965           0x0965
- #define PCI_DEVICE_ID_SI_966           0x0966
- #define PCI_DEVICE_ID_SI_968           0x0968
-
-
-And will add this to drivers/i2c/busses/i2c-sis964.c directly as
-i2c-sis964 will be the only file needing this define
-+#define PCI_DEVICE_ID_SI_964           0x0964
-
-
-
-Amaury Decrême
