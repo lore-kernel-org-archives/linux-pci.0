@@ -1,134 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:45699 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592Ab2GPPxF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 11:53:05 -0400
-Received: by bkwj10 with SMTP id j10so4836055bkw.19
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 08:53:03 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:25608 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751641Ab2GYJqW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 05:46:22 -0400
+Message-ID: <500FC011.5050807@huawei.com>
+Date: Wed, 25 Jul 2012 17:44:49 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <5000A6E1.5070306@xenotime.net>
-References: <20120713202900.15160.23438.stgit@amt.stowe> <5000A6E1.5070306@xenotime.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 16 Jul 2012 09:52:43 -0600
-Message-ID: <CAErSpo43dYfNjWfvb_B3oUJwT2PS+6P8=FDt==96JzH-MaCaZA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix undefined reference to 'pci_fixup_final_inited'
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 07/32] PCI/portdrv: use PCIe capabilities access
+ functions to simplify implementation
+References: <1343147504-25891-1-git-send-email-jiang.liu@huawei.com> <1343147504-25891-8-git-send-email-jiang.liu@huawei.com> <4A338DB2991D2A44B9A44B8718AECF650A4586BC@G01JPEXMBYT03>
+In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A4586BC@G01JPEXMBYT03>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 13, 2012 at 4:53 PM, Randy Dunlap <rdunlap@xenotime.net> wrote:
-> On 07/13/2012 01:29 PM, Myron Stowe wrote:
->
->> My "PCI: Integrate 'pci_fixup_final' quirks into hot-plug paths" patch
->> introduced an undefined reference to 'pci_fixup_final_inited' when
->> CONFIG_PCI_QUIRKS is not enabled (on x86_64):
->>   drivers/built-in.o: In function `pci_bus_add_device':
->>   (.text+0x4f62): undefined reference to `pci_fixup_final_inited'
+>> diff --git a/drivers/pci/pcie/portdrv_core.c
+>> b/drivers/pci/pcie/portdrv_core.c
+>> index bf320a9..37bff83 100644
+>> --- a/drivers/pci/pcie/portdrv_core.c
+>> +++ b/drivers/pci/pcie/portdrv_core.c
+>> @@ -76,7 +76,6 @@ static int pcie_port_enable_msix(struct pci_dev *dev,
+>> int *vectors, int mask)
+>>  	struct msix_entry *msix_entries;
+>>  	int idx[PCIE_PORT_DEVICE_MAXSERVICES];
+>>  	int nr_entries, status, pos, i, nvec;
+>> -	u16 reg16;
+>>  	u32 reg32;
 >>
->> This patch removes the external reference ending up with a result closer
->> to what we ultimately want when the boot path issues described in the
->> original patch are resolved.
->>
->> References:
->>   https://lkml.org/lkml/2012/7/9/542    Original, offending, patch
->>   https://lkml.org/lkml/2012/7/12/338 Randy's catch
->>
->> Reported-by: rdunlap@xenotime.net
->> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
->
->
-> Acked-by: Randy Dunlap <rdunlap@xenotime.net>
->
-> Thanks.
+>>  	nr_entries = pci_msix_table_size(dev);
+>> @@ -120,9 +119,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev,
+>> int *vectors, int mask)
+>>  		 * the value in this field indicates which MSI-X Table entry
+>> is
+>>  		 * used to generate the interrupt message."
+>>  		 */
+>> -		pos = pci_pcie_cap(dev);
+>> -		pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
+>> -		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+>> +		entry = (dev->pcie_flags_reg & PCI_EXP_FLAGS_IRQ) >> 9;
+>>  		if (entry >= nr_entries)
+>>  			goto Error;
+> 
+> I think we need to use pci_read_config_word() for MSI setup.
+> 
+> "Interrupt Message Number" in the PCIe capability register can vary depending
+> on whether MSI or MSI-x is enabled. Please see PCIe spec for details.
+> 
+> Could you double-check that?
+> 
+> Regards,
+> Kenji Kaneshige
+Good catch, will revert this change.
+Thanks!
+Gerry
 
-I added this to my "next" branch, thanks!
-
->>
->>  drivers/pci/bus.c    |    4 +---
->>  drivers/pci/quirks.c |   20 ++++----------------
->>  2 files changed, 5 insertions(+), 19 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index b511bd4..4b0970b 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -164,10 +164,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
->>  int pci_bus_add_device(struct pci_dev *dev)
->>  {
->>       int retval;
->> -     extern bool pci_fixup_final_inited;
->>
->> -     if (pci_fixup_final_inited)
->> -             pci_fixup_device(pci_fixup_final, dev);
->> +     pci_fixup_device(pci_fixup_final, dev);
->>       retval = device_add(&dev->dev);
->>       if (retval)
->>               return retval;
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 52f44b5..003f356 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -2956,6 +2956,7 @@ extern struct pci_fixup __end_pci_fixups_resume_early[];
->>  extern struct pci_fixup __start_pci_fixups_suspend[];
->>  extern struct pci_fixup __end_pci_fixups_suspend[];
->>
->> +static bool pci_apply_fixup_final_quirks;
->>
->>  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->>  {
->> @@ -2973,6 +2974,8 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->>               break;
->>
->>       case pci_fixup_final:
->> +             if (!pci_apply_fixup_final_quirks)
->> +                     return;
->>               start = __start_pci_fixups_final;
->>               end = __end_pci_fixups_final;
->>               break;
->> @@ -3006,21 +3009,6 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->>  EXPORT_SYMBOL(pci_fixup_device);
->>
->>
->> -/*
->> - * The global variable 'pci_fixup_final_inited' is being used as a interim
->> - * solution for calling the final quirks only during hot-plug events (not
->> - * during boot processing).
->> - *
->> - * When the boot path's PCI device setup sequencing is addressed, we can
->> - * remove the instance, and usages of, 'pci_fixup_final_inited' along with
->> - * removing 'fs_initcall_sync(pci_apply_final_quirks);' and end up with a
->> - * single, uniform, solution that satisfies both the boot path and the
->> - * various hot-plug event paths.
->> - *
->> - * ToDo: Remove 'pci_fixup_final_inited'
->> - */
->> -bool pci_fixup_final_inited;
->> -
->>  static int __init pci_apply_final_quirks(void)
->>  {
->>       struct pci_dev *dev = NULL;
->> @@ -3031,6 +3019,7 @@ static int __init pci_apply_final_quirks(void)
->>               printk(KERN_DEBUG "PCI: CLS %u bytes\n",
->>                      pci_cache_line_size << 2);
->>
->> +     pci_apply_fixup_final_quirks = true;
->>       for_each_pci_dev(dev) {
->>               pci_fixup_device(pci_fixup_final, dev);
->>               /*
->> @@ -3051,7 +3040,6 @@ static int __init pci_apply_final_quirks(void)
->>                       pci_cache_line_size = pci_dfl_cache_line_size;
->>               }
->>       }
->> -     pci_fixup_final_inited = 1;
->>
->>       if (!pci_cache_line_size) {
->>               printk(KERN_DEBUG "PCI: CLS %u bytes, default %u\n",
->>
->
->
->
-> --
-> ~Randy
