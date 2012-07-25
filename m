@@ -1,82 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:64865 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754957Ab2GXQnS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2012 12:43:18 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 24/32] PCI/ath9k: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:41:09 +0800
-Message-Id: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
+Received: from usmamail.tilera.com ([12.216.194.151]:13754 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233Ab2GYWpb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 18:45:31 -0400
+Message-ID: <50107709.2000301@tilera.com>
+Date: Wed, 25 Jul 2012 18:45:29 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] tilegx pci: fix semantic merge conflict with 3527ed81c
+References: <201207251946.q6PJklUm016228@farm-0002.internal.tilera.com> <CAErSpo7P4jCw=gTDR3JabY1F46xWiTF6ru90T86NzuT7Pxu1_A@mail.gmail.com>
+In-Reply-To: <CAErSpo7P4jCw=gTDR3JabY1F46xWiTF6ru90T86NzuT7Pxu1_A@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 7/25/2012 5:16 PM, Bjorn Helgaas wrote:
+> On Wed, Jul 25, 2012 at 1:40 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+>> > Yinghai Lu removed pci_bus.subordinate in pci-next, which meant that
+>> > the tile-next changes to add tilegx PCI support don't build.  This
+>> > was expected (seen in linux-next) and this one-line fix is along
+>> > the same lines as commit b918c62e for all other architectures.
+>> >
+>> > Signed-off-by: Chris Metcalf <cmetcalf@tilera.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> You pushed the other tile changes, so I assume you'll do the same with
+> this one.  
 
-Use PCIe capabilities access functions to simplify ath9k driver's
-implementation.
+I will, thanks!
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |   18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index a856b51..f90342d 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -112,11 +112,9 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct pci_dev *pdev = to_pci_dev(sc->dev);
- 	struct pci_dev *parent;
--	int pos;
--	u8 aspm;
-+	u16 aspm;
- 
--	pos = pci_pcie_cap(pdev);
--	if (!pos)
-+	if (!pci_is_pcie(pdev))
- 		return;
- 
- 	parent = pdev->bus->self;
-@@ -125,24 +123,22 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 
- 	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
- 		/* Bluetooth coexistance requires disabling ASPM. */
--		pci_read_config_byte(pdev, pos + PCI_EXP_LNKCTL, &aspm);
-+		pci_pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &aspm);
- 		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
--		pci_write_config_byte(pdev, pos + PCI_EXP_LNKCTL, aspm);
-+		pci_pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, aspm);
- 
- 		/*
- 		 * Both upstream and downstream PCIe components should
- 		 * have the same ASPM settings.
- 		 */
--		pos = pci_pcie_cap(parent);
--		pci_read_config_byte(parent, pos + PCI_EXP_LNKCTL, &aspm);
-+		pci_pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
- 		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
--		pci_write_config_byte(parent, pos + PCI_EXP_LNKCTL, aspm);
-+		pci_pcie_capability_write_word(parent, PCI_EXP_LNKCTL, aspm);
- 
- 		return;
- 	}
- 
--	pos = pci_pcie_cap(parent);
--	pci_read_config_byte(parent, pos +  PCI_EXP_LNKCTL, &aspm);
-+	pci_pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
- 	if (aspm & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
- 		ah->aspm_enabled = true;
- 		/* Initialize PCIe PM and SERDES registers. */
 -- 
-1.7.9.5
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
 
