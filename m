@@ -1,55 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:56072 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932349Ab2GEWjk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 18:39:40 -0400
-Received: by lbbgm6 with SMTP id gm6so13668054lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 05 Jul 2012 15:39:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201207060000.51762.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1207051727430.13212-100000@netrider.rowland.org> <201207060000.51762.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 5 Jul 2012 16:39:18 -0600
-Message-ID: <CAErSpo6AJEdCem2oAv6z0wGiGTZSLQAs5sJN+_rN1d9uqyT7BQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Quirk for ASUS S3 issue
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	AceLan Kao <acelan.kao@canonical.com>,
-	linux-pci@vger.kernel.org,
-	=?UTF-8?B?5rSqKEFsZXgp6IyC6ICV?= <alex.hung@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:54732 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753326Ab2GYBuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 24 Jul 2012 21:50:10 -0400
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Tue, 24 Jul 2012 21:50:09 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 265A1C9001C
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2012 21:50:07 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6P1o64x388674
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2012 21:50:06 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6P1o38A015853
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2012 21:50:06 -0400
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, linuxram@us.ibm.com,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/8] pci: change variable name for find_pci_host_bridge
+Date: Wed, 25 Jul 2012 09:49:50 +0800
+Message-Id: <1343180997-9483-2-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 5, 2012 at 4:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, July 05, 2012, Alan Stern wrote:
->> On Thu, 5 Jul 2012, Bjorn Helgaas wrote:
->>
->> > I wish we knew more about what's really going on here.  I looked
->> > through the bug reports AceLan dug up, and I don't get the feeling
->> > that anybody really has a grand unified theory about why Windows works
->> > but Linux doesn't.  But I'm willing to apply one of these patches if
->> > you and/or Alan sign off on it.
->>
->> His description seems to make sense, even if it may not be complete.
->>
->> Windows sets the COMMAND register to 0 before suspending, so it doesn't
->> trigger the BIOS bus.  Linux doesn't, so the BIOS tries to quiesce the
->> EHCI controller.  This involves doing various MMIO accesses, which of
->> course don't work if the controller is already in D3.
+The patch changes the variable name for function find_pci_host_bridge()
+so that it looks more meaningful. More specificly, the "bus" has been
+replaced with "root_bus".
 
-Should we clear the COMMAND register for more than just EHCI devices?
-It seems like known differences from Windows are just waiting to bite
-us.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ drivers/pci/host-bridge.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I like your patch and explanation for how this can cause a hang...
-that helps make sense of things.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..c19776a 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -22,9 +22,9 @@ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+ 
+ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_bus *root_bus = find_pci_root_bus(dev);
+ 
+-	return to_pci_host_bridge(bus->bridge);
++	return to_pci_host_bridge(root_bus->bridge);
+ }
+ 
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+-- 
+1.7.5.4
 
->> For obvious reasons, I'm in favor of my two-line change over AceLan's
->> new PCI quirk.  So far there have been positive responses from a few
->> volunteers testing the patch.
->
-> The two-liner is good enough, I think, and tested.  We can always add a quirk
-> based on it in the future.
-
-Cool, do you want to send me a patch with Signed-off-by, etc?
