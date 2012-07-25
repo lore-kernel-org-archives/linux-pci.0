@@ -1,131 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:37948 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752870Ab2GMWyJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2012 18:54:09 -0400
-Message-ID: <5000A6E1.5070306@xenotime.net>
-Date: Fri, 13 Jul 2012 15:53:21 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Myron Stowe <myron.stowe@redhat.com>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix undefined reference to 'pci_fixup_final_inited'
-References: <20120713202900.15160.23438.stgit@amt.stowe>
-In-Reply-To: <20120713202900.15160.23438.stgit@amt.stowe>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e31.co.us.ibm.com ([32.97.110.149]:60748 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754418Ab2GYBuT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jul 2012 21:50:19 -0400
+Received: from /spool/local
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Tue, 24 Jul 2012 19:50:18 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id D96E719D8039
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jul 2012 01:50:13 +0000 (WET)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6P1oGe7156594
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2012 19:50:16 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6P1o9vt011419
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jul 2012 19:50:15 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, linuxram@us.ibm.com,
+	Gavin Shan <shangw@linux.vnet.ibm.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/8] fiddle with conversion of pci and CPU address
+Date: Wed, 25 Jul 2012 09:49:52 +0800
+Message-Id: <1343180997-9483-4-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/13/2012 01:29 PM, Myron Stowe wrote:
+The patch fiddles with the those functions used to do conversion
+between PCI and CPU address. More specificly, 2 functions are
+involved: pcibios_bus_to_resource() and pcibios_resource_to_bus()
 
-> My "PCI: Integrate 'pci_fixup_final' quirks into hot-plug paths" patch
-> introduced an undefined reference to 'pci_fixup_final_inited' when
-> CONFIG_PCI_QUIRKS is not enabled (on x86_64):
->   drivers/built-in.o: In function `pci_bus_add_device':
->   (.text+0x4f62): undefined reference to `pci_fixup_final_inited'
-> 
-> This patch removes the external reference ending up with a result closer
-> to what we ultimately want when the boot path issues described in the
-> original patch are resolved.
-> 
-> References:
->   https://lkml.org/lkml/2012/7/9/542    Original, offending, patch
->   https://lkml.org/lkml/2012/7/12/338	Randy's catch
-> 
-> Reported-by: rdunlap@xenotime.net
-> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ drivers/pci/host-bridge.c |   24 +++++++++++++++++++-----
+ include/linux/pci.h       |    5 ++++-
+ 2 files changed, 23 insertions(+), 6 deletions(-)
 
-
-Acked-by: Randy Dunlap <rdunlap@xenotime.net>
-
-Thanks.
-
-
-> ---
-> 
->  drivers/pci/bus.c    |    4 +---
->  drivers/pci/quirks.c |   20 ++++----------------
->  2 files changed, 5 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index b511bd4..4b0970b 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -164,10 +164,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
->  int pci_bus_add_device(struct pci_dev *dev)
->  {
->  	int retval;
-> -	extern bool pci_fixup_final_inited;
->  
-> -	if (pci_fixup_final_inited)
-> -		pci_fixup_device(pci_fixup_final, dev);
-> +	pci_fixup_device(pci_fixup_final, dev);
->  	retval = device_add(&dev->dev);
->  	if (retval)
->  		return retval;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 52f44b5..003f356 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2956,6 +2956,7 @@ extern struct pci_fixup __end_pci_fixups_resume_early[];
->  extern struct pci_fixup __start_pci_fixups_suspend[];
->  extern struct pci_fixup __end_pci_fixups_suspend[];
->  
-> +static bool pci_apply_fixup_final_quirks;
->  
->  void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->  {
-> @@ -2973,6 +2974,8 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->  		break;
->  
->  	case pci_fixup_final:
-> +		if (!pci_apply_fixup_final_quirks)
-> +			return;
->  		start = __start_pci_fixups_final;
->  		end = __end_pci_fixups_final;
->  		break;
-> @@ -3006,21 +3009,6 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->  EXPORT_SYMBOL(pci_fixup_device);
->  
->  
-> -/*
-> - * The global variable 'pci_fixup_final_inited' is being used as a interim
-> - * solution for calling the final quirks only during hot-plug events (not
-> - * during boot processing).
-> - *
-> - * When the boot path's PCI device setup sequencing is addressed, we can
-> - * remove the instance, and usages of, 'pci_fixup_final_inited' along with
-> - * removing 'fs_initcall_sync(pci_apply_final_quirks);' and end up with a
-> - * single, uniform, solution that satisfies both the boot path and the
-> - * various hot-plug event paths.
-> - *
-> - * ToDo: Remove 'pci_fixup_final_inited'
-> - */
-> -bool pci_fixup_final_inited;
-> -
->  static int __init pci_apply_final_quirks(void)
->  {
->  	struct pci_dev *dev = NULL;
-> @@ -3031,6 +3019,7 @@ static int __init pci_apply_final_quirks(void)
->  		printk(KERN_DEBUG "PCI: CLS %u bytes\n",
->  		       pci_cache_line_size << 2);
->  
-> +	pci_apply_fixup_final_quirks = true;
->  	for_each_pci_dev(dev) {
->  		pci_fixup_device(pci_fixup_final, dev);
->  		/*
-> @@ -3051,7 +3040,6 @@ static int __init pci_apply_final_quirks(void)
->  			pci_cache_line_size = pci_dfl_cache_line_size;
->  		}
->  	}
-> -	pci_fixup_final_inited = 1;
->  
->  	if (!pci_cache_line_size) {
->  		printk(KERN_DEBUG "PCI: CLS %u bytes, default %u\n",
-> 
-
-
-
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index fc16357..abcf053 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -37,10 +37,10 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ 	return res1->start <= res2->start && res1->end >= res2->end;
+ }
+ 
+-void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+-			     struct resource *res)
++void __pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
++			       struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -57,6 +57,13 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 	region->start = res->start - offset;
+ 	region->end = res->end - offset;
+ }
++
++void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
++			     struct resource *res)
++{
++	__pcibios_resource_to_bus(dev->bus, region, res);
++}
++
+ EXPORT_SYMBOL(pcibios_resource_to_bus);
+ 
+ static bool region_contains(struct pci_bus_region *region1,
+@@ -65,10 +72,10 @@ static bool region_contains(struct pci_bus_region *region1,
+ 	return region1->start <= region2->start && region1->end >= region2->end;
+ }
+ 
+-void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
++	struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+@@ -90,4 +97,11 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 	res->start = region->start + offset;
+ 	res->end = region->end + offset;
+ }
++
++void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
++			     struct pci_bus_region *region)
++{
++	__pcibios_bus_to_resource(dev->bus, res, region);
++}
++
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d8c379d..9acea4b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -654,9 +654,12 @@ void pcibios_update_irq(struct pci_dev *, int irq);
+ void pci_fixup_cardbus(struct pci_bus *);
+ 
+ /* Generic PCI functions used internally */
+-
++void __pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
++				struct resource *res);
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res);
++void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
++			       struct pci_bus_region *region);
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
+ void pcibios_scan_specific_bus(int busn);
 -- 
-~Randy
+1.7.5.4
+
