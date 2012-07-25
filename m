@@ -1,120 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65343 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932121Ab2GKSpG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 Jul 2012 14:45:06 -0400
-Date: Wed, 11 Jul 2012 13:14:58 -0400
-From: Jason Baron <jbaron@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
-Message-ID: <20120711171458.GA14610@redhat.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
- <1340437325-29282-5-git-send-email-yinghai@kernel.org>
- <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:38008 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756316Ab2GYNay convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 09:30:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
+In-Reply-To: <87k3xskvqq.fsf@nemi.mork.no>
+References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
+	<87r4s0opck.fsf@nemi.mork.no>
+	<87pq7ko532.fsf@nemi.mork.no>
+	<1343190864.10311.26.camel@yhuang-dev>
+	<87k3xskvqq.fsf@nemi.mork.no>
+Date: Wed, 25 Jul 2012 21:30:52 +0800
+Message-ID: <CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
+ hotplug failure
+From: huang ying <huang.ying.caritas@gmail.com>
+To: =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Cc: Huang Ying <ying.huang@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 09:50:19AM -0600, Bjorn Helgaas wrote:
-> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > When system support hotplug bridge with children hotplug slots, we need to make sure
-> > that parent bridge get preallocated resource so later when device is plugged into
-> > children slot, those children devices will get resource allocated.
-> >
-> > We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
-> > pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
-> >
-> > Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Acked-by: Jason Baron <jbaron@redhat.com>
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
-> >  1 files changed, 26 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> > index ad6fd66..0f2b72d 100644
-> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
-> >         }
-> >  }
-> >
-> > +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
-> > +{
-> > +       struct acpiphp_func *func;
-> > +
-> > +       if (!dev->subordinate)
-> > +               return;
-> > +
-> > +       /* quirk, or pcie could set it already */
-> > +       if (dev->is_hotplug_bridge)
-> > +               return;
-> > +
-> > +       if (PCI_SLOT(dev->devfn) != slot->device)
-> > +               return;
-> > +
-> > +       list_for_each_entry(func, &slot->funcs, sibling) {
-> > +               if (PCI_FUNC(dev->devfn) == func->function) {
-> > +                       /* check if this bridge has ejectable slots */
-> > +                       if ((detect_ejectable_slots(func->handle) > 0))
-> > +                               dev->is_hotplug_bridge = 1;
-> > +                       break;
-> > +               }
-> > +       }
-> > +}
-> >  /**
-> >   * enable_device - enable, configure a slot
-> >   * @slot: slot to be enabled
-> > @@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
-> >                         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-> >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
-> >                                 max = pci_scan_bridge(bus, dev, max, pass);
-> > -                               if (pass && dev->subordinate)
-> > +                               if (pass && dev->subordinate) {
-> > +                                       check_hotplug_bridge(slot, dev);
-> 
-> I don't like this patch because it increases the differences between
-> the hotplug drivers, rather than decreasing them.
-> 
-> For PCI Express devices, we set dev->is_hotplug_bridge in the
-> pci_setup_device() path (in set_pcie_hotplug_bridge()).  I think it
-> would make sense to try to expand that path to also handle SHPC and
-> ACPI hotplug as well.  ACPI is harder because it's not PCI-specified,
-> so we'd need some sort of pcibios or other optional hook.
-> 
-> I don't have a clear picture of how this works -- if I understand
-> correctly, the situation is that we have a bridge managed by acpiphp.
-> That part makes sense because the bridge is on the motherboard and can
-> have a DSDT device.  Now we plug something into the slot below the
-> bridge.  I *think* this patch handles the case where this new
-> hot-added thing is also a bridge managed by acpiphp.  But where does
-> the ACPI device for this hot-added bridge come from?  It's an
-> arbitrary device the BIOS knows nothing about, so it can't be in the
-> DSDT.
-> 
+Hi, Bjorn,
 
-So this came up while I was developing pci bridge hotplug for qemu.
-Currently, there is a top level host bus (with ACPI device definitions), where
-devices can be hot-plugged. What I've done is added a second level
-of hotplug pci busses (again with ACPI device definitions). Thus, we can
-now hotplug a bridge into the top-level bus and then devices behind it.
-Effectively increasing the hot-plug space from n -> n^2.
+Thank you very much for your detailed information.
 
-Before the above pci patch, the devices behind the bridge would not
-configure their PCI BARs properly, since there were no i/o, mem resources
-assigned to the bridge. However, with the above patch in place things
-work as expected.
+On Wed, Jul 25, 2012 at 5:58 PM, Bjørn Mork <bjorn@mork.no> wrote:
+> Huang Ying <ying.huang@intel.com> writes:
+>> On Wed, 2012-07-25 at 06:08 +0200, Bjørn Mork wrote:
+>>> Enabling autosuspend for USB causes hotplug failure in the current
+>>> linux-next. Newly plugged devices are not detected at all until the
+>>> port/controller is manually powered on by writing "on" to power/control.
+>>> Testing is pretty simple:
+>>>
+>>>   1) for f in /sys/bus/usb/devices/*/power/control; do echo auto > $f; done
+>>
+>> Have you done:
+>>
+>> for f in /sys/bus/pci/devices/*/power/confol; do echo auto > $f; done
+>>
+>> ?
+>>
+>> If not, the pci device will not be suspended at all.
+>
+> Yes, sorry for missing that.  I had it automatically enabled.  Yes,
+> autosuspend for the PCI device and all child devices must be enabled for
+> the device to be suspended at all, of course.
+>
+>>>   2) wait for the controllers to suspend
+>>>   3) plugin a new USB device
+>>
+>> After plugin the new USB device, is there anything in dmesg?
+>
+> No. Absolutely nothing, so the USB devices is not enumerated.  Another
+> indication of the same:  Plugging a device like an Android phone, which
+> normally detects being connected to a host and presents a device type
+> menu to the user, results in the charging LED lighting up but no menu.
+>
+>
+> Trying to show the sequence of events:
+>
+> 1)  the controllers are suspended:
+>
+> Jul 25 11:27:12 nemi kernel: [   38.962792] uhci_hcd 0000:00:1a.2: power state changed by ACPI to D2
+> Jul 25 11:27:12 nemi kernel: [   39.006718] uhci_hcd 0000:00:1d.0: power state changed by ACPI to D2
+> Jul 25 11:27:15 nemi kernel: [   41.808471] uhci_hcd 0000:00:1a.0: power state changed by ACPI to D2
+> Jul 25 11:27:15 nemi kernel: [   41.824123] ehci_hcd 0000:00:1a.7: power state changed by ACPI to D2
+> Jul 25 11:27:15 nemi kernel: [   41.824194] ehci_hcd 0000:00:1d.7: power state changed by ACPI to D2
 
-Using the same code base I was able to do acpi hotplug on Windows 7,
-which correctly configured the both the bridge window and devices behind
-it on hot-plug. So currently, the above usage pattern works on Windows
-7, but not on Linux.
+Here uhci controller is put into D2
 
-Thanks,
+[snip]
+>
+> Doing the same with commit 448bd857d reverted:
+>
+>
+> 1)  the controllers are suspended (to state D3? instead of D2?):
+>
+> Jul 25 11:34:01 nemi kernel: [   37.064955] uhci_hcd 0000:00:1a.2: power state changed by ACPI to D3
+> Jul 25 11:34:01 nemi kernel: [   37.106586] uhci_hcd 0000:00:1d.0: power state changed by ACPI to D3
+> Jul 25 11:34:04 nemi kernel: [   39.808329] uhci_hcd 0000:00:1a.0: power state changed by ACPI to D3
+> Jul 25 11:34:04 nemi kernel: [   39.840054] ehci_hcd 0000:00:1d.7: power state changed by ACPI to D3
+> Jul 25 11:34:04 nemi kernel: [   39.840068] ehci_hcd 0000:00:1a.7: power state changed by ACPI to D3
 
--Jason
+With commit reverted, the uhci_controller is put into D3 (ACPI D3cold).
 
+And the uhci controller on your system may not work properly under D2
+state, while OK in D3 state, and the commit will make uhci controller
+choose D2 instead of D3.
 
+Please try following command line before testing.
+
+for f in /sys/bus/pci/devices/*/d3cold_allowed; do echo 1 > $f; done
+
+And please provide the output of the following command line.
+
+acpidump
+
+Best Regards,
+Huang Ying
+
+[snip]
