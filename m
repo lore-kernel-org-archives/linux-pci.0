@@ -1,41 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:39497 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754114Ab2GEVdO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 Jul 2012 17:33:14 -0400
-Date: Thu, 5 Jul 2012 17:33:14 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
+Received: from ogre.sisk.pl ([193.178.161.156]:57018 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752259Ab2GYTp0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 25 Jul 2012 15:45:26 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	AceLan Kao <acelan.kao@canonical.com>,
-	<linux-pci@vger.kernel.org>,
-	=?UTF-8?B?5rSqKEFsZXgp6IyC6ICV?= <alex.hung@canonical.com>
-Subject: Re: [PATCH] PCI: Quirk for ASUS S3 issue
-In-Reply-To: <CAErSpo7OWHzfzLAKXpb4gRwCC+R0U6QrwAu8v97NA9phVTw5PA@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1207051727430.13212-100000@netrider.rowland.org>
+Subject: [PATCH] PCI / PM: Fix messages printed by acpi_pci_set_power_state()
+Date: Wed, 25 Jul 2012 21:51:13 +0200
+Cc: huang ying <huang.ying.caritas@gmail.com>,
+	=?utf-8?q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>,
+	Huang Ying <ying.huang@intel.com>,
+	Zheng Yan <zheng.z.yan@intel.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org> <87k3xskvqq.fsf@nemi.mork.no> <CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
+In-Reply-To: <CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201207252151.14069.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 5 Jul 2012, Bjorn Helgaas wrote:
 
-> I wish we knew more about what's really going on here.  I looked
-> through the bug reports AceLan dug up, and I don't get the feeling
-> that anybody really has a grand unified theory about why Windows works
-> but Linux doesn't.  But I'm willing to apply one of these patches if
-> you and/or Alan sign off on it.
+If a PCI device is put into D3_cold by acpi_bus_set_power(),
+the message printed by acpi_pci_set_power_state() says that its
+power state has been changed to D4, which doesn't make sense.
+In turn, if the device is put into D3_hot, the message says just
+"D3" without specifying which variant of D3 it is.
 
-His description seems to make sense, even if it may not be complete.
-  
-Windows sets the COMMAND register to 0 before suspending, so it doesn't
-trigger the BIOS bus.  Linux doesn't, so the BIOS tries to quiesce the
-EHCI controller.  This involves doing various MMIO accesses, which of
-course don't work if the controller is already in D3.
+Fix that by using an array of state names corresponding to the
+PCI device power states instead of building the state name from
+the numeric value corresponding to the given state directly.
 
-For obvious reasons, I'm in favor of my two-line change over AceLan's
-new PCI quirk.  So far there have been positive responses from a few 
-volunteers testing the patch.
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/pci/pci-acpi.c |   14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-Alan Stern
-
+Index: linux/drivers/pci/pci-acpi.c
+===================================================================
+--- linux.orig/drivers/pci/pci-acpi.c
++++ linux/drivers/pci/pci-acpi.c
+@@ -265,9 +265,17 @@ static int acpi_pci_set_power_state(stru
+ 		error = acpi_bus_set_power(handle, state_conv[state]);
+ 	}
+ 
+-	if (!error)
+-		dev_printk(KERN_INFO, &dev->dev,
+-				"power state changed by ACPI to D%d\n", state);
++	if (!error) {
++		static const char *state_name[] = {
++			[PCI_D0] = "D0",
++			[PCI_D1] = "D1",
++			[PCI_D2] = "D2",
++			[PCI_D3hot] = "D3hot",
++			[PCI_D3cold] = "D3cold"
++		};
++		dev_info(&dev->dev, "power state changed by ACPI to %s\n",
++			 state_name[state]);
++	}
+ 
+ 	return error;
+ }
