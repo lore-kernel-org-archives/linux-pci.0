@@ -1,81 +1,484 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61675 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818Ab2GCIzZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 04:55:25 -0400
-Received: by pbbrp8 with SMTP id rp8so8913330pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 01:55:25 -0700 (PDT)
-From: AceLan Kao <acelan.kao@canonical.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI: Quirk for ASUS S3 issue
-Date: Tue,  3 Jul 2012 16:55:09 +0800
-Message-Id: <1341305709-8943-1-git-send-email-acelan.kao@canonical.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:50208 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752664Ab2GZTzo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 15:55:44 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 10/10] ARM: tegra: pcie: Add device tree support
+Date: Thu, 26 Jul 2012 21:55:12 +0200
+Message-Id: <1343332512-28762-11-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some of ASUS machines have problem to enter S3.
-The root cause of this issue is result from the the BIOS will try to
-disable USBs which was already disabled by driver.
-BIOS will to check the EHCI command register, if it's not zero, then
-BIOS will think the USB is not disabled yet, so it will try to disable
-USB again.
-To resolve this, we should clear the EHCI command register before
-entering S3. And this does no harm to the system, since it'll switch
-off the power after enter S3, so the value in memory is not important
-at all.
+This commit adds support for instantiating the Tegra PCIe controller
+from a device tree.
 
-Signed-off-by: AceLan Kao <acelan.kao@canonical.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- drivers/pci/quirks.c    |   15 +++++++++++++++
- include/linux/pci_ids.h |    2 ++
- 2 files changed, 17 insertions(+)
+Changes in v3:
+- rewrite the DT binding and adapt driver correspondingly
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 194b243a..684cd1f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2955,6 +2955,21 @@ static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
- 
-+/*
-+ * ASUS BIOS will check EHCI command register to see if USB if disabled
-+ * or not. BIOS will try to disable USB if the command register is not
-+ * cleared. But, actually, USB is disabled by the driver while entering S3,
-+ * so it'll hang in BIOS when it try to disable USB.
-+ * Since it's going to enter S3, so it does no harm to clear the command
-+ * register.
-+ */
-+static void asus_clear_pci_command(struct pci_dev *dev)
-+{
-+	pci_write_config_word(dev, PCI_COMMAND, 0);
-+}
-+DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON_EHCI, asus_clear_memory_bit);
-+DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_EHCI, asus_clear_memory_bit);
+Changes in v2:
+- increase compile coverage by using the IS_ENABLED() macro
+- disable node by default
+
+ .../bindings/pci/nvidia,tegra20-pcie.txt           |  94 ++++++++++
+ arch/arm/boot/dts/tegra20.dtsi                     |  62 +++++++
+ arch/arm/mach-tegra/board-dt-tegra20.c             |   7 +-
+ arch/arm/mach-tegra/pcie.c                         | 195 +++++++++++++++++++++
+ 4 files changed, 353 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+new file mode 100644
+index 0000000..b181d4c
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+@@ -0,0 +1,94 @@
++NVIDIA Tegra PCIe controller
 +
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
++Required properties:
++- compatible: "nvidia,tegra20-pcie"
++- reg: physical base address and length of the controller's registers
++- interrupts: the interrupt outputs of the controller
++- pex-clk-supply: supply voltage for internal reference clock
++- vdd-supply: power supply for controller (1.05V)
++- ranges: describes the translation of addresses for root ports
++- #address-cells: address representation for root ports (must be 3)
++  - cell 0 specifies the port index
++  - cell 1 denotes the address type
++      0: root port register space
++      1: PCI configuration space
++      2: PCI extended configuration space
++      3: downstream I/O
++      4: non-prefetchable memory
++      5: prefetchable memory
++  - cell 2 provides a number space that can include the size (should be 0)
++- #size-cells: size representation for root ports (must be 1)
++
++Root ports are defined as subnodes of the PCIe controller node.
++
++Required properties:
++- device_type: must be "pciex"
++- reg: address and size of the port configuration registers
++- #address-cells: must be 3
++- #size-cells: must be 2
++- ranges: sub-ranges distributed from the PCIe controller node
++- nvidia,num-lanes: number of lanes to use for this port
++
++Example:
++
++	pcie-controller {
++		compatible = "nvidia,tegra20-pcie";
++		reg = <0x80003000 0x00000800   /* PADS registers */
++		       0x80003800 0x00000200   /* AFI registers */
++		       0x81000000 0x01000000   /* configuration space */
++		       0x90000000 0x10000000>; /* extended configuration space */
++		interrupts = <0 98 0x04   /* controller interrupt */
++		              0 99 0x04>; /* MSI interrupt */
++		status = "disabled";
++
++		ranges = <0 0 0  0x80000000 0x00001000   /* root port 0 */
++			  0 1 0  0x81000000 0x00800000   /* port 0 config space */
++			  0 2 0  0x90000000 0x08000000   /* port 0 ext config space */
++			  0 3 0  0x82000000 0x00008000   /* port 0 downstream I/O */
++			  0 4 0  0xa0000000 0x08000000   /* port 0 non-prefetchable memory */
++			  0 5 0  0xb0000000 0x08000000   /* port 0 prefetchable memory */
++
++			  1 0 0  0x80001000 0x00001000   /* root port 1 */
++			  1 1 0  0x81800000 0x00800000   /* port 1 config space */
++			  1 2 0  0x98000000 0x08000000   /* port 1 ext config space */
++			  1 3 0  0x82008000 0x00008000   /* port 1 downstream I/O */
++			  1 4 0  0xa8000000 0x08000000   /* port 1 non-prefetchable memory */
++			  1 5 0  0xb8000000 0x08000000>; /* port 1 prefetchable memory */
++
++		#address-cells = <3>;
++		#size-cells = <1>;
++
++		pci@0 {
++			device_type = "pciex";
++			reg = <0 0 0 0x1000>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			ranges = <0x80000000 0 0  0 1 0  0 0x00800000   /* config space */
++				  0x90000000 0 0  0 2 0  0 0x08000000   /* ext config space */
++				  0x81000000 0 0  0 3 0  0 0x00008000   /* I/O */
++				  0x82000000 0 0  0 4 0  0 0x08000000   /* non-prefetchable memory */
++				  0xc2000000 0 0  0 5 0  0 0x08000000>; /* prefetchable memory */
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@1 {
++			device_type = "pciex";
++			reg = <1 0 0 0x1000>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			ranges = <0x80000000 0 0  1 1 0  0 0x00800000   /* config space */
++				  0x90000000 0 0  1 2 0  0 0x08000000   /* ext config space */
++				  0x81000000 0 0  1 3 0  0 0x00008000   /* I/O */
++				  0x82000000 0 0  1 4 0  0 0x08000000   /* non-prefetchable memory */
++				  0xc2000000 0 0  1 5 0  0 0x08000000>; /* prefetchable memory */
++
++			nvidia,num-lanes = <2>;
++		};
++	};
+diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
+index a094c97..c886dff 100644
+--- a/arch/arm/boot/dts/tegra20.dtsi
++++ b/arch/arm/boot/dts/tegra20.dtsi
+@@ -199,6 +199,68 @@
+ 		#size-cells = <0>;
+ 	};
+ 
++	pcie-controller {
++		compatible = "nvidia,tegra20-pcie";
++		reg = <0x80003000 0x00000800   /* PADS registers */
++		       0x80003800 0x00000200   /* AFI registers */
++		       0x81000000 0x01000000   /* configuration space */
++		       0x90000000 0x10000000>; /* extended configuration space */
++		interrupts = <0 98 0x04   /* controller interrupt */
++		              0 99 0x04>; /* MSI interrupt */
++		status = "disabled";
++
++		ranges = <0 0 0  0x80000000 0x00001000   /* root port 0 */
++			  0 1 0  0x81000000 0x00800000   /* port 0 config space */
++			  0 2 0  0x90000000 0x08000000   /* port 0 ext config space */
++			  0 3 0  0x82000000 0x00010000   /* port 0 downstream I/O */
++			  0 4 0  0xa0000000 0x08000000   /* port 0 non-prefetchable memory */
++			  0 5 0  0xb0000000 0x08000000   /* port 0 prefetchable memory */
++
++			  1 0 0  0x80001000 0x00001000   /* root port 1 */
++			  1 1 0  0x81800000 0x00800000   /* port 1 config space */
++			  1 2 0  0x98000000 0x08000000   /* port 1 ext config space */
++			  1 3 0  0x82010000 0x00010000   /* port 1 downstream I/O */
++			  1 4 0  0xa8000000 0x08000000   /* port 1 non-prefetchable memory */
++			  1 5 0  0xb8000000 0x08000000>; /* port 1 prefetchable memory */
++
++		#address-cells = <3>;
++		#size-cells = <1>;
++
++		pci@0 {
++			device_type = "pciex";
++			reg = <0 0 0 0x1000>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			ranges = <0x80000000 0 0  0 1 0  0 0x00800000   /* config space */
++				  0x90000000 0 0  0 2 0  0 0x08000000   /* ext config space */
++				  0x81000000 0 0  0 3 0  0 0x00010000   /* I/O */
++				  0x82000000 0 0  0 4 0  0 0x08000000   /* non-prefetchable memory */
++				  0xc2000000 0 0  0 5 0  0 0x08000000>; /* prefetchable memory */
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@1 {
++			device_type = "pciex";
++			reg = <1 0 0 0x1000>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			ranges = <0x80000000 0 0  1 1 0  0 0x00800000   /* config space */
++				  0x90000000 0 0  1 2 0  0 0x08000000   /* ext config space */
++				  0x81000000 0 0  1 3 0  0 0x00010000   /* I/O */
++				  0x82000000 0 0  1 4 0  0 0x08000000   /* non-prefetchable memory */
++				  0xc2000000 0 0  1 5 0  0 0x08000000>; /* prefetchable memory */
++
++			nvidia,num-lanes = <2>;
++		};
++	};
++
+ 	usb@c5000000 {
+ 		compatible = "nvidia,tegra20-ehci", "usb-ehci";
+ 		reg = <0xc5000000 0x4000>;
+diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
+index a8a05c1..caa377a 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra20.c
++++ b/arch/arm/mach-tegra/board-dt-tegra20.c
+@@ -40,6 +40,7 @@
+ 
+ #include <mach/iomap.h>
+ #include <mach/irqs.h>
++#include <mach/pci-tegra.h>
+ 
+ #include "board.h"
+ #include "board-harmony.h"
+@@ -114,11 +115,7 @@ static void __init tegra_dt_init(void)
+ #ifdef CONFIG_MACH_TRIMSLICE
+ static void __init trimslice_init(void)
  {
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index ab741b0..e79c469 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -216,6 +216,7 @@
- #define PCI_DEVICE_ID_ATI_68800		0x4158
- #define PCI_DEVICE_ID_ATI_215CT222	0x4354
- #define PCI_DEVICE_ID_ATI_210888CX	0x4358
-+#define PCI_DEVICE_ID_ATI_EHCI		0x4396
- #define PCI_DEVICE_ID_ATI_215ET222	0x4554
- /* Mach64 / Rage */
- #define PCI_DEVICE_ID_ATI_215GB		0x4742
-@@ -553,6 +554,7 @@
- #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
- #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
- #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
-+#define PCI_DEVICE_ID_AMD_HUDSON_EHCI	0x7808
- #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS	0x780b
- #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
- #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+-	int ret;
+-
+-	ret = tegra_pcie_init(true, true);
+-	if (ret)
+-		pr_err("tegra_pci_init() failed: %d\n", ret);
++	platform_device_register(&tegra_pcie_device);
+ }
+ #endif
+ 
+diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+index dab3479..2d00b1c 100644
+--- a/arch/arm/mach-tegra/pcie.c
++++ b/arch/arm/mach-tegra/pcie.c
+@@ -37,6 +37,10 @@
+ #include <linux/delay.h>
+ #include <linux/export.h>
+ #include <linux/msi.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include <asm/sizes.h>
+ #include <asm/mach/irq.h>
+@@ -220,6 +224,9 @@ struct tegra_pcie {
+ 	unsigned int num_ports;
+ 
+ 	struct tegra_pcie_msi *msi;
++
++	struct regulator *pex_clk_supply;
++	struct regulator *vdd_supply;
+ };
+ 
+ struct tegra_pcie_port {
+@@ -1016,6 +1023,178 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static int tegra_pcie_dt_init(struct platform_device *pdev)
++{
++	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
++	int err;
++
++	if (!IS_ERR_OR_NULL(pcie->vdd_supply)) {
++		err = regulator_enable(pcie->vdd_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable VDD regulator: %d\n", err);
++			return err;
++		}
++	}
++
++	if (!IS_ERR_OR_NULL(pcie->pex_clk_supply)) {
++		err = regulator_enable(pcie->pex_clk_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to enable pex-clk regulator: %d\n",
++				err);
++			return err;
++		}
++	}
++
++	return 0;
++}
++
++static int tegra_pcie_dt_exit(struct platform_device *pdev)
++{
++	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
++	int err;
++
++	if (!IS_ERR_OR_NULL(pcie->pex_clk_supply)) {
++		err = regulator_disable(pcie->pex_clk_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to disable pex-clk regulator: %d\n",
++				err);
++			return err;
++		}
++	}
++
++	if (!IS_ERR_OR_NULL(pcie->vdd_supply)) {
++		err = regulator_disable(pcie->vdd_supply);
++		if (err < 0) {
++			dev_err(&pdev->dev,
++				"failed to disable VDD regulator: %d\n", err);
++			return err;
++		}
++	}
++
++	return 0;
++}
++
++struct resource *of_parse_reg(struct device_node *np, unsigned int *countp)
++{
++	unsigned int count = 0, i;
++	struct resource *reg, res;
++	int err;
++
++	while (of_address_to_resource(np, count, &res) == 0)
++		count++;
++
++	reg = kzalloc(sizeof(*reg) * count, GFP_KERNEL);
++	if (!reg)
++		return ERR_PTR(-ENOMEM);
++
++	for (i = 0; i < count; i++) {
++		err = of_address_to_resource(np, i, &reg[i]);
++		if (err < 0) {
++			kfree(reg);
++			return ERR_PTR(err);
++		}
++	}
++
++	if (countp)
++		*countp = count;
++
++	return reg;
++}
++
++static int tegra_pcie_port_parse_dt(struct tegra_pcie *pcie,
++				    struct device_node *node,
++				    struct tegra_pcie_rp *port)
++{
++	const __be32 *values;
++	u32 value;
++	int err;
++
++	values = of_get_property(node, "reg", NULL);
++	if (!values)
++		return -ENODEV;
++
++	port->index = be32_to_cpup(values);
++
++	port->resources = of_parse_reg(node, &port->num_resources);
++	if (!port->resources)
++		return -ENOMEM;
++
++	port->ranges = of_pci_parse_ranges(node, &port->num_ranges);
++	if (!port->ranges) {
++		err = -ENOMEM;
++		goto free;
++	}
++
++	err = of_property_read_u32(node, "nvidia,num-lanes", &value);
++	if (err < 0)
++		goto free;
++
++	port->num_lanes = value;
++
++	return 0;
++
++free:
++	kfree(port->ranges);
++	kfree(port->resources);
++	return err;
++}
++
++static struct tegra_pcie_pdata *tegra_pcie_parse_dt(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_pdata *pdata;
++	struct device_node *child;
++	unsigned int i = 0;
++	size_t size;
++	int err;
++
++	pdata = devm_kzalloc(pcie->dev, sizeof(*pdata), GFP_KERNEL);
++	if (!pdata)
++		return NULL;
++
++	pdata->init = tegra_pcie_dt_init;
++	pdata->exit = tegra_pcie_dt_exit;
++
++	pcie->vdd_supply = devm_regulator_get(pcie->dev, "vdd");
++	if (IS_ERR_OR_NULL(pcie->vdd_supply))
++		return ERR_CAST(pcie->vdd_supply);
++
++	pcie->pex_clk_supply = devm_regulator_get(pcie->dev, "pex-clk");
++	if (IS_ERR_OR_NULL(pcie->pex_clk_supply))
++		return ERR_CAST(pcie->pex_clk_supply);
++
++	/* parse root port nodes */
++	for_each_child_of_node(pcie->dev->of_node, child) {
++		if (of_device_is_available(child))
++			pdata->num_ports++;
++	}
++
++	size = pdata->num_ports * sizeof(*pdata->ports);
++
++	pdata->ports = devm_kzalloc(pcie->dev, size, GFP_KERNEL);
++	if (!pdata->ports)
++		return ERR_PTR(-ENOMEM);
++
++	for_each_child_of_node(pcie->dev->of_node, child) {
++		struct tegra_pcie_rp *port = &pdata->ports[i];
++
++		if (!of_device_is_available(child))
++			continue;
++
++		err = tegra_pcie_port_parse_dt(pcie, child, port);
++		if (err < 0)
++			return ERR_PTR(err);
++
++		i++;
++	}
++
++	pdata->num_ports = i;
++
++	return pdata;
++}
++
+ static unsigned long tegra_pcie_port_get_pex_ctrl(struct tegra_pcie_port *port)
+ {
+ 	unsigned long ret = 0;
+@@ -1193,6 +1372,14 @@ static int __devinit tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie->dev = &pdev->dev;
+ 
++	if (IS_ENABLED(CONFIG_OF)) {
++		if (!pdata && pdev->dev.of_node) {
++			pdata = tegra_pcie_parse_dt(pcie);
++			if (IS_ERR(pdata))
++				return PTR_ERR(pdata);
++		}
++	}
++
+ 	if (!pdata)
+ 		return -ENODEV;
+ 
+@@ -1280,10 +1467,18 @@ static int __devexit tegra_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_OF
++static const struct of_device_id tegra_pcie_of_match[] = {
++	{ .compatible = "nvidia,tegra20-pcie", },
++	{ },
++};
++#endif
++
+ static struct platform_driver tegra_pcie_driver = {
+ 	.driver = {
+ 		.name = "tegra-pcie",
+ 		.owner = THIS_MODULE,
++		.of_match_table = of_match_ptr(tegra_pcie_of_match),
+ 	},
+ 	.probe = tegra_pcie_probe,
+ 	.remove = __devexit_p(tegra_pcie_remove),
 -- 
-1.7.9.5
+1.7.11.2
 
