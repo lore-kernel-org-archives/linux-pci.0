@@ -1,99 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:60608 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753604Ab2GLANE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 20:13:04 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:60218 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751961Ab2GZPDk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 11:03:40 -0400
+Date: Thu, 26 Jul 2012 11:03:40 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+cc: Huang Ying <ying.huang@intel.com>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
+ hotplug failure
+In-Reply-To: <87k3xqyfm3.fsf@nemi.mork.no>
+Message-ID: <Pine.LNX.4.44L0.1207261101350.1295-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo49u=NP0MwY6AVPJJC0YqvDmo092cbV4DzTT10m4jPHSA@mail.gmail.com>
-References: <1340222160.77018.19.camel@localhost.localdomain>
-	<1340322477.56127.2.camel@localhost.localdomain>
-	<CAErSpo7AWQCofnTRhtMKVP3pm_BDq9v+axGpide0RbmignsV9A@mail.gmail.com>
-	<1340657687.36341.178.camel@localhost.localdomain>
-	<CAErSpo49u=NP0MwY6AVPJJC0YqvDmo092cbV4DzTT10m4jPHSA@mail.gmail.com>
-Date: Wed, 11 Jul 2012 17:13:04 -0700
-Message-ID: <CAE9FiQXtsKomU3U=+HNB8K+6L1btJLtuV7S04K=T-PcQomdxJg@mail.gmail.com>
-Subject: Re: [PATCH] pci: support alignments upto 8Gb in pbus_size_mem()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nikhil P Rao <nikhil.rao@intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 3:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jun 25, 2012 at 2:54 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
->> On Sat, 2012-06-23 at 12:15 -0600, Bjorn Helgaas wrote:
->>> On Thu, Jun 21, 2012 at 5:47 PM, Nikhil P Rao <nikhil.rao@intel.com> wrote:
->>> > I ran into the "disabling BAR .." error message when
->>> > trying to use a 8Gb PCIe card on a system with a BIOS
->>> > that didnt have support for BAR size > 2Gb.
->>>
->>> So the BIOS left the 8Gb BAR unassigned, and you got the "disabling
->>> BAR ... (bad alignment)" message when Linux tried to enable it?
->>
->> Yes.
->>
->>> How do we know 8Gb is the correct new limit?  Are we going to be
->>> fixing this again when we see a 16Gb or a 32Gb BAR?  Do we need a
->>> better algorithm that doesn't have a limit like this?
->>>
->>
->> The original error message seems applicable to 32bit archs. and not to
->> 64 bit archs. How about the patch below - is aligns[44] (256bytes more)
->> acceptable ?
->>
->>
->> From: Nikhil P Rao <nikhil.rao@intel.com>
->> Date: Mon, 25 Jun 2012 13:33:55 -0700
->> Subject: [PATCH] pci: fix resource size check
->>
->> Support a PCI BAR alignment of > 2Gb, the original check was
->> only applicable to 32 bit kernels,
->>
->> Signed-off-by: Nikhil P Rao <nikhil.rao@intel.com>
->> ---
->>  drivers/pci/setup-bus.c |    5 +++--
->>  1 files changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 8fa2d4b..9f8d9ea 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -780,7 +780,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>  {
->>         struct pci_dev *dev;
->>         resource_size_t min_align, align, size, size0, size1;
->> -       resource_size_t aligns[12];     /* Alignments from 1Mb to 2Gb */
->> +       resource_size_t aligns[44];     /* Alignments from 1Mb to 2^63 */
->>         int order, max_order;
->>         struct resource *b_res = find_free_bus_resource(bus, type);
->>         unsigned int mem64_mask = 0;
->> @@ -819,7 +819,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->>                         /* For bridges size != alignment */
->>                         align = pci_resource_alignment(dev, r);
->>                         order = __ffs(align) - 20;
->> -                       if (order > 11) {
->> +                       if ((sizeof(size_t) == 4 && order > 11) ||
->> +                                       (sizeof(size_t) == 8 && order > 43)) {
->>                                 dev_warn(&dev->dev, "disabling BAR %d: %pR "
->>                                          "(bad alignment %#llx)\n", i, r,
->>                                          (unsigned long long) align);
->
-> Yinghai, what's your opinion on this?  The aligns[] array on the stack
-> is currently 96 bytes and would grow to 352 with this patch, which
-> does seem like quite a bit.
->
-> I do think the 2GB limit here is out-of-date.
+On Thu, 26 Jul 2012, Bjørn Mork wrote:
 
-yeah,  should be ok.
+> Huang Ying <ying.huang@intel.com> writes:
+> 
+> > Do you have time to try the below patch?
+> 
+> Sure.  Looks OK wrt the USB problems, but may cause problems with the
+> PCIe WiFi card.  Unless those are related to other changes in -next.
+> 
+> Anyway, for I applied your patch on top of next-20120724 for
+> consistency (still without Rafael print fix, so we get the D4 below).  
+> This results in different stats for the uhci_hcd and ehci_hcd:
+> 
+> 
+> Jul 26 12:13:42 nemi kernel: [   72.820305] uhci_hcd 0000:00:1a.2: power state changed by ACPI to D2
+> Jul 26 12:13:42 nemi kernel: [   72.835101] uhci_hcd 0000:00:1d.0: power state changed by ACPI to D2
+> Jul 26 12:13:44 nemi kernel: [   74.808770] uhci_hcd 0000:00:1a.0: power state changed by ACPI to D2
+> Jul 26 12:13:44 nemi kernel: [   74.840293] ehci_hcd 0000:00:1d.7: power state changed by ACPI to D4
+> Jul 26 12:13:44 nemi kernel: [   74.840326] ehci_hcd 0000:00:1a.7: power state changed by ACPI to D4
+> 
+> I assume that is expected, based on the lspci output I posted earlier.
+> Overall I get a nice mix of allowed/disallowed:
 
-only thing that sanity checking is not complete enough, for example,
-for bar that only support 32bit, we will have get range for under 4g.
-that will still need 2g limitation to fend off some bad
-devices.
+...
 
-Thanks
+> USB hotplugging seems to work fine with this.
 
-Yinghai
+Don't be too sure.  Have you tested to see if it still works after 
+doing "rmmod ehci-hcd"?
+
+So far you have tested the EHCI controllers, but have you tested the 
+UHCI controllers?  Unloading ehci-hcd will force them to be used.
+
+Alan Stern
+
