@@ -1,50 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 31 Jul 2012 16:14:31 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20120731231431.GA1558@kroah.com>
-References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
- <1343607994-32415-2-git-send-email-jon.mason@intel.com>
- <20120731222338.GA19134@kroah.com>
- <20120731225105.GD14080@jonmason-lab>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120731225105.GD14080@jonmason-lab>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33437 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752142Ab2GZQQZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Jul 2012 12:16:25 -0400
+Message-ID: <1343319381.3125.26.camel@ul30vt>
+Subject: Re: linux-next: Tree for July 26 (vfio)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 26 Jul 2012 10:16:21 -0600
+In-Reply-To: <50116598.5070404@xenotime.net>
+References: <20120726150419.0de645e8750e3a15fa0f1aaa@canb.auug.org.au>
+	 <50116598.5070404@xenotime.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2012 at 03:51:05PM -0700, Jon Mason wrote:
-> On Tue, Jul 31, 2012 at 03:23:38PM -0700, Greg KH wrote:
-> > On Sun, Jul 29, 2012 at 05:26:33PM -0700, Jon Mason wrote:
-> > > + *   You should have received a copy of the GNU General Public License
-> > > + *   along with this program; if not, write to the Free Software
-> > > + *   Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-> > 
-> > You really are going to track the FSF's office movements for the next
-> > 40+ years?
-> > 
-> > > + *   The full GNU General Public License is included in this distribution
-> > > + *   in the file called LICENSE.GPL.
-> > 
-> > No it isn't, this sentance is totally wrong for any in-kernel code,
-> > please remove it.
-> > 
-> > Also do the same for all the other files you added please.
+On Thu, 2012-07-26 at 08:43 -0700, Randy Dunlap wrote:
+> On 07/25/2012 10:04 PM, Stephen Rothwell wrote:
 > 
-> I echo'ed your original comments on this to Intel Legal and am waiting
-> on a response.  I 100% agree, but I need their signoff first.
+> > Hi all,
+> > 
+> > 
+> > Changes since 20120725:
+> > 
+> > 
 > 
-> It is worth noting that this version of the license is already in the
-> kernel in numerous other drivers:
-> drivers/sfi/*
-> drivers/scsi/isci/*
-> drivers/dma/ioat/dma_v3.c
-> drivers/net/wireless/iwlwifi/*
-> drivers/net/wireless/iwlegacy/*
+> 
+> on x86_64:
+> 
+>   CC [M]  drivers/vfio/pci/vfio_pci_intrs.o
+> drivers/vfio/pci/vfio_pci_intrs.c: In function 'virqfd_enable':
+> drivers/vfio/pci/vfio_pci_intrs.c:142:2: error: implicit declaration of function 'eventfd_fget'
+> drivers/vfio/pci/vfio_pci_intrs.c:142:7: warning: assignment makes pointer from integer without a cast
+> drivers/vfio/pci/vfio_pci_intrs.c:148:2: error: implicit declaration of function 'eventfd_ctx_fileget'
+> drivers/vfio/pci/vfio_pci_intrs.c:148:6: warning: assignment makes pointer from integer without a cast
+> make[4]: *** [drivers/vfio/pci/vfio_pci_intrs.o] Error 1
 
-Just because others got it wrong, doesn't mean you need to continue to :)
+Thanks!  vfio-pci is useless without CONFIG_EVENTFD so I've added that
+to the Kconfig depends.  Should be fixed in tomorrows tree.  Thanks,
 
-greg k-h
+Alex
+
+
