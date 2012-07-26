@@ -1,58 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:33781 "EHLO ogre.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:13093 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753367Ab2G2TMy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Jul 2012 15:12:54 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB hotplug failure
-Date: Sun, 29 Jul 2012 21:18:42 +0200
-Cc: Huang Ying <ying.huang@intel.com>,
-	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
-	huang ying <huang.ying.caritas@gmail.com>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org
-References: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201207292118.42547.rjw@sisk.pl>
+	id S1753962Ab2GZWDJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 26 Jul 2012 18:03:09 -0400
+From: Matthew Garrett <mjg@redhat.com>
+To: matt.fleming@intel.com
+Cc: linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 3/4] PCI: Add support for non-BAR ROMs
+Date: Thu, 26 Jul 2012 18:02:48 -0400
+Message-Id: <1343340169-7772-4-git-send-email-mjg@redhat.com>
+In-Reply-To: <1343340169-7772-1-git-send-email-mjg@redhat.com>
+References: <1343340169-7772-1-git-send-email-mjg@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, July 29, 2012, Alan Stern wrote:
-> On Sun, 29 Jul 2012, Rafael J. Wysocki wrote:
-> 
-> > The difference is, if you use _put_sync(), you need to wait the extra 10 ms
-> > for local_pci_probe() to return (if the parent is actually suspended),
-> > although you might not need to wait for it if you used _put(), right?
-> 
-> Yes, that's the difference.  But who waits for local_pci_probe() to 
-> return?  :-)
+Platforms may provide their own mechanisms for obtaining ROMs. Add support
+for using data provided by the platform in that case.
 
-pci_register_driver() might, but that's not a big deal.  Hot-plug might
-as well, though.
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+---
+ drivers/pci/rom.c   |    9 ++++++++-
+ include/linux/pci.h |    2 ++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-> > Which, to me, means that using _put_sync() may not be always better.
-> > It probably doesn't matter a lot, but then the workqueue overhead shouldn't
-> > matter a lot either.
-> 
-> It's that in the end, the extra overhead is pretty small.  For me
-> there's also an issue of style: If you do a synchronous get then it
-> looks odd not to do a synchronous put.  My feeling has always been that
-> the async routines are for use in non-process contexts, where the sync
-> routines can't be used.  Using them just to return a little more
-> quickly is a foreign idea.
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index 48ebdb2..7ebaab6 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -126,6 +126,12 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+ 		/* primary video rom always starts here */
+ 		start = (loff_t)0xC0000;
+ 		*size = 0x20000; /* cover C000:0 through E000:0 */
++	/*
++	 * Some devices may provide ROMs via a source other than the BAR
++	 */
++	} else if (pdev->rom && pdev->romlen) {
++		*size = pdev->romlen;
++		return phys_to_virt(pdev->rom);
+ 	} else {
+ 		if (res->flags &
+ 			(IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY)) {
+@@ -219,7 +225,8 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
+ 	if (res->flags & (IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY))
+ 		return;
+ 
+-	iounmap(rom);
++	if (!pdev->rom || !pdev->romlen)
++		iounmap(rom);
+ 
+ 	/* Disable again before continuing, leave enabled if pci=rom */
+ 	if (!(res->flags & (IORESOURCE_ROM_ENABLE | IORESOURCE_ROM_SHADOW)))
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6a2625c..2668bb9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -355,6 +355,8 @@ struct pci_dev {
+ 	};
+ 	struct pci_ats	*ats;	/* Address Translation Service */
+ #endif
++	void *rom; /* Physical pointer to ROM if it's not from the BAR */
++	size_t romlen; /* Length of ROM if it's not from the BAR */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+-- 
+1.7.10.4
 
-I see. :-)
-
-The reason for using sync get is quite obvious: we want to be able to access
-the device later on.  For sync put that's not so clear, though. There are cases
-when we definitely want to do it, like the failing .probe() in which we want to
-disable runtime PM next to the put, but usually it doesn't hurt (too much) to
-defer it IMO.
-
-Thanks,
-Rafael
