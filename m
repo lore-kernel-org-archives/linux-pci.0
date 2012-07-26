@@ -1,47 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:46160 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755205Ab2GaQST (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 12:18:19 -0400
-Message-ID: <50180547.9040603@wwwdotorg.org>
-Date: Tue, 31 Jul 2012 10:18:15 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <mjg@redhat.com>
+To: matt.fleming@intel.com
+Cc: linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH 4/4] X86: Use PCI setup data
+Date: Thu, 26 Jul 2012 18:02:49 -0400
+Message-Id: <1343340169-7772-5-git-send-email-mjg@redhat.com>
+In-Reply-To: <1343340169-7772-1-git-send-email-mjg@redhat.com>
+References: <1343340169-7772-1-git-send-email-mjg@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/26/2012 01:55 PM, Thierry Reding wrote:
-> This patch series adds support for device tree based probing of the PCIe
-> controller found on Tegra SoCs.
+EFI can provide PCI ROMs out of band via boot services, which may not be
+available after boot. Add support for using the data handed off to us by
+the boot stub or bootloader.
 
-Thierry,
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+---
+ arch/x86/pci/common.c |   33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-I think one thing that would help here would be to split up this series
-into one per subsystem, and to get all the dependencies merged by the
-respective maintainers. Preferably, each subsystem would export a stable
-branch (perhaps consisting of just these patches) that I can then merge
-into the Tegra tree and use as a basis for the PCIe driver itself.
-Hopefully this approach will get more traction on all the non-Tegra
-changes. Does that sound like a good plan?
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 720e973f..3d2752f 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -17,6 +17,7 @@
+ #include <asm/io.h>
+ #include <asm/smp.h>
+ #include <asm/pci_x86.h>
++#include <asm/setup.h>
+ 
+ unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
+ 				PCI_PROBE_MMCONF;
+@@ -608,6 +609,38 @@ unsigned int pcibios_assign_all_busses(void)
+ 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
+ }
+ 
++int pcibios_add_device(struct pci_dev *dev)
++{
++	struct setup_data *data;
++	struct pci_setup_rom *rom;
++	u64 pa_data;
++
++	if (boot_params.hdr.version < 0x0209)
++		return 0;
++
++	pa_data = boot_params.hdr.setup_data;
++	while (pa_data) {
++		data = phys_to_virt(pa_data);
++
++		if (data->type == SETUP_PCI) {
++			rom = (struct pci_setup_rom *)data;
++
++			if ((pci_domain_nr(dev->bus) == rom->segment) &&
++			    (dev->bus->number == rom->bus) &&
++			    (PCI_SLOT(dev->devfn) == rom->device) &&
++			    (PCI_FUNC(dev->devfn) == rom->function) &&
++			    (dev->vendor == rom->vendor) &&
++			    (dev->device == rom->devid)) {
++				dev->rom = (void *)(pa_data +
++				      offsetof(struct pci_setup_rom, romdata));
++				dev->romlen = rom->pcilen;
++			}
++		}
++		pa_data = data->next;
++	}
++	return 0;
++}
++
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+ 	int err;
+-- 
+1.7.10.4
 
-Or, I can just take it all through the Tegra tree, but I'll definitely
-need acks on all/most of the non-Tegra patches, since although the
-patches themselves are quite small, I'd like to be sure that maintainers
-are OK with the conceptual changes, like initializing PCI controllers
-later than at present etc.
