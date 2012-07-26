@@ -1,182 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:59895 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752413Ab2GIQov convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 12:44:51 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: EHCI: fix crash during suspend on ASUS computers
-Date: Mon, 9 Jul 2012 18:50:24 +0200
-Cc: AceLan Kao <acelan.kao@canonical.com>,
-	=?utf-8?q?D=C3=A2niel_Fraga?= <fragabr@gmail.com>,
-	Javier Marcet <jmarcet@gmail.com>,
-	Andrey Rahmatullin <wrar@wrar.name>,
-	Oleksij Rempel <bug-track@fisher-privat.net>,
-	Pavel Pisa <pisa@cmp.felk.cvut.cz>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1207091106430.1954-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1207091106430.1954-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201207091850.24550.rjw@sisk.pl>
+Received: from moutng.kundenserver.de ([212.227.17.8]:59540 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642Ab2GZTzk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 15:55:40 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 04/10] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+Date: Thu, 26 Jul 2012 21:55:06 +0200
+Message-Id: <1343332512-28762-5-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 09, 2012, Alan Stern wrote:
-> Quite a few ASUS computers experience a nasty problem, related to the
-> EHCI controllers, when going into system suspend.  It was observed
-> that the problem didn't occur if the controllers were not put into the
-> D3 power state before starting the suspend, and commit
-> 151b61284776be2d6f02d48c23c3625678960b97 (USB: EHCI: fix crash during
-> suspend on ASUS computers) was created to do this.
-> 
-> It turned out this approach messed up other computers that didn't have
-> the problem -- it prevented USB wakeup from working.  Consequently
-> commit c2fb8a3fa25513de8fedb38509b1f15a5bbee47b (USB: add
-> NO_D3_DURING_SLEEP flag and revert 151b61284776be2) was merged; it
-> reverted the earlier commit and added a whitelist of known good board
-> names.
-> 
-> Now we know the actual cause of the problem.  Thanks to AceLan Kao for
-> tracking it down.
-> 
-> According to him, an engineer at ASUS explained that some of their
-> BIOSes contain a bug that was added in an attempt to work around a
-> problem in early versions of Windows.  When the computer goes into S3
-> suspend, the BIOS tries to verify that the EHCI controllers were first
-> quiesced by the OS.  Nothing's wrong with this, but the BIOS does it
-> by checking that the PCI COMMAND registers contain 0 without checking
-> the controllers' power state.  If the register isn't 0, the BIOS
-> assumes the controller needs to be quiesced and tries to do so.  This
-> involves making various MMIO accesses to the controller, which don't
-> work very well if the controller is already in D3.  The end result is
-> a system hang or memory corruption.
-> 
-> Since the value in the PCI COMMAND register doesn't matter once the
-> controller has been suspended, and since the value will be restored
-> anyway when the controller is resumed, we can work around the BIOS bug
-> simply by setting the register to 0 during system suspend.  This patch
-> (as1590) does so and also reverts the second commit mentioned above,
-> which is now unnecessary.
-> 
-> In theory we could do this for every PCI device.  However to avoid
-> introducing new problems, the patch restricts itself to EHCI host
-> controllers.
-> 
-> Finally the affected systems can suspend with USB wakeup working
-> properly.
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> Tested-by: Dâniel Fraga <fragabr@gmail.com>
-> Tested-by: Javier Marcet <jmarcet@gmail.com>
-> Tested-by: Andrey Rahmatullin <wrar@wrar.name>
-> Tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> Tested-by: Pavel Pisa <pisa@cmp.felk.cvut.cz>
-> CC: <stable@vger.kernel.org>
+The PMC code already accesses to PMC registers so it makes sense to
+move this function there as well. While at it, rename the function to
+tegra_pmc_pcie_xclk_clamp() for consistency.
 
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
+---
+Changes in v3:
+- none
 
-> 
-> ---
-> 
->  drivers/pci/pci-driver.c |   12 ++++++++++++
->  drivers/pci/pci.c        |    5 -----
->  drivers/pci/quirks.c     |   26 --------------------------
->  include/linux/pci.h      |    2 --
->  4 files changed, 12 insertions(+), 33 deletions(-)
-> 
-> Index: usb-3.4/drivers/pci/pci.c
-> ==================================================================
-> --- usb-3.4.orig/drivers/pci/pci.c
-> +++ usb-3.4/drivers/pci/pci.c
-> @@ -1744,11 +1744,6 @@ int pci_prepare_to_sleep(struct pci_dev
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> -	/* Some devices mustn't be in D3 during system sleep */
-> -	if (target_state == PCI_D3hot &&
-> -			(dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP))
-> -		return 0;
-> -
->  	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
->  
->  	error = pci_set_power_state(dev, target_state);
-> Index: usb-3.4/drivers/pci/quirks.c
-> ===================================================================
-> --- usb-3.4.orig/drivers/pci/quirks.c
-> +++ usb-3.4/drivers/pci/quirks.c
-> @@ -2929,32 +2929,6 @@ static void __devinit disable_igfx_irq(s
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0102, disable_igfx_irq);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
->  
-> -/*
-> - * The Intel 6 Series/C200 Series chipset's EHCI controllers on many
-> - * ASUS motherboards will cause memory corruption or a system crash
-> - * if they are in D3 while the system is put into S3 sleep.
-> - */
-> -static void __devinit asus_ehci_no_d3(struct pci_dev *dev)
-> -{
-> -	const char *sys_info;
-> -	static const char good_Asus_board[] = "P8Z68-V";
-> -
-> -	if (dev->dev_flags & PCI_DEV_FLAGS_NO_D3_DURING_SLEEP)
-> -		return;
-> -	if (dev->subsystem_vendor != PCI_VENDOR_ID_ASUSTEK)
-> -		return;
-> -	sys_info = dmi_get_system_info(DMI_BOARD_NAME);
-> -	if (sys_info && memcmp(sys_info, good_Asus_board,
-> -			sizeof(good_Asus_board) - 1) == 0)
-> -		return;
-> -
-> -	dev_info(&dev->dev, "broken D3 during system sleep on ASUS\n");
-> -	dev->dev_flags |= PCI_DEV_FLAGS_NO_D3_DURING_SLEEP;
-> -	device_set_wakeup_capable(&dev->dev, false);
-> -}
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c26, asus_ehci_no_d3);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1c2d, asus_ehci_no_d3);
-> -
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  			  struct pci_fixup *end)
->  {
-> Index: usb-3.4/include/linux/pci.h
-> ===================================================================
-> --- usb-3.4.orig/include/linux/pci.h
-> +++ usb-3.4/include/linux/pci.h
-> @@ -176,8 +176,6 @@ enum pci_dev_flags {
->  	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
->  	/* Provide indication device is assigned by a Virtual Machine Manager */
->  	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
-> -	/* Device causes system crash if in D3 during S3 sleep */
-> -	PCI_DEV_FLAGS_NO_D3_DURING_SLEEP = (__force pci_dev_flags_t) 8,
->  };
->  
->  enum pci_irq_reroute_variant {
-> Index: usb-3.4/drivers/pci/pci-driver.c
-> ===================================================================
-> --- usb-3.4.orig/drivers/pci/pci-driver.c
-> +++ usb-3.4/drivers/pci/pci-driver.c
-> @@ -748,6 +748,18 @@ static int pci_pm_suspend_noirq(struct d
->  
->  	pci_pm_set_unknown_state(pci_dev);
->  
-> +	/*
-> +	 * Some BIOSes from ASUS have a bug: If a USB EHCI host controller's
-> +	 * PCI COMMAND register isn't 0, the BIOS assumes that the controller
-> +	 * hasn't been quiesced and tries to turn it off.  If the controller
-> +	 * is already in D3, this can hang or cause memory corruption.
-> +	 *
-> +	 * Since the value of the COMMAND register doesn't matter once the
-> +	 * device has been suspended, we can safely set it to 0 here.
-> +	 */
-> +	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-> +		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
-> +
->  	return 0;
->  }
->  
-> 
-> 
-> 
+Changes in v2:
+- none
+
+ arch/arm/mach-tegra/pcie.c | 30 ++++--------------------------
+ arch/arm/mach-tegra/pmc.c  | 16 ++++++++++++++++
+ arch/arm/mach-tegra/pmc.h  |  1 +
+ 3 files changed, 21 insertions(+), 26 deletions(-)
+
+diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+index 576347a..efe71dd 100644
+--- a/arch/arm/mach-tegra/pcie.c
++++ b/arch/arm/mach-tegra/pcie.c
+@@ -42,6 +42,7 @@
+ #include <mach/powergate.h>
+ 
+ #include "board.h"
++#include "pmc.h"
+ 
+ /* register definitions */
+ #define AFI_OFFSET	0x3800
+@@ -145,17 +146,6 @@
+ #define  PADS_PLL_CTL_TXCLKREF_DIV10		(0 << 20)
+ #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
+ 
+-/* PMC access is required for PCIE xclk (un)clamping */
+-#define PMC_SCRATCH42		0x144
+-#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
+-
+-static void __iomem *reg_pmc_base = IO_ADDRESS(TEGRA_PMC_BASE);
+-
+-#define pmc_writel(value, reg) \
+-	__raw_writel(value, reg_pmc_base + (reg))
+-#define pmc_readl(reg) \
+-	__raw_readl(reg_pmc_base + (reg))
+-
+ /*
+  * Tegra2 defines 1GB in the AXI address map for PCIe.
+  *
+@@ -647,18 +637,6 @@ static int tegra_pcie_enable_controller(void)
+ 	return 0;
+ }
+ 
+-static void tegra_pcie_xclk_clamp(bool clamp)
+-{
+-	u32 reg;
+-
+-	reg = pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
+-
+-	if (clamp)
+-		reg |= PMC_SCRATCH42_PCX_CLAMP;
+-
+-	pmc_writel(reg, PMC_SCRATCH42);
+-}
+-
+ static void tegra_pcie_power_off(void)
+ {
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+@@ -666,7 +644,7 @@ static void tegra_pcie_power_off(void)
+ 	tegra_periph_reset_assert(tegra_pcie.pex_clk);
+ 
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ }
+ 
+ static int tegra_pcie_power_regate(void)
+@@ -675,7 +653,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_pcie_power_off();
+ 
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ 
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+ 	tegra_periph_reset_assert(tegra_pcie.afi_clk);
+@@ -689,7 +667,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_periph_reset_deassert(tegra_pcie.afi_clk);
+ 
+-	tegra_pcie_xclk_clamp(false);
++	tegra_pmc_pcie_xclk_clamp(false);
+ 
+ 	clk_prepare_enable(tegra_pcie.afi_clk);
+ 	clk_prepare_enable(tegra_pcie.pex_clk);
+diff --git a/arch/arm/mach-tegra/pmc.c b/arch/arm/mach-tegra/pmc.c
+index 7af6a54..399dc3a 100644
+--- a/arch/arm/mach-tegra/pmc.c
++++ b/arch/arm/mach-tegra/pmc.c
+@@ -24,6 +24,10 @@
+ #define PMC_CTRL		0x0
+ #define PMC_CTRL_INTR_LOW	(1 << 17)
+ 
++/* PMC access is required for PCIE xclk (un)clamping */
++#define PMC_SCRATCH42		0x144
++#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
++
+ static inline u32 tegra_pmc_readl(u32 reg)
+ {
+ 	return readl(IO_ADDRESS(TEGRA_PMC_BASE + reg));
+@@ -74,3 +78,15 @@ void __init tegra_pmc_init(void)
+ 		val &= ~PMC_CTRL_INTR_LOW;
+ 	tegra_pmc_writel(val, PMC_CTRL);
+ }
++
++void tegra_pmc_pcie_xclk_clamp(bool clamp)
++{
++	u32 reg;
++
++	reg = tegra_pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
++
++	if (clamp)
++		reg |= PMC_SCRATCH42_PCX_CLAMP;
++
++	tegra_pmc_writel(reg, PMC_SCRATCH42);
++}
+diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
+index 8995ee4..2631c9a 100644
+--- a/arch/arm/mach-tegra/pmc.h
++++ b/arch/arm/mach-tegra/pmc.h
+@@ -19,5 +19,6 @@
+ #define __MACH_TEGRA_PMC_H
+ 
+ void tegra_pmc_init(void);
++void tegra_pmc_pcie_xclk_clamp(bool clamp);
+ 
+ #endif
+-- 
+1.7.11.2
 
