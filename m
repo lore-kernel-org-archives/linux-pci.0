@@ -1,87 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42163 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329Ab2GNGTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 14 Jul 2012 02:19:55 -0400
-Date: Fri, 13 Jul 2012 23:19:54 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [RFC 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20120714061953.GD4808@jonmason-lab>
-References: <1342215900-3358-1-git-send-email-jon.mason@intel.com>
- <20120713171344.1066d3b1@nehalam.linuxnetplumber.net>
+Received: from youngberry.canonical.com ([91.189.89.112]:39263 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753018Ab2G0D7r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jul 2012 23:59:47 -0400
+Date: Thu, 26 Jul 2012 22:59:40 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: efi, x86, pci: Improve graphics support on some Apple hardware
+Message-ID: <20120727035940.GA7119@thinkpad-t410>
+References: <1343340169-7772-1-git-send-email-mjg@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120713171344.1066d3b1@nehalam.linuxnetplumber.net>
+In-Reply-To: <1343340169-7772-1-git-send-email-mjg@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 13, 2012 at 05:13:44PM -0700, Stephen Hemminger wrote:
-> On Fri, 13 Jul 2012 14:44:59 -0700
-> Jon Mason <jon.mason@intel.com> wrote:
-> 
-> > A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
-> > connecting 2 systems, providing electrical isolation between the two subsystems.
-> > A non-transparent bridge is functionally similar to a transparent bridge except
-> > that both sides of the bridge have their own independent address domains.  The
-> > host on one side of the bridge will not have the visibility of the complete
-> > memory or I/O space on the other side of the bridge.  To communicate across the
-> > non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
-> > the local system.  Writes to these apertures are mirrored to memory on the
-> > remote system.  Communications can also occur through the use of doorbell
-> > registers that initiate interrupts to the alternate domain, and scratch-pad
-> > registers accessible from both sides.
-> > 
-> > The NTB device driver is needed to configure these memory windows, doorbell, and
-> > scratch-pad registers as well as use them in such a way as they can be turned
-> > into a viable communication channel to the remote system.  ntb_hw.[ch]
-> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
-> > the underlying hardware to provide access and a common interface to the doorbell
-> > registers, scratch pads, and memory windows.  These hardware interfaces are
-> > exported so that other, non-mainlined kernel drivers can access these.
-> > ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
-> > communication channel(s) and provide a reliable way of transferring data from
-> > one side to the other, which it then exports so that "client" drivers can access
-> > them.  These client drivers are used to provide a standard kernel interface
-> > (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
-> > system to the other in a standard way.
-> > 
-> > Signed-off-by: Jon Mason <jon.mason@intel.com>
-> 
-> This driver does some reimplementing of standard type operations is this
-> because you are trying to use the same code on multiple platforms?
-> 
-> Example:
-> +
-> +static void ntb_list_add_head(spinlock_t *lock, struct list_head *entry,
-> +			      struct list_head *list)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(lock, flags);
-> +	list_add(entry, list);
-> +	spin_unlock_irqrestore(lock, flags);
-> +}
-> +
-> +static void ntb_list_add_tail(spinlock_t *lock, struct list_head *entry,
-> +			      struct list_head *list)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(lock, flags);
-> +	list_add_tail(entry, list);
-> +	spin_unlock_irqrestore(lock, flags);
-> +}
-> 
-> Which are used on skb's and yet we already have sk_buff_head with locking?
-> 
-> I know you probably are committed to this API, but is there some way to
-> reuse existing shared memory used by virtio-net between two ports?
-> 
-> 
-The intention is to be able to have multiple client drivers/virtual devices that are able to use NTB as the transport to the remote system.  This is the reason why a void* is passed into the transport instead of skb*, making all of the extra book keeping necessary.  Currently, only the virtual Ethernet has been done, which may be part of the confusion.  I'd like to be able to find a way to have the virtio devices use ntb (and save me the work of reinventing the wheel), but step one is getting this code accepted :)
+On Thu, Jul 26, 2012 at 06:02:45PM -0400, Matthew Garrett wrote:
+> Some Apple machines only provide their video ROM via an EFI-specific mechanism
+> and don't permit it to be retrieved from the BAR. Add infrastructure to stash
+> it and provide access to drivers.
 
-Thanks,
-Jon
+I've verified that these patches produce funtioning radeon graphics on
+both the Macbook Pro 8,2 and Mac Mini 5,2 under native EFI boot.
+Previously the radeon driver did not work on these machines due to
+failure to locate the video ROM. So for the whole series:
+
+Tested-by: Seth Forshee <seth.forshee@canonical.com>
+
