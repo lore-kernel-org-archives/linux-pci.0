@@ -1,62 +1,582 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod7og115.obsmtp.com ([64.18.2.217]:32941 "EHLO
-	exprod7og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753660Ab2GWPJ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jul 2012 11:09:58 -0400
-Message-ID: <500D6932.8090306@genband.com>
-Date: Mon, 23 Jul 2012 09:09:38 -0600
-From: Chris Friesen <chris.friesen@genband.com>
-MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: Ben Hutchings <bhutchings@solarflare.com>,
-	David Miller <davem@davemloft.net>, yuvalmin@broadcom.com,
-	gregory.v.rose@intel.com, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: New commands to configure IOV features
-References: <5003DC9B.8000706@broadcom.com>	<5005BD00.4090106@redhat.com>			<5005D45D.1040302@genband.com>		 <20120717.141153.46613285253481776.davem@davemloft.net>		 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>	 <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com> <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
-In-Reply-To: <500D59BF.9040006@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Len Brown <lenb@kernel.org>, Tony Luck <tony.luch@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
+	Gaohuai Han <hangaohuai@huawei.com>
+Subject: [RFC PATCH 2/3] ACPIHP: ACPI system device hotplug slot enumerator
+Date: Sat, 28 Jul 2012 19:42:51 +0800
+Message-Id: <1343475772-21345-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343475772-21345-1-git-send-email-jiang.liu@huawei.com>
+References: <1343475772-21345-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/23/2012 08:03 AM, Don Dutile wrote:
-> On 07/20/2012 07:42 PM, Chris Friesen wrote:
->>
->> I actually have a use-case where the guest needs to be able to modify 
->> the MAC addresses of network devices that are actually VFs.
->>
->> The guest is bonding the network devices together, so the bonding 
->> driver in the guest expects to be able to set all the slaves to the 
->> same MAC address.
->>
->> As I read the ixgbe driver, this should be possible as long as the 
->> host hasn't explicitly set the MAC address of the VF. Is that correct?
->>
->> Chris
->
-> Interesting tug of war: hypervisors will want to set the macaddrs for 
-> security reasons,
->                         some guests may want to set macaddr for 
-> (valid?) config reasons.
->
+The first is an ACPI hotplug slot enumerator, which enumerates ACPI hotplug
+slots on load and provides callbacks to manage those hotplug slots.
+An ACPI hotplug slot is an abstraction of receptacles, where a group of
+system devices could be connected to. This patch implements the skeleton for
+ACPI system device hotplug slot enumerator. On loading, the driver scans the
+whole ACPI namespace for hotplug slots and creates a device node for each
+hotplug slots. Every slot is associated with a device class named
+acpihp_slot_class and will be managed by ACPI hotplug drivers.
 
-In our case we have control over both guest an host anyways, so it's 
-less of a security issue.  In the general case though I could see it 
-being an interesting problem.
+The hotplug enumerator will create following sysfs entries for hotplug slots:
 
-Back to the original discussion though--has anyone got any ideas about 
-the best way to trigger runtime creation of VFs?  I don't know what the 
-binary APIs looks like, but via sysfs I could see something like
+linux-drf:/sys/devices/LNXSYSTM:00/acpihp # ll
+drwxr-xr-x 4 root root 0 Jul 28 16:00 NODE00
+drwxr-xr-x 3 root root 0 Jul 28 16:00 NODE01
+drwxr-xr-x 3 root root 0 Jul 28 16:00 NODE02
 
-echo number_of_new_vfs_to_create >  
-/sys/bus/pci/devices/<address>/create_vfs
+linux-drf:/sys/devices/LNXSYSTM:00/acpihp/NODE00 # ll
+drwxr-xr-x 3 root root     0 Jul 28 16:00 IOX01
+-r--r--r-- 1 root root 65536 Jul 28 16:01 capabilities
+lrwxrwxrwx 1 root root     0 Jul 28 16:00 device -> ../../../LNXSYSTM:00
+-r--r--r-- 1 root root 65536 Jul 28 16:01 object
+drwxr-xr-x 2 root root     0 Jul 28 16:01 power
+-r--r--r-- 1 root root 65536 Jul 28 16:01 state
+-r--r--r-- 1 root root 65536 Jul 28 16:01 status
+lrwxrwxrwx 1 root root     0 Jul 28 16:00 subsystem -> ../../../../class/acpihp
+-r--r--r-- 1 root root 65536 Jul 28 16:01 type
+-rw-r--r-- 1 root root 65536 Jul 28 16:01 uevent
 
-Something else that occurred to me--is there buy-in from driver 
-maintainers?  I know the Intel ethernet drivers (what I'm most familiar 
-with) would need to be substantially modified to support on-the-fly 
-addition of new vfs.  Currently they assume that the number of vfs is 
-known at module init time.
+linux-drf:/sys/bus/acpi/acpihp # ls
+NODE00  NODE00.IOX01  NODE01  NODE02
 
-Chris
+linux-drf:/sys/bus/acpi/acpihp # ll
+lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE00 ->
+		../../../devices/LNXSYSTM:00/acpihp/NODE00
+lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE00.IOX01 ->
+		../../../devices/LNXSYSTM:00/acpihp/NODE00/IOX01
+lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE01 ->
+		../../../devices/LNXSYSTM:00/acpihp/NODE01
+lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE02 ->
+		../../../devices/LNXSYSTM:00/acpihp/NODE02
 
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+---
+ drivers/acpi/Kconfig             |   11 +
+ drivers/acpi/hotplug/Makefile    |    3 +
+ drivers/acpi/hotplug/slot_enum.c |  466 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 480 insertions(+)
+ create mode 100644 drivers/acpi/hotplug/slot_enum.c
+
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index e457d31..711e18e 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -333,6 +333,17 @@ menuconfig ACPI_HOTPLUG
+ 	  If your hardware and firmware do not support adding or removing
+ 	  of system devices at runtime, you need not to enable this option.
+ 
++config ACPI_HOTPLUG_ENUM
++	tristate "ACPI Hotplug Slot Enumerator"
++	depends on ACPI_HOTPLUG
++	default y
++	help
++	  This driver enumerates ACPI hotplug slots for ACPI based system
++	  device hotplug.
++
++	  To compile this driver as a module, choose M here:
++	  the module will be called acpihp_enum.
++
+ config ACPI_CONTAINER
+ 	tristate "Container and Module Devices (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL
+diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
+index 5e7790f..41c0da9 100644
+--- a/drivers/acpi/hotplug/Makefile
++++ b/drivers/acpi/hotplug/Makefile
+@@ -4,3 +4,6 @@
+ 
+ obj-$(CONFIG_ACPI_HOTPLUG)			+= acpihp.o
+ acpihp-y					= core.o
++
++obj-$(CONFIG_ACPI_HOTPLUG_ENUM)			+= acpihp_enum.o
++acpihp_enum-y					= slot_enum.o
+diff --git a/drivers/acpi/hotplug/slot_enum.c b/drivers/acpi/hotplug/slot_enum.c
+new file mode 100644
+index 0000000..80396a3
+--- /dev/null
++++ b/drivers/acpi/hotplug/slot_enum.c
+@@ -0,0 +1,466 @@
++/*
++ * Copyright (C) 2011 Huawei Tech. Co., Ltd.
++ * Copyright (C) 2011 Jiang Liu <jiang.liu@huawei.com>
++ * Copyright (C) 2011 Gaohuai Han <hangaohuai@huawei.com>
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ */
++
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/acpi.h>
++#include <acpi/acpi.h>
++#include <acpi/acpi_hotplug.h>
++
++static LIST_HEAD(slot_list);
++static LIST_HEAD(slot_id_list);
++
++struct acpihp_slot_id {
++	struct list_head node;
++	unsigned long instance_id;
++	enum acpihp_slot_type type;
++};
++
++static struct acpihp_slot_ops *slot_ops_curr;
++
++/*
++ * Array of platform specific enumeration methods.
++ * Entries in the array should be sorted by descending priority order.
++ */
++static struct acpihp_slot_ops *slot_ops_array[] = {
++	NULL
++};
++
++static void acpihp_enum_cleanup_slots(void);
++
++static int __init acpihp_get_parent_slot(struct acpihp_slot *slot)
++{
++	acpi_handle handle, root_handle;
++	struct acpihp_slot *tmp;
++
++	slot->parent = NULL;
++	handle = slot->handle;
++	if (ACPI_FAILURE(acpi_get_handle(NULL, ACPI_NS_ROOT_PATH,
++			 &root_handle))) {
++		ACPIHP_WARN("fails to get ACPI root device.\n");
++		return -EINVAL;
++	}
++
++	do {
++		if (ACPI_FAILURE(acpi_get_parent(handle, &handle))) {
++			ACPIHP_DEBUG("fails to get parent device handle.\n");
++			return -ENODEV;
++		}
++		list_for_each_entry(tmp, &slot_list, slot_list)
++			if (tmp->handle == handle) {
++				slot->parent = tmp;
++				return 0;
++			}
++	} while (handle != root_handle);
++
++	return 0;
++}
++
++static int __init acpihp_get_slot_state(struct acpihp_slot *slot)
++{
++	unsigned long long sta;
++
++	/* An hotplug slot must implement _STA method. */
++	if (ACPI_FAILURE(acpi_evaluate_integer(slot->handle, METHOD_NAME__STA,
++					       NULL, &sta))) {
++		ACPIHP_DEBUG("fails to execute _STA method.\n");
++		return -EINVAL;
++	}
++
++	if (!(sta & ACPI_STA_DEVICE_PRESENT))
++		slot->state = ACPIHP_SLOT_STATE_ABSENT;
++	else if ((sta & ACPI_STA_DEVICE_ENABLED) ||
++		 (sta & ACPI_STA_DEVICE_FUNCTIONING))
++		slot->state = ACPIHP_SLOT_STATE_POWERED;
++	else
++		slot->state = ACPIHP_SLOT_STATE_PRESENT;
++
++	return 0;
++}
++
++static int __init acpihp_enum_create_slot(acpi_handle handle)
++{
++	struct acpihp_slot *slot;
++
++	slot = acpihp_create_slot(handle, "TEMP");
++	if (!slot) {
++		ACPIHP_DEBUG("fails to allocate memory for hotplug slot.\n");
++		return -ENOMEM;
++	}
++
++	slot->slot_ops = slot_ops_curr;
++
++	if (acpihp_get_parent_slot(slot))
++		goto out;
++	if (acpihp_get_slot_state(slot))
++		goto out;
++	if (ACPI_FAILURE(acpihp_slot_get_capabilities(slot,
++						      &slot->capabilities))) {
++		ACPIHP_DEBUG("fails to get slot capabilities.\n");
++		goto out;
++	}
++	if (ACPI_FAILURE(acpihp_mark_slot(handle, slot))) {
++		ACPIHP_DEBUG("fails to attach slot to ACPI device object.\n");
++		goto out;
++	}
++
++	list_add_tail(&slot->slot_list, &slot_list);
++
++	return 0;
++out:
++	acpihp_slot_put(slot);
++	return -EINVAL;
++}
++
++/*
++ * Scan hotplug slots for ACPI based system device hotplug.
++ * We only care about processor, memory, PCI host bridge and CONTAINER.
++ */
++static acpi_status __init acpihp_enum_scan_slot(acpi_handle handle, u32 lvl,
++						void *context, void **rv)
++{
++	enum acpihp_dev_type type;
++
++	if (acpihp_dev_get_type(handle, &type) ||
++	    type == ACPIHP_DEV_TYPE_UNKNOWN)
++		return AE_OK;
++
++	if (ACPI_SUCCESS(slot_ops_curr->check(handle)))
++		acpihp_enum_create_slot(handle);
++
++	/*
++	 * Don't scan hotplug slots under PCI host bridges, they should be
++	 * handled by acpiphp or pciehp drivers.
++	 */
++	if (type == ACPIHP_DEV_TYPE_HOST_BRIDGE)
++		return AE_CTRL_DEPTH;
++
++	return AE_OK;
++}
++
++/*
++ * Get types of child devices connected to this slot.
++ * We only care about CPU, memory, PCI host bridge and CONTAINER here.
++ * Values used here must be in consistence with acpihp_enum_get_slot_type().
++ */
++static acpi_status __init
++acpihp_enum_get_dev_type(acpi_handle handle, u32 lvl, void *context, void **rv)
++{
++	acpi_status status = AE_OK;
++	enum acpihp_dev_type type;
++	u32 *tp = (u32 *)rv;
++
++	if (!acpihp_dev_get_type(handle, &type)) {
++		switch (type) {
++		case ACPIHP_DEV_TYPE_CPU:
++			*tp |= 0x0001;
++			status = AE_CTRL_DEPTH;
++			break;
++		case ACPIHP_DEV_TYPE_MEM:
++			*tp |= 0x0002;
++			status = AE_CTRL_DEPTH;
++			break;
++		case ACPIHP_DEV_TYPE_HOST_BRIDGE:
++			*tp |= 0x0004;
++			status = AE_CTRL_DEPTH;
++			break;
++		case ACPIHP_DEV_TYPE_CONTAINER:
++			*tp |= 0x0008;
++			break;
++		default:
++			break;
++		}
++	}
++
++	return status;
++}
++
++/*
++ * Guess type of a hotplug slot according to child devices connecting to it.
++ */
++static enum acpihp_slot_type __init acpihp_enum_get_slot_type(u32 dev_types)
++{
++	BUG_ON(dev_types > 15);
++
++	switch (dev_types) {
++	case 0:
++		/* Generic CONTAINER */
++		return ACPIHP_SLOT_TYPE_COMMON;
++	case 1:
++		/* Physical processor with logical CPUs */
++		return ACPIHP_SLOT_TYPE_CPU;
++	case 2:
++		/* Memory board/box with memory devices */
++		return ACPIHP_SLOT_TYPE_MEM;
++	case 3:
++		/* Physical processor with CPUs and memory controllers */
++		return ACPIHP_SLOT_TYPE_CPU;
++	case 4:
++		/* IO eXtension board/box with IO host bridges */
++		return ACPIHP_SLOT_TYPE_IOX;
++	case 7:
++		/* Physical processor with CPUs, IO host bridges and MCs. */
++		return ACPIHP_SLOT_TYPE_CPU;
++	case 8:
++		/* Generic CONTAINER */
++		return ACPIHP_SLOT_TYPE_COMMON;
++	case 9:
++		/* System board with physical processors */
++		return ACPIHP_SLOT_TYPE_SYSTEM_BOARD;
++	case 11:
++		/* System board with physical processors and memory */
++		return ACPIHP_SLOT_TYPE_SYSTEM_BOARD;
++	case 15:
++		/* Node with processor, memory and IO host bridge */
++		return ACPIHP_SLOT_TYPE_NODE;
++	default:
++		return ACPIHP_SLOT_TYPE_UNKNOWN;
++	}
++}
++
++/*
++ * Guess type of a hotplug slot according to the device type of the
++ * corresponding ACPI object itself.
++ */
++static enum acpihp_slot_type __init
++acpihp_enum_check_slot_self(struct acpihp_slot *slot)
++{
++	enum acpihp_dev_type type;
++
++	if (acpihp_dev_get_type(slot->handle, &type))
++		return ACPIHP_SLOT_TYPE_UNKNOWN;
++
++	switch (type) {
++	case ACPIHP_DEV_TYPE_CPU:
++		/* Logical CPU used in virtualization environment */
++		return ACPIHP_SLOT_TYPE_CPU;
++	case ACPIHP_DEV_TYPE_MEM:
++		/* Memory board with single memory device */
++		return ACPIHP_SLOT_TYPE_MEM;
++	case ACPIHP_DEV_TYPE_HOST_BRIDGE:
++		/* IO eXtension board/box with single IO host bridge */
++		return ACPIHP_SLOT_TYPE_IOX;
++	default:
++		return ACPIHP_SLOT_TYPE_UNKNOWN;
++	}
++}
++
++static int __init acpihp_enum_generate_slot_name(struct acpihp_slot *slot)
++{
++	int found = 0;
++	struct list_head *list;
++	struct acpihp_slot_id *slot_id;
++	unsigned long long uid;
++
++	/* Respect firmware settings if _UID return an integer. */
++	if (ACPI_SUCCESS(acpi_evaluate_integer(slot->handle, METHOD_NAME__UID,
++					       NULL, &uid)))
++		goto set_name;
++
++	if (slot->parent)
++		list = &slot->parent->slot_id_list;
++	else
++		list = &slot_id_list;
++
++	list_for_each_entry(slot_id, list, node)
++		if (slot_id->type == slot->type) {
++			found = 1;
++			break;
++		}
++	if (!found) {
++		slot_id = kzalloc(sizeof(struct acpihp_slot_id), GFP_KERNEL);
++		if (!slot_id) {
++			ACPIHP_DEBUG("fails to allocate slot instance ID.\n");
++			return -ENOMEM;
++		}
++		slot_id->type = slot->type;
++		list_add_tail(&slot_id->node, list);
++	}
++
++	uid = slot_id->instance_id++;
++
++set_name:
++	snprintf(slot->name, sizeof(slot->name) - 1, "%s%02llx",
++		 acpihp_get_slot_type_name(slot->type), uid);
++	dev_set_name(&slot->dev, "%s", slot->name);
++
++	return 0;
++}
++
++/*
++ * Generate a meaningful name for the slot according to devices connecting
++ * to this slot
++ */
++static int __init acpihp_enum_rename_slot(struct acpihp_slot *slot)
++{
++	u32 child_types = 0;
++
++	slot->type = acpihp_enum_check_slot_self(slot);
++	if (slot->type == ACPIHP_SLOT_TYPE_UNKNOWN) {
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, slot->handle,
++				ACPI_UINT32_MAX, acpihp_enum_get_dev_type,
++				NULL, NULL, (void **)&child_types);
++		acpi_walk_namespace(ACPI_TYPE_PROCESSOR, slot->handle,
++				ACPI_UINT32_MAX, acpihp_enum_get_dev_type,
++				NULL, NULL, (void **)&child_types);
++		slot->type = acpihp_enum_get_slot_type(child_types);
++	}
++
++	if (acpihp_enum_generate_slot_name(slot))
++		return -EINVAL;
++
++	return 0;
++}
++
++static void __init acpihp_enum_rename_and_register_slots(void)
++{
++	struct acpihp_slot *slot;
++
++	list_for_each_entry(slot, &slot_list, slot_list) {
++		/* generate a meaningful name for this slot */
++		if (acpihp_enum_rename_slot(slot))
++			continue;
++
++		if (acpihp_register_slot(slot))
++			ACPIHP_DEBUG("fails to register slot %s.\n",
++				     slot->name);
++	}
++}
++
++static int __init acpihp_enum_generate_slots(void)
++{
++	acpi_status status;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
++				     ACPI_UINT32_MAX, acpihp_enum_scan_slot,
++				     NULL, NULL, NULL);
++	if (!ACPI_SUCCESS(status))
++		goto out_err;
++
++	status = acpi_walk_namespace(ACPI_TYPE_PROCESSOR, ACPI_ROOT_OBJECT,
++				     ACPI_UINT32_MAX, acpihp_enum_scan_slot,
++				     NULL, NULL, NULL);
++	if (!ACPI_SUCCESS(status))
++		goto out_err;
++
++	acpihp_enum_rename_and_register_slots();
++
++	return 0;
++
++out_err:
++	ACPIHP_DEBUG("fails to scan hotplug slots.\n");
++	acpihp_enum_cleanup_slots();
++
++	return -ENOTSUPP;
++}
++
++static void acpihp_enum_unregister_slots(void)
++{
++	struct acpihp_slot *slot, *tmp;
++	struct acpihp_slot_id *slot_id, *slot_id_safe;
++
++	list_for_each_entry_safe(slot, tmp, &slot_list, slot_list) {
++		acpihp_unregister_slot(slot);
++		list_del_init(&slot->slot_list);
++		acpihp_unmark_slot(slot->handle);
++		list_for_each_entry_safe(slot_id, slot_id_safe,
++					 &slot->slot_id_list, node) {
++			list_del(&slot_id->node);
++			kfree(slot_id);
++		}
++		acpihp_slot_put(slot);
++	}
++}
++
++static void acpihp_enum_cleanup_slots(void)
++{
++	struct acpihp_slot_id *slot_id, *tmp;
++
++	acpihp_enum_unregister_slots();
++	list_for_each_entry_safe(slot_id, tmp, &slot_id_list, node) {
++		list_del(&slot_id->node);
++		kfree(slot_id);
++	}
++}
++
++static int __init acpihp_enum_init(void)
++{
++	int i;
++	int retval;
++
++	/* probe for suitable enumerator. */
++	for (i = 0; slot_ops_array[i]; i++)
++		if (ACPI_SUCCESS(slot_ops_array[i]->init())) {
++			slot_ops_curr = slot_ops_array[i];
++			break;
++		}
++	if (slot_ops_curr == NULL) {
++		ACPIHP_DEBUG("no ACPI hotplug slot found.\n");
++		return -ENXIO;
++	}
++
++	retval = acpihp_register_class();
++	if (retval != 0) {
++		ACPIHP_DEBUG("fails to register ACPI hotplug slot class.\n");
++		goto out_fini;
++	}
++
++	retval = acpihp_enum_generate_slots();
++	if (retval != 0) {
++		ACPIHP_DEBUG("fails to enumerate ACPI hotplug slots.\n");
++		goto out_unregister_class;
++	}
++
++	/* Back out if no ACPI hotplug slot  found. */
++	if (list_empty(&slot_list)) {
++		ACPIHP_DEBUG("no ACPI hotplug slot found.\n");
++		retval = -ENODEV;
++		goto out_unregister_class;
++	}
++
++	return 0;
++
++out_unregister_class:
++	acpihp_unregister_class();
++out_fini:
++	slot_ops_curr->fini();
++	ACPIHP_DEBUG("fails to initialize hotplug slot enumerator.\n");
++
++	return retval;
++}
++
++static void __exit acpihp_enum_exit(void)
++{
++	acpihp_enum_cleanup_slots();
++	acpihp_unregister_class();
++	slot_ops_curr->fini();
++}
++
++module_init(acpihp_enum_init);
++module_exit(acpihp_enum_exit);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Jiang Liu <jiang.liu@huawei.com>");
++MODULE_AUTHOR("Gaohuai Han <hangaohuai@huawei.com>");
+-- 
+1.7.9.5
 
