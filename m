@@ -1,61 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:35469 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362Ab2GMUmq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jul 2012 16:42:46 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:53750 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753165Ab2G2Oz4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 29 Jul 2012 10:55:56 -0400
+Date: Sun, 29 Jul 2012 10:55:55 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+cc: Huang Ying <ying.huang@intel.com>,
+	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
+ hotplug failure
+In-Reply-To: <201207291555.52749.rjw@sisk.pl>
+Message-ID: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <4FFEF71E.7080706@xenotime.net>
-References: <20120712160335.9cbff13c2f18eadc7d3cb0cf@canb.auug.org.au>
-	<4FFEF71E.7080706@xenotime.net>
-Date: Fri, 13 Jul 2012 14:42:45 -0600
-Message-ID: <CAL-B5D2D8WfDgrQoz4AVojXxavrhap2XPRyhkR3AeD4NNZHHxQ@mail.gmail.com>
-Subject: Re: linux-next: Tree for July 12 (pci)
-From: Myron Stowe <myron.stowe@gmail.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 12, 2012 at 10:11 AM, Randy Dunlap <rdunlap@xenotime.net> wrote:
-> On 07/11/2012 11:03 PM, Stephen Rothwell wrote:
->
->> Hi all,
->>
->> Changes since 20120710:
->>
->>
->> The pci tree lost its conflicts.
->
->
-> on x86_64:
->
-> drivers/built-in.o: In function `pci_bus_add_device':
-> (.text+0x4f62): undefined reference to `pci_fixup_final_inited'
->
->
-> when CONFIG_PCI_QUIRKS is not enabled.
->
-I just posted a patch to  resolve what you encountered.  Would you mind giving
-it a try and reporting back with the results?
+On Sun, 29 Jul 2012, Rafael J. Wysocki wrote:
 
-It's obvious what you ran into, with CONFIG_PCI_QUIRKS not enabled,
-./drivers/pci/quirks.o ends up not being generated and included in the
-kernel thus
-the unresolved reference from ./drivers/pci/bus.o.
+> The difference is, if you use _put_sync(), you need to wait the extra 10 ms
+> for local_pci_probe() to return (if the parent is actually suspended),
+> although you might not need to wait for it if you used _put(), right?
 
-I tried to reproduce the failure by disabling my .config file's
-CONFIG_PCI_QUIRKS
-entry (which in turn required me to enable CONFIG_EXPERT) but that was not
-enough to encounter the unresolved reference - although it *should* have been.
+Yes, that's the difference.  But who waits for local_pci_probe() to 
+return?  :-)
 
-Myron
->
-> --
-> ~Randy
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Which, to me, means that using _put_sync() may not be always better.
+> It probably doesn't matter a lot, but then the workqueue overhead shouldn't
+> matter a lot either.
+
+It's that in the end, the extra overhead is pretty small.  For me
+there's also an issue of style: If you do a synchronous get then it
+looks odd not to do a synchronous put.  My feeling has always been that
+the async routines are for use in non-process contexts, where the sync
+routines can't be used.  Using them just to return a little more
+quickly is a foreign idea.
+
+Alan Stern
+
