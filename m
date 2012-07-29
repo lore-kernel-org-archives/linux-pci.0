@@ -1,69 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:53251 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975Ab2GaUSr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 16:18:47 -0400
-Message-ID: <50183DA3.8020308@gmail.com>
-Date: Tue, 31 Jul 2012 15:18:43 -0500
-From: Rob Herring <robherring2@gmail.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:33781 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753367Ab2G2TMy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 29 Jul 2012 15:12:54 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB hotplug failure
+Date: Sun, 29 Jul 2012 21:18:42 +0200
+Cc: Huang Ying <ying.huang@intel.com>,
+	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org
+References: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Colin Cross <ccross@android.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v3 08/10] of/address: Handle #address-cells > 2 specially
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <1343332512-28762-9-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1343332512-28762-9-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201207292118.42547.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/26/2012 02:55 PM, Thierry Reding wrote:
-> When a bus specifies #address-cells > 2, of_bus_default_map() now
-> assumes that the mapping isn't for a physical address but rather an
-> identifier that needs to match exactly.
+On Sunday, July 29, 2012, Alan Stern wrote:
+> On Sun, 29 Jul 2012, Rafael J. Wysocki wrote:
 > 
-> This is required by bindings that use multiple cells to translate a
-> resource to the parent bus (device index, type, ...).
+> > The difference is, if you use _put_sync(), you need to wait the extra 10 ms
+> > for local_pci_probe() to return (if the parent is actually suspended),
+> > although you might not need to wait for it if you used _put(), right?
 > 
-> See here for the discussion:
-> 
-> 	https://lists.ozlabs.org/pipermail/devicetree-discuss/2012-June/016577.html
-> 
-> Originally-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> Yes, that's the difference.  But who waits for local_pci_probe() to 
+> return?  :-)
 
-Acked-by: Rob Herring <rob.herring@calxeda.com>
+pci_register_driver() might, but that's not a big deal.  Hot-plug might
+as well, though.
 
-> ---
-> Changes in v3:
-> - new patch
+> > Which, to me, means that using _put_sync() may not be always better.
+> > It probably doesn't matter a lot, but then the workqueue overhead shouldn't
+> > matter a lot either.
 > 
->  drivers/of/address.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 7e262a6..2776119 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -69,6 +69,14 @@ static u64 of_bus_default_map(u32 *addr, const __be32 *range,
->  		 (unsigned long long)cp, (unsigned long long)s,
->  		 (unsigned long long)da);
->  
-> +	/*
-> +	 * If the number of address cells is larger than 2 we assume the
-> +	 * mapping doesn't specify a physical address. Rather, the address
-> +	 * specifies an identifier that must match exactly.
-> +	 */
-> +	if (na > 2 && memcmp(range, addr, na * 4) != 0)
-> +		return OF_BAD_ADDR;
-> +
->  	if (da < cp || da >= (cp + s))
->  		return OF_BAD_ADDR;
->  	return da - cp;
-> 
+> It's that in the end, the extra overhead is pretty small.  For me
+> there's also an issue of style: If you do a synchronous get then it
+> looks odd not to do a synchronous put.  My feeling has always been that
+> the async routines are for use in non-process contexts, where the sync
+> routines can't be used.  Using them just to return a little more
+> quickly is a foreign idea.
 
+I see. :-)
 
+The reason for using sync get is quite obvious: we want to be able to access
+the device later on.  For sync put that's not so clear, though. There are cases
+when we definitely want to do it, like the failing .probe() in which we want to
+disable runtime PM next to the put, but usually it doesn't hurt (too much) to
+defer it IMO.
+
+Thanks,
+Rafael
