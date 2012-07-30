@@ -1,82 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:48556 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144Ab2GZCeQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jul 2012 22:34:16 -0400
-Received: by yenl2 with SMTP id l2so1464640yen.19
-        for <linux-pci@vger.kernel.org>; Wed, 25 Jul 2012 19:34:15 -0700 (PDT)
-From: Jon Mason <jdmason@kudzu.us>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: correct static code analysis tool issue
-Date: Wed, 25 Jul 2012 19:34:11 -0700
-Message-Id: <1343270051-5217-1-git-send-email-jdmason@kudzu.us>
+Received: from canardo.mork.no ([148.122.252.1]:39160 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753263Ab2G3Q5f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2012 12:57:35 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: huang ying <huang.ying.caritas@gmail.com>
+Cc: Huang Ying <ying.huang@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB hotplug failure
+References: <Pine.LNX.4.44L0.1207241312050.1164-100000@iolanthe.rowland.org>
+	<87r4s0opck.fsf@nemi.mork.no> <87pq7ko532.fsf@nemi.mork.no>
+	<1343190864.10311.26.camel@yhuang-dev> <87k3xskvqq.fsf@nemi.mork.no>
+	<CAC=cRTOi+=49+_4VuMuBR8rTPvjXLMVhNBFbr3SHgNyxfnKQUA@mail.gmail.com>
+	<874now7xi8.fsf@nemi.mork.no> <1343292851.3874.12.camel@yhuang-dev>
+	<87k3xqyfm3.fsf@nemi.mork.no> <1343367309.3874.21.camel@yhuang-dev>
+	<87sjcd4lgs.fsf@nemi.mork.no> <1343618131.3874.37.camel@yhuang-dev>
+	<871ujtr7rz.fsf@nemi.mork.no>
+	<CAC=cRTO7A2MSWX9hV3sR2xpJc5+c2-0+QhsyM0gURFhLfnNW-A@mail.gmail.com>
+Date: Mon, 30 Jul 2012 18:57:23 +0200
+In-Reply-To: <CAC=cRTO7A2MSWX9hV3sR2xpJc5+c2-0+QhsyM0gURFhLfnNW-A@mail.gmail.com>
+	(huang ying's message of "Mon, 30 Jul 2012 21:31:39 +0800")
+Message-ID: <873949p4p8.fsf@nemi.mork.no>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Coverity noticed that pcie_bus_configure_settings() can call
-pcie_bus_configure_set() when "smpss" is uninitialized.  The smpss is
-used to make the bus and all child devices have a uniform value.
-Setting the smpss is moot for PCIE_BUS_PERFORMANCE, since it will be
-determined dynamically based on the max size of the parent device and
-the child device.  To avoid the erroneous detection of this issue, set
-the smpss to 0.  Also, add a case statement to make clearer the possible
-use cases and add a nice comment describing what is being done in the
-PCIE_BUS_PERFORMANCE case.
+huang ying <huang.ying.caritas@gmail.com> writes:
 
-Signed-off-by: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |   32 ++++++++++++++++++++++----------
- 1 file changed, 22 insertions(+), 10 deletions(-)
+> On Mon, Jul 30, 2012 at 4:08 PM, Bjørn Mork <bjorn@mork.no> wrote:
+>> Huang Ying <ying.huang@intel.com> writes:
+>>
+>>> Do you have time to test the following patch to fix the lspci issue?
+>>>
+>>> Subject: [BUGFIX] PCI/PM: Keep parent bridge active when read/write config reg
+>>
+>>
+>> Sure.  But keep this going and I will file a request for modular build
+>> of the PCI subsystem :-)
+>
+> Why?  All not so old PC hardware has PCI/PCIe devices.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6c143b4..e813846 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1567,21 +1567,33 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
--	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
--		return;
--
--	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
--	 * to be aware to the MPS of the destination.  To work around this,
--	 * simply force the MPS of the entire system to the smallest possible.
--	 */
--	if (pcie_bus_config == PCIE_BUS_PEER2PEER)
-+	switch (pcie_bus_config) {
-+	case PCIE_BUS_PERFORMANCE:
-+		/* The smpss is used to make the bus and all child devices have
-+		 * a uniform value.  Setting the smpss is moot for
-+		 * "Performance", since it will be determined dynamically based
-+		 * on the max size of the parent device and the child device.
-+		 * However, not setting the smpss can result in static code
-+		 * analysis tools erroniously reporting an issue.  To avoid
-+		 * this, set the smpss to 0.
-+		 */
-+	case PCIE_BUS_PEER2PEER:
-+		/* FIXME - Peer to peer DMA is possible, though the endpoint
-+		 * would need to be aware to the MPS of the destination.  To
-+		 * work around this, simply force the MPS of the entire system
-+		 * to the smallest possible.
-+		 */
- 		smpss = 0;
--
--	if (pcie_bus_config == PCIE_BUS_SAFE) {
-+		break;
-+	case PCIE_BUS_SAFE:
- 		smpss = mpss;
- 
- 		pcie_find_smpss(bus->self, &smpss);
- 		pci_walk_bus(bus, pcie_find_smpss, &smpss);
-+		break;
-+	case PCIE_BUS_TUNE_OFF:
-+	default:
-+		return;
- 	}
- 
- 	pcie_bus_configure_set(bus->self, &smpss);
--- 
-1.7.9.5
+So that I didn't have to reboot all the time to test your new patches...
 
+It was a (bad) joke.  I don't really think my laptop would work all that
+well without PCI.
+
+
+Bjørn
