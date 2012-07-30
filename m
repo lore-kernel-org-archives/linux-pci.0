@@ -1,103 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f74.google.com ([209.85.212.74]:59140 "EHLO
-	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719Ab2GQAHg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 Jul 2012 20:07:36 -0400
-Received: by vbnl22 with SMTP id l22so618182vbn.1
-        for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 17:07:35 -0700 (PDT)
-Date: Mon, 16 Jul 2012 18:07:34 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@ozlabs.org,
-	benh@kernel.crashing.org, yinghai@kernel.org, linuxram@us.ibm.com
-Subject: Re: [PATCH 04/15] pci: weak function returns alignment
-Message-ID: <20120717000734.GB32203@google.com>
-References: <cover.1340949637.git.shangw@linux.vnet.ibm.com>
- <1342452631-21152-4-git-send-email-shangw@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1342452631-21152-4-git-send-email-shangw@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <50084E8B.3070508@gmx.de>
+References: <5002BC55.3050107@gmx.de> <201207152225.49154.rjw@sisk.pl>
+ <CAErSpo6Ka6XBakVZH7ge-==XY86FrOHP_dqGoa+zAFNgnnnFTA@mail.gmail.com> <50084E8B.3070508@gmx.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 30 Jul 2012 11:12:48 -0600
+Message-ID: <CAErSpo5SCa0NdZUtLpLDma+i6+L7NH7pOFvUzOAD4TougvqMQg@mail.gmail.com>
+Subject: [Bug 43238] Re: PCI ACPI/IRQ-routing broken on H77 chipset + Ivy
+ Bridge (kernel 3.5-rc7 and earlier)
+To: =?ISO-8859-1?Q?Malte_Schr=F6der?= <maltesch@gmx.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Galen Seitz <galens@seitzassoc.com>,
+	bugzilla-daemon@bugzilla.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 16, 2012 at 11:30:27PM +0800, Gavin Shan wrote:
-> The patch implements the weak function to return the default I/O
-> or memory alignment for P2P bridge. Currently, I/O window has 4KiB
-> alignment and memory window is 4MiB aligned by default. On the other
-> hand, those platforms (e.g. powernv) that have special requirements
-> on the alignment could override the function by themselves.
-> 
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> ---
->  drivers/pci/host-bridge.c |   17 +++++++++++++++++
->  include/linux/pci.h       |    2 ++
->  2 files changed, 19 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index abcf053..dcbc47d 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -105,3 +105,20 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->  }
->  
->  EXPORT_SYMBOL(pcibios_bus_to_resource);
-> +
-> +/*
-> + * Retrieve the default memory or I/O alignment for the
-> + * specific P2P bridge. The function has been implemented
-> + * as weak so that it can be overrided by platform that
-> + * has special requirments for memory and I/O alignment.
-> + */
-> +resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
-> +						unsigned long type)
+> I was pointed to https://bugzilla.kernel.org/show_bug.cgi?id=43238.
+> I tried the modifications to the DSDT that where proposed there and
+> voilŕ, the 3c905c started to work :)
 
-This no longer has anything to do with the host bridge, so I think it
-could be moved to setup-bus.c and made static.  We shouldn't have to
-repeat the default 1M and 4K code in the arch versions, so maybe we
-could do something like this:
+I don't know where to go with this.  We do have some _PRT quirks in
+drivers/acpi/pci_irq.c, but since Windows 7 works fine without any
+quirks, adding a quirk to Linux doesn't seem like the "right" fix.
 
-    resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus, unsigned long type)
-    {
-	return 1;
-    }
+Lubos, would it be possible for you to collect a Windows system report
+using AIDA64?  I think there's a free trial version here:
+http://www.aida64.com/
 
-    static resource_size_t window_alignment(struct pci_bus *bus, unsigned long type)
-    {
-	resource_size_t align = 1, arch_align;
-
-	if (type & IORESOURCE_MEM)
-	    align = 1024*1024;
-	else if (type & IORESOURCE_IO)
-	    align = 4*1024;
-    
-	arch_align = pcibios_window_alignment(bus, type);
-	return max(align, arch_align);
-    }
-
-I made the default 1, thinking of bus number apertures (though we don't use this
-path for bus numbers today).
-
-> +{
-> +	/* Memory windows must be 1MiB aligned */
-> +	if (type & IORESOURCE_MEM)
-> +		return 1024*1024;
-> +
-> +	/* I/O windows have default alignment of 4KiB */
-> +	return 4*1024;
-> +}
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 9acea4b..283da11 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -662,6 +662,8 @@ void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
->  			       struct pci_bus_region *region);
->  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->  			     struct pci_bus_region *region);
-> +resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-> +					 unsigned long type);
->  void pcibios_scan_specific_bus(int busn);
->  extern struct pci_bus *pci_find_bus(int domain, int busnr);
->  void pci_bus_add_devices(const struct pci_bus *bus);
-> -- 
-> 1.7.5.4
-> 
+Maybe somebody can compare what Windows does with what Linux does and
+figure out the difference.
