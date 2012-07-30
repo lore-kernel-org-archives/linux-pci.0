@@ -1,104 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:45646 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753872Ab2GJPdX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 11:33:23 -0400
-Received: by bkwj10 with SMTP id j10so125949bkw.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 08:33:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120709164720.GA15994@kroah.com>
-References: <Pine.LNX.4.44L0.1207091106430.1954-100000@iolanthe.rowland.org>
- <201207091850.24550.rjw@sisk.pl> <20120709164720.GA15994@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Jul 2012 09:32:59 -0600
-Message-ID: <CAErSpo6uaoJxd48yp3DsLSWMyAx7BKaYo72Zk_D2Mksw=V0ReQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: EHCI: fix crash during suspend on ASUS computers
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	AceLan Kao <acelan.kao@canonical.com>,
-	=?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>,
-	Javier Marcet <jmarcet@gmail.com>,
-	Andrey Rahmatullin <wrar@wrar.name>,
-	Oleksij Rempel <bug-track@fisher-privat.net>,
-	Pavel Pisa <pisa@cmp.felk.cvut.cz>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:9850 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755042Ab2G3XSy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Jul 2012 19:18:54 -0400
+Message-ID: <1343690279.8073.215.camel@ul30vt>
+Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Paul Mackerras <paulus@samba.org>
+Cc: torvalds@linux-foundation.org, benh@kernel.crashing.org,
+	aik@ozlabs.ru, david@gibson.dropbear.id.au,
+	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	ddutile@redhat.com
+Date: Mon, 30 Jul 2012 17:17:59 -0600
+In-Reply-To: <20120727053206.GC11870@drongo>
+References: <20120725142254.12800.61860.stgit@bling.home>
+	 <20120727053206.GC11870@drongo>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 9, 2012 at 10:47 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Mon, Jul 09, 2012 at 06:50:24PM +0200, Rafael J. Wysocki wrote:
->> On Monday, July 09, 2012, Alan Stern wrote:
->> > Quite a few ASUS computers experience a nasty problem, related to the
->> > EHCI controllers, when going into system suspend.  It was observed
->> > that the problem didn't occur if the controllers were not put into the
->> > D3 power state before starting the suspend, and commit
->> > 151b61284776be2d6f02d48c23c3625678960b97 (USB: EHCI: fix crash during
->> > suspend on ASUS computers) was created to do this.
->> >
->> > It turned out this approach messed up other computers that didn't have
->> > the problem -- it prevented USB wakeup from working.  Consequently
->> > commit c2fb8a3fa25513de8fedb38509b1f15a5bbee47b (USB: add
->> > NO_D3_DURING_SLEEP flag and revert 151b61284776be2) was merged; it
->> > reverted the earlier commit and added a whitelist of known good board
->> > names.
->> >
->> > Now we know the actual cause of the problem.  Thanks to AceLan Kao for
->> > tracking it down.
->> >
->> > According to him, an engineer at ASUS explained that some of their
->> > BIOSes contain a bug that was added in an attempt to work around a
->> > problem in early versions of Windows.  When the computer goes into S3
->> > suspend, the BIOS tries to verify that the EHCI controllers were first
->> > quiesced by the OS.  Nothing's wrong with this, but the BIOS does it
->> > by checking that the PCI COMMAND registers contain 0 without checking
->> > the controllers' power state.  If the register isn't 0, the BIOS
->> > assumes the controller needs to be quiesced and tries to do so.  This
->> > involves making various MMIO accesses to the controller, which don't
->> > work very well if the controller is already in D3.  The end result is
->> > a system hang or memory corruption.
->> >
->> > Since the value in the PCI COMMAND register doesn't matter once the
->> > controller has been suspended, and since the value will be restored
->> > anyway when the controller is resumed, we can work around the BIOS bug
->> > simply by setting the register to 0 during system suspend.  This patch
->> > (as1590) does so and also reverts the second commit mentioned above,
->> > which is now unnecessary.
->> >
->> > In theory we could do this for every PCI device.  However to avoid
->> > introducing new problems, the patch restricts itself to EHCI host
->> > controllers.
->> >
->> > Finally the affected systems can suspend with USB wakeup working
->> > properly.
->> >
->> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
->> > Tested-by: Dâniel Fraga <fragabr@gmail.com>
->> > Tested-by: Javier Marcet <jmarcet@gmail.com>
->> > Tested-by: Andrey Rahmatullin <wrar@wrar.name>
->> > Tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
->> > Tested-by: Pavel Pisa <pisa@cmp.felk.cvut.cz>
->> > CC: <stable@vger.kernel.org>
->>
->> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
->
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Fri, 2012-07-27 at 15:32 +1000, Paul Mackerras wrote:
+> On Wed, Jul 25, 2012 at 08:53:06AM -0600, Alex Williamson wrote:
+> > Hi Linus,
+> > 
+> > This series includes the VFIO userspace driver interface for the
+> > 3.6 kernel merge window.  This driver is intended to provide a
+> > secure interface for device access using IOMMU protection for
+> > applications like assignment of physical devices to virtual
+> > machines.  Qemu will be the first user of this interface, enabling
+> > assignment of PCI devices to Qemu guests.  This interface is
+> > intended to eventually replace the x86-specific assignment mechanism
+> > currently available in KVM.  This interface has the advantage of
+> > being more secure, by working with IOMMU groups to ensure device
+> > isolation and providing it's own filtered resource access mechanism,
+> > and also more flexible, in not being x86 or KVM specific (extensions
+> > to enable POWER are already working).
+> > 
+> > As a new driver, I'm including both the individual patches in email,
+> > as well as a branch to pull from:
+> > 
+> > git://github.com/awilliam/linux-vfio.git for-linus
+> > 
+> > This driver is originally the work of Tom Lyon, but has since been
+> > handed over to me and gone through a complete overhaul thanks to the
+> > input from David Gibson, Ben Herrenschmidt, Chris Wright, Joerg
+> > Roedel, and others.  This driver has been available in linux-next for
+> > the last month.  Thanks,
+> 
+> Linus,
+> 
+> Are you thinking of pulling this driver in for 3.6?  I would be glad
+> to see it go in since we want to use it with KVM on PowerPC.  If
+> possible we'd like the PowerPC bits for it to go in as well.
 
-I'm fine with this patch.  I was going to add these:
+I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
+including this in 3.6?  Thanks,
 
-    Based-on-patch-by: AceLan Kao <acelan.kao@canonical.com>
-    Reference: https://bugzilla.kernel.org/show_bug.cgi?id=37632
-    Reference: https://bugzilla.kernel.org/show_bug.cgi?id=42728
+Alex
 
-I don't have the previous iteration (c2fb8a3fa25513d) in my "next"
-branch.  I think it went through you, Greg.  Do you want to handle
-this one as well?
-
-I *could* do it, but it looks like a messy merge -- I think I'd have
-to rebase almost everything in my "next" branch -- so I'd rather not.
-Of course, I do have some D3-related updates in pci_prepare_to_sleep()
-which will conflict with this, too, so I guess it will be a bit of
-work for somebody either way.
-
-Bjorn
