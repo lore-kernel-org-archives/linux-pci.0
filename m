@@ -1,54 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gh0-f202.google.com ([209.85.160.202]:46142 "EHLO
-	mail-gh0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752315Ab2GISUO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jul 2012 14:20:14 -0400
-Received: by ghbz15 with SMTP id z15so1221355ghb.1
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jul 2012 11:20:13 -0700 (PDT)
-Subject: [PATCH 0/2] PCI: decode disable fixes
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Robert Hancock <hancockrwd@gmail.com>
-Date: Mon, 09 Jul 2012 12:20:12 -0600
-Message-ID: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:60658 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754185Ab2G3OTf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 Jul 2012 10:19:35 -0400
+Date: Mon, 30 Jul 2012 10:19:34 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Huang Ying <ying.huang@intel.com>
+cc: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
+ hotplug failure
+In-Reply-To: <1343618131.3874.37.camel@yhuang-dev>
+Message-ID: <Pine.LNX.4.44L0.1207301017190.1386-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since 2.6.36 (253d2e5498), we've disabled MEM & IO decoding while we size
-BARs (except for host bridge devices).  These patches tweak this in two
-ways:
+On Mon, 30 Jul 2012, Huang Ying wrote:
 
-1) We only kept decoding disabled while sizing the low-order dword
-of 64-bit BARs.  I think we should keep it disabled while we do the
-high-order dword also.
+> > Yup, that worked in the quick test I just did.
+> > 
+> >  lspci reading the device config will still not wake the bridge, but I
+> > assume that is intentional?  But loading the device driver now wakes
+> > both the bridge and the device, so that works.
+> 
+> Do you have time to test the following patch to fix the lspci issue?
+> 
+> Subject: [BUGFIX] PCI/PM: Keep parent bridge active when read/write config reg
+> 
+> This patch fixes the following bug:
+> 
+> http://marc.info/?l=linux-pci&m=134338059022620&w=2
+> 
+> Where lspci does not work properly if a device and the corresponding
+> parent bridge (such as PCIe port) is suspended.  This is because the
+> device configuration space registers will be not accessible if the
+> corresponding parent bridge is suspended.
+> 
+> To solve the issue, the bridge/PCIe port connected to the device is
+> put into active state before read/write configuration space registers.
 
-2) I think we should also disable decoding while updating 64-bit BARs,
-e.g., when we move a device into an aperture of an upstream bridge.  I'm
-only proposing to disable decoding for 64-bit BAR updates because 32-bit
-ones can be done atomically, while 64-bit updates require two writes and
-the half-written state is a potential problem.
+What happens when you run lspci and the device is in D3cold?  Then even 
+if the parent bridge is active, lspci will still fail.
 
-I'm considering these changes for the 3.6 merge window, which is
-approaching fast, so let me know if you see issues with either of these.
+It seems that in this case you need to resume the device itself, not 
+just its parent.
 
----
+Alan Stern
 
-Bjorn Helgaas (2):
-      PCI: leave MEM and IO decoding disabled during 64-bit BAR sizing, too
-      PCI: disable MEM decoding while updating 64-bit MEM BARs
-
-
- drivers/pci/probe.c     |    6 +++---
- drivers/pci/setup-res.c |   18 ++++++++++++++++++
- 2 files changed, 21 insertions(+), 3 deletions(-)
-
--- 
-Bjorn
