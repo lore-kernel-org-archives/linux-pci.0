@@ -1,26 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:36532 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753699Ab2G3A0o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 29 Jul 2012 20:26:44 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 31 Jul 2012 15:51:05 -0700
 From: Jon Mason <jon.mason@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dave Jiang <dave.jiang@intel.com>
-Subject: [RFC v2 0/2] PCI-Express Non-Transparent Bridge Support 
-Date: Sun, 29 Jul 2012 17:26:32 -0700
-Message-Id: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120731225105.GD14080@jonmason-lab>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+ <1343607994-32415-2-git-send-email-jon.mason@intel.com>
+ <20120731222338.GA19134@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120731222338.GA19134@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jul 31, 2012 at 03:23:38PM -0700, Greg KH wrote:
+> On Sun, Jul 29, 2012 at 05:26:33PM -0700, Jon Mason wrote:
+> > + *   You should have received a copy of the GNU General Public License
+> > + *   along with this program; if not, write to the Free Software
+> > + *   Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+> 
+> You really are going to track the FSF's office movements for the next
+> 40+ years?
+> 
+> > + *   The full GNU General Public License is included in this distribution
+> > + *   in the file called LICENSE.GPL.
+> 
+> No it isn't, this sentance is totally wrong for any in-kernel code,
+> please remove it.
+> 
+> Also do the same for all the other files you added please.
 
-Version 2 of the patch that adds support for PCI-Express Non-Transparent
-Bridges in Linux.  This version incorporates the changes suggested by
+I echo'ed your original comments on this to Intel Legal and am waiting
+on a response.  I 100% agree, but I need their signoff first.
 
-Stephen Hemminger <shemminger@vyatta.com>
-Greg KH <gregkh@linuxfoundation.org>
-chetan loke <loke.chetan@gmail.com>
-Jiri Pirko <jiri@resnulli.us>
+It is worth noting that this version of the license is already in the
+kernel in numerous other drivers:
+drivers/sfi/*
+drivers/scsi/isci/*
+drivers/dma/ioat/dma_v3.c
+drivers/net/wireless/iwlwifi/*
+drivers/net/wireless/iwlegacy/*
 
 Thanks,
 Jon
+
+> 
+> greg k-h
