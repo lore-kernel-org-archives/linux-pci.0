@@ -1,146 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:64515 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559Ab2GaPAO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 11:00:14 -0400
+Received: from mga03.intel.com ([143.182.124.21]:41464 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752958Ab2GaR1K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 Jul 2012 13:27:10 -0400
+Date: Tue, 31 Jul 2012 10:27:09 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: chetan loke <loke.chetan@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120731172709.GB14080@jonmason-lab>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+ <1343607994-32415-2-git-send-email-jon.mason@intel.com>
+ <CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
+ <20120730181542.GA987@jonmason-lab>
+ <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+ <CAAsGZS5kOyQ5FQ7Jg3HxOmmPNYS+F6XcB-_3tm=rcgDV7wAvRQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A477A44@G01JPEXMBYT03>
-References: <CAHzK-V0XpkVJHgqWiWpYP1jx5DPX=voE0eymK+5FG-zhrJOwAQ@mail.gmail.com>
- <20120726170925.GA24751@kroah.com> <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
- <4A338DB2991D2A44B9A44B8718AECF650A477A44@G01JPEXMBYT03>
-From: Shlomo Pongratz <shlomopongratz@gmail.com>
-Date: Tue, 31 Jul 2012 17:59:53 +0300
-Message-ID: <CAHzK-V3zHde2Kb0-63JftHVbda0MKWsS5TFtTyi6MqKwBJL_Og@mail.gmail.com>
-Subject: Re: Cabled PCIE device hotplug/hot-removal
-To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-Cc: Greg KH <greg@kroah.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAsGZS5kOyQ5FQ7Jg3HxOmmPNYS+F6XcB-_3tm=rcgDV7wAvRQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 31, 2012 at 2:02 PM, Kaneshige, Kenji
-<kaneshige.kenji@jp.fujitsu.com> wrote:
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org
->> [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Shlomo Pongratz
->> Sent: Sunday, July 29, 2012 9:36 PM
->> To: Greg KH
->> Cc: linux-pci@vger.kernel.org; linux-hotplug@vger.kernel.org
->> Subject: Re: Cabled PCIE device hotplug/hot-removal
->>
->> On Thu, Jul 26, 2012 at 8:09 PM, Greg KH <greg@kroah.com> wrote:
->> > On Thu, Jul 26, 2012 at 08:03:09PM +0300, Shlomo Pongratz wrote:
->> >> Hi,
->> >>
->> >> I have a  PCIe device connected with cables to a host (kernel 3.5.0-rc7+).
->> >> What are the handler I need to add to a driver in order to catch cable
->> >> pull-out / push-in?
->> >
->> > You shouldn't need anything special, aren't you already getting probe
->> > and disconnect callbacks when the device is discovered and removed?
->>
->
-> Note that if the controller doesn't support "surprise removal", pciehp does
-> nothing (just print a message) when plugging/unplugging the device. You need
-> to power on the slot by "echo 1 > /sys/bus/pci/slots/XXX/power" after plugging
-> the device. By this, pciehp will power on the slot and driver's .prove
-> callback will be called. And for removal, you need to
-> "echo 0 > /sys/bus/pci/slots/XXX/power" before unplugging the device. By doing
-> this, driver's .remove callback will be called and then pciehp will power
-> down the slot.
->
-> If the controller supports "surprise removal" driver's .probe/.remove callbacks
-> are called automatically by the pciehp's event handler when plugging/unplugging
-> event (presence change detect event) happens.
->
->
->> When the device is loaded the probe is called
->> When I "echo 1" to the remove sysfs entry the remove callback is called.
->> But when I power down the card no callback is called.
->
-> You need to "echo 0 > /sys/bus/pci/slots/XXX/power" to remove the device
-> if you are using pciehp.
->
->
->> >
->> >> The pcisig presentation
->> >>
->> "http://www.pcisig.com/developers/main/training_materials/get_document
->> ?doc_id=f4ca40ec1721aa7fadd05e2903b0172c36656294"
->> >> talks about PERST# detection for cabled PCIe hotplug.
->> >>
->> >> Does the kernel detect it?
->> >>
->> >> None of the pci_driver or pci_error_handlers callbacks were called
->> >> when using powered down/up the device (electrically).
->
-> How did you power down/up the device (electrically)?
->
->> >
->> > Do you have the pciehp driver loaded properly when this happens?
->>
->> My {dot}config includes it into the kernel, i.e.
->> CONFIG_HOTPLUG_PCI_PCIE=y
->>
->
-> You can see what kind of hot-plug driver manages the slot by checking
-> /sys/bus/pci/slots/XXX/module symbolic link. On my system which has some
-> PCIe hot-plug slots, I can see the following
->
-> $ ls /sys/bus/pci/slots/* -l
-> /sys/bus/pci/slots/21:
-> total 0
-> -r--r--r--. 1 root root 4096 Aug  1 02:55 adapter
-> -r--r--r--. 1 root root 4096 Aug  1 02:55 address
-> -rw-r--r--. 1 root root 4096 Aug  1 02:55 attention
-> -r--r--r--. 1 root root 4096 Aug  1 02:55 cur_bus_speed
-> -r--r--r--. 1 root root 4096 Aug  1 02:55 latch
-> -r--r--r--. 1 root root 4096 Aug  1 02:55 max_bus_speed
-> lrwxrwxrwx. 1 root root    0 Aug  1 02:55 module -> ../../../../module/pciehp
-> -rw-r--r--. 1 root root 4096 Aug  1 02:55 power
->
-> /sys/bus/pci/slots/22:
-> <snip.>
->
-> And pciehp_debug option might help you. With this option, you can get the
-> controller infomation like below.
->
-> pciehp 0000:0d:00.0:pcie24: Hotplug Controller:
-> pciehp 0000:0d:00.0:pcie24:   Seg/Bus/Dev/Func/IRQ : 0000:0d:00.0 IRQ 51
-> pciehp 0000:0d:00.0:pcie24:   Vendor ID            : 0x111d
-> pciehp 0000:0d:00.0:pcie24:   Device ID            : 0x807f
-> pciehp 0000:0d:00.0:pcie24:   Subsystem ID         : 0x159c
-> pciehp 0000:0d:00.0:pcie24:   Subsystem Vendor ID  : 0x10cf
-> pciehp 0000:0d:00.0:pcie24:   PCIe Cap offset      : 0x40
-> pciehp 0000:0d:00.0:pcie24:   PCI resource [14]     : [mem 0x92a00000-0x92bfffff]
-> pciehp 0000:0d:00.0:pcie24:   PCI resource [15]     : [mem 0x92000000-0x921fffff 64bit pref]
-> pciehp 0000:0d:00.0:pcie24: Slot Capabilities      : 0x00a8005e
-> pciehp 0000:0d:00.0:pcie24:   Physical Slot Number : 21
-> pciehp 0000:0d:00.0:pcie24:   Attention Button     :  no
-> pciehp 0000:0d:00.0:pcie24:   Power Controller     : yes
-> pciehp 0000:0d:00.0:pcie24:   MRL Sensor           : yes
-> pciehp 0000:0d:00.0:pcie24:   Attention Indicator  : yes
-> pciehp 0000:0d:00.0:pcie24:   Power Indicator      : yes
-> pciehp 0000:0d:00.0:pcie24:   Hot-Plug Surprise    :  no
-> pciehp 0000:0d:00.0:pcie24:   EMI Present          :  no
-> pciehp 0000:0d:00.0:pcie24:   Command Completed    : yes
-> pciehp 0000:0d:00.0:pcie24: Slot Status            : 0x0000
-> pciehp 0000:0d:00.0:pcie24: Slot Control           : 0x07c0
-> pciehp 0000:0d:00.0:pcie24: Link Active Reporting supported
->
-> Regards,
-> Kenji Kaneshige
->
+On Tue, Jul 31, 2012 at 12:02:20PM -0400, chetan loke wrote:
+> On Tue, Jul 31, 2012 at 9:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Mon, Jul 30, 2012 at 12:15 PM, Jon Mason <jon.mason@intel.com> wrote:
+> >>
+> >> I've tried to make it all generic enough that non-Intel NTBs should plug in with
+> >> minimal changes to ntb_hw.c.  If their design is too divergent, then a slight
+> >> redesign of ntb_hw.c might be necessary.  But from what I've seen of other
+> >> designs on the internet, they appear to be extremely similar.  The transport and
+> >> client drivers were written with the hardware abstracted away as much as
+> >> possible to prevent the need to modify it for different hardware.  If there is
+> >> anything which is Intel hardware specific, I'd be happy to change it to make it
+> >> more generic.
+> >
+> > That makes sense from a technical point of view, but I think it's
+> > going to cause maintenance issues.  For example, assume PLX NTB
+> > support is added.  Will PLX be happy about having to convince you to
+> > accept changes?  Will Intel be happy about having to release a new
+> 
+> Do you mean convince Intel? Well, if we think of ntb as the class
+> driver then the onus is on the community to vet the changes and NOT
+> intel.
+> And since this is the first NTB part for which the support is
+> introduced the class driver design could be a moving target. As
+> someone else mentioned, the async/sync tx-dma is another hook that
+> could change the class driver's design.
+> 
+> 
+> > driver for their hardware just to incorporate a PLX bug fix?  Will
+> > users of PLX hardware accept a new driver release that only benefits
+> > Intel users?
+> 
+> May be till the class driver is stable, the client(intel/PLX) drivers
+> might have to be modified.  This is a cue for other vendors to
+> chime-in and review this design?
+> Just thinking if this could sit in staging for some time(so that
+> others get a chance to review/suggest changes as well) and then get
+> promoted out of staging.
 
-O.K. so if using lspci -vvv is see that with the PCI-bridge the slot
-capability is marked with minus in the support surprise mode I need to
-get another system.
+I don't see the benefit of having the driver in staging.  Any vendors
+who would notice the ntb driver in staging would be sitting on these
+mailing lists and hopefully have planety of comments on the design.
+Stashing the driver in staging while waiting for these comments (which
+may never come) doesn't seem the best course of action.
 
-That is
+Thanks,
+Jon
 
-Capabilities: [6c] Express (v2) Root Port (Slot+), MSI 00
-.....
-       SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surpise-
-                        Slot #  0, PowerLimit 0.000000; Interlock- NoCompl-
+> 
+> Chetan Loke
