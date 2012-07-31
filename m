@@ -1,71 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33240 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755010Ab2GJX2r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 19:28:47 -0400
-Received: by lbbgm6 with SMTP id gm6so1316452lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 16:28:46 -0700 (PDT)
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:49539 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755366Ab2GaQCW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 12:02:22 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVX+CnRchXNe8PF8fz7hbc=UTzP8nCxEAzAzrJTeZk-Tg@mail.gmail.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
- <1340437325-29282-3-git-send-email-yinghai@kernel.org> <CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
- <CAE9FiQVX+CnRchXNe8PF8fz7hbc=UTzP8nCxEAzAzrJTeZk-Tg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 10 Jul 2012 17:28:25 -0600
-Message-ID: <CAErSpo40FOgXrMJBv9TRHtd8hX6muGLMipf8dq+h7oPOzD35Ug@mail.gmail.com>
-Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+	<1343607994-32415-2-git-send-email-jon.mason@intel.com>
+	<CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
+	<20120730181542.GA987@jonmason-lab>
+	<CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+Date: Tue, 31 Jul 2012 12:02:20 -0400
+Message-ID: <CAAsGZS5kOyQ5FQ7Jg3HxOmmPNYS+F6XcB-_3tm=rcgDV7wAvRQ@mail.gmail.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+From: chetan loke <loke.chetan@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Mason <jon.mason@intel.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 10, 2012 at 5:12 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Jul 10, 2012 at 3:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> If surprise removal is not supported, that event get dropped later.
->>> So there is no point to enable that.
->>>
->>> Also some sick chipset have those bit flip around when the card is not present.
->>> and make log full of useless warning.
+On Tue, Jul 31, 2012 at 9:45 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jul 30, 2012 at 12:15 PM, Jon Mason <jon.mason@intel.com> wrote:
 >>
->> HP_SUPR_RM tests the Slot Capabilities "Hot-Plug Surprise" bit, which
->> indicates that an adapter might be *removed* without prior
->> notification (sec 7.8.9).
->>
->> PCI_EXP_SLTCTL_PDCE is the Slot Control "Presence Detect Changed
->> Enable" bit, which enables interrupts for any change in the Slot
->> Status "Presence Detect State", i.e., we may get interrupts for either
->> add or remove events.
->>
->> In interrupt_event_handler(), we drop both add and remove events if
->> !HP_SUPR_RM().  Specifically, we drop *add* events if surprise
->> *removal* isn't supported.  That seems strange -- just from reading
->> the spec, it seems that a surprise *add* could occur even if the
->> "Hot-Plug Surprise" bit is not set.
+>> I've tried to make it all generic enough that non-Intel NTBs should plug in with
+>> minimal changes to ntb_hw.c.  If their design is too divergent, then a slight
+>> redesign of ntb_hw.c might be necessary.  But from what I've seen of other
+>> designs on the internet, they appear to be extremely similar.  The transport and
+>> client drivers were written with the hardware abstracted away as much as
+>> possible to prevent the need to modify it for different hardware.  If there is
+>> anything which is Intel hardware specific, I'd be happy to change it to make it
+>> more generic.
 >
-> Interesting, that means after card is plugged in, we don't need to
-> press attention button to bring
-> it online.
->
-> And other oses like windows and solaris do need to press the button
-> like current linux doing.
+> That makes sense from a technical point of view, but I think it's
+> going to cause maintenance issues.  For example, assume PLX NTB
+> support is added.  Will PLX be happy about having to convince you to
+> accept changes?  Will Intel be happy about having to release a new
 
-The attention button is apparently optional, depending on the form factor.
+Do you mean convince Intel? Well, if we think of ntb as the class
+driver then the onus is on the community to vet the changes and NOT
+intel.
+And since this is the first NTB part for which the support is
+introduced the class driver design could be a moving target. As
+someone else mentioned, the async/sync tx-dma is another hook that
+could change the class driver's design.
 
-I would guess that on a platform with no attention button and Hot-Plug
-Surprise == 0, Linux would be unable to do a hot-add.
 
->> So I'm not convinced that we should even bother looking at the
->> "Hot-Plug Surprise" bit...  Maybe we'd be better off if we just
->> removed that HP_SUPR_RM() test in interrupt_event_handler() and always
->> called handle_surprise_event().
->
-> Ah, that means some system with chip problem will keep feeding
-> pciehp_wq with pciehp_disable_slot and pciehp_enable_slot.
->
-> Anyway please drop this patch now.
+> driver for their hardware just to incorporate a PLX bug fix?  Will
+> users of PLX hardware accept a new driver release that only benefits
+> Intel users?
 
-Dropped.
+May be till the class driver is stable, the client(intel/PLX) drivers
+might have to be modified.  This is a cue for other vendors to
+chime-in and review this design?
+Just thinking if this could sit in staging for some time(so that
+others get a chance to review/suggest changes as well) and then get
+promoted out of staging.
+
+Chetan Loke
