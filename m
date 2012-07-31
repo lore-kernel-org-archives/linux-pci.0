@@ -1,67 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9850 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755042Ab2G3XSy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Jul 2012 19:18:54 -0400
-Message-ID: <1343690279.8073.215.camel@ul30vt>
-Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Paul Mackerras <paulus@samba.org>
-Cc: torvalds@linux-foundation.org, benh@kernel.crashing.org,
-	aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	ddutile@redhat.com
-Date: Mon, 30 Jul 2012 17:17:59 -0600
-In-Reply-To: <20120727053206.GC11870@drongo>
-References: <20120725142254.12800.61860.stgit@bling.home>
-	 <20120727053206.GC11870@drongo>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35973 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab2GaQOi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 12:14:38 -0400
+MIME-Version: 1.0
+In-Reply-To: <1343607994-32415-2-git-send-email-jon.mason@intel.com>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+	<1343607994-32415-2-git-send-email-jon.mason@intel.com>
+Date: Tue, 31 Jul 2012 12:14:36 -0400
+Message-ID: <CAAsGZS4NBM0_o1-RHEZGbYDmJkwTx_RrkYFm7a7-AZRpx0dYAQ@mail.gmail.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+From: chetan loke <loke.chetan@gmail.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-07-27 at 15:32 +1000, Paul Mackerras wrote:
-> On Wed, Jul 25, 2012 at 08:53:06AM -0600, Alex Williamson wrote:
-> > Hi Linus,
-> > 
-> > This series includes the VFIO userspace driver interface for the
-> > 3.6 kernel merge window.  This driver is intended to provide a
-> > secure interface for device access using IOMMU protection for
-> > applications like assignment of physical devices to virtual
-> > machines.  Qemu will be the first user of this interface, enabling
-> > assignment of PCI devices to Qemu guests.  This interface is
-> > intended to eventually replace the x86-specific assignment mechanism
-> > currently available in KVM.  This interface has the advantage of
-> > being more secure, by working with IOMMU groups to ensure device
-> > isolation and providing it's own filtered resource access mechanism,
-> > and also more flexible, in not being x86 or KVM specific (extensions
-> > to enable POWER are already working).
-> > 
-> > As a new driver, I'm including both the individual patches in email,
-> > as well as a branch to pull from:
-> > 
-> > git://github.com/awilliam/linux-vfio.git for-linus
-> > 
-> > This driver is originally the work of Tom Lyon, but has since been
-> > handed over to me and gone through a complete overhaul thanks to the
-> > input from David Gibson, Ben Herrenschmidt, Chris Wright, Joerg
-> > Roedel, and others.  This driver has been available in linux-next for
-> > the last month.  Thanks,
-> 
-> Linus,
-> 
-> Are you thinking of pulling this driver in for 3.6?  I would be glad
-> to see it go in since we want to use it with KVM on PowerPC.  If
-> possible we'd like the PowerPC bits for it to go in as well.
+On Sun, Jul 29, 2012 at 8:26 PM, Jon Mason <jon.mason@intel.com> wrote:
 
-I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
-including this in 3.6?  Thanks,
+<snip>
 
-Alex
+> +static void ntb_tx_copy_task(struct ntb_transport_qp *qp,
+> +                            struct ntb_queue_entry *entry,
+> +                            void *offset)
+> +{
+> +       struct ntb_payload_header *hdr = offset;
+> +
+> +       offset += sizeof(struct ntb_payload_header);
+> +       memcpy_toio(offset, entry->buf, entry->len);
+> +
+> +       hdr->len = entry->len;
+> +       hdr->ver = qp->tx_pkts;
+> +
+> +       /* Ensure that the data is fully copied out before setting the flag */
+> +       wmb();
+> +       hdr->flags = entry->flags | DESC_DONE_FLAG;
+> +
+> +       ntb_ring_sdb(qp->ndev, qp->qp_num);
+> +
+> +       /* The entry length can only be zero if the packet is intended to be a
+> +        * "link down" or similar.  Since no payload is being sent in these
+> +        * cases, there is nothing to add to the completion queue.
+> +        */
+> +       if (entry->len > 0) {
+> +               qp->tx_bytes += entry->len;
+> +
+> +               /* Add fully transmitted data to completion queue */
+> +               ntb_list_add_tail(&qp->ntb_tx_comp_q_lock, &entry->entry,
+> +                                 &qp->tx_comp_q);
+> +
+> +               if (qp->tx_handler)
+> +                       qp->tx_handler(qp->cb_data, qp);
+> +       } else
+> +               ntb_list_add_tail(&qp->ntb_tx_free_q_lock, &entry->entry,
+> +                                 &qp->tx_free_q);
+> +}
 
+I know you talked about a fixed array. But it's not here yet. So at
+all the call-sites, for [r/t]x_free_q , add the 'entry' to the head -
+change to ntb_list_add_head here and else where.
+
+Chetan Loke
