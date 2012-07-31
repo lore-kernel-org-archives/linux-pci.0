@@ -1,105 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40758 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754157Ab2GaOyZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 Jul 2012 10:54:25 -0400
-Message-ID: <1343746415.3368.5.camel@ul30vt>
-Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Paul Mackerras <paulus@samba.org>, benh@kernel.crashing.org,
-	aik@ozlabs.ru, david@gibson.dropbear.id.au,
-	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
-	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
-	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
-	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
-	kvm@vger.kernel.org, qemu-devel@nongnu.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	ddutile@redhat.com
-Date: Tue, 31 Jul 2012 08:53:35 -0600
-In-Reply-To: <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
-References: <20120725142254.12800.61860.stgit@bling.home>
-	 <20120727053206.GC11870@drongo> <1343690279.8073.215.camel@ul30vt>
-	 <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56971 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752888Ab2GaNpv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 09:45:51 -0400
+Received: by lahd3 with SMTP id d3so4034705lah.19
+        for <linux-pci@vger.kernel.org>; Tue, 31 Jul 2012 06:45:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120730181542.GA987@jonmason-lab>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+ <1343607994-32415-2-git-send-email-jon.mason@intel.com> <CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
+ <20120730181542.GA987@jonmason-lab>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 31 Jul 2012 07:45:29 -0600
+Message-ID: <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-07-30 at 22:11 -0700, Linus Torvalds wrote:
-> On Mon, Jul 30, 2012 at 4:17 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> >
-> > I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
-> > including this in 3.6?  Thanks,
-> 
-> I just pulled it, but then I unpulled again when I realized it's not a
-> signed tag and it's on github.
-> 
-> Please, people. Do tagged releases with proper signatures if you're
-> not using kernel.org or other controlled servers. In fact, I prefer
-> signed tags even if you *do* use kernel.org etc.
+On Mon, Jul 30, 2012 at 12:15 PM, Jon Mason <jon.mason@intel.com> wrote:
+> On Mon, Jul 30, 2012 at 10:50:13AM -0600, Bjorn Helgaas wrote:
+>> On Sun, Jul 29, 2012 at 6:26 PM, Jon Mason <jon.mason@intel.com> wrote:
+>> > A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+>> > connecting 2 systems, providing electrical isolation between the two subsystems.
+>> > A non-transparent bridge is functionally similar to a transparent bridge except
+>> > that both sides of the bridge have their own independent address domains.  The
+>> > host on one side of the bridge will not have the visibility of the complete
+>> > memory or I/O space on the other side of the bridge.  To communicate across the
+>> > non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+>> > the local system.  Writes to these apertures are mirrored to memory on the
+>> > remote system.  Communications can also occur through the use of doorbell
+>> > registers that initiate interrupts to the alternate domain, and scratch-pad
+>> > registers accessible from both sides.
+>> >
+>> > The NTB device driver is needed to configure these memory windows, doorbell, and
+>> > scratch-pad registers as well as use them in such a way as they can be turned
+>> > into a viable communication channel to the remote system.  ntb_hw.[ch]
+>> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+>> > the underlying hardware to provide access and a common interface to the doorbell
+>> > registers, scratch pads, and memory windows.  These hardware interfaces are
+>> > exported so that other, non-mainlined kernel drivers can access these.
+>> > ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+>> > communication channel(s) and provide a reliable way of transferring data from
+>> > one side to the other, which it then exports so that "client" drivers can access
+>> > them.  These client drivers are used to provide a standard kernel interface
+>> > (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+>> > system to the other in a standard way.
+>> >
+>> > Signed-off-by: Jon Mason <jon.mason@intel.com>
+>> > ---
+>> >  MAINTAINERS                 |    6 +
+>> >  drivers/Kconfig             |    2 +
+>> >  drivers/Makefile            |    1 +
+>> >  drivers/ntb/Kconfig         |   13 +
+>> >  drivers/ntb/Makefile        |    3 +
+>> >  drivers/ntb/ntb_hw.c        | 1178 ++++++++++++++++++++++++++++++++++++
+>> >  drivers/ntb/ntb_hw.h        |  206 +++++++
+>> >  drivers/ntb/ntb_regs.h      |  150 +++++
+>> >  drivers/ntb/ntb_transport.c | 1387 +++++++++++++++++++++++++++++++++++++++++++
+>> >  include/linux/ntb.h         |   92 +++
+>>
+>> Where will drivers for non-Intel NTBs fit in this hierarchy?  It seems
+>> a bit presumptuous to claim the generic "ntb" names just for Intel
+>> devices.
+>
+> I've tried to make it all generic enough that non-Intel NTBs should plug in with
+> minimal changes to ntb_hw.c.  If their design is too divergent, then a slight
+> redesign of ntb_hw.c might be necessary.  But from what I've seen of other
+> designs on the internet, they appear to be extremely similar.  The transport and
+> client drivers were written with the hardware abstracted away as much as
+> possible to prevent the need to modify it for different hardware.  If there is
+> anything which is Intel hardware specific, I'd be happy to change it to make it
+> more generic.
 
-Sorry about that, Linus.  I think this is a properly signed tag, please
-let me know if I'm still screwing up.  Thanks,
-
-Alex
-
-The following changes since commit 2e3ee613480563a6d5c01b57d342e65cc58c06df:
-
-  Merge tag 'writeback-proportions' of git://git.kernel.org/pub/scm/linux/kernel/git/wfg/linux (2012-07-30 22:14:04 -0700)
-
-are available in the git repository at:
-
-
-  git@github.com:awilliam/linux-vfio.git tags/vfio-for-v3.6
-
-for you to fetch changes up to 89e1f7d4c66d85f42c3d52ea3866eb10cadf6153:
-
-  vfio: Add PCI device driver (2012-07-31 08:16:24 -0600)
-
-----------------------------------------------------------------
-VFIO for v3.6
-
-----------------------------------------------------------------
-Alex Williamson (4):
-      vfio: VFIO core
-      vfio: Add documentation
-      vfio: Type1 IOMMU implementation
-      vfio: Add PCI device driver
-
- Documentation/ioctl/ioctl-number.txt |    1 +
- Documentation/vfio.txt               |  314 +++++++
- MAINTAINERS                          |    8 +
- drivers/Kconfig                      |    2 +
- drivers/Makefile                     |    1 +
- drivers/vfio/Kconfig                 |   16 +
- drivers/vfio/Makefile                |    3 +
- drivers/vfio/pci/Kconfig             |    8 +
- drivers/vfio/pci/Makefile            |    4 +
- drivers/vfio/pci/vfio_pci.c          |  579 +++++++++++++
- drivers/vfio/pci/vfio_pci_config.c   | 1540 ++++++++++++++++++++++++++++++++++
- drivers/vfio/pci/vfio_pci_intrs.c    |  740 ++++++++++++++++
- drivers/vfio/pci/vfio_pci_private.h  |   91 ++
- drivers/vfio/pci/vfio_pci_rdwr.c     |  269 ++++++
- drivers/vfio/vfio.c                  | 1420 +++++++++++++++++++++++++++++++
- drivers/vfio/vfio_iommu_type1.c      |  753 +++++++++++++++++
- include/linux/vfio.h                 |  445 ++++++++++
- 17 files changed, 6194 insertions(+)
- create mode 100644 Documentation/vfio.txt
- create mode 100644 drivers/vfio/Kconfig
- create mode 100644 drivers/vfio/Makefile
- create mode 100644 drivers/vfio/pci/Kconfig
- create mode 100644 drivers/vfio/pci/Makefile
- create mode 100644 drivers/vfio/pci/vfio_pci.c
- create mode 100644 drivers/vfio/pci/vfio_pci_config.c
- create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
- create mode 100644 drivers/vfio/pci/vfio_pci_private.h
- create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
- create mode 100644 drivers/vfio/vfio.c
- create mode 100644 drivers/vfio/vfio_iommu_type1.c
- create mode 100644 include/linux/vfio.h
-
-
-
+That makes sense from a technical point of view, but I think it's
+going to cause maintenance issues.  For example, assume PLX NTB
+support is added.  Will PLX be happy about having to convince you to
+accept changes?  Will Intel be happy about having to release a new
+driver for their hardware just to incorporate a PLX bug fix?  Will
+users of PLX hardware accept a new driver release that only benefits
+Intel users?
