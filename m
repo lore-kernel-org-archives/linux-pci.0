@@ -1,174 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:34686 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755336Ab2GCP7h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 Jul 2012 11:59:37 -0400
-Received: by lbbgm6 with SMTP id gm6so9692276lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 03 Jul 2012 08:59:35 -0700 (PDT)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:64515 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754559Ab2GaPAO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 11:00:14 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
-References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7NiCsuM+UxveZbYxNsCiStMH5SLZ8EdFzJ7EduB306OQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 3 Jul 2012 09:59:15 -0600
-Message-ID: <CAErSpo70NtEJFaQmDtdTLkSB3fQRNy78juAQO-KbXeceZkunkw@mail.gmail.com>
-Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
- ports without native PCIe hotplug capability
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A477A44@G01JPEXMBYT03>
+References: <CAHzK-V0XpkVJHgqWiWpYP1jx5DPX=voE0eymK+5FG-zhrJOwAQ@mail.gmail.com>
+ <20120726170925.GA24751@kroah.com> <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
+ <4A338DB2991D2A44B9A44B8718AECF650A477A44@G01JPEXMBYT03>
+From: Shlomo Pongratz <shlomopongratz@gmail.com>
+Date: Tue, 31 Jul 2012 17:59:53 +0300
+Message-ID: <CAHzK-V3zHde2Kb0-63JftHVbda0MKWsS5TFtTyi6MqKwBJL_Og@mail.gmail.com>
+Subject: Re: Cabled PCIE device hotplug/hot-removal
+To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+Cc: Greg KH <greg@kroah.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 2, 2012 at 10:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
->> ignore root bridges using PCIe native hotplug) added code that made the
->> acpiphp driver completely ignore PCIe root complexes for which the kernel
->> had been granted control of the native PCIe hotplug feature by the BIOS
->> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
->> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
->> the constraints to allow acpiphp driver handle non-PCIe bridges under
->> such a complex. The constraint needs to be relaxed further to allow
->> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
+On Tue, Jul 31, 2012 at 2:02 PM, Kaneshige, Kenji
+<kaneshige.kenji@jp.fujitsu.com> wrote:
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org
+>> [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Shlomo Pongratz
+>> Sent: Sunday, July 29, 2012 9:36 PM
+>> To: Greg KH
+>> Cc: linux-pci@vger.kernel.org; linux-hotplug@vger.kernel.org
+>> Subject: Re: Cabled PCIE device hotplug/hot-removal
 >>
->> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
->> switches and may migrate downstream ports among virtual switches.
->> To migrate a downstream port from the source virtual switch to the target,
->> the port needs to be hot-removed from the source and hot-added into the
->> target. pciehp driver can't be used here because there's no slots within
->> the virtual PCIe switch. So acpiphp driver is used to support downstream
->> port migration. A typical configuration is as below:
->> [Root w/o native PCIe HP]
->>         [Upstream port of vswitch w/o native PCIe HP]
->>                 [Downstream port of vswitch w/ native PCIe HP]
->>                         [PCIe enpoint]
+>> On Thu, Jul 26, 2012 at 8:09 PM, Greg KH <greg@kroah.com> wrote:
+>> > On Thu, Jul 26, 2012 at 08:03:09PM +0300, Shlomo Pongratz wrote:
+>> >> Hi,
+>> >>
+>> >> I have a  PCIe device connected with cables to a host (kernel 3.5.0-rc7+).
+>> >> What are the handler I need to add to a driver in order to catch cable
+>> >> pull-out / push-in?
+>> >
+>> > You shouldn't need anything special, aren't you already getting probe
+>> > and disconnect callbacks when the device is discovered and removed?
 >>
->> Here acpiphp driver will be used to handle root ports and upstream port
->> in the virtual switch, and pciehp driver will be used to handle downstream
->> ports in the virtual switch.
+>
+> Note that if the controller doesn't support "surprise removal", pciehp does
+> nothing (just print a message) when plugging/unplugging the device. You need
+> to power on the slot by "echo 1 > /sys/bus/pci/slots/XXX/power" after plugging
+> the device. By this, pciehp will power on the slot and driver's .prove
+> callback will be called. And for removal, you need to
+> "echo 0 > /sys/bus/pci/slots/XXX/power" before unplugging the device. By doing
+> this, driver's .remove callback will be called and then pciehp will power
+> down the slot.
+>
+> If the controller supports "surprise removal" driver's .probe/.remove callbacks
+> are called automatically by the pciehp's event handler when plugging/unplugging
+> event (presence change detect event) happens.
+>
+>
+>> When the device is loaded the probe is called
+>> When I "echo 1" to the remove sysfs entry the remove callback is called.
+>> But when I power down the card no callback is called.
+>
+> You need to "echo 0 > /sys/bus/pci/slots/XXX/power" to remove the device
+> if you are using pciehp.
+>
+>
+>> >
+>> >> The pcisig presentation
+>> >>
+>> "http://www.pcisig.com/developers/main/training_materials/get_document
+>> ?doc_id=f4ca40ec1721aa7fadd05e2903b0172c36656294"
+>> >> talks about PERST# detection for cabled PCIe hotplug.
+>> >>
+>> >> Does the kernel detect it?
+>> >>
+>> >> None of the pci_driver or pci_error_handlers callbacks were called
+>> >> when using powered down/up the device (electrically).
+>
+> How did you power down/up the device (electrically)?
+>
+>> >
+>> > Do you have the pciehp driver loaded properly when this happens?
 >>
->> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
->> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>> My {dot}config includes it into the kernel, i.e.
+>> CONFIG_HOTPLUG_PCI_PCIE=y
 >>
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
->>  1 files changed, 39 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index 806c44f..4889448 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
->>         .handler = handle_hotplug_event_func,
->>  };
->>
->> +/* Check whether device is managed by native PCIe hotplug driver */
->> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
->> +{
->> +       int pos;
->> +       u16 reg16;
->> +       u32 reg32;
->> +       acpi_handle tmp;
->> +       struct acpi_pci_root *root;
->> +
->> +       if (!pci_is_pcie(pdev))
->> +               return false;
->> +
->> +       /* Check whether PCIe port supports native PCIe hotplug */
->> +       pos = pci_pcie_cap(pdev);
 >
-> Add "if (!pos) return false;" here and you can drop the "if
-> (!pci_is_pcie())" test above.
+> You can see what kind of hot-plug driver manages the slot by checking
+> /sys/bus/pci/slots/XXX/module symbolic link. On my system which has some
+> PCIe hot-plug slots, I can see the following
 >
->> +       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
->> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
+> $ ls /sys/bus/pci/slots/* -l
+> /sys/bus/pci/slots/21:
+> total 0
+> -r--r--r--. 1 root root 4096 Aug  1 02:55 adapter
+> -r--r--r--. 1 root root 4096 Aug  1 02:55 address
+> -rw-r--r--. 1 root root 4096 Aug  1 02:55 attention
+> -r--r--r--. 1 root root 4096 Aug  1 02:55 cur_bus_speed
+> -r--r--r--. 1 root root 4096 Aug  1 02:55 latch
+> -r--r--r--. 1 root root 4096 Aug  1 02:55 max_bus_speed
+> lrwxrwxrwx. 1 root root    0 Aug  1 02:55 module -> ../../../../module/pciehp
+> -rw-r--r--. 1 root root 4096 Aug  1 02:55 power
 >
-> I think this is unsafe.  Per the PCIe v3.0 spec, sec 7.8.2 on p648,
-> the "Slot Implemented" bit is undefined except for Downstream Ports,
-> so we're using an undefined bit to decide whether to read
-> PCI_EXP_SLTCAP.
+> /sys/bus/pci/slots/22:
+> <snip.>
 >
-> If the device has a v1 PCIe Capability, it is not required to even
-> implement PCI_EXP_SLTCAP, so we could be reading garbage out of an
-> unrelated capability.  This is in sec 7.8, p363, of the v1.1 PCIe
-> spec.  I think v3.0 of the spec is dangerously incomplete because it
-> doesn't include enough information to handle the v1 PCIe Capability
-> correctly.
+> And pciehp_debug option might help you. With this option, you can get the
+> controller infomation like below.
 >
-> There's a fair amount of work to fix this.  I started doing it, but
-> decided I didn't have time to complete it.  Here's what I think we
-> (and by "we," I'm afraid I mean "you" :)) should do:
+> pciehp 0000:0d:00.0:pcie24: Hotplug Controller:
+> pciehp 0000:0d:00.0:pcie24:   Seg/Bus/Dev/Func/IRQ : 0000:0d:00.0 IRQ 51
+> pciehp 0000:0d:00.0:pcie24:   Vendor ID            : 0x111d
+> pciehp 0000:0d:00.0:pcie24:   Device ID            : 0x807f
+> pciehp 0000:0d:00.0:pcie24:   Subsystem ID         : 0x159c
+> pciehp 0000:0d:00.0:pcie24:   Subsystem Vendor ID  : 0x10cf
+> pciehp 0000:0d:00.0:pcie24:   PCIe Cap offset      : 0x40
+> pciehp 0000:0d:00.0:pcie24:   PCI resource [14]     : [mem 0x92a00000-0x92bfffff]
+> pciehp 0000:0d:00.0:pcie24:   PCI resource [15]     : [mem 0x92000000-0x921fffff 64bit pref]
+> pciehp 0000:0d:00.0:pcie24: Slot Capabilities      : 0x00a8005e
+> pciehp 0000:0d:00.0:pcie24:   Physical Slot Number : 21
+> pciehp 0000:0d:00.0:pcie24:   Attention Button     :  no
+> pciehp 0000:0d:00.0:pcie24:   Power Controller     : yes
+> pciehp 0000:0d:00.0:pcie24:   MRL Sensor           : yes
+> pciehp 0000:0d:00.0:pcie24:   Attention Indicator  : yes
+> pciehp 0000:0d:00.0:pcie24:   Power Indicator      : yes
+> pciehp 0000:0d:00.0:pcie24:   Hot-Plug Surprise    :  no
+> pciehp 0000:0d:00.0:pcie24:   EMI Present          :  no
+> pciehp 0000:0d:00.0:pcie24:   Command Completed    : yes
+> pciehp 0000:0d:00.0:pcie24: Slot Status            : 0x0000
+> pciehp 0000:0d:00.0:pcie24: Slot Control           : 0x07c0
+> pciehp 0000:0d:00.0:pcie24: Link Active Reporting supported
 >
->   - Add a "u16 pcie_flags" field in struct pci_dev and save the "PCI
-> Express Capabilities Register" there in set_pcie_port_type().  All
-> fields in that register are read-only, so it should be safe to cache
-> it.
->   - Remove pcie_type from struct pci_dev and replace it with a
-> pcie_type() inline that extracts it from pcie_flags.
->   - Rework the pcie_cap_has_*() macros in drivers/pci/pci.c to take a
-> struct pci_dev * and use pcie_flags instead of type and flags.  This
-> will remove the need for callers to read the flags themselves.
->   - Move the pcie_cap_has_*() macros to include/linux/pci_reg.h so
-> they can be shared.
->   - Audit all uses of the Link registers (PCI_EXP_LNKCAP,
-> PCI_EXP_LNKCTL, PCI_EXP_LNKSTA), Slot registers (PCI_EXP_SLTCAP,
-> PCI_EXP_SLTCTL, PCI_EXP_SLTSTA), and Root registers (PCI_EXP_RTCAP,
-> PCI_EXP_RTCTL, PCI_EXP_RTSTA) to make sure the register exists, either
-> by using pcie_cap_has_*() or some other knowledge of the device.
+> Regards,
+> Kenji Kaneshige
+>
 
-Thinking about this some more, this still leaves the callers
-responsible for using pcie_cap_has_*(), which feels pretty
-error-prone.
+O.K. so if using lspci -vvv is see that with the PCI-bridge the slot
+capability is marked with minus in the support surprise mode I need to
+get another system.
 
-I wonder if it'd be worth adding interfaces like:
+That is
 
-  pcie_cap_read_word(const struct pci_dev *, int where, u16 *val);
-  pcie_cap_read_dword(const struct pci_dev *, int where, u32 *val);
-  pcie_cap_write_word(const struct pci_dev *, int where, u16 val);
-  pcie_cap_write_dword(const struct pci_dev *, int where, u32 val);
-
-We might be able to encapsulate the v1/v2 differences inside these, e.g.,
-
-  int pcie_cap_read_word(const struct pci_dev *dev, int where, u16 *val)
-  {
-      int pos;
-
-      pos = pci_pcie_cap(dev);
-      if (!pos)
-          return -EINVAL;
-
-      switch (where) {
-      case PCI_EXP_FLAGS:
-      case PCI_EXP_DEVCTL:
-      case PCI_EXP_DEVSTA:
-          return pci_read_config_word(dev, pos + where, val);
-      case PCI_EXP_LNKCTL:
-      case PCI_EXP_LNKSTA:
-          if (pcie_cap_has_lnkctl(dev))
-              return pci_read_config_word(dev, pos + where, val);
-          else {
-              *val = 0;
-              return 0;
-          }
-      case PCI_EXP_SLTCTL:
-      case PCI_EXP_SLTSTA:
-          if (pcie_cap_has_sltctl(dev))
-              return pci_read_config_word(dev, pos + where, val);
-          else {
-              *val = 0;
-              if (where == PCI_EXP_SLTSTA && dev->pcie_type ==
-PCI_EXP_TYPE_DOWNSTREAM)
-                  *val = PCI_EXP_SLTSTA_PDS;
-              return 0;
-      ...
-      };
-      return -EINVAL;
-  }
-
-Any thoughts?
+Capabilities: [6c] Express (v2) Root Port (Slot+), MSI 00
+.....
+       SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surpise-
+                        Slot #  0, PowerLimit 0.000000; Interlock- NoCompl-
