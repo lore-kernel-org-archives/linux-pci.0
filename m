@@ -1,115 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 28/32] PCI/qla: use PCIe capabilities access functions to simplify implementation
-Date: Wed, 25 Jul 2012 00:41:13 +0800
-Message-Id: <1343148077-25941-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
-References: <1343148077-25941-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:42875 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752539Ab2GaAYO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 30 Jul 2012 20:24:14 -0400
+Message-ID: <1343694251.2591.5.camel@yhuang-dev>
+Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
+ hotplug failure
+From: Huang Ying <ying.huang@intel.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: =?ISO-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	huang ying <huang.ying.caritas@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zheng Yan <zheng.z.yan@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org
+Date: Tue, 31 Jul 2012 08:24:11 +0800
+In-Reply-To: <Pine.LNX.4.44L0.1207301017190.1386-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1207301017190.1386-100000@iolanthe.rowland.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Mon, 2012-07-30 at 10:19 -0400, Alan Stern wrote:
+> On Mon, 30 Jul 2012, Huang Ying wrote:
+> 
+> > > Yup, that worked in the quick test I just did.
+> > > 
+> > >  lspci reading the device config will still not wake the bridge, but I
+> > > assume that is intentional?  But loading the device driver now wakes
+> > > both the bridge and the device, so that works.
+> > 
+> > Do you have time to test the following patch to fix the lspci issue?
+> > 
+> > Subject: [BUGFIX] PCI/PM: Keep parent bridge active when read/write config reg
+> > 
+> > This patch fixes the following bug:
+> > 
+> > http://marc.info/?l=linux-pci&m=134338059022620&w=2
+> > 
+> > Where lspci does not work properly if a device and the corresponding
+> > parent bridge (such as PCIe port) is suspended.  This is because the
+> > device configuration space registers will be not accessible if the
+> > corresponding parent bridge is suspended.
+> > 
+> > To solve the issue, the bridge/PCIe port connected to the device is
+> > put into active state before read/write configuration space registers.
+> 
+> What happens when you run lspci and the device is in D3cold?  Then even 
+> if the parent bridge is active, lspci will still fail.
+> 
+> It seems that in this case you need to resume the device itself, not 
+> just its parent.
 
-Use PCIe capabilities access functions to simplify QLA SCSI drivers'
-implementation.
+Yes.  Will do that.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/scsi/qla2xxx/qla_init.c |    4 ++--
- drivers/scsi/qla2xxx/qla_nx.c   |    8 ++------
- drivers/scsi/qla4xxx/ql4_nx.c   |    4 +---
- 3 files changed, 5 insertions(+), 11 deletions(-)
+Best Regards,
+Huang Ying
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index ca50847..a44653b 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -685,7 +685,7 @@ qla24xx_pci_config(scsi_qla_host_t *vha)
- 		pcix_set_mmrbc(ha->pdev, 2048);
- 
- 	/* PCIe -- adjust Maximum Read Request Size (2048). */
--	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
-+	if (pci_is_pcie(ha->pdev))
- 		pcie_set_readrq(ha->pdev, 2048);
- 
- 	pci_disable_rom(ha->pdev);
-@@ -721,7 +721,7 @@ qla25xx_pci_config(scsi_qla_host_t *vha)
- 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
- 
- 	/* PCIe -- adjust Maximum Read Request Size (2048). */
--	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
-+	if (pci_is_pcie(ha->pdev))
- 		pcie_set_readrq(ha->pdev, 2048);
- 
- 	pci_disable_rom(ha->pdev);
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index caf627b..be516e9 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -1615,13 +1615,11 @@ qla82xx_get_fw_offs(struct qla_hw_data *ha)
- char *
- qla82xx_pci_info_str(struct scsi_qla_host *vha, char *str)
- {
--	int pcie_reg;
- 	struct qla_hw_data *ha = vha->hw;
- 	char lwstr[6];
- 	uint16_t lnk;
- 
--	pcie_reg = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_word(ha->pdev, pcie_reg + PCI_EXP_LNKSTA, &lnk);
-+	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
- 	ha->link_width = (lnk >> 4) & 0x3f;
- 
- 	strcpy(str, "PCIe (");
-@@ -2497,7 +2495,6 @@ fw_load_failed:
- int
- qla82xx_start_firmware(scsi_qla_host_t *vha)
- {
--	int           pcie_cap;
- 	uint16_t      lnk;
- 	struct qla_hw_data *ha = vha->hw;
- 
-@@ -2528,8 +2525,7 @@ qla82xx_start_firmware(scsi_qla_host_t *vha)
- 	}
- 
- 	/* Negotiated Link width */
--	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
-+	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
- 	ha->link_width = (lnk >> 4) & 0x3f;
- 
- 	/* Synchronize with Receive peg */
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 228b670..7e30158 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -1566,7 +1566,6 @@ qla4_8xxx_set_qsnt_ready(struct scsi_qla_host *ha)
- static int
- qla4_8xxx_start_firmware(struct scsi_qla_host *ha, uint32_t image_start)
- {
--	int pcie_cap;
- 	uint16_t lnk;
- 
- 	/* scrub dma mask expansion register */
-@@ -1590,8 +1589,7 @@ qla4_8xxx_start_firmware(struct scsi_qla_host *ha, uint32_t image_start)
- 	}
- 
- 	/* Negotiated Link width */
--	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
-+	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
- 	ha->link_width = (lnk >> 4) & 0x3f;
- 
- 	/* Synchronize with Receive peg */
--- 
-1.7.9.5
 
