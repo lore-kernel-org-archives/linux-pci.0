@@ -1,68 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23704 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752029Ab2GaDMY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 30 Jul 2012 23:12:24 -0400
-Message-ID: <1343704341.2591.8.camel@yhuang-dev>
-Subject: Re: [RFC] PCI/PM: Add ABI document for sysfs file d3cold_allowed
-From: Huang Ying <ying.huang@intel.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Bjorn Mork <bjorn@mork.no>
-Date: Tue, 31 Jul 2012 11:12:21 +0800
-In-Reply-To: <5016CC75.3050806@redhat.com>
-References: <1343376454-28520-1-git-send-email-ying.huang@intel.com>
-	 <5016CC75.3050806@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 31 Jul 2012 15:32:40 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Matthew Garrett <mjg@redhat.com>
+Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120731223240.GD19134@kroah.com>
+References: <1343407934-459-1-git-send-email-mjg@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1343407934-459-1-git-send-email-mjg@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Don,
-
-Thanks for your comments.
-
-On Mon, 2012-07-30 at 14:03 -0400, Don Dutile wrote:
-> On 07/27/2012 04:07 AM, Huang Ying wrote:
-> > This patch adds ABI document for the following sysfs file:
-> >
-> > /sys/bus/pci/devices/.../d3cold_allowed
-> >
-> > Signed-off-by: Huang Ying<ying.huang@intel.com>
-> > ---
-> >   Documentation/ABI/testing/sysfs-bus-pci |   12 ++++++++++++
-> >   1 file changed, 12 insertions(+)
-> >
-> > --- a/Documentation/ABI/testing/sysfs-bus-pci
-> > +++ b/Documentation/ABI/testing/sysfs-bus-pci
-> > @@ -210,3 +210,15 @@ Users:
-> >   		firmware assigned instance number of the PCI
-> >   		device that can help in understanding the firmware
-> >   		intended order of the PCI device.
-> > +
-> > +What:		/sys/bus/pci/devices/.../d3cold_allowed
-> > +Date:		July 2012
-> > +Contact:	Huang Ying<ying.huang@intel.com>
-> > +Description:
-> > +		d3cold_allowed is bit to control whether the corresponding PCI
-> > +		device can be put into D3Cold state.  If it is cleared, the
-> > +		device will never be put into D3Cold state.  If it is set, the
-> > +		device may be put into D3Cold state if other requirement are
-> did you mean 'requirements' here? -------------------------------^
-> or is there only 1 other requirement?
-
-I mean requirements here.
-
+On Fri, Jul 27, 2012 at 12:52:11PM -0400, Matthew Garrett wrote:
+> EFI provides support for providing PCI ROMs via means other than the ROM
+> BAR. This support vanishes after we've exited boot services, so add support
+> for stashing copies of the ROMs in setup_data if they're not otherwise
+> available.
 > 
-> > +		satisfied too.  Reading this attribute will show the current
-> > +		value of d3cold_allowed bit.  Writting this attribute will set
-> spell checker says 'Writing' --------------------^
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Tested-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+>  arch/x86/boot/compressed/eboot.c |  118 ++++++++++++++++++++++++++++++++++++++
+>  arch/x86/include/asm/bootparam.h |    1 +
+>  arch/x86/include/asm/pci.h       |   12 ++++
+>  include/linux/efi.h              |   71 +++++++++++++++++++++++
+>  4 files changed, 202 insertions(+)
 
-Sorry about my poor English and I should have spell checked it before
-sending out.
+With this series, does the latest MacBook work properly for the Intel
+graphics driver?  Or is this to resolve some other hardware issue?
 
-Best Regards,
-Huang Ying
+thanks,
 
-
+greg k-h
