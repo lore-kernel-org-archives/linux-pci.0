@@ -1,133 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:46641 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755555Ab2GaLC2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 07:02:28 -0400
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: Shlomo Pongratz <shlomopongratz@gmail.com>,
-	Greg KH <greg@kroah.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
-Subject: RE: Cabled PCIE device hotplug/hot-removal
-Date: Tue, 31 Jul 2012 11:02:24 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A477A44@G01JPEXMBYT03>
-References: <CAHzK-V0XpkVJHgqWiWpYP1jx5DPX=voE0eymK+5FG-zhrJOwAQ@mail.gmail.com>
- <20120726170925.GA24751@kroah.com>
- <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
-In-Reply-To: <CAHzK-V0idPrHhf-YuC_HAxxxQABExW7mUUWN31f-ZpdnC8W+GA@mail.gmail.com>
-Content-Type: text/plain; charset="iso-2022-jp"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 31 Jul 2012 10:10:23 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120731171023.GA14080@jonmason-lab>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+ <1343607994-32415-2-git-send-email-jon.mason@intel.com>
+ <CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
+ <20120730181542.GA987@jonmason-lab>
+ <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org
-> [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Shlomo Pongratz
-> Sent: Sunday, July 29, 2012 9:36 PM
-> To: Greg KH
-> Cc: linux-pci@vger.kernel.org; linux-hotplug@vger.kernel.org
-> Subject: Re: Cabled PCIE device hotplug/hot-removal
-> 
-> On Thu, Jul 26, 2012 at 8:09 PM, Greg KH <greg@kroah.com> wrote:
-> > On Thu, Jul 26, 2012 at 08:03:09PM +0300, Shlomo Pongratz wrote:
-> >> Hi,
+On Tue, Jul 31, 2012 at 07:45:29AM -0600, Bjorn Helgaas wrote:
+> On Mon, Jul 30, 2012 at 12:15 PM, Jon Mason <jon.mason@intel.com> wrote:
+> > On Mon, Jul 30, 2012 at 10:50:13AM -0600, Bjorn Helgaas wrote:
+> >> On Sun, Jul 29, 2012 at 6:26 PM, Jon Mason <jon.mason@intel.com> wrote:
+> >> > A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+> >> > connecting 2 systems, providing electrical isolation between the two subsystems.
+> >> > A non-transparent bridge is functionally similar to a transparent bridge except
+> >> > that both sides of the bridge have their own independent address domains.  The
+> >> > host on one side of the bridge will not have the visibility of the complete
+> >> > memory or I/O space on the other side of the bridge.  To communicate across the
+> >> > non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+> >> > the local system.  Writes to these apertures are mirrored to memory on the
+> >> > remote system.  Communications can also occur through the use of doorbell
+> >> > registers that initiate interrupts to the alternate domain, and scratch-pad
+> >> > registers accessible from both sides.
+> >> >
+> >> > The NTB device driver is needed to configure these memory windows, doorbell, and
+> >> > scratch-pad registers as well as use them in such a way as they can be turned
+> >> > into a viable communication channel to the remote system.  ntb_hw.[ch]
+> >> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> >> > the underlying hardware to provide access and a common interface to the doorbell
+> >> > registers, scratch pads, and memory windows.  These hardware interfaces are
+> >> > exported so that other, non-mainlined kernel drivers can access these.
+> >> > ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+> >> > communication channel(s) and provide a reliable way of transferring data from
+> >> > one side to the other, which it then exports so that "client" drivers can access
+> >> > them.  These client drivers are used to provide a standard kernel interface
+> >> > (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+> >> > system to the other in a standard way.
+> >> >
+> >> > Signed-off-by: Jon Mason <jon.mason@intel.com>
+> >> > ---
+> >> >  MAINTAINERS                 |    6 +
+> >> >  drivers/Kconfig             |    2 +
+> >> >  drivers/Makefile            |    1 +
+> >> >  drivers/ntb/Kconfig         |   13 +
+> >> >  drivers/ntb/Makefile        |    3 +
+> >> >  drivers/ntb/ntb_hw.c        | 1178 ++++++++++++++++++++++++++++++++++++
+> >> >  drivers/ntb/ntb_hw.h        |  206 +++++++
+> >> >  drivers/ntb/ntb_regs.h      |  150 +++++
+> >> >  drivers/ntb/ntb_transport.c | 1387 +++++++++++++++++++++++++++++++++++++++++++
+> >> >  include/linux/ntb.h         |   92 +++
 > >>
-> >> I have a  PCIe device connected with cables to a host (kernel 3.5.0-rc7+).
-> >> What are the handler I need to add to a driver in order to catch cable
-> >> pull-out / push-in?
+> >> Where will drivers for non-Intel NTBs fit in this hierarchy?  It seems
+> >> a bit presumptuous to claim the generic "ntb" names just for Intel
+> >> devices.
 > >
-> > You shouldn't need anything special, aren't you already getting probe
-> > and disconnect callbacks when the device is discovered and removed?
+> > I've tried to make it all generic enough that non-Intel NTBs should plug in with
+> > minimal changes to ntb_hw.c.  If their design is too divergent, then a slight
+> > redesign of ntb_hw.c might be necessary.  But from what I've seen of other
+> > designs on the internet, they appear to be extremely similar.  The transport and
+> > client drivers were written with the hardware abstracted away as much as
+> > possible to prevent the need to modify it for different hardware.  If there is
+> > anything which is Intel hardware specific, I'd be happy to change it to make it
+> > more generic.
 > 
+> That makes sense from a technical point of view, but I think it's
+> going to cause maintenance issues.  For example, assume PLX NTB
+> support is added.  Will PLX be happy about having to convince you to
+> accept changes?  Will Intel be happy about having to release a new
+> driver for their hardware just to incorporate a PLX bug fix?  Will
+> users of PLX hardware accept a new driver release that only benefits
+> Intel users?
 
-Note that if the controller doesn't support "surprise removal", pciehp does
-nothing (just print a message) when plugging/unplugging the device. You need
-to power on the slot by "echo 1 > /sys/bus/pci/slots/XXX/power" after plugging
-the device. By this, pciehp will power on the slot and driver's .prove
-callback will be called. And for removal, you need to
-"echo 0 > /sys/bus/pci/slots/XXX/power" before unplugging the device. By doing
-this, driver's .remove callback will be called and then pciehp will power
-down the slot.
+Firstly, I don't believe this is an issue.  The amount of hardware
+specific code is small (<150 loc), and the design of the PLX hardware
+appears to be the same as Intel (from what I've read on the internet).
 
-If the controller supports "surprise removal" driver's .probe/.remove callbacks
-are called automatically by the pciehp's event handler when plugging/unplugging
-event (presence change detect event) happens.
+Assuming Intel is me, I am always happy to do whatever I can to help
+PLX or any other NTB vendor.  I am willing to make internal releases
+(which I am assuming is the issue you are referring to) for any change
+to the driver.
 
+If necessary, refactoring the driver shouldn't be a significant issue.
+However, I would prefer to do it if/when another NTB driver wants to
+be added.  PLX (and those who are using their NTB hardware) hasn't
+pushed an NTB driver yet, and may never (as their design docs on the
+web are from '05).  Why complicate the driver for them if they never
+come?
 
-> When the device is loaded the probe is called
-> When I "echo 1" to the remove sysfs entry the remove callback is called.
-> But when I power down the card no callback is called.
-
-You need to "echo 0 > /sys/bus/pci/slots/XXX/power" to remove the device
-if you are using pciehp.
-
-
-> >
-> >> The pcisig presentation
-> >>
-> "http://www.pcisig.com/developers/main/training_materials/get_document
-> ?doc_id=f4ca40ec1721aa7fadd05e2903b0172c36656294"
-> >> talks about PERST# detection for cabled PCIe hotplug.
-> >>
-> >> Does the kernel detect it?
-> >>
-> >> None of the pci_driver or pci_error_handlers callbacks were called
-> >> when using powered down/up the device (electrically).
-
-How did you power down/up the device (electrically)?
-
-> >
-> > Do you have the pciehp driver loaded properly when this happens?
-> 
-> My {dot}config includes it into the kernel, i.e.
-> CONFIG_HOTPLUG_PCI_PCIE=y
-> 
-
-You can see what kind of hot-plug driver manages the slot by checking
-/sys/bus/pci/slots/XXX/module symbolic link. On my system which has some
-PCIe hot-plug slots, I can see the following
-
-$ ls /sys/bus/pci/slots/* -l
-/sys/bus/pci/slots/21:
-total 0
--r--r--r--. 1 root root 4096 Aug  1 02:55 adapter
--r--r--r--. 1 root root 4096 Aug  1 02:55 address
--rw-r--r--. 1 root root 4096 Aug  1 02:55 attention
--r--r--r--. 1 root root 4096 Aug  1 02:55 cur_bus_speed
--r--r--r--. 1 root root 4096 Aug  1 02:55 latch
--r--r--r--. 1 root root 4096 Aug  1 02:55 max_bus_speed
-lrwxrwxrwx. 1 root root    0 Aug  1 02:55 module -> ../../../../module/pciehp
--rw-r--r--. 1 root root 4096 Aug  1 02:55 power
-
-/sys/bus/pci/slots/22:
-<snip.>
-
-And pciehp_debug option might help you. With this option, you can get the
-controller infomation like below.
-
-pciehp 0000:0d:00.0:pcie24: Hotplug Controller:
-pciehp 0000:0d:00.0:pcie24:   Seg/Bus/Dev/Func/IRQ : 0000:0d:00.0 IRQ 51
-pciehp 0000:0d:00.0:pcie24:   Vendor ID            : 0x111d
-pciehp 0000:0d:00.0:pcie24:   Device ID            : 0x807f
-pciehp 0000:0d:00.0:pcie24:   Subsystem ID         : 0x159c
-pciehp 0000:0d:00.0:pcie24:   Subsystem Vendor ID  : 0x10cf
-pciehp 0000:0d:00.0:pcie24:   PCIe Cap offset      : 0x40
-pciehp 0000:0d:00.0:pcie24:   PCI resource [14]     : [mem 0x92a00000-0x92bfffff]
-pciehp 0000:0d:00.0:pcie24:   PCI resource [15]     : [mem 0x92000000-0x921fffff 64bit pref]
-pciehp 0000:0d:00.0:pcie24: Slot Capabilities      : 0x00a8005e
-pciehp 0000:0d:00.0:pcie24:   Physical Slot Number : 21
-pciehp 0000:0d:00.0:pcie24:   Attention Button     :  no
-pciehp 0000:0d:00.0:pcie24:   Power Controller     : yes
-pciehp 0000:0d:00.0:pcie24:   MRL Sensor           : yes
-pciehp 0000:0d:00.0:pcie24:   Attention Indicator  : yes
-pciehp 0000:0d:00.0:pcie24:   Power Indicator      : yes
-pciehp 0000:0d:00.0:pcie24:   Hot-Plug Surprise    :  no
-pciehp 0000:0d:00.0:pcie24:   EMI Present          :  no
-pciehp 0000:0d:00.0:pcie24:   Command Completed    : yes
-pciehp 0000:0d:00.0:pcie24: Slot Status            : 0x0000
-pciehp 0000:0d:00.0:pcie24: Slot Control           : 0x07c0
-pciehp 0000:0d:00.0:pcie24: Link Active Reporting supported
-
-Regards,
-Kenji Kaneshige
+Thanks,
+Jon
 
