@@ -1,59 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:57951 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756515Ab2GJRMY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jul 2012 13:12:24 -0400
-Received: by bkwj10 with SMTP id j10so266180bkw.19
-        for <linux-pci@vger.kernel.org>; Tue, 10 Jul 2012 10:12:23 -0700 (PDT)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:51312 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713Ab2GaFLo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 31 Jul 2012 01:11:44 -0400
 MIME-Version: 1.0
-Date: Tue, 10 Jul 2012 10:12:22 -0700
-Message-ID: <CAD-6qVV0jqqKo729MtWpSxsvfo6r3mB68o+dnZv9MHtvYJq6Fg@mail.gmail.com>
-Subject: how to do mmap for cacheable PCIe BAR on x86
-From: Alex <solomatnikov@gmail.com>
-To: linux-pci@vger.kernel.org
+In-Reply-To: <1343690279.8073.215.camel@ul30vt>
+References: <20120725142254.12800.61860.stgit@bling.home> <20120727053206.GC11870@drongo>
+ <1343690279.8073.215.camel@ul30vt>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 30 Jul 2012 22:11:20 -0700
+Message-ID: <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
+Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Paul Mackerras <paulus@samba.org>, benh@kernel.crashing.org,
+	aik@ozlabs.ru, david@gibson.dropbear.id.au,
+	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	ddutile@redhat.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am trying to write a driver with custom mmap() function for PCIe
-BAR, with the goal to make this BAR cacheable in the processor cache.
-I am aware this is not the best way to achieve highest bandwidth and
-that the order of writes is unpredictable (neither are the issues in
-this case).
+On Mon, Jul 30, 2012 at 4:17 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+>
+> I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
+> including this in 3.6?  Thanks,
 
-The processor is Sandy Bridge i7, PCIe device is Altera Stratix IV dev. board.
+I just pulled it, but then I unpulled again when I realized it's not a
+signed tag and it's on github.
 
-First, I tried to do it on CentOS 5 (2.6.18). I changed the MTRR
-settings to make sure the BAR is not within uncacheable MTRR and used
-io_remap_pfn_range() with _PAGE_PCD and _PAGE_PWT bits cleared. Reads
-worked as expected: reads returned correct values and second read to
-the same address does not necessarily cause the read to go to PCIe
-(read counter was checked in FPGA). However, the writes caused the
-system to freeze and then reboot.
+Please, people. Do tagged releases with proper signatures if you're
+not using kernel.org or other controlled servers. In fact, I prefer
+signed tags even if you *do* use kernel.org etc.
 
-Second, I tried to do it on CentOS 6 (2.6.32), which has PAT support.
-The result is the same: reads work correctly, writes cause system
-freeze and reboot. Interestingly, non-temporal/write-combining full
-cache line writes (AVX/SSE) work as expected, i.e. they always go to
-FPGA and FPGA observes full cache line writes, reads return correct
-values afterwards. However, simple 64-bit writes still cause system
-freeze/reboot.
-
-The message on the screen: Machine Check Exception: 5 Bank 5: be2000000003110a.
-
-Third, I also tried to ioremap_cache() and then iowrite32() inside the
-driver code. The result is the same.
-
-
-I also tried to do the same thing on 2-socket Sandy Bridge (Romley):
-reads and non-temporal write behavior is the same, simple writes do
-not cause MCE/crash but have no effect on system state, i.e. value in
-memory does not change.
-
-Also, I tried the same code on older 2-socket Nehalem system: simple
-writes also cause MCE, although the codes are different.
-
-
-I think it is a hardware issue but I would appreciate if somebody can
-share any ideas about what's going on.
-Alex
+             Linus
