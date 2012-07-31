@@ -1,81 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <mjg@redhat.com>
-To: matt.fleming@intel.com
-Cc: linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH V2 2/4] PCI: Add pcibios_add_device
-Date: Fri, 27 Jul 2012 12:52:12 -0400
-Message-Id: <1343407934-459-2-git-send-email-mjg@redhat.com>
-In-Reply-To: <1343407934-459-1-git-send-email-mjg@redhat.com>
-References: <1343407934-459-1-git-send-email-mjg@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40758 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754157Ab2GaOyZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 Jul 2012 10:54:25 -0400
+Message-ID: <1343746415.3368.5.camel@ul30vt>
+Subject: Re: [GIT PULL (PATCH 0/4)] VFIO driver for v3.6
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Paul Mackerras <paulus@samba.org>, benh@kernel.crashing.org,
+	aik@ozlabs.ru, david@gibson.dropbear.id.au,
+	gregkh@linuxfoundation.org, joerg.roedel@amd.com,
+	dwmw2@infradead.org, chrisw@sous-sol.org, agraf@suse.de,
+	benve@cisco.com, aafabbri@cisco.com, B08248@freescale.com,
+	B07421@freescale.com, avi@redhat.com, konrad.wilk@oracle.com,
+	kvm@vger.kernel.org, qemu-devel@nongnu.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	ddutile@redhat.com
+Date: Tue, 31 Jul 2012 08:53:35 -0600
+In-Reply-To: <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
+References: <20120725142254.12800.61860.stgit@bling.home>
+	 <20120727053206.GC11870@drongo> <1343690279.8073.215.camel@ul30vt>
+	 <CA+55aFzTzO-jzHNYSW6Hb5_kmP6aYCWH_hbAauLUn9rf9iLg_w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Platforms may want to provide architecture-specific functionality during
-PCI enumeration. Add a pcibios_add_device() call that architectures can
-override to do so.
+On Mon, 2012-07-30 at 22:11 -0700, Linus Torvalds wrote:
+> On Mon, Jul 30, 2012 at 4:17 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> >
+> > I'm pretty anxious to find out as well.  Linus, ping, any thoughts on
+> > including this in 3.6?  Thanks,
+> 
+> I just pulled it, but then I unpulled again when I realized it's not a
+> signed tag and it's on github.
+> 
+> Please, people. Do tagged releases with proper signatures if you're
+> not using kernel.org or other controlled servers. In fact, I prefer
+> signed tags even if you *do* use kernel.org etc.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
-Tested-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/pci/bus.c   |    5 +++++
- drivers/pci/pci.c   |   13 +++++++++++++
- include/linux/pci.h |    1 +
- 3 files changed, 19 insertions(+)
+Sorry about that, Linus.  I think this is a properly signed tag, please
+let me know if I'm still screwing up.  Thanks,
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4b0970b..e2f447e 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -166,6 +166,11 @@ int pci_bus_add_device(struct pci_dev *dev)
- 	int retval;
- 
- 	pci_fixup_device(pci_fixup_final, dev);
-+
-+	retval = pcibios_add_device(dev);
-+	if (retval)
-+		return retval;
-+
- 	retval = device_add(&dev->dev);
- 	if (retval)
- 		return retval;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f3ea977..fec3a92 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1385,6 +1385,19 @@ void pcim_pin_device(struct pci_dev *pdev)
- 		dr->pinned = 1;
- }
- 
-+/*
-+ * pcibios_add_device - provide arch specific hooks when adding device dev
-+ * @dev: the PCI device being added
-+ *
-+ * Permits the platform to provide architecture specific functionality when
-+ * devices are added. This is the default implementation. Architecture
-+ * implementations can override this.
-+ */
-+int __weak pcibios_add_device(struct pci_dev *dev)
-+{
-+	return 0;
-+}
-+
- /**
-  * pcibios_disable_device - disable arch specific PCI resources for device dev
-  * @dev: the PCI device to disable
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..6a2625c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1582,6 +1582,7 @@ void pcibios_disable_device(struct pci_dev *dev);
- void pcibios_set_master(struct pci_dev *dev);
- int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- 				 enum pcie_reset_state state);
-+int pcibios_add_device(struct pci_dev *dev);
- 
- #ifdef CONFIG_PCI_MMCONFIG
- extern void __init pci_mmcfg_early_init(void);
--- 
-1.7.10.4
+Alex
+
+The following changes since commit 2e3ee613480563a6d5c01b57d342e65cc58c06df:
+
+  Merge tag 'writeback-proportions' of git://git.kernel.org/pub/scm/linux/kernel/git/wfg/linux (2012-07-30 22:14:04 -0700)
+
+are available in the git repository at:
+
+
+  git@github.com:awilliam/linux-vfio.git tags/vfio-for-v3.6
+
+for you to fetch changes up to 89e1f7d4c66d85f42c3d52ea3866eb10cadf6153:
+
+  vfio: Add PCI device driver (2012-07-31 08:16:24 -0600)
+
+----------------------------------------------------------------
+VFIO for v3.6
+
+----------------------------------------------------------------
+Alex Williamson (4):
+      vfio: VFIO core
+      vfio: Add documentation
+      vfio: Type1 IOMMU implementation
+      vfio: Add PCI device driver
+
+ Documentation/ioctl/ioctl-number.txt |    1 +
+ Documentation/vfio.txt               |  314 +++++++
+ MAINTAINERS                          |    8 +
+ drivers/Kconfig                      |    2 +
+ drivers/Makefile                     |    1 +
+ drivers/vfio/Kconfig                 |   16 +
+ drivers/vfio/Makefile                |    3 +
+ drivers/vfio/pci/Kconfig             |    8 +
+ drivers/vfio/pci/Makefile            |    4 +
+ drivers/vfio/pci/vfio_pci.c          |  579 +++++++++++++
+ drivers/vfio/pci/vfio_pci_config.c   | 1540 ++++++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_intrs.c    |  740 ++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h  |   91 ++
+ drivers/vfio/pci/vfio_pci_rdwr.c     |  269 ++++++
+ drivers/vfio/vfio.c                  | 1420 +++++++++++++++++++++++++++++++
+ drivers/vfio/vfio_iommu_type1.c      |  753 +++++++++++++++++
+ include/linux/vfio.h                 |  445 ++++++++++
+ 17 files changed, 6194 insertions(+)
+ create mode 100644 Documentation/vfio.txt
+ create mode 100644 drivers/vfio/Kconfig
+ create mode 100644 drivers/vfio/Makefile
+ create mode 100644 drivers/vfio/pci/Kconfig
+ create mode 100644 drivers/vfio/pci/Makefile
+ create mode 100644 drivers/vfio/pci/vfio_pci.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_config.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_intrs.c
+ create mode 100644 drivers/vfio/pci/vfio_pci_private.h
+ create mode 100644 drivers/vfio/pci/vfio_pci_rdwr.c
+ create mode 100644 drivers/vfio/vfio.c
+ create mode 100644 drivers/vfio/vfio_iommu_type1.c
+ create mode 100644 include/linux/vfio.h
+
+
 
