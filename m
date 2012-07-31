@@ -1,72 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:41108 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752900Ab2G1VMX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 28 Jul 2012 17:12:23 -0400
-Date: Sat, 28 Jul 2012 17:12:22 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Huang Ying <ying.huang@intel.com>,
+Received: from ogre.sisk.pl ([193.178.161.156]:37221 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752447Ab2GaUZe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 31 Jul 2012 16:25:34 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Tue, 31 Jul 2012 22:31:19 +0200
+Cc: Huang Ying <ying.huang@intel.com>,
 	=?iso-8859-1?q?Bj=F8rn_Mork?= <bjorn@mork.no>,
 	huang ying <huang.ying.caritas@gmail.com>,
 	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-usb@vger.kernel.org>
-Subject: Re: bisected regression, v3.5 -> next-20120724: PCI PM causes USB
- hotplug failure
-In-Reply-To: <201207282226.40306.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1207281708000.30227-100000@netrider.rowland.org>
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1207291051310.18141-100000@netrider.rowland.org> <201207292118.42547.rjw@sisk.pl>
+In-Reply-To: <201207292118.42547.rjw@sisk.pl>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201207312231.19505.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 28 Jul 2012, Rafael J. Wysocki wrote:
-
-> On Saturday, July 28, 2012, Alan Stern wrote:
-> > On Fri, 27 Jul 2012, Rafael J. Wysocki wrote:
+On Sunday, July 29, 2012, Rafael J. Wysocki wrote:
+> On Sunday, July 29, 2012, Alan Stern wrote:
+> > On Sun, 29 Jul 2012, Rafael J. Wysocki wrote:
 > > 
-> > > > > > > +	if (parent)
-> > > > > > > +		pm_runtime_put(parent);
-> > > > > > 
-> > > > > > You should use pm_runtime_put_sync(), not pm_runtime_put().
-> > > > > 
-> > > > > Hmm, why exactly?
-> > > > 
-> > > > Because it's more efficient to do something directly than to run it in 
-> > > > a workqueue.
-> > > 
-> > > Well, depends.  If that results in a power off (the parent goes into
-> > > D3 for example), we may wait as long as 10 ms for that to complete.
+> > > The difference is, if you use _put_sync(), you need to wait the extra 10 ms
+> > > for local_pci_probe() to return (if the parent is actually suspended),
+> > > although you might not need to wait for it if you used _put(), right?
 > > 
-> > True, but so what?  You'd also have to wait 10 ms for the workqueue
-> > item to complete if pm_runtime_put() was used,
+> > Yes, that's the difference.  But who waits for local_pci_probe() to 
+> > return?  :-)
 > 
-> Are you sure?  pm_runtime_put() leads to rpm_idle() with the RPM_ASYNC
-> flag set, which causes it to queue up the work item and return immediately
-> without waiting.  Why exactly do you think I'd need to wait, then?
-
-What I mean is, it takes 10 ms for the parent to suspend regardless of
-whether or not you use the _sync form of the call.  If you're waiting
-for the parent to suspend, you would therefore have to wait 10 ms in
-either case.
-
-Likewise, if you're waiting for the PCI device to become usable then
-you don't have to wait for 10 ms, because you can use it as soon as the
-probe routine returns.
-
-> > plus the additional overhead of scheduling the workqueue thread.
-> > 
-> > Now, if the length of time required for the probe to run were an issue 
-> > then yes, the synchronous routine could make things take longer.  But 
-> > probing is generally done asynchronously anyway, right?  And usually 
-> > what matters is the time before the device becomes available, not the 
-> > time for the probe to run.
+> pci_register_driver() might, but that's not a big deal.  Hot-plug might
+> as well, though.
 > 
-> Still, I see no reason to wait synchronously for the _parent_ to suspend.
+> > > Which, to me, means that using _put_sync() may not be always better.
+> > > It probably doesn't matter a lot, but then the workqueue overhead shouldn't
+> > > matter a lot either.
+> > 
+> > It's that in the end, the extra overhead is pretty small.  For me
+> > there's also an issue of style: If you do a synchronous get then it
+> > looks odd not to do a synchronous put.  My feeling has always been that
+> > the async routines are for use in non-process contexts, where the sync
+> > routines can't be used.  Using them just to return a little more
+> > quickly is a foreign idea.
+> 
+> I see. :-)
+> 
+> The reason for using sync get is quite obvious: we want to be able to access
+> the device later on.  For sync put that's not so clear, though. There are cases
+> when we definitely want to do it, like the failing .probe() in which we want to
+> disable runtime PM next to the put, but usually it doesn't hurt (too much) to
+> defer it IMO.
 
-Why not?  There's no penalty, particularly since most device probing 
-happens asynchronously these days anyway.
+Now it occured to me that perhaps we don't need the current asynchronous
+pm_runtime_get() at all.  The usefulness of it is quite questionable, because
+either we want to resume the device immediately, for which pm_runtime_get_sync()
+should be used, or we just want to bump up the usage counter, in which cases
+pm_runtime_get_noresume() should always be sufficient.  I fail to see any
+particularly compelling use case for pm_runtime_get() doing an asynchronous
+resume at the moment, but perhaps that's just me.
 
-Alan Stern
+However, I receive reports of people using pm_runtime_get() where they really
+should use pm_runtime_get_sync(), so I wonder if we can simply rename
+pm_runtime_get_sync() as pm_runtime_get() and drop the asynchronous version
+altogether?
 
+Rafael
