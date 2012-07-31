@@ -1,61 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:35999 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756554Ab2GKR6S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jul 2012 13:58:18 -0400
-Received: by vbbff1 with SMTP id ff1so949822vbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 11 Jul 2012 10:58:17 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120711162120.GA17988@google.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
-	<1340437325-29282-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo5K9EqAQSKA5_YdM2WThWddJr4XDbFHr84h_MPHvSqJmg@mail.gmail.com>
-	<20120711162120.GA17988@google.com>
-Date: Wed, 11 Jul 2012 10:58:17 -0700
-Message-ID: <CAE9FiQUeJ3fyjamtxgx=_PeZC0Qdofx5ou8Gbg_ikSGTCbC06g@mail.gmail.com>
-Subject: Re: [PATCH 2/5] pciehp: Don't enable presence notification while
- surprise removal is not supported.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20120731172709.GB14080@jonmason-lab>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+	<1343607994-32415-2-git-send-email-jon.mason@intel.com>
+	<CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
+	<20120730181542.GA987@jonmason-lab>
+	<CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+	<CAAsGZS5kOyQ5FQ7Jg3HxOmmPNYS+F6XcB-_3tm=rcgDV7wAvRQ@mail.gmail.com>
+	<20120731172709.GB14080@jonmason-lab>
+Date: Tue, 31 Jul 2012 14:02:25 -0400
+Message-ID: <CAAsGZS4nhv+s7NVwaaGjQ9fJoHQoaXnUoYw=xTPC-sfen+tj8A@mail.gmail.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+From: chetan loke <loke.chetan@gmail.com>
+To: Jon Mason <jon.mason@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 11, 2012 at 9:21 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jul 10, 2012 at 04:56:15PM -0600, Bjorn Helgaas wrote:
+On Tue, Jul 31, 2012 at 1:27 PM, Jon Mason <jon.mason@intel.com> wrote:
 >
-> What bad things would happen if we did the following?
+> I don't see the benefit of having the driver in staging.  Any vendors
+> who would notice the ntb driver in staging would be sitting on these
+> mailing lists and hopefully have planety of comments on the design.
+> Stashing the driver in staging while waiting for these comments (which
+> may never come) doesn't seem the best course of action.
 >
-> I have no way to test this, but I don't understand what benefit
-> there is in testing HP_SUPR_RM() here.
->
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 27f4429..4bbe257 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -463,9 +463,8 @@ static void interrupt_event_handler(struct work_struct *work)
->                 break;
->         case INT_PRESENCE_ON:
->         case INT_PRESENCE_OFF:
-> -               if (!HP_SUPR_RM(ctrl))
-> -                       break;
-> -               ctrl_dbg(ctrl, "Surprise Removal\n");
-> +               ctrl_dbg(ctrl, "Presence Detect changed (now %spresent)\n",
-> +                        info->event_type == INT_PRESENCE_OFF ? "not " : "");
->                 handle_surprise_event(p_slot);
->                 break;
->         default:
 
-some chipsets (from cpu vendor) have some problem, when you remove the
-card, the present bit
-will keep flip around.
-Because that present bit is "OR" with inband (pcie link) and outband
-(input from VPP) detection.
-and silicon is trying to retrain the link to see if there is any device there.
-That means handle_surprise_event would get called frequently.
+I thought that since others are talking about it then may be there is
+some WIP code for foo-NTB. Seems like that's not the case. So no need
+to stage.
 
-Thanks
+Correct me if I'm wrong but wouldn't apps just open a socket and route
+data via ntb_vir_eth_dev? So I don't see an ABI breakage issue and
+hence nothing would prevent us from changing the kernel parts(for
+accommodating some foo-NTB part) in future.
 
-Yinghai
+It may not be a bad idea to prefix intel-specific(if any)
+ntb_structs/variables/logic with the 'intc'(Intel ticker or pick your
+string) keyword.
+
+Chetan Loke
