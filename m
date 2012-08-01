@@ -1,114 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23631 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754315Ab2HWFv2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Aug 2012 01:51:28 -0400
-Date: Thu, 23 Aug 2012 13:45:57 +0800
-From: Feng Tang <feng.tang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: pci_get_subsys: GFP_KERNEL allocations with IRQs disabled
-Message-ID: <20120823134557.00fdeb58@feng-i7>
-In-Reply-To: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-References: <5017D19B.5080806@redhat.com>
-	<1343738627.27983.30.camel@gandalf.stny.rr.com>
-	<5017D4AB.3090107@redhat.com>
-	<1343740419.27983.33.camel@gandalf.stny.rr.com>
-	<20120731234336.GA5526@localhost>
-	<1343778699.27983.70.camel@gandalf.stny.rr.com>
-	<20120731235705.GW2422@linux.vnet.ibm.com>
-	<1343779778.27983.73.camel@gandalf.stny.rr.com>
-	<20120801001811.GX2422@linux.vnet.ibm.com>
-	<20120801004319.GA7043@localhost>
-	<20120822025008.GA8066@localhost>
-	<20120822154908.2e6ef3c0@feng-i7>
-	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from cavan.codon.org.uk ([93.93.128.6]:51015 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082Ab2HAQyH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 12:54:07 -0400
+Date: Wed, 1 Aug 2012 17:54:00 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120801165400.GA3042@srcf.ucam.org>
+References: <1343407934-459-1-git-send-email-mjg@redhat.com>
+ <20120731223240.GD19134@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120731223240.GD19134@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tue, Jul 31, 2012 at 03:32:40PM -0700, Greg KH wrote:
 
-On Wed, 22 Aug 2012 11:02:52 -0700
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+> With this series, does the latest MacBook work properly for the Intel
+> graphics driver?  Or is this to resolve some other hardware issue?
 
-> On Wed, Aug 22, 2012 at 12:49 AM, Feng Tang <feng.tang@intel.com> wrote:
-> > Hi Fengguang,
-> >
-> >
-> > On Wed, 22 Aug 2012 10:50:08 +0800
-> > Fengguang Wu <fengguang.wu@intel.com> wrote:
-> >
-> >> Feng,
-> >>
-> >> > I think it's pci_get_subsys() triggered this assert:
-> >> >
-> >> >         /*
-> >> >          * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
-> >> >          */
-> >> >         if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
-> >> >                 return;
-> >>
-> >> It's bisected down to this commit:
-> >>
-> >> commit 55c844a4dd16a4d1fdc0cf2a283ec631a02ec448
-> >> Author:     Feng Tang <feng.tang@intel.com>
-> >> AuthorDate: Wed May 30 23:15:41 2012 +0800
-> >> Commit:     Ingo Molnar <mingo@kernel.org>
-> >> CommitDate: Wed Jun 6 12:03:23 2012 +0200
-> >>
-> >>     x86/reboot: Fix a warning message triggered by stop_other_cpus()
-> >>
-> >> Thanks,
-> >> Fengguang
-> >
-> > Thanks for the bisection.
-> >
-> > Revert my commit should be a solution, but can we simply make the pci_device_id
-> > a local on stack one instead of using sleepable kmalloc for it, as this
-> > sounds fragile when pci_get_subsys get called in a late system reboot stage?
-> 
-> I think this is a great idea.  Can you make this a real patch, with a
-> changelog and Signed-off-by?
+Apple only seem to provide the ROM for the radeon. Intel normally 
+stands a much better chance of working without a ROM - the only thing it 
+really uses it for is the VBT, and I'm thinking about a couple of ways 
+of handlng that.
 
-Thanks and will do.
-
-> 
-> We should also remove the obsolete comment about early boot.  I'm not
-> sure the no_pci_devices() check is needed, either.  And we can make
-> the same simplification in pci_get_class().
-
-Will check the no_pci_devices() part, and try to make it a separate
-patch for easy reverting in case of error.
-
-> 
-> > ------------
-> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> > index 993d4a0..e5ccede 100644
-> > --- a/drivers/pci/search.c
-> > +++ b/drivers/pci/search.c
-> > @@ -246,7 +246,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
-> >                                struct pci_dev *from)
-> >  {
-> > +       id.vendor = vendor;
-> > +       id.device = device;
-> > +       id.subvendor = ss_vendor;
-> > +       id.subdevice = ss_device;
-> >
-> > +       pdev = pci_get_dev_by_id(&id, from);
-> 
-> No need for "pdev" here, since we don't have to free anything.
-
-ok, will directly return it.
-
-Thanks,
-Feng
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
