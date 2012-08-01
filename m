@@ -1,113 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>, Jon Mason <mason@myri.com>,
-	Andrew Gallatin <gallatin@myri.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 21/32] PCI/myri10ge: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:26 +0800
-Message-Id: <1343836477-7287-22-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:39584 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754509Ab2HARsd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 13:48:33 -0400
+Received: by vbbff1 with SMTP id ff1so7227457vbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2012 10:48:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
+References: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
+Date: Wed, 1 Aug 2012 10:48:32 -0700
+Message-ID: <CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
+Subject: Re: PCI express switch
+From: Yinghai Lu <yinghai@kernel.org>
+To: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
+	<caronteycerbero@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Aug 1, 2012 at 6:42 AM, Miguel Ángel Álvarez
+<caronteycerbero@gmail.com> wrote:
+> Dear all,
+>
+> We are developing a board using a Freescale P2020. This micro has
+> three PCIexpress ports. 2 1xlane PCIe and 1 2xlane PCIe.
+>
+> We have been able to successfully use the PCIe interfaces.
+>
+> However, now we want to expand the number of PCIe slots connecting the
+> 2xlane PCIe to a PCIe switch (89HPES6T5E). This switch offers a 2xlane
+> upstream port and 4 1xlane downstream ports.
+>
+> The problem is that we do not really know how PCIe switches are
+> managed in Linux. If any of you can recommend us some resources to
+> read, we will appreciate it very much.
 
-Use PCIe capabilities access functions to simplify myri10ge driver's
-implementation.
+pcie switch should show as three or more pci bridges in the pci tree.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   39 ++++------------------
- 1 file changed, 7 insertions(+), 32 deletions(-)
+>
+> If there is no information to read, let me describe our main problem.
+>
+> The question is that if I let u-boot scan the PCIe, the upstream and
+> downstream ports are detected as well as the cards connected to the
+> downstream port. However when u-boot launches Linux, this last just
+> finds a device (the HPES6T5E), and none of the downstream ports or
+> card connected to them.
+>
+>
+> I know that the problem could be in the u-boot, so I am trying to
+> analyse its code also... but I think there could be something in Linux
+> I am not taking into account yet.
 
-diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-index 90153fc..fe6c44d 100644
---- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-+++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
-@@ -1078,24 +1078,8 @@ static int myri10ge_reset(struct myri10ge_priv *mgp)
- #ifdef CONFIG_MYRI10GE_DCA
- static int myri10ge_toggle_relaxed(struct pci_dev *pdev, int on)
- {
--	int ret, cap, err;
--	u16 ctl;
--
--	cap = pci_pcie_cap(pdev);
--	if (!cap)
--		return 0;
--
--	err = pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl);
--	if (err)
--		return 0;
--
--	ret = (ctl & PCI_EXP_DEVCTL_RELAX_EN) >> 4;
--	if (ret != on) {
--		ctl &= ~PCI_EXP_DEVCTL_RELAX_EN;
--		ctl |= (on << 4);
--		pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl);
--	}
--	return ret;
-+	return pci_pcie_capability_change_word(pdev, PCI_EXP_DEVCTL,
-+		       on << 4, PCI_EXP_DEVCTL_RELAX_EN);
- }
- 
- static void
-@@ -3192,18 +3176,13 @@ static void myri10ge_enable_ecrc(struct myri10ge_priv *mgp)
- 	struct device *dev = &mgp->pdev->dev;
- 	int cap;
- 	unsigned err_cap;
--	u16 val;
--	u8 ext_type;
- 	int ret;
- 
- 	if (!myri10ge_ecrc_enable || !bridge)
- 		return;
- 
- 	/* check that the bridge is a root port */
--	cap = pci_pcie_cap(bridge);
--	pci_read_config_word(bridge, cap + PCI_CAP_FLAGS, &val);
--	ext_type = (val & PCI_EXP_FLAGS_TYPE) >> 4;
--	if (ext_type != PCI_EXP_TYPE_ROOT_PORT) {
-+	if (pci_pcie_type(bridge) != PCI_EXP_TYPE_ROOT_PORT) {
- 		if (myri10ge_ecrc_enable > 1) {
- 			struct pci_dev *prev_bridge, *old_bridge = bridge;
- 
-@@ -3218,11 +3197,8 @@ static void myri10ge_enable_ecrc(struct myri10ge_priv *mgp)
- 						" to force ECRC\n");
- 					return;
- 				}
--				cap = pci_pcie_cap(bridge);
--				pci_read_config_word(bridge,
--						     cap + PCI_CAP_FLAGS, &val);
--				ext_type = (val & PCI_EXP_FLAGS_TYPE) >> 4;
--			} while (ext_type != PCI_EXP_TYPE_ROOT_PORT);
-+			} while (pci_pcie_type(bridge) !=
-+				 PCI_EXP_TYPE_ROOT_PORT);
- 
- 			dev_info(dev,
- 				 "Forcing ECRC on non-root port %s"
-@@ -3335,11 +3311,10 @@ static void myri10ge_select_firmware(struct myri10ge_priv *mgp)
- 	int overridden = 0;
- 
- 	if (myri10ge_force_firmware == 0) {
--		int link_width, exp_cap;
-+		int link_width;
- 		u16 lnk;
- 
--		exp_cap = pci_pcie_cap(mgp->pdev);
--		pci_read_config_word(mgp->pdev, exp_cap + PCI_EXP_LNKSTA, &lnk);
-+		pci_pcie_capability_read_word(mgp->pdev, PCI_EXP_LNKSTA, &lnk);
- 		link_width = (lnk >> 4) & 0x3f;
- 
- 		/* Check to see if Link is less than 8 or if the
--- 
-1.7.9.5
+can you post whole log with pci debug enabled?
 
+Thanks
+
+Yinghai
