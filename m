@@ -1,290 +1,534 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27513 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753295Ab2HWQhV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Aug 2012 12:37:21 -0400
-From: Matthew Garrett <mjg@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	mfleming@intel.com, dwmw2@infradead.org, bhelgaas@google.com,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH V3 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-Date: Thu, 23 Aug 2012 12:36:40 -0400
-Message-Id: <1345739803-21017-2-git-send-email-mjg@redhat.com>
-In-Reply-To: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 02/32] PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
+Date: Wed,  1 Aug 2012 23:54:07 +0800
+Message-Id: <1343836477-7287-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EFI provides support for providing PCI ROMs via means other than the ROM
-BAR. This support vanishes after we've exited boot services, so add support
-for stashing copies of the ROMs in setup_data if they're not otherwise
-available.
----
- arch/x86/boot/compressed/eboot.c | 118 +++++++++++++++++++++++++++++++++++++++
- arch/x86/include/asm/bootparam.h |   1 +
- arch/x86/include/asm/pci.h       |  12 ++++
- include/linux/efi.h              |  71 +++++++++++++++++++++++
- 4 files changed, 202 insertions(+)
+From: Yijing Wang <wangyijing@huawei.com>
 
-diff --git a/arch/x86/boot/compressed/eboot.c b/arch/x86/boot/compressed/eboot.c
-index b3e0227..8630578 100644
---- a/arch/x86/boot/compressed/eboot.c
-+++ b/arch/x86/boot/compressed/eboot.c
-@@ -8,6 +8,7 @@
-  * ----------------------------------------------------------------------- */
+From: Yijing Wang <wangyijing@huawei.com>
+
+Introduce an inline function pci_pcie_type(dev) to extract PCIe
+device type from pci_dev->pcie_flags_reg field, and prepare for
+removing pci_dev->pcie_type.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
+ drivers/iommu/intel-iommu.c                        |    6 +--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
+ .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
+ drivers/pci/iov.c                                  |    6 +--
+ drivers/pci/pci.c                                  |   26 ++++++------
+ drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
+ drivers/pci/pcie/aer/aerdrv.c                      |    7 ++--
+ drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
+ drivers/pci/pcie/aer/aerdrv_core.c                 |    2 +-
+ drivers/pci/pcie/aspm.c                            |   42 ++++++++++----------
+ drivers/pci/pcie/pme.c                             |    6 +--
+ drivers/pci/pcie/portdrv_bus.c                     |    2 +-
+ drivers/pci/pcie/portdrv_core.c                    |    4 +-
+ drivers/pci/pcie/portdrv_pci.c                     |    8 ++--
+ drivers/pci/probe.c                                |    9 +++--
+ drivers/pci/search.c                               |    2 +-
+ 17 files changed, 67 insertions(+), 63 deletions(-)
+
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 9cda6a1..b46e1da 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -855,7 +855,7 @@ static void __devinit pnv_ioda_setup_PEs(struct pci_bus *bus)
+ 		if (pe == NULL)
+ 			continue;
+ 		/* Leaving the PCIe domain ... single PE# */
+-		if (dev->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE)
++		if (pci_pcie_type(dev) == PCI_EXP_TYPE_PCI_BRIDGE)
+ 			pnv_ioda_setup_bus_PE(dev, pe);
+ 		else if (dev->subordinate)
+ 			pnv_ioda_setup_PEs(dev->subordinate);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 2fb7d15..8612271 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -2350,7 +2350,7 @@ static int iommu_should_identity_map(struct pci_dev *pdev, int startup)
+ 			return 0;
+ 		if (pdev->class >> 8 == PCI_CLASS_BRIDGE_PCI)
+ 			return 0;
+-	} else if (pdev->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE)
++	} else if (pci_pcie_type(pdev) == PCI_EXP_TYPE_PCI_BRIDGE)
+ 		return 0;
  
- #include <linux/efi.h>
-+#include <linux/pci.h>
- #include <asm/efi.h>
- #include <asm/setup.h>
- #include <asm/desc.h>
-@@ -243,6 +244,121 @@ static void find_bits(unsigned long mask, u8 *pos, u8 *size)
- 	*size = len;
+ 	/* 
+@@ -3545,10 +3545,10 @@ found:
+ 		struct pci_dev *bridge = bus->self;
+ 
+ 		if (!bridge || !pci_is_pcie(bridge) ||
+-		    bridge->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE)
++		    pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE)
+ 			return 0;
+ 
+-		if (bridge->pcie_type == PCI_EXP_TYPE_ROOT_PORT) {
++		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_ROOT_PORT) {
+ 			for (i = 0; i < atsru->devices_cnt; i++)
+ 				if (atsru->devices[i] == bridge)
+ 					return 1;
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+index bf20457..565772e 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+@@ -7470,7 +7470,7 @@ static pci_ers_result_t ixgbe_io_error_detected(struct pci_dev *pdev,
+ 		goto skip_bad_vf_detection;
+ 
+ 	bdev = pdev->bus->self;
+-	while (bdev && (bdev->pcie_type != PCI_EXP_TYPE_ROOT_PORT))
++	while (bdev && (pci_pcie_type(bdev) != PCI_EXP_TYPE_ROOT_PORT))
+ 		bdev = bdev->bus->self;
+ 
+ 	if (!bdev)
+diff --git a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
+index 342b3a7..01d6141 100644
+--- a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
++++ b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
+@@ -1382,7 +1382,7 @@ static void netxen_mask_aer_correctable(struct netxen_adapter *adapter)
+ 		adapter->ahw.board_type != NETXEN_BRDTYPE_P3_10G_TP)
+ 		return;
+ 
+-	if (root->pcie_type != PCI_EXP_TYPE_ROOT_PORT)
++	if (pci_pcie_type(root) != PCI_EXP_TYPE_ROOT_PORT)
+ 		return;
+ 
+ 	aer_pos = pci_find_ext_capability(root, PCI_EXT_CAP_ID_ERR);
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 74bbaf8..aeccc91 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -433,8 +433,8 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
+ 
+-	if (dev->pcie_type != PCI_EXP_TYPE_RC_END &&
+-	    dev->pcie_type != PCI_EXP_TYPE_ENDPOINT)
++	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
++	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+ 		return -ENODEV;
+ 
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
+@@ -503,7 +503,7 @@ found:
+ 	iov->self = dev;
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+ 	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+-	if (dev->pcie_type == PCI_EXP_TYPE_RC_END)
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+ 		iov->link = PCI_DEVFN(PCI_SLOT(dev->devfn), iov->link);
+ 
+ 	if (pdev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f3ea977..28eb55b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -885,7 +885,7 @@ static struct pci_cap_saved_state *pci_find_saved_cap(
+ 
+ static int pci_save_pcie_state(struct pci_dev *dev)
+ {
+-	int pos, i = 0;
++	int type, pos, i = 0;
+ 	struct pci_cap_saved_state *save_state;
+ 	u16 *cap;
+ 	u16 flags;
+@@ -903,13 +903,14 @@ static int pci_save_pcie_state(struct pci_dev *dev)
+ 
+ 	pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &flags);
+ 
+-	if (pcie_cap_has_devctl(dev->pcie_type, flags))
++	type = pci_pcie_type(dev);
++	if (pcie_cap_has_devctl(type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &cap[i++]);
+-	if (pcie_cap_has_lnkctl(dev->pcie_type, flags))
++	if (pcie_cap_has_lnkctl(type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &cap[i++]);
+-	if (pcie_cap_has_sltctl(dev->pcie_type, flags))
++	if (pcie_cap_has_sltctl(type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_SLTCTL, &cap[i++]);
+-	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
++	if (pcie_cap_has_rtctl(type, flags))
+ 		pci_read_config_word(dev, pos + PCI_EXP_RTCTL, &cap[i++]);
+ 
+ 	pos = pci_pcie_cap2(dev);
+@@ -924,7 +925,7 @@ static int pci_save_pcie_state(struct pci_dev *dev)
+ 
+ static void pci_restore_pcie_state(struct pci_dev *dev)
+ {
+-	int i = 0, pos;
++	int i = 0, pos, type;
+ 	struct pci_cap_saved_state *save_state;
+ 	u16 *cap;
+ 	u16 flags;
+@@ -937,13 +938,14 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+ 
+ 	pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &flags);
+ 
+-	if (pcie_cap_has_devctl(dev->pcie_type, flags))
++	type = pci_pcie_type(dev);
++	if (pcie_cap_has_devctl(type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, cap[i++]);
+-	if (pcie_cap_has_lnkctl(dev->pcie_type, flags))
++	if (pcie_cap_has_lnkctl(type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, cap[i++]);
+-	if (pcie_cap_has_sltctl(dev->pcie_type, flags))
++	if (pcie_cap_has_sltctl(type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_SLTCTL, cap[i++]);
+-	if (pcie_cap_has_rtctl(dev->pcie_type, flags))
++	if (pcie_cap_has_rtctl(type, flags))
+ 		pci_write_config_word(dev, pos + PCI_EXP_RTCTL, cap[i++]);
+ 
+ 	pos = pci_pcie_cap2(dev);
+@@ -2459,8 +2461,8 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ 		acs_flags &= (PCI_ACS_RR | PCI_ACS_CR |
+ 			      PCI_ACS_EC | PCI_ACS_DT);
+ 
+-	if (pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM ||
+-	    pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM ||
++	    pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+ 	    pdev->multifunction) {
+ 		pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+ 		if (!pos)
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 5222986..4e24cb8 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -288,7 +288,7 @@ static struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
+ 	while (1) {
+ 		if (!pci_is_pcie(dev))
+ 			break;
+-		if (dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
++		if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
+ 			return dev;
+ 		if (!dev->bus->self)
+ 			break;
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 58ad791..f7c6245 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -81,10 +81,11 @@ bool pci_aer_available(void)
+ static int set_device_error_reporting(struct pci_dev *dev, void *data)
+ {
+ 	bool enable = *((bool *)data);
++	int type = pci_pcie_type(dev);
+ 
+-	if ((dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT) ||
+-	    (dev->pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
+-	    (dev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)) {
++	if ((type == PCI_EXP_TYPE_ROOT_PORT) ||
++	    (type == PCI_EXP_TYPE_UPSTREAM) ||
++	    (type == PCI_EXP_TYPE_DOWNSTREAM)) {
+ 		if (enable)
+ 			pci_enable_pcie_error_reporting(dev);
+ 		else
+diff --git a/drivers/pci/pcie/aer/aerdrv_acpi.c b/drivers/pci/pcie/aer/aerdrv_acpi.c
+index 124f20f..5194a7d 100644
+--- a/drivers/pci/pcie/aer/aerdrv_acpi.c
++++ b/drivers/pci/pcie/aer/aerdrv_acpi.c
+@@ -60,7 +60,7 @@ static int aer_hest_parse(struct acpi_hest_header *hest_hdr, void *data)
+ 	p = (struct acpi_hest_aer_common *)(hest_hdr + 1);
+ 	if (p->flags & ACPI_HEST_GLOBAL) {
+ 		if ((pci_is_pcie(info->pci_dev) &&
+-		     info->pci_dev->pcie_type == pcie_type) || bridge)
++		     pci_pcie_type(info->pci_dev) == pcie_type) || bridge)
+ 			ff = !!(p->flags & ACPI_HEST_FIRMWARE_FIRST);
+ 	} else
+ 		if (hest_match_pci(p, info->pci_dev))
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 0ca0535..f551534 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -465,7 +465,7 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
+ 
+ 	if (driver && driver->reset_link) {
+ 		status = driver->reset_link(udev);
+-	} else if (udev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM) {
++	} else if (pci_pcie_type(udev) == PCI_EXP_TYPE_DOWNSTREAM) {
+ 		status = default_downstream_reset_link(udev);
+ 	} else {
+ 		dev_printk(KERN_DEBUG, &dev->dev,
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index b500840..2591603 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -412,7 +412,7 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	 * do ASPM for now.
+ 	 */
+ 	list_for_each_entry(child, &linkbus->devices, bus_list) {
+-		if (child->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) {
++		if (pci_pcie_type(child) == PCI_EXP_TYPE_PCI_BRIDGE) {
+ 			link->aspm_disable = ASPM_STATE_ALL;
+ 			break;
+ 		}
+@@ -425,8 +425,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 		struct aspm_latency *acceptable =
+ 			&link->acceptable[PCI_FUNC(child->devfn)];
+ 
+-		if (child->pcie_type != PCI_EXP_TYPE_ENDPOINT &&
+-		    child->pcie_type != PCI_EXP_TYPE_LEG_END)
++		if (pci_pcie_type(child) != PCI_EXP_TYPE_ENDPOINT &&
++		    pci_pcie_type(child) != PCI_EXP_TYPE_LEG_END)
+ 			continue;
+ 
+ 		pos = pci_pcie_cap(child);
+@@ -552,7 +552,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&link->children);
+ 	INIT_LIST_HEAD(&link->link);
+ 	link->pdev = pdev;
+-	if (pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM) {
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM) {
+ 		struct pcie_link_state *parent;
+ 		parent = pdev->bus->parent->self->link_state;
+ 		if (!parent) {
+@@ -585,12 +585,12 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 
+ 	if (!pci_is_pcie(pdev) || pdev->link_state)
+ 		return;
+-	if (pdev->pcie_type != PCI_EXP_TYPE_ROOT_PORT &&
+-	    pdev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM)
++	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
++	    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
+ 		return;
+ 
+ 	/* VIA has a strange chipset, root port is under a bridge */
+-	if (pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT &&
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+ 	    pdev->bus->self)
+ 		return;
+ 
+@@ -647,8 +647,8 @@ static void pcie_update_aspm_capable(struct pcie_link_state *root)
+ 		if (link->root != root)
+ 			continue;
+ 		list_for_each_entry(child, &linkbus->devices, bus_list) {
+-			if ((child->pcie_type != PCI_EXP_TYPE_ENDPOINT) &&
+-			    (child->pcie_type != PCI_EXP_TYPE_LEG_END))
++			if ((pci_pcie_type(child) != PCI_EXP_TYPE_ENDPOINT) &&
++			    (pci_pcie_type(child) != PCI_EXP_TYPE_LEG_END))
+ 				continue;
+ 			pcie_aspm_check_latency(child);
+ 		}
+@@ -663,8 +663,8 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 
+ 	if (!pci_is_pcie(pdev) || !parent || !parent->link_state)
+ 		return;
+-	if ((parent->pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
+-	    (parent->pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
++	if ((pci_pcie_type(parent) != PCI_EXP_TYPE_ROOT_PORT) &&
++	    (pci_pcie_type(parent) != PCI_EXP_TYPE_DOWNSTREAM))
+ 		return;
+ 
+ 	down_read(&pci_bus_sem);
+@@ -704,8 +704,8 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev)
+ 
+ 	if (aspm_disabled || !pci_is_pcie(pdev) || !link)
+ 		return;
+-	if ((pdev->pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
+-	    (pdev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
++	if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
++	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM))
+ 		return;
+ 	/*
+ 	 * Devices changed PM state, we should recheck if latency
+@@ -729,8 +729,8 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+ 	if (aspm_policy != POLICY_POWERSAVE)
+ 		return;
+ 
+-	if ((pdev->pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
+-	    (pdev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
++	if ((pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) &&
++	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM))
+ 		return;
+ 
+ 	down_read(&pci_bus_sem);
+@@ -757,8 +757,8 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem,
+ 	if (!pci_is_pcie(pdev))
+ 		return;
+ 
+-	if (pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pdev->pcie_type == PCI_EXP_TYPE_DOWNSTREAM)
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
++	    pci_pcie_type(pdev) == PCI_EXP_TYPE_DOWNSTREAM)
+ 		parent = pdev;
+ 	if (!parent || !parent->link_state)
+ 		return;
+@@ -933,8 +933,8 @@ void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
+ 	struct pcie_link_state *link_state = pdev->link_state;
+ 
+ 	if (!pci_is_pcie(pdev) ||
+-	    (pdev->pcie_type != PCI_EXP_TYPE_ROOT_PORT &&
+-	     pdev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM) || !link_state)
++	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
++	     pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM) || !link_state)
+ 		return;
+ 
+ 	if (link_state->aspm_support)
+@@ -950,8 +950,8 @@ void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
+ 	struct pcie_link_state *link_state = pdev->link_state;
+ 
+ 	if (!pci_is_pcie(pdev) ||
+-	    (pdev->pcie_type != PCI_EXP_TYPE_ROOT_PORT &&
+-	     pdev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM) || !link_state)
++	    (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
++	     pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM) || !link_state)
+ 		return;
+ 
+ 	if (link_state->aspm_support)
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 001f1b7..30897bf 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -120,7 +120,7 @@ static bool pcie_pme_from_pci_bridge(struct pci_bus *bus, u8 devfn)
+ 	if (!dev)
+ 		return false;
+ 
+-	if (pci_is_pcie(dev) && dev->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) {
++	if (pci_is_pcie(dev) && pci_pcie_type(dev) == PCI_EXP_TYPE_PCI_BRIDGE) {
+ 		down_read(&pci_bus_sem);
+ 		if (pcie_pme_walk_bus(bus))
+ 			found = true;
+@@ -335,13 +335,13 @@ static void pcie_pme_mark_devices(struct pci_dev *port)
+ 		struct pci_dev *dev;
+ 
+ 		/* Check if this is a root port event collector. */
+-		if (port->pcie_type != PCI_EXP_TYPE_RC_EC || !bus)
++		if (pci_pcie_type(port) != PCI_EXP_TYPE_RC_EC || !bus)
+ 			return;
+ 
+ 		down_read(&pci_bus_sem);
+ 		list_for_each_entry(dev, &bus->devices, bus_list)
+ 			if (pci_is_pcie(dev)
+-			    && dev->pcie_type == PCI_EXP_TYPE_RC_END)
++			    && pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+ 				pcie_pme_set_native(dev, NULL);
+ 		up_read(&pci_bus_sem);
+ 	}
+diff --git a/drivers/pci/pcie/portdrv_bus.c b/drivers/pci/pcie/portdrv_bus.c
+index 18bf90f..67be55a 100644
+--- a/drivers/pci/pcie/portdrv_bus.c
++++ b/drivers/pci/pcie/portdrv_bus.c
+@@ -38,7 +38,7 @@ static int pcie_port_bus_match(struct device *dev, struct device_driver *drv)
+ 		return 0;
+ 
+ 	if ((driver->port_type != PCIE_ANY_PORT) &&
+-	    (driver->port_type != pciedev->port->pcie_type))
++	    (driver->port_type != pci_pcie_type(pciedev->port)))
+ 		return 0;
+ 
+ 	return 1;
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 75915b3..bf320a9 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -298,7 +298,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 		services |= PCIE_PORT_SERVICE_VC;
+ 	/* Root ports are capable of generating PME too */
+ 	if ((cap_mask & PCIE_PORT_SERVICE_PME)
+-	    && dev->pcie_type == PCI_EXP_TYPE_ROOT_PORT) {
++	    && pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) {
+ 		services |= PCIE_PORT_SERVICE_PME;
+ 		/*
+ 		 * Disable PME interrupt on this port in case it's been enabled
+@@ -336,7 +336,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+ 	device->release = release_pcie_device;	/* callback to free pcie dev */
+ 	dev_set_name(device, "%s:pcie%02x",
+ 		     pci_name(pdev),
+-		     get_descriptor_id(pdev->pcie_type, service));
++		     get_descriptor_id(pci_pcie_type(pdev), service));
+ 	device->parent = &pdev->dev;
+ 	device_enable_async_suspend(device);
+ 
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 3a7eefc..24d1463 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -95,7 +95,7 @@ static int pcie_port_resume_noirq(struct device *dev)
+ 	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
+ 	 * bits now just in case (shouldn't hurt).
+ 	 */
+-	if(pdev->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+ 		pcie_clear_root_pme_status(pdev);
+ 	return 0;
  }
+@@ -186,9 +186,9 @@ static int __devinit pcie_portdrv_probe(struct pci_dev *dev,
+ 	int status;
  
-+static efi_status_t setup_efi_pci(struct boot_params *params)
-+{
-+	efi_pci_io_protocol *pci;
-+	efi_status_t status;
-+	void **pci_handle;
-+	efi_guid_t pci_proto = EFI_PCI_IO_PROTOCOL_GUID;
-+	unsigned long nr_pci, size = 0;
-+	int i;
-+	struct setup_data *data;
-+
-+	data = (struct setup_data *)params->hdr.setup_data;
-+
-+	while (data && data->next)
-+		data = (struct setup_data *)data->next;
-+
-+	status = efi_call_phys5(sys_table->boottime->locate_handle,
-+				EFI_LOCATE_BY_PROTOCOL, &pci_proto,
-+				NULL, &size, pci_handle);
-+
-+	if (status == EFI_BUFFER_TOO_SMALL) {
-+		status = efi_call_phys3(sys_table->boottime->allocate_pool,
-+					EFI_LOADER_DATA, size, &pci_handle);
-+
-+		if (status != EFI_SUCCESS)
-+			return status;
-+
-+		status = efi_call_phys5(sys_table->boottime->locate_handle,
-+					EFI_LOCATE_BY_PROTOCOL, &pci_proto,
-+					NULL, &size, pci_handle);
-+	}
-+
-+	if (status != EFI_SUCCESS)
-+		goto free_handle;
-+
-+	nr_pci = size / sizeof(void *);
-+	for (i = 0; i < nr_pci; i++) {
-+		void *h = pci_handle[i];
-+		uint64_t attributes;
-+		struct pci_setup_rom *rom;
-+
-+		status = efi_call_phys3(sys_table->boottime->handle_protocol,
-+					h, &pci_proto, &pci);
-+
-+		if (status != EFI_SUCCESS)
-+			continue;
-+
-+		if (!pci)
-+			continue;
-+
-+		status = efi_call_phys4(pci->attributes, pci,
-+					EfiPciIoAttributeOperationGet, 0,
-+					&attributes);
-+
-+		if (status != EFI_SUCCESS)
-+			continue;
-+
-+		if (!attributes & EFI_PCI_IO_ATTRIBUTE_EMBEDDED_ROM)
-+			continue;
-+
-+		if (!pci->romimage || !pci->romsize)
-+			continue;
-+
-+		size = pci->romsize + sizeof(*rom);
-+
-+		status = efi_call_phys3(sys_table->boottime->allocate_pool,
-+				EFI_LOADER_DATA, size, &rom);
-+
-+		if (status != EFI_SUCCESS)
-+			continue;
-+
-+		rom->data.type = SETUP_PCI;
-+		rom->data.len = size - sizeof(struct setup_data);
-+		rom->data.next = 0;
-+		rom->pcilen = pci->romsize;
-+
-+		status = efi_call_phys5(pci->pci.read, pci,
-+					EfiPciIoWidthUint16, PCI_VENDOR_ID,
-+					1, &(rom->vendor));
-+
-+		if (status != EFI_SUCCESS)
-+			goto free_struct;
-+
-+		status = efi_call_phys5(pci->pci.read, pci,
-+					EfiPciIoWidthUint16, PCI_DEVICE_ID,
-+					1, &(rom->devid));
-+
-+		if (status != EFI_SUCCESS)
-+			goto free_struct;
-+
-+		status = efi_call_phys5(pci->get_location, pci,
-+					&(rom->segment), &(rom->bus),
-+					&(rom->device), &(rom->function));
-+
-+		if (status != EFI_SUCCESS)
-+			goto free_struct;
-+
-+		memcpy(rom->romdata, pci->romimage, pci->romsize);
-+
-+		if (data)
-+			data->next = (uint64_t)rom;
-+		else
-+			params->hdr.setup_data = (uint64_t)rom;
-+
-+		data = (struct setup_data *)rom;
-+
-+		continue;
-+	free_struct:
-+		efi_call_phys1(sys_table->boottime->free_pool, rom);
-+	}
-+
-+free_handle:
-+	efi_call_phys1(sys_table->boottime->free_pool, pci_handle);
-+	return status;
-+}
-+
- /*
-  * See if we have Graphics Output Protocol
-  */
-@@ -1020,6 +1136,8 @@ struct boot_params *efi_main(void *handle, efi_system_table_t *_table,
+ 	if (!pci_is_pcie(dev) ||
+-	    ((dev->pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
+-	     (dev->pcie_type != PCI_EXP_TYPE_UPSTREAM) &&
+-	     (dev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM)))
++	    ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
++	     (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
++	     (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM)))
+ 		return -ENODEV;
  
- 	setup_graphics(boot_params);
+ 	if (!dev->irq && dev->pin) {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ba4d855..1d52a43 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1384,9 +1384,9 @@ static int only_one_child(struct pci_bus *bus)
  
-+	setup_efi_pci(boot_params);
-+
- 	status = efi_call_phys3(sys_table->boottime->allocate_pool,
- 				EFI_LOADER_DATA, sizeof(*gdt),
- 				(void **)&gdt);
-diff --git a/arch/x86/include/asm/bootparam.h b/arch/x86/include/asm/bootparam.h
-index 2ad874c..92862cd 100644
---- a/arch/x86/include/asm/bootparam.h
-+++ b/arch/x86/include/asm/bootparam.h
-@@ -13,6 +13,7 @@
- #define SETUP_NONE			0
- #define SETUP_E820_EXT			1
- #define SETUP_DTB			2
-+#define SETUP_PCI			3
+ 	if (!parent || !pci_is_pcie(parent))
+ 		return 0;
+-	if (parent->pcie_type == PCI_EXP_TYPE_ROOT_PORT)
++	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+ 		return 1;
+-	if (parent->pcie_type == PCI_EXP_TYPE_DOWNSTREAM &&
++	if (pci_pcie_type(parent) == PCI_EXP_TYPE_DOWNSTREAM &&
+ 	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 1;
+ 	return 0;
+@@ -1463,7 +1463,7 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
+ 	 */
+ 	if (dev->is_hotplug_bridge && (!list_is_singular(&dev->bus->devices) ||
+ 	     (dev->bus->self &&
+-	      dev->bus->self->pcie_type != PCI_EXP_TYPE_ROOT_PORT)))
++	      pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)))
+ 		*smpss = 0;
  
- /* extensible setup data list node */
- struct setup_data {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index df75d07..11491d1 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -171,4 +171,16 @@ cpumask_of_pcibus(const struct pci_bus *bus)
- }
- #endif
+ 	if (*smpss > dev->pcie_mpss)
+@@ -1479,7 +1479,8 @@ static void pcie_write_mps(struct pci_dev *dev, int mps)
+ 	if (pcie_bus_config == PCIE_BUS_PERFORMANCE) {
+ 		mps = 128 << dev->pcie_mpss;
  
-+struct pci_setup_rom {
-+	struct setup_data data;
-+	uint16_t vendor;
-+	uint16_t devid;
-+	uint64_t pcilen;
-+	unsigned long segment;
-+	unsigned long bus;
-+	unsigned long device;
-+	unsigned long function;
-+	uint8_t romdata[0];
-+};
-+
- #endif /* _ASM_X86_PCI_H */
-diff --git a/include/linux/efi.h b/include/linux/efi.h
-index ec45ccd..bf7e867 100644
---- a/include/linux/efi.h
-+++ b/include/linux/efi.h
-@@ -196,6 +196,77 @@ typedef struct {
- 	void *create_event_ex;
- } efi_boot_services_t;
- 
-+typedef enum {
-+	EfiPciIoWidthUint8,
-+	EfiPciIoWidthUint16,
-+	EfiPciIoWidthUint32,
-+	EfiPciIoWidthUint64,
-+	EfiPciIoWidthFifoUint8,
-+	EfiPciIoWidthFifoUint16,
-+	EfiPciIoWidthFifoUint32,
-+	EfiPciIoWidthFifoUint64,
-+	EfiPciIoWidthFillUint8,
-+	EfiPciIoWidthFillUint16,
-+	EfiPciIoWidthFillUint32,
-+	EfiPciIoWidthFillUint64,
-+	EfiPciIoWidthMaximum
-+} EFI_PCI_IO_PROTOCOL_WIDTH;
-+
-+typedef enum {
-+	EfiPciIoAttributeOperationGet,
-+	EfiPciIoAttributeOperationSet,
-+	EfiPciIoAttributeOperationEnable,
-+	EfiPciIoAttributeOperationDisable,
-+	EfiPciIoAttributeOperationSupported,
-+    EfiPciIoAttributeOperationMaximum
-+} EFI_PCI_IO_PROTOCOL_ATTRIBUTE_OPERATION;
-+
-+
-+typedef struct {
-+	void *read;
-+	void *write;
-+} efi_pci_io_protocol_access_t;
-+
-+typedef struct {
-+	void *poll_mem;
-+	void *poll_io;
-+	efi_pci_io_protocol_access_t mem;
-+	efi_pci_io_protocol_access_t io;
-+	efi_pci_io_protocol_access_t pci;
-+	void *copy_mem;
-+	void *map;
-+	void *unmap;
-+	void *allocate_buffer;
-+	void *free_buffer;
-+	void *flush;
-+	void *get_location;
-+	void *attributes;
-+	void *get_bar_attributes;
-+	void *set_bar_attributes;
-+	uint64_t romsize;
-+	void *romimage;
-+} efi_pci_io_protocol;
-+
-+#define EFI_PCI_IO_ATTRIBUTE_ISA_MOTHERBOARD_IO 0x0001
-+#define EFI_PCI_IO_ATTRIBUTE_ISA_IO 0x0002
-+#define EFI_PCI_IO_ATTRIBUTE_VGA_PALETTE_IO 0x0004
-+#define EFI_PCI_IO_ATTRIBUTE_VGA_MEMORY 0x0008
-+#define EFI_PCI_IO_ATTRIBUTE_VGA_IO 0x0010
-+#define EFI_PCI_IO_ATTRIBUTE_IDE_PRIMARY_IO 0x0020
-+#define EFI_PCI_IO_ATTRIBUTE_IDE_SECONDARY_IO 0x0040
-+#define EFI_PCI_IO_ATTRIBUTE_MEMORY_WRITE_COMBINE 0x0080
-+#define EFI_PCI_IO_ATTRIBUTE_IO 0x0100
-+#define EFI_PCI_IO_ATTRIBUTE_MEMORY 0x0200
-+#define EFI_PCI_IO_ATTRIBUTE_BUS_MASTER 0x0400
-+#define EFI_PCI_IO_ATTRIBUTE_MEMORY_CACHED 0x0800
-+#define EFI_PCI_IO_ATTRIBUTE_MEMORY_DISABLE 0x1000
-+#define EFI_PCI_IO_ATTRIBUTE_EMBEDDED_DEVICE 0x2000
-+#define EFI_PCI_IO_ATTRIBUTE_EMBEDDED_ROM 0x4000
-+#define EFI_PCI_IO_ATTRIBUTE_DUAL_ADDRESS_CYCLE 0x8000
-+#define EFI_PCI_IO_ATTRIBUTE_ISA_IO_16 0x10000
-+#define EFI_PCI_IO_ATTRIBUTE_VGA_PALETTE_IO_16 0x20000
-+#define EFI_PCI_IO_ATTRIBUTE_VGA_IO_16 0x40000
-+
- /*
-  * Types and defines for EFI ResetSystem
-  */
+-		if (dev->pcie_type != PCI_EXP_TYPE_ROOT_PORT && dev->bus->self)
++		if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT &&
++		    dev->bus->self)
+ 			/* For "Performance", the assumption is made that
+ 			 * downstream communication will never be larger than
+ 			 * the MRRS.  So, the MPS only needs to be configured
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 993d4a0..621b162 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -41,7 +41,7 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+ 			continue;
+ 		}
+ 		/* PCI device should connect to a PCIe bridge */
+-		if (pdev->pcie_type != PCI_EXP_TYPE_PCI_BRIDGE) {
++		if (pci_pcie_type(pdev) != PCI_EXP_TYPE_PCI_BRIDGE) {
+ 			/* Busted hardware? */
+ 			WARN_ON_ONCE(1);
+ 			return NULL;
 -- 
-1.7.11.2
+1.7.9.5
 
