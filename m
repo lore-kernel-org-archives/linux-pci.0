@@ -1,62 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757777Ab2HQXgw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:52 -0400
-Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:52 -0700 (PDT)
-Subject: [PATCH v2 13/16] parisc/PCI: Enable PERR/SERR on all devices
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-parisc@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:51 -0600
-Message-ID: <20120817233651.10973.83188.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61939 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755556Ab2HAP7k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:59:40 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Mike Marciniszyn <infinipath@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 27/32] PCI/qib: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:32 +0800
+Message-Id: <1343836477-7287-28-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, we enabled PERR & SERR for the first device on the bus, but
-left other devices alone.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-parisc@vger.kernel.org
+Use PCIe capabilities access functions to simplify qib driver's implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/parisc/lba_pci.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/infiniband/hw/qib/qib_pcie.c |   40 +++++++++++++++-------------------
+ 1 file changed, 17 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index 4f9cf24..4ce57c9 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -630,6 +630,7 @@ static void
- lba_fixup_bus(struct pci_bus *bus)
+diff --git a/drivers/infiniband/hw/qib/qib_pcie.c b/drivers/infiniband/hw/qib/qib_pcie.c
+index 790646e..9a5cb02 100644
+--- a/drivers/infiniband/hw/qib/qib_pcie.c
++++ b/drivers/infiniband/hw/qib/qib_pcie.c
+@@ -271,10 +271,9 @@ int qib_pcie_params(struct qib_devdata *dd, u32 minw, u32 *nent,
+ 		    struct qib_msix_entry *entry)
  {
- 	struct list_head *ln;
-+	struct pci_dev *dev;
- #ifdef FBB_SUPPORT
- 	u16 status;
- #endif
-@@ -712,8 +713,8 @@ lba_fixup_bus(struct pci_bus *bus)
+ 	u16 linkstat, speed;
+-	int pos = 0, pose, ret = 1;
++	int pos = 0, ret = 1;
  
- 	list_for_each(ln, &bus->devices) {
- 		int i;
--		struct pci_dev *dev = pci_dev_b(ln);
+-	pose = pci_pcie_cap(dd->pcidev);
+-	if (!pose) {
++	if (!pci_is_pcie(dd->pcidev)) {
+ 		qib_dev_err(dd, "Can't find PCI Express capability!\n");
+ 		/* set up something... */
+ 		dd->lbus_width = 1;
+@@ -296,7 +295,7 @@ int qib_pcie_params(struct qib_devdata *dd, u32 minw, u32 *nent,
+ 	if (!pos)
+ 		qib_enable_intx(dd->pcidev);
  
-+		dev = pci_dev_b(ln);
- 		DBG("lba_fixup_bus() %s\n", pci_name(dev));
+-	pci_read_config_word(dd->pcidev, pose + PCI_EXP_LNKSTA, &linkstat);
++	pci_pcie_capability_read_word(dd->pcidev, PCI_EXP_LNKSTA, &linkstat);
+ 	/*
+ 	 * speed is bits 0-3, linkwidth is bits 4-8
+ 	 * no defines for them in headers
+@@ -514,7 +513,6 @@ static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
+ {
+ 	int r;
+ 	struct pci_dev *parent;
+-	int ppos;
+ 	u16 devid;
+ 	u32 mask, bits, val;
  
- 		/* Virtualize Device/Bridge Resources. */
-@@ -771,6 +772,7 @@ lba_fixup_bus(struct pci_bus *bus)
+@@ -527,8 +525,7 @@ static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
+ 		qib_devinfo(dd->pcidev, "Parent not root\n");
+ 		return 1;
+ 	}
+-	ppos = pci_pcie_cap(parent);
+-	if (!ppos)
++	if (!pci_is_pcie(parent))
+ 		return 1;
+ 	if (parent->vendor != 0x8086)
+ 		return 1;
+@@ -585,7 +582,6 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
+ {
+ 	int ret = 1; /* Assume the worst */
+ 	struct pci_dev *parent;
+-	int ppos, epos;
+ 	u16 pcaps, pctl, ecaps, ectl;
+ 	int rc_sup, ep_sup;
+ 	int rc_cur, ep_cur;
+@@ -596,19 +592,15 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
+ 		qib_devinfo(dd->pcidev, "Parent not root\n");
+ 		goto bail;
+ 	}
+-	ppos = pci_pcie_cap(parent);
+-	if (ppos) {
+-		pci_read_config_word(parent, ppos + PCI_EXP_DEVCAP, &pcaps);
+-		pci_read_config_word(parent, ppos + PCI_EXP_DEVCTL, &pctl);
+-	} else
++
++	if (!pci_is_pcie(parent) || !pci_is_pcie(dd->pcidev))
+ 		goto bail;
++	pci_pcie_capability_read_word(parent, PCI_EXP_DEVCAP, &pcaps);
++	pci_pcie_capability_read_word(parent, PCI_EXP_DEVCTL, &pctl);
+ 	/* Find out supported and configured values for endpoint (us) */
+-	epos = pci_pcie_cap(dd->pcidev);
+-	if (epos) {
+-		pci_read_config_word(dd->pcidev, epos + PCI_EXP_DEVCAP, &ecaps);
+-		pci_read_config_word(dd->pcidev, epos + PCI_EXP_DEVCTL, &ectl);
+-	} else
+-		goto bail;
++	pci_pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVCAP, &ecaps);
++	pci_pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVCTL, &ectl);
++
+ 	ret = 0;
+ 	/* Find max payload supported by root, endpoint */
+ 	rc_sup = fld2val(pcaps, PCI_EXP_DEVCAP_PAYLOAD);
+@@ -627,14 +619,15 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
+ 		rc_cur = rc_sup;
+ 		pctl = (pctl & ~PCI_EXP_DEVCTL_PAYLOAD) |
+ 			val2fld(rc_cur, PCI_EXP_DEVCTL_PAYLOAD);
+-		pci_write_config_word(parent, ppos + PCI_EXP_DEVCTL, pctl);
++		pci_pcie_capability_write_word(parent, PCI_EXP_DEVCTL, pctl);
+ 	}
+ 	/* If less than (allowed, supported), bump endpoint payload */
+ 	if (rc_sup > ep_cur) {
+ 		ep_cur = rc_sup;
+ 		ectl = (ectl & ~PCI_EXP_DEVCTL_PAYLOAD) |
+ 			val2fld(ep_cur, PCI_EXP_DEVCTL_PAYLOAD);
+-		pci_write_config_word(dd->pcidev, epos + PCI_EXP_DEVCTL, ectl);
++		pci_pcie_capability_write_word(dd->pcidev,
++					       PCI_EXP_DEVCTL, ectl);
+ 	}
  
- 	/* Lastly enable FBB/PERR/SERR on all devices too */
- 	list_for_each(ln, &bus->devices) {
-+		dev = pci_dev_b(ln);
- 		(void) pci_read_config_word(dev, PCI_COMMAND, &status);
- 		status |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR | fbb_enable;
- 		(void) pci_write_config_word(dev, PCI_COMMAND, status);
+ 	/*
+@@ -652,13 +645,14 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
+ 		rc_cur = rc_sup;
+ 		pctl = (pctl & ~PCI_EXP_DEVCTL_READRQ) |
+ 			val2fld(rc_cur, PCI_EXP_DEVCTL_READRQ);
+-		pci_write_config_word(parent, ppos + PCI_EXP_DEVCTL, pctl);
++		pci_pcie_capability_write_word(parent, PCI_EXP_DEVCTL, pctl);
+ 	}
+ 	if (rc_sup > ep_cur) {
+ 		ep_cur = rc_sup;
+ 		ectl = (ectl & ~PCI_EXP_DEVCTL_READRQ) |
+ 			val2fld(ep_cur, PCI_EXP_DEVCTL_READRQ);
+-		pci_write_config_word(dd->pcidev, epos + PCI_EXP_DEVCTL, ectl);
++		pci_pcie_capability_write_word(dd->pcidev,
++					       PCI_EXP_DEVCTL, ectl);
+ 	}
+ bail:
+ 	return ret;
+-- 
+1.7.9.5
 
