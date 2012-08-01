@@ -1,52 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:58494 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab2HVRu3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 13:50:29 -0400
-Received: by lbbgj3 with SMTP id gj3so807394lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 10:50:27 -0700 (PDT)
+Received: from avon.wwwdotorg.org ([70.85.31.133]:60443 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154Ab2HARCX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 13:02:23 -0400
+Message-ID: <5019611A.2060804@wwwdotorg.org>
+Date: Wed, 01 Aug 2012 11:02:18 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <50303561.4020707@xenotime.net>
-References: <50303561.4020707@xenotime.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Aug 2012 10:50:07 -0700
-Message-ID: <CAErSpo7yTV=+5o90xf6xe+zdEAqrGEMKG2QYy5aSWxtzMUMaJQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: fix drivers/pci/pci.c kernel-doc warnings
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: linux-pci@vger.kernel.org
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <50180547.9040603@wwwdotorg.org> <20120801063545.GA26791@avionic-0098.adnet.avionic-design.de>
+In-Reply-To: <20120801063545.GA26791@avionic-0098.adnet.avionic-design.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 18, 2012 at 5:37 PM, Randy Dunlap <rdunlap@xenotime.net> wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
->
-> Fix kernel-doc warnings in drivers/pci/pci.c:
->
-> Warning(drivers/pci/pci.c:1550): No description found for parameter 'pci_dev'
-> Warning(drivers/pci/pci.c:1550): Excess function parameter 'dev' description in 'pci_wakeup'
+On 08/01/2012 12:35 AM, Thierry Reding wrote:
+> On Tue, Jul 31, 2012 at 10:18:15AM -0600, Stephen Warren wrote:
+>> On 07/26/2012 01:55 PM, Thierry Reding wrote:
+>>> This patch series adds support for device tree based probing of
+>>> the PCIe controller found on Tegra SoCs.
+>> 
+>> Thierry,
+>> 
+>> I think one thing that would help here would be to split up this
+>> series into one per subsystem, and to get all the dependencies
+>> merged by the respective maintainers. Preferably, each subsystem
+>> would export a stable branch (perhaps consisting of just these
+>> patches) that I can then merge into the Tegra tree and use as a
+>> basis for the PCIe driver itself. Hopefully this approach will
+>> get more traction on all the non-Tegra changes. Does that sound
+>> like a good plan?
+> 
+> I don't understand. The series is already split up into
+> per-subsystem patches. I just didn't want to post them separately
+> so everybody on Cc would be able to see the big picture and the
+> reason why the patch was required.
 
-Applied, thanks!
+There are separate patches that touch the different subsystems, but
+they're all scattered throughout the one series, rather than having e.g.:
 
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> Cc:     Bjorn Helgaas <bhelgaas@google.com>
-> Cc:     linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> --- lnx-36-rc2.orig/drivers/pci/pci.c
-> +++ lnx-36-rc2/drivers/pci/pci.c
-> @@ -1543,7 +1543,7 @@ void pci_pme_wakeup_bus(struct pci_bus *
->
->  /**
->   * pci_wakeup - Wake up a PCI device
-> - * @dev: Device to handle.
-> + * @pci_dev: Device to handle.
->   * @ign: ignored parameter
->   */
->  static int pci_wakeup(struct pci_dev *pci_dev, void *ign)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+* a series for the PCI tree
+* a series for the ARM core tree
+* a series for the OF/DT tree
+* a series for the Tegra tree, which indicates it depends on all of those.
+
+I'm wondering if the reason you haven't seen much discussion/Acks from
+the maintainers of the non-Tegra trees is because this is a big scary
+series that touches a lot of stuff, and it's not necessarily clear for
+people unfamiliar with it why they're being CCd on it.
