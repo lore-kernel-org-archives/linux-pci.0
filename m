@@ -1,91 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:38941 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754831Ab2HTNsQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Aug 2012 09:48:16 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Mon, 20 Aug 2012 09:48:13 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id B208F38C805E
-	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:47:45 -0400 (EDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7KDliFZ195614
-	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:47:45 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7KDkm7J005108
-	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 07:46:58 -0600
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org,
-	weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
-	yinghai@kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 7/8] ppc/pci: override pcibios_window_alignment
-Date: Mon, 20 Aug 2012 21:46:34 +0800
-Message-Id: <1345470395-17295-8-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	John Ronciak <john.ronciak@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 17/32] PCI/igb: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:22 +0800
+Message-Id: <1343836477-7287-18-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pcibios_window_alignment() has been implemented as "weak"
-in PCI core to return the default alignment of I/O and memory windows
-for the associated p2p bridge. The patch adds same function to
-override the weak one so that the default alignment could be changed
-for those platforms (e.g. powernv).
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+Use PCIe capabilities access functions to simplify Intel ethernet drivers'
+implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/include/asm/machdep.h |    3 +++
- arch/powerpc/kernel/pci-common.c   |   20 ++++++++++++++++++++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+ drivers/net/ethernet/intel/e1000e/netdev.c |   27 ++++++++-------------------
+ drivers/net/ethernet/intel/igb/igb_main.c  |   12 ++----------
+ 2 files changed, 10 insertions(+), 29 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 42ce570..f7706d7 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -214,6 +214,9 @@ struct machdep_calls {
- 	/* Called after scan and before resource survey */
- 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
- 
-+	/* Called during PCI resource reassignment */
-+	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
-+
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index a4b0435..30b647f 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -5582,16 +5582,15 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
  	 */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 2aa04f2..43fea54 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -99,6 +99,26 @@ void pcibios_free_controller(struct pci_controller *phb)
- 		kfree(phb);
+ 	if (adapter->flags & FLAG_IS_QUAD_PORT) {
+ 		struct pci_dev *us_dev = pdev->bus->self;
+-		int pos = pci_pcie_cap(us_dev);
+ 		u16 devctl;
+ 
+-		pci_read_config_word(us_dev, pos + PCI_EXP_DEVCTL, &devctl);
+-		pci_write_config_word(us_dev, pos + PCI_EXP_DEVCTL,
+-		                      (devctl & ~PCI_EXP_DEVCTL_CERE));
++		pci_pcie_capability_read_word(us_dev, PCI_EXP_DEVCTL, &devctl);
++		pci_pcie_capability_write_word(us_dev, PCI_EXP_DEVCTL,
++					       (devctl & ~PCI_EXP_DEVCTL_CERE));
+ 
+ 		e1000_power_off(pdev, sleep, wake);
+ 
+-		pci_write_config_word(us_dev, pos + PCI_EXP_DEVCTL, devctl);
++		pci_pcie_capability_write_word(us_dev, PCI_EXP_DEVCTL, devctl);
+ 	} else {
+ 		e1000_power_off(pdev, sleep, wake);
+ 	}
+@@ -5605,25 +5604,15 @@ static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+ #else
+ static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+ {
+-	int pos;
+-	u16 reg16;
+-
+ 	/*
+ 	 * Both device and parent should have the same ASPM setting.
+ 	 * Disable ASPM in downstream component first and then upstream.
+ 	 */
+-	pos = pci_pcie_cap(pdev);
+-	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
+-	reg16 &= ~state;
+-	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
+-
+-	if (!pdev->bus->self)
+-		return;
++	pci_pcie_capability_change_word(pdev, PCI_EXP_LNKCTL, 0, state);
+ 
+-	pos = pci_pcie_cap(pdev->bus->self);
+-	pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
+-	reg16 &= ~state;
+-	pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
++	if (pdev->bus->self)
++		pci_pcie_capability_change_word(pdev->bus->self, PCI_EXP_LNKCTL,
++						0, state);
+ }
+ #endif
+ static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index dd3bfe8..3d46830 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -6446,28 +6446,20 @@ static int igb_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd)
+ s32 igb_read_pcie_cap_reg(struct e1000_hw *hw, u32 reg, u16 *value)
+ {
+ 	struct igb_adapter *adapter = hw->back;
+-	u16 cap_offset;
+ 
+-	cap_offset = adapter->pdev->pcie_cap;
+-	if (!cap_offset)
++	if (pci_pcie_capability_read_word(adapter->pdev, reg, value))
+ 		return -E1000_ERR_CONFIG;
+ 
+-	pci_read_config_word(adapter->pdev, cap_offset + reg, value);
+-
+ 	return 0;
  }
  
-+/*
-+ * The function is used to return the minimal alignment
-+ * for memory or I/O windows of the associated P2P bridge.
-+ * By default, 4KiB alignment for I/O windows and 1MiB for
-+ * memory windows.
-+ */
-+resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-+					 unsigned long type)
-+{
-+	if (ppc_md.pcibios_window_alignment)
-+		return ppc_md.pcibios_window_alignment(bus, type);
-+
-+	/*
-+	 * PCI core will figure out the default
-+	 * alignment: 4KiB for I/O and 1MiB for
-+	 * memory window.
-+	 */
-+	return 1;
-+}
-+
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+ s32 igb_write_pcie_cap_reg(struct e1000_hw *hw, u32 reg, u16 *value)
  {
- #ifdef CONFIG_PPC64
+ 	struct igb_adapter *adapter = hw->back;
+-	u16 cap_offset;
+ 
+-	cap_offset = adapter->pdev->pcie_cap;
+-	if (!cap_offset)
++	if (pci_pcie_capability_write_word(adapter->pdev, reg, *value))
+ 		return -E1000_ERR_CONFIG;
+ 
+-	pci_write_config_word(adapter->pdev, cap_offset + reg, *value);
+-
+ 	return 0;
+ }
+ 
 -- 
-1.7.5.4
+1.7.9.5
 
