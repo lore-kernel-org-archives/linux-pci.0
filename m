@@ -1,175 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:49349 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750851Ab2GQFXm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jul 2012 01:23:42 -0400
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Mon, 16 Jul 2012 23:23:41 -0600
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 8C8A03E40051
-	for <linux-pci@vger.kernel.org>; Tue, 17 Jul 2012 05:23:38 +0000 (WET)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q6H5NdvF055518
-	for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 23:23:39 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q6H5NbmE007588
-	for <linux-pci@vger.kernel.org>; Mon, 16 Jul 2012 23:23:38 -0600
-Date: Tue, 17 Jul 2012 13:23:33 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, bhelgaas@google.com,
-	benh@kernel.crashing.org, yinghai@kernel.org
-Subject: Re: [PATCH 05/15] pci: resource assignment based on p2p alignment
-Message-ID: <20120717052333.GE2369@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <1342491799-30303-1-git-send-email-shangw@linux.vnet.ibm.com>
- <1342491799-30303-6-git-send-email-shangw@linux.vnet.ibm.com>
- <20120717050547.GD2369@ram-ThinkPad-T61>
+Received: from moutng.kundenserver.de ([212.227.17.8]:65068 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360Ab2HAGyp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 02:54:45 -0400
+Date: Wed, 1 Aug 2012 08:54:37 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-tegra@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	Colin Cross <ccross@android.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 09/10] of: Add of_pci_parse_ranges()
+Message-ID: <20120801065437.GB26791@avionic-0098.adnet.avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <1343332512-28762-10-git-send-email-thierry.reding@avionic-design.de>
+ <50183B03.2090809@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120717050547.GD2369@ram-ThinkPad-T61>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oLBj+sq0vYjzfsbl"
+In-Reply-To: <50183B03.2090809@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 17, 2012 at 01:05:47PM +0800, Ram Pai wrote:
-> On Tue, Jul 17, 2012 at 10:23:17AM +0800, Gavin Shan wrote:
-> > The patch changes function pbus_size_io() and pbus_size_mem() to
-> > do resource (I/O, memory and prefetchable memory) reassignment
-> > based on the minimal alignments for the p2p bridge, which was
-> > retrieved by function window_alignment().
-> > 
-> > Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+
+--oLBj+sq0vYjzfsbl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Jul 31, 2012 at 03:07:31PM -0500, Rob Herring wrote:
+> On 07/26/2012 02:55 PM, Thierry Reding wrote:
+> > This new function parses the ranges property of PCI device nodes into
+> > an array of struct resource elements. It is useful in multiple-port PCI
+> > host controller drivers to collect information about the ranges that it
+> > needs to forward to the respective ports.
+>=20
+> It seems to me that some of the DT PCI code in arch/powerpc/kernel/pci*
+> like pci_process_bridge_OF_ranges() should apply for ARM as well.
+>=20
+> Each arch defining their own pci controller structs complicates this,
+> but I would think at least the DT parsing can be common.
+
+Yes, there's quite a lot of room for refactoring. When I first started
+work on this there had been some discussion about whether it would make
+sense to move PCI controller drivers into a common location to make it
+easier to refactor but the consensus at the time was that this should
+not be done.
+
+I still think this might be worthwhile, but I have other things that I
+need to finish first.
+
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 > > ---
-> >  drivers/pci/setup-bus.c |   13 +++++++++----
-> >  1 files changed, 9 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index c0fb9da..a29483a 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -731,6 +731,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> >  	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO);
-> >  	unsigned long size = 0, size0 = 0, size1 = 0;
-> >  	resource_size_t children_add_size = 0;
-> > +	resource_size_t io_align;
-> > 
-> >  	if (!b_res)
-> >   		return;
-> > @@ -756,13 +757,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> >  				children_add_size += get_res_add_size(realloc_head, r);
-> >  		}
-> >  	}
+> > Changes in v3:
+> > - new patch
+> >=20
+> >  drivers/of/of_pci.c    | 84 ++++++++++++++++++++++++++++++++++++++++++=
++++++++-
+> >  include/linux/of_pci.h |  2 ++
+> >  2 files changed, 85 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index 13e37e2..bcff301 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
+> > @@ -1,7 +1,8 @@
+> >  #include <linux/kernel.h>
+> >  #include <linux/export.h>
+> > -#include <linux/of.h>
+> > +#include <linux/of_address.h>
+> >  #include <linux/of_pci.h>
+> > +#include <linux/slab.h>
+> >  #include <asm/prom.h>
+> > =20
+> >  static inline int __of_pci_pci_compare(struct device_node *node,
+> > @@ -40,3 +41,84 @@ struct device_node *of_pci_find_child_device(struct =
+device_node *parent,
+> >  	return NULL;
+> >  }
+> >  EXPORT_SYMBOL_GPL(of_pci_find_child_device);
 > > +
-> > +	io_align = window_alignment(bus, IORESOURCE_IO);
-> 
-> this should also be
-> 	io_align = max(4096, window_alignment(bus, IORESOURCE_IO));
-> 
-> right?
-> 
-> 
-> >  	size0 = calculate_iosize(size, min_size, size1,
-> > -			resource_size(b_res), 4096);
-> > +			resource_size(b_res), io_align);
-> >  	if (children_add_size > add_size)
-> >  		add_size = children_add_size;
-> >  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
-> >  		calculate_iosize(size, min_size, add_size + size1,
-> > -			resource_size(b_res), 4096);
-> > +			resource_size(b_res), io_align);
-> >  	if (!size0 && !size1) {
-> >  		if (b_res->start || b_res->end)
-> >  			dev_info(&bus->self->dev, "disabling bridge window "
-> > @@ -772,11 +775,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> >  		return;
-> >  	}
-> >  	/* Alignment of the IO window is always 4K */
-> > -	b_res->start = 4096;
-> > +	b_res->start = io_align;
-> >  	b_res->end = b_res->start + size0 - 1;
-> >  	b_res->flags |= IORESOURCE_STARTALIGN;
-> >  	if (size1 > size0 && realloc_head) {
-> > -		add_to_list(realloc_head, bus->self, b_res, size1-size0, 4096);
-> > +		add_to_list(realloc_head, bus->self, b_res, size1-size0, io_align);
-> >  		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window "
-> >  				 "%pR to [bus %02x-%02x] add_size %lx\n", b_res,
-> >  				 bus->secondary, bus->subordinate, size1-size0);
-> > @@ -875,6 +878,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> >  			min_align = align1 >> 1;
-> >  		align += aligns[order];
-> >  	}
-> > +
-> > +	min_align = max(min_align, window_alignment(bus, type));
-> 
->   'type' can sometimes be (IORESOURCE_MEM | IORESOURCE_PREFETCH), which
->   can lead to unpredictable results depending on how window_alignment()
->   is implemented... Hence to be on the safer side I suggest
-> 
-> 	min_align = max(min_align, window_alignment(bus, b_res->flags & mask));
+> > +struct resource *of_pci_parse_ranges(struct device_node *node,
+> > +				     unsigned int *countp)
+> > +{
+> > +	unsigned int count, i =3D 0;
+> > +	struct resource *ranges;
+>=20
+> I think res or pci_res would be clearer than ranges that this is a
+> struct resource.
 
-While you are at it, can we move the min_align calculation into
-a separate function?
+"range" is the term used by the PCI specifications to denote these
+regions. I don't see what's wrong with using it as a variable name.
 
-Somewhat around the following patch
+Thierry
 
+--oLBj+sq0vYjzfsbl
+Content-Type: application/pgp-signature
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8fa2d4b..426c8ad6 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -762,6 +762,25 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	}
- }
- 
-+static inline calculate_min_align(resource_size_t aligns *aligns, int max_order)
-+{
-+	resource_size_t align = 0;
-+	resource_size_t min_align = 0;
-+	int order;
-+	for (order = 0; order <= max_order; order++) {
-+		resource_size_t align1 = 1;
-+
-+		align1 <<= (order + 20);
-+
-+		if (!align)
-+			min_align = align1;
-+		else if (ALIGN(align + min_align, min_align) < align1)
-+			min_align = align1 >> 1;
-+		align += aligns[order];
-+	}
-+	return min_align;
-+}
-+
- /**
-  * pbus_size_mem() - size the memory window of a given bus
-  *
-@@ -841,19 +860,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				children_add_size += get_res_add_size(realloc_head, r);
- 		}
- 	}
--	align = 0;
--	min_align = 0;
--	for (order = 0; order <= max_order; order++) {
--		resource_size_t align1 = 1;
- 
--		align1 <<= (order + 20);
-+	min_align = calculate_min_align(aligns, max_order);
- 
--		if (!align)
--			min_align = align1;
--		else if (ALIGN(align + min_align, min_align) < align1)
--			min_align = align1 >> 1;
--		align += aligns[order];
--	}
- 	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
- 	if (children_add_size > add_size)
- 		add_size = children_add_size;
-@@ -880,6 +889,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	return 1;
- }
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
- RP
+iQIcBAEBAgAGBQJQGNKtAAoJEN0jrNd/PrOh1IIP/04wyxMUrXfPzYMwNaIJOFpD
+NvXK508GfgkG/r4KqpUxZ3EIZxJvPuGZWVcd+YS1KQw47BpLSCjTRqKRwX/T98kM
+zEA34DLi99TNTMDF8CNfF1FkjaZ1hhr1Sto5OKWTjp4vXZpDUWskbfIWLjVPNjZ7
+VzGby5gbDI+GDiXS0xIEWc54j4oYm3xpbIGUgRGH1DG4G70bGEhW7OnZ1XUq6X3B
+u0MXz3RZ9FU2lAoA7/GXnuTjyiZJ03AMHQjs3AEzUrkWRWqeniK7kIE2iJ9TG/8k
+9xAAFz7pyjoNbYnjyHNpUbasDQF2qty+WCx7DQx0+7rj0vwN28cqrn2ct4/1xG22
+OHIrALGTxAjYKOjD0vDo/hQpfOe05cdv53iv9Klsje5ZpndVDdNdFoHNTBWet5ip
+HXLcJI/4D6G32bx4cosO4qZ/MClh4e//nu1FtEVryGSpanmP7dHEUG/eR67HPhDZ
+HzrzX+al2rYZteodoBAs+bDiIoFPKkQf+Eiae4D8bRiiBTkR6vGGQyb7YLwqX9Pu
+UGLkGXcdNm8dxpqOhDq/gN8uyzRiYtqR2cpXjGAGOLV0Exj6l4zdht/jihgMmg65
+DsHnX1hxAAThLXN4a0xEgCSsHQa8JFQLdjiY1W+h3VbOBrrgL2xKA9Bia5kNpGdm
+WEUFAp0CiYVQ7/pkg2GI
+=e139
+-----END PGP SIGNATURE-----
 
+--oLBj+sq0vYjzfsbl--
