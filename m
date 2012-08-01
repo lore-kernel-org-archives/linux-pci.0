@@ -1,59 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:39584 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754509Ab2HARsd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 13:48:33 -0400
-Received: by vbbff1 with SMTP id ff1so7227457vbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2012 10:48:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
-References: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
-Date: Wed, 1 Aug 2012 10:48:32 -0700
-Message-ID: <CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
-Subject: Re: PCI express switch
-From: Yinghai Lu <yinghai@kernel.org>
-To: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
-	<caronteycerbero@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 06/32] PCI/hotplug: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:11 +0800
+Message-Id: <1343836477-7287-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 6:42 AM, Miguel Ángel Álvarez
-<caronteycerbero@gmail.com> wrote:
-> Dear all,
->
-> We are developing a board using a Freescale P2020. This micro has
-> three PCIexpress ports. 2 1xlane PCIe and 1 2xlane PCIe.
->
-> We have been able to successfully use the PCIe interfaces.
->
-> However, now we want to expand the number of PCIe slots connecting the
-> 2xlane PCIe to a PCIe switch (89HPES6T5E). This switch offers a 2xlane
-> upstream port and 4 1xlane downstream ports.
->
-> The problem is that we do not really know how PCIe switches are
-> managed in Linux. If any of you can recommend us some resources to
-> read, we will appreciate it very much.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-pcie switch should show as three or more pci bridges in the pci tree.
+Use PCIe capabilities access functions to simplify cpihp_slot.c.
 
->
-> If there is no information to read, let me describe our main problem.
->
-> The question is that if I let u-boot scan the PCIe, the upstream and
-> downstream ports are detected as well as the cards connected to the
-> downstream port. However when u-boot launches Linux, this last just
-> finds a device (the HPES6T5E), and none of the downstream ports or
-> card connected to them.
->
->
-> I know that the problem could be in the u-boot, so I am trying to
-> analyse its code also... but I think there could be something in Linux
-> I am not taking into account yet.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/pcihp_slot.c |   20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-can you post whole log with pci debug enabled?
+diff --git a/drivers/pci/hotplug/pcihp_slot.c b/drivers/pci/hotplug/pcihp_slot.c
+index 8c05a18..649dcc8 100644
+--- a/drivers/pci/hotplug/pcihp_slot.c
++++ b/drivers/pci/hotplug/pcihp_slot.c
+@@ -96,17 +96,11 @@ static void program_hpp_type1(struct pci_dev *dev, struct hpp_type1 *hpp)
+ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ {
+ 	int pos;
+-	u16 reg16;
+ 	u32 reg32;
+ 
+ 	if (!hpp)
+ 		return;
+ 
+-	/* Find PCI Express capability */
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return;
+-
+ 	if (hpp->revision > 1) {
+ 		dev_warn(&dev->dev, "PCIe settings rev %d not supported\n",
+ 			 hpp->revision);
+@@ -114,17 +108,13 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	}
+ 
+ 	/* Initialize Device Control Register */
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
+-	reg16 = (reg16 & hpp->pci_exp_devctl_and) | hpp->pci_exp_devctl_or;
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
++	pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL,
++			hpp->pci_exp_devctl_or, ~hpp->pci_exp_devctl_and);
+ 
+ 	/* Initialize Link Control Register */
+-	if (dev->subordinate) {
+-		pci_read_config_word(dev, pos + PCI_EXP_LNKCTL, &reg16);
+-		reg16 = (reg16 & hpp->pci_exp_lnkctl_and)
+-			| hpp->pci_exp_lnkctl_or;
+-		pci_write_config_word(dev, pos + PCI_EXP_LNKCTL, reg16);
+-	}
++	if (dev->subordinate)
++		pci_pcie_capability_change_word(dev, PCI_EXP_LNKCTL,
++			hpp->pci_exp_lnkctl_or, ~hpp->pci_exp_lnkctl_and);
+ 
+ 	/* Find Advanced Error Reporting Enhanced Capability */
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-- 
+1.7.9.5
 
-Thanks
-
-Yinghai
