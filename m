@@ -1,39 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 2 Aug 2012 00:08:02 +0200
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: mellanox mlx4_core and SR-IOV
-Message-ID: <20120801220802.GP5470@ics.muni.cz>
-References: <20120801133835.GH5470@ics.muni.cz>
- <CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
- <CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
- <20120801205640.GN5470@ics.muni.cz>
- <CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:50358 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755969Ab2HAP6L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:58:11 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>, Jon Mason <jdmason@kudzu.us>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 18/32] PCI/vxge: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:23 +0800
+Message-Id: <1343836477-7287-19-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 02:32:17PM -0700, Yinghai Lu wrote:
-> yes, i knew that.
-> 
-> one patch in my for-pci-next should address that.
-> 
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=fcce563f868e296f46a2eeaa88d6959bcee26a2d
+From: Jiang Liu <jiang.liu@huawei.com>
 
-this is probably only half-way. well mlx driver loads but it complains again
-on MMIO:
-[    3.564844] mlx4_core: Mellanox ConnectX core driver v1.1 (Dec, 2011)
-[    3.564845] mlx4_core: Initializing 0000:02:00.0
-[    3.564967] mlx4_core 0000:02:00.0: Enabling sriov with:4 vfs
-[    3.565087] mlx4_core 0000:02:00.0: not enough MMIO resources for SR-IOV
-[    3.565402] mlx4_core 0000:02:00.0: Failed to enable sriov,continuing
-without sriov enabled (err = -12).
+Use PCIe capabilities access functions to simplify vxge driver's
+implementation.
 
-so it seems, that pic=nocsr is a must now.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/net/ethernet/neterion/vxge/vxge-config.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/ethernet/neterion/vxge/vxge-config.c b/drivers/net/ethernet/neterion/vxge/vxge-config.c
+index 98e2c10..f83f0a4 100644
+--- a/drivers/net/ethernet/neterion/vxge/vxge-config.c
++++ b/drivers/net/ethernet/neterion/vxge/vxge-config.c
+@@ -757,7 +757,7 @@ __vxge_hw_verify_pci_e_info(struct __vxge_hw_device *hldev)
+ 	u16 lnk;
+ 
+ 	/* Get the negotiated link width and speed from PCI config space */
+-	pci_read_config_word(dev, dev->pcie_cap + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnk);
+ 
+ 	if ((lnk & PCI_EXP_LNKSTA_CLS) != 1)
+ 		return VXGE_HW_ERR_INVALID_PCI_INFO;
+@@ -1982,7 +1982,7 @@ u16 vxge_hw_device_link_width_get(struct __vxge_hw_device *hldev)
+ 	struct pci_dev *dev = hldev->pdev;
+ 	u16 lnk;
+ 
+-	pci_read_config_word(dev, dev->pcie_cap + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnk);
+ 	return (lnk & VXGE_HW_PCI_EXP_LNKCAP_LNK_WIDTH) >> 4;
+ }
+ 
 -- 
-Luká¹ Hejtmánek
+1.7.9.5
+
