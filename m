@@ -1,61 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44030 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758805Ab2HHQ13 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 12:27:29 -0400
-Received: by lboi8 with SMTP id i8so579577lbo.19
-        for <linux-pci@vger.kernel.org>; Wed, 08 Aug 2012 09:27:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <50228968.3070904@gmail.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
- <1344382695.3010.770.camel@misato.fc.hp.com> <50228968.3070904@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 8 Aug 2012 09:27:07 -0700
-Message-ID: <CAErSpo7S0zuU=tSJVzxk8cPjop0B+JKJjkM46sFCirJCX9KQ2g@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 00/16] ACPI based system device hotplug framework
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Toshi Kani <toshi.kani@hp.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>, Jon Mason <mason@myri.com>,
+	Andrew Gallatin <gallatin@myri.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 21/32] PCI/myri10ge: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:26 +0800
+Message-Id: <1343836477-7287-22-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 8, 2012 at 8:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 08/08/2012 07:38 AM, Toshi Kani wrote:
+From: Jiang Liu <jiang.liu@huawei.com>
 
->> It is nice to see redundant ACPI namespace walks removed from the ACPI
->> drivers.  But why do you need to add a new enumerator to create the
->> acpihp_slot tree, in addition to the current acpi_device tree?  I'd
->> prefer hotplug features to be generally integrated into the current ACPI
->> core code and data structures, instead of adding a new layer on top of
->> it.
-> The idea comes from PCI hotplug framework, which has an concepts of PCI
-> hotplug slot and PCI device. For system device hotplug, we could follow
-> the same model as PCI by abstracting control points as slots. By introducing
-> of hotplug slot, we could:
->
-> 1) Report all hotplug slots and slot's capabilities to user, no matter whether
-> there are devices connecting to a slot. If we integrate hotplug functionality
-> into current ACPI device tree, the slot (or device) is only visible when the
-> connected devices are enabled.
+Use PCIe capabilities access functions to simplify myri10ge driver's
+implementation.
 
-In PCI, the idea of a slot is a pretty explicit -- you can look at the
-capabilities of a bridge device and see whether it supports hot-add of
-a device below it.  Is it the same way in ACPI?  My impression is that
-it is not: there will be a parent ACPI device under which a new device
-can be added, but you might not be able to tell by looking at the
-parent device that hot-add is possible.  I thought the platform could
-just give us a Notify event on the parent, asking us to rescan the
-namespace below it and potentially discover new devices.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/net/ethernet/myricom/myri10ge/myri10ge.c |   39 ++++------------------
+ 1 file changed, 7 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+index 90153fc..fe6c44d 100644
+--- a/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
++++ b/drivers/net/ethernet/myricom/myri10ge/myri10ge.c
+@@ -1078,24 +1078,8 @@ static int myri10ge_reset(struct myri10ge_priv *mgp)
+ #ifdef CONFIG_MYRI10GE_DCA
+ static int myri10ge_toggle_relaxed(struct pci_dev *pdev, int on)
+ {
+-	int ret, cap, err;
+-	u16 ctl;
+-
+-	cap = pci_pcie_cap(pdev);
+-	if (!cap)
+-		return 0;
+-
+-	err = pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl);
+-	if (err)
+-		return 0;
+-
+-	ret = (ctl & PCI_EXP_DEVCTL_RELAX_EN) >> 4;
+-	if (ret != on) {
+-		ctl &= ~PCI_EXP_DEVCTL_RELAX_EN;
+-		ctl |= (on << 4);
+-		pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl);
+-	}
+-	return ret;
++	return pci_pcie_capability_change_word(pdev, PCI_EXP_DEVCTL,
++		       on << 4, PCI_EXP_DEVCTL_RELAX_EN);
+ }
+ 
+ static void
+@@ -3192,18 +3176,13 @@ static void myri10ge_enable_ecrc(struct myri10ge_priv *mgp)
+ 	struct device *dev = &mgp->pdev->dev;
+ 	int cap;
+ 	unsigned err_cap;
+-	u16 val;
+-	u8 ext_type;
+ 	int ret;
+ 
+ 	if (!myri10ge_ecrc_enable || !bridge)
+ 		return;
+ 
+ 	/* check that the bridge is a root port */
+-	cap = pci_pcie_cap(bridge);
+-	pci_read_config_word(bridge, cap + PCI_CAP_FLAGS, &val);
+-	ext_type = (val & PCI_EXP_FLAGS_TYPE) >> 4;
+-	if (ext_type != PCI_EXP_TYPE_ROOT_PORT) {
++	if (pci_pcie_type(bridge) != PCI_EXP_TYPE_ROOT_PORT) {
+ 		if (myri10ge_ecrc_enable > 1) {
+ 			struct pci_dev *prev_bridge, *old_bridge = bridge;
+ 
+@@ -3218,11 +3197,8 @@ static void myri10ge_enable_ecrc(struct myri10ge_priv *mgp)
+ 						" to force ECRC\n");
+ 					return;
+ 				}
+-				cap = pci_pcie_cap(bridge);
+-				pci_read_config_word(bridge,
+-						     cap + PCI_CAP_FLAGS, &val);
+-				ext_type = (val & PCI_EXP_FLAGS_TYPE) >> 4;
+-			} while (ext_type != PCI_EXP_TYPE_ROOT_PORT);
++			} while (pci_pcie_type(bridge) !=
++				 PCI_EXP_TYPE_ROOT_PORT);
+ 
+ 			dev_info(dev,
+ 				 "Forcing ECRC on non-root port %s"
+@@ -3335,11 +3311,10 @@ static void myri10ge_select_firmware(struct myri10ge_priv *mgp)
+ 	int overridden = 0;
+ 
+ 	if (myri10ge_force_firmware == 0) {
+-		int link_width, exp_cap;
++		int link_width;
+ 		u16 lnk;
+ 
+-		exp_cap = pci_pcie_cap(mgp->pdev);
+-		pci_read_config_word(mgp->pdev, exp_cap + PCI_EXP_LNKSTA, &lnk);
++		pci_pcie_capability_read_word(mgp->pdev, PCI_EXP_LNKSTA, &lnk);
+ 		link_width = (lnk >> 4) & 0x3f;
+ 
+ 		/* Check to see if Link is less than 8 or if the
+-- 
+1.7.9.5
+
