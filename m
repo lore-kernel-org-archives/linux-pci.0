@@ -1,41 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:34713 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751726Ab2HFXQn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Aug 2012 19:16:43 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1SyWXS-0001pN-Gh
-	for linux-pci@vger.kernel.org; Tue, 07 Aug 2012 01:16:42 +0200
-Received: from 99-119-199-15.lightspeed.sntcca.sbcglobal.net ([99.119.199.15])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Tue, 07 Aug 2012 01:16:42 +0200
-Received: from paolopiace by 99-119-199-15.lightspeed.sntcca.sbcglobal.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Tue, 07 Aug 2012 01:16:42 +0200
-To: linux-pci@vger.kernel.org
-From: Paolo <paolopiace@gmail.com>
-Subject: Re: accessing =?utf-8?b?cGNpX2Rldg==?=
-Date: Mon, 6 Aug 2012 23:16:32 +0000 (UTC)
-Message-ID: <loom.20120807T010348-354@post.gmane.org>
-References: <loom.20120807T001740-895@post.gmane.org> <20120806224658.GA8579@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Roland Dreier <roland@kernel.org>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 26/32] PCI/mthca: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:31 +0800
+Message-Id: <1343836477-7287-27-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Greg KH <gregkh <at> linuxfoundation.org> writes:
-> 
-> Yes, but why would you?
-> 
-> What problem are you trying to solve?
->
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Thanks for responding!
+Use PCIe capabilities access functions to simplify mthca driver's
+implementation.
 
-Basically, I want to check the config registers before and after the driver
-registration in order to make sure that the driver is not contaminating them.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/infiniband/hw/mthca/mthca_reset.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-And, yes, it's the very first time I'm dealing with kernel & drivers.
+diff --git a/drivers/infiniband/hw/mthca/mthca_reset.c b/drivers/infiniband/hw/mthca/mthca_reset.c
+index 4fa3534..7b1a3bc 100644
+--- a/drivers/infiniband/hw/mthca/mthca_reset.c
++++ b/drivers/infiniband/hw/mthca/mthca_reset.c
+@@ -241,16 +241,16 @@ good:
+ 
+ 	if (hca_pcie_cap) {
+ 		devctl = hca_header[(hca_pcie_cap + PCI_EXP_DEVCTL) / 4];
+-		if (pci_write_config_word(mdev->pdev, hca_pcie_cap + PCI_EXP_DEVCTL,
+-					   devctl)) {
++		if (pci_pcie_capability_write_word(mdev->pdev, PCI_EXP_DEVCTL,
++						   devctl)) {
+ 			err = -ENODEV;
+ 			mthca_err(mdev, "Couldn't restore HCA PCI Express "
+ 				  "Device Control register, aborting.\n");
+ 			goto out;
+ 		}
+ 		linkctl = hca_header[(hca_pcie_cap + PCI_EXP_LNKCTL) / 4];
+-		if (pci_write_config_word(mdev->pdev, hca_pcie_cap + PCI_EXP_LNKCTL,
+-					   linkctl)) {
++		if (pci_pcie_capability_write_word(mdev->pdev, PCI_EXP_LNKCTL,
++						   linkctl)) {
+ 			err = -ENODEV;
+ 			mthca_err(mdev, "Couldn't restore HCA PCI Express "
+ 				  "Link control register, aborting.\n");
+-- 
+1.7.9.5
 
