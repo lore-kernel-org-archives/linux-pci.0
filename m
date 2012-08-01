@@ -1,123 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:42054 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754040Ab2HDT3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 4 Aug 2012 15:29:20 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Sat, 4 Aug 2012 21:35:11 +0200
-Cc: linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1208022151450.22991-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1208022151450.22991-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208042135.12059.rjw@sisk.pl>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:36922 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755585Ab2HAP4q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:56:46 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 10/32] PCI/AER: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:15 +0800
+Message-Id: <1343836477-7287-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 03, 2012, Alan Stern wrote:
-> On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
-> 
-> > > I don't know about that -- the logic involved in doing the processing 
-> > > within the resume callback isn't terribly complicated.  At least, not 
-> > > much more complicated than the logic involved in setting up a custom 
-> > > work routine as you suggest.
-> > 
-> > That's why I had the idea of pm_request_resume_and_call(dev, func)
-> > described in this message:
-> > 
-> > http://marc.info/?l=linux-usb&m=134377126804170&w=4
-> > 
-> > although perheps it would be better to call it something like
-> > pm_runtime_async_resume_and_call(dev, func).
-> 
-> Hmmm.  You'd probably want a version that does a "get" at the same 
-> time.  I suppose you would call func directly if the device was already 
-> resumed, without going through the workqueue?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Yes.
+Use PCIe capabilities access functions to simplify PCIe AER implementation.
 
-> Yes, I agree this would be a better interface then pm_runtime_get.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c      |   17 ++++++--------
+ drivers/pci/pcie/aer/aerdrv_core.c |   45 ++++++++----------------------------
+ 2 files changed, 16 insertions(+), 46 deletions(-)
 
-OK
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index f7c6245..b85750d 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -122,19 +122,17 @@ static void set_downstream_devices_error_reporting(struct pci_dev *dev,
+ static void aer_enable_rootport(struct aer_rpc *rpc)
+ {
+ 	struct pci_dev *pdev = rpc->rpd->port;
+-	int pos, aer_pos;
++	int aer_pos;
+ 	u16 reg16;
+ 	u32 reg32;
+ 
+-	pos = pci_pcie_cap(pdev);
+ 	/* Clear PCIe Capability's Device Status */
+-	pci_read_config_word(pdev, pos+PCI_EXP_DEVSTA, &reg16);
+-	pci_write_config_word(pdev, pos+PCI_EXP_DEVSTA, reg16);
++	pci_pcie_capability_read_word(pdev, PCI_EXP_DEVSTA, &reg16);
++	pci_pcie_capability_write_word(pdev, PCI_EXP_DEVSTA, reg16);
+ 
+ 	/* Disable system error generation in response to error messages */
+-	pci_read_config_word(pdev, pos + PCI_EXP_RTCTL, &reg16);
+-	reg16 &= ~(SYSTEM_ERROR_INTR_ON_MESG_MASK);
+-	pci_write_config_word(pdev, pos + PCI_EXP_RTCTL, reg16);
++	pci_pcie_capability_change_word(pdev, PCI_EXP_RTCTL,
++					0, SYSTEM_ERROR_INTR_ON_MESG_MASK);
+ 
+ 	aer_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
+ 	/* Clear error status */
+@@ -396,9 +394,8 @@ static void aer_error_resume(struct pci_dev *dev)
+ 	u16 reg16;
+ 
+ 	/* Clean up Root device status */
+-	pos = pci_pcie_cap(dev);
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &reg16);
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVSTA, reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
++	pci_pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+ 
+ 	/* Clean AER Root Error Status */
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index f551534..2af79f7 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -34,51 +34,26 @@ module_param(nosourceid, bool, 0);
+ 
+ int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+ {
+-	u16 reg16 = 0;
+-	int pos;
+-
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-	if (!pos)
+-		return -EIO;
+-
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
++	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR))
+ 		return -EIO;
+ 
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
+-	reg16 |= (PCI_EXP_DEVCTL_CERE |
+-		PCI_EXP_DEVCTL_NFERE |
+-		PCI_EXP_DEVCTL_FERE |
+-		PCI_EXP_DEVCTL_URRE);
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
+-
+-	return 0;
++	return pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL,
++			PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE |
++			PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE, 0);
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_pcie_error_reporting);
+ 
+ int pci_disable_pcie_error_reporting(struct pci_dev *dev)
+ {
+-	u16 reg16 = 0;
+-	int pos;
+-
+ 	if (pcie_aer_get_firmware_first(dev))
+ 		return -EIO;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return -EIO;
+-
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
+-	reg16 &= ~(PCI_EXP_DEVCTL_CERE |
+-		PCI_EXP_DEVCTL_NFERE |
+-		PCI_EXP_DEVCTL_FERE |
+-		PCI_EXP_DEVCTL_URRE);
+-	pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, reg16);
+-
+-	return 0;
++	return pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL, 0,
++			PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE |
++			PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE);
+ }
+ EXPORT_SYMBOL_GPL(pci_disable_pcie_error_reporting);
+ 
+@@ -151,18 +126,16 @@ static bool is_error_source(struct pci_dev *dev, struct aer_err_info *e_info)
+ 	 */
+ 	if (atomic_read(&dev->enable_cnt) == 0)
+ 		return false;
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return false;
+ 
+ 	/* Check if AER is enabled */
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &reg16);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+ 	if (!(reg16 & (
+ 		PCI_EXP_DEVCTL_CERE |
+ 		PCI_EXP_DEVCTL_NFERE |
+ 		PCI_EXP_DEVCTL_FERE |
+ 		PCI_EXP_DEVCTL_URRE)))
+ 		return false;
++
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	if (!pos)
+ 		return false;
+-- 
+1.7.9.5
 
-> > > > Well, that shouldn't need the is_suspended flag at all, methinks, and the
-> > > > reason it does need it is because it uses pm_runtime_get().
-> > > 
-> > > Not so.  Consider your scheme.  When starting an I/O request, you call
-> > > pm_runtime_get_noresume() and then check to see if the device is
-> > > active, say by calling pm_runtime_suspended().  Suppose at that moment
-> > > the suspend callback has just finished and has released the private
-> > > spinlock.  The device's status is still RPM_SUSPENDING, so
-> > > pm_runtime_suspended() returns 0 and you try to carry out the I/O.
-> > > 
-> > > To fix this problem you have to synchronize the status checking with
-> > > the suspend/resume operations.  This means the status changes have to
-> > > occur under the protection of the private lock, which means a private
-> > > flag is needed.
-> > 
-> > What about checking if the status is RPM_ACTIVE under dev->power.lock?
-> > That's what rpm_resume() does, more or less.
-> 
-> That wouldn't solve the race described above.
-> 
-> > > >  Moreover,
-> > > > processing requests in the resume callback is not something I'd recommend
-> > > > to anyone, because that's going to happen when the status of the device
-> > > > is RPM_RESUMING, we're holding a reference on the parent (if there's one) etc.
-> > > 
-> > > I don't see any problem with that.  The parent's child_count will be 
-> > > incremented while the requests are being processed regardless.  And if 
-> > > you've been waiting for the device to resume in order to carry out some 
-> > > processing, within the resume callback is the logical place to do the 
-> > > work.
-> > 
-> > Unless your _driver_ callback is actually executed from within a PM domain
-> > callback, for example, and something else may be waiting for it to complete,
-> > so your data processing is adding latencies to some other threads.  I'm not
-> > making that up, by the way, that really can happen.
-> > 
-> > And what if you are a parent waited for by a child to resume so that _it_
-> > can process its data?  Would you still want to process your data in the
-> > resume callback in that case?
-> 
-> Okay, those are valid reasons.  (Although a device handling I/O 
-> requests isn't likely to have a child with its own independent I/O 
-> handling.)
-
-I agree that this isn't very likely in practice.
-
-> > > I suppose we could keep pm_runtime_get_sync as is, and just change
-> > > pm_runtime_get to pm_runtime_get_async (and likewise for _put).  That
-> > > could reduce the confusion during the changeover.
-> > 
-> > Changing pm_runtime_get() to pm_runtime_get_async() would be an improvement,
-> > although pm_runtime_get_but_do_not_resume_immediately() might even be better.
-> > Or even pm_runtime_get_but_do_not_access_hardware_when_it_returns(). ;-)
-> > 
-> > I see no reason to have any of those things, though.  Yes, they _may_ be
-> > useful to someone knowing the runtime PM core internals to save a few lines
-> > of code in some places, but generally they lead people to make serious mistakes
-> > that tend to be difficult to debug.  For this very reason pm_runtime_get() is a
-> > bad interface and I wish we hadn't introduced it at all.  Even if we give it
-> > a more descriptive name, it won't be much better.
-> > 
-> > And note how that doesn't apply to the pm_runtime_put*() family.  After all,
-> > doing pm_runtime_put() instead of pm_runtime_put_sync() will never lead to
-> > accessing registers of a suspended device.
-> 
-> All right.  But I still think "pm_runtime_put_async" is better than
-> "pm_runtime_put".  At least it forces people to think about what
-> they're doing.
-
-I agree.
-
-My current plan is to provide a better alternative interface, then to change
-the name of "pm_runtime_put" to "pm_runtime_put_async" and to document that
-it's going to be deprecated in future.
-
-Thanks,
-Rafael
