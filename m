@@ -1,151 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61939 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755556Ab2HAP7k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:59:40 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Mike Marciniszyn <infinipath@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 27/32] PCI/qib: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:32 +0800
-Message-Id: <1343836477-7287-28-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:37301 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754748Ab2HASD5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 14:03:57 -0400
+Received: by wgbdr13 with SMTP id dr13so7182060wgb.1
+        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2012 11:03:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
+References: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
+	<CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
+Date: Wed, 1 Aug 2012 19:03:55 +0100
+Message-ID: <CAOp+P+rsAW2pBZNNSW2ehEDVQB=zSFkweVRDmPcePCiEd5_8DA@mail.gmail.com>
+Subject: Re: PCI express switch
+From: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
+	<caronteycerbero@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Aug 1, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Aug 1, 2012 at 6:42 AM, Miguel Ángel Álvarez
+> <caronteycerbero@gmail.com> wrote:
+>> Dear all,
+>>
+>> We are developing a board using a Freescale P2020. This micro has
+>> three PCIexpress ports. 2 1xlane PCIe and 1 2xlane PCIe.
+>>
+>> We have been able to successfully use the PCIe interfaces.
+>>
+>> However, now we want to expand the number of PCIe slots connecting the
+>> 2xlane PCIe to a PCIe switch (89HPES6T5E). This switch offers a 2xlane
+>> upstream port and 4 1xlane downstream ports.
+>>
+>> The problem is that we do not really know how PCIe switches are
+>> managed in Linux. If any of you can recommend us some resources to
+>> read, we will appreciate it very much.
+>
+> pcie switch should show as three or more pci bridges in the pci tree.
+>
 
-Use PCIe capabilities access functions to simplify qib driver's implementation.
+OK.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/infiniband/hw/qib/qib_pcie.c |   40 +++++++++++++++-------------------
- 1 file changed, 17 insertions(+), 23 deletions(-)
+>>
+>> If there is no information to read, let me describe our main problem.
+>>
+>> The question is that if I let u-boot scan the PCIe, the upstream and
+>> downstream ports are detected as well as the cards connected to the
+>> downstream port. However when u-boot launches Linux, this last just
+>> finds a device (the HPES6T5E), and none of the downstream ports or
+>> card connected to them.
+>>
+>>
+>> I know that the problem could be in the u-boot, so I am trying to
+>> analyse its code also... but I think there could be something in Linux
+>> I am not taking into account yet.
+>
+> can you post whole log with pci debug enabled?
+>
 
-diff --git a/drivers/infiniband/hw/qib/qib_pcie.c b/drivers/infiniband/hw/qib/qib_pcie.c
-index 790646e..9a5cb02 100644
---- a/drivers/infiniband/hw/qib/qib_pcie.c
-+++ b/drivers/infiniband/hw/qib/qib_pcie.c
-@@ -271,10 +271,9 @@ int qib_pcie_params(struct qib_devdata *dd, u32 minw, u32 *nent,
- 		    struct qib_msix_entry *entry)
- {
- 	u16 linkstat, speed;
--	int pos = 0, pose, ret = 1;
-+	int pos = 0, ret = 1;
- 
--	pose = pci_pcie_cap(dd->pcidev);
--	if (!pose) {
-+	if (!pci_is_pcie(dd->pcidev)) {
- 		qib_dev_err(dd, "Can't find PCI Express capability!\n");
- 		/* set up something... */
- 		dd->lbus_width = 1;
-@@ -296,7 +295,7 @@ int qib_pcie_params(struct qib_devdata *dd, u32 minw, u32 *nent,
- 	if (!pos)
- 		qib_enable_intx(dd->pcidev);
- 
--	pci_read_config_word(dd->pcidev, pose + PCI_EXP_LNKSTA, &linkstat);
-+	pci_pcie_capability_read_word(dd->pcidev, PCI_EXP_LNKSTA, &linkstat);
- 	/*
- 	 * speed is bits 0-3, linkwidth is bits 4-8
- 	 * no defines for them in headers
-@@ -514,7 +513,6 @@ static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
- {
- 	int r;
- 	struct pci_dev *parent;
--	int ppos;
- 	u16 devid;
- 	u32 mask, bits, val;
- 
-@@ -527,8 +525,7 @@ static int qib_tune_pcie_coalesce(struct qib_devdata *dd)
- 		qib_devinfo(dd->pcidev, "Parent not root\n");
- 		return 1;
- 	}
--	ppos = pci_pcie_cap(parent);
--	if (!ppos)
-+	if (!pci_is_pcie(parent))
- 		return 1;
- 	if (parent->vendor != 0x8086)
- 		return 1;
-@@ -585,7 +582,6 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- {
- 	int ret = 1; /* Assume the worst */
- 	struct pci_dev *parent;
--	int ppos, epos;
- 	u16 pcaps, pctl, ecaps, ectl;
- 	int rc_sup, ep_sup;
- 	int rc_cur, ep_cur;
-@@ -596,19 +592,15 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- 		qib_devinfo(dd->pcidev, "Parent not root\n");
- 		goto bail;
- 	}
--	ppos = pci_pcie_cap(parent);
--	if (ppos) {
--		pci_read_config_word(parent, ppos + PCI_EXP_DEVCAP, &pcaps);
--		pci_read_config_word(parent, ppos + PCI_EXP_DEVCTL, &pctl);
--	} else
-+
-+	if (!pci_is_pcie(parent) || !pci_is_pcie(dd->pcidev))
- 		goto bail;
-+	pci_pcie_capability_read_word(parent, PCI_EXP_DEVCAP, &pcaps);
-+	pci_pcie_capability_read_word(parent, PCI_EXP_DEVCTL, &pctl);
- 	/* Find out supported and configured values for endpoint (us) */
--	epos = pci_pcie_cap(dd->pcidev);
--	if (epos) {
--		pci_read_config_word(dd->pcidev, epos + PCI_EXP_DEVCAP, &ecaps);
--		pci_read_config_word(dd->pcidev, epos + PCI_EXP_DEVCTL, &ectl);
--	} else
--		goto bail;
-+	pci_pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVCAP, &ecaps);
-+	pci_pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVCTL, &ectl);
-+
- 	ret = 0;
- 	/* Find max payload supported by root, endpoint */
- 	rc_sup = fld2val(pcaps, PCI_EXP_DEVCAP_PAYLOAD);
-@@ -627,14 +619,15 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- 		rc_cur = rc_sup;
- 		pctl = (pctl & ~PCI_EXP_DEVCTL_PAYLOAD) |
- 			val2fld(rc_cur, PCI_EXP_DEVCTL_PAYLOAD);
--		pci_write_config_word(parent, ppos + PCI_EXP_DEVCTL, pctl);
-+		pci_pcie_capability_write_word(parent, PCI_EXP_DEVCTL, pctl);
- 	}
- 	/* If less than (allowed, supported), bump endpoint payload */
- 	if (rc_sup > ep_cur) {
- 		ep_cur = rc_sup;
- 		ectl = (ectl & ~PCI_EXP_DEVCTL_PAYLOAD) |
- 			val2fld(ep_cur, PCI_EXP_DEVCTL_PAYLOAD);
--		pci_write_config_word(dd->pcidev, epos + PCI_EXP_DEVCTL, ectl);
-+		pci_pcie_capability_write_word(dd->pcidev,
-+					       PCI_EXP_DEVCTL, ectl);
- 	}
- 
- 	/*
-@@ -652,13 +645,14 @@ static int qib_tune_pcie_caps(struct qib_devdata *dd)
- 		rc_cur = rc_sup;
- 		pctl = (pctl & ~PCI_EXP_DEVCTL_READRQ) |
- 			val2fld(rc_cur, PCI_EXP_DEVCTL_READRQ);
--		pci_write_config_word(parent, ppos + PCI_EXP_DEVCTL, pctl);
-+		pci_pcie_capability_write_word(parent, PCI_EXP_DEVCTL, pctl);
- 	}
- 	if (rc_sup > ep_cur) {
- 		ep_cur = rc_sup;
- 		ectl = (ectl & ~PCI_EXP_DEVCTL_READRQ) |
- 			val2fld(ep_cur, PCI_EXP_DEVCTL_READRQ);
--		pci_write_config_word(dd->pcidev, epos + PCI_EXP_DEVCTL, ectl);
-+		pci_pcie_capability_write_word(dd->pcidev,
-+					       PCI_EXP_DEVCTL, ectl);
- 	}
- bail:
- 	return ret;
--- 
-1.7.9.5
+Which one? The one in which the switch is detected by the u-boot or
+the one in which the switch is detected by the Linux?
 
+Thanks
+
+Miguel Ángel
