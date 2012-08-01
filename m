@@ -1,137 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:35590 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276Ab2HGQSg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2012 12:18:36 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH v1 00/22] introduce PCI bus lock to serialize PCI hotplug operations
-Date: Wed,  8 Aug 2012 00:10:40 +0800
-Message-Id: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:38853 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755277Ab2HAVSN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Aug 2012 17:18:13 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Wed, 1 Aug 2012 23:24:01 +0200
+Cc: linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1208011014290.1691-100000@iolanthe.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1208011014290.1691-100000@iolanthe.rowland.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208012324.01329.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+On Wednesday, August 01, 2012, Alan Stern wrote:
+> On Tue, 31 Jul 2012, Rafael J. Wysocki wrote:
+> 
+> > On Tuesday, July 31, 2012, Alan Stern wrote:
+> > > [CC: list trimmed]
+> > > 
+> > > On Tue, 31 Jul 2012, Rafael J. Wysocki wrote:
+> > > 
+> > > > Now it occured to me that perhaps we don't need the current asynchronous
+> > > > pm_runtime_get() at all.  The usefulness of it is quite questionable, because
+> > > > either we want to resume the device immediately, for which pm_runtime_get_sync()
+> > > > should be used, or we just want to bump up the usage counter, in which cases
+> > > > pm_runtime_get_noresume() should always be sufficient.  I fail to see any
+> > > > particularly compelling use case for pm_runtime_get() doing an asynchronous
+> > > > resume at the moment, but perhaps that's just me.
+> > > 
+> > > There are indeed valid uses for pm_runtime_get().  We are forced to use
+> > > it in non-sleepable contexts when we want to resume the device as
+> > > quickly as possible.  Example: a driver receives an I/O request from an
+> > > interrupt handler.
+> > 
+> > Is it actually suitable to be used in such contexts?  It doesn't give any
+> > guarantee that the device will be active when it returns, so the caller can't
+> > really rely on it.
+> 
+> Of course not.  When you're in interrupt context, you can't wait around
+> to see if the device will actually resume.  (Unless you're using 
+> irq-safe runtime PM, but we can ignore that case.)
+> 
+> >  The caller always has to check if the device has been
+> > resumed before accessing it anyway, so it may as well do a _get_noresume(),
+> > do the check and do pm_request_resume() if needed directly.
+> 
+> This is exactly equivalent to doing pm_runtime_get() followed by a 
+> check, except that it's longer.
 
-This is the second take to resolve race conditions when hot-plugging PCI
-devices/host bridges. Instead of using a globla lock to serialize all hotplug
-operations as in previous version, now we introduce a state machine and bit
-lock mechanism for PCI buses to serialize hotplug operations. For discussions
-related to previous version, please refer to:
-http://comments.gmane.org/gmane.linux.kernel.pci/15007
+Except that I meant something different from what I wrote, sorry about that
+(must be too much heat).
 
-This patch-set is still in early stages, so sending it out just requesting
-for comments. Any comments are welcomed, especially about whether it's the
-right/suitable way to solve these race condition issues.
+What I really thought about was to do _get_noresume(), then check if the
+device is active and if not, queue up a work item (or another delayed
+execution in process context) that will do pm_runtime_resume() and
+then access the hardware.
 
-patch 1-5:
-	Preparing for coming PCI bus lock
-patch 6-7: 
-	Core of the new PCI bus lock mechanism.
-patch 8-13:
-	Enhance PCI core to support PCI bus lock mechanism.
-patch 14-18:
-	Enhance several PCI hotplug drivers to use PCI bus lock to serialize
-	hotplug operations.
-patch 19-20:
-	Enable PCI bus lock mechanism for x86 and IA64, still need to enable
-	PCI bus lock for other archs.
-patch 21-22:
-	Cleanups for unsed code.
+Why do I think it's better than plain pm_runtime_get()?  Because the code
+path calling pm_runtime_resume() will know that it is safe to access the
+hardware after it has returned (unless it returns an error code, but
+that's exceptional).
 
-There are multiple methods to trigger PCI hotplug requests/operations
-concurrently, such as:
-1. Sysfs interfaces exported by the PCI core subsystem
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
-	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
-	/sys/bus/pci/rescan
-2. Sysfs interfaces exported by the PCI hotplug subsystem
-	/sys/bus/pci/slots/xx/power
-3. PCI hotplug events triggered by PCI Hotplug Controllers
-4. ACPI hotplug events for PCI host bridges
-5. Driver binding/unbinding events
-	binding/unbinding pci drivers with SR-IOV support
+In contrast, with pm_runtime_get() there is no way to predict when the
+device is going to be resumed, so if the device happens to be suspended
+when pm_runtime_get() returns, the driver kind of has to poll it until
+it becomes active, or use a wait queue woken up from the resume callback,
+or do all of the processing in the resume callback itself (like in the
+example you mentioned).  I'm not sure if the expectation that all driver
+writers will be able to implement any of these options correctly is a realistic
+one.
 
-With current implementation, the PCI core subsystem doesn't support
-concurrent hotplug operations yet. The existing pci_bus_sem lock only
-protects several lists in struct pci_bus, such as children list,
-devices list, but it doesn't protect the pci_bus or pci_dev structure
-themselves.
+> Yes, I agree that pm_runtime_get(dev) is nothing more than a shorthand
+> way of doing pm_runtime_get_noresume(dev) followed by 
+> pm_request_resume(dev).  That doesn't mean it should be eliminated.  
+> Shorthands are convenient.
+> 
+> As another example, pm_runtime_get_sync(dev) is nothing more than a 
+> shorthand for pm_runtime_get_noresume(dev) followed by 
+> pm_runtime_resume(dev).  IMO, having these joint functions that do a 
+> get/put combined with a suspend/resume/idle is very useful.
+> 
+> > Now, as far as interrupt handlers are concerned, there are two cases: either
+> > the device has to be active to generate an interrupt (like PCI), or the
+> > interrupt is generated by something else on behalf of it.  We don't seem to
+> > handle the first case very well right now, because in that case the interrupt
+> > handler will always know that the device is active, so it should do a
+> > _get_noresume() and then change the device's status to "active" without
+> > calling any kind of "resume", but we don't provide a helper for that.
+> 
+> I disagree.  Even if the device has to be active to generate an IRQ,
+> it's possible for the interrupt handler to be delayed until after the
+> device is suspended (unless the suspend routine explicitly calls
+> synchronize_irq(), which would be pretty foolish).  Hence the handler 
+> can't make any assumptions about the device's state.
+> 
+> >  In the
+> > second case calling pm_runtime_get() doesn't really help either.  I think it's
+> > better to do _get_noresume(), check the status and if "suspended", set a flag
+> > for the resume callback to do something specific before returning successfully,
+> > then call pm_request_resume() and return.
+> 
+> This is exactly equivalent to: pm_runtime_get(), check the status, if 
+> "suspended" then set a flag, otherwise do the work.  Except that again, 
+> it's longer.
+> 
+> Check out the sample driver code in section 9 of 
+> Documentation/power/runtime_pm.txt, especially the foo_read_or_write() 
+> routine.
 
-Let's take pci_remove_bus_device() as an example, which are used by
-PCI hotplug drivers to hot-remove PCI devices.  Currently all these
-are free running without any protection, so it can't support reentrance.
-pci_remove_bus_device()
-    ->pci_stop_bus_device()
-        ->pci_stop_bus_device()
-            ->pci_stop_bus_devices()
-        ->pci_stop_dev()
+Well, that shouldn't need the is_suspended flag at all, methinks, and the
+reason it does need it is because it uses pm_runtime_get().  Moreover,
+processing requests in the resume callback is not something I'd recommend
+to anyone, because that's going to happen when the status of the device
+is RPM_RESUMING, we're holding a reference on the parent (if there's one) etc.
 
-Jiang Liu (22):
-  PCI: use pci_get_domain_bus_and_slot() to avoid race conditions
-  PCI: trivial cleanups for drivers/pci/remove.c
-  PCI: change PCI device management code to better follow device model
-  PCI: split PCI bus device registration into two stages
-  PCI: introduce pci_bus_{get|put}() to manage PCI bus reference count
-  PCI: use a global lock to serialize PCI root bridge hotplug
-    operations
-  PCI: introduce PCI bus lock to serialize PCI hotplug operations
-  PCI: introduce hotplug safe search interfaces for PCI bus/device
-  PCI: enhance PCI probe logic to support PCI bus lock mechanism
-  PCI: enhance PCI bus specific logic to support PCI bus lock mechanism
-  PCI: enhance PCI resource assignment logic to support PCI bus lock
-    mechanism
-  PCI: enhance PCI remove logic to support PCI bus lock mechanism
-  PCI: make each PCI device hold a reference to its parent PCI bus
-  PCI/sysfs: use PCI bus lock to avoid race conditions
-  PCI/eeepc: use PCI bus lock to avoid race conditions
-  PCI/asus-wmi: use PCI bus lock to avoid race conditions
-  PCI/pciehp: use PCI bus lock to avoid race conditions
-  PCI/acpiphp: use PCI bus lock to avoid race conditions
-  PCI/x86: enable PCI bus lock mechanism for x86 platforms
-  PCI/IA64: enable PCI bus lock mechanism for IA64 platforms
-  PCI: cleanups for PCI bus lock implementation
-  PCI: unexport pci_root_buses
+So, it looks like I don't really agree with the example. :-)
 
- arch/ia64/pci/pci.c                  |    2 +
- arch/ia64/sn/kernel/io_common.c      |    4 +-
- arch/ia64/sn/kernel/io_init.c        |    1 +
- arch/ia64/sn/pci/tioca_provider.c    |    4 +-
- arch/x86/pci/acpi.c                  |    6 +-
- arch/x86/pci/common.c                |   12 +++
- drivers/acpi/pci_root.c              |    8 +-
- drivers/edac/i7core_edac.c           |   16 ++-
- drivers/gpu/drm/drm_fops.c           |    6 +-
- drivers/gpu/vga/vgaarb.c             |   15 +--
- drivers/pci/bus.c                    |  188 +++++++++++++++++++++++++++++-----
- drivers/pci/host-bridge.c            |   19 ++++
- drivers/pci/hotplug/acpiphp_glue.c   |   13 ++-
- drivers/pci/hotplug/cpcihp_generic.c |    8 +-
- drivers/pci/hotplug/pciehp_pci.c     |   15 +++
- drivers/pci/hotplug/sgi_hotplug.c    |    2 +
- drivers/pci/iov.c                    |   11 +-
- drivers/pci/pci-sysfs.c              |   37 ++++---
- drivers/pci/probe.c                  |   83 +++++++++++----
- drivers/pci/remove.c                 |  176 +++++++++++++++++--------------
- drivers/pci/search.c                 |   53 ++++++++--
- drivers/pci/setup-bus.c              |   65 +++++++++---
- drivers/pci/xen-pcifront.c           |   10 +-
- drivers/platform/x86/asus-wmi.c      |   23 ++++-
- drivers/platform/x86/eeepc-laptop.c  |   20 ++--
- include/linux/pci.h                  |   56 +++++++++-
- 26 files changed, 629 insertions(+), 224 deletions(-)
+> > > Well, IMO the naming should have been the other way around from the
+> > > start.  That is, we should have made pm_runtime_get be the synchronous
+> > > routine and pm_runtime_get_async be the asynchronous one.  But it's too
+> > > late to change now.
+> > 
+> > I'm not sure it is too late.  If we first change all the instances of
+> > pm_runtime_get() to pm_runtime_get_async() and then all of the instances of
+> > pm_runtime_get_sync() to pm_runtime_get(), it should be technically possible.
+> > Of course, it would be confusing, but that's a different matter. :-)
+> 
+> If you're willing to risk a certain amount of confusion, count me in.  :-)
+> 
+> While you're changing names around, consider also adding a "_runtime"  
+> somewhere to:
+> 
+> 	pm_children_suspended,
+> 	pm_schedule_suspend,
+> 	pm_request_idle,
+> 	pm_request_resume,
+> 	pm_request_autosuspend.
+> 
+> For example, we could have pm_runtime_idle_async instead of 
+> pm_request_idle.
 
--- 
-1.7.9.5
+Well, these are not as misleading as pm_runtime_get(), at least in principle.
 
+Thanks,
+Rafael
