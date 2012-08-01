@@ -1,67 +1,220 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:54803 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756873Ab2HOULX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 16:11:23 -0400
-Message-ID: <502C025E.6000009@wwwdotorg.org>
-Date: Wed, 15 Aug 2012 14:11:10 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-References: <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com> <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de> <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com> <502AD82F.3080702@wwwdotorg.org> <502AE485.8060307@wwwdotorg.org> <502BF2B4.9030401@wwwdotorg.org> <20120815200905.GD12870@avionic-0098.mockup.avionic-design.de>
-In-Reply-To: <20120815200905.GD12870@avionic-0098.mockup.avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Eilon Greenstein <eilong@broadcom.com>,
+	Matt Carlson <mcarlson@broadcom.com>,
+	Michael Chan <mchan@broadcom.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 16/32] PCI/broadcom: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:21 +0800
+Message-Id: <1343836477-7287-17-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/15/2012 02:09 PM, Thierry Reding wrote:
-> On Wed, Aug 15, 2012 at 01:04:20PM -0600, Stephen Warren wrote:
->> On 08/14/2012 05:51 PM, Stephen Warren wrote:
->>> On 08/14/2012 04:58 PM, Stephen Warren wrote:
->> ...
->>>> Can't we make the call to pci_bus_add_devices() optional in 
->>>> pci_scan_root_bus() somehow; one of:
->>> 
->>> Sigh, that turns out not to work correctly; it solves at least
->>> this part of the problem when booting using device tree, but
->>> when booting using a board file, it causes the IRQ number
->>> passed to the PCIe device to be bogus:-(
->>> 
->>> I give up for now.
->> 
->> I think the appropriate workaround for Tegra in 3.6 is to simply
->> make any drivers for PCIe-based devices be modules instead of
->> built-in, as Thierry hinted at much earlier in the thread. I've
->> validated that the Ethernet works just fine on TrimSlice with
->> that change, booting v3.6-rc1 using either board files or device
->> tree.
-> 
-> That's certainly the easiest and least error-prone solution.
-> 
->> For 3.7, we should continue the discussion about a real fix; I'll
->> look into the change Bjorn requested and see if it works,
->> although given that hacking pci_scan_root_bus as described
->> immediately previously in this thread caused a regression when
->> booting using a board file, and the fact that board files are no
->> longer supported on Tegra, I'm not too confident in the
->> outcome...
-> 
-> I don't understand this last part. If the problem is there when
-> booting from board files and the board files are removed, doesn't
-> that remove the problem as well? =)
+From: Jiang Liu <jiang.liu@huawei.com>
 
-It does for ARM SoCs/CPUs exclusively using device tree, but not all
-ARM systems are converting to device tree, so the fact that Tegra has
-makes it harder for me not to break anything else.
+Use PCIe capabilities access functions to simplify broadcom ethernet drivers'
+implementation.
+
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |   25 ++-------
+ drivers/net/ethernet/broadcom/tg3.c              |   60 ++++++++--------------
+ 2 files changed, 25 insertions(+), 60 deletions(-)
+
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index f755a66..c631f62 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -1142,14 +1142,9 @@ static int bnx2x_send_final_clnup(struct bnx2x *bp, u8 clnup_func,
+ 
+ static u8 bnx2x_is_pcie_pending(struct pci_dev *dev)
+ {
+-	int pos;
+ 	u16 status;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return false;
+-
+-	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
++	pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+ 	return status & PCI_EXP_DEVSTA_TRPND;
+ }
+ 
+@@ -6114,8 +6109,7 @@ static void bnx2x_init_pxp(struct bnx2x *bp)
+ 	u16 devctl;
+ 	int r_order, w_order;
+ 
+-	pci_read_config_word(bp->pdev,
+-			     pci_pcie_cap(bp->pdev) + PCI_EXP_DEVCTL, &devctl);
++	pci_pcie_capability_read_word(bp->pdev, PCI_EXP_DEVCTL, &devctl);
+ 	DP(NETIF_MSG_HW, "read 0x%x from devctl\n", devctl);
+ 	w_order = ((devctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5);
+ 	if (bp->mrrs == -1)
+@@ -9330,15 +9324,10 @@ static int __devinit bnx2x_prev_mark_path(struct bnx2x *bp)
+ 
+ static bool __devinit bnx2x_can_flr(struct bnx2x *bp)
+ {
+-	int pos;
+ 	u32 cap;
+ 	struct pci_dev *dev = bp->pdev;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return false;
+-
+-	pci_read_config_dword(dev, pos + PCI_EXP_DEVCAP, &cap);
++	pci_pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+ 	if (!(cap & PCI_EXP_DEVCAP_FLR))
+ 		return false;
+ 
+@@ -9347,7 +9336,7 @@ static bool __devinit bnx2x_can_flr(struct bnx2x *bp)
+ 
+ static int __devinit bnx2x_do_flr(struct bnx2x *bp)
+ {
+-	int i, pos;
++	int i;
+ 	u16 status;
+ 	struct pci_dev *dev = bp->pdev;
+ 
+@@ -9355,16 +9344,12 @@ static int __devinit bnx2x_do_flr(struct bnx2x *bp)
+ 	if (bnx2x_can_flr(bp))
+ 		return -ENOTTY;
+ 
+-	pos = pci_pcie_cap(dev);
+-	if (!pos)
+-		return -ENOTTY;
+-
+ 	/* Wait for Transaction Pending bit clean */
+ 	for (i = 0; i < 4; i++) {
+ 		if (i)
+ 			msleep((1 << (i - 1)) * 100);
+ 
+-		pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
++		pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
+ 		if (!(status & PCI_EXP_DEVSTA_TRPND))
+ 			goto clear;
+ 	}
+diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
+index 09fa3c6..d29fe27 100644
+--- a/drivers/net/ethernet/broadcom/tg3.c
++++ b/drivers/net/ethernet/broadcom/tg3.c
+@@ -3541,17 +3541,9 @@ static int tg3_power_down_prepare(struct tg3 *tp)
+ 	tg3_enable_register_access(tp);
+ 
+ 	/* Restore the CLKREQ setting. */
+-	if (tg3_flag(tp, CLKREQ_BUG)) {
+-		u16 lnkctl;
+-
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				     &lnkctl);
+-		lnkctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
+-		pci_write_config_word(tp->pdev,
+-				      pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				      lnkctl);
+-	}
++	if (tg3_flag(tp, CLKREQ_BUG))
++		pci_pcie_capability_change_word(tp->pdev, PCI_EXP_LNKCTL,
++						PCI_EXP_LNKCTL_CLKREQ_EN, 0);
+ 
+ 	misc_host_ctrl = tr32(TG3PCI_MISC_HOST_CTRL);
+ 	tw32(TG3PCI_MISC_HOST_CTRL,
+@@ -4322,20 +4314,15 @@ relink:
+ 
+ 	/* Prevent send BD corruption. */
+ 	if (tg3_flag(tp, CLKREQ_BUG)) {
+-		u16 oldlnkctl, newlnkctl;
++		u16 set = 0, clr = 0;
+ 
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				     &oldlnkctl);
+ 		if (tp->link_config.active_speed == SPEED_100 ||
+ 		    tp->link_config.active_speed == SPEED_10)
+-			newlnkctl = oldlnkctl & ~PCI_EXP_LNKCTL_CLKREQ_EN;
++			clr = PCI_EXP_LNKCTL_CLKREQ_EN;
+ 		else
+-			newlnkctl = oldlnkctl | PCI_EXP_LNKCTL_CLKREQ_EN;
+-		if (newlnkctl != oldlnkctl)
+-			pci_write_config_word(tp->pdev,
+-					      pci_pcie_cap(tp->pdev) +
+-					      PCI_EXP_LNKCTL, newlnkctl);
++			set = PCI_EXP_LNKCTL_CLKREQ_EN;
++		pci_pcie_capability_change_word(tp->pdev, PCI_EXP_LNKCTL,
++						set, clr);
+ 	}
+ 
+ 	if (current_link_up != netif_carrier_ok(tp->dev)) {
+@@ -7942,7 +7929,7 @@ static int tg3_chip_reset(struct tg3 *tp)
+ 
+ 	udelay(120);
+ 
+-	if (tg3_flag(tp, PCI_EXPRESS) && pci_pcie_cap(tp->pdev)) {
++	if (tg3_flag(tp, PCI_EXPRESS) && pci_is_pcie(tp->pdev)) {
+ 		u16 val16;
+ 
+ 		if (tp->pci_chip_rev_id == CHIPREV_ID_5750_A0) {
+@@ -7959,28 +7946,22 @@ static int tg3_chip_reset(struct tg3 *tp)
+ 		}
+ 
+ 		/* Clear the "no snoop" and "relaxed ordering" bits. */
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_DEVCTL,
+-				     &val16);
+-		val16 &= ~(PCI_EXP_DEVCTL_RELAX_EN |
+-			   PCI_EXP_DEVCTL_NOSNOOP_EN);
++		val16 = PCI_EXP_DEVCTL_RELAX_EN | PCI_EXP_DEVCTL_NOSNOOP_EN;
+ 		/*
+ 		 * Older PCIe devices only support the 128 byte
+ 		 * MPS setting.  Enforce the restriction.
+ 		 */
+ 		if (!tg3_flag(tp, CPMU_PRESENT))
+-			val16 &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-		pci_write_config_word(tp->pdev,
+-				      pci_pcie_cap(tp->pdev) + PCI_EXP_DEVCTL,
+-				      val16);
++			val16 |= PCI_EXP_DEVCTL_PAYLOAD;
++		pci_pcie_capability_change_word(tp->pdev, PCI_EXP_DEVCTL,
++						0, val16);
+ 
+ 		/* Clear error status */
+-		pci_write_config_word(tp->pdev,
+-				      pci_pcie_cap(tp->pdev) + PCI_EXP_DEVSTA,
+-				      PCI_EXP_DEVSTA_CED |
+-				      PCI_EXP_DEVSTA_NFED |
+-				      PCI_EXP_DEVSTA_FED |
+-				      PCI_EXP_DEVSTA_URD);
++		pci_pcie_capability_write_word(tp->pdev, PCI_EXP_DEVSTA,
++					       PCI_EXP_DEVSTA_CED |
++					       PCI_EXP_DEVSTA_NFED |
++					       PCI_EXP_DEVSTA_FED |
++					       PCI_EXP_DEVSTA_URD);
+ 	}
+ 
+ 	tg3_restore_pci_state(tp);
+@@ -14303,9 +14284,8 @@ static int __devinit tg3_get_invariants(struct tg3 *tp)
+ 
+ 		tg3_flag_set(tp, PCI_EXPRESS);
+ 
+-		pci_read_config_word(tp->pdev,
+-				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
+-				     &lnkctl);
++		pci_pcie_capability_read_word(tp->pdev,
++					      PCI_EXP_LNKCTL, &lnkctl);
+ 		if (lnkctl & PCI_EXP_LNKCTL_CLKREQ_EN) {
+ 			if (GET_ASIC_REV(tp->pci_chip_rev_id) ==
+ 			    ASIC_REV_5906) {
+-- 
+1.7.9.5
+
