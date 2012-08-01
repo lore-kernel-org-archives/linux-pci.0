@@ -1,172 +1,287 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:33161 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755675Ab2HAPy7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:54:59 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Jiang Liu <liuj97@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Don Dutile <ddutile@redhat.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
-Date: Wed,  1 Aug 2012 23:54:05 +0800
-Message-Id: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 04/32] PCI: add PCIe capabilities access functions to hide differences among PCIe specs
+Date: Wed,  1 Aug 2012 23:54:09 +0800
+Message-Id: <1343836477-7287-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+From: Jiang Liu <jiang.liu@huawei.com>
 
-As suggested by Bjorn Helgaas and Don Dutile in threads
-http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
-to PCIe capabilities register in to way:
-1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
-   repeatedly reading this register because it's read only.
-2) provide access functions for PCIe Capabilities registers to hide differences
-   among PCIe base specifications, so the caller don't need to handle those
-   differences.
+Introduce several configuration access functions for PCIe capabilities
+registers to hide differences among PCIe Base Spec versions.
 
-This patch set applies to
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+Function pci_pcie_capability_read_word/dword() stores the PCIe Capabilities
+register value by the passed parameter val. If related PCIe Capabilities
+register is not implemented on the PCIe device, the passed parameter val
+will be set 0.
 
-And you could pull the change set from
-https://github.com/jiangliu/linux.git topic/pcie-cap
+Function pci_pcie_capability_write_word/dowrd() writes the value to PCIe
+Capability register.
 
-v2: 1) change return value to 0 when the register is not implemented by
-       V1 PCIe devices.
-    2) Change all driver in the source tree to use the new interfaces.
+Function pci_pcie_capability_change_word sets and/or clears bits
+of a PCIe Capability register.
 
-v3: 1) be more aggresive to remoce if (pci_is_pcie(dev)) check according to
-       Don's suggestion.
-    2) Don't cache MSI/MSI-x information in PCIe capabilities flag register
-       according to Kenji's suggestion.
-    3) add new pci_pcie_capability_change_word/dword() to reduce duplicated
-       code.
+Function pci_pcie_capability_reg_implemeneted() checks whether a Capabilities
+register is implemented by the PCIe device.
 
-Jiang Liu (29):
-  PCI: add PCIe capabilities access functions to hide differences among
-    PCIe specs
-  PCI/core: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/hotplug: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/portdrv: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/pciehp: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/PME: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/AER: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/ASPM: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/ARM: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/MIPS: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/tile: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/r8169: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/broadcom: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/igb: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/vxge: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/mlx4: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/niu: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/myri10ge: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/chelsio: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/atl1c: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/ath9k: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/iwl: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/mthca: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/qib: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/qla: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/radeon: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/tsi721: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/et131x: use PCIe capabilities access functions to simplify
-    implementation
-  PCI/rtl8192e: use PCIe capabilities access functions to simplify
-    implementation
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/access.c     |  195 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h      |   10 +++
+ include/linux/pci_regs.h |    2 +
+ 3 files changed, 207 insertions(+)
 
-Yijing Wang (3):
-  PCI: add pcie_flags_reg into struct pci_dev to cache PCIe
-    capabilities register
-  PCI: introduce pci_pcie_type(dev) to replace pci_dev->pcie_type
-  PCI: remove unused field pcie_type from struct pci_dev
-
- arch/arm/mach-tegra/pcie.c                         |   13 +-
- arch/mips/pci/pci-octeon.c                         |   15 +-
- arch/powerpc/platforms/powernv/pci-ioda.c          |    2 +-
- arch/tile/kernel/pci.c                             |   25 +-
- drivers/gpu/drm/radeon/evergreen.c                 |   10 +-
- drivers/infiniband/hw/mthca/mthca_reset.c          |    8 +-
- drivers/infiniband/hw/qib/qib_pcie.c               |   40 +--
- drivers/iommu/intel-iommu.c                        |    6 +-
- drivers/net/ethernet/atheros/atl1c/atl1c_main.c    |    2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c   |   25 +-
- drivers/net/ethernet/broadcom/tg3.c                |   60 ++--
- drivers/net/ethernet/chelsio/cxgb3/t3_hw.c         |   19 +-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    |   11 +-
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c         |   10 +-
- drivers/net/ethernet/intel/e1000e/netdev.c         |   27 +-
- drivers/net/ethernet/intel/igb/igb_main.c          |   12 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |    2 +-
- drivers/net/ethernet/mellanox/mlx4/reset.c         |    8 +-
- drivers/net/ethernet/myricom/myri10ge/myri10ge.c   |   39 +--
- drivers/net/ethernet/neterion/vxge/vxge-config.c   |    4 +-
- .../net/ethernet/qlogic/netxen/netxen_nic_main.c   |    2 +-
- drivers/net/ethernet/realtek/r8169.c               |   44 +--
- drivers/net/ethernet/sun/niu.c                     |   18 +-
- drivers/net/wireless/ath/ath9k/pci.c               |   21 +-
- drivers/net/wireless/iwlegacy/common.h             |    5 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      |    4 +-
- drivers/net/wireless/rtlwifi/pci.c                 |    8 +-
- drivers/pci/access.c                               |  195 ++++++++++++
- drivers/pci/hotplug/pciehp_acpi.c                  |    6 +-
- drivers/pci/hotplug/pciehp_hpc.c                   |   12 +-
- drivers/pci/hotplug/pcihp_slot.c                   |   20 +-
- drivers/pci/iov.c                                  |    6 +-
- drivers/pci/pci.c                                  |  324 ++++----------------
- drivers/pci/pcie/aer/aer_inject.c                  |    2 +-
- drivers/pci/pcie/aer/aerdrv.c                      |   24 +-
- drivers/pci/pcie/aer/aerdrv_acpi.c                 |    2 +-
- drivers/pci/pcie/aer/aerdrv_core.c                 |   47 +--
- drivers/pci/pcie/aspm.c                            |  111 +++----
- drivers/pci/pcie/pme.c                             |   28 +-
- drivers/pci/pcie/portdrv_bus.c                     |    2 +-
- drivers/pci/pcie/portdrv_core.c                    |   19 +-
- drivers/pci/pcie/portdrv_pci.c                     |   18 +-
- drivers/pci/probe.c                                |   29 +-
- drivers/pci/quirks.c                               |    9 +-
- drivers/pci/search.c                               |    2 +-
- drivers/rapidio/devices/tsi721.c                   |   19 +-
- drivers/scsi/qla2xxx/qla_init.c                    |    4 +-
- drivers/scsi/qla2xxx/qla_nx.c                      |    8 +-
- drivers/scsi/qla4xxx/ql4_nx.c                      |    4 +-
- drivers/staging/et131x/et131x.c                    |   19 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_pci.c        |    8 +-
- include/linux/pci.h                                |   21 +-
- include/linux/pci_regs.h                           |    2 +
- 53 files changed, 553 insertions(+), 828 deletions(-)
-
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index ba91a7e..1f8c9e8 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -469,3 +469,198 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
+ 	raw_spin_unlock_irqrestore(&pci_lock, flags);
+ }
+ EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
++
++static inline int pci_pcie_cap_version(const struct pci_dev *dev)
++{
++	return dev->pcie_flags_reg & PCI_EXP_FLAGS_VERS;
++}
++
++static inline bool pci_pcie_cap_has_devctl(const struct pci_dev *dev)
++{
++	return true;
++}
++
++static inline bool pci_pcie_cap_has_lnkctl(const struct pci_dev *dev)
++{
++	int type = pci_pcie_type(dev);
++
++	return pci_pcie_cap_version(dev) > 1 ||
++	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	       type == PCI_EXP_TYPE_ENDPOINT ||
++	       type == PCI_EXP_TYPE_LEG_END;
++}
++
++static inline bool pci_pcie_cap_has_sltctl(const struct pci_dev *dev)
++{
++	int type = pci_pcie_type(dev);
++
++	return pci_pcie_cap_version(dev) > 1 ||
++	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	       (type == PCI_EXP_TYPE_DOWNSTREAM &&
++		dev->pcie_flags_reg & PCI_EXP_FLAGS_SLOT);
++}
++
++static inline bool pci_pcie_cap_has_rtctl(const struct pci_dev *dev)
++{
++	int type = pci_pcie_type(dev);
++
++	return pci_pcie_cap_version(dev) > 1 ||
++	       type == PCI_EXP_TYPE_ROOT_PORT ||
++	       type == PCI_EXP_TYPE_RC_EC;
++}
++
++bool pci_pcie_capability_reg_implemented(struct pci_dev *dev, int pos)
++{
++	if (!pci_is_pcie(dev))
++		return false;
++
++	switch (pos) {
++	case PCI_EXP_FLAGS_TYPE:
++		return true;
++	case PCI_EXP_DEVCAP:
++	case PCI_EXP_DEVCTL:
++	case PCI_EXP_DEVSTA:
++		return pci_pcie_cap_has_devctl(dev);
++	case PCI_EXP_LNKCAP:
++	case PCI_EXP_LNKCTL:
++	case PCI_EXP_LNKSTA:
++		return pci_pcie_cap_has_lnkctl(dev);
++	case PCI_EXP_SLTCAP:
++	case PCI_EXP_SLTCTL:
++	case PCI_EXP_SLTSTA:
++		return pci_pcie_cap_has_sltctl(dev);
++	case PCI_EXP_RTCTL:
++	case PCI_EXP_RTCAP:
++	case PCI_EXP_RTSTA:
++		return pci_pcie_cap_has_rtctl(dev);
++	case PCI_EXP_DEVCAP2:
++	case PCI_EXP_DEVCTL2:
++	case PCI_EXP_LNKCAP2:
++	case PCI_EXP_LNKCTL2:
++	case PCI_EXP_LNKSTA2:
++		return pci_pcie_cap_version(dev) > 1;
++	default:
++		return false;
++	}
++}
++EXPORT_SYMBOL(pci_pcie_capability_reg_implemented);
++
++/*
++ * Quotation from PCIe Base Spec 3.0:
++ * For Functions that do not implement the Slot Capabilities,
++ * Slot Status, and Slot Control registers, these spaces must
++ * be hardwired to 0b, with the exception of the Presence Detect
++ * State bit in the Slot Status register of Downstream Ports,
++ * which must be hardwired to 1b.
++ */
++int pci_pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
++{
++	int ret = 0;
++
++	*val = 0;
++	if (pos & 1)
++		return -EINVAL;
++
++	if (pci_pcie_capability_reg_implemented(dev, pos)) {
++		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
++		/*
++		 * Reset *val to 0 if pci_read_config_word() fails, it may
++		 * have been written as 0xFFFF if hardware error happens
++		 * during pci_read_config_word().
++		 */
++		if (ret)
++			*val = 0;
++	} else if (pci_is_pcie(dev) && pos == PCI_EXP_SLTSTA &&
++		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
++		*val = PCI_EXP_SLTSTA_PDS;
++	}
++
++	return ret;
++}
++EXPORT_SYMBOL(pci_pcie_capability_read_word);
++
++int pci_pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
++{
++	int ret = 0;
++
++	*val = 0;
++	if (pos & 3)
++		return -EINVAL;
++
++	if (pci_pcie_capability_reg_implemented(dev, pos)) {
++		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
++		/*
++		 * Reset *val to 0 if pci_read_config_dword() fails, it may
++		 * have been written as 0xFFFFFFFF if hardware error happens
++		 * during pci_read_config_dword().
++		 */
++		if (ret)
++			*val = 0;
++	} else if (pci_is_pcie(dev) && pos == PCI_EXP_SLTCTL &&
++		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
++		*val = PCI_EXP_SLTSTA_PDS;
++	}
++
++	return ret;
++}
++EXPORT_SYMBOL(pci_pcie_capability_read_dword);
++
++int pci_pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
++{
++	if (pos & 1)
++		return -EINVAL;
++	else if (!pci_pcie_capability_reg_implemented(dev, pos))
++		return 0;
++
++	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
++}
++EXPORT_SYMBOL(pci_pcie_capability_write_word);
++
++int pci_pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
++{
++	if (pos & 3)
++		return -EINVAL;
++	else if (!pci_pcie_capability_reg_implemented(dev, pos))
++		return 0;
++
++	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
++}
++EXPORT_SYMBOL(pci_pcie_capability_write_dword);
++
++int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
++				    u16 set_bits, u16 clear_bits)
++{
++	int ret;
++	u16 val, old;
++
++	ret = pci_pcie_capability_read_word(dev, pos, &val);
++	if (!ret) {
++		old = val;
++		val &= ~clear_bits;
++		val |= set_bits;
++		if (val != old)
++			ret = pci_pcie_capability_write_word(dev, pos, val);
++	}
++
++	return ret;
++}
++EXPORT_SYMBOL(pci_pcie_capability_change_word);
++
++int pci_pcie_capability_change_dword(struct pci_dev *dev, int pos,
++				     u32 set_bits, u32 clear_bits)
++{
++	int ret;
++	u32 val, old;
++
++	ret = pci_pcie_capability_read_dword(dev, pos, &val);
++	if (!ret) {
++		old = val;
++		val &= ~clear_bits;
++		val |= set_bits;
++		if (val != old)
++			ret = pci_pcie_capability_write_dword(dev, pos, val);
++	}
++
++	return ret;
++}
++EXPORT_SYMBOL(pci_pcie_capability_change_dword);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9807da5..4fa3c99 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -816,6 +816,16 @@ static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ 
++int pci_pcie_capability_read_word(struct pci_dev *dev, int where, u16 *val);
++int pci_pcie_capability_read_dword(struct pci_dev *dev, int where, u32 *val);
++int pci_pcie_capability_write_word(struct pci_dev *dev, int where, u16 val);
++int pci_pcie_capability_write_dword(struct pci_dev *dev, int where, u32 val);
++int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
++				    u16 set_bits, u16 clear_bits);
++int pci_pcie_capability_change_dword(struct pci_dev *dev, int pos,
++				     u32 set_bits, u32 clear_bits);
++bool pci_pcie_capability_reg_implemented(struct pci_dev *dev, int where);
++
+ /* user-space driven config access */
+ int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+ int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+diff --git a/include/linux/pci_regs.h b/include/linux/pci_regs.h
+index 53274bf..5300fdf 100644
+--- a/include/linux/pci_regs.h
++++ b/include/linux/pci_regs.h
+@@ -543,7 +543,9 @@
+ #define  PCI_EXP_OBFF_MSGB_EN	0x4000	/* OBFF enable with Message type B */
+ #define  PCI_EXP_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
+ #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
++#define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
+ #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
++#define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
+ #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
+ 
+ /* Extended Capabilities (PCI-X 2.0 and Express) */
 -- 
 1.7.9.5
 
