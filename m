@@ -1,62 +1,31 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [BUGFIX -v3 2/4] PCI/PM: Keep parent bridge active when probing device
-Date: Wed,  8 Aug 2012 09:07:39 +0800
-Message-Id: <1344388061-18981-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
-References: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:45674 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933Ab2HASaN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 14:30:13 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fk26so7348123vcb.19
+        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2012 11:30:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOp+P+rsAW2pBZNNSW2ehEDVQB=zSFkweVRDmPcePCiEd5_8DA@mail.gmail.com>
+References: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
+	<CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
+	<CAOp+P+rsAW2pBZNNSW2ehEDVQB=zSFkweVRDmPcePCiEd5_8DA@mail.gmail.com>
+Date: Wed, 1 Aug 2012 11:30:13 -0700
+Message-ID: <CAE9FiQW7PR9L=4QtcOvFxN7jRbVSx9MpAnsBzXiJ50D+FATVEw@mail.gmail.com>
+Subject: Re: PCI express switch
+From: Yinghai Lu <yinghai@kernel.org>
+To: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
+	<caronteycerbero@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+On Wed, Aug 1, 2012 at 11:03 AM, Miguel Ángel Álvarez
+<caronteycerbero@gmail.com> wrote:
+> Which one? The one in which the switch is detected by the u-boot or
+> the one in which the switch is detected by the Linux?
 
-http://marc.info/?l=linux-pci&m=134329923124234&w=2
+both.
 
-The root cause of the bug is as follow.
-
-If a device is not bound with the corresponding driver, the device
-runtime PM will be disabled and the device will be put into suspended
-state.  So that, the bridge/PCIe port connected to it may be put into
-suspended and low power state.  When do probing for the device later,
-because the bridge/PCIe port connected to it is in low power state,
-the IO access to device may fail.
-
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before probing.
-
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/pci/pci-driver.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -280,8 +280,12 @@ static long local_pci_probe(void *_ddi)
- {
- 	struct drv_dev_and_id *ddi = _ddi;
- 	struct device *dev = &ddi->dev->dev;
-+	struct device *parent = dev->parent;
- 	int rc;
- 
-+	/* The parent bridge must be in active state when probing */
-+	if (parent)
-+		pm_runtime_get_sync(parent);
- 	/* Unbound PCI devices are always set to disabled and suspended.
- 	 * During probe, the device is set to enabled and active and the
- 	 * usage count is incremented.  If the driver supports runtime PM,
-@@ -298,6 +302,8 @@ static long local_pci_probe(void *_ddi)
- 		pm_runtime_set_suspended(dev);
- 		pm_runtime_put_noidle(dev);
- 	}
-+	if (parent)
-+		pm_runtime_put(parent);
- 	return rc;
- }
- 
+Yinghai
