@@ -1,161 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:62888 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972Ab2HBN4O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 09:56:14 -0400
-Received: by weyx8 with SMTP id x8so5853827wey.19
-        for <linux-pci@vger.kernel.org>; Thu, 02 Aug 2012 06:56:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOp+P+ria2vEsRj8rKsaMp0f5eRZrBVttite9Y3bknjW0ebx3A@mail.gmail.com>
-References: <CAOp+P+ria2vEsRj8rKsaMp0f5eRZrBVttite9Y3bknjW0ebx3A@mail.gmail.com>
-Date: Thu, 2 Aug 2012 14:56:12 +0100
-Message-ID: <CAOp+P+ry=ueSjA8gM5VU1Cjh9KWCe3pfD3Ca_CsVs4tVmCFzrw@mail.gmail.com>
-Subject: Re: PCIe interrupts assignment
-From: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
-	<caronteycerbero@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:62810 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756110Ab2HAP7v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:59:51 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	Ravi Anand <ravi.anand@qlogic.com>,
+	Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>, linux-driver@qlogic.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 28/32] PCI/qla: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:33 +0800
+Message-Id: <1343836477-7287-29-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-More information regarding this issue:
+From: Jiang Liu <jiang.liu@huawei.com>
 
-If I change the dts from:
+Use PCIe capabilities access functions to simplify QLA SCSI drivers'
+implementation.
 
-pci2: pcie@ffe08000 {
-		cell-index = <3>;
-		compatible = "fsl,mpc8548-pcie";
-		device_type = "pci";
-		#interrupt-cells = <1>;
-		#size-cells = <2>;
-		#address-cells = <3>;
-		reg = <0 0xffe08000 0 0x1000>;
-		bus-range = <0 255>;
-		ranges = <0x2000000 0x0 0xc0000000 0 0xc0000000 0x0 0x20000000
-			  0x1000000 0x0 0x00000000 0 0xffc40000 0x0 0x10000>;
-		clock-frequency = <33333333>;
-		interrupt-parent = <&mpic>;
-		interrupts = <27 2>;
-		interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
-		interrupt-map = <
-			/* IDSEL 0x0 */
-			0000 0x0 0x0 0x1 &mpic 0x8 0x1
-			0000 0x0 0x0 0x2 &mpic 0x9 0x1
-			0000 0x0 0x0 0x3 &mpic 0xa 0x1
-			0000 0x0 0x0 0x4 &mpic 0xb 0x1
-			>;
-		pcie@0 {
-			reg = <0x0 0x0 0x0 0x0 0x0>;
-			#size-cells = <2>;
-			#address-cells = <3>;
-			device_type = "pci";
-			ranges = <0x2000000 0x0 0xc0000000
-				  0x2000000 0x0 0xc0000000
-				  0x0 0x20000000
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c |    4 ++--
+ drivers/scsi/qla2xxx/qla_nx.c   |    8 ++------
+ drivers/scsi/qla4xxx/ql4_nx.c   |    4 +---
+ 3 files changed, 5 insertions(+), 11 deletions(-)
 
-				  0x1000000 0x0 0x0
-				  0x1000000 0x0 0x0
-				  0x0 0x100000>;
-		};
-	};
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ca50847..a44653b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -685,7 +685,7 @@ qla24xx_pci_config(scsi_qla_host_t *vha)
+ 		pcix_set_mmrbc(ha->pdev, 2048);
+ 
+ 	/* PCIe -- adjust Maximum Read Request Size (2048). */
+-	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
++	if (pci_is_pcie(ha->pdev))
+ 		pcie_set_readrq(ha->pdev, 2048);
+ 
+ 	pci_disable_rom(ha->pdev);
+@@ -721,7 +721,7 @@ qla25xx_pci_config(scsi_qla_host_t *vha)
+ 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
+ 
+ 	/* PCIe -- adjust Maximum Read Request Size (2048). */
+-	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
++	if (pci_is_pcie(ha->pdev))
+ 		pcie_set_readrq(ha->pdev, 2048);
+ 
+ 	pci_disable_rom(ha->pdev);
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index caf627b..be516e9 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1615,13 +1615,11 @@ qla82xx_get_fw_offs(struct qla_hw_data *ha)
+ char *
+ qla82xx_pci_info_str(struct scsi_qla_host *vha, char *str)
+ {
+-	int pcie_reg;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	char lwstr[6];
+ 	uint16_t lnk;
+ 
+-	pcie_reg = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
+-	pci_read_config_word(ha->pdev, pcie_reg + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
+ 	ha->link_width = (lnk >> 4) & 0x3f;
+ 
+ 	strcpy(str, "PCIe (");
+@@ -2497,7 +2495,6 @@ fw_load_failed:
+ int
+ qla82xx_start_firmware(scsi_qla_host_t *vha)
+ {
+-	int           pcie_cap;
+ 	uint16_t      lnk;
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+@@ -2528,8 +2525,7 @@ qla82xx_start_firmware(scsi_qla_host_t *vha)
+ 	}
+ 
+ 	/* Negotiated Link width */
+-	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
+-	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
+ 	ha->link_width = (lnk >> 4) & 0x3f;
+ 
+ 	/* Synchronize with Receive peg */
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 228b670..7e30158 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -1566,7 +1566,6 @@ qla4_8xxx_set_qsnt_ready(struct scsi_qla_host *ha)
+ static int
+ qla4_8xxx_start_firmware(struct scsi_qla_host *ha, uint32_t image_start)
+ {
+-	int pcie_cap;
+ 	uint16_t lnk;
+ 
+ 	/* scrub dma mask expansion register */
+@@ -1590,8 +1589,7 @@ qla4_8xxx_start_firmware(struct scsi_qla_host *ha, uint32_t image_start)
+ 	}
+ 
+ 	/* Negotiated Link width */
+-	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
+-	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
++	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
+ 	ha->link_width = (lnk >> 4) & 0x3f;
+ 
+ 	/* Synchronize with Receive peg */
+-- 
+1.7.9.5
 
-to:
-
-pci2: pcie@ffe08000 {
-		cell-index = <3>;
-		compatible = "fsl,mpc8548-pcie";
-		device_type = "pci";
-		#interrupt-cells = <1>;
-		#size-cells = <2>;
-		#address-cells = <3>;
-		reg = <0 0xffe08000 0 0x1000>;
-		bus-range = <0 255>;
-		ranges = <0x2000000 0x0 0xc0000000 0 0xc0000000 0x0 0x20000000
-			  0x1000000 0x0 0x00000000 0 0xffc40000 0x0 0x10000>;
-		clock-frequency = <33333333>;
-		interrupt-parent = <&mpic>;
-		interrupts = <27 2>;
-		interrupt-map-mask = <0xf800 0x0 0x0 0x7>;
-		interrupt-map = <
-			/* IDSEL 0x0 */
-			0000 0x0 0x0 0x1 &mpic 0x8 0x2
-			0000 0x0 0x0 0x2 &mpic 0x9 0x2
-			0000 0x0 0x0 0x3 &mpic 0xa 0x2
-			0000 0x0 0x0 0x4 &mpic 0xb 0x2
-			>;
-		pcie@0 {
-			reg = <0x0 0x0 0x0 0x0 0x0>;
-			#size-cells = <2>;
-			#address-cells = <3>;
-			device_type = "pci";
-			ranges = <0x2000000 0x0 0xc0000000
-				  0x2000000 0x0 0xc0000000
-				  0x0 0x20000000
-
-				  0x1000000 0x0 0x0
-				  0x1000000 0x0 0x0
-				  0x0 0x100000>;
-		};
-	};
-
-I find that the cards that failed begin to work and the one that
-worked begins to fail.
-
-Miguel Ángel
-
-On Thu, Aug 2, 2012 at 11:28 AM, Miguel Ángel Álvarez
-<caronteycerbero@gmail.com> wrote:
-> Dear all,
->
-> I have a 1 to 4 PCIe switch connected to a root port of a P2020.
->
-> I am attaching a PCIe board to each one of the download ports of the
-> switch (same kind of card with four serial ports in each one of them).
->
-> When booting Linux, all cards are detected, so I can see them in
-> /sys/bus/pci/devices. All 16 ttyS* are created. However, when trying
-> to use them, I have no problems when using the serial ports of the
-> card in the last downstream port of the switch, but if I try to use
-> any of the others I obtain the following error:
->
-> irq 16: nobody cared (try booting with the "irqpoll" option)
-> Call Trace:
-> [df83fca0] [c0007540] show_stack+0x84/0x1b0 (unreliable)
-> [df83fcd8] [c0077324] __report_bad_irq+0x5c/0xe0
-> [df83fcf0] [c0077534] note_interrupt+0x18c/0x238
-> [df83fd10] [c0078520] handle_fasteoi_irq+0xe4/0x134
-> [df83fd28] [c0004ea0] handle_one_irq+0x30/0x44
-> [df83fd38] [c000c078] __ipipe_do_IRQ+0x84/0xc0
-> [df83fd58] [c007bdc8] __ipipe_sync_stage+0x210/0x3b8
-> [df83fdb0] [c007cf40] __ipipe_unstall_root+0x60/0x74
-> [df83fdb8] [c0047798] __do_softirq+0xd8/0x200
-> [df83fe08] [c0004d50] do_softirq+0x60/0x80
-> [df83fe18] [c004751c] irq_exit+0x54/0xac
-> [df83fe20] [c000c07c] __ipipe_do_IRQ+0x88/0xc0
-> [df83fe40] [c007bdc8] __ipipe_sync_stage+0x210/0x3b8
-> [df83fe98] [c000ba7c] __ipipe_handle_irq+0x1c4/0x1f8
-> [df83fec8] [c000bd80] __ipipe_grab_irq+0x15c/0x1f0
-> [df83fee8] [c001323c] __ipipe_ret_from_except+0x0/0xc
-> [df83ffa8] [c0008684] cpu_idle+0x68/0xe0
-> [df83ffc0] [c0544c2c] start_secondary+0x314/0x350
-> [df83fff0] [c0001c9c] __secondary_start+0x30/0x84
-> handlers:
-> [<c0336e80>] (serial8250_interrupt+0x0/0x148)
-> Disabling IRQ #16
->
-> What I can see from /sys/bus/pci/devices/*/irq is that one irq is
-> assigned to each card; 16 for the first, 17 for the second, 18 for the
-> third and 19 for the last (and successfull) one.
->
-> My question is... where are irqs mapped for the pci express cards? I
-> have backtrace the code to pci_device_probe in pci-driver.c, but there
-> it seems that the irqs are already assigned.
->
-> I have searched the web, but have not found the clue that makes me
-> understand the process.
->
-> Any ideas?
->
-> Thanks
->
-> Miguel Ángel
