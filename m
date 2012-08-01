@@ -1,75 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mso.anu.edu.au ([150.203.89.32]:46591 "EHLO mso.anu.edu.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217Ab2HBWlM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Aug 2012 18:41:12 -0400
-Message-ID: <501B01ED.9080309@mso.anu.edu.au>
-Date: Fri, 03 Aug 2012 08:40:45 +1000
-From: Francois Rigaut <frigaut@mso.anu.edu.au>
-MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
-	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-References: <1343407934-459-1-git-send-email-mjg@redhat.com> <20120731223240.GD19134@kroah.com> <20120801165400.GA3042@srcf.ucam.org> <20120801232147.GA6228@kroah.com> <20120802040242.GB25933@thinkpad-t410> <20120802103423.GA1921@kroah.com> <501A955D.6030500@mso.anu.edu.au> <20120802161209.GF32395@thinkpad-t410>
-In-Reply-To: <20120802161209.GF32395@thinkpad-t410>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 09/32] PCI/PME: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:14 +0800
+Message-Id: <1343836477-7287-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Seth,
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Sorry for the belated response. On Oz time here.
-I don't have a /var/log/kernel.log !
-Let me make sure of something:
-This switcher code is to be run on osx, no? That's where gfxcardstatus 
-lives and where I can effect the card switch. Just to make sure.
-So I'm running osx mountain lion, and the only thing I see in the logs 
-when I switch cards (using gfxcardstatus) is what I pasted below. and 
-you're right, it was not in message.log, but system.log (it was late). I 
-just went through the whole thing again.
-Am I missing something?
-Cheers,
-Francois
+Use PCIe capabilities access functions to simplify PCIe PME implementation.
 
-On 03/08/12 02:12, Seth Forshee wrote:
-> On Fri, Aug 03, 2012 at 12:57:33AM +1000, Francois Rigaut wrote:
->> Greg, Seth,
->>
->> Here is what the message.log shows:
->>
->> switching to the HD4000 (integrated):
->>
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
->> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
->>
->> switching to the nvidia (discrete):
->>
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
->> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
->>
->> Hope that helps.
-> Thanks for trying it out, but it's not really what I was hoping for. I
-> get a bunch of messages similar to these in /var/log/kernel.log, mixed
-> in with a lot of other stuff.
->
->   AGC:: setMuxRegister:1666 (728, 1, 1)
->   AGC:: setMuxRegister:1666 (710, 1, 4)
->   AGC:: getMuxRegister:1647 (716, 1) = 1
->
-> I don't even have message.log. You don't have a kernel.log? Do you see
-> any messages like those if you run dmesg?
->
-> Seth
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/pme.c |   22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 30897bf..74a3d4d 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -57,17 +57,13 @@ struct pcie_pme_service_data {
+  */
+ void pcie_pme_interrupt_enable(struct pci_dev *dev, bool enable)
+ {
+-	int rtctl_pos;
+-	u16 rtctl;
++	u16 set = 0, clr = 0;
+ 
+-	rtctl_pos = pci_pcie_cap(dev) + PCI_EXP_RTCTL;
+-
+-	pci_read_config_word(dev, rtctl_pos, &rtctl);
+ 	if (enable)
+-		rtctl |= PCI_EXP_RTCTL_PMEIE;
++		set = PCI_EXP_RTCTL_PMEIE;
+ 	else
+-		rtctl &= ~PCI_EXP_RTCTL_PMEIE;
+-	pci_write_config_word(dev, rtctl_pos, rtctl);
++		clr = PCI_EXP_RTCTL_PMEIE;
++	pci_pcie_capability_change_word(dev, PCI_EXP_RTCTL, set, clr);
+ }
+ 
+ /**
+@@ -226,18 +222,15 @@ static void pcie_pme_work_fn(struct work_struct *work)
+ 	struct pcie_pme_service_data *data =
+ 			container_of(work, struct pcie_pme_service_data, work);
+ 	struct pci_dev *port = data->srv->port;
+-	int rtsta_pos;
+ 	u32 rtsta;
+ 
+-	rtsta_pos = pci_pcie_cap(port) + PCI_EXP_RTSTA;
+-
+ 	spin_lock_irq(&data->lock);
+ 
+ 	for (;;) {
+ 		if (data->noirq)
+ 			break;
+ 
+-		pci_read_config_dword(port, rtsta_pos, &rtsta);
++		pci_pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+ 		if (rtsta & PCI_EXP_RTSTA_PME) {
+ 			/*
+ 			 * Clear PME status of the port.  If there are other
+@@ -276,17 +269,14 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+ {
+ 	struct pci_dev *port;
+ 	struct pcie_pme_service_data *data;
+-	int rtsta_pos;
+ 	u32 rtsta;
+ 	unsigned long flags;
+ 
+ 	port = ((struct pcie_device *)context)->port;
+ 	data = get_service_data((struct pcie_device *)context);
+ 
+-	rtsta_pos = pci_pcie_cap(port) + PCI_EXP_RTSTA;
+-
+ 	spin_lock_irqsave(&data->lock, flags);
+-	pci_read_config_dword(port, rtsta_pos, &rtsta);
++	pci_pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+ 
+ 	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
+ 		spin_unlock_irqrestore(&data->lock, flags);
+-- 
+1.7.9.5
 
