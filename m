@@ -1,48 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757777Ab2HQXgr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:47 -0400
-Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:47 -0700 (PDT)
-Subject: [PATCH v2 12/16] frv/PCI: Use list_for_each_entry() for bus->devices
-	traversal
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>,
-	linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:46 -0600
-Message-ID: <20120817233646.10973.40175.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from minas.ics.muni.cz ([147.251.4.40]:49876 "EHLO minas.ics.muni.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753554Ab2HAU4v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Aug 2012 16:56:51 -0400
+Date: Wed, 1 Aug 2012 22:56:40 +0200
+From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: mellanox mlx4_core and SR-IOV
+Message-ID: <20120801205640.GN5470@ics.muni.cz>
+References: <20120801133835.GH5470@ics.muni.cz>
+ <CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
+ <CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace open-coded list traversal with list_for_each_entry().
+On Wed, Aug 01, 2012 at 11:29:02AM -0700, Yinghai Lu wrote:
+> iov bar is not assigned by BIOS, and kernel can not find range for it too.
+> 
+> Lukas, can you post whole boot log with PCI_DEBUG enabled? That will
+> tell exact why kernel does not assign them.
+> 
+> Recent kernel from 3.4... should enable realloc when SRIOV bar is not assigned.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: David Howells <dhowells@redhat.com>
----
- arch/frv/mb93090-mb00/pci-vdk.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+sorry for confusing, PCI_DEBUG does not break mlx driver, it is reallocation
+code that results:
+[    3.555008] mlx4_core 0000:02:00.0: Missing UAR, aborting.
 
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index d04ed14..71e9bcf 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -330,10 +330,8 @@ void __init pcibios_fixup_bus(struct pci_bus *bus)
- 	pci_read_bridge_bases(bus);
- 
- 	if (bus->number == 0) {
--		struct list_head *ln;
- 		struct pci_dev *dev;
--		for (ln=bus->devices.next; ln != &bus->devices; ln=ln->next) {
--			dev = pci_dev_b(ln);
-+		list_for_each_entry(dev, &bus->devices, bus_list) {
- 			if (dev->devfn == 0) {
- 				dev->resource[0].start = 0;
- 				dev->resource[0].end = 0;
-
+-- 
+Luká¹ Hejtmánek
