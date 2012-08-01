@@ -1,108 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:60328 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754283Ab2HNXvh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 19:51:37 -0400
-Message-ID: <502AE485.8060307@wwwdotorg.org>
-Date: Tue, 14 Aug 2012 17:51:33 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com> <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de> <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com> <502AD82F.3080702@wwwdotorg.org>
-In-Reply-To: <502AD82F.3080702@wwwdotorg.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Realtek linux nic maintainers <nic_swsd@realtek.com>,
+	Francois Romieu <romieu@fr.zoreil.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v3 15/32] PCI/r8169: use PCIe capabilities access functions to simplify implementation
+Date: Wed,  1 Aug 2012 23:54:20 +0800
+Message-Id: <1343836477-7287-16-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/14/2012 04:58 PM, Stephen Warren wrote:
-> On 08/14/2012 03:55 PM, Bjorn Helgaas wrote:
->> On Tue, Aug 14, 2012 at 12:58 PM, Thierry Reding
->> <thierry.reding@avionic-design.de> wrote:
->>> On Tue, Aug 14, 2012 at 01:39:23PM -0600, Stephen Warren wrote:
->>>> On 08/13/2012 05:18 PM, Bjorn Helgaas wrote:
->>>>> On Mon, Aug 13, 2012 at 11:47 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->>>> ...
->>>>>> whereas for a device tree boot:
->>>>>>
->>>>>> (same):
->>>>>>> [    2.112217] pci 0000:01:00.0: reg 10: [io  0x0000-0x00ff]
->>>>>>> [    2.117635] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x00000fff 64bit pref]
->>>>>>> [    2.124690] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00003fff 64bit pref]
->>>>>>> [    2.131731] pci 0000:01:00.0: reg 30: [mem 0x00000000-0x0001ffff pref]
->>>>>> ... (request region happens early)
->>>>>>> [    2.179838] r8169 0000:01:00.0: BAR 0: requesting [io  0x0000-0x00ff]
->>>>>>> [    2.193312] r8169 0000:01:00.0: BAR 2: requesting [mem 0x00000000-0x00000fff 64bit pref]
->>>>>>> [    2.201397] r8169 0000:01:00.0: BAR 2: can't reserve [mem 0x00000000-0x00000fff 64bit pref]
->>>>>>> [    2.209742] r8169 0000:01:00.0: (unregistered net_device): could not request regions
->>>>>> ... (same, just happens too late)
->>>>>>> [    2.236818] pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa001ffff pref]
->>>>>>> [    2.244027] pci 0000:01:00.0: BAR 4: assigned [mem 0xa0020000-0xa0023fff 64bit pref]
->>>>>>> [    2.251794] pci 0000:01:00.0: BAR 2: assigned [mem 0xa0024000-0xa0024fff 64bit pref]
->>>>>>> [    2.259542] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
->>>>>>
->>>>>> I suspect this is all still related to the PCI devices themselves being
->>>>>> probed much earlier in the overall PCI initialization sequence when the
->>>>>> PCI controller is probed later in the boot sequence, whereas PCI device
->>>>>> probe is deferred until the overall PCI initialization sequence is
->>>>>> complete if the PCI controller is probed very early in the boot sequence.
->>>>>
->>>>> I don't know what to apply your patches to (they don't apply cleanly
->>>>> to v3.6-rc2), so I can't see exactly what you're doing.  But it looks
->>>>> like you might be calling pci_bus_add_devices() before
->>>>> pci_bus_assign_resource(), which isn't going to work.
->>>>
->>>> Yes, that's exactly what is happening.
->>>>
->>>> PCIe initialization starts in arch/arm/mach-tegra/pci.e
->>>> tegra_pcie_init() which calls arch/arm/kernel/bios32.c
->>>> pci_common_init(). That function first calls pcibios_init_hw() (in the
->>>> same file, more about this later) and then loops over PCI buses, calling
->>>> amongst other things pci_bus_assign_resources() then pci_bus_add_devices().
->>>>
->>>> The problem is that ARM's pcibios_init_hw() calls pci_scan_root_bus()
->>>> (or a host-driver-specific function which that also calls
->>>> pci_scan_root_bus() in Tegra's case) which in turn calls
->>>> pci_bus_add_devices() right at the end, before control has returned to
->>>> pci_common_init() and hence before pci_bus_assign_resources() has been
->>>> called.
->>>>
->>>> If I modify pci_scan_root_bus() and remove the call to
->>>> pci_bus_add_devices(), everything works as expected.
->>>>
->>>> So, I guess the question is: Should ARM's pcibios_init_hw() not be
->>>> calling pci_scan_root_bus(), or at least presumably the ARM PCI code
->>>> needs to do things in a slightly different order?
->>
->> I think you need to do something like this instead of using pci_scan_root_bus():
->>
->>     pci_create_root_bus()
->>     pci_scan_child_bus()
->>     pci_bus_assign_resources()
->>     pci_bus_add_devices()
->>
->> This is the effective order used by most of the pci_create_root_bus() callers.
-> 
-> That would pretty much duplicate everything in pci_scan_root_bus(). That
-> might cause divergence down the road.
-> 
-> Can't we make the call to pci_bus_add_devices() optional in
-> pci_scan_root_bus() somehow; one of:
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Sigh, that turns out not to work correctly; it solves at least this part
-of the problem when booting using device tree, but when booting using a
-board file, it causes the IRQ number passed to the PCIe device to be
-bogus:-(
+Use PCIe capabilities access functions to simplify r8169 driver's
+implementation.
 
-I give up for now.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/net/ethernet/realtek/r8169.c |   44 +++++++---------------------------
+ 1 file changed, 9 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index 9757ce3..d575fbf 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -807,15 +807,8 @@ static void rtl_unlock_work(struct rtl8169_private *tp)
+ 
+ static void rtl_tx_performance_tweak(struct pci_dev *pdev, u16 force)
+ {
+-	int cap = pci_pcie_cap(pdev);
+-
+-	if (cap) {
+-		u16 ctl;
+-
+-		pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl);
+-		ctl = (ctl & ~PCI_EXP_DEVCTL_READRQ) | force;
+-		pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl);
+-	}
++	pci_pcie_capability_change_word(pdev, PCI_EXP_DEVCTL,
++		force, PCI_EXP_DEVCTL_READRQ);
+ }
+ 
+ static u32 ocp_read(struct rtl8169_private *tp, u8 mask, u16 reg)
+@@ -4504,28 +4497,14 @@ static void rtl_ephy_init(void __iomem *ioaddr, const struct ephy_info *e, int l
+ 
+ static void rtl_disable_clock_request(struct pci_dev *pdev)
+ {
+-	int cap = pci_pcie_cap(pdev);
+-
+-	if (cap) {
+-		u16 ctl;
+-
+-		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
+-		ctl &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
+-		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
+-	}
++	pci_pcie_capability_change_word(pdev, PCI_EXP_LNKCTL,
++					0, PCI_EXP_LNKCTL_CLKREQ_EN);
+ }
+ 
+ static void rtl_enable_clock_request(struct pci_dev *pdev)
+ {
+-	int cap = pci_pcie_cap(pdev);
+-
+-	if (cap) {
+-		u16 ctl;
+-
+-		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
+-		ctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
+-		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
+-	}
++	pci_pcie_capability_change_word(pdev, PCI_EXP_LNKCTL,
++					PCI_EXP_LNKCTL_CLKREQ_EN, 0);
+ }
+ 
+ #define R8168_CPCMD_QUIRK_MASK (\
+@@ -5132,14 +5111,9 @@ static void rtl_hw_start_8101(struct net_device *dev)
+ 		tp->event_slow &= ~RxFIFOOver;
+ 
+ 	if (tp->mac_version == RTL_GIGA_MAC_VER_13 ||
+-	    tp->mac_version == RTL_GIGA_MAC_VER_16) {
+-		int cap = pci_pcie_cap(pdev);
+-
+-		if (cap) {
+-			pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL,
+-					      PCI_EXP_DEVCTL_NOSNOOP_EN);
+-		}
+-	}
++	    tp->mac_version == RTL_GIGA_MAC_VER_16)
++		pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
++					       PCI_EXP_DEVCTL_NOSNOOP_EN);
+ 
+ 	RTL_W8(Cfg9346, Cfg9346_Unlock);
+ 
+-- 
+1.7.9.5
+
