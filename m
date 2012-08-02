@@ -1,54 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:20980 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725Ab2H1A5D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Aug 2012 20:57:03 -0400
-Message-ID: <503C1679.4020008@huawei.com>
-Date: Tue, 28 Aug 2012 08:53:13 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:64934 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753133Ab2HBVrP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 17:47:15 -0400
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	PCI <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [RESEND BUGFIX PATCH 1/3] PCI/AER: fix pci_ops return NULL when
- hotplug a pci bus which was doing aer error inject
-References: <1344685946-8172-1-git-send-email-wangyijing@huawei.com>   <5038A210.4030005@huawei.com> <1346030599.6279.315.camel@yhuang-dev>  <503B8CD4.8070802@gmail.com> <1346114304.6279.341.camel@yhuang-dev>
-In-Reply-To: <1346114304.6279.341.camel@yhuang-dev>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1343836477-7287-27-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <1343836477-7287-27-git-send-email-jiang.liu@huawei.com>
+From: Roland Dreier <roland@kernel.org>
+Date: Thu, 2 Aug 2012 14:46:54 -0700
+Message-ID: <CAG4TOxMzOeW4PE+sZmvu7OeO15RYQbn81s=nN3mQqSMPD8JMbg@mail.gmail.com>
+Subject: Re: [PATCH v3 26/32] PCI/mthca: use PCIe capabilities access
+ functions to simplify implementation
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Sean Hefty <sean.hefty@intel.com>,
+	Hal Rosenstock <hal.rosenstock@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/8/28 8:38, Huang Ying wrote:
-> On Mon, 2012-08-27 at 23:05 +0800, Jiang Liu wrote:
->> Is it ok to ignore such a case? After all, aer_inject is just a test tool:)
->> It's not worth to change the core logic for such a corner case.
->> --Gerry
-> 
-> Why ignore?  At least you can prevent aer_inject from unload if
-> something special happened.
-> 
+> Use PCIe capabilities access functions to simplify mthca driver's
+> implementation.
 
-Hi Huang Ying,
-   Thanks for your comments. It's my negligence. I will add some protection code when do #rmmod aer_inject(a race condition window about bus_ops),
-I will correct it in the new version patch.
-
-----------
-Thanks!
-Yijing
-
-
->> On 08/27/2012 09:23 AM, Huang Ying wrote:
->>> On Sat, 2012-08-25 at 17:59 +0800, Yijing Wang wrote:
->>>> When we inject aer errors to the target pci device by aer_inject module, the pci_ops of pci
->>>> bus which the target device is on will be assign to pci_ops_aer.So if the target pci device
->>>> is a bridge, once we hotplug the pci bus(child bus) which the target device bridges to, child
->>>> bus's pci_ops will be assigned to pci_ops_aer too.Now every access to the child bus's device
->>>> will result to system panic, because it return NULL pci_ops in pci_read_aer.
->>>> This patch fix this.
-
-
-
+Acked-by: Roland Dreier <roland@purestorage.com>
