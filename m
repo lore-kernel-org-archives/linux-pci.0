@@ -1,60 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [BUGFIX 2/4] PCI/PM: Keep parent bridge active when probing device
-Date: Fri,  3 Aug 2012 14:30:33 +0800
-Message-Id: <1343975435-25469-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1343975435-25469-1-git-send-email-ying.huang@intel.com>
-References: <1343975435-25469-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mso.anu.edu.au ([150.203.89.32]:46591 "EHLO mso.anu.edu.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753217Ab2HBWlM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Aug 2012 18:41:12 -0400
+Message-ID: <501B01ED.9080309@mso.anu.edu.au>
+Date: Fri, 03 Aug 2012 08:40:45 +1000
+From: Francois Rigaut <frigaut@mso.anu.edu.au>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+References: <1343407934-459-1-git-send-email-mjg@redhat.com> <20120731223240.GD19134@kroah.com> <20120801165400.GA3042@srcf.ucam.org> <20120801232147.GA6228@kroah.com> <20120802040242.GB25933@thinkpad-t410> <20120802103423.GA1921@kroah.com> <501A955D.6030500@mso.anu.edu.au> <20120802161209.GF32395@thinkpad-t410>
+In-Reply-To: <20120802161209.GF32395@thinkpad-t410>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+Hi Seth,
 
-http://marc.info/?l=linux-pci&m=134329923124234&w=2
+Sorry for the belated response. On Oz time here.
+I don't have a /var/log/kernel.log !
+Let me make sure of something:
+This switcher code is to be run on osx, no? That's where gfxcardstatus 
+lives and where I can effect the card switch. Just to make sure.
+So I'm running osx mountain lion, and the only thing I see in the logs 
+when I switch cards (using gfxcardstatus) is what I pasted below. and 
+you're right, it was not in message.log, but system.log (it was late). I 
+just went through the whole thing again.
+Am I missing something?
+Cheers,
+Francois
 
-The root cause of the bug is as follow.
+On 03/08/12 02:12, Seth Forshee wrote:
+> On Fri, Aug 03, 2012 at 12:57:33AM +1000, Francois Rigaut wrote:
+>> Greg, Seth,
+>>
+>> Here is what the message.log shows:
+>>
+>> switching to the HD4000 (integrated):
+>>
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
+>> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
+>>
+>> switching to the nvidia (discrete):
+>>
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
+>> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+>>
+>> Hope that helps.
+> Thanks for trying it out, but it's not really what I was hoping for. I
+> get a bunch of messages similar to these in /var/log/kernel.log, mixed
+> in with a lot of other stuff.
+>
+>   AGC:: setMuxRegister:1666 (728, 1, 1)
+>   AGC:: setMuxRegister:1666 (710, 1, 4)
+>   AGC:: getMuxRegister:1647 (716, 1) = 1
+>
+> I don't even have message.log. You don't have a kernel.log? Do you see
+> any messages like those if you run dmesg?
+>
+> Seth
 
-If a device is not bound with the corresponding driver, the device
-runtime PM will be disabled and the device will be put into suspended
-state.  So that, the bridge/PCIe port connected to it may be put into
-suspended and low power state.  When do probing for the device later,
-because the bridge/PCIe port connected to it is in low power state,
-the IO access to device may fail.
-
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before probing.
-
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci-driver.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -280,8 +280,12 @@ static long local_pci_probe(void *_ddi)
- {
- 	struct drv_dev_and_id *ddi = _ddi;
- 	struct device *dev = &ddi->dev->dev;
-+	struct device *parent = dev->parent;
- 	int rc;
- 
-+	/* The parent bridge must be in active state when probing */
-+	if (parent)
-+		pm_runtime_get_sync(parent);
- 	/* Unbound PCI devices are always set to disabled and suspended.
- 	 * During probe, the device is set to enabled and active and the
- 	 * usage count is incremented.  If the driver supports runtime PM,
-@@ -298,6 +302,8 @@ static long local_pci_probe(void *_ddi)
- 		pm_runtime_set_suspended(dev);
- 		pm_runtime_put_noidle(dev);
- 	}
-+	if (parent)
-+		pm_runtime_put(parent);
- 	return rc;
- }
- 
