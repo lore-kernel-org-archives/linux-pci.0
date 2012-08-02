@@ -1,78 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36548 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752624Ab2HTFal (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 01:30:41 -0400
-Received: by pbbrr13 with SMTP id rr13so6440379pbb.19
-        for <linux-pci@vger.kernel.org>; Sun, 19 Aug 2012 22:30:40 -0700 (PDT)
-Date: Sun, 19 Aug 2012 22:30:36 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
-	linux-mips <linux-mips@linux-mips.org>
-Subject: Re: PCI Section mismatch error in linux-next.
-Message-ID: <20120820053036.GA23166@kroah.com>
-References: <502E8115.90507@gmail.com>
- <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
- <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
- <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
- <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
- <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
- <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
- <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
- <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
- <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
+Received: from youngberry.canonical.com ([91.189.89.112]:38338 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752182Ab2HBQMT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 12:12:19 -0400
+Date: Thu, 2 Aug 2012 11:12:09 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Francois Rigaut <frigaut@mso.anu.edu.au>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120802161209.GF32395@thinkpad-t410>
+References: <1343407934-459-1-git-send-email-mjg@redhat.com>
+ <20120731223240.GD19134@kroah.com>
+ <20120801165400.GA3042@srcf.ucam.org>
+ <20120801232147.GA6228@kroah.com>
+ <20120802040242.GB25933@thinkpad-t410>
+ <20120802103423.GA1921@kroah.com>
+ <501A955D.6030500@mso.anu.edu.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <501A955D.6030500@mso.anu.edu.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2012 at 11:32:47PM +0200, Thierry Reding wrote:
-> On Fri, Aug 17, 2012 at 03:25:22PM -0600, Bjorn Helgaas wrote:
-> > On Fri, Aug 17, 2012 at 3:07 PM, Thierry Reding
-> > <thierry.reding@avionic-design.de> wrote:
-> > > On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
-> > >> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
-> > > [...]
-> > >> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
-> > >> > affect you?  I think we would still have to change some __inits to
-> > >> > __devinit, including pcibios_update_irq(), but it might be more
-> > >> > manageable.
-> > >>
-> > >> You said that depending on HOTPLUG wouldn't be enough because it would
-> > >> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
-> > >> theoretically possible to build a kernel without HOTPLUG but have the
-> > >> enumeration start after init because of deferred probing. Those cases
-> > >> won't work if we keep __init or __devinit respectively, right?
-> > >
-> > > Another possibility would be to make PCI select HOTPLUG or depend on it.
-> > > That way it would be made sure that __devinit wouldn't cause all the
-> > > functions to be discarded after init.
-> > 
-> > There's been some discussion recently about whether CONFIG_HOTPLUG is
-> > worth keeping any more, but nothing's been resolved yet.  If we did
-> > decide to remove CONFIG_HOTPLUG, or require it for PCI, I would rather
-> > just remove all the __devinit annotations because they'd be
-> > superfluous.
+On Fri, Aug 03, 2012 at 12:57:33AM +1000, Francois Rigaut wrote:
+> Greg, Seth,
 > 
-> I've missed that discussion. Can you point me to it?
+> Here is what the message.log shows:
+> 
+> switching to the HD4000 (integrated):
+> 
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
+> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
+> 
+> switching to the nvidia (discrete):
+> 
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
+> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
+> 
+> Hope that helps.
 
-It's pretty much just me saying the whole thing is a mess, causes
-problems, and really doesn't solve any memory usage issues.  Ideally we
-should just:
-	- remove CONFIG_HOTPLUG and assume it is enabled
-	- because of that, we can delete the large majority of the
-	  __dev* markings
+Thanks for trying it out, but it's not really what I was hoping for. I
+get a bunch of messages similar to these in /var/log/kernel.log, mixed
+in with a lot of other stuff.
 
-The memory savings these days are so tiny, if at all, and everyone,
-including me, gets it wrong all the time.
+ AGC:: setMuxRegister:1666 (728, 1, 1)
+ AGC:: setMuxRegister:1666 (710, 1, 4)
+ AGC:: getMuxRegister:1647 (716, 1) = 1
 
-As we pretty much allow anything to be disabled/enabled at any point in
-time after boot, we are all running systems that rely on CONFIG_HOTPLUG
-anyway.  To find a static system that doesn't need it is quite rare from
-what I have found.
+I don't even have message.log. You don't have a kernel.log? Do you see
+any messages like those if you run dmesg?
 
-greg k-h
+Seth
+
