@@ -1,85 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:51410 "EHLO ogre.sisk.pl"
+Received: from mga09.intel.com ([134.134.136.24]:7011 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759440Ab2HITfl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Aug 2012 15:35:41 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Thu, 9 Aug 2012 21:41:35 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1208081432090.1701-100000@iolanthe.rowland.org> <201208091246.25874.rjw@sisk.pl> <CACVXFVM9rQWvOrwR9ENrTx4m8iVK=EFbcjioWiCdgbyBRov3eQ@mail.gmail.com>
-In-Reply-To: <CACVXFVM9rQWvOrwR9ENrTx4m8iVK=EFbcjioWiCdgbyBRov3eQ@mail.gmail.com>
+	id S1753173Ab2HBBnZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Aug 2012 21:43:25 -0400
+Date: Wed, 1 Aug 2012 18:43:24 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: chetan loke <loke.chetan@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC v2 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120802014324.GB17548@jonmason-lab>
+References: <1343607994-32415-1-git-send-email-jon.mason@intel.com>
+ <1343607994-32415-2-git-send-email-jon.mason@intel.com>
+ <CAErSpo4p_hxvCeVGqiTXVq3itXepheQZerpqRHwLvG6A7R2Lcg@mail.gmail.com>
+ <20120730181542.GA987@jonmason-lab>
+ <CAErSpo6gjMf4C3RMn5YLNg5JtJ8CjHvTw1iqsKPa6YuRqPe90g@mail.gmail.com>
+ <CAAsGZS5kOyQ5FQ7Jg3HxOmmPNYS+F6XcB-_3tm=rcgDV7wAvRQ@mail.gmail.com>
+ <20120731172709.GB14080@jonmason-lab>
+ <CAAsGZS4nhv+s7NVwaaGjQ9fJoHQoaXnUoYw=xTPC-sfen+tj8A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208092141.35589.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAsGZS4nhv+s7NVwaaGjQ9fJoHQoaXnUoYw=xTPC-sfen+tj8A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, August 09, 2012, Ming Lei wrote:
-> On Thu, Aug 9, 2012 at 6:46 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Thursday, August 09, 2012, Ming Lei wrote:
+On Tue, Jul 31, 2012 at 02:02:25PM -0400, chetan loke wrote:
+> On Tue, Jul 31, 2012 at 1:27 PM, Jon Mason <jon.mason@intel.com> wrote:
+> >
+> > I don't see the benefit of having the driver in staging.  Any vendors
+> > who would notice the ntb driver in staging would be sitting on these
+> > mailing lists and hopefully have planety of comments on the design.
+> > Stashing the driver in staging while waiting for these comments (which
+> > may never come) doesn't seem the best course of action.
+> >
 > 
-> >> driver->runtime_resume should be allowed to do I/O things after
-> >> the device has been woken up inside driver callback, shouldn't it? If it
-> >> isn't allowed, something wrong should have be reported before.
-> >
-> > Well, the lack of reports doesn't mean there are no bugs. :-)
-> >
-> > People may actually see those bugs, but they don't report them or they
-> > report them as system suspend/resume bugs, for example.
+> I thought that since others are talking about it then may be there is
+> some WIP code for foo-NTB. Seems like that's not the case. So no need
+> to stage.
 > 
-> Also, I am still wondering why subsystem PM callback need to do
-> something after driver->runtime_resume completes, could you explain
-> it?
+> Correct me if I'm wrong but wouldn't apps just open a socket and route
+> data via ntb_vir_eth_dev? So I don't see an ABI breakage issue and
+> hence nothing would prevent us from changing the kernel parts(for
+> accommodating some foo-NTB part) in future.
 
-It just isn't guaranteed that the subsystem callback won't do anything
-after driver->runtime_resume completion.  I agree that it isn't likely
-to happen.
+The virtual ethernet device (patch #2) would allow for a generic way
+of passing data to the remote side.  The only issue would be changing
+how it is encoded in the shared buffer.
 
-> >> Firstly, introduce one extra pointer in device may increase memory
-> >> consume for device allocation,
-> >
-> > Yes, it does, which may or may not matter depending on the actual size of
-> > struct device and the CPU cache line size on the given machine, right?
-> 
-> It may double memory allocation size in some cases. And it is very possible
-> since there are so many device objects in system.
+> It may not be a bad idea to prefix intel-specific(if any)
+> ntb_structs/variables/logic with the 'intc'(Intel ticker or pick your
+> string) keyword.
 
-Numbers, please?  If you don't have them, it's just waving your hands.
-
-> >> also it reflects one design drawback in the patch, see below.
-> >>
-> >> More importantly, the implementation violates some software design
-> >> principle in object oriented design.
-> >
-> > It doesn't violate anything and you're just ignoring what you've been told.
-> > That makes discussing with you rather difficult, but I'll try again
-> > nevertheless.
-> >
-> > If you look at the actual patch I've just posted:
-> >
-> > https://patchwork.kernel.org/patch/1299781/
-> >
-> > you can see that power.func is never run directly.  Moreover, the pointer it
-> > contains is only used to run a function in pm_runtime_work() and note that
-> > pm_runtime_work() reads that pointer _twice_, because it may be changed in the
-> > meantime by a concurrent thread.
-> 
-> I have explained it before, it is enough to keep the pointer read only
-> since driver can maintain its internal state in its specific device instance
-> (for example, usb_interface objects) and decide what to do in 'func'
-> for situations, right?
-
-Yes, it is.  I actually have a patch that does something similar (I'll post it
-shortly).
-
-Of course, it is based on the assumption that func() will always be the same
-pointer for the given driver, which doesn't seem to be proven, but perhaps
-it is sufficient.  At least I'm not aware of use cases where it wouldn't be.
+The Intel specific things are current pre-pended with "xeon" or "bwd".
 
 Thanks,
-Rafael
+Jon
+
+
+> 
+> Chetan Loke
