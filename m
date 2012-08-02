@@ -1,91 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <503F8A27.2040005@gmail.com>
-Date: Thu, 30 Aug 2012 23:43:35 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:16483 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486Ab2HBHJV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 03:09:21 -0400
+Message-ID: <501A2740.3000309@huawei.com>
+Date: Thu, 2 Aug 2012 15:07:44 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: Re: [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in
- function pci_remove_bus()
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com> <20120810151227.cc02c783.izumi.taku@jp.fujitsu.com> <CAErSpo6ukOVgCNgrYJ7nZFH_4dwQKwqZhS1w6oSiR9LtNy8Maw@mail.gmail.com>
-In-Reply-To: <CAErSpo6ukOVgCNgrYJ7nZFH_4dwQKwqZhS1w6oSiR9LtNy8Maw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+To: Tang Chen <tangchen@cn.fujitsu.com>
+CC: Jiang Liu <liuj97@gmail.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luch@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Gaohuai Han <hangaohuai@huawei.com>
+Subject: Re: [RFC PATCH 1/3] ACPIHP: introduce a framework for ACPI based
+ system device hotplug
+References: <1343475772-21345-1-git-send-email-jiang.liu@huawei.com> <1343475772-21345-2-git-send-email-jiang.liu@huawei.com> <501A271A.5030808@cn.fujitsu.com>
+In-Reply-To: <501A271A.5030808@cn.fujitsu.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/17/2012 01:11 AM, Bjorn Helgaas wrote:
-> On Thu, Aug 9, 2012 at 11:12 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->>     Correctly clean up pci root buses in function pci_remove_bus()
->>
->>     The function pci_create_root_bus() allocates the pci bus structure,
->>     registers the bus device and creates the legacy files for a pci root
->>     bus, but returns without setting the is_added flag. The is_added flag
->>     for a pci root bus will be set by function pci_scan_child_bus().
->>     If a pci root bus is destroyed before calling pci_scan_child_bus(),
->>     the is_added flag will not be set.
+On 2012-8-2 15:07, Tang Chen wrote:
+> Hi,
 > 
-> What's the scenario where this happens?  Most of the
-> pci_scan_child_bus() calls look like this:
+> A little problem here. :)
 > 
->     bus = pci_create_root_bus();
->     pci_scan_child_bus(bus);
+> On 07/28/2012 07:42 PM, Jiang Liu wrote:
+>> +int acpihp_register_slot(struct acpihp_slot *slot)
+>> +{
+>> +	int ret;
+>> +	char *name;
+>> +	size_t off;
+>> +
+>> +	if (!slot || !slot->slot_ops)
+>> +		return -EINVAL;
+>> +
+>> +	/* Hook top level hotplug slots under ACPI root device */
+>> +	if (slot->parent)
+>> +		slot->dev.parent = &slot->parent->dev;
+>> +	else
+>> +		slot->dev.parent = &acpi_root->dev;
+>> +
+>> +	ret = device_add(&slot->dev);
+>> +	if (!ret) {
+>> +		slot->flags |= ACPIHP_SLOT_FLAG_REGISTERED;
+>> +		name = kmalloc(PAGE_SIZE, GFP_KERNEL);
+>> +		if (name) {
+>> +			off = acpihp_generate_link_name(slot, name, 0);
+>> +			name[off - 1] = '\0';
+>> +			sysfs_create_link(&acpihp_slot_kset->kobj,
+>> +					  &slot->dev.kobj, name);
 > 
-> In those cases, there's no opportunity to destroy the root bus before
-> calling pci_scan_child_bus().
+> I got a compiler warning here:
+>   CC      drivers/acpi/hotplug/core.o
+> drivers/acpi/hotplug/core.c: In function ‘acpihp_register_slot’:
+> drivers/acpi/hotplug/core.c:199: warning: ignoring return value of ‘sysfs_create_link’, declared with attribute warn_unused_result
 > 
-> I don't like to add additional tests as you're doing here because it's
-> telling us that we have more special cases to think about.  Apparently
-> bus->is_added is telling us that we've created legacy files and
-> registered the bus device.  EXCEPT for root buses.  Why is it
-> different for root buses?  Why don't we set root_bus->is_added at the
-> same time we create the legacy files and register the root bus's
-> device?
-Hi Bjorn,
-	Previously this patch was used to cover error recovery path in
-our new ACPI based hotplug framework. Now thing has changed a lot and
-it can't be cleanly applied to pci-next branch, so please ignore it:)
-I will resubmit it if needed in future.
-	--Gerry
+> Seems that we need to check the sysfs_create_link()'s return value here, and if it fails, 
+> shall we at least give a warning message here ?
+> 
+> Thanks. :)
+Hi Tang,
+	Thanks for your comments, will fix it in next version.
+	Regards!
+	Gerry
 
 > 
->>     So teach function pci_remove_bus()
->>     to detect such a case and correctly clean up pci root buses.
->>
->>     Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->>     Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>     Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
->> ---
->>  drivers/pci/remove.c |    9 ++++-----
->>  1 file changed, 4 insertions(+), 5 deletions(-)
->>
->> Index: Bjorn-next-0808/drivers/pci/remove.c
->> ===================================================================
->> --- Bjorn-next-0808.orig/drivers/pci/remove.c
->> +++ Bjorn-next-0808/drivers/pci/remove.c
->> @@ -70,11 +70,10 @@ void pci_remove_bus(struct pci_bus *pci_
->>         list_del(&pci_bus->node);
->>         pci_bus_release_busn_res(pci_bus);
->>         up_write(&pci_bus_sem);
->> -       if (!pci_bus->is_added)
->> -               return;
->> -
->> -       pci_remove_legacy_files(pci_bus);
->> -       device_unregister(&pci_bus->dev);
->> +       if (pci_bus->is_added || pci_is_root_bus(pci_bus)) {
->> +               pci_remove_legacy_files(pci_bus);
->> +               device_unregister(&pci_bus->dev);
->> +       }
->>  }
->>  EXPORT_SYMBOL(pci_remove_bus);
->>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+>> +			kfree(name);
+>> +		}
+>> +	}
+>> +
+>> +	return ret;
+>> +}
+>> +EXPORT_SYMBOL_GPL(acpihp_register_slot);
+> 
+
 
