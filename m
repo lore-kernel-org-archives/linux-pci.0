@@ -1,129 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 10/22] PCI: enhance PCI bus specific logic to support PCI bus lock mechanism
-Date: Wed,  8 Aug 2012 00:10:50 +0800
-Message-Id: <1344355862-2726-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:33241 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360Ab2HBKec (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 06:34:32 -0400
+Received: by yhmm54 with SMTP id m54so8508715yhm.19
+        for <linux-pci@vger.kernel.org>; Thu, 02 Aug 2012 03:34:31 -0700 (PDT)
+Date: Thu, 2 Aug 2012 03:34:23 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Francois Rigaut <frigaut@mso.anu.edu.au>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120802103423.GA1921@kroah.com>
+References: <1343407934-459-1-git-send-email-mjg@redhat.com>
+ <20120731223240.GD19134@kroah.com>
+ <20120801165400.GA3042@srcf.ucam.org>
+ <20120801232147.GA6228@kroah.com>
+ <20120802040242.GB25933@thinkpad-t410>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120802040242.GB25933@thinkpad-t410>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enhances PCI bus specific logic to support PCI bus lock mechanism.
+On Wed, Aug 01, 2012 at 11:02:42PM -0500, Seth Forshee wrote:
+> On Wed, Aug 01, 2012 at 04:21:47PM -0700, Greg KH wrote:
+> > On Wed, Aug 01, 2012 at 05:54:00PM +0100, Matthew Garrett wrote:
+> > > On Tue, Jul 31, 2012 at 03:32:40PM -0700, Greg KH wrote:
+> > > 
+> > > > With this series, does the latest MacBook work properly for the Intel
+> > > > graphics driver?  Or is this to resolve some other hardware issue?
+> > > 
+> > > Apple only seem to provide the ROM for the radeon. Intel normally 
+> > > stands a much better chance of working without a ROM - the only thing it 
+> > > really uses it for is the VBT, and I'm thinking about a couple of ways 
+> > > of handlng that.
+> > 
+> > Ok, thanks for letting me know.  For some reason, the gmux isn't working
+> > on the latest MacBook Pro so I can't get the vga switched to the Intel
+> > PCI device.  Rumor has it the osx tool at
+> > http://codykrieger.com/gfxCardStatus will switch into the Intel chip
+> > until the laptop is hard powered off, so it is possible, just need to
+> > figure out how to make the hardware do the switch...
+> 
+> There's a tool that enables some verbose logging which records all the
+> I/O to the gmux. It works for me with a Macbook Pro 8,2 running OS X
+> Lion, so you might give it a try.
+> 
+> All you need to do is clone https://github.com/ah-/switcher.git, build,
+> and run switcher. If it works you'll see messages prefixed with AGC in
+> dmesg. Then you can use gfxCardStatus to force some switches between the
+> integrated and discrete cards. After that you'll want to grab
+> /var/log/kern.log to get the full logs of everything that happened.
+> 
+> If you try this and it works, I'd appreciate it if you could send me a
+> copy of kern.log so I can apply the information towards getting graphics
+> switching into apple-gmux.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/bus.c |   54 ++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 31 insertions(+), 23 deletions(-)
+Francois, any chance you can ty this and let Seth know the results?  I
+don't have OSX on my machine anymore to do this myself.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index b6aacaa..371f20a 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -185,19 +185,20 @@ int pci_bus_add_device(struct pci_dev *dev)
-  */
- int pci_bus_add_child(struct pci_bus *bus)
- {
--	int retval;
--
--	if (bus->bridge)
--		bus->dev.parent = bus->bridge;
--
--	retval = device_add(&bus->dev);
--	if (retval)
--		return retval;
--
--	bus->is_added = 1;
--
--	/* Create legacy_io and legacy_mem files for this bus */
--	pci_create_legacy_files(bus);
-+	int retval = -EBUSY;
-+
-+	if (pci_bus_get_state(bus) == PCI_BUS_STATE_INITIALIZED) {
-+		if (bus->bridge)
-+			bus->dev.parent = bus->bridge;
-+		retval = device_add(&bus->dev);
-+		if (retval == 0) {
-+			/* Create legacy_io and legacy_mem files for this bus */
-+			pci_create_legacy_files(bus);
-+			pci_bus_change_state(bus, PCI_BUS_STATE_INITIALIZED,
-+					PCI_BUS_STATE_WORKING, false);
-+			bus->is_added = 1;
-+		}
-+	}
- 
- 	return retval;
- }
-@@ -232,13 +233,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		BUG_ON(!dev->is_added);
- 
--		child = dev->subordinate;
-+		child = pci_lock_subordinate(dev, PCI_BUS_STATE_STOPPING - 1);
-+		if (!child)
-+			continue;
-+
- 		/*
- 		 * If there is an unattached subordinate bus, attach
- 		 * it and then scan for unattached PCI devices.
- 		 */
--		if (!child)
--			continue;
- 		if (list_empty(&child->node)) {
- 			down_write(&pci_bus_sem);
- 			list_add_tail(&child->node, &dev->bus->children);
-@@ -250,28 +252,34 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 		 * register the bus with sysfs as the parent is now
- 		 * properly registered.
- 		 */
--		if (child->is_added)
--			continue;
--		retval = pci_bus_add_child(child);
--		if (retval)
--			dev_err(&dev->dev, "Error adding bus, continuing\n");
-+		if (pci_bus_get_state(child) == PCI_BUS_STATE_INITIALIZED) {
-+			retval = pci_bus_add_child(child);
-+			if (retval)
-+				dev_err(&dev->dev,
-+					"Error adding bus, continuing\n");
-+		}
-+
-+		pci_bus_unlock(child);
- 	}
- }
- 
- void pci_enable_bridges(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-+	struct pci_bus *child;
- 	int retval;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		if (dev->subordinate) {
-+		child = pci_lock_subordinate(dev, PCI_BUS_STATE_STOPPING - 1);
-+		if (child) {
- 			if (!pci_is_enabled(dev)) {
- 				retval = pci_enable_device(dev);
- 				if (retval)
- 					dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n", retval);
- 				pci_set_master(dev);
- 			}
--			pci_enable_bridges(dev->subordinate);
-+			pci_enable_bridges(child);
-+			pci_bus_unlock(child);
- 		}
- 	}
- }
--- 
-1.7.9.5
+thanks,
 
+greg k-h
