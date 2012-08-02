@@ -1,67 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56512 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755991Ab2HFUjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Aug 2012 16:39:35 -0400
-Date: Mon, 6 Aug 2012 16:39:02 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-Message-ID: <20120806203902.GH25559@redhat.com>
-References: <501BB4EF.7080909@jp.fujitsu.com>
- <20120803114643.GA28330@redhat.com>
- <501F4877.5050605@jp.fujitsu.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:35679 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab2HBECu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 00:02:50 -0400
+Date: Wed, 1 Aug 2012 23:02:42 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120802040242.GB25933@thinkpad-t410>
+References: <1343407934-459-1-git-send-email-mjg@redhat.com>
+ <20120731223240.GD19134@kroah.com>
+ <20120801165400.GA3042@srcf.ucam.org>
+ <20120801232147.GA6228@kroah.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <501F4877.5050605@jp.fujitsu.com>
+In-Reply-To: <20120801232147.GA6228@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 06, 2012 at 01:30:47PM +0900, Takao Indoh wrote:
-> Hi Vivek,
+On Wed, Aug 01, 2012 at 04:21:47PM -0700, Greg KH wrote:
+> On Wed, Aug 01, 2012 at 05:54:00PM +0100, Matthew Garrett wrote:
+> > On Tue, Jul 31, 2012 at 03:32:40PM -0700, Greg KH wrote:
+> > 
+> > > With this series, does the latest MacBook work properly for the Intel
+> > > graphics driver?  Or is this to resolve some other hardware issue?
+> > 
+> > Apple only seem to provide the ROM for the radeon. Intel normally 
+> > stands a much better chance of working without a ROM - the only thing it 
+> > really uses it for is the VBT, and I'm thinking about a couple of ways 
+> > of handlng that.
 > 
-> (2012/08/03 20:46), Vivek Goyal wrote:
-> > On Fri, Aug 03, 2012 at 08:24:31PM +0900, Takao Indoh wrote:
-> >> Hi all,
-> >>
-> >> This patch adds kernel parameter "reset_pcie_devices" which resets PCIe
-> >> devices at boot time to address DMA problem on kdump with iommu. When
-> >> this parameter is specified, a hot reset is triggered on each PCIe root
-> >> port and downstream port to reset its downstream endpoint.
-> >
-> > Hi Takao,
-> >
-> > Why not use existing "reset_devices" parameter instead of introducing
-> > a new one?
-> 
-> "reset_devices" is used for each driver to reset their own device, and
-> this patch resets all devices forcibly, so I thought they were different
-> things.
+> Ok, thanks for letting me know.  For some reason, the gmux isn't working
+> on the latest MacBook Pro so I can't get the vga switched to the Intel
+> PCI device.  Rumor has it the osx tool at
+> http://codykrieger.com/gfxCardStatus will switch into the Intel chip
+> until the laptop is hard powered off, so it is possible, just need to
+> figure out how to make the hardware do the switch...
 
-Yes reset_devices currently is used for driver to reset its device. I
-thought one could very well extend its reach to reset pci express devices
-at bus level.
+There's a tool that enables some verbose logging which records all the
+I/O to the gmux. It works for me with a Macbook Pro 8,2 running OS X
+Lion, so you might give it a try.
 
-Having them separate is not going to be much useful from kdump
-perspective. We will end up passing both reset_devices and
-reset_pcie_devices to second kernel whill lead to bus level reset as well
-as device level reset.
+All you need to do is clone https://github.com/ah-/switcher.git, build,
+and run switcher. If it works you'll see messages prefixed with AGC in
+dmesg. Then you can use gfxCardStatus to force some switches between the
+integrated and discrete cards. After that you'll want to grab
+/var/log/kern.log to get the full logs of everything that happened.
 
-Ideal situation would be that somehow detect that bus level reset has been
-done and skip device level reset (assuming bus level reset obviates the
-need of device level reset, please correct me if that's not the case). 
+If you try this and it works, I'd appreciate it if you could send me a
+copy of kern.log so I can apply the information towards getting graphics
+switching into apple-gmux.
 
-After pcie reset, can we store the state in a variable and drivers can
-use that variable to check if PCIe level reset was done or not. If yes,
-skip device level reset (Assuming driver knows that device is on a
-PCIe slot).
+Seth
 
-In that case we will not have to introduce new kernel command line, and
-also avoid double reset?
-
-Thanks
-Vivek
