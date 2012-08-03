@@ -1,103 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:55155 "EHLO
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:58506 "EHLO
 	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037Ab2HIABv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 20:01:51 -0400
+	with ESMTP id S1753261Ab2HCQlI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2012 12:41:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <1344469333-8739-1-git-send-email-charlie.mear@hp.com>
-References: <1344469333-8739-1-git-send-email-charlie.mear@hp.com>
-Date: Wed, 8 Aug 2012 17:01:50 -0700
-Message-ID: <CAE9FiQW2aFMxO54aD_GFSegjsfwexA2E+azFr3bqkh9248z3Uw@mail.gmail.com>
-Subject: Re: [PATCH] x86/pci: Allow x86 platforms to use translation offsets
+In-Reply-To: <20120803083344.GF25979@ics.muni.cz>
+References: <20120801133835.GH5470@ics.muni.cz>
+	<CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
+	<CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
+	<20120801205640.GN5470@ics.muni.cz>
+	<CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
+	<20120801220802.GP5470@ics.muni.cz>
+	<CAE9FiQW84gjtX=_4guCBgcAJmkAGQ5ooFoj7C_29K7QK0s9qwA@mail.gmail.com>
+	<20120803083344.GF25979@ics.muni.cz>
+Date: Fri, 3 Aug 2012 09:41:07 -0700
+Message-ID: <CAE9FiQX+dQiJXS31mXky4WSNHbmwNzHEwm3YhbWnmObWJ-FBug@mail.gmail.com>
+Subject: Re: mellanox mlx4_core and SR-IOV
 From: Yinghai Lu <yinghai@kernel.org>
-To: charlie.mear@hp.com
-Cc: ">" <"tglx@linutronix.de, mingo@redhat.com, hpa"@zytor.com>,
-	x86@kernel.org, bhelgaas@google.com, jbarnes@virtuousgeek.org,
-	davej@redhat.com, liuj97@gmail.com, linux-kernel@vger.kernel.org,
+To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 8, 2012 at 4:42 PM,  <charlie.mear@hp.com> wrote:
-> From: Charlie Mear <charlie.mear@hp.com>
+On Fri, Aug 3, 2012 at 1:33 AM, Lukas Hejtmanek <xhejtman@ics.muni.cz> wrote:
+> On Wed, Aug 01, 2012 at 04:36:14PM -0700, Yinghai Lu wrote:
+>> > so it seems, that pic=nocsr is a must now.
+>>
+>> yes. Or you have bios provide SRIOV support or 64 bit resource in _CRS.
 >
-> The memory range descriptors in the _CRS control method contain an
-> address translation offset for host bridges.  This value is used to
-> translate addresses across the bridge.  The support to use _TRA values
-> is present for other architectures but not for X86 platforms.
+> Well, I can use PCI passthrough in Xen now, however, it seems SR-IOV does not
+> work in case of Mellanox mlx4 driver.
 >
-> For existing X86 platforms the _TRA value is zero.  Non zero _TRA values
-> are expected on future X86 platforms and this change will register that
-> value with the resource.
+> With 3.5 stock kernel, I got this message in virtual domain:
+> [    2.666623] mlx4_core: Mellanox ConnectX core driver v1.1 (Dec, 2011)
+> [    2.666635] mlx4_core: Initializing 0000:00:00.1
+> [    2.666717] mlx4_core 0000:00:00.1: enabling device (0000 -> 0002)
+> [    2.666975] mlx4_core 0000:00:00.1: Xen PCI mapped GSI0 to IRQ168
+> [    2.667040] mlx4_core 0000:00:00.1: enabling bus mastering
+> [    2.667184] mlx4_core 0000:00:00.1: Detected virtual function - running in slave mode
+> [    2.667214] mlx4_core 0000:00:00.1: Sending reset
+> [    2.667319] mlx4_core 0000:00:00.1: Sending vhcr0
+> [    2.667886] mlx4_core 0000:00:00.1: HCA minimum page size:1
+> [    2.668067] mlx4_core 0000:00:00.1: The host doesn't support eth interface
+> [    2.668074] mlx4_core 0000:00:00.1: QUERY_FUNC_CAP command failed, aborting.
+> [    2.668079] mlx4_core 0000:00:00.1: Failed to obtain slave caps
+> [    2.668305] mlx4_core: probe of 0000:00:00.1 failed with error -93
 >
-> Signed-off-by: Charlie Mear <charlie.mear@hp.com>
-> ---
->  arch/x86/pci/acpi.c |   18 ++++++++++++++++--
->  1 files changed, 16 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 505acdd..37acbae 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -12,6 +12,7 @@ struct pci_root_info {
->         char name[16];
->         unsigned int res_num;
->         struct resource *res;
-> +       u64 *res_offset;
+> not sure what does it mean.
 
-resource_size_t * ?
+did you check if SRIOV bar for that card is assigned in DOM0 ?
 
->         struct pci_sysdata sd;
->  #ifdef CONFIG_PCI_MMCONFIG
->         bool mcfg_added;
-> @@ -306,6 +307,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
->         res->start = start;
->         res->end = end;
->         res->child = NULL;
-> +       info->res_offset[info->res_num] = addr.translation_offset;
->
->         if (!pci_use_crs) {
->                 dev_printk(KERN_DEBUG, &info->bridge->dev,
-> @@ -375,7 +377,8 @@ static void add_resources(struct pci_root_info *info,
->                                  "ignoring host bridge window %pR (conflicts with %s %pR)\n",
->                                  res, conflict->name, conflict);
->                 else
-> -                       pci_add_resource(resources, res);
-> +                       pci_add_resource_offset(resources, res,
-> +                                       info->res_offset[i]);
->         }
->  }
->
-> @@ -383,6 +386,8 @@ static void free_pci_root_info_res(struct pci_root_info *info)
->  {
->         kfree(info->res);
->         info->res = NULL;
-> +       kfree(info->res_offset);
-> +       info->res_offset = NULL;
->         info->res_num = 0;
->  }
->
-> @@ -433,11 +438,20 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
->                 return;
->
->         size = sizeof(*info->res) * info->res_num;
-> -       info->res_num = 0;
->         info->res = kmalloc(size, GFP_KERNEL);
->         if (!info->res)
-                   you need to info->res_num = 0 here
->                 return;
->
-> +       size = sizeof(*info->res_offset) * info->res_num;
-> +       info->res_offset = kmalloc(size, GFP_KERNEL);
-> +       if (!info->res_offset) {
-> +               kfree(info->res);
-> +               info->res = NULL;
-> +               return;
-> +       }
-> +       info->res_num = 0;
+can you kvm with pci pass through?
 
-need to move it before: if (!info->res_offset) {
+I only tried pci through with intel igb and ixgbe sriov device with
+kvm recently.
+
+please make sure you have intel_iommu=on ...
 
 Thanks
 
