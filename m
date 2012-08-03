@@ -1,419 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:44709 "EHLO ogre.sisk.pl"
+Received: from minas.ics.muni.cz ([147.251.4.40]:53905 "EHLO minas.ics.muni.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755937Ab2HFUZK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Aug 2012 16:25:10 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Mon, 6 Aug 2012 22:30:58 +0200
-Cc: Ming Lei <tom.leiming@gmail.com>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1208061112230.1649-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1208061112230.1649-100000@iolanthe.rowland.org>
+	id S1752923Ab2HCId5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 3 Aug 2012 04:33:57 -0400
+Date: Fri, 3 Aug 2012 10:33:44 +0200
+From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: mellanox mlx4_core and SR-IOV
+Message-ID: <20120803083344.GF25979@ics.muni.cz>
+References: <20120801133835.GH5470@ics.muni.cz>
+ <CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
+ <CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
+ <20120801205640.GN5470@ics.muni.cz>
+ <CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
+ <20120801220802.GP5470@ics.muni.cz>
+ <CAE9FiQW84gjtX=_4guCBgcAJmkAGQ5ooFoj7C_29K7QK0s9qwA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208062230.58553.rjw@sisk.pl>
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <CAE9FiQW84gjtX=_4guCBgcAJmkAGQ5ooFoj7C_29K7QK0s9qwA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, August 06, 2012, Alan Stern wrote:
-> On Sun, 5 Aug 2012, Rafael J. Wysocki wrote:
-[...]
+On Wed, Aug 01, 2012 at 04:36:14PM -0700, Yinghai Lu wrote:
+> > so it seems, that pic=nocsr is a must now.
 > 
-> > What about the appended experimental patch?
-> 
-> For now, I think it would be best to start with a single func argument.  
-> If it turns out that anyone really needs to have two separate
-> arguments, the single-argument form can be reimplemented on top of the
-> two-argument form easily enough.
+> yes. Or you have bios provide SRIOV support or 64 bit resource in _CRS.
 
-All right.
+Well, I can use PCI passthrough in Xen now, however, it seems SR-IOV does not
+work in case of Mellanox mlx4 driver.
 
-> > @@ -484,6 +484,15 @@ static int rpm_suspend(struct device *de
-> >  	goto out;
-> >  }
-> >  
-> > +void rpm_queue_up_resume(struct device *dev)
-> > +{
-> > +	dev->power.request = RPM_REQ_RESUME;
-> > +	if (!dev->power.request_pending) {
-> > +		dev->power.request_pending = true;
-> > +		queue_work(pm_wq, &dev->power.work);
-> > +	}
-> > +}
-> > +
-> >  /**
-> >   * rpm_resume - Carry out runtime resume of given device.
-> >   * @dev: Device to resume.
-> > @@ -524,7 +533,9 @@ static int rpm_resume(struct device *dev
-> >  	 * rather than cancelling it now only to restart it again in the near
-> >  	 * future.
-> >  	 */
-> > -	dev->power.request = RPM_REQ_NONE;
-> > +	if (dev->power.request != RPM_REQ_RESUME || !dev->power.func)
-> > +		dev->power.request = RPM_REQ_NONE;
-> > +
-> >  	if (!dev->power.timer_autosuspends)
-> >  		pm_runtime_deactivate_timer(dev);
-> >  
-> > @@ -533,6 +544,12 @@ static int rpm_resume(struct device *dev
-> >  		goto out;
-> >  	}
-> >  
-> > +	if (dev->power.func && (rpmflags & RPM_ASYNC)) {
-> > +		rpm_queue_up_resume(dev);
-> > +		retval = 0;
-> > +		goto out;
-> > +	}
-> > +
-> >  	if (dev->power.runtime_status == RPM_RESUMING
-> >  	    || dev->power.runtime_status == RPM_SUSPENDING) {
-> >  		DEFINE_WAIT(wait);
-> 
-> All those changes (and some of the following ones) are symptoms of a
-> basic mistake in this approach.
+With 3.5 stock kernel, I got this message in virtual domain:
+[    2.666623] mlx4_core: Mellanox ConnectX core driver v1.1 (Dec, 2011)
+[    2.666635] mlx4_core: Initializing 0000:00:00.1
+[    2.666717] mlx4_core 0000:00:00.1: enabling device (0000 -> 0002)
+[    2.666975] mlx4_core 0000:00:00.1: Xen PCI mapped GSI0 to IRQ168
+[    2.667040] mlx4_core 0000:00:00.1: enabling bus mastering
+[    2.667184] mlx4_core 0000:00:00.1: Detected virtual function - running in slave mode
+[    2.667214] mlx4_core 0000:00:00.1: Sending reset
+[    2.667319] mlx4_core 0000:00:00.1: Sending vhcr0
+[    2.667886] mlx4_core 0000:00:00.1: HCA minimum page size:1
+[    2.668067] mlx4_core 0000:00:00.1: The host doesn't support eth interface
+[    2.668074] mlx4_core 0000:00:00.1: QUERY_FUNC_CAP command failed, aborting.
+[    2.668079] mlx4_core 0000:00:00.1: Failed to obtain slave caps
+[    2.668305] mlx4_core: probe of 0000:00:00.1 failed with error -93
 
-Every time you say something like this (i.e. liks someone who knows better)
-I kind of feel like being under attach, which I hope is not your intention.
-Never mind. :-)
+not sure what does it mean.
 
-Those changes are there for different reasons rather unrelated to the way
-func() is being called, so let me explain.
+I also tried OFED package from Mellanox which seems to have better SR-IOV
+support (at least mlx4_ib does not complain that SR-IOV is not supported).
+However, it does not work when SR-IOV enabled:
+[13677.034266] mlx4_core 0000:02:00.0: Running in master mode
+[13689.278238] mlx4_core 0000:02:00.0: command 0x31 timed out (go bit not cleared)
+[13689.278324] mlx4_core 0000:02:00.0: NOP command failed to generate MSI-X interrupt IRQ 241).
+[13689.278399] mlx4_core 0000:02:00.0: Trying again without MSI-X.
+[13699.286473] mlx4_core 0000:02:00.0: command 0x31 timed out (go bit not cleared)
+[13699.286557] mlx4_core 0000:02:00.0: NOP command failed to generate interrupt (IRQ 237), aborting.
+[13699.286633] mlx4_core 0000:02:00.0: BIOS or ACPI interrupt routing problem?
+[13701.406680] mlx4_core: probe of 0000:02:00.0 failed with error -16
 
-First, rpm_queue_up_resume() is introduced, because the code it contains will
-have to be called in two different places.  At least I don't see how to avoid
-that without increasing the code complexity too much.
+if I disable SR-IOV mode for this driver, it works OK. Could the interrupt
+problem be BIOS related? I.e., it won't work until I got BIOS which properly
+supports SR-IOV with Mellanox card?
 
-Second, the following change in rpm_resume()
-
--	dev->power.request = RPM_REQ_NONE;
-+	if (dev->power.request != RPM_REQ_RESUME || !dev->power.func)
-+		dev->power.request = RPM_REQ_NONE;
-
-is made to prevent rpm_resume() from canceling the execution of func() queued
-up by an earlier pm_runtime_get_and_call().  I believe it is necessary.
-
-Finally, this change in rpm_resume():
- 
-+	if (dev->power.func && (rpmflags & RPM_ASYNC)) {
-+		rpm_queue_up_resume(dev);
-+		retval = 0;
-+		goto out;
-+	}
-
-is not strictly necessary if pm_runtime_get_and_call() is modified to run
-rpm_queue_up_resume() directly, like in the new version of the patch which is
-appended.  This reduces the number of checks overall, so perhaps it's better.
-
-> The idea of this new feature is to
-> call "func" as soon as we know the device is at full power, no matter
-> how it got there.
-
-Yes, it is so.
-
-> That means we should call it near the end of
-> rpm_resume() (just before the rpm_idle() call), not from within
-> pm_runtime_work().
-> 
-> Doing it this way will be more efficient and (I think) will remove
-> some races.
-
-Except that func() shouldn't be executed under dev->power.lock, which makes it
-rather difficult to call it from rpm_resume().  Or at least it seems so.
-
-Moreover, it should be called after we've changed the status to RPM_ACTIVE
-_and_ dropped the lock.
-
-Besides, I'd like to know what races you're referring to (perhaps you're seeing
-some more of them than I am).
-
-> > @@ -877,6 +903,48 @@ int __pm_runtime_resume(struct device *d
-> >  }
-> >  EXPORT_SYMBOL_GPL(__pm_runtime_resume);
-> >  
-> > +int pm_runtime_get_and_call(struct device *dev, void (*func)(struct device *),
-> > +			     void (*func_async)(struct device *))
-> > +{
-> > +	unsigned long flags;
-> > +	int ret;
-> > +
-> > +	atomic_inc(&dev->power.usage_count);
-> > +
-> > +	spin_lock_irqsave(&dev->power.lock, flags);
-> > +
-> > +	ret = dev->power.runtime_error;
-> > +	if (ret) {
-> > +		func = NULL;
-> > +		goto out;
-> > +	}
-> > +
-> > +	if (dev->power.runtime_status != RPM_ACTIVE
-> > +	    && dev->power.disable_depth == 0)
-> > +		func = NULL;
-> > +
-> > +	if (!func && func_async) {
-> > +		if (dev->power.func) {
-> > +			ret = -EAGAIN;
-> > +			goto out;
-> > +		} else {
-> > +			dev->power.func = func_async;
-> > +		}
-> > +	}
-> 
-> The logic here is kind of hard to follow.  It will be simpler when
-> there's only one "func":
-> 
-> 	If the status is RPM_ACTIVE or disable_depth > 0 then
-> 	call "func" directly.
-> 
-> 	Otherwise save "func" in dev.power and do an async resume.
-
-Yeah.  But do not run func() under power.lock, right?
-
-> Some more things:
-> 
-> In __pm_runtime_set_status(), if power.func is set then I think we
-> should call it if the new status is ACTIVE.
-
-__pm_runtime_set_status() only works if power.disable_depth > 0, in
-which case func() will be called synchronously.  Now, if someone does
-pm_runtime_get_and_call() immediately followed by pm_runtime_disable()
-(perhaps from a different thread), then __pm_runtime_disable() will
-resume the device, so it's better to call func() from there if set,
-I think.  And clear power.func afterwards.
-
-> Likwise at the end of rpm_suspend(), if the suspend fails.
-
-The only way by which power.func can be different from NULL at that point
-is when the work item queued up by pm_runtime_get_and_call() runs after
-rpm_suspend() has changed the status to RPM_SUSPENDING.  However in that
-case the rpm_resume(dev, 0) in pm_runtime_work() will wait for the
-suspend to complete (or fail) and func() will be run when it returns.
-
-> There should be an invariant: Whenever the status is RPM_ACTIVE,
-> power.func must be NULL.
-
-Well, maybe so, but I don't see why right now.
-
-> pm_runtime_barrier() should always clear power.func, even if the 
-> rpm_resume() call fails.
-
-Wouldn't it be better to wait for func() to be run?
-
-> The documentation should explain that in some ways, "func" is like a
-> workqueue callback routine: Subsystems and drivers have to be careful
-> to make sure that it can't be invoked after the device is unbound.  A
-> safe way to do this is to call pm_runtime_barrier() from within the
-> driver's .remove() routine, after making sure that
-> pm_runtime_get_and_call() won't be invoked any more.
-
-Sure.
-
-The appended patch doesn't contain any changes in __pm_runtime_disable()
-or pm_runtime_barrier(), but you are right that they are necessary.
-
-Thanks,
-Rafael
-
-
----
- drivers/base/power/runtime.c |   98 ++++++++++++++++++++++++++++++++++++++-----
- include/linux/pm.h           |    1 
- include/linux/pm_runtime.h   |   11 ++++
- 3 files changed, 99 insertions(+), 11 deletions(-)
-
-Index: linux/drivers/base/power/runtime.c
-===================================================================
---- linux.orig/drivers/base/power/runtime.c
-+++ linux/drivers/base/power/runtime.c
-@@ -484,6 +484,15 @@ static int rpm_suspend(struct device *de
- 	goto out;
- }
- 
-+void rpm_queue_up_resume(struct device *dev)
-+{
-+	dev->power.request = RPM_REQ_RESUME;
-+	if (!dev->power.request_pending) {
-+		dev->power.request_pending = true;
-+		queue_work(pm_wq, &dev->power.work);
-+	}
-+}
-+
- /**
-  * rpm_resume - Carry out runtime resume of given device.
-  * @dev: Device to resume.
-@@ -519,12 +528,18 @@ static int rpm_resume(struct device *dev
- 		goto out;
- 
- 	/*
--	 * Other scheduled or pending requests need to be canceled.  Small
--	 * optimization: If an autosuspend timer is running, leave it running
--	 * rather than cancelling it now only to restart it again in the near
--	 * future.
-+	 * Other scheduled or pending requests need to be canceled.  If the
-+	 * execution of a function is queued up along with a resume request,
-+	 * do not cancel it.
-+	 */
-+	if (dev->power.request != RPM_REQ_RESUME || !dev->power.func)
-+		dev->power.request = RPM_REQ_NONE;
-+
-+	/*
-+	 * Small optimization: If an autosuspend timer is running, leave it
-+	 * running rather than cancelling it now only to restart it again in the
-+	 * near future.
- 	 */
--	dev->power.request = RPM_REQ_NONE;
- 	if (!dev->power.timer_autosuspends)
- 		pm_runtime_deactivate_timer(dev);
- 
-@@ -591,11 +606,7 @@ static int rpm_resume(struct device *dev
- 
- 	/* Carry out an asynchronous or a synchronous resume. */
- 	if (rpmflags & RPM_ASYNC) {
--		dev->power.request = RPM_REQ_RESUME;
--		if (!dev->power.request_pending) {
--			dev->power.request_pending = true;
--			queue_work(pm_wq, &dev->power.work);
--		}
-+		rpm_queue_up_resume(dev);
- 		retval = 0;
- 		goto out;
- 	}
-@@ -691,6 +702,7 @@ static int rpm_resume(struct device *dev
- static void pm_runtime_work(struct work_struct *work)
- {
- 	struct device *dev = container_of(work, struct device, power.work);
-+	void (*func)(struct device *) = NULL;
- 	enum rpm_request req;
- 
- 	spin_lock_irq(&dev->power.lock);
-@@ -715,12 +727,24 @@ static void pm_runtime_work(struct work_
- 		rpm_suspend(dev, RPM_NOWAIT | RPM_AUTO);
- 		break;
- 	case RPM_REQ_RESUME:
--		rpm_resume(dev, RPM_NOWAIT);
-+		func = dev->power.func;
-+		if (func) {
-+			dev->power.func = NULL;
-+			pm_runtime_get_noresume(dev);
-+			rpm_resume(dev, 0);
-+		} else {
-+			rpm_resume(dev, RPM_NOWAIT);
-+		}
- 		break;
- 	}
- 
-  out:
- 	spin_unlock_irq(&dev->power.lock);
-+
-+	if (func) {
-+		func(dev);
-+		pm_runtime_put(dev);
-+	}
- }
- 
- /**
-@@ -877,6 +901,58 @@ int __pm_runtime_resume(struct device *d
- }
- EXPORT_SYMBOL_GPL(__pm_runtime_resume);
- 
-+int pm_runtime_get_and_call(struct device *dev, void (*func)(struct device *))
-+{
-+	unsigned long flags;
-+	bool sync = false;
-+	int ret;
-+
-+	atomic_inc(&dev->power.usage_count);
-+
-+	spin_lock_irqsave(&dev->power.lock, flags);
-+
-+	ret = dev->power.runtime_error;
-+	if (ret)
-+		goto out;
-+
-+	sync = dev->power.runtime_status == RPM_ACTIVE
-+		|| dev->power.disable_depth > 0;
-+
-+	if (!sync) {
-+		if (dev->power.func) {
-+			ret = -EAGAIN;
-+			goto out;
-+		} else {
-+			dev->power.func = func;
-+		}
-+	}
-+
-+	/*
-+	 * The approach here is the same as in rpm_suspend(): autosuspend timers
-+	 * will be activated shortly anyway, so it is pointless to cancel them
-+	 * now.
-+	 */
-+	if (!dev->power.timer_autosuspends)
-+		pm_runtime_deactivate_timer(dev);
-+
-+	if (sync)
-+		dev->power.request = RPM_REQ_NONE;
-+	else
-+		rpm_queue_up_resume(dev);
-+
-+ out:
-+	spin_unlock_irqrestore(&dev->power.lock, flags);
-+
-+	if (sync) {
-+		if (func)
-+			func(dev);
-+
-+		return 1;
-+	}
-+
-+	return ret;
-+}
-+
- /**
-  * __pm_runtime_set_status - Set runtime PM status of a device.
-  * @dev: Device to handle.
-Index: linux/include/linux/pm.h
-===================================================================
---- linux.orig/include/linux/pm.h
-+++ linux/include/linux/pm.h
-@@ -547,6 +547,7 @@ struct dev_pm_info {
- 	unsigned long		suspended_jiffies;
- 	unsigned long		accounting_timestamp;
- 	struct dev_pm_qos_request *pq_req;
-+	void			(*func)(struct device *);
- #endif
- 	struct pm_subsys_data	*subsys_data;  /* Owned by the subsystem. */
- 	struct pm_qos_constraints *constraints;
-Index: linux/include/linux/pm_runtime.h
-===================================================================
---- linux.orig/include/linux/pm_runtime.h
-+++ linux/include/linux/pm_runtime.h
-@@ -47,6 +47,8 @@ extern void pm_runtime_set_autosuspend_d
- extern unsigned long pm_runtime_autosuspend_expiration(struct device *dev);
- extern void pm_runtime_update_max_time_suspended(struct device *dev,
- 						 s64 delta_ns);
-+extern int pm_runtime_get_and_call(struct device *dev,
-+				   void (*func)(struct device *));
- 
- static inline bool pm_children_suspended(struct device *dev)
- {
-@@ -150,6 +152,15 @@ static inline void pm_runtime_set_autosu
- static inline unsigned long pm_runtime_autosuspend_expiration(
- 				struct device *dev) { return 0; }
- 
-+static inline int pm_runtime_get_and_call(struct device *dev,
-+					  void (*func)(struct device *))
-+{
-+	if (func)
-+		func(dev);
-+
-+	return 1;
-+}
-+
- #endif /* !CONFIG_PM_RUNTIME */
- 
- static inline int pm_runtime_idle(struct device *dev)
-
+-- 
+Luká¹ Hejtmánek
