@@ -1,68 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:34805 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751544Ab2HLVUL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 12 Aug 2012 17:20:11 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI: EHCI: fix crash during hibernation on ASUS computers
-Date: Sun, 12 Aug 2012 23:26:07 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	AceLan Kao <acelan.kao@canonical.com>, alex.hung@canonical.com,
-	Oleksij Rempel <bug-track@fisher-privat.net>,
-	"Linux-pm mailing list" <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1208110959320.21252-100000@netrider.rowland.org> <201208112356.26719.rjw@sisk.pl>
-In-Reply-To: <201208112356.26719.rjw@sisk.pl>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51577 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568Ab2HCL2n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2012 07:28:43 -0400
+Message-ID: <501BB4EF.7080909@jp.fujitsu.com>
+Date: Fri, 03 Aug 2012 20:24:31 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208122326.07318.rjw@sisk.pl>
+To: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+CC: bhelgaas@google.com, vgoyal@redhat.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump with
+ iommu
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi all,
 
-Commit dbf0e4c (PCI: EHCI: fix crash during suspend on ASUS
-computers) added a workaround for an ASUS suspend issue related to
-USB EHCI and a bug in a number of ASUS BIOSes that attemt to shut
-down the EHCI controller during system suspend if its PCI command
-register doesn't contain 0 at that time.
+This patch adds kernel parameter "reset_pcie_devices" which resets PCIe
+devices at boot time to address DMA problem on kdump with iommu. When
+this parameter is specified, a hot reset is triggered on each PCIe root
+port and downstream port to reset its downstream endpoint.
 
-It turns out that the same workaround is necessary in the analogous
-hibernation code path, so add it.
+Background:
+A kdump problem about DMA has been discussed for a long time. That is,
+when a kernel is switched to the kdump kernel DMA derived from first
+kernel affects second kernel. Recently this problem surfaces when iommu
+is used for PCI passthrough on KVM guest. In the case of the machine I
+use, when intel_iommu=on is specified, DMAR error is detected in kdump
+kernel and PCI SERR is also detected. Finally kdump fails because some
+devices does not work correctly.
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=45811
-Reported-and-tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-Cc: stable@vger.kernel.org
+The root cause is that ongoing DMA from first kernel causes DMAR fault
+because page table of DMAR is initialized while kdump kernel is booting
+up. Therefore to address this problem DMA needs to be stopped before DMAR
+is initialized at kdump kernel boot time. By this patch, PCIe devices
+are reset by hot reset and its DMA is stopped when reset_pcie_devices is
+specified. One problem of this solution is that VGA is reset and the
+monitor blacks out when the link between the port and VGA controller was
+reset. So this patch does not reset the port whose child endpoint is VGA
+device.
+
+Any comments would be appreciated.
+
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
 ---
+ Documentation/kernel-parameters.txt |    4 +
+ drivers/pci/quirks.c                |   59 ++++++++++++++++++++++++++
+ 2 files changed, 63 insertions(+)
 
-Hi Bjorn,
-
-Please push this to Linus ASAP, we need it in 3.6 and -stable.
-
-Thanks,
-Rafael
-
----
- drivers/pci/pci-driver.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-Index: linux/drivers/pci/pci-driver.c
-===================================================================
---- linux.orig/drivers/pci/pci-driver.c
-+++ linux/drivers/pci/pci-driver.c
-@@ -959,6 +959,13 @@ static int pci_pm_poweroff_noirq(struct
- 	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
- 		pci_prepare_to_sleep(pci_dev);
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index e714a02..e694e9f 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2489,6 +2489,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 	reset_devices	[KNL] Force drivers to reset the underlying device
+ 			during initialization.
  
-+	/*
-+	 * The reason for doing this here is the same as for the analogous code
-+	 * in pci_pm_suspend_noirq().
-+	 */
-+	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-+		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
++	reset_pcie_devices
++			[PCIE] Reset PCIe endpoint at boot time by sending a
++			hot reset to root port and downstream port
 +
- 	return 0;
- }
+ 	resume=		[SWSUSP]
+ 			Specify the partition device for software suspend
+ 			Format:
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 5155317..7f7fc02 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -32,6 +32,65 @@
+ #include "pci.h"
  
+ /*
++ * Reset PCIe endpoint by sending a hot reset to root port and downstream port
++ */
++unsigned int reset_pcie_devices;
++EXPORT_SYMBOL(reset_pcie_devices);
++static int __init set_reset_pcie_devices(char *str)
++{
++	reset_pcie_devices = 1;
++	return 1;
++}
++__setup("reset_pcie_devices", set_reset_pcie_devices);
++
++static void __devinit quirk_pcie_device_reset(struct pci_dev *dev)
++{
++	struct pci_bus *subordinate;
++	struct pci_dev *child;
++	u16 ctrl;
++
++	if (!reset_pcie_devices || !pci_is_pcie(dev) || !dev->subordinate ||
++	    ((dev->pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
++	     (dev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM)))
++		return;
++
++	subordinate = dev->subordinate;
++	list_for_each_entry(child, &subordinate->devices, bus_list) {
++		if ((child->pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
++		    (child->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) ||
++		    ((child->class >> 16) == PCI_BASE_CLASS_DISPLAY))
++		/* Don't reset switch, bridge, VGA device */
++		return;
++	}
++
++	dev_info(&dev->dev, "Reset Secondary bus\n");
++
++	list_for_each_entry(child, &subordinate->devices, bus_list) {
++		dev_info(&child->dev, "save state\n");
++		pci_save_state(child);
++	}
++
++	/* Assert Secondary Bus Reset */
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++
++	msleep(2);
++
++	/* De-assert Secondary Bus Reset */
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++
++	msleep(200);
++
++	list_for_each_entry(child, &subordinate->devices, bus_list) {
++		dev_info(&child->dev, "restore state\n");
++		pci_restore_state(child);
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_pcie_device_reset);
++
++/*
+  * Decoding should be disabled for a PCI device during BAR sizing to avoid
+  * conflict. But doing so may cause problems on host bridge and perhaps other
+  * key system devices. For devices that need to have mmio decoding always-on,
+
