@@ -1,23 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48832 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751118Ab2HCGaj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Aug 2012 02:30:39 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [PATCH 0/4] PCI/PM: PCI D3cold support fixes for 3.6-rc1
-Date: Fri,  3 Aug 2012 14:30:31 +0800
-Message-Id: <1343975435-25469-1-git-send-email-ying.huang@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 2 Aug 2012 23:53:12 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Francois Rigaut <frigaut@mso.anu.edu.au>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120803045312.GB2446@thinkpad-t410>
+References: <1343407934-459-1-git-send-email-mjg@redhat.com>
+ <20120731223240.GD19134@kroah.com>
+ <20120801165400.GA3042@srcf.ucam.org>
+ <20120801232147.GA6228@kroah.com>
+ <20120802040242.GB25933@thinkpad-t410>
+ <20120802103423.GA1921@kroah.com>
+ <501A955D.6030500@mso.anu.edu.au>
+ <20120802161209.GF32395@thinkpad-t410>
+ <501B01ED.9080309@mso.anu.edu.au>
+ <501B0536.6070001@mso.anu.edu.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <501B0536.6070001@mso.anu.edu.au>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[BUGFIX 1/4] PCI/PM: enable D3/D3cold by default for most devices
-[BUGFIX 2/4] PCI/PM: Keep parent bridge active when probing device
-[BUGFIX 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
-[PATCH 4/4] PCI/PM: Add ABI document for sysfs file d3cold_allowed
+On Fri, Aug 03, 2012 at 08:54:46AM +1000, Francois Rigaut wrote:
+> Seth,
+> 
+> I have put the osx system.log, which is the only file where I can
+> see mux and AGC related message, at
+> http://maumae.net/retina/system.log
 
-Best Regards,
-Huang Ying
+That does seem to contain the kernel log messages, but unfortunately I'm
+not seeing what I'm looking for there.
+
+> Thanks,
+> Francois
+> 
+> On 03/08/12 08:40, Francois Rigaut wrote:
+> >Hi Seth,
+> >
+> >Sorry for the belated response. On Oz time here.
+> >I don't have a /var/log/kernel.log !
+> >Let me make sure of something:
+> >This switcher code is to be run on osx, no? That's where
+> >gfxcardstatus lives and where I can effect the card switch. Just
+> >to make sure.
+> >So I'm running osx mountain lion, and the only thing I see in the
+> >logs when I switch cards (using gfxcardstatus) is what I pasted
+> >below. and you're right, it was not in message.log, but system.log
+> >(it was late). I just went through the whole thing again.
+> >Am I missing something?
+
+Yes, it's to be run on OS X. So apparently something has changed and
+this technique no longer works for getting a log of the gmux I/O.
+
+We've got one of these machines on order, so I'll see if I can turn
+anything up when I get a chance to play with it.
+
+Thanks,
+Seth
+
