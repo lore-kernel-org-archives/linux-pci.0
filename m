@@ -1,86 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:59656 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932066Ab2HOUHC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 16:07:02 -0400
-Date: Wed, 15 Aug 2012 22:06:55 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Rob Herring <robherring2@gmail.com>
-Cc: linux-tegra@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	Colin Cross <ccross@android.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v3 08/10] of/address: Handle #address-cells > 2 specially
-Message-ID: <20120815200655.GC12870@avionic-0098.mockup.avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <1343332512-28762-9-git-send-email-thierry.reding@avionic-design.de>
- <50183DA3.8020308@gmail.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:63355 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab2HCXvV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2012 19:51:21 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NKoe5XOeduwbEQHU"
-In-Reply-To: <50183DA3.8020308@gmail.com>
+In-Reply-To: <Pine.LNX.4.64.1208032349500.9164@bwv190.internetdsl.tpnet.pl>
+References: <Pine.LNX.4.64.1208031728120.9164@bwv190.internetdsl.tpnet.pl>
+	<CAE9FiQXzyxSNiPW96mqcN-Ki2RYZeKyYMJ39R50yjkgHnLMnYQ@mail.gmail.com>
+	<Pine.LNX.4.64.1208032349500.9164@bwv190.internetdsl.tpnet.pl>
+Date: Fri, 3 Aug 2012 16:51:20 -0700
+Message-ID: <CAE9FiQVhDbW1_58BZ3fHcmMq6nCdUJ_9yKV=w077fG2JENRdZw@mail.gmail.com>
+Subject: Re: bisected pcmcia bug - unable to map card memory on old laptops
+From: Yinghai Lu <yinghai@kernel.org>
+To: Piotr Gluszenia Slawinski <curious@bwv190.internetdsl.tpnet.pl>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Aug 3, 2012 at 2:53 PM, Piotr Gluszenia Slawinski
+<curious@bwv190.internetdsl.tpnet.pl> wrote:
+>>> bug is present in all kernels since late 2.6.36
+>>
+>>
+>> can you send the boot log with working and not working kernel?
+>> Please make sure you have PCI_DEBUG set in your config.
+>
+>
+> system is ISA based :) but i've enabled it for sake of clarity.
 
---NKoe5XOeduwbEQHU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Good.
 
-On Tue, Jul 31, 2012 at 03:18:43PM -0500, Rob Herring wrote:
-> On 07/26/2012 02:55 PM, Thierry Reding wrote:
-> > When a bus specifies #address-cells > 2, of_bus_default_map() now
-> > assumes that the mapping isn't for a physical address but rather an
-> > identifier that needs to match exactly.
-> >=20
-> > This is required by bindings that use multiple cells to translate a
-> > resource to the parent bus (device index, type, ...).
-> >=20
-> > See here for the discussion:
-> >=20
-> > 	https://lists.ozlabs.org/pipermail/devicetree-discuss/2012-June/016577=
-=2Ehtml
-> >=20
-> > Originally-by: Arnd Bergmann <arnd@arndb.de>
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
->=20
-> Acked-by: Rob Herring <rob.herring@calxeda.com>
+>
+> logs are attached both systems are 3.5 kernel, working is one where i've
+> simply commented out the code preventing low mem allocation in resource.c
+>
+> btw. note that if i would enable pci support in older kernels
+> bug would most likely resurface even there.
 
-Hi Rob,
+pcmcia :: nonstatic_find_mem_region
+do try to allocate mem under 1M.
 
-Were you going to take this through your DT tree? I'm trying to reduce
-the number of patches in this series to make it more manageable and
-split it into smaller chunks. There are also a couple of issues that
-need to be resolved so I don't know if I can get the whole series into
-shape for 3.7.
+should replace
+arch_remove_reservations()
 
-However if you don't think this patch is useful to be applied by itself
-I can also carry it until the complete series is ready.
+with reserve resource in iomem resource tree if needed for some platform.
 
-Thierry
+current arch_remove_reservations keep clip the with e820 table.
 
---NKoe5XOeduwbEQHU
-Content-Type: application/pgp-signature
+also there are two local resource_clip have different meaning. one is
+"include" and another one is "exclude"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQLAFfAAoJEN0jrNd/PrOh5nwP/AxK/PzslKGccOcl3laARCTx
-BNGd42RJi51e5jv7evJFp8zLzrv2R2WZ6jEr1f0+uEgWUdELooh5UxXZ8ZfmXxqt
-hVfYurGRS/gCgwSZNFitqAbp0HgebvAJGu/SptBkKFXAv5O2HegcPuMVq94BT6qV
-rqU3CnU6faNxC52OarQ5SvsIjdCKUB4oK5NhevJGt8/w6EfsGpYiJOq+POBQDvMH
-ivnPIbtniIcWHS41knJagd4smnD1eeGl34MWmwA70UnDzQDBIqK06HlWpJsyRO29
-e5vaBErcVpnulBECSjrAftPq26Wzwrnc05OjIpnw4b93gdcnYn1yMKQpIy+wSDIu
-9DKv7V4b30Bc2rixNv6Sw1hI5Mlz6++2P6+PrVJge3//eRxvMGpBYSXTxPQvcKVI
-lEsERjbh4xll1XKi/Q85n74N608A3VFtB6q4SGVJB/yFEa7ebWpUeH4eh43kShuV
-FmbhRfaMN1Q9bnLN0gfTtqMBBytg0rk1Nh9/kj09BeyXjohTj33lM6ocrbT4VBOW
-BkpGuxWZadyRQrIj+fUA0/cWb+RITUE0ec74CeFCZP/OnreDFUY+1OQsObmJYNis
-FSH1Q7Xl40m1DusKOpX5SnR4ofxQrV+MbItfRGD2lSXdA6rdRGsVrbkrtZKcvoak
-7xT7xDOCUSwnNSipXO+p
-=NhIa
------END PGP SIGNATURE-----
-
---NKoe5XOeduwbEQHU--
+Yinghai
