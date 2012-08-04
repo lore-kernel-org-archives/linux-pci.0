@@ -1,61 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:52140 "EHLO minas.ics.muni.cz"
+Received: from mso.anu.edu.au ([150.203.89.32]:41436 "EHLO mso.anu.edu.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932153Ab2HFPKx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Aug 2012 11:10:53 -0400
-Date: Mon, 6 Aug 2012 17:10:43 +0200
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: yinghai@kernel.org, linux-pci@vger.kernel.org, roland@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: mellanox mlx4_core and SR-IOV
-Message-ID: <20120806151043.GY25979@ics.muni.cz>
-References: <9f903175-4080-4016-b9f8-83e8615c110e@default>
- <20120805080500.GH25979@ics.muni.cz>
- <20120806140706.GC3093@phenom.dumpdata.com>
+	id S1752090Ab2HDFoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 4 Aug 2012 01:44:46 -0400
+Message-ID: <501CB6AE.3000400@mso.anu.edu.au>
+Date: Sat, 04 Aug 2012 15:44:14 +1000
+From: Francois Rigaut <frigaut@mso.anu.edu.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <20120806140706.GC3093@phenom.dumpdata.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	bhelgaas@google.com, linux-efi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+References: <20120802040242.GB25933@thinkpad-t410> <20120802103423.GA1921@kroah.com> <501A955D.6030500@mso.anu.edu.au> <20120802161209.GF32395@thinkpad-t410> <501B01ED.9080309@mso.anu.edu.au> <501B0536.6070001@mso.anu.edu.au> <20120803045312.GB2446@thinkpad-t410> <501BD1FC.9020601@mso.anu.edu.au> <20120803141421.GA8165@thinkpad-t410> <501C7C1D.5010903@mso.anu.edu.au> <20120804035844.GA31711@thinkpad-t410>
+In-Reply-To: <20120804035844.GA31711@thinkpad-t410>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 06, 2012 at 10:07:06AM -0400, Konrad Rzeszutek Wilk wrote:
-> > good catch. I forgot to pass swiotl=force for DomU in Xen. So now, it seems
-> > that mlx4_core works, mlx4_en (ethernet part) works as well. Unfortunately,
-> > the IB part does not. IB layer complains that SR-IOV is currently unsupported
-> > (kernel 3.5.0). So no luck here so far. 
-> 
-> Don't use swiotlb=force. That is for the old style kernels. Use iommu=soft.
+Seth,
 
-OK.
+[CC'd people, sorry we exchanged a few emails with Seth outside of the 
+lists, I passed him the acpi tables and here are gmux dumps]
 
-> > There is OFED stack directly from Mellanox, that seems to support SR-IOV even
-> > for IB layer, but they have buildable sources only for RHEL/SLES kernels
-> > (2.6.32) and even correcting the sources to get it compile with 3.5.0 does not
-> > make things work. The driver complains about interrupts not working in Dom0 or
-> > even without Xen hypervisor at all.
-> 
-> So there is a bug that .. well, I thought I had fixed it with the
-> IB layer but maybe not. It was about VM_IO having to be used on the vmaps
-> being setup. But I can't recall the details. Perhaps the InfiniBand mailing
-> list might have some ... ah here it is:
-> http://old-list-archives.xen.org/archives/html/xen-devel/2011-01/msg00246.html
-
-not sure what do you mean. This fix is for Mellanox OFED driver to work? Or for stock kernel?
-Stock kernel contains explicit check for SR-IOV and refuses to load.
-
-this is exact fail of the Mellanox OFED driver.
-
-kernel: [    6.568433] mlx4_core: Mellanox ConnectX core driver v1.0-mlnx_ofed1.5.3 (November 3, 2011)
-kernel: [    6.568526] mlx4_core: Initializing 0000:02:00.0
-kernel: [    7.071292] mlx4_core 0000:02:00.0: Enabling sriov with:1 vfs
-kernel: [    7.175587] mlx4_core 0000:02:00.0: Running in master mode
-kernel: [   18.613383] mlx4_core 0000:02:00.0: command 0x31 timed out (go bit not cleared)
-kernel: [   18.613475] mlx4_core 0000:02:00.0: NOP command failed to generate MSI-X interrupt IRQ 94).
-kernel: [   18.613564] mlx4_core 0000:02:00.0: Trying again without MSI-X.
-kernel: [   28.606086] mlx4_core 0000:02:00.0: command 0x31 timed out (go bit not cleared)
-kernel: [   30.615093] mlx4_core: probe of 0000:02:00.0 failed with error -16
+Allright. thanks for gmux-dump. There seems to be progress, as I can see 
+the gmux dumps for the nividia-selected and intel-selected are clearly 
+different (I did it twice to be sure, it checks out).
+The 2 dumps are at
+http://maumae.net/retina/gmux-dump_intel.dat
+and
+http://maumae.net/retina/gmux-dump_nvidia_only.dat
+I hope you'll be able to get something from these.
+Francois
 
 
--- 
-Luká¹ Hejtmánek
+
+On 04/08/12 13:58, Seth Forshee wrote:
+> On Sat, Aug 04, 2012 at 11:34:21AM +1000, Francois Rigaut wrote:
+>> Seth,
+>>
+>> I've put the acpi table dump in http://maumae.net/retina/acpi_tables.tgz
+> The ACPI stuff for the gmux looks exactly the same as for the machine
+> I've got. The I/O range is still 0x700 to 0x7ff.
+>
+>> As far as the mem dump, I've done it but can not see any difference
+>> (between case where one or the other graphic card are selected) in
+>> the first 3000 bytes. Not sure I'm doing that well though. I'm just
+>> dd'ing /dev/mem with
+>> dd bs=1000 count=3 if=/dev/mem of=some_file
+>> Am I addressing the right memory or is the switch going to be (or
+>> likely to be) somewhere else?
+> That's going to access sytem memory, not the I/O space for the gmux. Try
+> the attached instead. It's going to output the raw binary, so if you
+> want to view the output do something like
+>
+>   gmux-dump | xxd -g1
+>
+> Seth
+
