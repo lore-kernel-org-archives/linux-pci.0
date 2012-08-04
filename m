@@ -1,87 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:57211 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966Ab2HPXdn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 19:33:43 -0400
-Received: by eekd4 with SMTP id d4so157745eek.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 16:33:41 -0700 (PDT)
-Subject: [PATCH 4/6] parisc/PCI: Use list_for_each_entry() for bus->devices
-	traversal
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-parisc@vger.kernel.org
-Date: Thu, 16 Aug 2012 17:26:36 -0600
-Message-ID: <20120816232635.3662.73917.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:42068 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211Ab2HDTlq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 4 Aug 2012 15:41:46 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Sat, 4 Aug 2012 21:47:25 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <201208022326.31178.rjw@sisk.pl> <Pine.LNX.4.44L0.1208022151450.22991-100000@netrider.rowland.org> <CACVXFVOdwNiSkF1_Bs-FY-PT4gqZ86j6pcr4A=Yckc0bxykgRQ@mail.gmail.com>
+In-Reply-To: <CACVXFVOdwNiSkF1_Bs-FY-PT4gqZ86j6pcr4A=Yckc0bxykgRQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208042147.25845.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace list_for_each() + pci_dev_b() with the simpler
-list_for_each_entry().
+On Friday, August 03, 2012, Ming Lei wrote:
+> On Fri, Aug 3, 2012 at 10:20 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
+> 
+> > Hmmm.  You'd probably want a version that does a "get" at the same
+> > time.  I suppose you would call func directly if the device was already
+> > resumed, without going through the workqueue?
+> 
+> Maybe it isn't good, the 'func' might not be run in the current context
+> (irq context or some spinlock is held).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-parisc@vger.kernel.org
----
- drivers/parisc/dino.c    |    6 ++----
- drivers/parisc/lba_pci.c |    7 ++-----
- 2 files changed, 4 insertions(+), 9 deletions(-)
+Then I'd say don't use this interface.  If you have code that needs to
+be run in a different context, then you have to use a work item (or
+equivalent) anyway and you can do a synchronous runtime resume from there.
 
-diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-index ffddc4f..4581ee0 100644
---- a/drivers/parisc/dino.c
-+++ b/drivers/parisc/dino.c
-@@ -477,14 +477,12 @@ dino_card_setup(struct pci_bus *bus, void __iomem *base_addr)
- 	if (ccio_allocate_resource(dino_dev->hba.dev, res, _8MB,
- 				F_EXTEND(0xf0000000UL) | _8MB,
- 				F_EXTEND(0xffffffffUL) &~ _8MB, _8MB) < 0) {
--		struct list_head *ln, *tmp_ln;
-+		struct pci_dev *dev, *tmp;
- 
- 		printk(KERN_ERR "Dino: cannot attach bus %s\n",
- 		       dev_name(bus->bridge));
- 		/* kill the bus, we can't do anything with it */
--		list_for_each_safe(ln, tmp_ln, &bus->devices) {
--			struct pci_dev *dev = pci_dev_b(ln);
--
-+		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
- 			list_del(&dev->bus_list);
- 		}
- 			
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index 4ce57c9..fdd63a6 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -629,7 +629,6 @@ truncate_pat_collision(struct resource *root, struct resource *new)
- static void
- lba_fixup_bus(struct pci_bus *bus)
- {
--	struct list_head *ln;
- 	struct pci_dev *dev;
- #ifdef FBB_SUPPORT
- 	u16 status;
-@@ -711,10 +710,9 @@ lba_fixup_bus(struct pci_bus *bus)
- 
- 	}
- 
--	list_for_each(ln, &bus->devices) {
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
--		dev = pci_dev_b(ln);
- 		DBG("lba_fixup_bus() %s\n", pci_name(dev));
- 
- 		/* Virtualize Device/Bridge Resources. */
-@@ -771,8 +769,7 @@ lba_fixup_bus(struct pci_bus *bus)
- 	}
- 
- 	/* Lastly enable FBB/PERR/SERR on all devices too */
--	list_for_each(ln, &bus->devices) {
--		dev = pci_dev_b(ln);
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		(void) pci_read_config_word(dev, PCI_COMMAND, &status);
- 		status |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR | fbb_enable;
- 		(void) pci_write_config_word(dev, PCI_COMMAND, status);
+The problem we want to address here is when there's code that should be
+run as soon as the device is active, preferably _without_ a context switch.
 
+Thanks,
+Rafael
