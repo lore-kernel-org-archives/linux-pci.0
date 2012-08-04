@@ -1,114 +1,173 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:50779 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754522Ab2HNFz4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 01:55:56 -0400
-Date: Tue, 14 Aug 2012 07:55:42 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 05/10] resource: add PCI configuration space support
-Message-ID: <20120814055542.GB16181@avionic-0098.mockup.avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <1343332512-28762-6-git-send-email-thierry.reding@avionic-design.de>
- <CAErSpo4qg45brVRwEbw3=R04VsbnvUowSMWcT+M6VoAxbf3Cqg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Gaohuai Han <hangaohuai@huawei.com>
+Subject: [RFC PATCH v2 08/16] ACPIHP: provide interfaces to associate driver  specific data to hotplug slots
+Date: Sat, 4 Aug 2012 20:13:55 +0800
+Message-ID: <1344082443-4608-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1LKvkjL3sHcu1TtY"
-In-Reply-To: <CAErSpo4qg45brVRwEbw3=R04VsbnvUowSMWcT+M6VoAxbf3Cqg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jiang Liu <jiang.liu@huawei.com>
 
---1LKvkjL3sHcu1TtY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch provides interfaces to attach/detach/get class driver specific data
+to/from ACPI hotplug slots.
 
-On Mon, Aug 13, 2012 at 10:00:45PM -0700, Bjorn Helgaas wrote:
-> On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
-> <thierry.reding@avionic-design.de> wrote:
-> > This commit adds a new flag that allows marking resources as PCI
-> > configuration space.
-> >
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> > ---
-> > Changes in v3:
-> > - new patch
-> >
-> >  include/linux/ioport.h | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> > index 589e0e7..3314843 100644
-> > --- a/include/linux/ioport.h
-> > +++ b/include/linux/ioport.h
-> > @@ -102,7 +102,7 @@ struct resource {
-> >
-> >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
-> >  #define IORESOURCE_PCI_FIXED           (1<<4)  /* Do not move resource=
- */
-> > -
-> > +#define IORESOURCE_PCI_CS              (1<<5)  /* PCI configuration sp=
-ace */
->=20
-> What is the purpose of this?  It seems that you are marking regions
-> that we call MMCONFIG on x86, or ECAM-type regions in the language of
-> the PCIe spec.  I see that you set it in several places, but I don't
-> see anything that ever looks for it.  Do you have plans to use it in
-> the future?  If it really does correspond to MMCONFIG/ECAM, we should
-> handle those regions consistently across all architectures.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+---
+ drivers/acpi/hotplug/core.c |   88 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |    8 ++++
+ 2 files changed, 96 insertions(+)
 
-The purpose is ultimately to obtain the MMCONFIG/ECAM resources assigned
-to a PCI host controller. I've used this in the of_pci_parse_ranges()
-and in the static board setup code to mark ranges as such. Perhaps
-IORESOURCE_ECAM or IORESOURCE_MMCONFIG might have been better names. I
-also just noticed that I'm not using this anywhere, but the plan was to
-eventually use it with platform_get_resource(). However that doesn't
-seem to work either because the lower bits of the flags aren't use for
-comparison in that function.
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index 14b3d61..5e78867 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -34,11 +34,18 @@
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_hotplug.h>
+ 
++struct acpihp_drv_data {
++	struct list_head		node;
++	struct class_interface		*key;
++	void				*data;
++};
++
+ #define to_acpihp_slot(d) container_of(d, struct acpihp_slot, dev)
+ 
+ extern struct acpi_device *acpi_root;
+ 
+ static DEFINE_MUTEX(acpihp_mutex);
++static DEFINE_MUTEX(acpihp_drvdata_mutex);
+ static int acpihp_class_count;
+ static struct kset *acpihp_slot_kset;
+ 
+@@ -407,6 +414,87 @@ char *acpihp_get_slot_type_name(enum acpihp_slot_type type)
+ }
+ EXPORT_SYMBOL_GPL(acpihp_get_slot_type_name);
+ 
++int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
++				struct class_interface *drv, void *data)
++{
++	struct acpihp_drv_data *dp, *cp;
++
++	if (slot == NULL || drv == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
++	if (dp == NULL)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&dp->node);
++	dp->key = drv;
++	dp->data = data;
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			mutex_unlock(&acpihp_drvdata_mutex);
++			kfree(dp);
++			return -EEXIST;
++		}
++	list_add(&dp->node, &slot->drvdata_list);
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_attach_drv_data);
++
++int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
++				struct class_interface *drv, void **data)
++{
++	struct acpihp_drv_data *cp;
++
++	if (slot == NULL || drv == NULL || data == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			list_del(&cp->node);
++			*data = cp->data;
++			mutex_unlock(&acpihp_drvdata_mutex);
++			kfree(cp);
++			return 0;
++		}
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return -ENOENT;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_detach_drv_data);
++
++int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
++			     struct class_interface *drv, void **data)
++{
++	int ret = -ENOENT;
++	struct acpihp_drv_data *cp;
++
++	if (slot == NULL || drv == NULL || data == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			*data = cp->data;
++			ret = 0;
++			break;
++		}
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_get_drv_data);
++
+ /*
+  * slot_ops should be valid during the life cycle of a slot, so no protection.
+  */
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 2589ccb..1d43079 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -256,6 +256,14 @@ extern acpi_status acpihp_slot_get_capabilities(struct acpihp_slot *slot,
+ extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
+ extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
+ 
++/* Help routines to assoicate driver data with hotplug slot devices. */
++extern int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void *data);
++extern int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void **data);
++extern int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void **data);
++
+ /*
+  * Add devices for ACPI objects connecting to an ACPI hotplug slot,
+  * and don't cross the hotplug slot boundary.
+-- 
+1.7.9.5
 
-Any other ideas how that could be handled? Basically what I need is a
-way to mark a resource as an MMCONFIG/ECAM range so that it can be used
-to program the PCI host controller accordingly. I don't know how these
-are assigned on x86. I was under the impression that the MMCONFIG/ECAM
-space was accessed through a single single address/data register pair.
 
-On Tegra 20 this region can be anywhere in the upper 1 GiB of the 4 GiB
-address space, while on Tegra 30 it can be anywhere in the lower 1 GiB,
-so they can be freely assigned.
-
-Thierry
-
---1LKvkjL3sHcu1TtY
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQKeheAAoJEN0jrNd/PrOhEcAQAIFN7k1DjHENH+mEgHxbll8R
-N53Uw5NbO7LDzvMdIOGThFDi6dLM8HV5qr7wHcCtubi+S2WE3aMa4nFyL3fbUNWc
-9q/tVEpUd8/vronyeGerxKKEDq4UABq6FbfMKFxTKSrhzDs5ySyO50pjfbKO13Vm
-xuW54fv5PcUK2VPyEoKnrqDxkWSMess4rU61HI9oEHMYiDvuvv48yFQJhBAg4mO8
-UAxv2v/1TGdLGA2CoJVn2BI3K/19BrNqtcJjqlFANDW7gKCf1TeTnZ8Qnx23Ezxa
-rxl94f6hek2VMQowiJ3xB4JGy+vDup9ViwZ17OfyelsrioTD7xa+sAlgpAgnC7b4
-YoBlkFARDPFPM2jpys9C0xSSEb3a9ugBqCg8apsDPvggQg75h1IUNtYmhb1lJ0L4
-T8VihxtsSfHPvXrD9lPdERH58belpdEzqdCoc4iNzrmmD+2D02vpuuhl38Q3iQ1S
-EAnkVt0Me3AbJNEyK7TO+iVdB1J5jwfbaMHRAnNK8pioxj8XX4lY8Jlos70CZJNZ
-CQ7BGIq/vIkVG/tHslHpv3CmqO8bpsQevUc4D2GIYScSnnYBWUQcRu+TNwCoRz2G
-ml40FIi5huWoIYE87x6xmBG7Tmwb+QIyjv51L4/FSg1FyxTt5hpQHWp7C90oqYCz
-7id+DhTJiQkzW17D+j2d
-=7JD/
------END PGP SIGNATURE-----
-
---1LKvkjL3sHcu1TtY--
