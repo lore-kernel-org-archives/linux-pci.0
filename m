@@ -1,37 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from minas.ics.muni.cz ([147.251.4.40]:44322 "EHLO minas.ics.muni.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751668Ab2HAVvI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Aug 2012 17:51:08 -0400
-Date: Wed, 1 Aug 2012 23:50:54 +0200
-From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: mellanox mlx4_core and SR-IOV
-Message-ID: <20120801215054.GO5470@ics.muni.cz>
-References: <20120801133835.GH5470@ics.muni.cz>
- <CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
- <CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
- <20120801202840.GM5470@ics.muni.cz>
- <CAE9FiQWY+Z-_=th8ndh15A+AokDFpi2_dk5UiXyJaCj_KovMJw@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [BUGFIX 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
+Date: Sat, 4 Aug 2012 23:44:54 +0200
+Cc: Huang Ying <ying.huang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+References: <Pine.LNX.4.44L0.1208031042580.1520-100000@iolanthe.rowland.org> <201208042337.46394.rjw@sisk.pl>
+In-Reply-To: <201208042337.46394.rjw@sisk.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-In-Reply-To: <CAE9FiQWY+Z-_=th8ndh15A+AokDFpi2_dk5UiXyJaCj_KovMJw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208042344.54426.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 02:27:34PM -0700, Yinghai Lu wrote:
-> you may try to boot with pci=nocrs
+On Saturday, August 04, 2012, Rafael J. Wysocki wrote:
+> On Friday, August 03, 2012, Alan Stern wrote:
+> > On Fri, 3 Aug 2012, Huang Ying wrote:
+> > 
+> > > This patch fixes the following bug:
+> > > 
+> > > http://marc.info/?l=linux-pci&m=134338059022620&w=2
+> > > 
+> > > Where lspci does not work properly if a device and the corresponding
+> > > parent bridge (such as PCIe port) is suspended.  This is because the
+> > > device configuration space registers will be not accessible if the
+> > > corresponding parent bridge is suspended or the device is put into
+> > > D3cold state.
+> > > 
+> > > To solve the issue, the bridge/PCIe port connected to the device is
+> > > put into active state before read/write configuration space registers.
+> > > If the device is in D3cold state, it will be put into active state
+> > > too.
+> > > 
+> > > To avoid resume/suspend PCIe port for each configuration register
+> > > read/write, a small delay is added before the PCIe port to go
+> > > suspended.
+> > 
+> > 
+> > > +static void
+> > > +pci_config_pm_runtime_put(struct pci_dev *pdev)
+> > > +{
+> > > +	struct device *dev = &pdev->dev;
+> > > +	struct device *parent = dev->parent;
+> > > +
+> > > +	pm_runtime_put(dev);
+> > > +	if (parent)
+> > > +		pm_runtime_put(parent);
+> > > +}
+> > 
+> > This is just the sort of thing Rafael and I have been talking about.  
+> > Why do an asynchronous put, going to all the trouble of using the 
+> > workqueue, if the idle routine is just going to call 
+> > pm_schedule_suspend()?
+> 
+> If that's PCI, it will call pm_runtime_suspend().  That probably _should_ be
+> pm_schedule_suspend(), but it isn't at the moment.
+> 
+> > Why not call pm_runtime_put_sync() instead?
+> 
+> I guess because the caller doesn't care whether or not the devices will be
+> suspended immediately and we seem to have agreed already that the added
+> workqueue overhead is minimal.
+> 
+> If the _idle() routine were to call pm_schedule_suspend(), though, I'd
+> agree that the overhead would be absolutely unnecessary.
 
-ok, pci=nocrs i got:
-02:00.0 InfiniBand: Mellanox Technologies MT26428 [ConnectX VPI PCIe 2.0 5GT/s - IB QDR / 10GigE] (rev b0)
-02:00.1 InfiniBand: Mellanox Technologies MT25400 Family [ConnectX-2 Virtual Function] (rev b0)
-02:00.2 InfiniBand: Mellanox Technologies MT25400 Family [ConnectX-2 Virtual Function] (rev b0)
-02:00.3 InfiniBand: Mellanox Technologies MT25400 Family [ConnectX-2 Virtual Function] (rev b0)
-02:00.4 InfiniBand: Mellanox Technologies MT25400 Family [ConnectX-2 Virtual Function] (rev b0)
+Sorry, I should have had a closer look at pcie_port_runtime_idle() before
+replying.
 
-so it works. Should I try your patch without pci=nocrs?
+You're right, pm_runtime_put_sync() should be used for the parent.
 
--- 
-Luká¹ Hejtmánek
+Thanks,
+Rafael
