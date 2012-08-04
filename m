@@ -1,107 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:56571 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab2HNVz3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 17:55:29 -0400
-Received: by lbbgj3 with SMTP id gj3so520857lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 14 Aug 2012 14:55:28 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [RFC PATCH v2 09/16] ACPIHP: implement utility functions to support  system device hotplug
+Date: Sat, 4 Aug 2012 20:13:56 +0800
+Message-ID: <1344082443-4608-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de>
- <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com>
- <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 14 Aug 2012 14:55:07 -0700
-Message-ID: <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 14, 2012 at 12:58 PM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> On Tue, Aug 14, 2012 at 01:39:23PM -0600, Stephen Warren wrote:
->> On 08/13/2012 05:18 PM, Bjorn Helgaas wrote:
->> > On Mon, Aug 13, 2012 at 11:47 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->> ...
->> >> whereas for a device tree boot:
->> >>
->> >> (same):
->> >>> [    2.112217] pci 0000:01:00.0: reg 10: [io  0x0000-0x00ff]
->> >>> [    2.117635] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x00000fff 64bit pref]
->> >>> [    2.124690] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00003fff 64bit pref]
->> >>> [    2.131731] pci 0000:01:00.0: reg 30: [mem 0x00000000-0x0001ffff pref]
->> >> ... (request region happens early)
->> >>> [    2.179838] r8169 0000:01:00.0: BAR 0: requesting [io  0x0000-0x00ff]
->> >>> [    2.193312] r8169 0000:01:00.0: BAR 2: requesting [mem 0x00000000-0x00000fff 64bit pref]
->> >>> [    2.201397] r8169 0000:01:00.0: BAR 2: can't reserve [mem 0x00000000-0x00000fff 64bit pref]
->> >>> [    2.209742] r8169 0000:01:00.0: (unregistered net_device): could not request regions
->> >> ... (same, just happens too late)
->> >>> [    2.236818] pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa001ffff pref]
->> >>> [    2.244027] pci 0000:01:00.0: BAR 4: assigned [mem 0xa0020000-0xa0023fff 64bit pref]
->> >>> [    2.251794] pci 0000:01:00.0: BAR 2: assigned [mem 0xa0024000-0xa0024fff 64bit pref]
->> >>> [    2.259542] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
->> >>
->> >> I suspect this is all still related to the PCI devices themselves being
->> >> probed much earlier in the overall PCI initialization sequence when the
->> >> PCI controller is probed later in the boot sequence, whereas PCI device
->> >> probe is deferred until the overall PCI initialization sequence is
->> >> complete if the PCI controller is probed very early in the boot sequence.
->> >
->> > I don't know what to apply your patches to (they don't apply cleanly
->> > to v3.6-rc2), so I can't see exactly what you're doing.  But it looks
->> > like you might be calling pci_bus_add_devices() before
->> > pci_bus_assign_resource(), which isn't going to work.
->>
->> Yes, that's exactly what is happening.
->>
->> PCIe initialization starts in arch/arm/mach-tegra/pci.e
->> tegra_pcie_init() which calls arch/arm/kernel/bios32.c
->> pci_common_init(). That function first calls pcibios_init_hw() (in the
->> same file, more about this later) and then loops over PCI buses, calling
->> amongst other things pci_bus_assign_resources() then pci_bus_add_devices().
->>
->> The problem is that ARM's pcibios_init_hw() calls pci_scan_root_bus()
->> (or a host-driver-specific function which that also calls
->> pci_scan_root_bus() in Tegra's case) which in turn calls
->> pci_bus_add_devices() right at the end, before control has returned to
->> pci_common_init() and hence before pci_bus_assign_resources() has been
->> called.
->>
->> If I modify pci_scan_root_bus() and remove the call to
->> pci_bus_add_devices(), everything works as expected.
->>
->> So, I guess the question is: Should ARM's pcibios_init_hw() not be
->> calling pci_scan_root_bus(), or at least presumably the ARM PCI code
->> needs to do things in a slightly different order?
+From: Jiang Liu <jiang.liu@huawei.com>
 
-I think you need to do something like this instead of using pci_scan_root_bus():
+This patch implements some utility funcitons to support system device hotplug.
 
-    pci_create_root_bus()
-    pci_scan_child_bus()
-    pci_bus_assign_resources()
-    pci_bus_add_devices()
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+---
+ drivers/acpi/hotplug/core.c |   80 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |    9 +++++
+ 2 files changed, 89 insertions(+)
 
-This is the effective order used by most of the pci_create_root_bus() callers.
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index 5e78867..230375e 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -634,6 +634,86 @@ int acpihp_remove_device_list(struct klist *dev_list)
+ }
+ EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
+ 
++bool acpihp_slot_present(struct acpihp_slot *slot)
++{
++	acpi_status status;
++	unsigned long long sta;
++
++	/* A hotplug slot must implement ACPI _STA method */
++	status = acpi_evaluate_integer(slot->handle,
++				       METHOD_NAME__STA, NULL, &sta);
++	if (ACPI_FAILURE(status)) {
++		ACPIHP_WARN("fails to evaluate _STA for %p.\n", slot->name);
++		return false;
++	}
++
++	return !!(sta & ACPI_STA_DEVICE_PRESENT);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_present);
++
++bool acpihp_slot_powered(struct acpihp_slot *slot)
++{
++	acpi_status status;
++	unsigned long long sta;
++
++	/* hotplug slot must implement _STA method */
++	status = acpi_evaluate_integer(slot->handle,
++				       METHOD_NAME__STA, NULL, &sta);
++	if (ACPI_FAILURE(status)) {
++		ACPIHP_WARN("fails to evaluate _STA for %p.\n", slot->name);
++		return false;
++	}
++
++	if ((sta & ACPI_STA_DEVICE_PRESENT) &&
++	    ((sta & ACPI_STA_DEVICE_ENABLED) ||
++	    (sta & ACPI_STA_DEVICE_FUNCTIONING)))
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_powered);
++
++void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags)
++{
++	mutex_lock(&slot->slot_mutex);
++	slot->flags |= flags;
++	mutex_unlock(&slot->slot_mutex);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_set_flag);
++
++void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags)
++{
++	mutex_lock(&slot->slot_mutex);
++	slot->flags &= ~flags;
++	mutex_unlock(&slot->slot_mutex);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_clear_flag);
++
++u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags)
++{
++	mutex_lock(&slot->slot_mutex);
++	flags &= slot->flags;
++	mutex_unlock(&slot->slot_mutex);
++
++	return flags;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_get_flag);
++
++void acpihp_slot_change_state(struct acpihp_slot *slot,
++			      enum acpihp_slot_state state)
++{
++	if (state < ACPIHP_SLOT_STATE_UNKNOWN ||
++	    state > ACPIHP_SLOT_STATE_MAX) {
++		ACPIHP_WARN("slot state %d is invalid.\n", state);
++		BUG_ON(state);
++	}
++
++	mutex_lock(&slot->slot_mutex);
++	slot->state = state;
++	mutex_unlock(&slot->slot_mutex);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_change_state);
++
+ /* SYSFS interfaces */
+ static ssize_t acpihp_slot_object_show(struct device *d,
+ 		struct device_attribute *attr, char *buf)
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 1d43079..a13d9f0 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -289,6 +289,15 @@ extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
+ 				     struct device *dev);
+ extern int acpihp_remove_device_list(struct klist *dev_list);
+ 
++/* Utility Functions */
++extern bool acpihp_slot_present(struct acpihp_slot *slot);
++extern bool acpihp_slot_powered(struct acpihp_slot *slot);
++extern void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags);
++extern void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags);
++extern u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags);
++extern void acpihp_slot_change_state(struct acpihp_slot *slot,
++				     enum acpihp_slot_state state);
++
+ extern int acpihp_debug;
+ 
+ #define ACPIHP_DEBUG(fmt, ...) \
+-- 
+1.7.9.5
 
-> Maybe pci_scan_root_bus() should be calling pci_bus_assign_resources()?
-> Or a new function could be added which also assigns the resources.
 
-Yes, it probably should.  I'm nervous about just throwing it in there
-without quite a bit more analysis, but that's definitely the direction
-I think we should be heading.
-
-Bjorn
