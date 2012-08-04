@@ -1,34 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48675 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752628Ab2H2Nay (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2012 09:30:54 -0400
-Date: Wed, 29 Aug 2012 07:24:16 -0600
-From: Matthew Wilcox <matthew@wil.cx>
-To: TJ <tj@iam.tj>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Limiting BAR resource  region size allocation (device claims
-	2x what it needs) ?
-Message-ID: <20120829132415.GA21160@parisc-linux.org>
-References: <503E1027.6050104@iam.tj>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v2 06/16] ACPIHP: group devices connecting to a hotplug  slot according to device types
+Date: Sat, 4 Aug 2012 20:13:53 +0800
+Message-ID: <1344082443-4608-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <503E1027.6050104@iam.tj>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2012 at 01:50:47PM +0100, TJ wrote:
-> The CPU is 64-bit but the i945PM northbridge is 32-bit (so no physical > 4GB addressing). With PCI allocations as they are the system is limited to 2GB of RAM under Linux (3GB on Windows Vista).
+From: Jiang Liu <jiang.liu@huawei.com>
 
-According to the laptop specs, it's limited to 2GB RAM:
+ACPI devices connecting to an ACPI hotplug slot are divided into groups
+according to device types. Those devices will be configured/unconfigured
+in order of device types when hot-adding/hot-removing system devices.
 
-http://www.sony.co.uk/support/en/product/VGN-FE41Z/specifications
+For example, when hot-adding a computer node with CPUs, memory, PCI host
+bridges, IOAPICs, the order optimized for performance should be:
+memory -> CPU -> IOAPIC -> PCI host bridge.
 
-Personally, I'm not terribly excited about doing much work to enhance
-a 6 year old laptop...
+Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/acpi/hotplug/core.c |  113 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |   27 +++++++++++
+ 2 files changed, 140 insertions(+)
 
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index 6fac499..14b3d61 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -115,6 +115,23 @@ static char *acpihp_dev_ioapic_ids[] = {
+ 	NULL
+ };
+ 
++static void acpihp_dev_node_get(struct klist_node *lp)
++{
++	struct acpihp_dev_node *dp;
++
++	dp = container_of(lp, struct acpihp_dev_node, node);
++	get_device(dp->dev);
++}
++
++static void acpihp_dev_node_put(struct klist_node *lp)
++{
++	struct acpihp_dev_node *dp;
++
++	dp = container_of(lp, struct acpihp_dev_node, node);
++	put_device(dp->dev);
++	kfree(dp);
++}
++
+ static void acpihp_slot_release(struct device *dev)
+ {
+ 	struct acpihp_slot *slot = to_acpihp_slot(dev);
+@@ -134,6 +151,7 @@ static void acpihp_slot_release(struct device *dev)
+ 
+ struct acpihp_slot *acpihp_create_slot(acpi_handle handle, char *name)
+ {
++	int i;
+ 	struct acpihp_slot *slot;
+ 
+ 	if (name == NULL) {
+@@ -154,6 +172,9 @@ struct acpihp_slot *acpihp_create_slot(acpi_handle handle, char *name)
+ 	INIT_LIST_HEAD(&slot->slot_list);
+ 	INIT_LIST_HEAD(&slot->drvdata_list);
+ 	INIT_LIST_HEAD(&slot->slot_id_list);
++	for (i = ACPIHP_DEV_TYPE_UNKNOWN; i < ACPIHP_DEV_TYPE_MAX; i++)
++		klist_init(&slot->dev_lists[i],
++			   &acpihp_dev_node_get, &acpihp_dev_node_put);
+ 	strncpy(slot->name, name, sizeof(slot->name) - 1);
+ 	mutex_init(&slot->slot_mutex);
+ 
+@@ -433,6 +454,98 @@ acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot)
+ }
+ EXPORT_SYMBOL_GPL(acpihp_slot_poweroff);
+ 
++/* Insert a device onto a hotplug slot's device klist. */
++int acpihp_slot_add_device(struct acpihp_slot *slot, enum acpihp_dev_type type,
++			   enum acpihp_dev_state state, struct device *dev)
++{
++	struct acpihp_dev_node *np;
++
++	if (type < ACPIHP_DEV_TYPE_UNKNOWN || type >= ACPIHP_DEV_TYPE_MAX) {
++		ACPIHP_DEBUG("device type %d is invalid.\n", type);
++		return -EINVAL;
++	} else if (slot == NULL) {
++		ACPIHP_DEBUG("invalid parameter, slot is NULL.\n");
++		return -EINVAL;
++	} else if (dev == NULL) {
++		ACPIHP_DEBUG("invalid parameter, dev is NULL.\n");
++		return -EINVAL;
++	}
++
++	np = kzalloc(sizeof(*np), GFP_KERNEL);
++	if (np == NULL)
++		return -ENOMEM;
++
++	np->dev = dev;
++	np->state = state;
++	mutex_init(&np->lock);
++	klist_add_tail(&np->node, &slot->dev_lists[type]);
++	ACPIHP_DEBUG("add device %s to slot %s.\n",
++		     dev_name(dev), slot->name);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_add_device);
++
++/* Remove a device from a hotplug slot's device klist. */
++int acpihp_slot_remove_device(struct acpihp_slot *slot,
++			      enum acpihp_dev_type type, struct device *dev)
++{
++	int ret = -ENOENT;
++	struct klist_iter iter;
++	struct klist_node *ip;
++	struct acpihp_dev_node *np;
++
++	if (type < ACPIHP_DEV_TYPE_UNKNOWN || type >= ACPIHP_DEV_TYPE_MAX) {
++		ACPIHP_DEBUG("device type %d is invalid.\n", type);
++		return -EINVAL;
++	} else if (slot == NULL) {
++		ACPIHP_DEBUG("invalid parameter, slot is NULL.\n");
++		return -EINVAL;
++	} else if (dev == NULL) {
++		ACPIHP_DEBUG("invalid parameter, dev is NULL.\n");
++		return -EINVAL;
++	}
++
++	klist_iter_init(&slot->dev_lists[type], &iter);
++	while ((ip = klist_next(&iter)) != NULL) {
++		np = container_of(ip, struct acpihp_dev_node, node);
++		if (np->dev == dev) {
++			ACPIHP_DEBUG("remove device %s from slot %s.\n",
++				     dev_name(dev), slot->name);
++			klist_del(&np->node);
++			ret = 0;
++			break;
++		}
++	}
++	klist_iter_exit(&iter);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_remove_device);
++
++/* Remove all devices from the klist */
++int acpihp_remove_device_list(struct klist *dev_list)
++{
++	struct klist_iter iter;
++	struct klist_node *ip;
++	struct acpihp_dev_node *np;
++
++	if (dev_list == NULL) {
++		ACPIHP_DEBUG("invalid parameter, dev_list is NULL.\n");
++		return -EINVAL;
++	}
++
++	klist_iter_init(dev_list, &iter);
++	while ((ip = klist_next(&iter)) != NULL) {
++		np = container_of(ip, struct acpihp_dev_node, node);
++		klist_del(&np->node);
++	}
++	klist_iter_exit(&iter);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
++
+ /* SYSFS interfaces */
+ static ssize_t acpihp_slot_object_show(struct device *d,
+ 		struct device_attribute *attr, char *buf)
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index b81d934..cd8dd99 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -48,6 +48,24 @@ enum acpihp_dev_type {
+ 	ACPIHP_DEV_TYPE_MAX
+ };
+ 
++enum acpihp_dev_state {
++	DEVICE_STATE_UNKOWN = 0x00,
++	DEVICE_STATE_CONNECTED,
++	DEVICE_STATE_PRE_CONFIGURE,
++	DEVICE_STATE_CONFIGURED,
++	DEVICE_STATE_PRE_RELEASE,
++	DEVICE_STATE_RELEASED,
++	DEVICE_STATE_PRE_UNCONFIGURE,
++	DEVICE_STATE_MAX
++};
++
++struct acpihp_dev_node {
++	struct device		*dev;
++	enum acpihp_dev_state	state;
++	struct mutex		lock;
++	struct klist_node	node;
++};
++
+ /*
+  * ACPI hotplug slot is an abstraction of receptacles where a group of
+  * system devices could be attached, just like PCI slot in PCI hotplug.
+@@ -190,6 +208,15 @@ typedef acpi_status (*acpihp_walk_device_cb)(struct acpi_device *acpi_device,
+ extern int acpihp_walk_devices(acpi_handle handle, acpihp_walk_device_cb cb,
+ 			       void *argp);
+ 
++extern int acpihp_slot_add_device(struct acpihp_slot *slot,
++				  enum acpihp_dev_type type,
++				  enum acpihp_dev_state state,
++				  struct device *dev);
++extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
++				     enum acpihp_dev_type type,
++				     struct device *dev);
++extern int acpihp_remove_device_list(struct klist *dev_list);
++
+ extern int acpihp_debug;
+ 
+ #define ACPIHP_DEBUG(fmt, ...) \
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.7.9.5
+
+
