@@ -1,113 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:52377 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755488Ab2HPX0W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 19:26:22 -0400
-Received: by obbwc20 with SMTP id wc20so2313314obb.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 16:26:21 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.18.96.155])
-	by wpzn3.hot.corp.google.com (Postfix) with ESMTP id 087B6100047
-	for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 16:26:21 -0700 (PDT)
-Received: from bhelgaas.mtv.corp.google.com (unknown [IPv6:::1])
-	by bhelgaas.mtv.corp.google.com (Postfix) with ESMTP id A0FA4180640
-	for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 16:26:20 -0700 (PDT)
-Subject: [PATCH 1/6] PCI: Use list_for_each_entry() for bus->devices traversal
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Aug 2012 17:26:20 -0600
-Message-ID: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:42054 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754040Ab2HDT3U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 4 Aug 2012 15:29:20 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Sat, 4 Aug 2012 21:35:11 +0200
+Cc: linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1208022151450.22991-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1208022151450.22991-100000@netrider.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208042135.12059.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace list_for_each() + pci_dev_b() with the simpler
-list_for_each_entry().
+On Friday, August 03, 2012, Alan Stern wrote:
+> On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
+> 
+> > > I don't know about that -- the logic involved in doing the processing 
+> > > within the resume callback isn't terribly complicated.  At least, not 
+> > > much more complicated than the logic involved in setting up a custom 
+> > > work routine as you suggest.
+> > 
+> > That's why I had the idea of pm_request_resume_and_call(dev, func)
+> > described in this message:
+> > 
+> > http://marc.info/?l=linux-usb&m=134377126804170&w=4
+> > 
+> > although perheps it would be better to call it something like
+> > pm_runtime_async_resume_and_call(dev, func).
+> 
+> Hmmm.  You'd probably want a version that does a "get" at the same 
+> time.  I suppose you would call func directly if the device was already 
+> resumed, without going through the workqueue?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c |   28 ++++++++++++++--------------
- drivers/pci/search.c |    4 +---
- 2 files changed, 15 insertions(+), 17 deletions(-)
+Yes.
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 04a4861..d867056 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -111,22 +111,24 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 	__pci_remove_bus_device(dev);
- }
- 
--static void __pci_remove_behind_bridge(struct pci_dev *dev)
-+static void __pci_remove_behind_bridge(struct pci_dev *bridge)
- {
--	struct list_head *l, *n;
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev, *tmp;
- 
--	if (dev->subordinate)
--		list_for_each_safe(l, n, &dev->subordinate->devices)
--			__pci_remove_bus_device(pci_dev_b(l));
-+	if (bus)
-+		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
-+			__pci_remove_bus_device(dev);
- }
- 
--static void pci_stop_behind_bridge(struct pci_dev *dev)
-+static void pci_stop_behind_bridge(struct pci_dev *bridge)
- {
--	struct list_head *l, *n;
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev, *tmp;
- 
--	if (dev->subordinate)
--		list_for_each_safe(l, n, &dev->subordinate->devices)
--			pci_stop_bus_device(pci_dev_b(l));
-+	if (bus)
-+		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
-+			pci_stop_bus_device(dev);
- }
- 
- /**
-@@ -146,7 +148,7 @@ void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
- 
- static void pci_stop_bus_devices(struct pci_bus *bus)
- {
--	struct list_head *l, *n;
-+	struct pci_dev *dev, *tmp;
- 
- 	/*
- 	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
-@@ -156,10 +158,8 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
- 	 * We can iterate the list backwards to get prev valid PF instead
- 	 *  of removed VF.
- 	 */
--	list_for_each_prev_safe(l, n, &bus->devices) {
--		struct pci_dev *dev = pci_dev_b(l);
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list)
- 		pci_stop_bus_device(dev);
--	}
- }
- 
- /**
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 993d4a0..b169390 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -132,14 +132,12 @@ pci_find_next_bus(const struct pci_bus *from)
-  */
- struct pci_dev * pci_get_slot(struct pci_bus *bus, unsigned int devfn)
- {
--	struct list_head *tmp;
- 	struct pci_dev *dev;
- 
- 	WARN_ON(in_interrupt());
- 	down_read(&pci_bus_sem);
- 
--	list_for_each(tmp, &bus->devices) {
--		dev = pci_dev_b(tmp);
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (dev->devfn == devfn)
- 			goto out;
- 	}
+> Yes, I agree this would be a better interface then pm_runtime_get.
 
+OK
+
+> > > > Well, that shouldn't need the is_suspended flag at all, methinks, and the
+> > > > reason it does need it is because it uses pm_runtime_get().
+> > > 
+> > > Not so.  Consider your scheme.  When starting an I/O request, you call
+> > > pm_runtime_get_noresume() and then check to see if the device is
+> > > active, say by calling pm_runtime_suspended().  Suppose at that moment
+> > > the suspend callback has just finished and has released the private
+> > > spinlock.  The device's status is still RPM_SUSPENDING, so
+> > > pm_runtime_suspended() returns 0 and you try to carry out the I/O.
+> > > 
+> > > To fix this problem you have to synchronize the status checking with
+> > > the suspend/resume operations.  This means the status changes have to
+> > > occur under the protection of the private lock, which means a private
+> > > flag is needed.
+> > 
+> > What about checking if the status is RPM_ACTIVE under dev->power.lock?
+> > That's what rpm_resume() does, more or less.
+> 
+> That wouldn't solve the race described above.
+> 
+> > > >  Moreover,
+> > > > processing requests in the resume callback is not something I'd recommend
+> > > > to anyone, because that's going to happen when the status of the device
+> > > > is RPM_RESUMING, we're holding a reference on the parent (if there's one) etc.
+> > > 
+> > > I don't see any problem with that.  The parent's child_count will be 
+> > > incremented while the requests are being processed regardless.  And if 
+> > > you've been waiting for the device to resume in order to carry out some 
+> > > processing, within the resume callback is the logical place to do the 
+> > > work.
+> > 
+> > Unless your _driver_ callback is actually executed from within a PM domain
+> > callback, for example, and something else may be waiting for it to complete,
+> > so your data processing is adding latencies to some other threads.  I'm not
+> > making that up, by the way, that really can happen.
+> > 
+> > And what if you are a parent waited for by a child to resume so that _it_
+> > can process its data?  Would you still want to process your data in the
+> > resume callback in that case?
+> 
+> Okay, those are valid reasons.  (Although a device handling I/O 
+> requests isn't likely to have a child with its own independent I/O 
+> handling.)
+
+I agree that this isn't very likely in practice.
+
+> > > I suppose we could keep pm_runtime_get_sync as is, and just change
+> > > pm_runtime_get to pm_runtime_get_async (and likewise for _put).  That
+> > > could reduce the confusion during the changeover.
+> > 
+> > Changing pm_runtime_get() to pm_runtime_get_async() would be an improvement,
+> > although pm_runtime_get_but_do_not_resume_immediately() might even be better.
+> > Or even pm_runtime_get_but_do_not_access_hardware_when_it_returns(). ;-)
+> > 
+> > I see no reason to have any of those things, though.  Yes, they _may_ be
+> > useful to someone knowing the runtime PM core internals to save a few lines
+> > of code in some places, but generally they lead people to make serious mistakes
+> > that tend to be difficult to debug.  For this very reason pm_runtime_get() is a
+> > bad interface and I wish we hadn't introduced it at all.  Even if we give it
+> > a more descriptive name, it won't be much better.
+> > 
+> > And note how that doesn't apply to the pm_runtime_put*() family.  After all,
+> > doing pm_runtime_put() instead of pm_runtime_put_sync() will never lead to
+> > accessing registers of a suspended device.
+> 
+> All right.  But I still think "pm_runtime_put_async" is better than
+> "pm_runtime_put".  At least it forces people to think about what
+> they're doing.
+
+I agree.
+
+My current plan is to provide a better alternative interface, then to change
+the name of "pm_runtime_put" to "pm_runtime_put_async" and to document that
+it's going to be deprecated in future.
+
+Thanks,
+Rafael
