@@ -1,179 +1,262 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 21/22] PCI: cleanups for PCI bus lock implementation
-Date: Wed,  8 Aug 2012 00:11:01 +0800
-Message-Id: <1344355862-2726-22-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+From: Jiang Liu <jiang.liu@huawei.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: [RFC PATCH v2 11/16] ACPIHP: analyse dependences among ACPI system  device hotplug slots
+Date: Sat, 4 Aug 2012 20:13:58 +0800
+Message-ID: <1344082443-4608-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now all Archs have been converted to the new PCI bus lock mechanism,
-so clean up unused code.
+From: Jiang Liu <jiang.liu@huawei.com>
+
+Some ACPI hotplug slots may have dependencies on other ACPI hotplug slots.
+For example, if a hotpluggable memory board is connected to a hotpluggble
+physical processor, the physical processor must be powered on before
+powering the memory board on.
+
+We could get dependency relationships by analyze ACPI namespace topology
+and evaluate ACPI _EDL method. So this patch implements several functions
+to analyze dependencies among ACPI hotplug slots.
 
 Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
 ---
- drivers/pci/Kconfig     |    3 ---
- drivers/pci/bus.c       |    1 -
- drivers/pci/pci-sysfs.c |    9 ---------
- drivers/pci/probe.c     |    4 +---
- include/linux/pci.h     |   10 ----------
- 5 files changed, 1 insertion(+), 26 deletions(-)
+ drivers/acpi/hotplug/Makefile     |    1 +
+ drivers/acpi/hotplug/acpihp_drv.h |   14 ++++
+ drivers/acpi/hotplug/dependency.c |  167 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 182 insertions(+)
+ create mode 100644 drivers/acpi/hotplug/dependency.c
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 5a796c0..848bfb8 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -120,6 +120,3 @@ config PCI_IOAPIC
- config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
--
--config PCI_BUS_LOCK
--	def_bool y if (X86 || IA64)
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 371f20a..308c376 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -196,7 +196,6 @@ int pci_bus_add_child(struct pci_bus *bus)
- 			pci_create_legacy_files(bus);
- 			pci_bus_change_state(bus, PCI_BUS_STATE_INITIALIZED,
- 					PCI_BUS_STATE_WORKING, false);
--			bus->is_added = 1;
- 		}
- 	}
+diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
+index d69832f..8477c71 100644
+--- a/drivers/acpi/hotplug/Makefile
++++ b/drivers/acpi/hotplug/Makefile
+@@ -11,3 +11,4 @@ acpihp_enum-y					+= slot_enum_ej0.o
  
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 11043b4..a5a4195 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -284,7 +284,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- }
- 
- #ifdef CONFIG_HOTPLUG
--static DEFINE_MUTEX(pci_remove_rescan_mutex);
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 				size_t count)
- {
-@@ -296,13 +295,11 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 
- 	if (val) {
- 		pci_host_bridge_hotplug_lock();
--		mutex_lock(&pci_remove_rescan_mutex);
- 		while ((b = pci_find_next_bus(b)) != NULL)
- 			if (pci_bus_lock_states(b, PCI_BUS_STATE_WORKING) > 0) {
- 				pci_rescan_bus(b);
- 				pci_bus_unlock(b);
- 			}
--		mutex_unlock(&pci_remove_rescan_mutex);
- 		pci_host_bridge_hotplug_unlock();
- 	}
- 	return count;
-@@ -326,13 +323,11 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 	if (val) {
- 		struct pci_bus *bus = pdev->bus;
- 
--		mutex_lock(&pci_remove_rescan_mutex);
- 		if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
- 			if (pdev->is_added)
- 				pci_rescan_bus(bus);
- 			pci_bus_unlock(bus);
- 		}
--		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
- 	return count;
- }
-@@ -342,13 +337,11 @@ static void remove_callback(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct pci_bus *bus = pdev->bus;
- 
--	mutex_lock(&pci_remove_rescan_mutex);
- 	if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
- 		pci_bus_get(bus);
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_unlock_and_put_bus(bus);
- 	}
--	mutex_unlock(&pci_remove_rescan_mutex);
- }
- 
- static ssize_t
-@@ -382,14 +375,12 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 		return -EINVAL;
- 
- 	if (val) {
--		mutex_lock(&pci_remove_rescan_mutex);
- 		if (!pci_is_root_bus(bus))
- 			pci_rescan_bus_bridge_resize(bus->self);
- 		else if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
- 			pci_rescan_bus(bus);
- 			pci_bus_unlock(bus);
- 		}
--		mutex_unlock(&pci_remove_rescan_mutex);
- 	}
- 	return count;
- }
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index da6f04c..09517c3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1626,11 +1626,9 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
- 	if (pci_bus_get_state(bus) < PCI_BUS_STATE_WORKING) {
- 		dev_dbg(&bus->dev, "fixups for bus\n");
- 		pcibios_fixup_bus(bus);
--		if (pci_is_root_bus(bus)) {
-+		if (pci_is_root_bus(bus))
- 			pci_bus_change_state(bus, PCI_BUS_STATE_REGISTERED,
- 					     PCI_BUS_STATE_WORKING, false);
--			bus->is_added = 1;
--		}
- 	}
- 
- 	for (pass=0; pass < 2; pass++)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9e52e88..0e50ec8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -442,7 +442,6 @@ struct pci_bus {
- 	struct device		dev;
- 	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
- 	struct bin_attribute	*legacy_mem; /* legacy mem */
--	unsigned int		is_added:1;
- 	atomic_t		state;
+ obj-$(CONFIG_ACPI_HOTPLUG_DRIVER)		+= acpihp_drv.o
+ acpihp_drv-y					= drv_main.o
++acpihp_drv-y					+= dependency.o
+diff --git a/drivers/acpi/hotplug/acpihp_drv.h b/drivers/acpi/hotplug/acpihp_drv.h
+index 18330f7..c4ff91c 100644
+--- a/drivers/acpi/hotplug/acpihp_drv.h
++++ b/drivers/acpi/hotplug/acpihp_drv.h
+@@ -53,10 +53,24 @@ struct acpihp_slot_drv {
+ 	struct acpihp_cancel_context	cancel_ctx;
  };
  
-@@ -463,21 +462,12 @@ struct pci_bus {
- #define	PCI_BUS_STATE_DESTROYED		0x40	/* invalid state */
- #define	PCI_BUS_STATE_MASK		0x7F
++struct acpihp_slot_dependency {
++	struct list_head		node;
++	struct acpihp_slot		*slot;
++	u32				opcodes;
++};
++
+ void acpihp_drv_get_data(struct acpihp_slot *slot,
+ 			 struct acpihp_slot_drv **data);
+ int acpihp_drv_enumerate_devices(struct acpihp_slot *slot);
+ void acpihp_drv_update_slot_state(struct acpihp_slot *slot);
+ int acpihp_drv_update_slot_status(struct acpihp_slot *slot);
  
--#ifdef	CONFIG_PCI_BUS_LOCK
- #define	PCI_BUS_STATE_LOCK		0x10000	/* for pci core only */
- 
- static inline bool pci_bus_is_locked(struct pci_bus *bus)
- {
- 	return !!(atomic_read(&bus->state) & PCI_BUS_STATE_LOCK);
- }
--#else /* CONFIG_PCI_BUS_LOCK */
--#define	PCI_BUS_STATE_LOCK		0x0000	/* for pci core only */
--
--static inline bool pci_bus_is_locked(struct pci_bus *bus)
--{
--	return true;
--}
--#endif /* CONFIG_PCI_BUS_LOCK */
- 
- static inline int pci_bus_get_state(struct pci_bus *bus)
- {
++int acpihp_drv_add_slot_to_dependency_list(struct acpihp_slot *slot,
++					   struct list_head *slot_list);
++void acpihp_drv_destroy_dependency_list(struct list_head *slot_list);
++int acpihp_drv_filter_dependency_list(struct list_head *old_head,
++		struct list_head *new_head, u32 opcode);
++int acpihp_drv_generate_dependency_list(struct acpihp_slot *slot,
++		struct list_head *slot_list, enum acpihp_drv_cmd cmd);
++
+ #endif	/* __ACPIHP_DRV_H__ */
+diff --git a/drivers/acpi/hotplug/dependency.c b/drivers/acpi/hotplug/dependency.c
+new file mode 100644
+index 0000000..d2d7dbb
+--- /dev/null
++++ b/drivers/acpi/hotplug/dependency.c
+@@ -0,0 +1,167 @@
++/*
++ * Copyright (C) 2011 Huawei Tech. Co., Ltd.
++ * Copyright (C) 2011 Jiang Liu <jiang.liu@huawei.com>
++ * Copyright (C) 2011 Hanjun Guo <guohanjun@huawei.com>
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ */
++
++#include <linux/kernel.h>
++#include <linux/types.h>
++#include <linux/list.h>
++#include <linux/mutex.h>
++#include <linux/acpi.h>
++#include <acpi/acpi_hotplug.h>
++#include "acpihp_drv.h"
++
++/* Insert a slot into the dependency list at the head */
++int acpihp_drv_add_slot_to_dependency_list(struct acpihp_slot *slot,
++					   struct list_head *slot_list)
++{
++	struct acpihp_slot_dependency *dep;
++
++	list_for_each_entry(dep, slot_list, node)
++		if (dep->slot == slot)
++			return 0;
++
++	dep = kzalloc(sizeof(*dep), GFP_KERNEL);
++	if (!dep) {
++		ACPIHP_DEBUG("fails to allocate memory for %s.\n", slot->name);
++		return -ENOMEM;
++	}
++	dep->slot = slot;
++	list_add(&dep->node, slot_list);
++
++	return 0;
++}
++
++static int acpihp_drv_get_online_dependency(struct acpihp_slot *slot,
++					    struct list_head *slot_list)
++{
++	int ret = 0;
++	struct acpihp_slot *temp;
++
++	for (temp = slot; temp && ret == 0; temp = temp->parent)
++		ret = acpihp_drv_add_slot_to_dependency_list(temp, slot_list);
++
++	return ret;
++}
++
++static int acpihp_drv_for_each_edl(struct acpihp_slot *slot, void *argp,
++	int(*cb)(struct device *dev, void *argp))
++{
++	/* TODO */
++	return 0;
++}
++
++static int acpihp_drv_add_offline_dependency(struct device *dev, void *argp)
++{
++	int ret;
++	struct acpihp_slot *slot;
++	struct list_head *list = argp;
++
++	slot = container_of(dev, struct acpihp_slot, dev);
++	ret = acpihp_drv_add_slot_to_dependency_list(slot, list);
++	if (!ret)
++		ret = device_for_each_child(&slot->dev, argp,
++				&acpihp_drv_add_offline_dependency);
++	if (!ret)
++		ret = acpihp_drv_for_each_edl(slot, argp,
++				&acpihp_drv_add_offline_dependency);
++
++	return ret;
++}
++
++static int acpihp_drv_get_offline_dependency(struct acpihp_slot *slot,
++					     struct list_head *slot_list)
++{
++	return acpihp_drv_add_offline_dependency(&slot->dev, slot_list);
++}
++
++int acpihp_drv_generate_dependency_list(struct acpihp_slot *slot,
++		struct list_head *slot_list, enum acpihp_drv_cmd cmd)
++{
++	int retval;
++
++	switch (cmd) {
++	case ACPIHP_DRV_CMD_POWERON:
++	/* fall through */
++	case ACPIHP_DRV_CMD_CONNECT:
++	/* fall through */
++	case ACPIHP_DRV_CMD_CONFIGURE:
++		retval = acpihp_drv_get_online_dependency(slot, slot_list);
++		break;
++
++	case ACPIHP_DRV_CMD_POWEROFF:
++	/* fall through */
++	case ACPIHP_DRV_CMD_DISCONNECT:
++	/* fall through */
++	case ACPIHP_DRV_CMD_UNCONFIGURE:
++		retval = acpihp_drv_get_offline_dependency(slot, slot_list);
++		break;
++
++	default:
++		retval = -EINVAL;
++		break;
++	}
++
++	return retval;
++}
++
++/*
++ * Generate a new list with slots from the old list which need to
++ * execute a specific operation.
++ */
++int acpihp_drv_filter_dependency_list(struct list_head *old_head,
++		struct list_head *new_head, u32 opcode)
++{
++	struct acpihp_slot_dependency *old_dep, *new_dep;
++
++	/* Initialize new list to empty */
++	INIT_LIST_HEAD(new_head);
++
++	list_for_each_entry(old_dep, old_head, node) {
++		/* Skip if the specified operation is not needed. */
++		if (!(old_dep->opcodes & opcode))
++			continue;
++
++		new_dep = kzalloc(sizeof(*new_dep), GFP_KERNEL);
++		if (!new_dep) {
++			ACPIHP_DEBUG("fails to filter depend list.\n");
++			acpihp_drv_destroy_dependency_list(new_head);
++			return -ENOMEM;
++		}
++
++		new_dep->slot = old_dep->slot;
++		new_dep->opcodes = old_dep->opcodes;
++		list_add_tail(&new_dep->node, new_head);
++	}
++
++	return 0;
++}
++
++void acpihp_drv_destroy_dependency_list(struct list_head *slot_list)
++{
++	struct acpihp_slot_dependency *asd, *temp;
++
++	list_for_each_entry_safe(asd, temp, slot_list, node) {
++		list_del(&asd->node);
++		kfree(asd);
++	}
++}
 -- 
 1.7.9.5
+
 
