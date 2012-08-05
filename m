@@ -1,88 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51364 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755678Ab2HGQVO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2012 12:21:14 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <liuj97@gmail.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH v1 18/22] PCI/acpiphp: use PCI bus lock to avoid race conditions
-Date: Wed,  8 Aug 2012 00:10:58 +0800
-Message-Id: <1344355862-2726-19-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Received: from minas.ics.muni.cz ([147.251.4.40]:39053 "EHLO minas.ics.muni.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752373Ab2HEIFR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 5 Aug 2012 04:05:17 -0400
+Date: Sun, 5 Aug 2012 10:05:00 +0200
+From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+To: Konrad Wilk <konrad.wilk@oracle.com>
+Cc: yinghai@kernel.org, linux-pci@vger.kernel.org, roland@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: mellanox mlx4_core and SR-IOV
+Message-ID: <20120805080500.GH25979@ics.muni.cz>
+References: <9f903175-4080-4016-b9f8-83e8615c110e@default>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <9f903175-4080-4016-b9f8-83e8615c110e@default>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <liuj97@gmail.com>
+Hi,
 
-This patch uses PCI bus lock mechanism to avoid race conditions when doing
-PCI device/host bridge hotplug by acpiphp driver.
+On Fri, Aug 03, 2012 at 06:49:59AM -0700, Konrad Wilk wrote:
+> This looks like you are using PV PCI passthrough? If so, did you
+> remember to use 'iommu=soft' to enable the Xen-SWIOTLB in your guest?
+> And are you booting with more than 4GB? Or is less than 3GB (so that you have
+> a nice gap in E820).
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+good catch. I forgot to pass swiotl=force for DomU in Xen. So now, it seems
+that mlx4_core works, mlx4_en (ethernet part) works as well. Unfortunately,
+the IB part does not. IB layer complains that SR-IOV is currently unsupported
+(kernel 3.5.0). So no luck here so far. 
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 73af337..0ea7ab1 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -800,11 +800,14 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	if (slot->flags & SLOT_ENABLED)
- 		goto err_exit;
- 
-+	if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) < 0)
-+		return -EINVAL;
-+
- 	num = pci_scan_slot(bus, PCI_DEVFN(slot->device, 0));
- 	if (num == 0) {
- 		/* Maybe only part of funcs are added. */
- 		dbg("No new device found\n");
--		goto err_exit;
-+		goto out_unlock;
- 	}
- 
- 	max = acpiphp_max_busnr(bus);
-@@ -862,8 +865,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 		pci_dev_put(dev);
- 	}
- 
-+out_unlock:
-+	pci_bus_unlock(bus);
- 
-- err_exit:
-+err_exit:
- 	return retval;
- }
- 
-@@ -906,6 +911,9 @@ static int disable_device(struct acpiphp_slot *slot)
- 	struct pci_dev *pdev;
- 	struct pci_bus *bus = slot->bridge->pci_bus;
- 
-+	if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) < 0)
-+		goto err_exit;
-+
- 	/* The slot will be enabled when func 0 is added, so check
- 	   func 0 before disable the slot. */
- 	pdev = pci_get_slot(bus, PCI_DEVFN(slot->device, 0));
-@@ -943,6 +951,7 @@ static int disable_device(struct acpiphp_slot *slot)
- 	}
- 
- 	slot->flags &= (~SLOT_ENABLED);
-+	pci_bus_unlock(bus);
- 
- err_exit:
- 	return 0;
+There is OFED stack directly from Mellanox, that seems to support SR-IOV even
+for IB layer, but they have buildable sources only for RHEL/SLES kernels
+(2.6.32) and even correcting the sources to get it compile with 3.5.0 does not
+make things work. The driver complains about interrupts not working in Dom0 or
+even without Xen hypervisor at all.
+
+The only good point is, that I managed to convice Supermicro (board
+manufacturer), that enabling SR-IOV in BIOS leads to BIOS lockup, they
+confirmed it and maybe they provide BIOS upgrade.
+
+Thanks all.
+
 -- 
-1.7.9.5
-
+Luká¹ Hejtmánek
