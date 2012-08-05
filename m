@@ -1,133 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	John Ronciak <john.ronciak@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:47508 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754193Ab2HEJhl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 5 Aug 2012 05:37:41 -0400
+Message-ID: <501E3EAD.9090905@huawei.com>
+Date: Sun, 5 Aug 2012 17:36:45 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jiang Liu <liuj97@gmail.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luch@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 17/32] PCI/igb: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:22 +0800
-Message-Id: <1343836477-7287-18-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Gaohuai Han <hangaohuai@huawei.com>
+Subject: Re: [RFC PATCH 2/3] ACPIHP: ACPI system device hotplug slot enumerator
+References: <1343475772-21345-1-git-send-email-jiang.liu@huawei.com> <1343475772-21345-3-git-send-email-jiang.liu@huawei.com> <CAE9FiQU=HmRCy0nxLgi7oqnjbaW4DJ2ct1EE2pVP+=rac2D+wQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQU=HmRCy0nxLgi7oqnjbaW4DJ2ct1EE2pVP+=rac2D+wQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 2012-8-5 4:14, Yinghai Lu wrote:
+> On Sat, Jul 28, 2012 at 4:42 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> The first is an ACPI hotplug slot enumerator, which enumerates ACPI hotplug
+>> slots on load and provides callbacks to manage those hotplug slots.
+>> An ACPI hotplug slot is an abstraction of receptacles, where a group of
+>> system devices could be connected to. This patch implements the skeleton for
+>> ACPI system device hotplug slot enumerator. On loading, the driver scans the
+>> whole ACPI namespace for hotplug slots and creates a device node for each
+>> hotplug slots. Every slot is associated with a device class named
+>> acpihp_slot_class and will be managed by ACPI hotplug drivers.
+> 
+> I was thinking:
+>    We can have module in ACPI DSDT, and every module is coresponding
+> to SystemModule.
+>    so it will be
+> 	\_SB.NOD1
+> 		CPU0
+> 		CPU1
+> 		CPU2
+> 		CPU3
+> 		MEM0
+> 		MEM1
+> 		MEM2
+> 		MEM3
+> 		PCI0
+> 		PCI1
+> 		PCI2
+> 		PCI3
+> 		NTFY
+> 		STAT
+> 		STOP
+>     NTFY will be something like:
+> 	Notify(\_SB.NOD1.CPU0,....)
+> 	Notify(\_SB.NOD1.CPU1,....)
+> 	Notify(\_SB.NOD1.CPU2,....)
+> 	Notify(\_SB.NOD1.CPU3,....)
+> 
+> 	Notify(\_SB.NOD1.MEM0,....)
+> 	Notify(\_SB.NOD1.MEM1,....)
+> 	Notify(\_SB.NOD1.MEM2,....)
+> 	Notify(\_SB.NOD1.MEM3,....)
+> 
+> 	Notify(\_SB.NOD1.PCI0,....)
+> 	Notify(\_SB.NOD1.PCI1,....)
+> 	Notify(\_SB.NOD1.PCI2,....)
+> 	Notify(\_SB.NOD1.PCI3,....)
+> 
+>    and will link GPE button for SystemModule to call NTFY.
+> 
+>    STAT could be 32bit integer for final turn off the power.
+> 	every CPU, MEM, PCI will own one bit, it will clear that bit in this own
+> 	_EJ0.
+> 	Every _EJ0 will double check if all are cleared, then it call extra STOP
+> 	to power off the whole SystemModule.
+> 
+> if OS already have seperated handler for those type objects (CPU, MEM,
+> PCI),  we may not need to change to much to os.
 
-Use PCIe capabilities access functions to simplify Intel ethernet drivers'
-implementation.
+Hi Yinghai,
+	Thanks for your comments.
+	It's one of the major concerns that we may need to make too many changes
+to existing code, and even break backward compatibilities:(
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/net/ethernet/intel/e1000e/netdev.c |   27 ++++++++-------------------
- drivers/net/ethernet/intel/igb/igb_main.c  |   12 ++----------
- 2 files changed, 10 insertions(+), 29 deletions(-)
+	There are two possible ways to support hotplug in ACPI BIOS:
+	1) send hotplug notifications to each sub-component of an FRU/module.
+	2) send hotplug notifications to the FRU itself. 
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index a4b0435..30b647f 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -5582,16 +5582,15 @@ static void e1000_complete_shutdown(struct pci_dev *pdev, bool sleep,
- 	 */
- 	if (adapter->flags & FLAG_IS_QUAD_PORT) {
- 		struct pci_dev *us_dev = pdev->bus->self;
--		int pos = pci_pcie_cap(us_dev);
- 		u16 devctl;
- 
--		pci_read_config_word(us_dev, pos + PCI_EXP_DEVCTL, &devctl);
--		pci_write_config_word(us_dev, pos + PCI_EXP_DEVCTL,
--		                      (devctl & ~PCI_EXP_DEVCTL_CERE));
-+		pci_pcie_capability_read_word(us_dev, PCI_EXP_DEVCTL, &devctl);
-+		pci_pcie_capability_write_word(us_dev, PCI_EXP_DEVCTL,
-+					       (devctl & ~PCI_EXP_DEVCTL_CERE));
- 
- 		e1000_power_off(pdev, sleep, wake);
- 
--		pci_write_config_word(us_dev, pos + PCI_EXP_DEVCTL, devctl);
-+		pci_pcie_capability_write_word(us_dev, PCI_EXP_DEVCTL, devctl);
- 	} else {
- 		e1000_power_off(pdev, sleep, wake);
- 	}
-@@ -5605,25 +5604,15 @@ static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
- #else
- static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
- {
--	int pos;
--	u16 reg16;
--
- 	/*
- 	 * Both device and parent should have the same ASPM setting.
- 	 * Disable ASPM in downstream component first and then upstream.
- 	 */
--	pos = pci_pcie_cap(pdev);
--	pci_read_config_word(pdev, pos + PCI_EXP_LNKCTL, &reg16);
--	reg16 &= ~state;
--	pci_write_config_word(pdev, pos + PCI_EXP_LNKCTL, reg16);
--
--	if (!pdev->bus->self)
--		return;
-+	pci_pcie_capability_change_word(pdev, PCI_EXP_LNKCTL, 0, state);
- 
--	pos = pci_pcie_cap(pdev->bus->self);
--	pci_read_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, &reg16);
--	reg16 &= ~state;
--	pci_write_config_word(pdev->bus->self, pos + PCI_EXP_LNKCTL, reg16);
-+	if (pdev->bus->self)
-+		pci_pcie_capability_change_word(pdev->bus->self, PCI_EXP_LNKCTL,
-+						0, state);
- }
- #endif
- static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
-diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index dd3bfe8..3d46830 100644
---- a/drivers/net/ethernet/intel/igb/igb_main.c
-+++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -6446,28 +6446,20 @@ static int igb_ioctl(struct net_device *netdev, struct ifreq *ifr, int cmd)
- s32 igb_read_pcie_cap_reg(struct e1000_hw *hw, u32 reg, u16 *value)
- {
- 	struct igb_adapter *adapter = hw->back;
--	u16 cap_offset;
- 
--	cap_offset = adapter->pdev->pcie_cap;
--	if (!cap_offset)
-+	if (pci_pcie_capability_read_word(adapter->pdev, reg, value))
- 		return -E1000_ERR_CONFIG;
- 
--	pci_read_config_word(adapter->pdev, cap_offset + reg, value);
--
- 	return 0;
- }
- 
- s32 igb_write_pcie_cap_reg(struct e1000_hw *hw, u32 reg, u16 *value)
- {
- 	struct igb_adapter *adapter = hw->back;
--	u16 cap_offset;
- 
--	cap_offset = adapter->pdev->pcie_cap;
--	if (!cap_offset)
-+	if (pci_pcie_capability_write_word(adapter->pdev, reg, *value))
- 		return -E1000_ERR_CONFIG;
- 
--	pci_write_config_word(adapter->pdev, cap_offset + reg, *value);
--
- 	return 0;
- }
- 
--- 
-1.7.9.5
+	We have had discussions with BIOS team and chose to adopt the second 
+solution because:
+	1) It's more convenient for user to operate on FRUs instead of sub-components.
+	2) BIOS will be simpler because it only need to track status of FRU itself
+	instead	of sub-components.
+	3) It will be much more complex to do error recover if OS/BIOS cooperate on
+	sub-component granularity.
+	Any suggestions here?
+	Regards!
+	Gerry
 
