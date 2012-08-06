@@ -1,82 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55743 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754085Ab2HORGt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 13:06:49 -0400
-Received: by yhmm54 with SMTP id m54so2004355yhm.19
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 10:06:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Aug 2012 10:06:27 -0700
-Message-ID: <CAErSpo7v+i8i=mXCs7ZW8DtGTDN_4AEntwYLqGG8FcCzweySFg@mail.gmail.com>
-Subject: Re: [PATCH v3 01/10] PCI: Keep pci_fixup_irqs() around after init
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:16530 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755364Ab2HFBef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 5 Aug 2012 21:34:35 -0400
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: [BUGFIX -v2 1/4] PCI/PM: enable D3/D3cold by default for most devices
+Date: Mon,  6 Aug 2012 09:34:27 +0800
+Message-Id: <1344216870-21105-2-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
+References: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> When using deferred driver probing, PCI host controller drivers may
-> actually require this function after the init stage.
->
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> ---
-> Changes in v3:
-> - none
->
-> Changes in v2:
-> - use __devinit annotations
+This patch fixes the following bug:
 
-Your original patch removed __init completely.  Here you change it to
-__devinit.  That means we decide whether to discard the function based
-on whether CONFIG_HOTPLUG is supported.  But I think your point is not
-about hotplug; it's merely that we should be able to scan a PCI bus
-after init-time.  We ought to be able to do a late PCI scan even if
-hotplug is not supported.
+http://marc.info/?l=linux-usb&m=134318961120825&w=2
 
-Therefore, I'd be inclined to remove __init completely unless you have
-another reason for preferring __devinit.
+Originally, device lower power states include D1, D2, D3.  After that,
+D3 is further divided into D3hot and D3cold.  To support both scenario
+safely, original D3 is mapped to D3cold.
 
->  drivers/pci/setup-irq.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index eb219a1..f0bcd56 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -18,7 +18,7 @@
->  #include <linux/cache.h>
->
->
-> -static void __init
-> +static void __devinit
->  pdev_fixup_irq(struct pci_dev *dev,
->                u8 (*swizzle)(struct pci_dev *, u8 *),
->                int (*map_irq)(const struct pci_dev *, u8, u8))
-> @@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
->         pcibios_update_irq(dev, irq);
->  }
->
-> -void __init
-> +void __devinit
->  pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->                int (*map_irq)(const struct pci_dev *, u8, u8))
->  {
-> --
-> 1.7.11.2
->
+When adding D3cold support, because worry about some device may have
+broken D3cold support, D3cold is disabled by default.  This disable D3
+on original platform too.  But some original platform may only have
+working D3, but no working D1, D2.  The root cause of the above bug is
+it too.
+
+To deal with this, this patch enables D3/D3cold by default for most
+devices.  This restores the original behavior.  For some devices that
+suspected to have broken D3cold support, such as PCIe port, D3cold is
+disabled by default.
+
+Reported-by: Bjorn Mork <bjorn@mork.no>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/pci/pci.c              |    1 +
+ drivers/pci/pcie/portdrv_pci.c |    5 +++++
+ 2 files changed, 6 insertions(+)
+
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1941,6 +1941,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 	dev->pm_cap = pm;
+ 	dev->d3_delay = PCI_PM_D3_WAIT;
+ 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
++	dev->d3cold_allowed = true;
+ 
+ 	dev->d1_support = false;
+ 	dev->d2_support = false;
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -200,6 +200,11 @@ static int __devinit pcie_portdrv_probe(
+ 		return status;
+ 
+ 	pci_save_state(dev);
++	/*
++	 * D3cold may not work properly on some PCIe port, so disable
++	 * it by default.
++	 */
++	dev->d3cold_allowed = false;
+ 	if (!pci_match_id(port_runtime_pm_black_list, dev))
+ 		pm_runtime_put_noidle(&dev->dev);
+ 
