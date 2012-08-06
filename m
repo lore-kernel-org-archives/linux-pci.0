@@ -1,143 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:8593 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752589Ab2HFFzw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 01:55:52 -0400
+Message-ID: <1344232549.3441.7.camel@ul30vt.home>
+Subject: Re: [PATCH] pci: Account for virtual buses in pci_acs_path_enabled
+From: Alex Williamson <alex.williamson@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [BUGFIX -v2 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
-Date: Mon,  6 Aug 2012 09:34:29 +0800
-Message-Id: <1344216870-21105-4-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-References: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dsahern@gmail.com
+Date: Sun, 05 Aug 2012 23:55:49 -0600
+In-Reply-To: <CAErSpo42VMnfzDP6t5eCFfE-5=yPNmNGLs6a2D0KwGMhe71DbQ@mail.gmail.com>
+References: <20120804181445.6598.6505.stgit@bling.home>
+	 <CAErSpo42VMnfzDP6t5eCFfE-5=yPNmNGLs6a2D0KwGMhe71DbQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+On Sun, 2012-08-05 at 23:30 -0600, Bjorn Helgaas wrote:
+> On Sat, Aug 4, 2012 at 12:19 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > It's possible to have buses without an associated bridge
+> > (bus->self == NULL).  SR-IOV can generate such buses.  When
+> > we find these, skip to the parent bus to look for the next
+> > ACS test.
+> 
+> To make sure I understand the problem here, I think you're referring
+> to the situation where an SR-IOV device can span several bus numbers,
+> e.g., the "VFs Spanning Multiple Bus Numbers" implementation note in
+> the SR-IOV 1.1 spec, sec. 2.1.2.
+> 
+> It says "All PFs must be located on the Device's captured Bus Number"
+> -- I think that means every PF will be directly on a bridge's
+> secondary bus and hence will have a valid dev->bus->self pointer.
+> 
+> However, VFs need not be on the same bus number.  If a VF is on
+> (captured Bus Number plus 1), I think we allocate a new struct pci_bus
+> for it, but there's no P2P bridge that leads to that bus, so the
+> bus->self pointer is probably NULL.
 
-http://marc.info/?l=linux-pci&m=134338059022620&w=2
+Yes, exactly.  virtfn_add_bus() is where we're creating this new bus.
 
-Where lspci does not work properly if a device and the corresponding
-parent bridge (such as PCIe port) is suspended.  This is because the
-device configuration space registers will be not accessible if the
-corresponding parent bridge is suspended or the device is put into
-D3cold state.
+> This makes me quite nervous, because I bet there are many places that
+> assume every non-root bus has a valid bus->self pointer  -- I know I
+> certainly had that assumption.
+> 
+> I looked at callers of pci_is_root_bus(), and at first glance, it seems like
+> iommu_init_device(), intel_iommu_add_device(), pci_acs_path_enabled(),
 
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before read/write configuration space registers.
-If the device is in D3cold state, it will be put into active state
-too.
 
-To avoid resume/suspend PCIe port for each configuration register
-read/write, a small delay is added before the PCIe port to go
-suspended.
+These 3 are handled by this patch, plus the intel and amd iommu patches
+I sent.
 
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci-sysfs.c        |   37 +++++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv_pci.c |    9 +++++++++
- 2 files changed, 46 insertions(+)
+> pci_get_interrupt_pin(), pci_common_swizzle(),
 
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -458,6 +458,35 @@ boot_vga_show(struct device *dev, struct
- }
- struct device_attribute vga_attr = __ATTR_RO(boot_vga);
- 
-+static void
-+pci_config_pm_runtime_get(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
-+
-+	if (parent)
-+		pm_runtime_get_sync(parent);
-+	pm_runtime_get_noresume(dev);
-+	/*
-+	 * pdev->current_state is set to PCI_D3cold during suspending,
-+	 * so wait until suspending completes
-+	 */
-+	pm_runtime_barrier(dev);
-+	if (pdev->current_state == PCI_D3cold)
-+		pm_runtime_resume(dev);
-+}
-+
-+static void
-+pci_config_pm_runtime_put(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
-+
-+	pm_runtime_put(dev);
-+	if (parent)
-+		pm_runtime_put_sync(parent);
-+}
-+
- static ssize_t
- pci_read_config(struct file *filp, struct kobject *kobj,
- 		struct bin_attribute *bin_attr,
-@@ -484,6 +513,8 @@ pci_read_config(struct file *filp, struc
- 		size = count;
- 	}
- 
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((off & 1) && size) {
- 		u8 val;
- 		pci_user_read_config_byte(dev, off, &val);
-@@ -529,6 +560,8 @@ pci_read_config(struct file *filp, struc
- 		--size;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	return count;
- }
- 
-@@ -549,6 +582,8 @@ pci_write_config(struct file* filp, stru
- 		count = size;
- 	}
- 	
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((off & 1) && size) {
- 		pci_user_write_config_byte(dev, off, data[off - init_off]);
- 		off++;
-@@ -587,6 +622,8 @@ pci_write_config(struct file* filp, stru
- 		--size;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	return count;
- }
- 
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -140,9 +140,17 @@ static int pcie_port_runtime_resume(stru
- {
- 	return 0;
- }
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	/* Delay for a short while to prevent too frequent suspend/resume */
-+	pm_schedule_suspend(dev, 10);
-+	return -EBUSY;
-+}
- #else
- #define pcie_port_runtime_suspend	NULL
- #define pcie_port_runtime_resume	NULL
-+#define pcie_port_runtime_idle		NULL
- #endif
- 
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-@@ -155,6 +163,7 @@ static const struct dev_pm_ops pcie_port
- 	.resume_noirq	= pcie_port_resume_noirq,
- 	.runtime_suspend = pcie_port_runtime_suspend,
- 	.runtime_resume = pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+If sr-iov is the only source of these virtual buses, these are probably
+ok since VFs don't support INTx.
+
+> pci_find_upstream_pcie_bridge(), and
+
+Here the pci_is_root_bus() is after a pci_is_pcie() check, so again if
+sr-iov only (and assuming VFs properly report PCIe capability), we
+shouldn't stumble on it.
+
+> pci_bus_release_bridge_resources() all might have similar problems.
+
+This one might deserve further investigation.  Thanks,
+
+Alex
+
+> 
+> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > ---
+> >
+> > David Ahern reported an oops from iommu drivers passing NULL into
+> > this function for the same mistake.  Harden this function against
+> > assuming bus->self is valid as well.  David, please include this
+> > patch as well as the iommu patches in your testing.
+> >
+> >  drivers/pci/pci.c |   22 +++++++++++++++++-----
+> >  1 file changed, 17 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index f3ea977..e11a49c 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -2486,18 +2486,30 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+> >  bool pci_acs_path_enabled(struct pci_dev *start,
+> >                           struct pci_dev *end, u16 acs_flags)
+> >  {
+> > -       struct pci_dev *pdev, *parent = start;
+> > +       struct pci_dev *pdev = start;
+> > +       struct pci_bus *bus;
+> >
+> >         do {
+> > -               pdev = parent;
+> > -
+> >                 if (!pci_acs_enabled(pdev, acs_flags))
+> >                         return false;
+> >
+> > -               if (pci_is_root_bus(pdev->bus))
+> > +               bus = pdev->bus;
+> > +
+> > +               if (pci_is_root_bus(bus))
+> >                         return (end == NULL);
+> >
+> > -               parent = pdev->bus->self;
+> > +               /*
+> > +                * Skip buses without an associated bridge.  In this
+> > +                * case move to the parent and continue.
+> > +                */
+> > +               while (!bus->self) {
+> > +                       if (!pci_is_root_bus(bus))
+> > +                               bus = bus->parent;
+> > +                       else
+> > +                               return (end == NULL);
+> > +               }
+> > +
+> > +               pdev = bus->self;
+> >         } while (pdev != end);
+> >
+> >         return true;
+> >
+
+
+
