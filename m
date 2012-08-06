@@ -1,66 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [BUGFIX -v3 1/4] PCI/PM: enable D3/D3cold by default for most devices
-Date: Wed,  8 Aug 2012 09:07:38 +0800
-Message-Id: <1344388061-18981-2-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
-References: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:63254 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756493Ab2HFOXV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 10:23:21 -0400
+Message-ID: <1344262990.3441.13.camel@ul30vt.home>
+Subject: Re: [PATCH 0/2] Fix ACS path checking
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Joerg Roedel <joerg.roedel@amd.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	dwmw2@infradead.org, linux-kernel@vger.kernel.org,
+	dsahern@gmail.com
+Date: Mon, 06 Aug 2012 08:23:10 -0600
+In-Reply-To: <20120806122053.GL1996@amd.com>
+References: <20120804180155.6144.83332.stgit@bling.home>
+	 <20120806105010.GK1996@amd.com> <20120806122053.GL1996@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+On Mon, 2012-08-06 at 14:20 +0200, Joerg Roedel wrote:
+> On Mon, Aug 06, 2012 at 12:50:10PM +0200, Joerg Roedel wrote:
+> > On Sat, Aug 04, 2012 at 12:08:46PM -0600, Alex Williamson wrote:
+> > Hmm, tried it here, At least pci_request_acs() still gets called. How do
+> > you detect if ACS is really enabled?
+> 
+> Okay, I found a problem. pci_request_acs needs to be called before PCI
+> probing. Does the attached patch help?
+> 
+> From 87a4363be30d5d015a984a60769f29b0607fc5fb Mon Sep 17 00:00:00 2001
+> From: Joerg Roedel <joerg.roedel@amd.com>
+> Date: Mon, 6 Aug 2012 14:18:42 +0200
+> Subject: [PATCH] iommu/amd: Fix pci_request_acs() call-place
+> 
+> The pci_request_acs() function needs to be called before PCI
+> probing to be effective. So move it to another call-place to
+> ensure that.
+> 
+> Signed-off-by: Joerg Roedel <joerg.roedel@amd.com>
+> ---
+>  drivers/iommu/amd_iommu_init.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 
-http://marc.info/?l=linux-usb&m=134318961120825&w=2
 
-Originally, device lower power states include D1, D2, D3.  After that,
-D3 is further divided into D3hot and D3cold.  To support both scenario
-safely, original D3 is mapped to D3cold.
+Yes, that's it.  Before and after:
 
-When adding D3cold support, because worry about some device may have
-broken D3cold support, D3cold is disabled by default.  This disable D3
-on original platform too.  But some original platform may only have
-working D3, but no working D1, D2.  The root cause of the above bug is
-it too.
+00:04.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI RD890 PCI to PCI bridge (PCI express gpp port D) (prog-if 00 [Normal decode])
+	Capabilities: [190] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans+
+		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
 
-To deal with this, this patch enables D3/D3cold by default for most
-devices.  This restores the original behavior.  For some devices that
-suspected to have broken D3cold support, such as PCIe port, D3cold is
-disabled by default.
+	Capabilities: [190] Access Control Services
+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans+
+		ACSCtl:	SrcValid+ TransBlk- ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl- DirectTrans-
 
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/pci/pci.c              |    1 +
- drivers/pci/pcie/portdrv_pci.c |    5 +++++
- 2 files changed, 6 insertions(+)
+The former makes iommu grouping put all my VFs in a single group below
+this device.  Correct given the ACS state, but not very useful.  Thanks,
 
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1941,6 +1941,7 @@ void pci_pm_init(struct pci_dev *dev)
- 	dev->pm_cap = pm;
- 	dev->d3_delay = PCI_PM_D3_WAIT;
- 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
-+	dev->d3cold_allowed = true;
- 
- 	dev->d1_support = false;
- 	dev->d2_support = false;
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -200,6 +200,11 @@ static int __devinit pcie_portdrv_probe(
- 		return status;
- 
- 	pci_save_state(dev);
-+	/*
-+	 * D3cold may not work properly on some PCIe port, so disable
-+	 * it by default.
-+	 */
-+	dev->d3cold_allowed = false;
- 	if (!pci_match_id(port_runtime_pm_black_list, dev))
- 		pm_runtime_put_noidle(&dev->dev);
- 
+Alex
+
+Tested-by: Alex Williamson <alex.williamson@redhat.com>
+
+> diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
+> index 500e7f1..0a2ea31 100644
+> --- a/drivers/iommu/amd_iommu_init.c
+> +++ b/drivers/iommu/amd_iommu_init.c
+> @@ -1131,9 +1131,6 @@ static int __init amd_iommu_init_pci(void)
+>  			break;
+>  	}
+>  
+> -	/* Make sure ACS will be enabled */
+> -	pci_request_acs();
+> -
+>  	ret = amd_iommu_init_devices();
+>  
+>  	print_iommu_info();
+> @@ -1652,6 +1649,9 @@ static bool detect_ivrs(void)
+>  
+>  	early_acpi_os_unmap_memory((char __iomem *)ivrs_base, ivrs_size);
+>  
+> +	/* Make sure ACS will be enabled during PCI probe */
+> +	pci_request_acs();
+> +
+>  	return true;
+>  }
+>  
+
+
+
