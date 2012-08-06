@@ -1,239 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 12/22] PCI: enhance PCI remove logic to support PCI bus lock mechanism
-Date: Wed,  8 Aug 2012 00:10:52 +0800
-Message-Id: <1344355862-2726-13-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Date: Mon, 6 Aug 2012 14:20:53 +0200
+From: Joerg Roedel <joerg.roedel@amd.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <iommu@lists.linux-foundation.org>,
+	<dwmw2@infradead.org>, <linux-kernel@vger.kernel.org>,
+	<dsahern@gmail.com>
+Subject: Re: [PATCH 0/2] Fix ACS path checking
+Message-ID: <20120806122053.GL1996@amd.com>
+References: <20120804180155.6144.83332.stgit@bling.home>
+ <20120806105010.GK1996@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120806105010.GK1996@amd.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enhances PCI remove logic to support PCI bus lock mechanism.
-It implements the major part of the PCI bus state machine.
+On Mon, Aug 06, 2012 at 12:50:10PM +0200, Joerg Roedel wrote:
+> On Sat, Aug 04, 2012 at 12:08:46PM -0600, Alex Williamson wrote:
+> Hmm, tried it here, At least pci_request_acs() still gets called. How do
+> you detect if ACS is really enabled?
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Okay, I found a problem. pci_request_acs needs to be called before PCI
+probing. Does the attached patch help?
+
+>From 87a4363be30d5d015a984a60769f29b0607fc5fb Mon Sep 17 00:00:00 2001
+From: Joerg Roedel <joerg.roedel@amd.com>
+Date: Mon, 6 Aug 2012 14:18:42 +0200
+Subject: [PATCH] iommu/amd: Fix pci_request_acs() call-place
+
+The pci_request_acs() function needs to be called before PCI
+probing to be effective. So move it to another call-place to
+ensure that.
+
+Signed-off-by: Joerg Roedel <joerg.roedel@amd.com>
 ---
- drivers/pci/remove.c |  146 +++++++++++++++++++++++++++++---------------------
- 1 file changed, 85 insertions(+), 61 deletions(-)
+ drivers/iommu/amd_iommu_init.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index ba03059..a26a841 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -26,21 +26,25 @@ static void pci_stop_dev(struct pci_dev *dev)
- 		dev->is_added = 0;
+diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
+index 500e7f1..0a2ea31 100644
+--- a/drivers/iommu/amd_iommu_init.c
++++ b/drivers/iommu/amd_iommu_init.c
+@@ -1131,9 +1131,6 @@ static int __init amd_iommu_init_pci(void)
+ 			break;
  	}
  
-+	/* TODO: check whether it's safe to call aspm here */
- 	if (dev->bus->self)
- 		pcie_aspm_exit_link_state(dev);
- }
- 
- static void pci_destroy_dev(struct pci_dev *dev)
- {
--	/* Remove the device from the device lists, and prevent any further
--	 * list accesses from this device */
- 	down_write(&pci_bus_sem);
--	list_del(&dev->bus_list);
--	dev->bus_list.next = dev->bus_list.prev = NULL;
--	up_write(&pci_bus_sem);
+-	/* Make sure ACS will be enabled */
+-	pci_request_acs();
 -
--	pci_free_resources(dev);
--	put_device(&dev->dev);
-+	if (dev->bus_list.next == NULL) {
-+		up_write(&pci_bus_sem);
-+	} else {
-+		/* Remove the device from the device lists, and prevent any
-+		 * further list accesses from this device */
-+		list_del(&dev->bus_list);
-+		dev->bus_list.next = dev->bus_list.prev = NULL;
-+		up_write(&pci_bus_sem);
-+		pci_free_resources(dev);
-+		put_device(&dev->dev);
-+	}
- }
+ 	ret = amd_iommu_init_devices();
  
- /**
-@@ -64,29 +68,44 @@ int pci_remove_device_safe(struct pci_dev *dev)
+ 	print_iommu_info();
+@@ -1652,6 +1649,9 @@ static bool detect_ivrs(void)
  
- void pci_remove_bus(struct pci_bus *pci_bus)
- {
--	pci_proc_detach_bus(pci_bus);
-+	int state = pci_bus_get_state(pci_bus);
+ 	early_acpi_os_unmap_memory((char __iomem *)ivrs_base, ivrs_size);
  
--	down_write(&pci_bus_sem);
--	list_del(&pci_bus->node);
--	pci_bus_release_busn_res(pci_bus);
--	up_write(&pci_bus_sem);
--	if (pci_bus->is_added) {
-+	switch (state) {
-+	case PCI_BUS_STATE_STOPPED:
-+	case PCI_BUS_STATE_REGISTERED:
- 		pci_remove_legacy_files(pci_bus);
- 		device_del(&pci_bus->dev);
-+	case PCI_BUS_STATE_STOPPING:
-+	case PCI_BUS_STATE_INITIALIZED:
-+		pci_proc_detach_bus(pci_bus);
-+		down_write(&pci_bus_sem);
-+		list_del(&pci_bus->node);
-+		pci_bus_release_busn_res(pci_bus);
-+		up_write(&pci_bus_sem);
-+		pci_bus_change_state(pci_bus, state,
-+				     PCI_BUS_STATE_REMOVED, true);
-+		pci_bus_put(pci_bus);
-+		break;
-+	case PCI_BUS_STATE_REMOVED:
-+		pci_bus_unlock(pci_bus);
-+		break;
-+	default:
-+		BUG_ON(state);
-+		break;
- 	}
--	put_device(&pci_bus->dev);
- }
- EXPORT_SYMBOL(pci_remove_bus);
- 
--static void pci_remove_behind_bridge(struct pci_dev *dev);
--
- void __pci_remove_bus_device(struct pci_dev *dev)
- {
--	if (dev->subordinate) {
--		struct pci_bus *b = dev->subordinate;
-+	struct list_head *l, *n;
-+	struct pci_bus *bus;
- 
--		pci_remove_behind_bridge(dev);
--		pci_remove_bus(b);
-+	bus = pci_lock_subordinate(dev, PCI_BUS_STATE_DESTROYED - 1);
-+	if (bus) {
-+		list_for_each_safe(l, n, &bus->devices)
-+			__pci_remove_bus_device(pci_dev_b(l));
-+		pci_remove_bus(bus);
- 		dev->subordinate = NULL;
- 	}
- 
-@@ -111,24 +130,7 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 	pci_stop_bus_device(dev);
- 	__pci_remove_bus_device(dev);
- }
--
--static void pci_remove_behind_bridge(struct pci_dev *dev)
--{
--	struct list_head *l, *n;
--
--	if (dev->subordinate)
--		list_for_each_safe(l, n, &dev->subordinate->devices)
--			__pci_remove_bus_device(pci_dev_b(l));
--}
--
--static void pci_stop_behind_bridge(struct pci_dev *dev)
--{
--	struct list_head *l, *n;
--
--	if (dev->subordinate)
--		list_for_each_safe(l, n, &dev->subordinate->devices)
--			pci_stop_bus_device(pci_dev_b(l));
--}
-+EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- 
- /**
-  * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
-@@ -141,27 +143,17 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
-  */
- void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
- {
--	pci_stop_behind_bridge(dev);
--	pci_remove_behind_bridge(dev);
--}
--
--static void pci_stop_bus_devices(struct pci_bus *bus)
--{
- 	struct list_head *l, *n;
-+	struct pci_bus *bus;
- 
--	/*
--	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
--	 *  pci_stop_bus_devices() code path for PF.
--	 *  aka, bus->devices get updated in the process.
--	 * but VFs are inserted after PFs when SRIOV is enabled for PF,
--	 * We can iterate the list backwards to get prev valid PF instead
--	 *  of removed VF.
--	 */
--	list_for_each_prev_safe(l, n, &bus->devices) {
--		struct pci_dev *dev = pci_dev_b(l);
--		pci_stop_bus_device(dev);
-+	bus = pci_lock_subordinate(dev, PCI_BUS_STATE_REMOVED - 1);
-+	if (bus) {
-+		list_for_each_safe(l, n, &bus->devices)
-+			pci_stop_and_remove_bus_device(pci_dev_b(l));
-+		pci_bus_unlock(bus);
- 	}
- }
-+EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
- 
- /**
-  * pci_stop_bus_device - stop a PCI device and any children
-@@ -173,12 +165,44 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
-  */
- void pci_stop_bus_device(struct pci_dev *dev)
- {
--	if (dev->subordinate)
--		pci_stop_bus_devices(dev->subordinate);
-+	int state;
-+	struct pci_bus *bus;
-+	struct list_head *l, *n;
++	/* Make sure ACS will be enabled during PCI probe */
++	pci_request_acs();
 +
-+	bus = pci_lock_subordinate(dev, PCI_BUS_STATE_REMOVED - 1);
-+	if (!bus)
-+		goto out;
-+
-+	state = pci_bus_get_state(bus);
-+	switch (state) {
-+	case PCI_BUS_STATE_INITIALIZED:
-+		pci_bus_change_state(bus, state, PCI_BUS_STATE_STOPPING, true);
-+		break;
-+	case PCI_BUS_STATE_WORKING:
-+	case PCI_BUS_STATE_REGISTERED:
-+		pci_bus_change_state(bus, state, PCI_BUS_STATE_STOPPING, false);
-+		/*
-+		 * VFs could be removed by pci_stop_and_remove_bus_device()
-+		 * in the pci_stop_bus_devices() code path for PF.
-+		 * aka, bus->devices get updated in the process.
-+		 * but VFs are inserted after PFs when SRIOV is enabled for PF,
-+		 * We can iterate the list backwards to get prev valid PF
-+		 * instead of removed VF.
-+		 */
-+		list_for_each_prev_safe(l, n, &bus->devices)
-+			pci_stop_bus_device(pci_dev_b(l));
-+		pci_bus_change_state(bus, PCI_BUS_STATE_STOPPING,
-+				     PCI_BUS_STATE_STOPPED, true);
-+		break;
-+	case PCI_BUS_STATE_STOPPING:
-+	case PCI_BUS_STATE_STOPPED:
-+		pci_bus_unlock(bus);
-+		break;
-+	default:
-+		BUG_ON(state);
-+	}
- 
-+out:
- 	pci_stop_dev(dev);
+ 	return true;
  }
--
--EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
--EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
- EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+ 
 -- 
 1.7.9.5
+
 
