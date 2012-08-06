@@ -1,84 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:50983 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035Ab2HNFHA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 01:07:00 -0400
-Received: by obbuo13 with SMTP id uo13so7977300obb.19
-        for <linux-pci@vger.kernel.org>; Mon, 13 Aug 2012 22:06:59 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Huang Ying <ying.huang@intel.com>
+Subject: Re: [BUGFIX -v2 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
+Date: Mon, 6 Aug 2012 13:11:15 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Alan Stern <stern@rowland.harvard.edu>
+References: <1344216870-21105-1-git-send-email-ying.huang@intel.com> <1344216870-21105-4-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1344216870-21105-4-git-send-email-ying.huang@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 13 Aug 2012 22:06:38 -0700
-Message-ID: <CAErSpo5YDwstHv7B7LEbDQmnHnuVsMA2ibTFNLkiCKmkkeE4Zw@mail.gmail.com>
-Subject: Re: [PATCH v3 01/10] PCI: Keep pci_fixup_irqs() around after init
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201208061311.15431.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> When using deferred driver probing, PCI host controller drivers may
-> actually require this function after the init stage.
-
-Yes, this is a bug.  Actually, there's still another bug here: if we
-hot-add a device, we won't do pdev_fixup_irq() for it.  But your
-change is worthwhile even without fixing that other bug.
-
-Normally I would include this in my PCI tree since it's under
-drivers/pci.  That would make it easier for somebody to fix the
-hotplug problem in this cycle.  Would having it in my PCI tree make
-things harder for you?
-
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
+On Monday, August 06, 2012, Huang Ying wrote:
+> This patch fixes the following bug:
+> 
+> http://marc.info/?l=linux-pci&m=134338059022620&w=2
+> 
+> Where lspci does not work properly if a device and the corresponding
+> parent bridge (such as PCIe port) is suspended.  This is because the
+> device configuration space registers will be not accessible if the
+> corresponding parent bridge is suspended or the device is put into
+> D3cold state.
+> 
+> To solve the issue, the bridge/PCIe port connected to the device is
+> put into active state before read/write configuration space registers.
+> If the device is in D3cold state, it will be put into active state
+> too.
+> 
+> To avoid resume/suspend PCIe port for each configuration register
+> read/write, a small delay is added before the PCIe port to go
+> suspended.
+> 
+> Reported-by: Bjorn Mork <bjorn@mork.no>
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
 > ---
-> Changes in v3:
-> - none
->
-> Changes in v2:
-> - use __devinit annotations
->
->  drivers/pci/setup-irq.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index eb219a1..f0bcd56 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -18,7 +18,7 @@
->  #include <linux/cache.h>
->
->
-> -static void __init
-> +static void __devinit
->  pdev_fixup_irq(struct pci_dev *dev,
->                u8 (*swizzle)(struct pci_dev *, u8 *),
->                int (*map_irq)(const struct pci_dev *, u8, u8))
-> @@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
->         pcibios_update_irq(dev, irq);
+>  drivers/pci/pci-sysfs.c        |   37 +++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pcie/portdrv_pci.c |    9 +++++++++
+>  2 files changed, 46 insertions(+)
+> 
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -458,6 +458,35 @@ boot_vga_show(struct device *dev, struct
 >  }
->
-> -void __init
-> +void __devinit
->  pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
->                int (*map_irq)(const struct pci_dev *, u8, u8))
+>  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+>  
+> +static void
+> +pci_config_pm_runtime_get(struct pci_dev *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct device *parent = dev->parent;
+> +
+> +	if (parent)
+> +		pm_runtime_get_sync(parent);
+> +	pm_runtime_get_noresume(dev);
+> +	/*
+> +	 * pdev->current_state is set to PCI_D3cold during suspending,
+> +	 * so wait until suspending completes
+> +	 */
+> +	pm_runtime_barrier(dev);
+> +	if (pdev->current_state == PCI_D3cold)
+> +		pm_runtime_resume(dev);
+
+I think it would be good to write a comment explaining why we avoid
+doing pm_runtime_get_sync(dev) here.
+
+> +}
+> +
+> +static void
+> +pci_config_pm_runtime_put(struct pci_dev *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct device *parent = dev->parent;
+> +
+> +	pm_runtime_put(dev);
+> +	if (parent)
+> +		pm_runtime_put_sync(parent);
+> +}
+> +
+>  static ssize_t
+>  pci_read_config(struct file *filp, struct kobject *kobj,
+>  		struct bin_attribute *bin_attr,
+> @@ -484,6 +513,8 @@ pci_read_config(struct file *filp, struc
+>  		size = count;
+>  	}
+>  
+> +	pci_config_pm_runtime_get(dev);
+> +
+>  	if ((off & 1) && size) {
+>  		u8 val;
+>  		pci_user_read_config_byte(dev, off, &val);
+> @@ -529,6 +560,8 @@ pci_read_config(struct file *filp, struc
+>  		--size;
+>  	}
+>  
+> +	pci_config_pm_runtime_put(dev);
+> +
+>  	return count;
+>  }
+>  
+> @@ -549,6 +582,8 @@ pci_write_config(struct file* filp, stru
+>  		count = size;
+>  	}
+>  	
+> +	pci_config_pm_runtime_get(dev);
+> +
+>  	if ((off & 1) && size) {
+>  		pci_user_write_config_byte(dev, off, data[off - init_off]);
+>  		off++;
+> @@ -587,6 +622,8 @@ pci_write_config(struct file* filp, stru
+>  		--size;
+>  	}
+>  
+> +	pci_config_pm_runtime_put(dev);
+> +
+>  	return count;
+>  }
+>  
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -140,9 +140,17 @@ static int pcie_port_runtime_resume(stru
 >  {
-> --
-> 1.7.11.2
->
+>  	return 0;
+>  }
+> +
+> +static int pcie_port_runtime_idle(struct device *dev)
+> +{
+> +	/* Delay for a short while to prevent too frequent suspend/resume */
+> +	pm_schedule_suspend(dev, 10);
+> +	return -EBUSY;
+> +}
+>  #else
+>  #define pcie_port_runtime_suspend	NULL
+>  #define pcie_port_runtime_resume	NULL
+> +#define pcie_port_runtime_idle		NULL
+>  #endif
+>  
+>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+> @@ -155,6 +163,7 @@ static const struct dev_pm_ops pcie_port
+>  	.resume_noirq	= pcie_port_resume_noirq,
+>  	.runtime_suspend = pcie_port_runtime_suspend,
+>  	.runtime_resume = pcie_port_runtime_resume,
+> +	.runtime_idle	= pcie_port_runtime_idle,
+>  };
+>  
+>  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+
+Thanks,
+Rafael
