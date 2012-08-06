@@ -1,102 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:22493 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:63008 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952Ab2HUElN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2012 00:41:13 -0400
-From: "Cui, Dexuan" <dexuan.cui@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <liuj97@gmail.com>
-CC: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v3 00/32] provide interfaces to access PCIe capabilities
- registers
-Date: Tue, 21 Aug 2012 04:40:50 +0000
-Message-ID: <A25F549E4D43CD42B4C02DF47A1913230FE50780@SHSMSX102.ccr.corp.intel.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
- <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
- <50325732.3000700@gmail.com>
- <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
- <50325C18.9030207@gmail.com>
- <CAErSpo6t9m0xmWkXfmONtbicjqLR_z5dLsjKCLWQfcktzRKkUA@mail.gmail.com>
- <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com>
-In-Reply-To: <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1750713Ab2HFEKC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 00:10:02 -0400
+Message-ID: <501F4387.3010404@redhat.com>
+Date: Mon, 06 Aug 2012 00:09:43 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+CC: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, vgoyal@redhat.com,
+	hbabu@us.ibm.com, ishii.hironobu@jp.fujitsu.com,
+	martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <501BB4EF.7080909@jp.fujitsu.com>
+In-Reply-To: <501BB4EF.7080909@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote on 2012-08-21:
-> On Mon, Aug 20, 2012 at 10:10 AM, Bjorn Helgaas <bhelgaas@google.com>
-> wrote:
+On 08/03/2012 07:24 AM, Takao Indoh wrote:
+> Hi all,
 > 
->> So I'll try pulling your branch (I'll do something about the tsi721.c
->> stuff myself).
+> This patch adds kernel parameter "reset_pcie_devices" which resets PCIe
+> devices at boot time to address DMA problem on kdump with iommu. When
+> this parameter is specified, a hot reset is triggered on each PCIe root
+> port and downstream port to reset its downstream endpoint.
 > 
-> I pulled this into
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> pci/jiang-pcie-cap with the following changes:
+> Background:
+> A kdump problem about DMA has been discussed for a long time. That is,
+> when a kernel is switched to the kdump kernel DMA derived from first
+> kernel affects second kernel. Recently this problem surfaces when iommu
+> is used for PCI passthrough on KVM guest. In the case of the machine I
+> use, when intel_iommu=on is specified, DMAR error is detected in kdump
+> kernel and PCI SERR is also detected. Finally kdump fails because some
+> devices does not work correctly.
 > 
->   - Dropped some "pci_" prefixes on internal functions in access.c -
->   Minor restructure of pcie_capability_read_*() - Removed export of
->   pcie_capability_reg_implemented() - Reworked
->   reset_intel_82599_sfp_virtfn() to check for FLR bit in DEVCAP rather
->   than using pcie_capability_reg_implemented() - Split driver patches
->   into one driver per patch - Fixed myri10ge_toggle_relaxed() --
->   previous code returned useful value, but your patch made it always
->   return zero - Use 16-bit, not 32-bit, accesses for DEVCTL, DEVCTL2
->   (tsi721)
-> I am still concerned about reset_intel_82599_sfp_virtfn().  It looks
-> wrong and possibly unnecessary.  It looks wrong because it sets
-> PCI_EXP_DEVCTL_BCR_FLR and blindly clears all other bits in
-> PCI_EXP_DEVCTL.  Most of the bits are probably cleared by the FLR
-> anyway, but Aux Power PM Enable is RWS ("sticky"), so it is *not*
-> modified by FLR.  Therefore, using reset_intel_82599_sfp_virtfn() has
-> the probably unintended side effect of clearing Aux Power PM Enable.
+> The root cause is that ongoing DMA from first kernel causes DMAR fault
+> because page table of DMAR is initialized while kdump kernel is booting
+> up. Therefore to address this problem DMA needs to be stopped before DMAR
+> is initialized at kdump kernel boot time. By this patch, PCIe devices
+> are reset by hot reset and its DMA is stopped when reset_pcie_devices is
+> specified. One problem of this solution is that VGA is reset and the
+> monitor blacks out when the link between the port and VGA controller was
+> reset. So this patch does not reset the port whose child endpoint is VGA
+> device.
 > 
-> It looks possibly unnecessary because the generic pcie_flr() does
-> essentially the same thing, so it's not clear why we need a special
-> case for 82599.
+> Any comments would be appreciated.
 > 
-> Yu or Dexuan, can you comment on these 82599 questions?
-(Removed Yu Zhao from the To list since he has left Intel and the same
-email is now used by another unrelated person...)
+> Signed-off-by: Takao Indoh<indou.takao@jp.fujitsu.com>
+> ---
+Have you considered something less disruptive such as clearing the 
+Master Enable in each endpoint's PCI Command Register ?
+That should prevent DMA transactions from endpoints during the kdump and
+kexec, and when the driver for the device gets reconfigured,
+Master Enable will be set back on, but after the driver has had the
+opportunity to do a device-specific reset.
 
-Hi Bjorn
-I think reset_intel_82599_sfp_virtfn() is correct AND necessary.
-(pcie_flr() doesn't work here)
+- Don
 
-Please note the 82599 VF is a special PCIe device that doesn't report
-PCIe FLR capability though actually it does support that.
-That is why we put it in quirks.c. :-)
-
-The PCI_EXP_DEVCTL_AUX_PME bit of the 82599 VF is read-only and
-always zero.
-
-Please see 
-http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
-9.5 Virtual Functions Configuration Space
-  Table 9.7 VF PCIe Configuration Space
-  9.5.2.2.1 VF Device Control Register (0xA8; RW)
-
-Surely I should say sorry for not putting these necessary information
-in the git commit description.
-Now I don't know why I forgot to do that at that time(almost 3 years ago...).
-
-It would be great if you could help to add a comment in the code. :-)
-
+>   Documentation/kernel-parameters.txt |    4 +
+>   drivers/pci/quirks.c                |   59 ++++++++++++++++++++++++++
+>   2 files changed, 63 insertions(+)
 > 
-> The proposed new code is here:
-> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=blob;f=driver
-> s/pci/
-> quirks.c;h=9abbf56e93fe5c98364a7dfe2b0b724047dfa4a9;hb=ef529bf0cb560
-> 6ff5bd1422d2d2700a821d8218b#l3082
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index e714a02..e694e9f 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2489,6 +2489,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>   	reset_devices	[KNL] Force drivers to reset the underlying device
+>   			during initialization.
 > 
-> Bjorn
-
-Thanks,
--- Dexuan
+> +	reset_pcie_devices
+> +			[PCIE] Reset PCIe endpoint at boot time by sending a
+> +			hot reset to root port and downstream port
+> +
+>   	resume=		[SWSUSP]
+>   			Specify the partition device for software suspend
+>   			Format:
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 5155317..7f7fc02 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -32,6 +32,65 @@
+>   #include "pci.h"
+> 
+>   /*
+> + * Reset PCIe endpoint by sending a hot reset to root port and downstream port
+> + */
+> +unsigned int reset_pcie_devices;
+> +EXPORT_SYMBOL(reset_pcie_devices);
+> +static int __init set_reset_pcie_devices(char *str)
+> +{
+> +	reset_pcie_devices = 1;
+> +	return 1;
+> +}
+> +__setup("reset_pcie_devices", set_reset_pcie_devices);
+> +
+> +static void __devinit quirk_pcie_device_reset(struct pci_dev *dev)
+> +{
+> +	struct pci_bus *subordinate;
+> +	struct pci_dev *child;
+> +	u16 ctrl;
+> +
+> +	if (!reset_pcie_devices || !pci_is_pcie(dev) || !dev->subordinate ||
+> +	    ((dev->pcie_type != PCI_EXP_TYPE_ROOT_PORT)&&
+> +	     (dev->pcie_type != PCI_EXP_TYPE_DOWNSTREAM)))
+> +		return;
+> +
+> +	subordinate = dev->subordinate;
+> +	list_for_each_entry(child,&subordinate->devices, bus_list) {
+> +		if ((child->pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
+> +		    (child->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) ||
+> +		    ((child->class>>  16) == PCI_BASE_CLASS_DISPLAY))
+> +		/* Don't reset switch, bridge, VGA device */
+> +		return;
+> +	}
+> +
+> +	dev_info(&dev->dev, "Reset Secondary bus\n");
+> +
+> +	list_for_each_entry(child,&subordinate->devices, bus_list) {
+> +		dev_info(&child->dev, "save state\n");
+> +		pci_save_state(child);
+> +	}
+> +
+> +	/* Assert Secondary Bus Reset */
+> +	pci_read_config_word(dev, PCI_BRIDGE_CONTROL,&ctrl);
+> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+> +
+> +	msleep(2);
+> +
+> +	/* De-assert Secondary Bus Reset */
+> +	ctrl&= ~PCI_BRIDGE_CTL_BUS_RESET;
+> +	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+> +
+> +	msleep(200);
+> +
+> +	list_for_each_entry(child,&subordinate->devices, bus_list) {
+> +		dev_info(&child->dev, "restore state\n");
+> +		pci_restore_state(child);
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, quirk_pcie_device_reset);
+> +
+> +/*
+>    * Decoding should be disabled for a PCI device during BAR sizing to avoid
+>    * conflict. But doing so may cause problems on host bridge and perhaps other
+>    * key system devices. For devices that need to have mmio decoding always-on,
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
