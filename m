@@ -1,88 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:16483 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab2HBHJV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 03:09:21 -0400
-Message-ID: <501A2740.3000309@huawei.com>
-Date: Thu, 2 Aug 2012 15:07:44 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56512 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755991Ab2HFUjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 16:39:35 -0400
+Date: Mon, 6 Aug 2012 16:39:02 -0400
+From: Vivek Goyal <vgoyal@redhat.com>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+Message-ID: <20120806203902.GH25559@redhat.com>
+References: <501BB4EF.7080909@jp.fujitsu.com>
+ <20120803114643.GA28330@redhat.com>
+ <501F4877.5050605@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Tang Chen <tangchen@cn.fujitsu.com>
-CC: Jiang Liu <liuj97@gmail.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luch@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Gaohuai Han <hangaohuai@huawei.com>
-Subject: Re: [RFC PATCH 1/3] ACPIHP: introduce a framework for ACPI based
- system device hotplug
-References: <1343475772-21345-1-git-send-email-jiang.liu@huawei.com> <1343475772-21345-2-git-send-email-jiang.liu@huawei.com> <501A271A.5030808@cn.fujitsu.com>
-In-Reply-To: <501A271A.5030808@cn.fujitsu.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <501F4877.5050605@jp.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-8-2 15:07, Tang Chen wrote:
-> Hi,
+On Mon, Aug 06, 2012 at 01:30:47PM +0900, Takao Indoh wrote:
+> Hi Vivek,
 > 
-> A little problem here. :)
+> (2012/08/03 20:46), Vivek Goyal wrote:
+> > On Fri, Aug 03, 2012 at 08:24:31PM +0900, Takao Indoh wrote:
+> >> Hi all,
+> >>
+> >> This patch adds kernel parameter "reset_pcie_devices" which resets PCIe
+> >> devices at boot time to address DMA problem on kdump with iommu. When
+> >> this parameter is specified, a hot reset is triggered on each PCIe root
+> >> port and downstream port to reset its downstream endpoint.
+> >
+> > Hi Takao,
+> >
+> > Why not use existing "reset_devices" parameter instead of introducing
+> > a new one?
 > 
-> On 07/28/2012 07:42 PM, Jiang Liu wrote:
->> +int acpihp_register_slot(struct acpihp_slot *slot)
->> +{
->> +	int ret;
->> +	char *name;
->> +	size_t off;
->> +
->> +	if (!slot || !slot->slot_ops)
->> +		return -EINVAL;
->> +
->> +	/* Hook top level hotplug slots under ACPI root device */
->> +	if (slot->parent)
->> +		slot->dev.parent = &slot->parent->dev;
->> +	else
->> +		slot->dev.parent = &acpi_root->dev;
->> +
->> +	ret = device_add(&slot->dev);
->> +	if (!ret) {
->> +		slot->flags |= ACPIHP_SLOT_FLAG_REGISTERED;
->> +		name = kmalloc(PAGE_SIZE, GFP_KERNEL);
->> +		if (name) {
->> +			off = acpihp_generate_link_name(slot, name, 0);
->> +			name[off - 1] = '\0';
->> +			sysfs_create_link(&acpihp_slot_kset->kobj,
->> +					  &slot->dev.kobj, name);
-> 
-> I got a compiler warning here:
->   CC      drivers/acpi/hotplug/core.o
-> drivers/acpi/hotplug/core.c: In function ‘acpihp_register_slot’:
-> drivers/acpi/hotplug/core.c:199: warning: ignoring return value of ‘sysfs_create_link’, declared with attribute warn_unused_result
-> 
-> Seems that we need to check the sysfs_create_link()'s return value here, and if it fails, 
-> shall we at least give a warning message here ?
-> 
-> Thanks. :)
-Hi Tang,
-	Thanks for your comments, will fix it in next version.
-	Regards!
-	Gerry
+> "reset_devices" is used for each driver to reset their own device, and
+> this patch resets all devices forcibly, so I thought they were different
+> things.
 
-> 
-> 
->> +			kfree(name);
->> +		}
->> +	}
->> +
->> +	return ret;
->> +}
->> +EXPORT_SYMBOL_GPL(acpihp_register_slot);
-> 
+Yes reset_devices currently is used for driver to reset its device. I
+thought one could very well extend its reach to reset pci express devices
+at bus level.
 
+Having them separate is not going to be much useful from kdump
+perspective. We will end up passing both reset_devices and
+reset_pcie_devices to second kernel whill lead to bus level reset as well
+as device level reset.
 
+Ideal situation would be that somehow detect that bus level reset has been
+done and skip device level reset (assuming bus level reset obviates the
+need of device level reset, please correct me if that's not the case). 
+
+After pcie reset, can we store the state in a variable and drivers can
+use that variable to check if PCIe level reset was done or not. If yes,
+skip device level reset (Assuming driver knows that device is on a
+PCIe slot).
+
+In that case we will not have to introduce new kernel command line, and
+also avoid double reset?
+
+Thanks
+Vivek
