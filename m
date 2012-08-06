@@ -1,46 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755445Ab2HQXgm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:42 -0400
-Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:42 -0700 (PDT)
-Subject: [PATCH v2 11/16] PCI: Leave normal LIST_POISON in deleted list entries
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:41 -0600
-Message-ID: <20120817233641.10973.93668.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from minas.ics.muni.cz ([147.251.4.40]:52140 "EHLO minas.ics.muni.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932153Ab2HFPKx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 11:10:53 -0400
+Date: Mon, 6 Aug 2012 17:10:43 +0200
+From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: yinghai@kernel.org, linux-pci@vger.kernel.org, roland@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: mellanox mlx4_core and SR-IOV
+Message-ID: <20120806151043.GY25979@ics.muni.cz>
+References: <9f903175-4080-4016-b9f8-83e8615c110e@default>
+ <20120805080500.GH25979@ics.muni.cz>
+ <20120806140706.GC3093@phenom.dumpdata.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <20120806140706.GC3093@phenom.dumpdata.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-list_del() already sets next/prev to LIST_POISON1/LIST_POISON2, so we
-don't need to do anything special here to prevent further list accesses.
+On Mon, Aug 06, 2012 at 10:07:06AM -0400, Konrad Rzeszutek Wilk wrote:
+> > good catch. I forgot to pass swiotl=force for DomU in Xen. So now, it seems
+> > that mlx4_core works, mlx4_en (ethernet part) works as well. Unfortunately,
+> > the IB part does not. IB layer complains that SR-IOV is currently unsupported
+> > (kernel 3.5.0). So no luck here so far. 
+> 
+> Don't use swiotlb=force. That is for the old style kernels. Use iommu=soft.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+OK.
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index c01baca..4f9ca91 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -32,11 +32,8 @@ static void pci_stop_dev(struct pci_dev *dev)
- 
- static void pci_destroy_dev(struct pci_dev *dev)
- {
--	/* Remove the device from the device lists, and prevent any further
--	 * list accesses from this device */
- 	down_write(&pci_bus_sem);
- 	list_del(&dev->bus_list);
--	dev->bus_list.next = dev->bus_list.prev = NULL;
- 	up_write(&pci_bus_sem);
- 
- 	pci_free_resources(dev);
+> > There is OFED stack directly from Mellanox, that seems to support SR-IOV even
+> > for IB layer, but they have buildable sources only for RHEL/SLES kernels
+> > (2.6.32) and even correcting the sources to get it compile with 3.5.0 does not
+> > make things work. The driver complains about interrupts not working in Dom0 or
+> > even without Xen hypervisor at all.
+> 
+> So there is a bug that .. well, I thought I had fixed it with the
+> IB layer but maybe not. It was about VM_IO having to be used on the vmaps
+> being setup. But I can't recall the details. Perhaps the InfiniBand mailing
+> list might have some ... ah here it is:
+> http://old-list-archives.xen.org/archives/html/xen-devel/2011-01/msg00246.html
 
+not sure what do you mean. This fix is for Mellanox OFED driver to work? Or for stock kernel?
+Stock kernel contains explicit check for SR-IOV and refuses to load.
+
+this is exact fail of the Mellanox OFED driver.
+
+kernel: [    6.568433] mlx4_core: Mellanox ConnectX core driver v1.0-mlnx_ofed1.5.3 (November 3, 2011)
+kernel: [    6.568526] mlx4_core: Initializing 0000:02:00.0
+kernel: [    7.071292] mlx4_core 0000:02:00.0: Enabling sriov with:1 vfs
+kernel: [    7.175587] mlx4_core 0000:02:00.0: Running in master mode
+kernel: [   18.613383] mlx4_core 0000:02:00.0: command 0x31 timed out (go bit not cleared)
+kernel: [   18.613475] mlx4_core 0000:02:00.0: NOP command failed to generate MSI-X interrupt IRQ 94).
+kernel: [   18.613564] mlx4_core 0000:02:00.0: Trying again without MSI-X.
+kernel: [   28.606086] mlx4_core 0000:02:00.0: command 0x31 timed out (go bit not cleared)
+kernel: [   30.615093] mlx4_core: probe of 0000:02:00.0 failed with error -16
+
+
+-- 
+Luká¹ Hejtmánek
