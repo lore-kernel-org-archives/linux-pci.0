@@ -1,83 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50325732.3000700@gmail.com>
-Date: Mon, 20 Aug 2012 23:26:42 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:50847 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754867Ab2HFNtq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2012 09:49:46 -0400
+Date: Mon, 6 Aug 2012 08:49:33 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Francois Rigaut <frigaut@mso.anu.edu.au>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
+	bhelgaas@google.com, linux-efi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
+Message-ID: <20120806134933.GA28213@thinkpad-t410>
+References: <501A955D.6030500@mso.anu.edu.au>
+ <20120802161209.GF32395@thinkpad-t410>
+ <501B01ED.9080309@mso.anu.edu.au>
+ <501B0536.6070001@mso.anu.edu.au>
+ <20120803045312.GB2446@thinkpad-t410>
+ <501BD1FC.9020601@mso.anu.edu.au>
+ <20120803141421.GA8165@thinkpad-t410>
+ <501C7C1D.5010903@mso.anu.edu.au>
+ <20120804035844.GA31711@thinkpad-t410>
+ <501CB6AE.3000400@mso.anu.edu.au>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities
- registers
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
-In-Reply-To: <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <501CB6AE.3000400@mso.anu.edu.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/14/2012 12:25 PM, Bjorn Helgaas wrote:
-> On Wed, Aug 1, 2012 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Jiang Liu <liuj97@gmail.com>
->>
->> As suggested by Bjorn Helgaas and Don Dutile in threads
->> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
->> to PCIe capabilities register in to way:
->> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
->>    repeatedly reading this register because it's read only.
->> 2) provide access functions for PCIe Capabilities registers to hide differences
->>    among PCIe base specifications, so the caller don't need to handle those
->>    differences.
->>
->> This patch set applies to
->> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+On Sat, Aug 04, 2012 at 03:44:14PM +1000, Francois Rigaut wrote:
+> Seth,
 > 
-> Would you mind rebasing this to v3.6-rc1?  I think you posted this
-> when my branch was still 3.5-based, and there are some upstream
-> changes that cause minor conflicts here.
+> [CC'd people, sorry we exchanged a few emails with Seth outside of
+> the lists, I passed him the acpi tables and here are gmux dumps]
 > 
-> You currently have:
-> 
->     int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
-> u16 set_bits, u16 clear_bits)
-> 
-> I think this is a bit awkward because the function name doesn't
-> suggest *how* the word will be changed, and the clearing happens
-> before the setting (opposite the parameter order).  Something like:
-> 
->     int pci_pcie_capability_mask_and_set_word(..., u16 mask, u16 set) or
->     int pci_pcie_capability_clear_and_set_word(..., u16 clear, u16 set)
-> 
-> would be more obvious.  If you use "mask_and_set", I think the
-> function should do "(val & mask) | set" with the complement being at
-> the call site.  If you use "clear_and_set", I think it's OK to do
-> "(val & ~mask) | set" as in your current patch.
-> 
-> I know I suggested the "pci_pcie_capability_*" names, but they're
-> getting a bit unwieldy, especially if we do "mask_and_set" or similar.
->  There are already several "pcie_*" functions, so maybe we should
-> drop the leading "pci_" from these and just have:
-> 
->     pcie_capability_read_word
->     pcie_capability_write_word
->     pcie_capability_mask_and_set_word
-> 
-> Bjorn
-> 
-Hi Bjorn,
-	I have made following changes according to your suggestions,
-	1) get rid of the "pci_" prefix for access functions.
-	2) rename pci_pcie_capability_change_{word|dword}() to
-	pcie_capability_clear_and_set_{word|dword}.
-	3) add pcie_capability_{set|clear}_{word|dword}().
-	4) Add "Acked-by" and "Reviewed-by"
-	5) rebase to your latest pci-next tree
+> Allright. thanks for gmux-dump. There seems to be progress, as I can
+> see the gmux dumps for the nividia-selected and intel-selected are
+> clearly different (I did it twice to be sure, it checks out).
+> The 2 dumps are at
+> http://maumae.net/retina/gmux-dump_intel.dat
+> and
+> http://maumae.net/retina/gmux-dump_nvidia_only.dat
+> I hope you'll be able to get something from these.
 
-	So could you please help to pull from "https://github.com/jiangliu/linux.git topic/pcie-cap"
-or should I send all the patches to mail list again?
+It looks like you're not really getting data from the gmux in those
+dumps. The address range should be correct based on your ACPI tables. I
+have some ideas, but it won't be much longer until I can play with one
+of these machines myself so it's probably easier if I try them out then.
 
-	Regards!
-	Gerry
+Thanks,
+Seth
 
