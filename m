@@ -1,360 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:17580 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab2HDMPG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2012 08:15:06 -0400
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 15/16] ACPIHP: implement ACPI hotplug sysfs interfaces
-Date: Sat, 4 Aug 2012 20:14:02 +0800
-Message-ID: <1344082443-4608-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 10/22] PCI: enhance PCI bus specific logic to support PCI bus lock mechanism
+Date: Wed,  8 Aug 2012 00:10:50 +0800
+Message-Id: <1344355862-2726-11-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
-
-This patch implements ACPI hotplug sysfs interfaces for system device hotplug.
-
-enable: (It should be named 'power', but that causes name conflicts.)
-echo 1 > enable: power on the hotplug slot.
-echo 0 > enable: power off the hotplug slot.
-
-connect:
-echo 1 > connect: create ACPI devices for system devices connecting to a slot
-echo 0 > connect: remove ACPI devices for system devices connecting to a slot
-
-configure:
-echo 1 > configure: add system devices into running system
-echo 0 > configure: remove system devices from running system
-
-dependency:
-cat dependency: show slots have dependency on this slot if the slot is powered,
-		otherwise show slots this slot depends on.
+This patch enhances PCI bus specific logic to support PCI bus lock mechanism.
 
 Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- drivers/acpi/hotplug/Makefile     |    1 +
- drivers/acpi/hotplug/acpihp_drv.h |    3 +
- drivers/acpi/hotplug/drv_main.c   |    6 +
- drivers/acpi/hotplug/sysfs.c      |  246 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 256 insertions(+)
- create mode 100644 drivers/acpi/hotplug/sysfs.c
+ drivers/pci/bus.c |   54 ++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 31 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index 9383320..88c7595 100644
---- a/drivers/acpi/hotplug/Makefile
-+++ b/drivers/acpi/hotplug/Makefile
-@@ -15,3 +15,4 @@ acpihp_drv-y					+= dependency.o
- acpihp_drv-y					+= cancel.o
- acpihp_drv-y					+= configure.o
- acpihp_drv-y					+= state_machine.o
-+acpihp_drv-y					+= sysfs.o
-diff --git a/drivers/acpi/hotplug/acpihp_drv.h b/drivers/acpi/hotplug/acpihp_drv.h
-index 3b6dbdd..d339f9a 100644
---- a/drivers/acpi/hotplug/acpihp_drv.h
-+++ b/drivers/acpi/hotplug/acpihp_drv.h
-@@ -101,4 +101,7 @@ int acpihp_drv_unconfigure(struct list_head *list);
- /* The heart of the ACPI system device hotplug driver */
- int acpihp_drv_change_state(struct acpihp_slot *slot, enum acpihp_drv_cmd cmd);
- 
-+int acpihp_drv_create_sysfs(struct acpihp_slot *slot);
-+void acpihp_drv_remove_sysfs(struct acpihp_slot *slot);
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index b6aacaa..371f20a 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -185,19 +185,20 @@ int pci_bus_add_device(struct pci_dev *dev)
+  */
+ int pci_bus_add_child(struct pci_bus *bus)
+ {
+-	int retval;
+-
+-	if (bus->bridge)
+-		bus->dev.parent = bus->bridge;
+-
+-	retval = device_add(&bus->dev);
+-	if (retval)
+-		return retval;
+-
+-	bus->is_added = 1;
+-
+-	/* Create legacy_io and legacy_mem files for this bus */
+-	pci_create_legacy_files(bus);
++	int retval = -EBUSY;
 +
- #endif	/* __ACPIHP_DRV_H__ */
-diff --git a/drivers/acpi/hotplug/drv_main.c b/drivers/acpi/hotplug/drv_main.c
-index 538772d..9858fdd 100644
---- a/drivers/acpi/hotplug/drv_main.c
-+++ b/drivers/acpi/hotplug/drv_main.c
-@@ -280,6 +280,11 @@ static int acpihp_drv_slot_add(struct device *dev, struct class_interface *intf)
- 		return -ENOMEM;
- 	}
- 
-+	if (acpihp_drv_create_sysfs(slot))
-+		ACPIHP_DEBUG("fails to create sysfs interfaces for slot %s, "
-+			     "some function will not be available to user.\n",
-+			     slot->name);
-+
- 	ACPIHP_INFO("found hotplug slot %s.\n", slot->full_path);
- 
- 	return 0;
-@@ -294,6 +299,7 @@ static void acpihp_drv_intf_remove(struct device *dev,
- 
- 	ACPIHP_INFO("remove hotplug slot %s.\n", slot->full_path);
- 
-+	acpihp_drv_remove_sysfs(slot);
- 	acpihp_drv_uninstall_handler(slot);
- 	acpihp_drv_remove_devices(slot);
- 	acpihp_slot_detach_drv_data(slot, intf, (void **)&drv_data);
-diff --git a/drivers/acpi/hotplug/sysfs.c b/drivers/acpi/hotplug/sysfs.c
-new file mode 100644
-index 0000000..62c1892
---- /dev/null
-+++ b/drivers/acpi/hotplug/sysfs.c
-@@ -0,0 +1,246 @@
-+/*
-+ * Copyright (C) 2011 Huawei Tech. Co., Ltd.
-+ * Copyright (C) 2011 Jiang Liu <jiang.liu@huawei.com>
-+ * Copyright (C) 2011 Hanjun Guo <guohanjun@huawei.com>
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/mutex.h>
-+#include <acpi/acpi_hotplug.h>
-+#include "acpihp_drv.h"
-+
-+static ssize_t acpihp_drv_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count,
-+		enum acpihp_drv_cmd op_set, enum acpihp_drv_cmd op_clr)
-+{
-+	unsigned long val;
-+	ssize_t result = kstrtoul(buf, 0, &val);
-+	struct acpihp_slot *slot = container_of(dev, struct acpihp_slot, dev);
-+
-+	if (result < 0)
-+		return result;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	if (val)
-+		result = acpihp_drv_change_state(slot, op_set);
-+	else
-+		result = acpihp_drv_change_state(slot, op_clr);
-+
-+	return result < 0 ? result : count;
-+}
-+
-+static inline ssize_t acpihp_drv_print_bool(char *page, bool flag)
-+{
-+	return snprintf(page, PAGE_SIZE, flag ? "1\n" : "0\n");
-+}
-+
-+static ssize_t acpihp_drv_power_show(struct device *dev,
-+		struct device_attribute *attr, char *page)
-+{
-+	bool flag;
-+	struct acpihp_slot *slot = container_of(dev, struct acpihp_slot, dev);
-+
-+	acpihp_drv_update_slot_state(slot);
-+	mutex_lock(&slot->slot_mutex);
-+	switch (slot->state) {
-+	case ACPIHP_SLOT_STATE_POWERED:
-+	case ACPIHP_SLOT_STATE_CONNECTED:
-+	case ACPIHP_SLOT_STATE_CONFIGURED:
-+	case ACPIHP_SLOT_STATE_POWERING_ON:
-+	case ACPIHP_SLOT_STATE_POWERING_OFF:
-+	case ACPIHP_SLOT_STATE_CONNECTING:
-+	case ACPIHP_SLOT_STATE_DISCONNECTING:
-+	case ACPIHP_SLOT_STATE_CONFIGURING:
-+	case ACPIHP_SLOT_STATE_UNCONFIGURING:
-+		flag = true;
-+		break;
-+	default:
-+		flag = false;
-+		break;
++	if (pci_bus_get_state(bus) == PCI_BUS_STATE_INITIALIZED) {
++		if (bus->bridge)
++			bus->dev.parent = bus->bridge;
++		retval = device_add(&bus->dev);
++		if (retval == 0) {
++			/* Create legacy_io and legacy_mem files for this bus */
++			pci_create_legacy_files(bus);
++			pci_bus_change_state(bus, PCI_BUS_STATE_INITIALIZED,
++					PCI_BUS_STATE_WORKING, false);
++			bus->is_added = 1;
++		}
 +	}
-+	mutex_unlock(&slot->slot_mutex);
+ 
+ 	return retval;
+ }
+@@ -232,13 +233,14 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		BUG_ON(!dev->is_added);
+ 
+-		child = dev->subordinate;
++		child = pci_lock_subordinate(dev, PCI_BUS_STATE_STOPPING - 1);
++		if (!child)
++			continue;
 +
-+	return acpihp_drv_print_bool(page, flag);
-+}
-+
-+static ssize_t acpihp_drv_power_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	return acpihp_drv_store(dev, attr, buf, count,
-+			ACPIHP_DRV_CMD_POWERON, ACPIHP_DRV_CMD_POWEROFF);
-+}
-+
-+/* It should be named as 'power', but that will cause name conflics. */
-+DEVICE_ATTR(enable, S_IRUSR | S_IWUSR,
-+	    &acpihp_drv_power_show, &acpihp_drv_power_store);
-+
-+static ssize_t acpihp_drv_connect_show(struct device *dev,
-+		struct device_attribute *attr, char *page)
-+{
-+	bool flag;
-+	struct acpihp_slot *slot = container_of(dev, struct acpihp_slot, dev);
-+
-+	acpihp_drv_update_slot_state(slot);
-+	mutex_lock(&slot->slot_mutex);
-+	switch (slot->state) {
-+	case ACPIHP_SLOT_STATE_CONNECTED:
-+	case ACPIHP_SLOT_STATE_CONFIGURED:
-+	case ACPIHP_SLOT_STATE_CONNECTING:
-+	case ACPIHP_SLOT_STATE_DISCONNECTING:
-+	case ACPIHP_SLOT_STATE_CONFIGURING:
-+	case ACPIHP_SLOT_STATE_UNCONFIGURING:
-+		flag = true;
-+		break;
-+	default:
-+		flag = false;
-+		break;
-+	}
-+	mutex_unlock(&slot->slot_mutex);
-+
-+	return acpihp_drv_print_bool(page, flag);
-+}
-+
-+static ssize_t acpihp_drv_connect_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	return acpihp_drv_store(dev, attr, buf, count,
-+			ACPIHP_DRV_CMD_CONNECT, ACPIHP_DRV_CMD_DISCONNECT);
-+}
-+
-+DEVICE_ATTR(connect, S_IRUSR | S_IWUSR,
-+	    &acpihp_drv_connect_show, &acpihp_drv_connect_store);
-+
-+static ssize_t acpihp_drv_configure_show(struct device *dev,
-+		struct device_attribute *attr, char *page)
-+{
-+	bool flag;
-+	struct acpihp_slot *slot = container_of(dev, struct acpihp_slot, dev);
-+
-+	acpihp_drv_update_slot_state(slot);
-+	mutex_lock(&slot->slot_mutex);
-+	switch (slot->state) {
-+	case ACPIHP_SLOT_STATE_CONFIGURED:
-+	case ACPIHP_SLOT_STATE_CONFIGURING:
-+	case ACPIHP_SLOT_STATE_UNCONFIGURING:
-+		flag = true;
-+		break;
-+	default:
-+		flag = false;
-+		break;
-+	}
-+	mutex_unlock(&slot->slot_mutex);
-+
-+	return acpihp_drv_print_bool(page, flag);
-+}
-+
-+static ssize_t acpihp_drv_configure_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	return acpihp_drv_store(dev, attr, buf, count,
-+			ACPIHP_DRV_CMD_CONFIGURE, ACPIHP_DRV_CMD_UNCONFIGURE);
-+}
-+
-+DEVICE_ATTR(configure, S_IRUSR | S_IWUSR,
-+	    &acpihp_drv_configure_show, &acpihp_drv_configure_store);
-+
-+static ssize_t acpihp_drv_dependency_show(struct device *dev,
-+		struct device_attribute *attr, char *page)
-+{
-+	int ret;
-+	char *p, *end;
-+	struct list_head list;
-+	enum acpihp_drv_cmd cmd;
-+	struct acpihp_slot_dependency *dep;
-+	struct acpihp_slot *slot = container_of(dev, struct acpihp_slot, dev);
-+
-+	INIT_LIST_HEAD(&list);
-+	mutex_lock(&state_machine_mutex);
-+	cmd = acpihp_slot_powered(slot) ? ACPIHP_DRV_CMD_POWEROFF :
-+					  ACPIHP_DRV_CMD_POWERON;
-+	ret = acpihp_drv_generate_dependency_list(slot, &list, cmd);
-+	if (ret) {
-+		ret = -ENXIO;
-+	} else {
-+		p = page;
-+		end = page + PAGE_SIZE;
-+
-+		list_for_each_entry(dep, &list, node) {
-+			if (dep->slot == slot)
-+				continue;
-+			if (p + strlen(dep->slot->full_path) + 2 >= end)
-+				break;
-+			p += snprintf(p, end - p, "%s\n", dep->slot->full_path);
+ 		/*
+ 		 * If there is an unattached subordinate bus, attach
+ 		 * it and then scan for unattached PCI devices.
+ 		 */
+-		if (!child)
+-			continue;
+ 		if (list_empty(&child->node)) {
+ 			down_write(&pci_bus_sem);
+ 			list_add_tail(&child->node, &dev->bus->children);
+@@ -250,28 +252,34 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 		 * register the bus with sysfs as the parent is now
+ 		 * properly registered.
+ 		 */
+-		if (child->is_added)
+-			continue;
+-		retval = pci_bus_add_child(child);
+-		if (retval)
+-			dev_err(&dev->dev, "Error adding bus, continuing\n");
++		if (pci_bus_get_state(child) == PCI_BUS_STATE_INITIALIZED) {
++			retval = pci_bus_add_child(child);
++			if (retval)
++				dev_err(&dev->dev,
++					"Error adding bus, continuing\n");
 +		}
 +
-+		acpihp_drv_destroy_dependency_list(&list);
-+		ret = p - page;
-+	}
-+	mutex_unlock(&state_machine_mutex);
-+
-+	return ret;
-+}
-+
-+static DEVICE_ATTR(dependency, S_IRUSR | S_IWUSR,
-+		   &acpihp_drv_dependency_show, NULL);
-+
-+int acpihp_drv_create_sysfs(struct acpihp_slot *slot)
-+{
-+	int retval;
-+	struct device *dev = &slot->dev;
-+
-+	retval = device_create_file(dev, &dev_attr_enable);
-+	if (retval)
-+		goto out;
-+	retval = device_create_file(dev, &dev_attr_connect);
-+	if (retval)
-+		goto out1;
-+	retval = device_create_file(dev, &dev_attr_configure);
-+	if (retval)
-+		goto out2;
-+	retval = device_create_file(dev, &dev_attr_dependency);
-+	if (retval)
-+		goto out3;
-+
-+	return 0;
-+
-+out3:
-+	device_remove_file(dev, &dev_attr_configure);
-+out2:
-+	device_remove_file(dev, &dev_attr_connect);
-+out1:
-+	device_remove_file(dev, &dev_attr_enable);
-+out:
-+	ACPIHP_DEBUG("fails to create sysfs interfaces for slot %s.\n",
-+		     slot->name);
-+	return retval;
-+}
-+
-+void acpihp_drv_remove_sysfs(struct acpihp_slot *slot)
-+{
-+	struct device *dev = &slot->dev;
-+
-+	device_remove_file(dev, &dev_attr_dependency);
-+	device_remove_file(dev, &dev_attr_configure);
-+	device_remove_file(dev, &dev_attr_connect);
-+	device_remove_file(dev, &dev_attr_enable);
-+}
++		pci_bus_unlock(child);
+ 	}
+ }
+ 
+ void pci_enable_bridges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
++	struct pci_bus *child;
+ 	int retval;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		if (dev->subordinate) {
++		child = pci_lock_subordinate(dev, PCI_BUS_STATE_STOPPING - 1);
++		if (child) {
+ 			if (!pci_is_enabled(dev)) {
+ 				retval = pci_enable_device(dev);
+ 				if (retval)
+ 					dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n", retval);
+ 				pci_set_master(dev);
+ 			}
+-			pci_enable_bridges(dev->subordinate);
++			pci_enable_bridges(child);
++			pci_bus_unlock(child);
+ 		}
+ 	}
+ }
 -- 
 1.7.9.5
-
 
