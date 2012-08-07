@@ -11,64 +11,164 @@ Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 13/22] PCI: make each PCI device hold a reference to its parent PCI bus
-Date: Wed,  8 Aug 2012 00:10:53 +0800
-Message-Id: <1344355862-2726-14-git-send-email-jiang.liu@huawei.com>
+Subject: [RFC PATCH v1 08/22] PCI: introduce hotplug safe search interfaces for PCI bus/device
+Date: Wed,  8 Aug 2012 00:10:48 +0800
+Message-Id: <1344355862-2726-9-git-send-email-jiang.liu@huawei.com>
 In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
 References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make each PCI device hold a reference to its parent PCI bus, so it won't
-cause invalid memory access when doing:
-pci_bus_lock_states(dev->bus, PCI_BUS_STATE_xxxx);
+Function pci_find_bus() is not hotplug safe because it doesn't hold any
+reference on the returned bus, so the bus may be destroyed by hotplug
+operations just after returning from pci_find_bus.
+
+This patch introduces a hotplug safe interface to get and lock a specific
+PCI bus. It also provides several help interfaces to reduce code complexity.
 
 Signed-off-by: Jiang Liu <liuj97@gmail.com>
 ---
- drivers/pci/iov.c    |    3 ++-
- drivers/pci/probe.c  |    2 +-
- drivers/pci/remove.c |    1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/bus.c    |   34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/search.c |   44 ++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h  |   10 ++++++++++
+ 3 files changed, 78 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index c7d2969..40f5f52 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -92,7 +92,8 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
- 		kfree(virtfn);
- 		mutex_unlock(&iov->dev->sriov->lock);
- 		return -ENOMEM;
--	}
-+	} else
-+		pci_bus_get(virtfn->bus);
- 	virtfn->devfn = virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
- 	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e6b40d0..47bf071 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1272,7 +1272,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	if (!dev)
- 		return NULL;
- 
--	dev->bus = bus;
-+	dev->bus = pci_bus_get(bus);
- 	dev->devfn = devfn;
- 	dev->vendor = l & 0xffff;
- 	dev->device = (l >> 16) & 0xffff;
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index a26a841..0d947c0 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -43,6 +43,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 		dev->bus_list.next = dev->bus_list.prev = NULL;
- 		up_write(&pci_bus_sem);
- 		pci_free_resources(dev);
-+		pci_bus_put(dev->bus);
- 		put_device(&dev->dev);
- 	}
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index aa25fcf..b6aacaa 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -426,6 +426,40 @@ void pci_bus_change_state(struct pci_bus *bus, int old, int new, bool unlock)
  }
+ EXPORT_SYMBOL(pci_bus_change_state);
+ 
++struct pci_bus *__pci_get_and_lock_bus(int domain, int busnr, int states)
++{
++	struct pci_bus *bus;
++
++	bus = pci_get_bus(domain, busnr);
++	if (bus && pci_bus_lock_states(bus, states) < 0) {
++		pci_bus_put(bus);
++		bus = NULL;
++	}
++
++	return bus;
++}
++EXPORT_SYMBOL(__pci_get_and_lock_bus);
++
++struct pci_bus *pci_lock_subordinate(struct pci_dev *dev, int states)
++{
++	struct pci_bus *bus = dev->subordinate;
++
++	if (bus && pci_bus_lock_states(bus, states) > 0)
++		return bus;
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_lock_subordinate);
++
++void pci_unlock_and_put_bus(struct pci_bus *bus)
++{
++	if (bus) {
++		pci_bus_unlock(bus);
++		pci_bus_put(bus);
++	}
++}
++EXPORT_SYMBOL(pci_unlock_and_put_bus);
++
+ EXPORT_SYMBOL(pci_bus_alloc_resource);
+ EXPORT_SYMBOL_GPL(pci_bus_add_device);
+ EXPORT_SYMBOL(pci_bus_add_devices);
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index f1147a7..c0a8a2b 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -69,6 +69,35 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+ }
+ 
+ /**
++ * pci_get_bus - get PCI bus from a given domain and bus number
++ * @domain: number of PCI domain to search
++ * @busnr: number of desired PCI bus
++ *
++ * Given a PCI bus number and domain number, the desired PCI bus is located
++ * in the global list of PCI buses. If the bus is found, a reference count
++ * is held on the returned PCI bus. If no bus is found, %NULL is returned.
++ */
++struct pci_bus *pci_get_bus(int domain, int busnr)
++{
++	struct pci_bus *bus;
++	struct pci_bus *tmp_bus = NULL;
++
++	down_read(&pci_bus_sem);
++	list_for_each_entry(bus, &pci_root_buses, node)
++		if (pci_domain_nr(bus) == domain) {
++			tmp_bus = pci_do_find_bus(bus, busnr);
++			if (tmp_bus) {
++				pci_bus_get(tmp_bus);
++				break;
++			}
++		}
++	up_read(&pci_bus_sem);
++
++	return tmp_bus;
++}
++EXPORT_SYMBOL(pci_get_bus);
++
++/**
+  * pci_find_bus - locate PCI bus from a given domain and bus number
+  * @domain: number of PCI domain to search
+  * @busnr: number of desired PCI bus
+@@ -79,17 +108,12 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+  */
+ struct pci_bus * pci_find_bus(int domain, int busnr)
+ {
+-	struct pci_bus *bus = NULL;
+-	struct pci_bus *tmp_bus;
++	struct pci_bus *bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+-		if (pci_domain_nr(bus) != domain)
+-			continue;
+-		tmp_bus = pci_do_find_bus(bus, busnr);
+-		if (tmp_bus)
+-			return tmp_bus;
+-	}
+-	return NULL;
++	bus = pci_get_bus(domain, busnr);
++	pci_bus_put(bus);
++
++	return bus;
+ }
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e2ef517..9e52e88 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -488,6 +488,15 @@ extern int pci_bus_lock_states(struct pci_bus *bus, int states);
+ extern void pci_bus_unlock(struct pci_bus *bus);
+ extern void pci_bus_change_state(struct pci_bus *bus, int new, int old,
+ 				 bool unlock);
++extern struct pci_bus *pci_lock_subordinate(struct pci_dev *dev, int states);
++extern struct pci_bus *__pci_get_and_lock_bus(int domain, int busnr,
++					      int states);
++extern void pci_unlock_and_put_bus(struct pci_bus *bus);
++
++static inline struct pci_bus *pci_get_and_lock_bus(int domain, int busnr)
++{
++	return __pci_get_and_lock_bus(domain, busnr, PCI_BUS_STATE_WORKING);
++}
+ 
+ #define pci_bus_b(n)	list_entry(n, struct pci_bus, node)
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
+@@ -734,6 +743,7 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region);
+ void pcibios_scan_specific_bus(int busn);
+ extern struct pci_bus *pci_find_bus(int domain, int busnr);
++struct pci_bus *pci_get_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
+ struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+ 				      struct pci_ops *ops, void *sysdata);
 -- 
 1.7.9.5
 
