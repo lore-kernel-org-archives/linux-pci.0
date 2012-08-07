@@ -1,33 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.extricom.com ([212.235.17.194]:35796 "HELO
-	smtp.extricom.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with SMTP id S1751232Ab2HTII6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 04:08:58 -0400
-Message-ID: <5031EA55.4030503@extricom.com>
-Date: Mon, 20 Aug 2012 10:42:13 +0300
-From: leonid <leonid@extricom.com>
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:44407 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756863Ab2HGAN4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 20:13:56 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1SyXQp-0001WR-PD
+	for linux-pci@vger.kernel.org; Tue, 07 Aug 2012 02:13:55 +0200
+Received: from 99-119-199-15.lightspeed.sntcca.sbcglobal.net ([99.119.199.15])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Tue, 07 Aug 2012 02:13:55 +0200
+Received: from paolopiace by 99-119-199-15.lightspeed.sntcca.sbcglobal.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Tue, 07 Aug 2012 02:13:55 +0200
 To: linux-pci@vger.kernel.org
-Subject: p4080DS board and myri10gi
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Paolo <paolopiace@gmail.com>
+Subject: Re: accessing =?utf-8?b?cGNpX2Rldg==?=
+Date: Tue, 7 Aug 2012 00:13:45 +0000 (UTC)
+Message-ID: <loom.20120807T020525-624@post.gmane.org>
+References: <loom.20120807T001740-895@post.gmane.org> <20120806224658.GA8579@kroah.com> <loom.20120807T010348-354@post.gmane.org> <CAErSpo5-U1AJr1+HbkGxXKKa8MQ0WOzSpVNy7ooj2rtPoXyHnQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
-This is my first mail in this group , so I hope this is the right place 
-for it.
+Bjorn Helgaas <bhelgaas <at> google.com> writes:
+>
+> The user command "lspci -x" is a good way to see raw config space.
 
-I am testing myri10ge pci-e (10G ethernet card) on p4080 evaluation board.
-using kernel 2.6.34.6
-when I am trying to insert myri10ge kernel module, I getting :
-"myri10ge: Version 1.5.2-1.459
-myri10ge 0001:03:00.0: invalid sram_size -33B or board span 16777216B "
+Sure, Thanks. But I need & want to do everything with the functions
+pci_read_config_...
 
-it is looks like sram_size value is garbage read from the device .
+They need the struct pci_dev whose pointer is returned by the BIOS (or Kernel?)
+as parameter of the probe function in the struct pci_driver
 
-any idea ?
+There must be a way to get access to each and every pci_dev without resorting to
+the probe function.
 
-reference:
-myri10ge - https://www.myricom.com
-p4080ds - 
-http://www.freescale.com/webapp/sps/site/prod_summary.jsp?code=P4080DS
+That's what I'm looking fwd to know.
+
+Regards
+
