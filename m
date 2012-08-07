@@ -1,61 +1,48 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <50418769.4030605@gmail.com>
-Date: Sat, 01 Sep 2012 11:56:25 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:16218 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932565Ab2HGDpt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 6 Aug 2012 23:45:49 -0400
+From: Zang Roy-R61911 <r61911@freescale.com>
+To: Liu Shengzhou-B36685 <B36685@freescale.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	Kumar Gala <galak@kernel.crashing.org>
+CC: Wood Scott-B07421 <B07421@freescale.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	Liu Shengzhou-B36685 <B36685@freescale.com>
+Subject: RE: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non
+ MSI/INTx interrupt
+Date: Tue, 7 Aug 2012 03:45:30 +0000
+Message-ID: <3E027F8168735B46AC006B1D0C7BB002079D6153@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1342591614-1840-1-git-send-email-Shengzhou.Liu@freescale.com>
+ <3F453DDFF675A64A89321A1F35281021771A8B@039-SN1MPN1-003.039d.mgd.msft.net>
+In-Reply-To: <3F453DDFF675A64A89321A1F35281021771A8B@039-SN1MPN1-003.039d.mgd.msft.net>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	kaneshige.kenji@jp.fujitsu.com
-Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com> <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com> <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com> <CAErSpo5ZRapkienpn4ZNWyeC_vfzzxVhmUzViQd0XtAf5ghz2Q@mail.gmail.com> <50400D6E.1050108@huawei.com> <CAErSpo6A_rR=5OREu-OC=ykC_qjeGi7jZOybcurUZBThskp-YA@mail.gmail.com> <5040494E.8080501@huawei.com> <CAErSpo692O3z44b=q3qTjg-Pf4V4F=c-5H5Z_uVsDoQv+ASejQ@mail.gmail.com> <CAE9FiQWtv05guh+oDzAn8CNBr+G8+Wycir7XhAcrgezY5E13Cw@mail.gmail.com>
-In-Reply-To: <CAE9FiQWtv05guh+oDzAn8CNBr+G8+Wycir7XhAcrgezY5E13Cw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/01/2012 12:44 AM, Yinghai Lu wrote:
-> On Thu, Aug 30, 2012 at 10:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> That's true.  I think we should blindly probe for devices only when
->> (1) the system does not have ACPI or (2) the DMI BIOS date is older
->> than some date, e.g., 1 Jan 2013.  For new systems with ACPI, we
->> should only look at the host bridges described in ACPI.
+
+
+> -----Original Message-----
+> From: Linuxppc-dev [mailto:linuxppc-dev-bounces+tie-
+> fei.zang=freescale.com@lists.ozlabs.org] On Behalf Of Liu Shengzhou-B36685
+> Sent: Thursday, July 26, 2012 11:45 AM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org; akpm@linux-
+> foundation.org
+> Cc: Wood Scott-B07421; linuxppc-dev@lists.ozlabs.org; Liu Shengzhou-B36685
+> Subject: RE: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non
+> MSI/INTx interrupt
 > 
-> if those buses do not get scanned, then it should be enough.
+> Hello,
 > 
-> how about just removing pcibios_last_bus probing code?
-> 
-> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-> index 937bcec..3f3c460 100644
-> --- a/arch/x86/pci/mmconfig-shared.c
-> +++ b/arch/x86/pci/mmconfig-shared.c
-> @@ -616,16 +616,6 @@ static void __init __pci_mmcfg_init(int early)
->         if (list_empty(&pci_mmcfg_list))
->                 return;
-> 
-> -       if (pcibios_last_bus < 0) {
-> -               const struct pci_mmcfg_region *cfg;
-> -
-> -               list_for_each_entry(cfg, &pci_mmcfg_list, list) {
-> -                       if (cfg->segment)
-> -                               break;
-> -                       pcibios_last_bus = cfg->end_bus;
-> -               }
-> -       }
-> -
->         if (pci_mmcfg_arch_init())
->                 pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
->         else {
-> 
-> 
-> also Nehalem *EX* and Westmere *EX* does not support EDAC.
-> 
-> so if the user with Nehalem/Westmere Desktop version, want to use to
-> EDAC, they could just append
-> pci=last_bus=255 to get those buses scanned.
-I think this is a better solution than non-ACPI root bus hotplug.
---Gerry
+> A gentle reminder!
+> Any comments are appreciated.
+
+Who can help to review and pick up this patch?
+Thanks.
+Roy
 
