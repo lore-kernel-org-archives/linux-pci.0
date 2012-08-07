@@ -1,95 +1,104 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <50249098.1030704@cn.fujitsu.com>
-Date: Fri, 10 Aug 2012 12:39:52 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51364 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755777Ab2HGQVa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2012 12:21:30 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <liuj97@gmail.com>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [RFC PATCH v2 10/16] ACPIHP: system device hotplug driver skeleton
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com> <1344082443-4608-11-git-send-email-jiang.liu@huawei.com> <502362E3.8010901@cn.fujitsu.com> <50236978.70208@huawei.com> <502377C0.70401@cn.fujitsu.com> <50238496.1000504@huawei.com>
-In-Reply-To: <50238496.1000504@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v1 20/22] PCI/IA64: enable PCI bus lock mechanism for IA64 platforms
+Date: Wed,  8 Aug 2012 00:11:00 +0800
+Message-Id: <1344355862-2726-21-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jiang Liu <liuj97@gmail.com>
 
+This patch turns on PCI bus lock mechanism for IA64 platforms.
 
-On 08/09/2012 05:36 PM, Jiang Liu wrote:
->> And I just tried it some more times. It just hung up, but dmesg had no output.
->> Like this:
->>
->> # modprobe acpihp_enum
->> (OK, and sysfs interfaces have been created)
->> # modprobe acpihp_drv
->> (hang up)
->>
->> # dmesg
->> (nothing)
->>
->> The "modprobe acpihp_drv" process's call trace shows that it hung at the following function:
->> #0  0x00000032836aab80 in __nanosleep_nocancel () from /lib64/libc.so.6
->> #1  0x00000032836deb64 in usleep () from /lib64/libc.so.6
->> ......
->>
->> I have tried several times and I cannot reproduce the situation I just said.
-> You can reproduce it by loading acpihp_drv without acpihp_enum driver, I guess.
-> The acpihp_drv module_init() should call acpihp_register_class() to initialize the core.
-> 
-Hi~
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/ia64/pci/pci.c               |    2 ++
+ arch/ia64/sn/kernel/io_init.c     |    1 +
+ arch/ia64/sn/pci/tioca_provider.c |    4 +++-
+ drivers/pci/Kconfig               |    2 +-
+ 4 files changed, 7 insertions(+), 2 deletions(-)
 
-True. Thanks for your comments. :)
-Since I'm new in PCI related area, if you don't mind, would you please give me some more advice about the following problem ?
-Thanks. :)
-
-"modprobe acpihp_drv" command failed, but acpihp_drv was loaded successfully, and always in use.
-It cannot be removed. Is it a problem ?
-
-[root@DP tangchen]# lsmod | grep acpi
-acpi_cpufreq            9542  0 
-freq_table              5030  2 cpufreq_ondemand,acpi_cpufreq
-mperf                   1391  1 acpi_cpufreq
-acpi_memhotplug         4414  0 
-
-[root@DP tangchen]# modprobe acpihp_drv
-Killed								(NOTE: The NULL pointer problem happened here.)
-
-[root@DP tangchen]# echo $?
-137
-
-[root@DP tangchen]# lsmod | grep acpi
-acpihp_drv             24925  1 				(NOTE: Here, the module is loaded.)
-acpi_cpufreq            9542  0 
-freq_table              5030  2 cpufreq_ondemand,acpi_cpufreq
-mperf                   1391  1 acpi_cpufreq
-acpi_memhotplug         4414  0 
-
-[root@DP tangchen]# rmmod acpihp_drv
-ERROR: Module acpihp_drv is in use
-
-
-The core.c file has been compiled into kernel because of my configuration "CONFIG_ACPI_HOTPLUG=y".
-As my colleague said, in this case, there is no dependency between acpihp_enum and acpihp_drv.
-So I think, do we need to compile core.c into acpihp_enum module, or simply check if acpihp_enum 
-has been loaded in acpihp_drv_init() ?
-I am not sure if it is a good idea to move acpihp_slot_class definition and all related API to 
-acpihp_enum module.
-
-Thanks again for your comments and patient. :)
-
-
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d173a88..259a2e1 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -387,6 +387,8 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	pci_scan_child_bus(pbus);
++	pci_bus_unlock(pbus);
++
+ 	return pbus;
+ 
+ out3:
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index 238e2c5..67e8ce9 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -329,6 +329,7 @@ sn_pci_controller_fixup(int segment, int busnum, struct pci_bus *bus)
+  		goto error_return; /* error, or bus already scanned */
+ 
+ 	bus->sysdata = controller;
++	pci_bus_unlock(bus);
+ 
+ 	return;
+ 
+diff --git a/arch/ia64/sn/pci/tioca_provider.c b/arch/ia64/sn/pci/tioca_provider.c
+index a70b11f..79f8226 100644
+--- a/arch/ia64/sn/pci/tioca_provider.c
++++ b/arch/ia64/sn/pci/tioca_provider.c
+@@ -624,7 +624,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 	    nasid_to_cnodeid(tioca_common->ca_closest_nasid);
+ 	tioca_common->ca_kernel_private = (u64) tioca_kern;
+ 
+-	bus = pci_find_bus(tioca_common->ca_common.bs_persist_segment,
++	bus = pci_get_bus(tioca_common->ca_common.bs_persist_segment,
+ 		tioca_common->ca_common.bs_persist_busnum);
+ 	BUG_ON(!bus);
+ 	tioca_kern->ca_devices = &bus->devices;
+@@ -634,6 +634,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 	if (tioca_gart_init(tioca_kern) < 0) {
+ 		kfree(tioca_kern);
+ 		kfree(tioca_common);
++		pci_bus_put(bus);
+ 		return NULL;
+ 	}
+ 
+@@ -654,6 +655,7 @@ tioca_bus_fixup(struct pcibus_bussoft *prom_bussoft, struct pci_controller *cont
+ 
+ 	/* Setup locality information */
+ 	controller->node = tioca_kern->ca_closest_node;
++	pci_bus_put(bus);
+ 	return tioca_common;
+ }
+ 
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 1bbe924..5a796c0 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -122,4 +122,4 @@ config PCI_LABEL
+ 	select NLS
+ 
+ config PCI_BUS_LOCK
+-	def_bool y if X86
++	def_bool y if (X86 || IA64)
 -- 
-Best Regards,
-Tang chen
+1.7.9.5
+
