@@ -1,239 +1,165 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 06/16] ACPIHP: group devices connecting to a hotplug  slot according to device types
-Date: Sat, 4 Aug 2012 20:13:53 +0800
-Message-ID: <1344082443-4608-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59374 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755824Ab2HGSL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Aug 2012 14:11:56 -0400
+Message-ID: <50215A5B.2020508@redhat.com>
+Date: Tue, 07 Aug 2012 14:11:39 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jiang Liu <liuj97@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v1 00/22] introduce PCI bus lock to serialize PCI
+ hotplug operations
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 08/07/2012 12:10 PM, Jiang Liu wrote:
+> From: Jiang Liu<liuj97@gmail.com>
+>
+> This is the second take to resolve race conditions when hot-plugging PCI
+> devices/host bridges. Instead of using a globla lock to serialize all hotplug
+> operations as in previous version, now we introduce a state machine and bit
+> lock mechanism for PCI buses to serialize hotplug operations. For discussions
+> related to previous version, please refer to:
+> http://comments.gmane.org/gmane.linux.kernel.pci/15007
+>
+> This patch-set is still in early stages, so sending it out just requesting
+> for comments. Any comments are welcomed, especially about whether it's the
+> right/suitable way to solve these race condition issues.
+>
+> patch 1-5:
+> 	Preparing for coming PCI bus lock
+> patch 6-7:
+> 	Core of the new PCI bus lock mechanism.
+> patch 8-13:
+> 	Enhance PCI core to support PCI bus lock mechanism.
+> patch 14-18:
+> 	Enhance several PCI hotplug drivers to use PCI bus lock to serialize
+> 	hotplug operations.
+> patch 19-20:
+> 	Enable PCI bus lock mechanism for x86 and IA64, still need to enable
+> 	PCI bus lock for other archs.
+> patch 21-22:
+> 	Cleanups for unsed code.
+>
+> There are multiple methods to trigger PCI hotplug requests/operations
+> concurrently, such as:
+> 1. Sysfs interfaces exported by the PCI core subsystem
+> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
+> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
+> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
+> 	/sys/bus/pci/rescan
+> 2. Sysfs interfaces exported by the PCI hotplug subsystem
+> 	/sys/bus/pci/slots/xx/power
+> 3. PCI hotplug events triggered by PCI Hotplug Controllers
+> 4. ACPI hotplug events for PCI host bridges
+> 5. Driver binding/unbinding events
+> 	binding/unbinding pci drivers with SR-IOV support
+>
+6. PCI reset
+    --> a PCIe device-level reset is done by KVM when it assigns a device
+        to a guest.  a PCI config-save before reset, and PCI config-restore after reset
+        is done in this case.
+    --> VF devices are interesting, since they are reset, then bound to
+        pci-stub driver.  when more than 1 VF is enabled in a PF,
+        and several device-assignments are done simultaneously, you
+        get a storm of reset (save/restore pci cfg space), and pci-stub binding
+        (pci cfg read for resource allocation/deallocation), and depending on
+        the hw design: an AER caused by the FLR reset -- not suppose to, but
+        hw has bugs too! ;-)
+    PCI locking is 'challenged' in the above scenario.
 
-ACPI devices connecting to an ACPI hotplug slot are divided into groups
-according to device types. Those devices will be configured/unconfigured
-in order of device types when hot-adding/hot-removing system devices.
+   So, I ask: have you tried your patch set doing something like:
+     a) modprobe an SRIOV device with > 1 vf enabled
+   you may also have to do:
+     b) while assigning another SRIOV device's VF to another KVM guest
 
-For example, when hot-adding a computer node with CPUs, memory, PCI host
-bridges, IOAPICs, the order optimized for performance should be:
-memory -> CPU -> IOAPIC -> PCI host bridge.
+Unfortunately, the PCI cfg-space locking, esp. on x86 (ok, I'll say it:
+damn, mutually exclusive, IO-port-based cfg registers), doesn't lend itself
+to this multi-task, dynamic PCI scenario.
+Much less complicated on linearly-mapped, PCI-mmconf-only accesses.
 
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/acpi/hotplug/core.c |  113 +++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_hotplug.h |   27 +++++++++++
- 2 files changed, 140 insertions(+)
+- Don
 
-diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
-index 6fac499..14b3d61 100644
---- a/drivers/acpi/hotplug/core.c
-+++ b/drivers/acpi/hotplug/core.c
-@@ -115,6 +115,23 @@ static char *acpihp_dev_ioapic_ids[] = {
- 	NULL
- };
- 
-+static void acpihp_dev_node_get(struct klist_node *lp)
-+{
-+	struct acpihp_dev_node *dp;
-+
-+	dp = container_of(lp, struct acpihp_dev_node, node);
-+	get_device(dp->dev);
-+}
-+
-+static void acpihp_dev_node_put(struct klist_node *lp)
-+{
-+	struct acpihp_dev_node *dp;
-+
-+	dp = container_of(lp, struct acpihp_dev_node, node);
-+	put_device(dp->dev);
-+	kfree(dp);
-+}
-+
- static void acpihp_slot_release(struct device *dev)
- {
- 	struct acpihp_slot *slot = to_acpihp_slot(dev);
-@@ -134,6 +151,7 @@ static void acpihp_slot_release(struct device *dev)
- 
- struct acpihp_slot *acpihp_create_slot(acpi_handle handle, char *name)
- {
-+	int i;
- 	struct acpihp_slot *slot;
- 
- 	if (name == NULL) {
-@@ -154,6 +172,9 @@ struct acpihp_slot *acpihp_create_slot(acpi_handle handle, char *name)
- 	INIT_LIST_HEAD(&slot->slot_list);
- 	INIT_LIST_HEAD(&slot->drvdata_list);
- 	INIT_LIST_HEAD(&slot->slot_id_list);
-+	for (i = ACPIHP_DEV_TYPE_UNKNOWN; i < ACPIHP_DEV_TYPE_MAX; i++)
-+		klist_init(&slot->dev_lists[i],
-+			   &acpihp_dev_node_get, &acpihp_dev_node_put);
- 	strncpy(slot->name, name, sizeof(slot->name) - 1);
- 	mutex_init(&slot->slot_mutex);
- 
-@@ -433,6 +454,98 @@ acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot)
- }
- EXPORT_SYMBOL_GPL(acpihp_slot_poweroff);
- 
-+/* Insert a device onto a hotplug slot's device klist. */
-+int acpihp_slot_add_device(struct acpihp_slot *slot, enum acpihp_dev_type type,
-+			   enum acpihp_dev_state state, struct device *dev)
-+{
-+	struct acpihp_dev_node *np;
-+
-+	if (type < ACPIHP_DEV_TYPE_UNKNOWN || type >= ACPIHP_DEV_TYPE_MAX) {
-+		ACPIHP_DEBUG("device type %d is invalid.\n", type);
-+		return -EINVAL;
-+	} else if (slot == NULL) {
-+		ACPIHP_DEBUG("invalid parameter, slot is NULL.\n");
-+		return -EINVAL;
-+	} else if (dev == NULL) {
-+		ACPIHP_DEBUG("invalid parameter, dev is NULL.\n");
-+		return -EINVAL;
-+	}
-+
-+	np = kzalloc(sizeof(*np), GFP_KERNEL);
-+	if (np == NULL)
-+		return -ENOMEM;
-+
-+	np->dev = dev;
-+	np->state = state;
-+	mutex_init(&np->lock);
-+	klist_add_tail(&np->node, &slot->dev_lists[type]);
-+	ACPIHP_DEBUG("add device %s to slot %s.\n",
-+		     dev_name(dev), slot->name);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_add_device);
-+
-+/* Remove a device from a hotplug slot's device klist. */
-+int acpihp_slot_remove_device(struct acpihp_slot *slot,
-+			      enum acpihp_dev_type type, struct device *dev)
-+{
-+	int ret = -ENOENT;
-+	struct klist_iter iter;
-+	struct klist_node *ip;
-+	struct acpihp_dev_node *np;
-+
-+	if (type < ACPIHP_DEV_TYPE_UNKNOWN || type >= ACPIHP_DEV_TYPE_MAX) {
-+		ACPIHP_DEBUG("device type %d is invalid.\n", type);
-+		return -EINVAL;
-+	} else if (slot == NULL) {
-+		ACPIHP_DEBUG("invalid parameter, slot is NULL.\n");
-+		return -EINVAL;
-+	} else if (dev == NULL) {
-+		ACPIHP_DEBUG("invalid parameter, dev is NULL.\n");
-+		return -EINVAL;
-+	}
-+
-+	klist_iter_init(&slot->dev_lists[type], &iter);
-+	while ((ip = klist_next(&iter)) != NULL) {
-+		np = container_of(ip, struct acpihp_dev_node, node);
-+		if (np->dev == dev) {
-+			ACPIHP_DEBUG("remove device %s from slot %s.\n",
-+				     dev_name(dev), slot->name);
-+			klist_del(&np->node);
-+			ret = 0;
-+			break;
-+		}
-+	}
-+	klist_iter_exit(&iter);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_remove_device);
-+
-+/* Remove all devices from the klist */
-+int acpihp_remove_device_list(struct klist *dev_list)
-+{
-+	struct klist_iter iter;
-+	struct klist_node *ip;
-+	struct acpihp_dev_node *np;
-+
-+	if (dev_list == NULL) {
-+		ACPIHP_DEBUG("invalid parameter, dev_list is NULL.\n");
-+		return -EINVAL;
-+	}
-+
-+	klist_iter_init(dev_list, &iter);
-+	while ((ip = klist_next(&iter)) != NULL) {
-+		np = container_of(ip, struct acpihp_dev_node, node);
-+		klist_del(&np->node);
-+	}
-+	klist_iter_exit(&iter);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
-+
- /* SYSFS interfaces */
- static ssize_t acpihp_slot_object_show(struct device *d,
- 		struct device_attribute *attr, char *buf)
-diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
-index b81d934..cd8dd99 100644
---- a/include/acpi/acpi_hotplug.h
-+++ b/include/acpi/acpi_hotplug.h
-@@ -48,6 +48,24 @@ enum acpihp_dev_type {
- 	ACPIHP_DEV_TYPE_MAX
- };
- 
-+enum acpihp_dev_state {
-+	DEVICE_STATE_UNKOWN = 0x00,
-+	DEVICE_STATE_CONNECTED,
-+	DEVICE_STATE_PRE_CONFIGURE,
-+	DEVICE_STATE_CONFIGURED,
-+	DEVICE_STATE_PRE_RELEASE,
-+	DEVICE_STATE_RELEASED,
-+	DEVICE_STATE_PRE_UNCONFIGURE,
-+	DEVICE_STATE_MAX
-+};
-+
-+struct acpihp_dev_node {
-+	struct device		*dev;
-+	enum acpihp_dev_state	state;
-+	struct mutex		lock;
-+	struct klist_node	node;
-+};
-+
- /*
-  * ACPI hotplug slot is an abstraction of receptacles where a group of
-  * system devices could be attached, just like PCI slot in PCI hotplug.
-@@ -190,6 +208,15 @@ typedef acpi_status (*acpihp_walk_device_cb)(struct acpi_device *acpi_device,
- extern int acpihp_walk_devices(acpi_handle handle, acpihp_walk_device_cb cb,
- 			       void *argp);
- 
-+extern int acpihp_slot_add_device(struct acpihp_slot *slot,
-+				  enum acpihp_dev_type type,
-+				  enum acpihp_dev_state state,
-+				  struct device *dev);
-+extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
-+				     enum acpihp_dev_type type,
-+				     struct device *dev);
-+extern int acpihp_remove_device_list(struct klist *dev_list);
-+
- extern int acpihp_debug;
- 
- #define ACPIHP_DEBUG(fmt, ...) \
--- 
-1.7.9.5
-
+> With current implementation, the PCI core subsystem doesn't support
+> concurrent hotplug operations yet. The existing pci_bus_sem lock only
+> protects several lists in struct pci_bus, such as children list,
+> devices list, but it doesn't protect the pci_bus or pci_dev structure
+> themselves.
+>
+> Let's take pci_remove_bus_device() as an example, which are used by
+> PCI hotplug drivers to hot-remove PCI devices.  Currently all these
+> are free running without any protection, so it can't support reentrance.
+> pci_remove_bus_device()
+>      ->pci_stop_bus_device()
+>          ->pci_stop_bus_device()
+>              ->pci_stop_bus_devices()
+>          ->pci_stop_dev()
+>
+> Jiang Liu (22):
+>    PCI: use pci_get_domain_bus_and_slot() to avoid race conditions
+>    PCI: trivial cleanups for drivers/pci/remove.c
+>    PCI: change PCI device management code to better follow device model
+>    PCI: split PCI bus device registration into two stages
+>    PCI: introduce pci_bus_{get|put}() to manage PCI bus reference count
+>    PCI: use a global lock to serialize PCI root bridge hotplug
+>      operations
+>    PCI: introduce PCI bus lock to serialize PCI hotplug operations
+>    PCI: introduce hotplug safe search interfaces for PCI bus/device
+>    PCI: enhance PCI probe logic to support PCI bus lock mechanism
+>    PCI: enhance PCI bus specific logic to support PCI bus lock mechanism
+>    PCI: enhance PCI resource assignment logic to support PCI bus lock
+>      mechanism
+>    PCI: enhance PCI remove logic to support PCI bus lock mechanism
+>    PCI: make each PCI device hold a reference to its parent PCI bus
+>    PCI/sysfs: use PCI bus lock to avoid race conditions
+>    PCI/eeepc: use PCI bus lock to avoid race conditions
+>    PCI/asus-wmi: use PCI bus lock to avoid race conditions
+>    PCI/pciehp: use PCI bus lock to avoid race conditions
+>    PCI/acpiphp: use PCI bus lock to avoid race conditions
+>    PCI/x86: enable PCI bus lock mechanism for x86 platforms
+>    PCI/IA64: enable PCI bus lock mechanism for IA64 platforms
+>    PCI: cleanups for PCI bus lock implementation
+>    PCI: unexport pci_root_buses
+>
+>   arch/ia64/pci/pci.c                  |    2 +
+>   arch/ia64/sn/kernel/io_common.c      |    4 +-
+>   arch/ia64/sn/kernel/io_init.c        |    1 +
+>   arch/ia64/sn/pci/tioca_provider.c    |    4 +-
+>   arch/x86/pci/acpi.c                  |    6 +-
+>   arch/x86/pci/common.c                |   12 +++
+>   drivers/acpi/pci_root.c              |    8 +-
+>   drivers/edac/i7core_edac.c           |   16 ++-
+>   drivers/gpu/drm/drm_fops.c           |    6 +-
+>   drivers/gpu/vga/vgaarb.c             |   15 +--
+>   drivers/pci/bus.c                    |  188 +++++++++++++++++++++++++++++-----
+>   drivers/pci/host-bridge.c            |   19 ++++
+>   drivers/pci/hotplug/acpiphp_glue.c   |   13 ++-
+>   drivers/pci/hotplug/cpcihp_generic.c |    8 +-
+>   drivers/pci/hotplug/pciehp_pci.c     |   15 +++
+>   drivers/pci/hotplug/sgi_hotplug.c    |    2 +
+>   drivers/pci/iov.c                    |   11 +-
+>   drivers/pci/pci-sysfs.c              |   37 ++++---
+>   drivers/pci/probe.c                  |   83 +++++++++++----
+>   drivers/pci/remove.c                 |  176 +++++++++++++++++--------------
+>   drivers/pci/search.c                 |   53 ++++++++--
+>   drivers/pci/setup-bus.c              |   65 +++++++++---
+>   drivers/pci/xen-pcifront.c           |   10 +-
+>   drivers/platform/x86/asus-wmi.c      |   23 ++++-
+>   drivers/platform/x86/eeepc-laptop.c  |   20 ++--
+>   include/linux/pci.h                  |   56 +++++++++-
+>   26 files changed, 629 insertions(+), 224 deletions(-)
+>
 
