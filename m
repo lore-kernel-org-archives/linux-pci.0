@@ -1,49 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51371 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754101Ab2HJGKF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:10:05 -0400
-Date: Fri, 10 Aug 2012 15:09:55 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org
-Cc: kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
-	jiang.liu@huawei.com
-Subject: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
-Message-Id: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 17/22] PCI/pciehp: use PCI bus lock to avoid race conditions
+Date: Wed,  8 Aug 2012 00:10:57 +0800
+Message-Id: <1344355862-2726-18-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Hi all,
+This patch uses PCI bus lock mechanism to avoid race conditions when doing
+PCI device hotplug by pciehp driver.
 
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/pciehp_pci.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 09cecaf..9536a9e 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -42,18 +42,25 @@ int pciehp_configure_device(struct slot *p_slot)
+ 	int num, fn;
+ 	struct controller *ctrl = p_slot->ctrl;
  
- I'd like to merge hostbridge hotplug feature.
- I looked at Yinghai's branch and found that this branch contains 
- many work and can be split into some parts. 
- I believe it is good to merge step by step.
-
- My idea is splitting into the following 4 parts:
-   1. basic hostbirdge hotplug work
-   2. acpiphp work
-   3. /sysfs interface work (logical hotplug?)
-   4. cleanup
-
- This patchset is 1st step based on the following Yinghai's branch:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-root-bus-hotplug
-
-  * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
-  * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
-  * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
-  * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
-  * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
-  * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
-  * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
-
++	if (pci_bus_lock_states(parent, PCI_BUS_STATE_WORKING) < 0) {
++		ctrl_dbg(ctrl, "Port has been removed\n");
++		return -EINVAL;
++	}
++
+ 	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
+ 	if (dev) {
+ 		ctrl_err(ctrl, "Device %s already exists "
+ 			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
+ 			 pci_domain_nr(parent), parent->number);
+ 		pci_dev_put(dev);
++		pci_bus_unlock(parent);
+ 		return -EINVAL;
+ 	}
+ 
+ 	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
+ 	if (num == 0) {
+ 		ctrl_err(ctrl, "No new device found\n");
++		pci_bus_unlock(parent);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -82,6 +89,7 @@ int pciehp_configure_device(struct slot *p_slot)
+ 	}
+ 
+ 	pci_bus_add_devices(parent);
++	pci_bus_unlock(parent);
+ 
+ 	return 0;
+ }
+@@ -96,6 +104,11 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 	u16 command;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
++	if (pci_bus_lock_states(parent, PCI_BUS_STATE_WORKING) < 0) {
++		ctrl_dbg(ctrl, "Port has been removed\n");
++		return -EINVAL;
++	}
++
+ 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
+ 		 __func__, pci_domain_nr(parent), parent->number);
+ 	ret = pciehp_get_adapter_status(p_slot, &presence);
+@@ -131,5 +144,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 		pci_dev_put(temp);
+ 	}
+ 
++	pci_bus_unlock(parent);
++
+ 	return rc;
+ }
 -- 
-Best regards,
-Taku Izumi <izumi.taku@jp.fujitsu.com>
+1.7.9.5
 
