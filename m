@@ -1,62 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mso.anu.edu.au ([150.203.89.32]:41436 "EHLO mso.anu.edu.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752090Ab2HDFoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 4 Aug 2012 01:44:46 -0400
-Message-ID: <501CB6AE.3000400@mso.anu.edu.au>
-Date: Sat, 04 Aug 2012 15:44:14 +1000
-From: Francois Rigaut <frigaut@mso.anu.edu.au>
-MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
-	bhelgaas@google.com, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-References: <20120802040242.GB25933@thinkpad-t410> <20120802103423.GA1921@kroah.com> <501A955D.6030500@mso.anu.edu.au> <20120802161209.GF32395@thinkpad-t410> <501B01ED.9080309@mso.anu.edu.au> <501B0536.6070001@mso.anu.edu.au> <20120803045312.GB2446@thinkpad-t410> <501BD1FC.9020601@mso.anu.edu.au> <20120803141421.GA8165@thinkpad-t410> <501C7C1D.5010903@mso.anu.edu.au> <20120804035844.GA31711@thinkpad-t410>
-In-Reply-To: <20120804035844.GA31711@thinkpad-t410>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 01/22] PCI: use pci_get_domain_bus_and_slot() to avoid race conditions
+Date: Wed,  8 Aug 2012 00:10:41 +0800
+Message-Id: <1344355862-2726-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Seth,
+There's a typical usage pattern to search a PCI device under a specific
+PCI bus (domian, busno) as below:
+struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
 
-[CC'd people, sorry we exchanged a few emails with Seth outside of the 
-lists, I passed him the acpi tables and here are gmux dumps]
+The above code has a race window between pci_find_bus() and pci_get_slot()
+if PCI hotplug operations happen between them which removes the pci_bus.
+So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+which also reduces code complexity.
 
-Allright. thanks for gmux-dump. There seems to be progress, as I can see 
-the gmux dumps for the nividia-selected and intel-selected are clearly 
-different (I did it twice to be sure, it checks out).
-The 2 dumps are at
-http://maumae.net/retina/gmux-dump_intel.dat
-and
-http://maumae.net/retina/gmux-dump_nvidia_only.dat
-I hope you'll be able to get something from these.
-Francois
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ arch/ia64/sn/kernel/io_common.c      |    4 +---
+ drivers/gpu/vga/vgaarb.c             |   15 +++------------
+ drivers/pci/hotplug/cpcihp_generic.c |    8 ++------
+ drivers/pci/iov.c                    |    8 ++------
+ drivers/pci/xen-pcifront.c           |   10 ++--------
+ 5 files changed, 10 insertions(+), 35 deletions(-)
 
-
-
-On 04/08/12 13:58, Seth Forshee wrote:
-> On Sat, Aug 04, 2012 at 11:34:21AM +1000, Francois Rigaut wrote:
->> Seth,
->>
->> I've put the acpi table dump in http://maumae.net/retina/acpi_tables.tgz
-> The ACPI stuff for the gmux looks exactly the same as for the machine
-> I've got. The I/O range is still 0x700 to 0x7ff.
->
->> As far as the mem dump, I've done it but can not see any difference
->> (between case where one or the other graphic card are selected) in
->> the first 3000 bytes. Not sure I'm doing that well though. I'm just
->> dd'ing /dev/mem with
->> dd bs=1000 count=3 if=/dev/mem of=some_file
->> Am I addressing the right memory or is the switch going to be (or
->> likely to be) somewhere else?
-> That's going to access sytem memory, not the I/O space for the gmux. Try
-> the attached instead. It's going to output the raw binary, so if you
-> want to view the output do something like
->
->   gmux-dump | xxd -g1
->
-> Seth
+diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
+index fbb5f2f..8630875 100644
+--- a/arch/ia64/sn/kernel/io_common.c
++++ b/arch/ia64/sn/kernel/io_common.c
+@@ -229,7 +229,6 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
+ {
+ 	int segment = pci_domain_nr(dev->bus);
+ 	struct pcibus_bussoft *bs;
+-	struct pci_bus *host_pci_bus;
+ 	struct pci_dev *host_pci_dev;
+ 	unsigned int bus_no, devfn;
+ 
+@@ -245,8 +244,7 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
+ 
+ 	bus_no = (pcidev_info->pdi_slot_host_handle >> 32) & 0xff;
+ 	devfn = pcidev_info->pdi_slot_host_handle & 0xffffffff;
+- 	host_pci_bus = pci_find_bus(segment, bus_no);
+- 	host_pci_dev = pci_get_slot(host_pci_bus, devfn);
++	host_pci_dev = pci_get_domain_bus_and_slot(segment, bus_no, devfn);
+ 
+ 	pcidev_info->host_pci_dev = host_pci_dev;
+ 	pcidev_info->pdi_linux_pcidev = dev;
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 3df8fc0..b6852b7 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1066,7 +1066,6 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
+ 		}
+ 
+ 	} else if (strncmp(curr_pos, "target ", 7) == 0) {
+-		struct pci_bus *pbus;
+ 		unsigned int domain, bus, devfn;
+ 		struct vga_device *vgadev;
+ 
+@@ -1085,19 +1084,11 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
+ 			pr_debug("vgaarb: %s ==> %x:%x:%x.%x\n", curr_pos,
+ 				domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+ 
+-			pbus = pci_find_bus(domain, bus);
+-			pr_debug("vgaarb: pbus %p\n", pbus);
+-			if (pbus == NULL) {
+-				pr_err("vgaarb: invalid PCI domain and/or bus address %x:%x\n",
+-					domain, bus);
+-				ret_val = -ENODEV;
+-				goto done;
+-			}
+-			pdev = pci_get_slot(pbus, devfn);
++			pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+ 			pr_debug("vgaarb: pdev %p\n", pdev);
+ 			if (!pdev) {
+-				pr_err("vgaarb: invalid PCI address %x:%x\n",
+-					bus, devfn);
++				pr_err("vgaarb: invalid PCI address %x:%x:%x\n",
++					domain, bus, devfn);
+ 				ret_val = -ENODEV;
+ 				goto done;
+ 			}
+diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
+index 81af764..a6a71c4 100644
+--- a/drivers/pci/hotplug/cpcihp_generic.c
++++ b/drivers/pci/hotplug/cpcihp_generic.c
+@@ -154,12 +154,8 @@ static int __init cpcihp_generic_init(void)
+ 	if(!r)
+ 		return -EBUSY;
+ 
+-	bus = pci_find_bus(0, bridge_busnr);
+-	if (!bus) {
+-		err("Invalid bus number %d", bridge_busnr);
+-		return -EINVAL;
+-	}
+-	dev = pci_get_slot(bus, PCI_DEVFN(bridge_slot, 0));
++	dev = pci_get_domain_bus_and_slot(0, bridge_busnr,
++					  PCI_DEVFN(bridge_slot, 0));
+ 	if(!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
+ 		err("Invalid bridge device %s", bridge);
+ 		pci_dev_put(dev);
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 74bbaf8..c7d2969 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -152,15 +152,11 @@ failed1:
+ static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+-	struct pci_bus *bus;
+ 	struct pci_dev *virtfn;
+ 	struct pci_sriov *iov = dev->sriov;
+ 
+-	bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
+-	if (!bus)
+-		return;
+-
+-	virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
++	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
++			virtfn_bus(dev, id), virtfn_devfn(dev, id));
+ 	if (!virtfn)
+ 		return;
+ 
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index d6cc62c..def8d0b 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -982,7 +982,6 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+ 	int err = 0;
+ 	int i, num_devs;
+ 	unsigned int domain, bus, slot, func;
+-	struct pci_bus *pci_bus;
+ 	struct pci_dev *pci_dev;
+ 	char str[64];
+ 
+@@ -1032,13 +1031,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+ 			goto out;
+ 		}
+ 
+-		pci_bus = pci_find_bus(domain, bus);
+-		if (!pci_bus) {
+-			dev_dbg(&pdev->xdev->dev, "Cannot get bus %04x:%02x\n",
+-				domain, bus);
+-			continue;
+-		}
+-		pci_dev = pci_get_slot(pci_bus, PCI_DEVFN(slot, func));
++		pci_dev = pci_get_domain_bus_and_slot(domain, bus,
++				PCI_DEVFN(slot, func));
+ 		if (!pci_dev) {
+ 			dev_dbg(&pdev->xdev->dev,
+ 				"Cannot get PCI device %04x:%02x:%02x.%d\n",
+-- 
+1.7.9.5
 
