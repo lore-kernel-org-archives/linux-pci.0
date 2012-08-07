@@ -1,140 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:42678 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752120Ab2HOOgr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 10:36:47 -0400
-Received: by lagy9 with SMTP id y9so870354lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 07:36:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120815123022.GA8678@avionic-0098.adnet.avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <1343332512-28762-11-git-send-email-thierry.reding@avionic-design.de>
- <20120814201215.GA10542@avionic-0098.mockup.avionic-design.de>
- <CAErSpo6Awbx9-DWM3V02HUg7Xv4tWAhcLO7UKuT_0uXbpZ+nKw@mail.gmail.com>
- <20120815063718.GA15665@avionic-0098.mockup.avionic-design.de>
- <CAErSpo7Y9ADYHwZMjQjDwd7m8jtwgcxsE-NE_K5X_Z+PuV=C4w@mail.gmail.com> <20120815123022.GA8678@avionic-0098.adnet.avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Aug 2012 07:36:24 -0700
-Message-ID: <CAErSpo7c4L=Ny=CtZwLB_XWTcN8tVWs_quuE_T+XLEGyhWwHkg@mail.gmail.com>
-Subject: Re: [PATCH v3 10/10] ARM: tegra: pcie: Add device tree support
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 15/22] PCI/eeepc: use PCI bus lock to avoid race conditions
+Date: Wed,  8 Aug 2012 00:10:55 +0800
+Message-Id: <1344355862-2726-16-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 15, 2012 at 5:30 AM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> On Wed, Aug 15, 2012 at 05:18:04AM -0700, Bjorn Helgaas wrote:
->> On Tue, Aug 14, 2012 at 11:37 PM, Thierry Reding
->> <thierry.reding@avionic-design.de> wrote:
->> > On Tue, Aug 14, 2012 at 04:50:26PM -0700, Bjorn Helgaas wrote:
->> >> On Tue, Aug 14, 2012 at 1:12 PM, Thierry Reding
->> >> <thierry.reding@avionic-design.de> wrote:
->> >> > On Thu, Jul 26, 2012 at 09:55:12PM +0200, Thierry Reding wrote:
->> >> >> diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra20.dtsi
->> >> >> index a094c97..c886dff 100644
->> >> >> --- a/arch/arm/boot/dts/tegra20.dtsi
->> >> >> +++ b/arch/arm/boot/dts/tegra20.dtsi
->> >> >> @@ -199,6 +199,68 @@
->> >> >>               #size-cells = <0>;
->> >> >>       };
->> >> >>
->> >> >> +     pcie-controller {
->> >> >> +             compatible = "nvidia,tegra20-pcie";
->> >> >> +             reg = <0x80003000 0x00000800   /* PADS registers */
->> >> >> +                    0x80003800 0x00000200   /* AFI registers */
->> >> >> +                    0x81000000 0x01000000   /* configuration space */
->> >> >> +                    0x90000000 0x10000000>; /* extended configuration space */
->> >> >> +             interrupts = <0 98 0x04   /* controller interrupt */
->> >> >> +                           0 99 0x04>; /* MSI interrupt */
->> >> >> +             status = "disabled";
->> >> >> +
->> >> >> +             ranges = <0 0 0  0x80000000 0x00001000   /* root port 0 */
->> >> >> +                       0 1 0  0x81000000 0x00800000   /* port 0 config space */
->> >> >> +                       0 2 0  0x90000000 0x08000000   /* port 0 ext config space */
->> >> >> +                       0 3 0  0x82000000 0x00010000   /* port 0 downstream I/O */
->> >> >> +                       0 4 0  0xa0000000 0x08000000   /* port 0 non-prefetchable memory */
->> >> >> +                       0 5 0  0xb0000000 0x08000000   /* port 0 prefetchable memory */
->> >> >> +
->> >> >> +                       1 0 0  0x80001000 0x00001000   /* root port 1 */
->> >> >> +                       1 1 0  0x81800000 0x00800000   /* port 1 config space */
->> >> >> +                       1 2 0  0x98000000 0x08000000   /* port 1 ext config space */
->> >> >> +                       1 3 0  0x82010000 0x00010000   /* port 1 downstream I/O */
->> >> >> +                       1 4 0  0xa8000000 0x08000000   /* port 1 non-prefetchable memory */
->> >> >> +                       1 5 0  0xb8000000 0x08000000>; /* port 1 prefetchable memory */
->> >> >
->> >> > I've been thinking about this some more. The translations for both the
->> >> > regular and extended configuration spaces are configured in the top-
->> >> > level PCIe controller. It is therefore wrong how they are passed to the
->> >> > PCI host bridges via the ranges property.
->> >> >
->> >> > I remember Mitch saying that it should be passed down to the children
->> >> > because it is partitioned among them, but since the layout is compatible
->> >> > with ECAM, the partitioning isn't as simple as what's in the tree. In
->> >> > fact the partitions will be dependent on the number of devices attached
->> >> > to the host bridges.
->> >>
->> >> I don't understand this last bit about the number of devices attached
->> >> to the host bridges.  Logically, the host bridge has a bus number
->> >> aperture that you can know up front, even before you know anything
->> >> about what devices are below it.  On x86, for example, the ACPI _CRS
->> >> method has something like "[bus 00-7f]" in it, which means that any
->> >> buses in that range are below this bridge.  That doesn't tell us
->> >> anything about which buses actually have devices on them, of course;
->> >> it's just analogous to the secondary and subordinate bus number
->> >> registers in a P2P bridge.
->> >
->> > That's one of the issues I still need to take care of. Currently no bus
->> > resource is attached to the individual bridges (nor the PCI controller
->> > for that matter), so the PCI core will assign them dynamically.
->>
->> So your PCI controller driver knows how to program the controller bus
->> number aperture?  Sometimes people start by assuming that two host
->> bridges both have [bus 00-ff] apertures, then they enumerate below the
->> first and adjust the bus number apertures based on what they found.
->> For example, if they found buses 00-12 behind the first bridge, they
->> make the apertures [bus 00-12] for the first bridge and [bus 13-ff]
->> for the second.  That might be the case, depending on what firmware
->> set up, but it seems like a dubious way to do it, and of course it
->> precludes a lot of hot-plug scenarios.
->
-> No, that's not what I meant. What happens is that no pre-assigned bus
-> range is specified for either of the host bridges, so that the range
-> 0x00-0xff will be assigned by default in pci_scan_root_bus().
+This patch uses PCI bus lock mechanism to avoid race conditions when doing
+PCI device hotplug through eeepc driver. It also fixes a PCI device reference
+count leakage issue because acpi_get_pci_dev() holds a reference to the
+device returned.
 
-My concern is about making the kernel's idea of the host bridge bus
-number aperture match what the hardware is doing.  I'm pretty sure
-that the default [bus 00-ff] range assigned by pci_scan_root_bus()
-doesn't actually match the hardware in most cases, at least when we
-have multiple host bridges in the same PCI domain.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/platform/x86/eeepc-laptop.c |   20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-For example, if you don't supply a bus number range,
-pci_scan_root_bus() will assume [bus 00-ff] for both host bridges.
-But if you could put an analyzer on each of the root buses and then
-read bus 0 config space, will you see that config transaction on
-*both* buses?  I doubt it.
+diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
+index dab91b4..25c4176 100644
+--- a/drivers/platform/x86/eeepc-laptop.c
++++ b/drivers/platform/x86/eeepc-laptop.c
+@@ -606,16 +606,16 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
+ 			goto out_unlock;
+ 		}
+ 
+-		bus = port->subordinate;
++		bus = pci_lock_subordinate(port, PCI_BUS_STATE_WORKING);
+ 
+ 		if (!bus) {
+ 			pr_warn("Unable to find PCI bus 1?\n");
+-			goto out_unlock;
++			goto out_put_dev;
+ 		}
+ 
+ 		if (pci_bus_read_config_dword(bus, 0, PCI_VENDOR_ID, &l)) {
+ 			pr_err("Unable to read PCI config space?\n");
+-			goto out_unlock;
++			goto out_unlock_bus;
+ 		}
+ 
+ 		absent = (l == 0xffffffff);
+@@ -627,7 +627,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
+ 				absent ? "absent" : "present");
+ 			pr_warn("skipped wireless hotplug as probably "
+ 				"inappropriate for this model\n");
+-			goto out_unlock;
++			goto out_unlock_bus;
+ 		}
+ 
+ 		if (!blocked) {
+@@ -635,7 +635,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
+ 			if (dev) {
+ 				/* Device already present */
+ 				pci_dev_put(dev);
+-				goto out_unlock;
++				goto out_unlock_bus;
+ 			}
+ 			dev = pci_scan_single_device(bus, 0);
+ 			if (dev) {
+@@ -650,6 +650,11 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
+ 				pci_dev_put(dev);
+ 			}
+ 		}
++
++out_unlock_bus:
++		pci_bus_unlock(bus);
++out_put_dev:
++		pci_dev_put(port);
+ 	}
+ 
+ out_unlock:
+@@ -757,7 +762,7 @@ static struct hotplug_slot_ops eeepc_hotplug_slot_ops = {
+ static int eeepc_setup_pci_hotplug(struct eeepc_laptop *eeepc)
+ {
+ 	int ret = -ENOMEM;
+-	struct pci_bus *bus = pci_find_bus(0, 1);
++	struct pci_bus *bus = pci_get_bus(0, 1);
+ 
+ 	if (!bus) {
+ 		pr_err("Unable to find wifi PCI bus\n");
+@@ -785,6 +790,8 @@ static int eeepc_setup_pci_hotplug(struct eeepc_laptop *eeepc)
+ 		goto error_register;
+ 	}
+ 
++	pci_bus_put(bus);
++
+ 	return 0;
+ 
+ error_register:
+@@ -793,6 +800,7 @@ error_info:
+ 	kfree(eeepc->hotplug_slot);
+ 	eeepc->hotplug_slot = NULL;
+ error_slot:
++	pci_bus_put(bus);
+ 	return ret;
+ }
+ 
+-- 
+1.7.9.5
 
-You have to know at least the bus number of the root bus up front
-before you can even start enumerating it.  The only way to learn that
-is by reading registers in the host bridge or by some external
-mechanism like ACPI or device tree.  That's the beginning of the bus
-number aperture.  The end of the aperture is similar: we can't
-reliably determine it by enumerating devices below the host bridge, so
-we have to know it up front.  You can enumerate starting with the root
-bus number and assigning new subordinate bus numbers as necessary, but
-unless you know the host bridge aperture to begin with, you could
-inadvertently assign a new bus number that actually belongs to a
-different host bridge.
-
-Bjorn
