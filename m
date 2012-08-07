@@ -1,40 +1,292 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <503F96EB.2010304@gmail.com>
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-	<CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
-	<CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
-	<503F96EB.2010304@gmail.com>
-Date: Thu, 30 Aug 2012 10:29:54 -0700
-Message-ID: <CAE9FiQVdz1ApW-05BjzHK-kfZ-hrVbSamcemLbo_65qinV-R_w@mail.gmail.com>
-Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	kaneshige.kenji@jp.fujitsu.com, jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 06/22] PCI: use a global lock to serialize PCI root bridge hotplug operations
+Date: Wed,  8 Aug 2012 00:10:46 +0800
+Message-Id: <1344355862-2726-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 30, 2012 at 9:38 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 08/30/2012 11:48 PM, Yinghai Lu wrote:
->         For system does support physical processor hotplug, I think
-> BIOS should expose those special PCI buses, otherwise we may run into
-> trouble after removing a physical processor.
-No, not do the physical removing.
+Currently there's no mechanism to protect the global pci_root_buses list
+from dynamic change at runtime. That means, PCI root bridge hotplug
+operations, which dynamically change the pci_root_buses list, may cause
+invalid memory accesses.
 
-I just want to remove those not needed pci root bus.
+So introduce a global lock to serialize accesses to the pci_root_buses
+list and serialize PCI host bridge hotplug operations.
 
-lspci output get filled of all the those useless cpu pci devices.
+Be careful, never try to acquire this global lock from PCI device drivers,
+that may cause deadlocks.
 
->         BTW, do we really want to support logical PCI host bridge hotplug
-> or only support physical host bridge hotplug? Here logical hotplug means
-> adding a PCI bus into or removing a PCI bus from the running kernel.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/acpi/pci_root.c           |    8 +++++++-
+ drivers/edac/i7core_edac.c        |   16 +++++++---------
+ drivers/gpu/drm/drm_fops.c        |    6 +++++-
+ drivers/pci/host-bridge.c         |   19 +++++++++++++++++++
+ drivers/pci/hotplug/sgi_hotplug.c |    2 ++
+ drivers/pci/pci-sysfs.c           |    2 ++
+ drivers/pci/probe.c               |    5 ++++-
+ drivers/pci/search.c              |    9 ++++++++-
+ include/linux/pci.h               |    8 ++++++++
+ 9 files changed, 62 insertions(+), 13 deletions(-)
 
-get logical done at first, and then via acpi we could do real physical removal.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 7aff631..6bd0e32 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -463,6 +463,8 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (!root)
+ 		return -ENOMEM;
+ 
++	pci_host_bridge_hotplug_lock();
++
+ 	segment = 0;
+ 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
+ 				       &segment);
+@@ -516,7 +518,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+ 	 */
+ 
+-	/* TBD: Locking */
+ 	list_add_tail(&root->node, &acpi_pci_roots);
+ 
+ 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
+@@ -622,11 +623,14 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+ 
++	pci_host_bridge_hotplug_unlock();
++
+ 	return 0;
+ 
+ end:
+ 	if (!list_empty(&root->node))
+ 		list_del(&root->node);
++	pci_host_bridge_hotplug_unlock();
+ 	kfree(root);
+ 	return result;
+ }
+@@ -643,8 +647,10 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 
++	pci_host_bridge_hotplug_lock();
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
++	pci_host_bridge_hotplug_unlock();
+ 
+ 	kfree(root);
+ 	return 0;
+diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
+index d27778f..8e6f177 100644
+--- a/drivers/edac/i7core_edac.c
++++ b/drivers/edac/i7core_edac.c
+@@ -1196,6 +1196,7 @@ static void __init i7core_xeon_pci_fixup(const struct pci_id_table *table)
+ 	 * aren't announced by acpi. So, we need to use a legacy scan probing
+ 	 * to detect them
+ 	 */
++	pci_host_bridge_hotplug_lock();
+ 	while (table && table->descr) {
+ 		pdev = pci_get_device(PCI_VENDOR_ID_INTEL, table->descr[0].dev_id, NULL);
+ 		if (unlikely(!pdev)) {
+@@ -1205,19 +1206,16 @@ static void __init i7core_xeon_pci_fixup(const struct pci_id_table *table)
+ 		pci_dev_put(pdev);
+ 		table++;
+ 	}
++	pci_host_bridge_hotplug_unlock();
+ }
+ 
+ static unsigned i7core_pci_lastbus(void)
+ {
+-	int last_bus = 0, bus;
+-	struct pci_bus *b = NULL;
+-
+-	while ((b = pci_find_next_bus(b)) != NULL) {
+-		bus = b->number;
+-		debugf0("Found bus %d\n", bus);
+-		if (bus > last_bus)
+-			last_bus = bus;
+-	}
++	int last_bus = 0;
++
++	for (last_bus = 255; last_bus >= 0; last_bus--)
++		if (pci_find_bus(0, last_bus))
++			break;
+ 
+ 	debugf0("Last bus %d\n", last_bus);
+ 
+diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
+index 123de28..f559b5b 100644
+--- a/drivers/gpu/drm/drm_fops.c
++++ b/drivers/gpu/drm/drm_fops.c
+@@ -344,9 +344,13 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
+ 			pci_dev_put(pci_dev);
+ 		}
+ 		if (!dev->hose) {
+-			struct pci_bus *b = pci_bus_b(pci_root_buses.next);
++			struct pci_bus *b;
++
++			pci_host_bridge_hotplug_lock();
++			b = pci_find_next_bus(NULL);
+ 			if (b)
+ 				dev->hose = b->sysdata;
++			pci_host_bridge_hotplug_unlock();
+ 		}
+ 	}
+ #endif
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..28d5557 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -94,3 +94,22 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 	res->end = region->end + offset;
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++static DEFINE_MUTEX(pci_host_bridge_lock);
++
++/*
++ * Get the lock to serialize PCI host bridge hotplug operations.
++ * It can't be called from PCI device drivers, otherwise it may cause
++ * deadlocks when removing a host bridge.
++ */
++void pci_host_bridge_hotplug_lock(void)
++{
++	mutex_lock(&pci_host_bridge_lock);
++}
++EXPORT_SYMBOL(pci_host_bridge_hotplug_lock);
++
++void pci_host_bridge_hotplug_unlock(void)
++{
++	mutex_unlock(&pci_host_bridge_lock);
++}
++EXPORT_SYMBOL(pci_host_bridge_hotplug_unlock);
+diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+index f64ca92..e0e5d13 100644
+--- a/drivers/pci/hotplug/sgi_hotplug.c
++++ b/drivers/pci/hotplug/sgi_hotplug.c
+@@ -690,6 +690,7 @@ static int __init sn_pci_hotplug_init(void)
+ 
+ 	INIT_LIST_HEAD(&sn_hp_list);
+ 
++	pci_host_bridge_hotplug_lock();
+ 	while ((pci_bus = pci_find_next_bus(pci_bus))) {
+ 		if (!pci_bus->sysdata)
+ 			continue;
+@@ -709,6 +710,7 @@ static int __init sn_pci_hotplug_init(void)
+ 			break;
+ 		}
+ 	}
++	pci_host_bridge_hotplug_unlock();
+ 
+ 	return registered == 1 ? 0 : -ENODEV;
+ }
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 86c63fe..99fefbe 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -295,10 +295,12 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 		return -EINVAL;
+ 
+ 	if (val) {
++		pci_host_bridge_hotplug_lock();
+ 		mutex_lock(&pci_remove_rescan_mutex);
+ 		while ((b = pci_find_next_bus(b)) != NULL)
+ 			pci_rescan_bus(b);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
++		pci_host_bridge_hotplug_unlock();
+ 	}
+ 	return count;
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ad77ae5..1f64e8d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -23,7 +23,10 @@ struct resource busn_resource = {
+ 	.flags	= IORESOURCE_BUS,
+ };
+ 
+-/* Ugh.  Need to stop exporting this to modules. */
++/*
++ * Ugh.  Need to stop exporting this to modules.
++ * Protected by pci_host_bridge_hotplug_{lock|unlock}().
++ */
+ LIST_HEAD(pci_root_buses);
+ EXPORT_SYMBOL(pci_root_buses);
+ 
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 993d4a0..f1147a7 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -100,6 +100,13 @@ struct pci_bus * pci_find_bus(int domain, int busnr)
+  * initiated by passing %NULL as the @from argument.  Otherwise if
+  * @from is not %NULL, searches continue from next device on the
+  * global list.
++ *
++ * Please don't call this function at rumtime if possible.
++ * It's designed to be called at boot time only because it's unsafe
++ * to PCI root bridge hotplug operations. But some drivers do invoke
++ * it at runtime and it's hard to fix those drivers. In such cases,
++ * use pci_host_bridge_hotplug()_{lock|unlock} to protect the PCI root
++ * bus list, but you need to be really careful to avoid deadlock.
+  */
+ struct pci_bus * 
+ pci_find_next_bus(const struct pci_bus *from)
+@@ -115,6 +122,7 @@ pci_find_next_bus(const struct pci_bus *from)
+ 	up_read(&pci_bus_sem);
+ 	return b;
+ }
++EXPORT_SYMBOL(pci_find_next_bus);
+ 
+ /**
+  * pci_get_slot - locate PCI device for a given PCI slot
+@@ -353,7 +361,6 @@ EXPORT_SYMBOL(pci_dev_present);
+ 
+ /* For boot time work */
+ EXPORT_SYMBOL(pci_find_bus);
+-EXPORT_SYMBOL(pci_find_next_bus);
+ /* For everyone */
+ EXPORT_SYMBOL(pci_get_device);
+ EXPORT_SYMBOL(pci_get_subsys);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 21fa79e..e02f130 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -388,6 +388,8 @@ struct pci_host_bridge {
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
++void pci_host_bridge_hotplug_lock(void);
++void pci_host_bridge_hotplug_unlock(void);
+ 
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+@@ -1359,6 +1361,12 @@ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+ { return NULL; }
+ 
++static inline void pci_host_bridge_hotplug_lock(void)
++{ }
++
++static inline void pci_host_bridge_hotplug_unlock(void)
++{ }
++
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
+-- 
+1.7.9.5
 
-Thanks
-
-Yinghai
