@@ -1,31 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:45674 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933Ab2HASaN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 14:30:13 -0400
-Received: by mail-vc0-f174.google.com with SMTP id fk26so7348123vcb.19
-        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2012 11:30:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOp+P+rsAW2pBZNNSW2ehEDVQB=zSFkweVRDmPcePCiEd5_8DA@mail.gmail.com>
-References: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
-	<CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
-	<CAOp+P+rsAW2pBZNNSW2ehEDVQB=zSFkweVRDmPcePCiEd5_8DA@mail.gmail.com>
-Date: Wed, 1 Aug 2012 11:30:13 -0700
-Message-ID: <CAE9FiQW7PR9L=4QtcOvFxN7jRbVSx9MpAnsBzXiJ50D+FATVEw@mail.gmail.com>
-Subject: Re: PCI express switch
-From: Yinghai Lu <yinghai@kernel.org>
-To: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
-	<caronteycerbero@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 02/22] PCI: trivial cleanups for drivers/pci/remove.c
+Date: Wed,  8 Aug 2012 00:10:42 +0800
+Message-Id: <1344355862-2726-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 11:03 AM, Miguel Ángel Álvarez
-<caronteycerbero@gmail.com> wrote:
-> Which one? The one in which the switch is detected by the u-boot or
-> the one in which the switch is detected by the Linux?
+Trivial cleanups for drivers/pci/remove.c:
+1) move the comment for pci_stop_and_remove_bus_device() to the right place
+2) rename __pci_remove_behind_bridge() to pci_remove_behind_bridge()
 
-both.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/remove.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-Yinghai
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 04a4861..33b6318 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -78,25 +78,14 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-static void __pci_remove_behind_bridge(struct pci_dev *dev);
+-/**
+- * pci_stop_and_remove_bus_device - remove a PCI device and any children
+- * @dev: the device to remove
+- *
+- * Remove a PCI device from the device lists, informing the drivers
+- * that the device has been removed.  We also remove any subordinate
+- * buses and children in a depth-first manner.
+- *
+- * For each device we remove, delete the device structure from the
+- * device lists, remove the /proc entry, and notify userspace
+- * (/sbin/hotplug).
+- */
++static void pci_remove_behind_bridge(struct pci_dev *dev);
++
+ void __pci_remove_bus_device(struct pci_dev *dev)
+ {
+ 	if (dev->subordinate) {
+ 		struct pci_bus *b = dev->subordinate;
+ 
+-		__pci_remove_behind_bridge(dev);
++		pci_remove_behind_bridge(dev);
+ 		pci_remove_bus(b);
+ 		dev->subordinate = NULL;
+ 	}
+@@ -105,13 +94,25 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(__pci_remove_bus_device);
+ 
++/**
++ * pci_stop_and_remove_bus_device - remove a PCI device and any children
++ * @dev: the device to remove
++ *
++ * Remove a PCI device from the device lists, informing the drivers
++ * that the device has been removed.  We also remove any subordinate
++ * buses and children in a depth-first manner.
++ *
++ * For each device we remove, delete the device structure from the
++ * device lists, remove the /proc entry, and notify userspace
++ * (/sbin/hotplug).
++ */
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ {
+ 	pci_stop_bus_device(dev);
+ 	__pci_remove_bus_device(dev);
+ }
+ 
+-static void __pci_remove_behind_bridge(struct pci_dev *dev)
++static void pci_remove_behind_bridge(struct pci_dev *dev)
+ {
+ 	struct list_head *l, *n;
+ 
+@@ -141,7 +142,7 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
+ void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+ {
+ 	pci_stop_behind_bridge(dev);
+-	__pci_remove_behind_bridge(dev);
++	pci_remove_behind_bridge(dev);
+ }
+ 
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+-- 
+1.7.9.5
+
