@@ -1,56 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:58307 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021Ab2HaAn3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2012 20:43:29 -0400
-Received: by lbbgj3 with SMTP id gj3so898745lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2012 17:43:27 -0700 (PDT)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:38885 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513Ab2HGQa7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2012 12:30:59 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
- <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com> <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 30 Aug 2012 17:43:07 -0700
-Message-ID: <CAErSpo5ZRapkienpn4ZNWyeC_vfzzxVhmUzViQd0XtAf5ghz2Q@mail.gmail.com>
-Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
+In-Reply-To: <Pine.LNX.4.44L0.1208071138430.2400-100000@iolanthe.rowland.org>
+References: <CACVXFVO957+ORC4dLh5=5Ck=xeFw9cCSDXMNzx7jDPogyMfE_w@mail.gmail.com>
+	<Pine.LNX.4.44L0.1208071138430.2400-100000@iolanthe.rowland.org>
+Date: Wed, 8 Aug 2012 00:30:58 +0800
+Message-ID: <CACVXFVM6id=oB5x80fin-k8-=sj=fLYu=0YDRZX-Uhqk4Cp8QQ@mail.gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
+ regression ...)
+From: Ming Lei <tom.leiming@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 30, 2012 at 8:48 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Aug 29, 2012 at 11:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-
->> 1) For patch [1/7], I pointed out that there is currently no way to
->> remove a non-ACPI host bridge, which means the fact that we don't free
->> the pci_sysdata is not really a leak.  If you want to add the
->> release_fn so that you can add support for removing and adding these
->> non-ACPI host bridges in the future, I do not understand that.  It
->> just doesn't make sense to me to try to support hotplug for those
->> bridges.
+On Tue, Aug 7, 2012 at 11:42 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
 >
-> for Intel Nehalem and westmere -ex system, there will be root bus from
-> 0xf8 to 0xff for cpus.
-> and BIOS does not put the in ACPI, but __pci_mmcfg_init will set the
-> pcibios_last_bus.
-> so those but get probed via pcibios_fixup_peer_bridges.
+> No, that's really not what the patch is doing.
+>
+> The idea behind the new API is that "func" will be called as soon as we
+> know the device is at full power.  That could be after the next runtime
+> resume or it could be right away.  This is a one-time call; it should
 
-I understand how these buses get scanned.  What I don't understand is
-what value we get from trying to make these buses hot-pluggable.
+IMO, in the both two cases, the 'func' should be very similar with
+.runtime_post_resume from view of the caller because the caller
+don't know what the power state of the device is now, so they may
+always think the 'func' should do something similar done in
+.runtime_post_resume.
 
-> I hope I could use /sys to remove non-acpi root bus.
+Also .runtime_post_resume always knows the device's power state
+is active, which is same with 'func'. In fact, it doesn't matter if the active
+state is the 1st time or other times, does it?
 
-Why?  I don't think there's any value in being able to remove non-ACPI
-host bridges.  Any x86 host bridge hotplug that's actually useful to
-users will be done via ACPI.
+> not be made _every_ time the device resumes.
 
-You mention later that you want to remove these buses because they
-only contain CPU devices that don't seem to be good for anything.  I
-would rather do this by simply not scanning for peer bridges in the
-first place.  That's simpler than scanning the bridge, deciding we
-don't care about what we found, then trying to hot-remove it.
+Suppose the device is always resumed in the path(such as irq context),
+the callback is still called every time.
 
-Bjorn
+If the .runtime_post_resume is to be a one-time call, that is easy to do it.
+Also I am wondering why the callback shouldn't be called after resume
+in sync context, and it may simplify implementation if the two contexts
+(sync vs. async) are kept consistent.
+
+>
+>> Also, the 'func' should be per driver, not per device since only one
+>> 'func' is enough for all same kind of devices driven by one same
+>> driver.
+>
+> But what if the subsystem defines its own dev_pm_info structure?  Then
+> the driver's dev_pm_info will be ignored by the runtime PM core.  All
+> the subsystems would have to be changed.
+
+Suppose .runtime_post_resume is introduced, the priority of
+dev_pm_info for .runtime_post_resume callback can be changed to
+adapt to the situation.
+
+
+Thanks,
+-- 
+Ming Lei
