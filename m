@@ -1,113 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:56519 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752681Ab2HANmz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 09:42:55 -0400
-Received: by wibhr14 with SMTP id hr14so4003165wib.1
-        for <linux-pci@vger.kernel.org>; Wed, 01 Aug 2012 06:42:54 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 1 Aug 2012 14:42:54 +0100
-Message-ID: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
-Subject: PCI express switch
-From: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
-	<caronteycerbero@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
+Subject: [RFC PATCH v1 12/22] PCI: enhance PCI remove logic to support PCI bus lock mechanism
+Date: Wed,  8 Aug 2012 00:10:52 +0800
+Message-Id: <1344355862-2726-13-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear all,
+This patch enhances PCI remove logic to support PCI bus lock mechanism.
+It implements the major part of the PCI bus state machine.
 
-We are developing a board using a Freescale P2020. This micro has
-three PCIexpress ports. 2 1xlane PCIe and 1 2xlane PCIe.
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/remove.c |  146 +++++++++++++++++++++++++++++---------------------
+ 1 file changed, 85 insertions(+), 61 deletions(-)
 
-We have been able to successfully use the PCIe interfaces.
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index ba03059..a26a841 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -26,21 +26,25 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 		dev->is_added = 0;
+ 	}
+ 
++	/* TODO: check whether it's safe to call aspm here */
+ 	if (dev->bus->self)
+ 		pcie_aspm_exit_link_state(dev);
+ }
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
+-	/* Remove the device from the device lists, and prevent any further
+-	 * list accesses from this device */
+ 	down_write(&pci_bus_sem);
+-	list_del(&dev->bus_list);
+-	dev->bus_list.next = dev->bus_list.prev = NULL;
+-	up_write(&pci_bus_sem);
+-
+-	pci_free_resources(dev);
+-	put_device(&dev->dev);
++	if (dev->bus_list.next == NULL) {
++		up_write(&pci_bus_sem);
++	} else {
++		/* Remove the device from the device lists, and prevent any
++		 * further list accesses from this device */
++		list_del(&dev->bus_list);
++		dev->bus_list.next = dev->bus_list.prev = NULL;
++		up_write(&pci_bus_sem);
++		pci_free_resources(dev);
++		put_device(&dev->dev);
++	}
+ }
+ 
+ /**
+@@ -64,29 +68,44 @@ int pci_remove_device_safe(struct pci_dev *dev)
+ 
+ void pci_remove_bus(struct pci_bus *pci_bus)
+ {
+-	pci_proc_detach_bus(pci_bus);
++	int state = pci_bus_get_state(pci_bus);
+ 
+-	down_write(&pci_bus_sem);
+-	list_del(&pci_bus->node);
+-	pci_bus_release_busn_res(pci_bus);
+-	up_write(&pci_bus_sem);
+-	if (pci_bus->is_added) {
++	switch (state) {
++	case PCI_BUS_STATE_STOPPED:
++	case PCI_BUS_STATE_REGISTERED:
+ 		pci_remove_legacy_files(pci_bus);
+ 		device_del(&pci_bus->dev);
++	case PCI_BUS_STATE_STOPPING:
++	case PCI_BUS_STATE_INITIALIZED:
++		pci_proc_detach_bus(pci_bus);
++		down_write(&pci_bus_sem);
++		list_del(&pci_bus->node);
++		pci_bus_release_busn_res(pci_bus);
++		up_write(&pci_bus_sem);
++		pci_bus_change_state(pci_bus, state,
++				     PCI_BUS_STATE_REMOVED, true);
++		pci_bus_put(pci_bus);
++		break;
++	case PCI_BUS_STATE_REMOVED:
++		pci_bus_unlock(pci_bus);
++		break;
++	default:
++		BUG_ON(state);
++		break;
+ 	}
+-	put_device(&pci_bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-static void pci_remove_behind_bridge(struct pci_dev *dev);
+-
+ void __pci_remove_bus_device(struct pci_dev *dev)
+ {
+-	if (dev->subordinate) {
+-		struct pci_bus *b = dev->subordinate;
++	struct list_head *l, *n;
++	struct pci_bus *bus;
+ 
+-		pci_remove_behind_bridge(dev);
+-		pci_remove_bus(b);
++	bus = pci_lock_subordinate(dev, PCI_BUS_STATE_DESTROYED - 1);
++	if (bus) {
++		list_for_each_safe(l, n, &bus->devices)
++			__pci_remove_bus_device(pci_dev_b(l));
++		pci_remove_bus(bus);
+ 		dev->subordinate = NULL;
+ 	}
+ 
+@@ -111,24 +130,7 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ 	pci_stop_bus_device(dev);
+ 	__pci_remove_bus_device(dev);
+ }
+-
+-static void pci_remove_behind_bridge(struct pci_dev *dev)
+-{
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			__pci_remove_bus_device(pci_dev_b(l));
+-}
+-
+-static void pci_stop_behind_bridge(struct pci_dev *dev)
+-{
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			pci_stop_bus_device(pci_dev_b(l));
+-}
++EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+ 
+ /**
+  * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
+@@ -141,27 +143,17 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
+  */
+ void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+ {
+-	pci_stop_behind_bridge(dev);
+-	pci_remove_behind_bridge(dev);
+-}
+-
+-static void pci_stop_bus_devices(struct pci_bus *bus)
+-{
+ 	struct list_head *l, *n;
++	struct pci_bus *bus;
+ 
+-	/*
+-	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
+-	 *  pci_stop_bus_devices() code path for PF.
+-	 *  aka, bus->devices get updated in the process.
+-	 * but VFs are inserted after PFs when SRIOV is enabled for PF,
+-	 * We can iterate the list backwards to get prev valid PF instead
+-	 *  of removed VF.
+-	 */
+-	list_for_each_prev_safe(l, n, &bus->devices) {
+-		struct pci_dev *dev = pci_dev_b(l);
+-		pci_stop_bus_device(dev);
++	bus = pci_lock_subordinate(dev, PCI_BUS_STATE_REMOVED - 1);
++	if (bus) {
++		list_for_each_safe(l, n, &bus->devices)
++			pci_stop_and_remove_bus_device(pci_dev_b(l));
++		pci_bus_unlock(bus);
+ 	}
+ }
++EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+ 
+ /**
+  * pci_stop_bus_device - stop a PCI device and any children
+@@ -173,12 +165,44 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
+  */
+ void pci_stop_bus_device(struct pci_dev *dev)
+ {
+-	if (dev->subordinate)
+-		pci_stop_bus_devices(dev->subordinate);
++	int state;
++	struct pci_bus *bus;
++	struct list_head *l, *n;
++
++	bus = pci_lock_subordinate(dev, PCI_BUS_STATE_REMOVED - 1);
++	if (!bus)
++		goto out;
++
++	state = pci_bus_get_state(bus);
++	switch (state) {
++	case PCI_BUS_STATE_INITIALIZED:
++		pci_bus_change_state(bus, state, PCI_BUS_STATE_STOPPING, true);
++		break;
++	case PCI_BUS_STATE_WORKING:
++	case PCI_BUS_STATE_REGISTERED:
++		pci_bus_change_state(bus, state, PCI_BUS_STATE_STOPPING, false);
++		/*
++		 * VFs could be removed by pci_stop_and_remove_bus_device()
++		 * in the pci_stop_bus_devices() code path for PF.
++		 * aka, bus->devices get updated in the process.
++		 * but VFs are inserted after PFs when SRIOV is enabled for PF,
++		 * We can iterate the list backwards to get prev valid PF
++		 * instead of removed VF.
++		 */
++		list_for_each_prev_safe(l, n, &bus->devices)
++			pci_stop_bus_device(pci_dev_b(l));
++		pci_bus_change_state(bus, PCI_BUS_STATE_STOPPING,
++				     PCI_BUS_STATE_STOPPED, true);
++		break;
++	case PCI_BUS_STATE_STOPPING:
++	case PCI_BUS_STATE_STOPPED:
++		pci_bus_unlock(bus);
++		break;
++	default:
++		BUG_ON(state);
++	}
+ 
++out:
+ 	pci_stop_dev(dev);
+ }
+-
+-EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+-EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+ EXPORT_SYMBOL_GPL(pci_stop_bus_device);
+-- 
+1.7.9.5
 
-However, now we want to expand the number of PCIe slots connecting the
-2xlane PCIe to a PCIe switch (89HPES6T5E). This switch offers a 2xlane
-upstream port and 4 1xlane downstream ports.
-
-The problem is that we do not really know how PCIe switches are
-managed in Linux. If any of you can recommend us some resources to
-read, we will appreciate it very much.
-
-If there is no information to read, let me describe our main problem.
-
-The question is that if I let u-boot scan the PCIe, the upstream and
-downstream ports are detected as well as the cards connected to the
-downstream port. However when u-boot launches Linux, this last just
-finds a device (the HPES6T5E), and none of the downstream ports or
-card connected to them.
-
-pci 0000:00:00.0: PCI bridge, secondary bus 0000:01
-pci 0000:00:00.0:   IO window: 0x00-0xffff
-pci 0000:00:00.0:   MEM window: 0x80000000-0x9fffffff
-pci 0000:00:00.0:   PREFETCH window: disabled
-pci 0000:00:00.0: enabling device (0106 -> 0107)
-pci 0001:02:00.0: PCI bridge, secondary bus 0001:03
-pci 0001:02:00.0:   IO window: 0x00-0xffff
-pci 0001:02:00.0:   MEM window: 0xa0000000-0xbfffffff
-pci 0001:02:00.0:   PREFETCH window: disabled
-pci 0001:02:00.0: enabling device (0106 -> 0107)
-pci 0002:05:00.0: PCI bridge, secondary bus 0002:06
-pci 0002:05:00.0:   IO window: disabled
-pci 0002:05:00.0:   MEM window: 0xc0000000-0xc00fffff
-pci 0002:05:00.0:   PREFETCH window: disabled
-pci 0002:04:00.0: PCI bridge, secondary bus 0002:05
-pci 0002:04:00.0:   IO window: 0x00-0xffff
-pci 0002:04:00.0:   MEM window: 0xc0000000-0xdfffffff
-pci 0002:04:00.0:   PREFETCH window: disabled
-pci 0002:04:00.0: enabling device (0106 -> 0107)
-
-However, if I do not let u-boot scan the bus, Linux finds five devices
-for the 89HPES6T5E and the card connected to the downstream ports.
-
-pci 0000:00:00.0: PCI bridge, secondary bus 0000:01
-pci 0000:00:00.0:   IO window: 0x00-0xffff
-pci 0000:00:00.0:   MEM window: 0x80000000-0x9fffffff
-pci 0000:00:00.0:   PREFETCH window: disabled
-pci 0000:00:00.0: enabling device (0106 -> 0107)
-pci 0001:02:00.0: PCI bridge, secondary bus 0001:03
-pci 0001:02:00.0:   IO window: 0x00-0xffff
-pci 0001:02:00.0:   MEM window: 0xa0000000-0xbfffffff
-pci 0001:02:00.0:   PREFETCH window: disabled
-pci 0001:02:00.0: enabling device (0106 -> 0107)
-pci 0002:06:02.0: PCI bridge, secondary bus 0002:07
-pci 0002:06:02.0:   IO window: disabled
-pci 0002:06:02.0:   MEM window: disabled
-pci 0002:06:02.0:   PREFETCH window: disabled
-pci 0002:06:03.0: PCI bridge, secondary bus 0002:08
-pci 0002:06:03.0:   IO window: disabled
-pci 0002:06:03.0:   MEM window: disabled
-pci 0002:06:03.0:   PREFETCH window: disabled
-pci 0002:06:04.0: PCI bridge, secondary bus 0002:09
-pci 0002:06:04.0:   IO window: disabled
-pci 0002:06:04.0:   MEM window: disabled
-pci 0002:06:04.0:   PREFETCH window: disabled
-pci 0002:06:05.0: PCI bridge, secondary bus 0002:0a
-pci 0002:06:05.0:   IO window: disabled
-pci 0002:06:05.0:   MEM window: 0xc0000000-0xc00fffff
-pci 0002:06:05.0:   PREFETCH window: disabled
-pci 0002:05:00.0: PCI bridge, secondary bus 0002:06
-pci 0002:05:00.0:   IO window: disabled
-pci 0002:05:00.0:   MEM window: 0xc0000000-0xc00fffff
-pci 0002:05:00.0:   PREFETCH window: disabled
-pci 0002:04:00.0: PCI bridge, secondary bus 0002:05
-pci 0002:04:00.0:   IO window: 0x00-0xffff
-pci 0002:04:00.0:   MEM window: 0xc0000000-0xdfffffff
-pci 0002:04:00.0:   PREFETCH window: disabled
-pci 0002:04:00.0: enabling device (0106 -> 0107)
-pci 0002:05:00.0: enabling device (0000 -> 0002)
-pci 0002:06:05.0: enabling device (0000 -> 0002)
-
-/sys/bus/pci/devices # ls
-0002:0a:00.0  0002:06:04.0  0002:06:02.0  0002:04:00.0  0000:00:00.0
-0002:06:05.0  0002:06:03.0  0002:05:00.0  0001:02:00.0
-
-I know that the problem could be in the u-boot, so I am trying to
-analyse its code also... but I think there could be something in Linux
-I am not taking into account yet.
-
-Thanks.
-
-Miguel Ángel
