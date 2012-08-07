@@ -1,64 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:58506 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753261Ab2HCQlI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2012 12:41:08 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:46681 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756839Ab2HGVut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Aug 2012 17:50:49 -0400
+Message-ID: <50218DB6.2080209@redhat.com>
+Date: Tue, 07 Aug 2012 17:50:46 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20120803083344.GF25979@ics.muni.cz>
-References: <20120801133835.GH5470@ics.muni.cz>
-	<CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
-	<CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
-	<20120801205640.GN5470@ics.muni.cz>
-	<CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
-	<20120801220802.GP5470@ics.muni.cz>
-	<CAE9FiQW84gjtX=_4guCBgcAJmkAGQ5ooFoj7C_29K7QK0s9qwA@mail.gmail.com>
-	<20120803083344.GF25979@ics.muni.cz>
-Date: Fri, 3 Aug 2012 09:41:07 -0700
-Message-ID: <CAE9FiQX+dQiJXS31mXky4WSNHbmwNzHEwm3YhbWnmObWJ-FBug@mail.gmail.com>
-Subject: Re: mellanox mlx4_core and SR-IOV
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dsahern@gmail.com
+Subject: Re: [PATCH] pci: Account for virtual buses in pci_acs_path_enabled
+References: <20120804181445.6598.6505.stgit@bling.home> <CAErSpo42VMnfzDP6t5eCFfE-5=yPNmNGLs6a2D0KwGMhe71DbQ@mail.gmail.com> <1344232549.3441.7.camel@ul30vt.home> <CAErSpo756PXBNjwEMEX8DKGcEu0R+UuQ+rg9NG8k1c+TZ=j2Gw@mail.gmail.com>
+In-Reply-To: <CAErSpo756PXBNjwEMEX8DKGcEu0R+UuQ+rg9NG8k1c+TZ=j2Gw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 3, 2012 at 1:33 AM, Lukas Hejtmanek <xhejtman@ics.muni.cz> wrote:
-> On Wed, Aug 01, 2012 at 04:36:14PM -0700, Yinghai Lu wrote:
->> > so it seems, that pic=nocsr is a must now.
+On 08/06/2012 04:47 PM, Bjorn Helgaas wrote:
+> On Sun, Aug 5, 2012 at 11:55 PM, Alex Williamson
+> <alex.williamson@redhat.com>  wrote:
+>> On Sun, 2012-08-05 at 23:30 -0600, Bjorn Helgaas wrote:
+>>> On Sat, Aug 4, 2012 at 12:19 PM, Alex Williamson
+>>> <alex.williamson@redhat.com>  wrote:
+>>>> It's possible to have buses without an associated bridge
+>>>> (bus->self == NULL).  SR-IOV can generate such buses.  When
+>>>> we find these, skip to the parent bus to look for the next
+>>>> ACS test.
+>>>
+>>> To make sure I understand the problem here, I think you're referring
+>>> to the situation where an SR-IOV device can span several bus numbers,
+>>> e.g., the "VFs Spanning Multiple Bus Numbers" implementation note in
+>>> the SR-IOV 1.1 spec, sec. 2.1.2.
+>>>
+>>> It says "All PFs must be located on the Device's captured Bus Number"
+>>> -- I think that means every PF will be directly on a bridge's
+>>> secondary bus and hence will have a valid dev->bus->self pointer.
+>>>
+>>> However, VFs need not be on the same bus number.  If a VF is on
+>>> (captured Bus Number plus 1), I think we allocate a new struct pci_bus
+>>> for it, but there's no P2P bridge that leads to that bus, so the
+>>> bus->self pointer is probably NULL.
 >>
->> yes. Or you have bios provide SRIOV support or 64 bit resource in _CRS.
+>> Yes, exactly.  virtfn_add_bus() is where we're creating this new bus.
+>>
+>>> This makes me quite nervous, because I bet there are many places that
+>>> assume every non-root bus has a valid bus->self pointer  -- I know I
+>>> certainly had that assumption.
+>>>
+>>> I looked at callers of pci_is_root_bus(), and at first glance, it seems like
+>>> iommu_init_device(), intel_iommu_add_device(), pci_acs_path_enabled(),
+>>
+>>
+>> These 3 are handled by this patch, plus the intel and amd iommu patches
+>> I sent.
+>>
+>>> pci_get_interrupt_pin(), pci_common_swizzle(),
+>>
+>> If sr-iov is the only source of these virtual buses, these are probably
+>> ok since VFs don't support INTx.
+>>
+>>> pci_find_upstream_pcie_bridge(), and
+>>
+>> Here the pci_is_root_bus() is after a pci_is_pcie() check, so again if
+>> sr-iov only (and assuming VFs properly report PCIe capability), we
+>> shouldn't stumble on it.
+>>
+>>> pci_bus_release_bridge_resources() all might have similar problems.
+>>
+>> This one might deserve further investigation.  Thanks,
 >
-> Well, I can use PCI passthrough in Xen now, however, it seems SR-IOV does not
-> work in case of Mellanox mlx4 driver.
+> We can fix all these places piecemeal, but that doesn't feel like a
+> very satisfying solution.  It makes it much harder to know that each
+> place is correct, and this oddity of a bus with no upstream bridge is
+> still lying around, waiting to bite us again later.
 >
-> With 3.5 stock kernel, I got this message in virtual domain:
-> [    2.666623] mlx4_core: Mellanox ConnectX core driver v1.1 (Dec, 2011)
-> [    2.666635] mlx4_core: Initializing 0000:00:00.1
-> [    2.666717] mlx4_core 0000:00:00.1: enabling device (0000 -> 0002)
-> [    2.666975] mlx4_core 0000:00:00.1: Xen PCI mapped GSI0 to IRQ168
-> [    2.667040] mlx4_core 0000:00:00.1: enabling bus mastering
-> [    2.667184] mlx4_core 0000:00:00.1: Detected virtual function - running in slave mode
-> [    2.667214] mlx4_core 0000:00:00.1: Sending reset
-> [    2.667319] mlx4_core 0000:00:00.1: Sending vhcr0
-> [    2.667886] mlx4_core 0000:00:00.1: HCA minimum page size:1
-> [    2.668067] mlx4_core 0000:00:00.1: The host doesn't support eth interface
-> [    2.668074] mlx4_core 0000:00:00.1: QUERY_FUNC_CAP command failed, aborting.
-> [    2.668079] mlx4_core 0000:00:00.1: Failed to obtain slave caps
-> [    2.668305] mlx4_core: probe of 0000:00:00.1 failed with error -93
+> What other possible ways of fixing this do we have?  Could we set
+> bus->self (multiple buses would then point to the same bridge, and I
+> don't know if that would break something)?  Add something like a
+> pci_upstream_p2p_bridge() interface that would encapsulate traversing
+   ^^^ and this name will reduce the confusion? :)
+
+> the bus->parent and bus->self links?
 >
-> not sure what does it mean.
+> Since these fake VF buses don't have a bridge that points to them, I
+Well, they aren't fake busses, just ARI-identifiers, which translate the B:D.F/8:5.3
+format to simply a 16-bit i.d.
+So, VF devices should be attached to same bus->devices list as it's PF.
+pci_dev->bus should be same bus ptr as PF's pci_dev as well, since the
+VF uses all that's busses resources, support functions (cfg, dma-ops, etc.) as well.
+Searching the driver/pci area, support of functions like AER want the
+bus struct that's receiving/handling the PCIe error, associated (hw) port, etc.,
+so another reason the VF's pci-dev bus ptr should be the same as the PF's.
+Logically, ARI-based VFs with a 'bus-num' value != PF bus-num value make
+a point-to-point PCIe link look more like a parallel-bus with a different
+identifier parsing -- diff. interpretation of a 16-bit field.
 
-did you check if SRIOV bar for that card is assigned in DOM0 ?
+> think the only place we keep a pointer to them is in the parent bus's
+> "children" list (updated in pci_add_new_bus()).  And now I'm confused
+> about when we should use bus->children and when we should use
+> bus->devices and why we should have both.
+well, children are child busses; devices are all devices, bus-bridge & endpt devices.
+As for use.... seems like children should be traversed when doing bus ops.
 
-can you kvm with pci pass through?
+>
+> Does pci_walk_bus() work correctly with these VFs on fake buses?  It
+> doesn't use "children", so I can't see how it would ever find them.
+>
+as I read pci_walk_bus(), it won't work for VFs attached to a bus-num-id
+that doesn't match the PF's bus-num.
+sure glad the VFs don't use/need pci_walk_bus()! :o !
+Seems like a bug in that algorithm....
 
-I only tried pci through with intel igb and ixgbe sriov device with
-kvm recently.
+> Aren't you sorry you opened this can of worms?  :)
+>
+yeah, aw has a tendency to step in it (worms would be too clean an analogy for Alex!).
 
-please make sure you have intel_iommu=on ...
 
-Thanks
+>>>> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
+>>>> ---
+>>>>
+>>>> David Ahern reported an oops from iommu drivers passing NULL into
+>>>> this function for the same mistake.  Harden this function against
+>>>> assuming bus->self is valid as well.  David, please include this
+>>>> patch as well as the iommu patches in your testing.
+>>>>
+>>>>   drivers/pci/pci.c |   22 +++++++++++++++++-----
+>>>>   1 file changed, 17 insertions(+), 5 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index f3ea977..e11a49c 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -2486,18 +2486,30 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+>>>>   bool pci_acs_path_enabled(struct pci_dev *start,
+>>>>                            struct pci_dev *end, u16 acs_flags)
+>>>>   {
+>>>> -       struct pci_dev *pdev, *parent = start;
+>>>> +       struct pci_dev *pdev = start;
+>>>> +       struct pci_bus *bus;
+>>>>
+>>>>          do {
+>>>> -               pdev = parent;
+>>>> -
+>>>>                  if (!pci_acs_enabled(pdev, acs_flags))
+>>>>                          return false;
+>>>>
+>>>> -               if (pci_is_root_bus(pdev->bus))
+>>>> +               bus = pdev->bus;
+>>>> +
+>>>> +               if (pci_is_root_bus(bus))
+>>>>                          return (end == NULL);
+>>>>
+>>>> -               parent = pdev->bus->self;
+>>>> +               /*
+>>>> +                * Skip buses without an associated bridge.  In this
+>>>> +                * case move to the parent and continue.
+>>>> +                */
+>>>> +               while (!bus->self) {
+>>>> +                       if (!pci_is_root_bus(bus))
+>>>> +                               bus = bus->parent;
+>>>> +                       else
+>>>> +                               return (end == NULL);
+>>>> +               }
+>>>> +
+>>>> +               pdev = bus->self;
+>>>>          } while (pdev != end);
+>>>>
+>>>>          return true;
+>>>>
+>>
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yinghai
