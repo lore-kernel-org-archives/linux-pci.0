@@ -1,72 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:27477 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813Ab2HUDrq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 23:47:46 -0400
-Message-ID: <50330473.6030902@huawei.com>
-Date: Tue, 21 Aug 2012 11:45:55 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:45287 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752775Ab2HGPmX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2012 11:42:23 -0400
+Date: Tue, 7 Aug 2012 11:42:21 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ming Lei <tom.leiming@gmail.com>
+cc: "Rafael J. Wysocki" <rjw@sisk.pl>, <linux-pci@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
+ regression ...)
+In-Reply-To: <CACVXFVO957+ORC4dLh5=5Ck=xeFw9cCSDXMNzx7jDPogyMfE_w@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1208071138430.2400-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-pcmcia@lists.infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Subject: Re: [PATCH v2 00/16] Clean up drivers/pci/remove.c
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com> <5031C3E4.9050407@huawei.com> <CAErSpo6sV1pi5mCQ-G6stz4hYam30-Vs7A_4YMxwRyUMUiH74Q@mail.gmail.com>
-In-Reply-To: <CAErSpo6sV1pi5mCQ-G6stz4hYam30-Vs7A_4YMxwRyUMUiH74Q@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/8/20 23:40, Bjorn Helgaas wrote:
-> On Sun, Aug 19, 2012 at 10:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->> tested-by Yijing Wang <wangyijing@huawei.com>
+On Tue, 7 Aug 2012, Ming Lei wrote:
+
+> On Tue, Aug 7, 2012 at 7:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> Yes, I agree, but I don't think it may make .runtime_post_resume
+> >> not doable, do I?
+> >
+> > No more device PM callbacks, please.
 > 
-> Great, thanks for trying this out!  Can you give me any details on
-> what you tested (what sort of machine, which hotplug driver, PCIe
-> button/LED style hotplug or ExpressCard style, etc?)
-> 
+> IMO, what the patch is doing is to introduce one callback which
+> is just called after .runtime_resume is completed, and you want
+> to move something out of previous .runtime_resume and do it
+> in another new callback to speedup resume, so it should be
+> reasonable to introduce the .runtime_post_resume callback in logic.
 
-Hi Bjorn,
-   I tested these patches in IA_64, and use acpiphp driver to do the hot-plug test.
-The hotplug action was triggered via sysfs interface(/sys/bus/pci/slots/xxx/).
-The target pcie devices were fibre channel card and Intel 82576 card.As bellow:
+No, that's really not what the patch is doing.
 
-0000:40:07.0 root port supports hotplug by acpiphp.
-hot plug 0000:46:00.0 and its child devices and buses.
+The idea behind the new API is that "func" will be called as soon as we
+know the device is at full power.  That could be after the next runtime
+resume or it could be right away.  This is a one-time call; it should
+not be made _every_ time the device resumes.
 
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
+> Also, the 'func' should be per driver, not per device since only one
+> 'func' is enough for all same kind of devices driven by one same
+> driver.
 
-after hot remove
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-49]--
+But what if the subsystem defines its own dev_pm_info structure?  Then
+the driver's dev_pm_info will be ignored by the runtime PM core.  All
+the subsystems would have to be changed.
 
-
->>> This started as a simple conversion of list_for_each() to
->>> list_for_each_entry(), so I could remove the pci_dev_b() helper.
->>>
->>> In the process, I noticed that drivers/pci/remove.c is getting a little
->>> crufty, so I reworked it to make it more understandable.  This is a long
->>> series of small patches, so it might be easiest to start by looking at the
->>> end product, so you have some idea where I'm heading.
-
-
-
--- 
-Thanks!
-Yijing
+Alan Stern
 
