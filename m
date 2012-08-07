@@ -1,145 +1,249 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:51104 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab2H2ALF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Aug 2012 20:11:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFxLUExCZE1=gQpDT0ip9s+iMRYEVK2QjdCGNk9iympfYA@mail.gmail.com>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
- <1340736849-14875-3-git-send-email-yinghai@kernel.org> <CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
- <CAE9FiQUXTngUZp2c2dLVRZjFxhXD9e+XYW6Pn0zaHvMt0fB+eA@mail.gmail.com> <CA+55aFxLUExCZE1=gQpDT0ip9s+iMRYEVK2QjdCGNk9iympfYA@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 28 Aug 2012 17:10:43 -0700
-Message-ID: <CA+55aFyb-g77CQNoR72J0pjw76ZCy_nufP=VavT_X3xBg6=G-Q@mail.gmail.com>
-Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Content-Type: multipart/mixed; boundary=f46d04427108fe7b4004c85c64c8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1344382695.3010.770.camel@misato.fc.hp.com>
+Subject: Re: [RFC PATCH v2 00/16] ACPI based system device hotplug framework
+From: Toshi Kani <toshi.kani@hp.com>
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <liuj97@gmail.com>, Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Tue, 07 Aug 2012 17:38:15 -0600
+In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---f46d04427108fe7b4004c85c64c8
-Content-Type: text/plain; charset=ISO-8859-1
+On Sat, 2012-08-04 at 20:13 +0800, Jiang Liu wrote:
+> From: Jiang Liu <liuj97@gmail.com>
+> 
+> The patchset is based on v3.5-rc6 and you may pull them from:
+> git://github.com/jiangliu/linux.git acpihp
+> 
+> Modern high-end server may support advanced hotplug features for system
+> devices, including physical processor, memory board, IO extension board
+> and/or computer node. The ACPI specifications have provided standard
+> interfaces between firmware and OS to support device hotplug at runtime.
+> This patch series provide an ACPI based hotplug framework to support system
+> device hotplug at runtime, which will replace current existing ACPI device
+> driver based CPU/memory/CONTAINER hotplug mechanism.
+> 
+> The new ACPI based hotplug framework is modelled after PCI hotplug
+> architecture and target to achieve following goals:
 
-On Tue, Aug 28, 2012 at 10:05 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
+Hi Jiang,
+
+It is nice to see such infrastructure work!  I have some high-level
+questions / comments below.  So far, I have only looked at part of the
+changes briefly, so please correct me if I missed something.
+
+> 1) Provide a mechanism to detect hotplug slots by checking ACPI _EJ0 method,
+> ACPI PRCT (platform RAS capabilities table) and other platform specific
+> mechanisms.
+
+Does this mean that hot-plug device must support both hot-add &
+hot-delete operations?  Some platforms may choose to only support
+hot-add operations to increase the resource on-line (since it requires
+less effort and Windows does not support hot-remove, either).
+
+> 2) Unify the way to enumerate ACPI based hotplug slots. All hotplug slots
+> will be enumerated by the enumeration driver, instead of by ACPI device
+> drivers.
+
+It is nice to see redundant ACPI namespace walks removed from the ACPI
+drivers.  But why do you need to add a new enumerator to create the
+acpihp_slot tree, in addition to the current acpi_device tree?  I'd
+prefer hotplug features to be generally integrated into the current ACPI
+core code and data structures, instead of adding a new layer on top of
+it.
+
+Also, acpihp_dev_get_type() in core.c relies on PNP IDs that is embedded
+in the file.  This does not seem very flexible / extendable.  One should
+be able to add a handler for a new or vendor-specific PNP ID without
+changing the core code.  struct acpi_driver allows such extension today.
+
+> 3) Dynamically create/destroy ACPI hotplug slots. For example, new ACPI
+> hotplug slots may be created when hot-adding a computer node if the node
+> contains some memory hotplug slots.
+
+This is good, but it is necessary because you added the slots...
+
+> 4) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
+> for system devices will be handled by a generic ACPI hotplug driver,
+> instead of handled by ACPI device drivers.
+
+It seems that acpihp_drv_slot_add() registers an ACPI notify handler
+through .add_dev interface.  Does it mean that a device must be marked
+as present prior to hot-add operation..?
+
+> 5) Solve dependencies among hotplug slots. You need first to remove the
+> memory device before removing a physical processor if a hotpluggable memory
+> device is connected to a hotpluggable physical processor.
+
+This is nice, but in your example, I'd expect that a container object
+(as a node or socket) is used to generally represent such dependency
+with topology.  Such container object contains processor and memory
+devices.  When user needs to eject the whole, i.e. both processor and
+memory, an eject request can be sent to the container object.
+
+> 6) Provide better error handling and recover.
+> 
+> 7) Provide interface to cancel ongoing hotplug operations. It may take a
+> very long time to remove a memory device, so provide interface to cancel
+> the operation.
 >
-> Ugh. Ok, looking closer at this,
+> 8) Support new RAS features, such as socket/memory migration.
+> 
+> 9) Provide better user interfaces to the hotplug functionalities.
 
-Btw, looking at that code, I also found what looks like a potential
-locking bug in allocate_resource().
+I have not looked at the code yet, but these goals sound great.
 
-The code does
 
-    if (new->parent)
-       .. reallocate ..
+Thanks,
+-Toshi
 
-to check whether a resource was already allocated. HOWEVER, it does so
-without actually holding the resource lock. Which means that
-"new->parent" might in theory change.
 
-I don't really know if we care. Anybody who does a
-"allocate_resource()" on an existing resource that might already be in
-the resource tree hopefully does *not* do that in parallel with
-another user trying to change the resource allocation, so maybe the
-right thing to do is to just say "whatever, if there is a race with
-two threads reallocating the same resource at the same time, the bug
-is a much more serious one at a higher level".
+> The new hotplug framework includes four logical components.
+> 
+> The first is an ACPI hotplug slot enumerator, which enumerates ACPI hotplug
+> slots on load and provides callbacks to manage those hotplug slots. An ACPI
+> hotplug slot is an abstraction of receptacles, where a group of system
+> devices could be connected to.
+> 
+> The second is a device class for ACPI hotplug slots, named acpihp_slot_class.
+> All ACPI hotplug slot devices will be associated with acpihp_slot_class.
+> 
+> The third is a platform independent class driver for ACPI hotplug slots,
+> which registers itself onto acpihp_slot_class and manages all ACPI hotplug
+> slots in system. This hotplug driver handles ACPI hotplug events, processes
+> user requests and manages slot state machine accoring to user requests.
+> 
+> The fourth is a series of ACPI device drivers, for CPU, memory, PCI host
+> bridge, IOAPIC and ACPI CONTAINER. These ACPI device drivers provide device
+> specific callbacks for the hotplug driver to add/remove system devices at
+> runtime.
+> 
+> This patch set implements the first and second parts, which enumerates
+> hotplug slots and creates sysfs entries for each slot as below.
+> 
+> linux-drf:/sys/devices/LNXSYSTM:00/acpihp # ll
+> drwxr-xr-x 4 root root 0 Jul 28 16:00 NODE00
+> drwxr-xr-x 3 root root 0 Jul 28 16:00 NODE01
+> drwxr-xr-x 3 root root 0 Jul 28 16:00 NODE02
+> 
+> linux-drf:/sys/devices/LNXSYSTM:00/acpihp/NODE00 # ll
+> drwxr-xr-x 3 root root     0 Jul 28 16:00 IOX01
+> -r--r--r-- 1 root root 65536 Jul 28 16:01 capabilities
+> lrwxrwxrwx 1 root root     0 Jul 28 16:00 device -> ../../../LNXSYSTM:00
+> -r--r--r-- 1 root root 65536 Jul 28 16:01 object
+> drwxr-xr-x 2 root root     0 Jul 28 16:01 power
+> -r--r--r-- 1 root root 65536 Jul 28 16:01 state
+> -r--r--r-- 1 root root 65536 Jul 28 16:01 status
+> lrwxrwxrwx 1 root root     0 Jul 28 16:00 subsystem -> ../../../../class/acpihp
+> -r--r--r-- 1 root root 65536 Jul 28 16:01 type
+> -rw-r--r-- 1 root root 65536 Jul 28 16:01 uevent
+> 
+> linux-drf:/sys/bus/acpi/acpihp # ls
+> NODE00  NODE00.IOX01  NODE01  NODE02
+> 
+> linux-drf:/sys/bus/acpi/acpihp # ll
+> lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE00 ->
+> 		../../../devices/LNXSYSTM:00/acpihp/NODE00
+> lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE00.IOX01 ->
+> 		../../../devices/LNXSYSTM:00/acpihp/NODE00/IOX01
+> lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE01 ->
+> 		../../../devices/LNXSYSTM:00/acpihp/NODE01
+> lrwxrwxrwx 1 root root 0 Jul 28 16:03 NODE02 ->
+> 		../../../devices/LNXSYSTM:00/acpihp/NODE02
+> 
+> V1->V2 changes:
+> 1) implement the ACPI hotplug driver
+> 2) enhance ACPI container driver to support new hotplug framework
+> TODO:
+> 1) handle ACPI hotplug events in ACPI hotplug driver
+> 2) handle dependencies among slots by evaluating ACPI _EDL
+> 3) enhance ACPI processor, memory and PCI root drivers to support new
+>    hotplug framework
+> 4) develop an ACPI driver for IOAPIC
+> 5) thorough tests:)
+> 
+> Jiang Liu (16):
+>   ACPIHP: introduce a framework for ACPI based system device hotplug
+>   ACPIHP: ACPI system device hotplug slot enumerator
+>   ACPIHP: detect ACPI hotplug slots by checking ACPI _EJ0 method
+>   ACPI: introduce interfaces to manage ACPI device reference count
+>   ACPIHP: scan and walk ACPI devices connecting to an ACPI hotplug slot
+>   ACPIHP: group devices connecting to a hotplug slot according to
+>     device types
+>   ACPIHP: add callbacks into acpi_device_ops to support new hotplug
+>     framework
+>   ACPIHP: provide interfaces to associate driver specific data to
+>     hotplug slots
+>   ACPIHP: implement utility functions to support system device hotplug
+>   ACPIHP: system device hotplug driver skeleton
+>   ACPIHP: analyse dependences among ACPI system device hotplug slots
+>   ACPIHP: cancel inprogress ACPI system device hotplug operations
+>   ACPIHP: configure/unconfigure system devices connecting to a hotplug
+>     slot
+>   ACPIHP: implement the state machine for ACPI hotplug slots
+>   ACPIHP: implement ACPI hotplug sysfs interfaces
+>   ACPIHP: enhance ACPI container driver to support new hotplug
+>     framework
+> 
+>  drivers/acpi/Kconfig                   |   45 ++
+>  drivers/acpi/Makefile                  |    2 +
+>  drivers/acpi/bus.c                     |   22 +-
+>  drivers/acpi/container.c               |  201 ++------
+>  drivers/acpi/hotplug/Makefile          |   18 +
+>  drivers/acpi/hotplug/acpihp_drv.h      |  107 ++++
+>  drivers/acpi/hotplug/cancel.c          |  171 +++++++
+>  drivers/acpi/hotplug/configure.c       |  349 +++++++++++++
+>  drivers/acpi/hotplug/core.c            |  874 ++++++++++++++++++++++++++++++++
+>  drivers/acpi/hotplug/dependency.c      |  167 ++++++
+>  drivers/acpi/hotplug/device.c          |  193 +++++++
+>  drivers/acpi/hotplug/drv_main.c        |  337 ++++++++++++
+>  drivers/acpi/hotplug/slot_enum.c       |  469 +++++++++++++++++
+>  drivers/acpi/hotplug/slot_enum_ej0.c   |  113 +++++
+>  drivers/acpi/hotplug/state_machine.c   |  633 +++++++++++++++++++++++
+>  drivers/acpi/hotplug/sysfs.c           |  246 +++++++++
+>  drivers/acpi/internal.h                |    5 +
+>  drivers/acpi/scan.c                    |   17 +-
+>  drivers/gpu/drm/i915/intel_opregion.c  |    2 +
+>  drivers/gpu/drm/nouveau/nouveau_acpi.c |    1 +
+>  drivers/pci/hotplug/acpiphp_glue.c     |    9 +-
+>  drivers/pci/hotplug/acpiphp_ibm.c      |    5 +-
+>  drivers/pci/hotplug/sgi_hotplug.c      |    6 +-
+>  drivers/platform/x86/thinkpad_acpi.c   |    2 +
+>  drivers/pnp/pnpacpi/core.c             |   23 +-
+>  include/acpi/acpi_bus.h                |   21 +-
+>  include/acpi/acpi_hotplug.h            |  315 ++++++++++++
+>  include/acpi/container.h               |   12 -
+>  28 files changed, 4161 insertions(+), 204 deletions(-)
+>  create mode 100644 drivers/acpi/hotplug/Makefile
+>  create mode 100644 drivers/acpi/hotplug/acpihp_drv.h
+>  create mode 100644 drivers/acpi/hotplug/cancel.c
+>  create mode 100644 drivers/acpi/hotplug/configure.c
+>  create mode 100644 drivers/acpi/hotplug/core.c
+>  create mode 100644 drivers/acpi/hotplug/dependency.c
+>  create mode 100644 drivers/acpi/hotplug/device.c
+>  create mode 100644 drivers/acpi/hotplug/drv_main.c
+>  create mode 100644 drivers/acpi/hotplug/slot_enum.c
+>  create mode 100644 drivers/acpi/hotplug/slot_enum_ej0.c
+>  create mode 100644 drivers/acpi/hotplug/state_machine.c
+>  create mode 100644 drivers/acpi/hotplug/sysfs.c
+>  create mode 100644 include/acpi/acpi_hotplug.h
+>  delete mode 100644 include/acpi/container.h
+> 
 
-So this may well be a non-issue. It was introduced some time ago, in
-commit 23c570a67448e ("resource: ability to resize an allocated
-resource"), since before that we never even allowed re-allocation of
-an already allocated resource in the first place, and everything
-happened under the lock.
 
-I dunno. Here's a (UNTESTED!) patch that should fix it. Because it's
-extremely doubtful whether this is a real problem, I'm certainly not
-going to commit it now, much less mark it for stable. But I'm throwing
-it out as an RFC. Technically, if people rely on any races being
-handled by the resource subsystem, this *could* trigger. But I'm
-hoping that the PCI layer has some higher-level locking for
-"reallocate the resources of this PCI device". I did *not* check the
-callers.
-
-Btw, reallocate_resource() isn't actually used anywhere in the tree
-that I can see, so maybe we should remove it and the export, and just
-have the __reallocate_resource() that is static to resource.c and is
-to be called only with the lock held.
-
-                         Linus
-
---f46d04427108fe7b4004c85c64c8
-Content-Type: application/octet-stream; name="patch.diff"
-Content-Disposition: attachment; filename="patch.diff"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h6fnyfep0
-
-IGtlcm5lbC9yZXNvdXJjZS5jIHwgNzUgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDQyIGluc2VydGlvbnMoKyks
-IDMzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2tlcm5lbC9yZXNvdXJjZS5jIGIva2VybmVs
-L3Jlc291cmNlLmMKaW5kZXggMzRkNDU4ODZlZTg0Li44Mjk0NDM2OTA0OTcgMTAwNjQ0Ci0tLSBh
-L2tlcm5lbC9yZXNvdXJjZS5jCisrKyBiL2tlcm5lbC9yZXNvdXJjZS5jCkBAIC00NjIsNTAgKzQ2
-Miw1OSBAQCBzdGF0aWMgaW50IGZpbmRfcmVzb3VyY2Uoc3RydWN0IHJlc291cmNlICpyb290LCBz
-dHJ1Y3QgcmVzb3VyY2UgKm5ldywKIAlyZXR1cm4gIF9fZmluZF9yZXNvdXJjZShyb290LCBOVUxM
-LCBuZXcsIHNpemUsIGNvbnN0cmFpbnQpOwogfQogCi0vKioKLSAqIHJlYWxsb2NhdGVfcmVzb3Vy
-Y2UgLSBhbGxvY2F0ZSBhIHNsb3QgaW4gdGhlIHJlc291cmNlIHRyZWUgZ2l2ZW4gcmFuZ2UgJiBh
-bGlnbm1lbnQuCi0gKglUaGUgcmVzb3VyY2Ugd2lsbCBiZSByZWxvY2F0ZWQgaWYgdGhlIG5ldyBz
-aXplIGNhbm5vdCBiZSByZWFsbG9jYXRlZCBpbiB0aGUKLSAqCWN1cnJlbnQgbG9jYXRpb24uCi0g
-KgotICogQHJvb3Q6IHJvb3QgcmVzb3VyY2UgZGVzY3JpcHRvcgotICogQG9sZDogIHJlc291cmNl
-IGRlc2NyaXB0b3IgZGVzaXJlZCBieSBjYWxsZXIKLSAqIEBuZXdzaXplOiBuZXcgc2l6ZSBvZiB0
-aGUgcmVzb3VyY2UgZGVzY3JpcHRvcgotICogQGNvbnN0cmFpbnQ6IHRoZSBzaXplIGFuZCBhbGln
-bm1lbnQgY29uc3RyYWludHMgdG8gYmUgbWV0LgotICovCi1pbnQgcmVhbGxvY2F0ZV9yZXNvdXJj
-ZShzdHJ1Y3QgcmVzb3VyY2UgKnJvb3QsIHN0cnVjdCByZXNvdXJjZSAqb2xkLAorCitzdGF0aWMg
-aW50IF9fcmVhbGxvY2F0ZV9yZXNvdXJjZShzdHJ1Y3QgcmVzb3VyY2UgKnJvb3QsIHN0cnVjdCBy
-ZXNvdXJjZSAqb2xkLAogCQkJcmVzb3VyY2Vfc2l6ZV90IG5ld3NpemUsCiAJCQlzdHJ1Y3QgcmVz
-b3VyY2VfY29uc3RyYWludCAgKmNvbnN0cmFpbnQpCiB7Ci0JaW50IGVycj0wOworCWludCBlcnI7
-CiAJc3RydWN0IHJlc291cmNlIG5ldyA9ICpvbGQ7CiAJc3RydWN0IHJlc291cmNlICpjb25mbGlj
-dDsKIAotCXdyaXRlX2xvY2soJnJlc291cmNlX2xvY2spOwotCi0JaWYgKChlcnIgPSBfX2ZpbmRf
-cmVzb3VyY2Uocm9vdCwgb2xkLCAmbmV3LCBuZXdzaXplLCBjb25zdHJhaW50KSkpCi0JCWdvdG8g
-b3V0OworCWVyciA9IF9fZmluZF9yZXNvdXJjZShyb290LCBvbGQsICZuZXcsIG5ld3NpemUsIGNv
-bnN0cmFpbnQpOworCWlmIChlcnIpCisJCXJldHVybiBlcnI7CiAKIAlpZiAocmVzb3VyY2VfY29u
-dGFpbnMoJm5ldywgb2xkKSkgewogCQlvbGQtPnN0YXJ0ID0gbmV3LnN0YXJ0OwogCQlvbGQtPmVu
-ZCA9IG5ldy5lbmQ7Ci0JCWdvdG8gb3V0OworCQlyZXR1cm4gMDsKIAl9CiAKLQlpZiAob2xkLT5j
-aGlsZCkgewotCQllcnIgPSAtRUJVU1k7Ci0JCWdvdG8gb3V0OwotCX0KKwlpZiAob2xkLT5jaGls
-ZCkKKwkJcmV0dXJuIC1FQlVTWTsKIAogCWlmIChyZXNvdXJjZV9jb250YWlucyhvbGQsICZuZXcp
-KSB7CiAJCW9sZC0+c3RhcnQgPSBuZXcuc3RhcnQ7CiAJCW9sZC0+ZW5kID0gbmV3LmVuZDsKLQl9
-IGVsc2UgewotCQlfX3JlbGVhc2VfcmVzb3VyY2Uob2xkKTsKLQkJKm9sZCA9IG5ldzsKLQkJY29u
-ZmxpY3QgPSBfX3JlcXVlc3RfcmVzb3VyY2Uocm9vdCwgb2xkKTsKLQkJQlVHX09OKGNvbmZsaWN0
-KTsKKwkJcmV0dXJuIDA7CiAJfQotb3V0OgorCisJX19yZWxlYXNlX3Jlc291cmNlKG9sZCk7CisJ
-Km9sZCA9IG5ldzsKKwljb25mbGljdCA9IF9fcmVxdWVzdF9yZXNvdXJjZShyb290LCBvbGQpOwor
-CUJVR19PTihjb25mbGljdCk7CisJcmV0dXJuIDA7Cit9CisKKy8qKgorICogcmVhbGxvY2F0ZV9y
-ZXNvdXJjZSAtIGFsbG9jYXRlIGEgc2xvdCBpbiB0aGUgcmVzb3VyY2UgdHJlZSBnaXZlbiByYW5n
-ZSAmIGFsaWdubWVudC4KKyAqCVRoZSByZXNvdXJjZSB3aWxsIGJlIHJlbG9jYXRlZCBpZiB0aGUg
-bmV3IHNpemUgY2Fubm90IGJlIHJlYWxsb2NhdGVkIGluIHRoZQorICoJY3VycmVudCBsb2NhdGlv
-bi4KKyAqCisgKiBAcm9vdDogcm9vdCByZXNvdXJjZSBkZXNjcmlwdG9yCisgKiBAb2xkOiAgcmVz
-b3VyY2UgZGVzY3JpcHRvciBkZXNpcmVkIGJ5IGNhbGxlcgorICogQG5ld3NpemU6IG5ldyBzaXpl
-IG9mIHRoZSByZXNvdXJjZSBkZXNjcmlwdG9yCisgKiBAY29uc3RyYWludDogdGhlIHNpemUgYW5k
-IGFsaWdubWVudCBjb25zdHJhaW50cyB0byBiZSBtZXQuCisgKi8KK2ludCByZWFsbG9jYXRlX3Jl
-c291cmNlKHN0cnVjdCByZXNvdXJjZSAqcm9vdCwgc3RydWN0IHJlc291cmNlICpvbGQsCisJCQly
-ZXNvdXJjZV9zaXplX3QgbmV3c2l6ZSwKKwkJCXN0cnVjdCByZXNvdXJjZV9jb25zdHJhaW50ICAq
-Y29uc3RyYWludCkKK3sKKwlpbnQgZXJyOworCisJd3JpdGVfbG9jaygmcmVzb3VyY2VfbG9jayk7
-CisJZXJyID0gX19yZWFsbG9jYXRlX3Jlc291cmNlKHJvb3QsIG9sZCwgbmV3c2l6ZSwgY29uc3Ry
-YWludCk7CiAJd3JpdGVfdW5sb2NrKCZyZXNvdXJjZV9sb2NrKTsKIAlyZXR1cm4gZXJyOwogfQpA
-QCAtNTQ0LDE2ICs1NTMsMTYgQEAgaW50IGFsbG9jYXRlX3Jlc291cmNlKHN0cnVjdCByZXNvdXJj
-ZSAqcm9vdCwgc3RydWN0IHJlc291cmNlICpuZXcsCiAJY29uc3RyYWludC5hbGlnbmYgPSBhbGln
-bmY7CiAJY29uc3RyYWludC5hbGlnbmZfZGF0YSA9IGFsaWduZl9kYXRhOwogCisJd3JpdGVfbG9j
-aygmcmVzb3VyY2VfbG9jayk7CiAJaWYgKCBuZXctPnBhcmVudCApIHsKIAkJLyogcmVzb3VyY2Ug
-aXMgYWxyZWFkeSBhbGxvY2F0ZWQsIHRyeSByZWFsbG9jYXRpbmcgd2l0aAogCQkgICB0aGUgbmV3
-IGNvbnN0cmFpbnRzICovCi0JCXJldHVybiByZWFsbG9jYXRlX3Jlc291cmNlKHJvb3QsIG5ldywg
-c2l6ZSwgJmNvbnN0cmFpbnQpOworCQllcnIgPSBfX3JlYWxsb2NhdGVfcmVzb3VyY2Uocm9vdCwg
-bmV3LCBzaXplLCAmY29uc3RyYWludCk7CisJfSBlbHNlIHsKKwkJZXJyID0gZmluZF9yZXNvdXJj
-ZShyb290LCBuZXcsIHNpemUsICZjb25zdHJhaW50KTsKKwkJaWYgKGVyciA+PSAwICYmIF9fcmVx
-dWVzdF9yZXNvdXJjZShyb290LCBuZXcpKQorCQkJZXJyID0gLUVCVVNZOwogCX0KLQotCXdyaXRl
-X2xvY2soJnJlc291cmNlX2xvY2spOwotCWVyciA9IGZpbmRfcmVzb3VyY2Uocm9vdCwgbmV3LCBz
-aXplLCAmY29uc3RyYWludCk7Ci0JaWYgKGVyciA+PSAwICYmIF9fcmVxdWVzdF9yZXNvdXJjZShy
-b290LCBuZXcpKQotCQllcnIgPSAtRUJVU1k7CiAJd3JpdGVfdW5sb2NrKCZyZXNvdXJjZV9sb2Nr
-KTsKIAlyZXR1cm4gZXJyOwogfQo=
---f46d04427108fe7b4004c85c64c8--
