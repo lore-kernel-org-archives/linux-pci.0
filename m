@@ -1,86 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585Ab2HQXgL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:11 -0400
-Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:11 -0700 (PDT)
-Subject: [PATCH v2 05/16] PCI: Remove pci_stop_and_remove_behind_bridge()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:10 -0600
-Message-ID: <20120817233610.10973.25669.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:47019 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756328Ab2HGUvS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Aug 2012 16:51:18 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Tue, 7 Aug 2012 22:57:10 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <CACVXFVO957+ORC4dLh5=5Ck=xeFw9cCSDXMNzx7jDPogyMfE_w@mail.gmail.com> <Pine.LNX.4.44L0.1208071138430.2400-100000@iolanthe.rowland.org> <CACVXFVM6id=oB5x80fin-k8-=sj=fLYu=0YDRZX-Uhqk4Cp8QQ@mail.gmail.com>
+In-Reply-To: <CACVXFVM6id=oB5x80fin-k8-=sj=fLYu=0YDRZX-Uhqk4Cp8QQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208072257.11091.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCMCIA CardBus driver was the only user of
-pci_stop_and_remove_behind_bridge(), and it now uses
-pci_stop_and_remove_bus_device() instead, so remove this interface.
+On Tuesday, August 07, 2012, Ming Lei wrote:
+> On Tue, Aug 7, 2012 at 11:42 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >
+> > No, that's really not what the patch is doing.
+> >
+> > The idea behind the new API is that "func" will be called as soon as we
+> > know the device is at full power.  That could be after the next runtime
+> > resume or it could be right away.  This is a one-time call; it should
+> 
+> IMO, in the both two cases, the 'func' should be very similar with
+> .runtime_post_resume from view of the caller because the caller
+> don't know what the power state of the device is now, so they may
+> always think the 'func' should do something similar done in
+> .runtime_post_resume.
+> 
+> Also .runtime_post_resume always knows the device's power state
+> is active, which is same with 'func'. In fact, it doesn't matter if the active
+> state is the 1st time or other times, does it?
 
-This removes exported symbol pci_stop_and_remove_behind_bridge.
+What Alan wanted to say, I think, was that .runtime_post_resume() would have
+to be always identical, where func() need not be always the same function.
+Moreover, .runtime_post_resume() would _always_ be run after a device resume,
+while func() is run only _once_.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c |   25 -------------------------
- include/linux/pci.h  |    1 -
- 2 files changed, 0 insertions(+), 26 deletions(-)
+> > not be made _every_ time the device resumes.
+> 
+> Suppose the device is always resumed in the path(such as irq context),
+> the callback is still called every time.
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 534377f..b18dc2e 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -121,30 +121,6 @@ static void __pci_remove_behind_bridge(struct pci_dev *dev)
- 			__pci_remove_bus_device(pci_dev_b(l));
- }
- 
--static void pci_stop_behind_bridge(struct pci_dev *dev)
--{
--	struct list_head *l, *n;
--
--	if (dev->subordinate)
--		list_for_each_safe(l, n, &dev->subordinate->devices)
--			pci_stop_bus_device(pci_dev_b(l));
--}
--
--/**
-- * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
-- *					 a PCI bridge
-- * @dev: PCI bridge device
-- *
-- * Remove all devices on the bus, except for the parent bridge.
-- * This also removes any child buses, and any devices they may
-- * contain in a depth-first manner.
-- */
--void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
--{
--	pci_stop_behind_bridge(dev);
--	__pci_remove_behind_bridge(dev);
--}
--
- static void pci_stop_bus_devices(struct pci_bus *bus)
- {
- 	struct list_head *l, *n;
-@@ -180,4 +156,3 @@ static void pci_stop_bus_device(struct pci_dev *dev)
- }
- 
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
--EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 54b5b2b..1dce47c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1011,7 +1011,6 @@ void pci_unregister_driver(struct pci_driver *dev);
- 	module_driver(__pci_driver, pci_register_driver, \
- 		       pci_unregister_driver)
- 
--void pci_stop_and_remove_behind_bridge(struct pci_dev *dev);
- struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
- int pci_add_dynid(struct pci_driver *drv,
- 		  unsigned int vendor, unsigned int device,
+Yes, but what if you have _two_ code paths and you want to call different
+code as func() in each of them?
 
+> If the .runtime_post_resume is to be a one-time call, that is easy to do it.
+
+No, it isn't.
+
+> Also I am wondering why the callback shouldn't be called after resume
+> in sync context, and it may simplify implementation if the two contexts
+> (sync vs. async) are kept consistent.
+
+I have no idea what you're talking about.
+
+We actually have a callback that is run every time a device is resumed.
+It is called .runtime_idle().  Does it help, though?  No, it doesn't.
+
+> >> Also, the 'func' should be per driver, not per device since only one
+> >> 'func' is enough for all same kind of devices driven by one same
+> >> driver.
+> >
+> > But what if the subsystem defines its own dev_pm_info structure?  Then
+> > the driver's dev_pm_info will be ignored by the runtime PM core.  All
+> > the subsystems would have to be changed.
+> 
+> Suppose .runtime_post_resume is introduced,
+
+It is not going to be introduced, period.
+
+Thanks,
+Rafael
