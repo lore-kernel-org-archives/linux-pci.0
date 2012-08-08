@@ -1,146 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48832 "EHLO mga01.intel.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:49587 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751723Ab2HCGan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 3 Aug 2012 02:30:43 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [BUGFIX 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
-Date: Fri,  3 Aug 2012 14:30:34 +0800
-Message-Id: <1343975435-25469-4-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1343975435-25469-1-git-send-email-ying.huang@intel.com>
-References: <1343975435-25469-1-git-send-email-ying.huang@intel.com>
+	id S1753107Ab2HHWVy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Aug 2012 18:21:54 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Thu, 9 Aug 2012 00:27:47 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <CACVXFVPNO2yQXJjwPGm8oLeNHsj72wtHnJ5YKLg65hR2X7BWDg@mail.gmail.com> <201208072245.46334.rjw@sisk.pl> <CACVXFVNgchXD4J+ORwwp9zc6thQAqSSor_6gshnqPFGTG=x77g@mail.gmail.com>
+In-Reply-To: <CACVXFVNgchXD4J+ORwwp9zc6thQAqSSor_6gshnqPFGTG=x77g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208090027.47951.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+On Wednesday, August 08, 2012, Ming Lei wrote:
+> On Wed, Aug 8, 2012 at 4:45 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, August 07, 2012, Ming Lei wrote:
+> >> On Tue, Aug 7, 2012 at 7:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+[...]
+> >
+> >> and you want to move something out of previous .runtime_resume
+> >
+> > No, I don't.  Where did you get that idea from?
+> 
+> If so, I am wondering why the 'func' can't be called in .runtime_resume
+> directly, and follow the below inside caller at the same time?
+> 
+>              if (device is active or disabled)
+>                       call func(device).
 
-http://marc.info/?l=linux-pci&m=134338059022620&w=2
+This was covered in my last reply to Alan.
 
-Where lspci does not work properly if a device and the corresponding
-parent bridge (such as PCIe port) is suspended.  This is because the
-device configuration space registers will be not accessible if the
-corresponding parent bridge is suspended or the device is put into
-D3cold state.
+> >> and do it in another new callback to speedup resume,
+> >
+> > No, not to speed up resume.  The idea is to allow drivers to run something
+> > when the resume is complete, so that they don't have to implement a "resume
+> > detection" logic or use .runtime_resume() to run things that don't belong
+> > there.
+> 
+> Looks it was said by you, :-)
+> 
+> "Unless your _driver_ callback is actually executed from within a PM domain
+> callback, for example, and something else may be waiting for it to complete,
+> so your data processing is adding latencies to some other threads.  I'm not
+> making that up, by the way, that really can happen."
+> 
+> See http://marc.info/?l=linux-pm&m=134394271517527&w=2
 
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before read/write configuration space registers.
-If the device is in D3cold state, it will be put into active state
-too.
+We were discussing specific pseudo-code in the documentation and you
+conveniently took the above out of context.  Never mind. :-)
 
-To avoid resume/suspend PCIe port for each configuration register
-read/write, a small delay is added before the PCIe port to go
-suspended.
+I was trying to illustrate my point with a convincing example and I admit I
+could do better.
 
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci-sysfs.c        |   37 +++++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv_pci.c |    9 +++++++++
- 2 files changed, 46 insertions(+)
+Anyway the point was that the purpose of .runtime_resume() was not to
+process random I/O.  Its purpose is to _resume_ a suspended device,
+no less, no more.  Which the "so that they don't have to [...] use
+.runtime_resume() to run things that don't belong there." sentence above is
+about.  So I've been saying the same thing all the time and it's never been
+specifically about speedup (or rather about latencies added by random I/O
+processing in drivers' runtime resume callbacks).
 
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -458,6 +458,35 @@ boot_vga_show(struct device *dev, struct
- }
- struct device_attribute vga_attr = __ATTR_RO(boot_vga);
- 
-+static void
-+pci_config_pm_runtime_get(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
-+
-+	if (parent)
-+		pm_runtime_get_sync(parent);
-+	pm_runtime_get_noresume(dev);
-+	/*
-+	 * pdev->current_state is set to PCI_D3cold during suspending,
-+	 * so wait until suspending completes
-+	 */
-+	pm_runtime_barrier(dev);
-+	if (pdev->current_state == PCI_D3cold)
-+		pm_runtime_resume(dev);
-+}
-+
-+static void
-+pci_config_pm_runtime_put(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
-+
-+	pm_runtime_put(dev);
-+	if (parent)
-+		pm_runtime_put(parent);
-+}
-+
- static ssize_t
- pci_read_config(struct file *filp, struct kobject *kobj,
- 		struct bin_attribute *bin_attr,
-@@ -484,6 +513,8 @@ pci_read_config(struct file *filp, struc
- 		size = count;
- 	}
- 
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((off & 1) && size) {
- 		u8 val;
- 		pci_user_read_config_byte(dev, off, &val);
-@@ -529,6 +560,8 @@ pci_read_config(struct file *filp, struc
- 		--size;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	return count;
- }
- 
-@@ -549,6 +582,8 @@ pci_write_config(struct file* filp, stru
- 		count = size;
- 	}
- 	
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((off & 1) && size) {
- 		pci_user_write_config_byte(dev, off, data[off - init_off]);
- 		off++;
-@@ -587,6 +622,8 @@ pci_write_config(struct file* filp, stru
- 		--size;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	return count;
- }
- 
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -140,9 +140,17 @@ static int pcie_port_runtime_resume(stru
- {
- 	return 0;
- }
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	/* Delay for a short while to prevent too frequent suspend/resume */
-+	pm_schedule_suspend(dev, 10);
-+	return -EBUSY;
-+}
- #else
- #define pcie_port_runtime_suspend	NULL
- #define pcie_port_runtime_resume	NULL
-+#define pcie_port_runtime_idle		NULL
- #endif
- 
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-@@ -155,6 +163,7 @@ static const struct dev_pm_ops pcie_port
- 	.resume_noirq	= pcie_port_resume_noirq,
- 	.runtime_suspend = pcie_port_runtime_suspend,
- 	.runtime_resume = pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+> Alan also said "Okay, those are valid reasons" for the idea. Except for
+> this one, I don't see other obvious advantages about the patch.
+> 
+> >
+> >> so it should be reasonable to introduce the .runtime_post_resume callback in
+> >> logic.
+> >
+> > No.  This doesn't have anything to do with callbacks!
+> >
+> > If you want a new callback, you should specify what the role of this callback
+> > is, otherwise it is not well defined.  I this case, though, what the role of
+> > func() is depends on the caller and most likely every driver would use it
+> > for something different.  So no, I don't see how it can be a callback.
+> >
+> >> Also, the 'func' should be per driver, not per device since only one
+> >> 'func' is enough for all same kind of devices driven by one same
+> >> driver.
+> >
+> > It isn't per device!  It is per _caller_.  The fact that the pointer is
+> > stored _temporarily_ in struct device doesn't mean that it is per device
+> > and that it is a callback.  From the struct device point of view it is _data_,
+> > not a member function.
+> 
+> The fact is that it will become per-device one you store it in 'struct device'.
+> 
+> Suppose one driver may drive 10000 same devices,
+
+Do you have any specific example of that?  If not, then please don't make up
+arguments.
+
+> the same data will be stored inside all the 10000 device instances, it is a
+> good way to do it?
+> 
+> Not mention 90% devices mayn't use the _temporarily_ data at all.
+
+It may be unused just as well as an additional callback pointer in a driver
+object.
+
+[...]
+> >
+> > So now please count how many struct dev_pm_ops objects there are on that system
+> > and compute the differece.  And please note that drivers that don't use
+> > struct dev_pm_ops for power management will do that in the future.
+> 
+> Most of dev_pm_ops stays inside module image, and not in ram.
+
+Care to explain?  I'm not sure I understand the above correctly.
+
+> It is a bit difficult to get the count of all dev_pm_ops objects in ram
+> since it is defined statically.
+
+Still, they are occupying memory, aren't they?  So you really can't tell
+the difference between storing pointers in device driver objects and
+struct device objects.
+
+> For example, in USB subsystem, there are only 2 dev_pm_ops
+> objects in RAM for a normal system, but there may have hundreds of
+> usb devices in the system(usb_device, usb_interface, ep_device, ...).
+
+Yes, USB is kind of exceptional, but also this means that your "let's
+put that pointer into struct dev_pm_ops" idea won't work for USB drivers,
+precisely because they don't use struct dev_pm_ops objects.
+
+Thanks,
+Rafael
