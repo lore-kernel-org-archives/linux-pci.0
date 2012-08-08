@@ -1,163 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39703 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282Ab2HVXT7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 19:19:59 -0400
-Received: by lbbgj3 with SMTP id gj3so94692lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 16:19:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120820143548.GA2546@redhat.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
- <1340437325-29282-5-git-send-email-yinghai@kernel.org> <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
- <20120711171458.GA14610@redhat.com> <CAErSpo6Xdc-rDvvipJFzXbbF3V75zSBq4skMtZ2PDVsz1kxtdw@mail.gmail.com>
- <20120717141459.GD2463@redhat.com> <CAErSpo4vUqNDqGOxEhzsJbGRAiX6JN+hm5KowsCiZDgcTopehw@mail.gmail.com>
- <20120820143548.GA2546@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Aug 2012 17:19:35 -0600
-Message-ID: <CAErSpo5=3o9xE_LhKmZCFeg25HwGO-ZBuTrgbi+Aczjz9L4Q6w@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
-To: Jason Baron <jbaron@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	mst@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: [BUGFIX -v3 1/4] PCI/PM: enable D3/D3cold by default for most devices
+Date: Wed,  8 Aug 2012 09:07:38 +0800
+Message-Id: <1344388061-18981-2-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
+References: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 8:35 AM, Jason Baron <jbaron@redhat.com> wrote:
-> On Wed, Aug 15, 2012 at 01:36:43PM -0600, Bjorn Helgaas wrote:
->> On Tue, Jul 17, 2012 at 8:14 AM, Jason Baron <jbaron@redhat.com> wrote:
->> > On Wed, Jul 11, 2012 at 01:42:15PM -0600, Bjorn Helgaas wrote:
->> >> On Wed, Jul 11, 2012 at 11:14 AM, Jason Baron <jbaron@redhat.com> wrote:
->> >> > On Wed, Jul 11, 2012 at 09:50:19AM -0600, Bjorn Helgaas wrote:
->> >> >> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> >> >> > When system support hotplug bridge with children hotplug slots, we need to make sure
->> >> >> > that parent bridge get preallocated resource so later when device is plugged into
->> >> >> > children slot, those children devices will get resource allocated.
->> >> >> >
->> >> >> > We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
->> >> >> > pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
->> >> >> >
->> >> >> > Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
->> >> >> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> >> >> > Acked-by: Jason Baron <jbaron@redhat.com>
->> >> >> > ---
->> >> >> >  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
->> >> >> >  1 files changed, 26 insertions(+), 1 deletions(-)
->> >> >> >
->> >> >> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> >> >> > index ad6fd66..0f2b72d 100644
->> >> >> > --- a/drivers/pci/hotplug/acpiphp_glue.c
->> >> >> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> >> >> > @@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
->> >> >> >         }
->> >> >> >  }
->> >> >> >
->> >> >> > +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
->> >> >> > +{
->> >> >> > +       struct acpiphp_func *func;
->> >> >> > +
->> >> >> > +       if (!dev->subordinate)
->> >> >> > +               return;
->> >> >> > +
->> >> >> > +       /* quirk, or pcie could set it already */
->> >> >> > +       if (dev->is_hotplug_bridge)
->> >> >> > +               return;
->> >> >> > +
->> >> >> > +       if (PCI_SLOT(dev->devfn) != slot->device)
->> >> >> > +               return;
->> >> >> > +
->> >> >> > +       list_for_each_entry(func, &slot->funcs, sibling) {
->> >> >> > +               if (PCI_FUNC(dev->devfn) == func->function) {
->> >> >> > +                       /* check if this bridge has ejectable slots */
->> >> >> > +                       if ((detect_ejectable_slots(func->handle) > 0))
->> >> >> > +                               dev->is_hotplug_bridge = 1;
->> >> >> > +                       break;
->> >> >> > +               }
->> >> >> > +       }
->> >> >> > +}
->> >> >> >  /**
->> >> >> >   * enable_device - enable, configure a slot
->> >> >> >   * @slot: slot to be enabled
->> >> >> > @@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
->> >> >> >                         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
->> >> >> >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
->> >> >> >                                 max = pci_scan_bridge(bus, dev, max, pass);
->> >> >> > -                               if (pass && dev->subordinate)
->> >> >> > +                               if (pass && dev->subordinate) {
->> >> >> > +                                       check_hotplug_bridge(slot, dev);
->> >> >>
->> >> >> I don't like this patch because it increases the differences between
->> >> >> the hotplug drivers, rather than decreasing them.
->> >> >>
->> >> >> For PCI Express devices, we set dev->is_hotplug_bridge in the
->> >> >> pci_setup_device() path (in set_pcie_hotplug_bridge()).  I think it
->> >> >> would make sense to try to expand that path to also handle SHPC and
->> >> >> ACPI hotplug as well.  ACPI is harder because it's not PCI-specified,
->> >> >> so we'd need some sort of pcibios or other optional hook.
->> >> >>
->> >> >> I don't have a clear picture of how this works -- if I understand
->> >> >> correctly, the situation is that we have a bridge managed by acpiphp.
->> >> >> That part makes sense because the bridge is on the motherboard and can
->> >> >> have a DSDT device.  Now we plug something into the slot below the
->> >> >> bridge.  I *think* this patch handles the case where this new
->> >> >> hot-added thing is also a bridge managed by acpiphp.  But where does
->> >> >> the ACPI device for this hot-added bridge come from?  It's an
->> >> >> arbitrary device the BIOS knows nothing about, so it can't be in the
->> >> >> DSDT.
->> >> >>
->> >> >
->> >> > So this came up while I was developing pci bridge hotplug for qemu.
->> >> > Currently, there is a top level host bus (with ACPI device definitions), where
->> >> > devices can be hot-plugged. What I've done is added a second level
->> >> > of hotplug pci busses (again with ACPI device definitions). Thus, we can
->> >> > now hotplug a bridge into the top-level bus and then devices behind it.
->> >> > Effectively increasing the hot-plug space from n -> n^2.
->> >> >
->> >> > Before the above pci patch, the devices behind the bridge would not
->> >> > configure their PCI BARs properly, since there were no i/o, mem resources
->> >> > assigned to the bridge. However, with the above patch in place things
->> >> > work as expected.
->> >> >
->> >> > Using the same code base I was able to do acpi hotplug on Windows 7,
->> >> > which correctly configured the both the bridge window and devices behind
->> >> > it on hot-plug. So currently, the above usage pattern works on Windows
->> >> > 7, but not on Linux.
->> >>
->> >> Thanks, Jason.  Do you have "lspci -v" output and the DSDT AML handy?
->> >> I'd like to look in more detail at what we're missing.
->> >
->> > Hi,
->> >
->> > Sorry for the delay...was on vacation.
->> >
->> > Anyways, below is the patch I have to the seabios acpi table. However,
->> > there are other pieces for seabios and qemu required. I still need to
->> > clean them up and send them out. But this pci patch (or something
->> > similar) is a required dependency.
->> >
->> > What 'lspci -v' output are you looking for?
->> >
->> > Let me know what else I can provide.
->>
->> Now it's my turn to be sorry for dropping this for so long :)
->>
->> I was thinking of the "lspci -v" output from your system (qemu guest)
->> and the disassembled DSDT extracted from the same system.  Then we
->> could talk about concrete devices and point to the corresponding
->> entries in lspci output and the ACPI namespace.
->
-> Hi,
->
-> posted to: http://people.redhat.com/~jbaron/bridge-hotplug/
->
-> I've extracted the ssdt and dsdt tables.
+This patch fixes the following bug:
 
-Thanks, Jason.
+http://marc.info/?l=linux-usb&m=134318961120825&w=2
 
-I'd like to play with this on qemu myself so I don't have to ask so
-many stupid questions.  Earlier you mentioned some other qemu and
-seabios patches.  Are they usable yet?  I see the src/ssdt-pcihp.dsl
-patch you posted Jul 17, but I think you were referring to some other
-ones.
+Originally, device lower power states include D1, D2, D3.  After that,
+D3 is further divided into D3hot and D3cold.  To support both scenario
+safely, original D3 is mapped to D3cold.
 
-Bjorn
+When adding D3cold support, because worry about some device may have
+broken D3cold support, D3cold is disabled by default.  This disable D3
+on original platform too.  But some original platform may only have
+working D3, but no working D1, D2.  The root cause of the above bug is
+it too.
+
+To deal with this, this patch enables D3/D3cold by default for most
+devices.  This restores the original behavior.  For some devices that
+suspected to have broken D3cold support, such as PCIe port, D3cold is
+disabled by default.
+
+Reported-by: Bjorn Mork <bjorn@mork.no>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/pci/pci.c              |    1 +
+ drivers/pci/pcie/portdrv_pci.c |    5 +++++
+ 2 files changed, 6 insertions(+)
+
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1941,6 +1941,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 	dev->pm_cap = pm;
+ 	dev->d3_delay = PCI_PM_D3_WAIT;
+ 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
++	dev->d3cold_allowed = true;
+ 
+ 	dev->d1_support = false;
+ 	dev->d2_support = false;
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -200,6 +200,11 @@ static int __devinit pcie_portdrv_probe(
+ 		return status;
+ 
+ 	pci_save_state(dev);
++	/*
++	 * D3cold may not work properly on some PCIe port, so disable
++	 * it by default.
++	 */
++	dev->d3cold_allowed = false;
+ 	if (!pci_match_id(port_runtime_pm_black_list, dev))
+ 		pm_runtime_put_noidle(&dev->dev);
+ 
