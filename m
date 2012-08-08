@@ -1,109 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f202.google.com ([74.125.82.202]:45478 "EHLO
-	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755445Ab2HQXg2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:28 -0400
-Received: by weyr1 with SMTP id r1so207182wey.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:27 -0700 (PDT)
-Subject: [PATCH v2 08/16] PCI: Stop and remove devices in one pass
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:26 -0600
-Message-ID: <20120817233626.10973.57304.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52596 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752693Ab2HHSmQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 14:42:16 -0400
+Date: Wed, 8 Aug 2012 14:42:14 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ming Lei <tom.leiming@gmail.com>
+cc: "Rafael J. Wysocki" <rjw@sisk.pl>, <linux-pci@vger.kernel.org>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
+ regression ...)
+In-Reply-To: <CACVXFVNgchXD4J+ORwwp9zc6thQAqSSor_6gshnqPFGTG=x77g@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1208081432090.1701-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, when we removed a PCI device, we made two passes over the
-hierarchy rooted at the device.  In the first pass, we stopped all
-the devices, and in the second, we removed them.
+On Wed, 8 Aug 2012, Ming Lei wrote:
 
-This patch combines the two passes into one so that we remove a device as
-soon as it and all its children have been stopped.
+> On Wed, Aug 8, 2012 at 4:45 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Tuesday, August 07, 2012, Ming Lei wrote:
+> >> On Tue, Aug 7, 2012 at 7:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> >> Yes, I agree, but I don't think it may make .runtime_post_resume
+> >> >> not doable, do I?
+> >> >
+> >> > No more device PM callbacks, please.
+> >>
+> >> IMO, what the patch is doing is to introduce one callback which
+> >> is just called after .runtime_resume is completed,
+> >
+> > No, it is not a callback.  It is a function to be run _once_ when the device is
+> > known to be active.  It is not a member of a data type or anything like this.
+> 
+> Looks it was said by Alan, not me, :-)
+> 
+> "The documentation should explain that in some ways, "func" is like a
+> workqueue callback routine:".
+> 
+> See http://marc.info/?l=linux-usb&m=134426838507799&w=2
 
-Note that we previously stopped devices in reverse order and removed them
-in forward order.  Now we stop and remove them in reverse order.
+I didn't say it _was_ a callback; I said it was _like_ a callback in 
+some ways.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c |   42 +++++++-----------------------------------
- 1 files changed, 7 insertions(+), 35 deletions(-)
+> If so, I am wondering why the 'func' can't be called in .runtime_resume
+> directly, and follow the below inside caller at the same time?
+> 
+>              if (device is active or disabled)
+>                       call func(device).
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 30d002e..3828104 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -78,8 +78,6 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- }
- EXPORT_SYMBOL(pci_remove_bus);
- 
--static void pci_stop_bus_device(struct pci_dev *dev);
--
- /**
-  * pci_stop_and_remove_bus_device - remove a PCI device and any children
-  * @dev: the device to remove
-@@ -92,38 +90,8 @@ static void pci_stop_bus_device(struct pci_dev *dev);
-  * device lists, remove the /proc entry, and notify userspace
-  * (/sbin/hotplug).
-  */
--static void __pci_remove_bus_device(struct pci_dev *dev)
--{
--	struct pci_bus *bus = dev->subordinate;
--	struct pci_dev *child, *tmp;
--
--	if (bus) {
--		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
--			__pci_remove_bus_device(child);
--
--		pci_remove_bus(bus);
--		dev->subordinate = NULL;
--	}
--
--	pci_destroy_dev(dev);
--}
--
- void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- {
--	pci_stop_bus_device(dev);
--	__pci_remove_bus_device(dev);
--}
--
--/**
-- * pci_stop_bus_device - stop a PCI device and any children
-- * @dev: the device to stop
-- *
-- * Stop a PCI device (detach the driver, remove from the global list
-- * and so on). This also stop any subordinate buses and children in a
-- * depth-first manner.
-- */
--static void pci_stop_bus_device(struct pci_dev *dev)
--{
- 	struct pci_bus *bus = dev->subordinate;
- 	struct pci_dev *child, *tmp;
- 
-@@ -133,12 +101,16 @@ static void pci_stop_bus_device(struct pci_dev *dev)
- 	 * iterator.  Therefore, iterate in reverse so we remove the VFs
- 	 * first, then the PF.
- 	 */
--	if (bus)
-+	if (bus) {
- 		list_for_each_entry_safe_reverse(child, tmp,
- 						 &bus->devices, bus_list)
--			pci_stop_bus_device(child);
-+			pci_stop_and_remove_bus_device(child);
-+
-+		pci_remove_bus(bus);
-+		dev->subordinate = NULL;
-+	}
- 
- 	pci_stop_dev(dev);
-+	pci_destroy_dev(dev);
- }
--
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+That was my original suggestion.  Rafael pointed out that having a 
+single function call to do this would make it easier for driver writers 
+to get it right.
+
+> > No, not to speed up resume.  The idea is to allow drivers to run something
+> > when the resume is complete, so that they don't have to implement a "resume
+> > detection" logic or use .runtime_resume() to run things that don't belong
+> > there.
+> 
+> Looks it was said by you, :-)
+> 
+> "Unless your _driver_ callback is actually executed from within a PM domain
+> callback, for example, and something else may be waiting for it to complete,
+> so your data processing is adding latencies to some other threads.  I'm not
+> making that up, by the way, that really can happen."
+> 
+> See http://marc.info/?l=linux-pm&m=134394271517527&w=2
+> 
+> Alan also said "Okay, those are valid reasons" for the idea. Except for
+> this one, I don't see other obvious advantages about the patch.
+
+Those _are_ the two advantages:
+
+	The runtime-resume method does nothing but bring the device
+	back to full power; it doesn't do any other processing;
+
+	It's easier than calling pm_runtime_get() followed by a test
+	to see whether the device is active.
+
+> Suppose one driver may drive 10000 same devices, the same data will be
+> stored inside all the 10000 device instances, it is a good way to do it?
+
+If you've got a system with 10000 device instances, you can probably 
+spare the memory needed to store these function pointers.  But you're 
+right that this is a disadvantage.
+
+Alan Stern
 
