@@ -1,206 +1,217 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:61565 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755714Ab2HFNaH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2012 09:30:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <201208051726.22729.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1208041806490.23711-100000@netrider.rowland.org>
-	<201208051726.22729.rjw@sisk.pl>
-Date: Mon, 6 Aug 2012 21:30:05 +0800
-Message-ID: <CACVXFVPNO2yQXJjwPGm8oLeNHsj72wtHnJ5YKLg65hR2X7BWDg@mail.gmail.com>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
- regression ...)
-From: Ming Lei <tom.leiming@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1344459916.3010.868.camel@misato.fc.hp.com>
+Subject: Re: [RFC PATCH v2 00/16] ACPI based system device hotplug framework
+From: Toshi Kani <toshi.kani@hp.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Date: Wed, 08 Aug 2012 15:05:16 -0600
+In-Reply-To: <50228968.3070904@gmail.com>
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+	 <1344382695.3010.770.camel@misato.fc.hp.com> <50228968.3070904@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 5, 2012 at 11:26 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+On Wed, 2012-08-08 at 23:44 +0800, Jiang Liu wrote:
+> On 08/08/2012 07:38 AM, Toshi Kani wrote:
+> > On Sat, 2012-08-04 at 20:13 +0800, Jiang Liu wrote:
+> >> From: Jiang Liu <liuj97@gmail.com>
+> >>
+> >> The patchset is based on v3.5-rc6 and you may pull them from:
+> >> git://github.com/jiangliu/linux.git acpihp
+> >>
+> >> Modern high-end server may support advanced hotplug features for system
+> >> devices, including physical processor, memory board, IO extension board
+> >> and/or computer node. The ACPI specifications have provided standard
+> >> interfaces between firmware and OS to support device hotplug at runtime.
+> >> This patch series provide an ACPI based hotplug framework to support system
+> >> device hotplug at runtime, which will replace current existing ACPI device
+> >> driver based CPU/memory/CONTAINER hotplug mechanism.
+> >>
+> >> The new ACPI based hotplug framework is modelled after PCI hotplug
+> >> architecture and target to achieve following goals:
+> > 
+> > Hi Jiang,
+> > 
+> > It is nice to see such infrastructure work!  I have some high-level
+> > questions / comments below.  So far, I have only looked at part of the
+> > changes briefly, so please correct me if I missed something.
+> 
+> Hi Toshi,
+> 	Thanks for your time to review these patches!
+> 
+> > 
+> >> 1) Provide a mechanism to detect hotplug slots by checking ACPI _EJ0 method,
+> >> ACPI PRCT (platform RAS capabilities table) and other platform specific
+> >> mechanisms.
+> > 
+> > Does this mean that hot-plug device must support both hot-add &
+> > hot-delete operations?  Some platforms may choose to only support
+> > hot-add operations to increase the resource on-line (since it requires
+> > less effort and Windows does not support hot-remove, either).
+> This is a good question. By default, the framework detects hotplug slot
+> by checking _EJ0 method. If a system does support hot-add only components,
+> some static ACPI tables, like PRCT, may be used to describe hotplug slots
+> available in the system. 
+> 
+> Basically ACPI PRCT table contains tuples of (device type, uid, RAS capabilities).
 
-> ---
->  drivers/base/power/runtime.c |   82 +++++++++++++++++++++++++++++++++++++++----
->  include/linux/pm.h           |    1
->  include/linux/pm_runtime.h   |   14 +++++++
->  3 files changed, 90 insertions(+), 7 deletions(-)
->
-> Index: linux/drivers/base/power/runtime.c
-> ===================================================================
-> --- linux.orig/drivers/base/power/runtime.c
-> +++ linux/drivers/base/power/runtime.c
-> @@ -484,6 +484,15 @@ static int rpm_suspend(struct device *de
->         goto out;
->  }
->
-> +void rpm_queue_up_resume(struct device *dev)
-> +{
-> +       dev->power.request = RPM_REQ_RESUME;
-> +       if (!dev->power.request_pending) {
-> +               dev->power.request_pending = true;
-> +               queue_work(pm_wq, &dev->power.work);
-> +       }
-> +}
-> +
->  /**
->   * rpm_resume - Carry out runtime resume of given device.
->   * @dev: Device to resume.
-> @@ -524,7 +533,9 @@ static int rpm_resume(struct device *dev
->          * rather than cancelling it now only to restart it again in the near
->          * future.
->          */
-> -       dev->power.request = RPM_REQ_NONE;
-> +       if (dev->power.request != RPM_REQ_RESUME || !dev->power.func)
-> +               dev->power.request = RPM_REQ_NONE;
-> +
->         if (!dev->power.timer_autosuspends)
->                 pm_runtime_deactivate_timer(dev);
->
-> @@ -533,6 +544,12 @@ static int rpm_resume(struct device *dev
->                 goto out;
->         }
->
-> +       if (dev->power.func && (rpmflags & RPM_ASYNC)) {
-> +               rpm_queue_up_resume(dev);
-> +               retval = 0;
-> +               goto out;
-> +       }
-> +
->         if (dev->power.runtime_status == RPM_RESUMING
->             || dev->power.runtime_status == RPM_SUSPENDING) {
->                 DEFINE_WAIT(wait);
-> @@ -591,11 +608,7 @@ static int rpm_resume(struct device *dev
->
->         /* Carry out an asynchronous or a synchronous resume. */
->         if (rpmflags & RPM_ASYNC) {
-> -               dev->power.request = RPM_REQ_RESUME;
-> -               if (!dev->power.request_pending) {
-> -                       dev->power.request_pending = true;
-> -                       queue_work(pm_wq, &dev->power.work);
-> -               }
-> +               rpm_queue_up_resume(dev);
->                 retval = 0;
->                 goto out;
->         }
-> @@ -691,6 +704,7 @@ static int rpm_resume(struct device *dev
->  static void pm_runtime_work(struct work_struct *work)
->  {
->         struct device *dev = container_of(work, struct device, power.work);
-> +       void (*func)(struct device *) = NULL;
->         enum rpm_request req;
->
->         spin_lock_irq(&dev->power.lock);
-> @@ -715,12 +729,24 @@ static void pm_runtime_work(struct work_
->                 rpm_suspend(dev, RPM_NOWAIT | RPM_AUTO);
->                 break;
->         case RPM_REQ_RESUME:
-> -               rpm_resume(dev, RPM_NOWAIT);
-> +               func = dev->power.func;
-> +               if (func) {
-> +                       dev->power.func = NULL;
-> +                       pm_runtime_get_noresume(dev);
-> +                       rpm_resume(dev, 0);
-> +               } else {
-> +                       rpm_resume(dev, RPM_NOWAIT);
-> +               }
->                 break;
->         }
->
->   out:
->         spin_unlock_irq(&dev->power.lock);
-> +
-> +       if (func) {
-> +               func(dev);
-> +               pm_runtime_put(dev);
-> +       }
->  }
->
->  /**
-> @@ -877,6 +903,48 @@ int __pm_runtime_resume(struct device *d
->  }
->  EXPORT_SYMBOL_GPL(__pm_runtime_resume);
->
-> +int pm_runtime_get_and_call(struct device *dev, void (*func)(struct device *),
-> +                            void (*func_async)(struct device *))
-> +{
-> +       unsigned long flags;
-> +       int ret;
-> +
-> +       atomic_inc(&dev->power.usage_count);
-> +
-> +       spin_lock_irqsave(&dev->power.lock, flags);
-> +
-> +       ret = dev->power.runtime_error;
-> +       if (ret) {
-> +               func = NULL;
-> +               goto out;
-> +       }
-> +
-> +       if (dev->power.runtime_status != RPM_ACTIVE
-> +           && dev->power.disable_depth == 0)
-> +               func = NULL;
+I am not familiar with the PRCT table.  Can you point me to the spec?  I
+did not find it in the ACPI spec.
 
-Looks the above is a bit odd, and your motivation is to call 'func'
-for a suspended and runtime-PM enabled device in irq context, isn't it?
+> >> 2) Unify the way to enumerate ACPI based hotplug slots. All hotplug slots
+> >> will be enumerated by the enumeration driver, instead of by ACPI device
+> >> drivers.
+> > 
+> > It is nice to see redundant ACPI namespace walks removed from the ACPI
+> > drivers.  But why do you need to add a new enumerator to create the
+> > acpihp_slot tree, in addition to the current acpi_device tree?  I'd
+> > prefer hotplug features to be generally integrated into the current ACPI
+> > core code and data structures, instead of adding a new layer on top of
+> > it.
+> The idea comes from PCI hotplug framework, which has an concepts of PCI
+> hotplug slot and PCI device. For system device hotplug, we could follow
+> the same model as PCI by abstracting control points as slots. By introducing
+> of hotplug slot, we could:
 
-> +
-> +       if (!func && func_async) {
-> +               if (dev->power.func) {
-> +                       ret = -EAGAIN;
-> +                       goto out;
-> +               } else {
-> +                       dev->power.func = func_async;
-> +               }
-> +       }
-> +
-> +       rpm_resume(dev, RPM_ASYNC);
-> +
-> + out:
-> +       spin_unlock_irqrestore(&dev->power.lock, flags);
-> +
-> +       if (func) {
-> +               func(dev);
+Yes, I understand that.  Using the slot concept on PCI hotplug makes
+sense as it has PCI slot objects in ACPI.  For non-PCI, however, you are
+kind of faking slots and introducing a new slot tree on top of the
+existing ACPI device tree, so I am not sure if it is a good idea...
 
-Maybe the return value should be passed to caller. Also the race between
-'func' and its .runtime_resume callback should be stated in comment.
+> 1) Report all hotplug slots and slot's capabilities to user, no matter whether
+> there are devices connecting to a slot. If we integrate hotplug functionality
+> into current ACPI device tree, the slot (or device) is only visible when the
+> connected devices are enabled.
 
-In fact, maybe it is better to call 'func' always first, then call
-' rpm_resume(dev, RPM_ASYNC);', otherwise the driver may
-be confused about the order between 'func' and its .runtime_resume
-callback.
+We need to think about both physical and virtual machines.  Devices can
+be virtualized and there can be many of them.  For example, let's say,
+1TB of physical memory is logically sliced up with 1024 * 1GB memory
+objects for guests, so that they can add / delete memory by 1GB.  If a
+guest has only 2GB of memory assigned, it has other 1022 devices
+disabled.  In this case, showing 1022 empty memory slots may not be very
+helpful for users.
 
-> +               return 1;
-> +       }
-> +
-> +       return ret;
-> +}
-> +
->  /**
->   * __pm_runtime_set_status - Set runtime PM status of a device.
->   * @dev: Device to handle.
-> Index: linux/include/linux/pm.h
-> ===================================================================
-> --- linux.orig/include/linux/pm.h
-> +++ linux/include/linux/pm.h
-> @@ -547,6 +547,7 @@ struct dev_pm_info {
->         unsigned long           suspended_jiffies;
->         unsigned long           accounting_timestamp;
->         struct dev_pm_qos_request *pq_req;
-> +       void                    (*func)(struct device *);
+> 2) Provide interfaces for software to control hotplug slots. With current ACPI
+> definition, we could only trigger ACPI hotplug events by pressing hotplug button
+> or through some OOB device management system. To support RAS features like
+> memory power management, memory migration, dynamic resource management etc, we
+> need to trigger hotplug events through in-band interfaces. 
 
-Another way is to define 'func' as 'runtime_pre_resume'
-in 'struct dev_pm_ops', and there are some advantages about this way:
+acpi_device objects also have sysfs entries.  Can they be used for such
+in-bound interfaces?
 
-        - save one pointer in 'struct devices, since most of devices
-don't need the 'func'
-        - well documents on 'runtime_pre_resume'
-        - caller of pm_runtime_get_and_call may be happier, maybe just
-        pm_runtime_get or *_aync is enough.
+> > Also, acpihp_dev_get_type() in core.c relies on PNP IDs that is embedded
+> > in the file.  This does not seem very flexible / extendable.  One should
+> > be able to add a handler for a new or vendor-specific PNP ID without
+> > changing the core code.  struct acpi_driver allows such extension today.
+> Good catch. That's a design limitation currently. If the need arise, we could
+> extend the core to support platform specific extensions. But that may be a
+> little hard because all devices connecting to a slot will be configured/unconfigured
+> in order of device types. If we introduce a platform specific device type,
+> we need to change that logic too.
 
+Right.  This design does not allow someone to support a new device with
+a loadable module without recompiling the kernel.  This may be a problem
+in some case.
+
+> >> 3) Dynamically create/destroy ACPI hotplug slots. For example, new ACPI
+> >> hotplug slots may be created when hot-adding a computer node if the node
+> >> contains some memory hotplug slots.
+> > 
+> > This is good, but it is necessary because you added the slots...
+> Currently all ACPI hotplug drivers has an assumption that the ACPI namespace is
+> constructed from static ACPI tables, or in other words, the ACPI namespace is
+> static. Dynamically create/destroy ACPI hotplug slot is to get rid of such an
+> assumption. If it's unnecessary, we may not support dynamic creating/destroying
+> of ACPI hotplug slots.
+
+Oh, I see.  I agree that we need to support dynamic ACPI namespace.  I
+was confused since you stated this goal as the slot object being
+dynamic.
+ 
+> >> 4) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
+> >> for system devices will be handled by a generic ACPI hotplug driver,
+> >> instead of handled by ACPI device drivers.
+> > 
+> > It seems that acpihp_drv_slot_add() registers an ACPI notify handler
+> > through .add_dev interface.  Does it mean that a device must be marked
+> > as present prior to hot-add operation..?
+> acpihp_drv_slot_add() is called to bind the hotplug driver to a hotplug slot.
+> So the ACPI hotplug event handler will be installed once the hotplug driver
+> has been bound to a slot, no matter whether there are devices connecting to
+> the slot.
+
+acpi_bus_check_add() simply returns if a device is marked as !present
+& !functioning.  So, I thought acpihp_drv_slot_add() won't be called in
+this case.
+
+> >> 5) Solve dependencies among hotplug slots. You need first to remove the
+> >> memory device before removing a physical processor if a hotpluggable memory
+> >> device is connected to a hotpluggable physical processor.
+> > 
+> > This is nice, but in your example, I'd expect that a container object
+> > (as a node or socket) is used to generally represent such dependency
+> > with topology.  Such container object contains processor and memory
+> > devices.  When user needs to eject the whole, i.e. both processor and
+> > memory, an eject request can be sent to the container object.
+> There are two ways to get dependency relationships among hotplug slots. One is
+> by analyzing ACPI namespace topology, as you have described. The other is by
+> evaluating ACPI _EDL method. Some dependency relationships must be reported by
+> ACPI _EDL method because the ACPI namespace topology can't reflect those dependencies.
+> For examples:
+> 1) To be compatible with Windows, the PCI host bridge (IIO) embedded in a physical
+> processor may be present under _SB instead under the module device for the physical
+> processor.
+
+I believe the current version of Windows supports the module device
+object.  I remember there was such issue in the past, though.  I am not
+against of supporting _EDL, but it would be nice if we can avoid
+additional complexity.
+
+> 2) For NHM-EX/Boxboro chipset based platform, a Boxboro chipset is connected to
+> two physical processors. So the Boxboro chipset must be removed first if you want
+> to remove those two processor together. The ACPI namespace may be something like:
+> \SB\
+>     |- SCK0
+>     |- SCK1
+>     |- PCI0
+
+You should be able to use a module object containing SCK0, SCK1 and PCI0
+in this case.
+
+> 3) For a big system with partially connected topology, you may need to use ACPI _EDL
+> to report dependencies among nodes. An possible topology as below:
+> Node A <--->Node B
+>  ^            ^
+>  |            |
+>  v            v
+> Node C <--->Node D
+
+If the arrows represent their dependency, it seems a circular dependency
+to me.  I am not sure how _EDL can address this case.
 
 Thanks,
--- 
-Ming Lei
+-Toshi
+
+
+
+
+> 	Regards!
+> 	Gerry
+
+
