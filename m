@@ -1,96 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
-	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585Ab2HQXgG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:06 -0400
-Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:06 -0700 (PDT)
-Subject: [PATCH v2 04/16] PCI: Don't export stop_bus_device and
-	remove_bus_device interfaces
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:05 -0600
-Message-ID: <20120817233605.10973.85918.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:50574 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931Ab2HHNv1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 09:51:27 -0400
+Message-ID: <50226EDB.9000608@gmail.com>
+Date: Wed, 08 Aug 2012 07:51:23 -0600
+From: David Ahern <dsahern@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Don Dutile <ddutile@redhat.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Account for virtual buses in pci_acs_path_enabled
+References: <20120804181445.6598.6505.stgit@bling.home> <CAErSpo42VMnfzDP6t5eCFfE-5=yPNmNGLs6a2D0KwGMhe71DbQ@mail.gmail.com> <1344232549.3441.7.camel@ul30vt.home> <CAErSpo756PXBNjwEMEX8DKGcEu0R+UuQ+rg9NG8k1c+TZ=j2Gw@mail.gmail.com> <50218DB6.2080209@redhat.com> <CAErSpo5sFfr=O-Pp=PyaxGauaEajaTr2aK-EQ_rTVUk1zyz8cA@mail.gmail.com>
+In-Reply-To: <CAErSpo5sFfr=O-Pp=PyaxGauaEajaTr2aK-EQ_rTVUk1zyz8cA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The acpiphp hotplug driver was the only user of pci_stop_bus_device() and
-__pci_remove_bus_device(), and it now uses pci_stop_and_remove_bus_device()
-instead, so stop exposing these interfaces.
+On 8/8/12 12:00 AM, Bjorn Helgaas wrote:
+> On Tue, Aug 7, 2012 at 2:50 PM, Don Dutile <ddutile@redhat.com> wrote:
+>> On 08/06/2012 04:47 PM, Bjorn Helgaas wrote:
+>>>
+>>> On Sun, Aug 5, 2012 at 11:55 PM, Alex Williamson
+>>> <alex.williamson@redhat.com>  wrote:
+>>>>
+>>>> On Sun, 2012-08-05 at 23:30 -0600, Bjorn Helgaas wrote:
+>>>>>
+>>>>> On Sat, Aug 4, 2012 at 12:19 PM, Alex Williamson
+>>>>> <alex.williamson@redhat.com>  wrote:
+>>>>>>
+>>>>>> It's possible to have buses without an associated bridge
+>>>>>> (bus->self == NULL).  SR-IOV can generate such buses.  When
+>>>>>> we find these, skip to the parent bus to look for the next
+>>>>>> ACS test.
+>>>>>
+>>>>>
+>>>>> To make sure I understand the problem here, I think you're referring
+>>>>> to the situation where an SR-IOV device can span several bus numbers,
+>>>>> e.g., the "VFs Spanning Multiple Bus Numbers" implementation note in
+>>>>> the SR-IOV 1.1 spec, sec. 2.1.2.
+>>>>>
+>>>>> It says "All PFs must be located on the Device's captured Bus Number"
+>>>>> -- I think that means every PF will be directly on a bridge's
+>>>>> secondary bus and hence will have a valid dev->bus->self pointer.
+>>>>>
+>>>>> However, VFs need not be on the same bus number.  If a VF is on
+>>>>> (captured Bus Number plus 1), I think we allocate a new struct pci_bus
+>>>>> for it, but there's no P2P bridge that leads to that bus, so the
+>>>>> bus->self pointer is probably NULL.
+>>>>
+>>>>
+>>>> Yes, exactly.  virtfn_add_bus() is where we're creating this new bus.
+>>>>
+>>>>> This makes me quite nervous, because I bet there are many places that
+>>>>> assume every non-root bus has a valid bus->self pointer  -- I know I
+>>>>> certainly had that assumption.
+>>>>>
+>>>>> I looked at callers of pci_is_root_bus(), and at first glance, it seems
+>>>>> like
+>>>>> iommu_init_device(), intel_iommu_add_device(), pci_acs_path_enabled(),
+>>>>
+>>>>
+>>>>
+>>>> These 3 are handled by this patch, plus the intel and amd iommu patches
+>>>> I sent.
+>>>>
+>>>>> pci_get_interrupt_pin(), pci_common_swizzle(),
+>>>>
+>>>>
+>>>> If sr-iov is the only source of these virtual buses, these are probably
+>>>> ok since VFs don't support INTx.
+>>>>
+>>>>> pci_find_upstream_pcie_bridge(), and
+>>>>
+>>>>
+>>>> Here the pci_is_root_bus() is after a pci_is_pcie() check, so again if
+>>>> sr-iov only (and assuming VFs properly report PCIe capability), we
+>>>> shouldn't stumble on it.
+>>>>
+>>>>> pci_bus_release_bridge_resources() all might have similar problems.
+>>>>
+>>>>
+>>>> This one might deserve further investigation.  Thanks,
+>>>
+>>>
+>>> We can fix all these places piecemeal, but that doesn't feel like a
+>>> very satisfying solution.  It makes it much harder to know that each
+>>> place is correct, and this oddity of a bus with no upstream bridge is
+>>> still lying around, waiting to bite us again later.
+>>>
+>>> What other possible ways of fixing this do we have?  Could we set
+>>> bus->self (multiple buses would then point to the same bridge, and I
+>>> don't know if that would break something)?  Add something like a
+>>> pci_upstream_p2p_bridge() interface that would encapsulate traversing
+>>
+>>    ^^^ and this name will reduce the confusion? :)
+>
+> I don't claim that :)  I just wanted to explore other possible
+> solutions.  Changing every loop that searches the parent chain so it
+> knows about this SR-IOV oddity doesn't seem like the ideal solution,
+> though maybe it's the best we can do given the constraints.
+>
+>>> Since these fake VF buses don't have a bridge that points to them, I
+>>
+>> Well, they aren't fake busses, just ARI-identifiers, which translate the
+>> B:D.F/8:5.3
+>> format to simply a 16-bit i.d.
+>
+> I think an SR-IOV device can consume multiple bus numbers even without
+> ARI (in fact, I think ARI  reduces the number of bus numbers the
+> device requires ... e.g., a PF and 15 VFs would require two bus
+> numbers without ARI (04:00.0 - 04:00.7 and 05:00.0 - 05:00.7) but only
+> one bus number with ARI (04:00.0 - 04:01.7)).  (I think "04:01.7" is
+> how Linux would represent the 8-bit function number ARI gives you.
+> You could also think of it as "04:00.0f")
+>
+>> So, VF devices should be attached to same bus->devices list as it's PF.
+>
+> I don't think it works that way today, does it?  In the SR-IOV spec
+> example in sec 2.1.2:
+>
+>    PF 0 at 04:00.0
+>    ARI Capable is set
+>    First VF Offset = 1, VF Stride = 1, NumVFs = 600
+>
+> I think we have three separate bus->devices lists:
+>
+>    pci_bus 04: devices list contains PF 0 and VF 0,1 through VF 0,255
+>    pci_bus 05: devices list contains VF 0,256 - VF 0,511
+>    pci_bus 06: devices list contains VF 0,512 - VF 0,600
+>
+>> pci_dev->bus should be same bus ptr as PF's pci_dev as well, since the
+>> VF uses all that's busses resources, support functions (cfg, dma-ops, etc.)
+>> as well.
+>> Searching the driver/pci area, support of functions like AER want the
+>> bus struct that's receiving/handling the PCIe error, associated (hw) port,
+>> etc.,
+>> so another reason the VF's pci-dev bus ptr should be the same as the PF's.
+>
+> Maybe every VF *should* have the same dev->bus pointer as the PF, but
+> I don't think it does today.  I think we only store the bus number in
+> the struct pci_bus, so if we *did* give all the VFs the same dev->bus
+> pointer and put all the VFs in the same bus->devices list, we'd have
+> to store the bus number elsewhere, e.g., in the struct pci_dev.
+>
+> That might make sense, but the magnitude of a change like that makes
+> my head hurt --  it would affect drivers, arch code, config accessors,
+> etc.
+>
 
-This removes these exported symbols:
+Perhaps I misunderstand your point. VF's have shown up like this for 
+quite a while (e.g., running 3.6.0-rc1):
 
-    __pci_remove_bus_device
-    pci_stop_bus_device
+05:00.0 Ethernet controller: Intel Corporation 82576 Gigabit Network 
+Connection (rev 01)
+05:00.1 Ethernet controller: Intel Corporation 82576 Gigabit Network 
+Connection (rev 01)
+06:10.0 Ethernet controller: Illegal Vendor ID Device ffff (rev 01)
+06:10.1 Ethernet controller: Illegal Vendor ID Device ffff (rev 01)
+..
+06:11.5 Ethernet controller: Illegal Vendor ID Device ffff (rev 01)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c |    8 ++++----
- include/linux/pci.h  |    2 --
- 2 files changed, 4 insertions(+), 6 deletions(-)
+05:00.{0,1} are the PF's and the 06:* are the VF's (BTW, the 'Illegal 
+Vendor ID' is new to 3.6; in 3.5 the VF's show as 'Intel Corporation 
+82576 Virtual Function' but that's a topic for a different thread I guess).
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 04a4861..534377f 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -79,6 +79,8 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- EXPORT_SYMBOL(pci_remove_bus);
- 
- static void __pci_remove_behind_bridge(struct pci_dev *dev);
-+static void pci_stop_bus_device(struct pci_dev *dev);
-+
- /**
-  * pci_stop_and_remove_bus_device - remove a PCI device and any children
-  * @dev: the device to remove
-@@ -91,7 +93,7 @@ static void __pci_remove_behind_bridge(struct pci_dev *dev);
-  * device lists, remove the /proc entry, and notify userspace
-  * (/sbin/hotplug).
-  */
--void __pci_remove_bus_device(struct pci_dev *dev)
-+static void __pci_remove_bus_device(struct pci_dev *dev)
- {
- 	if (dev->subordinate) {
- 		struct pci_bus *b = dev->subordinate;
-@@ -103,7 +105,6 @@ void __pci_remove_bus_device(struct pci_dev *dev)
- 
- 	pci_destroy_dev(dev);
- }
--EXPORT_SYMBOL(__pci_remove_bus_device);
- 
- void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- {
-@@ -170,7 +171,7 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
-  * and so on). This also stop any subordinate buses and children in a
-  * depth-first manner.
-  */
--void pci_stop_bus_device(struct pci_dev *dev)
-+static void pci_stop_bus_device(struct pci_dev *dev)
- {
- 	if (dev->subordinate)
- 		pci_stop_bus_devices(dev->subordinate);
-@@ -180,4 +181,3 @@ void pci_stop_bus_device(struct pci_dev *dev)
- 
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
- EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
--EXPORT_SYMBOL_GPL(pci_stop_bus_device);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..54b5b2b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -734,9 +734,7 @@ u8 pci_common_swizzle(struct pci_dev *dev, u8 *pinp);
- extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
- extern void pci_dev_put(struct pci_dev *dev);
- extern void pci_remove_bus(struct pci_bus *b);
--extern void __pci_remove_bus_device(struct pci_dev *dev);
- extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
--extern void pci_stop_bus_device(struct pci_dev *dev);
- void pci_setup_cardbus(struct pci_bus *bus);
- extern void pci_sort_breadthfirst(void);
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
-
+David
