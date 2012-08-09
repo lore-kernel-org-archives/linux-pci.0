@@ -1,80 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <mjg@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	mfleming@intel.com, dwmw2@infradead.org, bhelgaas@google.com,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH V3 2/4] PCI: Add pcibios_add_device
-Date: Thu, 23 Aug 2012 12:36:41 -0400
-Message-Id: <1345739803-21017-3-git-send-email-mjg@redhat.com>
-In-Reply-To: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:51410 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759440Ab2HITfl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Aug 2012 15:35:41 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Thu, 9 Aug 2012 21:41:35 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1208081432090.1701-100000@iolanthe.rowland.org> <201208091246.25874.rjw@sisk.pl> <CACVXFVM9rQWvOrwR9ENrTx4m8iVK=EFbcjioWiCdgbyBRov3eQ@mail.gmail.com>
+In-Reply-To: <CACVXFVM9rQWvOrwR9ENrTx4m8iVK=EFbcjioWiCdgbyBRov3eQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208092141.35589.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Platforms may want to provide architecture-specific functionality during
-PCI enumeration. Add a pcibios_add_device() call that architectures can
-override to do so.
+On Thursday, August 09, 2012, Ming Lei wrote:
+> On Thu, Aug 9, 2012 at 6:46 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Thursday, August 09, 2012, Ming Lei wrote:
+> 
+> >> driver->runtime_resume should be allowed to do I/O things after
+> >> the device has been woken up inside driver callback, shouldn't it? If it
+> >> isn't allowed, something wrong should have be reported before.
+> >
+> > Well, the lack of reports doesn't mean there are no bugs. :-)
+> >
+> > People may actually see those bugs, but they don't report them or they
+> > report them as system suspend/resume bugs, for example.
+> 
+> Also, I am still wondering why subsystem PM callback need to do
+> something after driver->runtime_resume completes, could you explain
+> it?
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
----
- drivers/pci/bus.c   |  5 +++++
- drivers/pci/pci.c   | 13 +++++++++++++
- include/linux/pci.h |  1 +
- 3 files changed, 19 insertions(+)
+It just isn't guaranteed that the subsystem callback won't do anything
+after driver->runtime_resume completion.  I agree that it isn't likely
+to happen.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4b0970b..e2f447e 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -166,6 +166,11 @@ int pci_bus_add_device(struct pci_dev *dev)
- 	int retval;
- 
- 	pci_fixup_device(pci_fixup_final, dev);
-+
-+	retval = pcibios_add_device(dev);
-+	if (retval)
-+		return retval;
-+
- 	retval = device_add(&dev->dev);
- 	if (retval)
- 		return retval;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f3ea977..5a9a4d8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1385,6 +1385,19 @@ void pcim_pin_device(struct pci_dev *pdev)
- 		dr->pinned = 1;
- }
- 
-+/*
-+ * pcibios_add_device - provide arch specific hooks when adding device dev
-+ * @dev: the PCI device being added
-+ *
-+ * Permits the platform to provide architecture specific functionality when
-+ * devices are added. This is the default implementation. Architecture
-+ * implementations can override this.
-+ */
-+int __attribute__ ((weak)) pcibios_add_device (struct pci_dev *dev)
-+{
-+	return 0;
-+}
-+
- /**
-  * pcibios_disable_device - disable arch specific PCI resources for device dev
-  * @dev: the PCI device to disable
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..6a2625c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1582,6 +1582,7 @@ void pcibios_disable_device(struct pci_dev *dev);
- void pcibios_set_master(struct pci_dev *dev);
- int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- 				 enum pcie_reset_state state);
-+int pcibios_add_device(struct pci_dev *dev);
- 
- #ifdef CONFIG_PCI_MMCONFIG
- extern void __init pci_mmcfg_early_init(void);
--- 
-1.7.11.2
+> >> Firstly, introduce one extra pointer in device may increase memory
+> >> consume for device allocation,
+> >
+> > Yes, it does, which may or may not matter depending on the actual size of
+> > struct device and the CPU cache line size on the given machine, right?
+> 
+> It may double memory allocation size in some cases. And it is very possible
+> since there are so many device objects in system.
 
+Numbers, please?  If you don't have them, it's just waving your hands.
+
+> >> also it reflects one design drawback in the patch, see below.
+> >>
+> >> More importantly, the implementation violates some software design
+> >> principle in object oriented design.
+> >
+> > It doesn't violate anything and you're just ignoring what you've been told.
+> > That makes discussing with you rather difficult, but I'll try again
+> > nevertheless.
+> >
+> > If you look at the actual patch I've just posted:
+> >
+> > https://patchwork.kernel.org/patch/1299781/
+> >
+> > you can see that power.func is never run directly.  Moreover, the pointer it
+> > contains is only used to run a function in pm_runtime_work() and note that
+> > pm_runtime_work() reads that pointer _twice_, because it may be changed in the
+> > meantime by a concurrent thread.
+> 
+> I have explained it before, it is enough to keep the pointer read only
+> since driver can maintain its internal state in its specific device instance
+> (for example, usb_interface objects) and decide what to do in 'func'
+> for situations, right?
+
+Yes, it is.  I actually have a patch that does something similar (I'll post it
+shortly).
+
+Of course, it is based on the assumption that func() will always be the same
+pointer for the given driver, which doesn't seem to be proven, but perhaps
+it is sufficient.  At least I'm not aware of use cases where it wouldn't be.
+
+Thanks,
+Rafael
