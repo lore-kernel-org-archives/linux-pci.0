@@ -1,108 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51795 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758235Ab2HIPZA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2012 11:25:00 -0400
+Message-ID: <5023D63F.1080502@gmail.com>
+Date: Thu, 09 Aug 2012 23:24:47 +0800
 From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Realtek linux nic maintainers <nic_swsd@realtek.com>,
-	Francois Romieu <romieu@fr.zoreil.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Toshi Kani <toshi.kani@hp.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 15/32] PCI/r8169: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:20 +0800
-Message-Id: <1343836477-7287-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v2 00/16] ACPI based system device hotplug framework
+References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com> <1344382695.3010.770.camel@misato.fc.hp.com> <50228968.3070904@gmail.com> <CAErSpo7S0zuU=tSJVzxk8cPjop0B+JKJjkM46sFCirJCX9KQ2g@mail.gmail.com>
+In-Reply-To: <CAErSpo7S0zuU=tSJVzxk8cPjop0B+JKJjkM46sFCirJCX9KQ2g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
-
-Use PCIe capabilities access functions to simplify r8169 driver's
-implementation.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/net/ethernet/realtek/r8169.c |   44 +++++++---------------------------
- 1 file changed, 9 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index 9757ce3..d575fbf 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -807,15 +807,8 @@ static void rtl_unlock_work(struct rtl8169_private *tp)
- 
- static void rtl_tx_performance_tweak(struct pci_dev *pdev, u16 force)
- {
--	int cap = pci_pcie_cap(pdev);
--
--	if (cap) {
--		u16 ctl;
--
--		pci_read_config_word(pdev, cap + PCI_EXP_DEVCTL, &ctl);
--		ctl = (ctl & ~PCI_EXP_DEVCTL_READRQ) | force;
--		pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL, ctl);
--	}
-+	pci_pcie_capability_change_word(pdev, PCI_EXP_DEVCTL,
-+		force, PCI_EXP_DEVCTL_READRQ);
- }
- 
- static u32 ocp_read(struct rtl8169_private *tp, u8 mask, u16 reg)
-@@ -4504,28 +4497,14 @@ static void rtl_ephy_init(void __iomem *ioaddr, const struct ephy_info *e, int l
- 
- static void rtl_disable_clock_request(struct pci_dev *pdev)
- {
--	int cap = pci_pcie_cap(pdev);
--
--	if (cap) {
--		u16 ctl;
--
--		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
--		ctl &= ~PCI_EXP_LNKCTL_CLKREQ_EN;
--		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
--	}
-+	pci_pcie_capability_change_word(pdev, PCI_EXP_LNKCTL,
-+					0, PCI_EXP_LNKCTL_CLKREQ_EN);
- }
- 
- static void rtl_enable_clock_request(struct pci_dev *pdev)
- {
--	int cap = pci_pcie_cap(pdev);
--
--	if (cap) {
--		u16 ctl;
--
--		pci_read_config_word(pdev, cap + PCI_EXP_LNKCTL, &ctl);
--		ctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
--		pci_write_config_word(pdev, cap + PCI_EXP_LNKCTL, ctl);
--	}
-+	pci_pcie_capability_change_word(pdev, PCI_EXP_LNKCTL,
-+					PCI_EXP_LNKCTL_CLKREQ_EN, 0);
- }
- 
- #define R8168_CPCMD_QUIRK_MASK (\
-@@ -5132,14 +5111,9 @@ static void rtl_hw_start_8101(struct net_device *dev)
- 		tp->event_slow &= ~RxFIFOOver;
- 
- 	if (tp->mac_version == RTL_GIGA_MAC_VER_13 ||
--	    tp->mac_version == RTL_GIGA_MAC_VER_16) {
--		int cap = pci_pcie_cap(pdev);
--
--		if (cap) {
--			pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL,
--					      PCI_EXP_DEVCTL_NOSNOOP_EN);
--		}
--	}
-+	    tp->mac_version == RTL_GIGA_MAC_VER_16)
-+		pci_pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
-+					       PCI_EXP_DEVCTL_NOSNOOP_EN);
- 
- 	RTL_W8(Cfg9346, Cfg9346_Unlock);
- 
--- 
-1.7.9.5
-
+On 08/09/2012 12:27 AM, Bjorn Helgaas wrote:
+> On Wed, Aug 8, 2012 at 8:44 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> On 08/08/2012 07:38 AM, Toshi Kani wrote:
+> 
+>>> It is nice to see redundant ACPI namespace walks removed from the ACPI
+>>> drivers.  But why do you need to add a new enumerator to create the
+>>> acpihp_slot tree, in addition to the current acpi_device tree?  I'd
+>>> prefer hotplug features to be generally integrated into the current ACPI
+>>> core code and data structures, instead of adding a new layer on top of
+>>> it.
+>> The idea comes from PCI hotplug framework, which has an concepts of PCI
+>> hotplug slot and PCI device. For system device hotplug, we could follow
+>> the same model as PCI by abstracting control points as slots. By introducing
+>> of hotplug slot, we could:
+>>
+>> 1) Report all hotplug slots and slot's capabilities to user, no matter whether
+>> there are devices connecting to a slot. If we integrate hotplug functionality
+>> into current ACPI device tree, the slot (or device) is only visible when the
+>> connected devices are enabled.
+> 
+> In PCI, the idea of a slot is a pretty explicit -- you can look at the
+> capabilities of a bridge device and see whether it supports hot-add of
+> a device below it.  Is it the same way in ACPI?  My impression is that
+> it is not: there will be a parent ACPI device under which a new device
+> can be added, but you might not be able to tell by looking at the
+> parent device that hot-add is possible.  I thought the platform could
+> just give us a Notify event on the parent, asking us to rescan the
+> namespace below it and potentially discover new devices.
+> 
+Hi Bjorn,
+	You are right. With current ACPI V5 specification, we can't get the slot
+information from the ACPI namespace, and could only guess that a device with _EJ0
+supports hot-add/hot-remove.
+	Realized that limitation, there's ongoing effort to provide ACPI hotplug
+slot (or platform RAS capabilities) information to OS through static ACPI tables,
+so OS could enable hotplug and reserve enough resources for system device hotplug.
+If that static ACPI table is available, we could construct ACPI hotplug slots from
+it.
+	Regards!
+	Gerry
