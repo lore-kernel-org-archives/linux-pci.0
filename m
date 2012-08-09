@@ -1,83 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 23 Aug 2012 15:45:47 +0800
-From: Feng Tang <feng.tang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	akpm@linux-foundation.org, gregkh@linuxfoundation.org
-Subject: [PATCH 2/2] PCI: Remove the obsolete no_pci_devices() check
-Message-ID: <20120823154547.40d07cd0@feng-i7>
-In-Reply-To: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-References: <5017D19B.5080806@redhat.com>
-	<1343738627.27983.30.camel@gandalf.stny.rr.com>
-	<5017D4AB.3090107@redhat.com>
-	<1343740419.27983.33.camel@gandalf.stny.rr.com>
-	<20120731234336.GA5526@localhost>
-	<1343778699.27983.70.camel@gandalf.stny.rr.com>
-	<20120731235705.GW2422@linux.vnet.ibm.com>
-	<1343779778.27983.73.camel@gandalf.stny.rr.com>
-	<20120801001811.GX2422@linux.vnet.ibm.com>
-	<20120801004319.GA7043@localhost>
-	<20120822025008.GA8066@localhost>
-	<20120822154908.2e6ef3c0@feng-i7>
-	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:55155 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037Ab2HIABv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 20:01:51 -0400
+MIME-Version: 1.0
+In-Reply-To: <1344469333-8739-1-git-send-email-charlie.mear@hp.com>
+References: <1344469333-8739-1-git-send-email-charlie.mear@hp.com>
+Date: Wed, 8 Aug 2012 17:01:50 -0700
+Message-ID: <CAE9FiQW2aFMxO54aD_GFSegjsfwexA2E+azFr3bqkh9248z3Uw@mail.gmail.com>
+Subject: Re: [PATCH] x86/pci: Allow x86 platforms to use translation offsets
+From: Yinghai Lu <yinghai@kernel.org>
+To: charlie.mear@hp.com
+Cc: ">" <"tglx@linutronix.de, mingo@redhat.com, hpa"@zytor.com>,
+	x86@kernel.org, bhelgaas@google.com, jbarnes@virtuousgeek.org,
+	davej@redhat.com, liuj97@gmail.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 9f2f3bbdf65f669e091c72b9648a4a0394ce28f5 Mon Sep 17 00:00:00 2001
-From: Feng Tang <feng.tang@intel.com>
-Date: Thu, 23 Aug 2012 14:55:48 +0800
-Subject: [PATCH 2/2] PCI: Remove the obsolete no_pci_devices() check
+On Wed, Aug 8, 2012 at 4:42 PM,  <charlie.mear@hp.com> wrote:
+> From: Charlie Mear <charlie.mear@hp.com>
+>
+> The memory range descriptors in the _CRS control method contain an
+> address translation offset for host bridges.  This value is used to
+> translate addresses across the bridge.  The support to use _TRA values
+> is present for other architectures but not for X86 platforms.
+>
+> For existing X86 platforms the _TRA value is zero.  Non zero _TRA values
+> are expected on future X86 platforms and this change will register that
+> value with the resource.
+>
+> Signed-off-by: Charlie Mear <charlie.mear@hp.com>
+> ---
+>  arch/x86/pci/acpi.c |   18 ++++++++++++++++--
+>  1 files changed, 16 insertions(+), 2 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 505acdd..37acbae 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -12,6 +12,7 @@ struct pci_root_info {
+>         char name[16];
+>         unsigned int res_num;
+>         struct resource *res;
+> +       u64 *res_offset;
 
-In function pci_get_subsys() there is a check:
+resource_size_t * ?
 
-	/*
-	 * pci_find_subsys() can be called on the ide_setup() path,
-	 * super-early in boot.  But the down_read() will enable local
-	 * interrupts, which can cause some machines to crash.  So here we
-	 * detect and flag that situation and bail out early.
-	 */
-	if (unlikely(no_pci_devices()))
-		return NULL;
+>         struct pci_sysdata sd;
+>  #ifdef CONFIG_PCI_MMCONFIG
+>         bool mcfg_added;
+> @@ -306,6 +307,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+>         res->start = start;
+>         res->end = end;
+>         res->child = NULL;
+> +       info->res_offset[info->res_num] = addr.translation_offset;
+>
+>         if (!pci_use_crs) {
+>                 dev_printk(KERN_DEBUG, &info->bridge->dev,
+> @@ -375,7 +377,8 @@ static void add_resources(struct pci_root_info *info,
+>                                  "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+>                                  res, conflict->name, conflict);
+>                 else
+> -                       pci_add_resource(resources, res);
+> +                       pci_add_resource_offset(resources, res,
+> +                                       info->res_offset[i]);
+>         }
+>  }
+>
+> @@ -383,6 +386,8 @@ static void free_pci_root_info_res(struct pci_root_info *info)
+>  {
+>         kfree(info->res);
+>         info->res = NULL;
+> +       kfree(info->res_offset);
+> +       info->res_offset = NULL;
+>         info->res_num = 0;
+>  }
+>
+> @@ -433,11 +438,20 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+>                 return;
+>
+>         size = sizeof(*info->res) * info->res_num;
+> -       info->res_num = 0;
+>         info->res = kmalloc(size, GFP_KERNEL);
+>         if (!info->res)
+                   you need to info->res_num = 0 here
+>                 return;
+>
+> +       size = sizeof(*info->res_offset) * info->res_num;
+> +       info->res_offset = kmalloc(size, GFP_KERNEL);
+> +       if (!info->res_offset) {
+> +               kfree(info->res);
+> +               info->res = NULL;
+> +               return;
+> +       }
+> +       info->res_num = 0;
 
-But there is no ide_setup() now, and no down_read() either, which
-makes the check absolete. So remove it.
+need to move it before: if (!info->res_offset) {
 
-Signed-off-by: Feng Tang <feng.tang@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/pci/search.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+Thanks
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 78a08b1..e6e604f 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -247,15 +247,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- {
- 	struct pci_device_id id;
- 
--	/*
--	 * pci_find_subsys() can be called on the ide_setup() path,
--	 * super-early in boot.  But the down_read() will enable local
--	 * interrupts, which can cause some machines to crash.  So here we
--	 * detect and flag that situation and bail out early.
--	 */
--	if (unlikely(no_pci_devices()))
--		return NULL;
--
- 	id.vendor = vendor;
- 	id.device = device;
- 	id.subvendor = ss_vendor;
--- 
-1.7.1
+Yinghai
