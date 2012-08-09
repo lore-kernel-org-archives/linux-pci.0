@@ -1,94 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:45026 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544Ab2H3Psw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2012 11:48:52 -0400
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:45402 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757847Ab2HIKz4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2012 06:55:56 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-	<CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
-Date: Thu, 30 Aug 2012 08:48:51 -0700
-Message-ID: <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
-Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
+In-Reply-To: <201208091246.25874.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1208081432090.1701-100000@iolanthe.rowland.org>
+	<201208082216.48863.rjw@sisk.pl>
+	<CACVXFVPxjcawVVQwZGeHZ+g9Gh5twc2EqRH_BLbx9kzY3eMekQ@mail.gmail.com>
+	<201208091246.25874.rjw@sisk.pl>
+Date: Thu, 9 Aug 2012 18:55:54 +0800
+Message-ID: <CACVXFVM9rQWvOrwR9ENrTx4m8iVK=EFbcjioWiCdgbyBRov3eQ@mail.gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
+ regression ...)
+From: Ming Lei <tom.leiming@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2012 at 11:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Aug 9, 2012 at 11:09 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->>  Hi all,
->>
->>
->>  I'd like to merge hostbridge hotplug feature.
->>  I looked at Yinghai's branch and found that this branch contains
->>  many work and can be split into some parts.
->>  I believe it is good to merge step by step.
->>
->>  My idea is splitting into the following 4 parts:
->>    1. basic hostbirdge hotplug work
->>    2. acpiphp work
->>    3. /sysfs interface work (logical hotplug?)
->>    4. cleanup
->>
->>  This patchset is 1st step based on the following Yinghai's branch:
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-pci-root-bus-hotplug
->>
->>   * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
->>   * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
->>   * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
->>   * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
->>   * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
->>   * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
->>   * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
+On Thu, Aug 9, 2012 at 6:46 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, August 09, 2012, Ming Lei wrote:
+
+>> driver->runtime_resume should be allowed to do I/O things after
+>> the device has been woken up inside driver callback, shouldn't it? If it
+>> isn't allowed, something wrong should have be reported before.
 >
-> I looked at merging these tonight.  But I noticed there are still a
-> few unanswered questions I asked earlier.
+> Well, the lack of reports doesn't mean there are no bugs. :-)
 >
-> 1) For patch [1/7], I pointed out that there is currently no way to
-> remove a non-ACPI host bridge, which means the fact that we don't free
-> the pci_sysdata is not really a leak.  If you want to add the
-> release_fn so that you can add support for removing and adding these
-> non-ACPI host bridges in the future, I do not understand that.  It
-> just doesn't make sense to me to try to support hotplug for those
-> bridges.
+> People may actually see those bugs, but they don't report them or they
+> report them as system suspend/resume bugs, for example.
 
-for Intel Nehalem and westmere -ex system, there will be root bus from
-0xf8 to 0xff for cpus.
-and BIOS does not put the in ACPI, but __pci_mmcfg_init will set the
-pcibios_last_bus.
-so those but get probed via pcibios_fixup_peer_bridges.
+Also, I am still wondering why subsystem PM callback need to do
+something after driver->runtime_resume completes, could you explain
+it?
 
-I hope I could use /sys to remove non-acpi root bus.
+>> Firstly, introduce one extra pointer in device may increase memory
+>> consume for device allocation,
+>
+> Yes, it does, which may or may not matter depending on the actual size of
+> struct device and the CPU cache line size on the given machine, right?
 
-As for merging, I suggest following sequence:
-1. fw resource allocate per bus.
+It may double memory allocation size in some cases. And it is very possible
+since there are so many device objects in system.
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=3b0a9d26e1838b7ddd2b2273ee38ff4ea3bcc89e
+>
+>> also it reflects one design drawback in the patch, see below.
+>>
+>> More importantly, the implementation violates some software design
+>> principle in object oriented design.
+>
+> It doesn't violate anything and you're just ignoring what you've been told.
+> That makes discussing with you rather difficult, but I'll try again
+> nevertheless.
+>
+> If you look at the actual patch I've just posted:
+>
+> https://patchwork.kernel.org/patch/1299781/
+>
+> you can see that power.func is never run directly.  Moreover, the pointer it
+> contains is only used to run a function in pm_runtime_work() and note that
+> pm_runtime_work() reads that pointer _twice_, because it may be changed in the
+> meantime by a concurrent thread.
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=bb6436eb378c2b86478d3d6dfae3b032288ce68a
+I have explained it before, it is enough to keep the pointer read only
+since driver can maintain its internal state in its specific device instance
+(for example, usb_interface objects) and decide what to do in 'func'
+for situations, right?
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=48e4eb57f72cba194486ed8b264148820a4165ec
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=f01ef104f823ec8fbe0eb0313d1677ef596eeb74
 
-2. separate out pci host bridge hotplug add support from acpiphp
-
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=f00a5bdd7f0460eef573e2ef8f2a96a408300c75
-
-3. add pci host bridge remove support
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=eb46eaf0369464e4fab003f8721dc80423b34ee1
-...
-
-will rebase
-busn_alloc and root bus branch and send whole patchset for review.
-
-Thanks
-
-Yinghai
+Thanks,
+-- 
+Ming Lei
