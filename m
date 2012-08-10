@@ -1,64 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:49948 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585Ab2HQXfw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:35:52 -0400
-Received: by faem1 with SMTP id m1so116751fae.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:35:51 -0700 (PDT)
-Subject: [PATCH v2 01/16] PCI: acpiphp: Stop disabling bridges on remove
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:35:50 -0600
-Message-ID: <20120817233549.10973.85915.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from minas.ics.muni.cz ([147.251.4.40]:59358 "EHLO minas.ics.muni.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751620Ab2HJWen (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Aug 2012 18:34:43 -0400
+Date: Sat, 11 Aug 2012 00:34:26 +0200
+From: Lukas Hejtmanek <xhejtman@ics.muni.cz>
+To: Chris Friesen <chris.friesen@genband.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Roland Dreier <roland@kernel.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: mellanox mlx4_core and SR-IOV
+Message-ID: <20120810223426.GV11089@ics.muni.cz>
+References: <20120801133835.GH5470@ics.muni.cz>
+ <CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
+ <CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
+ <20120801205640.GN5470@ics.muni.cz>
+ <CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
+ <20120801220802.GP5470@ics.muni.cz>
+ <CAE9FiQW84gjtX=_4guCBgcAJmkAGQ5ooFoj7C_29K7QK0s9qwA@mail.gmail.com>
+ <20120803083344.GF25979@ics.muni.cz>
+ <50255849.6070307@genband.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-2
+In-Reply-To: <50255849.6070307@genband.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpiphp_disable_slot() turns off power to the slot immediately after
-calling disable_device(), so there's no point in disabling any bridges
-below the slot: we're about to turn them off anyway.
+On Fri, Aug 10, 2012 at 12:51:53PM -0600, Chris Friesen wrote:
+> On 08/03/2012 02:33 AM, Lukas Hejtmanek wrote:
+> >I also tried OFED package from Mellanox which seems to have better SR-IOV
+> >support (at least mlx4_ib does not complain that SR-IOV is not supported).
+> >However, it does not work when SR-IOV enabled:
+> 
+> Last I heard they were not officially providing support for SR-IOV.
+> Has anyone heard otherwise from the Mellanox folks?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   15 ---------------
- 1 files changed, 0 insertions(+), 15 deletions(-)
+they speak about it for 2 years:
+http://www.openfabrics.org/archives/spring2010sonoma/Monday/1.30%20Liran%20Liss%20I%3FO%20Virtualization/sriov_liss.ppt
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ad6fd66..c25291c 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -869,17 +869,6 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 	return retval;
- }
- 
--static void disable_bridges(struct pci_bus *bus)
--{
--	struct pci_dev *dev;
--	list_for_each_entry(dev, &bus->devices, bus_list) {
--		if (dev->subordinate) {
--			disable_bridges(dev->subordinate);
--			pci_disable_device(dev);
--		}
--	}
--}
--
- /* return first device in slot, acquiring a reference on it */
- static struct pci_dev *dev_in_slot(struct acpiphp_slot *slot)
- {
-@@ -932,10 +921,6 @@ static int disable_device(struct acpiphp_slot *slot)
- 	 */
- 	while ((pdev = dev_in_slot(slot))) {
- 		pci_stop_bus_device(pdev);
--		if (pdev->subordinate) {
--			disable_bridges(pdev->subordinate);
--			pci_disable_device(pdev);
--		}
- 		__pci_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
- 	}
+these are modified OFED drivers which seem to contain SR-IOV code also for IB
+layer.
+http://www.mellanox.com/content/pages.php?pg=products_dyn&product_family=26&menu_section=34#tab-three
 
+-- 
+Luká¹ Hejtmánek
