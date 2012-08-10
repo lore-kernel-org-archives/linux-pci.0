@@ -1,59 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:42110 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753211Ab2HDUmf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 4 Aug 2012 16:42:35 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Sat, 4 Aug 2012 22:48:24 +0200
-Cc: Ming Lei <tom.leiming@gmail.com>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1208041619440.23711-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1208041619440.23711-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208042248.24957.rjw@sisk.pl>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40369 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754335Ab2HJGNP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:13:15 -0400
+Date: Fri, 10 Aug 2012 15:12:58 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct
+ acpi_pci_driver
+Message-Id: <20120810151258.63828afb.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, August 04, 2012, Alan Stern wrote:
-> On Sat, 4 Aug 2012, Rafael J. Wysocki wrote:
-> 
-> > On Friday, August 03, 2012, Ming Lei wrote:
-> > > On Fri, Aug 3, 2012 at 10:20 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > > > On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
-> > > 
-> > > > Hmmm.  You'd probably want a version that does a "get" at the same
-> > > > time.  I suppose you would call func directly if the device was already
-> > > > resumed, without going through the workqueue?
-> > > 
-> > > Maybe it isn't good, the 'func' might not be run in the current context
-> > > (irq context or some spinlock is held).
-> > 
-> > Then I'd say don't use this interface.  If you have code that needs to
-> > be run in a different context, then you have to use a work item (or
-> > equivalent) anyway and you can do a synchronous runtime resume from there.
-> 
-> That wasn't what he meant.  What if the code needs to run in the _same_
-> context as the caller?  For example, with a spinlock held.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-I see.  I think it wouldn't be unreasonable to require that func should take
-all of the necessary locks by itself.
+    ACPI, PCI: Use normal list for struct acpi_pci_driver
+    
+    Use normal list for struct acpi_pci_driver to simplify code.
+    
+    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 
-However, I believe that if func is going to be called through the workqueue,
-the usage counter should be incremented before the preceding resume and
-decremented after func returns by the workqueue thread.
+---
+ drivers/acpi/pci_root.c |   16 +++-------------
+ include/linux/acpi.h    |    2 +-
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-> func would need to know whether it should acquire the lock, which means it
-> needs to know whether it was called directly or through the workqueue.
-> 
-> I suppose we could pass it an extra argument with this information...  
-> but that's a little ugly.
+Index: Bjorn-next-0808/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0808.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0808/drivers/acpi/pci_root.c
+@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_
+ };
+ 
+ static LIST_HEAD(acpi_pci_roots);
++static LIST_HEAD(acpi_pci_drivers);
+ 
+-static struct acpi_pci_driver *sub_driver;
+ static DEFINE_MUTEX(osc_lock);
+ 
+ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi
+ 	int n = 0;
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr)
+-		pptr = &(*pptr)->next;
+-	*pptr = driver;
++	list_add_tail(&driver->node, &acpi_pci_drivers);
+ 
+ 	if (!driver->add)
+ 		return 0;
+@@ -103,14 +100,7 @@ void acpi_pci_unregister_driver(struct a
+ {
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr) {
+-		if (*pptr == driver)
+-			break;
+-		pptr = &(*pptr)->next;
+-	}
+-	BUG_ON(!*pptr);
+-	*pptr = (*pptr)->next;
++	list_del(&driver->node);
+ 
+ 	if (!driver->remove)
+ 		return;
+Index: Bjorn-next-0808/include/linux/acpi.h
+===================================================================
+--- Bjorn-next-0808.orig/include/linux/acpi.h
++++ Bjorn-next-0808/include/linux/acpi.h
+@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int 
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ struct acpi_pci_driver {
+-	struct acpi_pci_driver *next;
++	struct list_head node;
+ 	int (*add)(acpi_handle handle);
+ 	void (*remove)(acpi_handle handle);
+ };
 
-I agree.  I'd prefer to avoid that, if possible.
-
-Thanks,
-Rafael
