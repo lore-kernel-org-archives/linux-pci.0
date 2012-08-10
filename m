@@ -1,180 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46681 "EHLO mx1.redhat.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:33316 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756839Ab2HGVut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Aug 2012 17:50:49 -0400
-Message-ID: <50218DB6.2080209@redhat.com>
-Date: Tue, 07 Aug 2012 17:50:46 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S1752759Ab2HJUXr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Aug 2012 16:23:47 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
+Date: Fri, 10 Aug 2012 22:29:36 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1208081432090.1701-100000@iolanthe.rowland.org> <201208092141.35589.rjw@sisk.pl> <CACVXFVPMaTT4s7aS8mdNjgm3i3GFJ6gqFhFxZKuooF0mqi45rA@mail.gmail.com>
+In-Reply-To: <CACVXFVPMaTT4s7aS8mdNjgm3i3GFJ6gqFhFxZKuooF0mqi45rA@mail.gmail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dsahern@gmail.com
-Subject: Re: [PATCH] pci: Account for virtual buses in pci_acs_path_enabled
-References: <20120804181445.6598.6505.stgit@bling.home> <CAErSpo42VMnfzDP6t5eCFfE-5=yPNmNGLs6a2D0KwGMhe71DbQ@mail.gmail.com> <1344232549.3441.7.camel@ul30vt.home> <CAErSpo756PXBNjwEMEX8DKGcEu0R+UuQ+rg9NG8k1c+TZ=j2Gw@mail.gmail.com>
-In-Reply-To: <CAErSpo756PXBNjwEMEX8DKGcEu0R+UuQ+rg9NG8k1c+TZ=j2Gw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208102229.36360.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2012 04:47 PM, Bjorn Helgaas wrote:
-> On Sun, Aug 5, 2012 at 11:55 PM, Alex Williamson
-> <alex.williamson@redhat.com>  wrote:
->> On Sun, 2012-08-05 at 23:30 -0600, Bjorn Helgaas wrote:
->>> On Sat, Aug 4, 2012 at 12:19 PM, Alex Williamson
->>> <alex.williamson@redhat.com>  wrote:
->>>> It's possible to have buses without an associated bridge
->>>> (bus->self == NULL).  SR-IOV can generate such buses.  When
->>>> we find these, skip to the parent bus to look for the next
->>>> ACS test.
->>>
->>> To make sure I understand the problem here, I think you're referring
->>> to the situation where an SR-IOV device can span several bus numbers,
->>> e.g., the "VFs Spanning Multiple Bus Numbers" implementation note in
->>> the SR-IOV 1.1 spec, sec. 2.1.2.
->>>
->>> It says "All PFs must be located on the Device's captured Bus Number"
->>> -- I think that means every PF will be directly on a bridge's
->>> secondary bus and hence will have a valid dev->bus->self pointer.
->>>
->>> However, VFs need not be on the same bus number.  If a VF is on
->>> (captured Bus Number plus 1), I think we allocate a new struct pci_bus
->>> for it, but there's no P2P bridge that leads to that bus, so the
->>> bus->self pointer is probably NULL.
->>
->> Yes, exactly.  virtfn_add_bus() is where we're creating this new bus.
->>
->>> This makes me quite nervous, because I bet there are many places that
->>> assume every non-root bus has a valid bus->self pointer  -- I know I
->>> certainly had that assumption.
->>>
->>> I looked at callers of pci_is_root_bus(), and at first glance, it seems like
->>> iommu_init_device(), intel_iommu_add_device(), pci_acs_path_enabled(),
->>
->>
->> These 3 are handled by this patch, plus the intel and amd iommu patches
->> I sent.
->>
->>> pci_get_interrupt_pin(), pci_common_swizzle(),
->>
->> If sr-iov is the only source of these virtual buses, these are probably
->> ok since VFs don't support INTx.
->>
->>> pci_find_upstream_pcie_bridge(), and
->>
->> Here the pci_is_root_bus() is after a pci_is_pcie() check, so again if
->> sr-iov only (and assuming VFs properly report PCIe capability), we
->> shouldn't stumble on it.
->>
->>> pci_bus_release_bridge_resources() all might have similar problems.
->>
->> This one might deserve further investigation.  Thanks,
->
-> We can fix all these places piecemeal, but that doesn't feel like a
-> very satisfying solution.  It makes it much harder to know that each
-> place is correct, and this oddity of a bus with no upstream bridge is
-> still lying around, waiting to bite us again later.
->
-> What other possible ways of fixing this do we have?  Could we set
-> bus->self (multiple buses would then point to the same bridge, and I
-> don't know if that would break something)?  Add something like a
-> pci_upstream_p2p_bridge() interface that would encapsulate traversing
-   ^^^ and this name will reduce the confusion? :)
+On Friday, August 10, 2012, Ming Lei wrote:
+> On Fri, Aug 10, 2012 at 3:41 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >
+> > It just isn't guaranteed that the subsystem callback won't do anything
+> > after driver->runtime_resume completion.  I agree that it isn't likely
+> > to happen.
+> 
+> In fact, the subsystem callback should make sure that don't happen, see
+> below comments on .runtime_resume:
+> 
+>  * @runtime_resume: Put the device into the fully active state in response to a
+>  *      wakeup event generated by hardware or at the request of software.  If
+>  *      necessary, put the device into the full-power state and restore its
+>  *      registers, so that it is fully operational.
+> 
+> So once driver->runtime_resume completes, the device should be fully operational
+> from the view of driver.
 
-> the bus->parent and bus->self links?
->
-> Since these fake VF buses don't have a bridge that points to them, I
-Well, they aren't fake busses, just ARI-identifiers, which translate the B:D.F/8:5.3
-format to simply a 16-bit i.d.
-So, VF devices should be attached to same bus->devices list as it's PF.
-pci_dev->bus should be same bus ptr as PF's pci_dev as well, since the
-VF uses all that's busses resources, support functions (cfg, dma-ops, etc.) as well.
-Searching the driver/pci area, support of functions like AER want the
-bus struct that's receiving/handling the PCIe error, associated (hw) port, etc.,
-so another reason the VF's pci-dev bus ptr should be the same as the PF's.
-Logically, ARI-based VFs with a 'bus-num' value != PF bus-num value make
-a point-to-point PCIe link look more like a parallel-bus with a different
-identifier parsing -- diff. interpretation of a 16-bit field.
+This comment only applies literally to drivers whose callbacks are run directly
+by the PM core.  If subsystems and/or PM domains are involved, the interactions
+between different layers of callbacks obviously have to be taken into account.
 
-> think the only place we keep a pointer to them is in the parent bus's
-> "children" list (updated in pci_add_new_bus()).  And now I'm confused
-> about when we should use bus->children and when we should use
-> bus->devices and why we should have both.
-well, children are child busses; devices are all devices, bus-bridge & endpt devices.
-As for use.... seems like children should be traversed when doing bus ops.
+Please note, however, that this comment doesn't say anything about processing
+I/O by the callback (hint: the callback is _not_ _supposed_ to do that).
 
->
-> Does pci_walk_bus() work correctly with these VFs on fake buses?  It
-> doesn't use "children", so I can't see how it would ever find them.
->
-as I read pci_walk_bus(), it won't work for VFs attached to a bus-num-id
-that doesn't match the PF's bus-num.
-sure glad the VFs don't use/need pci_walk_bus()! :o !
-Seems like a bug in that algorithm....
+> >> >> Firstly, introduce one extra pointer in device may increase memory
+> >> >> consume for device allocation,
+> >> >
+> >> > Yes, it does, which may or may not matter depending on the actual size of
+> >> > struct device and the CPU cache line size on the given machine, right?
+> >>
+> >> It may double memory allocation size in some cases. And it is very possible
+> >> since there are so many device objects in system.
+> >
+> > Numbers, please?  If you don't have them, it's just waving your hands.
+> 
+> It is easily observed and proved. Suppose sizeof(struct foo_dev) is 508bytes,
+> it will become 516bytes after your patch applies on 64bit arch, so
+> ksize(foo_dev_ptr)
+> will become 1024 and the memory consumption of the object is doubled.
 
-> Aren't you sorry you opened this can of worms?  :)
->
-yeah, aw has a tendency to step in it (worms would be too clean an analogy for Alex!).
+I meant real numbers, not made-up ones.
 
+> >> I have explained it before, it is enough to keep the pointer read only
+> >> since driver can maintain its internal state in its specific device instance
+> >> (for example, usb_interface objects) and decide what to do in 'func'
+> >> for situations, right?
+> >
+> > Yes, it is.  I actually have a patch that does something similar (I'll post it
+> > shortly).
+> 
+> I have seen your patch which moves the 'func' from device into device_driver.
+> It is much better than before.
 
->>>> Signed-off-by: Alex Williamson<alex.williamson@redhat.com>
->>>> ---
->>>>
->>>> David Ahern reported an oops from iommu drivers passing NULL into
->>>> this function for the same mistake.  Harden this function against
->>>> assuming bus->self is valid as well.  David, please include this
->>>> patch as well as the iommu patches in your testing.
->>>>
->>>>   drivers/pci/pci.c |   22 +++++++++++++++++-----
->>>>   1 file changed, 17 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index f3ea977..e11a49c 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -2486,18 +2486,30 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
->>>>   bool pci_acs_path_enabled(struct pci_dev *start,
->>>>                            struct pci_dev *end, u16 acs_flags)
->>>>   {
->>>> -       struct pci_dev *pdev, *parent = start;
->>>> +       struct pci_dev *pdev = start;
->>>> +       struct pci_bus *bus;
->>>>
->>>>          do {
->>>> -               pdev = parent;
->>>> -
->>>>                  if (!pci_acs_enabled(pdev, acs_flags))
->>>>                          return false;
->>>>
->>>> -               if (pci_is_root_bus(pdev->bus))
->>>> +               bus = pdev->bus;
->>>> +
->>>> +               if (pci_is_root_bus(bus))
->>>>                          return (end == NULL);
->>>>
->>>> -               parent = pdev->bus->self;
->>>> +               /*
->>>> +                * Skip buses without an associated bridge.  In this
->>>> +                * case move to the parent and continue.
->>>> +                */
->>>> +               while (!bus->self) {
->>>> +                       if (!pci_is_root_bus(bus))
->>>> +                               bus = bus->parent;
->>>> +                       else
->>>> +                               return (end == NULL);
->>>> +               }
->>>> +
->>>> +               pdev = bus->self;
->>>>          } while (pdev != end);
->>>>
->>>>          return true;
->>>>
->>
->>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Oh, thanks for letting me know.
 
+> > Of course, it is based on the assumption that func() will always be the same
+> > pointer for the given driver, which doesn't seem to be proven, but perhaps
+> > it is sufficient.  At least I'm not aware of use cases where it wouldn't be.
+> 
+> Since you have moved 'func' into device_driver, and you still thought the
+> pointer can't be changed after it is set, so why not implement it as callback?
+
+I don't understand what you mean.
+
+It _is_ a callback now in fact.
+
+Thanks,
+Rafael
