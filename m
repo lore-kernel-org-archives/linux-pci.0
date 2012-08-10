@@ -1,77 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [BUGFIX 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
-Date: Sat, 4 Aug 2012 23:44:54 +0200
-Cc: Huang Ying <ying.huang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-References: <Pine.LNX.4.44L0.1208031042580.1520-100000@iolanthe.rowland.org> <201208042337.46394.rjw@sisk.pl>
-In-Reply-To: <201208042337.46394.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208042344.54426.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51371 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754101Ab2HJGKF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:10:05 -0400
+Date: Fri, 10 Aug 2012 15:09:55 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org
+Cc: kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Subject: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+Message-Id: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, August 04, 2012, Rafael J. Wysocki wrote:
-> On Friday, August 03, 2012, Alan Stern wrote:
-> > On Fri, 3 Aug 2012, Huang Ying wrote:
-> > 
-> > > This patch fixes the following bug:
-> > > 
-> > > http://marc.info/?l=linux-pci&m=134338059022620&w=2
-> > > 
-> > > Where lspci does not work properly if a device and the corresponding
-> > > parent bridge (such as PCIe port) is suspended.  This is because the
-> > > device configuration space registers will be not accessible if the
-> > > corresponding parent bridge is suspended or the device is put into
-> > > D3cold state.
-> > > 
-> > > To solve the issue, the bridge/PCIe port connected to the device is
-> > > put into active state before read/write configuration space registers.
-> > > If the device is in D3cold state, it will be put into active state
-> > > too.
-> > > 
-> > > To avoid resume/suspend PCIe port for each configuration register
-> > > read/write, a small delay is added before the PCIe port to go
-> > > suspended.
-> > 
-> > 
-> > > +static void
-> > > +pci_config_pm_runtime_put(struct pci_dev *pdev)
-> > > +{
-> > > +	struct device *dev = &pdev->dev;
-> > > +	struct device *parent = dev->parent;
-> > > +
-> > > +	pm_runtime_put(dev);
-> > > +	if (parent)
-> > > +		pm_runtime_put(parent);
-> > > +}
-> > 
-> > This is just the sort of thing Rafael and I have been talking about.  
-> > Why do an asynchronous put, going to all the trouble of using the 
-> > workqueue, if the idle routine is just going to call 
-> > pm_schedule_suspend()?
-> 
-> If that's PCI, it will call pm_runtime_suspend().  That probably _should_ be
-> pm_schedule_suspend(), but it isn't at the moment.
-> 
-> > Why not call pm_runtime_put_sync() instead?
-> 
-> I guess because the caller doesn't care whether or not the devices will be
-> suspended immediately and we seem to have agreed already that the added
-> workqueue overhead is minimal.
-> 
-> If the _idle() routine were to call pm_schedule_suspend(), though, I'd
-> agree that the overhead would be absolutely unnecessary.
+ Hi all,
 
-Sorry, I should have had a closer look at pcie_port_runtime_idle() before
-replying.
+ 
+ I'd like to merge hostbridge hotplug feature.
+ I looked at Yinghai's branch and found that this branch contains 
+ many work and can be split into some parts. 
+ I believe it is good to merge step by step.
 
-You're right, pm_runtime_put_sync() should be used for the parent.
+ My idea is splitting into the following 4 parts:
+   1. basic hostbirdge hotplug work
+   2. acpiphp work
+   3. /sysfs interface work (logical hotplug?)
+   4. cleanup
 
-Thanks,
-Rafael
+ This patchset is 1st step based on the following Yinghai's branch:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-root-bus-hotplug
+
+  * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
+  * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
+  * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
+  * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+  * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
+  * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
+  * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
+
+-- 
+Best regards,
+Taku Izumi <izumi.taku@jp.fujitsu.com>
+
