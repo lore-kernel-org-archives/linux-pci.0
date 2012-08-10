@@ -1,77 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:55336 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815Ab2HQVH2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 17:07:28 -0400
-Date: Fri, 17 Aug 2012 23:07:18 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
-	linux-mips <linux-mips@linux-mips.org>
-Subject: Re: PCI Section mismatch error in linux-next.
-Message-ID: <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
-References: <502E8115.90507@gmail.com>
- <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
- <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
- <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
- <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
- <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
- <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
-In-Reply-To: <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51458 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752849Ab2HJGMd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:12:33 -0400
+Date: Fri, 10 Aug 2012 15:12:27 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in
+ function pci_remove_bus()
+Message-Id: <20120810151227.cc02c783.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jiang Liu <jiang.liu@huawei.com>
 
---u3/rZRmxL6MmkK24
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+    Correctly clean up pci root buses in function pci_remove_bus()
+    
+    The function pci_create_root_bus() allocates the pci bus structure,
+    registers the bus device and creates the legacy files for a pci root
+    bus, but returns without setting the is_added flag. The is_added flag
+    for a pci root bus will be set by function pci_scan_child_bus().
+    If a pci root bus is destroyed before calling pci_scan_child_bus(),
+    the is_added flag will not be set.  So teach function pci_remove_bus()
+    to detect such a case and correctly clean up pci root buses.
+    
+    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/pci/remove.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
-> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
-[...]
-> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
-> > affect you?  I think we would still have to change some __inits to
-> > __devinit, including pcibios_update_irq(), but it might be more
-> > manageable.
->=20
-> You said that depending on HOTPLUG wouldn't be enough because it would
-> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
-> theoretically possible to build a kernel without HOTPLUG but have the
-> enumeration start after init because of deferred probing. Those cases
-> won't work if we keep __init or __devinit respectively, right?
+Index: Bjorn-next-0808/drivers/pci/remove.c
+===================================================================
+--- Bjorn-next-0808.orig/drivers/pci/remove.c
++++ Bjorn-next-0808/drivers/pci/remove.c
+@@ -70,11 +70,10 @@ void pci_remove_bus(struct pci_bus *pci_
+ 	list_del(&pci_bus->node);
+ 	pci_bus_release_busn_res(pci_bus);
+ 	up_write(&pci_bus_sem);
+-	if (!pci_bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(pci_bus);
+-	device_unregister(&pci_bus->dev);
++	if (pci_bus->is_added || pci_is_root_bus(pci_bus)) {
++		pci_remove_legacy_files(pci_bus);
++		device_unregister(&pci_bus->dev);
++	}
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
 
-Another possibility would be to make PCI select HOTPLUG or depend on it.
-That way it would be made sure that __devinit wouldn't cause all the
-functions to be discarded after init.
-
-Also, using PCI without HOTPLUG is sort of contradictory.
-
-Thierry
-
---u3/rZRmxL6MmkK24
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQLrKGAAoJEN0jrNd/PrOhCdcP/3uQiMNPZuOMfFpouaXem6qS
-Wo1nLtGkeLLjvRY5jv38voix7MRxeJIkKW1v7YCeuCj5+RjzCO6o+0u+qHS0jZKp
-tku2SYP2h12v6p0yIZijyR+ebgPvKOSrBLN2R4IT4487teBeW1dLoyZ3O5QInjOh
-BtKwUcXkCDRKGLsBDK1wg+wqe2qlb/tXL7Dc+pn7RdI2l6R69b3rxmPqsDUL2p6f
-/wpzcf+2zwNCQnhgHHaYqB/IKfHb0WbZmM/U71JuaowmvLRQu0Eb9UH2qHpJ5stY
-UTbDIsMRiXacDvKrFiVYJ4coCY7WrWB1CCvnObVTsru5Fc4E62y3Px99m4yHCzxP
-KmW/t0Srf4D5YVwyWmEK83WzGyZOol8cAJfc7Y7gCUJ8zagfaPlX9VXlkfKkgadM
-uh4n/2kLnmduituVlEOsbPw8gMwLkflUJIxPSwyNrpkJeWvT2wDakGSrGt/uQ8MW
-LKISwrvGXos+cZkyR6HLcJMfgq+LO4AbDvQwRWKur3XkNL0yJBrOByWy3+baZ+Ti
-QA1OXc3Sbt5ojAB24bO8c+RGpdhitK8gHI5nJHDQ7Go6IdtQmjykt6dLBQlnBgD6
-WT6KBuWtPn1Kmx/ztYG2Zsihz22+uJttHZWSv8yp+rCi1U3FRAjWDlXeVXJxqgMg
-yLEUd6DMr7bX7GHD1Jls
-=VgbU
------END PGP SIGNATURE-----
-
---u3/rZRmxL6MmkK24--
