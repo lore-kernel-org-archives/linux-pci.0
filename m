@@ -1,111 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:62546 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964787Ab2HQCtm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 22:49:42 -0400
-Received: by qaas11 with SMTP id s11so1206630qaa.19
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 19:49:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1343180997-9483-9-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
-	<1343180997-9483-9-git-send-email-shangw@linux.vnet.ibm.com>
-Date: Fri, 17 Aug 2012 10:49:41 +0800
-Message-ID: <CADLM8XOe_C-w2SYr417=if+3KqKbiYB04mAgO8opRy-aosrFVg@mail.gmail.com>
-Subject: Re: [PATCH 8/8] ppc/pnv: I/O and memory alignment for p2p bridges
-From: Wei Yang <weiyang.kernel@gmail.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40382 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754347Ab2HJGNt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:13:49 -0400
+Date: Fri, 10 Aug 2012 15:13:44 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
 Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	benh@kernel.crashing.org, linuxram@us.ibm.com,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when
+ hot-plugging PCI root bridges
+Message-Id: <20120810151344.23304526.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2012/7/25 Gavin Shan <shangw@linux.vnet.ibm.com>:
-> The patch implements ppc_md.pcibios_window_alignment for powernv
-> platform so that the resource reassignment in PCI core will be
-> done according to the I/O and memory alignment returned from
-> powernv platform. The alignments returned from powernv platform
-> is closely depending on the scheme for PE segmenting. Besides,
-> the patch isn't useful for now, but the subsequent patches will
-> be working based on it.
->
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/platforms/powernv/pci-ioda.c |   38 +++++++++++++++++++++++++++++
->  1 files changed, 38 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index fbdd74d..159bce5 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -1139,6 +1139,43 @@ static void __devinit pnv_pci_ioda_fixup_phb(struct pci_controller *hose)
->         }
->  }
->
-> +/*
-> + * Returns the alignment for I/O or memory windows for p2p
-> + * bridges. That actually depends on how PEs are segmented.
-> + * For now, we return I/O or M32 segment size for PE sensitive
-> + * p2p bridges. Otherwise, the default values (4KiB for I/O,
-> + * 1MiB for memory) will be returned.
-> + */
-> +static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
-> +                                               unsigned long type)
-> +{
-> +       struct pci_dev *dev = bus->self;
-> +       struct pci_controller *hose = pci_bus_to_host(bus);
-> +       struct pnv_phb *phb = hose->private_data;
-> +
-> +       /* PCI root bus will be assigned with segment size */
-> +       if (!dev)
-> +               goto out;
-> +
+From: Jiang Liu <jiang.liu@huawei.com>
 
-there is a function, pci_is_root_bus() which is introduced in
-79af72d7, to check whether
-this bus is a root bus or not.
+    ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+    
+    When hot-plugging PCI root bridge, acpi_pci_drivers' add()/remove()
+    methods should be invoked to notify registered drivers.
+    
+    -v2: Move add calling to acpi_pci_root_start by Yinghai
+    
+    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 
-> +       /*
-> +        * If the parent bridge is PCI bridge, we will return
-> +        * the default values
-> +        */
-> +       dev = dev->bus->self;
-> +       if (!dev)
-> +               goto out;
-> +       if (dev->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) {
-> +               return 1;
-> +       }
-> +
-> +out:
-> +       /* We need support prefetchable memory window later */
-> +       if (type & IORESOURCE_MEM)
-> +               return phb->ioda.m32_segsize;
-> +
-> +       return phb->ioda.io_segsize;
-> +}
-> +
->  /* Prevent enabling devices for which we couldn't properly
->   * assign a PE
->   */
-> @@ -1306,6 +1343,7 @@ void __init pnv_pci_init_ioda1_phb(struct device_node *np)
->          */
->         ppc_md.pcibios_fixup_phb = pnv_pci_ioda_fixup_phb;
->         ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
-> +       ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
->         pci_add_flags(PCI_PROBE_ONLY | PCI_REASSIGN_ALL_RSRC);
->
->         /* Reset IODA tables to a clean state */
-> --
-> 1.7.5.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+ drivers/acpi/pci_root.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
+Index: Bjorn-next-0808/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0808.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0808/drivers/acpi/pci_root.c
+@@ -626,14 +626,25 @@ end:
+ static int acpi_pci_root_start(struct acpi_device *device)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
++	struct acpi_pci_driver *driver;
++
++	list_for_each_entry(driver, &acpi_pci_drivers, node)
++		if (driver->add)
++			driver->add(device->handle);
+ 
+ 	pci_bus_add_devices(root->bus);
++
+ 	return 0;
+ }
+ 
+ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
++	struct acpi_pci_driver *driver;
++
++	list_for_each_entry(driver, &acpi_pci_drivers, node)
++		if (driver->remove)
++			driver->remove(root->device->handle);
+ 
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
 
-
--- 
-Richard Yang
-Help You, Help Me
