@@ -1,135 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:43883 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394Ab2HOTMg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 15:12:36 -0400
-Received: by ggdk6 with SMTP id k6so2163245ggd.19
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 12:12:35 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:22580 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268Ab2HKLyj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Aug 2012 07:54:39 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <yijingwang21@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+CC: Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Huang Ying <ying.huang@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/3] PCI/AER: Clean pci_bus_ops when related pci bus was removed
+Date: Sat, 11 Aug 2012 19:52:25 +0800
+Message-ID: <1344685946-8172-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1344685946-8172-1-git-send-email-wangyijing@huawei.com>
+References: <1344685946-8172-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
-References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Aug 2012 13:12:14 -0600
-Message-ID: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
-Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
- ports without native PCIe hotplug capability
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-> ignore root bridges using PCIe native hotplug) added code that made the
-> acpiphp driver completely ignore PCIe root complexes for which the kernel
-> had been granted control of the native PCIe hotplug feature by the BIOS
-> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-> the constraints to allow acpiphp driver handle non-PCIe bridges under
-> such a complex. The constraint needs to be relaxed further to allow
-> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
+When Inject aer errors to the target pci device, a pci_bus_ops will
+be allocated for the pci device's pci bus.When the pci bus was removed,
+we should also release the pci_bus_ops.
 
-Gerry, I assume you'll refresh and repost this after we get the PCIe
-capability stuff squared away, so I'll ignore this patch for now.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   43 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 42 insertions(+), 1 deletions(-)
 
-> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-> switches and may migrate downstream ports among virtual switches.
-> To migrate a downstream port from the source virtual switch to the target,
-> the port needs to be hot-removed from the source and hot-added into the
-> target. pciehp driver can't be used here because there's no slots within
-> the virtual PCIe switch. So acpiphp driver is used to support downstream
-> port migration. A typical configuration is as below:
-> [Root w/o native PCIe HP]
->         [Upstream port of vswitch w/o native PCIe HP]
->                 [Downstream port of vswitch w/ native PCIe HP]
->                         [PCIe enpoint]
->
-> Here acpiphp driver will be used to handle root ports and upstream port
-> in the virtual switch, and pciehp driver will be used to handle downstream
-> ports in the virtual switch.
->
-> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
->
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
->  1 files changed, 39 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 806c44f..4889448 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
->         .handler = handle_hotplug_event_func,
->  };
->
-> +/* Check whether device is managed by native PCIe hotplug driver */
-> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-> +{
-> +       int pos;
-> +       u16 reg16;
-> +       u32 reg32;
-> +       acpi_handle tmp;
-> +       struct acpi_pci_root *root;
-> +
-> +       if (!pci_is_pcie(pdev))
-> +               return false;
-> +
-> +       /* Check whether PCIe port supports native PCIe hotplug */
-> +       pos = pci_pcie_cap(pdev);
-> +       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
-> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
-> +               return false;
-> +       pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP, &reg32);
-> +       if (!(reg32 & PCI_EXP_SLTCAP_HPC))
-> +               return false;
-> +
-> +       /*
-> +        * Check whether native PCIe hotplug has been enabled for
-> +        * this PCIe hierarchy.
-> +        */
-> +       tmp = acpi_find_root_bridge_handle(pdev);
-> +       if (!tmp)
-> +               return false;
-> +       root = acpi_pci_find_root(tmp);
-> +       if (!root)
-> +               return false;
-> +       if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> +               return false;
-> +
-> +       return true;
-> +}
-> +
->  /* callback routine to register each ACPI PCI slot object */
->  static acpi_status
->  register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-> @@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
->                 return AE_OK;
->
->         pdev = pbus->self;
-> -       if (pdev && pci_is_pcie(pdev)) {
-> -               tmp = acpi_find_root_bridge_handle(pdev);
-> -               if (tmp) {
-> -                       struct acpi_pci_root *root = acpi_pci_find_root(tmp);
-> -
-> -                       if (root && (root->osc_control_set &
-> -                                       OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> -                               return AE_OK;
-> -               }
-> -       }
-> +       if (pdev && device_is_managed_by_native_pciehp(pdev))
-> +               return AE_OK;
->
->         acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
->         device = (adr >> 16) & 0xffff;
-> --
-> 1.7.1
->
->
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index fc28785..8ca744f 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -526,10 +526,50 @@ static struct miscdevice aer_inject_device = {
+ 	.fops = &aer_inject_fops,
+ };
+ 
++static void aer_clean_pci_bus_ops(struct pci_dev *dev)
++{
++	unsigned long flags;
++	struct pci_bus_ops *bus_ops, *tmp_ops;
++	struct pci_bus *bus;
++	bus = dev->subordinate;
++	if (!bus)
++		return;
++
++	spin_lock_irqsave(&inject_lock, flags);
++	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list)
++		if (bus_ops->bus == bus) {
++			list_del(&bus_ops->list);
++			kfree(bus_ops);
++			break;
++		}
++	spin_unlock_irqrestore(&inject_lock, flags);
++}
++
++static int aer_hp_notify_fn(struct notifier_block *nb,
++		unsigned long event, void *data)
++{
++	switch (event) {
++	case BUS_NOTIFY_DEL_DEVICE:
++		aer_clean_pci_bus_ops(to_pci_dev(data));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block aerinj_hp_notifier = {
++	.notifier_call = &aer_hp_notify_fn,
++};
+ 
+ static int __init aer_inject_init(void)
+ {
+-	return misc_register(&aer_inject_device);
++	int ret;
++	ret = misc_register(&aer_inject_device);
++	if (!ret)
++		bus_register_notifier(&pci_bus_type, &aerinj_hp_notifier);
++	return ret;
+ }
+ 
+ static void __exit aer_inject_exit(void)
+@@ -538,6 +578,7 @@ static void __exit aer_inject_exit(void)
+ 	unsigned long flags;
+ 	struct pci_bus_ops *bus_ops;
+ 
++	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
+ 	misc_deregister(&aer_inject_device);
+ 
+ 	while ((bus_ops = pci_bus_ops_pop())) {
+-- 
+1.7.1
+
+
