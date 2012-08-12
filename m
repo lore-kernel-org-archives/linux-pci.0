@@ -1,126 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:43328 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757924Ab2HVQ3V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 12:29:21 -0400
-Received: by lagy9 with SMTP id y9so673969lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 09:29:19 -0700 (PDT)
+Received: from ogre.sisk.pl ([193.178.161.156]:34805 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751544Ab2HLVUL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 12 Aug 2012 17:20:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: EHCI: fix crash during hibernation on ASUS computers
+Date: Sun, 12 Aug 2012 23:26:07 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	AceLan Kao <acelan.kao@canonical.com>, alex.hung@canonical.com,
+	Oleksij Rempel <bug-track@fisher-privat.net>,
+	"Linux-pm mailing list" <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1208110959320.21252-100000@netrider.rowland.org> <201208112356.26719.rjw@sisk.pl>
+In-Reply-To: <201208112356.26719.rjw@sisk.pl>
 MIME-Version: 1.0
-In-Reply-To: <A25F549E4D43CD42B4C02DF47A1913230FE50780@SHSMSX102.ccr.corp.intel.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
- <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
- <50325732.3000700@gmail.com> <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
- <50325C18.9030207@gmail.com> <CAErSpo6t9m0xmWkXfmONtbicjqLR_z5dLsjKCLWQfcktzRKkUA@mail.gmail.com>
- <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com> <A25F549E4D43CD42B4C02DF47A1913230FE50780@SHSMSX102.ccr.corp.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Aug 2012 09:28:58 -0700
-Message-ID: <CAErSpo5ftvKLF2=1ixzp1KroNLKh_s-b5hi9aFv3X7PpqisGwg@mail.gmail.com>
-Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
-To: "Cui, Dexuan" <dexuan.cui@intel.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208122326.07318.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 9:40 PM, Cui, Dexuan <dexuan.cui@intel.com> wrote:
-> Bjorn Helgaas wrote on 2012-08-21:
 
->> I am still concerned about reset_intel_82599_sfp_virtfn().  It looks
->> wrong and possibly unnecessary.  It looks wrong because it sets
->> PCI_EXP_DEVCTL_BCR_FLR and blindly clears all other bits in
->> PCI_EXP_DEVCTL.  Most of the bits are probably cleared by the FLR
->> anyway, but Aux Power PM Enable is RWS ("sticky"), so it is *not*
->> modified by FLR.  Therefore, using reset_intel_82599_sfp_virtfn() has
->> the probably unintended side effect of clearing Aux Power PM Enable.
->>
->> It looks possibly unnecessary because the generic pcie_flr() does
->> essentially the same thing, so it's not clear why we need a special
->> case for 82599.
+Commit dbf0e4c (PCI: EHCI: fix crash during suspend on ASUS
+computers) added a workaround for an ASUS suspend issue related to
+USB EHCI and a bug in a number of ASUS BIOSes that attemt to shut
+down the EHCI controller during system suspend if its PCI command
+register doesn't contain 0 at that time.
 
-> I think reset_intel_82599_sfp_virtfn() is correct AND necessary.
-> (pcie_flr() doesn't work here)
->
-> Please note the 82599 VF is a special PCIe device that doesn't report
-> PCIe FLR capability though actually it does support that.
-> That is why we put it in quirks.c. :-)
->
-> The PCI_EXP_DEVCTL_AUX_PME bit of the 82599 VF is read-only and
-> always zero.
->
-> Please see
-> http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
-> 9.5 Virtual Functions Configuration Space
->   Table 9.7 VF PCIe Configuration Space
->   9.5.2.2.1 VF Device Control Register (0xA8; RW)
+It turns out that the same workaround is necessary in the analogous
+hibernation code path, so add it.
 
-Thanks, Dexuan!
+References: https://bugzilla.kernel.org/show_bug.cgi?id=45811
+Reported-and-tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: stable@vger.kernel.org
+---
 
-The 82599 does report FLR in the DEVCAP for the PF (sec 9.3.10.4), but
-not in the DEVCAP for the VF (sec 9.5), which indeed means we can't
-use pcie_flr() on the VFs.  I wonder whether this error appears in any
-other devices.
+Hi Bjorn,
 
-The VF DEVCTL register (sec 9.5.2.2.1) is RO and zero except for
-"Initiate FLR" unlike the PF DEVCTL (sec 9.3.10.5).  The
-read/modify/write done by pcie_flr() would work on the VF but is not
-necessary.
+Please push this to Linus ASAP, we need it in 3.6 and -stable.
 
-The VF DEVSTA register (sec 9.5.2.2.2) does have an active
-"Transaction Pending" bit.  That suggests to me that we should wait
-for it to be clear, as pcie_flr() does.
+Thanks,
+Rafael
 
-What would you think of a patch like the following?  My idea is to
-make it the same as pcie_flr() except for the absolutely necessary
-differences.  With this patch, the only difference is that we don't
-look at the 82599 DEVCAP FLR bit.
+---
+ drivers/pci/pci-driver.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index aa77538..7a451ff 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3081,10 +3081,36 @@ static int reset_intel_generic_dev(struct
-pci_dev *dev, int probe)
-
- static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- {
-+       int i;
-+       u16 status;
+Index: linux/drivers/pci/pci-driver.c
+===================================================================
+--- linux.orig/drivers/pci/pci-driver.c
++++ linux/drivers/pci/pci-driver.c
+@@ -959,6 +959,13 @@ static int pci_pm_poweroff_noirq(struct
+ 	if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
+ 		pci_prepare_to_sleep(pci_dev);
+ 
++	/*
++	 * The reason for doing this here is the same as for the analogous code
++	 * in pci_pm_suspend_noirq().
++	 */
++	if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
++		pci_write_config_word(pci_dev, PCI_COMMAND, 0);
 +
-+       /*
-+        * http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
-+        *
-+        * The 82599 supports FLR on VFs, but FLR support is reported only
-+        * in the PF DEVCAP (sec 9.3.10.4), not in the VF DEVCAP (sec 9.5).
-+        * Therefore, we can't use pcie_flr(), which checks the VF DEVCAP.
-+        */
-+
-        if (probe)
-                return 0;
-
--       pcie_capability_write_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
-+       /* Wait for Transaction Pending bit clean */
-+       for (i = 0; i < 4; i++) {
-+               if (i)
-+                       msleep((1 << (i - 1)) * 100);
-+
-+               pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
-+               if (!(status & PCI_EXP_DEVSTA_TRPND))
-+                       goto clear;
-+       }
-+
-+       dev_err(&dev->dev, "transaction is not cleared; "
-+                       "proceeding with reset anyway\n");
-+
-+clear:
-+       pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
-+
-        msleep(100);
-
-        return 0;
+ 	return 0;
+ }
+ 
