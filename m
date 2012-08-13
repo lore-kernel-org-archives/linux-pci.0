@@ -1,73 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:46838 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab2HGJG7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Aug 2012 05:06:59 -0400
-Message-ID: <5020D9B3.7020506@jp.fujitsu.com>
-Date: Tue, 07 Aug 2012 18:02:43 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:46671 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752122Ab2HMVkP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Aug 2012 17:40:15 -0400
+Message-ID: <50297434.8090806@gmail.com>
+Date: Mon, 13 Aug 2012 14:40:04 -0700
+From: David Daney <ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-To: vgoyal@redhat.com
-CC: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com>
-In-Reply-To: <20120806203902.GH25559@redhat.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+To: Jiang Liu <liuj97@gmail.com>, Ralf Baechle <ralf@linux-mips.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 13/32] PCI/MIPS: use PCIe capabilities access functions
+ to simplify implementation
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <1343836477-7287-14-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1343836477-7287-14-git-send-email-jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/08/07 5:39), Vivek Goyal wrote:
-> On Mon, Aug 06, 2012 at 01:30:47PM +0900, Takao Indoh wrote:
->> Hi Vivek,
->>
->> (2012/08/03 20:46), Vivek Goyal wrote:
->>> On Fri, Aug 03, 2012 at 08:24:31PM +0900, Takao Indoh wrote:
->>>> Hi all,
->>>>
->>>> This patch adds kernel parameter "reset_pcie_devices" which resets PCIe
->>>> devices at boot time to address DMA problem on kdump with iommu. When
->>>> this parameter is specified, a hot reset is triggered on each PCIe root
->>>> port and downstream port to reset its downstream endpoint.
->>>
->>> Hi Takao,
->>>
->>> Why not use existing "reset_devices" parameter instead of introducing
->>> a new one?
->>
->> "reset_devices" is used for each driver to reset their own device, and
->> this patch resets all devices forcibly, so I thought they were different
->> things.
+On 08/01/2012 08:54 AM, Jiang Liu wrote:
+> From: Jiang Liu<jiang.liu@huawei.com>
 >
-> Yes reset_devices currently is used for driver to reset its device. I
-> thought one could very well extend its reach to reset pci express devices
-> at bus level.
+> Use PCIe capabilities access functions to simplify PCIe MIPS implementation.
 >
-> Having them separate is not going to be much useful from kdump
-> perspective. We will end up passing both reset_devices and
-> reset_pcie_devices to second kernel whill lead to bus level reset as well
-> as device level reset.
->
-> Ideal situation would be that somehow detect that bus level reset has been
-> done and skip device level reset (assuming bus level reset obviates the
-> need of device level reset, please correct me if that's not the case).
->
-> After pcie reset, can we store the state in a variable and drivers can
-> use that variable to check if PCIe level reset was done or not. If yes,
-> skip device level reset (Assuming driver knows that device is on a
-> PCIe slot).
->
-> In that case we will not have to introduce new kernel command line, and
-> also avoid double reset?
+> Signed-off-by: Jiang Liu<liuj97@gmail.com>
 
-Actually I'm not sure whether the driver does not need to do their reset after
-bus level reset, but I agree with you, now I'm thinking that using reset_devices
-is better rather than adding narrow one which is limited to PCI express, otherwise
-we may have to add new parameter every time when adding new reset method, such as
-reset_pcie_devices, reset_pci_legacy_devices, etc.
+Acked-by: David Daney <david.daney@cavium.com>
 
-Thanks,
-Takao Indoh
+> ---
+>   arch/mips/pci/pci-octeon.c |   15 +++++----------
+>   1 file changed, 5 insertions(+), 10 deletions(-)
+>
+> diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
+> index 52a1ba7..aaed2ad 100644
+> --- a/arch/mips/pci/pci-octeon.c
+> +++ b/arch/mips/pci/pci-octeon.c
+> @@ -117,16 +117,11 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+>   	}
+>
+>   	/* Enable the PCIe normal error reporting */
+> -	pos = pci_find_capability(dev, PCI_CAP_ID_EXP);
+> -	if (pos) {
+> -		/* Update Device Control */
+> -		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL,&config);
+> -		config |= PCI_EXP_DEVCTL_CERE; /* Correctable Error Reporting */
+> -		config |= PCI_EXP_DEVCTL_NFERE; /* Non-Fatal Error Reporting */
+> -		config |= PCI_EXP_DEVCTL_FERE;  /* Fatal Error Reporting */
+> -		config |= PCI_EXP_DEVCTL_URRE;  /* Unsupported Request */
+> -		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, config);
+> -	}
+> +	config = PCI_EXP_DEVCTL_CERE; /* Correctable Error Reporting */
+> +	config |= PCI_EXP_DEVCTL_NFERE; /* Non-Fatal Error Reporting */
+> +	config |= PCI_EXP_DEVCTL_FERE;  /* Fatal Error Reporting */
+> +	config |= PCI_EXP_DEVCTL_URRE;  /* Unsupported Request */
+> +	pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL, config, 0);
+>
+>   	/* Find the Advanced Error Reporting capability */
+>   	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
 
