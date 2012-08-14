@@ -1,163 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22372 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268Ab2HKLxQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Aug 2012 07:53:16 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: <yijingwang21@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-CC: Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Huang Ying <ying.huang@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 1/3] PCI/AER: Fix NULL pci_ops return when hotplug a pci bus which was doing aer error inject
-Date: Sat, 11 Aug 2012 19:52:24 +0800
-Message-ID: <1344685946-8172-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:48235 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753788Ab2HNVoq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 17:44:46 -0400
+Received: by lbbgj3 with SMTP id gj3so515729lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 14 Aug 2012 14:44:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20120814180142.GA9430@avionic-0098.mockup.avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <1343332512-28762-6-git-send-email-thierry.reding@avionic-design.de>
+ <CAErSpo4qg45brVRwEbw3=R04VsbnvUowSMWcT+M6VoAxbf3Cqg@mail.gmail.com>
+ <20120814055542.GB16181@avionic-0098.mockup.avionic-design.de>
+ <CAErSpo6LYpkC5wop53S1r1z3ov4+w4soqrQARzbbouVs1trzUg@mail.gmail.com> <20120814180142.GA9430@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Aug 2012 14:44:24 -0700
+Message-ID: <CAErSpo4Efy-Dt67rktzNiYfZfOTSu=pmYtyGd3tR-zZQ3jDGtA@mail.gmail.com>
+Subject: Re: [PATCH v3 05/10] resource: add PCI configuration space support
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we inject aer errors to the target pci device by aer_inject module, the pci_ops of pci
-bus which the target device is on will be assign to pci_ops_aer.So if the target pci device
-is a bridge, once we hotplug the pci bus(child bus) which the target device bridges to, child
-bus's pci_ops will be assigned to pci_ops_aer too.Now every access to the child bus's device
-will result to system panic, because it return NULL pci_ops in pci_read_aer.
+On Tue, Aug 14, 2012 at 11:01 AM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> On Tue, Aug 14, 2012 at 10:38:08AM -0700, Bjorn Helgaas wrote:
+>> On Mon, Aug 13, 2012 at 10:55 PM, Thierry Reding
+>> <thierry.reding@avionic-design.de> wrote:
+>> > On Mon, Aug 13, 2012 at 10:00:45PM -0700, Bjorn Helgaas wrote:
+>> >> On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
+>> >> <thierry.reding@avionic-design.de> wrote:
+>> >> > This commit adds a new flag that allows marking resources as PCI
+>> >> > configuration space.
+>> >> >
+>> >> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>> >> > ---
+>> >> > Changes in v3:
+>> >> > - new patch
+>> >> >
+>> >> >  include/linux/ioport.h | 2 +-
+>> >> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >> >
+>> >> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+>> >> > index 589e0e7..3314843 100644
+>> >> > --- a/include/linux/ioport.h
+>> >> > +++ b/include/linux/ioport.h
+>> >> > @@ -102,7 +102,7 @@ struct resource {
+>> >> >
+>> >> >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+>> >> >  #define IORESOURCE_PCI_FIXED           (1<<4)  /* Do not move resource */
+>> >> > -
+>> >> > +#define IORESOURCE_PCI_CS              (1<<5)  /* PCI configuration space */
+>> >>
+>> >> What is the purpose of this?  It seems that you are marking regions
+>> >> that we call MMCONFIG on x86, or ECAM-type regions in the language of
+>> >> the PCIe spec.  I see that you set it in several places, but I don't
+>> >> see anything that ever looks for it.  Do you have plans to use it in
+>> >> the future?  If it really does correspond to MMCONFIG/ECAM, we should
+>> >> handle those regions consistently across all architectures.
+>> >
+>> > The purpose is ultimately to obtain the MMCONFIG/ECAM resources assigned
+>> > to a PCI host controller. I've used this in the of_pci_parse_ranges()
+>> > and in the static board setup code to mark ranges as such. Perhaps
+>> > IORESOURCE_ECAM or IORESOURCE_MMCONFIG might have been better names. I
+>> > also just noticed that I'm not using this anywhere, but the plan was to
+>> > eventually use it with platform_get_resource(). However that doesn't
+>> > seem to work either because the lower bits of the flags aren't use for
+>> > comparison in that function.
+>> >
+>> > Any other ideas how that could be handled? Basically what I need is a
+>> > way to mark a resource as an MMCONFIG/ECAM range so that it can be used
+>> > to program the PCI host controller accordingly. I don't know how these
+>> > are assigned on x86. I was under the impression that the MMCONFIG/ECAM
+>> > space was accessed through a single single address/data register pair.
+>>
+>> The legacy config access mechanism (CF8h/CFCh registers described in
+>> PCI 3.0 spec sec 3.2.2.3.2) is a single address/data pair, but this is
+>> mostly x86-specific.  The ECAM mechanism (described in the PCIe 3.0
+>> spec sec 7.2.2) is not a single address/data pair; instead, each byte
+>> of config space is directly mapped into the host's MMIO space.
+>>
+>> Here's what we do on x86 (omitting some historical grunge that
+>> complicates things):
+>>
+>>   - Discover the host bridge via a PNP0A08 device in the ACPI namespace.
+>>   - Discover the bus number range behind the bridge using a _CRS
+>> method in the PNP0A08 device.
+>>   - Discover the ECAM space for those buses via a _CBA method in the
+>> PNP0A08 device.
+>>   - Tell the config accessors (struct pci_ops) that the ECAM space for
+>> buses A-B is at address X.
+>>   - Enumerate the devices behind the host bridge by calling
+>> pci_scan_root_bus(), passing the config accessors.
+>>
+>> It sounds like you want a way to parse the resources at one point,
+>> saving them and marking the ECAM region, then at a later point, look
+>> up the ECAM from a saved list.  We don't do that on x86 because the
+>> config accessors keep an internal list of the ECAM area for each bus.
+>>
+>> We do of course want to put this ECAM space in the IORESOURCE_MEM tree
+>> because it consumes address space and we have to make sure we don't
+>> put anything else on top of it.  But we don't have any reason to
+>> describe the MMIO -> config space function in that tree.  From the
+>> point of view of the rest of the system, it's just MMIO space that's
+>> consumed by the PCI host bridge, just like any other device-specific
+>> MMIO area.
+>
+> What I currently do is pass the ECAM space as a resource to the PCI host
+> bridge platform device. Regular and extended configuration spaces are
+> given by the third and fourth resources, respectively. If I understand
+> correctly, you're saying that nothing beyond that needs to be encoded.
+> In other words it is enough for the PCI host bridge driver to know where
+> to take the data from.
 
-CallTrace:
-bash[5908]: NaT consumption 17179869216 [1]
-Modules linked in: aer_inject cpufreq_conservative cpufreq_userspace cpufreq_pow
-ersave acpi_cpufreq binfmt_misc fuse nls_iso8859_1 loop ipmi_si(+) ipmi_devintf
-ipmi_msghandler dm_mod ppdev iTCO_wdt iTCO_vendor_support sg igb parport_pc i2c_
-i801 mptctl i2c_core serio_raw hid_generic lpc_ich mfd_core parport button conta
-iner usbhid hid uhci_hcd ehci_hcd usbcore usb_common sd_mod crc_t10dif ext3 mbca
-che jbd fan processor ide_pci_generic ide_core ata_piix libata mptsas mptscsih m
-ptbase scsi_transport_sas scsi_mod thermal thermal_sys hwmon
+Yes, I think so.
 
-Pid: 5908, CPU 9, comm:                 bash
-psr : 00001010085a2010 ifs : 800000000000048e ip  : [<a000000220b815b0>]    Not
-tainted (3.5.0-rc6yijing-repo)
-ip is at pci_read_aer+0x330/0x460 [aer_inject]
-unat: 0000000000000000 pfs : 000000000000048e rsc : 0000000000000003
-rnat: 0000000000000000 bsps: 0000000000000000 pr  : 65519aa6a6969aa5
-ldrs: 0000000000000000 ccv : ffffffff00000001 fpsr: 0009804c8a70033f
-csd : 0000000000000000 ssd : 0000000000000000
-b0  : a000000220b815b0 b6  : a000000220b81280 b7  : a0000001006d56a0
-f6  : 1003e0000000000000005 f7  : 1003e0000000000000028
-f8  : 1003e00000000000000c8 f9  : 1003e0000000000000005
-f10 : 1003e627ec1e2f4c0d8a7 f11 : 1003e0000000000000011
-r1  : a0000001014e63c0 r2  : 0000000000000738 r3  : 000000000000fffe
-r8  : 0000000000000736 r9  : 0000000000000042 r10 : e000001f08f4c898
-r11 : 0000000000000000 r12 : e000000f3dfcfdc0 r13 : e000000f3dfc0000
-r14 : 0000000000000738 r15 : 0000000000004000 r16 : a000000220b827c8
-r17 : a000000220b827b8 r18 : ffffffffffffff00 r19 : e000000f073b0110
-r20 : 0000000000000042 r21 : e000000f073b0114 r22 : 0000000000000000
-r23 : e000000f073b0118 r24 : a0000001009e0e49 r25 : 0000000000000001
-r26 : 0000000000007041 r27 : e000000f3dfcfde0 r28 : 0000000000000000
-r29 : e000000f3dfcfc08 r30 : a000000220b827c8 r31 : e000001f074d6000
+I'd like to someday make ECAM support generic, since it's specified by
+the PCIe spec.  The spec doesn't differentiate between PCI
+configuration space (offsets 0-0xff) and PCI Express *extended*
+configuration space (offsets 0x100-0xfff).  But it sounds like Tegra
+might have a memory-mapped configuration mechanism that is similar to
+ECAM but with a different address map, since you mention two resources
+(third and fourth).  That's not a problem, since you're doing a
+Tegra-specific solution right now anyway, but something to keep in the
+back of your mind if we ever do make a generic ECAM solution.
 
-Call Trace:
- [<a000000100016500>] show_stack+0x80/0xa0
-                                sp=e000000f3dfcf800 bsp=e000000f3dfc1758
- [<a000000100016b60>] show_regs+0x640/0x920
-                                sp=e000000f3dfcf9d0 bsp=e000000f3dfc1700
- [<a000000100040770>] die+0x190/0x2c0
-                                sp=e000000f3dfcf9e0 bsp=e000000f3dfc16c0
- [<a0000001000408f0>] die_if_kernel+0x50/0x80
-                                sp=e000000f3dfcf9e0 bsp=e000000f3dfc1690
- [<a000000100903a90>] ia64_fault+0xf0/0x15e0
-                                sp=e000000f3dfcf9e0 bsp=e000000f3dfc1640
- [<a00000010000c0a0>] ia64_native_leave_kernel+0x0/0x270
-                                sp=e000000f3dfcfbf0 bsp=e000000f3dfc1640
- [<a000000220b815b0>] pci_read_aer+0x330/0x460 [aer_inject]
-                                sp=e000000f3dfcfdc0 bsp=e000000f3dfc15c8
- [<a0000001004ace00>] pci_bus_read_config_dword+0xe0/0x140
-                                sp=e000000f3dfcfdc0 bsp=e000000f3dfc1580
- [<a0000001004b0c10>] pci_bus_read_dev_vendor_id+0x50/0x200
-                                sp=e000000f3dfcfdd0 bsp=e000000f3dfc1530
- [<a0000001008d3d10>] pci_scan_single_device+0x90/0x200
-                                sp=e000000f3dfcfdd0 bsp=e000000f3dfc14f8
- [<a0000001004b24b0>] pci_scan_slot+0xb0/0x320
-                                sp=e000000f3dfcfde0 bsp=e000000f3dfc14a8
- [<a0000001008d9e90>] pci_scan_child_bus+0x90/0x2e0
-                                sp=e000000f3dfcfde0 bsp=e000000f3dfc1468
- [<a0000001008d9580>] pci_scan_bridge+0x540/0xdc0
-                                sp=e000000f3dfcfde0 bsp=e000000f3dfc13d0
- [<a0000001008da0b0>] pci_scan_child_bus+0x2b0/0x2e0
-                                sp=e000000f3dfcfe00 bsp=e000000f3dfc1390
- [<a0000001008d5bd0>] pci_rescan_bus+0x50/0x220
-                                sp=e000000f3dfcfe00 bsp=e000000f3dfc1358
- [<a0000001004c2ab0>] bus_rescan_store+0xf0/0x160
-                                sp=e000000f3dfcfe10 bsp=e000000f3dfc1328
- [<a0000001006110b0>] bus_attr_store+0x70/0xa0
-                                sp=e000000f3dfcfe20 bsp=e000000f3dfc12f0
- [<a000000100343b00>] sysfs_write_file+0x240/0x340
-                                sp=e000000f3dfcfe20 bsp=e000000f3dfc1298
- [<a00000010025e230>] vfs_write+0x1b0/0x3a0
-                                sp=e000000f3dfcfe20 bsp=e000000f3dfc1250
- [<a00000010025e5e0>] sys_write+0x80/0x100
-                                sp=e000000f3dfcfe20 bsp=e000000f3dfc11d0
- [<a00000010000bf20>] ia64_ret_from_syscall+0x0/0x20
-                                sp=e000000f3dfcfe30 bsp=e000000f3dfc11d0
- [<a000000000040720>] __kernel_syscall_via_break+0x0/0x20
-                                sp=e000000f3dfd0000 bsp=e000000f3dfc11d0
-Disabling lock debugging due to kernel taint
+> I'll have to see what this means for the DT binding. There are other
+> issues that I need to think about, like for example how to pass the ECAM
+> space from the PCI host controller to each of the two bridges via the
+> ranges property. This no longer makes sense in the current form, as the
+> ECAM covers the configuration spaces for devices of both bridges and
+> cannot really be split among them.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
+We have the same situation on x86.  Part of the historical grunge that
+I omitted is that there's a static ACPI table (MCFG) that can tell you
+the ECAM range for a bus number range.  Often that bus number range
+includes several host bridges.  On x86, we have a single set of ECAM
+config accessors (see pci_mmcfg), and they maintain a list of "bus
+number -> ECAM addr" mappings internally, independent of which host
+bridge leads to the buses.
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 5222986..fc28785 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -109,6 +109,19 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
- 	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
- }
- 
-+static bool pci_is_upstream_bus(struct pci_bus *bus, struct pci_bus *up_bus)
-+{
-+	struct pci_bus *pbus = bus->parent;
-+
-+	while (pbus) {
-+		if (pbus == up_bus)
-+			return true;
-+		pbus = pbus->parent;
-+	}
-+
-+	return false;
-+}
-+
- /* inject_lock must be held before calling */
- static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- {
-@@ -118,6 +131,13 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- 		if (bus_ops->bus == bus)
- 			return bus_ops->ops;
- 	}
-+
-+	/* here can't find bus_ops, fall back to get bus_ops of upstream bus */
-+	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
-+		if (pci_is_upstream_bus(bus, bus_ops->bus))
-+			return bus_ops->ops;
-+	}
-+
- 	return NULL;
- }
- 
-@@ -506,6 +526,7 @@ static struct miscdevice aer_inject_device = {
- 	.fops = &aer_inject_fops,
- };
- 
-+
- static int __init aer_inject_init(void)
- {
- 	return misc_register(&aer_inject_device);
--- 
-1.7.1
-
-
+Bjorn
