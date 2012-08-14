@@ -1,120 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:46996 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753340Ab2HGUjy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Aug 2012 16:39:54 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Tue, 7 Aug 2012 22:45:46 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <CACVXFVPNO2yQXJjwPGm8oLeNHsj72wtHnJ5YKLg65hR2X7BWDg@mail.gmail.com> <201208071323.51275.rjw@sisk.pl> <CACVXFVO957+ORC4dLh5=5Ck=xeFw9cCSDXMNzx7jDPogyMfE_w@mail.gmail.com>
-In-Reply-To: <CACVXFVO957+ORC4dLh5=5Ck=xeFw9cCSDXMNzx7jDPogyMfE_w@mail.gmail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:43901 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143Ab2HNTj2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 15:39:28 -0400
+Message-ID: <502AA96B.2050709@wwwdotorg.org>
+Date: Tue, 14 Aug 2012 13:39:23 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208072245.46334.rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com>
+In-Reply-To: <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 07, 2012, Ming Lei wrote:
-> On Tue, Aug 7, 2012 at 7:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> Yes, I agree, but I don't think it may make .runtime_post_resume
-> >> not doable, do I?
-> >
-> > No more device PM callbacks, please.
+On 08/13/2012 05:18 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 13, 2012 at 11:47 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+...
+>> whereas for a device tree boot:
+>>
+>> (same):
+>>> [    2.112217] pci 0000:01:00.0: reg 10: [io  0x0000-0x00ff]
+>>> [    2.117635] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x00000fff 64bit pref]
+>>> [    2.124690] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00003fff 64bit pref]
+>>> [    2.131731] pci 0000:01:00.0: reg 30: [mem 0x00000000-0x0001ffff pref]
+>> ... (request region happens early)
+>>> [    2.179838] r8169 0000:01:00.0: BAR 0: requesting [io  0x0000-0x00ff]
+>>> [    2.193312] r8169 0000:01:00.0: BAR 2: requesting [mem 0x00000000-0x00000fff 64bit pref]
+>>> [    2.201397] r8169 0000:01:00.0: BAR 2: can't reserve [mem 0x00000000-0x00000fff 64bit pref]
+>>> [    2.209742] r8169 0000:01:00.0: (unregistered net_device): could not request regions
+>> ... (same, just happens too late)
+>>> [    2.236818] pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa001ffff pref]
+>>> [    2.244027] pci 0000:01:00.0: BAR 4: assigned [mem 0xa0020000-0xa0023fff 64bit pref]
+>>> [    2.251794] pci 0000:01:00.0: BAR 2: assigned [mem 0xa0024000-0xa0024fff 64bit pref]
+>>> [    2.259542] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+>>
+>> I suspect this is all still related to the PCI devices themselves being
+>> probed much earlier in the overall PCI initialization sequence when the
+>> PCI controller is probed later in the boot sequence, whereas PCI device
+>> probe is deferred until the overall PCI initialization sequence is
+>> complete if the PCI controller is probed very early in the boot sequence.
 > 
-> IMO, what the patch is doing is to introduce one callback which
-> is just called after .runtime_resume is completed,
+> I don't know what to apply your patches to (they don't apply cleanly
+> to v3.6-rc2), so I can't see exactly what you're doing.  But it looks
+> like you might be calling pci_bus_add_devices() before
+> pci_bus_assign_resource(), which isn't going to work.
 
-No, it is not a callback.  It is a function to be run _once_ when the device is
-known to be active.  It is not a member of a data type or anything like this.
+Yes, that's exactly what is happening.
 
-It's kind of disappointing that you don't see a difference between that and a
-callback.
+PCIe initialization starts in arch/arm/mach-tegra/pci.e
+tegra_pcie_init() which calls arch/arm/kernel/bios32.c
+pci_common_init(). That function first calls pcibios_init_hw() (in the
+same file, more about this later) and then loops over PCI buses, calling
+amongst other things pci_bus_assign_resources() then pci_bus_add_devices().
 
-> and you want to move something out of previous .runtime_resume
+The problem is that ARM's pcibios_init_hw() calls pci_scan_root_bus()
+(or a host-driver-specific function which that also calls
+pci_scan_root_bus() in Tegra's case) which in turn calls
+pci_bus_add_devices() right at the end, before control has returned to
+pci_common_init() and hence before pci_bus_assign_resources() has been
+called.
 
-No, I don't.  Where did you get that idea from?
+If I modify pci_scan_root_bus() and remove the call to
+pci_bus_add_devices(), everything works as expected.
 
-> and do it in another new callback to speedup resume,
-
-No, not to speed up resume.  The idea is to allow drivers to run something
-when the resume is complete, so that they don't have to implement a "resume
-detection" logic or use .runtime_resume() to run things that don't belong
-there.
-
-> so it should be reasonable to introduce the .runtime_post_resume callback in
-> logic.
-
-No.  This doesn't have anything to do with callbacks!
-
-If you want a new callback, you should specify what the role of this callback
-is, otherwise it is not well defined.  I this case, though, what the role of
-func() is depends on the caller and most likely every driver would use it
-for something different.  So no, I don't see how it can be a callback.
-
-> Also, the 'func' should be per driver, not per device since only one
-> 'func' is enough for all same kind of devices driven by one same
-> driver.
-
-It isn't per device!  It is per _caller_.  The fact that the pointer is
-stored _temporarily_ in struct device doesn't mean that it is per device
-and that it is a callback.  From the struct device point of view it is _data_,
-not a member function.
-
-> > Besides, callbacks in struct dev_pm_ops are not only for drivers.
-> 
-> All the current 3 runtime callbacks are for devices. If you mean
-> they can be defined in bus/power_domain/device_type, .runtime_post_resume
-> still can be defined there too.
-
-No, it wouldn't make _any_ _sense_ there, because its role there cannot be
-defined in any sane way.
-
-> >> > Also, "func" should not be stored in dev_pm_ops because it won't be a
-> >> > read-only value.
-> >>
-> >> Sorry, could you explain it in detail that why the 'func'
-> >> has to switch to multiple functions dynamically? I understand
-> >> one function is enough and sometimes it can be bypassed with
-> >> one flag(such as, ignore_post_resume is introduced in dev_pm_info)
-> >> set.  Also, the driver can store the device specific states
-> >> in its own device instance to deal with different situations in the callback.
-> >>
-> >> If the idea is doable, we can save one pointer in 'struct device',
-> >> since the 'func' may not be used by more than 90% devices, also
-> >> have document benefit, even may simplify implementation of the
-> >> mechanism.
-> >
-> > And how many struct device objects there are for the one extra pointer to
-> > matter, let alone the fact that you want to replace it by one extra pointer
-> > somewhere else?
-> 
-> For example, in the pandaboard(one omap4 based small system), follows
-> the count of device instances:
-> 
->          [root@root]#dmesg | grep device_add | wc -l
->         471
-> 
-> The above is just a simple configuration(no graphics, no video/video, only
-> console enabled) on Pandaboard.
-> 
-> If the callback may be defined in dev_pm_info,
-
-I guess you mean struct dev_pm_ops, right?
-
-> not only memory can be saved, also there are other advantages described
-> before.
-
-So now please count how many struct dev_pm_ops objects there are on that system
-and compute the differece.  And please note that drivers that don't use
-struct dev_pm_ops for power management will do that in the future.
-
-Also please note that the caller of pm_runtime_get_and_call() need not be
-a driver, at least in theory.
-
-Thanks,
-Rafael
+So, I guess the question is: Should ARM's pcibios_init_hw() not be
+calling pci_scan_root_bus(), or at least presumably the ARM PCI code
+needs to do things in a slightly different order?
