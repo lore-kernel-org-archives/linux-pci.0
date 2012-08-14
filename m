@@ -1,148 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:45510 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752962Ab2HWA2d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 20:28:33 -0400
-Received: by vbbff1 with SMTP id ff1so217863vbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 17:28:33 -0700 (PDT)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:50983 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035Ab2HNFHA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 01:07:00 -0400
+Received: by obbuo13 with SMTP id uo13so7977300obb.19
+        for <linux-pci@vger.kernel.org>; Mon, 13 Aug 2012 22:06:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
-References: <20120618050333.GA13469@ram-ThinkPad-T61>
-	<CAE9FiQWwPOgBa5guG1y-xF95nBMwE+TC75E_xcg-N8ZxuPW_XQ@mail.gmail.com>
-	<CAErSpo40Ok9NuMm0zxGnZ0DmFmGT19Y23JC4BCQV1RSxsmakCw@mail.gmail.com>
-	<20120816032602.GN2449@ram-ThinkPad-T61>
-	<CAE9FiQW08aoQBiy+37x-VMYrG-OunqzfuRpB1JhDAgNL3AxEuw@mail.gmail.com>
-	<20120816044104.GQ2449@ram-ThinkPad-T61>
-	<20120821151245.GA2356@ram-ThinkPad-T61>
-	<CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
-	<20120822101533.GA2332@ram-ThinkPad-T61>
-	<CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
-	<CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
-Date: Wed, 22 Aug 2012 17:28:32 -0700
-Message-ID: <CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 ]pci: pci resource iterator
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: multipart/mixed; boundary=047d7b6d8a5e7c36d304c7e3f086
+In-Reply-To: <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 13 Aug 2012 22:06:38 -0700
+Message-ID: <CAErSpo5YDwstHv7B7LEbDQmnHnuVsMA2ibTFNLkiCKmkkeE4Zw@mail.gmail.com>
+Subject: Re: [PATCH v3 01/10] PCI: Keep pci_fixup_irqs() around after init
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7b6d8a5e7c36d304c7e3f086
-Content-Type: text/plain; charset=ISO-8859-1
+On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> When using deferred driver probing, PCI host controller drivers may
+> actually require this function after the init stage.
 
-On Wed, Aug 22, 2012 at 10:35 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Aug 22, 2012 at 10:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->  keep the idx would make thing simple for referencing and converting.
+Yes, this is a bug.  Actually, there's still another bug here: if we
+hot-add a device, we won't do pdev_fixup_irq() for it.  But your
+change is worthwhile even without fixing that other bug.
+
+Normally I would include this in my PCI tree since it's under
+drivers/pci.  That would make it easier for somebody to fix the
+hotplug problem in this cycle.  Would having it in my PCI tree make
+things harder for you?
+
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+> Changes in v3:
+> - none
 >
->  pci_dev_resource_n() would be wrapper to from idx to real resource pointer.
->  we just need to change &dev->resource[i] referencing to
->  pci_dev_resource_n(dev, i) instead.
+> Changes in v2:
+> - use __devinit annotations
 >
->  We did that before for irq_desc storage converting, and now we have
->       for_each_irq_desc(irq, desc)
+>  drivers/pci/setup-irq.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
->  later for the resource allocation, I will change resource member from
->            struct resource resource[DEVICE_COUNT_RESOURCE];
->  to
->            struct resource std_res[7];
->            struct resource *iov_res;
->            struct resource *bridge_res;
-> and allocate iov_res and bridge array as needed.
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index eb219a1..f0bcd56 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -18,7 +18,7 @@
+>  #include <linux/cache.h>
 >
-> anyway keep the overalll idx is good way to go and follow.
 >
-
-Like to suggest two versions that only handle idx...
-
-Thanks
-
-Yinghai
-
---047d7b6d8a5e7c36d304c7e3f086
-Content-Type: application/octet-stream; name="ram_pci_it_v4.patch"
-Content-Disposition: attachment; filename="ram_pci_it_v4.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h6742mcf0
-
-LS0tCiBpbmNsdWRlL2xpbnV4L3BjaS5oIHwgICA1NCArKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdlZCwgNTQgaW5zZXJ0aW9u
-cygrKQoKSW5kZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0t
-IGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRl
-L2xpbnV4L3BjaS5oCkBAIC0zNzMsNiArMzczLDYwIEBAIHN0cnVjdCBwY2lfZGV2IHsKIHN0cnVj
-dCByZXNvdXJjZSAqcGNpX2Rldl9yZXNvdXJjZV9uKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGludCBu
-KTsKIGludCBwY2lfZGV2X3Jlc291cmNlX2lkeChzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3Qg
-cmVzb3VyY2UgKnJlcyk7CiAKKyNkZWZpbmUgUENJX1NURF9SRVMJCSgxPDwwKQorI2RlZmluZSBQ
-Q0lfUk9NX1JFUwkJKDE8PDEpCisjZGVmaW5lIFBDSV9CUklER0VfUkVTCQkoMTw8MikKKyNkZWZp
-bmUgUENJX0lPVl9SRVMJCSgxPDwzKQorCisjZGVmaW5lIFBDSV9BTExfUkVTCQkoUENJX1NURF9S
-RVMgfCBQQ0lfUk9NX1JFUyB8IFBDSV9CUklER0VfUkVTIHwgUENJX0lPVl9SRVMpCisjZGVmaW5l
-IFBDSV9OT1NURF9SRVMJCShQQ0lfQUxMX1JFUyAmIH5QQ0lfU1REX1JFUykKKyNkZWZpbmUgUENJ
-X05PSU9WX1JFUwkJKFBDSV9BTExfUkVTICYgflBDSV9JT1ZfUkVTKQorI2RlZmluZSBQQ0lfTk9S
-T01fUkVTCQkoUENJX0FMTF9SRVMgJiB+UENJX1JPTV9SRVMpCisjZGVmaW5lIFBDSV9OT0JSSURH
-RV9SRVMJKFBDSV9BTExfUkVTICYgflBDSV9CUklER0VfUkVTKQorI2RlZmluZSBQQ0lfU1REX1JP
-TV9SRVMJCShQQ0lfU1REX1JFUyB8IFBDSV9ST01fUkVTKQorI2RlZmluZSBQQ0lfU1REX0lPVl9S
-RVMJCShQQ0lfU1REX1JFUyB8IFBDSV9JT1ZfUkVTKQorI2RlZmluZSBQQ0lfU1REX1JPTV9JT1Zf
-UkVTCShQQ0lfU1REX1JFUyB8IFBDSV9ST01fUkVTIHwgUENJX0lPVl9SRVMpCisKK3N0YXRpYyBp
-bmxpbmUgdm9pZCBfX3ByZXBhcmVfaWR4X2JpdG1hcCh1bnNpZ25lZCBsb25nICptYXNrLCBpbnQg
-ZmxhZykKK3sKKwliaXRtYXBfemVybyhtYXNrLCBQQ0lfTlVNX1JFU09VUkNFUyk7CisJaWYgKGZs
-YWcgJiBQQ0lfU1REX1JFUykKKwkJYml0bWFwX3NldChtYXNrLCBQQ0lfU1REX1JFU09VUkNFUywK
-KwkJCVBDSV9TVERfUkVTT1VSQ0VfRU5EIC0gUENJX1NURF9SRVNPVVJDRVMgKyAxKTsKKwlpZiAo
-ZmxhZyAmIFBDSV9ST01fUkVTKQorCQliaXRtYXBfc2V0KG1hc2ssIFBDSV9ST01fUkVTT1VSQ0Us
-IDEpOworI2lmZGVmIENPTkZJR19QQ0lfSU9WCisJaWYgKGZsYWcgJiBQQ0lfSU9WX1JFUykKKwkJ
-Yml0bWFwX3NldChtYXNrLCBQQ0lfSU9WX1JFU09VUkNFUywKKwkJCVBDSV9JT1ZfUkVTT1VSQ0Vf
-RU5EIC0gUENJX0lPVl9SRVNPVVJDRVMgKyAxKTsKKyNlbmRpZgorCWlmIChmbGFnICYgUENJX0JS
-SURHRV9SRVMpCisJCWJpdG1hcF9zZXQobWFzaywgUENJX0JSSURHRV9SRVNPVVJDRVMsCisJCQlQ
-Q0lfQlJJREdFX1JFU09VUkNFX0VORCAtIFBDSV9CUklER0VfUkVTT1VSQ0VTICsgMSk7Cit9Owor
-CitzdGF0aWMgaW5saW5lIGludCBwY2lfbmV4dF9yZXNvdXJjZV9pZHgoaW50IGksIGludCBmbGFn
-KQoreworCURFQ0xBUkVfQklUTUFQKG1hc2ssIFBDSV9OVU1fUkVTT1VSQ0VTKTsKKworCV9fcHJl
-cGFyZV9pZHhfYml0bWFwKG1hc2ssIGZsYWcpOworCisJaSsrOworCWkgPSBmaW5kX25leHRfYml0
-KG1hc2ssIFBDSV9OVU1fUkVTT1VSQ0VTLCBpKTsKKworCWlmIChpIDwgUENJX05VTV9SRVNPVVJD
-RVMpCisJCXJldHVybiBpOworCisJcmV0dXJuIC0xOworfQorCisjZGVmaW5lIGZvcl9lYWNoX3Bj
-aV9yZXNvdXJjZShkZXYsIHJlcywgaSwgZmxhZykJXAorCWZvciAoaSA9IHBjaV9uZXh0X3Jlc291
-cmNlX2lkeCgtMSwgZmxhZyksCVwKKwkJcmVzID0gcGNpX2Rldl9yZXNvdXJjZV9uKGRldiwgaSk7
-CVwKKwkgICAgIHJlczsJCQkJCVwKKwkgICAgIGkgPSBwY2lfbmV4dF9yZXNvdXJjZV9pZHgoaSwg
-ZmxhZyksCVwKKwkJcmVzID0gcGNpX2Rldl9yZXNvdXJjZV9uKGRldiwgaSkpCisKIHN0YXRpYyBp
-bmxpbmUgc3RydWN0IHBjaV9kZXYgKnBjaV9waHlzZm4oc3RydWN0IHBjaV9kZXYgKmRldikKIHsK
-ICNpZmRlZiBDT05GSUdfUENJX0lPVgo=
---047d7b6d8a5e7c36d304c7e3f086
-Content-Type: application/octet-stream; name="ram_pci_it_v4_x.patch"
-Content-Disposition: attachment; filename="ram_pci_it_v4_x.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h6743bw31
-
-LS0tCiBpbmNsdWRlL2xpbnV4L3BjaS5oIHwgICAzNyArKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdlZCwgMzcgaW5zZXJ0aW9ucygrKQoKSW5kZXg6IGxp
-bnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
-L2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCkBA
-IC0zNzMsNiArMzczLDQzIEBAIHN0cnVjdCBwY2lfZGV2IHsKIHN0cnVjdCByZXNvdXJjZSAqcGNp
-X2Rldl9yZXNvdXJjZV9uKHN0cnVjdCBwY2lfZGV2ICpkZXYsIGludCBuKTsKIGludCBwY2lfZGV2
-X3Jlc291cmNlX2lkeChzdHJ1Y3QgcGNpX2RldiAqZGV2LCBzdHJ1Y3QgcmVzb3VyY2UgKnJlcyk7
-CiAKKyNkZWZpbmUgUENJX1NURF9SRVMJCSgxPDwwKQorI2RlZmluZSBQQ0lfUk9NX1JFUwkJKDE8
-PDEpCisjZGVmaW5lIFBDSV9CUklER0VfUkVTCQkoMTw8MikKKyNkZWZpbmUgUENJX0lPVl9SRVMJ
-CSgxPDwzKQorCisjZGVmaW5lIFBDSV9BTExfUkVTCQkoUENJX1NURF9SRVMgfCBQQ0lfUk9NX1JF
-UyB8IFBDSV9CUklER0VfUkVTIHwgUENJX0lPVl9SRVMpCisjZGVmaW5lIFBDSV9OT1NURF9SRVMJ
-CShQQ0lfQUxMX1JFUyAmIH5QQ0lfU1REX1JFUykKKyNkZWZpbmUgUENJX05PSU9WX1JFUwkJKFBD
-SV9BTExfUkVTICYgflBDSV9JT1ZfUkVTKQorI2RlZmluZSBQQ0lfTk9ST01fUkVTCQkoUENJX0FM
-TF9SRVMgJiB+UENJX1JPTV9SRVMpCisjZGVmaW5lIFBDSV9OT0JSSURHRV9SRVMJKFBDSV9BTExf
-UkVTICYgflBDSV9CUklER0VfUkVTKQorI2RlZmluZSBQQ0lfU1REX1JPTV9SRVMJCShQQ0lfU1RE
-X1JFUyB8IFBDSV9ST01fUkVTKQorI2RlZmluZSBQQ0lfU1REX0lPVl9SRVMJCShQQ0lfU1REX1JF
-UyB8IFBDSV9JT1ZfUkVTKQorI2RlZmluZSBQQ0lfU1REX1JPTV9JT1ZfUkVTCShQQ0lfU1REX1JF
-UyB8IFBDSV9ST01fUkVTIHwgUENJX0lPVl9SRVMpCisKK3N0YXRpYyBpbmxpbmUgaW50IHBjaV9u
-ZXh0X3Jlc291cmNlX2lkeChpbnQgaSwgaW50IGZsYWcpCit7CisJd2hpbGUgKCsraSA8IFBDSV9O
-VU1fUkVTT1VSQ0VTKSB7CisJCWlmICgoaSA+PSAwICYmIGkgPCBQQ0lfUk9NX1JFU09VUkNFKSAm
-JiAoZmxhZyAmIFBDSV9TVERfUkVTKSkKKwkJCXJldHVybiBpOworCQllbHNlIGlmICgoaSA9PSBQ
-Q0lfUk9NX1JFU09VUkNFKSAmJiAoZmxhZyAmIFBDSV9ST01fUkVTKSkKKwkJCXJldHVybiBpOwor
-I2lmZGVmIENPTkZJR19QQ0lfSU9WCisJCWVsc2UgaWYgKChpIDw9IFBDSV9JT1ZfUkVTT1VSQ0Vf
-RU5EKSAmJiAoZmxhZyAmIFBDSV9JT1ZfUkVTKSkKKwkJCXJldHVybiBpOworI2VuZGlmCisJCWVs
-c2UgaWYgKChpIDw9IFBDSV9CUklER0VfUkVTT1VSQ0VfRU5EKSAmJiAoZmxhZyAmIFBDSV9CUklE
-R0VfUkVTKSkKKwkJCXJldHVybiBpOworCX0KKworCXJldHVybiAtMTsKK30KKworI2RlZmluZSBm
-b3JfZWFjaF9wY2lfcmVzb3VyY2UoZGV2LCByZXMsIGksIGZsYWcpCQkJICAgICAgXAorCWZvciAo
-aSA9IHBjaV9uZXh0X3Jlc291cmNlX2lkeCgtMSwgZmxhZyksIHJlcyA9IHBjaV9kZXZfcmVzb3Vy
-Y2VfbihkZXYsIGkpO1wKKwkgICAgIHJlczsJCQkJCQkJICAgICAgXAorCSAgICAgaSA9IHBjaV9u
-ZXh0X3Jlc291cmNlX2lkeChpLCBmbGFnKSwgcmVzID0gcGNpX2Rldl9yZXNvdXJjZV9uKGRldiwg
-aSkpCisKIHN0YXRpYyBpbmxpbmUgc3RydWN0IHBjaV9kZXYgKnBjaV9waHlzZm4oc3RydWN0IHBj
-aV9kZXYgKmRldikKIHsKICNpZmRlZiBDT05GSUdfUENJX0lPVgo=
---047d7b6d8a5e7c36d304c7e3f086--
+> -static void __init
+> +static void __devinit
+>  pdev_fixup_irq(struct pci_dev *dev,
+>                u8 (*swizzle)(struct pci_dev *, u8 *),
+>                int (*map_irq)(const struct pci_dev *, u8, u8))
+> @@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
+>         pcibios_update_irq(dev, irq);
+>  }
+>
+> -void __init
+> +void __devinit
+>  pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>                int (*map_irq)(const struct pci_dev *, u8, u8))
+>  {
+> --
+> 1.7.11.2
+>
