@@ -1,50 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:53277 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756468Ab2HTOEy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 10:04:54 -0400
-Received: by lbbgj3 with SMTP id gj3so3314216lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 07:04:52 -0700 (PDT)
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:56511 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab2HNE0R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 00:26:17 -0400
+Received: by ggdk6 with SMTP id k6so4107175ggd.19
+        for <linux-pci@vger.kernel.org>; Mon, 13 Aug 2012 21:26:16 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5031EA55.4030503@extricom.com>
-References: <5031EA55.4030503@extricom.com>
+In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 Aug 2012 07:04:32 -0700
-Message-ID: <CAErSpo4C4TOUf+DVwHY8agvP8s9q_c-F0nZY4OP1pbJedGY7Jg@mail.gmail.com>
-Subject: Re: p4080DS board and myri10gi
-To: leonid <leonid@extricom.com>
-Cc: linux-pci@vger.kernel.org
+Date: Mon, 13 Aug 2012 21:25:55 -0700
+Message-ID: <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 1:42 AM, leonid <leonid@extricom.com> wrote:
-> Hi
-> This is my first mail in this group , so I hope this is the right place for
-> it.
+On Wed, Aug 1, 2012 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <liuj97@gmail.com>
 >
-> I am testing myri10ge pci-e (10G ethernet card) on p4080 evaluation board.
-> using kernel 2.6.34.6
-> when I am trying to insert myri10ge kernel module, I getting :
-> "myri10ge: Version 1.5.2-1.459
-> myri10ge 0001:03:00.0: invalid sram_size -33B or board span 16777216B "
+> As suggested by Bjorn Helgaas and Don Dutile in threads
+> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
+> to PCIe capabilities register in to way:
+> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
+>    repeatedly reading this register because it's read only.
+> 2) provide access functions for PCIe Capabilities registers to hide differences
+>    among PCIe base specifications, so the caller don't need to handle those
+>    differences.
 >
-> it is looks like sram_size value is garbage read from the device .
->
-> any idea ?
->
-> reference:
-> myri10ge - https://www.myricom.com
-> p4080ds -
-> http://www.freescale.com/webapp/sps/site/prod_summary.jsp?code=P4080DS
+> This patch set applies to
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
 
-This list is primarily concerned with issues in the Linux PCI core,
-not directly with drivers.
+Would you mind rebasing this to v3.6-rc1?  I think you posted this
+when my branch was still 3.5-based, and there are some upstream
+changes that cause minor conflicts here.
 
-It looks like the device has a 16MB BAR and the driver ioremapped it
-successfully.  After that, the PCI core is pretty much out of the way.
+You currently have:
 
-The driver has this email address at the top: <help@myri.com>; maybe
-they'd have some ideas.
+    int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
+u16 set_bits, u16 clear_bits)
+
+I think this is a bit awkward because the function name doesn't
+suggest *how* the word will be changed, and the clearing happens
+before the setting (opposite the parameter order).  Something like:
+
+    int pci_pcie_capability_mask_and_set_word(..., u16 mask, u16 set) or
+    int pci_pcie_capability_clear_and_set_word(..., u16 clear, u16 set)
+
+would be more obvious.  If you use "mask_and_set", I think the
+function should do "(val & mask) | set" with the complement being at
+the call site.  If you use "clear_and_set", I think it's OK to do
+"(val & ~mask) | set" as in your current patch.
+
+I know I suggested the "pci_pcie_capability_*" names, but they're
+getting a bit unwieldy, especially if we do "mask_and_set" or similar.
+ There are already several "pcie_*" functions, so maybe we should
+drop the leading "pci_" from these and just have:
+
+    pcie_capability_read_word
+    pcie_capability_write_word
+    pcie_capability_mask_and_set_word
 
 Bjorn
