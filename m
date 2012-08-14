@@ -1,65 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	David Airlie <airlied@linux.ie>,
-	Dave Airlie <airlied@redhat.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 29/32] PCI/radeon: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:34 +0800
-Message-Id: <1343836477-7287-30-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56571 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab2HNVz3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 17:55:29 -0400
+Received: by lbbgj3 with SMTP id gj3so520857lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 14 Aug 2012 14:55:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de>
+ <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com>
+ <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Aug 2012 14:55:07 -0700
+Message-ID: <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com>
+Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Tue, Aug 14, 2012 at 12:58 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> On Tue, Aug 14, 2012 at 01:39:23PM -0600, Stephen Warren wrote:
+>> On 08/13/2012 05:18 PM, Bjorn Helgaas wrote:
+>> > On Mon, Aug 13, 2012 at 11:47 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
+>> ...
+>> >> whereas for a device tree boot:
+>> >>
+>> >> (same):
+>> >>> [    2.112217] pci 0000:01:00.0: reg 10: [io  0x0000-0x00ff]
+>> >>> [    2.117635] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x00000fff 64bit pref]
+>> >>> [    2.124690] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00003fff 64bit pref]
+>> >>> [    2.131731] pci 0000:01:00.0: reg 30: [mem 0x00000000-0x0001ffff pref]
+>> >> ... (request region happens early)
+>> >>> [    2.179838] r8169 0000:01:00.0: BAR 0: requesting [io  0x0000-0x00ff]
+>> >>> [    2.193312] r8169 0000:01:00.0: BAR 2: requesting [mem 0x00000000-0x00000fff 64bit pref]
+>> >>> [    2.201397] r8169 0000:01:00.0: BAR 2: can't reserve [mem 0x00000000-0x00000fff 64bit pref]
+>> >>> [    2.209742] r8169 0000:01:00.0: (unregistered net_device): could not request regions
+>> >> ... (same, just happens too late)
+>> >>> [    2.236818] pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa001ffff pref]
+>> >>> [    2.244027] pci 0000:01:00.0: BAR 4: assigned [mem 0xa0020000-0xa0023fff 64bit pref]
+>> >>> [    2.251794] pci 0000:01:00.0: BAR 2: assigned [mem 0xa0024000-0xa0024fff 64bit pref]
+>> >>> [    2.259542] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+>> >>
+>> >> I suspect this is all still related to the PCI devices themselves being
+>> >> probed much earlier in the overall PCI initialization sequence when the
+>> >> PCI controller is probed later in the boot sequence, whereas PCI device
+>> >> probe is deferred until the overall PCI initialization sequence is
+>> >> complete if the PCI controller is probed very early in the boot sequence.
+>> >
+>> > I don't know what to apply your patches to (they don't apply cleanly
+>> > to v3.6-rc2), so I can't see exactly what you're doing.  But it looks
+>> > like you might be calling pci_bus_add_devices() before
+>> > pci_bus_assign_resource(), which isn't going to work.
+>>
+>> Yes, that's exactly what is happening.
+>>
+>> PCIe initialization starts in arch/arm/mach-tegra/pci.e
+>> tegra_pcie_init() which calls arch/arm/kernel/bios32.c
+>> pci_common_init(). That function first calls pcibios_init_hw() (in the
+>> same file, more about this later) and then loops over PCI buses, calling
+>> amongst other things pci_bus_assign_resources() then pci_bus_add_devices().
+>>
+>> The problem is that ARM's pcibios_init_hw() calls pci_scan_root_bus()
+>> (or a host-driver-specific function which that also calls
+>> pci_scan_root_bus() in Tegra's case) which in turn calls
+>> pci_bus_add_devices() right at the end, before control has returned to
+>> pci_common_init() and hence before pci_bus_assign_resources() has been
+>> called.
+>>
+>> If I modify pci_scan_root_bus() and remove the call to
+>> pci_bus_add_devices(), everything works as expected.
+>>
+>> So, I guess the question is: Should ARM's pcibios_init_hw() not be
+>> calling pci_scan_root_bus(), or at least presumably the ARM PCI code
+>> needs to do things in a slightly different order?
 
-Use PCIe capabilities access functions to simplify radeon driver's
-implementation.
+I think you need to do something like this instead of using pci_scan_root_bus():
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/gpu/drm/radeon/evergreen.c |   10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+    pci_create_root_bus()
+    pci_scan_child_bus()
+    pci_bus_assign_resources()
+    pci_bus_add_devices()
 
-diff --git a/drivers/gpu/drm/radeon/evergreen.c b/drivers/gpu/drm/radeon/evergreen.c
-index 01550d0..8804c80 100644
---- a/drivers/gpu/drm/radeon/evergreen.c
-+++ b/drivers/gpu/drm/radeon/evergreen.c
-@@ -77,13 +77,9 @@ void evergreen_tiling_fields(unsigned tiling_flags, unsigned *bankw,
- void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
- {
- 	u16 ctl, v;
--	int cap, err;
-+	int err;
- 
--	cap = pci_pcie_cap(rdev->pdev);
--	if (!cap)
--		return;
--
--	err = pci_read_config_word(rdev->pdev, cap + PCI_EXP_DEVCTL, &ctl);
-+	err = pci_pcie_capability_read_word(rdev->pdev, PCI_EXP_DEVCTL, &ctl);
- 	if (err)
- 		return;
- 
-@@ -95,7 +91,7 @@ void evergreen_fix_pci_max_read_req_size(struct radeon_device *rdev)
- 	if ((v == 0) || (v == 6) || (v == 7)) {
- 		ctl &= ~PCI_EXP_DEVCTL_READRQ;
- 		ctl |= (2 << 12);
--		pci_write_config_word(rdev->pdev, cap + PCI_EXP_DEVCTL, ctl);
-+		pci_pcie_capability_write_word(rdev->pdev, PCI_EXP_DEVCTL, ctl);
- 	}
- }
- 
--- 
-1.7.9.5
+This is the effective order used by most of the pci_create_root_bus() callers.
 
+> Maybe pci_scan_root_bus() should be calling pci_bus_assign_resources()?
+> Or a new function could be added which also assigns the resources.
+
+Yes, it probably should.  I'm nervous about just throwing it in there
+without quite a bit more analysis, but that's definitely the direction
+I think we should be heading.
+
+Bjorn
