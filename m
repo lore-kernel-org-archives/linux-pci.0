@@ -1,165 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59374 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755824Ab2HGSL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Aug 2012 14:11:56 -0400
-Message-ID: <50215A5B.2020508@redhat.com>
-Date: Tue, 07 Aug 2012 14:11:39 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:54448 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab2HNPrG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 11:47:06 -0400
+Message-ID: <502A72EF.3030303@gmail.com>
+Date: Tue, 14 Aug 2012 23:46:55 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v1 00/22] introduce PCI bus lock to serialize PCI
- hotplug operations
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities
+ registers
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
+In-Reply-To: <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/07/2012 12:10 PM, Jiang Liu wrote:
-> From: Jiang Liu<liuj97@gmail.com>
->
-> This is the second take to resolve race conditions when hot-plugging PCI
-> devices/host bridges. Instead of using a globla lock to serialize all hotplug
-> operations as in previous version, now we introduce a state machine and bit
-> lock mechanism for PCI buses to serialize hotplug operations. For discussions
-> related to previous version, please refer to:
-> http://comments.gmane.org/gmane.linux.kernel.pci/15007
->
-> This patch-set is still in early stages, so sending it out just requesting
-> for comments. Any comments are welcomed, especially about whether it's the
-> right/suitable way to solve these race condition issues.
->
-> patch 1-5:
-> 	Preparing for coming PCI bus lock
-> patch 6-7:
-> 	Core of the new PCI bus lock mechanism.
-> patch 8-13:
-> 	Enhance PCI core to support PCI bus lock mechanism.
-> patch 14-18:
-> 	Enhance several PCI hotplug drivers to use PCI bus lock to serialize
-> 	hotplug operations.
-> patch 19-20:
-> 	Enable PCI bus lock mechanism for x86 and IA64, still need to enable
-> 	PCI bus lock for other archs.
-> patch 21-22:
-> 	Cleanups for unsed code.
->
-> There are multiple methods to trigger PCI hotplug requests/operations
-> concurrently, such as:
-> 1. Sysfs interfaces exported by the PCI core subsystem
-> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../remove
-> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../rescan
-> 	/sys/devices/pcissss:bb/ssss:bb:dd.f/.../pci_bus/ssss:bb/rescan
-> 	/sys/bus/pci/rescan
-> 2. Sysfs interfaces exported by the PCI hotplug subsystem
-> 	/sys/bus/pci/slots/xx/power
-> 3. PCI hotplug events triggered by PCI Hotplug Controllers
-> 4. ACPI hotplug events for PCI host bridges
-> 5. Driver binding/unbinding events
-> 	binding/unbinding pci drivers with SR-IOV support
->
-6. PCI reset
-    --> a PCIe device-level reset is done by KVM when it assigns a device
-        to a guest.  a PCI config-save before reset, and PCI config-restore after reset
-        is done in this case.
-    --> VF devices are interesting, since they are reset, then bound to
-        pci-stub driver.  when more than 1 VF is enabled in a PF,
-        and several device-assignments are done simultaneously, you
-        get a storm of reset (save/restore pci cfg space), and pci-stub binding
-        (pci cfg read for resource allocation/deallocation), and depending on
-        the hw design: an AER caused by the FLR reset -- not suppose to, but
-        hw has bugs too! ;-)
-    PCI locking is 'challenged' in the above scenario.
-
-   So, I ask: have you tried your patch set doing something like:
-     a) modprobe an SRIOV device with > 1 vf enabled
-   you may also have to do:
-     b) while assigning another SRIOV device's VF to another KVM guest
-
-Unfortunately, the PCI cfg-space locking, esp. on x86 (ok, I'll say it:
-damn, mutually exclusive, IO-port-based cfg registers), doesn't lend itself
-to this multi-task, dynamic PCI scenario.
-Much less complicated on linearly-mapped, PCI-mmconf-only accesses.
-
-- Don
-
-> With current implementation, the PCI core subsystem doesn't support
-> concurrent hotplug operations yet. The existing pci_bus_sem lock only
-> protects several lists in struct pci_bus, such as children list,
-> devices list, but it doesn't protect the pci_bus or pci_dev structure
-> themselves.
->
-> Let's take pci_remove_bus_device() as an example, which are used by
-> PCI hotplug drivers to hot-remove PCI devices.  Currently all these
-> are free running without any protection, so it can't support reentrance.
-> pci_remove_bus_device()
->      ->pci_stop_bus_device()
->          ->pci_stop_bus_device()
->              ->pci_stop_bus_devices()
->          ->pci_stop_dev()
->
-> Jiang Liu (22):
->    PCI: use pci_get_domain_bus_and_slot() to avoid race conditions
->    PCI: trivial cleanups for drivers/pci/remove.c
->    PCI: change PCI device management code to better follow device model
->    PCI: split PCI bus device registration into two stages
->    PCI: introduce pci_bus_{get|put}() to manage PCI bus reference count
->    PCI: use a global lock to serialize PCI root bridge hotplug
->      operations
->    PCI: introduce PCI bus lock to serialize PCI hotplug operations
->    PCI: introduce hotplug safe search interfaces for PCI bus/device
->    PCI: enhance PCI probe logic to support PCI bus lock mechanism
->    PCI: enhance PCI bus specific logic to support PCI bus lock mechanism
->    PCI: enhance PCI resource assignment logic to support PCI bus lock
->      mechanism
->    PCI: enhance PCI remove logic to support PCI bus lock mechanism
->    PCI: make each PCI device hold a reference to its parent PCI bus
->    PCI/sysfs: use PCI bus lock to avoid race conditions
->    PCI/eeepc: use PCI bus lock to avoid race conditions
->    PCI/asus-wmi: use PCI bus lock to avoid race conditions
->    PCI/pciehp: use PCI bus lock to avoid race conditions
->    PCI/acpiphp: use PCI bus lock to avoid race conditions
->    PCI/x86: enable PCI bus lock mechanism for x86 platforms
->    PCI/IA64: enable PCI bus lock mechanism for IA64 platforms
->    PCI: cleanups for PCI bus lock implementation
->    PCI: unexport pci_root_buses
->
->   arch/ia64/pci/pci.c                  |    2 +
->   arch/ia64/sn/kernel/io_common.c      |    4 +-
->   arch/ia64/sn/kernel/io_init.c        |    1 +
->   arch/ia64/sn/pci/tioca_provider.c    |    4 +-
->   arch/x86/pci/acpi.c                  |    6 +-
->   arch/x86/pci/common.c                |   12 +++
->   drivers/acpi/pci_root.c              |    8 +-
->   drivers/edac/i7core_edac.c           |   16 ++-
->   drivers/gpu/drm/drm_fops.c           |    6 +-
->   drivers/gpu/vga/vgaarb.c             |   15 +--
->   drivers/pci/bus.c                    |  188 +++++++++++++++++++++++++++++-----
->   drivers/pci/host-bridge.c            |   19 ++++
->   drivers/pci/hotplug/acpiphp_glue.c   |   13 ++-
->   drivers/pci/hotplug/cpcihp_generic.c |    8 +-
->   drivers/pci/hotplug/pciehp_pci.c     |   15 +++
->   drivers/pci/hotplug/sgi_hotplug.c    |    2 +
->   drivers/pci/iov.c                    |   11 +-
->   drivers/pci/pci-sysfs.c              |   37 ++++---
->   drivers/pci/probe.c                  |   83 +++++++++++----
->   drivers/pci/remove.c                 |  176 +++++++++++++++++--------------
->   drivers/pci/search.c                 |   53 ++++++++--
->   drivers/pci/setup-bus.c              |   65 +++++++++---
->   drivers/pci/xen-pcifront.c           |   10 +-
->   drivers/platform/x86/asus-wmi.c      |   23 ++++-
->   drivers/platform/x86/eeepc-laptop.c  |   20 ++--
->   include/linux/pci.h                  |   56 +++++++++-
->   26 files changed, 629 insertions(+), 224 deletions(-)
->
+Hi Bjorn,
+	No problem, will handle issues mentioned below.
+	Regards!
+	Gerry
+On 08/14/2012 12:25 PM, Bjorn Helgaas wrote:
+> On Wed, Aug 1, 2012 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Jiang Liu <liuj97@gmail.com>
+>>
+>> As suggested by Bjorn Helgaas and Don Dutile in threads
+>> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
+>> to PCIe capabilities register in to way:
+>> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
+>>    repeatedly reading this register because it's read only.
+>> 2) provide access functions for PCIe Capabilities registers to hide differences
+>>    among PCIe base specifications, so the caller don't need to handle those
+>>    differences.
+>>
+>> This patch set applies to
+>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+> 
+> Would you mind rebasing this to v3.6-rc1?  I think you posted this
+> when my branch was still 3.5-based, and there are some upstream
+> changes that cause minor conflicts here.
+> 
+> You currently have:
+> 
+>     int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
+> u16 set_bits, u16 clear_bits)
+> 
+> I think this is a bit awkward because the function name doesn't
+> suggest *how* the word will be changed, and the clearing happens
+> before the setting (opposite the parameter order).  Something like:
+> 
+>     int pci_pcie_capability_mask_and_set_word(..., u16 mask, u16 set) or
+>     int pci_pcie_capability_clear_and_set_word(..., u16 clear, u16 set)
+> 
+> would be more obvious.  If you use "mask_and_set", I think the
+> function should do "(val & mask) | set" with the complement being at
+> the call site.  If you use "clear_and_set", I think it's OK to do
+> "(val & ~mask) | set" as in your current patch.
+> 
+> I know I suggested the "pci_pcie_capability_*" names, but they're
+> getting a bit unwieldy, especially if we do "mask_and_set" or similar.
+>  There are already several "pcie_*" functions, so maybe we should
+> drop the leading "pci_" from these and just have:
+> 
+>     pcie_capability_read_word
+>     pcie_capability_write_word
+>     pcie_capability_mask_and_set_word
+> 
+> Bjorn
+> 
 
