@@ -1,71 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:53912 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754104Ab2HOTPY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 15:15:24 -0400
-Received: by ggdk6 with SMTP id k6so2166730ggd.19
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 12:15:24 -0700 (PDT)
+Received: from ogre.sisk.pl ([193.178.161.156]:39043 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751044Ab2HNVsB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Aug 2012 17:48:01 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Huang Ying <ying.huang@intel.com>
+Subject: Re: [BUGFIX -v3 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
+Date: Tue, 14 Aug 2012 23:53:58 +0200
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1344388061-18981-1-git-send-email-ying.huang@intel.com> <1344388061-18981-4-git-send-email-ying.huang@intel.com> <1344566197.19962.95.camel@yhuang-dev>
+In-Reply-To: <1344566197.19962.95.camel@yhuang-dev>
 MIME-Version: 1.0
-In-Reply-To: <201208122326.07318.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1208110959320.21252-100000@netrider.rowland.org>
- <201208112356.26719.rjw@sisk.pl> <201208122326.07318.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Aug 2012 13:15:02 -0600
-Message-ID: <CAErSpo7XZZ=ehzSx256aL8FomDX8AjR2jYsa-y5K+9QGGHghKA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: EHCI: fix crash during hibernation on ASUS computers
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	AceLan Kao <acelan.kao@canonical.com>, alex.hung@canonical.com,
-	Oleksij Rempel <bug-track@fisher-privat.net>,
-	Linux-pm mailing list <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201208142353.59106.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 12, 2012 at 3:26 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
-> Commit dbf0e4c (PCI: EHCI: fix crash during suspend on ASUS
-> computers) added a workaround for an ASUS suspend issue related to
-> USB EHCI and a bug in a number of ASUS BIOSes that attemt to shut
-> down the EHCI controller during system suspend if its PCI command
-> register doesn't contain 0 at that time.
->
-> It turns out that the same workaround is necessary in the analogous
-> hibernation code path, so add it.
->
-> References: https://bugzilla.kernel.org/show_bug.cgi?id=45811
-> Reported-and-tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> Cc: stable@vger.kernel.org
-> ---
->
-> Hi Bjorn,
->
-> Please push this to Linus ASAP, we need it in 3.6 and -stable.
+Sorry for the delay.
 
-Applied to my for-linus branch, thanks.  I'll ask Linus to pull it in
-a couple days, after it's had a chance in -next.
+On Friday, August 10, 2012, Huang Ying wrote:
+> On Wed, 2012-08-08 at 09:07 +0800, Huang Ying wrote:
+> > This patch fixes the following bug:
+> > 
+> > http://marc.info/?l=linux-pci&m=134338059022620&w=2
+> > 
+> > Where lspci does not work properly if a device and the corresponding
+> > parent bridge (such as PCIe port) is suspended.  This is because the
+> > device configuration space registers will be not accessible if the
+> > corresponding parent bridge is suspended or the device is put into
+> > D3cold state.
+> > 
+> > To solve the issue, the bridge/PCIe port connected to the device is
+> > put into active state before read/write configuration space registers.
+> > If the device is in D3cold state, it will be put into active state
+> > too.
+> > 
+> > To avoid resume/suspend PCIe port for each configuration register
+> > read/write, a small delay is added before the PCIe port to go
+> > suspended.
+> > 
+> > Reported-by: Bjorn Mork <bjorn@mork.no>
+> > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> > ---
+> >  drivers/pci/pci-sysfs.c        |   43 +++++++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/pcie/portdrv_pci.c |    9 ++++++++
+> >  2 files changed, 52 insertions(+)
+> > 
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -458,6 +458,41 @@ boot_vga_show(struct device *dev, struct
+> >  }
+> >  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+> >  
+> > +static void
+> > +pci_config_pm_runtime_get(struct pci_dev *pdev)
+> > +{
+> > +	struct device *dev = &pdev->dev;
+> > +	struct device *parent = dev->parent;
+> > +
+> > +	if (parent)
+> > +		pm_runtime_get_sync(parent);
+> > +	pm_runtime_get_noresume(dev);
+> > +	/*
+> > +	 * pdev->current_state is set to PCI_D3cold during suspending,
+> > +	 * so wait until suspending completes
+> > +	 */
+> > +	pm_runtime_barrier(dev);
+> > +	if (pdev->current_state == PCI_D3cold) {
+> > +		/*
+> > +		 * Already called pm_runtime_get_noresume above, so
+> > +		 * just calling pm_runtime_resume is sufficient, need
+> > +		 * not to call pm_runtime_get_sync.
+> > +		 */
+> > +		pm_runtime_resume(dev);
+> 
+> Hi, Rafael,
+> 
+> Do you OK with this new version and the comments added above?
 
-> ---
->  drivers/pci/pci-driver.c |    7 +++++++
->  1 file changed, 7 insertions(+)
->
-> Index: linux/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux.orig/drivers/pci/pci-driver.c
-> +++ linux/drivers/pci/pci-driver.c
-> @@ -959,6 +959,13 @@ static int pci_pm_poweroff_noirq(struct
->         if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
->                 pci_prepare_to_sleep(pci_dev);
->
-> +       /*
-> +        * The reason for doing this here is the same as for the analogous code
-> +        * in pci_pm_suspend_noirq().
-> +        */
-> +       if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-> +               pci_write_config_word(pci_dev, PCI_COMMAND, 0);
-> +
->         return 0;
->  }
->
+I meant something different.  Namely, it may not be entirely clear why
+we make the effort to check if pdev->current_state is equal to PCI_D3cold
+instead of just calling pm_runtime_get_sync() right after resuming the
+parent.
+
+My understanding is that we do it because in principle the device may
+be suspended, but not in D3cold, and in that case we don't need to
+resume it.  If that is the reason, it may be a good idea to document it
+in a comment.
+
+The comment explaining why the barrier is there is clearly useful, though.
+
+Thanks,
+Rafael
