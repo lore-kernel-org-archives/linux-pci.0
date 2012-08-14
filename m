@@ -1,122 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:62810 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756110Ab2HAP7v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 11:59:51 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	Ravi Anand <ravi.anand@qlogic.com>,
-	Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>, linux-driver@qlogic.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 28/32] PCI/qla: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:33 +0800
-Message-Id: <1343836477-7287-29-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55191 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754939Ab2HNRib (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Aug 2012 13:38:31 -0400
+Received: by lbbgj3 with SMTP id gj3so382163lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 14 Aug 2012 10:38:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120814055542.GB16181@avionic-0098.mockup.avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <1343332512-28762-6-git-send-email-thierry.reding@avionic-design.de>
+ <CAErSpo4qg45brVRwEbw3=R04VsbnvUowSMWcT+M6VoAxbf3Cqg@mail.gmail.com> <20120814055542.GB16181@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 14 Aug 2012 10:38:08 -0700
+Message-ID: <CAErSpo6LYpkC5wop53S1r1z3ov4+w4soqrQARzbbouVs1trzUg@mail.gmail.com>
+Subject: Re: [PATCH v3 05/10] resource: add PCI configuration space support
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Mon, Aug 13, 2012 at 10:55 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> On Mon, Aug 13, 2012 at 10:00:45PM -0700, Bjorn Helgaas wrote:
+>> On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
+>> <thierry.reding@avionic-design.de> wrote:
+>> > This commit adds a new flag that allows marking resources as PCI
+>> > configuration space.
+>> >
+>> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>> > ---
+>> > Changes in v3:
+>> > - new patch
+>> >
+>> >  include/linux/ioport.h | 2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >
+>> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+>> > index 589e0e7..3314843 100644
+>> > --- a/include/linux/ioport.h
+>> > +++ b/include/linux/ioport.h
+>> > @@ -102,7 +102,7 @@ struct resource {
+>> >
+>> >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+>> >  #define IORESOURCE_PCI_FIXED           (1<<4)  /* Do not move resource */
+>> > -
+>> > +#define IORESOURCE_PCI_CS              (1<<5)  /* PCI configuration space */
+>>
+>> What is the purpose of this?  It seems that you are marking regions
+>> that we call MMCONFIG on x86, or ECAM-type regions in the language of
+>> the PCIe spec.  I see that you set it in several places, but I don't
+>> see anything that ever looks for it.  Do you have plans to use it in
+>> the future?  If it really does correspond to MMCONFIG/ECAM, we should
+>> handle those regions consistently across all architectures.
+>
+> The purpose is ultimately to obtain the MMCONFIG/ECAM resources assigned
+> to a PCI host controller. I've used this in the of_pci_parse_ranges()
+> and in the static board setup code to mark ranges as such. Perhaps
+> IORESOURCE_ECAM or IORESOURCE_MMCONFIG might have been better names. I
+> also just noticed that I'm not using this anywhere, but the plan was to
+> eventually use it with platform_get_resource(). However that doesn't
+> seem to work either because the lower bits of the flags aren't use for
+> comparison in that function.
+>
+> Any other ideas how that could be handled? Basically what I need is a
+> way to mark a resource as an MMCONFIG/ECAM range so that it can be used
+> to program the PCI host controller accordingly. I don't know how these
+> are assigned on x86. I was under the impression that the MMCONFIG/ECAM
+> space was accessed through a single single address/data register pair.
 
-Use PCIe capabilities access functions to simplify QLA SCSI drivers'
-implementation.
+The legacy config access mechanism (CF8h/CFCh registers described in
+PCI 3.0 spec sec 3.2.2.3.2) is a single address/data pair, but this is
+mostly x86-specific.  The ECAM mechanism (described in the PCIe 3.0
+spec sec 7.2.2) is not a single address/data pair; instead, each byte
+of config space is directly mapped into the host's MMIO space.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/scsi/qla2xxx/qla_init.c |    4 ++--
- drivers/scsi/qla2xxx/qla_nx.c   |    8 ++------
- drivers/scsi/qla4xxx/ql4_nx.c   |    4 +---
- 3 files changed, 5 insertions(+), 11 deletions(-)
+Here's what we do on x86 (omitting some historical grunge that
+complicates things):
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index ca50847..a44653b 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -685,7 +685,7 @@ qla24xx_pci_config(scsi_qla_host_t *vha)
- 		pcix_set_mmrbc(ha->pdev, 2048);
- 
- 	/* PCIe -- adjust Maximum Read Request Size (2048). */
--	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
-+	if (pci_is_pcie(ha->pdev))
- 		pcie_set_readrq(ha->pdev, 2048);
- 
- 	pci_disable_rom(ha->pdev);
-@@ -721,7 +721,7 @@ qla25xx_pci_config(scsi_qla_host_t *vha)
- 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
- 
- 	/* PCIe -- adjust Maximum Read Request Size (2048). */
--	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
-+	if (pci_is_pcie(ha->pdev))
- 		pcie_set_readrq(ha->pdev, 2048);
- 
- 	pci_disable_rom(ha->pdev);
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index caf627b..be516e9 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -1615,13 +1615,11 @@ qla82xx_get_fw_offs(struct qla_hw_data *ha)
- char *
- qla82xx_pci_info_str(struct scsi_qla_host *vha, char *str)
- {
--	int pcie_reg;
- 	struct qla_hw_data *ha = vha->hw;
- 	char lwstr[6];
- 	uint16_t lnk;
- 
--	pcie_reg = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_word(ha->pdev, pcie_reg + PCI_EXP_LNKSTA, &lnk);
-+	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
- 	ha->link_width = (lnk >> 4) & 0x3f;
- 
- 	strcpy(str, "PCIe (");
-@@ -2497,7 +2495,6 @@ fw_load_failed:
- int
- qla82xx_start_firmware(scsi_qla_host_t *vha)
- {
--	int           pcie_cap;
- 	uint16_t      lnk;
- 	struct qla_hw_data *ha = vha->hw;
- 
-@@ -2528,8 +2525,7 @@ qla82xx_start_firmware(scsi_qla_host_t *vha)
- 	}
- 
- 	/* Negotiated Link width */
--	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
-+	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
- 	ha->link_width = (lnk >> 4) & 0x3f;
- 
- 	/* Synchronize with Receive peg */
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 228b670..7e30158 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -1566,7 +1566,6 @@ qla4_8xxx_set_qsnt_ready(struct scsi_qla_host *ha)
- static int
- qla4_8xxx_start_firmware(struct scsi_qla_host *ha, uint32_t image_start)
- {
--	int pcie_cap;
- 	uint16_t lnk;
- 
- 	/* scrub dma mask expansion register */
-@@ -1590,8 +1589,7 @@ qla4_8xxx_start_firmware(struct scsi_qla_host *ha, uint32_t image_start)
- 	}
- 
- 	/* Negotiated Link width */
--	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
-+	pci_pcie_capability_read_word(ha->pdev, PCI_EXP_LNKSTA, &lnk);
- 	ha->link_width = (lnk >> 4) & 0x3f;
- 
- 	/* Synchronize with Receive peg */
--- 
-1.7.9.5
+  - Discover the host bridge via a PNP0A08 device in the ACPI namespace.
+  - Discover the bus number range behind the bridge using a _CRS
+method in the PNP0A08 device.
+  - Discover the ECAM space for those buses via a _CBA method in the
+PNP0A08 device.
+  - Tell the config accessors (struct pci_ops) that the ECAM space for
+buses A-B is at address X.
+  - Enumerate the devices behind the host bridge by calling
+pci_scan_root_bus(), passing the config accessors.
 
+It sounds like you want a way to parse the resources at one point,
+saving them and marking the ECAM region, then at a later point, look
+up the ECAM from a saved list.  We don't do that on x86 because the
+config accessors keep an internal list of the ECAM area for each bus.
+
+We do of course want to put this ECAM space in the IORESOURCE_MEM tree
+because it consumes address space and we have to make sure we don't
+put anything else on top of it.  But we don't have any reason to
+describe the MMIO -> config space function in that tree.  From the
+point of view of the rest of the system, it's just MMIO space that's
+consumed by the PCI host bridge, just like any other device-specific
+MMIO area.
+
+Bjorn
