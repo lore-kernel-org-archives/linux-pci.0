@@ -1,243 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:64718 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932392Ab2HOUHT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 16:07:19 -0400
-Received: by lagy9 with SMTP id y9so1061955lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 13:07:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1337930622-7696-1-git-send-email-jiang.liu@huawei.com>
-References: <1337930622-7696-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:64882 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894Ab2HOUku (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 16:40:50 -0400
+Received: by faem1 with SMTP id m1so6125fae.1
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 13:40:48 -0700 (PDT)
+Date: Wed, 15 Aug 2012 14:40:47 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 15 Aug 2012 14:06:57 -0600
-Message-ID: <CAErSpo4Ya4TXns664jXHqDSLfPGnE-v5GD0fTpjxU7q45WQ02w@mail.gmail.com>
-Subject: Re: [PATCH v1] PCI,IA64: free associated resources when removing host bridges
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>,
-	linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, shangw@linux.vnet.ibm.com
+Subject: Re: [PATCH] pci: cleanup on confusing variable name for
+ pci_create_root_bus
+Message-ID: <20120815204047.GA18925@google.com>
+References: <1339398558-2562-1-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1339398558-2562-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 25, 2012 at 1:23 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> There are some resources associated with PCI host bridges on
-> IA 64 platforms, they should be released when removing host
-> bridges. Otherwise it will cause memory leak and other strange
-> behavior.
->
-> For example, PCI IO port address space are mapped into memory
-> address space on IA64. Those IO port resource should be released
-> when removing PCI host bridges. Otherwise host bridge hotplug
-> may cause duplicated entries in the iomem resource pool.
-> All "1fffffe400000-1fffffffffffe" are duplicated entries.
->
-> 30fc000000-30ffffffff : reserved
-> 1fffffc000000-1fffffc33dcf7 : PCI Bus 0000:00 I/O Ports 00000000-00000cf7
-> 1fffffc400000-1fffffe3fffff : PCI Bus 0000:00 I/O Ports 00001000-00008fff
-> 30fc000000-30ffffffff : reserved
-> 1fffffc000000-1fffffc33dcf7 : PCI Bus 0000:00 I/O Ports 00000000-00000cf7
-> 1fffffc400000-1fffffe3fffff : PCI Bus 0000:00 I/O Ports 00001000-00008fff
-> 1fffffe400000-1fffffffffffe : PCI Bus 0000:40 I/O Ports 00009000-0000fffe
->   1fffffe400000-1fffffffffffe : PCI Bus 0000:40 I/O Ports 00009000-0000fffe
->     1fffffe400000-1fffffffffffe : PCI Bus 0000:40 I/O Ports 00009000-0000fffe
->
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->
-> This patch applies to
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/next-3.5
+On Mon, Jun 11, 2012 at 03:09:18PM +0800, Wei Yang wrote:
+> Since there are serverail *bridge* in this function, it would be a little
+> confusion.
+> 
+> Rename the local variable *bridge* to *host_bridge* for easy reading.
+> 
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
 
-x86 does the exact same thing in arch/x86/pci/acpi.c (some of the data
-structures are slightly different and ia64 does have the extra
-memory-mapped I/O port space regions, but they are essentially
-similar).  Can you rework this a bit so it looks more like the x86
-code, e.g., use the same function names and code when possible?
+pci_create_root_bus() has changed somewhat since you posted this patch.
+I refreshed it and also changed some other occurrences, resulting in
+the following patch.  I'll apply it if it looks OK to you.
 
-Someday the x86 and ia64 code should be converged, and if the code
-looks more similar, that's more likely to happen.
+Bjorn
 
-> ---
->  arch/ia64/include/asm/pci.h |    6 +++
->  arch/ia64/pci/pci.c         |   80 +++++++++++++++++++++++++++++++++++--------
->  2 files changed, 71 insertions(+), 15 deletions(-)
->
-> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-> index 5e04b59..3939f00 100644
-> --- a/arch/ia64/include/asm/pci.h
-> +++ b/arch/ia64/include/asm/pci.h
-> @@ -94,6 +94,11 @@ struct pci_window {
->         u64 offset;
->  };
->
-> +struct iospace_resource {
-> +       struct list_head list;
-> +       struct resource res;
-> +};
-> +
->  struct pci_controller {
->         void *acpi_handle;
->         void *iommu;
-> @@ -102,6 +107,7 @@ struct pci_controller {
->
->         unsigned int windows;
->         struct pci_window *window;
-> +       struct list_head io_resources;
->
->         void *platform_data;
->  };
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index d173a88..a66cba4 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -168,25 +168,20 @@ new_space (u64 phys_base, int sparse)
->  static u64 __devinit
->  add_io_space (struct pci_root_info *info, struct acpi_resource_address64 *addr)
->  {
-> +       struct iospace_resource *iospace;
->         struct resource *resource;
->         char *name;
->         unsigned long base, min, max, base_port;
->         unsigned int sparse = 0, space_nr, len;
->
-> -       resource = kzalloc(sizeof(*resource), GFP_KERNEL);
-> -       if (!resource) {
-> +       len = strlen(info->name) + 32;
-> +       iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
-> +       if (!iospace) {
->                 printk(KERN_ERR "PCI: No memory for %s I/O port space\n",
->                         info->name);
->                 goto out;
->         }
-> -
-> -       len = strlen(info->name) + 32;
-> -       name = kzalloc(len, GFP_KERNEL);
-> -       if (!name) {
-> -               printk(KERN_ERR "PCI: No memory for %s I/O port space name\n",
-> -                       info->name);
-> -               goto free_resource;
-> -       }
-> +       name = (char *)(iospace + 1);
->
->         min = addr->minimum;
->         max = min + addr->address_length - 1;
-> @@ -195,7 +190,7 @@ add_io_space (struct pci_root_info *info, struct acpi_resource_address64 *addr)
->
->         space_nr = new_space(addr->translation_offset, sparse);
->         if (space_nr == ~0)
-> -               goto free_name;
-> +               goto free_resource;
->
->         base = __pa(io_space[space_nr].mmio_base);
->         base_port = IO_SPACE_BASE(space_nr);
-> @@ -210,18 +205,24 @@ add_io_space (struct pci_root_info *info, struct acpi_resource_address64 *addr)
->         if (space_nr == 0)
->                 sparse = 1;
->
-> +       resource = &iospace->res;
->         resource->name  = name;
->         resource->flags = IORESOURCE_MEM;
->         resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
->         resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
-> -       insert_resource(&iomem_resource, resource);
-> +       if (insert_resource(&iomem_resource, resource)) {
-> +               dev_err(&info->bridge->dev,
-> +                       "can't allocate host bridge io space resource  %pR\n",
-> +                       resource);
-> +               goto free_resource;
-> +       }
-> +
-> +       list_add_tail(&iospace->list, &info->controller->io_resources);
->
->         return base_port;
->
-> -free_name:
-> -       kfree(name);
->  free_resource:
-> -       kfree(resource);
-> +       kfree(iospace);
->  out:
->         return ~0;
->  }
-> @@ -325,6 +326,51 @@ static __devinit acpi_status add_window(struct acpi_resource *res, void *data)
->         return AE_OK;
->  }
->
-> +static void shutdown_pci_controller(struct pci_host_bridge *bridge)
-> +{
-> +       unsigned int i;
-> +       struct resource *resource;
-> +       struct iospace_resource *iospace;
-> +       struct pci_controller *controller = bridge->release_data;
-> +
-> +       if (!controller)
-> +               return;
+commit a634940588f3469b1efa883db1a8a66c3f84c06c
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Aug 15 14:24:25 2012 -0600
 
-I'd remove this test because controller will be NULL only if there's a
-programming error, and having the test here would cover up such
-errors.
+    PCI: Use "host_bridge" for pci_host_bridge variable names
+    
+    Rename local pci_host_bridge variables from "bridge" to "host_bridge"
+    to distinguish them from PCI-to-PCI bridges.
+    
+    Based-on-patch-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> +       /* release io space resource */
-> +       list_for_each_entry(iospace, &controller->io_resources, list)
-> +               release_resource(&iospace->res);
-> +
-> +       /* release root bus resource */
-> +       for (i = 0; i < controller->windows; i++) {
-> +               resource = &controller->window[i].resource;
-> +               if (resource->flags & (IORESOURCE_MEM | IORESOURCE_IO))
-> +                       if (resource->parent)
-> +                               release_resource(resource);
-> +       }
-> +}
-> +
-> +static void free_pci_controller(struct pci_host_bridge *bridge)
-> +{
-> +       struct resource *resource;
-> +       struct iospace_resource *iospace, *tmp;
-> +       struct pci_controller *controller = bridge->release_data;
-> +
-> +       if (!controller)
-> +               return;
-> +
-> +       shutdown_pci_controller(bridge);
-> +
-> +       list_for_each_entry_safe(iospace, tmp, &controller->io_resources, list)
-> +               kfree(iospace);
-> +
-> +       if (controller->window) {
-> +               kfree(controller->window->resource.name);
-> +               kfree(controller->window);
-> +       }
-> +
-> +       kfree(controller);
-> +}
-> +
->  struct pci_bus * __devinit
->  pci_acpi_scan_root(struct acpi_pci_root *root)
->  {
-> @@ -343,6 +389,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
->                 goto out1;
->
->         controller->acpi_handle = device->handle;
-> +       INIT_LIST_HEAD(&controller->io_resources);
->
->         pxm = acpi_get_pxm(controller->acpi_handle);
->  #ifdef CONFIG_NUMA
-> @@ -386,6 +433,9 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
->                 return NULL;
->         }
->
-> +       pci_set_host_bridge_release(to_pci_host_bridge(pbus->bridge),
-> +                       free_pci_controller, controller);
-> +
->         pci_scan_child_bus(pbus);
->         return pbus;
->
-> --
-> 1.7.1
->
->
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..6677528 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -27,12 +27,12 @@ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+ 	return to_pci_host_bridge(bus->bridge);
+ }
+ 
+-void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
++void pci_set_host_bridge_release(struct pci_host_bridge *host_bridge,
+ 				 void (*release_fn)(struct pci_host_bridge *),
+ 				 void *release_data)
+ {
+-	bridge->release_fn = release_fn;
+-	bridge->release_data = release_data;
++	host_bridge->release_fn = release_fn;
++	host_bridge->release_data = release_data;
+ }
+ 
+ static bool resource_contains(struct resource *res1, struct resource *res2)
+@@ -43,11 +43,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
+ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
+ 			     struct resource *res)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *host_bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+-	list_for_each_entry(window, &bridge->windows, list) {
++	list_for_each_entry(window, &host_bridge->windows, list) {
+ 		if (resource_type(res) != resource_type(window->res))
+ 			continue;
+ 
+@@ -71,11 +71,11 @@ static bool region_contains(struct pci_bus_region *region1,
+ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ 			     struct pci_bus_region *region)
+ {
+-	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
++	struct pci_host_bridge *host_bridge = find_pci_host_bridge(dev);
+ 	struct pci_host_bridge_window *window;
+ 	resource_size_t offset = 0;
+ 
+-	list_for_each_entry(window, &bridge->windows, list) {
++	list_for_each_entry(window, &host_bridge->windows, list) {
+ 		struct pci_bus_region bus_region;
+ 
+ 		if (resource_type(res) != resource_type(window->res))
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6c143b4..5d084b6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -467,15 +467,15 @@ static struct pci_bus * pci_alloc_bus(void)
+ 
+ static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+ {
+-	struct pci_host_bridge *bridge;
++	struct pci_host_bridge *host_bridge;
+ 
+-	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+-	if (bridge) {
+-		INIT_LIST_HEAD(&bridge->windows);
+-		bridge->bus = b;
++	host_bridge = kzalloc(sizeof(*host_bridge), GFP_KERNEL);
++	if (host_bridge) {
++		INIT_LIST_HEAD(&host_bridge->windows);
++		host_bridge->bus = b;
+ 	}
+ 
+-	return bridge;
++	return host_bridge;
+ }
+ 
+ static unsigned char pcix_bus_speed[] = {
+@@ -1179,14 +1179,14 @@ int pci_cfg_space_size(struct pci_dev *dev)
+ 
+ static void pci_release_bus_bridge_dev(struct device *dev)
+ {
+-	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
++	struct pci_host_bridge *host_bridge = to_pci_host_bridge(dev);
+ 
+-	if (bridge->release_fn)
+-		bridge->release_fn(bridge);
++	if (host_bridge->release_fn)
++		host_bridge->release_fn(host_bridge);
+ 
+-	pci_free_resource_list(&bridge->windows);
++	pci_free_resource_list(&host_bridge->windows);
+ 
+-	kfree(bridge);
++	kfree(host_bridge);
+ }
+ 
+ struct pci_dev *alloc_pci_dev(void)
+@@ -1636,7 +1636,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+ 	int error;
+-	struct pci_host_bridge *bridge;
++	struct pci_host_bridge *host_bridge;
+ 	struct pci_bus *b, *b2;
+ 	struct pci_host_bridge_window *window, *n;
+ 	struct resource *res;
+@@ -1658,17 +1658,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		goto err_out;
+ 	}
+ 
+-	bridge = pci_alloc_host_bridge(b);
+-	if (!bridge)
++	host_bridge = pci_alloc_host_bridge(b);
++	if (!host_bridge)
+ 		goto err_out;
+ 
+-	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_bus_bridge_dev;
+-	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+-	error = device_register(&bridge->dev);
++	host_bridge->dev.parent = parent;
++	host_bridge->dev.release = pci_release_bus_bridge_dev;
++	dev_set_name(&host_bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	error = device_register(&host_bridge->dev);
+ 	if (error)
+ 		goto bridge_dev_reg_err;
+-	b->bridge = get_device(&bridge->dev);
++	b->bridge = get_device(&host_bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
+ 
+@@ -1694,7 +1694,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 
+ 	/* Add initial resources to the bus */
+ 	list_for_each_entry_safe(window, n, resources, list) {
+-		list_move_tail(&window->list, &bridge->windows);
++		list_move_tail(&window->list, &host_bridge->windows);
+ 		res = window->res;
+ 		offset = window->offset;
+ 		if (res->flags & IORESOURCE_BUS)
+@@ -1721,10 +1721,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	return b;
+ 
+ class_dev_reg_err:
+-	put_device(&bridge->dev);
+-	device_unregister(&bridge->dev);
++	put_device(&host_bridge->dev);
++	device_unregister(&host_bridge->dev);
+ bridge_dev_reg_err:
+-	kfree(bridge);
++	kfree(host_bridge);
+ err_out:
+ 	kfree(b);
+ 	return NULL;
