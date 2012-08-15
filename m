@@ -1,115 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50828 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755429Ab2HVSDO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 14:03:14 -0400
-Received: by lbbgj3 with SMTP id gj3so815757lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 11:03:12 -0700 (PDT)
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:52151 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020Ab2HOOtg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 10:49:36 -0400
+Received: by ghrr11 with SMTP id r11so1847727ghr.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 07:49:35 -0700 (PDT)
+Message-ID: <502BB7A2.7040304@gmail.com>
+Date: Wed, 15 Aug 2012 22:52:18 +0800
+From: Yijing Wang <wangyijing0307@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20120822154908.2e6ef3c0@feng-i7>
-References: <5017D19B.5080806@redhat.com> <1343738627.27983.30.camel@gandalf.stny.rr.com>
- <5017D4AB.3090107@redhat.com> <1343740419.27983.33.camel@gandalf.stny.rr.com>
- <20120731234336.GA5526@localhost> <1343778699.27983.70.camel@gandalf.stny.rr.com>
- <20120731235705.GW2422@linux.vnet.ibm.com> <1343779778.27983.73.camel@gandalf.stny.rr.com>
- <20120801001811.GX2422@linux.vnet.ibm.com> <20120801004319.GA7043@localhost>
- <20120822025008.GA8066@localhost> <20120822154908.2e6ef3c0@feng-i7>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Aug 2012 11:02:52 -0700
-Message-ID: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-Subject: Re: pci_get_subsys: GFP_KERNEL allocations with IRQs disabled
-To: Feng Tang <feng.tang@intel.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: Do we need acpiphp_sanitize_bus() in acpiphp?
+References: <502BAEA5.5080505@gmail.com> <CAErSpo4nFeDPvWeWmbXgmiRKWDNaeA44uwFbOLOWUhi-gLp5ag@mail.gmail.com>
+In-Reply-To: <CAErSpo4nFeDPvWeWmbXgmiRKWDNaeA44uwFbOLOWUhi-gLp5ag@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 22, 2012 at 12:49 AM, Feng Tang <feng.tang@intel.com> wrote:
-> Hi Fengguang,
->
->
-> On Wed, 22 Aug 2012 10:50:08 +0800
-> Fengguang Wu <fengguang.wu@intel.com> wrote:
->
->> Feng,
->>
->> > I think it's pci_get_subsys() triggered this assert:
->> >
->> >         /*
->> >          * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
->> >          */
->> >         if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
->> >                 return;
->>
->> It's bisected down to this commit:
->>
->> commit 55c844a4dd16a4d1fdc0cf2a283ec631a02ec448
->> Author:     Feng Tang <feng.tang@intel.com>
->> AuthorDate: Wed May 30 23:15:41 2012 +0800
->> Commit:     Ingo Molnar <mingo@kernel.org>
->> CommitDate: Wed Jun 6 12:03:23 2012 +0200
->>
->>     x86/reboot: Fix a warning message triggered by stop_other_cpus()
->>
->> Thanks,
->> Fengguang
->
-> Thanks for the bisection.
->
-> Revert my commit should be a solution, but can we simply make the pci_device_id
-> a local on stack one instead of using sleepable kmalloc for it, as this
-> sounds fragile when pci_get_subsys get called in a late system reboot stage?
-
-I think this is a great idea.  Can you make this a real patch, with a
-changelog and Signed-off-by?
-
-We should also remove the obsolete comment about early boot.  I'm not
-sure the no_pci_devices() check is needed, either.  And we can make
-the same simplification in pci_get_class().
-
-> ------------
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index 993d4a0..e5ccede 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -246,7 +246,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
->                                struct pci_dev *from)
->  {
->         struct pci_dev *pdev;
-> -       struct pci_device_id *id;
-> +       struct pci_device_id id;
->
->         /*
->          * pci_find_subsys() can be called on the ide_setup() path,
-> @@ -257,17 +257,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
->         if (unlikely(no_pci_devices()))
->                 return NULL;
->
-> -       id = kzalloc(sizeof(*id), GFP_KERNEL);
-> -       if (!id)
-> -               return NULL;
-> -       id->vendor = vendor;
-> -       id->device = device;
-> -       id->subvendor = ss_vendor;
-> -       id->subdevice = ss_device;
-> -
-> -       pdev = pci_get_dev_by_id(id, from);
-> -       kfree(id);
-> +       id.vendor = vendor;
-> +       id.device = device;
-> +       id.subvendor = ss_vendor;
-> +       id.subdevice = ss_device;
->
-> +       pdev = pci_get_dev_by_id(&id, from);
-
-No need for "pdev" here, since we don't have to free anything.
-
->         return pdev;
->  }
+> On Wed, Aug 15, 2012 at 7:13 AM, Yijing Wang <wangyijing0307@gmail.com> wrote:
+>> Hi all,
+>>    I have some confusion on acpiphp_sanitize_bus() functions.If I understand wrong about this, correct me,thanks your help.
+>>    I think there are three problems in this function:
+>>    1、Use list_for_each_entry here is not safe, because pci_stop_and_remove_bus_device() will remove the device from bus.
+>>    2、If assign resources fail after hot-add a device, the resource will reset to zero, in reset_resource(), res->start = 0,
+>>       res->end =0, res->end = 0.
+>>    3、I think leave the fail pci devices in the system is better rather than remove them, so we can see all pci devices
+>>       by lspci after hot-add, what about your opinion?
+> 
+> These sound like reasonable concerns.  The best thing to do is to
+> propose patches (separate ones for each logical issue).  Then we can
+> review a concrete change and apply it if appropriate.
+> 
+Hi Bjorn,
+   Thanks for your comments!
+   You are right, I will provide some patches as soon.
