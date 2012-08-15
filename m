@@ -1,50 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:36659 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350Ab2H2Wy4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2012 18:54:56 -0400
-Received: by vcbfk26 with SMTP id fk26so1255320vcb.19
-        for <linux-pci@vger.kernel.org>; Wed, 29 Aug 2012 15:54:56 -0700 (PDT)
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57610 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab2HOThF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 15:37:05 -0400
+Received: by yhmm54 with SMTP id m54so2181674yhm.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 12:37:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAPoiz9yRzEr68=NB53SVXb5+nRmEa_J4Mtt6eGAAo5EWFbDbmQ@mail.gmail.com>
-References: <CAErSpo73r3yzzndUek-NJ3d0pDKtg8zTrnjk4ihudBE5gngBAA@mail.gmail.com>
-	<503E39DE.7000109@gmail.com>
-	<CAPoiz9yRzEr68=NB53SVXb5+nRmEa_J4Mtt6eGAAo5EWFbDbmQ@mail.gmail.com>
-Date: Wed, 29 Aug 2012 15:54:56 -0700
-Message-ID: <CAE9FiQWEE0aCPbM=aVfH4kYzWqpJ4orseh2isWuuGFj3yFxKqQ@mail.gmail.com>
-Subject: Re: PCI mini-summit notes
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jon Mason <jdmason@kudzu.us>
-Cc: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	ksummit-2012-discuss
-	<ksummit-2012-discuss@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20120717141459.GD2463@redhat.com>
+References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
+ <1340437325-29282-5-git-send-email-yinghai@kernel.org> <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
+ <20120711171458.GA14610@redhat.com> <CAErSpo6Xdc-rDvvipJFzXbbF3V75zSBq4skMtZ2PDVsz1kxtdw@mail.gmail.com>
+ <20120717141459.GD2463@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 13:36:43 -0600
+Message-ID: <CAErSpo4vUqNDqGOxEhzsJbGRAiX6JN+hm5KowsCiZDgcTopehw@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
+To: Jason Baron <jbaron@redhat.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2012 at 3:44 PM, Jon Mason <jdmason@kudzu.us> wrote:
->> Hi Bjorn,
->>         One of my team member reported another corner case for SR-IOV. There's
->> are two NIC cards in the system driven by the same driver, but one supports
->> SR-IOV and the other doesn't. It runs into trouble if "max_vfs" parameter is
->> set for the NIC driver.
->>         --Gerry
+On Tue, Jul 17, 2012 at 8:14 AM, Jason Baron <jbaron@redhat.com> wrote:
+> On Wed, Jul 11, 2012 at 01:42:15PM -0600, Bjorn Helgaas wrote:
+>> On Wed, Jul 11, 2012 at 11:14 AM, Jason Baron <jbaron@redhat.com> wrote:
+>> > On Wed, Jul 11, 2012 at 09:50:19AM -0600, Bjorn Helgaas wrote:
+>> >> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> >> > When system support hotplug bridge with children hotplug slots, we need to make sure
+>> >> > that parent bridge get preallocated resource so later when device is plugged into
+>> >> > children slot, those children devices will get resource allocated.
+>> >> >
+>> >> > We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
+>> >> > pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
+>> >> >
+>> >> > Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
+>> >> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> >> > Acked-by: Jason Baron <jbaron@redhat.com>
+>> >> > ---
+>> >> >  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
+>> >> >  1 files changed, 26 insertions(+), 1 deletions(-)
+>> >> >
+>> >> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> >> > index ad6fd66..0f2b72d 100644
+>> >> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> >> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> >> > @@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+>> >> >         }
+>> >> >  }
+>> >> >
+>> >> > +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
+>> >> > +{
+>> >> > +       struct acpiphp_func *func;
+>> >> > +
+>> >> > +       if (!dev->subordinate)
+>> >> > +               return;
+>> >> > +
+>> >> > +       /* quirk, or pcie could set it already */
+>> >> > +       if (dev->is_hotplug_bridge)
+>> >> > +               return;
+>> >> > +
+>> >> > +       if (PCI_SLOT(dev->devfn) != slot->device)
+>> >> > +               return;
+>> >> > +
+>> >> > +       list_for_each_entry(func, &slot->funcs, sibling) {
+>> >> > +               if (PCI_FUNC(dev->devfn) == func->function) {
+>> >> > +                       /* check if this bridge has ejectable slots */
+>> >> > +                       if ((detect_ejectable_slots(func->handle) > 0))
+>> >> > +                               dev->is_hotplug_bridge = 1;
+>> >> > +                       break;
+>> >> > +               }
+>> >> > +       }
+>> >> > +}
+>> >> >  /**
+>> >> >   * enable_device - enable, configure a slot
+>> >> >   * @slot: slot to be enabled
+>> >> > @@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>> >> >                         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+>> >> >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+>> >> >                                 max = pci_scan_bridge(bus, dev, max, pass);
+>> >> > -                               if (pass && dev->subordinate)
+>> >> > +                               if (pass && dev->subordinate) {
+>> >> > +                                       check_hotplug_bridge(slot, dev);
+>> >>
+>> >> I don't like this patch because it increases the differences between
+>> >> the hotplug drivers, rather than decreasing them.
+>> >>
+>> >> For PCI Express devices, we set dev->is_hotplug_bridge in the
+>> >> pci_setup_device() path (in set_pcie_hotplug_bridge()).  I think it
+>> >> would make sense to try to expand that path to also handle SHPC and
+>> >> ACPI hotplug as well.  ACPI is harder because it's not PCI-specified,
+>> >> so we'd need some sort of pcibios or other optional hook.
+>> >>
+>> >> I don't have a clear picture of how this works -- if I understand
+>> >> correctly, the situation is that we have a bridge managed by acpiphp.
+>> >> That part makes sense because the bridge is on the motherboard and can
+>> >> have a DSDT device.  Now we plug something into the slot below the
+>> >> bridge.  I *think* this patch handles the case where this new
+>> >> hot-added thing is also a bridge managed by acpiphp.  But where does
+>> >> the ACPI device for this hot-added bridge come from?  It's an
+>> >> arbitrary device the BIOS knows nothing about, so it can't be in the
+>> >> DSDT.
+>> >>
+>> >
+>> > So this came up while I was developing pci bridge hotplug for qemu.
+>> > Currently, there is a top level host bus (with ACPI device definitions), where
+>> > devices can be hot-plugged. What I've done is added a second level
+>> > of hotplug pci busses (again with ACPI device definitions). Thus, we can
+>> > now hotplug a bridge into the top-level bus and then devices behind it.
+>> > Effectively increasing the hot-plug space from n -> n^2.
+>> >
+>> > Before the above pci patch, the devices behind the bridge would not
+>> > configure their PCI BARs properly, since there were no i/o, mem resources
+>> > assigned to the bridge. However, with the above patch in place things
+>> > work as expected.
+>> >
+>> > Using the same code base I was able to do acpi hotplug on Windows 7,
+>> > which correctly configured the both the bridge window and devices behind
+>> > it on hot-plug. So currently, the above usage pattern works on Windows
+>> > 7, but not on Linux.
+>>
+>> Thanks, Jason.  Do you have "lspci -v" output and the DSDT AML handy?
+>> I'd like to look in more detail at what we're missing.
 >
-> I believe it was decided that a per-pf sysfs interface would be used
-> to replace the current module parameter that specifies the number of
-> vf's.  This should enable different numbers of vf's for each physical
-> device.  The driver interface that was discussed would introduce new
-> function pointers for handlers to setup/teardown the vf's.  I believe
-> this will solve your problem once it has been implemented.
+> Hi,
+>
+> Sorry for the delay...was on vacation.
+>
+> Anyways, below is the patch I have to the seabios acpi table. However,
+> there are other pieces for seabios and qemu required. I still need to
+> clean them up and send them out. But this pci patch (or something
+> similar) is a required dependency.
+>
+> What 'lspci -v' output are you looking for?
+>
+> Let me know what else I can provide.
 
-now we have ixgbe.max_vfs=63
+Now it's my turn to be sorry for dropping this for so long :)
 
-so if change to per pci device (PF),
-
-how about having the driver built-in?
-what kind of kernel parameters will be passed?
-
-Thanks
-
-Yinghai
+I was thinking of the "lspci -v" output from your system (qemu guest)
+and the disassembled DSDT extracted from the same system.  Then we
+could talk about concrete devices and point to the corresponding
+entries in lspci output and the ACPI namespace.
