@@ -1,68 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:46671 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752122Ab2HMVkP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Aug 2012 17:40:15 -0400
-Message-ID: <50297434.8090806@gmail.com>
-Date: Mon, 13 Aug 2012 14:40:04 -0700
-From: David Daney <ddaney.cavm@gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55170 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753627Ab2HOTrp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 15:47:45 -0400
+Received: by lbbgj3 with SMTP id gj3so1076091lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 12:47:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>, Ralf Baechle <ralf@linux-mips.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-mips@linux-mips.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 13/32] PCI/MIPS: use PCIe capabilities access functions
- to simplify implementation
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <1343836477-7287-14-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-14-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <201205242245.45888.rjw@sisk.pl>
+References: <201205242245.45888.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 13:47:23 -0600
+Message-ID: <CAErSpo4LQsWH7eX=3YNSGUdZjNyMQeyoZPrx2ZUto3gWLYSWEQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI / ACPI: Do not request control of ASPM if the BIOS
+ has disabled it
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>
+Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Wei Kong <wkong@novell.com>, Jean Delvare <jdelvare@suse.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/01/2012 08:54 AM, Jiang Liu wrote:
-> From: Jiang Liu<jiang.liu@huawei.com>
+On Thu, May 24, 2012 at 2:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rjw@sisk.pl>
 >
-> Use PCIe capabilities access functions to simplify PCIe MIPS implementation.
+> We want to report that the kernel supports ASPM to the BIOS even if
+> the BIOS signals us that it doesn't.  So, we need the flags to include
+> (OSC_ACTIVE_STATE_PWR_SUPPORT | OSC_CLOCK_PWR_CAPABILITY_SUPPORT)
+> before calling acpi_pci_osc_support(root, flags) in
+> acpi_pci_root_add() (unless there's a command line telling us that
+> ASPM is not to be supported).
 >
-> Signed-off-by: Jiang Liu<liuj97@gmail.com>
+> However, knowing that the BIOS doesn't support ASPM, we shouldn't
+> request the control of it, so we should remove
+> (OSC_ACTIVE_STATE_PWR_SUPPORT | OSC_CLOCK_PWR_CAPABILITY_SUPPORT)
+> from the flags before calling acpi_pci_osc_control_set() in those
+> cases.  Failing to do so causes the evaluation of _OSC for the PCI
+> root bridge to return error codes on some systems where it should
+> work correctly.
+>
+> Reported-and-tested-by: Wei Kong <wkong@novell.com>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> ---
+>
+> -stable material, I think.
 
-Acked-by: David Daney <david.daney@cavium.com>
+Len, since you've applied recent patches in this area, can you take
+care of this, too?
 
 > ---
->   arch/mips/pci/pci-octeon.c |   15 +++++----------
->   1 file changed, 5 insertions(+), 10 deletions(-)
+>  drivers/acpi/pci_root.c |    4 ++++
+>  1 file changed, 4 insertions(+)
 >
-> diff --git a/arch/mips/pci/pci-octeon.c b/arch/mips/pci/pci-octeon.c
-> index 52a1ba7..aaed2ad 100644
-> --- a/arch/mips/pci/pci-octeon.c
-> +++ b/arch/mips/pci/pci-octeon.c
-> @@ -117,16 +117,11 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
->   	}
+> Index: linux/drivers/acpi/pci_root.c
+> ===================================================================
+> --- linux.orig/drivers/acpi/pci_root.c
+> +++ linux/drivers/acpi/pci_root.c
+> @@ -574,6 +574,10 @@ static int __devinit acpi_pci_root_add(s
+>         if (flags != base_flags)
+>                 acpi_pci_osc_support(root, flags);
 >
->   	/* Enable the PCIe normal error reporting */
-> -	pos = pci_find_capability(dev, PCI_CAP_ID_EXP);
-> -	if (pos) {
-> -		/* Update Device Control */
-> -		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL,&config);
-> -		config |= PCI_EXP_DEVCTL_CERE; /* Correctable Error Reporting */
-> -		config |= PCI_EXP_DEVCTL_NFERE; /* Non-Fatal Error Reporting */
-> -		config |= PCI_EXP_DEVCTL_FERE;  /* Fatal Error Reporting */
-> -		config |= PCI_EXP_DEVCTL_URRE;  /* Unsupported Request */
-> -		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, config);
-> -	}
-> +	config = PCI_EXP_DEVCTL_CERE; /* Correctable Error Reporting */
-> +	config |= PCI_EXP_DEVCTL_NFERE; /* Non-Fatal Error Reporting */
-> +	config |= PCI_EXP_DEVCTL_FERE;  /* Fatal Error Reporting */
-> +	config |= PCI_EXP_DEVCTL_URRE;  /* Unsupported Request */
-> +	pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL, config, 0);
->
->   	/* Find the Advanced Error Reporting capability */
->   	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-
+> +       if (!pcie_aspm_enabled())
+> +               flags &= ~(OSC_ACTIVE_STATE_PWR_SUPPORT |
+> +                       OSC_CLOCK_PWR_CAPABILITY_SUPPORT);
+> +
+>         if (!pcie_ports_disabled
+>             && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+>                 flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
