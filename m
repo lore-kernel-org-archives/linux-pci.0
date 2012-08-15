@@ -1,125 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:38888 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519Ab2HVKP7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Aug 2012 06:15:59 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Wed, 22 Aug 2012 06:15:58 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id C0CB0C90042
-	for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 06:15:56 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7MAFuQJ174024
-	for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 06:15:56 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7MAFmYG031585
-	for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 07:15:56 -0300
-Date: Wed, 22 Aug 2012 18:15:33 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH v2 ]pci: pci resource iterator
-Message-ID: <20120822101533.GA2332@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <20120618050333.GA13469@ram-ThinkPad-T61>
- <CAE9FiQWwPOgBa5guG1y-xF95nBMwE+TC75E_xcg-N8ZxuPW_XQ@mail.gmail.com>
- <CAErSpo40Ok9NuMm0zxGnZ0DmFmGT19Y23JC4BCQV1RSxsmakCw@mail.gmail.com>
- <20120816032602.GN2449@ram-ThinkPad-T61>
- <CAE9FiQW08aoQBiy+37x-VMYrG-OunqzfuRpB1JhDAgNL3AxEuw@mail.gmail.com>
- <20120816044104.GQ2449@ram-ThinkPad-T61>
- <20120821151245.GA2356@ram-ThinkPad-T61>
- <CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55743 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754085Ab2HORGt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 13:06:49 -0400
+Received: by yhmm54 with SMTP id m54so2004355yhm.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 10:06:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
+In-Reply-To: <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 10:06:27 -0700
+Message-ID: <CAErSpo7v+i8i=mXCs7ZW8DtGTDN_4AEntwYLqGG8FcCzweySFg@mail.gmail.com>
+Subject: Re: [PATCH v3 01/10] PCI: Keep pci_fixup_irqs() around after init
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2012 at 04:22:52PM -0700, Yinghai Lu wrote:
-> On Tue, Aug 21, 2012 at 8:13 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> > PCI: pci resource iterator
-> >
-> > Currently pci_dev structure holds an array of 17 PCI resources; six base
-> > BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
-> > A bridge device just needs the 4 bridge resources. A non-bridge device
-> > just needs the six base resources and one ROM resource. The sriov
-> > resources are needed only if the device has SRIOV capability.
-> >
-> > The pci_dev structure needs to be re-organized to avoid unnecessary
-> > bloating.  However too much code outside the pci-bus driver, assumes the
-> > internal details of the pci_dev structure, thus making it hard to
-> > re-organize the datastructure.
-> >
-> > As a first step this patch provides generic methods to access the
-> > resource structure of the pci_dev.
-> >
-> > Once this patch is accepted, I have another 40+ patches that modify all
-> > the files that directly access the resource structure, to use the new
-> > methods provided in the first step.
-> >
-> > Finally we can re-organize the resource structure in the pci_dev
-> > structure and correspondingly update the methods.
-> >
-> > This patch is compile tested only.
-> >
-> > Changelog:
-> >         Consolidated iterator interface as per Bjorn's suggestion.
-> >
-> > +#define for_each_pci_resource(dev, res, flag) \
-> > +       for (res = pci_next_resource(dev, NULL, flag); res; \
-> > +                       res = pci_next_resource(dev, res, flag))
-> > +
-> 
-> We may need to keep the idx, so we could make the converting more granularity.
-> 
-> because some loop body is still using the idx.
-> 
-> also there is some abusing pci bridge resource as addon resources.
-> and we need to remove the abusing at first ---
-> that is addressed by:
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=5eb48c3c998257386f67a7570778872ec600138f
-> 
->  PCI: Add addon_resource support for pci_dev
-> 
-> and later we may remove the idx in the for_each_pci_resource()
-> 
-> Please check updated version of your patch that keep the idx.
+On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> When using deferred driver probing, PCI host controller drivers may
+> actually require this function after the init stage.
+>
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> ---
+> Changes in v3:
+> - none
+>
+> Changes in v2:
+> - use __devinit annotations
 
-by exposing idx through the interface, we are exposing the implementation to
-the enduser. I want the end user not know that the resources are 
-structured as a array. This will help easily restructure resources
-in the pci_dev structure to whatever implementation we want, linked list
-or hash or whatever...
+Your original patch removed __init completely.  Here you change it to
+__devinit.  That means we decide whether to discard the function based
+on whether CONFIG_HOTPLUG is supported.  But I think your point is not
+about hotplug; it's merely that we should be able to scan a PCI bus
+after init-time.  We ought to be able to do a late PCI scan even if
+hotplug is not supported.
 
-Why can't the addon resource be hidden behind the interface? something
-like this?
+Therefore, I'd be inclined to remove __init completely unless you have
+another reason for preferring __devinit.
 
-static inline struct resource *pci_next_resource(struct pci_dev *pdev,
-                       struct resource *res, int flag)
-{
-       int i = res? pci_resource_number(pdev, res) : -1;
-
-       while (++i < PCI_NUM_RESOURCES) {
-               if ((i >= 0 && i < PCI_ROM_RESOURCE) && (flag & PCI_STD_RES))
-                       return pci_get_std_resource(pdev, i);
-               else if ((i == PCI_ROM_RESOURCE) && (flag & PCI_ROM_RES))
-                       return pci_get_rom_resource(pdev);
-               else if ((i <= PCI_IOV_RESOURCE_END) && (flag & PCI_IOV_RES))
-                       return pci_get_sriov_resource(pdev, i-PCI_IOV_RESOURCES);
-               else if ((i <= PCI_BRIDGE_RESOURCE_END) && (flag & PCI_BRIDGE_RES))
-                       return pci_get_bridge_resource(pdev, i-PCI_BRIDGE_RESOURCES);
-       }
-
-       if (flag & PCI_ADDON_RES) {
-       		if ( i == PCI_NUM_RESOURCES) {
-       			// return the first element of the addon list;
-		} else {
-			// return the next element in the list;
-		}		
-       }
-       return NULL;
-}
-
+>  drivers/pci/setup-irq.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index eb219a1..f0bcd56 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -18,7 +18,7 @@
+>  #include <linux/cache.h>
+>
+>
+> -static void __init
+> +static void __devinit
+>  pdev_fixup_irq(struct pci_dev *dev,
+>                u8 (*swizzle)(struct pci_dev *, u8 *),
+>                int (*map_irq)(const struct pci_dev *, u8, u8))
+> @@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
+>         pcibios_update_irq(dev, irq);
+>  }
+>
+> -void __init
+> +void __devinit
+>  pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>                int (*map_irq)(const struct pci_dev *, u8, u8))
+>  {
+> --
+> 1.7.11.2
+>
