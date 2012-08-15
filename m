@@ -1,51 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([78.24.191.182]:59823 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757890Ab2HURFI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2012 13:05:08 -0400
-Date: Tue, 21 Aug 2012 19:04:57 +0200
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Daney <ddaney.cavm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-mips <linux-mips@linux-mips.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>
-Subject: Re: PCI Section mismatch error in linux-next.
-Message-ID: <20120821170456.GA18994@linux-mips.org>
-References: <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
- <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
- <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
- <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
- <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
- <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
- <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
- <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
- <20120820053036.GA23166@kroah.com>
- <CAMuHMdWfhATFQrP-ZiMi6Ub3ZbOgUhe7S_fVUzc7zOwDxRNsyw@mail.gmail.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:53912 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754104Ab2HOTPY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 15:15:24 -0400
+Received: by ggdk6 with SMTP id k6so2166730ggd.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 12:15:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdWfhATFQrP-ZiMi6Ub3ZbOgUhe7S_fVUzc7zOwDxRNsyw@mail.gmail.com>
+In-Reply-To: <201208122326.07318.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1208110959320.21252-100000@netrider.rowland.org>
+ <201208112356.26719.rjw@sisk.pl> <201208122326.07318.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 13:15:02 -0600
+Message-ID: <CAErSpo7XZZ=ehzSx256aL8FomDX8AjR2jYsa-y5K+9QGGHghKA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: EHCI: fix crash during hibernation on ASUS computers
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	AceLan Kao <acelan.kao@canonical.com>, alex.hung@canonical.com,
+	Oleksij Rempel <bug-track@fisher-privat.net>,
+	Linux-pm mailing list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 21, 2012 at 04:32:45PM +0200, Geert Uytterhoeven wrote:
+On Sun, Aug 12, 2012 at 3:26 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> Commit dbf0e4c (PCI: EHCI: fix crash during suspend on ASUS
+> computers) added a workaround for an ASUS suspend issue related to
+> USB EHCI and a bug in a number of ASUS BIOSes that attemt to shut
+> down the EHCI controller during system suspend if its PCI command
+> register doesn't contain 0 at that time.
+>
+> It turns out that the same workaround is necessary in the analogous
+> hibernation code path, so add it.
+>
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=45811
+> Reported-and-tested-by: Oleksij Rempel <bug-track@fisher-privat.net>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> Cc: stable@vger.kernel.org
+> ---
+>
+> Hi Bjorn,
+>
+> Please push this to Linus ASAP, we need it in 3.6 and -stable.
 
-> Anyone who disables CONFIG_HOTPLUG in his defconfig files?
-> 
-> $ git grep CONFIG_HOTPLUG arch/*/*config
-> arch/frv/defconfig:# CONFIG_HOTPLUG is not set
-> arch/h8300/defconfig:# CONFIG_HOTPLUG is not set
-> arch/um/defconfig:CONFIG_HOTPLUG=y
-> $
-> 
-> Yep, (at least --- not all defconfigs are up-to-date) frv and h8300.
+Applied to my for-linus branch, thanks.  I'll ask Linus to pull it in
+a couple days, after it's had a chance in -next.
 
-Since we started stripping all the defconfigs down grepping through
-arch/*/configs/ doesn't yield much useful information anymore :-(
-
-There are currently 8 MIPS default configurations that dondo not enable
-CONFIG_HOTPLUG.  I didn't check other architectures.
-
-  Ralf
+> ---
+>  drivers/pci/pci-driver.c |    7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> Index: linux/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci-driver.c
+> +++ linux/drivers/pci/pci-driver.c
+> @@ -959,6 +959,13 @@ static int pci_pm_poweroff_noirq(struct
+>         if (!pci_dev->state_saved && !pci_is_bridge(pci_dev))
+>                 pci_prepare_to_sleep(pci_dev);
+>
+> +       /*
+> +        * The reason for doing this here is the same as for the analogous code
+> +        * in pci_pm_suspend_noirq().
+> +        */
+> +       if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+> +               pci_write_config_word(pci_dev, PCI_COMMAND, 0);
+> +
+>         return 0;
+>  }
+>
