@@ -1,44 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:64437 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755865Ab2HAVcS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 17:32:18 -0400
+Received: from ogre.sisk.pl ([193.178.161.156]:40861 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932193Ab2HOT5v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Aug 2012 15:57:51 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI / ACPI: Do not request control of ASPM if the BIOS has disabled it
+Date: Wed, 15 Aug 2012 22:03:48 +0200
+Cc: Len Brown <lenb@kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Wei Kong <wkong@novell.com>, Jean Delvare <jdelvare@suse.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+References: <201205242245.45888.rjw@sisk.pl> <CAErSpo4LQsWH7eX=3YNSGUdZjNyMQeyoZPrx2ZUto3gWLYSWEQ@mail.gmail.com>
+In-Reply-To: <CAErSpo4LQsWH7eX=3YNSGUdZjNyMQeyoZPrx2ZUto3gWLYSWEQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20120801205640.GN5470@ics.muni.cz>
-References: <20120801133835.GH5470@ics.muni.cz>
-	<CAG4TOxONLJnBaY7N5x7Kfi+dwCb507QPqX9s_Wuef10+RzM=AQ@mail.gmail.com>
-	<CAE9FiQUSFeBpGaFByOfENUa8qg7t89WTiUann8=4ezT7s2qmzw@mail.gmail.com>
-	<20120801205640.GN5470@ics.muni.cz>
-Date: Wed, 1 Aug 2012 14:32:17 -0700
-Message-ID: <CAE9FiQWmgyirjjCwn54PkAsfvWxZSY5RhRVDkhhbK7E0NPzqaw@mail.gmail.com>
-Subject: Re: mellanox mlx4_core and SR-IOV
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lukas Hejtmanek <xhejtman@ics.muni.cz>
-Cc: Roland Dreier <roland@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201208152203.48377.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 1, 2012 at 1:56 PM, Lukas Hejtmanek <xhejtman@ics.muni.cz> wrote:
-> On Wed, Aug 01, 2012 at 11:29:02AM -0700, Yinghai Lu wrote:
->> iov bar is not assigned by BIOS, and kernel can not find range for it too.
->>
->> Lukas, can you post whole boot log with PCI_DEBUG enabled? That will
->> tell exact why kernel does not assign them.
->>
->> Recent kernel from 3.4... should enable realloc when SRIOV bar is not assigned.
->
-> sorry for confusing, PCI_DEBUG does not break mlx driver, it is reallocation
-> code that results:
-> [    3.555008] mlx4_core 0000:02:00.0: Missing UAR, aborting.
+On Wednesday, August 15, 2012, Bjorn Helgaas wrote:
+> On Thu, May 24, 2012 at 2:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> >
+> > We want to report that the kernel supports ASPM to the BIOS even if
+> > the BIOS signals us that it doesn't.  So, we need the flags to include
+> > (OSC_ACTIVE_STATE_PWR_SUPPORT | OSC_CLOCK_PWR_CAPABILITY_SUPPORT)
+> > before calling acpi_pci_osc_support(root, flags) in
+> > acpi_pci_root_add() (unless there's a command line telling us that
+> > ASPM is not to be supported).
+> >
+> > However, knowing that the BIOS doesn't support ASPM, we shouldn't
+> > request the control of it, so we should remove
+> > (OSC_ACTIVE_STATE_PWR_SUPPORT | OSC_CLOCK_PWR_CAPABILITY_SUPPORT)
+> > from the flags before calling acpi_pci_osc_control_set() in those
+> > cases.  Failing to do so causes the evaluation of _OSC for the PCI
+> > root bridge to return error codes on some systems where it should
+> > work correctly.
+> >
+> > Reported-and-tested-by: Wei Kong <wkong@novell.com>
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >
+> > -stable material, I think.
+> 
+> Len, since you've applied recent patches in this area, can you take
+> care of this, too?
 
-yes, i knew that.
+No, please don't.
 
-one patch in my for-pci-next should address that.
+I'd discussed that with Matthew and we concluded that it would break things
+sometimes.  Please disregard it (and sorry for not saying that earlier).
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=fcce563f868e296f46a2eeaa88d6959bcee26a2d
+Thanks,
+Rafael
 
-Thanks
 
-Yinghai
+> > ---
+> >  drivers/acpi/pci_root.c |    4 ++++
+> >  1 file changed, 4 insertions(+)
+> >
+> > Index: linux/drivers/acpi/pci_root.c
+> > ===================================================================
+> > --- linux.orig/drivers/acpi/pci_root.c
+> > +++ linux/drivers/acpi/pci_root.c
+> > @@ -574,6 +574,10 @@ static int __devinit acpi_pci_root_add(s
+> >         if (flags != base_flags)
+> >                 acpi_pci_osc_support(root, flags);
+> >
+> > +       if (!pcie_aspm_enabled())
+> > +               flags &= ~(OSC_ACTIVE_STATE_PWR_SUPPORT |
+> > +                       OSC_CLOCK_PWR_CAPABILITY_SUPPORT);
+> > +
+> >         if (!pcie_ports_disabled
+> >             && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+> >                 flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+> 
+> 
+
