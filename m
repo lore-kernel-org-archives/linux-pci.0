@@ -1,50 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:50378 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753625Ab2HDUs0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2012 16:48:26 -0400
-Date: Sat, 4 Aug 2012 16:48:25 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Ming Lei <tom.leiming@gmail.com>, <linux-pci@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
- regression ...)
-In-Reply-To: <201208042248.24957.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1208041644240.23711-100000@netrider.rowland.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54060 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756661Ab2HOUVu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 16:21:50 -0400
+Received: by lagy9 with SMTP id y9so1069792lag.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 13:21:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+References: <1338787022-400-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 14:21:28 -0600
+Message-ID: <CAErSpo66quAss14Hcdq7o3RSuR=DsE6xjyp=Eah=-XxtDRMTgQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 1/6] PCI: change PCI device management logic to
+ better follow device model
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <liuj97@gmail.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 4 Aug 2012, Rafael J. Wysocki wrote:
+On Sun, Jun 3, 2012 at 11:16 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> From: Jiang Liu <liuj97@gmail.com>
+>
+> According to device model documentation, the way to add/remove device
+> object should be symmetric.
 
-> > That wasn't what he meant.  What if the code needs to run in the _same_
-> > context as the caller?  For example, with a spinlock held.
-> 
-> I see.  I think it wouldn't be unreasonable to require that func should take
-> all of the necessary locks by itself.
+I think this 6-patch series has been folded into your "[RFC PATCH v1
+00/22] introduce PCI bus lock to serialize PCI hotplug operations"
+series posted August 8, right?
 
-But then if func was called directly, because the device was at full
-power, it would deadlock trying to acquire a lock the caller already
-holds.
+I'll ignore these 6 patches on that assumption, so let me know if otherwise.
 
-> However, I believe that if func is going to be called through the workqueue,
-> the usage counter should be incremented before the preceding resume and
-> decremented after func returns by the workqueue thread.
-
-Okay.
-
-> > func would need to know whether it should acquire the lock, which means it
-> > needs to know whether it was called directly or through the workqueue.
-> > 
-> > I suppose we could pass it an extra argument with this information...  
-> > but that's a little ugly.
-> 
-> I agree.  I'd prefer to avoid that, if possible.
-
-Do you have any better suggestions?
-
-Alan Stern
-
+> /**
+>  * device_del - delete device from system.
+>  * @dev: device.
+>  *
+>  * This is the first part of the device unregistration
+>  * sequence. This removes the device from the lists we control
+>  * from here, has it removed from the other driver model
+>  * subsystems it was added to in device_add(), and removes it
+>  * from the kobject hierarchy.
+>  *
+>  * NOTE: this should be called manually _iff_ device_add() was
+>  * also called manually.
+>  */
+>
+> The rule here is to either use
+> 1) device_register()/device_unregister()
+> or
+> 2) device_initialize()/device_add()/device_del()/put_device().
+>
+> So change PCI core to follow the rule and get rid of the redundant
+> pci_dev_get()/pci_dev_put() pair.
+>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/pci/probe.c  |    1 -
+>  drivers/pci/remove.c |    4 ++--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 0840409..dacca26 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+>         device_initialize(&dev->dev);
+>         dev->dev.release = pci_release_dev;
+> -       pci_dev_get(dev);
+>
+>         dev->dev.dma_mask = &dev->dma_mask;
+>         dev->dev.dma_parms = &dev->dma_parms;
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 04a4861..6c07bc5 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+>         if (dev->is_added) {
+>                 pci_proc_detach_device(dev);
+>                 pci_remove_sysfs_dev_files(dev);
+> -               device_unregister(&dev->dev);
+> +               device_del(&dev->dev);
+>                 dev->is_added = 0;
+>         }
+>
+> @@ -40,7 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>         up_write(&pci_bus_sem);
+>
+>         pci_free_resources(dev);
+> -       pci_dev_put(dev);
+> +       put_device(&dev->dev);
+>  }
+>
+>  /**
+> --
+> 1.7.1
+>
+>
