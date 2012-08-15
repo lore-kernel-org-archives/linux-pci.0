@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55681 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753362Ab2HXSw6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Aug 2012 14:52:58 -0400
-Received: by lbbgj3 with SMTP id gj3so1343988lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 24 Aug 2012 11:52:57 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:42986 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750854Ab2HOO2E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Aug 2012 10:28:04 -0400
+Received: by lagy9 with SMTP id y9so865009lag.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 07:28:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <50325732.3000700@gmail.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
- <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com> <50325732.3000700@gmail.com>
+In-Reply-To: <502BAEA5.5080505@gmail.com>
+References: <502BAEA5.5080505@gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 24 Aug 2012 12:52:37 -0600
-Message-ID: <CAErSpo5TP4j9bqL+GvkxSNKtyzDOh6m5agRaS0_=tAb+46Cvow@mail.gmail.com>
-Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Wed, 15 Aug 2012 07:27:40 -0700
+Message-ID: <CAErSpo4nFeDPvWeWmbXgmiRKWDNaeA44uwFbOLOWUhi-gLp5ag@mail.gmail.com>
+Subject: Re: Do we need acpiphp_sanitize_bus() in acpiphp?
+To: Yijing Wang <wangyijing0307@gmail.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 9:26 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Hi Bjorn,
->         I have made following changes according to your suggestions,
->         1) get rid of the "pci_" prefix for access functions.
->         2) rename pci_pcie_capability_change_{word|dword}() to
->         pcie_capability_clear_and_set_{word|dword}.
->         3) add pcie_capability_{set|clear}_{word|dword}().
->         4) Add "Acked-by" and "Reviewed-by"
->         5) rebase to your latest pci-next tree
+On Wed, Aug 15, 2012 at 7:13 AM, Yijing Wang <wangyijing0307@gmail.com> wrote:
+> Hi all,
+>    I have some confusion on acpiphp_sanitize_bus() functions.If I understand wrong about this, correct me,thanks your help.
+>    I think there are three problems in this function:
+>    1、Use list_for_each_entry here is not safe, because pci_stop_and_remove_bus_device() will remove the device from bus.
+>    2、If assign resources fail after hot-add a device, the resource will reset to zero, in reset_resource(), res->start = 0,
+>       res->end =0, res->end = 0.
+>    3、I think leave the fail pci devices in the system is better rather than remove them, so we can see all pci devices
+>       by lspci after hot-add, what about your opinion?
+
+These sound like reasonable concerns.  The best thing to do is to
+propose patches (separate ones for each logical issue).  Then we can
+review a concrete change and apply it if appropriate.
+
+> /*
+>  * Remove devices for which we could not assign resources, call
+>  * arch specific code to fix-up the bus
+>  */
+> static void acpiphp_sanitize_bus(struct pci_bus *bus)
+> {
+>         struct pci_dev *dev;
+>         int i;
+>         unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
 >
->         So could you please help to pull from "https://github.com/jiangliu/linux.git topic/pcie-cap"
-> or should I send all the patches to mail list again?
-
-I applied these (with the fixups mentioned in this thread) to my
-"next" branch.  Unfortunately, I just missed the 0824 -next tree, and
-Stephen is taking a hiatus for KS/LPC next week, so it might be a
-while before they show up in his tree.
-
-Thanks a lot for doing this work!  I feel much more confident that we
-can avoid driver issues with the v1/v2 differences, and you removed an
-appreciable amount of code at the same time:
-
- 52 files changed, 591 insertions(+), 823 deletions(-)
+>         list_for_each_entry(dev, &bus->devices, bus_list) {
+>                 for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
+>                         struct resource *res = &dev->resource[i];
+>                         if ((res->flags & type_mask) && !res->start &&
+>                                         res->end) {
+>                                 /* Could not assign a required resources
+>                                  * for this device, remove it */
+>                                 pci_stop_and_remove_bus_device(dev);
+>                                 break;
+>                         }
+>                 }
+>         }
+> }
