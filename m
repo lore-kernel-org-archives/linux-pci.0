@@ -1,558 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:7055 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754437Ab2HIHmn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Aug 2012 03:42:43 -0400
-Message-ID: <50236978.70208@huawei.com>
-Date: Thu, 9 Aug 2012 15:40:40 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:59593 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251Ab2HOGhc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 02:37:32 -0400
+Date: Wed, 15 Aug 2012 08:37:18 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 10/10] ARM: tegra: pcie: Add device tree support
+Message-ID: <20120815063718.GA15665@avionic-0098.mockup.avionic-design.de>
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
+ <1343332512-28762-11-git-send-email-thierry.reding@avionic-design.de>
+ <20120814201215.GA10542@avionic-0098.mockup.avionic-design.de>
+ <CAErSpo6Awbx9-DWM3V02HUg7Xv4tWAhcLO7UKuT_0uXbpZ+nKw@mail.gmail.com>
 MIME-Version: 1.0
-To: Tang Chen <tangchen@cn.fujitsu.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [RFC PATCH v2 10/16] ACPIHP: system device hotplug driver skeleton
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com> <1344082443-4608-11-git-send-email-jiang.liu@huawei.com> <502362E3.8010901@cn.fujitsu.com>
-In-Reply-To: <502362E3.8010901@cn.fujitsu.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Nq2Wo0NMKNjxTN9z"
+In-Reply-To: <CAErSpo6Awbx9-DWM3V02HUg7Xv4tWAhcLO7UKuT_0uXbpZ+nKw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tang,
-	Thanks for testing.
-	Currently there's a limitation that you need to insert acpihp_enum driver first.
-Will fix this issue in next version.
-	Regards!
-	Gerry
 
-On 2012-8-9 15:12, Tang Chen wrote:
-> Hi Liu~
-> 
-> I compiled this driver as a module, acpihp_drv. And when I loaded this module, it
-> gave the following error message:
-> 
-> # modprobe acpihp_drv
-> (the command hangs up, no return after 10 min)
-> 
-> #dmesg
-> ......
-> [  126.643350] BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
-> [  126.644007] IP: [<ffffffff814c0cd3>] mutex_lock+0x19/0x37
-> [  126.644007] PGD 105277a067 PUD 104f823067 PMD 0 
-> [  126.644007] Oops: 0002 [#1] SMP 
-> [  126.644007] Modules linked in: acpihp_drv(+) ebtable_nat ebtables ipt_MASQUERADE iptable_nat nf_nat iptable_mangle bridge stp llc sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 vhost_net macvtap macvlan tun uinput iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crc32c_intel microcode lpc_ich mfd_core pcspkr i2c_i801 i2c_core ioatdma e1000e acpi_memhotplug i7core_edac edac_core igb dca mptsas mptscsih mptbase scsi_transport_sas
-> [  126.644007] CPU 10 
-> [  126.644007] Pid: 2821, comm: modprobe Tainted: G       A     3.6.0-rc1+ #6 FUJITSU-SV PRIMEQUEST 1800E/SB
-> [  126.644007] RIP: 0010:[<ffffffff814c0cd3>]  [<ffffffff814c0cd3>] mutex_lock+0x19/0x37
-> [  126.644007] RSP: 0018:ffff8810589a9de8  EFLAGS: 00010246
-> [  126.644007] RAX: 0000000000000000 RBX: 0000000000000078 RCX: 0000000000000000
-> [  126.644007] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000078
-> [  126.644007] RBP: ffff8810589a9e08 R08: 0000000000000000 R09: ffff8810589a9d88
-> [  126.644007] R10: 00000000000013e5 R11: 00000000000013e5 R12: ffffffffa01460d0
-> [  126.644007] R13: 0000000000000000 R14: ffffffffa014732b R15: 00000000000000bf
-> [  126.644007] FS:  00007fecb1802700(0000) GS:ffff88105e640000(0000) knlGS:0000000000000000
-> [  126.644007] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  126.644007] CR2: 0000000000000078 CR3: 0000001052772000 CR4: 00000000000007e0
-> [  126.644007] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [  126.644007] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> [  126.644007] Process modprobe (pid: 2821, threadinfo ffff8810589a8000, task ffff8810592f8000)
-> [  126.644007] Stack:
-> [  126.644007]  ffff8810589a9e08 ffffffff810be37f ffffffffa0146220 ffffffff81a7b390
-> [  126.644007]  ffff8810589a9e58 ffffffff81317eb3 ffff8810589a9e48 0000000000000000
-> [  126.644007]  ffffffff81a342c0 ffffffff81a342e0 0000000000000000 ffffffffa0146220
-> [  126.644007] Call Trace:
-> [  126.644007]  [<ffffffff810be37f>] ? tracepoint_module_notify+0xd9/0x14a
-> [  126.644007]  [<ffffffff81317eb3>] class_interface_register+0x4a/0xbc
-> [  126.644007]  [<ffffffffa00b8000>] ? 0xffffffffa00b7fff
-> [  126.644007]  [<ffffffffa00b8010>] acpihp_drv_init+0x10/0x12 [acpihp_drv]
-> [  126.644007]  [<ffffffff8100207f>] do_one_initcall+0x7f/0x139
-> [  126.644007]  [<ffffffff81093414>] sys_init_module+0x12d3/0x14e3
-> [  126.644007]  [<ffffffff81264b0d>] ? ddebug_dyndbg_boot_param_cb+0x45/0x45
-> [  126.644007]  [<ffffffff814c9469>] system_call_fastpath+0x16/0x1b
-> [  126.644007] Code: 48 8b 04 25 80 c6 00 00 48 89 43 18 31 c0 5b 5b c9 c3 55 48 89 e5 53 48 83 ec 18 66 66 66 66 90 48 89 fb e8 5a 0c 00 00 48 89 df <f0> ff 0f 79 05 e8 06 ff ff ff 65 48 8b 04 25 80 c6 00 00 48 89 
-> [  126.644007] RIP  [<ffffffff814c0cd3>] mutex_lock+0x19/0x37
-> [  126.644007]  RSP <ffff8810589a9de8>
-> [  126.644007] CR2: 0000000000000078
-> [  129.981335] ---[ end trace da17e9c9de8dd560 ]---
-> [  139.085895] nr_pdflush_threads exported in /proc is scheduled for removal
-> [  139.167394] sysctl: The scan_unevictable_pages sysctl/node-interface has been disabled for lack of a legitimate use case.  If you have one, please send an email to linux-mm@kvack.org.
-> 
-> Looks like it dereferenced a NULL pointer here.
-> May be it was my mistake that I didn't configure the environment correctly.
-> Would you please give me some advice ?
-> 
-> Thanks. :)
-> 
-> 
-> On 08/04/2012 08:13 PM, Jiang Liu wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->> This patch implements a skeleton for ACPI based system device hotplug driver.
->> This device class driver will be bound to and manage ACPI hotplug slots.
->>
->> This is the default hotplug driver for ACPI based system device hotplug.
->>
->> Signed-off-by: Jiang Liu <liuj97@gmail.com>
->> Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
->> ---
->>  drivers/acpi/Kconfig              |   12 ++
->>  drivers/acpi/hotplug/Makefile     |    3 +
->>  drivers/acpi/hotplug/acpihp_drv.h |   62 +++++++
->>  drivers/acpi/hotplug/drv_main.c   |  331 +++++++++++++++++++++++++++++++++++++
->>  4 files changed, 408 insertions(+)
->>  create mode 100644 drivers/acpi/hotplug/acpihp_drv.h
->>  create mode 100644 drivers/acpi/hotplug/drv_main.c
->>
->> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
->> index c9f7918..89047a3 100644
->> --- a/drivers/acpi/Kconfig
->> +++ b/drivers/acpi/Kconfig
->> @@ -354,6 +354,18 @@ config ACPI_HOTPLUG_ENUM_EJ0
->>  
->>  	  It's the default method to detect ACPI hotplug slots.
->>  
->> +config ACPI_HOTPLUG_DRIVER
->> +	tristate "ACPI Based System Device Hotplug Driver"
->> +	depends on ACPI_HOTPLUG
->> +	default y
->> +	help
->> +	  This driver enables ACPI based system device hotplug, including
->> +	  physical processor, memory device, IO host bridge and computer
->> +	  node etc.
->> +
->> +	  To compile this driver as a module, choose M here:
->> +	  the module will be called acpihp_drv.
->> +
->>  config ACPI_CONTAINER
->>  	tristate "Container and Module Devices (EXPERIMENTAL)"
->>  	depends on EXPERIMENTAL
->> diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
->> index 25fac24..d69832f 100644
->> --- a/drivers/acpi/hotplug/Makefile
->> +++ b/drivers/acpi/hotplug/Makefile
->> @@ -8,3 +8,6 @@ acpihp-y					= core.o device.o
->>  obj-$(CONFIG_ACPI_HOTPLUG_ENUM)			+= acpihp_enum.o
->>  acpihp_enum-y					= slot_enum.o
->>  acpihp_enum-y					+= slot_enum_ej0.o
->> +
->> +obj-$(CONFIG_ACPI_HOTPLUG_DRIVER)		+= acpihp_drv.o
->> +acpihp_drv-y					= drv_main.o
->> diff --git a/drivers/acpi/hotplug/acpihp_drv.h b/drivers/acpi/hotplug/acpihp_drv.h
->> new file mode 100644
->> index 0000000..18330f7
->> --- /dev/null
->> +++ b/drivers/acpi/hotplug/acpihp_drv.h
->> @@ -0,0 +1,62 @@
->> +/*
->> + * Copyright (C) 2011 Huawei Tech. Co., Ltd.
->> + * Copyright (C) 2011 Jiang Liu <jiang.liu@huawei.com>
->> + * Copyright (C) 2011 Hanjun Guo <guohanjun@huawei.com>
->> + *
->> + * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License as published by
->> + * the Free Software Foundation; either version 2 of the License, or
->> + * (at your option) any later version.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + *
->> + * You should have received a copy of the GNU General Public License
->> + * along with this program; if not, write to the Free Software
->> + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->> + *
->> + * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> + */
->> +
->> +#ifndef	__ACPIHP_DRV_H__
->> +#define	__ACPIHP_DRV_H__
->> +
->> +/* Commands to change state of a hotplug slot */
->> +enum acpihp_drv_cmd {
->> +	ACPIHP_DRV_CMD_NOOP = 0,
->> +	ACPIHP_DRV_CMD_POWERON = 0x1,
->> +	ACPIHP_DRV_CMD_CONNECT = 0x2,
->> +	ACPIHP_DRV_CMD_CONFIGURE = 0x4,
->> +	ACPIHP_DRV_CMD_UNCONFIGURE = 0x8,
->> +	ACPIHP_DRV_CMD_DISCONNECT = 0x10,
->> +	ACPIHP_DRV_CMD_POWEROFF = 0x20,
->> +	ACPIHP_DRV_CMD_CANCEL = 0x40,
->> +	ACPIHP_DRV_CMD_MAX
->> +};
->> +
->> +/* Hotplug operations may be triggered by firmware or OS */
->> +enum acpihp_dev_event {
->> +	ACPIHP_DRV_EVENT_FROM_FW,
->> +	ACPIHP_DRV_EVENT_FROM_OS
->> +};
->> +
->> +struct acpihp_slot_drv {
->> +	enum acpihp_dev_event	event_flag;
->> +	struct mutex		op_mutex; /* Prevent concurrent hotplugs. */
->> +	struct list_head	depend_list; /* Dependency relationship */
->> +	atomic_t		cancel_status;
->> +	atomic_t		cancel_flag;
->> +	struct acpihp_cancel_context	cancel_ctx;
->> +};
->> +
->> +void acpihp_drv_get_data(struct acpihp_slot *slot,
->> +			 struct acpihp_slot_drv **data);
->> +int acpihp_drv_enumerate_devices(struct acpihp_slot *slot);
->> +void acpihp_drv_update_slot_state(struct acpihp_slot *slot);
->> +int acpihp_drv_update_slot_status(struct acpihp_slot *slot);
->> +
->> +#endif	/* __ACPIHP_DRV_H__ */
->> diff --git a/drivers/acpi/hotplug/drv_main.c b/drivers/acpi/hotplug/drv_main.c
->> new file mode 100644
->> index 0000000..538772d
->> --- /dev/null
->> +++ b/drivers/acpi/hotplug/drv_main.c
->> @@ -0,0 +1,331 @@
->> +/*
->> + * Copyright (C) 2011 Huawei Tech. Co., Ltd.
->> + * Copyright (C) 2011 Jiang Liu <jiang.liu@huawei.com>
->> + * Copyright (C) 2011 Hanjun Guo <guohanjun@huawei.com>
->> + *
->> + * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License as published by
->> + * the Free Software Foundation; either version 2 of the License, or
->> + * (at your option) any later version.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + *
->> + * You should have received a copy of the GNU General Public License
->> + * along with this program; if not, write to the Free Software
->> + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->> + *
->> + * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> + */
->> +
->> +#include <linux/kernel.h>
->> +#include <linux/errno.h>
->> +#include <linux/types.h>
->> +#include <linux/list.h>
->> +#include <linux/mutex.h>
->> +#include <linux/kthread.h>
->> +#include <linux/delay.h>
->> +#include <linux/acpi.h>
->> +#include <acpi/acpi_hotplug.h>
->> +#include "acpihp_drv.h"
->> +
->> +static struct class_interface acpihp_drv_interface;
->> +
->> +void acpihp_drv_get_data(struct acpihp_slot *slot,
->> +			 struct acpihp_slot_drv **data)
->> +{
->> +	*data = NULL;
->> +	acpihp_slot_get_drv_data(slot, &acpihp_drv_interface, (void **)data);
->> +}
->> +
->> +/* Update slot state according to state of devices connecting to it. */
->> +void acpihp_drv_update_slot_state(struct acpihp_slot *slot)
->> +{
->> +	enum acpihp_dev_type type;
->> +	enum acpihp_slot_state state;
->> +	struct klist_iter iter;
->> +	struct klist_node *ip;
->> +	struct acpihp_dev_node *dp;
->> +	bool connected = false;
->> +	bool configured = false;
->> +
->> +	if (!acpihp_slot_present(slot)) {
->> +		state = ACPIHP_SLOT_STATE_ABSENT;
->> +		goto out;
->> +	} else if (!acpihp_slot_powered(slot)) {
->> +		state = ACPIHP_SLOT_STATE_PRESENT;
->> +		goto out;
->> +	}
->> +
->> +	for (type = ACPIHP_DEV_TYPE_UNKNOWN;
->> +	     type < ACPIHP_DEV_TYPE_MAX && !configured;
->> +	     type++) {
->> +		klist_iter_init(&slot->dev_lists[type], &iter);
->> +		while ((ip = klist_next(&iter)) != NULL) {
->> +			connected = true;
->> +			dp = container_of(ip, struct acpihp_dev_node, node);
->> +			if (dp->state == DEVICE_STATE_CONFIGURED) {
->> +				configured = true;
->> +				break;
->> +			}
->> +		}
->> +		klist_iter_exit(&iter);
->> +	}
->> +
->> +	if (configured)
->> +		state = ACPIHP_SLOT_STATE_CONFIGURED;
->> +	else if (connected)
->> +		state = ACPIHP_SLOT_STATE_CONNECTED;
->> +	else
->> +		state = ACPIHP_SLOT_STATE_POWERED;
->> +
->> +out:
->> +	acpihp_slot_change_state(slot, state);
->> +}
->> +
->> +/* Update slot state according to status of devices connecting to it. */
->> +int acpihp_drv_update_slot_status(struct acpihp_slot *slot)
->> +{
->> +	int ret = 0;
->> +	enum acpihp_dev_type type;
->> +	struct klist_iter iter;
->> +	struct klist_node *ip;
->> +	struct acpihp_dev_node *np;
->> +	struct acpi_device *dev;
->> +	struct acpihp_dev_info *info;
->> +
->> +	if (!slot)
->> +		return -EINVAL;
->> +
->> +	info = kzalloc(sizeof(*info), GFP_KERNEL);
->> +	if (!info)
->> +		return -ENOMEM;
->> +
->> +	for (type = ACPIHP_DEV_TYPE_MEM; type <= ACPIHP_DEV_TYPE_HOST_BRIDGE;
->> +	     type++) {
->> +		klist_iter_init(&slot->dev_lists[type], &iter);
->> +		while ((ip = klist_next(&iter)) != NULL) {
->> +			np = container_of(ip, struct acpihp_dev_node, node);
->> +			dev = container_of(np->dev, struct acpi_device, dev);
->> +			ret = acpihp_dev_get_info(dev, info);
->> +			if (ret) {
->> +				ACPIHP_DEBUG("fails to get info about %s.\n",
->> +					     dev_name(&dev->dev));
->> +				goto out;
->> +			}
->> +
->> +			if (info->status & ACPIHP_DEV_STATUS_FAULT)
->> +				acpihp_slot_set_flag(slot,
->> +						ACPIHP_SLOT_FLAG_FAULT);
->> +			if (info->status & ACPIHP_DEV_STATUS_IRREMOVABLE)
->> +				acpihp_slot_set_flag(slot,
->> +						ACPIHP_SLOT_FLAG_IRREMOVABLE);
->> +		}
->> +	}
->> +
->> +out:
->> +	kfree(info);
->> +
->> +	return ret;
->> +}
->> +EXPORT_SYMBOL(acpihp_drv_update_slot_status);
->> +
->> +/* Add ACPI device to hotplug slot's device list */
->> +static acpi_status acpihp_drv_enum_device(struct acpi_device *dev, void *argp)
->> +{
->> +	int ret = -ENOMEM;
->> +	acpi_status rv = AE_OK;
->> +	enum acpihp_dev_type type;
->> +	enum acpihp_dev_state state;
->> +	struct acpihp_dev_info *info;
->> +	struct acpihp_slot *slot = (struct acpihp_slot *)argp;
->> +
->> +	if (acpihp_dev_get_type(dev->handle, &type)) {
->> +		ACPIHP_DEBUG("fails to get device type of %s.\n",
->> +			     dev_name(&dev->dev));
->> +		return AE_ERROR;
->> +	} else if (type == ACPIHP_DEV_TYPE_MAX) {
->> +		/*
->> +		 * Some ACPI objects for IO devices, such as PCI/IDE etc, only
->> +		 * implement _ADR instead of _HID/_CID, skip them.
->> +		 */
->> +		return AE_CTRL_DEPTH;
->> +	}
->> +
->> +	info = kzalloc(sizeof(*info), GFP_KERNEL);
->> +	if (info)
->> +		ret = acpihp_dev_get_info(dev, info);
->> +
->> +	if (!ret) {
->> +		if (info->status & ACPIHP_DEV_STATUS_STARTED)
->> +			state = DEVICE_STATE_CONFIGURED;
->> +		else
->> +			state = DEVICE_STATE_CONNECTED;
->> +
->> +		if (info->status & ACPIHP_DEV_STATUS_IRREMOVABLE)
->> +			acpihp_slot_set_flag(slot,
->> +					     ACPIHP_SLOT_FLAG_IRREMOVABLE);
->> +		if (info->status & ACPIHP_DEV_STATUS_FAULT)
->> +			acpihp_slot_set_flag(slot, ACPIHP_SLOT_FLAG_FAULT);
->> +
->> +		if (acpihp_slot_add_device(slot, type, state, &dev->dev)) {
->> +			ACPIHP_DEBUG("fails to add %s to slot %s.\n",
->> +				     dev_name(&dev->dev), slot->name);
->> +			rv = AE_ERROR;
->> +		}
->> +	} else {
->> +		ACPIHP_DEBUG("fails to query device info of %s.\n",
->> +			     dev_name(&dev->dev));
->> +	}
->> +
->> +	kfree(info);
->> +
->> +	return rv;
->> +}
->> +
->> +/*
->> + * Enumerator all devices connecting to a slot and add them onto slot's
->> + * device lists.
->> + */
->> +int acpihp_drv_enumerate_devices(struct acpihp_slot *slot)
->> +{
->> +	return acpihp_walk_devices(slot->handle, acpihp_drv_enum_device, slot);
->> +}
->> +
->> +static void acpihp_drv_remove_devices(struct acpihp_slot *slot)
->> +{
->> +	enum acpihp_dev_type type;
->> +
->> +	for (type = ACPIHP_DEV_TYPE_UNKNOWN; type < ACPIHP_DEV_TYPE_MAX; type++)
->> +		acpihp_remove_device_list(&slot->dev_lists[type]);
->> +}
->> +
->> +/* Callback function for ACPI system event notification. */
->> +static void acpihp_drv_event_handler(acpi_handle handle, u32 event,
->> +				     void *context)
->> +{
->> +	/* TODO: handle ACPI hotplug events */
->> +}
->> +
->> +static acpi_status acpihp_drv_install_handler(struct acpihp_slot *slot)
->> +{
->> +	acpi_status status;
->> +
->> +	status = acpi_install_notify_handler(slot->handle, ACPI_SYSTEM_NOTIFY,
->> +					     acpihp_drv_event_handler, slot);
->> +	ACPIHP_DEBUG("%s to install event handler for %s.\n",
->> +		     ACPI_SUCCESS(status) ? "succeeds" : "fails", slot->name);
->> +
->> +	return status;
->> +}
->> +
->> +static void acpihp_drv_uninstall_handler(struct acpihp_slot *slot)
->> +{
->> +	acpi_status status;
->> +
->> +	status = acpi_remove_notify_handler(slot->handle, ACPI_SYSTEM_NOTIFY,
->> +					    acpihp_drv_event_handler);
->> +	ACPIHP_DEBUG("%s to uninstall event handler for %s.\n",
->> +		ACPI_SUCCESS(status) ? "succeeds" : "fails", slot->name);
->> +}
->> +
->> +static int acpihp_drv_slot_add(struct device *dev, struct class_interface *intf)
->> +{
->> +	struct acpihp_slot_drv *drv_data;
->> +	struct acpihp_slot *slot = container_of(dev, struct acpihp_slot, dev);
->> +
->> +	/*
->> +	 * Try to hold a reference to the slot_ops structure to prevent
->> +	 * the platform specific enumerator driver from unloading.
->> +	 */
->> +	if (!slot->slot_ops || !try_module_get(slot->slot_ops->owner)) {
->> +		ACPIHP_DEBUG("fails to get reference to slot_ops for %s.\n",
->> +			     slot->name);
->> +		return -EINVAL;
->> +	}
->> +
->> +	/* install ACPI event notification handler for slot */
->> +	if (ACPI_FAILURE(acpihp_drv_install_handler(slot))) {
->> +		ACPIHP_DEBUG("fails to install event handler for %s.\n",
->> +			     slot->name);
->> +		module_put(slot->slot_ops->owner);
->> +		return -EBUSY;
->> +	}
->> +
->> +	/* Enumerate all devices if slot is already powered. */
->> +	if (!acpihp_slot_powered(slot))
->> +		ACPIHP_DEBUG("slot %s is powered off.\n", slot->name);
->> +	else if (acpihp_drv_enumerate_devices(slot))
->> +		acpihp_slot_set_flag(slot, ACPIHP_SLOT_FLAG_IRREMOVABLE);
->> +
->> +	acpihp_drv_update_slot_state(slot);
->> +
->> +	drv_data = kzalloc(sizeof(*drv_data), GFP_KERNEL);
->> +	if (drv_data) {
->> +		drv_data->event_flag = ACPIHP_DRV_EVENT_FROM_FW;
->> +		mutex_init(&drv_data->op_mutex);
->> +		INIT_LIST_HEAD(&drv_data->depend_list);
->> +	}
->> +	if (drv_data == NULL ||
->> +	    acpihp_slot_attach_drv_data(slot, intf, (void *)drv_data)) {
->> +		ACPIHP_DEBUG("fails to attach driver data for %s.\n",
->> +			     slot->name);
->> +		acpihp_drv_remove_devices(slot);
->> +		module_put(slot->slot_ops->owner);
->> +		kfree(drv_data);
->> +		return -ENOMEM;
->> +	}
->> +
->> +	ACPIHP_INFO("found hotplug slot %s.\n", slot->full_path);
->> +
->> +	return 0;
->> +}
->> +
->> +static void acpihp_drv_intf_remove(struct device *dev,
->> +				  struct class_interface *intf)
->> +{
->> +	struct acpihp_slot_drv *drv_data = NULL;
->> +	struct acpihp_slot *slot =
->> +			container_of(dev, struct acpihp_slot, dev);
->> +
->> +	ACPIHP_INFO("remove hotplug slot %s.\n", slot->full_path);
->> +
->> +	acpihp_drv_uninstall_handler(slot);
->> +	acpihp_drv_remove_devices(slot);
->> +	acpihp_slot_detach_drv_data(slot, intf, (void **)&drv_data);
->> +	if (drv_data != NULL)
->> +		kfree(drv_data);
->> +
->> +	module_put(slot->slot_ops->owner);
->> +}
->> +
->> +/*
->> + * register a class driver onto the acpihp_slot_class to manage all system
->> + * device hotplug slots.
->> + */
->> +static struct class_interface acpihp_drv_interface = {
->> +	.class		= &acpihp_slot_class,
->> +	.add_dev	= acpihp_drv_slot_add,
->> +	.remove_dev	= acpihp_drv_intf_remove,
->> +};
->> +
->> +static int __init acpihp_drv_init(void)
->> +{
->> +	return class_interface_register(&acpihp_drv_interface);
->> +}
->> +
->> +static void __exit acpihp_drv_exit(void)
->> +{
->> +	class_interface_unregister(&acpihp_drv_interface);
->> +}
->> +
->> +module_init(acpihp_drv_init);
->> +module_exit(acpihp_drv_exit);
->> +
->> +MODULE_LICENSE("GPL v2");
->> +MODULE_AUTHOR("Jiang Liu <jiang.liu@huawei.com>");
->> +MODULE_AUTHOR("Hanjun Guo <guohanjun@huawei.com>");
-> 
+--Nq2Wo0NMKNjxTN9z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, Aug 14, 2012 at 04:50:26PM -0700, Bjorn Helgaas wrote:
+> On Tue, Aug 14, 2012 at 1:12 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+> > On Thu, Jul 26, 2012 at 09:55:12PM +0200, Thierry Reding wrote:
+> >> diff --git a/arch/arm/boot/dts/tegra20.dtsi b/arch/arm/boot/dts/tegra2=
+0.dtsi
+> >> index a094c97..c886dff 100644
+> >> --- a/arch/arm/boot/dts/tegra20.dtsi
+> >> +++ b/arch/arm/boot/dts/tegra20.dtsi
+> >> @@ -199,6 +199,68 @@
+> >>               #size-cells =3D <0>;
+> >>       };
+> >>
+> >> +     pcie-controller {
+> >> +             compatible =3D "nvidia,tegra20-pcie";
+> >> +             reg =3D <0x80003000 0x00000800   /* PADS registers */
+> >> +                    0x80003800 0x00000200   /* AFI registers */
+> >> +                    0x81000000 0x01000000   /* configuration space */
+> >> +                    0x90000000 0x10000000>; /* extended configuration=
+ space */
+> >> +             interrupts =3D <0 98 0x04   /* controller interrupt */
+> >> +                           0 99 0x04>; /* MSI interrupt */
+> >> +             status =3D "disabled";
+> >> +
+> >> +             ranges =3D <0 0 0  0x80000000 0x00001000   /* root port =
+0 */
+> >> +                       0 1 0  0x81000000 0x00800000   /* port 0 confi=
+g space */
+> >> +                       0 2 0  0x90000000 0x08000000   /* port 0 ext c=
+onfig space */
+> >> +                       0 3 0  0x82000000 0x00010000   /* port 0 downs=
+tream I/O */
+> >> +                       0 4 0  0xa0000000 0x08000000   /* port 0 non-p=
+refetchable memory */
+> >> +                       0 5 0  0xb0000000 0x08000000   /* port 0 prefe=
+tchable memory */
+> >> +
+> >> +                       1 0 0  0x80001000 0x00001000   /* root port 1 =
+*/
+> >> +                       1 1 0  0x81800000 0x00800000   /* port 1 confi=
+g space */
+> >> +                       1 2 0  0x98000000 0x08000000   /* port 1 ext c=
+onfig space */
+> >> +                       1 3 0  0x82010000 0x00010000   /* port 1 downs=
+tream I/O */
+> >> +                       1 4 0  0xa8000000 0x08000000   /* port 1 non-p=
+refetchable memory */
+> >> +                       1 5 0  0xb8000000 0x08000000>; /* port 1 prefe=
+tchable memory */
+> >
+> > I've been thinking about this some more. The translations for both the
+> > regular and extended configuration spaces are configured in the top-
+> > level PCIe controller. It is therefore wrong how they are passed to the
+> > PCI host bridges via the ranges property.
+> >
+> > I remember Mitch saying that it should be passed down to the children
+> > because it is partitioned among them, but since the layout is compatible
+> > with ECAM, the partitioning isn't as simple as what's in the tree. In
+> > fact the partitions will be dependent on the number of devices attached
+> > to the host bridges.
+>=20
+> I don't understand this last bit about the number of devices attached
+> to the host bridges.  Logically, the host bridge has a bus number
+> aperture that you can know up front, even before you know anything
+> about what devices are below it.  On x86, for example, the ACPI _CRS
+> method has something like "[bus 00-7f]" in it, which means that any
+> buses in that range are below this bridge.  That doesn't tell us
+> anything about which buses actually have devices on them, of course;
+> it's just analogous to the secondary and subordinate bus number
+> registers in a P2P bridge.
 
+That's one of the issues I still need to take care of. Currently no bus
+resource is attached to the individual bridges (nor the PCI controller
+for that matter), so the PCI core will assign them dynamically. If this
+range is known at boot time we could assign ECAM ranges based on the bus
+numbers. Standard ECAM ranges, that is. On Tegra this won't work because
+as Stephen mentioned in a previous mail, the bus field is not the top
+field in the ECAM addresses. Basically what you have is this:
+
+	[27:24] upper 4 bits of the register address for extended
+	        configuration space
+	[23:16] bus number
+	[15:11] device number
+	[10: 8] device function
+	[ 8: 0] register
+
+So the ECAM space cannot be partitioned by bus number.
+
+Thierry
+
+--Nq2Wo0NMKNjxTN9z
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQK0OeAAoJEN0jrNd/PrOh6iIQAL0V0gBkvqgHGnr/26kjXhtX
+6h06I20vrEGvYv8iB3Z5CcBk4/aUgpyhWajMbQqDLHJ4Cdy/grasFvpP9BeywlfK
+SFFRsx2cJs0LUz+b7t8RpKCKCxyEmWYE2XpCfVw5F/gAWh4O75wuxkafFu7bQDlM
+5nZaNwYZElIuq3FpOrd1Y/68yJVmdsbiDbz2acsueMVaBdQZ+GoVi19/ADbfP1BN
+FpCacaUmzg+IqlcrrJf1Jmxf78EkOQEdoxFkXIMzxX4UKqJD6OgPLeQvPNsQCpXE
+Ska47BvZuNETfcJtmoU5mKRc9k6IM8LOP/+6ydd8HzPO6ZVM1AKh/qrzgImrWDbf
+O/ohn7Zgmxyu6XIdP2lMnNwFVvcchsVGvD2faZapT3uswWJJrvzKDIZCRFC11yWi
+ScXK0v2B+WjX9vd3SUcIpF4FiZUwruv4MMkhj2mMxIljjyk1zf6zUP6FKvEm3J+O
+8wptN80OvEpZMocsYaJmela31ujOQWWFH5RHSRYKLcLv3rAKBYDLWPZAUhbWDulU
+ID/mZSLEPTmf95EBuYqVe+bjcw8NMCSUg3z5xTO6Y7Rw1/xeyok1wwFB5illveJT
++Fsy+pYfE3DAS73oNtqB/7tEMYhxYbRlL8SehCJf4clg8/Ef8ssNvCdMJ0rZ+AzN
+YYTUBXh7cJwj6qfSXcMG
+=NDBv
+-----END PGP SIGNATURE-----
+
+--Nq2Wo0NMKNjxTN9z--
