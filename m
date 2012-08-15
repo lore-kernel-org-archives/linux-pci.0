@@ -1,127 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:26527 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752031Ab2HWHue convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2012 03:50:34 -0400
-Date: Thu, 23 Aug 2012 15:45:03 +0800
-From: Feng Tang <feng.tang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 1/2] PCI: Use local parameter pci_device_id for
- pci_get_subsys/class()
-Message-ID: <20120823154503.15a45b14@feng-i7>
-In-Reply-To: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-References: <5017D19B.5080806@redhat.com>
-	<1343738627.27983.30.camel@gandalf.stny.rr.com>
-	<5017D4AB.3090107@redhat.com>
-	<1343740419.27983.33.camel@gandalf.stny.rr.com>
-	<20120731234336.GA5526@localhost>
-	<1343778699.27983.70.camel@gandalf.stny.rr.com>
-	<20120731235705.GW2422@linux.vnet.ibm.com>
-	<1343779778.27983.73.camel@gandalf.stny.rr.com>
-	<20120801001811.GX2422@linux.vnet.ibm.com>
-	<20120801004319.GA7043@localhost>
-	<20120822025008.GA8066@localhost>
-	<20120822154908.2e6ef3c0@feng-i7>
-	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <201208042327.33132.rjw@sisk.pl>
+References: <201208042327.33132.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 13:17:43 -0600
+Message-ID: <CAErSpo4EHK5SEiAquguFV9sZa2-+q2jrF64JeBZqKBjaULNsRQ@mail.gmail.com>
+Subject: Re: [Resend][PATCH] PCI / PM: Fix messages printed by acpi_pci_set_power_state()
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Len Brown <lenb@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 57a28ee5e7662ca28ba4c793aa037d64bd082dee Mon Sep 17 00:00:00 2001
-From: Feng Tang <feng.tang@intel.com>
-Date: Wed, 22 Aug 2012 15:41:51 +0800
-Subject: [PATCH 1/2] PCI: Use local parameter pci_device_id for pci_get_subsys/class()
+On Sat, Aug 4, 2012 at 3:27 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+> If a PCI device is put into D3_cold by acpi_bus_set_power(),
+> the message printed by acpi_pci_set_power_state() says that its
+> power state has been changed to D4, which doesn't make sense.
+> In turn, if the device is put into D3_hot, the message simply
+> says "D3" without specifying the variant of the D3 state.
+>
+> Fix this by using the pci_power_name() macro for printing the state
+> name instead of building it from the numeric value corresponding to
+> the given state directly.
+>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
+Applied to my for-linus branch, since this fixes a minor issue
+introduced with the runtime D3cold support we merged for 3.6.  Thanks!
 
-pci_get_subsys() may get called in late system reboot stage, using
-a sleepable kmalloc() sounds fragile and will casue a kernel warning
-with my recent commmit 55c844a "x86/reboot: Fix a warning message
-triggered by stop_other_cpus()" which disable local interrupt in
-late system shutdown/reboot phase. Using a local parameter instead
-will fix it and make it eligible for calling forom atomic context.
-
-Do the same change for the pci_get_class() as suggeted by Bjorn Helgaas
-
-Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Feng Tang <feng.tang@intel.com>
-Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
----
- drivers/pci/search.c |   35 +++++++++++------------------------
- 1 files changed, 11 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 993d4a0..78a08b1 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -245,8 +245,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- 			       unsigned int ss_vendor, unsigned int ss_device,
- 			       struct pci_dev *from)
- {
--	struct pci_dev *pdev;
--	struct pci_device_id *id;
-+	struct pci_device_id id;
- 
- 	/*
- 	 * pci_find_subsys() can be called on the ide_setup() path,
-@@ -257,18 +256,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- 	if (unlikely(no_pci_devices()))
- 		return NULL;
- 
--	id = kzalloc(sizeof(*id), GFP_KERNEL);
--	if (!id)
--		return NULL;
--	id->vendor = vendor;
--	id->device = device;
--	id->subvendor = ss_vendor;
--	id->subdevice = ss_device;
--
--	pdev = pci_get_dev_by_id(id, from);
--	kfree(id);
-+	id.vendor = vendor;
-+	id.device = device;
-+	id.subvendor = ss_vendor;
-+	id.subdevice = ss_device;
- 
--	return pdev;
-+	return pci_get_dev_by_id(&id, from);
- }
- 
- /**
-@@ -307,19 +300,13 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
-  */
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
- {
--	struct pci_dev *dev;
--	struct pci_device_id *id;
-+	struct pci_device_id id;
- 
--	id = kzalloc(sizeof(*id), GFP_KERNEL);
--	if (!id)
--		return NULL;
--	id->vendor = id->device = id->subvendor = id->subdevice = PCI_ANY_ID;
--	id->class_mask = PCI_ANY_ID;
--	id->class = class;
-+	id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
-+	id.class_mask = PCI_ANY_ID;
-+	id.class = class;
- 
--	dev = pci_get_dev_by_id(id, from);
--	kfree(id);
--	return dev;
-+	return pci_get_dev_by_id(&id, from);
- }
- 
- /**
--- 
-1.7.1
+> ---
+>  drivers/pci/pci-acpi.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> Index: linux/drivers/pci/pci-acpi.c
+> ===================================================================
+> --- linux.orig/drivers/pci/pci-acpi.c
+> +++ linux/drivers/pci/pci-acpi.c
+> @@ -266,8 +266,8 @@ static int acpi_pci_set_power_state(stru
+>         }
+>
+>         if (!error)
+> -               dev_printk(KERN_INFO, &dev->dev,
+> -                               "power state changed by ACPI to D%d\n", state);
+> +               dev_info(&dev->dev, "power state changed by ACPI to %s\n",
+> +                        pci_power_name(state));
+>
+>         return error;
+>  }
