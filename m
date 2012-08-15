@@ -1,131 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:36132 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933650Ab2HQDU0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 23:20:26 -0400
-Received: by qcro28 with SMTP id o28so2751349qcr.19
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 20:20:26 -0700 (PDT)
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:43883 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394Ab2HOTMg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 15:12:36 -0400
+Received: by ggdk6 with SMTP id k6so2163245ggd.19
+        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 12:12:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1343180997-9483-4-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
-	<1343180997-9483-4-git-send-email-shangw@linux.vnet.ibm.com>
-Date: Fri, 17 Aug 2012 11:20:26 +0800
-Message-ID: <CADLM8XNy37rCki78Xueb7NgMoAU1_1suajSMEMrBrCLSF-tvfQ@mail.gmail.com>
-Subject: Re: [PATCH 3/8] fiddle with conversion of pci and CPU address
-From: Wei Yang <weiyang.kernel@gmail.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	benh@kernel.crashing.org, linuxram@us.ibm.com,
-	Yinghai Lu <yinghai@kernel.org>,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
+References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 15 Aug 2012 13:12:14 -0600
+Message-ID: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
+Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
+ ports without native PCIe hotplug capability
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I am not sure why you want to rename those functions.
+On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
+> ignore root bridges using PCIe native hotplug) added code that made the
+> acpiphp driver completely ignore PCIe root complexes for which the kernel
+> had been granted control of the native PCIe hotplug feature by the BIOS
+> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+> the constraints to allow acpiphp driver handle non-PCIe bridges under
+> such a complex. The constraint needs to be relaxed further to allow
+> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
 
-BTW, i think you change the parameter of find_pci_host_bridge() in patch 2/8.
+Gerry, I assume you'll refresh and repost this after we get the PCIe
+capability stuff squared away, so I'll ignore this patch for now.
 
-So if I just apply 2/8, it will fail the compilation, i think.
-
-
-2012/7/25 Gavin Shan <shangw@linux.vnet.ibm.com>:
-> The patch fiddles with the those functions used to do conversion
-> between PCI and CPU address. More specificly, 2 functions are
-> involved: pcibios_bus_to_resource() and pcibios_resource_to_bus()
+> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+> switches and may migrate downstream ports among virtual switches.
+> To migrate a downstream port from the source virtual switch to the target,
+> the port needs to be hot-removed from the source and hot-added into the
+> target. pciehp driver can't be used here because there's no slots within
+> the virtual PCIe switch. So acpiphp driver is used to support downstream
+> port migration. A typical configuration is as below:
+> [Root w/o native PCIe HP]
+>         [Upstream port of vswitch w/o native PCIe HP]
+>                 [Downstream port of vswitch w/ native PCIe HP]
+>                         [PCIe enpoint]
 >
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> Here acpiphp driver will be used to handle root ports and upstream port
+> in the virtual switch, and pciehp driver will be used to handle downstream
+> ports in the virtual switch.
+>
+> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>
 > ---
->  drivers/pci/host-bridge.c |   24 +++++++++++++++++++-----
->  include/linux/pci.h       |    5 ++++-
->  2 files changed, 23 insertions(+), 6 deletions(-)
+>  drivers/pci/hotplug/acpiphp_glue.c |   49 ++++++++++++++++++++++++++++-------
+>  1 files changed, 39 insertions(+), 10 deletions(-)
 >
-> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> index fc16357..abcf053 100644
-> --- a/drivers/pci/host-bridge.c
-> +++ b/drivers/pci/host-bridge.c
-> @@ -37,10 +37,10 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
->         return res1->start <= res2->start && res1->end >= res2->end;
->  }
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 806c44f..4889448 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -115,6 +115,43 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
+>         .handler = handle_hotplug_event_func,
+>  };
 >
-> -void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-> -                            struct resource *res)
-> +void __pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-> +                              struct resource *res)
->  {
-> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
-> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
->         struct pci_host_bridge_window *window;
->         resource_size_t offset = 0;
->
-> @@ -57,6 +57,13 @@ void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->         region->start = res->start - offset;
->         region->end = res->end - offset;
->  }
-> +
-> +void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
-> +                            struct resource *res)
+> +/* Check whether device is managed by native PCIe hotplug driver */
+> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
 > +{
-> +       __pcibios_resource_to_bus(dev->bus, region, res);
+> +       int pos;
+> +       u16 reg16;
+> +       u32 reg32;
+> +       acpi_handle tmp;
+> +       struct acpi_pci_root *root;
+> +
+> +       if (!pci_is_pcie(pdev))
+> +               return false;
+> +
+> +       /* Check whether PCIe port supports native PCIe hotplug */
+> +       pos = pci_pcie_cap(pdev);
+> +       pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
+> +       if (!(reg16 & PCI_EXP_FLAGS_SLOT))
+> +               return false;
+> +       pci_read_config_dword(pdev, pos + PCI_EXP_SLTCAP, &reg32);
+> +       if (!(reg32 & PCI_EXP_SLTCAP_HPC))
+> +               return false;
+> +
+> +       /*
+> +        * Check whether native PCIe hotplug has been enabled for
+> +        * this PCIe hierarchy.
+> +        */
+> +       tmp = acpi_find_root_bridge_handle(pdev);
+> +       if (!tmp)
+> +               return false;
+> +       root = acpi_pci_find_root(tmp);
+> +       if (!root)
+> +               return false;
+> +       if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> +               return false;
+> +
+> +       return true;
 > +}
 > +
->  EXPORT_SYMBOL(pcibios_resource_to_bus);
+>  /* callback routine to register each ACPI PCI slot object */
+>  static acpi_status
+>  register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> @@ -133,16 +170,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+>                 return AE_OK;
 >
->  static bool region_contains(struct pci_bus_region *region1,
-> @@ -65,10 +72,10 @@ static bool region_contains(struct pci_bus_region *region1,
->         return region1->start <= region2->start && region1->end >= region2->end;
->  }
->
-> -void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> +void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
->                              struct pci_bus_region *region)
->  {
-> -       struct pci_host_bridge *bridge = find_pci_host_bridge(dev->bus);
-> +       struct pci_host_bridge *bridge = find_pci_host_bridge(bus);
->         struct pci_host_bridge_window *window;
->         resource_size_t offset = 0;
->
-> @@ -90,4 +97,11 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->         res->start = region->start + offset;
->         res->end = region->end + offset;
->  }
-> +
-> +void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
-> +                            struct pci_bus_region *region)
-> +{
-> +       __pcibios_bus_to_resource(dev->bus, res, region);
-> +}
-> +
->  EXPORT_SYMBOL(pcibios_bus_to_resource);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d8c379d..9acea4b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -654,9 +654,12 @@ void pcibios_update_irq(struct pci_dev *, int irq);
->  void pci_fixup_cardbus(struct pci_bus *);
->
->  /* Generic PCI functions used internally */
+>         pdev = pbus->self;
+> -       if (pdev && pci_is_pcie(pdev)) {
+> -               tmp = acpi_find_root_bridge_handle(pdev);
+> -               if (tmp) {
+> -                       struct acpi_pci_root *root = acpi_pci_find_root(tmp);
 > -
-> +void __pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
-> +                               struct resource *res);
->  void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
->                              struct resource *res);
-> +void __pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
-> +                              struct pci_bus_region *region);
->  void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
->                              struct pci_bus_region *region);
->  void pcibios_scan_specific_bus(int busn);
-> --
-> 1.7.5.4
+> -                       if (root && (root->osc_control_set &
+> -                                       OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> -                               return AE_OK;
+> -               }
+> -       }
+> +       if (pdev && device_is_managed_by_native_pciehp(pdev))
+> +               return AE_OK;
 >
+>         acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+>         device = (adr >> 16) & 0xffff;
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Richard Yang
-Help You, Help Me
+> 1.7.1
+>
+>
