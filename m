@@ -1,47 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:41768 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753390Ab2HDUZH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 4 Aug 2012 16:25:07 -0400
-Date: Sat, 4 Aug 2012 16:25:06 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Ming Lei <tom.leiming@gmail.com>, <linux-pci@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
- regression ...)
-In-Reply-To: <201208042147.25845.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1208041619440.23711-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from shards.monkeyblade.net ([149.20.54.216]:34980 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932587Ab2HPU0A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 16:26:00 -0400
+Date: Thu, 16 Aug 2012 13:25:57 -0700 (PDT)
+Message-Id: <20120816.132557.173944271888805402.davem@davemloft.net>
+To: mroos@linux.ee
+Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: PCI resource allocation problem on Sun Ultra 10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <alpine.SOC.1.00.1208161813240.11061@math.ut.ee>
+References: <alpine.SOC.1.00.1208161813240.11061@math.ut.ee>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 4 Aug 2012, Rafael J. Wysocki wrote:
+From: Meelis Roos <mroos@linux.ee>
+Date: Thu, 16 Aug 2012 18:15:24 +0300 (EEST)
 
-> On Friday, August 03, 2012, Ming Lei wrote:
-> > On Fri, Aug 3, 2012 at 10:20 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > > On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
-> > 
-> > > Hmmm.  You'd probably want a version that does a "get" at the same
-> > > time.  I suppose you would call func directly if the device was already
-> > > resumed, without going through the workqueue?
-> > 
-> > Maybe it isn't good, the 'func' might not be run in the current context
-> > (irq context or some spinlock is held).
-> 
-> Then I'd say don't use this interface.  If you have code that needs to
-> be run in a different context, then you have to use a work item (or
-> equivalent) anyway and you can do a synchronous runtime resume from there.
+> I tried to populate my Sun Ultra 10 with PCI cards. All but the last 
+> slot work but the last slot is assigned a non-working BAR. It sees that 
+> this area is reserved for Video ROM. Why is there Video ROM placeholder 
+> at that address - I see no resource in ATI VGA for it?
 
-That wasn't what he meant.  What if the code needs to run in the _same_
-context as the caller?  For example, with a spinlock held.  func would
-need to know whether it should acquire the lock, which means it needs
-to know whether it was called directly or through the workqueue.
+It's not a "placeholder", it's absolutely necessary because this range
+is implicitly decoded by any VGA capable device in the system.
 
-I suppose we could pass it an extra argument with this information...  
-but that's a little ugly.
+Therefore no device should ever be allocated that part of the address
+space.
 
-Alan Stern
+If OBP is allocating this range to non-VGA devices, it's buggy, and is
+risking multiple devices responding at the same time to an I/O space
+access.
 
