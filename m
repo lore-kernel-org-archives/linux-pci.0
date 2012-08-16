@@ -1,70 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:16530 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755364Ab2HFBef (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 5 Aug 2012 21:34:35 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [BUGFIX -v2 1/4] PCI/PM: enable D3/D3cold by default for most devices
-Date: Mon,  6 Aug 2012 09:34:27 +0800
-Message-Id: <1344216870-21105-2-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-References: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:54247 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964784Ab2HPPSZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 11:18:25 -0400
+Message-ID: <502D0F3C.4010308@wwwdotorg.org>
+Date: Thu, 16 Aug 2012 09:18:20 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 05/10] resource: add PCI configuration space support
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <1343332512-28762-6-git-send-email-thierry.reding@avionic-design.de> <CAErSpo4qg45brVRwEbw3=R04VsbnvUowSMWcT+M6VoAxbf3Cqg@mail.gmail.com> <20120814055542.GB16181@avionic-0098.mockup.avionic-design.de> <CAErSpo6LYpkC5wop53S1r1z3ov4+w4soqrQARzbbouVs1trzUg@mail.gmail.com> <20120814180142.GA9430@avionic-0098.mockup.avionic-design.de> <CAErSpo4Efy-Dt67rktzNiYfZfOTSu=pmYtyGd3tR-zZQ3jDGtA@mail.gmail.com> <20120815064902.GB15665@avionic-0098.mockup.avionic-design.de>
+In-Reply-To: <20120815064902.GB15665@avionic-0098.mockup.avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+On 08/15/2012 12:49 AM, Thierry Reding wrote:
+...
+> Stephen: Could you try to find out whether the regular
+> configuration space translation can just be omitted if we already
+> set up the one for the extended configuration space? In
+> tegra_pcie_setup_translations(), BAR 0 is setup for regular
+> configuration space (which requires a 16 MiB region), while BAR 1
+> is setup for the extended configuration space (requiring a full 256
+> MiB region). However, if I understand correctly, each of the
+> registers that can be accessed via the BAR 0 translation can also
+> be accessed via the BAR 1 translation. That seems like we're 
+> wasting the 16 MiB set aside for the BAR 0 mapping.
 
-http://marc.info/?l=linux-usb&m=134318961120825&w=2
-
-Originally, device lower power states include D1, D2, D3.  After that,
-D3 is further divided into D3hot and D3cold.  To support both scenario
-safely, original D3 is mapped to D3cold.
-
-When adding D3cold support, because worry about some device may have
-broken D3cold support, D3cold is disabled by default.  This disable D3
-on original platform too.  But some original platform may only have
-working D3, but no working D1, D2.  The root cause of the above bug is
-it too.
-
-To deal with this, this patch enables D3/D3cold by default for most
-devices.  This restores the original behavior.  For some devices that
-suspected to have broken D3cold support, such as PCIe port, D3cold is
-disabled by default.
-
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/pci/pci.c              |    1 +
- drivers/pci/pcie/portdrv_pci.c |    5 +++++
- 2 files changed, 6 insertions(+)
-
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1941,6 +1941,7 @@ void pci_pm_init(struct pci_dev *dev)
- 	dev->pm_cap = pm;
- 	dev->d3_delay = PCI_PM_D3_WAIT;
- 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
-+	dev->d3cold_allowed = true;
- 
- 	dev->d1_support = false;
- 	dev->d2_support = false;
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -200,6 +200,11 @@ static int __devinit pcie_portdrv_probe(
- 		return status;
- 
- 	pci_save_state(dev);
-+	/*
-+	 * D3cold may not work properly on some PCIe port, so disable
-+	 * it by default.
-+	 */
-+	dev->d3cold_allowed = false;
- 	if (!pci_match_id(port_runtime_pm_black_list, dev))
- 		pm_runtime_put_noidle(&dev->dev);
- 
+I have confirmed that in theory, the EXTCFG space can indeed be used
+to access any register, making the regular config space redundant.
+However, using the HW this way has apparently received less validation.
