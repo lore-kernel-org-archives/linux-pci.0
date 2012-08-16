@@ -1,36 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:34980 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932587Ab2HPU0A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 16:26:00 -0400
-Date: Thu, 16 Aug 2012 13:25:57 -0700 (PDT)
-Message-Id: <20120816.132557.173944271888805402.davem@davemloft.net>
-To: mroos@linux.ee
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: PCI resource allocation problem on Sun Ultra 10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <alpine.SOC.1.00.1208161813240.11061@math.ut.ee>
-References: <alpine.SOC.1.00.1208161813240.11061@math.ut.ee>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:54996 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751957Ab2HPOry (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Aug 2012 10:47:54 -0400
+Date: Thu, 16 Aug 2012 16:47:36 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH 2/5] x86, MSI: Allocate as many multiple IRQs as requested
+Message-ID: <864757eaf884e27c08f01f54ff6fa81d4af2ac57.1345124063.git.agordeev@redhat.com>
+References: <cover.1345124063.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1345124063.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Meelis Roos <mroos@linux.ee>
-Date: Thu, 16 Aug 2012 18:15:24 +0300 (EEST)
+When multiple MSIs are enabled with pci_enable_msi_block() the number of
+allocated IRQs 'nvec' is rounded up to the nearest value of power of two.
+That could lead to a condition when number of requested and used IRQs is
+less than number of actually allocated IRQs.
 
-> I tried to populate my Sun Ultra 10 with PCI cards. All but the last 
-> slot work but the last slot is assigned a non-working BAR. It sees that 
-> this area is reserved for Video ROM. Why is there Video ROM placeholder 
-> at that address - I see no resource in ATI VGA for it?
+This fix introduces 'msi_desc::nvec' field to address the above issue -
+when non-zero, it holds the number of allocated IRQs. Otherwise, the old
+method is used.
 
-It's not a "placeholder", it's absolutely necessary because this range
-is implicitly decoded by any VGA capable device in the system.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ arch/x86/kernel/apic/io_apic.c |   16 +++++++---------
+ drivers/pci/msi.c              |   10 ++++++++--
+ include/linux/msi.h            |    1 +
+ 3 files changed, 16 insertions(+), 11 deletions(-)
 
-Therefore no device should ever be allocated that part of the address
-space.
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index f083049..5a5c92b 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -3107,16 +3107,12 @@ static inline void destroy_irqs(unsigned int irq, unsigned int count)
+ }
+ 
+ static inline int
+-can_create_pow_of_two_irqs(unsigned int from, unsigned int count)
++can_create_irqs(unsigned int from, unsigned int count)
+ {
+-	if ((count > 1) && (count % 2))
+-		return -EINVAL;
+-
+-	for (; count; count = count / 2) {
++	for (; count; count = count - 1) {
+ 		if (!irq_can_alloc_irqs(from, count))
+ 			return count;
+ 	}
+-
+ 	return -ENOSPC;
+ }
+ 
+@@ -3298,8 +3294,7 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 	if (nvec > 1 && !irq_remapping_enabled)
+ 		return 1;
+ 
+-	nvec = __roundup_pow_of_two(nvec);
+-	ret = can_create_pow_of_two_irqs(nr_irqs_gsi, nvec);
++	ret = can_create_irqs(nr_irqs_gsi, nvec);
+ 	if (ret != nvec)
+ 		return ret;
+ 
+@@ -3307,11 +3302,13 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
++	WARN_ON(msidesc->nvec);
+ 
+ 	node = dev_to_node(&dev->dev);
+ 	irq = create_irqs(nr_irqs_gsi, nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
++	msidesc->nvec = nvec;
+ 
+ 	if (!irq_remapping_enabled) {
+ 		ret = setup_msi_irq(dev, msidesc, irq, 0);
+@@ -3320,7 +3317,7 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 		return 0;
+ 	}
+ 
+-	msidesc->msi_attrib.multiple = ilog2(nvec);
++	msidesc->msi_attrib.multiple = ilog2(__roundup_pow_of_two(nvec));
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+ 			index = msi_alloc_remapped_irq(dev, irq, nvec);
+@@ -3348,6 +3345,7 @@ error:
+ 	 */
+ 	msidesc->irq = 0;
+ 	msidesc->msi_attrib.multiple = 0;
++	msidesc->nvec = 0;
+ 
+ 	return ret;
+ }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a825d78..f0752d1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -79,7 +79,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ 		int i, nvec;
+ 		if (entry->irq == 0)
+ 			continue;
+-		nvec = 1 << entry->msi_attrib.multiple;
++		if (entry->nvec)
++			nvec = entry->nvec;
++		else
++			nvec = 1 << entry->msi_attrib.multiple;
+ 		for (i = 0; i < nvec; i++)
+ 			arch_teardown_msi_irq(entry->irq + i);
+ 	}
+@@ -336,7 +339,10 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 		int i, nvec;
+ 		if (!entry->irq)
+ 			continue;
+-		nvec = 1 << entry->msi_attrib.multiple;
++		if (entry->nvec)
++			nvec = entry->nvec;
++		else
++			nvec = 1 << entry->msi_attrib.multiple;
+ 		for (i = 0; i < nvec; i++)
+ 			BUG_ON(irq_has_action(entry->irq + i));
+ 	}
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ce93a34..6f4dfba 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -35,6 +35,7 @@ struct msi_desc {
+ 
+ 	u32 masked;			/* mask bits */
+ 	unsigned int irq;
++	unsigned int nvec;
+ 	struct list_head list;
+ 
+ 	union {
+-- 
+1.7.7.6
 
-If OBP is allocating this range to non-VGA devices, it's buggy, and is
-risking multiple devices responding at the same time to an I/O space
-access.
 
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
