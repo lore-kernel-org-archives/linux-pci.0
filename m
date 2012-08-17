@@ -1,436 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v2 04/16] ACPI: introduce interfaces to manage ACPI  device reference count
-Date: Sat, 4 Aug 2012 20:13:51 +0800
-Message-ID: <1344082443-4608-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:54217 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022Ab2HQVZo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 17:25:44 -0400
+Received: by ghrr11 with SMTP id r11so4406202ghr.19
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 14:25:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
+References: <502E8115.90507@gmail.com> <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
+ <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
+ <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
+ <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de> <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 Aug 2012 15:25:22 -0600
+Message-ID: <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
+Subject: Re: PCI Section mismatch error in linux-next.
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-mips <linux-mips@linux-mips.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Fri, Aug 17, 2012 at 3:07 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
+>> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
+> [...]
+>> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
+>> > affect you?  I think we would still have to change some __inits to
+>> > __devinit, including pcibios_update_irq(), but it might be more
+>> > manageable.
+>>
+>> You said that depending on HOTPLUG wouldn't be enough because it would
+>> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
+>> theoretically possible to build a kernel without HOTPLUG but have the
+>> enumeration start after init because of deferred probing. Those cases
+>> won't work if we keep __init or __devinit respectively, right?
+>
+> Another possibility would be to make PCI select HOTPLUG or depend on it.
+> That way it would be made sure that __devinit wouldn't cause all the
+> functions to be discarded after init.
 
-Function acpi_bus_get_device() return an ACPI device without holding a
-reference count the device, which is not safe to ACPI hotplug operations.
+There's been some discussion recently about whether CONFIG_HOTPLUG is
+worth keeping any more, but nothing's been resolved yet.  If we did
+decide to remove CONFIG_HOTPLUG, or require it for PCI, I would rather
+just remove all the __devinit annotations because they'd be
+superfluous.
 
-So change acpi_bus_get_device() to hold a reference count on the returned
-ACPI device and introduces acpi_get_device()/acpi_put_device() to manage
-ACPI device reference count.
+> Also, using PCI without HOTPLUG is sort of contradictory.
 
-This patch is still incomplete, need to check and modify all callers of
-acpi_bus_get_device().
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/acpi/bus.c                     |   22 +++++++++++++++++++---
- drivers/acpi/internal.h                |    3 +++
- drivers/acpi/scan.c                    |    6 ++++++
- drivers/gpu/drm/i915/intel_opregion.c  |    2 ++
- drivers/gpu/drm/nouveau/nouveau_acpi.c |    1 +
- drivers/pci/hotplug/acpiphp_glue.c     |    9 +++++++--
- drivers/pci/hotplug/acpiphp_ibm.c      |    5 ++++-
- drivers/pci/hotplug/sgi_hotplug.c      |    6 +++++-
- drivers/platform/x86/thinkpad_acpi.c   |    2 ++
- drivers/pnp/pnpacpi/core.c             |   23 ++++++++++-------------
- include/acpi/acpi_bus.h                |   16 +++++++++++++++-
- 11 files changed, 74 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-index adceafd..e13dcbc 100644
---- a/drivers/acpi/bus.c
-+++ b/drivers/acpi/bus.c
-@@ -89,26 +89,42 @@ static struct dmi_system_id dsdt_dmi_table[] __initdata = {
-                                 Device Management
-    -------------------------------------------------------------------------- */
- 
--int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device)
-+bool acpi_bus_has_device(acpi_handle handle)
- {
--	acpi_status status = AE_OK;
-+	acpi_status status;
-+	struct acpi_device *device = NULL;
-+
-+	down_read(&acpi_device_data_handler_sem);
-+	status = acpi_get_data(handle, acpi_bus_data_handler, (void **)&device);
-+	up_read(&acpi_device_data_handler_sem);
-+
-+	return ACPI_SUCCESS(status) && device;
-+}
-+EXPORT_SYMBOL(acpi_bus_has_device);
- 
-+int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device)
-+{
-+	acpi_status status;
- 
- 	if (!device)
- 		return -EINVAL;
- 
- 	/* TBD: Support fixed-feature devices */
- 
-+	down_read(&acpi_device_data_handler_sem);
- 	status = acpi_get_data(handle, acpi_bus_data_handler, (void **)device);
- 	if (ACPI_FAILURE(status) || !*device) {
-+		up_read(&acpi_device_data_handler_sem);
- 		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "No context for object [%p]\n",
- 				  handle));
- 		return -ENODEV;
-+	} else {
-+		get_device(&(*device)->dev);
-+		up_read(&acpi_device_data_handler_sem);
- 	}
- 
- 	return 0;
- }
--
- EXPORT_SYMBOL(acpi_bus_get_device);
- 
- acpi_status acpi_bus_get_status_handle(acpi_handle handle,
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index ca75b9c..70843c0 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -93,4 +93,7 @@ static inline int suspend_nvs_save(void) { return 0; }
- static inline void suspend_nvs_restore(void) {}
- #endif
- 
-+extern struct rw_semaphore acpi_device_data_handler_sem;
-+void acpi_bus_data_handler(acpi_handle handle, void *context);
-+
- #endif /* _ACPI_INTERNAL_H_ */
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 459593a..28408af 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -10,6 +10,7 @@
- #include <linux/signal.h>
- #include <linux/kthread.h>
- #include <linux/dmi.h>
-+#include <linux/sem.h>
- 
- #include <acpi/acpi_drivers.h>
- #include <linux/idr.h>
-@@ -33,6 +34,7 @@ static LIST_HEAD(acpi_device_list);
- static LIST_HEAD(acpi_bus_id_list);
- DEFINE_MUTEX(acpi_device_lock);
- LIST_HEAD(acpi_wakeup_device_list);
-+DECLARE_RWSEM(acpi_device_data_handler_sem);
- 
- struct acpi_device_bus_id{
- 	char bus_id[15];
-@@ -564,7 +566,9 @@ static void acpi_device_unregister(struct acpi_device *device, int type)
- 	acpi_device_release_id(device);
- 	mutex_unlock(&acpi_device_lock);
- 
-+	down_write(&acpi_device_data_handler_sem);
- 	acpi_detach_data(device->handle, acpi_bus_data_handler);
-+	up_write(&acpi_device_data_handler_sem);
- 
- 	acpi_device_remove_files(device);
- 	device_unregister(&device->dev);
-@@ -1227,8 +1231,10 @@ static int acpi_device_set_context(struct acpi_device *device)
- 	if (!device->handle)
- 		return 0;
- 
-+	down_write(&acpi_device_data_handler_sem);
- 	status = acpi_attach_data(device->handle,
- 				  acpi_bus_data_handler, device);
-+	up_write(&acpi_device_data_handler_sem);
- 	if (ACPI_SUCCESS(status))
- 		return 0;
- 
-diff --git a/drivers/gpu/drm/i915/intel_opregion.c b/drivers/gpu/drm/i915/intel_opregion.c
-index 18bd0af..da7dd48 100644
---- a/drivers/gpu/drm/i915/intel_opregion.c
-+++ b/drivers/gpu/drm/i915/intel_opregion.c
-@@ -359,6 +359,8 @@ static void intel_didl_outputs(struct drm_device *dev)
- 		}
- 	}
- 
-+	acpi_device_put(acpi_dev);
-+
- 	if (!acpi_video_bus) {
- 		pr_warn("No ACPI video bus found\n");
- 		return;
-diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-index fc841e8..f83efe3 100644
---- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-@@ -423,6 +423,7 @@ nouveau_acpi_edid(struct drm_device *dev, struct drm_connector *connector)
- 		return -ENODEV;
- 
- 	ret = acpi_video_get_edid(acpidev, type, -1, &edid);
-+	acpi_device_put(acpidev);
- 	if (ret < 0)
- 		return ret;
- 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 806c44f..78cffba4 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -724,11 +724,13 @@ static int acpiphp_bus_add(struct acpiphp_func *func)
- 		 * the bus then re-add it...
- 		 */
- 		ret_val = acpi_bus_trim(device, 1);
-+		acpi_device_put(device);
- 		dbg("acpi_bus_trim return %x\n", ret_val);
- 	}
- 
- 	ret_val = acpi_bus_add(&device, pdevice, func->handle,
- 		ACPI_BUS_TYPE_DEVICE);
-+	acpi_device_put(pdevice);
- 	if (ret_val) {
- 		dbg("error adding bus, %x\n",
- 			-ret_val);
-@@ -760,6 +762,8 @@ static int acpiphp_bus_trim(acpi_handle handle)
- 	if (retval)
- 		err("cannot remove from acpi list\n");
- 
-+	acpi_device_put(device);
-+
- 	return retval;
- }
- 
-@@ -1114,8 +1118,10 @@ static void handle_bridge_insertion(acpi_handle handle, u32 type)
- 	}
- 	if (acpi_bus_add(&device, pdevice, handle, ACPI_BUS_TYPE_DEVICE)) {
- 		err("cannot add bridge to acpi list\n");
-+		acpi_device_put(pdevice);
- 		return;
- 	}
-+	acpi_device_put(pdevice);
- 	if (!acpiphp_configure_bridge(handle) &&
- 		!acpi_bus_start(device))
- 		add_bridge(handle);
-@@ -1192,7 +1198,6 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpi_device *device;
- 	int num_sub_bridges = 0;
- 	struct acpiphp_hp_work *hp_work;
- 	acpi_handle handle;
-@@ -1202,7 +1207,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 
--	if (acpi_bus_get_device(handle, &device)) {
-+	if (!acpi_bus_has_device(handle)) {
- 		/* This bridge must have just been physically inserted */
- 		handle_bridge_insertion(handle, type);
- 		goto out;
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index c35e8ad..ecd4b8d 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -450,7 +450,7 @@ static int __init ibm_acpiphp_init(void)
- 	}
- 	if (acpiphp_register_attention(&ibm_attention_info)) {
- 		retval = -ENODEV;
--		goto init_return;
-+		goto put_device;
- 	}
- 
- 	ibm_note.device = device;
-@@ -471,6 +471,8 @@ static int __init ibm_acpiphp_init(void)
- 
- init_cleanup:
- 	acpiphp_unregister_attention(&ibm_attention_info);
-+put_device:
-+	acpi_device_put(device);
- init_return:
- 	return retval;
- }
-@@ -493,6 +495,7 @@ static void __exit ibm_acpiphp_exit(void)
- 		err("%s: Notification handler removal failed\n", __func__);
- 	/* remove the /sys entries */
- 	sysfs_remove_bin_file(sysdir, &ibm_apci_table_attr);
-+	acpi_device_put(ibm_note.device);
- }
- 
- module_init(ibm_acpiphp_init);
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index de57311..ad120f1 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -464,6 +464,8 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
- 				}
- 			}
- 		}
-+
-+		acpi_device_put(pdevice);
- 	}
- 
- 	/* Call the driver for the new device */
-@@ -540,8 +542,10 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
- 
- 				ret = acpi_bus_get_device(chandle,
- 							  &device);
--				if (ACPI_SUCCESS(ret))
-+				if (ACPI_SUCCESS(ret)) {
- 					acpi_bus_trim(device, 1);
-+					acpi_device_put(device);
-+				}
- 			}
- 		}
- 
-diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
-index 8b5610d..285eac5f 100644
---- a/drivers/platform/x86/thinkpad_acpi.c
-+++ b/drivers/platform/x86/thinkpad_acpi.c
-@@ -782,6 +782,7 @@ static int __init setup_acpi_notify(struct ibm_struct *ibm)
- 			pr_err("acpi_install_notify_handler(%s) failed: %s\n",
- 			       ibm->name, acpi_format_exception(status));
- 		}
-+		acpi_device_put(ibm->acpi->device);
- 		return -ENODEV;
- 	}
- 	ibm->flags.acpi_notify_installed = 1;
-@@ -8461,6 +8462,7 @@ static void ibm_exit(struct ibm_struct *ibm)
- 		acpi_remove_notify_handler(*ibm->acpi->handle,
- 					   ibm->acpi->type,
- 					   dispatch_acpi_notify);
-+		acpi_device_put(ibm->acpi->device);
- 		ibm->flags.acpi_notify_installed = 0;
- 	}
- 
-diff --git a/drivers/pnp/pnpacpi/core.c b/drivers/pnp/pnpacpi/core.c
-index d21e8f5..684b462 100644
---- a/drivers/pnp/pnpacpi/core.c
-+++ b/drivers/pnp/pnpacpi/core.c
-@@ -82,7 +82,6 @@ static int pnpacpi_get_resources(struct pnp_dev *dev)
- 
- static int pnpacpi_set_resources(struct pnp_dev *dev)
- {
--	struct acpi_device *acpi_dev;
- 	acpi_handle handle;
- 	struct acpi_buffer buffer;
- 	int ret;
-@@ -90,7 +89,7 @@ static int pnpacpi_set_resources(struct pnp_dev *dev)
- 	pnp_dbg(&dev->dev, "set resources\n");
- 
- 	handle = DEVICE_ACPI_HANDLE(&dev->dev);
--	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &acpi_dev))) {
-+	if (!handle || !acpi_bus_has_device(handle)) {
- 		dev_dbg(&dev->dev, "ACPI device not found in %s!\n", __func__);
- 		return -ENODEV;
- 	}
-@@ -113,14 +112,13 @@ static int pnpacpi_set_resources(struct pnp_dev *dev)
- 
- static int pnpacpi_disable_resources(struct pnp_dev *dev)
- {
--	struct acpi_device *acpi_dev;
- 	acpi_handle handle;
- 	int ret;
- 
- 	dev_dbg(&dev->dev, "disable resources\n");
- 
- 	handle = DEVICE_ACPI_HANDLE(&dev->dev);
--	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &acpi_dev))) {
-+	if (!handle || !acpi_bus_has_device(handle)) {
- 		dev_dbg(&dev->dev, "ACPI device not found in %s!\n", __func__);
- 		return 0;
- 	}
-@@ -138,11 +136,10 @@ static int pnpacpi_disable_resources(struct pnp_dev *dev)
- #ifdef CONFIG_ACPI_SLEEP
- static bool pnpacpi_can_wakeup(struct pnp_dev *dev)
- {
--	struct acpi_device *acpi_dev;
- 	acpi_handle handle;
- 
- 	handle = DEVICE_ACPI_HANDLE(&dev->dev);
--	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &acpi_dev))) {
-+	if (!handle || !acpi_bus_has_device(handle)) {
- 		dev_dbg(&dev->dev, "ACPI device not found in %s!\n", __func__);
- 		return false;
- 	}
-@@ -152,12 +149,11 @@ static bool pnpacpi_can_wakeup(struct pnp_dev *dev)
- 
- static int pnpacpi_suspend(struct pnp_dev *dev, pm_message_t state)
- {
--	struct acpi_device *acpi_dev;
- 	acpi_handle handle;
- 	int error = 0;
- 
- 	handle = DEVICE_ACPI_HANDLE(&dev->dev);
--	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &acpi_dev))) {
-+	if (!handle || !acpi_bus_has_device(handle)) {
- 		dev_dbg(&dev->dev, "ACPI device not found in %s!\n", __func__);
- 		return 0;
- 	}
-@@ -190,11 +186,10 @@ static int pnpacpi_suspend(struct pnp_dev *dev, pm_message_t state)
- 
- static int pnpacpi_resume(struct pnp_dev *dev)
- {
--	struct acpi_device *acpi_dev;
- 	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->dev);
- 	int error = 0;
- 
--	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &acpi_dev))) {
-+	if (!handle || !acpi_bus_has_device(handle)) {
- 		dev_dbg(&dev->dev, "ACPI device not found in %s!\n", __func__);
- 		return -ENODEV;
- 	}
-@@ -310,10 +305,12 @@ static acpi_status __init pnpacpi_add_device_handler(acpi_handle handle,
- {
- 	struct acpi_device *device;
- 
--	if (!acpi_bus_get_device(handle, &device))
--		pnpacpi_add_device(device);
--	else
-+	if (acpi_bus_get_device(handle, &device))
- 		return AE_CTRL_DEPTH;
-+
-+	pnpacpi_add_device(device);
-+	acpi_device_put(device);
-+
- 	return AE_OK;
- }
- 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 9e6e1c6..e2a3eb0 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -345,8 +345,22 @@ extern void unregister_acpi_bus_notifier(struct notifier_block *nb);
-  * External Functions
-  */
- 
-+static inline struct acpi_device *acpi_device_get(struct acpi_device *d)
-+{
-+	if (d)
-+		get_device(&d->dev);
-+
-+	return d;
-+}
-+
-+static inline void acpi_device_put(struct acpi_device *d)
-+{
-+	if (d)
-+		put_device(&d->dev);
-+}
-+
-+bool acpi_bus_has_device(acpi_handle handle);
- int acpi_bus_get_device(acpi_handle handle, struct acpi_device **device);
--void acpi_bus_data_handler(acpi_handle handle, void *context);
- acpi_status acpi_bus_get_status_handle(acpi_handle handle,
- 				       unsigned long long *sta);
- int acpi_bus_get_status(struct acpi_device *device);
--- 
-1.7.9.5
-
-
+I'm not sure I follow this one.  I can easily imagine embedded systems
+that use PCI internally but have no slots or connectors, so there's no
+possibility of anything changing.
