@@ -1,153 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [RFC PATCH v2 09/16] ACPIHP: implement utility functions to support  system device hotplug
-Date: Sat, 4 Aug 2012 20:13:56 +0800
-Message-ID: <1344082443-4608-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
+	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757918Ab2HQXg6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:58 -0400
+Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:57 -0700 (PDT)
+Subject: [PATCH v2 14/16] parisc/PCI: Use list_for_each_entry() for
+	bus->devices traversal
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-parisc@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Date: Fri, 17 Aug 2012 17:36:56 -0600
+Message-ID: <20120817233656.10973.65389.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Replace list_for_each() + pci_dev_b() with the simpler
+list_for_each_entry().
 
-This patch implements some utility funcitons to support system device hotplug.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-parisc@vger.kernel.org
 ---
- drivers/acpi/hotplug/core.c |   80 +++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_hotplug.h |    9 +++++
- 2 files changed, 89 insertions(+)
+ drivers/parisc/dino.c    |    6 ++----
+ drivers/parisc/lba_pci.c |    7 ++-----
+ 2 files changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
-index 5e78867..230375e 100644
---- a/drivers/acpi/hotplug/core.c
-+++ b/drivers/acpi/hotplug/core.c
-@@ -634,6 +634,86 @@ int acpihp_remove_device_list(struct klist *dev_list)
- }
- EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index ffddc4f..4581ee0 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -477,14 +477,12 @@ dino_card_setup(struct pci_bus *bus, void __iomem *base_addr)
+ 	if (ccio_allocate_resource(dino_dev->hba.dev, res, _8MB,
+ 				F_EXTEND(0xf0000000UL) | _8MB,
+ 				F_EXTEND(0xffffffffUL) &~ _8MB, _8MB) < 0) {
+-		struct list_head *ln, *tmp_ln;
++		struct pci_dev *dev, *tmp;
  
-+bool acpihp_slot_present(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
-+
-+	/* A hotplug slot must implement ACPI _STA method */
-+	status = acpi_evaluate_integer(slot->handle,
-+				       METHOD_NAME__STA, NULL, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_WARN("fails to evaluate _STA for %p.\n", slot->name);
-+		return false;
-+	}
-+
-+	return !!(sta & ACPI_STA_DEVICE_PRESENT);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_present);
-+
-+bool acpihp_slot_powered(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
-+
-+	/* hotplug slot must implement _STA method */
-+	status = acpi_evaluate_integer(slot->handle,
-+				       METHOD_NAME__STA, NULL, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_WARN("fails to evaluate _STA for %p.\n", slot->name);
-+		return false;
-+	}
-+
-+	if ((sta & ACPI_STA_DEVICE_PRESENT) &&
-+	    ((sta & ACPI_STA_DEVICE_ENABLED) ||
-+	    (sta & ACPI_STA_DEVICE_FUNCTIONING)))
-+		return true;
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_powered);
-+
-+void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	slot->flags |= flags;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_set_flag);
-+
-+void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	slot->flags &= ~flags;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_clear_flag);
-+
-+u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	flags &= slot->flags;
-+	mutex_unlock(&slot->slot_mutex);
-+
-+	return flags;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_get_flag);
-+
-+void acpihp_slot_change_state(struct acpihp_slot *slot,
-+			      enum acpihp_slot_state state)
-+{
-+	if (state < ACPIHP_SLOT_STATE_UNKNOWN ||
-+	    state > ACPIHP_SLOT_STATE_MAX) {
-+		ACPIHP_WARN("slot state %d is invalid.\n", state);
-+		BUG_ON(state);
-+	}
-+
-+	mutex_lock(&slot->slot_mutex);
-+	slot->state = state;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_change_state);
-+
- /* SYSFS interfaces */
- static ssize_t acpihp_slot_object_show(struct device *d,
- 		struct device_attribute *attr, char *buf)
-diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
-index 1d43079..a13d9f0 100644
---- a/include/acpi/acpi_hotplug.h
-+++ b/include/acpi/acpi_hotplug.h
-@@ -289,6 +289,15 @@ extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
- 				     struct device *dev);
- extern int acpihp_remove_device_list(struct klist *dev_list);
+ 		printk(KERN_ERR "Dino: cannot attach bus %s\n",
+ 		       dev_name(bus->bridge));
+ 		/* kill the bus, we can't do anything with it */
+-		list_for_each_safe(ln, tmp_ln, &bus->devices) {
+-			struct pci_dev *dev = pci_dev_b(ln);
+-
++		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+ 			list_del(&dev->bus_list);
+ 		}
+ 			
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index 4ce57c9..fdd63a6 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -629,7 +629,6 @@ truncate_pat_collision(struct resource *root, struct resource *new)
+ static void
+ lba_fixup_bus(struct pci_bus *bus)
+ {
+-	struct list_head *ln;
+ 	struct pci_dev *dev;
+ #ifdef FBB_SUPPORT
+ 	u16 status;
+@@ -711,10 +710,9 @@ lba_fixup_bus(struct pci_bus *bus)
  
-+/* Utility Functions */
-+extern bool acpihp_slot_present(struct acpihp_slot *slot);
-+extern bool acpihp_slot_powered(struct acpihp_slot *slot);
-+extern void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags);
-+extern void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags);
-+extern u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags);
-+extern void acpihp_slot_change_state(struct acpihp_slot *slot,
-+				     enum acpihp_slot_state state);
-+
- extern int acpihp_debug;
+ 	}
  
- #define ACPIHP_DEBUG(fmt, ...) \
--- 
-1.7.9.5
-
+-	list_for_each(ln, &bus->devices) {
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+-		dev = pci_dev_b(ln);
+ 		DBG("lba_fixup_bus() %s\n", pci_name(dev));
+ 
+ 		/* Virtualize Device/Bridge Resources. */
+@@ -771,8 +769,7 @@ lba_fixup_bus(struct pci_bus *bus)
+ 	}
+ 
+ 	/* Lastly enable FBB/PERR/SERR on all devices too */
+-	list_for_each(ln, &bus->devices) {
+-		dev = pci_dev_b(ln);
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		(void) pci_read_config_word(dev, PCI_COMMAND, &status);
+ 		status |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR | fbb_enable;
+ 		(void) pci_write_config_word(dev, PCI_COMMAND, status);
 
