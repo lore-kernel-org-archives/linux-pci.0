@@ -1,79 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51427 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753667Ab2HJGL6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:11:58 -0400
-Date: Fri, 10 Aug 2012 15:11:50 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking
- with release_fn
-Message-Id: <20120810151150.a3942c58.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
+	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab2HQXgm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:42 -0400
+Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:42 -0700 (PDT)
+Subject: [PATCH v2 11/16] PCI: Leave normal LIST_POISON in deleted list entries
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Date: Fri, 17 Aug 2012 17:36:41 -0600
+Message-ID: <20120817233641.10973.93668.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+list_del() already sets next/prev to LIST_POISON1/LIST_POISON2, so we
+don't need to do anything special here to prevent further list accesses.
 
-    x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
-    
-    Non acpi path, or root is not probed from acpi, during root bus removal
-    will get warning about leaking from pci_scan_bus_on_node.
-    
-    Fix it with setting pci_host_bridge release function.
-    
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/pci/common.c |   17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ drivers/pci/remove.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-Index: Bjorn-next-0808/arch/x86/pci/common.c
-===================================================================
---- Bjorn-next-0808.orig/arch/x86/pci/common.c
-+++ Bjorn-next-0808/arch/x86/pci/common.c
-@@ -634,17 +634,19 @@ int pci_ext_cfg_avail(struct pci_dev *de
- 		return 0;
- }
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index c01baca..4f9ca91 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -32,11 +32,8 @@ static void pci_stop_dev(struct pci_dev *dev)
  
-+static void release_pci_sysdata(struct pci_host_bridge *bridge)
-+{
-+	struct pci_sysdata *sd = bridge->release_data;
-+
-+	kfree(sd);
-+}
-+
- struct pci_bus * __devinit pci_scan_bus_on_node(int busno, struct pci_ops *ops, int node)
+ static void pci_destroy_dev(struct pci_dev *dev)
  {
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus = NULL;
- 	struct pci_sysdata *sd;
+-	/* Remove the device from the device lists, and prevent any further
+-	 * list accesses from this device */
+ 	down_write(&pci_bus_sem);
+ 	list_del(&dev->bus_list);
+-	dev->bus_list.next = dev->bus_list.prev = NULL;
+ 	up_write(&pci_bus_sem);
  
--	/*
--	 * Allocate per-root-bus (not per bus) arch-specific data.
--	 * TODO: leak; this memory is never freed.
--	 * It's arguable whether it's worth the trouble to care.
--	 */
- 	sd = kzalloc(sizeof(*sd), GFP_KERNEL);
- 	if (!sd) {
- 		printk(KERN_ERR "PCI: OOM, skipping PCI bus %02x\n", busno);
-@@ -654,7 +656,10 @@ struct pci_bus * __devinit pci_scan_bus_
- 	x86_pci_root_bus_resources(busno, &resources);
- 	printk(KERN_DEBUG "PCI: Probing PCI hardware (bus %02x)\n", busno);
- 	bus = pci_scan_root_bus(NULL, busno, ops, sd, &resources);
--	if (!bus) {
-+	if (bus)
-+		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
-+					release_pci_sysdata, sd);
-+	else {
- 		pci_free_resource_list(&resources);
- 		kfree(sd);
- 	}
+ 	pci_free_resources(dev);
 
