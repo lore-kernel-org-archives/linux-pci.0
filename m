@@ -1,90 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
+	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753297Ab2HQXf4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:35:56 -0400
+Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:35:56 -0700 (PDT)
+Subject: [PATCH v2 02/16] PCI: acpiphp: Use common
+	pci_stop_and_remove_bus_device()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 17/22] PCI/pciehp: use PCI bus lock to avoid race conditions
-Date: Wed,  8 Aug 2012 00:10:57 +0800
-Message-Id: <1344355862-2726-18-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Fri, 17 Aug 2012 17:35:55 -0600
+Message-ID: <20120817233555.10973.75372.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch uses PCI bus lock mechanism to avoid race conditions when doing
-PCI device hotplug by pciehp driver.
+Use pci_stop_and_remove_bus_device() like most other hotplug drivers
+rather than stopping and removing separately.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/pciehp_pci.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/pci/hotplug/acpiphp_glue.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 09cecaf..9536a9e 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -42,18 +42,25 @@ int pciehp_configure_device(struct slot *p_slot)
- 	int num, fn;
- 	struct controller *ctrl = p_slot->ctrl;
- 
-+	if (pci_bus_lock_states(parent, PCI_BUS_STATE_WORKING) < 0) {
-+		ctrl_dbg(ctrl, "Port has been removed\n");
-+		return -EINVAL;
-+	}
-+
- 	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
- 	if (dev) {
- 		ctrl_err(ctrl, "Device %s already exists "
- 			 "at %04x:%02x:00, cannot hot-add\n", pci_name(dev),
- 			 pci_domain_nr(parent), parent->number);
- 		pci_dev_put(dev);
-+		pci_bus_unlock(parent);
- 		return -EINVAL;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index c25291c..b5d798e 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -920,8 +920,7 @@ static int disable_device(struct acpiphp_slot *slot)
+ 	 * here.
+ 	 */
+ 	while ((pdev = dev_in_slot(slot))) {
+-		pci_stop_bus_device(pdev);
+-		__pci_remove_bus_device(pdev);
++		pci_stop_and_remove_bus_device(pdev);
+ 		pci_dev_put(pdev);
  	}
  
- 	num = pci_scan_slot(parent, PCI_DEVFN(0, 0));
- 	if (num == 0) {
- 		ctrl_err(ctrl, "No new device found\n");
-+		pci_bus_unlock(parent);
- 		return -ENODEV;
- 	}
- 
-@@ -82,6 +89,7 @@ int pciehp_configure_device(struct slot *p_slot)
- 	}
- 
- 	pci_bus_add_devices(parent);
-+	pci_bus_unlock(parent);
- 
- 	return 0;
- }
-@@ -96,6 +104,11 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 	u16 command;
- 	struct controller *ctrl = p_slot->ctrl;
- 
-+	if (pci_bus_lock_states(parent, PCI_BUS_STATE_WORKING) < 0) {
-+		ctrl_dbg(ctrl, "Port has been removed\n");
-+		return -EINVAL;
-+	}
-+
- 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
- 		 __func__, pci_domain_nr(parent), parent->number);
- 	ret = pciehp_get_adapter_status(p_slot, &presence);
-@@ -131,5 +144,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 		pci_dev_put(temp);
- 	}
- 
-+	pci_bus_unlock(parent);
-+
- 	return rc;
- }
--- 
-1.7.9.5
 
