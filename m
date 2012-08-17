@@ -1,80 +1,25 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Chris Metcalf <cmetcalf@tilera.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 14/32] PCI/tile: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:19 +0800
-Message-Id: <1343836477-7287-15-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:56794 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211Ab2HQXhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:37:34 -0400
+Received: by lbbgj3 with SMTP id gj3so2417513lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:37:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 Aug 2012 17:37:12 -0600
+Message-ID: <CAErSpo7R1wz0OEU2JVrdHJnoA0Rjk8vkhrBYnSRNDDXeUfPekg@mail.gmail.com>
+Subject: Re: [PATCH 1/6] PCI: Use list_for_each_entry() for bus->devices traversal
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Thu, Aug 16, 2012 at 5:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Replace list_for_each() + pci_dev_b() with the simpler
+> list_for_each_entry().
 
-Use PCIe capabilities access functions to simplify PCIe tile implementation.
-
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- arch/tile/kernel/pci.c |   25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
-
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 0fdd99d..4640690 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -246,16 +246,13 @@ static void __devinit fixup_read_and_payload_sizes(void)
- 
- 	/* Scan for the smallest maximum payload size. */
- 	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
--		int pcie_caps_offset;
- 		u32 devcap;
- 		int max_payload;
- 
--		pcie_caps_offset = pci_find_capability(dev, PCI_CAP_ID_EXP);
--		if (pcie_caps_offset == 0)
-+		if (!pci_is_pcie(dev))
- 			continue;
- 
--		pci_read_config_dword(dev, pcie_caps_offset + PCI_EXP_DEVCAP,
--				      &devcap);
-+		pci_pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &devcap);
- 		max_payload = devcap & PCI_EXP_DEVCAP_PAYLOAD;
- 		if (max_payload < smallest_max_payload)
- 			smallest_max_payload = max_payload;
-@@ -263,21 +260,9 @@ static void __devinit fixup_read_and_payload_sizes(void)
- 
- 	/* Now, set the max_payload_size for all devices to that value. */
- 	new_values = (max_read_size << 12) | (smallest_max_payload << 5);
--	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
--		int pcie_caps_offset;
--		u16 devctl;
--
--		pcie_caps_offset = pci_find_capability(dev, PCI_CAP_ID_EXP);
--		if (pcie_caps_offset == 0)
--			continue;
--
--		pci_read_config_word(dev, pcie_caps_offset + PCI_EXP_DEVCTL,
--				     &devctl);
--		devctl &= ~(PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ);
--		devctl |= new_values;
--		pci_write_config_word(dev, pcie_caps_offset + PCI_EXP_DEVCTL,
--				      devctl);
--	}
-+	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
-+		pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL, new_values,
-+				PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ);
- }
- 
- 
--- 
-1.7.9.5
-
+This series of 6 patches is obsoleted by "[PATCH v2 00/16] Clean up
+drivers/pci/remove.c", posted 8/17.
