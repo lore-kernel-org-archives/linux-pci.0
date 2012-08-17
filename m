@@ -1,41 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:42068 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752211Ab2HDTlq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 4 Aug 2012 15:41:46 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Sat, 4 Aug 2012 21:47:25 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pci@vger.kernel.org,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <201208022326.31178.rjw@sisk.pl> <Pine.LNX.4.44L0.1208022151450.22991-100000@netrider.rowland.org> <CACVXFVOdwNiSkF1_Bs-FY-PT4gqZ86j6pcr4A=Yckc0bxykgRQ@mail.gmail.com>
-In-Reply-To: <CACVXFVOdwNiSkF1_Bs-FY-PT4gqZ86j6pcr4A=Yckc0bxykgRQ@mail.gmail.com>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:51444 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab2HQXgi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:38 -0400
+Received: by faem1 with SMTP id m1so116777fae.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:37 -0700 (PDT)
+Subject: [PATCH v2 10/16] PCI: Rename local variables to conventional names
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Date: Fri, 17 Aug 2012 17:36:36 -0600
+Message-ID: <20120817233636.10973.70478.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208042147.25845.rjw@sisk.pl>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 03, 2012, Ming Lei wrote:
-> On Fri, Aug 3, 2012 at 10:20 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
-> 
-> > Hmmm.  You'd probably want a version that does a "get" at the same
-> > time.  I suppose you would call func directly if the device was already
-> > resumed, without going through the workqueue?
-> 
-> Maybe it isn't good, the 'func' might not be run in the current context
-> (irq context or some spinlock is held).
+"bus" is the conventional name for a "struct pci_bus *" variable.
 
-Then I'd say don't use this interface.  If you have code that needs to
-be run in a different context, then you have to use a work item (or
-equivalent) anyway and you can do a synchronous runtime resume from there.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/remove.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-The problem we want to address here is when there's code that should be
-run as soon as the device is active, preferably _without_ a context switch.
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 44f479f..c01baca 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -43,19 +43,19 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	pci_dev_put(dev);
+ }
+ 
+-void pci_remove_bus(struct pci_bus *pci_bus)
++void pci_remove_bus(struct pci_bus *bus)
+ {
+-	pci_proc_detach_bus(pci_bus);
++	pci_proc_detach_bus(bus);
+ 
+ 	down_write(&pci_bus_sem);
+-	list_del(&pci_bus->node);
+-	pci_bus_release_busn_res(pci_bus);
++	list_del(&bus->node);
++	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!pci_bus->is_added)
++	if (!bus->is_added)
+ 		return;
+ 
+-	pci_remove_legacy_files(pci_bus);
+-	device_unregister(&pci_bus->dev);
++	pci_remove_legacy_files(bus);
++	device_unregister(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
 
-Thanks,
-Rafael
