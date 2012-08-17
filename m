@@ -1,64 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55574 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753052Ab2HCO2N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2012 10:28:13 -0400
-Date: Fri, 3 Aug 2012 10:28:12 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Ming Lei <tom.leiming@gmail.com>
-cc: "Rafael J. Wysocki" <rjw@sisk.pl>, <linux-pci@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
- regression ...)
-In-Reply-To: <CACVXFVOdwNiSkF1_Bs-FY-PT4gqZ86j6pcr4A=Yckc0bxykgRQ@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1208031020060.1520-100000@iolanthe.rowland.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:55336 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815Ab2HQVH2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 17:07:28 -0400
+Date: Fri, 17 Aug 2012 23:07:18 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-mips <linux-mips@linux-mips.org>
+Subject: Re: PCI Section mismatch error in linux-next.
+Message-ID: <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
+References: <502E8115.90507@gmail.com>
+ <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
+ <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
+ <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
+ <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
+In-Reply-To: <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 3 Aug 2012, Ming Lei wrote:
 
-> On Fri, Aug 3, 2012 at 10:20 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > On Thu, 2 Aug 2012, Rafael J. Wysocki wrote:
-> 
-> > Hmmm.  You'd probably want a version that does a "get" at the same
-> > time.  I suppose you would call func directly if the device was already
-> > resumed, without going through the workqueue?
-> 
-> Maybe it isn't good, the 'func' might not be run in the current context
-> (irq context or some spinlock is held).
+--u3/rZRmxL6MmkK24
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-True.  But we don't want to wait for the workqueue if the device is 
-already at full power.  Suggestions?
+On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
+> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
+[...]
+> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
+> > affect you?  I think we would still have to change some __inits to
+> > __devinit, including pcibios_update_irq(), but it might be more
+> > manageable.
+>=20
+> You said that depending on HOTPLUG wouldn't be enough because it would
+> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
+> theoretically possible to build a kernel without HOTPLUG but have the
+> enumeration start after init because of deferred probing. Those cases
+> won't work if we keep __init or __devinit respectively, right?
 
-> >> And what if you are a parent waited for by a child to resume so that _it_
-> >> can process its data?  Would you still want to process your data in the
-> >> resume callback in that case?
-> 
-> Looks the child is always resumed after its parent completes the resuming,
-> and current pm_runtime_get doesn't delay the resume of the parent, and
-> just make the .runtime_resume run in another context.
+Another possibility would be to make PCI select HOTPLUG or depend on it.
+That way it would be made sure that __devinit wouldn't cause all the
+functions to be discarded after init.
 
-I don't understand.  Rafael's point was that if the parent's resume
-callback did a bunch of real work, it would delay resuming the child 
-because the child can't be resumed until the parent's resume callback 
-returns.
+Also, using PCI without HOTPLUG is sort of contradictory.
 
-> Also are there actual examples about the above situation?
+Thierry
 
-I don't know of any.  I suspect there aren't many examples.  It 
-wouldn't make much sense.
+--u3/rZRmxL6MmkK24
+Content-Type: application/pgp-signature
 
-> IMO, the .runtime_resume callback can handle the IO things easily
-> via scheduling worker function if the driver don't want to delay
-> its children's resume.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
-That was one of Rafael's other suggestions.  But calling 
-pm_request_resume_and_call() is easier than scheduling a worker 
-function.
+iQIcBAEBAgAGBQJQLrKGAAoJEN0jrNd/PrOhCdcP/3uQiMNPZuOMfFpouaXem6qS
+Wo1nLtGkeLLjvRY5jv38voix7MRxeJIkKW1v7YCeuCj5+RjzCO6o+0u+qHS0jZKp
+tku2SYP2h12v6p0yIZijyR+ebgPvKOSrBLN2R4IT4487teBeW1dLoyZ3O5QInjOh
+BtKwUcXkCDRKGLsBDK1wg+wqe2qlb/tXL7Dc+pn7RdI2l6R69b3rxmPqsDUL2p6f
+/wpzcf+2zwNCQnhgHHaYqB/IKfHb0WbZmM/U71JuaowmvLRQu0Eb9UH2qHpJ5stY
+UTbDIsMRiXacDvKrFiVYJ4coCY7WrWB1CCvnObVTsru5Fc4E62y3Px99m4yHCzxP
+KmW/t0Srf4D5YVwyWmEK83WzGyZOol8cAJfc7Y7gCUJ8zagfaPlX9VXlkfKkgadM
+uh4n/2kLnmduituVlEOsbPw8gMwLkflUJIxPSwyNrpkJeWvT2wDakGSrGt/uQ8MW
+LKISwrvGXos+cZkyR6HLcJMfgq+LO4AbDvQwRWKur3XkNL0yJBrOByWy3+baZ+Ti
+QA1OXc3Sbt5ojAB24bO8c+RGpdhitK8gHI5nJHDQ7Go6IdtQmjykt6dLBQlnBgD6
+WT6KBuWtPn1Kmx/ztYG2Zsihz22+uJttHZWSv8yp+rCi1U3FRAjWDlXeVXJxqgMg
+yLEUd6DMr7bX7GHD1Jls
+=VgbU
+-----END PGP SIGNATURE-----
 
-Alan Stern
-
-
+--u3/rZRmxL6MmkK24--
