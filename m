@@ -1,68 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9065 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752917Ab2HPOqS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Aug 2012 10:46:18 -0400
-Date: Thu, 16 Aug 2012 16:45:56 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH 0/5] x86, MSI, AHCI: Support multiple MSIs
-Message-ID: <cover.1345124063.git.agordeev@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:55935 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752184Ab2HQVcw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 17:32:52 -0400
+Date: Fri, 17 Aug 2012 23:32:47 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-mips <linux-mips@linux-mips.org>
+Subject: Re: PCI Section mismatch error in linux-next.
+Message-ID: <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
+References: <502E8115.90507@gmail.com>
+ <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
+ <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
+ <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
+ <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
+ <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
+ <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="BXVAT5kNtrzKuDFl"
+In-Reply-To: <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently multiple MSI mode is limited to a single vector per device (at
-least on x86 and PPC). This series breathes life into pci_enable_msi_block()
-and makes it possible to set interrupt affinity for multiple IRQs, similarly
-to MSI-X. Yet, only for x86 and only when IOMMUs are present.
 
-Although IRQ and PCI subsystems are modified, the current behaviour left
-intact. The drivers could just start using multiple MSIs just by following
-the existing documentation.
+--BXVAT5kNtrzKuDFl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The AHCI device driver makes use of the new mode and a new function -
-pci_enable_msi_block_auto() - patches 4,5.
+On Fri, Aug 17, 2012 at 03:25:22PM -0600, Bjorn Helgaas wrote:
+> On Fri, Aug 17, 2012 at 3:07 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+> > On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
+> >> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
+> > [...]
+> >> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
+> >> > affect you?  I think we would still have to change some __inits to
+> >> > __devinit, including pcibios_update_irq(), but it might be more
+> >> > manageable.
+> >>
+> >> You said that depending on HOTPLUG wouldn't be enough because it would
+> >> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
+> >> theoretically possible to build a kernel without HOTPLUG but have the
+> >> enumeration start after init because of deferred probing. Those cases
+> >> won't work if we keep __init or __devinit respectively, right?
+> >
+> > Another possibility would be to make PCI select HOTPLUG or depend on it.
+> > That way it would be made sure that __devinit wouldn't cause all the
+> > functions to be discarded after init.
+>=20
+> There's been some discussion recently about whether CONFIG_HOTPLUG is
+> worth keeping any more, but nothing's been resolved yet.  If we did
+> decide to remove CONFIG_HOTPLUG, or require it for PCI, I would rather
+> just remove all the __devinit annotations because they'd be
+> superfluous.
 
-The series is adapted to Ingo's -tip repository, x86/apic branch.
-Patches 4,5 could be applied independently of patches 1-3.
+I've missed that discussion. Can you point me to it?
 
-Attached patches:
-  1/5 x86, MSI: Support multiple MSIs in presense of IRQ remapping
-  2/5 x86, MSI: Allocate as many multiple IRQs as requested
-  3/5 x86, MSI: Minor readability fixes
-  4/5 PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
-  5/5 AHCI: Support multiple MSIs
+> > Also, using PCI without HOTPLUG is sort of contradictory.
+>=20
+> I'm not sure I follow this one.  I can easily imagine embedded systems
+> that use PCI internally but have no slots or connectors, so there's no
+> possibility of anything changing.
 
- Documentation/PCI/MSI-HOWTO.txt |   41 ++++++++-
- arch/x86/kernel/apic/io_apic.c  |  170 ++++++++++++++++++++++++++++++++++++---
- drivers/ata/ahci.c              |   11 +--
- drivers/ata/ahci.h              |    1 +
- drivers/ata/libahci.c           |   24 ++++++
- drivers/ata/libata-core.c       |   66 +++++++++++++++
- drivers/pci/msi.c               |   39 +++++++++-
- include/linux/irq.h             |    6 ++
- include/linux/libata.h          |    3 +
- include/linux/msi.h             |    1 +
- include/linux/pci.h             |    7 ++
- kernel/irq/chip.c               |   30 +++++--
- kernel/irq/irqdesc.c            |   31 +++++++
- 13 files changed, 397 insertions(+), 33 deletions(-)
+Contradictory was probably the wrong word. What I meant to say was that
+for systems that use PCI it probably wouldn't hurt to enable HOTPLUG as
+well. That would sort of go with what you said above, regarding the
+removal of HOTPLUG altogether.
 
--- 
-1.7.7.6
+Thierry
 
+--BXVAT5kNtrzKuDFl
+Content-Type: application/pgp-signature
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQLrh/AAoJEN0jrNd/PrOh3tgQALYNMSOVoqKR0VO+N4jmx8pz
+wtJfWRZrxMOqtxs/5vLdVNR3YyXVbvWth6UfTWasHjDnLsnpHXuz9hvPbyQZ1K10
+Ti+cYnz+w3n47fg9hO4F/aQxHAv3Ugnf7o6jdzMEDovpRZcko+ST/3eAjja44ErG
+kd6wgUtNPeLZepmGq8hOaWKqmTE5/ll5fasK3+KHKJ7NZFZ0NzTxKRixe/DO3CZ4
+NPUDuRPpsw3mGgFyZ9s5d8hJ3tUzuhXX8M3GEDpZzMIzd2EfZ9FqLiw7MzBB6vp3
+19epPv8XaDSbA4dz7Mcy/9csGOguHAjsdi+quJrcTTfKXy8ad9cjFhl7Baaw9jya
+NSWBWRtWq/itwbCOeFCGBDq8KBCR4fZF9o9imqLpQgJIrIyUbzVXO+C37H60PbaH
+OIOzWkCY4wOl12kOaAgaoCKsHr9w69xrhN58qdRQAVB9PX7PLmiddu0oOdk7xpJO
+dMSs2kQR/sLeOoDQXoJL66Nf6wbAMQZmy8r6yVBijhlCsbhxkIc9QquoOrqm4tii
+neaTdMj1HNszPrcW2/Q5gzdYquzTI79HSryxkxquRXwLZDhcIGajYbFIwVdTmbkF
+6RE9H6XjZXMnawDIvR+8rkgh6yDDMhrcdyt8SfuxkT4D1PGdpWL4D2zV1O+Zg0eq
+unIBDvNJSUYSwpMmevKM
+=rWb7
+-----END PGP SIGNATURE-----
+
+--BXVAT5kNtrzKuDFl--
