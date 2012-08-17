@@ -1,78 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:64827 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988Ab2HQVqm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 17:46:42 -0400
-Received: by ghrr11 with SMTP id r11so4418180ghr.19
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 14:46:41 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:25410 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755000Ab2HQITY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Aug 2012 04:19:24 -0400
+Date: Fri, 17 Aug 2012 10:19:08 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	linux-doc@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 4/5] PCI, MSI: Enable multiple MSIs with
+ pci_enable_msi_block_auto()
+Message-ID: <20120817081907.GI2246@dhcp-26-207.brq.redhat.com>
+References: <cover.1345124063.git.agordeev@redhat.com>
+ <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
+ <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
-References: <502E8115.90507@gmail.com> <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
- <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
- <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
- <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
- <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
- <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
- <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
- <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com> <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 17 Aug 2012 15:46:20 -0600
-Message-ID: <CAErSpo7D8HSKQ7o9peWBE6e30UcYOBj8KTEENzyxhTNKSUmYWg@mail.gmail.com>
-Subject: Re: PCI Section mismatch error in linux-next.
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
-	linux-mips <linux-mips@linux-mips.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 17, 2012 at 3:32 PM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> On Fri, Aug 17, 2012 at 03:25:22PM -0600, Bjorn Helgaas wrote:
->> On Fri, Aug 17, 2012 at 3:07 PM, Thierry Reding
->> <thierry.reding@avionic-design.de> wrote:
->> > On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
->> >> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
->> > [...]
->> >> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
->> >> > affect you?  I think we would still have to change some __inits to
->> >> > __devinit, including pcibios_update_irq(), but it might be more
->> >> > manageable.
->> >>
->> >> You said that depending on HOTPLUG wouldn't be enough because it would
->> >> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
->> >> theoretically possible to build a kernel without HOTPLUG but have the
->> >> enumeration start after init because of deferred probing. Those cases
->> >> won't work if we keep __init or __devinit respectively, right?
->> >
->> > Another possibility would be to make PCI select HOTPLUG or depend on it.
->> > That way it would be made sure that __devinit wouldn't cause all the
->> > functions to be discarded after init.
->>
->> There's been some discussion recently about whether CONFIG_HOTPLUG is
->> worth keeping any more, but nothing's been resolved yet.  If we did
->> decide to remove CONFIG_HOTPLUG, or require it for PCI, I would rather
->> just remove all the __devinit annotations because they'd be
->> superfluous.
->
-> I've missed that discussion. Can you point me to it?
+On Thu, Aug 16, 2012 at 10:00:39AM -0600, Bjorn Helgaas wrote:
+> On Thu, Aug 16, 2012 at 8:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > -4.2.3 pci_disable_msi
+> > +4.2.3 pci_enable_msi_block_auto
+> > +
+> > +int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
+> > +
+> > +This variation on pci_enable_msi() call allows a device driver to request
+> > +the maximum possible number of MSIs.  The MSI specification only allows
+> > +interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
+> > +
+> > +If this function returns 0, it has succeeded in allocating as many
+> > +interrupts as the device supports.
+> > +
+> > +If this function returns a positive number, it indicates that it has
+> > +succeeded, but the number of allocated interrupts is less than the number
+> > +of interrupts the device supports. The returned value in this case is the
+> > +number of allocated interrupts.
+> 
+> Seems like it would be simpler to avoid the special case of returning
+> zero.  You could return a negative value for failure, otherwise return
+> the number of interrupts allocated.
 
-Sure: http://lists.linux-foundation.org/pipermail/ksummit-2012-discuss/2012-June/000051.html
+But this special case is important, because some drivers would not get
+satisfied with just any number of interrupts allocated (i.e. few Intel AHCI
+chips (seems) have hardware logic that compares qmask vs qsize and simply
+falls back to single interrupt if they are not equal).
 
->From previous email:
->> This is the situation (deferred probing with CONFIG_HOTPLUG=n) that
->> I'm suggesting might not need to work.  After all, hotplug essentially
->> means "adding devices after init."
+So I see the fact that maximum possible number of interrupts were allocated
+at least as important than the number itself.
 
-> Yes, I guess that would be appropriate. However I don't see how this
-> could be expressed in Kconfig unless the deferred probing itself is
-> conditionalized on HOTPLUG. Even in that case it would still be possible
-> to build a PCIe controller driver as a module and load it at runtime
-> after init.
+> Then you could also dispense with the "int *count" argument, because
+> the caller could just look at the return value.
 
-That's exactly it -- the deferred probing and any loadable PCI host
-bridge drivers would have to depend on HOTPLUG.  That seems like the
-most straightforward, least-surprises, approach for now.
+What about returning the number of allocated interrtupts while storing the
+number of supported interrupts to "int *count" (or maxcount)?
 
-Bjorn
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
