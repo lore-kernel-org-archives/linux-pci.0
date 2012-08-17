@@ -1,169 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f202.google.com ([74.125.82.202]:45478 "EHLO
+	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab2HQXg2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:28 -0400
+Received: by weyr1 with SMTP id r1so207182wey.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:27 -0700 (PDT)
+Subject: [PATCH v2 08/16] PCI: Stop and remove devices in one pass
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 01/22] PCI: use pci_get_domain_bus_and_slot() to avoid race conditions
-Date: Wed,  8 Aug 2012 00:10:41 +0800
-Message-Id: <1344355862-2726-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Fri, 17 Aug 2012 17:36:26 -0600
+Message-ID: <20120817233626.10973.57304.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's a typical usage pattern to search a PCI device under a specific
-PCI bus (domian, busno) as below:
-struct pci_bus *pci_bus = pci_find_bus(domain, busno);
-struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
+Previously, when we removed a PCI device, we made two passes over the
+hierarchy rooted at the device.  In the first pass, we stopped all
+the devices, and in the second, we removed them.
 
-The above code has a race window between pci_find_bus() and pci_get_slot()
-if PCI hotplug operations happen between them which removes the pci_bus.
-So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
-which also reduces code complexity.
+This patch combines the two passes into one so that we remove a device as
+soon as it and all its children have been stopped.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
+Note that we previously stopped devices in reverse order and removed them
+in forward order.  Now we stop and remove them in reverse order.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/ia64/sn/kernel/io_common.c      |    4 +---
- drivers/gpu/vga/vgaarb.c             |   15 +++------------
- drivers/pci/hotplug/cpcihp_generic.c |    8 ++------
- drivers/pci/iov.c                    |    8 ++------
- drivers/pci/xen-pcifront.c           |   10 ++--------
- 5 files changed, 10 insertions(+), 35 deletions(-)
+ drivers/pci/remove.c |   42 +++++++-----------------------------------
+ 1 files changed, 7 insertions(+), 35 deletions(-)
 
-diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
-index fbb5f2f..8630875 100644
---- a/arch/ia64/sn/kernel/io_common.c
-+++ b/arch/ia64/sn/kernel/io_common.c
-@@ -229,7 +229,6 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
- {
- 	int segment = pci_domain_nr(dev->bus);
- 	struct pcibus_bussoft *bs;
--	struct pci_bus *host_pci_bus;
- 	struct pci_dev *host_pci_dev;
- 	unsigned int bus_no, devfn;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 30d002e..3828104 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -78,8 +78,6 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
  
-@@ -245,8 +244,7 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
- 
- 	bus_no = (pcidev_info->pdi_slot_host_handle >> 32) & 0xff;
- 	devfn = pcidev_info->pdi_slot_host_handle & 0xffffffff;
-- 	host_pci_bus = pci_find_bus(segment, bus_no);
-- 	host_pci_dev = pci_get_slot(host_pci_bus, devfn);
-+	host_pci_dev = pci_get_domain_bus_and_slot(segment, bus_no, devfn);
- 
- 	pcidev_info->host_pci_dev = host_pci_dev;
- 	pcidev_info->pdi_linux_pcidev = dev;
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 3df8fc0..b6852b7 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1066,7 +1066,6 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
- 		}
- 
- 	} else if (strncmp(curr_pos, "target ", 7) == 0) {
--		struct pci_bus *pbus;
- 		unsigned int domain, bus, devfn;
- 		struct vga_device *vgadev;
- 
-@@ -1085,19 +1084,11 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
- 			pr_debug("vgaarb: %s ==> %x:%x:%x.%x\n", curr_pos,
- 				domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
- 
--			pbus = pci_find_bus(domain, bus);
--			pr_debug("vgaarb: pbus %p\n", pbus);
--			if (pbus == NULL) {
--				pr_err("vgaarb: invalid PCI domain and/or bus address %x:%x\n",
--					domain, bus);
--				ret_val = -ENODEV;
--				goto done;
--			}
--			pdev = pci_get_slot(pbus, devfn);
-+			pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
- 			pr_debug("vgaarb: pdev %p\n", pdev);
- 			if (!pdev) {
--				pr_err("vgaarb: invalid PCI address %x:%x\n",
--					bus, devfn);
-+				pr_err("vgaarb: invalid PCI address %x:%x:%x\n",
-+					domain, bus, devfn);
- 				ret_val = -ENODEV;
- 				goto done;
- 			}
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index 81af764..a6a71c4 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -154,12 +154,8 @@ static int __init cpcihp_generic_init(void)
- 	if(!r)
- 		return -EBUSY;
- 
--	bus = pci_find_bus(0, bridge_busnr);
--	if (!bus) {
--		err("Invalid bus number %d", bridge_busnr);
--		return -EINVAL;
--	}
--	dev = pci_get_slot(bus, PCI_DEVFN(bridge_slot, 0));
-+	dev = pci_get_domain_bus_and_slot(0, bridge_busnr,
-+					  PCI_DEVFN(bridge_slot, 0));
- 	if(!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
- 		err("Invalid bridge device %s", bridge);
- 		pci_dev_put(dev);
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 74bbaf8..c7d2969 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -152,15 +152,11 @@ failed1:
- static void virtfn_remove(struct pci_dev *dev, int id, int reset)
- {
- 	char buf[VIRTFN_ID_LEN];
--	struct pci_bus *bus;
- 	struct pci_dev *virtfn;
- 	struct pci_sriov *iov = dev->sriov;
- 
--	bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
--	if (!bus)
--		return;
+-static void pci_stop_bus_device(struct pci_dev *dev);
 -
--	virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
-+	virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-+			virtfn_bus(dev, id), virtfn_devfn(dev, id));
- 	if (!virtfn)
- 		return;
+ /**
+  * pci_stop_and_remove_bus_device - remove a PCI device and any children
+  * @dev: the device to remove
+@@ -92,38 +90,8 @@ static void pci_stop_bus_device(struct pci_dev *dev);
+  * device lists, remove the /proc entry, and notify userspace
+  * (/sbin/hotplug).
+  */
+-static void __pci_remove_bus_device(struct pci_dev *dev)
+-{
+-	struct pci_bus *bus = dev->subordinate;
+-	struct pci_dev *child, *tmp;
+-
+-	if (bus) {
+-		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
+-			__pci_remove_bus_device(child);
+-
+-		pci_remove_bus(bus);
+-		dev->subordinate = NULL;
+-	}
+-
+-	pci_destroy_dev(dev);
+-}
+-
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ {
+-	pci_stop_bus_device(dev);
+-	__pci_remove_bus_device(dev);
+-}
+-
+-/**
+- * pci_stop_bus_device - stop a PCI device and any children
+- * @dev: the device to stop
+- *
+- * Stop a PCI device (detach the driver, remove from the global list
+- * and so on). This also stop any subordinate buses and children in a
+- * depth-first manner.
+- */
+-static void pci_stop_bus_device(struct pci_dev *dev)
+-{
+ 	struct pci_bus *bus = dev->subordinate;
+ 	struct pci_dev *child, *tmp;
  
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index d6cc62c..def8d0b 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -982,7 +982,6 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 	int err = 0;
- 	int i, num_devs;
- 	unsigned int domain, bus, slot, func;
--	struct pci_bus *pci_bus;
- 	struct pci_dev *pci_dev;
- 	char str[64];
+@@ -133,12 +101,16 @@ static void pci_stop_bus_device(struct pci_dev *dev)
+ 	 * iterator.  Therefore, iterate in reverse so we remove the VFs
+ 	 * first, then the PF.
+ 	 */
+-	if (bus)
++	if (bus) {
+ 		list_for_each_entry_safe_reverse(child, tmp,
+ 						 &bus->devices, bus_list)
+-			pci_stop_bus_device(child);
++			pci_stop_and_remove_bus_device(child);
++
++		pci_remove_bus(bus);
++		dev->subordinate = NULL;
++	}
  
-@@ -1032,13 +1031,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
- 			goto out;
- 		}
- 
--		pci_bus = pci_find_bus(domain, bus);
--		if (!pci_bus) {
--			dev_dbg(&pdev->xdev->dev, "Cannot get bus %04x:%02x\n",
--				domain, bus);
--			continue;
--		}
--		pci_dev = pci_get_slot(pci_bus, PCI_DEVFN(slot, func));
-+		pci_dev = pci_get_domain_bus_and_slot(domain, bus,
-+				PCI_DEVFN(slot, func));
- 		if (!pci_dev) {
- 			dev_dbg(&pdev->xdev->dev,
- 				"Cannot get PCI device %04x:%02x:%02x.%d\n",
--- 
-1.7.9.5
+ 	pci_stop_dev(dev);
++	pci_destroy_dev(dev);
+ }
+-
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
 
