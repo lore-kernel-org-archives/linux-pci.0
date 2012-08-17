@@ -1,124 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <502377C0.70401@cn.fujitsu.com>
-Date: Thu, 09 Aug 2012 16:41:36 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:48077 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753815Ab2HQVHE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 17:07:04 -0400
+Received: by yenl14 with SMTP id l14so4392410yen.19
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 14:07:03 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [RFC PATCH v2 10/16] ACPIHP: system device hotplug driver skeleton
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com> <1344082443-4608-11-git-send-email-jiang.liu@huawei.com> <502362E3.8010901@cn.fujitsu.com> <50236978.70208@huawei.com>
-In-Reply-To: <50236978.70208@huawei.com>
+In-Reply-To: <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
+References: <502E8115.90507@gmail.com> <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
+ <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
+ <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com> <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 17 Aug 2012 15:06:42 -0600
+Message-ID: <CAErSpo5G=N529J9uOdp3oV66=PRTVPA+BWxraN5aZ5JAH_31JA@mail.gmail.com>
+Subject: Re: PCI Section mismatch error in linux-next.
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-mips <linux-mips@linux-mips.org>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Liu ~
-
-On 08/09/2012 03:40 PM, Jiang Liu wrote:
-> Hi Tang,
-> 	Thanks for testing.
-> 	Currently there's a limitation that you need to insert acpihp_enum driver first.
-
-Sorry, I didn't make it clear. I did load acpihp_enum module first, and then load acpihp_drv.
-
-And I just tried it some more times. It just hung up, but dmesg had no output.
-Like this:
-
-# modprobe acpihp_enum
-(OK, and sysfs interfaces have been created)
-# modprobe acpihp_drv
-(hang up)
-
-# dmesg
-(nothing)
-
-The "modprobe acpihp_drv" process's call trace shows that it hung at the following function:
-#0  0x00000032836aab80 in __nanosleep_nocancel () from /lib64/libc.so.6
-#1  0x00000032836deb64 in usleep () from /lib64/libc.so.6
-......
-
-I have tried several times and I cannot reproduce the situation I just said.
-Maybe my box has something different with yours. And I'll try to find out why.
-
-Thanks for your advice. :)
-
-> Will fix this issue in next version.
-> 	Regards!
-> 	Gerry
-> 
-> On 2012-8-9 15:12, Tang Chen wrote:
->> Hi Liu~
+On Fri, Aug 17, 2012 at 2:48 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
+>> On Fri, Aug 17, 2012 at 2:07 PM, Thierry Reding
+>> <thierry.reding@avionic-design.de> wrote:
+>> > On Fri, Aug 17, 2012 at 01:32:45PM -0600, Bjorn Helgaas wrote:
+>> >> On Fri, Aug 17, 2012 at 12:29 PM, Thierry Reding
+>> >> <thierry.reding@avionic-design.de> wrote:
+>> >> > On Fri, Aug 17, 2012 at 11:44:31AM -0600, Bjorn Helgaas wrote:
+>> >> >> On Fri, Aug 17, 2012 at 11:36 AM, David Daney <ddaney.cavm@gmail.com> wrote:
+>> >> >> > For MIPS, Thierry Reding's patch in linux-next (PCI: Keep pci_fixup_irqs()
+>> >> >> > around after init) causes:
+>> >> >> >
+>> >> >> > WARNING: vmlinux.o(.text+0x22c784): Section mismatch in reference from the
+>> >> >> > function pci_fixup_irqs() to the function .init.text:pcibios_update_irq()
+>> >> >> >
+>> >> >> > The MIPS implementation of pcibios_update_irq() is __init, so there is
+>> >> >> > conflict with the removal of __init from pci_fixup_irqs() and
+>> >> >> > pdev_fixup_irq().
+>> >> >> >
+>> >> >> > Can you guys either remove the patch from linux-next, or improve it to also
+>> >> >> > fix up any architecture implementations of pdev_update_irq()?
+>> >> >>
+>> >> >> Crap, there are lots of arches with this issue.  I'll fix it up.
+>> >> >> Thanks for pointing it out!
+>> >> >
+>> >> > Oh wow... looks like I've opened a can of worms there. This requires
+>> >> > quite a lot of other functions to have their annotations removed as
+>> >> > well. Bjorn, how do you want to handle this?
+>> >>
+>> >> David said "pdev_update_irq()," but I think he meant "pcibios_update_irq()."
+>> >>
+>> >> Almost all the pcibios_update_irq() implementations are identical, so
+>> >> I think I'll just supply a weak implementation and remove the
+>> >> redundant arch versions.
+>> >
+>> > That makes sense. However I've just tested a build with section mismatch
+>> > debugging enabled on ARM and there are a few more that need __init or
+>> > __devinit removed to get rid of the warnings:
+>> >
+>> >         pci_common_init()
+>> >         pcibios_init_hw()
+>> >         pcibios_init_resources()
+>> >         pcibios_swizzle()
+>> >         pcibios_update_irq()
+>> >
+>> > pci_scan_root_bus() also needs __devinit removed. I haven't checked the
+>> > other architectures because I'll have to build cross-compilers for them
+>> > first, but I suspect most of them will have a similar list. I'm not sure
+>> > how well this kind of change is going to go down with the respective
+>> > architecture maintainers, though.
 >>
->> I compiled this driver as a module, acpihp_drv. And when I loaded this module, it
->> gave the following error message:
+>> Hmm, yeah, this is a mess, isn't it?  Just about everything in PCI
+>> will need __devinit removed.  We've been assuming that the only way
+>> for things to show up after init is via hotplug.  But you're breaking
+>> that assumption by doing *all* enumeration after init.  There are
+>> approximately a bajillion __init and __devinit annotations just in
+>> drivers/pci, not to mention those in the architectures.
 >>
->> # modprobe acpihp_drv
->> (the command hangs up, no return after 10 min)
->>
->> #dmesg
->> ......
->> [  126.643350] BUG: unable to handle kernel NULL pointer dereference at 0000000000000078
->> [  126.644007] IP: [<ffffffff814c0cd3>] mutex_lock+0x19/0x37
->> [  126.644007] PGD 105277a067 PUD 104f823067 PMD 0 
->> [  126.644007] Oops: 0002 [#1] SMP 
->> [  126.644007] Modules linked in: acpihp_drv(+) ebtable_nat ebtables ipt_MASQUERADE iptable_nat nf_nat iptable_mangle bridge stp llc sunrpc cpufreq_ondemand acpi_cpufreq freq_table mperf ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_filter ip6_tables ipv6 vhost_net macvtap macvlan tun uinput iTCO_wdt iTCO_vendor_support coretemp kvm_intel kvm crc32c_intel microcode lpc_ich mfd_core pcspkr i2c_i801 i2c_core ioatdma e1000e acpi_memhotplug i7core_edac edac_core igb dca mptsas mptscsih mptbase scsi_transport_sas
->> [  126.644007] CPU 10 
->> [  126.644007] Pid: 2821, comm: modprobe Tainted: G       A     3.6.0-rc1+ #6 FUJITSU-SV PRIMEQUEST 1800E/SB
->> [  126.644007] RIP: 0010:[<ffffffff814c0cd3>]  [<ffffffff814c0cd3>] mutex_lock+0x19/0x37
->> [  126.644007] RSP: 0018:ffff8810589a9de8  EFLAGS: 00010246
->> [  126.644007] RAX: 0000000000000000 RBX: 0000000000000078 RCX: 0000000000000000
->> [  126.644007] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000078
->> [  126.644007] RBP: ffff8810589a9e08 R08: 0000000000000000 R09: ffff8810589a9d88
->> [  126.644007] R10: 00000000000013e5 R11: 00000000000013e5 R12: ffffffffa01460d0
->> [  126.644007] R13: 0000000000000000 R14: ffffffffa014732b R15: 00000000000000bf
->> [  126.644007] FS:  00007fecb1802700(0000) GS:ffff88105e640000(0000) knlGS:0000000000000000
->> [  126.644007] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [  126.644007] CR2: 0000000000000078 CR3: 0000001052772000 CR4: 00000000000007e0
->> [  126.644007] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->> [  126.644007] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->> [  126.644007] Process modprobe (pid: 2821, threadinfo ffff8810589a8000, task ffff8810592f8000)
->> [  126.644007] Stack:
->> [  126.644007]  ffff8810589a9e08 ffffffff810be37f ffffffffa0146220 ffffffff81a7b390
->> [  126.644007]  ffff8810589a9e58 ffffffff81317eb3 ffff8810589a9e48 0000000000000000
->> [  126.644007]  ffffffff81a342c0 ffffffff81a342e0 0000000000000000 ffffffffa0146220
->> [  126.644007] Call Trace:
->> [  126.644007]  [<ffffffff810be37f>] ? tracepoint_module_notify+0xd9/0x14a
->> [  126.644007]  [<ffffffff81317eb3>] class_interface_register+0x4a/0xbc
->> [  126.644007]  [<ffffffffa00b8000>] ? 0xffffffffa00b7fff
->> [  126.644007]  [<ffffffffa00b8010>] acpihp_drv_init+0x10/0x12 [acpihp_drv]
->> [  126.644007]  [<ffffffff8100207f>] do_one_initcall+0x7f/0x139
->> [  126.644007]  [<ffffffff81093414>] sys_init_module+0x12d3/0x14e3
->> [  126.644007]  [<ffffffff81264b0d>] ? ddebug_dyndbg_boot_param_cb+0x45/0x45
->> [  126.644007]  [<ffffffff814c9469>] system_call_fastpath+0x16/0x1b
->> [  126.644007] Code: 48 8b 04 25 80 c6 00 00 48 89 43 18 31 c0 5b 5b c9 c3 55 48 89 e5 53 48 83 ec 18 66 66 66 66 90 48 89 fb e8 5a 0c 00 00 48 89 df <f0> ff 0f 79 05 e8 06 ff ff ff 65 48 8b 04 25 80 c6 00 00 48 89 
->> [  126.644007] RIP  [<ffffffff814c0cd3>] mutex_lock+0x19/0x37
->> [  126.644007]  RSP <ffff8810589a9de8>
->> [  126.644007] CR2: 0000000000000078
->> [  129.981335] ---[ end trace da17e9c9de8dd560 ]---
->> [  139.085895] nr_pdflush_threads exported in /proc is scheduled for removal
->> [  139.167394] sysctl: The scan_unevictable_pages sysctl/node-interface has been disabled for lack of a legitimate use case.  If you have one, please send an email to linux-mm@kvack.org.
->>
->> Looks like it dereferenced a NULL pointer here.
->> May be it was my mistake that I didn't configure the environment correctly.
->> Would you please give me some advice ?
->>
->> Thanks. :)
->>
->>
+>> Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
+>> affect you?  I think we would still have to change some __inits to
+>> __devinit, including pcibios_update_irq(), but it might be more
+>> manageable.
+>
+> You said that depending on HOTPLUG wouldn't be enough because it would
+> exclude reenumeration at runtime if HOTPLUG wasn't defined.
 
--- 
-Best Regards,
-Tang chen
+I'm suggesting that maybe we shouldn't support enumeration at runtime
+unless HOTPLUG is defined.  So if you want to enumerate after init,
+set CONFIG_HOTPLUG=y.
+
+> Also it is
+> theoretically possible to build a kernel without HOTPLUG but have the
+> enumeration start after init because of deferred probing. Those cases
+> won't work if we keep __init or __devinit respectively, right?
+
+This is the situation (deferred probing with CONFIG_HOTPLUG=n) that
+I'm suggesting might not need to work.  After all, hotplug essentially
+means "adding devices after init."
+
+> I won't be able to test anything beyond Tegra because I'm lacking the
+> hardware. But with the section mismatch debugging enabled all issues
+> should be detected at compile time anyway, so it's just a problem of
+> getting cross-compilers for all architectures that support PCI.
+
+I have cross-compilers for many of the architectures (relatively
+painless to build with
+http://git.infradead.org/users/segher/buildall.git), but this is
+starting to look like it will take more time than I have right now.
