@@ -1,67 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:38338 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182Ab2HBQMT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Aug 2012 12:12:19 -0400
-Date: Thu, 2 Aug 2012 11:12:09 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Francois Rigaut <frigaut@mso.anu.edu.au>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
-	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-Message-ID: <20120802161209.GF32395@thinkpad-t410>
-References: <1343407934-459-1-git-send-email-mjg@redhat.com>
- <20120731223240.GD19134@kroah.com>
- <20120801165400.GA3042@srcf.ucam.org>
- <20120801232147.GA6228@kroah.com>
- <20120802040242.GB25933@thinkpad-t410>
- <20120802103423.GA1921@kroah.com>
- <501A955D.6030500@mso.anu.edu.au>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:34352 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830Ab2HQRgY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 13:36:24 -0400
+Received: by pbbrr13 with SMTP id rr13so3636242pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 10:36:24 -0700 (PDT)
+Message-ID: <502E8115.90507@gmail.com>
+Date: Fri, 17 Aug 2012 10:36:21 -0700
+From: David Daney <ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <501A955D.6030500@mso.anu.edu.au>
+To: Thierry Reding <thierry.reding@avionic-design.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org
+CC: linux-mips <linux-mips@linux-mips.org>
+Subject: PCI Section mismatch error in linux-next.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 03, 2012 at 12:57:33AM +1000, Francois Rigaut wrote:
-> Greg, Seth,
-> 
-> Here is what the message.log shows:
-> 
-> switching to the HD4000 (integrated):
-> 
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
-> Aug  3 00:49:55 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
-> 
-> switching to the nvidia (discrete):
-> 
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003d
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003e
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x3f003f
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: CGXMuxAcknowledge: Posting glitchless acknowledge
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: MPAccessSurfaceForDisplayDevice: Set up page flip mode on display 0x042803c0 device: 0x10c678320  isBackBuffered: 0 numComp: 1 numDisp: 3
-> Aug  3 00:50:35 poliahu.ctio.noao.edu WindowServer[79]: Received display connect changed for display 0x42803c0
-> 
-> Hope that helps.
+For MIPS, Thierry Reding's patch in linux-next (PCI: Keep 
+pci_fixup_irqs() around after init) causes:
 
-Thanks for trying it out, but it's not really what I was hoping for. I
-get a bunch of messages similar to these in /var/log/kernel.log, mixed
-in with a lot of other stuff.
+WARNING: vmlinux.o(.text+0x22c784): Section mismatch in reference from 
+the function pci_fixup_irqs() to the function 
+.init.text:pcibios_update_irq()
 
- AGC:: setMuxRegister:1666 (728, 1, 1)
- AGC:: setMuxRegister:1666 (710, 1, 4)
- AGC:: getMuxRegister:1647 (716, 1) = 1
+The MIPS implementation of pcibios_update_irq() is __init, so there is 
+conflict with the removal of __init from pci_fixup_irqs() and 
+pdev_fixup_irq().
 
-I don't even have message.log. You don't have a kernel.log? Do you see
-any messages like those if you run dmesg?
+Can you guys either remove the patch from linux-next, or improve it to 
+also fix up any architecture implementations of pdev_update_irq()?
 
-Seth
 
+Thanks,
+David Daney
