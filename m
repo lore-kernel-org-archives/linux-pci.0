@@ -1,90 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:52596 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752693Ab2HHSmQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 14:42:16 -0400
-Date: Wed, 8 Aug 2012 14:42:14 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Ming Lei <tom.leiming@gmail.com>
-cc: "Rafael J. Wysocki" <rjw@sisk.pl>, <linux-pci@vger.kernel.org>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected
- regression ...)
-In-Reply-To: <CACVXFVNgchXD4J+ORwwp9zc6thQAqSSor_6gshnqPFGTG=x77g@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1208081432090.1701-100000@iolanthe.rowland.org>
+Received: from mail-ob0-f202.google.com ([209.85.214.202]:34062 "EHLO
+	mail-ob0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585Ab2HQXgL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:11 -0400
+Received: by mail-ob0-f202.google.com with SMTP id wc20so3010724obb.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:11 -0700 (PDT)
+Subject: [PATCH v2 05/16] PCI: Remove pci_stop_and_remove_behind_bridge()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Date: Fri, 17 Aug 2012 17:36:10 -0600
+Message-ID: <20120817233610.10973.25669.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 8 Aug 2012, Ming Lei wrote:
+The PCMCIA CardBus driver was the only user of
+pci_stop_and_remove_behind_bridge(), and it now uses
+pci_stop_and_remove_bus_device() instead, so remove this interface.
 
-> On Wed, Aug 8, 2012 at 4:45 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Tuesday, August 07, 2012, Ming Lei wrote:
-> >> On Tue, Aug 7, 2012 at 7:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> >> Yes, I agree, but I don't think it may make .runtime_post_resume
-> >> >> not doable, do I?
-> >> >
-> >> > No more device PM callbacks, please.
-> >>
-> >> IMO, what the patch is doing is to introduce one callback which
-> >> is just called after .runtime_resume is completed,
-> >
-> > No, it is not a callback.  It is a function to be run _once_ when the device is
-> > known to be active.  It is not a member of a data type or anything like this.
-> 
-> Looks it was said by Alan, not me, :-)
-> 
-> "The documentation should explain that in some ways, "func" is like a
-> workqueue callback routine:".
-> 
-> See http://marc.info/?l=linux-usb&m=134426838507799&w=2
+This removes exported symbol pci_stop_and_remove_behind_bridge.
 
-I didn't say it _was_ a callback; I said it was _like_ a callback in 
-some ways.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/remove.c |   25 -------------------------
+ include/linux/pci.h  |    1 -
+ 2 files changed, 0 insertions(+), 26 deletions(-)
 
-> If so, I am wondering why the 'func' can't be called in .runtime_resume
-> directly, and follow the below inside caller at the same time?
-> 
->              if (device is active or disabled)
->                       call func(device).
-
-That was my original suggestion.  Rafael pointed out that having a 
-single function call to do this would make it easier for driver writers 
-to get it right.
-
-> > No, not to speed up resume.  The idea is to allow drivers to run something
-> > when the resume is complete, so that they don't have to implement a "resume
-> > detection" logic or use .runtime_resume() to run things that don't belong
-> > there.
-> 
-> Looks it was said by you, :-)
-> 
-> "Unless your _driver_ callback is actually executed from within a PM domain
-> callback, for example, and something else may be waiting for it to complete,
-> so your data processing is adding latencies to some other threads.  I'm not
-> making that up, by the way, that really can happen."
-> 
-> See http://marc.info/?l=linux-pm&m=134394271517527&w=2
-> 
-> Alan also said "Okay, those are valid reasons" for the idea. Except for
-> this one, I don't see other obvious advantages about the patch.
-
-Those _are_ the two advantages:
-
-	The runtime-resume method does nothing but bring the device
-	back to full power; it doesn't do any other processing;
-
-	It's easier than calling pm_runtime_get() followed by a test
-	to see whether the device is active.
-
-> Suppose one driver may drive 10000 same devices, the same data will be
-> stored inside all the 10000 device instances, it is a good way to do it?
-
-If you've got a system with 10000 device instances, you can probably 
-spare the memory needed to store these function pointers.  But you're 
-right that this is a disadvantage.
-
-Alan Stern
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 534377f..b18dc2e 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -121,30 +121,6 @@ static void __pci_remove_behind_bridge(struct pci_dev *dev)
+ 			__pci_remove_bus_device(pci_dev_b(l));
+ }
+ 
+-static void pci_stop_behind_bridge(struct pci_dev *dev)
+-{
+-	struct list_head *l, *n;
+-
+-	if (dev->subordinate)
+-		list_for_each_safe(l, n, &dev->subordinate->devices)
+-			pci_stop_bus_device(pci_dev_b(l));
+-}
+-
+-/**
+- * pci_stop_and_remove_behind_bridge - stop and remove all devices behind
+- *					 a PCI bridge
+- * @dev: PCI bridge device
+- *
+- * Remove all devices on the bus, except for the parent bridge.
+- * This also removes any child buses, and any devices they may
+- * contain in a depth-first manner.
+- */
+-void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+-{
+-	pci_stop_behind_bridge(dev);
+-	__pci_remove_behind_bridge(dev);
+-}
+-
+ static void pci_stop_bus_devices(struct pci_bus *bus)
+ {
+ 	struct list_head *l, *n;
+@@ -180,4 +156,3 @@ static void pci_stop_bus_device(struct pci_dev *dev)
+ }
+ 
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+-EXPORT_SYMBOL(pci_stop_and_remove_behind_bridge);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 54b5b2b..1dce47c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1011,7 +1011,6 @@ void pci_unregister_driver(struct pci_driver *dev);
+ 	module_driver(__pci_driver, pci_register_driver, \
+ 		       pci_unregister_driver)
+ 
+-void pci_stop_and_remove_behind_bridge(struct pci_dev *dev);
+ struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
+ int pci_add_dynid(struct pci_driver *drv,
+ 		  unsigned int vendor, unsigned int device,
 
