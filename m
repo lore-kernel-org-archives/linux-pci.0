@@ -1,63 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 2 Aug 2012 23:53:12 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Francois Rigaut <frigaut@mso.anu.edu.au>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
-	linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-Message-ID: <20120803045312.GB2446@thinkpad-t410>
-References: <1343407934-459-1-git-send-email-mjg@redhat.com>
- <20120731223240.GD19134@kroah.com>
- <20120801165400.GA3042@srcf.ucam.org>
- <20120801232147.GA6228@kroah.com>
- <20120802040242.GB25933@thinkpad-t410>
- <20120802103423.GA1921@kroah.com>
- <501A955D.6030500@mso.anu.edu.au>
- <20120802161209.GF32395@thinkpad-t410>
- <501B01ED.9080309@mso.anu.edu.au>
- <501B0536.6070001@mso.anu.edu.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:45710 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964787Ab2HQDAt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 23:00:49 -0400
+Received: by qaas11 with SMTP id s11so1212180qaa.19
+        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 20:00:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <501B0536.6070001@mso.anu.edu.au>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1343180997-9483-5-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
+	<1343180997-9483-5-git-send-email-shangw@linux.vnet.ibm.com>
+Date: Fri, 17 Aug 2012 11:00:48 +0800
+Message-ID: <CADLM8XOiHMfwnxBvZU_YF8S9QomcXjy5fb6JyxCrNCjr+sbYOw@mail.gmail.com>
+Subject: Re: [PATCH 4/8] pci: weak function returns alignment
+From: Wei Yang <weiyang.kernel@gmail.com>
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	benh@kernel.crashing.org, linuxram@us.ibm.com,
+	Richard Yang <weiyang@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 03, 2012 at 08:54:46AM +1000, Francois Rigaut wrote:
-> Seth,
-> 
-> I have put the osx system.log, which is the only file where I can
-> see mux and AGC related message, at
-> http://maumae.net/retina/system.log
+2012/7/25 Gavin Shan <shangw@linux.vnet.ibm.com>:
+> The patch implements the weak function to return the default I/O
+> or memory alignment for P2P bridge. Currently, I/O window has 4KiB
+> alignment and memory window is 4MiB aligned by default. On the other
+> hand, those platforms (e.g. powernv) that have special requirements
+> on the alignment could override the function by themselves.
+>
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/setup-bus.c |   21 +++++++++++++++++++++
+>  include/linux/pci.h     |    2 ++
+>  2 files changed, 23 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 8fa2d4b..c0fb9da 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -690,6 +690,27 @@ static resource_size_t calculate_memsize(resource_size_t size,
+>         return size;
+>  }
+>
+> +resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
+> +                                               unsigned long type)
+> +{
+> +       return 1;
+> +}
+> +
+> +static resource_size_t window_alignment(struct pci_bus *bus,
+> +                                       unsigned long type)
+> +{
+> +       resource_size_t align = 1, arch_align;
+> +
+> +       if (type & IORESOURCE_MEM)
+> +               align = 1024*1024;      /* 1MiB */
+> +       else if (type & IORESOURCE_IO)
+> +               align = 4*1024;         /* 4KiB */
+> +
 
-That does seem to contain the kernel log messages, but unfortunately I'm
-not seeing what I'm looking for there.
+If this is a constant, could we use define a macro?
+So we don't use to calculate the value every time.
+Maybe some compile will be smart enough to optimize this,
+still think it is better to give a result.
 
-> Thanks,
-> Francois
-> 
-> On 03/08/12 08:40, Francois Rigaut wrote:
-> >Hi Seth,
-> >
-> >Sorry for the belated response. On Oz time here.
-> >I don't have a /var/log/kernel.log !
-> >Let me make sure of something:
-> >This switcher code is to be run on osx, no? That's where
-> >gfxcardstatus lives and where I can effect the card switch. Just
-> >to make sure.
-> >So I'm running osx mountain lion, and the only thing I see in the
-> >logs when I switch cards (using gfxcardstatus) is what I pasted
-> >below. and you're right, it was not in message.log, but system.log
-> >(it was late). I just went through the whole thing again.
-> >Am I missing something?
+> +       arch_align = pcibios_window_alignment(bus, type);
+> +
+> +       return max(align, arch_align);
+> +}
+> +
+>  /**
+>   * pbus_size_io() - size the io window of a given bus
+>   *
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9acea4b..34ff2bb 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -988,6 +988,8 @@ int pci_cfg_space_size_ext(struct pci_dev *dev);
+>  int pci_cfg_space_size(struct pci_dev *dev);
+>  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+>  void pci_setup_bridge(struct pci_bus *bus);
+> +resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+> +                                        unsigned long type);
+>
+>  #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+>  #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+> --
+> 1.7.5.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, it's to be run on OS X. So apparently something has changed and
-this technique no longer works for getting a log of the gmux I/O.
 
-We've got one of these machines on order, so I'll see if I can turn
-anything up when I get a chance to play with it.
 
-Thanks,
-Seth
-
+-- 
+Richard Yang
+Help You, Help Me
