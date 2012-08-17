@@ -1,77 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Matthew Garrett <mjg@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	mfleming@intel.com, dwmw2@infradead.org, bhelgaas@google.com,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH V3 4/4] X86: Use PCI setup data
-Date: Thu, 23 Aug 2012 12:36:43 -0400
-Message-Id: <1345739803-21017-5-git-send-email-mjg@redhat.com>
-In-Reply-To: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44225 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751981Ab2HQFBg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 01:01:36 -0400
+Message-ID: <502DCFBF.5040901@huawei.com>
+Date: Fri, 17 Aug 2012 12:59:43 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 3/3] PCI, acpiphp: Use res->flags to determine whether
+ the resouce is valid
+References: <1345119142-5896-1-git-send-email-wangyijing@huawei.com> <1345119142-5896-3-git-send-email-wangyijing@huawei.com> <502D9724.2030307@huawei.com> <CAErSpo7P7VtXBhZ2FTM8ozriyfjpRFp0V4HAVrqaiyMhhQpFTw@mail.gmail.com>
+In-Reply-To: <CAErSpo7P7VtXBhZ2FTM8ozriyfjpRFp0V4HAVrqaiyMhhQpFTw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EFI can provide PCI ROMs out of band via boot services, which may not be
-available after boot. Add support for using the data handed off to us by
-the boot stub or bootloader.
+On 2012/8/17 10:34, Bjorn Helgaas wrote:
+> On Thu, Aug 16, 2012 at 6:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> Hi Bjorn,
+>>    Please ignore these three patches, I'm very sorry I still have some confusion about allocating resources
+>> to pci devices.So this patch is not appropriate. I will provide new version patches when I find a better
+>> solution for this problem.
+> 
+> We don't have a uniform way of detecting unassigned BARs and handling
+> resource allocation failures yet.  When we make that all consistent, I
+> think it will make it more obvious how to do these patches.
+Yes, I also think maybe we need one uniform way to detecting unassigned BARs and resources
+that be assigned failure.Then if necessary, some codes which want to correct or re-assign resoruces
+for pci dev could do that more clearly. I will try to analyse that, and propose some patches as soon.
+Thanks!
+> I think patch 2/3 (the list_for_each_safe() one) is probably still a
+> good bug fix, so with your permission, I'll keep that one.
+Sure,that's ok.
+>>> When we hot plug pci devices, system will allocate resources to these new add
+>>> devices, pci_bus_assign_resources() will be called.If the pci devices was assigned
+>>> resource fail, the resource struct will reset to zero.So I think use res->flags here
+>>> to determine whether the resource is valid is reliable.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
----
- arch/x86/pci/common.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 720e973f..3d2752f 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -17,6 +17,7 @@
- #include <asm/io.h>
- #include <asm/smp.h>
- #include <asm/pci_x86.h>
-+#include <asm/setup.h>
- 
- unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
- 				PCI_PROBE_MMCONF;
-@@ -608,6 +609,38 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	struct setup_data *data;
-+	struct pci_setup_rom *rom;
-+	u64 pa_data;
-+
-+	if (boot_params.hdr.version < 0x0209)
-+		return 0;
-+
-+	pa_data = boot_params.hdr.setup_data;
-+	while (pa_data) {
-+		data = phys_to_virt(pa_data);
-+
-+		if (data->type == SETUP_PCI) {
-+			rom = (struct pci_setup_rom *)data;
-+
-+			if ((pci_domain_nr(dev->bus) == rom->segment) &&
-+			    (dev->bus->number == rom->bus) &&
-+			    (PCI_SLOT(dev->devfn) == rom->device) &&
-+			    (PCI_FUNC(dev->devfn) == rom->function) &&
-+			    (dev->vendor == rom->vendor) &&
-+			    (dev->device == rom->devid)) {
-+				dev->rom = (void *)(pa_data +
-+				      offsetof(struct pci_setup_rom, romdata));
-+				dev->romlen = rom->pcilen;
-+			}
-+		}
-+		pa_data = data->next;
-+	}
-+	return 0;
-+}
-+
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
- 	int err;
 -- 
-1.7.11.2
+Thanks!
+Yijing
 
