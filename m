@@ -1,95 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 22 Aug 2012 10:50:08 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: "Tang, Feng" <feng.tang@intel.com>
-Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: pci_get_subsys: GFP_KERNEL allocations with IRQs disabled
-Message-ID: <20120822025008.GA8066@localhost>
-References: <5017D19B.5080806@redhat.com>
- <1343738627.27983.30.camel@gandalf.stny.rr.com>
- <5017D4AB.3090107@redhat.com>
- <1343740419.27983.33.camel@gandalf.stny.rr.com>
- <20120731234336.GA5526@localhost>
- <1343778699.27983.70.camel@gandalf.stny.rr.com>
- <20120731235705.GW2422@linux.vnet.ibm.com>
- <1343779778.27983.73.camel@gandalf.stny.rr.com>
- <20120801001811.GX2422@linux.vnet.ibm.com>
- <20120801004319.GA7043@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.9]:58219 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100Ab2HQUsv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 16:48:51 -0400
+Date: Fri, 17 Aug 2012 22:48:39 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-mips <linux-mips@linux-mips.org>
+Subject: Re: PCI Section mismatch error in linux-next.
+Message-ID: <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
+References: <502E8115.90507@gmail.com>
+ <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
+ <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
+ <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120801004319.GA7043@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
+In-Reply-To: <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Feng,
 
-> I think it's pci_get_subsys() triggered this assert:
-> 
->         /*
->          * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
->          */
->         if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
->                 return;
+--AqsLC8rIMeq19msA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-It's bisected down to this commit:
+On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
+> On Fri, Aug 17, 2012 at 2:07 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+> > On Fri, Aug 17, 2012 at 01:32:45PM -0600, Bjorn Helgaas wrote:
+> >> On Fri, Aug 17, 2012 at 12:29 PM, Thierry Reding
+> >> <thierry.reding@avionic-design.de> wrote:
+> >> > On Fri, Aug 17, 2012 at 11:44:31AM -0600, Bjorn Helgaas wrote:
+> >> >> On Fri, Aug 17, 2012 at 11:36 AM, David Daney <ddaney.cavm@gmail.co=
+m> wrote:
+> >> >> > For MIPS, Thierry Reding's patch in linux-next (PCI: Keep pci_fix=
+up_irqs()
+> >> >> > around after init) causes:
+> >> >> >
+> >> >> > WARNING: vmlinux.o(.text+0x22c784): Section mismatch in reference=
+ from the
+> >> >> > function pci_fixup_irqs() to the function .init.text:pcibios_upda=
+te_irq()
+> >> >> >
+> >> >> > The MIPS implementation of pcibios_update_irq() is __init, so the=
+re is
+> >> >> > conflict with the removal of __init from pci_fixup_irqs() and
+> >> >> > pdev_fixup_irq().
+> >> >> >
+> >> >> > Can you guys either remove the patch from linux-next, or improve =
+it to also
+> >> >> > fix up any architecture implementations of pdev_update_irq()?
+> >> >>
+> >> >> Crap, there are lots of arches with this issue.  I'll fix it up.
+> >> >> Thanks for pointing it out!
+> >> >
+> >> > Oh wow... looks like I've opened a can of worms there. This requires
+> >> > quite a lot of other functions to have their annotations removed as
+> >> > well. Bjorn, how do you want to handle this?
+> >>
+> >> David said "pdev_update_irq()," but I think he meant "pcibios_update_i=
+rq()."
+> >>
+> >> Almost all the pcibios_update_irq() implementations are identical, so
+> >> I think I'll just supply a weak implementation and remove the
+> >> redundant arch versions.
+> >
+> > That makes sense. However I've just tested a build with section mismatch
+> > debugging enabled on ARM and there are a few more that need __init or
+> > __devinit removed to get rid of the warnings:
+> >
+> >         pci_common_init()
+> >         pcibios_init_hw()
+> >         pcibios_init_resources()
+> >         pcibios_swizzle()
+> >         pcibios_update_irq()
+> >
+> > pci_scan_root_bus() also needs __devinit removed. I haven't checked the
+> > other architectures because I'll have to build cross-compilers for them
+> > first, but I suspect most of them will have a similar list. I'm not sure
+> > how well this kind of change is going to go down with the respective
+> > architecture maintainers, though.
+>=20
+> Hmm, yeah, this is a mess, isn't it?  Just about everything in PCI
+> will need __devinit removed.  We've been assuming that the only way
+> for things to show up after init is via hotplug.  But you're breaking
+> that assumption by doing *all* enumeration after init.  There are
+> approximately a bajillion __init and __devinit annotations just in
+> drivers/pci, not to mention those in the architectures.
+>=20
+> Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
+> affect you?  I think we would still have to change some __inits to
+> __devinit, including pcibios_update_irq(), but it might be more
+> manageable.
 
-commit 55c844a4dd16a4d1fdc0cf2a283ec631a02ec448
-Author:     Feng Tang <feng.tang@intel.com>
-AuthorDate: Wed May 30 23:15:41 2012 +0800
-Commit:     Ingo Molnar <mingo@kernel.org>
-CommitDate: Wed Jun 6 12:03:23 2012 +0200
+You said that depending on HOTPLUG wouldn't be enough because it would
+exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
+theoretically possible to build a kernel without HOTPLUG but have the
+enumeration start after init because of deferred probing. Those cases
+won't work if we keep __init or __devinit respectively, right?
 
-    x86/reboot: Fix a warning message triggered by stop_other_cpus()
+> I started working on this, but it sounds like you're in a better
+> position to find problems and test fixes, so how about if I just let
+> you handle it? :)
 
-Thanks,
-Fengguang
+I won't be able to test anything beyond Tegra because I'm lacking the
+hardware. But with the section mismatch debugging enabled all issues
+should be detected at compile time anyway, so it's just a problem of
+getting cross-compilers for all architectures that support PCI.
 
-> [   91.282131] machine restart
-> [   91.283895] ------------[ cut here ]------------
-> [   91.284731] WARNING: at /c/wfg/linux/kernel/lockdep.c:2739 lockdep_trace_alloc+0x1fb/0x210()
-> [   91.286132] Modules linked in:
-> [   91.286703] Pid: 697, comm: reboot Not tainted 3.5.0-00024-g01ff5db-dirty #4
-> [   91.287859] Call Trace:
-> [   91.288289]  [<81050148>] warn_slowpath_common+0xb8/0x100
-> [   91.289338]  [<8110acdb>] ? lockdep_trace_alloc+0x1fb/0x210
-> [   91.290264]  [<8110acdb>] ? lockdep_trace_alloc+0x1fb/0x210
-> [   91.291161]  [<810501ce>] warn_slowpath_null+0x3e/0x50
-> [   91.292042]  [<8110acdb>] lockdep_trace_alloc+0x1fb/0x210
-> [   91.292934]  [<81228e25>] kmem_cache_alloc_trace+0x55/0x600
-> [   91.292934]  [<813025ca>] ? kobject_put+0x9a/0x160
-> [   91.292934]  [<814e95e0>] ? klist_iter_exit+0x30/0x50
-> [   91.292934]  [<81405881>] ? bus_find_device+0xf1/0x120
-> [   91.292934]  [<81361a3c>] ? pci_get_subsys+0x11c/0x1b0
-> [   91.292934]  [<81361a3c>] pci_get_subsys+0x11c/0x1b0
-> [   91.292934]  [<81361afe>] pci_get_device+0x2e/0x40
-> [   91.292934]  [<81033e25>] mach_reboot_fixups+0xa5/0xd0
-> [   91.292934]  [<81027611>] native_machine_emergency_restart+0x1f1/0x590
-> [   91.292934]  [<814f2e00>] ? printk+0x4b/0x5b
-> [   91.292934]  [<810269ef>] native_machine_restart+0x6f/0x80
-> [   91.292934]  [<810271cc>] machine_restart+0x1c/0x30
-> [   91.292934]  [<810886e0>] kernel_restart+0x70/0xc0
-> [   91.292934]  [<81088a85>] sys_reboot+0x325/0x380
-> [   91.292934]  [<811f796c>] ? handle_pte_fault+0xdc/0x1740
-> [   91.292934]  [<811f93e7>] ? handle_mm_fault+0x417/0x4a0
-> [   91.292934]  [<8103e07b>] ? do_page_fault+0x7fb/0xb30
-> [   91.292934]  [<810b33e7>] ? up_read+0x37/0x70
-> [   91.292934]  [<8103e07b>] ? do_page_fault+0x7fb/0xb30
-> [   91.292934]  [<8123c063>] ? do_sys_open+0x3a3/0x3f0
-> [   91.292934]  [<8123c063>] ? do_sys_open+0x3a3/0x3f0
-> [   91.292934]  [<810b0270>] ? update_rmtp+0xe0/0xe0
-> [   91.292934]  [<8150376e>] ? restore_all+0xf/0xf
-> [   91.292934]  [<8103d880>] ? vmalloc_sync_all+0x320/0x320
-> [   91.292934]  [<81109fca>] ? trace_hardirqs_on_caller+0x28a/0x380
-> [   91.292934]  [<81311594>] ? trace_hardirqs_on_thunk+0xc/0x10
-> [   91.292934]  [<81503735>] syscall_call+0x7/0xb
-> 
-> Thanks,
-> Fengguang
+Thierry
+
+--AqsLC8rIMeq19msA
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQLq4nAAoJEN0jrNd/PrOhWEsP/1WoLz4BUtifqR3+kcODi54U
+jXihEkyEA6VEjnk9gc9QDDWH5CBxf5ENXUk45MPIZgDWyw7Rzl8LbHyOV+Z7PejR
+tKqOX61y4OBwHUfR3lMUEiiAV3qQ/Ymt2p7rFLIgkKDSdTyELT37e/BA9iMwHktt
+Rj47Gf4UCF+5YSr4Vdo1ZB5p/Lmi+jKiLloZyjMiTicoUbi6snZGS55JW+imZH5U
+ztnbbmsdnT4HQTCBJ1VkzV6n1gEfkwA7IZvrxewLhKdVuE2GJF3t2LIpLD5Ifty+
+u9EnHWKbMKCUV6xAY8UpoPetSRFV5m66iDHUBS74GPkSnhbjS4UBwNlpU6UVqCFa
+oqNAAZDIvGe4QRbodbgTAXAMmMpW/ibykA0S6ou5ok2MpGacuPahIeIXCIwsTd0j
+lJyqXYtsPE0WARSS3h6dyZEvNQNMY5sOm3ooOZBn7V+9g5lpbovHJi5mUn12YH3d
+LzjGGdG36EQwb06/tO2J0tF/3+ZR5cmZirMCz3iQ2a8NDG1t5e1XULg6D2+RmwuV
+prltLMcQkFVzllCLJgp1wG1qr0YW5ILfQPwOSlCLoTB1bmFG/vLeFbaX/0IyKFQm
+IShZNuma254vMCJcAWWXn/HwbcAzcozhgnJp65HsN8z+vddSMEYPcI5CFoSnaDg3
+arl7kARYxgKd6riaThsB
+=l8ZL
+-----END PGP SIGNATURE-----
+
+--AqsLC8rIMeq19msA--
