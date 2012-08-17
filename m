@@ -1,50 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f202.google.com ([74.125.82.202]:65276 "EHLO
-	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932527Ab2HPX0m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 19:26:42 -0400
-Received: by mail-we0-f202.google.com with SMTP id r1so155204wey.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 16:26:41 -0700 (PDT)
-Subject: [PATCH 5/6] sgi-agp: Use list_for_each_entry() for bus->devices
-	traversal
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:52986 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585Ab2HQXgD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:03 -0400
+Received: by eekd4 with SMTP id d4so192260eek.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:01 -0700 (PDT)
+Subject: [PATCH v2 03/16] pcmcia: Use common pci_stop_and_remove_bus_device()
 To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>
-Date: Thu, 16 Aug 2012 17:26:41 -0600
-Message-ID: <20120816232641.3662.52757.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
+Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Date: Fri, 17 Aug 2012 17:36:00 -0600
+Message-ID: <20120817233600.10973.11841.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace list_for_each() + pci_dev_b() with the simpler
-list_for_each_entry().
+Use pci_stop_and_remove_bus_device() like most other hotplug drivers
+rather than the special-purpose "behind_bridge" variant.  This just
+means we have to iterate through all the devices downstream of the
+bridge ourselves, which is the same thing pci_stop_behind_bridge()
+did.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: David Airlie <airlied@linux.ie>
 ---
- drivers/char/agp/sgi-agp.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/pcmcia/cardbus.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/char/agp/sgi-agp.c b/drivers/char/agp/sgi-agp.c
-index 1920003..3a5af2f 100644
---- a/drivers/char/agp/sgi-agp.c
-+++ b/drivers/char/agp/sgi-agp.c
-@@ -289,12 +289,11 @@ static int __devinit agp_sgi_init(void)
+diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
+index 24caeaf..94f87b5 100644
+--- a/drivers/pcmcia/cardbus.c
++++ b/drivers/pcmcia/cardbus.c
+@@ -106,7 +106,10 @@ int __ref cb_alloc(struct pcmcia_socket *s)
+ void cb_free(struct pcmcia_socket *s)
+ {
+ 	struct pci_dev *bridge = s->cb_dev;
++	struct pci_bus *bus = bridge->subordinate;
++	struct pci_dev *dev, *tmp;
  
- 	j = 0;
- 	list_for_each_entry(info, &tioca_list, ca_list) {
--		struct list_head *tmp;
- 		if (list_empty(info->ca_devices))
- 			continue;
--		list_for_each(tmp, info->ca_devices) {
-+		list_for_each_entry(pdev, info->ca_devices, bus_list) {
- 			u8 cap_ptr;
--			pdev = pci_dev_b(tmp);
-+
- 			if (pdev->class != (PCI_CLASS_DISPLAY_VGA << 8))
- 				continue;
- 			cap_ptr = pci_find_capability(pdev, PCI_CAP_ID_AGP);
+-	if (bridge)
+-		pci_stop_and_remove_behind_bridge(bridge);
++	if (bus)
++		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
++			pci_stop_and_remove_bus_device(dev);
+ }
 
