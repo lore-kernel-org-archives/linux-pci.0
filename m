@@ -1,150 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:24576 "EHLO mga03.intel.com"
+Received: from bounces.ut.ee ([193.40.5.137]:56904 "EHLO bounces.ut.ee"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751287Ab2HOBnI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Aug 2012 21:43:08 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [UPDATE][PATCH -v3 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
-Date: Wed, 15 Aug 2012 09:43:03 +0800
-Message-Id: <1344994983-9092-1-git-send-email-ying.huang@intel.com>
+	id S932639Ab2HQHTn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Aug 2012 03:19:43 -0400
+Date: Fri, 17 Aug 2012 10:19:40 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: David Miller <davem@davemloft.net>
+cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: PCI resource allocation problem on Sun Ultra 10
+In-Reply-To: <20120816.132557.173944271888805402.davem@davemloft.net>
+Message-ID: <alpine.SOC.1.00.1208170001370.93@math.ut.ee>
+References: <alpine.SOC.1.00.1208161813240.11061@math.ut.ee> <20120816.132557.173944271888805402.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+> > I tried to populate my Sun Ultra 10 with PCI cards. All but the last 
+> > slot work but the last slot is assigned a non-working BAR. It sees that 
+> > this area is reserved for Video ROM. Why is there Video ROM placeholder 
+> > at that address - I see no resource in ATI VGA for it?
+> 
+> It's not a "placeholder", it's absolutely necessary because this range
+> is implicitly decoded by any VGA capable device in the system.
+>
+> Therefore no device should ever be allocated that part of the address
+> space.
+> 
+> If OBP is allocating this range to non-VGA devices, it's buggy, and is
+> risking multiple devices responding at the same time to an I/O space
+> access.
 
-http://marc.info/?l=linux-pci&m=134338059022620&w=2
+There are 2 different onboard grpahics "cards" on U5/U10 mainboard, PGX 
+that is ATI Mach 64 with 2M SGRAM and PGX24 that has 4M SGRAM. I have 
+the latter. And these do not seem to need this reservation.
 
-Where lspci does not work properly if a device and the corresponding
-parent bridge (such as PCIe port) is suspended.  This is because the
-device configuration space registers will be not accessible if the
-corresponding parent bridge is suspended or the device is put into
-D3cold state.
+Maybe Sun does not support legacy VGA cards in PCI slots (only 
+PCI-assigned areas)?
 
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before read/write configuration space registers.
-If the device is in D3cold state, it will be put into active state
-too.
+The onboard PCI VGA is on PCIB, slots are on PCIA bus. So this code 
+protects against PCI VGA cards that have ROM and decode in on c0000 even 
+after being set up on PCI, OK.
 
-To avoid resume/suspend PCIe port for each configuration register
-read/write, a small delay is added before the PCIe port to go
-suspended.
+PCI address assignment section from Sun Ultra 10 service manual tells
+0x4000.0000 - 0x7FFF.FFFF, 1 Gbyte, PCI bus A memory space (PCI slots 
+ APB ASIC register(equals 0xc))
+0x40.0000 - 0x7f.ffff, 4 Mbytes, PCI bus A I/O space (PCI slots)
 
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci-sysfs.c        |   42 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv_pci.c |    9 ++++++++
- 2 files changed, 51 insertions(+)
+I can not correlate these to any number I saw in OBP and Linux 
+assignments... there is only
+assigned-addresses:  83022010.00000000.000c0000.00000000.00010000
+and that has c0000. 
 
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -458,6 +458,40 @@ boot_vga_show(struct device *dev, struct
- }
- struct device_attribute vga_attr = __ATTR_RO(boot_vga);
- 
-+static void
-+pci_config_pm_runtime_get(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
-+
-+	if (parent)
-+		pm_runtime_get_sync(parent);
-+	pm_runtime_get_noresume(dev);
-+	/*
-+	 * pdev->current_state is set to PCI_D3cold during suspending,
-+	 * so wait until suspending completes
-+	 */
-+	pm_runtime_barrier(dev);
-+	/*
-+	 * Only need to resume devices in D3cold, because config
-+	 * registers are still accessible for devices suspended but
-+	 * not in D3cold.
-+	 */
-+	if (pdev->current_state == PCI_D3cold)
-+		pm_runtime_resume(dev);
-+}
-+
-+static void
-+pci_config_pm_runtime_put(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
-+
-+	pm_runtime_put(dev);
-+	if (parent)
-+		pm_runtime_put_sync(parent);
-+}
-+
- static ssize_t
- pci_read_config(struct file *filp, struct kobject *kobj,
- 		struct bin_attribute *bin_attr,
-@@ -484,6 +518,8 @@ pci_read_config(struct file *filp, struc
- 		size = count;
- 	}
- 
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((off & 1) && size) {
- 		u8 val;
- 		pci_user_read_config_byte(dev, off, &val);
-@@ -529,6 +565,8 @@ pci_read_config(struct file *filp, struc
- 		--size;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	return count;
- }
- 
-@@ -549,6 +587,8 @@ pci_write_config(struct file* filp, stru
- 		count = size;
- 	}
- 	
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((off & 1) && size) {
- 		pci_user_write_config_byte(dev, off, data[off - init_off]);
- 		off++;
-@@ -587,6 +627,8 @@ pci_write_config(struct file* filp, stru
- 		--size;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	return count;
- }
- 
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -140,9 +140,17 @@ static int pcie_port_runtime_resume(stru
- {
- 	return 0;
- }
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	/* Delay for a short while to prevent too frequent suspend/resume */
-+	pm_schedule_suspend(dev, 10);
-+	return -EBUSY;
-+}
- #else
- #define pcie_port_runtime_suspend	NULL
- #define pcie_port_runtime_resume	NULL
-+#define pcie_port_runtime_idle		NULL
- #endif
- 
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-@@ -155,6 +163,7 @@ static const struct dev_pm_ops pcie_port
- 	.resume_noirq	= pcie_port_resume_noirq,
- 	.runtime_suspend = pcie_port_runtime_suspend,
- 	.runtime_resume = pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+And a magic section C.3.3.1 telling
+PCI bus A has all the PCI slots and the address is programmable by the 
+OpenBoot Prom (OBP).
+
+Any idea how I can change the slots address assignment from OBP? The 
+setting are result of "set-defaults" plus changing boot device to 
+Adaptec scsi and maybe changing console.
+
+http://developers.sun.com/solaris/developer/support/driver/wps/pci/html/Device_Prop.doc.html 
+talks about what assigned-addresses and regs mean but that's not that. 
+Neither does "OpenBoot 4.x Command Reference Manual" help here.
+
+As a test, I removed the Video ROM reservation and tg3 of course started 
+working since there was no VGA on that bus. What should I do to cause 
+some problem without Video ROM area - try different old PCI graphics 
+cards in slots 2 and 3?
+
+On what other PCI Sun that could be a problem? I could probably test it 
+:)
+
+-- 
+Meelis Roos (mroos@linux.ee)
