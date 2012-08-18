@@ -1,131 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:46512 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751409Ab2HHKr4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Aug 2012 06:47:56 -0400
-Subject: [PATCH] pci: convert "new_id"/"remove_id" into generic pci_bus driver
- attributes
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Date: Wed, 08 Aug 2012 14:47:51 +0400
-Message-ID: <20120808104751.28854.76212.stgit@zurg>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:37229 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228Ab2HRA7A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 20:59:00 -0400
+Received: by vcbfk26 with SMTP id fk26so3499098vcb.19
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 17:58:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20120817233600.10973.11841.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+	<20120817233600.10973.11841.stgit@bhelgaas.mtv.corp.google.com>
+Date: Fri, 17 Aug 2012 17:58:58 -0700
+Message-ID: <CAE9FiQXFObwPx50NprfnEUyO5PcppUdxqOKg_3eetf-W7a8+FA@mail.gmail.com>
+Subject: Re: [PATCH v2 03/16] pcmcia: Use common pci_stop_and_remove_bus_device()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch removes hardcoded sysfs attributes manipulation and
-converts them into generic pci_bus->dev_attrs. This saves several bytes.
+On Fri, Aug 17, 2012 at 4:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Use pci_stop_and_remove_bus_device() like most other hotplug drivers
+> rather than the special-purpose "behind_bridge" variant.  This just
+> means we have to iterate through all the devices downstream of the
+> bridge ourselves, which is the same thing pci_stop_behind_bridge()
+> did.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pcmcia/cardbus.c |    7 +++++--
+>  1 files changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
+> index 24caeaf..94f87b5 100644
+> --- a/drivers/pcmcia/cardbus.c
+> +++ b/drivers/pcmcia/cardbus.c
+> @@ -106,7 +106,10 @@ int __ref cb_alloc(struct pcmcia_socket *s)
+>  void cb_free(struct pcmcia_socket *s)
+>  {
+>         struct pci_dev *bridge = s->cb_dev;
+> +       struct pci_bus *bus = bridge->subordinate;
+> +       struct pci_dev *dev, *tmp;
+>
+> -       if (bridge)
+> -               pci_stop_and_remove_behind_bridge(bridge);
+> +       if (bus)
+> +               list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
+> +                       pci_stop_and_remove_bus_device(dev);
+>  }
+>
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
----
- drivers/pci/pci-driver.c |   57 ++++++++--------------------------------------
- 1 file changed, 10 insertions(+), 47 deletions(-)
+original looks like bridge could be NULL.
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 185be37..4c361e5 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -139,7 +139,6 @@ store_new_id(struct device_driver *driver, const char *buf, size_t count)
- 		return retval;
- 	return count;
- }
--static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
- 
- /**
-  * store_remove_id - remove a PCI device ID from this driver
-@@ -185,38 +184,16 @@ store_remove_id(struct device_driver *driver, const char *buf, size_t count)
- 		return retval;
- 	return count;
- }
--static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
- 
--static int
--pci_create_newid_files(struct pci_driver *drv)
--{
--	int error = 0;
-+static struct driver_attribute pci_drv_attrs[] = {
-+	__ATTR(new_id, S_IWUSR, NULL, store_new_id),
-+	__ATTR(remove_id, S_IWUSR, NULL, store_remove_id),
-+	__ATTR_NULL,
-+};
- 
--	if (drv->probe != NULL) {
--		error = driver_create_file(&drv->driver, &driver_attr_new_id);
--		if (error == 0) {
--			error = driver_create_file(&drv->driver,
--					&driver_attr_remove_id);
--			if (error)
--				driver_remove_file(&drv->driver,
--						&driver_attr_new_id);
--		}
--	}
--	return error;
--}
--
--static void pci_remove_newid_files(struct pci_driver *drv)
--{
--	driver_remove_file(&drv->driver, &driver_attr_remove_id);
--	driver_remove_file(&drv->driver, &driver_attr_new_id);
--}
--#else /* !CONFIG_HOTPLUG */
--static inline int pci_create_newid_files(struct pci_driver *drv)
--{
--	return 0;
--}
--static inline void pci_remove_newid_files(struct pci_driver *drv) {}
--#endif
-+#else
-+#define pci_drv_attrs	NULL
-+#endif /* CONFIG_HOTPLUG */
- 
- /**
-  * pci_match_id - See if a pci device matches a given pci_id table
-@@ -1149,8 +1126,6 @@ const struct dev_pm_ops pci_dev_pm_ops = {
- int __pci_register_driver(struct pci_driver *drv, struct module *owner,
- 			  const char *mod_name)
- {
--	int error;
--
- 	/* initialize common driver fields */
- 	drv->driver.name = drv->name;
- 	drv->driver.bus = &pci_bus_type;
-@@ -1161,19 +1136,7 @@ int __pci_register_driver(struct pci_driver *drv, struct module *owner,
- 	INIT_LIST_HEAD(&drv->dynids.list);
- 
- 	/* register with core */
--	error = driver_register(&drv->driver);
--	if (error)
--		goto out;
--
--	error = pci_create_newid_files(drv);
--	if (error)
--		goto out_newid;
--out:
--	return error;
--
--out_newid:
--	driver_unregister(&drv->driver);
--	goto out;
-+	return driver_register(&drv->driver);
- }
- 
- /**
-@@ -1189,7 +1152,6 @@ out_newid:
- void
- pci_unregister_driver(struct pci_driver *drv)
- {
--	pci_remove_newid_files(drv);
- 	driver_unregister(&drv->driver);
- 	pci_free_dynids(drv);
- }
-@@ -1289,6 +1251,7 @@ struct bus_type pci_bus_type = {
- 	.shutdown	= pci_device_shutdown,
- 	.dev_attrs	= pci_dev_attrs,
- 	.bus_attrs	= pci_bus_attrs,
-+	.drv_attrs	= pci_drv_attrs,
- 	.pm		= PCI_PM_OPS_PTR,
- };
- 
-
+Yinghai
