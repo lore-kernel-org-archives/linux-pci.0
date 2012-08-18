@@ -1,80 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:46353 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021Ab2HaAlK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2012 20:41:10 -0400
-Received: by lbbgj3 with SMTP id gj3so897978lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2012 17:41:08 -0700 (PDT)
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:39743 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755964Ab2HRBWA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 21:22:00 -0400
+Received: by vbbff1 with SMTP id ff1so3896186vbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 18:21:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV_yjGizLWAF6FCW03g5jxOx2D_+LXMVZc1H3K1_u2dqw@mail.gmail.com>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
- <1340736849-14875-3-git-send-email-yinghai@kernel.org> <CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
- <CAE9FiQUXTngUZp2c2dLVRZjFxhXD9e+XYW6Pn0zaHvMt0fB+eA@mail.gmail.com>
- <CA+55aFxLUExCZE1=gQpDT0ip9s+iMRYEVK2QjdCGNk9iympfYA@mail.gmail.com>
- <CA+55aFyb-g77CQNoR72J0pjw76ZCy_nufP=VavT_X3xBg6=G-Q@mail.gmail.com>
- <CAE9FiQUKxO5QmuaK5V1-rWzS98aRmyfDgC0Aonk-L5JRG1cd6A@mail.gmail.com> <CAE9FiQV_yjGizLWAF6FCW03g5jxOx2D_+LXMVZc1H3K1_u2dqw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 30 Aug 2012 17:40:48 -0700
-Message-ID: <CAErSpo51XRqDYLZCgCmUq5jnVNgf64dAtLqW3kgGWkFHNrNJSA@mail.gmail.com>
-Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+In-Reply-To: <20120817233626.10973.57304.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+	<20120817233626.10973.57304.stgit@bhelgaas.mtv.corp.google.com>
+Date: Fri, 17 Aug 2012 18:21:59 -0700
+Message-ID: <CAE9FiQX+OCFeDFfpoMNRR+QS9=hNoMS94WJ0+s4dTv6E70WRAw@mail.gmail.com>
+Subject: Re: [PATCH v2 08/16] PCI: Stop and remove devices in one pass
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2012 at 10:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Aug 29, 2012 at 8:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> also have another version for probe_resource, please check attached version -v8.
->>
+On Fri, Aug 17, 2012 at 4:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Previously, when we removed a PCI device, we made two passes over the
+> hierarchy rooted at the device.  In the first pass, we stopped all
+> the devices, and in the second, we removed them.
 >
-> sorry, v8 forget removing two lines.
+> This patch combines the two passes into one so that we remove a device as
+> soon as it and all its children have been stopped.
 >
-> please -v9 instead.
+> Note that we previously stopped devices in reverse order and removed them
+> in forward order.  Now we stop and remove them in reverse order.
 >
-> -v8: Linus said: allocation/return is not right, and -1 step tricks make it
->         not work as generic resource probe.
->      So try to remove the needed_size tricks, and also use __adjust_resource
->         for probing instead.
-> -v9: remove two lines that is supposed to be removed after converting to use
->         __adjust_resource
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/remove.c |   42 +++++++-----------------------------------
+>  1 files changed, 7 insertions(+), 35 deletions(-)
 
-These tweaks might be slight improvements, but they completely miss
-the point of my objection.  I just don't think the probe_resource()
-interface is a reasonable addition to kernel/resource.c.  I think it's
-too hard to describe what it does, and it seems like it's too specific
-to what PCI needs in this particular case.  We should be able to look
-at the prototype and get a pretty good idea of what the function does,
-but I can't do that with this:
+looks like your cleanup will have some conflict with my pci root bus
+hot plug branch.
 
-+int probe_resource(struct resource *b_res,
-+			 struct resource *busn_res,
-+			 resource_size_t needed_size, struct resource **p,
-+			 int skip_nr, int limit, int stop_flags)
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=blob;f=drivers/pci/remove.c;h=f672731922f8db619fb36db05dbd9c27f3253c19;hb=refs/heads/for-pci-root-bus-hotplug
 
-We already have adjust_resource(), which grows or shrinks a resource
-while maintaining the invariants that the adjusted resource (1)
-doesn't overlap any of its siblings and (2) still contains all its
-children.
+it add pci_stop_and_remove_bus and it depends on some functions that
+you kill in this patch set.
 
-adjust_resource() seems like a fairly generic, generally useful
-interface.  What you're trying to do with probe_resource() is quite
-similar, except that probe_resource() adds the idea of walking up the
-tree.
+ 180 void pci_stop_and_remove_bus(struct pci_bus *bus)
+181 {
+182         struct pci_host_bridge *host_bridge = NULL;
+183         struct pci_dev *pci_bridge = NULL;
+184
+185         pci_stop_bus_devices(bus);
+186
+187         if (pci_is_root_bus(bus)) {
+188                 host_bridge = to_pci_host_bridge(bus->bridge);
+189                 get_device(&host_bridge->dev);
+190                 pci_stop_host_bridge(host_bridge);
+191         } else
+192                 pci_bridge = bus->self;
+193
+194         __pci_remove_bus_devices(bus);
+195
+196         pci_remove_bus(bus);
+197
+198         if (host_bridge) {
+199                 host_bridge->bus = NULL;
+200                 put_device(&host_bridge->dev);
+201         }
+202
+203         if (pci_bridge)
+204                 pci_bridge->subordinate = NULL;
+205 }
 
-I think you should consider something like an "expand_resource()" that
-just balloons a resource at both ends until it abuts its siblings,
-i.e., it grows the resource as much as possible.  Then you know the
-largest possible size, and you can use adjust_resource() to shrink it
-again if you don't need that much.  You can walk up the tree in the
-caller when you need to.
-
-Bjorn
+Yinghai
