@@ -1,62 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from oproxy12-pub.bluehost.com ([50.87.16.10]:46039 "HELO
+	oproxy12-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750759Ab2HSAhz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 18 Aug 2012 20:37:55 -0400
+Message-ID: <50303561.4020707@xenotime.net>
+Date: Sat, 18 Aug 2012 17:37:53 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [BUGFIX -v2 2/4] PCI/PM: Keep parent bridge active when probing device
-Date: Mon,  6 Aug 2012 09:34:28 +0800
-Message-Id: <1344216870-21105-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-References: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+CC: linux-pci@vger.kernel.org
+Subject: [PATCH] pci: fix drivers/pci/pci.c kernel-doc warnings
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch fixes the following bug:
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-http://marc.info/?l=linux-pci&m=134329923124234&w=2
+Fix kernel-doc warnings in drivers/pci/pci.c:
 
-The root cause of the bug is as follow.
+Warning(drivers/pci/pci.c:1550): No description found for parameter 'pci_dev'
+Warning(drivers/pci/pci.c:1550): Excess function parameter 'dev' description in 'pci_wakeup'
 
-If a device is not bound with the corresponding driver, the device
-runtime PM will be disabled and the device will be put into suspended
-state.  So that, the bridge/PCIe port connected to it may be put into
-suspended and low power state.  When do probing for the device later,
-because the bridge/PCIe port connected to it is in low power state,
-the IO access to device may fail.
-
-To solve the issue, the bridge/PCIe port connected to the device is
-put into active state before probing.
-
-Reported-by: Bjorn Mork <bjorn@mork.no>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Reviewed-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc:	Bjorn Helgaas <bhelgaas@google.com>
+Cc:	linux-pci@vger.kernel.org
 ---
- drivers/pci/pci-driver.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -280,8 +280,12 @@ static long local_pci_probe(void *_ddi)
- {
- 	struct drv_dev_and_id *ddi = _ddi;
- 	struct device *dev = &ddi->dev->dev;
-+	struct device *parent = dev->parent;
- 	int rc;
+--- lnx-36-rc2.orig/drivers/pci/pci.c
++++ lnx-36-rc2/drivers/pci/pci.c
+@@ -1543,7 +1543,7 @@ void pci_pme_wakeup_bus(struct pci_bus *
  
-+	/* The parent bridge must be in active state when probing */
-+	if (parent)
-+		pm_runtime_get_sync(parent);
- 	/* Unbound PCI devices are always set to disabled and suspended.
- 	 * During probe, the device is set to enabled and active and the
- 	 * usage count is incremented.  If the driver supports runtime PM,
-@@ -298,6 +302,8 @@ static long local_pci_probe(void *_ddi)
- 		pm_runtime_set_suspended(dev);
- 		pm_runtime_put_noidle(dev);
- 	}
-+	if (parent)
-+		pm_runtime_put(parent);
- 	return rc;
- }
- 
+ /**
+  * pci_wakeup - Wake up a PCI device
+- * @dev: Device to handle.
++ * @pci_dev: Device to handle.
+  * @ign: ignored parameter
+  */
+ static int pci_wakeup(struct pci_dev *pci_dev, void *ign)
