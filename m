@@ -1,55 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mso.anu.edu.au ([150.203.89.32]:49692 "EHLO mso.anu.edu.au"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:51246 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756373Ab2HFWvZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Aug 2012 18:51:25 -0400
-Message-ID: <50204A4E.5040104@mso.anu.edu.au>
-Date: Tue, 07 Aug 2012 08:50:54 +1000
-From: Francois Rigaut <frigaut@mso.anu.edu.au>
-MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>, matt.fleming@intel.com,
-	bhelgaas@google.com, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-References: <501A955D.6030500@mso.anu.edu.au> <20120802161209.GF32395@thinkpad-t410> <501B01ED.9080309@mso.anu.edu.au> <501B0536.6070001@mso.anu.edu.au> <20120803045312.GB2446@thinkpad-t410> <501BD1FC.9020601@mso.anu.edu.au> <20120803141421.GA8165@thinkpad-t410> <501C7C1D.5010903@mso.anu.edu.au> <20120804035844.GA31711@thinkpad-t410> <501CB6AE.3000400@mso.anu.edu.au> <20120806134933.GA28213@thinkpad-t410>
-In-Reply-To: <20120806134933.GA28213@thinkpad-t410>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1752114Ab2HTNqx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Aug 2012 09:46:53 -0400
+Received: from /spool/local
+	by e3.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Mon, 20 Aug 2012 09:46:52 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id CF861C9005C
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:49 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7KDkeeF2818092
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:43 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7KDkdSC009769
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 10:46:40 -0300
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
+	yinghai@kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH V8 0/8] Minimal alignment for p2p bars
+Date: Mon, 20 Aug 2012 21:46:27 +0800
+Message-Id: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+v1 -> v2:
+	* Shorten the varaible names so that they looks more short.
+        * Changelog adjustment so that they looks more meaningful.
 
+v2 -> v3:
+        * Rebase to 3.5.RC4
 
-On Mon 06 Aug 2012 23:49:33 EST, Seth Forshee wrote:
-> On Sat, Aug 04, 2012 at 03:44:14PM +1000, Francois Rigaut wrote:
->> Seth,
->>
->> [CC'd people, sorry we exchanged a few emails with Seth outside of
->> the lists, I passed him the acpi tables and here are gmux dumps]
->>
->> Allright. thanks for gmux-dump. There seems to be progress, as I can
->> see the gmux dumps for the nividia-selected and intel-selected are
->> clearly different (I did it twice to be sure, it checks out).
->> The 2 dumps are at
->> http://maumae.net/retina/gmux-dump_intel.dat
->> and
->> http://maumae.net/retina/gmux-dump_nvidia_only.dat
->> I hope you'll be able to get something from these.
->
-> It looks like you're not really getting data from the gmux in those
-> dumps. The address range should be correct based on your ACPI tables. I
-> have some ideas, but it won't be much longer until I can play with one
-> of these machines myself so it's probably easier if I try them out then.
+v3 -> v4:
+        * Merge Yinghai's patches.
 
-allright, no worries. Delivery time can be quite long for these 
-machines, I waited for mine 5 long weeks.
-Hope you get yours faster.
-Cheers,
-Francois
-PS: I'm working with Daniel Vetter [intel-fgx] for a of fix the video 
-mode (corrupted), another problem for the use of the i915 driver
->
-> Thanks,
-> Seth
+v3 -> v4:
+        * Split patch for easy review.
+        * Add function to retrieve the minimal alignment of p2p bridge.
+
+v4 -> v5:
+        * Rebase to 3.5.RC7
+        * Introduce weak function pcibios_window_alignment() to retrieve
+          I/O and memory alignment for P2P bridges.
+        * Introduce pcibios_window_alignment() for ppc to override the
+          PCI function.
+        * Add ppc_md.pcibios_window_alignment() for specific platform like
+          powernv can override ppc's pcibios_window_alignment().
+
+v5 -> v6:
+        * Refactor pcibios_window_alignment() so the platform-specific
+          implementation needn't return the default alignment according
+          to Bjorn's suggestion.
+        * Simplify pbus_size_mem() according to Bjorn's suggestion: Just
+          check the platform required alignment at very end and adjust
+          the "min_align" if necessary.
+
+v6 -> v7:
+        * Change "type" to "b_res->flags & mask" while retrieving the
+          minimal alignment for memory window according to Ram's suggestion.
+        * Refactor pbus_size_mem() according to Ram's suggestion.
+        * ppc_md.pcibios_window_alignment returns 1 for those PCI bridges
+          behind PCI bridges so that PCI core will use default alignment
+          values.
+
+v7 -> v8:
+	* Rebase to 3.6.RC2, which starts to use "struct resource" to represent
+	  the range of PCI bus numbers that specific p2p bridge covers.
+	* Define macros for the default alignment of P2P bars according to
+	  Richard's comments.
+
+Lu Yinghai(3):
+  pci: change variable name for find_pci_host_bridge
+  pci: argument pci_bus for find_pci_host_bridge
+  pci: fiddle with conversion of pci and CPU address
+
+Gavin Shan(5)
+  pci: weak function returns alignment
+  pci: resource assignment based on p2p alignment
+  pci: refactor function pbus_size_mem
+  ppc/pci: override pcibios_window_alignment
+  ppc/pnv: I/O and memory alignment for p2p bridges
+
+-----
+
+arch/powerpc/include/asm/machdep.h        |    3 +
+arch/powerpc/kernel/pci-common.c          |   20 ++++++++
+arch/powerpc/platforms/powernv/pci-ioda.c |   38 +++++++++++++++
+drivers/pci/host-bridge.c                 |   35 +++++++++-----
+drivers/pci/setup-bus.c                   |   74 ++++++++++++++++++++++------
+include/linux/pci.h                       |    7 ++-
+6 files changed, 148 insertions(+), 29 deletions(-)
+
+Thanks,
+Gavin
+
