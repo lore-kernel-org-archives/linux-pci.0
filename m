@@ -1,158 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 23 Aug 2012 12:02:13 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Olof Johansson <olof@lixom.net>
-Cc: linux-pci@vger.kernel.org,
-	Jacob Pan <jacob.jun.pan@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>,
-	Robert Hancock <hancockrwd@gmail.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH 1/2] PCI: leave MEM and IO decoding disabled during
- 64-bit BAR sizing, too
-Message-ID: <20120823180213.GA31462@google.com>
-References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
- <20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
- <CAOesGMgUGUG9Z=x6ssumVkAxN6fHoeyAJ3-P8CoaNTGas7-vmg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOesGMgUGUG9Z=x6ssumVkAxN6fHoeyAJ3-P8CoaNTGas7-vmg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:50058 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754808Ab2HTNrG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Aug 2012 09:47:06 -0400
+Received: from /spool/local
+	by e5.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Mon, 20 Aug 2012 09:47:05 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2A1C96E8039
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:53 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7KDkqOs146038
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:52 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7KDkoTd016727
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:51 -0400
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
+	yinghai@kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 4/8] pci: weak function returns alignment
+Date: Mon, 20 Aug 2012 21:46:31 +0800
+Message-Id: <1345470395-17295-5-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 23, 2012 at 12:28:23AM -0700, Olof Johansson wrote:
-> Hi,
-> 
-> On Mon, Jul 9, 2012 at 11:20 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > After 253d2e5498, we disable MEM and IO decoding for most devices while we
-> > size 32-bit BARs.  However, we restore the original COMMAND register before
-> > we size the upper 32 bits of 64-bit BARs, so we can still cause a conflict.
-> >
-> > This patch waits to restore the original COMMAND register until we're
-> > completely finished sizing the BAR.
-> >
-> > Reference: https://lkml.org/lkml/2007/8/25/154
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> This patch causes boot lockup on PA Semi hardware, since it disables
-> the bar on the UART that is used for console, and it has printks
-> between the old and the new re-enable location. If I boot with 'debug'
-> level for printk, I hit this. If I boot with just regular console
-> args, I don't.
-> 
-> I'm guessing any other platform that uses MMIO-based UART on PCI for
-> console will have similar issues. I can verify on Chrome OS x86
-> hardware tomorrow if legacy powerpc isn't important enough to care
-> about. :-)
-> 
-> I have no proposal for a fix for this. Can you please consider
-> reverting for 3.6 unless someone has a better idea?
+The patch implements the weak function to return the default I/O
+or memory alignment for P2P bridge. Currently, I/O window has 4KiB
+alignment and memory window is 4MiB aligned by default. On the other
+hand, those platforms (e.g. powernv) that have special requirements
+on the alignment could override the function by themselves.
 
-Thanks a lot for finding and debugging this!
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |   24 ++++++++++++++++++++++++
+ include/linux/pci.h     |    2 ++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-Can you try the patch below?
-
-
-commit cfc29ece86d648e63fb46de81b2bf8e3e107672c
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Aug 23 10:53:08 2012 -0600
-
-    PCI: Don't print anything while decoding is disabled
-    
-    If we try to print to the console device while its decoding is disabled,
-    the system will hang.
-    
-    Reported-by: Olof Johansson <olof@lixom.net>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6c143b4..9f8a6b7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -144,15 +144,13 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
- 	case PCI_BASE_ADDRESS_MEM_TYPE_32:
- 		break;
- 	case PCI_BASE_ADDRESS_MEM_TYPE_1M:
--		dev_info(&dev->dev, "1M mem BAR treated as 32-bit BAR\n");
-+		/* 1M mem BAR treated as 32-bit BAR */
- 		break;
- 	case PCI_BASE_ADDRESS_MEM_TYPE_64:
- 		flags |= IORESOURCE_MEM_64;
- 		break;
- 	default:
--		dev_warn(&dev->dev,
--			 "mem unknown type %x treated as 32-bit BAR\n",
--			 mem_type);
-+		/* mem unknown type treated as 32-bit BAR */
- 		break;
- 	}
- 	return flags;
-@@ -173,9 +171,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	u32 l, sz, mask;
- 	u16 orig_cmd;
- 	struct pci_bus_region region;
-+	bool bar_too_big = false, bar_disabled = false;
- 
- 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
- 
-+	/* No printks while decoding is disabled! */
- 	if (!dev->mmio_always_on) {
- 		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
- 		pci_write_config_word(dev, PCI_COMMAND,
-@@ -240,8 +240,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			goto fail;
- 
- 		if ((sizeof(resource_size_t) < 8) && (sz64 > 0x100000000ULL)) {
--			dev_err(&dev->dev, "reg %x: can't handle 64-bit BAR\n",
--				pos);
-+			bar_too_big = true;
- 			goto fail;
- 		}
- 
-@@ -252,12 +251,11 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			region.start = 0;
- 			region.end = sz64;
- 			pcibios_bus_to_resource(dev, res, &region);
-+			bar_disabled = true;
- 		} else {
- 			region.start = l64;
- 			region.end = l64 + sz64;
- 			pcibios_bus_to_resource(dev, res, &region);
--			dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n",
--				   pos, res);
- 		}
- 	} else {
- 		sz = pci_size(l, sz, mask);
-@@ -268,18 +266,23 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		region.start = l;
- 		region.end = l + sz;
- 		pcibios_bus_to_resource(dev, res, &region);
--
--		dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n", pos, res);
- 	}
- 
-- out:
-+	goto out;
-+
-+
-+fail:
-+	res->flags = 0;
-+out:
- 	if (!dev->mmio_always_on)
- 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
- 
-+	if (bar_too_big)
-+		dev_err(&dev->dev, "reg %x: can't handle 64-bit BAR\n", pos);
-+	if (res->flags && !bar_disabled)
-+		dev_printk(KERN_DEBUG, &dev->dev, "reg %x: %pR\n", pos, res);
-+
- 	return (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
-- fail:
--	res->flags = 0;
--	goto out;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index fb50613..826a4f3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -697,6 +697,30 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 	return size;
  }
  
- static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
++resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
++						unsigned long type)
++{
++	return 1;
++}
++
++#define PCI_P2P_DEFAULT_MEM_ALIGN	0x100000	/* 1MiB */
++#define PCI_P2P_DEFAULT_IO_ALIGN	0x1000		/* 4KiB */
++
++static resource_size_t window_alignment(struct pci_bus *bus,
++					unsigned long type)
++{
++	resource_size_t align = 1, arch_align;
++
++	if (type & IORESOURCE_MEM)
++		align = PCI_P2P_DEFAULT_MEM_ALIGN;
++	else if (type & IORESOURCE_IO)
++		align = PCI_P2P_DEFAULT_IO_ALIGN;
++
++	arch_align = pcibios_window_alignment(bus, type);
++
++	return max(align, arch_align);
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a47a4d3..739be31 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1034,6 +1034,8 @@ int pci_cfg_space_size_ext(struct pci_dev *dev);
+ int pci_cfg_space_size(struct pci_dev *dev);
+ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
++resource_size_t pcibios_window_alignment(struct pci_bus *bus,
++					 unsigned long type);
+ 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
+-- 
+1.7.5.4
+
