@@ -1,130 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Divy Le Ray <divy@chelsio.com>,
-	Dimitris Michailidis <dm@chelsio.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 22/32] PCI/chelsio: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:27 +0800
-Message-Id: <1343836477-7287-23-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.187]:49841 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755292Ab2HTHQx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 03:16:53 -0400
+Date: Mon, 20 Aug 2012 09:16:41 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
+	linux-mips <linux-mips@linux-mips.org>
+Subject: Re: PCI Section mismatch error in linux-next.
+Message-ID: <20120820071641.GA4083@avionic-0098.mockup.avionic-design.de>
+References: <CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
+ <20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
+ <20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
+ <CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
+ <20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
+ <20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
+ <CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
+ <20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
+ <20120820053036.GA23166@kroah.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="rwEMma7ioTxnRzrJ"
+In-Reply-To: <20120820053036.GA23166@kroah.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
 
-Use PCIe capabilities access functions to simplify chelsio ethernet drivers'
-implementation.
+--rwEMma7ioTxnRzrJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/net/ethernet/chelsio/cxgb3/t3_hw.c      |   19 +++++++------------
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |   11 ++---------
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c      |   10 +++-------
- 3 files changed, 12 insertions(+), 28 deletions(-)
+On Sun, Aug 19, 2012 at 10:30:36PM -0700, Greg KH wrote:
+> On Fri, Aug 17, 2012 at 11:32:47PM +0200, Thierry Reding wrote:
+> > On Fri, Aug 17, 2012 at 03:25:22PM -0600, Bjorn Helgaas wrote:
+> > > On Fri, Aug 17, 2012 at 3:07 PM, Thierry Reding
+> > > <thierry.reding@avionic-design.de> wrote:
+> > > > On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
+> > > >> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
+> > > > [...]
+> > > >> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would =
+that
+> > > >> > affect you?  I think we would still have to change some __inits =
+to
+> > > >> > __devinit, including pcibios_update_irq(), but it might be more
+> > > >> > manageable.
+> > > >>
+> > > >> You said that depending on HOTPLUG wouldn't be enough because it w=
+ould
+> > > >> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also i=
+t is
+> > > >> theoretically possible to build a kernel without HOTPLUG but have =
+the
+> > > >> enumeration start after init because of deferred probing. Those ca=
+ses
+> > > >> won't work if we keep __init or __devinit respectively, right?
+> > > >
+> > > > Another possibility would be to make PCI select HOTPLUG or depend o=
+n it.
+> > > > That way it would be made sure that __devinit wouldn't cause all the
+> > > > functions to be discarded after init.
+> > >=20
+> > > There's been some discussion recently about whether CONFIG_HOTPLUG is
+> > > worth keeping any more, but nothing's been resolved yet.  If we did
+> > > decide to remove CONFIG_HOTPLUG, or require it for PCI, I would rather
+> > > just remove all the __devinit annotations because they'd be
+> > > superfluous.
+> >=20
+> > I've missed that discussion. Can you point me to it?
+>=20
+> It's pretty much just me saying the whole thing is a mess, causes
+> problems, and really doesn't solve any memory usage issues.  Ideally we
+> should just:
+> 	- remove CONFIG_HOTPLUG and assume it is enabled
+> 	- because of that, we can delete the large majority of the
+> 	  __dev* markings
+>=20
+> The memory savings these days are so tiny, if at all, and everyone,
+> including me, gets it wrong all the time.
+>=20
+> As we pretty much allow anything to be disabled/enabled at any point in
+> time after boot, we are all running systems that rely on CONFIG_HOTPLUG
+> anyway.  To find a static system that doesn't need it is quite rare from
+> what I have found.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c b/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
-index 44ac2f4..8fadbb3 100644
---- a/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
-@@ -3289,22 +3289,18 @@ static void config_pcie(struct adapter *adap)
- 	unsigned int log2_width, pldsize;
- 	unsigned int fst_trn_rx, fst_trn_tx, acklat, rpllmt;
- 
--	pci_read_config_word(adap->pdev,
--			     adap->pdev->pcie_cap + PCI_EXP_DEVCTL,
--			     &val);
-+	pci_pcie_capability_read_word(adap->pdev, PCI_EXP_DEVCTL, &val);
- 	pldsize = (val & PCI_EXP_DEVCTL_PAYLOAD) >> 5;
- 
- 	pci_read_config_word(adap->pdev, 0x2, &devid);
- 	if (devid == 0x37) {
--		pci_write_config_word(adap->pdev,
--				      adap->pdev->pcie_cap + PCI_EXP_DEVCTL,
-+		pci_pcie_capability_write_word(adap->pdev, PCI_EXP_DEVCTL,
- 				      val & ~PCI_EXP_DEVCTL_READRQ &
- 				      ~PCI_EXP_DEVCTL_PAYLOAD);
- 		pldsize = 0;
- 	}
- 
--	pci_read_config_word(adap->pdev, adap->pdev->pcie_cap + PCI_EXP_LNKCTL,
--			     &val);
-+	pci_pcie_capability_read_word(adap->pdev, PCI_EXP_LNKCTL, &val);
- 
- 	fst_trn_tx = G_NUMFSTTRNSEQ(t3_read_reg(adap, A_PCIE_PEX_CTRL0));
- 	fst_trn_rx = adap->params.rev == 0 ? fst_trn_tx :
-@@ -3425,15 +3421,14 @@ out_err:
- static void get_pci_mode(struct adapter *adapter, struct pci_params *p)
- {
- 	static unsigned short speed_map[] = { 33, 66, 100, 133 };
--	u32 pci_mode, pcie_cap;
-+	u32 pci_mode;
- 
--	pcie_cap = pci_pcie_cap(adapter->pdev);
--	if (pcie_cap) {
-+	if (pci_is_pcie(adapter->pdev)) {
- 		u16 val;
- 
- 		p->variant = PCI_VARIANT_PCIE;
--		pci_read_config_word(adapter->pdev, pcie_cap + PCI_EXP_LNKSTA,
--					&val);
-+		pci_pcie_capability_read_word(adapter->pdev, PCI_EXP_LNKSTA,
-+					      &val);
- 		p->width = (val >> 4) & 0x3f;
- 		return;
- 	}
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index e1f96fb..a414bac 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -3694,15 +3694,8 @@ static void __devinit print_port_info(const struct net_device *dev)
- 
- static void __devinit enable_pcie_relaxed_ordering(struct pci_dev *dev)
- {
--	u16 v;
--	int pos;
--
--	pos = pci_pcie_cap(dev);
--	if (pos > 0) {
--		pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &v);
--		v |= PCI_EXP_DEVCTL_RELAX_EN;
--		pci_write_config_word(dev, pos + PCI_EXP_DEVCTL, v);
--	}
-+	pci_pcie_capability_change_word(dev, PCI_EXP_DEVCTL,
-+					PCI_EXP_DEVCTL_RELAX_EN, 0);
- }
- 
- /*
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-index 32e1dd5..f0e673e 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-@@ -2741,14 +2741,10 @@ static void __devinit get_pci_mode(struct adapter *adapter,
- 				   struct pci_params *p)
- {
- 	u16 val;
--	u32 pcie_cap = pci_pcie_cap(adapter->pdev);
- 
--	if (pcie_cap) {
--		pci_read_config_word(adapter->pdev, pcie_cap + PCI_EXP_LNKSTA,
--				     &val);
--		p->speed = val & PCI_EXP_LNKSTA_CLS;
--		p->width = (val & PCI_EXP_LNKSTA_NLW) >> 4;
--	}
-+	pci_pcie_capability_read_word(adapter->pdev, PCI_EXP_LNKSTA, &val);
-+	p->speed = val & PCI_EXP_LNKSTA_CLS;
-+	p->width = (val & PCI_EXP_LNKSTA_NLW) >> 4;
- }
- 
- /**
--- 
-1.7.9.5
+I've been reading through the thread it seems like the consensus is to
+just drop it. Though there seems to be lacking a formal decision.
 
+Thierry
+
+--rwEMma7ioTxnRzrJ
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQMeRZAAoJEN0jrNd/PrOhpR4P/A3x3bRrhHIXloLCiFItBcT4
+lYrtqz9XIg28IjUtDvdKeoppngU9LW9Lc58nzkJY+TMyCXOh5vGCPphk1wuCV6mP
+rs87YwSkfL7PCunHGcEI5WHTpFkkbGr8x4iwbltRCLOHWOwge1L0Xl0foUX0lhKW
+wDo5OpyEAar0z9JWDX2olGfb9TZz9ALTEwKhxGqM6XTQcJZo4UPc5MmFQUUk4Qs6
+FU9hk6Dz8qWA/EYTRRqGqtuindEsrWn5JixVYYQ3lhwPvavHVVXE7DP8/Dm+GtBo
+fpticf4E4+pPHqxzV+38yL0l+pNxv72WAYfPwZBfZEEXvnnn6TXvf6uqHFOubaDS
+wtf+Cw8XlVFzcScmhdprIpRIaoPayWOaCPnPibP9WcrOBGSIy2T5mRTefQeJ0dTJ
+u/P2TPDoOTQWEAIS1eMmKka/HLmIf6jc712IGq5MnVWd00Xg0jMNRoJTbgTUzFNc
+uQZofe/JB+eD4VDtMkLEy/b8aN5AjS7JxoJmpjzeT4ujazpTCe+AdvP00ZePXCkb
+GMBaiif2yvdG6MjBehI1Z/GDTfozht0D33EmqYq9Dv2aNNEk+OgaWh9tLhPySwtm
+8rql8uD74sIP97qs1OBzLWTdscDSTyLG1fk9xGnJuKx5T+3VeywYCUXIH+HzRgyT
+zWWEBgWRwO7oBrtDgGsA
+=P4Dy
+-----END PGP SIGNATURE-----
+
+--rwEMma7ioTxnRzrJ--
