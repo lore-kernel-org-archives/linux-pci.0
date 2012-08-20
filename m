@@ -1,183 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:48744 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932884Ab2HPQBB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 12:01:01 -0400
-Received: by lbbgj3 with SMTP id gj3so1574461lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 09:00:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
-References: <cover.1345124063.git.agordeev@redhat.com> <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Aug 2012 10:00:39 -0600
-Message-ID: <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	linux-doc@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:33159 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755459Ab2HTNrZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Aug 2012 09:47:25 -0400
+Received: from /spool/local
+	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Mon, 20 Aug 2012 09:47:19 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id A3D3BC90050
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:49 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7KDkgsN30802150
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:42 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7KDkecJ015920
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:46:41 -0400
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
+	yinghai@kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 1/8] pci: change variable name for find_pci_host_bridge
+Date: Mon, 20 Aug 2012 21:46:28 +0800
+Message-Id: <1345470395-17295-2-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2012 at 8:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> The new function pci_enable_msi_block_auto() tries to allocate maximum
-> possible number of MSIs up to the number the device supports. It
-> generalizes a pattern when pci_enable_msi_block() contiguously called
-> until it succeeds or fails.
->
-> Opposite to pci_enable_msi_block() which takes the number of MSIs to
-> allocate as a input parameter, pci_enable_msi_block_auto() could be used
-> by device drivers to obtain the number of assigned MSIs.
->
-> The function could also be used by device drivers which do not care
-> about the exact number of assigned MSIs.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   41 ++++++++++++++++++++++++++++++++++----
->  drivers/pci/msi.c               |   29 +++++++++++++++++++++++++++
->  include/linux/pci.h             |    7 ++++++
->  3 files changed, 72 insertions(+), 5 deletions(-)
->
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index 53e6fca..d5ab6d7 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -127,15 +127,46 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
->  returns as soon as it finds any constraint that doesn't allow the
->  call to succeed.
->
-> -4.2.3 pci_disable_msi
-> +4.2.3 pci_enable_msi_block_auto
-> +
-> +int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
-> +
-> +This variation on pci_enable_msi() call allows a device driver to request
-> +the maximum possible number of MSIs.  The MSI specification only allows
-> +interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
-> +
-> +If this function returns 0, it has succeeded in allocating as many
-> +interrupts as the device supports.
-> +
-> +If this function returns a positive number, it indicates that it has
-> +succeeded, but the number of allocated interrupts is less than the number
-> +of interrupts the device supports. The returned value in this case is the
-> +number of allocated interrupts.
+The patch changes the variable name for function find_pci_host_bridge()
+so that it looks more meaningful. More specificly, the "bus" has been
+replaced with "root_bus".
 
-Seems like it would be simpler to avoid the special case of returning
-zero.  You could return a negative value for failure, otherwise return
-the number of interrupts allocated.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ drivers/pci/host-bridge.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Then you could also dispense with the "int *count" argument, because
-the caller could just look at the return value.
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index a68dc61..c19776a 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -22,9 +22,9 @@ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+ 
+ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus = find_pci_root_bus(dev);
++	struct pci_bus *root_bus = find_pci_root_bus(dev);
+ 
+-	return to_pci_host_bridge(bus->bridge);
++	return to_pci_host_bridge(root_bus->bridge);
+ }
+ 
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+-- 
+1.7.5.4
 
-> +In both cases above, the function enables MSI on this device and updates
-> +dev->irq to be the lowest of the new interrupts assigned to it. The other
-> +interrupts assigned to the device are in the range dev->irq to dev->irq +
-> +number of allocated interrupts - 1.
-> +
-> +If the device driver needs to know the number of allocated interrupts it
-> +can pass the pointer count where that number is stored. If the device driver
-> +has other means to obtain that number or does not need it, NULL pointer can
-> +be passed instead.
-> +
-> +If this function returns a negative number, it indicates an error and the
-> +driver should not attempt to request any more MSI interrupts for this
-> +device.
-> +
-> +4.2.4 pci_disable_msi
->
->  void pci_disable_msi(struct pci_dev *dev)
->
->  This function should be used to undo the effect of pci_enable_msi() or
-> -pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
-> -interrupt number and frees the previously allocated message signaled
-> -interrupt(s).  The interrupt may subsequently be assigned to another
-> -device, so drivers should not cache the value of dev->irq.
-> +pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
-> +dev->irq to the pin-based interrupt number and frees the previously
-> +allocated message signaled interrupt(s).  The interrupt may subsequently be
-> +assigned to another device, so drivers should not cache the value of
-> +dev->irq.
->
->  Before calling this function, a device driver must always call free_irq()
->  on any interrupt for which it previously called request_irq().
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index f0752d1..ef982c1 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -845,6 +845,35 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->  }
->  EXPORT_SYMBOL(pci_enable_msi_block);
->
-> +int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec)
-> +{
-> +       int ret, pos, envec, maxvec;
-> +       u16 msgctl;
-> +
-> +       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +       if (!pos)
-> +               return -EINVAL;
-> +
-> +       pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-> +       maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +       ret = maxvec;
-> +
-> +       do {
-> +               envec = ret;
-> +               ret = pci_enable_msi_block(dev, envec);
-> +       } while (ret > 0);
-> +
-> +       if (ret < 0)
-> +               return ret;
-> +       if (nvec)
-> +               *nvec = envec;
-> +       if (envec < maxvec)
-> +               return envec;
-> +       return 0;
-> +
-> +}
-> +EXPORT_SYMBOL(pci_enable_msi_block_auto);
-> +
->  void pci_msi_shutdown(struct pci_dev *dev)
->  {
->         struct msi_desc *desc;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d8c379d..14788d0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1024,6 +1024,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->         return -1;
->  }
->
-> +static inline int
-> +pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec)
-> +{
-> +       return -1;
-> +}
-> +
->  static inline void pci_msi_shutdown(struct pci_dev *dev)
->  { }
->  static inline void pci_disable_msi(struct pci_dev *dev)
-> @@ -1055,6 +1061,7 @@ static inline int pci_msi_enabled(void)
->  }
->  #else
->  extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
-> +extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec);
->  extern void pci_msi_shutdown(struct pci_dev *dev);
->  extern void pci_disable_msi(struct pci_dev *dev);
->  extern int pci_msix_table_size(struct pci_dev *dev);
-> --
-> 1.7.7.6
->
->
-> --
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
