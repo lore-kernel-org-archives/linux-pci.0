@@ -1,92 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:55307 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752456Ab2H2QCq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2012 12:02:46 -0400
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40194 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757221Ab2HTQKe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 12:10:34 -0400
+Received: by lagy9 with SMTP id y9so3372805lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:10:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120829101423.GA18856@ram-ThinkPad-T61>
-References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
-	<1340736849-14875-3-git-send-email-yinghai@kernel.org>
-	<CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
-	<CAE9FiQUXTngUZp2c2dLVRZjFxhXD9e+XYW6Pn0zaHvMt0fB+eA@mail.gmail.com>
-	<CA+55aFxLUExCZE1=gQpDT0ip9s+iMRYEVK2QjdCGNk9iympfYA@mail.gmail.com>
-	<CA+55aFyb-g77CQNoR72J0pjw76ZCy_nufP=VavT_X3xBg6=G-Q@mail.gmail.com>
-	<20120829101423.GA18856@ram-ThinkPad-T61>
-Date: Wed, 29 Aug 2012 09:02:44 -0700
-Message-ID: <CAE9FiQVtxMWEheQAWkvHZzFRUtyEL914EFZAJjg98p6Jsq3zpw@mail.gmail.com>
-Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ram Pai <linuxram@us.ibm.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Tony Luck <tony.luck@intel.com>,
-	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org
+In-Reply-To: <50325C18.9030207@gmail.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
+ <50325732.3000700@gmail.com> <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
+ <50325C18.9030207@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 Aug 2012 10:10:12 -0600
+Message-ID: <CAErSpo6t9m0xmWkXfmONtbicjqLR_z5dLsjKCLWQfcktzRKkUA@mail.gmail.com>
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2012 at 3:14 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> @@ -718,12 +727,12 @@ void insert_resource_expand_to_fit(struct resource *root, struct resource *new)
->   */
->  int adjust_resource(struct resource *res, resource_size_t start, resource_size_t size)
->  {
-> -       struct resource *tmp, *parent = res->parent;
-> +       struct resource *tmp, *parent;
->         resource_size_t end = start + size - 1;
->         int result = -EBUSY;
->
->         write_lock(&resource_lock);
-> -
-> +       parent = res->parent;
->         if (!parent)
->                 goto skip;
+On Mon, Aug 20, 2012 at 9:47 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 08/20/2012 11:35 PM, Bjorn Helgaas wrote:
+>> On Mon, Aug 20, 2012 at 9:26 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>> On 08/14/2012 12:25 PM, Bjorn Helgaas wrote:
+>>>> On Wed, Aug 1, 2012 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>>> From: Jiang Liu <liuj97@gmail.com>
+>>>>>
+>>>>> As suggested by Bjorn Helgaas and Don Dutile in threads
+>>>>> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
+>>>>> to PCIe capabilities register in to way:
+>>>>> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
+>>>>>    repeatedly reading this register because it's read only.
+>>>>> 2) provide access functions for PCIe Capabilities registers to hide differences
+>>>>>    among PCIe base specifications, so the caller don't need to handle those
+>>>>>    differences.
+>>>>>
+>>>>> This patch set applies to
+>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+>>>>
+>>>> Would you mind rebasing this to v3.6-rc1?  I think you posted this
+>>>> when my branch was still 3.5-based, and there are some upstream
+>>>> changes that cause minor conflicts here.
+>>>>
+>>>> You currently have:
+>>>>
+>>>>     int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
+>>>> u16 set_bits, u16 clear_bits)
+>>>>
+>>>> I think this is a bit awkward because the function name doesn't
+>>>> suggest *how* the word will be changed, and the clearing happens
+>>>> before the setting (opposite the parameter order).  Something like:
+>>>>
+>>>>     int pci_pcie_capability_mask_and_set_word(..., u16 mask, u16 set) or
+>>>>     int pci_pcie_capability_clear_and_set_word(..., u16 clear, u16 set)
+>>>>
+>>>> would be more obvious.  If you use "mask_and_set", I think the
+>>>> function should do "(val & mask) | set" with the complement being at
+>>>> the call site.  If you use "clear_and_set", I think it's OK to do
+>>>> "(val & ~mask) | set" as in your current patch.
+>>>>
+>>>> I know I suggested the "pci_pcie_capability_*" names, but they're
+>>>> getting a bit unwieldy, especially if we do "mask_and_set" or similar.
+>>>>  There are already several "pcie_*" functions, so maybe we should
+>>>> drop the leading "pci_" from these and just have:
+>>>>
+>>>>     pcie_capability_read_word
+>>>>     pcie_capability_write_word
+>>>>     pcie_capability_mask_and_set_word
+>>>>
+>>>> Bjorn
+>>>>
+>>> Hi Bjorn,
+>>>         I have made following changes according to your suggestions,
+>>>         1) get rid of the "pci_" prefix for access functions.
+>>>         2) rename pci_pcie_capability_change_{word|dword}() to
+>>>         pcie_capability_clear_and_set_{word|dword}.
+>>>         3) add pcie_capability_{set|clear}_{word|dword}().
+>>
+>> Are 2) and 3) really the same?  If they're really different, we'll end up with:
+>>
+>>     pcie_capability_clear_and_set_word()
+>>     pcie_capability_clear_and_set_dword()
+>>     pcie_capability_set_word()
+>>     pcie_capability_set_dword()
+>>     pcie_capability_clear_word()
+>>     pcie_capability_clear_dword()
+>>
+>> It seems a little excessive to have all six interfaces, since the
+>> first two are sufficient to provide all the functionality.
+>>
+> Hi Bjorn,
+>         pcie_capability_{set|clear}_{word|dword}() are implemented as inline functions
+> which just call pcie_capability_clear_and_set_{word|dword}(). If it seems a little redundant,
+> I could help to remove them.
 
-yes, in the v7 of probe_resource() patch that  I sent before,
-introduced _adjust_resource solved the problem.
+I looked through your v3 patches and found
 
+  12 clear_word callers
+  9 set_word callers
+  11 clear_and_set_word callers
+  0 clear_dword callers
+  0 set_dword callers
+  2 clear_and_set_dword callers that should be clear_and_set_word
+callers (in tsi721.c)
+  1 clear_and_set_dword caller (PCI_EXP_RTSTA, Root Status)
 
-@@ -741,14 +741,13 @@ void insert_resource_expand_to_fit(struc
-  * arguments.  Returns 0 on success, -EBUSY if it can't fit.
-  * Existing children of the resource are assumed to be immutable.
-  */
--int adjust_resource(struct resource *res, resource_size_t start,
-resource_size_t size)
-+static int __adjust_resource(struct resource *res, resource_size_t start,
-+                            resource_size_t size)
- {
-        struct resource *tmp, *parent = res->parent;
-        resource_size_t end = start + size - 1;
-        int result = -EBUSY;
+I had expected that almost all would be clear_and_set users, but that
+wasn't the case.  Bottom line, it does seem like there are enough
+callers of clear, set, and clear_and_set to keep all of them.
 
--       write_lock(&resource_lock);
--
-        if (!parent)
-                goto skip;
+There's only one legitimate user of the dword interfaces, but I'm OK
+with keeping all of them for symmetry with the word interfaces.
 
-@@ -776,9 +775,19 @@ skip:
-        result = 0;
+So I'll try pulling your branch (I'll do something about the tsi721.c
+stuff myself).
 
-  out:
--       write_unlock(&resource_lock);
-        return result;
- }
-+int adjust_resource(struct resource *res, resource_size_t start,
-+                   resource_size_t size)
-+{
-+       int ret;
-+
-+       write_lock(&resource_lock);
-+       ret = __adjust_resource(res, start, size);
-+       write_unlock(&resource_lock);
-+
-+       return ret;
-+}
- EXPORT_SYMBOL(adjust_resource);
+Thanks!
 
- static void __init __reserve_region_with_split(struct resource *root,
+Bjorn
