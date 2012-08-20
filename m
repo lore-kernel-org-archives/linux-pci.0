@@ -1,37 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 1 Aug 2012 16:21:47 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: matt.fleming@intel.com, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH V2 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-Message-ID: <20120801232147.GA6228@kroah.com>
-References: <1343407934-459-1-git-send-email-mjg@redhat.com>
- <20120731223240.GD19134@kroah.com>
- <20120801165400.GA3042@srcf.ucam.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:56267 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752435Ab2HTFCp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 01:02:45 -0400
+From: "Taku Izumi" <izumi.taku@jp.fujitsu.com>
+To: "'Yinghai Lu'" <yinghai@kernel.org>
+Cc: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>,
+	"Kaneshige, Kenji/?? ??" <kaneshige.kenji@jp.fujitsu.com>,
+	<jiang.liu@huawei.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com> <CAE9FiQUZ+EHDGfAVU4wkYepT-97UVAkUNsKds4QVRJv=eNUTdQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQUZ+EHDGfAVU4wkYepT-97UVAkUNsKds4QVRJv=eNUTdQ@mail.gmail.com>
+Subject: RE: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+Date: Mon, 20 Aug 2012 14:02:43 +0900
+Message-ID: <075801cd7e91$08d4bd90$1a7e38b0$@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120801165400.GA3042@srcf.ucam.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 01, 2012 at 05:54:00PM +0100, Matthew Garrett wrote:
-> On Tue, Jul 31, 2012 at 03:32:40PM -0700, Greg KH wrote:
-> 
-> > With this series, does the latest MacBook work properly for the Intel
-> > graphics driver?  Or is this to resolve some other hardware issue?
-> 
-> Apple only seem to provide the ROM for the radeon. Intel normally 
-> stands a much better chance of working without a ROM - the only thing it 
-> really uses it for is the VBT, and I'm thinking about a couple of ways 
-> of handlng that.
 
-Ok, thanks for letting me know.  For some reason, the gmux isn't working
-on the latest MacBook Pro so I can't get the vga switched to the Intel
-PCI device.  Rumor has it the osx tool at
-http://codykrieger.com/gfxCardStatus will switch into the Intel chip
-until the laptop is hard powered off, so it is possible, just need to
-figure out how to make the hardware do the switch...
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Yinghai Lu
+> Sent: Saturday, August 11, 2012 1:41 AM
+> To: Taku Izumi
+> Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; linux-acpi@vger.kernel.org; kaneshige.kenji@jp.fujitsu.com;
+> jiang.liu@huawei.com
+> Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+> 
+> On Thu, Aug 9, 2012 at 11:09 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >  Hi all,
+> >
+> >
+> >  I'd like to merge hostbridge hotplug feature.
+> >  I looked at Yinghai's branch and found that this branch contains
+> >  many work and can be split into some parts.
+> >  I believe it is good to merge step by step.
+> >
+> >  My idea is splitting into the following 4 parts:
+> >    1. basic hostbirdge hotplug work
+> >    2. acpiphp work
+> >    3. /sysfs interface work (logical hotplug?)
+> >    4. cleanup
+> >
+> >  This patchset is 1st step based on the following Yinghai's branch:
+> 
+> Hi,
+> 
+> Are you going to attend PCI mini-summit 8/28? We should discuss there.
 
-greg k-h
+  Sounds great. I'll attend PCI mini-summit.
+ 
+  Best regards,
+  Taku Izumi
+
+
+> 
+> Thanks
+> 
+> Yinghai
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
