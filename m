@@ -1,153 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54996 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751957Ab2HPOry (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Aug 2012 10:47:54 -0400
-Date: Thu, 16 Aug 2012 16:47:36 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH 2/5] x86, MSI: Allocate as many multiple IRQs as requested
-Message-ID: <864757eaf884e27c08f01f54ff6fa81d4af2ac57.1345124063.git.agordeev@redhat.com>
-References: <cover.1345124063.git.agordeev@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50325C18.9030207@gmail.com>
+Date: Mon, 20 Aug 2012 23:47:36 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1345124063.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities
+ registers
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com> <50325732.3000700@gmail.com> <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
+In-Reply-To: <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When multiple MSIs are enabled with pci_enable_msi_block() the number of
-allocated IRQs 'nvec' is rounded up to the nearest value of power of two.
-That could lead to a condition when number of requested and used IRQs is
-less than number of actually allocated IRQs.
-
-This fix introduces 'msi_desc::nvec' field to address the above issue -
-when non-zero, it holds the number of allocated IRQs. Otherwise, the old
-method is used.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/x86/kernel/apic/io_apic.c |   16 +++++++---------
- drivers/pci/msi.c              |   10 ++++++++--
- include/linux/msi.h            |    1 +
- 3 files changed, 16 insertions(+), 11 deletions(-)
-
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index f083049..5a5c92b 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3107,16 +3107,12 @@ static inline void destroy_irqs(unsigned int irq, unsigned int count)
- }
- 
- static inline int
--can_create_pow_of_two_irqs(unsigned int from, unsigned int count)
-+can_create_irqs(unsigned int from, unsigned int count)
- {
--	if ((count > 1) && (count % 2))
--		return -EINVAL;
--
--	for (; count; count = count / 2) {
-+	for (; count; count = count - 1) {
- 		if (!irq_can_alloc_irqs(from, count))
- 			return count;
- 	}
--
- 	return -ENOSPC;
- }
- 
-@@ -3298,8 +3294,7 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	if (nvec > 1 && !irq_remapping_enabled)
- 		return 1;
- 
--	nvec = __roundup_pow_of_two(nvec);
--	ret = can_create_pow_of_two_irqs(nr_irqs_gsi, nvec);
-+	ret = can_create_irqs(nr_irqs_gsi, nvec);
- 	if (ret != nvec)
- 		return ret;
- 
-@@ -3307,11 +3302,13 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
-+	WARN_ON(msidesc->nvec);
- 
- 	node = dev_to_node(&dev->dev);
- 	irq = create_irqs(nr_irqs_gsi, nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
-+	msidesc->nvec = nvec;
- 
- 	if (!irq_remapping_enabled) {
- 		ret = setup_msi_irq(dev, msidesc, irq, 0);
-@@ -3320,7 +3317,7 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
- 		return 0;
- 	}
- 
--	msidesc->msi_attrib.multiple = ilog2(nvec);
-+	msidesc->msi_attrib.multiple = ilog2(__roundup_pow_of_two(nvec));
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
- 			index = msi_alloc_remapped_irq(dev, irq, nvec);
-@@ -3348,6 +3345,7 @@ error:
- 	 */
- 	msidesc->irq = 0;
- 	msidesc->msi_attrib.multiple = 0;
-+	msidesc->nvec = 0;
- 
- 	return ret;
- }
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a825d78..f0752d1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -79,7 +79,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 		int i, nvec;
- 		if (entry->irq == 0)
- 			continue;
--		nvec = 1 << entry->msi_attrib.multiple;
-+		if (entry->nvec)
-+			nvec = entry->nvec;
-+		else
-+			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
- 			arch_teardown_msi_irq(entry->irq + i);
- 	}
-@@ -336,7 +339,10 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		int i, nvec;
- 		if (!entry->irq)
- 			continue;
--		nvec = 1 << entry->msi_attrib.multiple;
-+		if (entry->nvec)
-+			nvec = entry->nvec;
-+		else
-+			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
- 			BUG_ON(irq_has_action(entry->irq + i));
- 	}
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ce93a34..6f4dfba 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -35,6 +35,7 @@ struct msi_desc {
- 
- 	u32 masked;			/* mask bits */
- 	unsigned int irq;
-+	unsigned int nvec;
- 	struct list_head list;
- 
- 	union {
--- 
-1.7.7.6
+On 08/20/2012 11:35 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 20, 2012 at 9:26 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> On 08/14/2012 12:25 PM, Bjorn Helgaas wrote:
+>>> On Wed, Aug 1, 2012 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>> From: Jiang Liu <liuj97@gmail.com>
+>>>>
+>>>> As suggested by Bjorn Helgaas and Don Dutile in threads
+>>>> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
+>>>> to PCIe capabilities register in to way:
+>>>> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
+>>>>    repeatedly reading this register because it's read only.
+>>>> 2) provide access functions for PCIe Capabilities registers to hide differences
+>>>>    among PCIe base specifications, so the caller don't need to handle those
+>>>>    differences.
+>>>>
+>>>> This patch set applies to
+>>>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+>>>
+>>> Would you mind rebasing this to v3.6-rc1?  I think you posted this
+>>> when my branch was still 3.5-based, and there are some upstream
+>>> changes that cause minor conflicts here.
+>>>
+>>> You currently have:
+>>>
+>>>     int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
+>>> u16 set_bits, u16 clear_bits)
+>>>
+>>> I think this is a bit awkward because the function name doesn't
+>>> suggest *how* the word will be changed, and the clearing happens
+>>> before the setting (opposite the parameter order).  Something like:
+>>>
+>>>     int pci_pcie_capability_mask_and_set_word(..., u16 mask, u16 set) or
+>>>     int pci_pcie_capability_clear_and_set_word(..., u16 clear, u16 set)
+>>>
+>>> would be more obvious.  If you use "mask_and_set", I think the
+>>> function should do "(val & mask) | set" with the complement being at
+>>> the call site.  If you use "clear_and_set", I think it's OK to do
+>>> "(val & ~mask) | set" as in your current patch.
+>>>
+>>> I know I suggested the "pci_pcie_capability_*" names, but they're
+>>> getting a bit unwieldy, especially if we do "mask_and_set" or similar.
+>>>  There are already several "pcie_*" functions, so maybe we should
+>>> drop the leading "pci_" from these and just have:
+>>>
+>>>     pcie_capability_read_word
+>>>     pcie_capability_write_word
+>>>     pcie_capability_mask_and_set_word
+>>>
+>>> Bjorn
+>>>
+>> Hi Bjorn,
+>>         I have made following changes according to your suggestions,
+>>         1) get rid of the "pci_" prefix for access functions.
+>>         2) rename pci_pcie_capability_change_{word|dword}() to
+>>         pcie_capability_clear_and_set_{word|dword}.
+>>         3) add pcie_capability_{set|clear}_{word|dword}().
+> 
+> Are 2) and 3) really the same?  If they're really different, we'll end up with:
+> 
+>     pcie_capability_clear_and_set_word()
+>     pcie_capability_clear_and_set_dword()
+>     pcie_capability_set_word()
+>     pcie_capability_set_dword()
+>     pcie_capability_clear_word()
+>     pcie_capability_clear_dword()
+> 
+> It seems a little excessive to have all six interfaces, since the
+> first two are sufficient to provide all the functionality.
+> 
+Hi Bjorn,
+	pcie_capability_{set|clear}_{word|dword}() are implemented as inline functions
+which just call pcie_capability_clear_and_set_{word|dword}(). If it seems a little redundant,
+I could help to remove them.
+	Regards!
+	Gerry
 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
