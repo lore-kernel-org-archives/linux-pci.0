@@ -1,94 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:32960 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751341Ab2HTPk3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 11:40:29 -0400
-Received: by lagy9 with SMTP id y9so3355269lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 08:40:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5031C3E4.9050407@huawei.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com> <5031C3E4.9050407@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 Aug 2012 09:40:07 -0600
-Message-ID: <CAErSpo6sV1pi5mCQ-G6stz4hYam30-Vs7A_4YMxwRyUMUiH74Q@mail.gmail.com>
-Subject: Re: [PATCH v2 00/16] Clean up drivers/pci/remove.c
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-pcmcia@lists.infradead.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:51335 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756097Ab2HTNtb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Aug 2012 09:49:31 -0400
+Received: from /spool/local
+	by e5.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Mon, 20 Aug 2012 09:49:27 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id D76E26E8044
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:49:10 -0400 (EDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7KDn5eu156774
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 09:49:10 -0400
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7KDko9F005198
+	for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 07:46:58 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com,
+	yinghai@kernel.org, Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 8/8] ppc/pnv: I/O and memory alignment for p2p bridges
+Date: Mon, 20 Aug 2012 21:46:35 +0800
+Message-Id: <1345470395-17295-9-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 19, 2012 at 10:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> tested-by Yijing Wang <wangyijing@huawei.com>
+The patch implements ppc_md.pcibios_window_alignment for powernv
+platform so that the resource reassignment in PCI core will be
+done according to the I/O and memory alignment returned from
+powernv platform. The alignments returned from powernv platform
+is closely depending on the scheme for PE segmenting. Besides,
+the patch isn't useful for now, but the subsequent patches will
+be working based on it.
 
-Great, thanks for trying this out!  Can you give me any details on
-what you tested (what sort of machine, which hotplug driver, PCIe
-button/LED style hotplug or ExpressCard style, etc?)
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |   38 +++++++++++++++++++++++++++++
+ 1 files changed, 38 insertions(+), 0 deletions(-)
 
->> This started as a simple conversion of list_for_each() to
->> list_for_each_entry(), so I could remove the pci_dev_b() helper.
->>
->> In the process, I noticed that drivers/pci/remove.c is getting a little
->> crufty, so I reworked it to make it more understandable.  This is a long
->> series of small patches, so it might be easiest to start by looking at the
->> end product, so you have some idea where I'm heading.
->>
->> Here's the final version of remove.c:
->> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=blob;f=drivers/pci/remove.c/pci/remove.c;h=4f9ca9162895edd8216fda36e055949541d44012;hb=refs/heads/pci/bjorn-cleanup-remove
->>
->> This is based on v3.6-rc1 and replaces the 6-patch series I posted on Aug 16.
->>
->> I've booted this on x86, but I don't have facilities to test the
->> interesting hotplug changes, so any review and/or testing is welcome.
->>
->> ---
->>
->> Bjorn Helgaas (16):
->>       PCI: acpiphp: Stop disabling bridges on remove
->>       PCI: acpiphp: Use common pci_stop_and_remove_bus_device()
->>       pcmcia: Use common pci_stop_and_remove_bus_device()
->>       PCI: Don't export stop_bus_device and remove_bus_device interfaces
->>       PCI: Remove pci_stop_and_remove_behind_bridge()
->>       PCI: Use list_for_each_entry() for bus->devices traversal
->>       PCI: Fold stop and remove helpers into their callers
->>       PCI: Stop and remove devices in one pass
->>       PCI: Remove unused, commented-out, code
->>       PCI: Rename local variables to conventional names
->>       PCI: Leave normal LIST_POISON in deleted list entries
->>       frv/PCI: Use list_for_each_entry() for bus->devices traversal
->>       parisc/PCI: Enable PERR/SERR on all devices
->>       parisc/PCI: Use list_for_each_entry() for bus->devices traversal
->>       sgi-agp: Use list_for_each_entry() for bus->devices traversal
->>       PCI: Remove unused pci_dev_b()
->>
->>
->>  arch/frv/mb93090-mb00/pci-vdk.c    |    4 -
->>  drivers/char/agp/sgi-agp.c         |    5 +
->>  drivers/parisc/dino.c              |    6 +-
->>  drivers/parisc/lba_pci.c           |    7 +-
->>  drivers/pci/hotplug/acpiphp_glue.c |   46 -------------
->>  drivers/pci/proc.c                 |   19 -----
->>  drivers/pci/remove.c               |  131 ++++++------------------------------
->>  drivers/pci/rom.c                  |   59 ----------------
->>  drivers/pci/search.c               |    6 +-
->>  drivers/pcmcia/cardbus.c           |    7 +-
->>  include/linux/pci.h                |    4 -
->>  11 files changed, 37 insertions(+), 257 deletions(-)
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
-> --
-> Thanks!
-> Yijing
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 9cda6a1..af6b7fb 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1139,6 +1139,43 @@ static void __devinit pnv_pci_ioda_fixup_phb(struct pci_controller *hose)
+ 	}
+ }
+ 
++/*
++ * Returns the alignment for I/O or memory windows for p2p
++ * bridges. That actually depends on how PEs are segmented.
++ * For now, we return I/O or M32 segment size for PE sensitive
++ * p2p bridges. Otherwise, the default values (4KiB for I/O,
++ * 1MiB for memory) will be returned.
++ */
++static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
++						unsigned long type)
++{
++	struct pci_dev *dev = bus->self;
++	struct pci_controller *hose = pci_bus_to_host(bus);
++	struct pnv_phb *phb = hose->private_data;
++
++	/* PCI root bus will be assigned with segment size */
++	if (!dev)
++		goto out;
++
++	/*
++	 * If the parent bridge is PCI bridge, we will return
++	 * the default values
++	 */
++	dev = dev->bus->self;
++	if (!dev)
++		goto out;
++	if (dev->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) {
++		return 1;
++	}
++
++out:
++	/* We need support prefetchable memory window later */
++	if (type & IORESOURCE_MEM)
++		return phb->ioda.m32_segsize;
++
++	return phb->ioda.io_segsize;
++}
++
+ /* Prevent enabling devices for which we couldn't properly
+  * assign a PE
+  */
+@@ -1306,6 +1343,7 @@ void __init pnv_pci_init_ioda1_phb(struct device_node *np)
+ 	 */
+ 	ppc_md.pcibios_fixup_phb = pnv_pci_ioda_fixup_phb;
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
++	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+ 	pci_add_flags(PCI_PROBE_ONLY | PCI_REASSIGN_ALL_RSRC);
+ 
+ 	/* Reset IODA tables to a clean state */
+-- 
+1.7.5.4
+
