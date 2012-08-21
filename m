@@ -1,46 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f202.google.com ([74.125.82.202]:65276 "EHLO
-	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755488Ab2HPX02 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 19:26:28 -0400
-Received: by weyr1 with SMTP id r1so155204wey.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 16:26:26 -0700 (PDT)
-Subject: [PATCH 2/6] frv/PCI: Use list_for_each_entry() for bus->devices
-	traversal
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>
-Date: Thu, 16 Aug 2012 17:26:25 -0600
-Message-ID: <20120816232625.3662.28141.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120816232620.3662.90438.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:55283 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757742Ab2HUP71 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2012 11:59:27 -0400
+Message-ID: <5033B052.7010506@gmail.com>
+Date: Tue, 21 Aug 2012 23:59:14 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Hayes Wang <hayeswang@realtek.com>
+CC: Yu Zhao <yu.zhao@intel.com>, Dexuan Cui <dexuan.cui@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities
+ registers
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com> <50325732.3000700@gmail.com> <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com> <50325C18.9030207@gmail.com> <CAErSpo6t9m0xmWkXfmONtbicjqLR_z5dLsjKCLWQfcktzRKkUA@mail.gmail.com> <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com>
+In-Reply-To: <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace open-coded list traversal with list_for_each_entry().
+Hi Bjorn,
+	Thanks for your help to finalize the patchset.
+	There's another suspicious issue in r8169.c, which directly writes PCI_EXP_DEVCTL_NOSNOOP_EN
+to PCI_EXP_DEVCTL. I feel it should preserve other bits when setting the NOSNOOP flag.
+	Regards!
+	Gerry
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: David Howells <dhowells@redhat.com>
----
- arch/frv/mb93090-mb00/pci-vdk.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index b47d5b3..4104968 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -5405,14 +5384,9 @@ static void rtl_hw_start_8101(struct net_device *dev)
+                tp->event_slow &= ~RxFIFOOver;
 
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index d04ed14..71e9bcf 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -330,10 +330,8 @@ void __init pcibios_fixup_bus(struct pci_bus *bus)
- 	pci_read_bridge_bases(bus);
- 
- 	if (bus->number == 0) {
--		struct list_head *ln;
- 		struct pci_dev *dev;
--		for (ln=bus->devices.next; ln != &bus->devices; ln=ln->next) {
--			dev = pci_dev_b(ln);
-+		list_for_each_entry(dev, &bus->devices, bus_list) {
- 			if (dev->devfn == 0) {
- 				dev->resource[0].start = 0;
- 				dev->resource[0].end = 0;
+        if (tp->mac_version == RTL_GIGA_MAC_VER_13 ||
+-           tp->mac_version == RTL_GIGA_MAC_VER_16) {
+-               int cap = pci_pcie_cap(pdev);
+-
+-               if (cap) {
+-                       pci_write_config_word(pdev, cap + PCI_EXP_DEVCTL,
+-                                             PCI_EXP_DEVCTL_NOSNOOP_EN);
+-               }
+-       }
++           tp->mac_version == RTL_GIGA_MAC_VER_16)
++               pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
++                                          PCI_EXP_DEVCTL_NOSNOOP_EN);
 
+        RTL_W8(Cfg9346, Cfg9346_Unlock);
