@@ -1,114 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <liuj97@gmail.com>
-Subject: [RFC PATCH v1 15/22] PCI/eeepc: use PCI bus lock to avoid race conditions
-Date: Wed,  8 Aug 2012 00:10:55 +0800
-Message-Id: <1344355862-2726-16-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:41865 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752740Ab2HUXsE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Aug 2012 19:48:04 -0400
+Received: by lbbgj3 with SMTP id gj3so318712lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 21 Aug 2012 16:48:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAC=cRTPQTtn4y8pNh2hN6tRk7OPJQ7mjcsiGkcK0pR0TE=KWkA@mail.gmail.com>
+References: <1343975435-25469-1-git-send-email-ying.huang@intel.com>
+ <87393jmanq.fsf@nemi.mork.no> <CAC=cRTPQTtn4y8pNh2hN6tRk7OPJQ7mjcsiGkcK0pR0TE=KWkA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 21 Aug 2012 16:47:41 -0700
+Message-ID: <CAErSpo6nxOarX83iKky-WdKqE5TNLHWoSB7STcAR4TDXKZxD6A@mail.gmail.com>
+Subject: Re: [PATCH 0/4] PCI/PM: PCI D3cold support fixes for 3.6-rc1
+To: huang ying <huang.ying.caritas@gmail.com>
+Cc: Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch uses PCI bus lock mechanism to avoid race conditions when doing
-PCI device hotplug through eeepc driver. It also fixes a PCI device reference
-count leakage issue because acpi_get_pci_dev() holds a reference to the
-device returned.
+On Sun, Aug 19, 2012 at 6:09 PM, huang ying
+<huang.ying.caritas@gmail.com> wrote:
+> Hi, Bjorn,
+>
+> Could you please merge this patchset?  They fix real bugs.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/platform/x86/eeepc-laptop.c |   20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+I assume you wanted the updated "[PATCH 3/4] PCI/PM:  Fix config reg
+access ..." patch posted Aug 15.
 
-diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
-index dab91b4..25c4176 100644
---- a/drivers/platform/x86/eeepc-laptop.c
-+++ b/drivers/platform/x86/eeepc-laptop.c
-@@ -606,16 +606,16 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
- 			goto out_unlock;
- 		}
- 
--		bus = port->subordinate;
-+		bus = pci_lock_subordinate(port, PCI_BUS_STATE_WORKING);
- 
- 		if (!bus) {
- 			pr_warn("Unable to find PCI bus 1?\n");
--			goto out_unlock;
-+			goto out_put_dev;
- 		}
- 
- 		if (pci_bus_read_config_dword(bus, 0, PCI_VENDOR_ID, &l)) {
- 			pr_err("Unable to read PCI config space?\n");
--			goto out_unlock;
-+			goto out_unlock_bus;
- 		}
- 
- 		absent = (l == 0xffffffff);
-@@ -627,7 +627,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
- 				absent ? "absent" : "present");
- 			pr_warn("skipped wireless hotplug as probably "
- 				"inappropriate for this model\n");
--			goto out_unlock;
-+			goto out_unlock_bus;
- 		}
- 
- 		if (!blocked) {
-@@ -635,7 +635,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
- 			if (dev) {
- 				/* Device already present */
- 				pci_dev_put(dev);
--				goto out_unlock;
-+				goto out_unlock_bus;
- 			}
- 			dev = pci_scan_single_device(bus, 0);
- 			if (dev) {
-@@ -650,6 +650,11 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
- 				pci_dev_put(dev);
- 			}
- 		}
-+
-+out_unlock_bus:
-+		pci_bus_unlock(bus);
-+out_put_dev:
-+		pci_dev_put(port);
- 	}
- 
- out_unlock:
-@@ -757,7 +762,7 @@ static struct hotplug_slot_ops eeepc_hotplug_slot_ops = {
- static int eeepc_setup_pci_hotplug(struct eeepc_laptop *eeepc)
- {
- 	int ret = -ENOMEM;
--	struct pci_bus *bus = pci_find_bus(0, 1);
-+	struct pci_bus *bus = pci_get_bus(0, 1);
- 
- 	if (!bus) {
- 		pr_err("Unable to find wifi PCI bus\n");
-@@ -785,6 +790,8 @@ static int eeepc_setup_pci_hotplug(struct eeepc_laptop *eeepc)
- 		goto error_register;
- 	}
- 
-+	pci_bus_put(bus);
-+
- 	return 0;
- 
- error_register:
-@@ -793,6 +800,7 @@ error_info:
- 	kfree(eeepc->hotplug_slot);
- 	eeepc->hotplug_slot = NULL;
- error_slot:
-+	pci_bus_put(bus);
- 	return ret;
- }
- 
--- 
-1.7.9.5
+I merged these (with the updated 3/4 patch) to my "for-linus" branch.
+After it's in linux-next for a couple days, I'll ask Linus to pull it.
 
+> On Sun, Aug 19, 2012 at 6:35 PM, Bjørn Mork <bjorn@mork.no> wrote:
+>> Huang Ying <ying.huang@intel.com> writes:
+>>
+>>> [BUGFIX 1/4] PCI/PM: enable D3/D3cold by default for most devices
+>>> [BUGFIX 2/4] PCI/PM: Keep parent bridge active when probing device
+>>> [BUGFIX 3/4] PCI/PM: Fix config reg access for D3cold and bridge suspending
+>>> [PATCH 4/4] PCI/PM: Add ABI document for sysfs file d3cold_allowed
+>>
+>> Hello,
+>>
+>> I am hoping these patches will appear in 3.6?  They fix real problems in
+>> 3.6-rc1 for me. If it helps in any way, feel free to add
+>>
+>> Tested-by: Bjørn Mork <bjorn@mork.no>
+>>
+>> to the 3 bugfix patches, including version 2 of patch #3.
+>>
+>>
+>> Bjørn
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
