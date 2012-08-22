@@ -1,60 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:47562 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750896Ab2H0GoE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Aug 2012 02:44:04 -0400
-Message-ID: <503B16DD.8080900@huawei.com>
-Date: Mon, 27 Aug 2012 14:42:37 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:37196 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964848Ab2HVRb0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 13:31:26 -0400
+Received: by vbbff1 with SMTP id ff1so1298700vbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 10:31:25 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <liuj97@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	PCI <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [RESEND BUGFIX PATCH 3/3] PCI: check whether pci device has been
- removed when remove a pci device by sysfs
-References: <1344685946-8172-3-git-send-email-wangyijing@huawei.com> <5038A21C.4070200@huawei.com> <5038E3B7.5090601@gmail.com>
-In-Reply-To: <5038E3B7.5090601@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <20120822101533.GA2332@ram-ThinkPad-T61>
+References: <20120618050333.GA13469@ram-ThinkPad-T61>
+	<CAE9FiQWwPOgBa5guG1y-xF95nBMwE+TC75E_xcg-N8ZxuPW_XQ@mail.gmail.com>
+	<CAErSpo40Ok9NuMm0zxGnZ0DmFmGT19Y23JC4BCQV1RSxsmakCw@mail.gmail.com>
+	<20120816032602.GN2449@ram-ThinkPad-T61>
+	<CAE9FiQW08aoQBiy+37x-VMYrG-OunqzfuRpB1JhDAgNL3AxEuw@mail.gmail.com>
+	<20120816044104.GQ2449@ram-ThinkPad-T61>
+	<20120821151245.GA2356@ram-ThinkPad-T61>
+	<CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
+	<20120822101533.GA2332@ram-ThinkPad-T61>
+Date: Wed, 22 Aug 2012 10:31:25 -0700
+Message-ID: <CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 ]pci: pci resource iterator
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/8/25 22:39, Jiang Liu wrote:
-> Hi Yijing,
-> 	The patch only patially fix the issue, there exists still small race
-> condition window because pdev->is_added isn't a reliable flag to depend on.
-> 	--Gerry
-> 
+On Wed, Aug 22, 2012 at 3:15 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+> On Tue, Aug 21, 2012 at 04:22:52PM -0700, Yinghai Lu wrote:
+>> On Tue, Aug 21, 2012 at 8:13 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+> by exposing idx through the interface, we are exposing the implementation to
+> the enduser. I want the end user not know that the resources are
+> structured as a array. This will help easily restructure resources
+> in the pci_dev structure to whatever implementation we want, linked list
+> or hash or whatever...
+>
+> Why can't the addon resource be hidden behind the interface? something
+> like this?
 
-Hi Gerry,
-    You are right, add pdev->is_added flag check here only fix the race condition window
-between remove and rescan sysfs interfaces. Maybe we need a more comprehensive solution to
-solve these problems between hotplug/remove/rescan actions.Next, I will do a more detailed test for
-[RFC PATCH v1 00/22] introduce PCI bus lock to serialize PCI hotplug operations patches.
-That is a more comprehensive solution actually.
+keep the idx would make thing simple for referencing and converting.
 
----------
-Thanks.
-Yijing
+pci_dev_resource_n() would be wrapper to from idx to real resource pointer.
+we just need to change &dev->resource[i] referencing to
+pci_dev_resource_n(dev, i) instead.
 
-> On 08/25/2012 05:59 PM, Yijing Wang wrote:
->> We remove a pci device maybe like this
->> echo 1 > /sys/bus/pci/devices/xxxx:xx:xx.x/remove
->> Then remove_store function will be called to complete this remove work,
->> later the remove work will be queued to sysfs_workqueue by device_schedule_callback.
->> So if we remove a pci root port device and a pci endpoint device which was the root
->> port's child device concurrently.The endponit device will be removed when root port's
->> remove work completed,so when endpoint device itself's remove work start, since endpoint
->> device has been removed, it will result to oops.
->> This patch fix this.
->>
->> CallTrace:
->> kworker/u:2[220]: Oops 11003706212352 [1]
->> Modules linked in: cpufreq_conservative cpufreq_userspace cpufreq_powersave acpi
->> _cpufreq binfmt_misc fuse nls_iso8859_1 loop ipmi_si ipmi_devintf ipmi_msghandle
->> r dm_mod igb ppdev iTCO_wdt parport_pc iTCO_vendor_support i2c_i801 parport sg m
->> ptctl serio_raw i2c_core lpc_ich mfd_core hid_generic button container usbhid hi
->> d uhci_hcd ehci_hcd usbcore usb_common sd_mod crc_t10dif ext3 mbcache jbd fan pr
->> ocessor ide_pci_generic ide_core ata_piix libata mptsas mptscsih mptbase scsi_tr
->> ansport_sas scsi_mod thermal thermal_sys hwmon
+We did that before for irq_desc storage converting, and now we have
+     for_each_irq_desc(irq, desc)
 
-
+later for the resource allocation, I will change resource member from
+          struct resource resource[DEVICE_COUNT_RESOURCE];
+to
+          struct resource *std_res;
