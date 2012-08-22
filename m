@@ -1,152 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:38853 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755277Ab2HAVSN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Aug 2012 17:18:13 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Do we need asynchronous pm_runtime_get()? (was: Re: bisected regression ...)
-Date: Wed, 1 Aug 2012 23:24:01 +0200
-Cc: linux-pci@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1208011014290.1691-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1208011014290.1691-100000@iolanthe.rowland.org>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:42621 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab2HVRfn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 13:35:43 -0400
+Received: by vbbff1 with SMTP id ff1so1303950vbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 10:35:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201208012324.01329.rjw@sisk.pl>
+In-Reply-To: <CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
+References: <20120618050333.GA13469@ram-ThinkPad-T61>
+	<CAE9FiQWwPOgBa5guG1y-xF95nBMwE+TC75E_xcg-N8ZxuPW_XQ@mail.gmail.com>
+	<CAErSpo40Ok9NuMm0zxGnZ0DmFmGT19Y23JC4BCQV1RSxsmakCw@mail.gmail.com>
+	<20120816032602.GN2449@ram-ThinkPad-T61>
+	<CAE9FiQW08aoQBiy+37x-VMYrG-OunqzfuRpB1JhDAgNL3AxEuw@mail.gmail.com>
+	<20120816044104.GQ2449@ram-ThinkPad-T61>
+	<20120821151245.GA2356@ram-ThinkPad-T61>
+	<CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
+	<20120822101533.GA2332@ram-ThinkPad-T61>
+	<CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
+Date: Wed, 22 Aug 2012 10:35:42 -0700
+Message-ID: <CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 ]pci: pci resource iterator
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 01, 2012, Alan Stern wrote:
-> On Tue, 31 Jul 2012, Rafael J. Wysocki wrote:
-> 
-> > On Tuesday, July 31, 2012, Alan Stern wrote:
-> > > [CC: list trimmed]
-> > > 
-> > > On Tue, 31 Jul 2012, Rafael J. Wysocki wrote:
-> > > 
-> > > > Now it occured to me that perhaps we don't need the current asynchronous
-> > > > pm_runtime_get() at all.  The usefulness of it is quite questionable, because
-> > > > either we want to resume the device immediately, for which pm_runtime_get_sync()
-> > > > should be used, or we just want to bump up the usage counter, in which cases
-> > > > pm_runtime_get_noresume() should always be sufficient.  I fail to see any
-> > > > particularly compelling use case for pm_runtime_get() doing an asynchronous
-> > > > resume at the moment, but perhaps that's just me.
-> > > 
-> > > There are indeed valid uses for pm_runtime_get().  We are forced to use
-> > > it in non-sleepable contexts when we want to resume the device as
-> > > quickly as possible.  Example: a driver receives an I/O request from an
-> > > interrupt handler.
-> > 
-> > Is it actually suitable to be used in such contexts?  It doesn't give any
-> > guarantee that the device will be active when it returns, so the caller can't
-> > really rely on it.
-> 
-> Of course not.  When you're in interrupt context, you can't wait around
-> to see if the device will actually resume.  (Unless you're using 
-> irq-safe runtime PM, but we can ignore that case.)
-> 
-> >  The caller always has to check if the device has been
-> > resumed before accessing it anyway, so it may as well do a _get_noresume(),
-> > do the check and do pm_request_resume() if needed directly.
-> 
-> This is exactly equivalent to doing pm_runtime_get() followed by a 
-> check, except that it's longer.
+On Wed, Aug 22, 2012 at 10:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Aug 22, 2012 at 3:15 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+>> On Tue, Aug 21, 2012 at 04:22:52PM -0700, Yinghai Lu wrote:
+>>> On Tue, Aug 21, 2012 at 8:13 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+>> by exposing idx through the interface, we are exposing the implementation to
+>> the enduser. I want the end user not know that the resources are
+>> structured as a array. This will help easily restructure resources
+>> in the pci_dev structure to whatever implementation we want, linked list
+>> or hash or whatever...
+>>
+>> Why can't the addon resource be hidden behind the interface? something
+>> like this?
+>
+ keep the idx would make thing simple for referencing and converting.
 
-Except that I meant something different from what I wrote, sorry about that
-(must be too much heat).
+ pci_dev_resource_n() would be wrapper to from idx to real resource pointer.
+ we just need to change &dev->resource[i] referencing to
+ pci_dev_resource_n(dev, i) instead.
 
-What I really thought about was to do _get_noresume(), then check if the
-device is active and if not, queue up a work item (or another delayed
-execution in process context) that will do pm_runtime_resume() and
-then access the hardware.
+ We did that before for irq_desc storage converting, and now we have
+      for_each_irq_desc(irq, desc)
 
-Why do I think it's better than plain pm_runtime_get()?  Because the code
-path calling pm_runtime_resume() will know that it is safe to access the
-hardware after it has returned (unless it returns an error code, but
-that's exceptional).
+ later for the resource allocation, I will change resource member from
+           struct resource resource[DEVICE_COUNT_RESOURCE];
+ to
+           struct resource std_res[7];
+           struct resource *iov_res;
+           struct resource *bridge_res;
+and allocate iov_res and bridge array as needed.
 
-In contrast, with pm_runtime_get() there is no way to predict when the
-device is going to be resumed, so if the device happens to be suspended
-when pm_runtime_get() returns, the driver kind of has to poll it until
-it becomes active, or use a wait queue woken up from the resume callback,
-or do all of the processing in the resume callback itself (like in the
-example you mentioned).  I'm not sure if the expectation that all driver
-writers will be able to implement any of these options correctly is a realistic
-one.
+anyway keep the overalll idx is good way to go and follow.
 
-> Yes, I agree that pm_runtime_get(dev) is nothing more than a shorthand
-> way of doing pm_runtime_get_noresume(dev) followed by 
-> pm_request_resume(dev).  That doesn't mean it should be eliminated.  
-> Shorthands are convenient.
-> 
-> As another example, pm_runtime_get_sync(dev) is nothing more than a 
-> shorthand for pm_runtime_get_noresume(dev) followed by 
-> pm_runtime_resume(dev).  IMO, having these joint functions that do a 
-> get/put combined with a suspend/resume/idle is very useful.
-> 
-> > Now, as far as interrupt handlers are concerned, there are two cases: either
-> > the device has to be active to generate an interrupt (like PCI), or the
-> > interrupt is generated by something else on behalf of it.  We don't seem to
-> > handle the first case very well right now, because in that case the interrupt
-> > handler will always know that the device is active, so it should do a
-> > _get_noresume() and then change the device's status to "active" without
-> > calling any kind of "resume", but we don't provide a helper for that.
-> 
-> I disagree.  Even if the device has to be active to generate an IRQ,
-> it's possible for the interrupt handler to be delayed until after the
-> device is suspended (unless the suspend routine explicitly calls
-> synchronize_irq(), which would be pretty foolish).  Hence the handler 
-> can't make any assumptions about the device's state.
-> 
-> >  In the
-> > second case calling pm_runtime_get() doesn't really help either.  I think it's
-> > better to do _get_noresume(), check the status and if "suspended", set a flag
-> > for the resume callback to do something specific before returning successfully,
-> > then call pm_request_resume() and return.
-> 
-> This is exactly equivalent to: pm_runtime_get(), check the status, if 
-> "suspended" then set a flag, otherwise do the work.  Except that again, 
-> it's longer.
-> 
-> Check out the sample driver code in section 9 of 
-> Documentation/power/runtime_pm.txt, especially the foo_read_or_write() 
-> routine.
+Thanks
 
-Well, that shouldn't need the is_suspended flag at all, methinks, and the
-reason it does need it is because it uses pm_runtime_get().  Moreover,
-processing requests in the resume callback is not something I'd recommend
-to anyone, because that's going to happen when the status of the device
-is RPM_RESUMING, we're holding a reference on the parent (if there's one) etc.
-
-So, it looks like I don't really agree with the example. :-)
-
-> > > Well, IMO the naming should have been the other way around from the
-> > > start.  That is, we should have made pm_runtime_get be the synchronous
-> > > routine and pm_runtime_get_async be the asynchronous one.  But it's too
-> > > late to change now.
-> > 
-> > I'm not sure it is too late.  If we first change all the instances of
-> > pm_runtime_get() to pm_runtime_get_async() and then all of the instances of
-> > pm_runtime_get_sync() to pm_runtime_get(), it should be technically possible.
-> > Of course, it would be confusing, but that's a different matter. :-)
-> 
-> If you're willing to risk a certain amount of confusion, count me in.  :-)
-> 
-> While you're changing names around, consider also adding a "_runtime"  
-> somewhere to:
-> 
-> 	pm_children_suspended,
-> 	pm_schedule_suspend,
-> 	pm_request_idle,
-> 	pm_request_resume,
-> 	pm_request_autosuspend.
-> 
-> For example, we could have pm_runtime_idle_async instead of 
-> pm_request_idle.
-
-Well, these are not as misleading as pm_runtime_get(), at least in principle.
-
-Thanks,
-Rafael
+Yinghai
