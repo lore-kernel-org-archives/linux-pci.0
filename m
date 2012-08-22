@@ -1,173 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Gaohuai Han <hangaohuai@huawei.com>
-Subject: [RFC PATCH v2 08/16] ACPIHP: provide interfaces to associate driver  specific data to hotplug slots
-Date: Sat, 4 Aug 2012 20:13:55 +0800
-Message-ID: <1344082443-4608-9-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:48884 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933182Ab2HVRJO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 13:09:14 -0400
+Received: by lbbgj3 with SMTP id gj3so781582lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 10:09:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <5033B052.7010506@gmail.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com>
+ <50325732.3000700@gmail.com> <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
+ <50325C18.9030207@gmail.com> <CAErSpo6t9m0xmWkXfmONtbicjqLR_z5dLsjKCLWQfcktzRKkUA@mail.gmail.com>
+ <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com> <5033B052.7010506@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Aug 2012 10:08:51 -0700
+Message-ID: <CAErSpo7MYETQPac-P9BGKx9dp0KnoP3TWLrjTePaNTdFVKgU3Q@mail.gmail.com>
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Hayes Wang <hayeswang@realtek.com>, Yu Zhao <yu.zhao@intel.com>,
+	Dexuan Cui <dexuan.cui@intel.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Tue, Aug 21, 2012 at 8:59 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Hi Bjorn,
+>         Thanks for your help to finalize the patchset.
+>         There's another suspicious issue in r8169.c, which directly writes PCI_EXP_DEVCTL_NOSNOOP_EN
+> to PCI_EXP_DEVCTL. I feel it should preserve other bits when setting the NOSNOOP flag.
 
-This patch provides interfaces to attach/detach/get class driver specific data
-to/from ACPI hotplug slots.
+I think you're right.  I propose the following patch on top of your
+original one:
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
----
- drivers/acpi/hotplug/core.c |   88 +++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_hotplug.h |    8 ++++
- 2 files changed, 96 insertions(+)
+commit 300ef7967e87467656b0fe24270edba66bce45e4
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Aug 22 10:29:42 2012 -0600
 
-diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
-index 14b3d61..5e78867 100644
---- a/drivers/acpi/hotplug/core.c
-+++ b/drivers/acpi/hotplug/core.c
-@@ -34,11 +34,18 @@
- #include <acpi/acpi_bus.h>
- #include <acpi/acpi_hotplug.h>
- 
-+struct acpihp_drv_data {
-+	struct list_head		node;
-+	struct class_interface		*key;
-+	void				*data;
-+};
-+
- #define to_acpihp_slot(d) container_of(d, struct acpihp_slot, dev)
- 
- extern struct acpi_device *acpi_root;
- 
- static DEFINE_MUTEX(acpihp_mutex);
-+static DEFINE_MUTEX(acpihp_drvdata_mutex);
- static int acpihp_class_count;
- static struct kset *acpihp_slot_kset;
- 
-@@ -407,6 +414,87 @@ char *acpihp_get_slot_type_name(enum acpihp_slot_type type)
- }
- EXPORT_SYMBOL_GPL(acpihp_get_slot_type_name);
- 
-+int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
-+				struct class_interface *drv, void *data)
-+{
-+	struct acpihp_drv_data *dp, *cp;
-+
-+	if (slot == NULL || drv == NULL) {
-+		ACPIHP_DEBUG("invalid parameters.\n");
-+		return -EINVAL;
-+	}
-+
-+	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
-+	if (dp == NULL)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&dp->node);
-+	dp->key = drv;
-+	dp->data = data;
-+
-+	mutex_lock(&acpihp_drvdata_mutex);
-+	list_for_each_entry(cp, &slot->drvdata_list, node)
-+		if (cp->key == drv) {
-+			mutex_unlock(&acpihp_drvdata_mutex);
-+			kfree(dp);
-+			return -EEXIST;
-+		}
-+	list_add(&dp->node, &slot->drvdata_list);
-+	mutex_unlock(&acpihp_drvdata_mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_attach_drv_data);
-+
-+int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
-+				struct class_interface *drv, void **data)
-+{
-+	struct acpihp_drv_data *cp;
-+
-+	if (slot == NULL || drv == NULL || data == NULL) {
-+		ACPIHP_DEBUG("invalid parameters.\n");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&acpihp_drvdata_mutex);
-+	list_for_each_entry(cp, &slot->drvdata_list, node)
-+		if (cp->key == drv) {
-+			list_del(&cp->node);
-+			*data = cp->data;
-+			mutex_unlock(&acpihp_drvdata_mutex);
-+			kfree(cp);
-+			return 0;
-+		}
-+	mutex_unlock(&acpihp_drvdata_mutex);
-+
-+	return -ENOENT;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_detach_drv_data);
-+
-+int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
-+			     struct class_interface *drv, void **data)
-+{
-+	int ret = -ENOENT;
-+	struct acpihp_drv_data *cp;
-+
-+	if (slot == NULL || drv == NULL || data == NULL) {
-+		ACPIHP_DEBUG("invalid parameters.\n");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&acpihp_drvdata_mutex);
-+	list_for_each_entry(cp, &slot->drvdata_list, node)
-+		if (cp->key == drv) {
-+			*data = cp->data;
-+			ret = 0;
-+			break;
-+		}
-+	mutex_unlock(&acpihp_drvdata_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_get_drv_data);
-+
- /*
-  * slot_ops should be valid during the life cycle of a slot, so no protection.
-  */
-diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
-index 2589ccb..1d43079 100644
---- a/include/acpi/acpi_hotplug.h
-+++ b/include/acpi/acpi_hotplug.h
-@@ -256,6 +256,14 @@ extern acpi_status acpihp_slot_get_capabilities(struct acpihp_slot *slot,
- extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
- extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
- 
-+/* Help routines to assoicate driver data with hotplug slot devices. */
-+extern int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
-+			struct class_interface *drv, void *data);
-+extern int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
-+			struct class_interface *drv, void **data);
-+extern int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
-+			struct class_interface *drv, void **data);
-+
- /*
-  * Add devices for ACPI objects connecting to an ACPI hotplug slot,
-  * and don't cross the hotplug slot boundary.
--- 
-1.7.9.5
+    r8169: Preserve other Device Control bits when setting NOSNOOP_EN
 
+    Previously, when we turned on the "Enable No Snoop Bit," we cleared all
+    the other Device Control bits, including error reporting enables,
+    Max_Payload_Size, Max_Read_Request_Size, etc.  This patch preserves
+    all the other bits.
 
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/net/ethernet/realtek/r8169.c
+b/drivers/net/ethernet/realtek/r8169.c
+index 4104968..a7cc560 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -5385,8 +5385,8 @@ static void rtl_hw_start_8101(struct net_device *dev)
+
+        if (tp->mac_version == RTL_GIGA_MAC_VER_13 ||
+            tp->mac_version == RTL_GIGA_MAC_VER_16)
+-               pcie_capability_write_word(pdev, PCI_EXP_DEVCTL,
+-                                          PCI_EXP_DEVCTL_NOSNOOP_EN);
++               pcie_capability_set_word(pdev, PCI_EXP_DEVCTL,
++                                        PCI_EXP_DEVCTL_NOSNOOP_EN);
+
+        RTL_W8(Cfg9346, Cfg9346_Unlock);
