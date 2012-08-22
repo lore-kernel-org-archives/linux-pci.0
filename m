@@ -1,171 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Aug 2012 16:49:00 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	linux-doc@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH 4/5] PCI, MSI: Enable multiple MSIs with
- pci_enable_msi_block_auto()
-Message-ID: <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
-References: <cover.1345124063.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:50828 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755429Ab2HVSDO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 14:03:14 -0400
+Received: by lbbgj3 with SMTP id gj3so815757lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 11:03:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1345124063.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120822154908.2e6ef3c0@feng-i7>
+References: <5017D19B.5080806@redhat.com> <1343738627.27983.30.camel@gandalf.stny.rr.com>
+ <5017D4AB.3090107@redhat.com> <1343740419.27983.33.camel@gandalf.stny.rr.com>
+ <20120731234336.GA5526@localhost> <1343778699.27983.70.camel@gandalf.stny.rr.com>
+ <20120731235705.GW2422@linux.vnet.ibm.com> <1343779778.27983.73.camel@gandalf.stny.rr.com>
+ <20120801001811.GX2422@linux.vnet.ibm.com> <20120801004319.GA7043@localhost>
+ <20120822025008.GA8066@localhost> <20120822154908.2e6ef3c0@feng-i7>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 22 Aug 2012 11:02:52 -0700
+Message-ID: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+Subject: Re: pci_get_subsys: GFP_KERNEL allocations with IRQs disabled
+To: Feng Tang <feng.tang@intel.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new function pci_enable_msi_block_auto() tries to allocate maximum
-possible number of MSIs up to the number the device supports. It
-generalizes a pattern when pci_enable_msi_block() contiguously called
-until it succeeds or fails.
+On Wed, Aug 22, 2012 at 12:49 AM, Feng Tang <feng.tang@intel.com> wrote:
+> Hi Fengguang,
+>
+>
+> On Wed, 22 Aug 2012 10:50:08 +0800
+> Fengguang Wu <fengguang.wu@intel.com> wrote:
+>
+>> Feng,
+>>
+>> > I think it's pci_get_subsys() triggered this assert:
+>> >
+>> >         /*
+>> >          * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
+>> >          */
+>> >         if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
+>> >                 return;
+>>
+>> It's bisected down to this commit:
+>>
+>> commit 55c844a4dd16a4d1fdc0cf2a283ec631a02ec448
+>> Author:     Feng Tang <feng.tang@intel.com>
+>> AuthorDate: Wed May 30 23:15:41 2012 +0800
+>> Commit:     Ingo Molnar <mingo@kernel.org>
+>> CommitDate: Wed Jun 6 12:03:23 2012 +0200
+>>
+>>     x86/reboot: Fix a warning message triggered by stop_other_cpus()
+>>
+>> Thanks,
+>> Fengguang
+>
+> Thanks for the bisection.
+>
+> Revert my commit should be a solution, but can we simply make the pci_device_id
+> a local on stack one instead of using sleepable kmalloc for it, as this
+> sounds fragile when pci_get_subsys get called in a late system reboot stage?
 
-Opposite to pci_enable_msi_block() which takes the number of MSIs to
-allocate as a input parameter, pci_enable_msi_block_auto() could be used
-by device drivers to obtain the number of assigned MSIs.
+I think this is a great idea.  Can you make this a real patch, with a
+changelog and Signed-off-by?
 
-The function could also be used by device drivers which do not care
-about the exact number of assigned MSIs.
+We should also remove the obsolete comment about early boot.  I'm not
+sure the no_pci_devices() check is needed, either.  And we can make
+the same simplification in pci_get_class().
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   41 ++++++++++++++++++++++++++++++++++----
- drivers/pci/msi.c               |   29 +++++++++++++++++++++++++++
- include/linux/pci.h             |    7 ++++++
- 3 files changed, 72 insertions(+), 5 deletions(-)
+> ------------
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index 993d4a0..e5ccede 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -246,7 +246,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>                                struct pci_dev *from)
+>  {
+>         struct pci_dev *pdev;
+> -       struct pci_device_id *id;
+> +       struct pci_device_id id;
+>
+>         /*
+>          * pci_find_subsys() can be called on the ide_setup() path,
+> @@ -257,17 +257,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>         if (unlikely(no_pci_devices()))
+>                 return NULL;
+>
+> -       id = kzalloc(sizeof(*id), GFP_KERNEL);
+> -       if (!id)
+> -               return NULL;
+> -       id->vendor = vendor;
+> -       id->device = device;
+> -       id->subvendor = ss_vendor;
+> -       id->subdevice = ss_device;
+> -
+> -       pdev = pci_get_dev_by_id(id, from);
+> -       kfree(id);
+> +       id.vendor = vendor;
+> +       id.device = device;
+> +       id.subvendor = ss_vendor;
+> +       id.subdevice = ss_device;
+>
+> +       pdev = pci_get_dev_by_id(&id, from);
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 53e6fca..d5ab6d7 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,15 +127,46 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_disable_msi
-+4.2.3 pci_enable_msi_block_auto
-+
-+int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
-+
-+This variation on pci_enable_msi() call allows a device driver to request
-+the maximum possible number of MSIs.  The MSI specification only allows
-+interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
-+
-+If this function returns 0, it has succeeded in allocating as many
-+interrupts as the device supports.
-+
-+If this function returns a positive number, it indicates that it has
-+succeeded, but the number of allocated interrupts is less than the number
-+of interrupts the device supports. The returned value in this case is the
-+number of allocated interrupts.
-+
-+In both cases above, the function enables MSI on this device and updates
-+dev->irq to be the lowest of the new interrupts assigned to it. The other
-+interrupts assigned to the device are in the range dev->irq to dev->irq +
-+number of allocated interrupts - 1.
-+
-+If the device driver needs to know the number of allocated interrupts it
-+can pass the pointer count where that number is stored. If the device driver
-+has other means to obtain that number or does not need it, NULL pointer can
-+be passed instead.
-+
-+If this function returns a negative number, it indicates an error and the
-+driver should not attempt to request any more MSI interrupts for this
-+device.
-+
-+4.2.4 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
- This function should be used to undo the effect of pci_enable_msi() or
--pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
--interrupt number and frees the previously allocated message signaled
--interrupt(s).  The interrupt may subsequently be assigned to another
--device, so drivers should not cache the value of dev->irq.
-+pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
-+dev->irq to the pin-based interrupt number and frees the previously
-+allocated message signaled interrupt(s).  The interrupt may subsequently be
-+assigned to another device, so drivers should not cache the value of
-+dev->irq.
- 
- Before calling this function, a device driver must always call free_irq()
- on any interrupt for which it previously called request_irq().
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f0752d1..ef982c1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -845,6 +845,35 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
-+int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec)
-+{
-+	int ret, pos, envec, maxvec;
-+	u16 msgctl;
-+
-+	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	if (!pos)
-+		return -EINVAL;
-+
-+	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = maxvec;
-+
-+	do {
-+		envec = ret;
-+		ret = pci_enable_msi_block(dev, envec);
-+	} while (ret > 0);
-+
-+	if (ret < 0)
-+		return ret;
-+	if (nvec)
-+		*nvec = envec;
-+	if (envec < maxvec)
-+		return envec;
-+	return 0;
-+
-+}
-+EXPORT_SYMBOL(pci_enable_msi_block_auto);
-+
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d8c379d..14788d0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1024,6 +1024,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 	return -1;
- }
- 
-+static inline int
-+pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec)
-+{
-+	return -1;
-+}
-+
- static inline void pci_msi_shutdown(struct pci_dev *dev)
- { }
- static inline void pci_disable_msi(struct pci_dev *dev)
-@@ -1055,6 +1061,7 @@ static inline int pci_msi_enabled(void)
- }
- #else
- extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
-+extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec);
- extern void pci_msi_shutdown(struct pci_dev *dev);
- extern void pci_disable_msi(struct pci_dev *dev);
- extern int pci_msix_table_size(struct pci_dev *dev);
--- 
-1.7.7.6
+No need for "pdev" here, since we don't have to free anything.
 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+>         return pdev;
+>  }
