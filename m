@@ -1,199 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:64882 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755894Ab2HOUku (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Aug 2012 16:40:50 -0400
-Received: by faem1 with SMTP id m1so6125fae.1
-        for <linux-pci@vger.kernel.org>; Wed, 15 Aug 2012 13:40:48 -0700 (PDT)
-Date: Wed, 15 Aug 2012 14:40:47 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, shangw@linux.vnet.ibm.com
-Subject: Re: [PATCH] pci: cleanup on confusing variable name for
- pci_create_root_bus
-Message-ID: <20120815204047.GA18925@google.com>
-References: <1339398558-2562-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:38888 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751519Ab2HVKP7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Aug 2012 06:15:59 -0400
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Wed, 22 Aug 2012 06:15:58 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id C0CB0C90042
+	for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 06:15:56 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7MAFuQJ174024
+	for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 06:15:56 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7MAFmYG031585
+	for <linux-pci@vger.kernel.org>; Wed, 22 Aug 2012 07:15:56 -0300
+Date: Wed, 22 Aug 2012 18:15:33 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC PATCH v2 ]pci: pci resource iterator
+Message-ID: <20120822101533.GA2332@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <20120618050333.GA13469@ram-ThinkPad-T61>
+ <CAE9FiQWwPOgBa5guG1y-xF95nBMwE+TC75E_xcg-N8ZxuPW_XQ@mail.gmail.com>
+ <CAErSpo40Ok9NuMm0zxGnZ0DmFmGT19Y23JC4BCQV1RSxsmakCw@mail.gmail.com>
+ <20120816032602.GN2449@ram-ThinkPad-T61>
+ <CAE9FiQW08aoQBiy+37x-VMYrG-OunqzfuRpB1JhDAgNL3AxEuw@mail.gmail.com>
+ <20120816044104.GQ2449@ram-ThinkPad-T61>
+ <20120821151245.GA2356@ram-ThinkPad-T61>
+ <CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1339398558-2562-1-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 11, 2012 at 03:09:18PM +0800, Wei Yang wrote:
-> Since there are serverail *bridge* in this function, it would be a little
-> confusion.
+On Tue, Aug 21, 2012 at 04:22:52PM -0700, Yinghai Lu wrote:
+> On Tue, Aug 21, 2012 at 8:13 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+> > PCI: pci resource iterator
+> >
+> > Currently pci_dev structure holds an array of 17 PCI resources; six base
+> > BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
+> > A bridge device just needs the 4 bridge resources. A non-bridge device
+> > just needs the six base resources and one ROM resource. The sriov
+> > resources are needed only if the device has SRIOV capability.
+> >
+> > The pci_dev structure needs to be re-organized to avoid unnecessary
+> > bloating.  However too much code outside the pci-bus driver, assumes the
+> > internal details of the pci_dev structure, thus making it hard to
+> > re-organize the datastructure.
+> >
+> > As a first step this patch provides generic methods to access the
+> > resource structure of the pci_dev.
+> >
+> > Once this patch is accepted, I have another 40+ patches that modify all
+> > the files that directly access the resource structure, to use the new
+> > methods provided in the first step.
+> >
+> > Finally we can re-organize the resource structure in the pci_dev
+> > structure and correspondingly update the methods.
+> >
+> > This patch is compile tested only.
+> >
+> > Changelog:
+> >         Consolidated iterator interface as per Bjorn's suggestion.
+> >
+> > +#define for_each_pci_resource(dev, res, flag) \
+> > +       for (res = pci_next_resource(dev, NULL, flag); res; \
+> > +                       res = pci_next_resource(dev, res, flag))
+> > +
 > 
-> Rename the local variable *bridge* to *host_bridge* for easy reading.
+> We may need to keep the idx, so we could make the converting more granularity.
 > 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Reviewed-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+> because some loop body is still using the idx.
+> 
+> also there is some abusing pci bridge resource as addon resources.
+> and we need to remove the abusing at first ---
+> that is addressed by:
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=5eb48c3c998257386f67a7570778872ec600138f
+> 
+>  PCI: Add addon_resource support for pci_dev
+> 
+> and later we may remove the idx in the for_each_pci_resource()
+> 
+> Please check updated version of your patch that keep the idx.
 
-pci_create_root_bus() has changed somewhat since you posted this patch.
-I refreshed it and also changed some other occurrences, resulting in
-the following patch.  I'll apply it if it looks OK to you.
+by exposing idx through the interface, we are exposing the implementation to
+the enduser. I want the end user not know that the resources are 
+structured as a array. This will help easily restructure resources
+in the pci_dev structure to whatever implementation we want, linked list
+or hash or whatever...
 
-Bjorn
+Why can't the addon resource be hidden behind the interface? something
+like this?
 
-commit a634940588f3469b1efa883db1a8a66c3f84c06c
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Wed Aug 15 14:24:25 2012 -0600
+static inline struct resource *pci_next_resource(struct pci_dev *pdev,
+                       struct resource *res, int flag)
+{
+       int i = res? pci_resource_number(pdev, res) : -1;
 
-    PCI: Use "host_bridge" for pci_host_bridge variable names
-    
-    Rename local pci_host_bridge variables from "bridge" to "host_bridge"
-    to distinguish them from PCI-to-PCI bridges.
-    
-    Based-on-patch-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+       while (++i < PCI_NUM_RESOURCES) {
+               if ((i >= 0 && i < PCI_ROM_RESOURCE) && (flag & PCI_STD_RES))
+                       return pci_get_std_resource(pdev, i);
+               else if ((i == PCI_ROM_RESOURCE) && (flag & PCI_ROM_RES))
+                       return pci_get_rom_resource(pdev);
+               else if ((i <= PCI_IOV_RESOURCE_END) && (flag & PCI_IOV_RES))
+                       return pci_get_sriov_resource(pdev, i-PCI_IOV_RESOURCES);
+               else if ((i <= PCI_BRIDGE_RESOURCE_END) && (flag & PCI_BRIDGE_RES))
+                       return pci_get_bridge_resource(pdev, i-PCI_BRIDGE_RESOURCES);
+       }
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index a68dc61..6677528 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -27,12 +27,12 @@ static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
- 	return to_pci_host_bridge(bus->bridge);
- }
- 
--void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
-+void pci_set_host_bridge_release(struct pci_host_bridge *host_bridge,
- 				 void (*release_fn)(struct pci_host_bridge *),
- 				 void *release_data)
- {
--	bridge->release_fn = release_fn;
--	bridge->release_data = release_data;
-+	host_bridge->release_fn = release_fn;
-+	host_bridge->release_data = release_data;
- }
- 
- static bool resource_contains(struct resource *res1, struct resource *res2)
-@@ -43,11 +43,11 @@ static bool resource_contains(struct resource *res1, struct resource *res2)
- void pcibios_resource_to_bus(struct pci_dev *dev, struct pci_bus_region *region,
- 			     struct resource *res)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *host_bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
--	list_for_each_entry(window, &bridge->windows, list) {
-+	list_for_each_entry(window, &host_bridge->windows, list) {
- 		if (resource_type(res) != resource_type(window->res))
- 			continue;
- 
-@@ -71,11 +71,11 @@ static bool region_contains(struct pci_bus_region *region1,
- void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- 			     struct pci_bus_region *region)
- {
--	struct pci_host_bridge *bridge = find_pci_host_bridge(dev);
-+	struct pci_host_bridge *host_bridge = find_pci_host_bridge(dev);
- 	struct pci_host_bridge_window *window;
- 	resource_size_t offset = 0;
- 
--	list_for_each_entry(window, &bridge->windows, list) {
-+	list_for_each_entry(window, &host_bridge->windows, list) {
- 		struct pci_bus_region bus_region;
- 
- 		if (resource_type(res) != resource_type(window->res))
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6c143b4..5d084b6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -467,15 +467,15 @@ static struct pci_bus * pci_alloc_bus(void)
- 
- static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
- {
--	struct pci_host_bridge *bridge;
-+	struct pci_host_bridge *host_bridge;
- 
--	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
--	if (bridge) {
--		INIT_LIST_HEAD(&bridge->windows);
--		bridge->bus = b;
-+	host_bridge = kzalloc(sizeof(*host_bridge), GFP_KERNEL);
-+	if (host_bridge) {
-+		INIT_LIST_HEAD(&host_bridge->windows);
-+		host_bridge->bus = b;
- 	}
- 
--	return bridge;
-+	return host_bridge;
- }
- 
- static unsigned char pcix_bus_speed[] = {
-@@ -1179,14 +1179,14 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 
- static void pci_release_bus_bridge_dev(struct device *dev)
- {
--	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
-+	struct pci_host_bridge *host_bridge = to_pci_host_bridge(dev);
- 
--	if (bridge->release_fn)
--		bridge->release_fn(bridge);
-+	if (host_bridge->release_fn)
-+		host_bridge->release_fn(host_bridge);
- 
--	pci_free_resource_list(&bridge->windows);
-+	pci_free_resource_list(&host_bridge->windows);
- 
--	kfree(bridge);
-+	kfree(host_bridge);
- }
- 
- struct pci_dev *alloc_pci_dev(void)
-@@ -1636,7 +1636,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
- {
- 	int error;
--	struct pci_host_bridge *bridge;
-+	struct pci_host_bridge *host_bridge;
- 	struct pci_bus *b, *b2;
- 	struct pci_host_bridge_window *window, *n;
- 	struct resource *res;
-@@ -1658,17 +1658,17 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		goto err_out;
- 	}
- 
--	bridge = pci_alloc_host_bridge(b);
--	if (!bridge)
-+	host_bridge = pci_alloc_host_bridge(b);
-+	if (!host_bridge)
- 		goto err_out;
- 
--	bridge->dev.parent = parent;
--	bridge->dev.release = pci_release_bus_bridge_dev;
--	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(&bridge->dev);
-+	host_bridge->dev.parent = parent;
-+	host_bridge->dev.release = pci_release_bus_bridge_dev;
-+	dev_set_name(&host_bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	error = device_register(&host_bridge->dev);
- 	if (error)
- 		goto bridge_dev_reg_err;
--	b->bridge = get_device(&bridge->dev);
-+	b->bridge = get_device(&host_bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
- 
-@@ -1694,7 +1694,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 
- 	/* Add initial resources to the bus */
- 	list_for_each_entry_safe(window, n, resources, list) {
--		list_move_tail(&window->list, &bridge->windows);
-+		list_move_tail(&window->list, &host_bridge->windows);
- 		res = window->res;
- 		offset = window->offset;
- 		if (res->flags & IORESOURCE_BUS)
-@@ -1721,10 +1721,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	return b;
- 
- class_dev_reg_err:
--	put_device(&bridge->dev);
--	device_unregister(&bridge->dev);
-+	put_device(&host_bridge->dev);
-+	device_unregister(&host_bridge->dev);
- bridge_dev_reg_err:
--	kfree(bridge);
-+	kfree(host_bridge);
- err_out:
- 	kfree(b);
- 	return NULL;
+       if (flag & PCI_ADDON_RES) {
+       		if ( i == PCI_NUM_RESOURCES) {
+       			// return the first element of the addon list;
+		} else {
+			// return the next element in the list;
+		}		
+       }
+       return NULL;
+}
+
