@@ -1,130 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40819 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379Ab2HBBdk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 21:33:40 -0400
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Don Dutile" <ddutile@redhat.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	"Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61410 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932909Ab2HVPSZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 11:18:25 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Yijing Wang <wangyijing@huawei.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v3 07/32] PCI/portdrv: use PCIe capabilities access
- functions to simplify implementation
-Date: Thu, 2 Aug 2012 01:33:37 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A47B7CE@G01JPEXMBYT03>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
- <1343836477-7287-8-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-8-git-send-email-jiang.liu@huawei.com>
-Content-Type: text/plain; charset="iso-2022-jp"
-MIME-Version: 1.0
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH v2] PCI: allow acpiphp to handle PCIe ports w/o native PCIe hotplug capability
+Date: Wed, 22 Aug 2012 23:16:45 +0800
+Message-Id: <1345648605-7636-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
+References: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Regards,
-Kenji Kaneshige
+Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
+ignore root bridges using PCIe native hotplug) added code that made the
+acpiphp driver completely ignore PCIe root complexes for which the kernel
+had been granted control of the native PCIe hotplug feature by the BIOS
+through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+"PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+the constraints to allow acpiphp driver handle non-PCIe bridges under
+such a complex. The constraint needs to be relaxed further to allow
+acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
 
+Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+switches and may migrate downstream ports among virtual switches.
+To migrate a downstream port from the source virtual switch to the target,
+the port needs to be hot-removed from the source and hot-added into the
+target. pciehp driver can't be used here because there's no slots within
+the virtual PCIe switch. So acpiphp driver is used to support downstream
+port migration. A typical configuration is as below:
+[Root w/o native PCIe HP]
+	[Upstream port of vswitch w/o native PCIe HP]
+		[Downstream port of vswitch w/ native PCIe HP]
+			[PCIe enpoint]
 
-> -----Original Message-----
-> From: Jiang Liu [mailto:liuj97@gmail.com]
-> Sent: Thursday, August 02, 2012 12:54 AM
-> To: Bjorn Helgaas; Don Dutile
-> Cc: Jiang Liu; Yinghai Lu; Izumi, Taku/泉 拓; Rafael J . Wysocki; Kaneshige,
-> Kenji/金重 憲治; Yijing Wang; linux-kernel@vger.kernel.org;
-> linux-pci@vger.kernel.org; Jiang Liu
-> Subject: [PATCH v3 07/32] PCI/portdrv: use PCIe capabilities access
-> functions to simplify implementation
-> 
-> From: Jiang Liu <jiang.liu@huawei.com>
-> 
-> Use PCIe capabilities access functions to simplify PCIe portdrv
-> implementation.
-> 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c |   15 +++++----------
->  drivers/pci/pcie/portdrv_pci.c  |   10 ++--------
->  2 files changed, 7 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c
-> b/drivers/pci/pcie/portdrv_core.c
-> index bf320a9..274d524 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -246,8 +246,7 @@ static void cleanup_service_irqs(struct pci_dev *dev)
->   */
->  static int get_port_device_capability(struct pci_dev *dev)
->  {
-> -	int services = 0, pos;
-> -	u16 reg16;
-> +	int services = 0;
->  	u32 reg32;
->  	int cap_mask = 0;
->  	int err;
-> @@ -265,11 +264,9 @@ static int get_port_device_capability(struct pci_dev
-> *dev)
->  			return 0;
->  	}
-> 
-> -	pos = pci_pcie_cap(dev);
-> -	pci_read_config_word(dev, pos + PCI_EXP_FLAGS, &reg16);
->  	/* Hot-Plug Capable */
-> -	if ((cap_mask & PCIE_PORT_SERVICE_HP) && (reg16 &
-> PCI_EXP_FLAGS_SLOT)) {
-> -		pci_read_config_dword(dev, pos + PCI_EXP_SLTCAP,
-> &reg32);
-> +	if ((cap_mask & PCIE_PORT_SERVICE_HP)) {
-> +		pci_pcie_capability_read_dword(dev, PCI_EXP_SLTCAP,
-> &reg32);
->  		if (reg32 & PCI_EXP_SLTCAP_HPC) {
->  			services |= PCIE_PORT_SERVICE_HP;
->  			/*
-> @@ -277,10 +274,8 @@ static int get_port_device_capability(struct pci_dev
-> *dev)
->  			 * enabled by the BIOS and the hot-plug service
-> driver
->  			 * is not loaded.
->  			 */
-> -			pos += PCI_EXP_SLTCTL;
-> -			pci_read_config_word(dev, pos, &reg16);
-> -			reg16 &= ~(PCI_EXP_SLTCTL_CCIE |
-> PCI_EXP_SLTCTL_HPIE);
-> -			pci_write_config_word(dev, pos, reg16);
-> +			pci_pcie_capability_change_word(dev,
-> PCI_EXP_SLTCTL,
-> +				0, PCI_EXP_SLTCTL_CCIE |
-> PCI_EXP_SLTCTL_HPIE);
->  		}
->  	}
->  	/* AER capable */
-> diff --git a/drivers/pci/pcie/portdrv_pci.c
-> b/drivers/pci/pcie/portdrv_pci.c
-> index 24d1463..93f726c 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -64,14 +64,8 @@ __setup("pcie_ports=", pcie_port_setup);
->   */
->  void pcie_clear_root_pme_status(struct pci_dev *dev)
->  {
-> -	int rtsta_pos;
-> -	u32 rtsta;
-> -
-> -	rtsta_pos = pci_pcie_cap(dev) + PCI_EXP_RTSTA;
-> -
-> -	pci_read_config_dword(dev, rtsta_pos, &rtsta);
-> -	rtsta |= PCI_EXP_RTSTA_PME;
-> -	pci_write_config_dword(dev, rtsta_pos, rtsta);
-> +	pci_pcie_capability_change_dword(dev, PCI_EXP_RTSTA,
-> +					 PCI_EXP_RTSTA_PME, 0);
->  }
-> 
->  static int pcie_portdrv_restore_config(struct pci_dev *dev)
-> --
-> 1.7.9.5
+Here acpiphp driver will be used to handle root ports and upstream port
+in the virtual switch, and pciehp driver will be used to handle downstream
+ports in the virtual switch.
+
+v1->v2: use PCIe capability accessors to read PCI_EXP_SLTCAP register
+
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Jiang Liu <liuj97@gmail.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   41 +++++++++++++++++++++++++++---------
+ 1 file changed, 31 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ad6fd66..e6da392 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -115,6 +115,35 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
+ 	.handler = handle_hotplug_event_func,
+ };
+ 
++/* Check whether the PCI device is managed by native PCIe hotplug driver */
++static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
++{
++	u32 reg32;
++	acpi_handle tmp;
++	struct acpi_pci_root *root;
++
++	/* Check whether the PCIe port supports native PCIe hotplug */
++	if (pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32))
++		return false;
++	if (!(reg32 & PCI_EXP_SLTCAP_HPC))
++		return false;
++
++	/*
++	 * Check whether native PCIe hotplug has been enabled for
++	 * this PCIe hierarchy.
++	 */
++	tmp = acpi_find_root_bridge_handle(pdev);
++	if (!tmp)
++		return false;
++	root = acpi_pci_find_root(tmp);
++	if (!root)
++		return false;
++	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
++		return false;
++
++	return true;
++}
++
+ /* callback routine to register each ACPI PCI slot object */
+ static acpi_status
+ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+@@ -142,16 +171,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	function = adr & 0xffff;
+ 
+ 	pdev = pbus->self;
+-	if (pdev && pci_is_pcie(pdev)) {
+-		tmp = acpi_find_root_bridge_handle(pdev);
+-		if (tmp) {
+-			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
+-
+-			if (root && (root->osc_control_set &
+-					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+-				return AE_OK;
+-		}
+-	}
++	if (pdev && device_is_managed_by_native_pciehp(pdev))
++		return AE_OK;
+ 
+ 	newfunc = kzalloc(sizeof(struct acpiphp_func), GFP_KERNEL);
+ 	if (!newfunc)
+-- 
+1.7.9.5
 
