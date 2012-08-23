@@ -1,76 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3873 "EHLO mx1.redhat.com"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:60451 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753418Ab2HWQhW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Aug 2012 12:37:22 -0400
-From: Matthew Garrett <mjg@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	mfleming@intel.com, dwmw2@infradead.org, bhelgaas@google.com,
-	Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH V3 3/4] PCI: Add support for non-BAR ROMs
-Date: Thu, 23 Aug 2012 12:36:42 -0400
-Message-Id: <1345739803-21017-4-git-send-email-mjg@redhat.com>
-In-Reply-To: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+	id S1751052Ab2HWFKF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Aug 2012 01:10:05 -0400
+Received: from /spool/local
+	by e3.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Thu, 23 Aug 2012 01:10:04 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2609D6E8039
+	for <linux-pci@vger.kernel.org>; Thu, 23 Aug 2012 01:10:03 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q7N5A2vR38207620
+	for <linux-pci@vger.kernel.org>; Thu, 23 Aug 2012 01:10:02 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q7N5A1wX011911
+	for <linux-pci@vger.kernel.org>; Thu, 23 Aug 2012 02:10:02 -0300
+Date: Thu, 23 Aug 2012 13:09:58 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, linuxram@us.ibm.com
+Subject: [RFC PATCH v3 ]pci: pci resource iterator
+Message-ID: <20120823050958.GB2332@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <CAErSpo40Ok9NuMm0zxGnZ0DmFmGT19Y23JC4BCQV1RSxsmakCw@mail.gmail.com>
+ <20120816032602.GN2449@ram-ThinkPad-T61>
+ <CAE9FiQW08aoQBiy+37x-VMYrG-OunqzfuRpB1JhDAgNL3AxEuw@mail.gmail.com>
+ <20120816044104.GQ2449@ram-ThinkPad-T61>
+ <20120821151245.GA2356@ram-ThinkPad-T61>
+ <CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
+ <20120822101533.GA2332@ram-ThinkPad-T61>
+ <CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
+ <CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
+ <CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Platforms may provide their own mechanisms for obtaining ROMs. Add support
-for using data provided by the platform in that case.
+    PCI: pci resource iterator
+    
+    Currently pci_dev structure holds an array of 17 PCI resources; six
+    base BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is
+    wasteful. A bridge device just needs the 4 bridge resources. A
+    non-bridge device just needs the six base resources and one ROM
+    resource. The sriov resources are needed only if the device has
+    SRIOV capability.
+    
+    The pci_dev structure needs to be re-organized to avoid unnecessary
+    bloating.  However too much code outside the pci-bus driver, assumes
+    the internal details of the pci_dev structure, thus making it hard
+    to re-organize the datastructure.
+    
+    As a first step this patch provides generic methods to access the
+    resource structure of the pci_dev.
+    
+    Next step, change the code in all the drivers that access the
+    resource structure to use the new iterator.
+    
+    Finally we can re-organize the resource structure in the pci_dev
+    structure and correspondingly update the methods.
+    
+    This patch is compile tested only.
+    
+    Changelog v2:
+            Consolidated iterator interface as per Bjorn's suggestion.
+    
+    Changelog v3:
+    	ability to get index of the returned resource. Suggested by Yinghai.
+    	Incorporates Yinghai's code snippets.
+    
+<TODO get Yinghai's SOB>
+Signed-off-by: Ram Pai <linuxram@us.ibm.com>
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
----
- drivers/pci/rom.c   | 11 +++++++++--
- include/linux/pci.h |  2 ++
- 2 files changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 48ebdb2..46026e4 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -118,11 +118,17 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
- 	void __iomem *rom;
- 
- 	/*
-+	 * Some devices may provide ROMs via a source other than the BAR
-+	 */
-+	if (pdev->rom && pdev->romlen) {
-+		*size = pdev->romlen;
-+		return phys_to_virt((phys_addr_t)pdev->rom);
-+	/*
- 	 * IORESOURCE_ROM_SHADOW set on x86, x86_64 and IA64 supports legacy
- 	 * memory map if the VGA enable bit of the Bridge Control register is
- 	 * set for embedded VGA.
- 	 */
--	if (res->flags & IORESOURCE_ROM_SHADOW) {
-+	} else if (res->flags & IORESOURCE_ROM_SHADOW) {
- 		/* primary video rom always starts here */
- 		start = (loff_t)0xC0000;
- 		*size = 0x20000; /* cover C000:0 through E000:0 */
-@@ -219,7 +225,8 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
- 	if (res->flags & (IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY))
- 		return;
- 
--	iounmap(rom);
-+	if (!pdev->rom || !pdev->romlen)
-+		iounmap(rom);
- 
- 	/* Disable again before continuing, leave enabled if pci=rom */
- 	if (!(res->flags & (IORESOURCE_ROM_ENABLE | IORESOURCE_ROM_SHADOW)))
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6a2625c..2668bb9 100644
+index e444f5b..7101da2 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -355,6 +355,8 @@ struct pci_dev {
- 	};
- 	struct pci_ats	*ats;	/* Address Translation Service */
- #endif
-+	void *rom; /* Physical pointer to ROM if it's not from the BAR */
-+	size_t romlen; /* Length of ROM if it's not from the BAR */
- };
+@@ -1351,6 +1351,48 @@ static inline int pci_domain_nr(struct pci_bus *bus)
+ 	 (pci_resource_end((dev), (bar)) -		\
+ 	  pci_resource_start((dev), (bar)) + 1))
  
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
--- 
-1.7.11.2
++#define PCI_STD_RES		(1<<0)
++#define PCI_ROM_RES		(1<<1)
++#define PCI_BRIDGE_RES		(1<<2)
++#define PCI_IOV_RES		(1<<3)
++#define PCI_ALL_RES	(PCI_STD_RES|PCI_ROM_RES|PCI_BRIDGE_RES|PCI_IOV_RES)
++#define PCI_NOSTD_RES		(PCI_ALL_RES & ~PCI_STD_RES)
++#define PCI_NOIOV_RES		(PCI_ALL_RES & ~PCI_IOV_RES)
++#define PCI_NOROM_RES		(PCI_ALL_RES & ~PCI_ROM_RES)
++#define PCI_NOBRIDGE_RES	(PCI_ALL_RES & ~PCI_BRIDGE_RES)
++#define PCI_STD_ROM_RES		(PCI_STD_RES | PCI_ROM_RES)
++#define PCI_STD_IOV_RES		(PCI_STD_RES | PCI_IOV_RES)
++#define PCI_STD_ROM_IOV_RES	(PCI_NOBRIDGE_RES)
++
++static inline struct resource *pci_dev_resource_n(struct pci_dev *dev, int n)
++{
++	if (n >= 0 && n < PCI_NUM_RESOURCES)
++		return &dev->resource[n];
++
++	return NULL;
++}
++
++static inline int pci_next_resource_idx(int i, int flag)
++{
++	while (++i < PCI_NUM_RESOURCES) {
++		if ((i >= 0 && i < PCI_ROM_RESOURCE && (flag & PCI_STD_RES)) ||
++		    (i == PCI_ROM_RESOURCE && (flag & PCI_ROM_RES)) ||
++#ifdef CONFIG_PCI_IOV
++		    (i <= PCI_IOV_RESOURCE_END && (flag & PCI_IOV_RES)) ||
++#endif
++		    (i <= PCI_BRIDGE_RESOURCE_END && (flag & PCI_BRIDGE_RES)))
++			return i;
++	}
++	return -1;
++}
++
++#define for_each_pci_resource(dev, res, flag) \
++	for (i = pci_next_resource_idx(-1, flag), \
++			res = pci_dev_resource_n(dev, i); \
++	     res; \
++	     i = pci_next_resource_idx(i, flag), \
++			res = pci_dev_resource_n(dev, i))
++
+ /* Similar to the helpers above, these manipulate per-pci_dev
+  * driver-specific data.  They are really just a wrapper around
+  * the generic device structure functions of these calls.
 
