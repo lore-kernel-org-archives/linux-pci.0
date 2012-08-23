@@ -1,58 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:40535 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755880Ab2HAQAh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Aug 2012 12:00:37 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mike McCormack <mikem@ring3k.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 32/32] PCI/rtl8192e: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:37 +0800
-Message-Id: <1343836477-7287-33-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:45993 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756055Ab2HWH2Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2012 03:28:25 -0400
+Received: by wgbfm10 with SMTP id fm10so392505wgb.1
+        for <linux-pci@vger.kernel.org>; Thu, 23 Aug 2012 00:28:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
+References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+	<20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
+Date: Thu, 23 Aug 2012 00:28:23 -0700
+Message-ID: <CAOesGMgUGUG9Z=x6ssumVkAxN6fHoeyAJ3-P8CoaNTGas7-vmg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: leave MEM and IO decoding disabled during 64-bit
+ BAR sizing, too
+From: Olof Johansson <olof@lixom.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Robert Hancock <hancockrwd@gmail.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Hi,
 
-Use PCIe capabilities access functions to simplify rtl8192e driver's
-implementation.
+On Mon, Jul 9, 2012 at 11:20 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> After 253d2e5498, we disable MEM and IO decoding for most devices while we
+> size 32-bit BARs.  However, we restore the original COMMAND register before
+> we size the upper 32 bits of 64-bit BARs, so we can still cause a conflict.
+>
+> This patch waits to restore the original COMMAND register until we're
+> completely finished sizing the BAR.
+>
+> Reference: https://lkml.org/lkml/2007/8/25/154
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/staging/rtl8192e/rtl8192e/rtl_pci.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+This patch causes boot lockup on PA Semi hardware, since it disables
+the bar on the UART that is used for console, and it has printks
+between the old and the new re-enable location. If I boot with 'debug'
+level for printk, I hit this. If I boot with just regular console
+args, I don't.
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_pci.c b/drivers/staging/rtl8192e/rtl8192e/rtl_pci.c
-index ddadcc3..820cc68 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_pci.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_pci.c
-@@ -31,12 +31,10 @@ static void rtl8192_parse_pci_configuration(struct pci_dev *pdev,
- 	struct r8192_priv *priv = (struct r8192_priv *)rtllib_priv(dev);
- 
- 	u8 tmp;
--	int pos;
--	u8 LinkCtrlReg;
-+	u16 LinkCtrlReg;
- 
--	pos = pci_find_capability(priv->pdev, PCI_CAP_ID_EXP);
--	pci_read_config_byte(priv->pdev, pos + PCI_EXP_LNKCTL, &LinkCtrlReg);
--	priv->NdisAdapter.LinkCtrlReg = LinkCtrlReg;
-+	pci_pcie_capability_read_word(priv->pdev, PCI_EXP_LNKCTL, &LinkCtrlReg);
-+	priv->NdisAdapter.LinkCtrlReg = (u8)LinkCtrlReg;
- 
- 	RT_TRACE(COMP_INIT, "Link Control Register =%x\n",
- 		 priv->NdisAdapter.LinkCtrlReg);
--- 
-1.7.9.5
+I'm guessing any other platform that uses MMIO-based UART on PCI for
+console will have similar issues. I can verify on Chrome OS x86
+hardware tomorrow if legacy powerpc isn't important enough to care
+about. :-)
 
+I have no proposal for a fix for this. Can you please consider
+reverting for 3.6 unless someone has a better idea?
+
+
+-Olof
