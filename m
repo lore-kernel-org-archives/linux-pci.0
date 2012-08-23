@@ -1,100 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:45710 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964787Ab2HQDAt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 23:00:49 -0400
-Received: by qaas11 with SMTP id s11so1212180qaa.19
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 20:00:49 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43937 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134Ab2HWVfe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2012 17:35:34 -0400
+Date: Thu, 23 Aug 2012 14:35:29 -0700
+From: Tejun Heo <tj@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] pci: rewrite pci_call_probe() to use workqueue instead of
+ work_on_cpu()
+Message-ID: <20120823213529.GH14962@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1343180997-9483-5-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1343180997-9483-1-git-send-email-shangw@linux.vnet.ibm.com>
-	<1343180997-9483-5-git-send-email-shangw@linux.vnet.ibm.com>
-Date: Fri, 17 Aug 2012 11:00:48 +0800
-Message-ID: <CADLM8XOiHMfwnxBvZU_YF8S9QomcXjy5fb6JyxCrNCjr+sbYOw@mail.gmail.com>
-Subject: Re: [PATCH 4/8] pci: weak function returns alignment
-From: Wei Yang <weiyang.kernel@gmail.com>
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	benh@kernel.crashing.org, linuxram@us.ibm.com,
-	Richard Yang <weiyang@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2012/7/25 Gavin Shan <shangw@linux.vnet.ibm.com>:
-> The patch implements the weak function to return the default I/O
-> or memory alignment for P2P bridge. Currently, I/O window has 4KiB
-> alignment and memory window is 4MiB aligned by default. On the other
-> hand, those platforms (e.g. powernv) that have special requirements
-> on the alignment could override the function by themselves.
->
-> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
-> ---
->  drivers/pci/setup-bus.c |   21 +++++++++++++++++++++
->  include/linux/pci.h     |    2 ++
->  2 files changed, 23 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 8fa2d4b..c0fb9da 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -690,6 +690,27 @@ static resource_size_t calculate_memsize(resource_size_t size,
->         return size;
->  }
->
-> +resource_size_t __weak pcibios_window_alignment(struct pci_bus *bus,
-> +                                               unsigned long type)
-> +{
-> +       return 1;
-> +}
-> +
-> +static resource_size_t window_alignment(struct pci_bus *bus,
-> +                                       unsigned long type)
-> +{
-> +       resource_size_t align = 1, arch_align;
-> +
-> +       if (type & IORESOURCE_MEM)
-> +               align = 1024*1024;      /* 1MiB */
-> +       else if (type & IORESOURCE_IO)
-> +               align = 4*1024;         /* 4KiB */
-> +
+pci_call_probe() uses work_on_cpu(), which creates and tears down a
+full kthread on each call, to invoke ->probe() on node local CPU for
+allocation affinity.
 
-If this is a constant, could we use define a macro?
-So we don't use to calculate the value every time.
-Maybe some compile will be smart enough to optimize this,
-still think it is better to give a result.
+The same goal can easily be achieved using a work item.  This patch
+rewrites pci_call_probe() so that it uses a work item instead of
+work_on_cpu().
 
-> +       arch_align = pcibios_window_alignment(bus, type);
-> +
-> +       return max(align, arch_align);
-> +}
-> +
->  /**
->   * pbus_size_io() - size the io window of a given bus
->   *
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 9acea4b..34ff2bb 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -988,6 +988,8 @@ int pci_cfg_space_size_ext(struct pci_dev *dev);
->  int pci_cfg_space_size(struct pci_dev *dev);
->  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
->  void pci_setup_bridge(struct pci_bus *bus);
-> +resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-> +                                        unsigned long type);
->
->  #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
->  #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
-> --
-> 1.7.5.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note that the function is restructured for simplicity.  This adds
+get/put_online_cpus() pair for devices without node but the overhead
+of doing so isn't anything material at this level.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+I tested both paths but had to simulate device on foreign node.
 
+Thanks.
 
--- 
-Richard Yang
-Help You, Help Me
+ drivers/pci/pci-driver.c |   48 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 28 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 5270f1a..554c15a 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -274,11 +274,14 @@ struct drv_dev_and_id {
+ 	struct pci_driver *drv;
+ 	struct pci_dev *dev;
+ 	const struct pci_device_id *id;
++	struct work_struct work;
++	int error;
+ };
+ 
+-static long local_pci_probe(void *_ddi)
++static void pci_probe_fn(struct work_struct *work)
+ {
+-	struct drv_dev_and_id *ddi = _ddi;
++	struct drv_dev_and_id *ddi = container_of(work, struct drv_dev_and_id,
++						  work);
+ 	struct device *dev = &ddi->dev->dev;
+ 	int rc;
+ 
+@@ -298,33 +301,38 @@ static long local_pci_probe(void *_ddi)
+ 		pm_runtime_set_suspended(dev);
+ 		pm_runtime_put_noidle(dev);
+ 	}
+-	return rc;
++
++	ddi->error = rc;
+ }
+ 
+ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 			  const struct pci_device_id *id)
+ {
+-	int error, node;
++	int node;
++	int cpu = nr_cpu_ids;
+ 	struct drv_dev_and_id ddi = { drv, dev, id };
+ 
+-	/* Execute driver initialization on node where the device's
+-	   bus is attached to.  This way the driver likely allocates
+-	   its local memory on the right node without any need to
+-	   change it. */
+-	node = dev_to_node(&dev->dev);
+-	if (node >= 0) {
+-		int cpu;
++	/*
++	 * Execute driver initialization on node where the device's bus is
++	 * attached to.  This way the driver likely allocates its local
++	 * memory on the right node without any need to change it.
++	 */
++	get_online_cpus();
+ 
+-		get_online_cpus();
++	node = dev_to_node(&dev->dev);
++	if (node >= 0)
+ 		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
+-		if (cpu < nr_cpu_ids)
+-			error = work_on_cpu(cpu, local_pci_probe, &ddi);
+-		else
+-			error = local_pci_probe(&ddi);
+-		put_online_cpus();
+-	} else
+-		error = local_pci_probe(&ddi);
+-	return error;
++
++	if (cpu < nr_cpu_ids) {
++		INIT_WORK_ONSTACK(&ddi.work, pci_probe_fn);
++		schedule_work_on(cpu, &ddi.work);
++		flush_work(&ddi.work);
++	} else {
++		pci_probe_fn(&ddi.work);
++	}
++
++	put_online_cpus();
++	return ddi.error;
+ }
+ 
+ /**
