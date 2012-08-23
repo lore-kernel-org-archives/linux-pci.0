@@ -1,118 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:61410 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932909Ab2HVPSZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Aug 2012 11:18:25 -0400
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:59118 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972Ab2HWBwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Aug 2012 21:52:19 -0400
+Message-ID: <50358CA4.40008@redhat.com>
+Date: Wed, 22 Aug 2012 21:51:32 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
+CC: "Cui, Dexuan" <dexuan.cui@intel.com>, Jiang Liu <liuj97@gmail.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v2] PCI: allow acpiphp to handle PCIe ports w/o native PCIe hotplug capability
-Date: Wed, 22 Aug 2012 23:16:45 +0800
-Message-Id: <1345648605-7636-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
-References: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities
+ registers
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com> <50325732.3000700@gmail.com> <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com> <50325C18.9030207@gmail.com> <CAErSpo6t9m0xmWkXfmONtbicjqLR_z5dLsjKCLWQfcktzRKkUA@mail.gmail.com> <CAErSpo5=OUM9veX8890USWegTG_Fhh10soxPJbjemd80bAO0qg@mail.gmail.com> <A25F549E4D43CD42B4C02DF47A1913230FE50780@SHSMSX102.ccr.corp.intel.com> <CAErSpo5ftvKLF2=1ixzp1KroNLKh_s-b5hi9aFv3X7PpqisGwg@mail.gmail.com>
+In-Reply-To: <CAErSpo5ftvKLF2=1ixzp1KroNLKh_s-b5hi9aFv3X7PpqisGwg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On 08/22/2012 12:28 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 20, 2012 at 9:40 PM, Cui, Dexuan<dexuan.cui@intel.com>  wrote:
+>> Bjorn Helgaas wrote on 2012-08-21:
+>
+>>> I am still concerned about reset_intel_82599_sfp_virtfn().  It looks
+>>> wrong and possibly unnecessary.  It looks wrong because it sets
+>>> PCI_EXP_DEVCTL_BCR_FLR and blindly clears all other bits in
+>>> PCI_EXP_DEVCTL.  Most of the bits are probably cleared by the FLR
+>>> anyway, but Aux Power PM Enable is RWS ("sticky"), so it is *not*
+>>> modified by FLR.  Therefore, using reset_intel_82599_sfp_virtfn() has
+>>> the probably unintended side effect of clearing Aux Power PM Enable.
+>>>
+>>> It looks possibly unnecessary because the generic pcie_flr() does
+>>> essentially the same thing, so it's not clear why we need a special
+>>> case for 82599.
+>
+>> I think reset_intel_82599_sfp_virtfn() is correct AND necessary.
+>> (pcie_flr() doesn't work here)
+>>
+>> Please note the 82599 VF is a special PCIe device that doesn't report
+>> PCIe FLR capability though actually it does support that.
+>> That is why we put it in quirks.c. :-)
+>>
+>> The PCI_EXP_DEVCTL_AUX_PME bit of the 82599 VF is read-only and
+>> always zero.
+>>
+>> Please see
+>> http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
+>> 9.5 Virtual Functions Configuration Space
+>>    Table 9.7 VF PCIe Configuration Space
+>>    9.5.2.2.1 VF Device Control Register (0xA8; RW)
+>
+> Thanks, Dexuan!
+>
+> The 82599 does report FLR in the DEVCAP for the PF (sec 9.3.10.4), but
+> not in the DEVCAP for the VF (sec 9.5), which indeed means we can't
+> use pcie_flr() on the VFs.  I wonder whether this error appears in any
+> other devices.
+>
+It should not exist in any other VF device.  The SRIOV spec states
+that all VFs must support FLR.  The 82599 quirk is just that...
 
-Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-ignore root bridges using PCIe native hotplug) added code that made the
-acpiphp driver completely ignore PCIe root complexes for which the kernel
-had been granted control of the native PCIe hotplug feature by the BIOS
-through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-"PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-the constraints to allow acpiphp driver handle non-PCIe bridges under
-such a complex. The constraint needs to be relaxed further to allow
-acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
-
-Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-switches and may migrate downstream ports among virtual switches.
-To migrate a downstream port from the source virtual switch to the target,
-the port needs to be hot-removed from the source and hot-added into the
-target. pciehp driver can't be used here because there's no slots within
-the virtual PCIe switch. So acpiphp driver is used to support downstream
-port migration. A typical configuration is as below:
-[Root w/o native PCIe HP]
-	[Upstream port of vswitch w/o native PCIe HP]
-		[Downstream port of vswitch w/ native PCIe HP]
-			[PCIe enpoint]
-
-Here acpiphp driver will be used to handle root ports and upstream port
-in the virtual switch, and pciehp driver will be used to handle downstream
-ports in the virtual switch.
-
-v1->v2: use PCIe capability accessors to read PCI_EXP_SLTCAP register
-
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   41 +++++++++++++++++++++++++++---------
- 1 file changed, 31 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ad6fd66..e6da392 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -115,6 +115,35 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
- 	.handler = handle_hotplug_event_func,
- };
- 
-+/* Check whether the PCI device is managed by native PCIe hotplug driver */
-+static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-+{
-+	u32 reg32;
-+	acpi_handle tmp;
-+	struct acpi_pci_root *root;
-+
-+	/* Check whether the PCIe port supports native PCIe hotplug */
-+	if (pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32))
-+		return false;
-+	if (!(reg32 & PCI_EXP_SLTCAP_HPC))
-+		return false;
-+
-+	/*
-+	 * Check whether native PCIe hotplug has been enabled for
-+	 * this PCIe hierarchy.
-+	 */
-+	tmp = acpi_find_root_bridge_handle(pdev);
-+	if (!tmp)
-+		return false;
-+	root = acpi_pci_find_root(tmp);
-+	if (!root)
-+		return false;
-+	if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-+		return false;
-+
-+	return true;
-+}
-+
- /* callback routine to register each ACPI PCI slot object */
- static acpi_status
- register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-@@ -142,16 +171,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	function = adr & 0xffff;
- 
- 	pdev = pbus->self;
--	if (pdev && pci_is_pcie(pdev)) {
--		tmp = acpi_find_root_bridge_handle(pdev);
--		if (tmp) {
--			struct acpi_pci_root *root = acpi_pci_find_root(tmp);
--
--			if (root && (root->osc_control_set &
--					OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
--				return AE_OK;
--		}
--	}
-+	if (pdev && device_is_managed_by_native_pciehp(pdev))
-+		return AE_OK;
- 
- 	newfunc = kzalloc(sizeof(struct acpiphp_func), GFP_KERNEL);
- 	if (!newfunc)
--- 
-1.7.9.5
+> The VF DEVCTL register (sec 9.5.2.2.1) is RO and zero except for
+> "Initiate FLR" unlike the PF DEVCTL (sec 9.3.10.5).  The
+> read/modify/write done by pcie_flr() would work on the VF but is not
+> necessary.
+>
+> The VF DEVSTA register (sec 9.5.2.2.2) does have an active
+> "Transaction Pending" bit.  That suggests to me that we should wait
+> for it to be clear, as pcie_flr() does.
+>
+> What would you think of a patch like the following?  My idea is to
+> make it the same as pcie_flr() except for the absolutely necessary
+> differences.  With this patch, the only difference is that we don't
+> look at the 82599 DEVCAP FLR bit.
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index aa77538..7a451ff 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3081,10 +3081,36 @@ static int reset_intel_generic_dev(struct
+> pci_dev *dev, int probe)
+>
+>   static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+>   {
+> +       int i;
+> +       u16 status;
+> +
+> +       /*
+> +        * http://www.intel.com/content/dam/doc/datasheet/82599-10-gbe-controller-datasheet.pdf
+> +        *
+> +        * The 82599 supports FLR on VFs, but FLR support is reported only
+> +        * in the PF DEVCAP (sec 9.3.10.4), not in the VF DEVCAP (sec 9.5).
+> +        * Therefore, we can't use pcie_flr(), which checks the VF DEVCAP.
+> +        */
+> +
+>          if (probe)
+>                  return 0;
+>
+> -       pcie_capability_write_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+> +       /* Wait for Transaction Pending bit clean */
+> +       for (i = 0; i<  4; i++) {
+> +               if (i)
+> +                       msleep((1<<  (i - 1)) * 100);
+> +
+> +               pcie_capability_read_word(dev, PCI_EXP_DEVSTA,&status);
+> +               if (!(status&  PCI_EXP_DEVSTA_TRPND))
+> +                       goto clear;
+> +       }
+> +
+> +       dev_err(&dev->dev, "transaction is not cleared; "
+> +                       "proceeding with reset anyway\n");
+> +
+> +clear:
+> +       pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+> +
+>          msleep(100);
+>
+>          return 0;
 
