@@ -1,262 +1,127 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@huawei.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:26527 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752031Ab2HWHue convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Aug 2012 03:50:34 -0400
+Date: Thu, 23 Aug 2012 15:45:03 +0800
+From: Feng Tang <feng.tang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-CC: Jiang Liu <jiang.liu@huawei.com>, Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: [RFC PATCH v2 11/16] ACPIHP: analyse dependences among ACPI system  device hotplug slots
-Date: Sat, 4 Aug 2012 20:13:58 +0800
-Message-ID: <1344082443-4608-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-References: <1344082443-4608-1-git-send-email-jiang.liu@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH 1/2] PCI: Use local parameter pci_device_id for
+ pci_get_subsys/class()
+Message-ID: <20120823154503.15a45b14@feng-i7>
+In-Reply-To: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+References: <5017D19B.5080806@redhat.com>
+	<1343738627.27983.30.camel@gandalf.stny.rr.com>
+	<5017D4AB.3090107@redhat.com>
+	<1343740419.27983.33.camel@gandalf.stny.rr.com>
+	<20120731234336.GA5526@localhost>
+	<1343778699.27983.70.camel@gandalf.stny.rr.com>
+	<20120731235705.GW2422@linux.vnet.ibm.com>
+	<1343779778.27983.73.camel@gandalf.stny.rr.com>
+	<20120801001811.GX2422@linux.vnet.ibm.com>
+	<20120801004319.GA7043@localhost>
+	<20120822025008.GA8066@localhost>
+	<20120822154908.2e6ef3c0@feng-i7>
+	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+>From 57a28ee5e7662ca28ba4c793aa037d64bd082dee Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Wed, 22 Aug 2012 15:41:51 +0800
+Subject: [PATCH 1/2] PCI: Use local parameter pci_device_id for pci_get_subsys/class()
 
-Some ACPI hotplug slots may have dependencies on other ACPI hotplug slots.
-For example, if a hotpluggable memory board is connected to a hotpluggble
-physical processor, the physical processor must be powered on before
-powering the memory board on.
+This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
 
-We could get dependency relationships by analyze ACPI namespace topology
-and evaluate ACPI _EDL method. So this patch implements several functions
-to analyze dependencies among ACPI hotplug slots.
+pci_get_subsys() may get called in late system reboot stage, using
+a sleepable kmalloc() sounds fragile and will casue a kernel warning
+with my recent commmit 55c844a "x86/reboot: Fix a warning message
+triggered by stop_other_cpus()" which disable local interrupt in
+late system shutdown/reboot phase. Using a local parameter instead
+will fix it and make it eligible for calling forom atomic context.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Do the same change for the pci_get_class() as suggeted by Bjorn Helgaas
+
+Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
 ---
- drivers/acpi/hotplug/Makefile     |    1 +
- drivers/acpi/hotplug/acpihp_drv.h |   14 ++++
- drivers/acpi/hotplug/dependency.c |  167 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 182 insertions(+)
- create mode 100644 drivers/acpi/hotplug/dependency.c
+ drivers/pci/search.c |   35 +++++++++++------------------------
+ 1 files changed, 11 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index d69832f..8477c71 100644
---- a/drivers/acpi/hotplug/Makefile
-+++ b/drivers/acpi/hotplug/Makefile
-@@ -11,3 +11,4 @@ acpihp_enum-y					+= slot_enum_ej0.o
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 993d4a0..78a08b1 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -245,8 +245,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 			       unsigned int ss_vendor, unsigned int ss_device,
+ 			       struct pci_dev *from)
+ {
+-	struct pci_dev *pdev;
+-	struct pci_device_id *id;
++	struct pci_device_id id;
  
- obj-$(CONFIG_ACPI_HOTPLUG_DRIVER)		+= acpihp_drv.o
- acpihp_drv-y					= drv_main.o
-+acpihp_drv-y					+= dependency.o
-diff --git a/drivers/acpi/hotplug/acpihp_drv.h b/drivers/acpi/hotplug/acpihp_drv.h
-index 18330f7..c4ff91c 100644
---- a/drivers/acpi/hotplug/acpihp_drv.h
-+++ b/drivers/acpi/hotplug/acpihp_drv.h
-@@ -53,10 +53,24 @@ struct acpihp_slot_drv {
- 	struct acpihp_cancel_context	cancel_ctx;
- };
+ 	/*
+ 	 * pci_find_subsys() can be called on the ide_setup() path,
+@@ -257,18 +256,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 	if (unlikely(no_pci_devices()))
+ 		return NULL;
  
-+struct acpihp_slot_dependency {
-+	struct list_head		node;
-+	struct acpihp_slot		*slot;
-+	u32				opcodes;
-+};
-+
- void acpihp_drv_get_data(struct acpihp_slot *slot,
- 			 struct acpihp_slot_drv **data);
- int acpihp_drv_enumerate_devices(struct acpihp_slot *slot);
- void acpihp_drv_update_slot_state(struct acpihp_slot *slot);
- int acpihp_drv_update_slot_status(struct acpihp_slot *slot);
+-	id = kzalloc(sizeof(*id), GFP_KERNEL);
+-	if (!id)
+-		return NULL;
+-	id->vendor = vendor;
+-	id->device = device;
+-	id->subvendor = ss_vendor;
+-	id->subdevice = ss_device;
+-
+-	pdev = pci_get_dev_by_id(id, from);
+-	kfree(id);
++	id.vendor = vendor;
++	id.device = device;
++	id.subvendor = ss_vendor;
++	id.subdevice = ss_device;
  
-+int acpihp_drv_add_slot_to_dependency_list(struct acpihp_slot *slot,
-+					   struct list_head *slot_list);
-+void acpihp_drv_destroy_dependency_list(struct list_head *slot_list);
-+int acpihp_drv_filter_dependency_list(struct list_head *old_head,
-+		struct list_head *new_head, u32 opcode);
-+int acpihp_drv_generate_dependency_list(struct acpihp_slot *slot,
-+		struct list_head *slot_list, enum acpihp_drv_cmd cmd);
-+
- #endif	/* __ACPIHP_DRV_H__ */
-diff --git a/drivers/acpi/hotplug/dependency.c b/drivers/acpi/hotplug/dependency.c
-new file mode 100644
-index 0000000..d2d7dbb
---- /dev/null
-+++ b/drivers/acpi/hotplug/dependency.c
-@@ -0,0 +1,167 @@
-+/*
-+ * Copyright (C) 2011 Huawei Tech. Co., Ltd.
-+ * Copyright (C) 2011 Jiang Liu <jiang.liu@huawei.com>
-+ * Copyright (C) 2011 Hanjun Guo <guohanjun@huawei.com>
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/types.h>
-+#include <linux/list.h>
-+#include <linux/mutex.h>
-+#include <linux/acpi.h>
-+#include <acpi/acpi_hotplug.h>
-+#include "acpihp_drv.h"
-+
-+/* Insert a slot into the dependency list at the head */
-+int acpihp_drv_add_slot_to_dependency_list(struct acpihp_slot *slot,
-+					   struct list_head *slot_list)
-+{
-+	struct acpihp_slot_dependency *dep;
-+
-+	list_for_each_entry(dep, slot_list, node)
-+		if (dep->slot == slot)
-+			return 0;
-+
-+	dep = kzalloc(sizeof(*dep), GFP_KERNEL);
-+	if (!dep) {
-+		ACPIHP_DEBUG("fails to allocate memory for %s.\n", slot->name);
-+		return -ENOMEM;
-+	}
-+	dep->slot = slot;
-+	list_add(&dep->node, slot_list);
-+
-+	return 0;
-+}
-+
-+static int acpihp_drv_get_online_dependency(struct acpihp_slot *slot,
-+					    struct list_head *slot_list)
-+{
-+	int ret = 0;
-+	struct acpihp_slot *temp;
-+
-+	for (temp = slot; temp && ret == 0; temp = temp->parent)
-+		ret = acpihp_drv_add_slot_to_dependency_list(temp, slot_list);
-+
-+	return ret;
-+}
-+
-+static int acpihp_drv_for_each_edl(struct acpihp_slot *slot, void *argp,
-+	int(*cb)(struct device *dev, void *argp))
-+{
-+	/* TODO */
-+	return 0;
-+}
-+
-+static int acpihp_drv_add_offline_dependency(struct device *dev, void *argp)
-+{
-+	int ret;
-+	struct acpihp_slot *slot;
-+	struct list_head *list = argp;
-+
-+	slot = container_of(dev, struct acpihp_slot, dev);
-+	ret = acpihp_drv_add_slot_to_dependency_list(slot, list);
-+	if (!ret)
-+		ret = device_for_each_child(&slot->dev, argp,
-+				&acpihp_drv_add_offline_dependency);
-+	if (!ret)
-+		ret = acpihp_drv_for_each_edl(slot, argp,
-+				&acpihp_drv_add_offline_dependency);
-+
-+	return ret;
-+}
-+
-+static int acpihp_drv_get_offline_dependency(struct acpihp_slot *slot,
-+					     struct list_head *slot_list)
-+{
-+	return acpihp_drv_add_offline_dependency(&slot->dev, slot_list);
-+}
-+
-+int acpihp_drv_generate_dependency_list(struct acpihp_slot *slot,
-+		struct list_head *slot_list, enum acpihp_drv_cmd cmd)
-+{
-+	int retval;
-+
-+	switch (cmd) {
-+	case ACPIHP_DRV_CMD_POWERON:
-+	/* fall through */
-+	case ACPIHP_DRV_CMD_CONNECT:
-+	/* fall through */
-+	case ACPIHP_DRV_CMD_CONFIGURE:
-+		retval = acpihp_drv_get_online_dependency(slot, slot_list);
-+		break;
-+
-+	case ACPIHP_DRV_CMD_POWEROFF:
-+	/* fall through */
-+	case ACPIHP_DRV_CMD_DISCONNECT:
-+	/* fall through */
-+	case ACPIHP_DRV_CMD_UNCONFIGURE:
-+		retval = acpihp_drv_get_offline_dependency(slot, slot_list);
-+		break;
-+
-+	default:
-+		retval = -EINVAL;
-+		break;
-+	}
-+
-+	return retval;
-+}
-+
-+/*
-+ * Generate a new list with slots from the old list which need to
-+ * execute a specific operation.
-+ */
-+int acpihp_drv_filter_dependency_list(struct list_head *old_head,
-+		struct list_head *new_head, u32 opcode)
-+{
-+	struct acpihp_slot_dependency *old_dep, *new_dep;
-+
-+	/* Initialize new list to empty */
-+	INIT_LIST_HEAD(new_head);
-+
-+	list_for_each_entry(old_dep, old_head, node) {
-+		/* Skip if the specified operation is not needed. */
-+		if (!(old_dep->opcodes & opcode))
-+			continue;
-+
-+		new_dep = kzalloc(sizeof(*new_dep), GFP_KERNEL);
-+		if (!new_dep) {
-+			ACPIHP_DEBUG("fails to filter depend list.\n");
-+			acpihp_drv_destroy_dependency_list(new_head);
-+			return -ENOMEM;
-+		}
-+
-+		new_dep->slot = old_dep->slot;
-+		new_dep->opcodes = old_dep->opcodes;
-+		list_add_tail(&new_dep->node, new_head);
-+	}
-+
-+	return 0;
-+}
-+
-+void acpihp_drv_destroy_dependency_list(struct list_head *slot_list)
-+{
-+	struct acpihp_slot_dependency *asd, *temp;
-+
-+	list_for_each_entry_safe(asd, temp, slot_list, node) {
-+		list_del(&asd->node);
-+		kfree(asd);
-+	}
-+}
+-	return pdev;
++	return pci_get_dev_by_id(&id, from);
+ }
+ 
+ /**
+@@ -307,19 +300,13 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+  */
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+ {
+-	struct pci_dev *dev;
+-	struct pci_device_id *id;
++	struct pci_device_id id;
+ 
+-	id = kzalloc(sizeof(*id), GFP_KERNEL);
+-	if (!id)
+-		return NULL;
+-	id->vendor = id->device = id->subvendor = id->subdevice = PCI_ANY_ID;
+-	id->class_mask = PCI_ANY_ID;
+-	id->class = class;
++	id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
++	id.class_mask = PCI_ANY_ID;
++	id.class = class;
+ 
+-	dev = pci_get_dev_by_id(id, from);
+-	kfree(id);
+-	return dev;
++	return pci_get_dev_by_id(&id, from);
+ }
+ 
+ /**
 -- 
-1.7.9.5
-
-
+1.7.1
