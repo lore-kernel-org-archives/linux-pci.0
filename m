@@ -1,61 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51458 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752849Ab2HJGMd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:12:33 -0400
-Date: Fri, 10 Aug 2012 15:12:27 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in
- function pci_remove_bus()
-Message-Id: <20120810151227.cc02c783.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Matthew Garrett <mjg@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
+	mfleming@intel.com, dwmw2@infradead.org, bhelgaas@google.com,
+	Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH V3 2/4] PCI: Add pcibios_add_device
+Date: Thu, 23 Aug 2012 12:36:41 -0400
+Message-Id: <1345739803-21017-3-git-send-email-mjg@redhat.com>
+In-Reply-To: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Platforms may want to provide architecture-specific functionality during
+PCI enumeration. Add a pcibios_add_device() call that architectures can
+override to do so.
 
-    Correctly clean up pci root buses in function pci_remove_bus()
-    
-    The function pci_create_root_bus() allocates the pci bus structure,
-    registers the bus device and creates the legacy files for a pci root
-    bus, but returns without setting the is_added flag. The is_added flag
-    for a pci root bus will be set by function pci_scan_child_bus().
-    If a pci root bus is destroyed before calling pci_scan_child_bus(),
-    the is_added flag will not be set.  So teach function pci_remove_bus()
-    to detect such a case and correctly clean up pci root buses.
-    
-    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
 ---
- drivers/pci/remove.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/pci/bus.c   |  5 +++++
+ drivers/pci/pci.c   | 13 +++++++++++++
+ include/linux/pci.h |  1 +
+ 3 files changed, 19 insertions(+)
 
-Index: Bjorn-next-0808/drivers/pci/remove.c
-===================================================================
---- Bjorn-next-0808.orig/drivers/pci/remove.c
-+++ Bjorn-next-0808/drivers/pci/remove.c
-@@ -70,11 +70,10 @@ void pci_remove_bus(struct pci_bus *pci_
- 	list_del(&pci_bus->node);
- 	pci_bus_release_busn_res(pci_bus);
- 	up_write(&pci_bus_sem);
--	if (!pci_bus->is_added)
--		return;
--
--	pci_remove_legacy_files(pci_bus);
--	device_unregister(&pci_bus->dev);
-+	if (pci_bus->is_added || pci_is_root_bus(pci_bus)) {
-+		pci_remove_legacy_files(pci_bus);
-+		device_unregister(&pci_bus->dev);
-+	}
- }
- EXPORT_SYMBOL(pci_remove_bus);
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4b0970b..e2f447e 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -166,6 +166,11 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	int retval;
  
+ 	pci_fixup_device(pci_fixup_final, dev);
++
++	retval = pcibios_add_device(dev);
++	if (retval)
++		return retval;
++
+ 	retval = device_add(&dev->dev);
+ 	if (retval)
+ 		return retval;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f3ea977..5a9a4d8 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1385,6 +1385,19 @@ void pcim_pin_device(struct pci_dev *pdev)
+ 		dr->pinned = 1;
+ }
+ 
++/*
++ * pcibios_add_device - provide arch specific hooks when adding device dev
++ * @dev: the PCI device being added
++ *
++ * Permits the platform to provide architecture specific functionality when
++ * devices are added. This is the default implementation. Architecture
++ * implementations can override this.
++ */
++int __attribute__ ((weak)) pcibios_add_device (struct pci_dev *dev)
++{
++	return 0;
++}
++
+ /**
+  * pcibios_disable_device - disable arch specific PCI resources for device dev
+  * @dev: the PCI device to disable
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..6a2625c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1582,6 +1582,7 @@ void pcibios_disable_device(struct pci_dev *dev);
+ void pcibios_set_master(struct pci_dev *dev);
+ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ 				 enum pcie_reset_state state);
++int pcibios_add_device(struct pci_dev *dev);
+ 
+ #ifdef CONFIG_PCI_MMCONFIG
+ extern void __init pci_mmcfg_early_init(void);
+-- 
+1.7.11.2
 
