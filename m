@@ -1,126 +1,114 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120820053036.GA23166@kroah.com>
-References: <502E8115.90507@gmail.com>
-	<CAErSpo7a77wAxrgZYfg_UdqLEtEf0wUxcbxTghnR7HbRsncKRQ@mail.gmail.com>
-	<20120817182931.GA27391@avionic-0098.adnet.avionic-design.de>
-	<CAErSpo6xhbpmd-rnLqKp9SuRQCp5a7jUzKhz0n6zGGLNHybWqA@mail.gmail.com>
-	<20120817200755.GA16021@avionic-0098.adnet.avionic-design.de>
-	<CAErSpo4XX7mQBmJfYWzmXCSDAt4BzZoJV6gU9__409K=fpvC6A@mail.gmail.com>
-	<20120817204839.GA2017@avionic-0098.mockup.avionic-design.de>
-	<20120817210718.GA14842@avionic-0098.mockup.avionic-design.de>
-	<CAErSpo7bwHNUchZHeJByxzhsc0uN7RJMLivBo5FuOJzA0Gz2Jg@mail.gmail.com>
-	<20120817213247.GA1056@avionic-0098.mockup.avionic-design.de>
-	<20120820053036.GA23166@kroah.com>
-Date: Tue, 21 Aug 2012 16:32:45 +0200
-Message-ID: <CAMuHMdWfhATFQrP-ZiMi6Ub3ZbOgUhe7S_fVUzc7zOwDxRNsyw@mail.gmail.com>
-Subject: Re: PCI Section mismatch error in linux-next.
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>, linux-pci@vger.kernel.org,
-	linux-mips <linux-mips@linux-mips.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:23631 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754315Ab2HWFv2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Aug 2012 01:51:28 -0400
+Date: Thu, 23 Aug 2012 13:45:57 +0800
+From: Feng Tang <feng.tang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: pci_get_subsys: GFP_KERNEL allocations with IRQs disabled
+Message-ID: <20120823134557.00fdeb58@feng-i7>
+In-Reply-To: <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+References: <5017D19B.5080806@redhat.com>
+	<1343738627.27983.30.camel@gandalf.stny.rr.com>
+	<5017D4AB.3090107@redhat.com>
+	<1343740419.27983.33.camel@gandalf.stny.rr.com>
+	<20120731234336.GA5526@localhost>
+	<1343778699.27983.70.camel@gandalf.stny.rr.com>
+	<20120731235705.GW2422@linux.vnet.ibm.com>
+	<1343779778.27983.73.camel@gandalf.stny.rr.com>
+	<20120801001811.GX2422@linux.vnet.ibm.com>
+	<20120801004319.GA7043@localhost>
+	<20120822025008.GA8066@localhost>
+	<20120822154908.2e6ef3c0@feng-i7>
+	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
+Hi Bjorn,
 
-On Mon, Aug 20, 2012 at 7:30 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Fri, Aug 17, 2012 at 11:32:47PM +0200, Thierry Reding wrote:
->> On Fri, Aug 17, 2012 at 03:25:22PM -0600, Bjorn Helgaas wrote:
->> > On Fri, Aug 17, 2012 at 3:07 PM, Thierry Reding
->> > <thierry.reding@avionic-design.de> wrote:
->> > > On Fri, Aug 17, 2012 at 10:48:39PM +0200, Thierry Reding wrote:
->> > >> On Fri, Aug 17, 2012 at 02:39:34PM -0600, Bjorn Helgaas wrote:
->> > > [...]
->> > >> > Well, maybe you just need to turn on CONFIG_HOTPLUG.  How would that
->> > >> > affect you?  I think we would still have to change some __inits to
->> > >> > __devinit, including pcibios_update_irq(), but it might be more
->> > >> > manageable.
->> > >>
->> > >> You said that depending on HOTPLUG wouldn't be enough because it would
->> > >> exclude reenumeration at runtime if HOTPLUG wasn't defined. Also it is
->> > >> theoretically possible to build a kernel without HOTPLUG but have the
->> > >> enumeration start after init because of deferred probing. Those cases
->> > >> won't work if we keep __init or __devinit respectively, right?
->> > >
->> > > Another possibility would be to make PCI select HOTPLUG or depend on it.
->> > > That way it would be made sure that __devinit wouldn't cause all the
->> > > functions to be discarded after init.
->> >
->> > There's been some discussion recently about whether CONFIG_HOTPLUG is
->> > worth keeping any more, but nothing's been resolved yet.  If we did
->> > decide to remove CONFIG_HOTPLUG, or require it for PCI, I would rather
->> > just remove all the __devinit annotations because they'd be
->> > superfluous.
->>
->> I've missed that discussion. Can you point me to it?
->
-> It's pretty much just me saying the whole thing is a mess, causes
-> problems, and really doesn't solve any memory usage issues.  Ideally we
-> should just:
->         - remove CONFIG_HOTPLUG and assume it is enabled
->         - because of that, we can delete the large majority of the
->           __dev* markings
->
-> The memory savings these days are so tiny, if at all, and everyone,
-> including me, gets it wrong all the time.
->
-> As we pretty much allow anything to be disabled/enabled at any point in
-> time after boot, we are all running systems that rely on CONFIG_HOTPLUG
-> anyway.  To find a static system that doesn't need it is quite rare from
-> what I have found.
+On Wed, 22 Aug 2012 11:02:52 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Anyone who disables CONFIG_HOTPLUG in his defconfig files?
+> On Wed, Aug 22, 2012 at 12:49 AM, Feng Tang <feng.tang@intel.com> wrote:
+> > Hi Fengguang,
+> >
+> >
+> > On Wed, 22 Aug 2012 10:50:08 +0800
+> > Fengguang Wu <fengguang.wu@intel.com> wrote:
+> >
+> >> Feng,
+> >>
+> >> > I think it's pci_get_subsys() triggered this assert:
+> >> >
+> >> >         /*
+> >> >          * Oi! Can't be having __GFP_FS allocations with IRQs disabled.
+> >> >          */
+> >> >         if (DEBUG_LOCKS_WARN_ON(irqs_disabled_flags(flags)))
+> >> >                 return;
+> >>
+> >> It's bisected down to this commit:
+> >>
+> >> commit 55c844a4dd16a4d1fdc0cf2a283ec631a02ec448
+> >> Author:     Feng Tang <feng.tang@intel.com>
+> >> AuthorDate: Wed May 30 23:15:41 2012 +0800
+> >> Commit:     Ingo Molnar <mingo@kernel.org>
+> >> CommitDate: Wed Jun 6 12:03:23 2012 +0200
+> >>
+> >>     x86/reboot: Fix a warning message triggered by stop_other_cpus()
+> >>
+> >> Thanks,
+> >> Fengguang
+> >
+> > Thanks for the bisection.
+> >
+> > Revert my commit should be a solution, but can we simply make the pci_device_id
+> > a local on stack one instead of using sleepable kmalloc for it, as this
+> > sounds fragile when pci_get_subsys get called in a late system reboot stage?
+> 
+> I think this is a great idea.  Can you make this a real patch, with a
+> changelog and Signed-off-by?
 
-$ git grep CONFIG_HOTPLUG arch/*/*config
-arch/frv/defconfig:# CONFIG_HOTPLUG is not set
-arch/h8300/defconfig:# CONFIG_HOTPLUG is not set
-arch/um/defconfig:CONFIG_HOTPLUG=y
-$
+Thanks and will do.
 
-Yep, (at least --- not all defconfigs are up-to-date) frv and h8300.
+> 
+> We should also remove the obsolete comment about early boot.  I'm not
+> sure the no_pci_devices() check is needed, either.  And we can make
+> the same simplification in pci_get_class().
 
-It seems to be hard, as it's enabled for all non-CONFIG_EXPERT (and
-before that non-CONFIG_EMBEDDED) builds since Nov 2005
-(full-history-linux commit 712f47cea7703a340406fde61e84eb86ce781988
- "[PATCH] HOTPLUG: always enable the .config option, unless EMBEDDED").
+Will check the no_pci_devices() part, and try to make it a separate
+patch for easy reverting in case of error.
 
-$ git grep CONFIG_EXPERT arch/*/*config
-arch/frv/defconfig:CONFIG_EXPERT=y
-arch/h8300/defconfig:CONFIG_EXPERT=y
-arch/s390/defconfig:CONFIG_EXPERT=y
-arch/um/defconfig:# CONFIG_EXPERT is not set
-$
+> 
+> > ------------
+> > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> > index 993d4a0..e5ccede 100644
+> > --- a/drivers/pci/search.c
+> > +++ b/drivers/pci/search.c
+> > @@ -246,7 +246,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+> >                                struct pci_dev *from)
+> >  {
+> > +       id.vendor = vendor;
+> > +       id.device = device;
+> > +       id.subvendor = ss_vendor;
+> > +       id.subdevice = ss_device;
+> >
+> > +       pdev = pci_get_dev_by_id(&id, from);
+> 
+> No need for "pdev" here, since we don't have to free anything.
 
-The same architectures, plus s390, who used to be an explicit negative
-dependency before the commit above.
+ok, will directly return it.
 
-For a quick test, I enabled CONFIG_EXPERT and disabled CONFIG_HOTPLUG
-in my Atari defconfig build, and it saved 168 bytes of code and 112 bytes of
-data. Note that Atari doesn't have any hotpluggable hardware, hence no
-real hotpluggable drivers.
-Anyway, I'll sleep better now ;-)
-
-FWIW, both tile and xtensa have their own duplicates of CONFIG_HOTPLUG:
-
-$ git grep -w 'config HOTPLUG' -- "*Kconf*"
-arch/tile/Kconfig:config HOTPLUG
-arch/xtensa/Kconfig:config HOTPLUG
-init/Kconfig:config HOTPLUG
-$
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Thanks,
+Feng
