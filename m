@@ -1,78 +1,83 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 01/32] PCI: add pcie_flags_reg into struct pci_dev to cache PCIe capabilities register
-Date: Wed,  1 Aug 2012 23:54:06 +0800
-Message-Id: <1343836477-7287-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <20120823180213.GA31462@google.com>
+References: <20120709181745.18165.93914.stgit@bhelgaas.mtv.corp.google.com>
+	<20120709182018.18165.98339.stgit@bhelgaas.mtv.corp.google.com>
+	<CAOesGMgUGUG9Z=x6ssumVkAxN6fHoeyAJ3-P8CoaNTGas7-vmg@mail.gmail.com>
+	<20120823180213.GA31462@google.com>
+Date: Thu, 23 Aug 2012 11:20:12 -0700
+Message-ID: <CAOesGMjU9trQ3RFFfnQp6TOKWJr1ceeEcKx8xW2phW7EHn+bCw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: leave MEM and IO decoding disabled during 64-bit
+ BAR sizing, too
+From: Olof Johansson <olof@lixom.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jacob Pan <jacob.jun.pan@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matthew Wilcox <matthew.r.wilcox@intel.com>,
+	Robert Hancock <hancockrwd@gmail.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yijing Wang <wangyijing@huawei.com>
+Hi,
 
-From: Yijing Wang <wangyijing@huawei.com>
+On Thu, Aug 23, 2012 at 11:02 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Aug 23, 2012 at 12:28:23AM -0700, Olof Johansson wrote:
+>> Hi,
+>>
+>> On Mon, Jul 9, 2012 at 11:20 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > After 253d2e5498, we disable MEM and IO decoding for most devices while we
+>> > size 32-bit BARs.  However, we restore the original COMMAND register before
+>> > we size the upper 32 bits of 64-bit BARs, so we can still cause a conflict.
+>> >
+>> > This patch waits to restore the original COMMAND register until we're
+>> > completely finished sizing the BAR.
+>> >
+>> > Reference: https://lkml.org/lkml/2007/8/25/154
+>> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> This patch causes boot lockup on PA Semi hardware, since it disables
+>> the bar on the UART that is used for console, and it has printks
+>> between the old and the new re-enable location. If I boot with 'debug'
+>> level for printk, I hit this. If I boot with just regular console
+>> args, I don't.
+>>
+>> I'm guessing any other platform that uses MMIO-based UART on PCI for
+>> console will have similar issues. I can verify on Chrome OS x86
+>> hardware tomorrow if legacy powerpc isn't important enough to care
+>> about. :-)
+>>
+>> I have no proposal for a fix for this. Can you please consider
+>> reverting for 3.6 unless someone has a better idea?
+>
+> Thanks a lot for finding and debugging this!
+>
+> Can you try the patch below?
+>
+>
+> commit cfc29ece86d648e63fb46de81b2bf8e3e107672c
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Aug 23 10:53:08 2012 -0600
+>
+>     PCI: Don't print anything while decoding is disabled
+>
+>     If we try to print to the console device while its decoding is disabled,
+>     the system will hang.
+>
+>     Reported-by: Olof Johansson <olof@lixom.net>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Since PCI Express Capabilities Register is read only, cache its value
-into struct pci_dev to avoid repeatedly calling pci_read_config_*().
+Ah yes, of course. Teaches me to try to do anything productive late at
+night. Tested fine here.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/pci/probe.c |    3 ++-
- include/linux/pci.h |   10 ++++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+Acked-by: Olof Johansson <olof@lixom.net>
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6c143b4..ba4d855 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -929,7 +929,8 @@ void set_pcie_port_type(struct pci_dev *pdev)
- 	pdev->is_pcie = 1;
- 	pdev->pcie_cap = pos;
- 	pci_read_config_word(pdev, pos + PCI_EXP_FLAGS, &reg16);
--	pdev->pcie_type = (reg16 & PCI_EXP_FLAGS_TYPE) >> 4;
-+	pdev->pcie_flags_reg = reg16;
-+	pdev->pcie_type = pci_pcie_type(pdev);
- 	pci_read_config_word(pdev, pos + PCI_EXP_DEVCAP, &reg16);
- 	pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..95662b2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -258,6 +258,7 @@ struct pci_dev {
- 	u8		pcie_mpss:3;	/* PCI-E Max Payload Size Supported */
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;  		/* which interrupt pin this device uses */
-+	u16		pcie_flags_reg;	/* cached PCI-E Capabilities Register */
- 
- 	struct pci_driver *driver;	/* which driver has allocated this device */
- 	u64		dma_mask;	/* Mask of the bits of bus address this
-@@ -1650,6 +1651,15 @@ static inline bool pci_is_pcie(struct pci_dev *dev)
- 	return !!pci_pcie_cap(dev);
- }
- 
-+/**
-+ * pci_pcie_type - get the PCIe device/port type
-+ * @dev: PCI device
-+ */
-+static inline int pci_pcie_type(const struct pci_dev *dev)
-+{
-+	return (dev->pcie_flags_reg & PCI_EXP_FLAGS_TYPE) >> 4;
-+}
-+
- void pci_request_acs(void);
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
- bool pci_acs_path_enabled(struct pci_dev *start,
--- 
-1.7.9.5
 
+Thanks!
+
+-Olof
