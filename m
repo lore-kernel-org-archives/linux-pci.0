@@ -1,156 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55747 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754703Ab2HTOfy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Aug 2012 10:35:54 -0400
-Date: Mon, 20 Aug 2012 10:35:48 -0400
-From: Jason Baron <jbaron@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	mst@redhat.com
-Subject: Re: [PATCH 4/5] PCI, acpiphp: add is_hotplug_bridge detection
-Message-ID: <20120820143548.GA2546@redhat.com>
-References: <1340437325-29282-1-git-send-email-yinghai@kernel.org>
- <1340437325-29282-5-git-send-email-yinghai@kernel.org>
- <CAErSpo7SS1N+h+VyGoCBq5HCMezvFAonRZR-pqsYezVHX2-_2w@mail.gmail.com>
- <20120711171458.GA14610@redhat.com>
- <CAErSpo6Xdc-rDvvipJFzXbbF3V75zSBq4skMtZ2PDVsz1kxtdw@mail.gmail.com>
- <20120717141459.GD2463@redhat.com>
- <CAErSpo4vUqNDqGOxEhzsJbGRAiX6JN+hm5KowsCiZDgcTopehw@mail.gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55681 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753362Ab2HXSw6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Aug 2012 14:52:58 -0400
+Received: by lbbgj3 with SMTP id gj3so1343988lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 24 Aug 2012 11:52:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4vUqNDqGOxEhzsJbGRAiX6JN+hm5KowsCiZDgcTopehw@mail.gmail.com>
+In-Reply-To: <50325732.3000700@gmail.com>
+References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com> <50325732.3000700@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 24 Aug 2012 12:52:37 -0600
+Message-ID: <CAErSpo5TP4j9bqL+GvkxSNKtyzDOh6m5agRaS0_=tAb+46Cvow@mail.gmail.com>
+Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 15, 2012 at 01:36:43PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jul 17, 2012 at 8:14 AM, Jason Baron <jbaron@redhat.com> wrote:
-> > On Wed, Jul 11, 2012 at 01:42:15PM -0600, Bjorn Helgaas wrote:
-> >> On Wed, Jul 11, 2012 at 11:14 AM, Jason Baron <jbaron@redhat.com> wrote:
-> >> > On Wed, Jul 11, 2012 at 09:50:19AM -0600, Bjorn Helgaas wrote:
-> >> >> On Sat, Jun 23, 2012 at 1:42 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> >> > When system support hotplug bridge with children hotplug slots, we need to make sure
-> >> >> > that parent bridge get preallocated resource so later when device is plugged into
-> >> >> > children slot, those children devices will get resource allocated.
-> >> >> >
-> >> >> > We do not meet this problem, because for pcie hotplug card, when acpiphp is used,
-> >> >> > pci_scan_bridge will set that for us when detect hotplug bit in slot cap.
-> >> >> >
-> >> >> > Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
-> >> >> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> >> > Acked-by: Jason Baron <jbaron@redhat.com>
-> >> >> > ---
-> >> >> >  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
-> >> >> >  1 files changed, 26 insertions(+), 1 deletions(-)
-> >> >> >
-> >> >> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> >> >> > index ad6fd66..0f2b72d 100644
-> >> >> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> >> >> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> >> >> > @@ -783,6 +783,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
-> >> >> >         }
-> >> >> >  }
-> >> >> >
-> >> >> > +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
-> >> >> > +{
-> >> >> > +       struct acpiphp_func *func;
-> >> >> > +
-> >> >> > +       if (!dev->subordinate)
-> >> >> > +               return;
-> >> >> > +
-> >> >> > +       /* quirk, or pcie could set it already */
-> >> >> > +       if (dev->is_hotplug_bridge)
-> >> >> > +               return;
-> >> >> > +
-> >> >> > +       if (PCI_SLOT(dev->devfn) != slot->device)
-> >> >> > +               return;
-> >> >> > +
-> >> >> > +       list_for_each_entry(func, &slot->funcs, sibling) {
-> >> >> > +               if (PCI_FUNC(dev->devfn) == func->function) {
-> >> >> > +                       /* check if this bridge has ejectable slots */
-> >> >> > +                       if ((detect_ejectable_slots(func->handle) > 0))
-> >> >> > +                               dev->is_hotplug_bridge = 1;
-> >> >> > +                       break;
-> >> >> > +               }
-> >> >> > +       }
-> >> >> > +}
-> >> >> >  /**
-> >> >> >   * enable_device - enable, configure a slot
-> >> >> >   * @slot: slot to be enabled
-> >> >> > @@ -817,8 +840,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
-> >> >> >                         if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-> >> >> >                             dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
-> >> >> >                                 max = pci_scan_bridge(bus, dev, max, pass);
-> >> >> > -                               if (pass && dev->subordinate)
-> >> >> > +                               if (pass && dev->subordinate) {
-> >> >> > +                                       check_hotplug_bridge(slot, dev);
-> >> >>
-> >> >> I don't like this patch because it increases the differences between
-> >> >> the hotplug drivers, rather than decreasing them.
-> >> >>
-> >> >> For PCI Express devices, we set dev->is_hotplug_bridge in the
-> >> >> pci_setup_device() path (in set_pcie_hotplug_bridge()).  I think it
-> >> >> would make sense to try to expand that path to also handle SHPC and
-> >> >> ACPI hotplug as well.  ACPI is harder because it's not PCI-specified,
-> >> >> so we'd need some sort of pcibios or other optional hook.
-> >> >>
-> >> >> I don't have a clear picture of how this works -- if I understand
-> >> >> correctly, the situation is that we have a bridge managed by acpiphp.
-> >> >> That part makes sense because the bridge is on the motherboard and can
-> >> >> have a DSDT device.  Now we plug something into the slot below the
-> >> >> bridge.  I *think* this patch handles the case where this new
-> >> >> hot-added thing is also a bridge managed by acpiphp.  But where does
-> >> >> the ACPI device for this hot-added bridge come from?  It's an
-> >> >> arbitrary device the BIOS knows nothing about, so it can't be in the
-> >> >> DSDT.
-> >> >>
-> >> >
-> >> > So this came up while I was developing pci bridge hotplug for qemu.
-> >> > Currently, there is a top level host bus (with ACPI device definitions), where
-> >> > devices can be hot-plugged. What I've done is added a second level
-> >> > of hotplug pci busses (again with ACPI device definitions). Thus, we can
-> >> > now hotplug a bridge into the top-level bus and then devices behind it.
-> >> > Effectively increasing the hot-plug space from n -> n^2.
-> >> >
-> >> > Before the above pci patch, the devices behind the bridge would not
-> >> > configure their PCI BARs properly, since there were no i/o, mem resources
-> >> > assigned to the bridge. However, with the above patch in place things
-> >> > work as expected.
-> >> >
-> >> > Using the same code base I was able to do acpi hotplug on Windows 7,
-> >> > which correctly configured the both the bridge window and devices behind
-> >> > it on hot-plug. So currently, the above usage pattern works on Windows
-> >> > 7, but not on Linux.
-> >>
-> >> Thanks, Jason.  Do you have "lspci -v" output and the DSDT AML handy?
-> >> I'd like to look in more detail at what we're missing.
-> >
-> > Hi,
-> >
-> > Sorry for the delay...was on vacation.
-> >
-> > Anyways, below is the patch I have to the seabios acpi table. However,
-> > there are other pieces for seabios and qemu required. I still need to
-> > clean them up and send them out. But this pci patch (or something
-> > similar) is a required dependency.
-> >
-> > What 'lspci -v' output are you looking for?
-> >
-> > Let me know what else I can provide.
-> 
-> Now it's my turn to be sorry for dropping this for so long :)
-> 
-> I was thinking of the "lspci -v" output from your system (qemu guest)
-> and the disassembled DSDT extracted from the same system.  Then we
-> could talk about concrete devices and point to the corresponding
-> entries in lspci output and the ACPI namespace.
+On Mon, Aug 20, 2012 at 9:26 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Hi Bjorn,
+>         I have made following changes according to your suggestions,
+>         1) get rid of the "pci_" prefix for access functions.
+>         2) rename pci_pcie_capability_change_{word|dword}() to
+>         pcie_capability_clear_and_set_{word|dword}.
+>         3) add pcie_capability_{set|clear}_{word|dword}().
+>         4) Add "Acked-by" and "Reviewed-by"
+>         5) rebase to your latest pci-next tree
+>
+>         So could you please help to pull from "https://github.com/jiangliu/linux.git topic/pcie-cap"
+> or should I send all the patches to mail list again?
 
-Hi,
+I applied these (with the fixups mentioned in this thread) to my
+"next" branch.  Unfortunately, I just missed the 0824 -next tree, and
+Stephen is taking a hiatus for KS/LPC next week, so it might be a
+while before they show up in his tree.
 
-posted to: http://people.redhat.com/~jbaron/bridge-hotplug/
+Thanks a lot for doing this work!  I feel much more confident that we
+can avoid driver issues with the v1/v2 differences, and you removed an
+appreciable amount of code at the same time:
 
-I've extracted the ssdt and dsdt tables.
-
-Thanks,
-
--Jason
+ 52 files changed, 591 insertions(+), 823 deletions(-)
