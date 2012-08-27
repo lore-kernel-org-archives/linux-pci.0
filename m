@@ -1,63 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:26055 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752276Ab2HQBAS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 21:00:18 -0400
-Message-ID: <502D9724.2030307@huawei.com>
-Date: Fri, 17 Aug 2012 08:58:12 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58666 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783Ab2H0Byn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Aug 2012 21:54:43 -0400
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 3/3] PCI, acpiphp: Use res->flags to determine whether
- the resouce is valid
-References: <1345119142-5896-1-git-send-email-wangyijing@huawei.com> <1345119142-5896-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1345119142-5896-3-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <50379008.3080500@gmail.com>
+References: <CAFgQCTt82Mu2mhVxeZ01=1bJzuzDWZjBEV58X9xjeEPQY3R8ww@mail.gmail.com>
+	<50379008.3080500@gmail.com>
+Date: Mon, 27 Aug 2012 09:54:42 +0800
+Message-ID: <CAFgQCTs_8WSpmqXwQUznb-hz=VNxHkuAmR5J22O62d1qw7Smgg@mail.gmail.com>
+Subject: Re: pci: question about the life cycle of pci_dev and its parent pci_bus
+From: Liu ping fan <kernelfans@gmail.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Scott Murray <scott@spiteful.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-   Please ignore these three patches, I'm very sorry I still have some confusion about allocating resources
-to pci devices.So this patch is not appropriate. I will provide new version patches when I find a better
-solution for this problem.
+On Fri, Aug 24, 2012 at 10:30 PM, Jiang Liu <liuj97@gmail.com> wrote:
+> Hi Pingfan,
+>
+>         We have realized the same when implementing lock mechanisms for PCI hotplug
+> operations, and we are planning to holding a reference to parent bus for each pci dev.
 
-> When we hot plug pci devices, system will allocate resources to these new add
-> devices, pci_bus_assign_resources() will be called.If the pci devices was assigned
-> resource fail, the resource struct will reset to zero.So I think use res->flags here
-> to determine whether the resource is valid is reliable.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |    4 +---
->  1 files changed, 1 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 7bbd6bf..2161902 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -1084,13 +1084,11 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
->  {
->  	struct pci_dev *dev, *tmp;
->  	int i;
-> -	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
->  
->  	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
->  		for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
->  			struct resource *res = &dev->resource[i];
-> -			if ((res->flags & type_mask) && !res->start &&
-> -					res->end) {
-> +			if (!res->flags) {
->  				/* Could not assign a required resources
->  				 * for this device, remove it */
->  				pci_stop_and_remove_bus_device(dev);
-> 
+Thanks! You save me from searching such codes.
+Regards,
+pingfan
 
-
--- 
-Thanks!
-Yijing
-
+>         Regards!
+>         Gerry
+>
+> On 08/23/2012 01:24 PM, Liu ping fan wrote:
+>> Hi,
+>>
+>> I have a question about the life cycle of pci_dev and its parent pci_bus.
+>> In pci_destroy_dev(), we remove the pci_dev from the bus_list, so
+>> pci_dev is isolated from its parent pci_bus, and their life cycle are
+>> independent too. But it seems that in pci_dev, we can still access the
+>> pci_bus from the pointer pci_dev->bus.  To resolve such issue, I think
+>> during the pci_dev removal,  there should be process to 1.prevent the
+>> reader incoming 2. ensure the current reader has exit.  But can not
+>> find them.
+>>
+>> Could anyone tell me?
+>>
+>> Thanx, pingfan
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>>
+>
