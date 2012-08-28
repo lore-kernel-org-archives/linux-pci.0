@@ -1,167 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12650 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811Ab2HJCgj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Aug 2012 22:36:39 -0400
-Message-ID: <1344566197.19962.95.camel@yhuang-dev>
-Subject: Re: [BUGFIX -v3 3/4] PCI/PM: Fix config reg access for D3cold and
- bridge suspending
-From: Huang Ying <ying.huang@intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 10 Aug 2012 10:36:37 +0800
-In-Reply-To: <1344388061-18981-4-git-send-email-ying.huang@intel.com>
-References: <1344388061-18981-1-git-send-email-ying.huang@intel.com>
-	 <1344388061-18981-4-git-send-email-ying.huang@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jes Sorensen <jes@sgi.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 1/5] PCI/IA64: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+Date: Tue, 28 Aug 2012 23:43:54 +0800
+Message-Id: <1346168638-32724-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-08-08 at 09:07 +0800, Huang Ying wrote:
-> This patch fixes the following bug:
-> 
-> http://marc.info/?l=linux-pci&m=134338059022620&w=2
-> 
-> Where lspci does not work properly if a device and the corresponding
-> parent bridge (such as PCIe port) is suspended.  This is because the
-> device configuration space registers will be not accessible if the
-> corresponding parent bridge is suspended or the device is put into
-> D3cold state.
-> 
-> To solve the issue, the bridge/PCIe port connected to the device is
-> put into active state before read/write configuration space registers.
-> If the device is in D3cold state, it will be put into active state
-> too.
-> 
-> To avoid resume/suspend PCIe port for each configuration register
-> read/write, a small delay is added before the PCIe port to go
-> suspended.
-> 
-> Reported-by: Bjorn Mork <bjorn@mork.no>
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> ---
->  drivers/pci/pci-sysfs.c        |   43 +++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pcie/portdrv_pci.c |    9 ++++++++
->  2 files changed, 52 insertions(+)
-> 
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -458,6 +458,41 @@ boot_vga_show(struct device *dev, struct
->  }
->  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
->  
-> +static void
-> +pci_config_pm_runtime_get(struct pci_dev *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct device *parent = dev->parent;
-> +
-> +	if (parent)
-> +		pm_runtime_get_sync(parent);
-> +	pm_runtime_get_noresume(dev);
-> +	/*
-> +	 * pdev->current_state is set to PCI_D3cold during suspending,
-> +	 * so wait until suspending completes
-> +	 */
-> +	pm_runtime_barrier(dev);
-> +	if (pdev->current_state == PCI_D3cold) {
-> +		/*
-> +		 * Already called pm_runtime_get_noresume above, so
-> +		 * just calling pm_runtime_resume is sufficient, need
-> +		 * not to call pm_runtime_get_sync.
-> +		 */
-> +		pm_runtime_resume(dev);
+Following code has a race window between pci_find_bus() and pci_get_slot()
+if PCI hotplug operation happens between them which removes the pci_bus.
+So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+which also reduces code complexity.
 
-Hi, Rafael,
+struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
 
-Do you OK with this new version and the comments added above?
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/ia64/sn/kernel/io_common.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Best Regards,
-Huang Ying
-
-> +	}
-> +}
-> +
-> +static void
-> +pci_config_pm_runtime_put(struct pci_dev *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct device *parent = dev->parent;
-> +
-> +	pm_runtime_put(dev);
-> +	if (parent)
-> +		pm_runtime_put_sync(parent);
-> +}
-> +
->  static ssize_t
->  pci_read_config(struct file *filp, struct kobject *kobj,
->  		struct bin_attribute *bin_attr,
-> @@ -484,6 +519,8 @@ pci_read_config(struct file *filp, struc
->  		size = count;
->  	}
->  
-> +	pci_config_pm_runtime_get(dev);
-> +
->  	if ((off & 1) && size) {
->  		u8 val;
->  		pci_user_read_config_byte(dev, off, &val);
-> @@ -529,6 +566,8 @@ pci_read_config(struct file *filp, struc
->  		--size;
->  	}
->  
-> +	pci_config_pm_runtime_put(dev);
-> +
->  	return count;
->  }
->  
-> @@ -549,6 +588,8 @@ pci_write_config(struct file* filp, stru
->  		count = size;
->  	}
->  	
-> +	pci_config_pm_runtime_get(dev);
-> +
->  	if ((off & 1) && size) {
->  		pci_user_write_config_byte(dev, off, data[off - init_off]);
->  		off++;
-> @@ -587,6 +628,8 @@ pci_write_config(struct file* filp, stru
->  		--size;
->  	}
->  
-> +	pci_config_pm_runtime_put(dev);
-> +
->  	return count;
->  }
->  
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -140,9 +140,17 @@ static int pcie_port_runtime_resume(stru
->  {
->  	return 0;
->  }
-> +
-> +static int pcie_port_runtime_idle(struct device *dev)
-> +{
-> +	/* Delay for a short while to prevent too frequent suspend/resume */
-> +	pm_schedule_suspend(dev, 10);
-> +	return -EBUSY;
-> +}
->  #else
->  #define pcie_port_runtime_suspend	NULL
->  #define pcie_port_runtime_resume	NULL
-> +#define pcie_port_runtime_idle		NULL
->  #endif
->  
->  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-> @@ -155,6 +163,7 @@ static const struct dev_pm_ops pcie_port
->  	.resume_noirq	= pcie_port_resume_noirq,
->  	.runtime_suspend = pcie_port_runtime_suspend,
->  	.runtime_resume = pcie_port_runtime_resume,
-> +	.runtime_idle	= pcie_port_runtime_idle,
->  };
->  
->  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-
+diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
+index fbb5f2f..8630875 100644
+--- a/arch/ia64/sn/kernel/io_common.c
++++ b/arch/ia64/sn/kernel/io_common.c
+@@ -229,7 +229,6 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
+ {
+ 	int segment = pci_domain_nr(dev->bus);
+ 	struct pcibus_bussoft *bs;
+-	struct pci_bus *host_pci_bus;
+ 	struct pci_dev *host_pci_dev;
+ 	unsigned int bus_no, devfn;
+ 
+@@ -245,8 +244,7 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
+ 
+ 	bus_no = (pcidev_info->pdi_slot_host_handle >> 32) & 0xff;
+ 	devfn = pcidev_info->pdi_slot_host_handle & 0xffffffff;
+- 	host_pci_bus = pci_find_bus(segment, bus_no);
+- 	host_pci_dev = pci_get_slot(host_pci_bus, devfn);
++	host_pci_dev = pci_get_domain_bus_and_slot(segment, bus_no, devfn);
+ 
+ 	pcidev_info->host_pci_dev = host_pci_dev;
+ 	pcidev_info->pdi_linux_pcidev = dev;
+-- 
+1.7.9.5
 
