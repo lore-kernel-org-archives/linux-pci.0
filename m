@@ -1,29 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:33806 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170Ab2HFEvc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Aug 2012 00:51:32 -0400
-Message-ID: <501F4D51.9070306@gmail.com>
-Date: Sun, 05 Aug 2012 22:51:29 -0600
-From: David Ahern <dsahern@gmail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59940 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851Ab2H1X4t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Aug 2012 19:56:49 -0400
+Message-ID: <503D5ABB.6010605@gmail.com>
+Date: Wed, 29 Aug 2012 07:56:43 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: joerg.roedel@amd.com, dwmw2@infradead.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] intel-iommu: Fix ACS path checking
-References: <20120804180155.6144.83332.stgit@bling.home> <20120804180852.6144.71902.stgit@bling.home>
-In-Reply-To: <20120804180852.6144.71902.stgit@bling.home>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 5/5] PCI/xen-pcifront: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com> <1346168638-32724-6-git-send-email-jiang.liu@huawei.com> <20120828165959.GA23312@localhost.localdomain>
+In-Reply-To: <20120828165959.GA23312@localhost.localdomain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/4/12 12:08 PM, Alex Williamson wrote:
-> SR-IOV can create buses without a bridge.  There may be other cases
-> where this happens as well.  In these cases skip to the parent bus
-> and continue testing devices there.
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+On 08/29/2012 12:59 AM, Konrad Rzeszutek Wilk wrote:
+> On Tue, Aug 28, 2012 at 11:43:58PM +0800, Jiang Liu wrote:
+>> Following code has a race window between pci_find_bus() and pci_get_slot()
+>> if PCI hotplug operation happens between them which removes the pci_bus.
+>> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+>> which also reduces code complexity.
+> 
+> Has this happend in practice? Is this something one can reproduce
+> by manipulating SysFS and at the same time unplugging the PCI
+> devices?
+Hi Konrad,
+	We just noticed this issue by code inspection when improving PCI
+hotplug implementation. I guess we could trigger such issue by adding
+some delay between pci_find_bus() and pci_get_slot().
+	Regards!
+	Gerry
 
-Tested-by: David Ahern <dsahern@gmail.com>
+>>
+>> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+>> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> ---
+>>  drivers/pci/xen-pcifront.c |   10 ++--------
+>>  1 file changed, 2 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+>> index d6cc62c..def8d0b 100644
+>> --- a/drivers/pci/xen-pcifront.c
+>> +++ b/drivers/pci/xen-pcifront.c
+>> @@ -982,7 +982,6 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>>  	int err = 0;
+>>  	int i, num_devs;
+>>  	unsigned int domain, bus, slot, func;
+>> -	struct pci_bus *pci_bus;
+>>  	struct pci_dev *pci_dev;
+>>  	char str[64];
+>>  
+>> @@ -1032,13 +1031,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>>  			goto out;
+>>  		}
+>>  
+>> -		pci_bus = pci_find_bus(domain, bus);
+>> -		if (!pci_bus) {
+>> -			dev_dbg(&pdev->xdev->dev, "Cannot get bus %04x:%02x\n",
+>> -				domain, bus);
+>> -			continue;
+>> -		}
+>> -		pci_dev = pci_get_slot(pci_bus, PCI_DEVFN(slot, func));
+>> +		pci_dev = pci_get_domain_bus_and_slot(domain, bus,
+>> +				PCI_DEVFN(slot, func));
+>>  		if (!pci_dev) {
+>>  			dev_dbg(&pdev->xdev->dev,
+>>  				"Cannot get PCI device %04x:%02x:%02x.%d\n",
+>> -- 
+>> 1.7.9.5
+>>
 
