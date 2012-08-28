@@ -1,44 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:57985 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750806Ab2GTSRm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jul 2012 14:17:42 -0400
-Received: by lbbgm6 with SMTP id gm6so5367001lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 20 Jul 2012 11:17:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4BDvognFbn6DZCEGuvf=u4g5HZRHtXb2cPGf2Kzz0tNQ@mail.gmail.com>
-References: <CAErSpo4BDvognFbn6DZCEGuvf=u4g5HZRHtXb2cPGf2Kzz0tNQ@mail.gmail.com>
-Date: Fri, 20 Jul 2012 11:17:40 -0700
-Message-ID: <CAPoiz9y0z3ysiwm6AgyOq1kBeeO8kTAaxdyoJOcpEP9rxfdR5w@mail.gmail.com>
-Subject: Re: pcie_bus_configure_settings() use of uninitialized value
-From: Jon Mason <jdmason@kudzu.us>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Dave Airlie <airlied@redhat.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 2/5] PCI/vga: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+Date: Tue, 28 Aug 2012 23:43:55 +0800
+Message-Id: <1346168638-32724-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 19, 2012 at 6:15 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Hi Jon,
->
-> Coverity noticed that pcie_bus_configure_settings() can call
-> pcie_bus_configure_set() when "smpss" is uninitialized.
->
-> This might be only a theoretical problem because that can only happen
-> if pcie_bus_config is PCIE_BUS_PERFORMANCE, and in that case, I
-> *think* we don't care about smpss because pcie_write_mps() ignores the
-> mps passed in and always uses dev->pcie_mpss.  But it takes a lot of
-> analysis to be certain, and it would be better to make
-> pcie_bus_configure_settings() cleaner.
->
-> Would you mind fixing this up?
+Following code has a race window between pci_find_bus() and pci_get_slot()
+if PCI hotplug operation happens between them which removes the pci_bus.
+So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+which also reduces code complexity.
 
-Sorry, just saw this.  Do you still want me to take a whack at it?
+struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
 
->
-> Thanks,
->   Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/gpu/vga/vgaarb.c |   15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 3df8fc0..b6852b7 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1066,7 +1066,6 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
+ 		}
+ 
+ 	} else if (strncmp(curr_pos, "target ", 7) == 0) {
+-		struct pci_bus *pbus;
+ 		unsigned int domain, bus, devfn;
+ 		struct vga_device *vgadev;
+ 
+@@ -1085,19 +1084,11 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
+ 			pr_debug("vgaarb: %s ==> %x:%x:%x.%x\n", curr_pos,
+ 				domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
+ 
+-			pbus = pci_find_bus(domain, bus);
+-			pr_debug("vgaarb: pbus %p\n", pbus);
+-			if (pbus == NULL) {
+-				pr_err("vgaarb: invalid PCI domain and/or bus address %x:%x\n",
+-					domain, bus);
+-				ret_val = -ENODEV;
+-				goto done;
+-			}
+-			pdev = pci_get_slot(pbus, devfn);
++			pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+ 			pr_debug("vgaarb: pdev %p\n", pdev);
+ 			if (!pdev) {
+-				pr_err("vgaarb: invalid PCI address %x:%x\n",
+-					bus, devfn);
++				pr_err("vgaarb: invalid PCI address %x:%x:%x\n",
++					domain, bus, devfn);
+ 				ret_val = -ENODEV;
+ 				goto done;
+ 			}
+-- 
+1.7.9.5
+
