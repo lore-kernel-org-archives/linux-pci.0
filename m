@@ -1,43 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH -v2 4/4] PCI/PM: Add ABI document for sysfs file d3cold_allowed
-Date: Mon,  6 Aug 2012 09:34:30 +0800
-Message-Id: <1344216870-21105-5-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-References: <1344216870-21105-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:48675 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628Ab2H2Nay (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2012 09:30:54 -0400
+Date: Wed, 29 Aug 2012 07:24:16 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: TJ <tj@iam.tj>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: Limiting BAR resource  region size allocation (device claims
+	2x what it needs) ?
+Message-ID: <20120829132415.GA21160@parisc-linux.org>
+References: <503E1027.6050104@iam.tj>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <503E1027.6050104@iam.tj>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds ABI document for the following sysfs file:
+On Wed, Aug 29, 2012 at 01:50:47PM +0100, TJ wrote:
+> The CPU is 64-bit but the i945PM northbridge is 32-bit (so no physical > 4GB addressing). With PCI allocations as they are the system is limited to 2GB of RAM under Linux (3GB on Windows Vista).
 
-/sys/bus/pci/devices/.../d3cold_allowed
+According to the laptop specs, it's limited to 2GB RAM:
 
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- Documentation/ABI/testing/sysfs-bus-pci |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+http://www.sony.co.uk/support/en/product/VGN-FE41Z/specifications
 
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -210,3 +210,15 @@ Users:
- 		firmware assigned instance number of the PCI
- 		device that can help in understanding the firmware
- 		intended order of the PCI device.
-+
-+What:		/sys/bus/pci/devices/.../d3cold_allowed
-+Date:		July 2012
-+Contact:	Huang Ying <ying.huang@intel.com>
-+Description:
-+		d3cold_allowed is bit to control whether the corresponding PCI
-+		device can be put into D3Cold state.  If it is cleared, the
-+		device will never be put into D3Cold state.  If it is set, the
-+		device may be put into D3Cold state if other requirements are
-+		satisfied too.  Reading this attribute will show the current
-+		value of d3cold_allowed bit.  Writing this attribute will set
-+		the value of d3cold_allowed bit.
+Personally, I'm not terribly excited about doing much work to enhance
+a 6 year old laptop...
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
