@@ -1,117 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:52986 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755445Ab2HQXgW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:22 -0400
-Received: by mail-ee0-f74.google.com with SMTP id d4so192260eek.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:22 -0700 (PDT)
-Subject: [PATCH v2 07/16] PCI: Fold stop and remove helpers into their callers
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:21 -0600
-Message-ID: <20120817233621.10973.48755.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Received: from yes.iam.tj ([109.74.197.121]:49895 "EHLO tjworld.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751000Ab2H2OTH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Aug 2012 10:19:07 -0400
+Received: from [10.254.251.51] (unknown [10.254.251.51])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by tjworld.net (Postfix) with ESMTPSA id 5A6C21ADD5
+	for <linux-pci@vger.kernel.org>; Wed, 29 Aug 2012 15:19:05 +0100 (BST)
+Message-ID: <503E24D8.3010601@iam.tj>
+Date: Wed, 29 Aug 2012 15:19:04 +0100
+From: TJ <tj@iam.tj>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+CC: linux-pci@vger.kernel.org
+Subject: Re: Limiting BAR resource  region size allocation (device claims
+ 2x what it needs) ?
+References: <503E1027.6050104@iam.tj> <20120829132415.GA21160@parisc-linux.org>
+In-Reply-To: <20120829132415.GA21160@parisc-linux.org>
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_stop_bus_devices() is only two lines of code and is only called by
-pci_stop_bus_device(), so I think it's easier to read if we just fold it
-into the caller.  Similarly for __pci_remove_behind_bridge().
+On 29/08/12 14:24, Matthew Wilcox wrote:
+> On Wed, Aug 29, 2012 at 01:50:47PM +0100, TJ wrote:
+>> The CPU is 64-bit but the i945PM northbridge is 32-bit (so no physical > 4GB addressing). With PCI allocations as they are the system is limited to 2GB of RAM under Linux (3GB on Windows Vista).
+> 
+> According to the laptop specs, it's limited to 2GB RAM:
+> 
+> http://www.sony.co.uk/support/en/product/VGN-FE41Z/specifications
+> 
+> Personally, I'm not terribly excited about doing much work to enhance
+> a 6 year old laptop...
+> 
+I've had it from new. It supports 4GB physically - 2 SO-DIM slots @ 2GB each.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c |   53 +++++++++++++++++++-------------------------------
- 1 files changed, 20 insertions(+), 33 deletions(-)
+Up until now I've been using my own resource allocation patches I wrote in 2009 to do things the same way as Windows does, to allow access to 3GB of RAM. At that time I discussed them with Jesse
+Barnes and analysed the problem comprehensively. See http://tjworld.net/wiki/Linux/Kernel/Bug/PciAllocationAlgorithm
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index f17a027..30d002e 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -78,7 +78,6 @@ void pci_remove_bus(struct pci_bus *pci_bus)
- }
- EXPORT_SYMBOL(pci_remove_bus);
- 
--static void __pci_remove_behind_bridge(struct pci_dev *dev);
- static void pci_stop_bus_device(struct pci_dev *dev);
- 
- /**
-@@ -95,11 +94,14 @@ static void pci_stop_bus_device(struct pci_dev *dev);
-  */
- static void __pci_remove_bus_device(struct pci_dev *dev)
- {
--	if (dev->subordinate) {
--		struct pci_bus *b = dev->subordinate;
-+	struct pci_bus *bus = dev->subordinate;
-+	struct pci_dev *child, *tmp;
-+
-+	if (bus) {
-+		list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+			__pci_remove_bus_device(child);
- 
--		__pci_remove_behind_bridge(dev);
--		pci_remove_bus(b);
-+		pci_remove_bus(bus);
- 		dev->subordinate = NULL;
- 	}
- 
-@@ -112,32 +114,6 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 	__pci_remove_bus_device(dev);
- }
- 
--static void __pci_remove_behind_bridge(struct pci_dev *dev)
--{
--	struct pci_dev *child, *tmp;
--
--	if (dev->subordinate)
--		list_for_each_entry_safe(child, tmp,
--					 &dev->subordinate->devices, bus_list)
--			__pci_remove_bus_device(child);
--}
--
--static void pci_stop_bus_devices(struct pci_bus *bus)
--{
--	struct pci_dev *dev, *tmp;
--
--	/*
--	 * VFs could be removed by pci_stop_and_remove_bus_device() in the
--	 *  pci_stop_bus_devices() code path for PF.
--	 *  aka, bus->devices get updated in the process.
--	 * but VFs are inserted after PFs when SRIOV is enabled for PF,
--	 * We can iterate the list backwards to get prev valid PF instead
--	 *  of removed VF.
--	 */
--	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list)
--		pci_stop_bus_device(dev);
--}
--
- /**
-  * pci_stop_bus_device - stop a PCI device and any children
-  * @dev: the device to stop
-@@ -148,8 +124,19 @@ static void pci_stop_bus_devices(struct pci_bus *bus)
-  */
- static void pci_stop_bus_device(struct pci_dev *dev)
- {
--	if (dev->subordinate)
--		pci_stop_bus_devices(dev->subordinate);
-+	struct pci_bus *bus = dev->subordinate;
-+	struct pci_dev *child, *tmp;
-+
-+	/*
-+	 * Removing an SR-IOV PF device removes all the associated VFs,
-+	 * which will update the bus->devices list and confuse the
-+	 * iterator.  Therefore, iterate in reverse so we remove the VFs
-+	 * first, then the PF.
-+	 */
-+	if (bus)
-+		list_for_each_entry_safe_reverse(child, tmp,
-+						 &bus->devices, bus_list)
-+			pci_stop_bus_device(child);
- 
- 	pci_stop_dev(dev);
- }
+I'd now like to work with a mainline kernel but that would force me to lose 1/3 of RAM as things stand.
+
+As things have changed significantly in PCI-land since I wrote my patches they no longer fit so I'm looking to find a way to use mainline and keep the 3GB of RAM.
+
+Relatively recently I realised the VRAM is only 128MB so I wondered if there might be a slightly easier way by forcing the region size allocation to match. Reducing the region size to 128MB would also
+mean double the number of boundaries it could align to. That might avoid the need for my custom patches to shuffle allocations around.
+
 
