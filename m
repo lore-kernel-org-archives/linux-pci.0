@@ -1,176 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1588 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758723Ab2HHPYb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Aug 2012 11:24:31 -0400
-Message-ID: <1344439468.26297.14.camel@bling.home>
-Subject: Re: [PATCH] pci: Account for virtual buses in pci_acs_path_enabled
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Don Dutile <ddutile@redhat.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dsahern@gmail.com
-Date: Wed, 08 Aug 2012 09:24:28 -0600
-In-Reply-To: <CAErSpo5sFfr=O-Pp=PyaxGauaEajaTr2aK-EQ_rTVUk1zyz8cA@mail.gmail.com>
-References: <20120804181445.6598.6505.stgit@bling.home>
-	 <CAErSpo42VMnfzDP6t5eCFfE-5=yPNmNGLs6a2D0KwGMhe71DbQ@mail.gmail.com>
-	 <1344232549.3441.7.camel@ul30vt.home>
-	 <CAErSpo756PXBNjwEMEX8DKGcEu0R+UuQ+rg9NG8k1c+TZ=j2Gw@mail.gmail.com>
-	 <50218DB6.2080209@redhat.com>
-	 <CAErSpo5sFfr=O-Pp=PyaxGauaEajaTr2aK-EQ_rTVUk1zyz8cA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:55307 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752456Ab2H2QCq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Aug 2012 12:02:46 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120829101423.GA18856@ram-ThinkPad-T61>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+	<1340736849-14875-3-git-send-email-yinghai@kernel.org>
+	<CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
+	<CAE9FiQUXTngUZp2c2dLVRZjFxhXD9e+XYW6Pn0zaHvMt0fB+eA@mail.gmail.com>
+	<CA+55aFxLUExCZE1=gQpDT0ip9s+iMRYEVK2QjdCGNk9iympfYA@mail.gmail.com>
+	<CA+55aFyb-g77CQNoR72J0pjw76ZCy_nufP=VavT_X3xBg6=G-Q@mail.gmail.com>
+	<20120829101423.GA18856@ram-ThinkPad-T61>
+Date: Wed, 29 Aug 2012 09:02:44 -0700
+Message-ID: <CAE9FiQVtxMWEheQAWkvHZzFRUtyEL914EFZAJjg98p6Jsq3zpw@mail.gmail.com>
+Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-08-07 at 23:00 -0700, Bjorn Helgaas wrote:
-> On Tue, Aug 7, 2012 at 2:50 PM, Don Dutile <ddutile@redhat.com> wrote:
-> > On 08/06/2012 04:47 PM, Bjorn Helgaas wrote:
-> >>
-> >> On Sun, Aug 5, 2012 at 11:55 PM, Alex Williamson
-> >> <alex.williamson@redhat.com>  wrote:
-> >>>
-> >>> On Sun, 2012-08-05 at 23:30 -0600, Bjorn Helgaas wrote:
-> >>>>
-> >>>> On Sat, Aug 4, 2012 at 12:19 PM, Alex Williamson
-> >>>> <alex.williamson@redhat.com>  wrote:
-> >>>>>
-> >>>>> It's possible to have buses without an associated bridge
-> >>>>> (bus->self == NULL).  SR-IOV can generate such buses.  When
-> >>>>> we find these, skip to the parent bus to look for the next
-> >>>>> ACS test.
-> >>>>
-> >>>>
-> >>>> To make sure I understand the problem here, I think you're referring
-> >>>> to the situation where an SR-IOV device can span several bus numbers,
-> >>>> e.g., the "VFs Spanning Multiple Bus Numbers" implementation note in
-> >>>> the SR-IOV 1.1 spec, sec. 2.1.2.
-> >>>>
-> >>>> It says "All PFs must be located on the Device's captured Bus Number"
-> >>>> -- I think that means every PF will be directly on a bridge's
-> >>>> secondary bus and hence will have a valid dev->bus->self pointer.
-> >>>>
-> >>>> However, VFs need not be on the same bus number.  If a VF is on
-> >>>> (captured Bus Number plus 1), I think we allocate a new struct pci_bus
-> >>>> for it, but there's no P2P bridge that leads to that bus, so the
-> >>>> bus->self pointer is probably NULL.
-> >>>
-> >>>
-> >>> Yes, exactly.  virtfn_add_bus() is where we're creating this new bus.
-> >>>
-> >>>> This makes me quite nervous, because I bet there are many places that
-> >>>> assume every non-root bus has a valid bus->self pointer  -- I know I
-> >>>> certainly had that assumption.
-> >>>>
-> >>>> I looked at callers of pci_is_root_bus(), and at first glance, it seems
-> >>>> like
-> >>>> iommu_init_device(), intel_iommu_add_device(), pci_acs_path_enabled(),
-> >>>
-> >>>
-> >>>
-> >>> These 3 are handled by this patch, plus the intel and amd iommu patches
-> >>> I sent.
-> >>>
-> >>>> pci_get_interrupt_pin(), pci_common_swizzle(),
-> >>>
-> >>>
-> >>> If sr-iov is the only source of these virtual buses, these are probably
-> >>> ok since VFs don't support INTx.
-> >>>
-> >>>> pci_find_upstream_pcie_bridge(), and
-> >>>
-> >>>
-> >>> Here the pci_is_root_bus() is after a pci_is_pcie() check, so again if
-> >>> sr-iov only (and assuming VFs properly report PCIe capability), we
-> >>> shouldn't stumble on it.
-> >>>
-> >>>> pci_bus_release_bridge_resources() all might have similar problems.
-> >>>
-> >>>
-> >>> This one might deserve further investigation.  Thanks,
-> >>
-> >>
-> >> We can fix all these places piecemeal, but that doesn't feel like a
-> >> very satisfying solution.  It makes it much harder to know that each
-> >> place is correct, and this oddity of a bus with no upstream bridge is
-> >> still lying around, waiting to bite us again later.
-> >>
-> >> What other possible ways of fixing this do we have?  Could we set
-> >> bus->self (multiple buses would then point to the same bridge, and I
-> >> don't know if that would break something)?  Add something like a
-> >> pci_upstream_p2p_bridge() interface that would encapsulate traversing
-> >
-> >   ^^^ and this name will reduce the confusion? :)
-> 
-> I don't claim that :)  I just wanted to explore other possible
-> solutions.  Changing every loop that searches the parent chain so it
-> knows about this SR-IOV oddity doesn't seem like the ideal solution,
-> though maybe it's the best we can do given the constraints.
+On Wed, Aug 29, 2012 at 3:14 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+> @@ -718,12 +727,12 @@ void insert_resource_expand_to_fit(struct resource *root, struct resource *new)
+>   */
+>  int adjust_resource(struct resource *res, resource_size_t start, resource_size_t size)
+>  {
+> -       struct resource *tmp, *parent = res->parent;
+> +       struct resource *tmp, *parent;
+>         resource_size_t end = start + size - 1;
+>         int result = -EBUSY;
+>
+>         write_lock(&resource_lock);
+> -
+> +       parent = res->parent;
+>         if (!parent)
+>                 goto skip;
 
-Yep, these are the two alternatives I thought of too, set bus->self or
-create a helper function.  The former leaves present assumptions in
-place, but I don't know whether we'll break something else having two
-buses claiming to be sourced by the same device.  Maintaining the NULL
-self pointer almost feels like a better representation of the hardware,
-but requires evaluating all the current users and coming up with a
-helper.  That's more work, but we probably want to move away from
-everyone manually walking pci data structures anyway.
+yes, in the v7 of probe_resource() patch that  I sent before,
+introduced _adjust_resource solved the problem.
 
-> >> Since these fake VF buses don't have a bridge that points to them, I
-> >
-> > Well, they aren't fake busses, just ARI-identifiers, which translate the
-> > B:D.F/8:5.3
-> > format to simply a 16-bit i.d.
-> 
-> I think an SR-IOV device can consume multiple bus numbers even without
-> ARI (in fact, I think ARI  reduces the number of bus numbers the
-> device requires ... e.g., a PF and 15 VFs would require two bus
-> numbers without ARI (04:00.0 - 04:00.7 and 05:00.0 - 05:00.7) but only
-> one bus number with ARI (04:00.0 - 04:01.7)).  (I think "04:01.7" is
-> how Linux would represent the 8-bit function number ARI gives you.
-> You could also think of it as "04:00.0f")
 
-Yep, that's what I think is happening too.  I've been testing on a
-system with ARI, so using the same device as David, PFs at 1:00.0/1 and
-VFs at 1:10.0 - 1:11.5.  The sr-iov capability reports VF offset: 128,
-stride: 2.  IIRC, w/o ARI this same device reports VF offset 384 (256 +
-128), which seems to match David's lspci.
+@@ -741,14 +741,13 @@ void insert_resource_expand_to_fit(struc
+  * arguments.  Returns 0 on success, -EBUSY if it can't fit.
+  * Existing children of the resource are assumed to be immutable.
+  */
+-int adjust_resource(struct resource *res, resource_size_t start,
+resource_size_t size)
++static int __adjust_resource(struct resource *res, resource_size_t start,
++                            resource_size_t size)
+ {
+        struct resource *tmp, *parent = res->parent;
+        resource_size_t end = start + size - 1;
+        int result = -EBUSY;
 
-> 
-> > So, VF devices should be attached to same bus->devices list as it's PF.
-> 
-> I don't think it works that way today, does it?  In the SR-IOV spec
-> example in sec 2.1.2:
-> 
->   PF 0 at 04:00.0
->   ARI Capable is set
->   First VF Offset = 1, VF Stride = 1, NumVFs = 600
-> 
-> I think we have three separate bus->devices lists:
-> 
->   pci_bus 04: devices list contains PF 0 and VF 0,1 through VF 0,255
->   pci_bus 05: devices list contains VF 0,256 - VF 0,511
->   pci_bus 06: devices list contains VF 0,512 - VF 0,600
-> 
-> > pci_dev->bus should be same bus ptr as PF's pci_dev as well, since the
-> > VF uses all that's busses resources, support functions (cfg, dma-ops, etc.)
-> > as well.
-> > Searching the driver/pci area, support of functions like AER want the
-> > bus struct that's receiving/handling the PCIe error, associated (hw) port,
-> > etc.,
-> > so another reason the VF's pci-dev bus ptr should be the same as the PF's.
-> 
-> Maybe every VF *should* have the same dev->bus pointer as the PF, but
-> I don't think it does today.  I think we only store the bus number in
-> the struct pci_bus, so if we *did* give all the VFs the same dev->bus
-> pointer and put all the VFs in the same bus->devices list, we'd have
-> to store the bus number elsewhere, e.g., in the struct pci_dev.
-> 
-> That might make sense, but the magnitude of a change like that makes
-> my head hurt --  it would affect drivers, arch code, config accessors,
-> etc.
+-       write_lock(&resource_lock);
+-
+        if (!parent)
+                goto skip;
 
-Yep, I agree, that's a total rework of what a struct pci_bus represents.
-Thanks,
+@@ -776,9 +775,19 @@ skip:
+        result = 0;
 
-Alex
+  out:
+-       write_unlock(&resource_lock);
+        return result;
+ }
++int adjust_resource(struct resource *res, resource_size_t start,
++                   resource_size_t size)
++{
++       int ret;
++
++       write_lock(&resource_lock);
++       ret = __adjust_resource(res, start, size);
++       write_unlock(&resource_lock);
++
++       return ret;
++}
+ EXPORT_SYMBOL(adjust_resource);
 
+ static void __init __reserve_region_with_split(struct resource *root,
