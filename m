@@ -1,220 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	Matt Carlson <mcarlson@broadcom.com>,
-	Michael Chan <mchan@broadcom.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH v3 16/32] PCI/broadcom: use PCIe capabilities access functions to simplify implementation
-Date: Wed,  1 Aug 2012 23:54:21 +0800
-Message-Id: <1343836477-7287-17-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:45026 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab2H3Psw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2012 11:48:52 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+	<CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+Date: Thu, 30 Aug 2012 08:48:51 -0700
+Message-ID: <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Aug 29, 2012 at 11:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Aug 9, 2012 at 11:09 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>>  Hi all,
+>>
+>>
+>>  I'd like to merge hostbridge hotplug feature.
+>>  I looked at Yinghai's branch and found that this branch contains
+>>  many work and can be split into some parts.
+>>  I believe it is good to merge step by step.
+>>
+>>  My idea is splitting into the following 4 parts:
+>>    1. basic hostbirdge hotplug work
+>>    2. acpiphp work
+>>    3. /sysfs interface work (logical hotplug?)
+>>    4. cleanup
+>>
+>>  This patchset is 1st step based on the following Yinghai's branch:
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>> for-pci-root-bus-hotplug
+>>
+>>   * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
+>>   * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
+>>   * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
+>>   * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+>>   * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
+>>   * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
+>>   * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
+>
+> I looked at merging these tonight.  But I noticed there are still a
+> few unanswered questions I asked earlier.
+>
+> 1) For patch [1/7], I pointed out that there is currently no way to
+> remove a non-ACPI host bridge, which means the fact that we don't free
+> the pci_sysdata is not really a leak.  If you want to add the
+> release_fn so that you can add support for removing and adding these
+> non-ACPI host bridges in the future, I do not understand that.  It
+> just doesn't make sense to me to try to support hotplug for those
+> bridges.
 
-Use PCIe capabilities access functions to simplify broadcom ethernet drivers'
-implementation.
+for Intel Nehalem and westmere -ex system, there will be root bus from
+0xf8 to 0xff for cpus.
+and BIOS does not put the in ACPI, but __pci_mmcfg_init will set the
+pcibios_last_bus.
+so those but get probed via pcibios_fixup_peer_bridges.
 
-Signed-off-by: Jiang Liu <liuj97@gmail.com>
----
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |   25 ++-------
- drivers/net/ethernet/broadcom/tg3.c              |   60 ++++++++--------------
- 2 files changed, 25 insertions(+), 60 deletions(-)
+I hope I could use /sys to remove non-acpi root bus.
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-index f755a66..c631f62 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-@@ -1142,14 +1142,9 @@ static int bnx2x_send_final_clnup(struct bnx2x *bp, u8 clnup_func,
- 
- static u8 bnx2x_is_pcie_pending(struct pci_dev *dev)
- {
--	int pos;
- 	u16 status;
- 
--	pos = pci_pcie_cap(dev);
--	if (!pos)
--		return false;
--
--	pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
-+	pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
- 	return status & PCI_EXP_DEVSTA_TRPND;
- }
- 
-@@ -6114,8 +6109,7 @@ static void bnx2x_init_pxp(struct bnx2x *bp)
- 	u16 devctl;
- 	int r_order, w_order;
- 
--	pci_read_config_word(bp->pdev,
--			     pci_pcie_cap(bp->pdev) + PCI_EXP_DEVCTL, &devctl);
-+	pci_pcie_capability_read_word(bp->pdev, PCI_EXP_DEVCTL, &devctl);
- 	DP(NETIF_MSG_HW, "read 0x%x from devctl\n", devctl);
- 	w_order = ((devctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5);
- 	if (bp->mrrs == -1)
-@@ -9330,15 +9324,10 @@ static int __devinit bnx2x_prev_mark_path(struct bnx2x *bp)
- 
- static bool __devinit bnx2x_can_flr(struct bnx2x *bp)
- {
--	int pos;
- 	u32 cap;
- 	struct pci_dev *dev = bp->pdev;
- 
--	pos = pci_pcie_cap(dev);
--	if (!pos)
--		return false;
--
--	pci_read_config_dword(dev, pos + PCI_EXP_DEVCAP, &cap);
-+	pci_pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
- 	if (!(cap & PCI_EXP_DEVCAP_FLR))
- 		return false;
- 
-@@ -9347,7 +9336,7 @@ static bool __devinit bnx2x_can_flr(struct bnx2x *bp)
- 
- static int __devinit bnx2x_do_flr(struct bnx2x *bp)
- {
--	int i, pos;
-+	int i;
- 	u16 status;
- 	struct pci_dev *dev = bp->pdev;
- 
-@@ -9355,16 +9344,12 @@ static int __devinit bnx2x_do_flr(struct bnx2x *bp)
- 	if (bnx2x_can_flr(bp))
- 		return -ENOTTY;
- 
--	pos = pci_pcie_cap(dev);
--	if (!pos)
--		return -ENOTTY;
--
- 	/* Wait for Transaction Pending bit clean */
- 	for (i = 0; i < 4; i++) {
- 		if (i)
- 			msleep((1 << (i - 1)) * 100);
- 
--		pci_read_config_word(dev, pos + PCI_EXP_DEVSTA, &status);
-+		pci_pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &status);
- 		if (!(status & PCI_EXP_DEVSTA_TRPND))
- 			goto clear;
- 	}
-diff --git a/drivers/net/ethernet/broadcom/tg3.c b/drivers/net/ethernet/broadcom/tg3.c
-index 09fa3c6..d29fe27 100644
---- a/drivers/net/ethernet/broadcom/tg3.c
-+++ b/drivers/net/ethernet/broadcom/tg3.c
-@@ -3541,17 +3541,9 @@ static int tg3_power_down_prepare(struct tg3 *tp)
- 	tg3_enable_register_access(tp);
- 
- 	/* Restore the CLKREQ setting. */
--	if (tg3_flag(tp, CLKREQ_BUG)) {
--		u16 lnkctl;
--
--		pci_read_config_word(tp->pdev,
--				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
--				     &lnkctl);
--		lnkctl |= PCI_EXP_LNKCTL_CLKREQ_EN;
--		pci_write_config_word(tp->pdev,
--				      pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
--				      lnkctl);
--	}
-+	if (tg3_flag(tp, CLKREQ_BUG))
-+		pci_pcie_capability_change_word(tp->pdev, PCI_EXP_LNKCTL,
-+						PCI_EXP_LNKCTL_CLKREQ_EN, 0);
- 
- 	misc_host_ctrl = tr32(TG3PCI_MISC_HOST_CTRL);
- 	tw32(TG3PCI_MISC_HOST_CTRL,
-@@ -4322,20 +4314,15 @@ relink:
- 
- 	/* Prevent send BD corruption. */
- 	if (tg3_flag(tp, CLKREQ_BUG)) {
--		u16 oldlnkctl, newlnkctl;
-+		u16 set = 0, clr = 0;
- 
--		pci_read_config_word(tp->pdev,
--				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
--				     &oldlnkctl);
- 		if (tp->link_config.active_speed == SPEED_100 ||
- 		    tp->link_config.active_speed == SPEED_10)
--			newlnkctl = oldlnkctl & ~PCI_EXP_LNKCTL_CLKREQ_EN;
-+			clr = PCI_EXP_LNKCTL_CLKREQ_EN;
- 		else
--			newlnkctl = oldlnkctl | PCI_EXP_LNKCTL_CLKREQ_EN;
--		if (newlnkctl != oldlnkctl)
--			pci_write_config_word(tp->pdev,
--					      pci_pcie_cap(tp->pdev) +
--					      PCI_EXP_LNKCTL, newlnkctl);
-+			set = PCI_EXP_LNKCTL_CLKREQ_EN;
-+		pci_pcie_capability_change_word(tp->pdev, PCI_EXP_LNKCTL,
-+						set, clr);
- 	}
- 
- 	if (current_link_up != netif_carrier_ok(tp->dev)) {
-@@ -7942,7 +7929,7 @@ static int tg3_chip_reset(struct tg3 *tp)
- 
- 	udelay(120);
- 
--	if (tg3_flag(tp, PCI_EXPRESS) && pci_pcie_cap(tp->pdev)) {
-+	if (tg3_flag(tp, PCI_EXPRESS) && pci_is_pcie(tp->pdev)) {
- 		u16 val16;
- 
- 		if (tp->pci_chip_rev_id == CHIPREV_ID_5750_A0) {
-@@ -7959,28 +7946,22 @@ static int tg3_chip_reset(struct tg3 *tp)
- 		}
- 
- 		/* Clear the "no snoop" and "relaxed ordering" bits. */
--		pci_read_config_word(tp->pdev,
--				     pci_pcie_cap(tp->pdev) + PCI_EXP_DEVCTL,
--				     &val16);
--		val16 &= ~(PCI_EXP_DEVCTL_RELAX_EN |
--			   PCI_EXP_DEVCTL_NOSNOOP_EN);
-+		val16 = PCI_EXP_DEVCTL_RELAX_EN | PCI_EXP_DEVCTL_NOSNOOP_EN;
- 		/*
- 		 * Older PCIe devices only support the 128 byte
- 		 * MPS setting.  Enforce the restriction.
- 		 */
- 		if (!tg3_flag(tp, CPMU_PRESENT))
--			val16 &= ~PCI_EXP_DEVCTL_PAYLOAD;
--		pci_write_config_word(tp->pdev,
--				      pci_pcie_cap(tp->pdev) + PCI_EXP_DEVCTL,
--				      val16);
-+			val16 |= PCI_EXP_DEVCTL_PAYLOAD;
-+		pci_pcie_capability_change_word(tp->pdev, PCI_EXP_DEVCTL,
-+						0, val16);
- 
- 		/* Clear error status */
--		pci_write_config_word(tp->pdev,
--				      pci_pcie_cap(tp->pdev) + PCI_EXP_DEVSTA,
--				      PCI_EXP_DEVSTA_CED |
--				      PCI_EXP_DEVSTA_NFED |
--				      PCI_EXP_DEVSTA_FED |
--				      PCI_EXP_DEVSTA_URD);
-+		pci_pcie_capability_write_word(tp->pdev, PCI_EXP_DEVSTA,
-+					       PCI_EXP_DEVSTA_CED |
-+					       PCI_EXP_DEVSTA_NFED |
-+					       PCI_EXP_DEVSTA_FED |
-+					       PCI_EXP_DEVSTA_URD);
- 	}
- 
- 	tg3_restore_pci_state(tp);
-@@ -14303,9 +14284,8 @@ static int __devinit tg3_get_invariants(struct tg3 *tp)
- 
- 		tg3_flag_set(tp, PCI_EXPRESS);
- 
--		pci_read_config_word(tp->pdev,
--				     pci_pcie_cap(tp->pdev) + PCI_EXP_LNKCTL,
--				     &lnkctl);
-+		pci_pcie_capability_read_word(tp->pdev,
-+					      PCI_EXP_LNKCTL, &lnkctl);
- 		if (lnkctl & PCI_EXP_LNKCTL_CLKREQ_EN) {
- 			if (GET_ASIC_REV(tp->pci_chip_rev_id) ==
- 			    ASIC_REV_5906) {
--- 
-1.7.9.5
+As for merging, I suggest following sequence:
+1. fw resource allocate per bus.
 
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=patch;h=3b0a9d26e1838b7ddd2b2273ee38ff4ea3bcc89e
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=bb6436eb378c2b86478d3d6dfae3b032288ce68a
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=48e4eb57f72cba194486ed8b264148820a4165ec
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=f01ef104f823ec8fbe0eb0313d1677ef596eeb74
+
+2. separate out pci host bridge hotplug add support from acpiphp
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=f00a5bdd7f0460eef573e2ef8f2a96a408300c75
+
+3. add pci host bridge remove support
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=eb46eaf0369464e4fab003f8721dc80423b34ee1
+...
+
+will rebase
+busn_alloc and root bus branch and send whole patchset for review.
+
+Thanks
+
+Yinghai
