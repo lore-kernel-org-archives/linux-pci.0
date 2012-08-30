@@ -1,47 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:63479 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754551Ab2HPPP2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 11:15:28 -0400
-Message-ID: <502D0E79.9000103@gmail.com>
-Date: Thu, 16 Aug 2012 23:15:05 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+In-Reply-To: <503F96EB.2010304@gmail.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+	<CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+	<CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
+	<503F96EB.2010304@gmail.com>
+Date: Thu, 30 Aug 2012 10:29:54 -0700
+Message-ID: <CAE9FiQVdz1ApW-05BjzHK-kfZ-hrVbSamcemLbo_65qinV-R_w@mail.gmail.com>
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Keping Chen <chenkeping@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [Resend with Ack][PATCH v1] PCI: allow acpiphp to handle PCIe
- ports without native PCIe hotplug capability
-References: <1338795894-6292-1-git-send-email-jiang.liu@huawei.com> <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
-In-Reply-To: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/16/2012 03:12 AM, Bjorn Helgaas wrote:
-> On Mon, Jun 4, 2012 at 1:44 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
->> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
->> ignore root bridges using PCIe native hotplug) added code that made the
->> acpiphp driver completely ignore PCIe root complexes for which the kernel
->> had been granted control of the native PCIe hotplug feature by the BIOS
->> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
->> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
->> the constraints to allow acpiphp driver handle non-PCIe bridges under
->> such a complex. The constraint needs to be relaxed further to allow
->> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
-> 
-> Gerry, I assume you'll refresh and repost this after we get the PCIe
-> capability stuff squared away, so I'll ignore this patch for now.
-> 
-Hi Bjorn,
-	Please just ignore it and I will rework it after the PCIe capabilities
-patches are done.
-	Regards!
-	Gerry
+On Thu, Aug 30, 2012 at 9:38 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 08/30/2012 11:48 PM, Yinghai Lu wrote:
+>         For system does support physical processor hotplug, I think
+> BIOS should expose those special PCI buses, otherwise we may run into
+> trouble after removing a physical processor.
+No, not do the physical removing.
 
+I just want to remove those not needed pci root bus.
+
+lspci output get filled of all the those useless cpu pci devices.
+
+>         BTW, do we really want to support logical PCI host bridge hotplug
+> or only support physical host bridge hotplug? Here logical hotplug means
+> adding a PCI bus into or removing a PCI bus from the running kernel.
+
+get logical done at first, and then via acpi we could do real physical removal.
+
+Thanks
+
+Yinghai
