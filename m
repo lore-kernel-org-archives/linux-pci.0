@@ -1,50 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:52986 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585Ab2HQXgD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Aug 2012 19:36:03 -0400
-Received: by eekd4 with SMTP id d4so192260eek.1
-        for <linux-pci@vger.kernel.org>; Fri, 17 Aug 2012 16:36:01 -0700 (PDT)
-Subject: [PATCH v2 03/16] pcmcia: Use common pci_stop_and_remove_bus_device()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pcmcia@lists.infradead.org, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Date: Fri, 17 Aug 2012 17:36:00 -0600
-Message-ID: <20120817233600.10973.11841.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
-References: <20120817233100.10973.59521.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 29 Aug 2012 23:23:49 -0700
+Message-ID: <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use pci_stop_and_remove_bus_device() like most other hotplug drivers
-rather than the special-purpose "behind_bridge" variant.  This just
-means we have to iterate through all the devices downstream of the
-bridge ourselves, which is the same thing pci_stop_behind_bridge()
-did.
+On Thu, Aug 9, 2012 at 11:09 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>  Hi all,
+>
+>
+>  I'd like to merge hostbridge hotplug feature.
+>  I looked at Yinghai's branch and found that this branch contains
+>  many work and can be split into some parts.
+>  I believe it is good to merge step by step.
+>
+>  My idea is splitting into the following 4 parts:
+>    1. basic hostbirdge hotplug work
+>    2. acpiphp work
+>    3. /sysfs interface work (logical hotplug?)
+>    4. cleanup
+>
+>  This patchset is 1st step based on the following Yinghai's branch:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-root-bus-hotplug
+>
+>   * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
+>   * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
+>   * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
+>   * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+>   * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
+>   * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
+>   * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pcmcia/cardbus.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+I looked at merging these tonight.  But I noticed there are still a
+few unanswered questions I asked earlier.
 
-diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
-index 24caeaf..94f87b5 100644
---- a/drivers/pcmcia/cardbus.c
-+++ b/drivers/pcmcia/cardbus.c
-@@ -106,7 +106,10 @@ int __ref cb_alloc(struct pcmcia_socket *s)
- void cb_free(struct pcmcia_socket *s)
- {
- 	struct pci_dev *bridge = s->cb_dev;
-+	struct pci_bus *bus = bridge->subordinate;
-+	struct pci_dev *dev, *tmp;
- 
--	if (bridge)
--		pci_stop_and_remove_behind_bridge(bridge);
-+	if (bus)
-+		list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list)
-+			pci_stop_and_remove_bus_device(dev);
- }
+1) For patch [1/7], I pointed out that there is currently no way to
+remove a non-ACPI host bridge, which means the fact that we don't free
+the pci_sysdata is not really a leak.  If you want to add the
+release_fn so that you can add support for removing and adding these
+non-ACPI host bridges in the future, I do not understand that.  It
+just doesn't make sense to me to try to support hotplug for those
+bridges.
 
+2) For patch [2/7], I'm still curious about the scenario where this
+patch makes a difference (see my previous response for details).
+
+3) Patch [5/7], adds mutual exclusion to two different lists, using
+two different mechanisms (mutex and RCU).  It would be easier for
+people to review if this were done in two separate patches.
+
+Bjorn
