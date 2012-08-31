@@ -1,252 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40429 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452Ab2HJGOX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Aug 2012 02:14:23 -0400
-Date: Fri, 10 Aug 2012 15:14:17 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in
- drivers/acpi/pci_root.c
-Message-Id: <20120810151417.031666ce.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:46353 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021Ab2HaAlK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2012 20:41:10 -0400
+Received: by lbbgj3 with SMTP id gj3so897978lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2012 17:41:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQV_yjGizLWAF6FCW03g5jxOx2D_+LXMVZc1H3K1_u2dqw@mail.gmail.com>
+References: <1340736849-14875-1-git-send-email-yinghai@kernel.org>
+ <1340736849-14875-3-git-send-email-yinghai@kernel.org> <CAE9FiQVrUbEzopKfeoQZFNdNszLN96brC+rYuGXQCfZvpi_ETQ@mail.gmail.com>
+ <CAE9FiQUXTngUZp2c2dLVRZjFxhXD9e+XYW6Pn0zaHvMt0fB+eA@mail.gmail.com>
+ <CA+55aFxLUExCZE1=gQpDT0ip9s+iMRYEVK2QjdCGNk9iympfYA@mail.gmail.com>
+ <CA+55aFyb-g77CQNoR72J0pjw76ZCy_nufP=VavT_X3xBg6=G-Q@mail.gmail.com>
+ <CAE9FiQUKxO5QmuaK5V1-rWzS98aRmyfDgC0Aonk-L5JRG1cd6A@mail.gmail.com> <CAE9FiQV_yjGizLWAF6FCW03g5jxOx2D_+LXMVZc1H3K1_u2dqw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 30 Aug 2012 17:40:48 -0700
+Message-ID: <CAErSpo51XRqDYLZCgCmUq5jnVNgf64dAtLqW3kgGWkFHNrNJSA@mail.gmail.com>
+Subject: Re: [PATCH -v12 02/15] resources: Add probe_resource()
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Tony Luck <tony.luck@intel.com>,
+	David Miller <davem@davemloft.net>, x86 <x86@kernel.org>,
+	Dominik Brodowski <linux@dominikbrodowski.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Wed, Aug 29, 2012 at 10:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Aug 29, 2012 at 8:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> also have another version for probe_resource, please check attached version -v8.
+>>
+>
+> sorry, v8 forget removing two lines.
+>
+> please -v9 instead.
+>
+> -v8: Linus said: allocation/return is not right, and -1 step tricks make it
+>         not work as generic resource probe.
+>      So try to remove the needed_size tricks, and also use __adjust_resource
+>         for probing instead.
+> -v9: remove two lines that is supposed to be removed after converting to use
+>         __adjust_resource
 
-    ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
-    
-    There are two global lists inf file drivers/acpi/pci_root.c.
-    One is for registered acpi_pci_drivers, the other is for
-    enumerated ACPI PCI root bridge objects. These two global
-    lists may change dynamically when registering/deregistering
-    acpi_pci_drivers or adding/removing ACPI PCI root bridge
-    objects. So protect them by mutex lock and RCU list.
-    
-    Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-    Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-    [izumi.taku@jp.fujitsu.com: a bit change at acpi_pci_root_remove()]
-    Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+These tweaks might be slight improvements, but they completely miss
+the point of my objection.  I just don't think the probe_resource()
+interface is a reasonable addition to kernel/resource.c.  I think it's
+too hard to describe what it does, and it seems like it's too specific
+to what PCI needs in this particular case.  We should be able to look
+at the prototype and get a pretty good idea of what the function does,
+but I can't do that with this:
 
----
- drivers/acpi/pci_root.c |   86 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 53 insertions(+), 33 deletions(-)
++int probe_resource(struct resource *b_res,
++			 struct resource *busn_res,
++			 resource_size_t needed_size, struct resource **p,
++			 int skip_nr, int limit, int stop_flags)
 
-Index: Bjorn-next/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next/drivers/acpi/pci_root.c
-@@ -27,7 +27,8 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/types.h>
--#include <linux/spinlock.h>
-+#include <linux/mutex.h>
-+#include <linux/rculist.h>
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
-@@ -71,6 +72,8 @@ static struct acpi_driver acpi_pci_root_
- 		},
- };
- 
-+/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
-+static DEFINE_MUTEX(acpi_pci_root_lock);
- static LIST_HEAD(acpi_pci_roots);
- static LIST_HEAD(acpi_pci_drivers);
- 
-@@ -81,47 +84,48 @@ int acpi_pci_register_driver(struct acpi
- 	int n = 0;
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_add_tail(&driver->node, &acpi_pci_drivers);
--
--	if (!driver->add)
--		return 0;
--
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		driver->add(root->device->handle);
--		n++;
--	}
-+	if (driver->add)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
-+			driver->add(root->device->handle);
-+			n++;
-+		}
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	return n;
- }
--
- EXPORT_SYMBOL(acpi_pci_register_driver);
- 
- void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
- {
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_del(&driver->node);
--
--	if (!driver->remove)
--		return;
--
--	list_for_each_entry(root, &acpi_pci_roots, node)
--		driver->remove(root->device->handle);
-+	if (driver->remove)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node)
-+			driver->remove(root->device->handle);
-+	mutex_unlock(&acpi_pci_root_lock);
- }
--
- EXPORT_SYMBOL(acpi_pci_unregister_driver);
- 
- acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
- {
- 	struct acpi_pci_root *root;
-+	struct acpi_handle *handle = NULL;
- 	
--	list_for_each_entry(root, &acpi_pci_roots, node)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
- 		if ((root->segment == (u16) seg) &&
--		    (root->secondary.start == (u16) bus))
--			return root->device->handle;
--	return NULL;		
--}
-+		    (root->secondary.start == (u16) bus)) {
-+			handle = root->device->handle;
-+			break;
-+		}
-+	rcu_read_unlock();
- 
-+	return handle;
-+}
- EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
- 
- /**
-@@ -268,10 +272,15 @@ struct acpi_pci_root *acpi_pci_find_root
- {
- 	struct acpi_pci_root *root;
- 
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		if (root->device->handle == handle)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
-+		if (root->device->handle == handle) {
-+			rcu_read_unlock();
- 			return root;
-+		}
- 	}
-+	rcu_read_unlock();
-+
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(acpi_pci_find_root);
-@@ -459,7 +468,7 @@ static int __devinit acpi_pci_root_add(s
- 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
- 		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
- 		result = -ENODEV;
--		goto end;
-+		goto out_free;
- 	}
- 
- 	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
-@@ -484,7 +493,7 @@ static int __devinit acpi_pci_root_add(s
- 		else {
- 			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
- 			result = -ENODEV;
--			goto end;
-+			goto out_free;
- 		}
- 	}
- 
-@@ -508,8 +517,8 @@ static int __devinit acpi_pci_root_add(s
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
- 	 */
- 
--	/* TBD: Locking */
--	list_add_tail(&root->node, &acpi_pci_roots);
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_add_tail_rcu(&root->node, &acpi_pci_roots);
- 
- 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
-@@ -528,7 +537,7 @@ static int __devinit acpi_pci_root_add(s
- 			    "Bus %04x:%02x not present in PCI namespace\n",
- 			    root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
--		goto end;
-+		goto out_del_root;
- 	}
- 
- 	/*
-@@ -538,7 +547,7 @@ static int __devinit acpi_pci_root_add(s
- 	 */
- 	result = acpi_pci_bind_root(device);
- 	if (result)
--		goto end;
-+		goto out_del_root;
- 
- 	/*
- 	 * PCI Routing Table
-@@ -614,11 +623,15 @@ static int __devinit acpi_pci_root_add(s
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
-+	mutex_unlock(&acpi_pci_root_lock);
-+
- 	return 0;
- 
--end:
--	if (!list_empty(&root->node))
--		list_del(&root->node);
-+out_del_root:
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
-+out_free:
- 	kfree(root);
- 	return result;
- }
-@@ -628,11 +641,13 @@ static int acpi_pci_root_start(struct ac
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
- 			driver->add(device->handle);
- 
- 	pci_bus_add_devices(root->bus);
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	return 0;
- }
-@@ -642,6 +657,8 @@ static int acpi_pci_root_remove(struct a
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	mutex_lock(&acpi_pci_root_lock);
-+
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->remove)
- 			driver->remove(root->device->handle);
-@@ -649,6 +666,9 @@ static int acpi_pci_root_remove(struct a
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
- 	kfree(root);
- 	return 0;
- }
+We already have adjust_resource(), which grows or shrinks a resource
+while maintaining the invariants that the adjusted resource (1)
+doesn't overlap any of its siblings and (2) still contains all its
+children.
 
+adjust_resource() seems like a fairly generic, generally useful
+interface.  What you're trying to do with probe_resource() is quite
+similar, except that probe_resource() adds the idea of walking up the
+tree.
+
+I think you should consider something like an "expand_resource()" that
+just balloons a resource at both ends until it abuts its siblings,
+i.e., it grows the resource as much as possible.  Then you know the
+largest possible size, and you can use adjust_resource() to shrink it
+again if you don't need that much.  You can walk up the tree in the
+caller when you need to.
+
+Bjorn
