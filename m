@@ -1,73 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:48536 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:58307 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752463Ab2HQCez (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Aug 2012 22:34:55 -0400
-Received: by lbbgj3 with SMTP id gj3so1867941lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 16 Aug 2012 19:34:53 -0700 (PDT)
+	with ESMTP id S1753021Ab2HaAn3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Aug 2012 20:43:29 -0400
+Received: by lbbgj3 with SMTP id gj3so898745lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2012 17:43:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <502D9724.2030307@huawei.com>
-References: <1345119142-5896-1-git-send-email-wangyijing@huawei.com>
- <1345119142-5896-3-git-send-email-wangyijing@huawei.com> <502D9724.2030307@huawei.com>
+In-Reply-To: <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+ <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com> <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Aug 2012 20:34:33 -0600
-Message-ID: <CAErSpo7P7VtXBhZ2FTM8ozriyfjpRFp0V4HAVrqaiyMhhQpFTw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI, acpiphp: Use res->flags to determine whether the
- resouce is valid
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>
+Date: Thu, 30 Aug 2012 17:43:07 -0700
+Message-ID: <CAErSpo5ZRapkienpn4ZNWyeC_vfzzxVhmUzViQd0XtAf5ghz2Q@mail.gmail.com>
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2012 at 6:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Hi Bjorn,
->    Please ignore these three patches, I'm very sorry I still have some confusion about allocating resources
-> to pci devices.So this patch is not appropriate. I will provide new version patches when I find a better
-> solution for this problem.
+On Thu, Aug 30, 2012 at 8:48 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Aug 29, 2012 at 11:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-We don't have a uniform way of detecting unassigned BARs and handling
-resource allocation failures yet.  When we make that all consistent, I
-think it will make it more obvious how to do these patches.
+>> 1) For patch [1/7], I pointed out that there is currently no way to
+>> remove a non-ACPI host bridge, which means the fact that we don't free
+>> the pci_sysdata is not really a leak.  If you want to add the
+>> release_fn so that you can add support for removing and adding these
+>> non-ACPI host bridges in the future, I do not understand that.  It
+>> just doesn't make sense to me to try to support hotplug for those
+>> bridges.
+>
+> for Intel Nehalem and westmere -ex system, there will be root bus from
+> 0xf8 to 0xff for cpus.
+> and BIOS does not put the in ACPI, but __pci_mmcfg_init will set the
+> pcibios_last_bus.
+> so those but get probed via pcibios_fixup_peer_bridges.
 
-I think patch 2/3 (the list_for_each_safe() one) is probably still a
-good bug fix, so with your permission, I'll keep that one.
+I understand how these buses get scanned.  What I don't understand is
+what value we get from trying to make these buses hot-pluggable.
 
->> When we hot plug pci devices, system will allocate resources to these new add
->> devices, pci_bus_assign_resources() will be called.If the pci devices was assigned
->> resource fail, the resource struct will reset to zero.So I think use res->flags here
->> to determine whether the resource is valid is reliable.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |    4 +---
->>  1 files changed, 1 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index 7bbd6bf..2161902 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -1084,13 +1084,11 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
->>  {
->>       struct pci_dev *dev, *tmp;
->>       int i;
->> -     unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM;
->>
->>       list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
->>               for (i=0; i<PCI_BRIDGE_RESOURCES; i++) {
->>                       struct resource *res = &dev->resource[i];
->> -                     if ((res->flags & type_mask) && !res->start &&
->> -                                     res->end) {
->> +                     if (!res->flags) {
->>                               /* Could not assign a required resources
->>                                * for this device, remove it */
->>                               pci_stop_and_remove_bus_device(dev);
->>
->
->
-> --
-> Thanks!
-> Yijing
->
+> I hope I could use /sys to remove non-acpi root bus.
+
+Why?  I don't think there's any value in being able to remove non-ACPI
+host bridges.  Any x86 host bridge hotplug that's actually useful to
+users will be done via ACPI.
+
+You mention later that you want to remove these buses because they
+only contain CPU devices that don't seem to be good for anything.  I
+would rather do this by simply not scanning for peer bridges in the
+first place.  That's simpler than scanning the bridge, deciding we
+don't care about what we found, then trying to hot-remove it.
+
+Bjorn
