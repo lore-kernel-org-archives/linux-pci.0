@@ -1,105 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:43602 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757002Ab2HTPfl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Aug 2012 11:35:41 -0400
-Received: by lbbgj3 with SMTP id gj3so3367005lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 20 Aug 2012 08:35:39 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:45386 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750985Ab2HaFEW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Aug 2012 01:04:22 -0400
+Received: by lagy9 with SMTP id y9so2034405lag.19
+        for <linux-pci@vger.kernel.org>; Thu, 30 Aug 2012 22:04:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <50325732.3000700@gmail.com>
-References: <1343836477-7287-1-git-send-email-jiang.liu@huawei.com>
- <CAErSpo7WoEeWayMQ__H4jiKKmMdNgyLMYdRmJ0Nf0LoEKjFRmA@mail.gmail.com> <50325732.3000700@gmail.com>
+In-Reply-To: <50400D6E.1050108@huawei.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+ <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+ <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com>
+ <CAErSpo5ZRapkienpn4ZNWyeC_vfzzxVhmUzViQd0XtAf5ghz2Q@mail.gmail.com> <50400D6E.1050108@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 20 Aug 2012 09:35:18 -0600
-Message-ID: <CAErSpo4-SGH__kE5tPNzz+VO=V-GKOMdcKCqqy6s3=5sNKgG0w@mail.gmail.com>
-Subject: Re: [PATCH v3 00/32] provide interfaces to access PCIe capabilities registers
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+Date: Thu, 30 Aug 2012 22:04:00 -0700
+Message-ID: <CAErSpo6A_rR=5OREu-OC=ykC_qjeGi7jZOybcurUZBThskp-YA@mail.gmail.com>
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+To: Jiang Liu <jiang.liu@huawei.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 20, 2012 at 9:26 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 08/14/2012 12:25 PM, Bjorn Helgaas wrote:
->> On Wed, Aug 1, 2012 at 8:54 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>> From: Jiang Liu <liuj97@gmail.com>
+On Thu, Aug 30, 2012 at 6:03 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
+> On 2012-8-31 8:43, Bjorn Helgaas wrote:
+>> On Thu, Aug 30, 2012 at 8:48 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, Aug 29, 2012 at 11:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>>>> 1) For patch [1/7], I pointed out that there is currently no way to
+>>>> remove a non-ACPI host bridge, which means the fact that we don't free
+>>>> the pci_sysdata is not really a leak.  If you want to add the
+>>>> release_fn so that you can add support for removing and adding these
+>>>> non-ACPI host bridges in the future, I do not understand that.  It
+>>>> just doesn't make sense to me to try to support hotplug for those
+>>>> bridges.
 >>>
->>> As suggested by Bjorn Helgaas and Don Dutile in threads
->>> http://www.spinics.net/lists/linux-pci/msg15663.html, we could improve access
->>> to PCIe capabilities register in to way:
->>> 1) cache content of PCIe Capabilities Register into struct pce_dev to avoid
->>>    repeatedly reading this register because it's read only.
->>> 2) provide access functions for PCIe Capabilities registers to hide differences
->>>    among PCIe base specifications, so the caller don't need to handle those
->>>    differences.
->>>
->>> This patch set applies to
->>> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-next
+>>> for Intel Nehalem and westmere -ex system, there will be root bus from
+>>> 0xf8 to 0xff for cpus.
+>>> and BIOS does not put the in ACPI, but __pci_mmcfg_init will set the
+>>> pcibios_last_bus.
+>>> so those but get probed via pcibios_fixup_peer_bridges.
 >>
->> Would you mind rebasing this to v3.6-rc1?  I think you posted this
->> when my branch was still 3.5-based, and there are some upstream
->> changes that cause minor conflicts here.
+>> I understand how these buses get scanned.  What I don't understand is
+>> what value we get from trying to make these buses hot-pluggable.
 >>
->> You currently have:
+>>> I hope I could use /sys to remove non-acpi root bus.
 >>
->>     int pci_pcie_capability_change_word(struct pci_dev *dev, int pos,
->> u16 set_bits, u16 clear_bits)
+>> Why?  I don't think there's any value in being able to remove non-ACPI
+>> host bridges.  Any x86 host bridge hotplug that's actually useful to
+>> users will be done via ACPI.
 >>
->> I think this is a bit awkward because the function name doesn't
->> suggest *how* the word will be changed, and the clearing happens
->> before the setting (opposite the parameter order).  Something like:
->>
->>     int pci_pcie_capability_mask_and_set_word(..., u16 mask, u16 set) or
->>     int pci_pcie_capability_clear_and_set_word(..., u16 clear, u16 set)
->>
->> would be more obvious.  If you use "mask_and_set", I think the
->> function should do "(val & mask) | set" with the complement being at
->> the call site.  If you use "clear_and_set", I think it's OK to do
->> "(val & ~mask) | set" as in your current patch.
->>
->> I know I suggested the "pci_pcie_capability_*" names, but they're
->> getting a bit unwieldy, especially if we do "mask_and_set" or similar.
->>  There are already several "pcie_*" functions, so maybe we should
->> drop the leading "pci_" from these and just have:
->>
->>     pcie_capability_read_word
->>     pcie_capability_write_word
->>     pcie_capability_mask_and_set_word
->>
->> Bjorn
->>
-> Hi Bjorn,
->         I have made following changes according to your suggestions,
->         1) get rid of the "pci_" prefix for access functions.
->         2) rename pci_pcie_capability_change_{word|dword}() to
->         pcie_capability_clear_and_set_{word|dword}.
->         3) add pcie_capability_{set|clear}_{word|dword}().
+>> You mention later that you want to remove these buses because they
+>> only contain CPU devices that don't seem to be good for anything.  I
+>> would rather do this by simply not scanning for peer bridges in the
+>> first place.  That's simpler than scanning the bridge, deciding we
+>> don't care about what we found, then trying to hot-remove it.
 
-Are 2) and 3) really the same?  If they're really different, we'll end up with:
+> Actually some memory error handling mechanism may depend on those CPU
+> devices to do memory address decoding. For example, EDAC needs to access
+> them. And we are working on a project to do memory address translation
+> by reading memory controller information from those CPU devices too.
 
-    pcie_capability_clear_and_set_word()
-    pcie_capability_clear_and_set_dword()
-    pcie_capability_set_word()
-    pcie_capability_set_dword()
-    pcie_capability_clear_word()
-    pcie_capability_clear_dword()
+If you depend on those CPU-related PCI devices for EDAC or any other
+reason, your BIOS should expose a host bridge leading to them.  If it
+does, we'll enumerate them just like we do today, and whatever host
+bridge hotplug support we add should work for those bridges just like
+any other host bridge.
 
-It seems a little excessive to have all six interfaces, since the
-first two are sufficient to provide all the functionality.
+The issue we're struggling with here is how we handle non-ACPI host
+bridges, i.e., bridges the BIOS doesn't tell us about but we assume
+are present because we find things when we blindly probe for devices.
+I think we should not even try to do hotplug of bridges like this.
+Hotplug for these non-ACPI bridges would be completely
+platform-dependent, since there would be no ACPI notifications for
+removal or rescan.  For example, we'd have to have platform-dependent
+code to turn off the power to a node before removing it.
 
->         4) Add "Acked-by" and "Reviewed-by"
->         5) rebase to your latest pci-next tree
->
->         So could you please help to pull from "https://github.com/jiangliu/linux.git topic/pcie-cap"
-> or should I send all the patches to mail list again?
-
-Just let me know what you think about the above, and I'll try pulling
-from your tree.  We're done to nits, and it hardly seems worthwhile to
-flood LKML with 32 more almost-identical patches.
+Yinghai proposed making sysfs hooks for doing "hotplug" of these
+non-ACPI bridges by just removing the pci_bus and pci_dev topology for
+"remove" and by blindly scanning again for "add."  I think that's
+pointless work since it's only shuffling kernel data structures --
+it's not related to physically removing a node or anything like that.
+If we want to test this path (and we should), we should do it on ACPI
+bridges where we can exercise the whole path, including ejecting the
+ACPI bridge device for "remove" and rescanning the ACPI namespace for
+"add."
 
 Bjorn
