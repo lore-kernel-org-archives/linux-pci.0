@@ -1,48 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:41325 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753042Ab2HCQcl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 3 Aug 2012 12:32:41 -0400
-Received: by vcbfk26 with SMTP id fk26so867704vcb.19
-        for <linux-pci@vger.kernel.org>; Fri, 03 Aug 2012 09:32:41 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <50418769.4030605@gmail.com>
+Date: Sat, 01 Sep 2012 11:56:25 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOp+P+r+GDsV1y71+tS1WJxYVtymA-gH-JT6XRtEn4wScP6+Hg@mail.gmail.com>
-References: <CAOp+P+o5frkFRkrG9=2-3OL1AgDy+zVCbLgRqRVkm0yW_MaFVw@mail.gmail.com>
-	<CAE9FiQUZvMyXjydOdsiBG7YJGA696ihdFkuKj6NMu589NTELCA@mail.gmail.com>
-	<CAOp+P+rsAW2pBZNNSW2ehEDVQB=zSFkweVRDmPcePCiEd5_8DA@mail.gmail.com>
-	<CAE9FiQW7PR9L=4QtcOvFxN7jRbVSx9MpAnsBzXiJ50D+FATVEw@mail.gmail.com>
-	<CAOp+P+rrjd=g6A_knEsHmO44WHUYuud++5qY8WQrsOX-z4kL9g@mail.gmail.com>
-	<CAE9FiQXuZ6rfgjJaJL752Ph+cDLv7XgxBOqzsWRZQDqqUUVrxw@mail.gmail.com>
-	<CAOp+P+r+GDsV1y71+tS1WJxYVtymA-gH-JT6XRtEn4wScP6+Hg@mail.gmail.com>
-Date: Fri, 3 Aug 2012 09:32:41 -0700
-Message-ID: <CAE9FiQXeNvndA2NfoQ-cgJo+s128bY6QFiugb2ocZdk=GGyd6g@mail.gmail.com>
-Subject: Re: PCI express switch
-From: Yinghai Lu <yinghai@kernel.org>
-To: =?ISO-8859-1?Q?Miguel_=C1ngel_=C1lvarez?=
-	<caronteycerbero@gmail.com>
-Cc: linux-pci@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com> <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com> <CAE9FiQV4M8cAZ71Pxvm8gAXzVuEz_4Yb3akpk7w9JwBH052_rQ@mail.gmail.com> <CAErSpo5ZRapkienpn4ZNWyeC_vfzzxVhmUzViQd0XtAf5ghz2Q@mail.gmail.com> <50400D6E.1050108@huawei.com> <CAErSpo6A_rR=5OREu-OC=ykC_qjeGi7jZOybcurUZBThskp-YA@mail.gmail.com> <5040494E.8080501@huawei.com> <CAErSpo692O3z44b=q3qTjg-Pf4V4F=c-5H5Z_uVsDoQv+ASejQ@mail.gmail.com> <CAE9FiQWtv05guh+oDzAn8CNBr+G8+Wycir7XhAcrgezY5E13Cw@mail.gmail.com>
+In-Reply-To: <CAE9FiQWtv05guh+oDzAn8CNBr+G8+Wycir7XhAcrgezY5E13Cw@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 3, 2012 at 2:20 AM, Miguel Ángel Álvarez
-<caronteycerbero@gmail.com> wrote:
-> Sorry,
->
-> I found no sense in sending the bootlog because there were no
-> differences with the previously ones.
->
-> But if you think I should send them, please tell me.
+On 09/01/2012 12:44 AM, Yinghai Lu wrote:
+> On Thu, Aug 30, 2012 at 10:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> That's true.  I think we should blindly probe for devices only when
+>> (1) the system does not have ACPI or (2) the DMI BIOS date is older
+>> than some date, e.g., 1 Jan 2013.  For new systems with ACPI, we
+>> should only look at the host bridges described in ACPI.
+> 
+> if those buses do not get scanned, then it should be enough.
+> 
+> how about just removing pcibios_last_bus probing code?
+> 
+> diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+> index 937bcec..3f3c460 100644
+> --- a/arch/x86/pci/mmconfig-shared.c
+> +++ b/arch/x86/pci/mmconfig-shared.c
+> @@ -616,16 +616,6 @@ static void __init __pci_mmcfg_init(int early)
+>         if (list_empty(&pci_mmcfg_list))
+>                 return;
+> 
+> -       if (pcibios_last_bus < 0) {
+> -               const struct pci_mmcfg_region *cfg;
+> -
+> -               list_for_each_entry(cfg, &pci_mmcfg_list, list) {
+> -                       if (cfg->segment)
+> -                               break;
+> -                       pcibios_last_bus = cfg->end_bus;
+> -               }
+> -       }
+> -
+>         if (pci_mmcfg_arch_init())
+>                 pci_probe = (pci_probe & ~PCI_PROBE_MASK) | PCI_PROBE_MMCONF;
+>         else {
+> 
+> 
+> also Nehalem *EX* and Westmere *EX* does not support EDAC.
+> 
+> so if the user with Nehalem/Westmere Desktop version, want to use to
+> EDAC, they could just append
+> pci=last_bus=255 to get those buses scanned.
+I think this is a better solution than non-ACPI root bus hotplug.
+--Gerry
 
-please send out the whole boot log with PCI_DEBUG.
-
-need to check if the bus range setting is not right or not.
-
-also you could try my busn-alloc branch to see if it would help.
-
-   git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-busn-alloc
-
-Thanks
-
-Yinghai
