@@ -1,40 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31193 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932075Ab2IFRgi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Sep 2012 13:36:38 -0400
-From: Matthew Garrett <mjg@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, Matthew Garrett <mjg@redhat.com>
-Subject: [PATCH] x86: Fix build warning on 32-bit
-Date: Thu,  6 Sep 2012 13:36:16 -0400
-Message-Id: <1346952976-18554-1-git-send-email-mjg@redhat.com>
-In-Reply-To: <CAErSpo4A=ZWDuiGCFr6gQnFz--3OReVt0iWmzfjmOSQO=ZHNEw@mail.gmail.com>
-References: <CAErSpo4A=ZWDuiGCFr6gQnFz--3OReVt0iWmzfjmOSQO=ZHNEw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part5 5/7] PCI: Set dev_node early for pci_dev
+Date: Sun,  2 Sep 2012 14:56:03 -0700
+Message-Id: <1346622965-30937-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+References: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix up the cast so it doesn't cause issues on 32-bit systems.
+otherwise irq_desc for pci bridge with hot-added ioapic can not be
+on local node.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/probe.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 3d2752f..1e2deac 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -631,7 +631,7 @@ int pcibios_add_device(struct pci_dev *dev)
- 			    (PCI_FUNC(dev->devfn) == rom->function) &&
- 			    (dev->vendor == rom->vendor) &&
- 			    (dev->device == rom->devid)) {
--				dev->rom = (void *)(pa_data +
-+				dev->rom = (void *)(unsigned long)(pa_data +
- 				      offsetof(struct pci_setup_rom, romdata));
- 				dev->romlen = rom->pcilen;
- 			}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 59345ac..dd84224 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1293,6 +1293,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.release = pci_release_dev;
+ 	pci_dev_get(dev);
+ 
++	set_dev_node(&dev->dev, pcibus_to_node(bus));
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
 -- 
-1.7.11.4
+1.7.7
 
