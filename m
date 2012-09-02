@@ -1,83 +1,93 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH 07/29] PCI, ACPI: add acpi_bus_type for host bridge
-Date: Tue, 25 Sep 2012 01:26:08 -0700
-Message-Id: <1348561590-28067-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part3 02/11] PCI: Move back pci_rescan_bus() to probe.c
+Date: Sun,  2 Sep 2012 14:52:12 -0700
+Message-Id: <1346622741-30799-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of abusing of acp_bus_type for pci device and checking device
-name tricks
+We have pci_assign_unassigned_bus_resources() in as global function now.
+
+So could move back pci_rescan_bus to probe.c where it should be.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/acpi/glue.c    |    4 ++--
- drivers/pci/pci-acpi.c |   13 +++++++++++--
- 2 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/pci/probe.c     |   21 +++++++++++++++++++++
+ drivers/pci/setup-bus.c |   22 ----------------------
+ 2 files changed, 21 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 243ee85..3079634 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -210,8 +210,8 @@ static int acpi_platform_notify(struct device *dev)
- 	acpi_handle handle;
- 	int ret = -EINVAL;
- 
--	if (!dev->bus || !dev->parent) {
--		/* bridge devices genernally haven't bus or parent */
-+	if (!dev->bus) {
-+		/* bridge devices genernally haven't bus */
- 		ret = acpi_find_bridge_device(dev, &handle);
- 		goto end;
- 	}
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index c5792d6..a167f6d 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -360,7 +360,8 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
- 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index d8f513b..bc22308 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1890,6 +1890,27 @@ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ 	return max;
  }
  
--static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
-+static int acpi_pci_host_bridge_find_device(struct device *dev,
-+						acpi_handle *handle)
- {
- 	int num;
- 	unsigned int seg, bus;
-@@ -378,10 +379,14 @@ static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
- 	return 0;
++/**
++ * pci_rescan_bus - scan a PCI bus for devices.
++ * @bus: PCI bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++{
++	unsigned int max;
++
++	max = pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_add_devices(bus);
++
++	return max;
++}
++EXPORT_SYMBOL_GPL(pci_rescan_bus);
++
+ EXPORT_SYMBOL(pci_add_new_bus);
+ EXPORT_SYMBOL(pci_scan_slot);
+ EXPORT_SYMBOL(pci_scan_bridge);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e5c45c8..1dc22b3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1530,25 +1530,3 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 
+ 	pci_enable_bridges(bus);
  }
- 
-+static struct acpi_bus_type acpi_pci_host_bridge_bus = {
-+	.bus = &pci_host_bridge_bus_type,
-+	.find_device = acpi_pci_host_bridge_find_device,
-+};
-+
- static struct acpi_bus_type acpi_pci_bus = {
- 	.bus = &pci_bus_type,
- 	.find_device = acpi_pci_find_device,
--	.find_bridge = acpi_pci_find_root_bridge,
- };
- 
- static int __init acpi_pci_init(void)
-@@ -398,6 +403,10 @@ static int __init acpi_pci_init(void)
- 		pcie_no_aspm();
- 	}
- 
-+	ret = register_acpi_bus_type(&acpi_pci_host_bridge_bus);
-+	if (ret)
-+		return 0;
-+
- 	ret = register_acpi_bus_type(&acpi_pci_bus);
- 	if (ret)
- 		return 0;
+-#ifdef CONFIG_HOTPLUG
+-/**
+- * pci_rescan_bus - scan a PCI bus for devices.
+- * @bus: PCI bus to scan
+- *
+- * Scan a PCI bus and child buses for new devices, adds them,
+- * and enables them.
+- *
+- * Returns the max number of subordinate bus discovered.
+- */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+-{
+-	unsigned int max;
+-
+-	max = pci_scan_child_bus(bus);
+-	pci_assign_unassigned_bus_resources(bus);
+-	pci_bus_add_devices(bus);
+-
+-	return max;
+-}
+-EXPORT_SYMBOL_GPL(pci_rescan_bus);
+-#endif
 -- 
 1.7.7
 
