@@ -1,36 +1,108 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 19 Sep 2012 00:54:38 +0100
-From: Matthew Garrett <mjg@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	Dave Airlie <airlied@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH] PCI: fix default vga ref_count
-Message-ID: <20120918235438.GA13373@srcf.ucam.org>
-References: <CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
- <1348011882-31452-1-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1348011882-31452-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:23372 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755359Ab2IBVvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:51:07 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part2 2/6] x86, PCI: Separate pcibios_allocate_dev_resources()
+Date: Sun,  2 Sep 2012 14:50:49 -0700
+Message-Id: <1346622653-30741-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 04:44:42PM -0700, Yinghai Lu wrote:
+Thus pcibios_allocate_resources() could more simple and clean
 
->  void vga_set_default_device(struct pci_dev *pdev)
->  {
-> +	if (vga_default)
-> +		pci_dev_put(vga_default);
-> +
-> +	if (pdev)
-> +		pdev = pci_dev_get(pdev);
-> +
->  	vga_default = pdev;
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c |   42 +++++++++++++++++++++++-------------------
+ 1 files changed, 23 insertions(+), 19 deletions(-)
 
-It shouldn't happen, but do we want to check for the vga_default == pdev 
-case?
-
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 9800362..5817cf2 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -232,9 +232,8 @@ struct pci_check_idx_range {
+ 	int end;
+ };
+ 
+-static void __init pcibios_allocate_resources(int pass)
++static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ {
+-	struct pci_dev *dev = NULL;
+ 	int idx, disabled, i;
+ 	u16 command;
+ 	struct resource *r;
+@@ -246,14 +245,13 @@ static void __init pcibios_allocate_resources(int pass)
+ #endif
+ 	};
+ 
+-	for_each_pci_dev(dev) {
+-		pci_read_config_word(dev, PCI_COMMAND, &command);
+-		for (i = 0; i < ARRAY_SIZE(idx_range); i++)
++	pci_read_config_word(dev, PCI_COMMAND, &command);
++	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
+ 		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
+ 			r = &dev->resource[idx];
+-			if (r->parent)		/* Already allocated */
++			if (r->parent)	/* Already allocated */
+ 				continue;
+-			if (!r->start)		/* Address not assigned at all */
++			if (!r->start)	/* Address not assigned at all */
+ 				continue;
+ 			if (r->flags & IORESOURCE_IO)
+ 				disabled = !(command & PCI_COMMAND_IO);
+@@ -272,23 +270,29 @@ static void __init pcibios_allocate_resources(int pass)
+ 				}
+ 			}
+ 		}
+-		if (!pass) {
+-			r = &dev->resource[PCI_ROM_RESOURCE];
+-			if (r->flags & IORESOURCE_ROM_ENABLE) {
+-				/* Turn the ROM off, leave the resource region,
+-				 * but keep it unregistered. */
+-				u32 reg;
+-				dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
+-				r->flags &= ~IORESOURCE_ROM_ENABLE;
+-				pci_read_config_dword(dev,
+-						dev->rom_base_reg, &reg);
+-				pci_write_config_dword(dev, dev->rom_base_reg,
++	if (!pass) {
++		r = &dev->resource[PCI_ROM_RESOURCE];
++		if (r->flags & IORESOURCE_ROM_ENABLE) {
++			/* Turn the ROM off, leave the resource region,
++			 * but keep it unregistered. */
++			u32 reg;
++			dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
++			r->flags &= ~IORESOURCE_ROM_ENABLE;
++			pci_read_config_dword(dev, dev->rom_base_reg, &reg);
++			pci_write_config_dword(dev, dev->rom_base_reg,
+ 						reg & ~PCI_ROM_ADDRESS_ENABLE);
+-			}
+ 		}
+ 	}
+ }
+ 
++static void __init pcibios_allocate_resources(int pass)
++{
++	struct pci_dev *dev = NULL;
++
++	for_each_pci_dev(dev)
++		pcibios_allocate_dev_resources(dev, pass);
++}
++
+ static int __init pcibios_assign_resources(void)
+ {
+ 	struct pci_dev *dev = NULL;
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.7
+
