@@ -1,40 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:58864 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756095Ab2ITTje (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 15:39:34 -0400
-Date: Thu, 20 Sep 2012 20:39:26 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Huang Ying <ying.huang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [RFC 3/3] PCI/PM: Disable PME poll for PCIe devices
-Message-ID: <20120920193926.GA6623@srcf.ucam.org>
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
- <1347872076-5260-4-git-send-email-ying.huang@intel.com>
- <201209202131.13483.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201209202131.13483.rjw@sisk.pl>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part4 02/11] PCI: Correctly clean up pci root buses in function pci_remove_bus()
+Date: Sun,  2 Sep 2012 14:54:12 -0700
+Message-Id: <1346622861-30865-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 20, 2012 at 09:31:13PM +0200, Rafael J. Wysocki wrote:
-> On Monday, September 17, 2012, Huang Ying wrote:
-> > PME poll is not necessary for PCIe devices, because PCIe devices use
-> > in-band PME message and IRQ on PCIe port to report PME.
-> 
-> Alas, not all of them as it turns out and even if they do, it doesn't
-> work for some of them. That's why we've added the PCIe devices polling
-> (quite recently, for that matter).
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Right. I'd believe that there's some underlying bug that's causing the 
-missing PMEs and maybe it does work in theory, but the reality is that 
-right now some PCIe devices are not getting their PMEs delivered to us. 
-We don't know if it's our bug or a hardware bug, and until we do we need 
-to leave the polling code.
+The function pci_create_root_bus() allocates the pci bus structure,
+registers the bus device and creates the legacy files for a pci root
+bus, but returns without setting the is_added flag. The is_added flag
+for a pci root bus will be set by function pci_scan_child_bus().
+If a pci root bus is destroyed before calling pci_scan_child_bus(),
+the is_added flag will not be set.  So teach function pci_remove_bus()
+to detect such a case and correctly clean up pci root buses.
 
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index aaae16e..b9f553b 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -48,11 +48,10 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(bus);
+-	device_unregister(&bus->dev);
++	if (bus->is_added || pci_is_root_bus(bus)) {
++		pci_remove_legacy_files(bus);
++		device_unregister(&bus->dev);
++	}
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.7
+
