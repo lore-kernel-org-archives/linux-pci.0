@@ -1,98 +1,99 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 7/7] PCI/acpiphp: serialize access to the bridge_list list
-Date: Tue, 25 Sep 2012 22:29:30 +0800
-Message-Id: <1348583370-11006-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1348583370-11006-1-git-send-email-jiang.liu@huawei.com>
-References: <1348583370-11006-1-git-send-email-jiang.liu@huawei.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part2 3/6] x86, PCI: Let pcibios_allocate_bus_resources() take bus instead
+Date: Sun,  2 Sep 2012 14:50:50 -0700
+Message-Id: <1346622653-30741-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- From: Jiang Liu <jiang.liu@huawei.com>
+Will need call the same code for one single root bus during hot add.
+So try to make it take bus instead of bus_list.
 
-Serialize access to the bridge_list in the acpiphp driver.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+ arch/x86/pci/i386.c |   38 +++++++++++++++++++++++++-------------
+ 1 files changed, 25 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 1fb0eb7..348afd7 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -53,6 +53,7 @@
- #include "../pci.h"
- #include "acpiphp.h"
- 
-+static DEFINE_MUTEX(bridge_mutex);
- static LIST_HEAD(bridge_list);
- 
- #define MY_NAME "acpiphp_glue"
-@@ -497,8 +498,10 @@ static int add_bridge(acpi_handle handle)
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 5817cf2..84696ed 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -215,16 +215,15 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
  	}
+ }
  
- 	/* search P2P bridges under this host bridge */
-+	mutex_lock(&bridge_mutex);
- 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
- 				     find_p2p_bridge, NULL, NULL, NULL);
-+	mutex_unlock(&bridge_mutex);
- 
- 	if (ACPI_FAILURE(status))
- 		warn("find_p2p_bridge failed (error code = 0x%x)\n", status);
-@@ -595,6 +598,8 @@ static void remove_bridge(acpi_handle handle)
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
  {
- 	struct acpiphp_bridge *bridge;
+-	struct pci_bus *bus;
++	struct pci_bus *child;
  
-+	mutex_lock(&bridge_mutex);
-+
- 	/* cleanup p2p bridges under this host bridge
- 	   in a depth-first manner */
- 	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-@@ -613,6 +618,8 @@ static void remove_bridge(acpi_handle handle)
- 	else
- 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 					   handle_hotplug_event_bridge);
-+
-+	mutex_unlock(&bridge_mutex);
+ 	/* Depth-First Search on bus tree */
+-	list_for_each_entry(bus, bus_list, node) {
+-		if (bus->self)
+-			pcibios_allocate_bridge_resources(bus->self);
+-		pcibios_allocate_bus_resources(&bus->children);
+-	}
++	if (bus->self)
++		pcibios_allocate_bridge_resources(bus->self);
++	list_for_each_entry(child, &bus->children, node)
++		pcibios_allocate_bus_resources(child);
  }
  
- static int power_on_slot(struct acpiphp_slot *slot)
-@@ -1415,11 +1422,13 @@ static void acpiphp_hp_notify_add(struct pci_dev *dev)
- 	if (!dev->subordinate || !handle)
- 		return;
- 
-+	mutex_lock(&bridge_mutex);
- 	/* check if this bridge has ejectable slots */
- 	if (detect_ejectable_slots(handle) > 0) {
- 		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
- 		add_p2p_bridge(handle);
+ struct pci_check_idx_range {
+@@ -285,12 +284,18 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
  	}
-+	mutex_unlock(&bridge_mutex);
  }
  
- static void acpiphp_hp_notify_del(struct pci_dev *dev)
-@@ -1430,11 +1439,13 @@ static void acpiphp_hp_notify_del(struct pci_dev *dev)
- 	if (!bus)
- 		return;
+-static void __init pcibios_allocate_resources(int pass)
++static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ {
+-	struct pci_dev *dev = NULL;
++	struct pci_dev *dev;
++	struct pci_bus *child;
  
-+	mutex_lock(&bridge_mutex);
- 	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
- 		if (bridge->pci_bus == bus) {
- 			cleanup_bridge(bridge);
- 			break;
- 		}
-+	mutex_unlock(&bridge_mutex);
+-	for_each_pci_dev(dev)
++	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pcibios_allocate_dev_resources(dev, pass);
++
++		child = dev->subordinate;
++		if (child)
++			pcibios_allocate_resources(child, pass);
++	}
  }
  
- static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
+ static int __init pcibios_assign_resources(void)
+@@ -323,10 +328,17 @@ static int __init pcibios_assign_resources(void)
+ 
+ void __init pcibios_resource_survey(void)
+ {
++	struct pci_bus *bus;
++
+ 	DBG("PCI: Allocating resources\n");
+-	pcibios_allocate_bus_resources(&pci_root_buses);
+-	pcibios_allocate_resources(0);
+-	pcibios_allocate_resources(1);
++
++	list_for_each_entry(bus, &pci_root_buses, node)
++		pcibios_allocate_bus_resources(bus);
++
++	list_for_each_entry(bus, &pci_root_buses, node)
++		pcibios_allocate_resources(bus, 0);
++	list_for_each_entry(bus, &pci_root_buses, node)
++		pcibios_allocate_resources(bus, 1);
+ 
+ 	e820_reserve_resources_late();
+ 	/*
 -- 
-1.7.9.5
+1.7.7
 
