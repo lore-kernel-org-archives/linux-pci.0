@@ -1,48 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hapkido.dreamhost.com ([66.33.216.122]:45835 "EHLO
-	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816Ab2ICAEx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 20:04:53 -0400
-Subject: [PATCH 3/5] PCI: hotplug: remove acpi_bus_generate_proc_event
-From: Davidlohr Bueso <dave@gnu.org>
-Reply-To: dave@gnu.org
+Received: from acsinet15.oracle.com ([141.146.126.227]:32859 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755108Ab2IBVrw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:47:52 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 03 Sep 2012 02:03:27 +0200
-Message-ID: <1346630607.3170.31.camel@offbook>
-Mime-Version: 1.0
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part1 0/4] PCI: pci root bus hotplug support - part1
+Date: Sun,  2 Sep 2012 14:47:34 -0700
+Message-Id: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Calling this function no longer makes sense as /proc/acpi/event
-is being removed.
+It is based on pci/next
 
-Signed-off-by: Davidlohr Bueso <dave@gnu.org>
----
- drivers/pci/hotplug/acpiphp_ibm.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Add back some functions for pci remove.
 
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index c35e8ad..5394fff 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -270,7 +270,6 @@ static void ibm_handle_events(acpi_handle handle, u32 event, void *context)
- 
- 	if (subevent == 0x80) {
- 		dbg("%s: generationg bus event\n", __func__);
--		acpi_bus_generate_proc_event(note->device, note->event, detail);
- 		acpi_bus_generate_netlink_event(note->device->pnp.device_class,
- 						  dev_name(&note->device->dev),
- 						  note->event, detail);
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug-part1
+
+Yinghai Lu (4):
+  PCI, pciehp: Turn on link again after power off the slot
+  PCI, acpiphp: Add is_hotplug_bridge detection
+  PCI: Add root bus children dev's res to fail list
+  PCI: Split out stop_bus_device and remove_bus_dev again.
+
+ drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++-
+ drivers/pci/hotplug/pciehp_hpc.c   |    2 +
+ drivers/pci/remove.c               |   77 ++++++++++++++++++++++++++++-------
+ drivers/pci/setup-bus.c            |    2 +-
+ include/linux/pci.h                |    2 +
+ 5 files changed, 92 insertions(+), 18 deletions(-)
+
 -- 
-1.7.4.1
-
-
-
+1.7.7
 
