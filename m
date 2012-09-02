@@ -1,231 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:50824 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423140Ab2I1Vuf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Sep 2012 17:50:35 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Subject: [RFD][PATCH 1/7] PM / QoS: Prepare device structure for adding more constraint types
-Date: Fri, 28 Sep 2012 23:52:08 +0200
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-References: <201209282351.10663.rjw@sisk.pl>
-In-Reply-To: <201209282351.10663.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209282352.08434.rjw@sisk.pl>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part1 4/4] PCI: Split out stop_bus_device and remove_bus_dev again.
+Date: Sun,  2 Sep 2012 14:47:38 -0700
+Message-Id: <1346622458-30595-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
+References: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently struct dev_pm_info contains only one PM QoS constraints
-pointer reserved for latency requirements.  Since one more device
-constraints type (i.e. flags) will be necessary, introduce a new
-structure, struct dev_pm_qos, that eventually will contain all of
-the available device PM QoS constraints and replace the "constraints"
-pointer in struct dev_pm_info with a pointer to the new structure
-called "qos".
+So add back some functions that are needed for pci root bus hotplug support.
 
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/base/power/qos.c |   42 ++++++++++++++++++++++--------------------
- include/linux/pm.h       |    2 +-
- include/linux/pm_qos.h   |    4 ++++
- 3 files changed, 27 insertions(+), 21 deletions(-)
+ drivers/pci/remove.c |   77 +++++++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h  |    2 +
+ 2 files changed, 63 insertions(+), 16 deletions(-)
 
-Index: linux/include/linux/pm.h
-===================================================================
---- linux.orig/include/linux/pm.h
-+++ linux/include/linux/pm.h
-@@ -551,7 +551,7 @@ struct dev_pm_info {
- 	struct dev_pm_qos_request *pq_req;
- #endif
- 	struct pm_subsys_data	*subsys_data;  /* Owned by the subsystem. */
--	struct pm_qos_constraints *constraints;
-+	struct dev_pm_qos	*qos;
- };
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 4f9ca91..aaae16e 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -56,25 +56,13 @@ void pci_remove_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
  
- extern void update_pm_runtime_accounting(struct device *dev);
-Index: linux/include/linux/pm_qos.h
-===================================================================
---- linux.orig/include/linux/pm_qos.h
-+++ linux/include/linux/pm_qos.h
-@@ -57,6 +57,10 @@ struct pm_qos_constraints {
- 	struct blocking_notifier_head *notifiers;
- };
+-/**
+- * pci_stop_and_remove_bus_device - remove a PCI device and any children
+- * @dev: the device to remove
+- *
+- * Remove a PCI device from the device lists, informing the drivers
+- * that the device has been removed.  We also remove any subordinate
+- * buses and children in a depth-first manner.
+- *
+- * For each device we remove, delete the device structure from the
+- * device lists, remove the /proc entry, and notify userspace
+- * (/sbin/hotplug).
+- */
+-void pci_stop_and_remove_bus_device(struct pci_dev *dev)
++static void pci_stop_bus_device(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = dev->subordinate;
+ 	struct pci_dev *child, *tmp;
  
-+struct dev_pm_qos {
-+	struct pm_qos_constraints latency;
-+};
+ 	/*
+-	 * Removing an SR-IOV PF device removes all the associated VFs,
++	 * Stopping an SR-IOV PF device removes all the associated VFs,
+ 	 * which will update the bus->devices list and confuse the
+ 	 * iterator.  Therefore, iterate in reverse so we remove the VFs
+ 	 * first, then the PF.
+@@ -82,13 +70,70 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ 	if (bus) {
+ 		list_for_each_entry_safe_reverse(child, tmp,
+ 						 &bus->devices, bus_list)
+-			pci_stop_and_remove_bus_device(child);
++			pci_stop_bus_device(child);
++	}
 +
- /* Action requested to pm_qos_update_target */
- enum pm_qos_req_action {
- 	PM_QOS_ADD_REQ,		/* Add a new request */
-Index: linux/drivers/base/power/qos.c
-===================================================================
---- linux.orig/drivers/base/power/qos.c
-+++ linux/drivers/base/power/qos.c
-@@ -55,9 +55,7 @@ static BLOCKING_NOTIFIER_HEAD(dev_pm_not
-  */
- s32 __dev_pm_qos_read_value(struct device *dev)
- {
--	struct pm_qos_constraints *c = dev->power.constraints;
--
--	return c ? pm_qos_read_value(c) : 0;
-+	return dev->power.qos ? pm_qos_read_value(&dev->power.qos->latency) : 0;
- }
++	pci_stop_dev(dev);
++}
++
++static void pci_remove_bus_device(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->subordinate;
++	struct pci_dev *child, *tmp;
++
++	if (bus) {
++		list_for_each_entry_safe(child, tmp,
++					 &bus->devices, bus_list)
++			pci_remove_bus_device(child);
  
- /**
-@@ -91,12 +89,12 @@ static int apply_constraint(struct dev_p
- {
- 	int ret, curr_value;
- 
--	ret = pm_qos_update_target(req->dev->power.constraints,
-+	ret = pm_qos_update_target(&req->dev->power.qos->latency,
- 				   &req->node, action, value);
- 
- 	if (ret) {
- 		/* Call the global callbacks if needed */
--		curr_value = pm_qos_read_value(req->dev->power.constraints);
-+		curr_value = pm_qos_read_value(&req->dev->power.qos->latency);
- 		blocking_notifier_call_chain(&dev_pm_notifiers,
- 					     (unsigned long)curr_value,
- 					     req);
-@@ -114,20 +112,22 @@ static int apply_constraint(struct dev_p
-  */
- static int dev_pm_qos_constraints_allocate(struct device *dev)
- {
-+	struct dev_pm_qos *qos;
- 	struct pm_qos_constraints *c;
- 	struct blocking_notifier_head *n;
- 
--	c = kzalloc(sizeof(*c), GFP_KERNEL);
--	if (!c)
-+	qos = kzalloc(sizeof(*qos), GFP_KERNEL);
-+	if (!qos)
- 		return -ENOMEM;
- 
- 	n = kzalloc(sizeof(*n), GFP_KERNEL);
- 	if (!n) {
--		kfree(c);
-+		kfree(qos);
- 		return -ENOMEM;
- 	}
- 	BLOCKING_INIT_NOTIFIER_HEAD(n);
- 
-+	c = &qos->latency;
- 	plist_head_init(&c->list);
- 	c->target_value = PM_QOS_DEV_LAT_DEFAULT_VALUE;
- 	c->default_value = PM_QOS_DEV_LAT_DEFAULT_VALUE;
-@@ -135,7 +135,7 @@ static int dev_pm_qos_constraints_alloca
- 	c->notifiers = n;
- 
- 	spin_lock_irq(&dev->power.lock);
--	dev->power.constraints = c;
-+	dev->power.qos = qos;
- 	spin_unlock_irq(&dev->power.lock);
- 
- 	return 0;
-@@ -151,7 +151,7 @@ static int dev_pm_qos_constraints_alloca
- void dev_pm_qos_constraints_init(struct device *dev)
- {
- 	mutex_lock(&dev_pm_qos_mtx);
--	dev->power.constraints = NULL;
-+	dev->power.qos = NULL;
- 	dev->power.power_state = PMSG_ON;
- 	mutex_unlock(&dev_pm_qos_mtx);
- }
-@@ -164,6 +164,7 @@ void dev_pm_qos_constraints_init(struct
-  */
- void dev_pm_qos_constraints_destroy(struct device *dev)
- {
-+	struct dev_pm_qos *qos;
- 	struct dev_pm_qos_request *req, *tmp;
- 	struct pm_qos_constraints *c;
- 
-@@ -176,10 +177,11 @@ void dev_pm_qos_constraints_destroy(stru
- 	mutex_lock(&dev_pm_qos_mtx);
- 
- 	dev->power.power_state = PMSG_INVALID;
--	c = dev->power.constraints;
--	if (!c)
-+	qos = dev->power.qos;
-+	if (!qos)
- 		goto out;
- 
-+	c = &qos->latency;
- 	/* Flush the constraints list for the device */
- 	plist_for_each_entry_safe(req, tmp, &c->list, node) {
- 		/*
-@@ -191,7 +193,7 @@ void dev_pm_qos_constraints_destroy(stru
+ 		pci_remove_bus(bus);
+ 		dev->subordinate = NULL;
  	}
  
- 	spin_lock_irq(&dev->power.lock);
--	dev->power.constraints = NULL;
-+	dev->power.qos = NULL;
- 	spin_unlock_irq(&dev->power.lock);
- 
- 	kfree(c->notifiers);
-@@ -235,7 +237,7 @@ int dev_pm_qos_add_request(struct device
- 
- 	mutex_lock(&dev_pm_qos_mtx);
- 
--	if (!dev->power.constraints) {
-+	if (!dev->power.qos) {
- 		if (dev->power.power_state.event == PM_EVENT_INVALID) {
- 			/* The device has been removed from the system. */
- 			req->dev = NULL;
-@@ -290,7 +292,7 @@ int dev_pm_qos_update_request(struct dev
- 
- 	mutex_lock(&dev_pm_qos_mtx);
- 
--	if (req->dev->power.constraints) {
-+	if (req->dev->power.qos) {
- 		if (new_value != req->node.prio)
- 			ret = apply_constraint(req, PM_QOS_UPDATE_REQ,
- 					       new_value);
-@@ -329,7 +331,7 @@ int dev_pm_qos_remove_request(struct dev
- 
- 	mutex_lock(&dev_pm_qos_mtx);
- 
--	if (req->dev->power.constraints) {
-+	if (req->dev->power.qos) {
- 		ret = apply_constraint(req, PM_QOS_REMOVE_REQ,
- 				       PM_QOS_DEFAULT_VALUE);
- 		memset(req, 0, sizeof(*req));
-@@ -362,13 +364,13 @@ int dev_pm_qos_add_notifier(struct devic
- 
- 	mutex_lock(&dev_pm_qos_mtx);
- 
--	if (!dev->power.constraints)
-+	if (!dev->power.qos)
- 		ret = dev->power.power_state.event != PM_EVENT_INVALID ?
- 			dev_pm_qos_constraints_allocate(dev) : -ENODEV;
- 
- 	if (!ret)
- 		ret = blocking_notifier_chain_register(
--				dev->power.constraints->notifiers, notifier);
-+				dev->power.qos->latency.notifiers, notifier);
- 
- 	mutex_unlock(&dev_pm_qos_mtx);
- 	return ret;
-@@ -393,9 +395,9 @@ int dev_pm_qos_remove_notifier(struct de
- 	mutex_lock(&dev_pm_qos_mtx);
- 
- 	/* Silently return if the constraints object is not present. */
--	if (dev->power.constraints)
-+	if (dev->power.qos)
- 		retval = blocking_notifier_chain_unregister(
--				dev->power.constraints->notifiers,
-+				dev->power.qos->latency.notifiers,
- 				notifier);
- 
- 	mutex_unlock(&dev_pm_qos_mtx);
+-	pci_stop_dev(dev);
+ 	pci_destroy_dev(dev);
+ }
++
++/**
++ * pci_stop_and_remove_bus_device - remove a PCI device and any children
++ * @dev: the device to remove
++ *
++ * Remove a PCI device from the device lists, informing the drivers
++ * that the device has been removed.  We also remove any subordinate
++ * buses and children in a depth-first manner.
++ *
++ * For each device we remove, delete the device structure from the
++ * device lists, remove the /proc entry, and notify userspace
++ * (/sbin/hotplug).
++ */
++void pci_stop_and_remove_bus_device(struct pci_dev *dev)
++{
++	pci_stop_bus_device(dev);
++	pci_remove_bus_device(dev);
++}
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
++
++void pci_stop_bus_devices(struct pci_bus *bus)
++{
++	struct pci_dev *child, *tmp;
++
++	list_for_each_entry_safe_reverse(child, tmp,
++					 &bus->devices, bus_list)
++		pci_stop_bus_device(child);
++}
++
++static void pci_remove_bus_devices(struct pci_bus *bus)
++{
++	struct pci_dev *child, *tmp;
++
++	list_for_each_entry_safe(child, tmp,
++				 &bus->devices, bus_list)
++		pci_remove_bus_device(child);
++}
++
++void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
++{
++	pci_stop_bus_device(dev);
++
++	if (dev->subordinate)
++		pci_remove_bus_devices(dev->subordinate);
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0d87189..1b460e1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_bus_devices(struct pci_bus *bus);
++void pci_stop_and_remove_behind_bridge(struct pci_dev *dev);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+-- 
+1.7.7
 
