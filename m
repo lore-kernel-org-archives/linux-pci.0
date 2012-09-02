@@ -1,180 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:50963 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578Ab2I0UV6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 16:21:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVQOw0Dt5Vkz4+8DpoXY0a_xKW7Etk-uCzvJpiMhsL=PQ@mail.gmail.com>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-	<1348561590-28067-11-git-send-email-yinghai@kernel.org>
-	<CAOLK0pzmP6bZqPJTi6h2XqbX72gb79VKMYObegP1X3xmEX3TJA@mail.gmail.com>
-	<CAE9FiQVQOw0Dt5Vkz4+8DpoXY0a_xKW7Etk-uCzvJpiMhsL=PQ@mail.gmail.com>
-Date: Thu, 27 Sep 2012 13:21:56 -0700
-Message-ID: <CAE9FiQVRtpYeCJTbDjsUq81qxcHTBr8GcR-AoaKC1SkTh1kY=A@mail.gmail.com>
-Subject: Re: [PATCH 10/29] PCI, USB: remove find_bridge in acpi_bus_type
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Lan Tianyu <lantianyu1986@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org
-Content-Type: multipart/mixed; boundary=0015175cd862d5db8804cab4b0f3
-Sender: linux-pci-owner@vger.kernel.org
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part3 11/11] PCI, sysfs: Clean up rescan/remove with scheule_callback
+Date: Sun,  2 Sep 2012 14:52:21 -0700
+Message-Id: <1346622741-30799-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---0015175cd862d5db8804cab4b0f3
-Content-Type: text/plain; charset=ISO-8859-1
+Change to use three return according to Bjorn.
 
-On Tue, Sep 25, 2012 at 9:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Sep 25, 2012 at 1:35 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
->> 2012/9/25 Yinghai Lu <yinghai@kernel.org>:
->>> The struct member is not used anymore, remove it.
->>>
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->>> Cc: linux-usb@vger.kernel.org
->>> ---
->>>  drivers/usb/core/usb-acpi.c |    1 -
->>>  1 files changed, 0 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/usb/core/usb-acpi.c b/drivers/usb/core/usb-acpi.c
->>> index 8947b20..a6ea613 100644
->>> --- a/drivers/usb/core/usb-acpi.c
->>> +++ b/drivers/usb/core/usb-acpi.c
->>> @@ -102,7 +102,6 @@ static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
->>>
->>>  static struct acpi_bus_type usb_acpi_bus = {
->>>         .bus = &usb_bus_type,
->>> -       .find_bridge = NULL,
->>>         .find_device = usb_acpi_find_device,
->>>  };
->>>
->> HI Yinghai:
->>                  This member has been populated in the usb-next tree.
->>
->> http://git.kernel.org/?p=linux/kernel/git/gregkh/usb.git;a=commit;h=d557542421da643358201664903e67fd01dfca1a
->
-> Thanks for pointing that out.
->
-> Looks that following change is not needed in that commit.
->
-> @@ -102,7 +139,7 @@ static int usb_acpi_find_device(struct device
-> *dev, acpi_handle *handle)
->
->  static struct acpi_bus_type usb_acpi_bus = {
->         .bus = &usb_bus_type,
-> -       .find_bridge = NULL,
-> +       .find_bridge = usb_acpi_find_device,
->         .find_device = usb_acpi_find_device,
->  };
->
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c |   37 ++++++++++++++++++++-----------------
+ 1 files changed, 20 insertions(+), 17 deletions(-)
 
-after looking your code closely, that find_bridge is still needed.
-that usb_port does not have usb_bus_type.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 7ebc764..3601912 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -340,17 +340,17 @@ static ssize_t
+ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
+ 
+-	if (val)
+-		ret = device_schedule_callback(dev, bridge_rescan_callback);
+-
+-	if (ret)
+-		count = ret;
++	err = device_schedule_callback(dev, bridge_rescan_callback);
++	if (err)
++		return err;
+ 
+ 	return count;
+ }
+@@ -371,7 +371,7 @@ static ssize_t
+ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	     const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+@@ -380,10 +380,13 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	/* An attribute cannot be unregistered by one of its own methods,
+ 	 * so we have to use this roundabout approach.
+ 	 */
+-	if (val)
+-		ret = device_schedule_callback(dev, remove_callback);
+-	if (ret)
+-		count = ret;
++	if (!val)
++		return count;
++
++	err = device_schedule_callback(dev, remove_callback);
++	if (err)
++		return err;
++
+ 	return count;
+ }
+ 
+@@ -399,17 +402,17 @@ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
+ 
+-	if (val)
+-		ret = device_schedule_callback(dev, bus_rescan_callback);
+-
+-	if (ret)
+-		count = ret;
++	err = device_schedule_callback(dev, bus_rescan_callback);
++	if (err)
++		return err;
+ 
+ 	return count;
+ }
+-- 
+1.7.7
 
-but mixing find bridge and find device cause confusing.
-
-Please check attached patch that will separate find_bridge out.
-
--Yinghai
-
---0015175cd862d5db8804cab4b0f3
-Content-Type: application/octet-stream; name="usb_acpi_find_bridge.patch"
-Content-Disposition: attachment; filename="usb_acpi_find_bridge.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h7mb6qrw0
-
-U3ViamVjdDogW1BBVENIXSB1c2IsIEFDUEk6IFNlcGFyYXRlIG91dCB1c2JfYWNwaV9maW5kX2Jy
-aWRnZQoKdXNiX2FjcGlfZmluZF9kZXZpY2UgaXMgZm9yIHVzYl9kZXZpY2UgYW5kIGl0IGhhcyB1
-c2JfZGV2aWNlX3R5cGUgYW5kIHVzYl9idXNfdHlwZS4KU28gY291bGQgcmVtb3ZlIG5vdCBuZWVk
-ZWQgaXNfdXNiX2RldmljZSBjaGVja2luZy4KCnVzYl9hY3BpX2ZpbmRfYnJpZGdlIGlzIGZvciB1
-c2JfcG9ydCwgYW5kIGl0IGhhcyB1c2JfcG9ydF9kZXZpY2VfdHlwZSBvbmx5LgoKU2lnbmVkLW9m
-Zi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgpDYzogR3JlZyBLcm9haC1IYXJ0
-bWFuIDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZz4KQ2M6IExhbiBUaWFueXUgPHRpYW55dS5s
-YW5AaW50ZWwuY29tPgpDYzogU2FyYWggU2hhcnAgPHNhcmFoLmEuc2hhcnBAbGludXguaW50ZWwu
-Y29tPgpDYzogTWF0dGhldyBHYXJyZXR0IDxtamdAcmVkaGF0LmNvbT4KQ2M6IExlbiBCcm93biA8
-bGVuLmJyb3duQGludGVsLmNvbT4KCi0tLQogZHJpdmVycy91c2IvY29yZS91c2ItYWNwaS5jIHwg
-IDEzNyArKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLQogMSBmaWxl
-IGNoYW5nZWQsIDcyIGluc2VydGlvbnMoKyksIDY1IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4
-LTIuNi9kcml2ZXJzL3VzYi9jb3JlL3VzYi1hY3BpLmMKPT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42
-Lm9yaWcvZHJpdmVycy91c2IvY29yZS91c2ItYWNwaS5jCisrKyBsaW51eC0yLjYvZHJpdmVycy91
-c2IvY29yZS91c2ItYWNwaS5jCkBAIC0xMjUsOTMgKzEyNSwxMDAgQEAgb3V0OgogCXJldHVybiBy
-ZXQ7CiB9CiAKLXN0YXRpYyBpbnQgdXNiX2FjcGlfZmluZF9kZXZpY2Uoc3RydWN0IGRldmljZSAq
-ZGV2LCBhY3BpX2hhbmRsZSAqaGFuZGxlKQorLyoKKyAqIEluIHRoZSBBQ1BJIERTRFQgdGFibGUs
-IG9ubHkgdXNiIHJvb3QgaHViIGFuZCB1c2IgcG9ydHMgYXJlCisgKiBhY3BpIGRldmljZSBub2Rl
-cy4gVGhlIGhpZXJhcmNoeSBsaWtlIGZvbGxvd2luZy4KKyAqIERldmljZSAoRUhDMSkKKyAqCURl
-dmljZSAoSFVCTikKKyAqCQlEZXZpY2UgKFBSMDEpCisgKgkJCURldmljZSAoUFIxMSkKKyAqCQkJ
-RGV2aWNlIChQUjEyKQorICoJCQlEZXZpY2UgKFBSMTMpCisgKgkJCS4uLgorICogU28gYWxsIGJp
-bmRpbmcgcHJvY2VzcyBpcyBkaXZpZGVkIGludG8gdHdvIHBhcnRzLiBiaW5kaW5nCisgKiByb290
-IGh1YiBhbmQgdXNiIHBvcnRzLgorICovCisKK3N0YXRpYyBpbnQgdXNiX2FjcGlfZmluZF9icmlk
-Z2Uoc3RydWN0IGRldmljZSAqZGV2LCBhY3BpX2hhbmRsZSAqaGFuZGxlKQogewogCXN0cnVjdCB1
-c2JfZGV2aWNlICp1ZGV2OwogCWFjcGlfaGFuZGxlICpwYXJlbnRfaGFuZGxlOwogCWludCBwb3J0
-X251bTsKIAorCWlmICghaXNfdXNiX3BvcnQoZGV2KSkKKwkJcmV0dXJuIC1FTk9ERVY7CisKKwlz
-c2NhbmYoZGV2X25hbWUoZGV2KSwgInBvcnQlZCIsICZwb3J0X251bSk7CisJLyogR2V0IHRoZSBz
-dHJ1Y3QgdXNiX2RldmljZSBwb2ludCBvZiBwb3J0J3MgaHViICovCisJdWRldiA9IHRvX3VzYl9k
-ZXZpY2UoZGV2LT5wYXJlbnQtPnBhcmVudCk7CisKIAkvKgotCSAqIEluIHRoZSBBQ1BJIERTRFQg
-dGFibGUsIG9ubHkgdXNiIHJvb3QgaHViIGFuZCB1c2IgcG9ydHMgYXJlCi0JICogYWNwaSBkZXZp
-Y2Ugbm9kZXMuIFRoZSBoaWVyYXJjaHkgbGlrZSBmb2xsb3dpbmcuCi0JICogRGV2aWNlIChFSEMx
-KQotCSAqCURldmljZSAoSFVCTikKLQkgKgkJRGV2aWNlIChQUjAxKQotCSAqCQkJRGV2aWNlIChQ
-UjExKQotCSAqCQkJRGV2aWNlIChQUjEyKQotCSAqCQkJRGV2aWNlIChQUjEzKQotCSAqCQkJLi4u
-Ci0JICogU28gYWxsIGJpbmRpbmcgcHJvY2VzcyBpcyBkaXZpZGVkIGludG8gdHdvIHBhcnRzLiBi
-aW5kaW5nCi0JICogcm9vdCBodWIgYW5kIHVzYiBwb3J0cy4KKwkgKiBUaGUgcm9vdCBodWIgcG9y
-dHMnIHBhcmVudCBpcyB0aGUgcm9vdCBodWIuIFRoZSBub24tcm9vdC1odWIKKwkgKiBwb3J0cycg
-cGFyZW50IGlzIHRoZSBwYXJlbnQgaHViIHBvcnQgd2hpY2ggdGhlIGh1YiBpcworCSAqIGNvbm5l
-Y3RlZCB0by4KIAkgKi8KLQlpZiAoaXNfdXNiX2RldmljZShkZXYpKSB7Ci0JCXVkZXYgPSB0b191
-c2JfZGV2aWNlKGRldik7Ci0JCWlmICh1ZGV2LT5wYXJlbnQpIHsKLQkJCWVudW0gdXNiX3BvcnRf
-Y29ubmVjdF90eXBlIHR5cGU7Ci0KLQkJCS8qCi0JCQkgKiBBY2NvcmRpbmcgdXNiIHBvcnQncyBj
-b25uZWN0IHR5cGUgdG8gc2V0IHVzYiBkZXZpY2UncwotCQkJICogcmVtb3ZhYmlsaXR5LgotCQkJ
-ICovCi0JCQl0eXBlID0gdXNiX2dldF9odWJfcG9ydF9jb25uZWN0X3R5cGUodWRldi0+cGFyZW50
-LAotCQkJCXVkZXYtPnBvcnRudW0pOwotCQkJc3dpdGNoICh0eXBlKSB7Ci0JCQljYXNlIFVTQl9Q
-T1JUX0NPTk5FQ1RfVFlQRV9IT1RfUExVRzoKLQkJCQl1ZGV2LT5yZW1vdmFibGUgPSBVU0JfREVW
-SUNFX1JFTU9WQUJMRTsKLQkJCQlicmVhazsKLQkJCWNhc2UgVVNCX1BPUlRfQ09OTkVDVF9UWVBF
-X0hBUkRfV0lSRUQ6Ci0JCQkJdWRldi0+cmVtb3ZhYmxlID0gVVNCX0RFVklDRV9GSVhFRDsKLQkJ
-CQlicmVhazsKLQkJCWRlZmF1bHQ6Ci0JCQkJdWRldi0+cmVtb3ZhYmxlID0gVVNCX0RFVklDRV9S
-RU1PVkFCTEVfVU5LTk9XTjsKLQkJCQlicmVhazsKLQkJCX0KLQorCWlmICghdWRldi0+cGFyZW50
-KSB7CisJCSpoYW5kbGUgPSBhY3BpX2dldF9jaGlsZChERVZJQ0VfQUNQSV9IQU5ETEUoJnVkZXYt
-PmRldiksCisJCQlwb3J0X251bSk7CisJCWlmICghKmhhbmRsZSkKKwkJCXJldHVybiAtRU5PREVW
-OworCX0gZWxzZSB7CisJCXBhcmVudF9oYW5kbGUgPQorCQkJdXNiX2dldF9odWJfcG9ydF9hY3Bp
-X2hhbmRsZSh1ZGV2LT5wYXJlbnQsCisJCQl1ZGV2LT5wb3J0bnVtKTsKKwkJaWYgKCFwYXJlbnRf
-aGFuZGxlKQogCQkJcmV0dXJuIC1FTk9ERVY7Ci0JCX0KIAotCQkvKiByb290IGh1YidzIHBhcmVu
-dCBpcyB0aGUgdXNiIGhjZC4gKi8KLQkJcGFyZW50X2hhbmRsZSA9IERFVklDRV9BQ1BJX0hBTkRM
-RShkZXYtPnBhcmVudCk7Ci0JCSpoYW5kbGUgPSBhY3BpX2dldF9jaGlsZChwYXJlbnRfaGFuZGxl
-LCB1ZGV2LT5wb3J0bnVtKTsKKwkJKmhhbmRsZSA9IGFjcGlfZ2V0X2NoaWxkKHBhcmVudF9oYW5k
-bGUsCXBvcnRfbnVtKTsKIAkJaWYgKCEqaGFuZGxlKQogCQkJcmV0dXJuIC1FTk9ERVY7Ci0JCXJl
-dHVybiAwOwotCX0gZWxzZSBpZiAoaXNfdXNiX3BvcnQoZGV2KSkgewotCQlzc2NhbmYoZGV2X25h
-bWUoZGV2KSwgInBvcnQlZCIsICZwb3J0X251bSk7Ci0JCS8qIEdldCB0aGUgc3RydWN0IHVzYl9k
-ZXZpY2UgcG9pbnQgb2YgcG9ydCdzIGh1YiAqLwotCQl1ZGV2ID0gdG9fdXNiX2RldmljZShkZXYt
-PnBhcmVudC0+cGFyZW50KTsKKwl9CisJCXVzYl9hY3BpX2NoZWNrX3BvcnRfY29ubmVjdF90eXBl
-KHVkZXYsICpoYW5kbGUsIHBvcnRfbnVtKTsKKworCXJldHVybiAwOworfQorCitzdGF0aWMgaW50
-IHVzYl9hY3BpX2ZpbmRfZGV2aWNlKHN0cnVjdCBkZXZpY2UgKmRldiwgYWNwaV9oYW5kbGUgKmhh
-bmRsZSkKK3sKKwlzdHJ1Y3QgdXNiX2RldmljZSAqdWRldjsKKwlhY3BpX2hhbmRsZSAqcGFyZW50
-X2hhbmRsZTsKKworCXVkZXYgPSB0b191c2JfZGV2aWNlKGRldik7CisJaWYgKHVkZXYtPnBhcmVu
-dCkgeworCQllbnVtIHVzYl9wb3J0X2Nvbm5lY3RfdHlwZSB0eXBlOwogCiAJCS8qCi0JCSAqIFRo
-ZSByb290IGh1YiBwb3J0cycgcGFyZW50IGlzIHRoZSByb290IGh1Yi4gVGhlIG5vbi1yb290LWh1
-YgotCQkgKiBwb3J0cycgcGFyZW50IGlzIHRoZSBwYXJlbnQgaHViIHBvcnQgd2hpY2ggdGhlIGh1
-YiBpcwotCQkgKiBjb25uZWN0ZWQgdG8uCisJCSAqIEFjY29yZGluZyB1c2IgcG9ydCdzIGNvbm5l
-Y3QgdHlwZSB0byBzZXQgdXNiIGRldmljZSdzCisJCSAqIHJlbW92YWJpbGl0eS4KIAkJICovCi0J
-CWlmICghdWRldi0+cGFyZW50KSB7Ci0JCQkqaGFuZGxlID0gYWNwaV9nZXRfY2hpbGQoREVWSUNF
-X0FDUElfSEFORExFKCZ1ZGV2LT5kZXYpLAotCQkJCXBvcnRfbnVtKTsKLQkJCWlmICghKmhhbmRs
-ZSkKLQkJCQlyZXR1cm4gLUVOT0RFVjsKLQkJfSBlbHNlIHsKLQkJCXBhcmVudF9oYW5kbGUgPQot
-CQkJCXVzYl9nZXRfaHViX3BvcnRfYWNwaV9oYW5kbGUodWRldi0+cGFyZW50LAotCQkJCXVkZXYt
-PnBvcnRudW0pOwotCQkJaWYgKCFwYXJlbnRfaGFuZGxlKQotCQkJCXJldHVybiAtRU5PREVWOwot
-Ci0JCQkqaGFuZGxlID0gYWNwaV9nZXRfY2hpbGQocGFyZW50X2hhbmRsZSwJcG9ydF9udW0pOwot
-CQkJaWYgKCEqaGFuZGxlKQotCQkJCXJldHVybiAtRU5PREVWOworCQl0eXBlID0gdXNiX2dldF9o
-dWJfcG9ydF9jb25uZWN0X3R5cGUodWRldi0+cGFyZW50LAorCQkJdWRldi0+cG9ydG51bSk7CisJ
-CXN3aXRjaCAodHlwZSkgeworCQljYXNlIFVTQl9QT1JUX0NPTk5FQ1RfVFlQRV9IT1RfUExVRzoK
-KwkJCXVkZXYtPnJlbW92YWJsZSA9IFVTQl9ERVZJQ0VfUkVNT1ZBQkxFOworCQkJYnJlYWs7CisJ
-CWNhc2UgVVNCX1BPUlRfQ09OTkVDVF9UWVBFX0hBUkRfV0lSRUQ6CisJCQl1ZGV2LT5yZW1vdmFi
-bGUgPSBVU0JfREVWSUNFX0ZJWEVEOworCQkJYnJlYWs7CisJCWRlZmF1bHQ6CisJCQl1ZGV2LT5y
-ZW1vdmFibGUgPSBVU0JfREVWSUNFX1JFTU9WQUJMRV9VTktOT1dOOworCQkJYnJlYWs7CiAJCX0K
-LQkJdXNiX2FjcGlfY2hlY2tfcG9ydF9jb25uZWN0X3R5cGUodWRldiwgKmhhbmRsZSwgcG9ydF9u
-dW0pOwotCX0gZWxzZQorCiAJCXJldHVybiAtRU5PREVWOworCX0KIAorCS8qIHJvb3QgaHViJ3Mg
-cGFyZW50IGlzIHRoZSB1c2IgaGNkLiAqLworCXBhcmVudF9oYW5kbGUgPSBERVZJQ0VfQUNQSV9I
-QU5ETEUoZGV2LT5wYXJlbnQpOworCSpoYW5kbGUgPSBhY3BpX2dldF9jaGlsZChwYXJlbnRfaGFu
-ZGxlLCB1ZGV2LT5wb3J0bnVtKTsKKwlpZiAoISpoYW5kbGUpCisJCXJldHVybiAtRU5PREVWOwog
-CXJldHVybiAwOwogfQogCiBzdGF0aWMgc3RydWN0IGFjcGlfYnVzX3R5cGUgdXNiX2FjcGlfYnVz
-ID0gewogCS5idXMgPSAmdXNiX2J1c190eXBlLAotCS5maW5kX2JyaWRnZSA9IHVzYl9hY3BpX2Zp
-bmRfZGV2aWNlLAorCS5maW5kX2JyaWRnZSA9IHVzYl9hY3BpX2ZpbmRfYnJpZGdlLAogCS5maW5k
-X2RldmljZSA9IHVzYl9hY3BpX2ZpbmRfZGV2aWNlLAogfTsKIAo=
---0015175cd862d5db8804cab4b0f3--
