@@ -1,158 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:48821 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757623Ab2IUUJ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 16:09:59 -0400
-Received: by lbbgj3 with SMTP id gj3so4397011lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 21 Sep 2012 13:09:57 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com> <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 21 Sep 2012 14:09:37 -0600
-Message-ID: <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
-Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part2 6/6] PCI: Claim hw/fw allocated resources in hot add path.
+Date: Sun,  2 Sep 2012 14:50:53 -0700
+Message-Id: <1346622653-30741-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 12:25 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->
-> Currently there's no PCI-related clean-up code
-> in acpi_pci_root_remove() function.
-> This patch introduces function for hostbridge removal,
-> and brings back pci_stop_bus_devices() function.
->
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  drivers/acpi/pci_bind.c     |    7 +++++++
->  drivers/acpi/pci_root.c     |    7 +++++++
->  drivers/pci/remove.c        |   27 +++++++++++++++++++++++++++
->  include/acpi/acpi_drivers.h |    1 +
->  include/linux/pci.h         |    2 ++
->  5 files changed, 44 insertions(+)
->
-> Index: Bjorn-next-0903/drivers/pci/remove.c
-> ===================================================================
-> --- Bjorn-next-0903.orig/drivers/pci/remove.c
-> +++ Bjorn-next-0903/drivers/pci/remove.c
-> @@ -92,3 +92,30 @@ void pci_stop_and_remove_bus_device(stru
->         pci_destroy_dev(dev);
->  }
->  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
-> +
-> +void pci_stop_bus_devices(struct pci_bus *bus)
-> +{
-> +       struct pci_dev *dev, *tmp;
-> +
-> +       list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
-> +               if (dev->subordinate)
-> +                       pci_stop_bus_devices(dev->subordinate);
-> +               pci_stop_dev(dev);
-> +       }
-> +
-> +}
-> +EXPORT_SYMBOL(pci_stop_bus_devices);
-> +
-> +void pci_remove_host_bridge(struct pci_host_bridge *bridge)
-> +{
-> +       struct pci_bus *root = bridge->bus;
-> +       struct pci_dev *dev, *tmp;
-> +
-> +       list_for_each_entry_safe_reverse(dev, tmp, &root->devices, bus_list)
-> +               pci_stop_and_remove_bus_device(dev);
-> +
-> +       pci_remove_bus(root);
-> +
-> +       device_unregister(&bridge->dev);
-> +}
-> +EXPORT_SYMBOL(pci_remove_host_bridge);
-> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-> ===================================================================
-> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
-> @@ -652,8 +652,10 @@ static int acpi_pci_root_remove(struct a
->  {
->         struct acpi_pci_root *root = acpi_driver_data(device);
->         struct acpi_pci_driver *driver;
-> +       struct pci_host_bridge *bridge = to_pci_host_bridge(root->bus->bridge);
->
->         mutex_lock(&acpi_pci_root_lock);
-> +       pci_stop_bus_devices(root->bus);
->         list_for_each_entry(driver, &acpi_pci_drivers, node)
->                 if (driver->remove)
->                         driver->remove(root);
-> @@ -661,6 +663,11 @@ static int acpi_pci_root_remove(struct a
->         device_set_run_wake(root->bus->bridge, false);
->         pci_acpi_remove_bus_pm_notifier(device);
->
-> +       acpi_pci_irq_del_prt(root->bus);
+During testing remove/rescan root bus 00, found
+[  338.142574] bus: 'pci': really_probe: probing driver ata_piix with device 0000:00:01.1
+[  338.146788] ata_piix 0000:00:01.1: device not available (can't reserve [io  0x01f0-0x01f7])
+[  338.150565] ata_piix: probe of 0000:00:01.1 failed with error -22
 
-acpi_pci_irq_del_prt() does not actually have a dependency on the
-struct pci_bus, so I think its interface should be changed so it takes
-a segment number and a bus number instead of the "struct pci_bus *".
-The same applies to acpi_pci_irq_add_prt().
+because that fixed resource is not claimed from
+        arch/x86/pci/i386.c::pcibios_allocate_resources()
+that is init path.
 
-This basically boils down to reverting 859a3f86ca8 and d9efae3688a.  I
-acked those changes at the time, but I think they were a mistake.  The
-reason is that passing in the struct pci_bus * ties them into the host
-bridge add/remove flow in a way that's not necessary.
+Try to claim those resources, so on the remove/rescan will still use old
+resources.
 
-If we get rid of the struct pci_bus * dependency, then we can easily
-add the _PRT before doing PCI enumeration behind the bridge, and we
-can remove the _PRT after removing the PCI devices.  I think this is
-one small step toward getting rid of the add/start and stop/remove
-split.
+It is some kind honoring HW/FW setting in the registers during hot add.
+esp root-bus hot add is through acpi, BIOS have chance to set some register
+for us.
 
-> +       acpi_pci_unbind_root(device);
-> +
-> +       pci_remove_host_bridge(bridge);
-> +
->         list_del(&root->node);
->         mutex_unlock(&acpi_pci_root_lock);
->         kfree(root);
-> Index: Bjorn-next-0903/include/linux/pci.h
-> ===================================================================
-> --- Bjorn-next-0903.orig/include/linux/pci.h
-> +++ Bjorn-next-0903/include/linux/pci.h
-> @@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struc
->  extern void pci_dev_put(struct pci_dev *dev);
->  extern void pci_remove_bus(struct pci_bus *b);
->  extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-> +extern void pci_stop_bus_devices(struct pci_bus *bus);
-> +extern void pci_remove_host_bridge(struct pci_host_bridge *bridge);
->  void pci_setup_cardbus(struct pci_bus *bus);
->  extern void pci_sort_breadthfirst(void);
->  #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
-> Index: Bjorn-next-0903/drivers/acpi/pci_bind.c
-> ===================================================================
-> --- Bjorn-next-0903.orig/drivers/acpi/pci_bind.c
-> +++ Bjorn-next-0903/drivers/acpi/pci_bind.c
-> @@ -118,3 +118,10 @@ int acpi_pci_bind_root(struct acpi_devic
->
->         return 0;
->  }
-> +
-> +void  acpi_pci_unbind_root(struct acpi_device *device)
-> +{
-> +       device->ops.bind = NULL;
-> +       device->ops.unbind = NULL;
-> +}
-> +
-> Index: Bjorn-next-0903/include/acpi/acpi_drivers.h
-> ===================================================================
-> --- Bjorn-next-0903.orig/include/acpi/acpi_drivers.h
-> +++ Bjorn-next-0903/include/acpi/acpi_drivers.h
-> @@ -101,6 +101,7 @@ struct pci_bus;
->
->  struct pci_dev *acpi_get_pci_dev(acpi_handle);
->  int acpi_pci_bind_root(struct acpi_device *device);
-> +void acpi_pci_unbind_root(struct acpi_device *device);
->
->  /* Arch-defined function to add a bus to the system */
->
->
+-v2: add rom resource claiming.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c |   28 +++++++++++++++++++++-------
+ drivers/pci/bus.c   |    2 ++
+ include/linux/pci.h |    1 +
+ 3 files changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index abf2a61..3cb7d66 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -201,13 +201,15 @@ EXPORT_SYMBOL(pcibios_align_resource);
+  *	    as well.
+  */
+ 
+-static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
++static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ {
+ 	int idx;
+ 	struct resource *r;
+ 
+ 	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
+ 		r = &dev->resource[idx];
++		if (r->parent)	/* Already allocated */
++			continue;
+ 		if (!r->flags)
+ 			continue;
+ 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
+@@ -223,7 +225,7 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 	}
+ }
+ 
+-static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
++static void pcibios_allocate_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_bus *child;
+ 
+@@ -239,7 +241,7 @@ struct pci_check_idx_range {
+ 	int end;
+ };
+ 
+-static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
++static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ {
+ 	int idx, disabled, i;
+ 	u16 command;
+@@ -292,7 +294,7 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 	}
+ }
+ 
+-static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
++static void pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *child;
+@@ -306,7 +308,7 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ 	}
+ }
+ 
+-static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
++static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ {
+ 	struct resource *r;
+ 
+@@ -324,7 +326,7 @@ static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ 		r->start = 0;
+ 	}
+ }
+-static void __init __pcibios_allocate_rom_resources(struct pci_bus *bus)
++static void __pcibios_allocate_rom_resources(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *child;
+@@ -337,7 +339,7 @@ static void __init __pcibios_allocate_rom_resources(struct pci_bus *bus)
+ 			__pcibios_allocate_rom_resources(child);
+ 	}
+ }
+-static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
++static void pcibios_allocate_rom_resources(struct pci_bus *bus)
+ {
+ 	if (pci_probe & PCI_ASSIGN_ROMS)
+ 		return;
+@@ -358,6 +360,18 @@ static int __init pcibios_assign_resources(void)
+ 	return 0;
+ }
+ 
++void pcibios_resource_survey_bus(struct pci_bus *bus)
++{
++	dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
++
++	pcibios_allocate_bus_resources(bus);
++
++	pcibios_allocate_resources(bus, 0);
++	pcibios_allocate_resources(bus, 1);
++
++	pcibios_allocate_rom_resources(bus);
++}
++
+ void __init pcibios_resource_survey(void)
+ {
+ 	struct pci_bus *bus;
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4b0970b..2882d01 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -154,6 +154,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 	return ret;
+ }
+ 
++void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
++
+ /**
+  * pci_bus_add_device - add a single device
+  * @dev: device to add
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1b460e1..29a4704 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -676,6 +676,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
+ /* Some device drivers need know if pci is initiated */
+ extern int no_pci_devices(void);
+ 
++void pcibios_resource_survey_bus(struct pci_bus *bus);
+ void pcibios_fixup_bus(struct pci_bus *);
+ int __must_check pcibios_enable_device(struct pci_dev *, int mask);
+ /* Architecture specific versions may override this (weak) */
+-- 
+1.7.7
+
