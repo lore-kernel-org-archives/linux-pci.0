@@ -1,82 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:65402 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172Ab2IOFJj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 01:09:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <1347678312-11124-4-git-send-email-jiang.liu@huawei.com>
-References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
-	<1347678312-11124-4-git-send-email-jiang.liu@huawei.com>
-Date: Fri, 14 Sep 2012 22:09:37 -0700
-Message-ID: <CAE9FiQU66sW4HsDuqh69evvcT0cfx61=6JtgrU7FTJjMo-_Njw@mail.gmail.com>
-Subject: Re: [PATCH v2 3/9] PCI: preserve dev->subordinate until
- pci_stop_dev() has been called
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jiang Liu <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part3 10/11] PCI: Rescan bus or bridge using callback method too
+Date: Sun,  2 Sep 2012 14:52:20 -0700
+Message-Id: <1346622741-30799-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
-> From: Yijing Wang <wangyijing@huawei.com>
->
-> Changeset 2ed168eeb3edec029aa0eca5cb981d6376f931f9 "PCI: Fold stop and
-> remove helpers into their callers" has changed the behavior when
-> removing a PCI device.
->
-> Previously, for a PCI bridge device with secondary bus, dev->subordinate
-> is valid when calling PCI bus notification callbacks for
-> BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events. Now dev->subordinate
-> has been reset to NULL when calling callbacks for BUS_NOTIFY_DEL_DEVICE
-> events, which may break some PCI bus notification callbacks.
->
-> So revert to the original behavior to keep dev->subordinate valid for
-> both BUS_NOTIFY_ADD_DEVICE events and BUS_NOTIFY_DEL_DEVICE events.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  drivers/pci/remove.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 86a4636..6244956 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -79,16 +79,16 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->          * iterator.  Therefore, iterate in reverse so we remove the VFs
->          * first, then the PF.
->          */
-> -       if (bus) {
-> +       if (bus)
->                 list_for_each_entry_safe_reverse(child, tmp,
->                                                  &bus->devices, bus_list)
->                         pci_stop_and_remove_bus_device(child);
-> +       pci_stop_dev(dev);
->
-> +       if (bus) {
->                 pci_remove_bus(bus);
->                 dev->subordinate = NULL;
->         }
-> -
-> -       pci_stop_dev(dev);
->         pci_destroy_dev(dev);
->  }
->  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+Just like removal.
 
-for support root bus support with acpi_pci_root (ioapic/iommu) will
-need pci_stop_bus_devices()
+Because We could add new bus under the bridges...
 
-so I just put those function back...
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c |   43 +++++++++++++++++++++++++++++++------------
+ 1 files changed, 31 insertions(+), 12 deletions(-)
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=247a40206cf44488f21bc6074cf0ba2805d4d840
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 60cb06b..7ebc764 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -327,21 +327,31 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 	return count;
+ }
+ 
++static void bridge_rescan_callback(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	mutex_lock(&pci_remove_rescan_mutex);
++	pci_rescan_bus_bridge_resize(pdev);
++	mutex_unlock(&pci_remove_rescan_mutex);
++}
++
+ static ssize_t
+ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
++	int ret = 0;
+ 	unsigned long val;
+-	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	if (kstrtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus_bridge_resize(pdev);
+-		mutex_unlock(&pci_remove_rescan_mutex);
+-	}
++	if (val)
++		ret = device_schedule_callback(dev, bridge_rescan_callback);
++
++	if (ret)
++		count = ret;
++
+ 	return count;
+ }
+ 
+@@ -377,21 +387,30 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	return count;
+ }
+ 
++static void bus_rescan_callback(struct device *dev)
++{
++	struct pci_bus *bus = to_pci_bus(dev);
++
++	mutex_lock(&pci_remove_rescan_mutex);
++	pci_rescan_bus(bus);
++	mutex_unlock(&pci_remove_rescan_mutex);
++}
+ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
++	int ret = 0;
+ 	unsigned long val;
+-	struct pci_bus *bus = to_pci_bus(dev);
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+-	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
+-	}
++	if (val)
++		ret = device_schedule_callback(dev, bus_rescan_callback);
++
++	if (ret)
++		count = ret;
++
+ 	return count;
+ }
+ 
+-- 
+1.7.7
 
-Thanks
-
-Yinghai
