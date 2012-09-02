@@ -1,43 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50726 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062Ab2IMJy0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 05:54:26 -0400
-Received: by lbbgj3 with SMTP id gj3so1817565lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 13 Sep 2012 02:54:25 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CAPM=9tz-pc2cZs+WTMxcNH8YVa2JEDwH1hmxVeGLOkdFyC-Xxg@mail.gmail.com>
-References: <CA+icZUWQtYB2yJYKh9MRqA40Qu5v7V=SOqpu5jvdqDhR_teiFg@mail.gmail.com>
-	<CAPM=9tz-pc2cZs+WTMxcNH8YVa2JEDwH1hmxVeGLOkdFyC-Xxg@mail.gmail.com>
-Date: Thu, 13 Sep 2012 11:54:25 +0200
-Message-ID: <CA+icZUVLdDefC3ku9LJ3b7W8kCYdRxO0_9EdyaciyZjG3aJQiQ@mail.gmail.com>
-Subject: Re: [pci-next] Include patches from mmotm and drm-opt-pwr GIT trees?
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Dave Airlie <airlied@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part5 1/7] ACPI, PCI: Use normal list for struct acpi_pci_driver
+Date: Sun,  2 Sep 2012 14:55:59 -0700
+Message-Id: <1346622965-30937-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+References: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 13, 2012 at 11:34 AM, Dave Airlie <airlied@gmail.com> wrote:
-> On Thu, Sep 13, 2012 at 7:20 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
->> Hi Bjorn,
->>
->> those two patches would IMHO be nice to have also in pci.git#next?
->> The 1st could have given me more infos when I had some troubles with
->> drm in Linux-Next some days ago.
->> The 2nd one was sent already by Dave to linux-pci ML.
->
-> The 2nd isn't really ready yet, please don't jump the maintainer gun.
->
+From: Jiang Liu <jiang.liu@huawei.com>
 
-Thanks.
-Good, you say that before I started my build.
-Now, building Linux-Next (next-20120913) with the 1st one.
+Use normal list for struct acpi_pci_driver to simplify code.
 
-- Sedat -
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |   16 +++-------------
+ include/linux/acpi.h    |    2 +-
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-> Dave.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 12791fd..2aec08d 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_driver = {
+ };
+ 
+ static LIST_HEAD(acpi_pci_roots);
++static LIST_HEAD(acpi_pci_drivers);
+ 
+-static struct acpi_pci_driver *sub_driver;
+ static DEFINE_MUTEX(osc_lock);
+ 
+ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+ 	int n = 0;
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr)
+-		pptr = &(*pptr)->next;
+-	*pptr = driver;
++	list_add_tail(&driver->node, &acpi_pci_drivers);
+ 
+ 	if (!driver->add)
+ 		return 0;
+@@ -103,14 +100,7 @@ void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+ {
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr) {
+-		if (*pptr == driver)
+-			break;
+-		pptr = &(*pptr)->next;
+-	}
+-	BUG_ON(!*pptr);
+-	*pptr = (*pptr)->next;
++	list_del(&driver->node);
+ 
+ 	if (!driver->remove)
+ 		return;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 3ad510b..a54cf8e 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int active);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ struct acpi_pci_driver {
+-	struct acpi_pci_driver *next;
++	struct list_head node;
+ 	int (*add)(acpi_handle handle);
+ 	void (*remove)(acpi_handle handle);
+ };
+-- 
+1.7.7
+
