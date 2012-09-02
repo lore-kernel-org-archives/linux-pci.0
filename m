@@ -1,51 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:50836 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423141Ab2I1Vuf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Sep 2012 17:50:35 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Subject: [RFD][PATCH 0/7] PM / QoS: Support for PM QoS device flags
-Date: Fri, 28 Sep 2012 23:51:10 +0200
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209282351.10663.rjw@sisk.pl>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <lenb@kernel.org>
+Subject: [PATCH part4 11/11] PCI, ACPI: Make kacpi_hotplug_wq static
+Date: Sun,  2 Sep 2012 14:54:21 -0700
+Message-Id: <1346622861-30865-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+No external user anymore.
 
-The following patch series extends the existing device PM QoS core code to
-support PM QoS flags representing binary (on/off) requirements, such as
-whether or not power may be removed entirely from the device or whether
-or not remote wakeup (i.e. signalling of external events while suspended)
-should work for it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/osl.c      |    3 +--
+ include/acpi/acpiosxf.h |    2 --
+ 2 files changed, 1 insertions(+), 4 deletions(-)
 
-[1/7] Prepare PM QoS device structure for adding more constraint types.
-[2/7] Introduce request and constraint data types for PM QoS flags.
-[3/7] Prepare struct dev_pm_qos_request for representing more request types. 
-[4/7] Introduce device PM QoS flags support.
-[5/7] Make it possible to expose PM QoS device flags to user space.
-[6/7] PM / Domains: Check device PM QoS flags in pm_genpd_poweroff().
-[7/7] PM / ACPI: Take device PM QoS flags into account.
-
-The last two patches make the generic PM domains framework and ACPI / PCI,
-respectively, take the PM QoS device flags introduced by patch [5/7] into
-accont when making their decisions.
-
-The changelogs describe the details, but if anything isn't clear, please let
-me know.
-
-Thanks,
-Rafael
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 0719fa7..311a921 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
+ static void *acpi_irq_context;
+ static struct workqueue_struct *kacpid_wq;
+ static struct workqueue_struct *kacpi_notify_wq;
+-struct workqueue_struct *kacpi_hotplug_wq;
+-EXPORT_SYMBOL(kacpi_hotplug_wq);
++static struct workqueue_struct *kacpi_hotplug_wq;
+ 
+ /*
+  * This list of permanent mappings is for memory that may be accessed from
+diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
+index 6ff92ea..9f68f69 100644
+--- a/include/acpi/acpiosxf.h
++++ b/include/acpi/acpiosxf.h
+@@ -194,8 +194,6 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
+ /*
+  * Threads and Scheduling
+  */
+-extern struct workqueue_struct *kacpi_hotplug_wq;
+-
+ struct acpi_hp_work {
+ 	struct work_struct work;
+ 	acpi_handle handle;
+-- 
+1.7.7
 
