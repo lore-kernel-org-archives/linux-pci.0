@@ -1,10 +1,10 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:19771 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757034Ab2ISSzh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:37 -0400
+Received: from acsinet15.oracle.com ([141.146.126.227]:19800 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755602Ab2IBVwi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:52:38 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
@@ -12,74 +12,46 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 29/40] PCI, ACPI: Add alloc_acpi_hp_work()
-Date: Wed, 19 Sep 2012 11:54:43 -0700
-Message-Id: <1348080894-23412-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH part3 04/11] PCI: Use __pci_bus_size_bridges() directly in pci_assign_unassigned_bus_resources()
+Date: Sun,  2 Sep 2012 14:52:14 -0700
+Message-Id: <1346622741-30799-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it with acpiphp and pci_root_hp events handling
+Now __pci_bus_size_bridges() will not include self bridge.
+So we don't need to have our own version in
+ pci_assign_unassigned_bus_resources anymore.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/acpi/osl.c      |   21 +++++++++++++++++++++
- include/acpi/acpiosxf.h |    9 +++++++++
- 2 files changed, 30 insertions(+), 0 deletions(-)
+ drivers/pci/setup-bus.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 9eaf708..0719fa7 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -1592,3 +1592,24 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 70d6292..054d54b 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1519,17 +1519,11 @@ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
  {
- 	__acpi_os_prepare_sleep = func;
- }
-+
-+void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
-+			void (*func)(struct work_struct *work))
-+{
-+	struct acpi_hp_work *hp_work;
-+	int ret;
-+
-+	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-+	if (!hp_work)
-+		return;
-+
-+	hp_work->handle = handle;
-+	hp_work->type = type;
-+	hp_work->context = context;
-+
-+	INIT_WORK(&hp_work->work, func);
-+	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-+	if (!ret)
-+		kfree(hp_work);
-+}
-+EXPORT_SYMBOL(alloc_acpi_hp_work);
-diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
-index 0650f5f..6ff92ea 100644
---- a/include/acpi/acpiosxf.h
-+++ b/include/acpi/acpiosxf.h
-@@ -196,6 +196,15 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
-  */
- extern struct workqueue_struct *kacpi_hotplug_wq;
+-	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
  
-+struct acpi_hp_work {
-+	struct work_struct work;
-+	acpi_handle handle;
-+	u32 type;
-+	void *context;
-+};
-+void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
-+			void (*func)(struct work_struct *work));
-+
- acpi_thread_id acpi_os_get_thread_id(void);
- 
- acpi_status
+ 	down_read(&pci_bus_sem);
+-	list_for_each_entry(dev, &bus->devices, bus_list)
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+-		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
+-			if (dev->subordinate)
+-				__pci_bus_size_bridges(dev->subordinate,
+-						 &add_list, true);
++	__pci_bus_size_bridges(bus, &add_list, false);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
 -- 
 1.7.7
 
