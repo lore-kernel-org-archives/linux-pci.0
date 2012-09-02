@@ -1,58 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A4A2DCD@G01JPEXMBYT03>
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-	<20120903170442.c406455c.izumi.taku@jp.fujitsu.com>
-	<4A338DB2991D2A44B9A44B8718AECF650A4A2DCD@G01JPEXMBYT03>
-Date: Tue, 4 Sep 2012 12:12:19 -0700
-Message-ID: <CAE9FiQVJ0JRCgZsh+iSB8VC4TqJDcetPyno36L8=UW-UQUK4vQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
- hot-plugging PCI root bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-Cc: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36805 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755034Ab2IBViY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:38:24 -0400
+From: Mathias Krause <minipli@googlemail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Mathias Krause <minipli@googlemail.com>
+Subject: [PATCH] PCI: drop duplicate const in DECLARE_PCI_FIXUP_SECTION
+Date: Sun,  2 Sep 2012 23:37:24 +0200
+Message-Id: <1346621844-31211-1-git-send-email-minipli@googlemail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 4, 2012 at 12:58 AM, Kaneshige, Kenji
-<kaneshige.kenji@jp.fujitsu.com> wrote:
->>   -v2: Move add calling to acpi_pci_root_start by Yinghai
->>  static int acpi_pci_root_start(struct acpi_device *device)
->>  {
->>       struct acpi_pci_root *root = acpi_driver_data(device);
->> +     struct acpi_pci_driver *driver;
->> +
->> +     list_for_each_entry(driver, &acpi_pci_drivers, node)
->> +             if (driver->add)
->> +                     driver->add(device->handle);
->>
->
-> I think this (invoke .add callback for each acpi pci driver) should be done
-> after pci_bus_add_devices().
+It's redundant and makes sparse complain about it.
 
-We need to load ioapic driver and dmar driver before normal pci drivers.
+Signed-off-by: Mathias Krause <minipli@googlemail.com>
+---
+ include/linux/pci.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
-> It seems ACPI pci drivers run *after* pci_bus_add_devices() at the boot time
-> (because no acpi pci drivers is loaded at that time). On the other hand, it
-> seems that ACPI pci drivers run *before* pci_bus_add_devices() at the hotadd
-> time. Those should be the same.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..aee24a8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1472,7 +1472,7 @@ enum pci_fixup_pass {
+ /* Anonymous variables would be nice... */
+ #define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, class,	\
+ 				  class_shift, hook)			\
+-	static const struct pci_fixup const __pci_fixup_##name __used	\
++	static const struct pci_fixup __pci_fixup_##name __used		\
+ 	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
+ 		= { vendor, device, class, class_shift, hook };
+ 
+-- 
+1.7.10.4
 
-for boot time, sequence : normal pci driver still get loaded after
-ioapic and dmar drivers.
-otherwise those driver will have problem to get irq and iommu work correctly.
-and if ioapic and dmar are static, and they will get initialized
-around pci device get scanned and pci_bus_add_devices get called
-already.
-but that time normal devices driver does not get registered yet. those
-pci drivers will get loaded (should be bounded)
-for pci devices when those driver get registered.
-
-Thanks
-
-Yinghai
