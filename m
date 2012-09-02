@@ -1,110 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63547 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751201Ab2ISFNl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Sep 2012 01:13:41 -0400
-Message-ID: <1348031618.8212.124.camel@yhuang-dev>
-Subject: Re: [PATCH 1/6] PCI/AER: fix pci_ops return NULL when hotplug a pci
- bus doing aer error inject
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Wed, 19 Sep 2012 13:13:38 +0800
-In-Reply-To: <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-	 <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part4 04/11] PCI: Fix an access-after-free issue in function pci_stop_and_remove_bus()
+Date: Sun,  2 Sep 2012 14:54:14 -0700
+Message-Id: <1346622861-30865-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
-> When we inject aer errors to the target pcie device by aer_inject module, the pci_ops of pci
-> bus which the target device is on will be assigned to pci_ops_aer.So if the target pci device
-> is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
-> will be assigned to pci_ops_aer too.Now every access to the child bus's devices will result to
-> system panic, because it get a NULL pci_ops in pci_read_aer/pci_write_aer.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   27 ++++++++++++++++++++++++++-
->  1 files changed, 26 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 4e24cb8..0f00a27 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
->  	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
->  }
->  
-> +/* find pci_ops of the nearest parent bus */
-> +static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
-> +{
-> +	struct pci_bus_ops *bus_ops;
-> +	struct pci_bus *pbus = bus->parent;
-> +
-> +	if (!pbus)
-> +		return NULL;
-> +
-> +	while (pbus) {
-> +		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
-> +			if (bus_ops->bus == pbus)
-> +				return bus_ops->ops;
-> +
-> +		pbus = pbus->parent;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
->  /* inject_lock must be held before calling */
->  static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  {
-> @@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  		if (bus_ops->bus == bus)
->  			return bus_ops->ops;
->  	}
-> -	return NULL;
-> +
-> +	/* can't find bus_ops, fall back to get bus_ops of upstream bus */
-> +	return __find_pci_bus_ops_parent(bus);
->  }
->  
->  static struct pci_bus_ops *pci_bus_ops_pop(void)
-> @@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
->  	}
->  out:
->  	ops = __find_pci_bus_ops(bus);
-> +	BUG_ON(!ops);
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return ops->read(bus, devfn, where, size, val);
->  }
-> @@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
->  	}
->  out:
->  	ops = __find_pci_bus_ops(bus);
-> +	BUG_ON(!ops);
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return ops->write(bus, devfn, where, size, val);
->  }
-> @@ -506,6 +530,7 @@ static struct miscdevice aer_inject_device = {
->  	.fops = &aer_inject_fops,
->  };
->  
-> +
+From: Jiang Liu <jiang.liu@huawei.com>
 
-unnecessary new line?
+If pci_stop_and_remove_bus() is called to remove a pci root bus,
+the host_bridge structure may have already been freed after returning
+from pci_remove_bus(). To avoid that, hold an extra reference count
+to the root bus before calling pci_remove_bus(), so we can safely
+access the pci_host_bridge structure after returning from function
+pci_remove_bus().
 
-Best Regards,
-Huang Ying
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
->  static int __init aer_inject_init(void)
->  {
->  	return misc_register(&aer_inject_device);
-
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 94407d4..40f8148 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -154,6 +154,7 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+ 
+ 	if (pci_is_root_bus(bus)) {
+ 		host_bridge = to_pci_host_bridge(bus->bridge);
++		get_device(&host_bridge->dev);
+ 		pci_stop_host_bridge(host_bridge);
+ 	} else
+ 		pci_bridge = bus->self;
+@@ -162,8 +163,10 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+ 
+ 	pci_remove_bus(bus);
+ 
+-	if (host_bridge)
++	if (host_bridge) {
+ 		host_bridge->bus = NULL;
++		put_device(&host_bridge->dev);
++	}
+ 
+ 	if (pci_bridge)
+ 		pci_bridge->subordinate = NULL;
+-- 
+1.7.7
 
