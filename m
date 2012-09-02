@@ -1,55 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Russell King <linux@arm.linux.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 2/2] ARM: pci: Allow passing per-controller private data
-Date: Thu, 20 Sep 2012 09:43:45 +0200
-Message-Id: <1348127025-29461-3-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part2 0/6] PCI, x86: pci root bus hotplug support - part2
+Date: Sun,  2 Sep 2012 14:50:47 -0700
+Message-Id: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to allow drivers to specify private data for each controller,
-this commit adds a private_data field to the struct hw_pci. This field
-is an array of nr_controllers pointers that will be used to initialize
-the private_data field of the corresponding controller's pci_sys_data
-structure.
+Refactor x86 pci pcibios_allocate related function to take bus as parameter.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- arch/arm/include/asm/mach/pci.h | 1 +
- arch/arm/kernel/bios32.c        | 3 +++
- 2 files changed, 4 insertions(+)
+So later could use it for root bus add case.
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index db9fedb..5cf2e97 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -23,6 +23,7 @@ struct hw_pci {
- #endif
- 	struct pci_ops	*ops;
- 	int		nr_controllers;
-+	void		**private_data;
- 	int		(*setup)(int nr, struct pci_sys_data *);
- 	struct pci_bus *(*scan)(int nr, struct pci_sys_data *);
- 	void		(*preinit)(void);
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 2c80f36..88da2d4 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -475,6 +475,9 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 		sys->map_irq = hw->map_irq;
- 		INIT_LIST_HEAD(&sys->resources);
- 
-+		if (hw->private_data)
-+			sys->private_data = hw->private_data[nr];
-+
- 		ret = hw->setup(nr, sys);
- 
- 		if (ret > 0) {
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug-part2
+
+Yinghai Lu (6):
+  x86, PCI: Separate pcibios_allocate_bridge_resources()
+  x86, PCI: Separate pcibios_allocate_dev_resources()
+  x86, PCI: Let pcibios_allocate_bus_resources() take bus instead
+  x86, PCI: Separate rom resource claim out
+  PCI, x86: Add pcibios_fw_addr_done
+  PCI: Claim hw/fw allocated resources in hot add path.
+
+ arch/x86/pci/i386.c |  192 ++++++++++++++++++++++++++++++++++-----------------
+ drivers/pci/bus.c   |    2 +
+ include/linux/pci.h |    1 +
+ 3 files changed, 131 insertions(+), 64 deletions(-)
+
 -- 
-1.7.12
+1.7.7
 
