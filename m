@@ -1,43 +1,92 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 26 Sep 2012 14:38:25 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 -tip 0/5] x86, MSI, AHCI: Support multiple MSIs
-Message-ID: <20120926123824.GB7123@dhcp-26-207.brq.redhat.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1346653435.git.agordeev@redhat.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part3 07/11] PCI: Add pci_bus_add_single_device()
+Date: Sun,  2 Sep 2012 14:52:17 -0700
+Message-Id: <1346622741-30799-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 03, 2012 at 11:16:55AM +0200, Alexander Gordeev wrote:
->   5/5:	based on Jeff's comments:
-> 
-> 	- AHCI specific code moved from libata-core.c to libahci.c;
-> 
-> 	- the host-wide lock concern addressed - ahci_interrupt() handler
-> 	  split in two parts: ahci_hw_interrupt() hardware context handler
-> 	  and ahci_thread_fn() threaded handler;
-> 
-> 	- host->lock statistics attached;
+Will use it to pci_bus_bridge_scan_resize() to make bridge will
+have pci_bus directory created correctly.
 
-Hi Jeff,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c   |   39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 40 insertions(+), 0 deletions(-)
 
-Would you please comment on the changes and numbers?
-
-Thanks!
-
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 2882d01..950b786 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -259,6 +259,45 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 	}
+ }
+ 
++void pci_bus_add_single_device(struct pci_dev *dev)
++{
++	struct pci_bus *child;
++	int retval;
++
++	/* Skip already-added devices */
++	if (!dev->is_added) {
++		retval = pci_bus_add_device(dev);
++		if (retval)
++			dev_err(&dev->dev, "Error adding device, continuing\n");
++	}
++
++	BUG_ON(!dev->is_added);
++
++	child = dev->subordinate;
++	/*
++	 * If there is an unattached subordinate bus, attach
++	 * it and then scan for unattached PCI devices.
++	 */
++	if (child) {
++		if (list_empty(&child->node)) {
++			down_write(&pci_bus_sem);
++			list_add_tail(&child->node, &dev->bus->children);
++			up_write(&pci_bus_sem);
++		}
++		pci_bus_add_devices(child);
++
++		/*
++		 * register the bus with sysfs as the parent is now
++		 * properly registered.
++		 */
++		if (!child->is_added) {
++			retval = pci_bus_add_child(child);
++			if (retval)
++				dev_err(&dev->dev, "Error adding bus, continuing\n");
++		}
++	}
++}
++
+ void pci_enable_bridges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f994e93..4446448 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -700,6 +700,7 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
+ void pcibios_scan_specific_bus(int busn);
+ extern struct pci_bus *pci_find_bus(int domain, int busnr);
+ void pci_bus_add_devices(const struct pci_bus *bus);
++void pci_bus_add_single_device(struct pci_dev *dev);
+ struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
+ 				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.7
+
