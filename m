@@ -1,201 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "R, Durgadoss" <durgadoss.r@intel.com>
-To: "Zhang, Rui" <rui.zhang@intel.com>, Hugh Dickins <hughd@google.com>
-CC: Sedat Dilek <sedat.dilek@gmail.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Dave Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: inux-next: Tree for Sept 26 (not bootable on AMD64:
- thermal|acpi|drm/i915|pci related?)
-Date: Thu, 27 Sep 2012 06:11:07 +0000
-Message-ID: <4D68720C2E767A4AA6A8796D42C8EB591D3CF5@BGSMSX101.gar.corp.intel.com>
-References: <CA+icZUWF92LaJ6pOMUPh6M-MVhF1GikJfyb9_1xXdNTxGLahXw@mail.gmail.com>
-	 <alpine.LSU.2.00.1209261241190.2175@eggly.anvils>
- <1348726082.10877.276.camel@rui.sh.intel.com>
-In-Reply-To: <1348726082.10877.276.camel@rui.sh.intel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part2 1/6] x86, PCI: Separate pcibios_allocate_bridge_resources()
+Date: Sun,  2 Sep 2012 14:50:48 -0700
+Message-Id: <1346622653-30741-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUnVpLA0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhhbmcs
-IFJ1aQ0KPiBTZW50OiBUaHVyc2RheSwgU2VwdGVtYmVyIDI3LCAyMDEyIDExOjM4IEFNDQo+IFRv
-OiBIdWdoIERpY2tpbnMNCj4gQ2M6IFNlZGF0IERpbGVrOyBTdGVwaGVuIFJvdGh3ZWxsOyBBbmRy
-ZXcgTW9ydG9uOyBEYW4gQ2FycGVudGVyOyBSLA0KPiBEdXJnYWRvc3M7IGxpbnV4LW5leHRAdmdl
-ci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBSYWZhZWwgSi4g
-V3lzb2NraTsgRGF2ZSBBaXJsaWU7IERhbmllbCBWZXR0ZXI7IExpbnV4IEFDUEk7IGxpbnV4LQ0K
-PiBwY2lAdmdlci5rZXJuZWwub3JnOyBEUkk7IEJqb3JuIEhlbGdhYXMNCj4gU3ViamVjdDogUmU6
-IGludXgtbmV4dDogVHJlZSBmb3IgU2VwdCAyNiAobm90IGJvb3RhYmxlIG9uIEFNRDY0Og0KPiB0
-aGVybWFsfGFjcGl8ZHJtL2k5MTV8cGNpIHJlbGF0ZWQ/KQ0KPiANCj4gSGksIGh1Z2gsDQo+IA0K
-PiBPbiDkuIksIDIwMTItMDktMjYgYXQgMTI6NTEgLTA3MDAsIEh1Z2ggRGlja2lucyB3cm90ZToN
-Cj4gPiBPbiBXZWQsIDI2IFNlcCAyMDEyLCBTZWRhdCBEaWxlayB3cm90ZToNCj4gPiA+DQo+ID4g
-PiBvbiBteSBVYnVudHUvcHJlY2lzZSBBTUQ2NCB0b2RheSdzIExpbnV4LU5leHQgcnVucyBpbnRv
-IHRoZSBmb2xsb3dpbmcNCj4gPiA+IGNhbGwtdHJhY2UgKG1hY2hpbmUgZnJlZXplcyk6DQo+ID4g
-Pg0KPiA+ID4gIFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTI0NzM5XSBC
-VUc6IHVuYWJsZSB0byBoYW5kbGUNCj4gPiA+IGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVu
-Y2UgYXQgMDAwMDAwMDAwMDAwMDAxOA0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJu
-ZWw6IFsgICAxMS4xMjQ4MDZdIElQOiBbPGZmZmZmZmZmODE0YmIwNTg+XQ0KPiA+ID4gdGhlcm1h
-bF9jb29saW5nX2RldmljZV9yZWdpc3RlcisweDJjOC8weDNkMA0KPiA+ID4gU2VwIDI2IDE5OjIy
-OjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjQ4NjldIFBHRCAwDQo+ID4gPiBTZXAgMjYgMTk6
-MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjEyNDg5NV0gT29wczogMDAwMCBbIzFdIFNNUA0K
-PiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjQ5MTldIE1vZHVs
-ZXMgbGlua2VkIGluOg0KPiA+ID4gY29yZXRlbXAga3ZtX2ludGVsIGt2bSBzbmRfaGRhX2ludGVs
-KCspIGFyYzQgc25kX2hkYV9jb2RlYyBpd2xkdm0NCj4gPiA+IHNuZF9od2RlcCBnaGFzaF9jbG11
-bG5pX2ludGVsIHNuZF9wY20gYWVzbmlfaW50ZWwgdXZjdmlkZW8gbWFjODAyMTENCj4gPiA+IGFl
-c194ODZfNjQgc25kX3BhZ2VfYWxsb2MgYWJsa19oZWxwZXIgaTkxNSgrKSBzbmRfc2VxX21pZGkg
-Y3J5cHRkDQo+ID4gPiB2aWRlb2J1ZjJfdm1hbGxvYyBzbmRfc2VxX21pZGlfZXZlbnQgeHRzIHZp
-ZGVvYnVmMl9tZW1vcHMgbHJ3DQo+ID4gPiBzbmRfcmF3bWlkaSB2aWRlb2J1ZjJfY29yZSBqb3lk
-ZXYgZ2YxMjhtdWwgdmlkZW9kZXYgc25kX3NlcQ0KPiA+ID4gc25kX3NlcV9kZXZpY2UgaGlkX2dl
-bmVyaWMgc25kX3RpbWVyIGRybV9rbXNfaGVscGVyIGl3bHdpZmkgZHJtIHNuZA0KPiA+ID4gcHNt
-b3VzZSBpMmNfYWxnb19iaXQgc291bmRjb3JlIGJ0dXNiIG1pY3JvY29kZSBzZXJpb19yYXcNCj4g
-PiA+IHNhbXN1bmdfbGFwdG9wIHdtaSBjZmc4MDIxMSBibHVldG9vdGggbWVpIG1hY19oaWQgdmlk
-ZW8gbHBjX2ljaCBscA0KPiA+ID4gcGFycG9ydCBleHQ0IGpiZDIgdXNiaGlkIGhpZCByODE2OQ0K
-PiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjUzMTldIENQVSAy
-DQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjEyNTMzMl0gUGlk
-OiA1NzksIGNvbW06IG1vZHByb2JlDQo+ID4gPiBOb3QgdGFpbnRlZCAzLjYuMC1yYzctbmV4dDIw
-MTIwOTI2LTItaW5pemEtZ2VuZXJpYyAjMSBTQU1TVU5HDQo+ID4gPiBFTEVDVFJPTklDUyBDTy4s
-IExURC4NCj4gNTMwVTNCSS81MzBVNEJJLzUzMFU0QkgvNTMwVTNCSS81MzBVNEJJLzUzMFU0QkgN
-Cj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTI1NDAxXSBSSVA6
-DQo+ID4gPiAwMDEwOls8ZmZmZmZmZmY4MTRiYjA1OD5dICBbPGZmZmZmZmZmODE0YmIwNTg+XQ0K
-PiA+ID4gdGhlcm1hbF9jb29saW5nX2RldmljZV9yZWdpc3RlcisweDJjOC8weDNkMA0KPiA+ID4g
-U2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjU0NTBdIFJTUDoNCj4gPiA+
-IDAwMTg6ZmZmZjg4MDEwZjIzZDgzOCAgRUZMQUdTOiAwMDAxMDI0Ng0KPiA+ID4gU2VwIDI2IDE5
-OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjU0NzVdIFJBWDogMDAwMDAwMDAwMDAwMDAw
-MA0KPiA+ID4gUkJYOiBmZmZmODgwMTBiZmQ0YzAwIFJDWDogMDAwMDAwMDAwMDAwMDAwMQ0KPiA+
-ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjU1MDddIFJEWDogMDAw
-MDAwMDAwMDAwMDAwMA0KPiA+ID4gUlNJOiAwMDAwMDAwMDAwMDAwMjgyIFJESTogMDAwMDAwMDAw
-MDAwMDI4Mg0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjU1
-MzldIFJCUDogZmZmZjg4MDEwZjIzZDg3OA0KPiA+ID4gUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIw
-OTogMDAwMDAwMDAwMDAwMDAwMQ0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6
-IFsgICAxMS4xMjU1NzBdIFIxMDogZmZmZjg4MDEwNTRmYzQ2MA0KPiA+ID4gUjExOiAwMDAwMDAw
-MDAwMDAwMDAwIFIxMjogZmZmZjg4MDEwYmZkNGMwNA0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZh
-bWJveCBrZXJuZWw6IFsgICAxMS4xMjU2MDJdIFIxMzogZmZmZjg4MDExYTczZTAwMA0KPiA+ID4g
-UjE0OiAwMDAwMDAwMDAwMDAwMDAwIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0KPiA+ID4gU2VwIDI2
-IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjU2MzRdIEZTOg0KPiA+ID4gMDAwMDdm
-NmI4ZGEyOTcwMCgwMDAwKSBHUzpmZmZmODgwMTFmYTgwMDAwKDAwMDApDQo+ID4gPiBrbmxHUzow
-MDAwMDAwMDAwMDAwMDAwDQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAg
-IDExLjEyNTY3MF0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOg0KPiA+ID4gMDAwMCBDUjA6IDAwMDAw
-MDAwODAwNTAwMzMNCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEu
-MTI1Njk3XSBDUjI6IDAwMDAwMDAwMDAwMDAwMTgNCj4gPiA+IENSMzogMDAwMDAwMDExMDE4NTAw
-MCBDUjQ6IDAwMDAwMDAwMDAwNDA3ZTANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2Vy
-bmVsOiBbICAgMTEuMTI1NzI5XSBEUjA6IDAwMDAwMDAwMDAwMDAwMDANCj4gPiA+IERSMTogMDAw
-MDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAwMDANCj4gPiA+IFNlcCAyNiAxOToyMjo1
-OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTI1NzYxXSBEUjM6IDAwMDAwMDAwMDAwMDAwMDANCj4g
-PiA+IERSNjogMDAwMDAwMDBmZmZmMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDANCj4gPiA+IFNl
-cCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTI1NzkzXSBQcm9jZXNzIG1vZHBy
-b2JlIChwaWQ6DQo+ID4gPiA1NzksIHRocmVhZGluZm8gZmZmZjg4MDEwZjIzYzAwMCwgdGFzayBm
-ZmZmODgwMTE2NjQ4MDAwKQ0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsg
-ICAxMS4xMjcxMzNdIFN0YWNrOg0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6
-IFsgICAxMS4xMjg0NjFdICBmZmZmODgwMTFhNWQ5MDk4DQo+ID4gPiBmZmZmODgwMTBkNzRjMzAw
-IGZmZmY4ODAxMGYyM2Q4NzggZmZmZjg4MDExMGIwNjQ4MA0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4
-IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMjk3NTVdICBmZmZmODgwMTBiZmQxMDAwDQo+ID4gPiBm
-ZmZmODgwMTFhNWQ5MDk4IGZmZmY4ODAxMGQ3NGMzMDAgZmZmZjg4MDExYTYyNTAwMA0KPiA+ID4g
-U2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMzA5NDNdICBmZmZmODgwMTBm
-MjNkOTU4DQo+ID4gPiBmZmZmZmZmZmEwMGU1ODY4IDAwMDAwMDAwMDAwMDAwMDAgZmZmZmZmZmY4
-MTFmYTAzMw0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xMzI3
-NDldIENhbGwgVHJhY2U6DQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAg
-IDExLjEzMzkzOV0gIFs8ZmZmZmZmZmZhMDBlNTg2OD5dDQo+ID4gPiBhY3BpX3ZpZGVvX2J1c19h
-ZGQrMHg5YmEvMHhjZTYgW3ZpZGVvXQ0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJu
-ZWw6IFsgICAxMS4xMzUxMzBdICBbPGZmZmZmZmZmODExZmEwMzM+XSA/DQo+ID4gPiBzeXNmc19h
-ZGRybV9maW5pc2grMHgzMy8weGMwDQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5l
-bDogWyAgIDExLjEzNjMxM10gIFs8ZmZmZmZmZmY4MTM0NTRjYz5dDQo+ID4gPiBhY3BpX2Rldmlj
-ZV9wcm9iZSsweDRlLzB4MTFjDQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDog
-WyAgIDExLjEzNzQ4Ml0gIFs8ZmZmZmZmZmY4MTNkNDcyYj5dDQo+ID4gPiBkcml2ZXJfcHJvYmVf
-ZGV2aWNlKzB4N2IvMHgyNDANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBb
-ICAgMTEuMTM4NjQyXSAgWzxmZmZmZmZmZjgxM2Q0OTliPl0NCj4gPiA+IF9fZHJpdmVyX2F0dGFj
-aCsweGFiLzB4YjANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEu
-MTM5Nzk4XSAgWzxmZmZmZmZmZjgxM2Q0OGYwPl0gPw0KPiA+ID4gZHJpdmVyX3Byb2JlX2Rldmlj
-ZSsweDI0MC8weDI0MA0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAx
-MS4xNDA5ODFdICBbPGZmZmZmZmZmODEzZDJiNDY+XQ0KPiA+ID4gYnVzX2Zvcl9lYWNoX2Rldisw
-eDU2LzB4OTANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTQy
-MTI5XSAgWzxmZmZmZmZmZjgxM2Q0MjVlPl0NCj4gPiA+IGRyaXZlcl9hdHRhY2grMHgxZS8weDIw
-DQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjE0MzI2NF0gIFs8
-ZmZmZmZmZmY4MTNkM2RkMD5dDQo+ID4gPiBidXNfYWRkX2RyaXZlcisweDE5MC8weDI5MA0KPiA+
-ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xNDQ0NDNdICBbPGZmZmZm
-ZmZmODEzZDRlZmE+XQ0KPiA+ID4gZHJpdmVyX3JlZ2lzdGVyKzB4N2EvMHgxNjANCj4gPiA+IFNl
-cCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTQ1NTgzXSAgWzxmZmZmZmZmZjgx
-MzQ1Y2NmPl0NCj4gPiA+IGFjcGlfYnVzX3JlZ2lzdGVyX2RyaXZlcisweDQzLzB4NDUNCj4gPiA+
-IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTQ2ODcxXSAgWzxmZmZmZmZm
-ZmEwMGU0ZGFjPl0NCj4gPiA+IGFjcGlfdmlkZW9fcmVnaXN0ZXIrMHgyMC8weDM5IFt2aWRlb10N
-Cj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTQ4MTY3XSAgWzxm
-ZmZmZmZmZmEwMmY0YmFkPl0NCj4gPiA+IGk5MTVfZHJpdmVyX2xvYWQrMHg4M2QvMHhlYTAgW2k5
-MTVdDQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjE0OTQ1MV0g
-IFs8ZmZmZmZmZmZhMDIwZWJjMT5dDQo+ID4gPiBkcm1fZ2V0X3BjaV9kZXYrMHgxOTEvMHgyYjAg
-W2RybV0NCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTUwNzM5
-XSAgWzxmZmZmZmZmZmEwMzQ1ZTJiPl0NCj4gPiA+IGk5MTVfcGNpX3Byb2JlKzB4NGYvMHg1NyBb
-aTkxNV0NCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTUyMDE1
-XSAgWzxmZmZmZmZmZjgxMzA5YWY5Pl0NCj4gPiA+IGxvY2FsX3BjaV9wcm9iZSsweDc5LzB4MTAw
-DQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjE1MzI4N10gIFs8
-ZmZmZmZmZmY4MTMwYjFmOT5dDQo+ID4gPiBwY2lfZGV2aWNlX3Byb2JlKzB4MTA5LzB4MTMwDQo+
-ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjE1NDU0Nl0gIFs8ZmZm
-ZmZmZmY4MTNkNDcyYj5dDQo+ID4gPiBkcml2ZXJfcHJvYmVfZGV2aWNlKzB4N2IvMHgyNDANCj4g
-PiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTU1Nzk2XSAgWzxmZmZm
-ZmZmZjgxM2Q0OTliPl0NCj4gPiA+IF9fZHJpdmVyX2F0dGFjaCsweGFiLzB4YjANCj4gPiA+IFNl
-cCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTU3MDQ4XSAgWzxmZmZmZmZmZjgx
-M2Q0OGYwPl0gPw0KPiA+ID4gZHJpdmVyX3Byb2JlX2RldmljZSsweDI0MC8weDI0MA0KPiA+ID4g
-U2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xNTgyODBdICBbPGZmZmZmZmZm
-ODEzZDJiNDY+XQ0KPiA+ID4gYnVzX2Zvcl9lYWNoX2RldisweDU2LzB4OTANCj4gPiA+IFNlcCAy
-NiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTU5NDk2XSAgWzxmZmZmZmZmZjgxM2Q0
-MjVlPl0NCj4gPiA+IGRyaXZlcl9hdHRhY2grMHgxZS8weDIwDQo+ID4gPiBTZXAgMjYgMTk6MjI6
-NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjE2MDcwOF0gIFs8ZmZmZmZmZmY4MTNkM2RkMD5dDQo+
-ID4gPiBidXNfYWRkX2RyaXZlcisweDE5MC8weDI5MA0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZh
-bWJveCBrZXJuZWw6IFsgICAxMS4xNjE5MDldICBbPGZmZmZmZmZmODEzZDRlZmE+XQ0KPiA+ID4g
-ZHJpdmVyX3JlZ2lzdGVyKzB4N2EvMHgxNjANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gg
-a2VybmVsOiBbICAgMTEuMTYzMTIxXSAgWzxmZmZmZmZmZjgxMzBhMTU5Pl0NCj4gPiA+IF9fcGNp
-X3JlZ2lzdGVyX2RyaXZlcisweDQ5LzB4NTANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gg
-a2VybmVsOiBbICAgMTEuMTY0MjI3XSAgWzxmZmZmZmZmZmEwMjBlZGZhPl0NCj4gPiA+IGRybV9w
-Y2lfaW5pdCsweDExYS8weDEzMCBbZHJtXQ0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBr
-ZXJuZWw6IFsgICAxMS4xNjUyOTVdICBbPGZmZmZmZmZmYTAzN2MwMDA+XSA/DQo+ID4gPiAweGZm
-ZmZmZmZmYTAzN2JmZmYNCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAg
-MTEuMTY2MzUxXSAgWzxmZmZmZmZmZmEwMzdjMDY2Pl0NCj4gPiA+IGk5MTVfaW5pdCsweDY2LzB4
-NjggW2k5MTVdDQo+ID4gPiBTZXAgMjYgMTk6MjI6NTggZmFtYm94IGtlcm5lbDogWyAgIDExLjE2
-NzM2MF0gIFs8ZmZmZmZmZmY4MTAwMjAzZj5dDQo+ID4gPiBkb19vbmVfaW5pdGNhbGwrMHgzZi8w
-eDE3MA0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xNjgzMzJd
-ICBbPGZmZmZmZmZmODEwYmM5YmU+XQ0KPiA+ID4gc3lzX2luaXRfbW9kdWxlKzB4YmUvMHgyMjAN
-Cj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTY5Mjc2XSAgWzxm
-ZmZmZmZmZjgxNjRhMGJkPl0NCj4gPiA+IHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MWEvMHgxZg0K
-PiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xNzAyMDBdIENvZGU6
-IDFiIDdlIDAwIDQ4IDNkIGMwDQo+ID4gPiBjYiBjOSA4MSA0YyA4ZCBhOCBiMCBmYyBmZiBmZiAw
-ZiA4NCBiZiAwMCAwMCAwMCAwZiAxZiA0NCAwMCAwMCA0ZCA4Yg0KPiA+ID4gYmQgZjAgMDIgMDAg
-MDAgNGQgODUgZmYgMGYgODQgYzAgMDAgMDAgMDAgPDQ5PiA4YiA3NyAxOCA0OCA4NSBmNiAwZiA4
-NA0KPiA+ID4gZDMgZmUgZmYgZmYgNDEgOGIgNDcgMTQgODUgYzAgN2UgN2INCj4gPiA+IFNlcCAy
-NiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTcyNDY3XSBSSVANCj4gPiA+IFs8ZmZm
-ZmZmZmY4MTRiYjA1OD5dIHRoZXJtYWxfY29vbGluZ19kZXZpY2VfcmVnaXN0ZXIrMHgyYzgvMHgz
-ZDANCj4gPiA+IFNlcCAyNiAxOToyMjo1OCBmYW1ib3gga2VybmVsOiBbICAgMTEuMTczNTQyXSAg
-UlNQIDxmZmZmODgwMTBmMjNkODM4Pg0KPiA+ID4gU2VwIDI2IDE5OjIyOjU4IGZhbWJveCBrZXJu
-ZWw6IFsgICAxMS4xNzQ2MDNdIENSMjogMDAwMDAwMDAwMDAwMDAxOA0KPiA+ID4gU2VwIDI2IDE5
-OjIyOjU4IGZhbWJveCBrZXJuZWw6IFsgICAxMS4xNzU2NzVdIC0tLVsgZW5kIHRyYWNlDQo+ID4g
-PiAwZjJiYzQzNzY2MmZjMDk3IF0tLS0NCj4gPiA+DQo+ID4gPiBJIGhhdmUgQ0NlZCBzb21lIG1h
-aW50YWluZXJzLCBob3BlIHRoZXkgbWlnaHQgaGF2ZSBhIGxvb2sgYXQgaXQNCj4gPiA+IChzb3Jy
-eSwgZGlkbnQgY2hlY2sgYW55IE1McykuDQo+ID4gPg0KPiA+ID4gTXkga2Vybi5sb2cgYW5kIGtl
-cm5lbC1jb25maWcgYXJlIGF0dGFjaGVkLg0KPiA+DQo+ID4gSSBnZXQgb29wcyBpbiBiaW5kX2Nk
-ZXYoKSBjYWxsZWQgZnJvbSB0aGVybWFsX2Nvb2xpbmdfZGV2aWNlX3JlZ2lzdGVyKCkNCj4gPiBv
-biBtbW90bSwgSSBleHBlY3QgeW91cnMgaXMgdGhlIHNhbWUgKGJ1dCBiaW5kX2NkZXYgaW5saW5l
-ZCBzbyBpdCBkb2Vzbid0DQo+ID4gYXBwZWFyIGluIHRoZSBiYWNrdHJhY2UpLiAgVGhpcyBwYXRj
-aCBnZXRzIG1lIGJvb3RpbmcgKG5vdGUgaXQgYWxzbyBmaXhlcw0KPiA+IHJldHVybiB0byBicmVh
-ayB0byB1bmxvY2sgdGhlIG11dGV4KSwgZG9lcyBpdCBoZWxwIHlvdT8gIFdoZXRoZXIgdGhlIHJv
-b3QNCj4gPiBwcm9ibGVtIGlzIGVsc2V3aGVyZSBvciBub3QsIEkndmUgbm8gaWRlYTsgYnV0IEkg
-c2VlIERhbiBhbHJlYWR5IHNwb3R0ZWQNCj4gPiBvdGhlciBlcnJvcnMgaGVyZWFib3V0cyAtIHBy
-b2JhYmx5IG5lZWRzIG1vcmUgdGhvcm91Z2ggcmV2aWV3Lg0KPiA+DQo+IA0KPiANCj4gPiBIdWdo
-DQo+ID4NCj4gPiAtLS0gbW1vdG0vZHJpdmVycy90aGVybWFsL3RoZXJtYWxfc3lzLmMJMjAxMi0w
-OS0yNg0KPiAxMDoxNToyOC42NTIwNzEzNjIgLTA3MDANCj4gPiArKysgbGludXgvZHJpdmVycy90
-aGVybWFsL3RoZXJtYWxfc3lzLmMJMjAxMi0wOS0yNg0KPiAxMTo0MTowMS41NDk2ODQ5ODMgLTA3
-MDANCj4gPiBAQCAtMjUyLDggKzI1Miw4IEBAIHN0YXRpYyB2b2lkIGJpbmRfY2RldihzdHJ1Y3Qg
-dGhlcm1hbF9jb28NCj4gPiAgCQl9DQo+ID4NCj4gPiAgCQl0enAgPSBwb3MtPnR6cDsNCj4gPiAt
-CQlpZiAoIXR6cC0+dGJwKQ0KPiA+IC0JCQlyZXR1cm47DQo+ID4gKwkJaWYgKCF0enAgfHwgIXR6
-cC0+dGJwKQ0KPiA+ICsJCQlicmVhazsNCj4gPg0KPiA+ICAJCWZvciAoaSA9IDA7IGkgPCB0enAt
-Pm51bV90YnBzOyBpKyspIHsNCj4gPiAgCQkJaWYgKHR6cC0+dGJwW2ldLmNkZXYgfHwgIXR6cC0+
-dGJwW2ldLm1hdGNoKQ0KPiANCj4gdGhhbmtzIGZvciB0aGUgZml4LCB0aGlzIHBhdGNoIGxvb2tz
-IGdvb2QgdG8gbWUuDQo+IGNvdWxkIHlvdSBwbGVhc2UgcmVzZW5kIGl0IGluIGEgcHJvcGVyIGZv
-cm1hdCwgc2F5LCB3aXRoIGNoYW5nZWxvZyBhbmQNCj4gU2luZ2VkLW9mZi1ieSwgc28gdGhhdCBJ
-IGNhbiBhcHBseSB0byBteSAtbmV4dCB0cmVlPw0KPiANCg0KU2hvdWxkbid0IHRoaXMgYmUgYSAn
-Y29udGludWUnIGluc3RlYWQgb2YgdGhlICdicmVhaycgaGVyZSA/DQpXaXRoIHRoaXMgY2hhbmdl
-LCBJIGp1c3Qgc2VudCBhIHBhdGNoLCANCg0KVGhhbmtzLA0KRHVyZ2ENCg==
+Thus pcibios_allocate_bus_resources() could more simple and clean
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c |   46 ++++++++++++++++++++++++----------------------
+ 1 files changed, 24 insertions(+), 22 deletions(-)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index dd8ca6f..9800362 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -193,34 +193,36 @@ EXPORT_SYMBOL(pcibios_align_resource);
+  *	    as well.
+  */
+ 
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 	int idx;
+ 	struct resource *r;
+ 
++	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
++		r = &dev->resource[idx];
++		if (!r->flags)
++			continue;
++		if (!r->start || pci_claim_resource(dev, idx) < 0) {
++			/*
++			 * Something is wrong with the region.
++			 * Invalidate the resource to prevent
++			 * child resource allocations in this
++			 * range.
++			 */
++			r->start = r->end = 0;
++			r->flags = 0;
++		}
++	}
++}
++
++static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++{
++	struct pci_bus *bus;
++
+ 	/* Depth-First Search on bus tree */
+ 	list_for_each_entry(bus, bus_list, node) {
+-		if ((dev = bus->self)) {
+-			for (idx = PCI_BRIDGE_RESOURCES;
+-			    idx < PCI_NUM_RESOURCES; idx++) {
+-				r = &dev->resource[idx];
+-				if (!r->flags)
+-					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					/*
+-					 * Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range.
+-					 */
+-					r->start = r->end = 0;
+-					r->flags = 0;
+-				}
+-			}
+-		}
++		if (bus->self)
++			pcibios_allocate_bridge_resources(bus->self);
+ 		pcibios_allocate_bus_resources(&bus->children);
+ 	}
+ }
+-- 
+1.7.7
+
