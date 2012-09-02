@@ -1,56 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:46433 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932417Ab2IQTfJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 15:35:09 -0400
-Received: by lagy9 with SMTP id y9so4436064lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 12:35:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
-References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Sep 2012 13:34:46 -0600
-Message-ID: <CAErSpo6qSZ3Kgr7rDZt4wMW5nPiGhJBiQyaJPiA7+BY=ttyJLQ@mail.gmail.com>
-Subject: Re: [PATCH 0/5] Simplify code by using hotplug safe pci_get_domain_bus_and_slot()
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dave Airlie <airlied@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part5 6/7] PCI, x86: Move pci_enable_bridges() down
+Date: Sun,  2 Sep 2012 14:56:04 -0700
+Message-Id: <1346622965-30937-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+References: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2012 at 9:43 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Following code has a race window between pci_find_bus() and pci_get_slot()
-> if PCI hotplug operation happens between them which removes the pci_bus.
-> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
-> which also reduces code complexity.
->
-> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
-> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
->
-> Jiang Liu (5):
->   PCI/IA64: simplify code by hotplug safe pci_get_domain_bus_and_slot()
->   PCI/vga: simplify code by hotplug safe pci_get_domain_bus_and_slot()
->   PCI/cpcihp: simplify code by hotplug safe
->     pci_get_domain_bus_and_slot()
->   PCI/IOV: simplify code by hotplug safe pci_get_domain_bus_and_slot()
->   PCI/xen-pcifront: simplify code by hotplug safe
->     pci_get_domain_bus_and_slot()
+After we get hot-added ioapic registered.
 
-I applied these to my "next" branch, including the vgaarb and xen bits.  Thanks!
+pci_enable_bridges will try to enable ioapic irq for pci bridge.
 
->  arch/ia64/sn/kernel/io_common.c      |    4 +---
->  drivers/gpu/vga/vgaarb.c             |   15 +++------------
->  drivers/pci/hotplug/cpcihp_generic.c |    8 ++------
->  drivers/pci/iov.c                    |    8 ++------
->  drivers/pci/xen-pcifront.c           |   10 ++--------
->  5 files changed, 10 insertions(+), 35 deletions(-)
->
-> --
-> 1.7.9.5
->
+So need to move it down.
+
+Or We can move out pcibios_enable_irq() out of pci_enable_device()
+and call pcibios_enable_irq in pci_bus_add_devices ?
+also will need to move ...
+        pcibios_resource_survey_bus(root->bus);
+        pci_assign_unassigned_bus_resources(root->bus);
+to the start add ....
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |    3 +++
+ drivers/pci/probe.c     |    1 +
+ drivers/pci/setup-bus.c |    2 --
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 59aa947..80adbbb 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -646,6 +646,9 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ 		if (driver->add)
+ 			driver->add(device->handle);
+ 
++	/* need to after hot-added ioapic is registered */
++	pci_enable_bridges(root->bus);
++
+ 	pci_bus_add_devices(root->bus);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dd84224..b18f429 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1909,6 +1909,7 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+ 
+ 	max = pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++	pci_enable_bridges(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 054d54b..ec10d51 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1527,6 +1527,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+ 	BUG_ON(!list_empty(&add_list));
+-
+-	pci_enable_bridges(bus);
+ }
+-- 
+1.7.7
+
