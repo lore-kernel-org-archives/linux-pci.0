@@ -1,62 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16578 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756966Ab2IUIoh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 04:44:37 -0400
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 0/5] Fix aer_inject bug caused by pci hot-plug
-Date: Fri, 21 Sep 2012 16:43:08 +0800
-Message-ID: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH part3 09/11] PCI: Clean up rescan_bus_bridge_resize()
+Date: Sun,  2 Sep 2012 14:52:19 -0700
+Message-Id: <1346622741-30799-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series of patch mainly to fix the aer_inject bug described as below:
+Should only use it with bridge instead of bus.
+It could get new subordinate. so can not use it with reguar bus.
 
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
+In that case, user may need to make sure all children devices get removed
+already before rescan.
 
-my steps:
-1)modprobe aer_inject
-2)inject aer errors to pcie device 0000:48:00.0
-3)modprobe pciehp
-4)hot remove Network Card in slot(port 0000:40:07.0)
-5)hot add Network Card in slot(port 0000:40:07.0)
-6)system panic
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-in step 2) the pci_ops of bus 0000:48 and bus 0000:40 will be assigned to pci_ops_aer
-in step 5) the pci_ops of the newly created bus 0000:46 will be assigned to pci_ops_aer(inherited by parent pci_ops),
-but this pci_ops(0000:46) is not tracked in pci_bus_ops_list in aer_inject module. So every access to pci_config space
-by pci_ops of 0000:46 will cause system panic, Since pci_ops_aer cannot find its original pci_ops, thus , a NULL pci_ops return;
-
-The first patch fix this bug by finding parent pci_ops(tracked in pci_ops_list) instead of returning NULL in step 5);
-The second patch fix a small race condition window in aer_inject_exit;
-The Third patch to find and clean all untracked pci_ops_aer in system when aer_inject module exit
-The rest two patch mainly about to clean bus_ops;
-
-Yijing Wang (5):
-  PCI/AER: Fix pci_ops return NULL in pci_read/write_aer
-  PCI/AER: use list_for_each_entry to avoid a small race condition
-    window
-  PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
-  PCI/AER: clean pci_bus_ops when related pci bus was removed
-  PCI/AER: free pci_bus_ops_list and remove pci_bus_ops_pop
-
- drivers/pci/pcie/aer/aer_inject.c |  123 +++++++++++++++++++++++++++++++------
- 1 files changed, 103 insertions(+), 20 deletions(-)
-
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 2100c04..60cb06b 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -339,7 +339,7 @@ dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
+ 
+ 	if (val) {
+ 		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(pdev->subordinate);
++		pci_rescan_bus_bridge_resize(pdev);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
+ 	}
+ 	return count;
+@@ -389,10 +389,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 
+ 	if (val) {
+ 		mutex_lock(&pci_remove_rescan_mutex);
+-		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+-			pci_rescan_bus_bridge_resize(bus->self);
+-		else
+-			pci_rescan_bus(bus);
++		pci_rescan_bus(bus);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
+ 	}
+ 	return count;
+-- 
+1.7.7
 
