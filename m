@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:23372 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755359Ab2IBVvH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:51:07 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
@@ -11,98 +7,87 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part2 2/6] x86, PCI: Separate pcibios_allocate_dev_resources()
-Date: Sun,  2 Sep 2012 14:50:49 -0700
-Message-Id: <1346622653-30741-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <lenb@kernel.org>
+Subject: [PATCH part4 10/11] PCI, pci_root_hp: Use acpi_hp_work
+Date: Sun,  2 Sep 2012 14:54:20 -0700
+Message-Id: <1346622861-30865-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thus pcibios_allocate_resources() could more simple and clean
+Remove local copy: acpi_root_hp_work
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- arch/x86/pci/i386.c |   42 +++++++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 19 deletions(-)
+ drivers/acpi/pci_root_hp.c |   34 +++-------------------------------
+ 1 files changed, 3 insertions(+), 31 deletions(-)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 9800362..5817cf2 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -232,9 +232,8 @@ struct pci_check_idx_range {
- 	int end;
- };
- 
--static void __init pcibios_allocate_resources(int pass)
-+static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
--	struct pci_dev *dev = NULL;
- 	int idx, disabled, i;
- 	u16 command;
- 	struct resource *r;
-@@ -246,14 +245,13 @@ static void __init pcibios_allocate_resources(int pass)
- #endif
- 	};
- 
--	for_each_pci_dev(dev) {
--		pci_read_config_word(dev, PCI_COMMAND, &command);
--		for (i = 0; i < ARRAY_SIZE(idx_range); i++)
-+	pci_read_config_word(dev, PCI_COMMAND, &command);
-+	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
- 		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
- 			r = &dev->resource[idx];
--			if (r->parent)		/* Already allocated */
-+			if (r->parent)	/* Already allocated */
- 				continue;
--			if (!r->start)		/* Address not assigned at all */
-+			if (!r->start)	/* Address not assigned at all */
- 				continue;
- 			if (r->flags & IORESOURCE_IO)
- 				disabled = !(command & PCI_COMMAND_IO);
-@@ -272,23 +270,29 @@ static void __init pcibios_allocate_resources(int pass)
- 				}
- 			}
- 		}
--		if (!pass) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (r->flags & IORESOURCE_ROM_ENABLE) {
--				/* Turn the ROM off, leave the resource region,
--				 * but keep it unregistered. */
--				u32 reg;
--				dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
--				r->flags &= ~IORESOURCE_ROM_ENABLE;
--				pci_read_config_dword(dev,
--						dev->rom_base_reg, &reg);
--				pci_write_config_dword(dev, dev->rom_base_reg,
-+	if (!pass) {
-+		r = &dev->resource[PCI_ROM_RESOURCE];
-+		if (r->flags & IORESOURCE_ROM_ENABLE) {
-+			/* Turn the ROM off, leave the resource region,
-+			 * but keep it unregistered. */
-+			u32 reg;
-+			dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
-+			r->flags &= ~IORESOURCE_ROM_ENABLE;
-+			pci_read_config_dword(dev, dev->rom_base_reg, &reg);
-+			pci_write_config_dword(dev, dev->rom_base_reg,
- 						reg & ~PCI_ROM_ADDRESS_ENABLE);
--			}
- 		}
- 	}
+diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+index 214adcb..d2ace81 100644
+--- a/drivers/acpi/pci_root_hp.c
++++ b/drivers/acpi/pci_root_hp.c
+@@ -79,34 +79,6 @@ static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
+ 	kfree(bridge);
  }
  
-+static void __init pcibios_allocate_resources(int pass)
-+{
-+	struct pci_dev *dev = NULL;
-+
-+	for_each_pci_dev(dev)
-+		pcibios_allocate_dev_resources(dev, pass);
-+}
-+
- static int __init pcibios_assign_resources(void)
+-struct acpi_root_hp_work {
+-	struct work_struct work;
+-	acpi_handle handle;
+-	u32 type;
+-	void *context;
+-};
+-
+-static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
+-					void *context,
+-					void (*func)(struct work_struct *work))
+-{
+-	struct acpi_root_hp_work *hp_work;
+-	int ret;
+-
+-	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+-	if (!hp_work)
+-		return;
+-
+-	hp_work->handle = handle;
+-	hp_work->type = type;
+-	hp_work->context = context;
+-
+-	INIT_WORK(&hp_work->work, func);
+-	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+-	if (!ret)
+-		kfree(hp_work);
+-}
+-
+ /* Program resources in newly inserted bridge */
+ static void acpi_root_configure_bridge(acpi_handle handle)
  {
- 	struct pci_dev *dev = NULL;
+@@ -204,11 +176,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_root_hp_work *hp_work;
++	struct acpi_hp_work *hp_work;
+ 	acpi_handle handle;
+ 	u32 type;
+ 
+-	hp_work = container_of(work, struct acpi_root_hp_work, work);
++	hp_work = container_of(work, struct acpi_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 
+@@ -256,7 +228,7 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+ 					void *context)
+ {
+-	alloc_acpi_root_hp_work(handle, type, context,
++	alloc_acpi_hp_work(handle, type, context,
+ 				_handle_hotplug_event_root);
+ }
+ 
 -- 
 1.7.7
 
