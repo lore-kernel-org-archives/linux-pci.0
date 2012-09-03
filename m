@@ -1,62 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53077 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab2ISCmZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:42:25 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
-Date: Wed, 19 Sep 2012 10:40:41 +0800
-Message-ID: <1348022442-7816-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 3 Sep 2012 17:06:02 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH v2 4/6] ACPI, PCI: add acpi_pci_roots protection
+Message-Id: <20120903170602.375b00cc.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Use mutex and RCU to protect global acpi_pci_roots list against
+PCI host bridge hotplug operations.
+
+RCU is used to avoid possible deadlock in function acpi_pci_find_root()
+and acpi_get_pci_rootbridge_handle(). A possible call graph:
+acpi_pci_register_driver()
+	mutex_lock(&acpi_pci_root_lock)
+		driver->add(root)
+			......
+				acpi_pci_find_root()
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 ---
- drivers/pci/pcie/aer/aer_inject.c |   14 +++++++++++---
- 1 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/acpi/pci_root.c |   50 +++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 33 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 0a12ac7..79b611d 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -162,6 +162,16 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
- 	return bus_ops;
+Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0903/drivers/acpi/pci_root.c
+@@ -28,6 +28,7 @@
+ #include <linux/init.h>
+ #include <linux/types.h>
+ #include <linux/mutex.h>
++#include <linux/rculist.h>
+ #include <linux/pm.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci.h>
+@@ -86,7 +87,7 @@ int acpi_pci_register_driver(struct acpi
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_add_tail(&driver->node, &acpi_pci_drivers);
+ 	if (driver->add)
+-		list_for_each_entry(root, &acpi_pci_roots, node) {
++		list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
+ 			driver->add(root->device->handle);
+ 			n++;
+ 		}
+@@ -103,7 +104,7 @@ void acpi_pci_unregister_driver(struct a
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_del(&driver->node);
+ 	if (driver->remove)
+-		list_for_each_entry(root, &acpi_pci_roots, node)
++		list_for_each_entry_rcu(root, &acpi_pci_roots, node)
+ 			driver->remove(root->device->handle);
+ 	mutex_unlock(&acpi_pci_root_lock);
  }
- 
-+static void pci_bus_ops_free(void)
-+{
-+	struct pci_bus_ops *bus_ops, *tmp_ops;
-+
-+	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
-+		list_del(&bus_ops->list);
-+		kfree(bus_ops);
-+	}
-+}
-+
- static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
+@@ -112,14 +113,19 @@ EXPORT_SYMBOL(acpi_pci_unregister_driver
+ acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
  {
- 	struct pci_bus_ops *bus_ops = NULL;
-@@ -641,9 +651,7 @@ static void __exit aer_inject_exit(void)
- 	 * module exit
- 	 */
- 	clean_untracked_pci_ops_aer();
--
--	while ((bus_ops = pci_bus_ops_pop()))
--		kfree(bus_ops);
-+	pci_bus_ops_free();
+ 	struct acpi_pci_root *root;
++	struct acpi_handle *handle = NULL;
+ 	
+-	list_for_each_entry(root, &acpi_pci_roots, node)
++	rcu_read_lock();
++	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
+ 		if ((root->segment == (u16) seg) &&
+-		    (root->secondary.start == (u16) bus))
+-			return root->device->handle;
+-	return NULL;		
+-}
++		    (root->secondary.start == (u16) bus)) {
++			handle = root->device->handle;
++			break;
++		}
++	rcu_read_unlock();
  
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
--- 
-1.7.1
-
++	return handle;
++}
+ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
+ 
+ /**
+@@ -266,10 +272,14 @@ struct acpi_pci_root *acpi_pci_find_root
+ {
+ 	struct acpi_pci_root *root;
+ 
+-	list_for_each_entry(root, &acpi_pci_roots, node) {
+-		if (root->device->handle == handle)
++	rcu_read_lock();
++	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
++		if (root->device->handle == handle) {
++			rcu_read_unlock();
+ 			return root;
+-	}
++		}
++	rcu_read_unlock();
++
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(acpi_pci_find_root);
+@@ -506,8 +516,9 @@ static int __devinit acpi_pci_root_add(s
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+ 	 */
+ 
+-	/* TBD: Locking */
+-	list_add_tail(&root->node, &acpi_pci_roots);
++	mutex_lock(&acpi_pci_root_lock);
++	list_add_tail_rcu(&root->node, &acpi_pci_roots);
++	mutex_unlock(&acpi_pci_root_lock);
+ 
+ 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
+ 	       acpi_device_name(device), acpi_device_bid(device),
+@@ -526,7 +537,7 @@ static int __devinit acpi_pci_root_add(s
+ 			    "Bus %04x:%02x not present in PCI namespace\n",
+ 			    root->segment, (unsigned int)root->secondary.start);
+ 		result = -ENODEV;
+-		goto end;
++		goto out_del_root;
+ 	}
+ 
+ 	/*
+@@ -536,7 +547,7 @@ static int __devinit acpi_pci_root_add(s
+ 	 */
+ 	result = acpi_pci_bind_root(device);
+ 	if (result)
+-		goto end;
++		goto out_del_root;
+ 
+ 	/*
+ 	 * PCI Routing Table
+@@ -614,9 +625,12 @@ static int __devinit acpi_pci_root_add(s
+ 
+ 	return 0;
+ 
++out_del_root:
++	mutex_lock(&acpi_pci_root_lock);
++	list_del_rcu(&root->node);
++	mutex_unlock(&acpi_pci_root_lock);
++	synchronize_rcu();
+ end:
+-	if (!list_empty(&root->node))
+-		list_del(&root->node);
+ 	kfree(root);
+ 	return result;
+ }
+@@ -646,11 +660,13 @@ static int acpi_pci_root_remove(struct a
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->remove)
+ 			driver->remove(root->device->handle);
+-	mutex_unlock(&acpi_pci_root_lock);
+ 
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
++	list_del_rcu(&root->node);
++	mutex_unlock(&acpi_pci_root_lock);
++	synchronize_rcu();
+ 	kfree(root);
+ 	return 0;
+ }
 
