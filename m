@@ -1,99 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54143 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753483Ab2ICSUq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2012 14:20:46 -0400
+Received: by dady13 with SMTP id y13so3839362dad.19
+        for <linux-pci@vger.kernel.org>; Mon, 03 Sep 2012 11:20:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
- <1348733519-24684-5-git-send-email-yinghai@kernel.org> <CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com>
- <CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 28 Sep 2012 21:31:25 -0600
-Message-ID: <CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
-Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
- root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20120903090821.GC2438@ram-ThinkPad-T61>
+References: <20120821151245.GA2356@ram-ThinkPad-T61>
+	<CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
+	<20120822101533.GA2332@ram-ThinkPad-T61>
+	<CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
+	<CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
+	<CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
+	<20120823050958.GB2332@ram-ThinkPad-T61>
+	<CAE9FiQVq=6Shv_4taNzN3h4OBs1PgoFJZqV0i3tRvmz04qZbXw@mail.gmail.com>
+	<20120827073335.GE20843@ram-ThinkPad-T61>
+	<CAE9FiQVEuH=ZwL4R+wyO0H0853hQ8bpGBYKQJwkAJ5g7FKtY7g@mail.gmail.com>
+	<20120903090821.GC2438@ram-ThinkPad-T61>
+Date: Mon, 3 Sep 2012 11:20:45 -0700
+Message-ID: <CAE9FiQV+_cuDV1WqVZK5SO4JYuJ8_=Gj3qG3Rz9bJsGhUSLV4w@mail.gmail.com>
+Subject: Re: [RFC PATCH v3 ]pci: pci resource iterator
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=e89a8ff1c8b043f26d04c8d03370
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 7:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> After we get hot-added ioapic registered.
->>> pci_enable_bridges will try to enable ioapic irq for pci bridges.
->>
->> What makes this specifically related to IOAPICs?
+--e89a8ff1c8b043f26d04c8d03370
+Content-Type: text/plain; charset=ISO-8859-1
 
-I think you missed this question.
-
->>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>> ---
->>>  drivers/acpi/pci_root.c |    7 +++++++
->>>  1 files changed, 7 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->>> index bce469c..27adbfd 100644
->>> --- a/drivers/acpi/pci_root.c
->>> +++ b/drivers/acpi/pci_root.c
->>> @@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
->>>         struct acpi_pci_root *root = acpi_driver_data(device);
->>>         struct acpi_pci_driver *driver;
->>>
->>> +       if (system_state != SYSTEM_BOOTING)
->>> +               pci_assign_unassigned_bus_resources(root->bus);
->>> +
->>>         mutex_lock(&acpi_pci_root_lock);
->>>         list_for_each_entry(driver, &acpi_pci_drivers, node)
->>>                 if (driver->add)
->>>                         driver->add(root);
->>>         mutex_unlock(&acpi_pci_root_lock);
->>>
->>> +       /* need to after hot-added ioapic is registered */
->>> +       if (system_state != SYSTEM_BOOTING)
->>> +               pci_enable_bridges(root->bus);
->>
->> Theoretically, we should be able to assign resources and enable
->> bridges here regardless of the system_state.
->>
->> I think the reason you don't want to do it while SYSTEM_BOOTING is
->> because we currently do this at boot-time:
->>
->>     acpi_pci_root_add
->>         pci_scan_child_bus
->>     acpi_pci_root_start
->>         pci_bus_add_devices
->>     <account for some motherboard (PNP0C01) resources>
->>     pcibios_assign_resources            # fs_initcall
->>         pci_assign_unassigned_resources
->>             pci_enable_bridges
->>
->> and without the SYSTEM_BOOTING check, we might assign PCI resources at
->> boot-time that conflict with motherboard resources.
->>
->> Is that right?
+On Mon, Sep 3, 2012 at 2:08 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+> On Mon, Sep 03, 2012 at 01:07:46AM -0700, Yinghai Lu wrote:
 >
-> yes.
->
->>
->> This is completely non-obvious and future readers deserve a hint about
->> what's going on here.
->>
->> The right way to do this would be to pay attention to the host bridge
->> apertures, and assign resources from within the apertures.  Then we
->> could always assign PCI resources when adding a host bridge instead of
->> in an fs_initcall.  I understand we still have legacy issues and
->> machines where we still don't pay attention to _CRS.  But if we're
->> doing things to work around a broken design, it's important to be
->> aware of how the design is broken so we have some hope of eventually
->> fixing the design.
->
-> that could be another big topic.
+> Anyway I am ok with either patch.
 
-I agree, and I'm not asking you to fix that.  I'm just trying to
-understand what's going on and write some comments and changelogs that
-will help make this maintainable in the future.
+please check -v7.
 
-Also note the question at the top -- your changelog calls out IOAPICs,
-but I'm still not sure what this patch has to do with IOAPICs.
+final next_idx finding will be like:
+static inline unsigned long *get_res_idx_mask(int flag)
+{
+        return res_idx_mask[flag & ((1 << PCI_RES_BLOCK_NUM) - 1)];
+}
+
+int pci_next_resource_idx(int i, int flag)
+{
+        i++;
+        if (i < PCI_NUM_RESOURCES)
+                i = find_next_bit(get_res_idx_mask(flag), PCI_NUM_RESOURCES, i);
+
+        if (i < PCI_NUM_RESOURCES)
+                return i;
+
+        return -1;
+}
+
+
+Thanks
+
+Yinghai
+
+--e89a8ff1c8b043f26d04c8d03370
+Content-Type: application/octet-stream; name="ram_pci_it_v7.patch"
+Content-Disposition: attachment; filename="ram_pci_it_v7.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h6nw8k0a0
+
+RnJvbTogUmFtIFBhaSA8bGludXhyYW1AdXMuaWJtLmNvbT4KVG86IGxpbnV4LXBjaUB2Z2VyLmtl
+cm5lbC5vcmcKU3ViamVjdDogW1BBVENIIHY3XXBjaTogcGNpIHJlc291cmNlIGl0ZXJhdG9yCgpD
+dXJyZW50bHkgcGNpX2RldiBzdHJ1Y3R1cmUgaG9sZHMgYW4gYXJyYXkgb2YgMTcgUENJIHJlc291
+cmNlczsgc2l4IGJhc2UKQkFScywgb25lIFJPTSBCQVIsIGZvdXIgQlJJREdFIEJBUnMsIHNpeCBz
+cmlvdiBCQVJzLiAgVGhpcyBpcyB3YXN0ZWZ1bC4KQSBicmlkZ2UgZGV2aWNlIGp1c3QgbmVlZHMg
+dGhlIDQgYnJpZGdlIHJlc291cmNlcy4gQSBub24tYnJpZGdlIGRldmljZQpqdXN0IG5lZWRzIHRo
+ZSBzaXggYmFzZSByZXNvdXJjZXMgYW5kIG9uZSBST00gcmVzb3VyY2UuIFRoZSBzcmlvdgpyZXNv
+dXJjZXMgYXJlIG5lZWRlZCBvbmx5IGlmIHRoZSBkZXZpY2UgaGFzIFNSSU9WIGNhcGFiaWxpdHku
+CgpUaGUgcGNpX2RldiBzdHJ1Y3R1cmUgbmVlZHMgdG8gYmUgcmUtb3JnYW5pemVkIHRvIGF2b2lk
+IHVubmVjZXNzYXJ5CmJsb2F0aW5nLiAgSG93ZXZlciB0b28gbXVjaCBjb2RlIG91dHNpZGUgdGhl
+IHBjaS1idXMgZHJpdmVyLCBhc3N1bWVzIHRoZQppbnRlcm5hbCBkZXRhaWxzIG9mIHRoZSBwY2lf
+ZGV2IHN0cnVjdHVyZSwgdGh1cyBtYWtpbmcgaXQgaGFyZCB0bwpyZS1vcmdhbml6ZSB0aGUgZGF0
+YXN0cnVjdHVyZS4KCkFzIGEgZmlyc3Qgc3RlcCB0aGlzIHBhdGNoIHByb3ZpZGVzIGdlbmVyaWMg
+bWV0aG9kcyB0byBhY2Nlc3MgdGhlCnJlc291cmNlIHN0cnVjdHVyZSBvZiB0aGUgcGNpX2Rldi4K
+CkZpbmFsbHkgd2UgY2FuIHJlLW9yZ2FuaXplIHRoZSByZXNvdXJjZSBzdHJ1Y3R1cmUgaW4gdGhl
+IHBjaV9kZXYKc3RydWN0dXJlIGFuZCBjb3JyZXNwb25kaW5nbHkgdXBkYXRlIHRoZSBtZXRob2Rz
+LgoKLXYyOiBDb25zb2xpZGF0ZWQgaXRlcmF0b3IgaW50ZXJmYWNlIGFzIHBlciBCam9ybidzIHN1
+Z2dlc3Rpb24uCi12MzogQWRkIHRoZSBpZHggYmFjayAtIFlpbmdoYWkgTHUKLXY3OiBDaGFuZ2Ug
+dG8gdXNlIGJpdG1hcCBmb3Igc2VhcmNoaW5nIC0gWWluZ2hhaSBMdQoKU2lnbmVkLW9mZi1ieTog
+UmFtIFBhaSA8bGludXhyYW1AdXMuaWJtLmNvbT4KU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8
+eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9wcm9iZS5jIHwgICA0NyArKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwogaW5jbHVkZS9saW51
+eC9wY2kuaCB8ICAgMjQgKysrKysrKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQs
+IDcxIGluc2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9wY2kuaAo9
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9pbmNsdWRlL2xpbnV4L3BjaS5oCisrKyBsaW51
+eC0yLjYvaW5jbHVkZS9saW51eC9wY2kuaApAQCAtMzYwLDYgKzM2MCwzMCBAQCBzdHJ1Y3QgcGNp
+X2RldiB7CiBzdHJ1Y3QgcmVzb3VyY2UgKnBjaV9kZXZfcmVzb3VyY2VfbihzdHJ1Y3QgcGNpX2Rl
+diAqZGV2LCBpbnQgbik7CiBpbnQgcGNpX2Rldl9yZXNvdXJjZV9pZHgoc3RydWN0IHBjaV9kZXYg
+KmRldiwgc3RydWN0IHJlc291cmNlICpyZXMpOwogCisjZGVmaW5lIFBDSV9TVERfUkVTCQkoMTw8
+MCkKKyNkZWZpbmUgUENJX1JPTV9SRVMJCSgxPDwxKQorI2RlZmluZSBQQ0lfSU9WX1JFUwkJKDE8
+PDIpCisjZGVmaW5lIFBDSV9CUklER0VfUkVTCQkoMTw8MykKKyNkZWZpbmUgUENJX1JFU19CTE9D
+S19OVU0JNAorCisjZGVmaW5lIFBDSV9BTExfUkVTCQkoUENJX1NURF9SRVMgfCBQQ0lfUk9NX1JF
+UyB8IFBDSV9CUklER0VfUkVTIHwgUENJX0lPVl9SRVMpCisjZGVmaW5lIFBDSV9OT1NURF9SRVMJ
+CShQQ0lfQUxMX1JFUyAmIH5QQ0lfU1REX1JFUykKKyNkZWZpbmUgUENJX05PSU9WX1JFUwkJKFBD
+SV9BTExfUkVTICYgflBDSV9JT1ZfUkVTKQorI2RlZmluZSBQQ0lfTk9ST01fUkVTCQkoUENJX0FM
+TF9SRVMgJiB+UENJX1JPTV9SRVMpCisjZGVmaW5lIFBDSV9OT0JSSURHRV9SRVMJKFBDSV9BTExf
+UkVTICYgflBDSV9CUklER0VfUkVTKQorI2RlZmluZSBQQ0lfU1REX1JPTV9SRVMJCShQQ0lfU1RE
+X1JFUyB8IFBDSV9ST01fUkVTKQorI2RlZmluZSBQQ0lfU1REX0lPVl9SRVMJCShQQ0lfU1REX1JF
+UyB8IFBDSV9JT1ZfUkVTKQorI2RlZmluZSBQQ0lfU1REX1JPTV9JT1ZfUkVTCShQQ0lfU1REX1JF
+UyB8IFBDSV9ST01fUkVTIHwgUENJX0lPVl9SRVMpCisKK2ludCBwY2lfbmV4dF9yZXNvdXJjZV9p
+ZHgoaW50IGksIGludCBmbGFnKTsKKworI2RlZmluZSBmb3JfZWFjaF9wY2lfcmVzb3VyY2UoZGV2
+LCByZXMsIGksIGZsYWcpCVwKKwlmb3IgKGkgPSBwY2lfbmV4dF9yZXNvdXJjZV9pZHgoLTEsIGZs
+YWcpLAlcCisJCXJlcyA9IHBjaV9kZXZfcmVzb3VyY2VfbihkZXYsIGkpOwlcCisJICAgICByZXM7
+CQkJCQlcCisJICAgICBpID0gcGNpX25leHRfcmVzb3VyY2VfaWR4KGksIGZsYWcpLAlcCisJCXJl
+cyA9IHBjaV9kZXZfcmVzb3VyY2VfbihkZXYsIGkpKQorCiBzdGF0aWMgaW5saW5lIHN0cnVjdCBw
+Y2lfZGV2ICpwY2lfcGh5c2ZuKHN0cnVjdCBwY2lfZGV2ICpkZXYpCiB7CiAjaWZkZWYgQ09ORklH
+X1BDSV9JT1YKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9iZS5jCj09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
+LS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysrIGxpbnV4LTIuNi9kcml2
+ZXJzL3BjaS9wcm9iZS5jCkBAIC0xMjMsNiArMTIzLDUzIEBAIGludCBwY2lfZGV2X3Jlc291cmNl
+X2lkeChzdHJ1Y3QgcGNpX2RldgogCXJldHVybiAtMTsKIH0KIAorc3RhdGljIHZvaWQgX19pbml0
+X3Jlc19pZHhfbWFzayh1bnNpZ25lZCBsb25nICptYXNrLCBpbnQgZmxhZykKK3sKKwliaXRtYXBf
+emVybyhtYXNrLCBQQ0lfTlVNX1JFU09VUkNFUyk7CisJaWYgKGZsYWcgJiBQQ0lfU1REX1JFUykK
+KwkJYml0bWFwX3NldChtYXNrLCBQQ0lfU1REX1JFU09VUkNFUywKKwkJCVBDSV9TVERfUkVTT1VS
+Q0VfRU5EIC0gUENJX1NURF9SRVNPVVJDRVMgKyAxKTsKKwlpZiAoZmxhZyAmIFBDSV9ST01fUkVT
+KQorCQliaXRtYXBfc2V0KG1hc2ssIFBDSV9ST01fUkVTT1VSQ0UsIDEpOworI2lmZGVmIENPTkZJ
+R19QQ0lfSU9WCisJaWYgKGZsYWcgJiBQQ0lfSU9WX1JFUykKKwkJYml0bWFwX3NldChtYXNrLCBQ
+Q0lfSU9WX1JFU09VUkNFUywKKwkJCVBDSV9JT1ZfUkVTT1VSQ0VfRU5EIC0gUENJX0lPVl9SRVNP
+VVJDRVMgKyAxKTsKKyNlbmRpZgorCWlmIChmbGFnICYgUENJX0JSSURHRV9SRVMpCisJCWJpdG1h
+cF9zZXQobWFzaywgUENJX0JSSURHRV9SRVNPVVJDRVMsCisJCQlQQ0lfQlJJREdFX1JFU09VUkNF
+X0VORCAtIFBDSV9CUklER0VfUkVTT1VSQ0VTICsgMSk7Cit9CisKK3N0YXRpYyBERUNMQVJFX0JJ
+VE1BUChyZXNfaWR4X21hc2tbMSA8PCBQQ0lfUkVTX0JMT0NLX05VTV0sIFBDSV9OVU1fUkVTT1VS
+Q0VTKTsKK3N0YXRpYyBpbnQgX19pbml0IHBjaV9yZXNfaWR4X21hc2tfaW5pdCh2b2lkKQorewor
+CWludCBpOworCisJZm9yIChpID0gMDsgaSA8ICgxIDw8IFBDSV9SRVNfQkxPQ0tfTlVNKTsgaSsr
+KQorCQlfX2luaXRfcmVzX2lkeF9tYXNrKHJlc19pZHhfbWFza1tpXSwgaSk7CisKKwlyZXR1cm4g
+MDsKK30KK3Bvc3Rjb3JlX2luaXRjYWxsKHBjaV9yZXNfaWR4X21hc2tfaW5pdCk7CisKK3N0YXRp
+YyBpbmxpbmUgdW5zaWduZWQgbG9uZyAqZ2V0X3Jlc19pZHhfbWFzayhpbnQgZmxhZykKK3sKKwly
+ZXR1cm4gcmVzX2lkeF9tYXNrW2ZsYWcgJiAoKDEgPDwgUENJX1JFU19CTE9DS19OVU0pIC0gMSld
+OworfQorCitpbnQgcGNpX25leHRfcmVzb3VyY2VfaWR4KGludCBpLCBpbnQgZmxhZykKK3sKKwlp
+Kys7CisJaWYgKGkgPCBQQ0lfTlVNX1JFU09VUkNFUykKKwkJaSA9IGZpbmRfbmV4dF9iaXQoZ2V0
+X3Jlc19pZHhfbWFzayhmbGFnKSwgUENJX05VTV9SRVNPVVJDRVMsIGkpOworCisJaWYgKGkgPCBQ
+Q0lfTlVNX1JFU09VUkNFUykKKwkJcmV0dXJuIGk7CisKKwlyZXR1cm4gLTE7Cit9CisKIHN0YXRp
+YyB1NjQgcGNpX3NpemUodTY0IGJhc2UsIHU2NCBtYXhiYXNlLCB1NjQgbWFzaykKIHsKIAl1NjQg
+c2l6ZSA9IG1hc2sgJiBtYXhiYXNlOwkvKiBGaW5kIHRoZSBzaWduaWZpY2FudCBiaXRzICovCg==
+--e89a8ff1c8b043f26d04c8d03370--
