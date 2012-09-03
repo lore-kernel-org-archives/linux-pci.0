@@ -1,40 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65219 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752797Ab2ITP65 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 11:58:57 -0400
-Message-ID: <505B3D3C.6030109@gmail.com>
-Date: Thu, 20 Sep 2012 23:58:52 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54256 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754370Ab2ICSxk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2012 14:53:40 -0400
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Giridhar Malavali <giridhar.malavali@qlogic.com>,
-	Jon Mason <jdmason@kudzu.us>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	linux-driver@qlogic.com, linux-scsi@vger.kernel.org,
-	PCI <linux-pci@vger.kernel.org>,
-	Saurav Kashyap <saurav.kashyap@qlogic.com>,
-	Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
-References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com> <50571243.4050001@huawei.com> <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com> <505924E4.5010502@huawei.com> <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com> <505A7599.5070103@huawei.com> <505B0B6A.2050709@huawei.com> <CAErSpo6Wvn_cdOJg-OULbjyDQ0Qibq_+X78QMSqBeoC0GuB2VQ@mail.gmail.com>
-In-Reply-To: <CAErSpo6Wvn_cdOJg-OULbjyDQ0Qibq_+X78QMSqBeoC0GuB2VQ@mail.gmail.com>
+In-Reply-To: <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
+References: <cover.1346653435.git.agordeev@redhat.com>
+	<034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
+Date: Mon, 3 Sep 2012 11:53:39 -0700
+Message-ID: <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
+Subject: Re: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense
+ of IRQ remapping
+From: Yinghai Lu <yinghai@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-	We will try to work out a patch for this issue, won't silently ignore it.
-We also found another issue related to ARI. The steps to reproduce the bug is:
-1) Boot with a ARI-capable device connected to ARI-capable port, so ARI will be enabled.
-2) Hot-remove the ARI-capable device.
-3) Hot-add another non-ARI-capable multifunction device into the same slot.
-4) Now only the function 0 of the hot-added device could be enumerated.
+On Mon, Sep 3, 2012 at 2:17 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> The MSI specification has several constraints in comparison with MSI-X,
+> most notable of them is the inability to configure MSIs independently.
+> As a result, it is impossible to dispatch interrupts from different
+> queues to different CPUs. This is largely devalues the support of
+> multiple MSIs in SMP systems.
+>
+> Also, a necessity to allocate a contiguous block of vector numbers for
+> devices capable of multiple MSIs might cause a considerable pressure on
+> x86 interrupt vector allocator and could lead to fragmentation of the
+> interrupt vectors space.
+>
+> This patch overcomes both drawbacks in presense of IRQ remapping and
+> lets devices take advantage of multiple queues and per-IRQ affinity
+> assignments.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |  166 +++++++++++++++++++++++++++++++++++++--
+>  include/linux/irq.h            |    6 ++
+>  kernel/irq/chip.c              |   30 +++++--
+>  kernel/irq/irqdesc.c           |   31 ++++++++
+>  4 files changed, 216 insertions(+), 17 deletions(-)
+>
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index c265593..5fd2577 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -305,6 +305,11 @@ static int alloc_irq_from(unsigned int from, int node)
+>         return irq_alloc_desc_from(from, node);
+>  }
+>
+> +static int alloc_irqs_from(unsigned int from, unsigned int count, int node)
+> +{
+> +       return irq_alloc_descs_from(from, count, node);
+> +}
+> +
+>  static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+>  {
+>         free_irq_cfg(at, cfg);
+> @@ -3039,6 +3044,55 @@ int create_irq(void)
+>         return irq;
+>  }
+>
+> +unsigned int create_irqs(unsigned int from, unsigned int count, int node)
+> +{
+> +       struct irq_cfg **cfg;
+> +       unsigned long flags;
+> +       int irq, i;
+> +
+> +       if (from < nr_irqs_gsi)
+> +               from = nr_irqs_gsi;
+> +
+> +       cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
+> +       if (!cfg)
+> +               return 0;
+> +
+> +       irq = alloc_irqs_from(from, count, node);
+> +       if (irq < 0)
+> +               goto out_cfgs;
+> +
+> +       for (i = 0; i < count; i++) {
+> +               cfg[i] = alloc_irq_cfg(irq + i, node);
+> +               if (!cfg[i])
+> +                       goto out_irqs;
+> +       }
+> +
+> +       raw_spin_lock_irqsave(&vector_lock, flags);
+> +       for (i = 0; i < count; i++)
+> +               if (__assign_irq_vector(irq + i, cfg[i], apic->target_cpus()))
+> +                       goto out_vecs;
+> +       raw_spin_unlock_irqrestore(&vector_lock, flags);
+> +
+> +       for (i = 0; i < count; i++) {
+> +               irq_set_chip_data(irq + i, cfg[i]);
+> +               irq_clear_status_flags(irq + i, IRQ_NOREQUEST);
+> +       }
+> +
+> +       kfree(cfg);
+> +       return irq;
+> +
+> +out_vecs:
+> +       for (; i; i--)
+> +               __clear_irq_vector(irq + i - 1, cfg[i - 1]);
+> +       raw_spin_unlock_irqrestore(&vector_lock, flags);
+> +out_irqs:
+> +       for (i = 0; i < count; i++)
+> +               free_irq_at(irq + i, cfg[i]);
+> +out_cfgs:
+> +       kfree(cfg);
+> +       return 0;
+> +}
+> +
 
-	I think Yijing is going to work on the above two issues.
-	Thanks!
-	Gerry
+You may update create_irq_nr to be __create_irq_nr, and it could take
+extra count.
 
-On 09/20/2012 11:46 PM, Bjorn Helgaas wrote:
->>>> tried any.  Does "pci=pcie_bus_safe" make any difference?
+and later have create_irq_nr to be __create_irq_nr(,1,)
+and create_irqs to be __create_irq_nr(,count,)
+....
 
+BTW, in short, how much performance benefits for adding 500 lines code?
+
+Thanks
+
+Yinghai
