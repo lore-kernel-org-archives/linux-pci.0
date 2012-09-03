@@ -1,57 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57668 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56147 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750900Ab2I1IQ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Sep 2012 04:16:28 -0400
-Message-ID: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
-Subject: Why hold device_lock when calling callback in pci_walk_bus?
-From: Huang Ying <ying.huang@intel.com>
-To: bhelgaas@google.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	yanmin.zhang@intel.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rjw@sisk.pl
-Date: Fri, 28 Sep 2012 16:15:18 +0800
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1756094Ab2ICJTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Sep 2012 05:19:55 -0400
+Date: Mon, 3 Sep 2012 11:19:40 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v2 -tip 4/5] PCI, MSI: Enable multiple MSIs with
+ pci_enable_msi_block_auto()
+Message-ID: <6a425d611ce5c276ec6949fd6aadf575580e07fe.1346653435.git.agordeev@redhat.com>
+References: <cover.1346653435.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1346653435.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, All,
+The new function pci_enable_msi_block_auto() tries to allocate maximum
+possible number of MSIs up to the number the device supports. It
+generalizes a pattern when pci_enable_msi_block() is contiguously called
+until it succeeds or fails.
 
-If my understanding were correct, device_lock is used to provide mutual
-exclusion between device probe/remove/suspend/resume etc.  Why hold
-device_lock when calling callback in pci_walk_bus.
+Opposite to pci_enable_msi_block() which takes the number of MSIs to
+allocate as a input parameter, pci_enable_msi_block_auto() could be used
+by device drivers to obtain the number of assigned MSIs and the number
+of MSIs the device supports.
 
-This is introduced by the following commit.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++++++++++++++++++++++++++-----
+ drivers/pci/msi.c               |   26 ++++++++++++++++++++++++++
+ include/linux/pci.h             |    7 +++++++
+ 3 files changed, 65 insertions(+), 5 deletions(-)
 
-commit d71374dafbba7ec3f67371d3b7e9f6310a588808
-Author: Zhang Yanmin <yanmin.zhang@intel.com>
-Date:   Fri Jun 2 12:35:43 2006 +0800
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 53e6fca..a091780 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -127,15 +127,42 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
+ returns as soon as it finds any constraint that doesn't allow the
+ call to succeed.
+ 
+-4.2.3 pci_disable_msi
++4.2.3 pci_enable_msi_block_auto
++
++int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
++
++This variation on pci_enable_msi() call allows a device driver to request
++the maximum possible number of MSIs.  The MSI specification only allows
++interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
++
++If this function returns a positive number, it indicates that it has
++succeeded and the returned value is the number of allocated interrupts. In
++this case, the function enables MSI on this device and updates dev->irq to
++be the lowest of the new interrupts assigned to it.  The other interrupts
++assigned to the device are in the range dev->irq to dev->irq + returned
++value - 1.
++
++If this function returns a negative number, it indicates an error and
++the driver should not attempt to request any more MSI interrupts for
++this device.
++
++If the device driver needs to know the number of interrupts the device
++supports it can pass the pointer count where that number is stored. The
++device driver must decide what action to take if pci_enable_msi_block_auto()
++succeeds, but returns a value less than the number of interrupts supported.
++If the device driver does not need to know the number of interrupts
++supported, it can set the pointer count to NULL.
++
++4.2.4 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+ This function should be used to undo the effect of pci_enable_msi() or
+-pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
+-interrupt number and frees the previously allocated message signaled
+-interrupt(s).  The interrupt may subsequently be assigned to another
+-device, so drivers should not cache the value of dev->irq.
++pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
++dev->irq to the pin-based interrupt number and frees the previously
++allocated message signaled interrupt(s).  The interrupt may subsequently be
++assigned to another device, so drivers should not cache the value of
++dev->irq.
+ 
+ Before calling this function, a device driver must always call free_irq()
+ on any interrupt for which it previously called request_irq().
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f0752d1..690b268 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -845,6 +845,32 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
++int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++{
++	int ret, pos, nvec;
++	u16 msgctl;
++
++	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
++	if (!pos)
++		return -EINVAL;
++
++	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
++	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++
++	if (maxvec)
++		*maxvec = ret;
++
++	do {
++		nvec = ret;
++		ret = pci_enable_msi_block(dev, nvec);
++	} while (ret > 0);
++
++	if (ret < 0)
++		return ret;
++	return nvec;
++}
++EXPORT_SYMBOL(pci_enable_msi_block_auto);
++
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..b8a9454 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1070,6 +1070,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	return -1;
+ }
+ 
++static inline int
++pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++{
++	return -1;
++}
++
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ { }
+ static inline void pci_disable_msi(struct pci_dev *dev)
+@@ -1101,6 +1107,7 @@ static inline int pci_msi_enabled(void)
+ }
+ #else
+ extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
++extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ extern void pci_msi_shutdown(struct pci_dev *dev);
+ extern void pci_disable_msi(struct pci_dev *dev);
+ extern int pci_msix_table_size(struct pci_dev *dev);
+-- 
+1.7.7.6
 
-    [PATCH] PCI: fix race with pci_walk_bus and pci_destroy_dev
-    
-    pci_walk_bus has a race with pci_destroy_dev. When cb is called
-    in pci_walk_bus, pci_destroy_dev might unlink the dev pointed by next.
-    Later on in the next loop, pointer next becomes NULL and cause
-    kernel panic.
-    
-    Below patch against 2.6.17-rc4 fixes it by changing pci_bus_lock (spin_lock)
-    to pci_bus_sem (rw_semaphore).
-    
-    Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
-    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-Corresponding email thread is: https://lkml.org/lkml/2006/5/26/38
-
-But from the commit and email thread, I can not find why we need to do
-that.
-
-I ask this question because I want to use pci_walk_bus in a function (in
-pci runtime resume path) which may be called with device_lock held.
-
-Can anyone help me on that?
-
-Best Regards,
-Huang Ying
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
