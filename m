@@ -1,65 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:36655 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab2IOWWd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 18:22:33 -0400
-Received: by lbbgj3 with SMTP id gj3so3488556lbb.19
-        for <linux-pci@vger.kernel.org>; Sat, 15 Sep 2012 15:22:31 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <50442C4A.9020302@huawei.com>
+Date: Mon, 3 Sep 2012 12:04:26 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20120915075301.GA31044@avionic-0098.mockup.avionic-design.de>
-References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
- <1347655456-2542-2-git-send-email-thierry.reding@avionic-design.de>
- <CAMuHMdWuR_tdMw9iVkaQ3D9p1HVU_L05ap=MzBuo1jLD6YdHHw@mail.gmail.com> <20120915075301.GA31044@avionic-0098.mockup.avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 15 Sep 2012 16:22:11 -0600
-Message-ID: <CAErSpo7q9fvtjatfKqtb8SP3UOJdEXpbvFC_qMBTc6mAoRTQuA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Provide a default pcibios_update_irq()
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <kaneshige.kenji@jp.fujitsu.com>,
+	<yinghai@kernel.org>
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com> <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com> <20120903112845.0c583e70.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120903112845.0c583e70.izumi.taku@jp.fujitsu.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 15, 2012 at 1:53 AM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> On Sat, Sep 15, 2012 at 09:32:10AM +0200, Geert Uytterhoeven wrote:
->> On Fri, Sep 14, 2012 at 10:44 PM, Thierry Reding
->> <thierry.reding@avionic-design.de> wrote:
->> > --- a/drivers/pci/setup-irq.c
->> > +++ b/drivers/pci/setup-irq.c
->> > @@ -17,6 +17,14 @@
->> >  #include <linux/ioport.h>
->> >  #include <linux/cache.h>
->> >
->> > +void __devinit __weak pcibios_update_irq(struct pci_dev *dev, int irq)
->> > +{
->> > +#ifdef CONFIG_PCI_DEBUG
->> > +       printk(KERN_DEBUG "PCI: Assigning IRQ %02d to %s\n", irq,
->> > +              pci_name(dev));
+On 2012-9-3 10:28, Taku Izumi wrote:
+> Hi Bjorn,
+> 
+>   Sorry for late response. 
+>   I've returned to Japan. It was nice to see you.
+> 
+> On Wed, 29 Aug 2012 23:23:49 -0700
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+>> On Thu, Aug 9, 2012 at 11:09 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>>>  Hi all,
+>>>
+>>>
+>>>  I'd like to merge hostbridge hotplug feature.
+>>>  I looked at Yinghai's branch and found that this branch contains
+>>>  many work and can be split into some parts.
+>>>  I believe it is good to merge step by step.
+>>>
+>>>  My idea is splitting into the following 4 parts:
+>>>    1. basic hostbirdge hotplug work
+>>>    2. acpiphp work
+>>>    3. /sysfs interface work (logical hotplug?)
+>>>    4. cleanup
+>>>
+>>>  This patchset is 1st step based on the following Yinghai's branch:
+>>>
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+>>> for-pci-root-bus-hotplug
+>>>
+>>>   * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
+>>>   * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
+>>>   * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
+>>>   * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+>>>   * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
+>>>   * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
+>>>   * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
 >>
->> pr_debug()?
->> Or even better, dev_dbg()?
->
-> The problem with pr_debug() and dev_dbg() is that they will be compiled
-> out if DEBUG is not defined. Perhaps we should pass -DDEBUG if PCI_DEBUG
-> is configured and make this dev_dbg()?
+>> I looked at merging these tonight.  But I noticed there are still a
+>> few unanswered questions I asked earlier.
+>>
+>> 1) For patch [1/7], I pointed out that there is currently no way to
+>> remove a non-ACPI host bridge, which means the fact that we don't free
+>> the pci_sysdata is not really a leak.  If you want to add the
+>> release_fn so that you can add support for removing and adding these
+>> non-ACPI host bridges in the future, I do not understand that.  It
+>> just doesn't make sense to me to try to support hotplug for those
+>> bridges.
+> 
+>   I see. I plan on ACPI-based host bridge hotplug, so I omit this patch now.
+> 
+>> 2) For patch [2/7], I'm still curious about the scenario where this
+>> patch makes a difference (see my previous response for details).
+> 
+>   I'll omit this patch too according to Jian's comment.
+> 
+>> 3) Patch [5/7], adds mutual exclusion to two different lists, using
+>> two different mechanisms (mutex and RCU).  It would be easier for
+>> people to review if this were done in two separate patches.
+>>
+>   OK. I'll sprit into 2 patches.
+> 
+>   And I'll resend new version one soon.
+Hi Taku,
+	I have already split it into two patches:)
+	--Gerry
+
+> 
+
+
