@@ -1,53 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:27396 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755522Ab2I0IM0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:26 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/8] PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
-Date: Thu, 27 Sep 2012 01:11:54 -0700
-Message-Id: <1348733519-24684-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 3 Sep 2012 17:07:05 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH v2 6/6] ACPI, PCI: add resoruce-assign code for devices
+ under hot-added hostbridge
+Message-Id: <20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could use assign_unassigned_bus_res pci root bus add
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Devices under hot-added hostbridge have no chance to assign resources
+and to configure them, so this patch adds such code for hot-added 
+hostbridges at acpi_pci_root_start().
+
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 ---
- drivers/pci/probe.c     |    1 +
- drivers/pci/setup-bus.c |    2 --
- 2 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_root.c |   17 +++++++++++++++++
+ include/acpi/acpi_bus.h |    1 +
+ 2 files changed, 18 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 65f62e3..59cf1ba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1905,6 +1905,7 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0903/drivers/acpi/pci_root.c
+@@ -39,6 +39,7 @@
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_drivers.h>
+ #include <acpi/apei.h>
++#include <linux/pci_hotplug.h>
  
- 	max = pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
-+	pci_enable_bridges(bus);
- 	pci_bus_add_devices(bus);
+ #define PREFIX "ACPI: "
  
- 	return max;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 59e6c55..6d3591d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1566,6 +1566,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
--
--	pci_enable_bridges(bus);
- }
--- 
-1.7.7
+@@ -461,6 +462,9 @@ static int __devinit acpi_pci_root_add(s
+ 	if (!root)
+ 		return -ENOMEM;
+ 
++	if (system_state != SYSTEM_BOOTING)
++		root->hot_added = true;
++
+ 	segment = 0;
+ 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
+ 				       &segment);
+@@ -639,6 +643,7 @@ static int acpi_pci_root_start(struct ac
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
++	struct pci_dev *pdev;
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+@@ -646,6 +651,18 @@ static int acpi_pci_root_start(struct ac
+ 			driver->add(device->handle);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 
++	/*
++	 * Devices under hot-added hostbridge have no chance to assign
++	 * resources and to configure them, so do that here
++	 */
++	if (root->hot_added) {
++		pci_bus_size_bridges(root->bus);
++		pci_bus_assign_resources(root->bus);
++		list_for_each_entry(pdev, &root->bus->devices, bus_list)
++			pci_configure_slot(pdev);
++		pci_enable_bridges(root->bus);
++	}
++
+ 	pci_bus_add_devices(root->bus);
+ 
+ 	return 0;
+Index: Bjorn-next-0903/include/acpi/acpi_bus.h
+===================================================================
+--- Bjorn-next-0903.orig/include/acpi/acpi_bus.h
++++ Bjorn-next-0903/include/acpi/acpi_bus.h
+@@ -407,6 +407,7 @@ struct acpi_pci_root {
+ 	u32 osc_support_set;	/* _OSC state of support bits */
+ 	u32 osc_control_set;	/* _OSC state of control bits */
+ 	phys_addr_t mcfg_addr;
++	bool hot_added;
+ };
+ 
+ /* helper */
 
