@@ -1,75 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 14 Sep 2012 11:48:18 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-Message-ID: <20120914154817.GE6221@redhat.com>
-References: <501BB4EF.7080909@jp.fujitsu.com>
- <20120803114643.GA28330@redhat.com>
- <501F4877.5050605@jp.fujitsu.com>
- <20120806203902.GH25559@redhat.com>
- <50473306.1070803@jp.fujitsu.com>
- <20120910143604.GB639@redhat.com>
- <504F1343.7030607@jp.fujitsu.com>
- <20120911144323.GF12039@redhat.com>
- <50504F47.80909@jp.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50504F47.80909@jp.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+	<20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
+Date: Mon, 3 Sep 2012 13:27:11 -0700
+Message-ID: <CAE9FiQVXtTf3+jpbYzHk3D3VVm-bXEB9EcgkBwkEtYR-SRiKHA@mail.gmail.com>
+Subject: Re: [PATCH v2 6/6] ACPI, PCI: add resoruce-assign code for devices
+ under hot-added hostbridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2012 at 06:00:55PM +0900, Takao Indoh wrote:
-> (2012/09/11 23:43), Vivek Goyal wrote:
-> >On Tue, Sep 11, 2012 at 07:32:35PM +0900, Takao Indoh wrote:
-> >
-> >[..]
-> >>I'll post new patch which clears bus master bit and resets devices in
-> >>second kernel.
-> >>
-> >>As to the boot parameter to enable this function, you suggested using
-> >>reset_devices. I found that on a certain platform resetting devices
-> >>caused PCIe error due to a hardware bug. Therefore I think we need
-> >>new parameter apart from reset_devices to disable this function on
-> >>such a machine.
-> >
-> >Can you explain a bit more how the error happens. I still don't think
-> >that because of a bug in a platform somewhere we should be introducing
-> >a separate command line parameter and not reuse the exisiting one. Also
-> >you have not explained what's the bug and how a new parameter will
-> >avoid the bug.
-> 
-> The bug I mentioned is that ACS Violation occurs at PCIe switch when
-> reading PCI configuration after device reset. I got information that
-> this violation is caused by PCIe switch bug. The machine becomes fatal
-> status by this error.
-> 
-> The reason why I try to introduce new parameter is that I want to avoid
-> regression by this patch. Let's say this patch was included in kernel
-> and its reset function was enabled by reset_devices as you said. AFAIK
-> reset_devices is always needed for kdump, so it means that devices are
-> always reset at kdump boot time. It causes a regression that system
-> always becomes abnormal status when we run kdump on the machine which has
-> a bug I mentioned.
-> 
-> To avoid this regression, I want to separate reset_devices from this
-> reset function. Or how about this?
-> - if user specify reset_devices, devices are reset by this patch, as you
->   said.
-> - To avoid a regression I said, add new parameter like "pci=noreset".
->   If this parameter is specified, the reset function I add is disabled
->   and we can avoid regression.
+On Mon, Sep 3, 2012 at 1:07 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>
+> Devices under hot-added hostbridge have no chance to assign resources
+> and to configure them, so this patch adds such code for hot-added
+> hostbridges at acpi_pci_root_start().
+>
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  drivers/acpi/pci_root.c |   17 +++++++++++++++++
+>  include/acpi/acpi_bus.h |    1 +
+>  2 files changed, 18 insertions(+)
+>
+> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+> ===================================================================
+> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
+> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
+> @@ -39,6 +39,7 @@
+>  #include <acpi/acpi_bus.h>
+>  #include <acpi/acpi_drivers.h>
+>  #include <acpi/apei.h>
+> +#include <linux/pci_hotplug.h>
+>
+>  #define PREFIX "ACPI: "
+>
+> @@ -461,6 +462,9 @@ static int __devinit acpi_pci_root_add(s
+>         if (!root)
+>                 return -ENOMEM;
+>
+> +       if (system_state != SYSTEM_BOOTING)
+> +               root->hot_added = true;
+> +
+>         segment = 0;
+>         status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
+>                                        &segment);
+> @@ -639,6 +643,7 @@ static int acpi_pci_root_start(struct ac
+>  {
+>         struct acpi_pci_root *root = acpi_driver_data(device);
+>         struct acpi_pci_driver *driver;
+> +       struct pci_dev *pdev;
+>
+>         mutex_lock(&acpi_pci_root_lock);
+>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+> @@ -646,6 +651,18 @@ static int acpi_pci_root_start(struct ac
+>                         driver->add(device->handle);
+>         mutex_unlock(&acpi_pci_root_lock);
+>
+> +       /*
+> +        * Devices under hot-added hostbridge have no chance to assign
+> +        * resources and to configure them, so do that here
+> +        */
+> +       if (root->hot_added) {
+> +               pci_bus_size_bridges(root->bus);
+> +               pci_bus_assign_resources(root->bus);
+> +               list_for_each_entry(pdev, &root->bus->devices, bus_list)
+> +                       pci_configure_slot(pdev);
+> +               pci_enable_bridges(root->bus);
+> +       }
+> +
+>         pci_bus_add_devices(root->bus);
 
-Can we identify that particular switch in code and not reset it in code.
-Introducing new paramenters to avoid bugs really feels odd.
+after looking at your simplified version in patch5 and patch6
+found that you do not understand my patchset correctly.
 
-Also, what was the conclusion to avoid double reset. I am assuming that
-we don't want to do bus level reset as well as driver level reset based
-on reset_devices. 
+in my patchset there is change on:
+acpi_pci_root_add
+acpi_pci_root_start
+acpi_pci_root_remove
+
+and
+handle_root_bridge_insertion/acpi_root_configure_bridge
+handle_root_bridge_removal
+
+for hot add path:
+handle_root_bridge_insertion will call
+      acpi_pci_root_add: it will scan the root bus and find all pci device
+      acpi_root_configure_bridge: it will survey fw set pci resource,
+and assigned unsigned resource
+      acpi_pci_root_start: it will start acpi_pci driver for ioapic
+controller and dmar iommu
+                                    then call pci_bus_add_devices to
+load other pci device drivers.
+
+for hot remove path:
+      acpi_pci_root_remove: will call pci_stop_bus_devices() to stop
+drivers for all normal pci devices.
+                                        then stop acpi_pci driver for
+dmar and ioapic driver
+                                        then call
+pci_stop_and_remove_bus to remove the root bus.
+
+the point is : keep the driver of ioapic and dmar  driver loading
+before normal pci drivers, and later
+stop driver for dmar/iommu, after unloading pci drivers.
 
 Thanks
-Vivek
+
+Yinghai
