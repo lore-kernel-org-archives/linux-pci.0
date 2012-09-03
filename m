@@ -1,73 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:57520 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752277Ab2IQQYp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 12:24:45 -0400
-Received: by lagy9 with SMTP id y9so4297485lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 09:24:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <505747FA.6060708@gmail.com>
-References: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
- <1347552010-6718-1-git-send-email-jiang.liu@huawei.com> <CAErSpo781H+k=veR19WoRvRRKe-pVpxYV4UK74iaQv36Ms3LrA@mail.gmail.com>
- <505747FA.6060708@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Sep 2012 10:24:23 -0600
-Message-ID: <CAErSpo5uj9YwxjZweoLDsrx11S5NjCFwPeNfROsKySr1dTOjqQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: introduce root bridge hotplug safe interfaces to
- walk root buses
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:51654 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755799Ab2ICC2a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 22:28:30 -0400
+Date: Mon, 3 Sep 2012 11:28:45 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Subject: Re: [PATCH 0/7][RESEND] acpi, pci: hostbridge hotplug support
+Message-Id: <20120903112845.0c583e70.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+References: <20120810150955.e4ab3c7f.izumi.taku@jp.fujitsu.com>
+	<CAErSpo5eqyuK_yKshHbDyK5LBBG9cCn1MpmHbqpvVYe6x7AxFg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2012 at 9:55 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 09/14/2012 01:40 AM, Bjorn Helgaas wrote:
->> On Thu, Sep 13, 2012 at 10:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>> This patch introduces two root bridge hotplug safe interfaces to walk
->>> all root buses. Function pci_get_root_buses() takes a snopshot of the
->>> pci_root_buses list and holds a reference count to each root buses.
->>> pci_{get|put}_root_buses are used to replace hotplug unsafe interface
->>> pci_find_next_bus().
->>
->> Honestly, I think the whole idea of walking these lists is wrong, and
->> adding safer interfaces just perpetuates the idea that it's OK to walk
->> them.
->>
->> We should be doing the setup in the device add path instead.  I know
->> we have other issues with that in some cases, but I'd like to at least
->> move in that direction.
->>
->> For example, sba_init() is a problem because it's an ACPI driver, and
->> we currently enumerate PCI devices before binding most ACPI drivers.
->> That's broken -- in that particular case, there's an HWP0001 IOMMU
->> device that encloses the PNP0A03 PCI host bridge.  Currently we bind
->> the PNP0A03 driver first, enumerate the PCI devices below it, then
->> bind the HWP0001 driver (sba_init).  Obviously that's backwards and
->> the HWP0001 driver should have been bound first, then the PNP0A03
->> driver.  But I don't think we're ready to make that shift yet (though
->> it'd be nice if somebody were working on it).
-> I remember there were some discussions on the mail list above the divergence
-> between boot and hotplug paths. But it's a little hard for me to work on
-> this, I only have experience with PCI on IA64 and x86:(
->
->>
->> I wonder if we could add some kind of iterator that does the list
->> traversals in the PCI core and calls a callback for every device?  I
->> think that would work for sba_init(), but I don't know about the
->> others.  This would still be ugly in that the iterator would have to
->> hold some sort of hotplug lock while doing for_each_pci_dev() and the
->> callers, e.g., sba_init(), are not solving the problem for hot-added
->> devices, but at least the locking would be in the core and the drivers
->> would stop depending on the lists themselves.
+Hi Bjorn,
 
-> I will try the iterator first, hope we could find a solution here.
+  Sorry for late response. 
+  I've returned to Japan. It was nice to see you.
 
-A plain iterator only handles devices that already exist.  But I
-wonder if it would work to have an interface like "call this callback
-for every device that exists already *and* for every device that's
-hot-added in the future."  The bus notifiers are close to this, e.g.,
-"bus_register_notifier(&pci_bus_type, ...)" handles this for hot-added
-devices.  A little glue around it could take care of doing it for
-already-existing devices as well.
+On Wed, 29 Aug 2012 23:23:49 -0700
+Bjorn Helgaas <bhelgaas@google.com> wrote:
+
+> On Thu, Aug 9, 2012 at 11:09 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >  Hi all,
+> >
+> >
+> >  I'd like to merge hostbridge hotplug feature.
+> >  I looked at Yinghai's branch and found that this branch contains
+> >  many work and can be split into some parts.
+> >  I believe it is good to merge step by step.
+> >
+> >  My idea is splitting into the following 4 parts:
+> >    1. basic hostbirdge hotplug work
+> >    2. acpiphp work
+> >    3. /sysfs interface work (logical hotplug?)
+> >    4. cleanup
+> >
+> >  This patchset is 1st step based on the following Yinghai's branch:
+> >
+> > git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> > for-pci-root-bus-hotplug
+> >
+> >   * [PATCH 1/7][RESEND] x86, PCI: Fix non acpi path pci_sysdata leaking with release_fn
+> >   * [PATCH 2/7][RESEND] PCI: Correctly clean up pci root buses in function pci_remove_bus()
+> >   * [PATCH 3/7][RESEND] ACPI, PCI: Use normal list for struct acpi_pci_driver
+> >   * [PATCH 4/7][RESEND] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+> >   * [PATCH 5/7][RESEND] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
+> >   * [PATCH 6/7][RESEND] ACPI, PCI: add hostbridge removal function
+> >   * [PATCH 7/7][RESEND] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
+> 
+> I looked at merging these tonight.  But I noticed there are still a
+> few unanswered questions I asked earlier.
+> 
+> 1) For patch [1/7], I pointed out that there is currently no way to
+> remove a non-ACPI host bridge, which means the fact that we don't free
+> the pci_sysdata is not really a leak.  If you want to add the
+> release_fn so that you can add support for removing and adding these
+> non-ACPI host bridges in the future, I do not understand that.  It
+> just doesn't make sense to me to try to support hotplug for those
+> bridges.
+
+  I see. I plan on ACPI-based host bridge hotplug, so I omit this patch now.
+
+> 2) For patch [2/7], I'm still curious about the scenario where this
+> patch makes a difference (see my previous response for details).
+
+  I'll omit this patch too according to Jian's comment.
+
+> 3) Patch [5/7], adds mutual exclusion to two different lists, using
+> two different mechanisms (mutex and RCU).  It would be easier for
+> people to review if this were done in two separate patches.
+> 
+  OK. I'll sprit into 2 patches.
+
+  And I'll resend new version one soon.
+
+-- 
+Best regards,
+Taku Izumi <izumi.taku@jp.fujitsu.com>
+
