@@ -1,58 +1,413 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38216 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756576Ab2IDJcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Sep 2012 05:32:50 -0400
-Date: Tue, 4 Sep 2012 11:32:31 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 3 Sep 2012 11:17:40 +0200
 From: Alexander Gordeev <agordeev@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Jeff Garzik <jgarzik@pobox.com>,
 	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
 	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense
- of IRQ remapping
-Message-ID: <20120904093230.GA17873@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense of
+ IRQ remapping
+Message-ID: <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
 References: <cover.1346653435.git.agordeev@redhat.com>
- <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
- <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <cover.1346653435.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 03, 2012 at 11:53:39AM -0700, Yinghai Lu wrote:
-> On Mon, Sep 3, 2012 at 2:17 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> You may update create_irq_nr to be __create_irq_nr, and it could take
-> extra count.
-> 
-> and later have create_irq_nr to be __create_irq_nr(,1,)
-> and create_irqs to be __create_irq_nr(,count,)
-> ....
+The MSI specification has several constraints in comparison with MSI-X,
+most notable of them is the inability to configure MSIs independently.
+As a result, it is impossible to dispatch interrupts from different
+queues to different CPUs. This is largely devalues the support of
+multiple MSIs in SMP systems.
 
-Indeed. Will do.
+Also, a necessity to allocate a contiguous block of vector numbers for
+devices capable of multiple MSIs might cause a considerable pressure on
+x86 interrupt vector allocator and could lead to fragmentation of the
+interrupt vectors space.
 
-> BTW, in short, how much performance benefits for adding 500 lines code?
+This patch overcomes both drawbacks in presense of IRQ remapping and
+lets devices take advantage of multiple queues and per-IRQ affinity
+assignments.
 
-Unfortunatelly, I do not have a short answer here. There are three types
-of performance this series deals with - I'll try to summarize:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ arch/x86/kernel/apic/io_apic.c |  166 +++++++++++++++++++++++++++++++++++++--
+ include/linux/irq.h            |    6 ++
+ kernel/irq/chip.c              |   30 +++++--
+ kernel/irq/irqdesc.c           |   31 ++++++++
+ 4 files changed, 216 insertions(+), 17 deletions(-)
 
-- devices - 3 SATA HDDs generate roughly one interrupt every 273 us while
-  it get handled in less than 5 us. So there is/could be no increase here;
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index c265593..5fd2577 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -305,6 +305,11 @@ static int alloc_irq_from(unsigned int from, int node)
+ 	return irq_alloc_desc_from(from, node);
+ }
+ 
++static int alloc_irqs_from(unsigned int from, unsigned int count, int node)
++{
++	return irq_alloc_descs_from(from, count, node);
++}
++
+ static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+ {
+ 	free_irq_cfg(at, cfg);
+@@ -3039,6 +3044,55 @@ int create_irq(void)
+ 	return irq;
+ }
+ 
++unsigned int create_irqs(unsigned int from, unsigned int count, int node)
++{
++	struct irq_cfg **cfg;
++	unsigned long flags;
++	int irq, i;
++
++	if (from < nr_irqs_gsi)
++		from = nr_irqs_gsi;
++
++	cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
++	if (!cfg)
++		return 0;
++
++	irq = alloc_irqs_from(from, count, node);
++	if (irq < 0)
++		goto out_cfgs;
++
++	for (i = 0; i < count; i++) {
++		cfg[i] = alloc_irq_cfg(irq + i, node);
++		if (!cfg[i])
++			goto out_irqs;
++	}
++
++	raw_spin_lock_irqsave(&vector_lock, flags);
++	for (i = 0; i < count; i++)
++		if (__assign_irq_vector(irq + i, cfg[i], apic->target_cpus()))
++			goto out_vecs;
++	raw_spin_unlock_irqrestore(&vector_lock, flags);
++
++	for (i = 0; i < count; i++) {
++		irq_set_chip_data(irq + i, cfg[i]);
++		irq_clear_status_flags(irq + i, IRQ_NOREQUEST);
++	}
++
++	kfree(cfg);
++	return irq;
++
++out_vecs:
++	for (; i; i--)
++		__clear_irq_vector(irq + i - 1, cfg[i - 1]);
++	raw_spin_unlock_irqrestore(&vector_lock, flags);
++out_irqs:
++	for (i = 0; i < count; i++)
++		free_irq_at(irq + i, cfg[i]);
++out_cfgs:
++	kfree(cfg);
++	return 0;
++}
++
+ void destroy_irq(unsigned int irq)
+ {
+ 	struct irq_cfg *cfg = irq_get_chip_data(irq);
+@@ -3054,6 +3108,27 @@ void destroy_irq(unsigned int irq)
+ 	free_irq_at(irq, cfg);
+ }
+ 
++static inline void destroy_irqs(unsigned int irq, unsigned int count)
++{
++	unsigned int i;
++	for (i = 0; i < count; i++)
++		destroy_irq(irq + i);
++}
++
++static inline int
++can_create_pow_of_two_irqs(unsigned int from, unsigned int count)
++{
++	if ((count > 1) && (count % 2))
++		return -EINVAL;
++
++	for (; count; count = count / 2) {
++		if (!irq_can_alloc_irqs(from, count))
++			return count;
++	}
++
++	return -ENOSPC;
++}
++
+ /*
+  * MSI message composition
+  */
+@@ -3145,18 +3220,25 @@ static struct irq_chip msi_chip = {
+ 	.irq_retrigger		= ioapic_retrigger_irq,
+ };
+ 
+-static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc, int irq)
++static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
++			 unsigned int irq_base, unsigned int irq_offset)
+ {
+ 	struct irq_chip *chip = &msi_chip;
+ 	struct msi_msg msg;
++	unsigned int irq = irq_base + irq_offset;
+ 	int ret;
+ 
+ 	ret = msi_compose_msg(dev, irq, &msg, -1);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	irq_set_msi_desc(irq, msidesc);
+-	write_msi_msg(irq, &msg);
++	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
++
++	/* MSI-X message is written per-IRQ, the offset is always 0.
++	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
++	 */
++	if (!irq_offset)
++		write_msi_msg(irq, &msg);
+ 
+ 	if (irq_remapped(irq_get_chip_data(irq))) {
+ 		irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+@@ -3170,16 +3252,12 @@ static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc, int irq)
+ 	return 0;
+ }
+ 
+-int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int setup_msix_irqs(struct pci_dev *dev, int nvec)
+ {
+ 	int node, ret, sub_handle, index = 0;
+ 	unsigned int irq, irq_want;
+ 	struct msi_desc *msidesc;
+ 
+-	/* x86 doesn't support multiple MSI yet */
+-	if (type == PCI_CAP_ID_MSI && nvec > 1)
+-		return 1;
+-
+ 	node = dev_to_node(&dev->dev);
+ 	irq_want = nr_irqs_gsi;
+ 	sub_handle = 0;
+@@ -3208,7 +3286,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 				goto error;
+ 		}
+ no_ir:
+-		ret = setup_msi_irq(dev, msidesc, irq);
++		ret = setup_msi_irq(dev, msidesc, irq, 0);
+ 		if (ret < 0)
+ 			goto error;
+ 		sub_handle++;
+@@ -3220,6 +3298,76 @@ error:
+ 	return ret;
+ }
+ 
++int setup_msi_irqs(struct pci_dev *dev, int nvec)
++{
++	int node, ret, sub_handle, index = 0;
++	unsigned int irq;
++	struct msi_desc *msidesc;
++
++	if (nvec > 1 && !irq_remapping_enabled)
++		return 1;
++
++	nvec = __roundup_pow_of_two(nvec);
++	ret = can_create_pow_of_two_irqs(nr_irqs_gsi, nvec);
++	if (ret != nvec)
++		return ret;
++
++	WARN_ON(!list_is_singular(&dev->msi_list));
++	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
++	WARN_ON(msidesc->irq);
++	WARN_ON(msidesc->msi_attrib.multiple);
++
++	node = dev_to_node(&dev->dev);
++	irq = create_irqs(nr_irqs_gsi, nvec, node);
++	if (irq == 0)
++		return -ENOSPC;
++
++	if (!irq_remapping_enabled) {
++		ret = setup_msi_irq(dev, msidesc, irq, 0);
++		if (ret < 0)
++			goto error;
++		return 0;
++	}
++
++	msidesc->msi_attrib.multiple = ilog2(nvec);
++	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
++		if (!sub_handle) {
++			index = msi_alloc_remapped_irq(dev, irq, nvec);
++			if (index < 0) {
++				ret = index;
++				goto error;
++			}
++		} else {
++			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
++						     index, sub_handle);
++			if (ret < 0)
++				goto error;
++		}
++		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
++		if (ret < 0)
++			goto error;
++	}
++	return 0;
++
++error:
++	destroy_irqs(irq, nvec);
++
++	/* Restore altered MSI descriptor fields and prevent just destroyed
++	 * IRQs from tearing down again in default_teardown_msi_irqs()
++	 */
++	msidesc->irq = 0;
++	msidesc->msi_attrib.multiple = 0;
++
++	return ret;
++}
++
++int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	if (type == PCI_CAP_ID_MSI)
++		return setup_msi_irqs(dev, nvec);
++	return setup_msix_irqs(dev, nvec);
++}
++
+ void native_teardown_msi_irq(unsigned int irq)
+ {
+ 	destroy_irq(irq);
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 216b0ba..c3ba39f 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -522,6 +522,8 @@ extern int irq_set_handler_data(unsigned int irq, void *data);
+ extern int irq_set_chip_data(unsigned int irq, void *data);
+ extern int irq_set_irq_type(unsigned int irq, unsigned int type);
+ extern int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry);
++extern int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
++				struct msi_desc *entry);
+ extern struct irq_data *irq_get_irq_data(unsigned int irq);
+ 
+ static inline struct irq_chip *irq_get_chip(unsigned int irq)
+@@ -584,8 +586,12 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ #define irq_alloc_desc_from(from, node)		\
+ 	irq_alloc_descs(-1, from, 1, node)
+ 
++#define irq_alloc_descs_from(from, cnt, node)	\
++	irq_alloc_descs(-1, from, cnt, node)
++
+ void irq_free_descs(unsigned int irq, unsigned int cnt);
+ int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++int irq_can_alloc_irqs(unsigned int from, unsigned int cnt);
+ 
+ static inline void irq_free_desc(unsigned int irq)
+ {
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 57d86d0..2230389 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -90,27 +90,41 @@ int irq_set_handler_data(unsigned int irq, void *data)
+ EXPORT_SYMBOL(irq_set_handler_data);
+ 
+ /**
+- *	irq_set_msi_desc - set MSI descriptor data for an irq
+- *	@irq:	Interrupt number
+- *	@entry:	Pointer to MSI descriptor data
++ *	irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
++ *	@irq_base:	Interrupt number base
++ *	@irq_offset:	Interrupt number offset
++ *	@entry:		Pointer to MSI descriptor data
+  *
+- *	Set the MSI descriptor entry for an irq
++ *	Set the MSI descriptor entry for an irq at offset
+  */
+-int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
++int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
++			 struct msi_desc *entry)
+ {
+ 	unsigned long flags;
+-	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
++	struct irq_desc *desc = irq_get_desc_lock(irq_base + irq_offset, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+ 
+ 	if (!desc)
+ 		return -EINVAL;
+ 	desc->irq_data.msi_desc = entry;
+-	if (entry)
+-		entry->irq = irq;
++	if (entry && !irq_offset)
++		entry->irq = irq_base;
+ 	irq_put_desc_unlock(desc, flags);
+ 	return 0;
+ }
+ 
+ /**
++ *	irq_set_msi_desc - set MSI descriptor data for an irq
++ *	@irq:	Interrupt number
++ *	@entry:	Pointer to MSI descriptor data
++ *
++ *	Set the MSI descriptor entry for an irq
++ */
++int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
++{
++	return irq_set_msi_desc_off(irq, 0, entry);
++}
++
++/**
+  *	irq_set_chip_data - set irq chip data for an irq
+  *	@irq:	Interrupt number
+  *	@data:	Pointer to chip specific data
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 192a302..8287b78 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -210,6 +210,13 @@ static int irq_expand_nr_irqs(unsigned int nr)
+ 	return 0;
+ }
+ 
++static int irq_can_expand_nr_irqs(unsigned int nr)
++{
++	if (nr > IRQ_BITMAP_BITS)
++		return -ENOMEM;
++	return 0;
++}
++
+ int __init early_irq_init(void)
+ {
+ 	int i, initcnt, node = first_online_node;
+@@ -414,6 +421,30 @@ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+ }
+ 
+ /**
++ * irq_can_alloc_irqs - checks if a range of irqs could be allocated
++ * @from:	check from irq number
++ * @cnt:	number of irqs to check
++ *
++ * Returns 0 on success or an appropriate error code
++ */
++int irq_can_alloc_irqs(unsigned int from, unsigned int cnt)
++{
++	unsigned int start;
++	int ret = 0;
++
++	if (!cnt)
++		return -EINVAL;
++
++	mutex_lock(&sparse_irq_lock);
++	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
++					   from, cnt, 0);
++	mutex_unlock(&sparse_irq_lock);
++	if (start + cnt > nr_irqs)
++		ret = irq_can_expand_nr_irqs(start + cnt);
++	return ret;
++}
++
++/**
+  * irq_get_next_irq - get next allocated irq number
+  * @offset:	where to start the search
+  *
+-- 
+1.7.7.6
 
-- the hardware context interrupt handler - its performance dropped 2.5 times
-  (little bit more in fact) at the expense of increase of 1.3 times in
-  overall interrupt handling time (hardware context + threaded context);
-
-- overall system performance - I *assume* it should increase, because:
-  (a) AHCI interrupt handlers keep local interrupts disabled 2.5 times less
-  (b) separate AHCI IRQs become subjects of IRQ balancing
-  (c) threaded handlers are per-device, per-CPU (well, up to irqbalanced)
-      and executed with local interrupts enabled;
 
 -- 
 Regards,
