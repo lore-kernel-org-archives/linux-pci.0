@@ -1,132 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:54256 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754370Ab2ICSxk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Sep 2012 14:53:40 -0400
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43121 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757221Ab2IDOWO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Sep 2012 10:22:14 -0400
+Received: from localhost.localdomain (earthlight.etchedpixels.co.uk [81.2.110.250])
+	by lxorguk.ukuu.org.uk (8.14.5/8.14.1) with ESMTP id q84EsuVF007358
+	for <linux-pci@vger.kernel.org>; Tue, 4 Sep 2012 15:55:01 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] cpqphp_ctrl: remove unreachable path
+To: linux-pci@vger.kernel.org
+Date: Tue, 04 Sep 2012 15:39:57 +0100
+Message-ID: <20120904143946.25201.77305.stgit@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
-	<034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
-Date: Mon, 3 Sep 2012 11:53:39 -0700
-Message-ID: <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
-Subject: Re: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense
- of IRQ remapping
-From: Yinghai Lu <yinghai@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 3, 2012 at 2:17 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> The MSI specification has several constraints in comparison with MSI-X,
-> most notable of them is the inability to configure MSIs independently.
-> As a result, it is impossible to dispatch interrupts from different
-> queues to different CPUs. This is largely devalues the support of
-> multiple MSIs in SMP systems.
->
-> Also, a necessity to allocate a contiguous block of vector numbers for
-> devices capable of multiple MSIs might cause a considerable pressure on
-> x86 interrupt vector allocator and could lead to fragmentation of the
-> interrupt vectors space.
->
-> This patch overcomes both drawbacks in presense of IRQ remapping and
-> lets devices take advantage of multiple queues and per-IRQ affinity
-> assignments.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  arch/x86/kernel/apic/io_apic.c |  166 +++++++++++++++++++++++++++++++++++++--
->  include/linux/irq.h            |    6 ++
->  kernel/irq/chip.c              |   30 +++++--
->  kernel/irq/irqdesc.c           |   31 ++++++++
->  4 files changed, 216 insertions(+), 17 deletions(-)
->
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index c265593..5fd2577 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -305,6 +305,11 @@ static int alloc_irq_from(unsigned int from, int node)
->         return irq_alloc_desc_from(from, node);
->  }
->
-> +static int alloc_irqs_from(unsigned int from, unsigned int count, int node)
-> +{
-> +       return irq_alloc_descs_from(from, count, node);
-> +}
-> +
->  static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
->  {
->         free_irq_cfg(at, cfg);
-> @@ -3039,6 +3044,55 @@ int create_irq(void)
->         return irq;
->  }
->
-> +unsigned int create_irqs(unsigned int from, unsigned int count, int node)
-> +{
-> +       struct irq_cfg **cfg;
-> +       unsigned long flags;
-> +       int irq, i;
-> +
-> +       if (from < nr_irqs_gsi)
-> +               from = nr_irqs_gsi;
-> +
-> +       cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
-> +       if (!cfg)
-> +               return 0;
-> +
-> +       irq = alloc_irqs_from(from, count, node);
-> +       if (irq < 0)
-> +               goto out_cfgs;
-> +
-> +       for (i = 0; i < count; i++) {
-> +               cfg[i] = alloc_irq_cfg(irq + i, node);
-> +               if (!cfg[i])
-> +                       goto out_irqs;
-> +       }
-> +
-> +       raw_spin_lock_irqsave(&vector_lock, flags);
-> +       for (i = 0; i < count; i++)
-> +               if (__assign_irq_vector(irq + i, cfg[i], apic->target_cpus()))
-> +                       goto out_vecs;
-> +       raw_spin_unlock_irqrestore(&vector_lock, flags);
-> +
-> +       for (i = 0; i < count; i++) {
-> +               irq_set_chip_data(irq + i, cfg[i]);
-> +               irq_clear_status_flags(irq + i, IRQ_NOREQUEST);
-> +       }
-> +
-> +       kfree(cfg);
-> +       return irq;
-> +
-> +out_vecs:
-> +       for (; i; i--)
-> +               __clear_irq_vector(irq + i - 1, cfg[i - 1]);
-> +       raw_spin_unlock_irqrestore(&vector_lock, flags);
-> +out_irqs:
-> +       for (i = 0; i < count; i++)
-> +               free_irq_at(irq + i, cfg[i]);
-> +out_cfgs:
-> +       kfree(cfg);
-> +       return 0;
-> +}
-> +
+From: Alan Cox <alan@linux.intel.com>
 
-You may update create_irq_nr to be __create_irq_nr, and it could take
-extra count.
+register & 0x0B == 0x04 is never true, the code will always take the
+(identical) 0x00 path anyway. Remove the dead code paths.
 
-and later have create_irq_nr to be __create_irq_nr(,1,)
-and create_irqs to be __create_irq_nr(,count,)
-....
+Resolves-bug: https://bugzilla.kernel.org/show_bug.cgi?id=44151
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+---
 
-BTW, in short, how much performance benefits for adding 500 lines code?
+ drivers/pci/hotplug/cpqphp_ctrl.c |   21 +--------------------
+ 1 file changed, 1 insertion(+), 20 deletions(-)
 
-Thanks
+diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
+index e43908d..36112fe 100644
+--- a/drivers/pci/hotplug/cpqphp_ctrl.c
++++ b/drivers/pci/hotplug/cpqphp_ctrl.c
+@@ -2890,27 +2890,8 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+ 						func->mem_head = mem_node;
+ 					} else
+ 						return -ENOMEM;
+-				} else if ((temp_register & 0x0BL) == 0x04) {
+-					/* Map memory */
+-					base = temp_register & 0xFFFFFFF0;
+-					base = ~base + 1;
+-
+-					dbg("CND:      length = 0x%x\n", base);
+-					mem_node = get_resource(&(resources->mem_head), base);
+-
+-					/* allocate the resource to the board */
+-					if (mem_node) {
+-						base = mem_node->base;
+-
+-						mem_node->next = func->mem_head;
+-						func->mem_head = mem_node;
+-					} else
+-						return -ENOMEM;
+-				} else if ((temp_register & 0x0BL) == 0x06) {
+-					/* Those bits are reserved, we can't handle this */
+-					return 1;
+ 				} else {
+-					/* Requesting space below 1M */
++					/* Reserved bits or requesting space below 1M */
+ 					return NOT_ENOUGH_RESOURCES;
+ 				}
+ 
 
-Yinghai
