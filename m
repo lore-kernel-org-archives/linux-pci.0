@@ -1,145 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44284 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922Ab2IXWK0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2012 18:10:26 -0400
-Received: by lbbgj3 with SMTP id gj3so7477307lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 24 Sep 2012 15:10:25 -0700 (PDT)
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:48272 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426Ab2IDH6k convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Sep 2012 03:58:40 -0400
+From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+To: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	"Izumi, Taku" <izumi.taku@jp.fujitsu.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
+Subject: RE: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
+ hot-plugging PCI root bridges
+Date: Tue, 4 Sep 2012 07:58:36 +0000
+Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A4A2DCD@G01JPEXMBYT03>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+ <20120903170442.c406455c.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120903170442.c406455c.izumi.taku@jp.fujitsu.com>
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
-In-Reply-To: <1345648605-7636-1-git-send-email-jiang.liu@huawei.com>
-References: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
- <1345648605-7636-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Sep 2012 16:10:04 -0600
-Message-ID: <CAErSpo5gyZgxWxwTgXRMyZzDDbEBeXHtmhisPN2FqvvUarmTeg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: allow acpiphp to handle PCIe ports w/o native
- PCIe hotplug capability
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 22, 2012 at 9:16 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> -----Original Message-----
+> From: Taku Izumi [mailto:izumi.taku@jp.fujitsu.com]
+> Sent: Monday, September 03, 2012 5:05 PM
+> To: Izumi, Taku/泉 拓
+> Cc: linux-pci@vger.kernel.org; bhelgaas@google.com;
+> linux-acpi@vger.kernel.org; Kaneshige, Kenji/金重 憲治;
+> yinghai@kernel.org; jiang.liu@huawei.com
+> Subject: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
+> hot-plugging PCI root bridges
+> 
 > From: Jiang Liu <jiang.liu@huawei.com>
->
-> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
-> ignore root bridges using PCIe native hotplug) added code that made the
-> acpiphp driver completely ignore PCIe root complexes for which the kernel
-> had been granted control of the native PCIe hotplug feature by the BIOS
-> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
-> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
-> the constraints to allow acpiphp driver handle non-PCIe bridges under
-> such a complex. The constraint needs to be relaxed further to allow
-> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
->
-> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
-> switches and may migrate downstream ports among virtual switches.
-> To migrate a downstream port from the source virtual switch to the target,
-> the port needs to be hot-removed from the source and hot-added into the
-> target. pciehp driver can't be used here because there's no slots within
-> the virtual PCIe switch. So acpiphp driver is used to support downstream
-> port migration. A typical configuration is as below:
-> [Root w/o native PCIe HP]
->         [Upstream port of vswitch w/o native PCIe HP]
->                 [Downstream port of vswitch w/ native PCIe HP]
->                         [PCIe enpoint]
->
-> Here acpiphp driver will be used to handle root ports and upstream port
-> in the virtual switch, and pciehp driver will be used to handle downstream
-> ports in the virtual switch.
->
-> v1->v2: use PCIe capability accessors to read PCI_EXP_SLTCAP register
->
-> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-
-I tweaked the changelog (typos, indentation) and applied this to my
-"pci/jiang-acpiphp" branch.  Kenji acked a previous version, but I
-didn't add it here because this is slightly updated.
-
-If the PLX8696 supports moving downstream ports between upstream
-ports, it seems like a deficiency if the upstream port doesn't support
-native hotplug.  If I understand correctly, this patch allows the use
-of acpiphp for "hotplug" of the downstream ports, but that is only an
-option if the PLX8696 is in the ACPI namespace.
-
-It seems like the lack of PLX8696 native hotplug for upstream ports
-mean this virtual switch migration can only be done if the PLX8696 is
-soldered into the system -- for instance, we don't have any way to
-deal with an 8696 on a plug-in card because ACPI won't know anything
-about that device.
-
-I'm not objecting to this patch; I'm just trying to understand the
-situation better.
-
+> 
+>   ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+> 
+>   When hot-plugging PCI root bridge, acpi_pci_drivers' add()/remove()
+>   methods should be invoked to notify registered drivers.
+> 
+>   -v2: Move add calling to acpi_pci_root_start by Yinghai
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 > ---
->  drivers/pci/hotplug/acpiphp_glue.c |   41 +++++++++++++++++++++++++++---------
->  1 file changed, 31 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index ad6fd66..e6da392 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -115,6 +115,35 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
->         .handler = handle_hotplug_event_func,
->  };
->
-> +/* Check whether the PCI device is managed by native PCIe hotplug driver */
-> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
-> +{
-> +       u32 reg32;
-> +       acpi_handle tmp;
-> +       struct acpi_pci_root *root;
+>  drivers/acpi/pci_root.c |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> Index: Bjorn-next-0808/drivers/acpi/pci_root.c
+> ===================================================================
+> --- Bjorn-next-0808.orig/drivers/acpi/pci_root.c
+> +++ Bjorn-next-0808/drivers/acpi/pci_root.c
+> @@ -626,14 +626,25 @@ end:
+>  static int acpi_pci_root_start(struct acpi_device *device)
+>  {
+>  	struct acpi_pci_root *root = acpi_driver_data(device);
+> +	struct acpi_pci_driver *driver;
 > +
-> +       /* Check whether the PCIe port supports native PCIe hotplug */
-> +       if (pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32))
-> +               return false;
-> +       if (!(reg32 & PCI_EXP_SLTCAP_HPC))
-> +               return false;
+> +	list_for_each_entry(driver, &acpi_pci_drivers, node)
+> +		if (driver->add)
+> +			driver->add(device->handle);
+> 
+
+I think this (invoke .add callback for each acpi pci driver) should be done
+after pci_bus_add_devices().
+
+It seems ACPI pci drivers run *after* pci_bus_add_devices() at the boot time
+(because no acpi pci drivers is loaded at that time). On the other hand, it
+seems that ACPI pci drivers run *before* pci_bus_add_devices() at the hotadd
+time. Those should be the same.
+
+Regards,
+Kenji Kaneshige
+
+>  	pci_bus_add_devices(root->bus);
 > +
-> +       /*
-> +        * Check whether native PCIe hotplug has been enabled for
-> +        * this PCIe hierarchy.
-> +        */
-> +       tmp = acpi_find_root_bridge_handle(pdev);
-> +       if (!tmp)
-> +               return false;
-> +       root = acpi_pci_find_root(tmp);
-> +       if (!root)
-> +               return false;
-> +       if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> +               return false;
-> +
-> +       return true;
-> +}
-> +
->  /* callback routine to register each ACPI PCI slot object */
->  static acpi_status
->  register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
-> @@ -142,16 +171,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
->         function = adr & 0xffff;
->
->         pdev = pbus->self;
-> -       if (pdev && pci_is_pcie(pdev)) {
-> -               tmp = acpi_find_root_bridge_handle(pdev);
-> -               if (tmp) {
-> -                       struct acpi_pci_root *root = acpi_pci_find_root(tmp);
-> -
-> -                       if (root && (root->osc_control_set &
-> -                                       OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
-> -                               return AE_OK;
-> -               }
-> -       }
-> +       if (pdev && device_is_managed_by_native_pciehp(pdev))
-> +               return AE_OK;
->
->         newfunc = kzalloc(sizeof(struct acpiphp_func), GFP_KERNEL);
->         if (!newfunc)
-> --
-> 1.7.9.5
->
+
