@@ -1,85 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:49994 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751891Ab2ILT7n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2012 15:59:43 -0400
-Received: by lbbgj3 with SMTP id gj3so1442072lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2012 12:59:42 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:38216 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756576Ab2IDJcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Sep 2012 05:32:50 -0400
+Date: Tue, 4 Sep 2012 11:32:31 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense
+ of IRQ remapping
+Message-ID: <20120904093230.GA17873@dhcp-26-207.brq.redhat.com>
+References: <cover.1346653435.git.agordeev@redhat.com>
+ <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
+ <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1347459869-5709-1-git-send-email-jiang.liu@huawei.com>
-References: <CAErSpo5ZQmzusUMuB7TobCH-Bzw=r78h8SGQ88-WqaH7nRSXkQ@mail.gmail.com>
- <1347459869-5709-1-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Sep 2012 13:59:21 -0600
-Message-ID: <CAErSpo6tKygUM3LrAC7a48aY2AQFmD0T-eR5Z76_ULwey1pv0w@mail.gmail.com>
-Subject: Re: [PATCH] eeepc-laptop: fix device reference count leakage in eeepc_rfkill_hotplug()
-To: Jiang Liu <liuj97@gmail.com>
-Cc: huxinwei@huawei.com, Jiang Liu <jiang.liu@huawei.com>,
-	linux-pci@vger.kernel.org, Corentin Chary <corentincj@iksaif.net>,
-	Matthew Garrett <mjg@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2012 at 8:24 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Fix a device reference count leakage issue in function
-> eeepc_rfkill_hotplug().
+On Mon, Sep 03, 2012 at 11:53:39AM -0700, Yinghai Lu wrote:
+> On Mon, Sep 3, 2012 at 2:17 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> You may update create_irq_nr to be __create_irq_nr, and it could take
+> extra count.
+> 
+> and later have create_irq_nr to be __create_irq_nr(,1,)
+> and create_irqs to be __create_irq_nr(,count,)
+> ....
 
-This looks good to me, but it needs a Signed-off-by and probably
-should go through something other than the PCI tree.
+Indeed. Will do.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+> BTW, in short, how much performance benefits for adding 500 lines code?
 
-> ---
->  drivers/platform/x86/eeepc-laptop.c |   10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/platform/x86/eeepc-laptop.c b/drivers/platform/x86/eeepc-laptop.c
-> index dab91b4..5ca2641 100644
-> --- a/drivers/platform/x86/eeepc-laptop.c
-> +++ b/drivers/platform/x86/eeepc-laptop.c
-> @@ -610,12 +610,12 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
->
->                 if (!bus) {
->                         pr_warn("Unable to find PCI bus 1?\n");
-> -                       goto out_unlock;
-> +                       goto out_put_dev;
->                 }
->
->                 if (pci_bus_read_config_dword(bus, 0, PCI_VENDOR_ID, &l)) {
->                         pr_err("Unable to read PCI config space?\n");
-> -                       goto out_unlock;
-> +                       goto out_put_dev;
->                 }
->
->                 absent = (l == 0xffffffff);
-> @@ -627,7 +627,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
->                                 absent ? "absent" : "present");
->                         pr_warn("skipped wireless hotplug as probably "
->                                 "inappropriate for this model\n");
-> -                       goto out_unlock;
-> +                       goto out_put_dev;
->                 }
->
->                 if (!blocked) {
-> @@ -635,7 +635,7 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
->                         if (dev) {
->                                 /* Device already present */
->                                 pci_dev_put(dev);
-> -                               goto out_unlock;
-> +                               goto out_put_dev;
->                         }
->                         dev = pci_scan_single_device(bus, 0);
->                         if (dev) {
-> @@ -650,6 +650,8 @@ static void eeepc_rfkill_hotplug(struct eeepc_laptop *eeepc, acpi_handle handle)
->                                 pci_dev_put(dev);
->                         }
->                 }
-> +out_put_dev:
-> +               pci_dev_put(port);
->         }
->
->  out_unlock:
-> --
-> 1.7.9.5
->
+Unfortunatelly, I do not have a short answer here. There are three types
+of performance this series deals with - I'll try to summarize:
+
+- devices - 3 SATA HDDs generate roughly one interrupt every 273 us while
+  it get handled in less than 5 us. So there is/could be no increase here;
+
+- the hardware context interrupt handler - its performance dropped 2.5 times
+  (little bit more in fact) at the expense of increase of 1.3 times in
+  overall interrupt handling time (hardware context + threaded context);
+
+- overall system performance - I *assume* it should increase, because:
+  (a) AHCI interrupt handlers keep local interrupts disabled 2.5 times less
+  (b) separate AHCI IRQs become subjects of IRQ balancing
+  (c) threaded handlers are per-device, per-CPU (well, up to irqbalanced)
+      and executed with local interrupts enabled;
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
