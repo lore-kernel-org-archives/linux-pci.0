@@ -1,75 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 34/40] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
-Date: Wed, 19 Sep 2012 11:54:48 -0700
-Message-Id: <1348080894-23412-35-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:57622 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab2IEIzM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2012 04:55:12 -0400
+From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
+Subject: RE: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
+ hot-plugging PCI root bridges
+Date: Wed, 5 Sep 2012 08:55:09 +0000
+Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A4A4817@G01JPEXMBYT03>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+	<20120903170442.c406455c.izumi.taku@jp.fujitsu.com>
+	<4A338DB2991D2A44B9A44B8718AECF650A4A2DCD@G01JPEXMBYT03>
+	<CAE9FiQVJ0JRCgZsh+iSB8VC4TqJDcetPyno36L8=UW-UQUK4vQ@mail.gmail.com>
+	<4A338DB2991D2A44B9A44B8718AECF650A4A4240@G01JPEXMBYT03>
+ <CAE9FiQUbfTivsyYJe0cr-Dng2+3wEXMM7TX+RgxNC+mGBok6Kw@mail.gmail.com>
+In-Reply-To: <CAE9FiQUbfTivsyYJe0cr-Dng2+3wEXMM7TX+RgxNC+mGBok6Kw@mail.gmail.com>
+Content-Type: text/plain; charset="iso-2022-jp"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+> -----Original Message-----
+> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
+> Yinghai Lu
+> Sent: Wednesday, September 05, 2012 2:02 PM
+> To: Kaneshige, Kenji/金重 憲治
+> Cc: Izumi, Taku/泉 拓; linux-pci@vger.kernel.org; bhelgaas@google.com;
+> linux-acpi@vger.kernel.org; jiang.liu@huawei.com
+> Subject: Re: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
+> hot-plugging PCI root bridges
+> 
+> On Tue, Sep 4, 2012 at 9:32 PM, Kaneshige, Kenji
+> <kaneshige.kenji@jp.fujitsu.com> wrote:
+> >
+> > Ok, my understanding of your comment is that IOAPIC and DMAR drivers are
+> implemented
+> > as ACPI PCI driver (or you have a plan to implement IOAPIC and DMAR drivers
+> as ACPI
+> > PCI driver), and those drivers need to be loaded before PCI device drivers.
+> Is my
+> > understanding correct?
+> 
+> yes.
+> 
+> for ioapic:
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=
+> shortlog;h=refs/heads/for-x86-irq
+> 
+> for iommu:
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=
+> shortlog;h=refs/heads/for-iommu
+> 
 
-When hot-plugging PCI root bridge, acpi_pci_drivers' add()/remove()
-methods should be invoked to notify registered drivers.
+Thank you for answering.
+Though I've not looked at those trees yet, the idea, which utilize ACPI pci
+driver to load ioapic and dmar driver, looks good to me.
 
--v2: Move add calling to acpi_pci_root_start - Yinghai
--v3: use acpi_pci_root pointer instead of handle - Yinghai
--v3: Fold stop ioapic/iommu drivers after pci devices change in. - Yinghai
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 325cf5c..0ea5ad0 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -633,6 +633,11 @@ end:
- static int acpi_pci_root_start(struct acpi_device *device)
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
-+	struct acpi_pci_driver *driver;
-+
-+	list_for_each_entry(driver, &acpi_pci_drivers, node)
-+		if (driver->add)
-+			driver->add(root);
- 
- 	pci_bus_add_devices(root->bus);
- 	return 0;
-@@ -643,6 +648,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	acpi_status status;
- 	acpi_handle handle;
- 	struct acpi_pci_root *root = acpi_driver_data(device);
-+	struct acpi_pci_driver *driver;
- 
- 	/* that root bus could be removed already */
- 	if (!pci_find_bus(root->segment, root->secondary.start)) {
-@@ -651,8 +657,13 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 		goto out;
- 	}
- 
-+	/* stop normal pci drivers before we stop ioapic and dmar etc */
- 	pci_stop_root_bus(root->bus);
- 
-+	list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
-+		if (driver->remove)
-+			driver->remove(root);
-+
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
--- 
-1.7.7
+Regards,
+Kenji Kaneshige
 
