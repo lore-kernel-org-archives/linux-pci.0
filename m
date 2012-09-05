@@ -1,34 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:36921 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684Ab2IEUnC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2012 16:43:02 -0400
+Date: Wed, 5 Sep 2012 16:32:17 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 5/5] PCI/xen-pcifront: simplify code by hotplug safe
+ pci_get_domain_bus_and_slot()
+Message-ID: <20120905203217.GA28018@phenom.dumpdata.com>
+References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+ <1346168638-32724-6-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo63QeF-Wd8nW-K_Qfp5rjMd0mhWADGW-fZiw4Up5-0ezA@mail.gmail.com>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-	<1348733519-24684-4-git-send-email-yinghai@kernel.org>
-	<CAErSpo63QeF-Wd8nW-K_Qfp5rjMd0mhWADGW-fZiw4Up5-0ezA@mail.gmail.com>
-Date: Fri, 28 Sep 2012 18:48:09 -0700
-Message-ID: <CAE9FiQXDw+D8FeMiojmcX0k_g939zkRM3XmJP08yJJG6o7_Cyg@mail.gmail.com>
-Subject: Re: [PATCH 3/8] PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1346168638-32724-6-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> So could use assign_unassigned_bus_res pci root bus add
->
-> After your series, acpi_pci_root_start() looks like this:
->
->     pci_assign_unassigned_bus_resources
->     list_for_each_entry(driver, &acpi_pci_drivers, node)
->         driver->add(root);
->     pci_enable_bridges(root->bus);
->
-> so apparently it's important that the driver->add() methods be run
-> *before* the bridges are enabled.  Why?
+On Tue, Aug 28, 2012 at 11:43:58PM +0800, Jiang Liu wrote:
+> Following code has a race window between pci_find_bus() and pci_get_slot()
+> if PCI hotplug operation happens between them which removes the pci_bus.
+> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+> which also reduces code complexity.
+> 
+> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 
-pci_enable_bridge
+So:
+
+Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Tested-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+
+> ---
+>  drivers/pci/xen-pcifront.c |   10 ++--------
+>  1 file changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index d6cc62c..def8d0b 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -982,7 +982,6 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>  	int err = 0;
+>  	int i, num_devs;
+>  	unsigned int domain, bus, slot, func;
+> -	struct pci_bus *pci_bus;
+>  	struct pci_dev *pci_dev;
+>  	char str[64];
+>  
+> @@ -1032,13 +1031,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
+>  			goto out;
+>  		}
+>  
+> -		pci_bus = pci_find_bus(domain, bus);
+> -		if (!pci_bus) {
+> -			dev_dbg(&pdev->xdev->dev, "Cannot get bus %04x:%02x\n",
+> -				domain, bus);
+> -			continue;
+> -		}
+> -		pci_dev = pci_get_slot(pci_bus, PCI_DEVFN(slot, func));
+> +		pci_dev = pci_get_domain_bus_and_slot(domain, bus,
+> +				PCI_DEVFN(slot, func));
+>  		if (!pci_dev) {
+>  			dev_dbg(&pdev->xdev->dev,
+>  				"Cannot get PCI device %04x:%02x:%02x.%d\n",
+> -- 
+> 1.7.9.5
