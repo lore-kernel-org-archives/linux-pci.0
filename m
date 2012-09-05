@@ -1,165 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part2 6/6] PCI: Claim hw/fw allocated resources in hot add path.
-Date: Sun,  2 Sep 2012 14:50:53 -0700
-Message-Id: <1346622653-30741-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27578 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751560Ab2IEBd1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Sep 2012 21:33:27 -0400
+Message-ID: <5046ABE0.303@redhat.com>
+Date: Tue, 04 Sep 2012 21:33:20 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, Jon Mason <jdmason@kudzu.us>,
+	Jiang Liu <liuj97@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI mini-summit notes
+References: <CAErSpo73r3yzzndUek-NJ3d0pDKtg8zTrnjk4ihudBE5gngBAA@mail.gmail.com> <503E39DE.7000109@gmail.com> <CAPoiz9yRzEr68=NB53SVXb5+nRmEa_J4Mtt6eGAAo5EWFbDbmQ@mail.gmail.com> <CAE9FiQWEE0aCPbM=aVfH4kYzWqpJ4orseh2isWuuGFj3yFxKqQ@mail.gmail.com> <CAErSpo60gh1Ph6jq5iWT6Vsc=UGW+4DFdGCZpL90-3vk+_H89g@mail.gmail.com>
+In-Reply-To: <CAErSpo60gh1Ph6jq5iWT6Vsc=UGW+4DFdGCZpL90-3vk+_H89g@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During testing remove/rescan root bus 00, found
-[  338.142574] bus: 'pci': really_probe: probing driver ata_piix with device 0000:00:01.1
-[  338.146788] ata_piix 0000:00:01.1: device not available (can't reserve [io  0x01f0-0x01f7])
-[  338.150565] ata_piix: probe of 0000:00:01.1 failed with error -22
+On 08/30/2012 02:02 AM, Bjorn Helgaas wrote:
+> [removed cc ksummit-2012-discuss]
+>
+> On Wed, Aug 29, 2012 at 3:54 PM, Yinghai Lu<yinghai@kernel.org>  wrote:
+>> On Wed, Aug 29, 2012 at 3:44 PM, Jon Mason<jdmason@kudzu.us>  wrote:
+>>>> Hi Bjorn,
+>>>>          One of my team member reported another corner case for SR-IOV. There's
+>>>> are two NIC cards in the system driven by the same driver, but one supports
+>>>> SR-IOV and the other doesn't. It runs into trouble if "max_vfs" parameter is
+>>>> set for the NIC driver.
+>>>>          --Gerry
+>>>
+>>> I believe it was decided that a per-pf sysfs interface would be used
+>>> to replace the current module parameter that specifies the number of
+>>> vf's.  This should enable different numbers of vf's for each physical
+>>> device.  The driver interface that was discussed would introduce new
+>>> function pointers for handlers to setup/teardown the vf's.  I believe
+>>> this will solve your problem once it has been implemented.
+>>
+>> now we have ixgbe.max_vfs=63
+>>
+>> so if change to per pci device (PF),
+>>
+>> how about having the driver built-in?
+>> what kind of kernel parameters will be passed?
 
-because that fixed resource is not claimed from
-        arch/x86/pci/i386.c::pcibios_allocate_resources()
-that is init path.
+Having the driver built-in won't make a difference.
 
-Try to claim those resources, so on the remove/rescan will still use old
-resources.
+The model is to have files under sys fs, i.e.,
+/sys/bus/pci/devices/0000:03:01.0/[sriov_vf_enable, sriov_vf_disable]
 
-It is some kind honoring HW/FW setting in the registers during hot add.
-esp root-bus hot add is through acpi, BIOS have chance to set some register
-for us.
+where one echo's the number of vf's one wants to configure for a pf
+into the sriov_vf_enable file;  if want to disable/deconfigure the vf's,
+one echo's a 1 to sriov_vf_disable (all or nothing disable).
 
--v2: add rom resource claiming.
+the pci core will be able to check & filter that the max num of vf's
+is not exceeded.  Also looking to add a file like 'sriov_num_vfs' to
+indicate max number of vf's a PF supports.  Whether the bus configuration
+supports it (enough mmio space, enough pci bus nums, etc.) won't be
+known until the enable count is written.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c |   28 +++++++++++++++++++++-------
- drivers/pci/bus.c   |    2 ++
- include/linux/pci.h |    1 +
- 3 files changed, 24 insertions(+), 7 deletions(-)
+I have the code down to create the sysfs files & report the num_vfs.
+Hope to have the first enable/disable working within another week.
+The tough part is to re-factor a pf driver that enables/configures pf;
+I'm working with the igb(_main.c) driver right now.
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index abf2a61..3cb7d66 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -201,13 +201,15 @@ EXPORT_SYMBOL(pcibios_align_resource);
-  *	    as well.
-  */
- 
--static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
-+static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- {
- 	int idx;
- 	struct resource *r;
- 
- 	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
- 		r = &dev->resource[idx];
-+		if (r->parent)	/* Already allocated */
-+			continue;
- 		if (!r->flags)
- 			continue;
- 		if (!r->start || pci_claim_resource(dev, idx) < 0) {
-@@ -223,7 +225,7 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
- }
- 
--static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
-+static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_bus *child;
- 
-@@ -239,7 +241,7 @@ struct pci_check_idx_range {
- 	int end;
- };
- 
--static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
-+static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
- 	int idx, disabled, i;
- 	u16 command;
-@@ -292,7 +294,7 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
-+static void pcibios_allocate_resources(struct pci_bus *bus, int pass)
- {
- 	struct pci_dev *dev;
- 	struct pci_bus *child;
-@@ -306,7 +308,7 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
-+static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- {
- 	struct resource *r;
- 
-@@ -324,7 +326,7 @@ static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- 		r->start = 0;
- 	}
- }
--static void __init __pcibios_allocate_rom_resources(struct pci_bus *bus)
-+static void __pcibios_allocate_rom_resources(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
- 	struct pci_bus *child;
-@@ -337,7 +339,7 @@ static void __init __pcibios_allocate_rom_resources(struct pci_bus *bus)
- 			__pcibios_allocate_rom_resources(child);
- 	}
- }
--static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
-+static void pcibios_allocate_rom_resources(struct pci_bus *bus)
- {
- 	if (pci_probe & PCI_ASSIGN_ROMS)
- 		return;
-@@ -358,6 +360,18 @@ static int __init pcibios_assign_resources(void)
- 	return 0;
- }
- 
-+void pcibios_resource_survey_bus(struct pci_bus *bus)
-+{
-+	dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
-+
-+	pcibios_allocate_bus_resources(bus);
-+
-+	pcibios_allocate_resources(bus, 0);
-+	pcibios_allocate_resources(bus, 1);
-+
-+	pcibios_allocate_rom_resources(bus);
-+}
-+
- void __init pcibios_resource_survey(void)
- {
- 	struct pci_bus *bus;
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4b0970b..2882d01 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -154,6 +154,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 	return ret;
- }
- 
-+void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
-+
- /**
-  * pci_bus_add_device - add a single device
-  * @dev: device to add
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1b460e1..29a4704 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -676,6 +676,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
- /* Some device drivers need know if pci is initiated */
- extern int no_pci_devices(void);
- 
-+void pcibios_resource_survey_bus(struct pci_bus *bus);
- void pcibios_fixup_bus(struct pci_bus *);
- int __must_check pcibios_enable_device(struct pci_dev *, int mask);
- /* Architecture specific versions may override this (weak) */
--- 
-1.7.7
+- Don
+>
+> I don't think we really discussed things at this level, and I
+> personally don't know enough about the current SR-IOV support to even
+> know what the possible strategies are.  I think it's really up to the
+> person doing the implementation to figure out what makes sense given
+> the constraints of the SR-IOV specs and the current Linux support.
+>
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
