@@ -1,165 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56147 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756094Ab2ICJTz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Sep 2012 05:19:55 -0400
-Date: Mon, 3 Sep 2012 11:19:40 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH v2 -tip 4/5] PCI, MSI: Enable multiple MSIs with
- pci_enable_msi_block_auto()
-Message-ID: <6a425d611ce5c276ec6949fd6aadf575580e07fe.1346653435.git.agordeev@redhat.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:46398 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990Ab2IELOi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2012 07:14:38 -0400
+Message-ID: <50473306.1070803@jp.fujitsu.com>
+Date: Wed, 05 Sep 2012 20:09:58 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1346653435.git.agordeev@redhat.com>
+To: vgoyal@redhat.com
+CC: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com>
+In-Reply-To: <20120806203902.GH25559@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The new function pci_enable_msi_block_auto() tries to allocate maximum
-possible number of MSIs up to the number the device supports. It
-generalizes a pattern when pci_enable_msi_block() is contiguously called
-until it succeeds or fails.
+(2012/08/07 5:39), Vivek Goyal wrote:
+> On Mon, Aug 06, 2012 at 01:30:47PM +0900, Takao Indoh wrote:
+>> Hi Vivek,
+>>
+>> (2012/08/03 20:46), Vivek Goyal wrote:
+>>> On Fri, Aug 03, 2012 at 08:24:31PM +0900, Takao Indoh wrote:
+>>>> Hi all,
+>>>>
+>>>> This patch adds kernel parameter "reset_pcie_devices" which resets PCIe
+>>>> devices at boot time to address DMA problem on kdump with iommu. When
+>>>> this parameter is specified, a hot reset is triggered on each PCIe root
+>>>> port and downstream port to reset its downstream endpoint.
+>>>
+>>> Hi Takao,
+>>>
+>>> Why not use existing "reset_devices" parameter instead of introducing
+>>> a new one?
+>>
+>> "reset_devices" is used for each driver to reset their own device, and
+>> this patch resets all devices forcibly, so I thought they were different
+>> things.
+>
+> Yes reset_devices currently is used for driver to reset its device. I
+> thought one could very well extend its reach to reset pci express devices
+> at bus level.
+>
+> Having them separate is not going to be much useful from kdump
+> perspective. We will end up passing both reset_devices and
+> reset_pcie_devices to second kernel whill lead to bus level reset as well
+> as device level reset.
+>
+> Ideal situation would be that somehow detect that bus level reset has been
+> done and skip device level reset (assuming bus level reset obviates the
+> need of device level reset, please correct me if that's not the case).
+>
+> After pcie reset, can we store the state in a variable and drivers can
+> use that variable to check if PCIe level reset was done or not. If yes,
+> skip device level reset (Assuming driver knows that device is on a
+> PCIe slot).
+>
+> In that case we will not have to introduce new kernel command line, and
+> also avoid double reset?
+  
+I found a problem when testing my patch on some machines.
 
-Opposite to pci_enable_msi_block() which takes the number of MSIs to
-allocate as a input parameter, pci_enable_msi_block_auto() could be used
-by device drivers to obtain the number of assigned MSIs and the number
-of MSIs the device supports.
+Originally there are two problems in kdump kernel when iommu is enabled;
+DMAR error and PCI SERR. I thought they are fixed by my patch, but I
+noticed that PCI SERR is still detected after applying the patch. It
+seems that something happens when Interrupt Remapping is initialized in
+kdump kernel.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++++++++++++++++++++++++++-----
- drivers/pci/msi.c               |   26 ++++++++++++++++++++++++++
- include/linux/pci.h             |    7 +++++++
- 3 files changed, 65 insertions(+), 5 deletions(-)
+Therefore resetting devices has to be done before enable_IR() is
+called. I have three ideas for it.
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 53e6fca..a091780 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,15 +127,42 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_disable_msi
-+4.2.3 pci_enable_msi_block_auto
-+
-+int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
-+
-+This variation on pci_enable_msi() call allows a device driver to request
-+the maximum possible number of MSIs.  The MSI specification only allows
-+interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
-+
-+If this function returns a positive number, it indicates that it has
-+succeeded and the returned value is the number of allocated interrupts. In
-+this case, the function enables MSI on this device and updates dev->irq to
-+be the lowest of the new interrupts assigned to it.  The other interrupts
-+assigned to the device are in the range dev->irq to dev->irq + returned
-+value - 1.
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to request any more MSI interrupts for
-+this device.
-+
-+If the device driver needs to know the number of interrupts the device
-+supports it can pass the pointer count where that number is stored. The
-+device driver must decide what action to take if pci_enable_msi_block_auto()
-+succeeds, but returns a value less than the number of interrupts supported.
-+If the device driver does not need to know the number of interrupts
-+supported, it can set the pointer count to NULL.
-+
-+4.2.4 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
- This function should be used to undo the effect of pci_enable_msi() or
--pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
--interrupt number and frees the previously allocated message signaled
--interrupt(s).  The interrupt may subsequently be assigned to another
--device, so drivers should not cache the value of dev->irq.
-+pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
-+dev->irq to the pin-based interrupt number and frees the previously
-+allocated message signaled interrupt(s).  The interrupt may subsequently be
-+assigned to another device, so drivers should not cache the value of
-+dev->irq.
- 
- Before calling this function, a device driver must always call free_irq()
- on any interrupt for which it previously called request_irq().
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f0752d1..690b268 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -845,6 +845,32 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
-+int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-+{
-+	int ret, pos, nvec;
-+	u16 msgctl;
-+
-+	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	if (!pos)
-+		return -EINVAL;
-+
-+	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+
-+	if (maxvec)
-+		*maxvec = ret;
-+
-+	do {
-+		nvec = ret;
-+		ret = pci_enable_msi_block(dev, nvec);
-+	} while (ret > 0);
-+
-+	if (ret < 0)
-+		return ret;
-+	return nvec;
-+}
-+EXPORT_SYMBOL(pci_enable_msi_block_auto);
-+
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..b8a9454 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1070,6 +1070,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 	return -1;
- }
- 
-+static inline int
-+pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-+{
-+	return -1;
-+}
-+
- static inline void pci_msi_shutdown(struct pci_dev *dev)
- { }
- static inline void pci_disable_msi(struct pci_dev *dev)
-@@ -1101,6 +1107,7 @@ static inline int pci_msi_enabled(void)
- }
- #else
- extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
-+extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- extern void pci_msi_shutdown(struct pci_dev *dev);
- extern void pci_disable_msi(struct pci_dev *dev);
- extern int pci_msix_table_size(struct pci_dev *dev);
--- 
-1.7.7.6
+  (i) Resetting devices in 1st kernel(panic kernel)
+  We can reset devices before jumping into 2nd kernel. Of course it may
+  be dangerous to scan pci device tree and call PCI functions in panic'd
+  kernel. Beforehand we need to collect device information so that only
+  minimal code could run on panic.
 
+  (ii) Resetting devices in purgatory
+  It seems to be be appropriate place to do this, but I'm not sure
+  where I can save/restore PCI config when resetting devices in
+  purgatory.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+  (iii) Resetting devices in 2nd kernel(kdump kernel)
+  Important point is to do reset before enable_IR() is called as I wrote
+  above. I think I should add new function to do reset into
+  arch/x86/pci/early.c and call it in setup_arch like
+  early_dump_pci_devices() or early_quirks().
+
+Any comments?
+
+Thanks,
+Takao Indoh
+
