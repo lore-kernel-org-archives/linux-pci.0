@@ -1,49 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:36826 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab2I2EIe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 29 Sep 2012 00:08:34 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
+Subject: RE: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
+ hot-plugging PCI root bridges
+Date: Wed, 5 Sep 2012 04:32:17 +0000
+Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A4A4240@G01JPEXMBYT03>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+	<20120903170442.c406455c.izumi.taku@jp.fujitsu.com>
+	<4A338DB2991D2A44B9A44B8718AECF650A4A2DCD@G01JPEXMBYT03>
+ <CAE9FiQVJ0JRCgZsh+iSB8VC4TqJDcetPyno36L8=UW-UQUK4vQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQVJ0JRCgZsh+iSB8VC4TqJDcetPyno36L8=UW-UQUK4vQ@mail.gmail.com>
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-	<1348733519-24684-5-git-send-email-yinghai@kernel.org>
-	<CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com>
-	<CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com>
-	<CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
-Date: Fri, 28 Sep 2012 21:08:32 -0700
-Message-ID: <CAE9FiQXno7kmQ526dFx+jVSicxxuqLk8Cz4a4Da9fb_Ha-yigQ@mail.gmail.com>
-Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
- root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 8:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 28, 2012 at 7:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> After we get hot-added ioapic registered.
->>>> pci_enable_bridges will try to enable ioapic irq for pci bridges.
->>>
->>> What makes this specifically related to IOAPICs?
->
-> I think you missed this question.
+> -----Original Message-----
+> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
+> Yinghai Lu
+> Sent: Wednesday, September 05, 2012 4:12 AM
+> To: Kaneshige, Kenji/金重 憲治
+> Cc: Izumi, Taku/泉 拓; linux-pci@vger.kernel.org; bhelgaas@google.com;
+> linux-acpi@vger.kernel.org; jiang.liu@huawei.com
+> Subject: Re: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
+> hot-plugging PCI root bridges
+> 
+> On Tue, Sep 4, 2012 at 12:58 AM, Kaneshige, Kenji
+> <kaneshige.kenji@jp.fujitsu.com> wrote:
+> >>   -v2: Move add calling to acpi_pci_root_start by Yinghai
+> >>  static int acpi_pci_root_start(struct acpi_device *device)
+> >>  {
+> >>       struct acpi_pci_root *root = acpi_driver_data(device);
+> >> +     struct acpi_pci_driver *driver;
+> >> +
+> >> +     list_for_each_entry(driver, &acpi_pci_drivers, node)
+> >> +             if (driver->add)
+> >> +                     driver->add(device->handle);
+> >>
+> >
+> > I think this (invoke .add callback for each acpi pci driver) should be
+> done
+> > after pci_bus_add_devices().
+> 
+> We need to load ioapic driver and dmar driver before normal pci drivers.
 
-in another response:
+Ok, my understanding of your comment is that IOAPIC and DMAR drivers are implemented
+as ACPI PCI driver (or you have a plan to implement IOAPIC and DMAR drivers as ACPI
+PCI driver), and those drivers need to be loaded before PCI device drivers. Is my
+understanding correct?
 
- pci_enable_bridges
-    ==> pci_enable_device
-        ==> ...
-           ===> pcibios_enable_device
-               ===> pcibios_enable_irq
+Regards,
+Kenji Kaneshige
 
-and one of driver in acpi_pci_drivers, is ioapic drivers and it will
-enable ioapic there.
 
-So we need to enable bridges that later.
+
+> 
+> >
+> > It seems ACPI pci drivers run *after* pci_bus_add_devices() at the boot
+> time
+> > (because no acpi pci drivers is loaded at that time). On the other hand,
+> it
+> > seems that ACPI pci drivers run *before* pci_bus_add_devices() at the
+> hotadd
+> > time. Those should be the same.
+> 
+> for boot time, sequence : normal pci driver still get loaded after
+> ioapic and dmar drivers.
+> otherwise those driver will have problem to get irq and iommu work correctly.
+> and if ioapic and dmar are static, and they will get initialized
+> around pci device get scanned and pci_bus_add_devices get called
+> already.
+> but that time normal devices driver does not get registered yet. those
+> pci drivers will get loaded (should be bounded)
+> for pci devices when those driver get registered.
+> 
+> Thanks
+> 
+> Yinghai
