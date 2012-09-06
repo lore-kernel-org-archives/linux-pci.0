@@ -1,71 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:43945 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264Ab2IHWBc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Sep 2012 18:01:32 -0400
-Message-ID: <504BC038.2050608@lwfinger.net>
-Date: Sat, 08 Sep 2012 17:01:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33866 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933115Ab2IFViH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2012 17:38:07 -0400
+Received: by lagy9 with SMTP id y9so1430646lag.19
+        for <linux-pci@vger.kernel.org>; Thu, 06 Sep 2012 14:38:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: Question about failure in PCI power-state change
-References: <Pine.LNX.4.44L0.1209081747030.4838-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209081747030.4838-100000@netrider.rowland.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 6 Sep 2012 15:37:45 -0600
+Message-ID: <CAErSpo6i4LS7s+LULVyVcX8eAG8TnRpxqYnaqY4RVM7BBt24nw@mail.gmail.com>
+Subject: [GIT PULL] PCI updates for v3.6
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Huang Ying <ying.huang@intel.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/08/2012 04:50 PM, Alan Stern wrote:
-> On Sat, 8 Sep 2012, Rafael J. Wysocki wrote:
->
->> On Saturday, September 08, 2012, Bjorn Helgaas wrote:
->>> +cc Rafael, Huang, linux-pm
->>>
->>> On Fri, Sep 7, 2012 at 3:44 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>>> Hi,
->>>>
->>>> On occasion when I unload and reload driver rtl8192ce, I get the message
->>>>
->>>> "Refused to change power state, currently in D3"
->>>>
->>>> I added additional info to the printk and discovered that it was trying to
->>>> change to state D0. The problem seems to occur when I have made a
->>>> connection, unloaded the driver, and reloaded it. If I do not make a
->>>> connection before unloading, then the problem is a lot less likely.
->>>>
->>>> This is with kernel 3.6-rc4 from wireless-testing. A Google search shows
->>>> that the problem is usually due to suspend/resume difficulties, but this
->>>> machine has not been suspended.
->>>>
->>>> I would appreciate any help that you might give in solving this issue.
->>
->> I think writing "on" to the /sys/devices/.../power/control attribute of the device
->> in question would help.
->
-> Are you suggesting that this particular wireless adapter is unable to
-> return to D0 from D3?
->
-> Larry, what happens if you try the suspend & resume your system while
-> there's a connection?  Does a similar error occur during the resume?
+Hi Linus,
 
-After I sent this request, I found an error in the removal process for this 
-particular adapter, which I suspect is the real source of the problem. That 
-difficulty is only found on the new variant of the card - the older one is OK. I 
-think the problem is that the adapter is left in some ill-defined state that can 
-only be cleared by doing a power reset. In that state, it is unable to return to D0.
+Here are some more fixes for v3.6.  These all fix things we merged in
+v3.6-rc1.  Four are fixes for the D3cold support, and one is for a
+boot lockup on PA Semi caused by a printk while the console BAR is
+still disabled.
 
-This box has never been able to suspend/resume, thus I cannot answer the other 
-question.
-
-Thanks to all that responded. Once I clean up the other error, I will recontact 
-the list if the D3 => D0 problem persists.
-
-Larry
+Bjorn
 
 
+The following changes since commit a6b881a5b8d4fa2135e55a74be6d6b1e17e445dd:
+
+  Merge branch 'for-linus' of
+git://git.kernel.org/pub/scm/linux/kernel/git/gerg/m68knommu
+(2012-08-21 10:08:39 -0700)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+tags/3.6-pci-fixes
+
+for you to fetch changes up to 0ff9514b579b4f2f3e6038cd961ce64c224c3c73:
+
+  PCI: Don't print anything while decoding is disabled (2012-08-23
+10:53:08 -0600)
+
+----------------------------------------------------------------
+PCI updates for v3.6:
+
+  Power management
+    - PCI/PM: Enable D3/D3cold by default for most devices
+    - PCI/PM: Keep parent bridge active when probing device
+    - PCI/PM: Fix config reg access for D3cold and bridge suspending
+    - PCI/PM: Add ABI document for sysfs file d3cold_allowed
+  Core
+    - PCI: Don't print anything while decoding is disabled
+
+----------------------------------------------------------------
+Bjorn Helgaas (1):
+      PCI: Don't print anything while decoding is disabled
+
+Huang Ying (4):
+      PCI/PM: Enable D3/D3cold by default for most devices
+      PCI/PM: Keep parent bridge active when probing device
+      PCI/PM: Fix config reg access for D3cold and bridge suspending
+      PCI/PM: Add ABI document for sysfs file d3cold_allowed
+
+ Documentation/ABI/testing/sysfs-bus-pci | 12 ++++++++++
+ drivers/pci/pci-driver.c                |  6 +++++
+ drivers/pci/pci-sysfs.c                 | 42 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c                       |  1 +
+ drivers/pci/pcie/portdrv_pci.c          | 14 +++++++++++
+ drivers/pci/probe.c                     | 31 +++++++++++++-----------
+ 6 files changed, 92 insertions(+), 14 deletions(-)
