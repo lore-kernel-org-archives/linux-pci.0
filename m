@@ -1,96 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:43335 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756564Ab2IQObf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 10:31:35 -0400
-Message-ID: <5057343C.2010201@gmail.com>
-Date: Mon, 17 Sep 2012 22:31:24 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47868 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932173Ab2IFRYn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2012 13:24:43 -0400
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from
- acpi_device_ops
-References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com> <1347678312-11124-6-git-send-email-jiang.liu@huawei.com> <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
-In-Reply-To: <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
+In-Reply-To: <20120906090522.GA25102@localhost>
+References: <20120905065118.GA9603@localhost>
+	<CAE9FiQVO6dj+rEP=phQD5VYEF-rak6UPYGMSV8ud0OyELo7Opg@mail.gmail.com>
+	<20120906090522.GA25102@localhost>
+Date: Thu, 6 Sep 2012 10:24:43 -0700
+Message-ID: <CAE9FiQWyCj1-MJE44pvw=vMFF1TADyqhLZJ7EvfFdEAFaX-4Uw@mail.gmail.com>
+Subject: Re: PCI/e1000 BUG: unable to handle kernel paging request at 0ffff163
+From: Yinghai Lu <yinghai@kernel.org>
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/16/2012 07:27 AM, Yinghai Lu wrote:
-> On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
->>  From: Jiang Liu <jiang.liu@huawei.com>
->>
->> Now ACPI devices are created before/destroyed after corresponding PCI
->> devices, and acpi_platform_notify/acpi_platform_notify_remove will
->> update PCI<->ACPI binding relationship when creating/destroying PCI
->> devices, there's no need to invoke bind/unbind callbacks from ACPI
->> device probe/destroy routines anymore. So remove bind/unbind callbacks
->> from acpi_device_ops.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/acpi/pci_bind.c     |  100 +++++++++----------------------------------
->>  drivers/acpi/pci_root.c     |    9 ----
->>  drivers/acpi/scan.c         |   21 +--------
->>  include/acpi/acpi_bus.h     |    4 --
->>  include/acpi/acpi_drivers.h |    1 -
->>  5 files changed, 23 insertions(+), 112 deletions(-)
->> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
->> index d1ecca2..f31cb2f 100644
->> --- a/drivers/acpi/scan.c
->> +++ b/drivers/acpi/scan.c
->> @@ -1232,17 +1232,8 @@ static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
->>         dev->removal_type = ACPI_BUS_REMOVAL_EJECT;
->>         device_release_driver(&dev->dev);
->>
->> -       if (!rmdevice)
->> -               return 0;
->> -
->> -       /*
->> -        * unbind _ADR-Based Devices when hot removal
->> -        */
->> -       if (dev->flags.bus_address) {
->> -               if ((dev->parent) && (dev->parent->ops.unbind))
->> -                       dev->parent->ops.unbind(dev);
->> -       }
->> -       acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
->> +       if (rmdevice)
->> +               acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
->>
->>         return 0;
->>  }
-> 
-> for pci root bus, acpi_bus_trim() is used to remove acpi_device.
-> 
-> and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
-> iommu driver then remove pci devices.
-> 
-> if call back is removed there, then could some functions in
-> acpi_pci_unbind() will be skipped.
-> 
-> I really do not want to add pci_stop_bus_devices() in
-> pci_root_hp.c::handle_root_bridge_removal before
-> calling acpi_bus_trim...
-Hi Yinghai,
-	We are working on a ACPI based hotplug framework for CPU, memory and IOH.
-With our framework, the sequence to remove a IOH is:
-1) unbind all PCI device drivers for affected PCI devices.
-2) stop and remove all affected PCI devices.
-3) stop ACPI ioapic drivers(a new driver like PCI version).
-4) destroy all ACPI devices.
+On Thu, Sep 6, 2012 at 2:05 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+>
+> The root cause is memory corruption by the isdnloop driver:
+>
+> ==>     [    9.345694] isdnloop-ISDN-driver Rev 1.11.6.7
+> ==>     [    9.347484] isdnloop: (loop0) virtual card added
+>         [    9.348444] bus: 'usb': driver_probe_device: matched device 1-1:2.0 with driver cdc_acm
+>         [    9.349773] bus: 'usb': really_probe: probing driver cdc_acm with device 1-1:2.0
+>         [    9.350967] cdc_acm 1-1:2.0: This device cannot do calls on its own. It is not a modem.
+>         [    9.353255] cdc_acm 1-1:2.0: ttyACM0: USB ACM device
+>         [    9.354137] BUG: unable to handle kernel paging request at 0ffff163
+>         [    9.355214] IP: [<0ffff163>] 0xffff162
+>         [    9.355869] *pde = 00000000
 
---Gerry
-> 
-> Thanks
-> 
-> Yinghai
-> 
-
+good.
