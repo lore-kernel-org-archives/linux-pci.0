@@ -1,64 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:36784 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754692Ab2ITTYn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Sep 2012 15:24:43 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Huang Ying <ying.huang@intel.com>
-Subject: Re: [RFC 3/3] PCI/PM: Disable PME poll for PCIe devices
-Date: Thu, 20 Sep 2012 21:31:13 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com> <1347872076-5260-4-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1347872076-5260-4-git-send-email-ying.huang@intel.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:60510 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755144Ab2IFXUz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2012 19:20:55 -0400
+Received: by lbbgj3 with SMTP id gj3so1511966lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 06 Sep 2012 16:20:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201209202131.13483.rjw@sisk.pl>
+In-Reply-To: <1345470395-17295-2-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1345470395-17295-1-git-send-email-shangw@linux.vnet.ibm.com> <1345470395-17295-2-git-send-email-shangw@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 6 Sep 2012 17:20:34 -0600
+Message-ID: <CAErSpo4EMC+wzfhue=LPAOpE=M0KY1Wgb1331NXvmZiD5S7D=g@mail.gmail.com>
+Subject: Re: [PATCH 1/8] pci: change variable name for find_pci_host_bridge
+To: Gavin Shan <shangw@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
+	weiyang@linux.vnet.ibm.com, linuxram@us.ibm.com, yinghai@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 17, 2012, Huang Ying wrote:
-> PME poll is not necessary for PCIe devices, because PCIe devices use
-> in-band PME message and IRQ on PCIe port to report PME.
+On Mon, Aug 20, 2012 at 7:46 AM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
+> The patch changes the variable name for function find_pci_host_bridge()
+> so that it looks more meaningful. More specificly, the "bus" has been
+> replaced with "root_bus".
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
 
-Alas, not all of them as it turns out and even if they do, it doesn't
-work for some of them. That's why we've added the PCIe devices polling
-(quite recently, for that matter).
+I don't understand the point of patches 1-3:
 
-If you'd spent some time on some proper research regarding that (like browsing
-the changelogs of git commits modifying the relevant part of drivers/pci/pci.c),
-you'd have known that already.
+  pci: change variable name for find_pci_host_bridge
+  pci: argument pci_bus for find_pci_host_bridge
+  pci: fiddle with conversion of pci and CPU address
 
-And that actually is quite important, because I don't have to remember every
-single PM-related change we're making in the PCI layer.  I _incidentally_ do
-remember this one, but that may not happen next time.  Please do the research
-_before_ proposing changes of this kind.
+As far as I can tell, they don't have anything to do with patches 4-8.
 
-Thanks,
-Rafael
+I don't mind considering them later if they make things easier to read
+or if they enable some other rework, but right now I want to make
+progress on the P2P window alignment stuff, and patches 1-3 seem to be
+distractions from that.
 
-
-> PME poll is useful for PCI devices.  Because for PCI devices, PME is
-> reported via a side-band PME# line and some platform logic, and the
-> platform logic is often missing on many systems.
-> 
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> ---
->  drivers/pci/pcie/pme.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -313,6 +313,7 @@ static int pcie_pme_set_native(struct pc
->  
->  	device_set_run_wake(&dev->dev, true);
->  	dev->pme_interrupt = true;
-> +	dev->pme_poll = false;
->  	return 0;
+>  drivers/pci/host-bridge.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> index a68dc61..c19776a 100644
+> --- a/drivers/pci/host-bridge.c
+> +++ b/drivers/pci/host-bridge.c
+> @@ -22,9 +22,9 @@ static struct pci_bus *find_pci_root_bus(struct pci_dev *dev)
+>
+>  static struct pci_host_bridge *find_pci_host_bridge(struct pci_dev *dev)
+>  {
+> -       struct pci_bus *bus = find_pci_root_bus(dev);
+> +       struct pci_bus *root_bus = find_pci_root_bus(dev);
+>
+> -       return to_pci_host_bridge(bus->bridge);
+> +       return to_pci_host_bridge(root_bus->bridge);
 >  }
->  
-> 
-> 
-
+>
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+> --
+> 1.7.5.4
+>
