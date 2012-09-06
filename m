@@ -1,41 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:51995 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752612Ab2ISHaV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 03:30:21 -0400
-Message-ID: <50597442.3010800@huawei.com>
-Date: Wed, 19 Sep 2012 15:29:06 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:51018 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750736Ab2IFEJB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2012 00:09:01 -0400
+Message-ID: <504821C7.1030005@xenotime.net>
+Date: Wed, 05 Sep 2012 21:08:39 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-To: Chen Gong <gong.chen@linux.intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>, <jiang.liu@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com> <1348022442-7816-6-git-send-email-wangyijing@huawei.com> <20120919071138.GA15513@gchen.bj.intel.com>
-In-Reply-To: <20120919071138.GA15513@gchen.bj.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+To: Stephen Hemminger <shemminger@vyatta.com>
+CC: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org
+Subject: Re: PCI tree
+References: <20120905204539.7ea93350@nehalam.linuxnetplumber.net>
+In-Reply-To: <20120905204539.7ea93350@nehalam.linuxnetplumber.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/19 15:11, Chen Gong wrote:
-> On Wed, Sep 19, 2012 at 10:40:41AM +0800, Yijing Wang wrote:
->> Date: Wed, 19 Sep 2012 10:40:41 +0800
->> From: Yijing Wang <wangyijing@huawei.com>
->> To: Bjorn Helgaas <bhelgaas@google.com>, Huang Ying <ying.huang@intel.com>,
->>  Chen Gong <gong.chen@linux.intel.com>
->> CC: jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>,
->>  linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
->> Subject: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
->> X-Mailer: git-send-email 1.7.11.msysgit.1
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> 
-> Your patch hasn't description.
-> 
-I will add description later, Thanks!
+On 09/05/2012 08:45 PM, Stephen Hemminger wrote:
+
+> Where is current PCI upstream tree.
+> I thought it was
+>  git://git.kernel.org/pub/scm/linux/kernel/git/jbarnes/pci 
+> But this is still back at 3.3.6 from March.
+> --
+
+
+MAINTAINERS file says:
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+
+Jesse is no longer the PCI maintainer.
+
 
 -- 
-Thanks!
-Yijing
-
+~Randy
