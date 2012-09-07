@@ -1,182 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:45024 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756621Ab2IDD2D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Sep 2012 23:28:03 -0400
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Mon, 3 Sep 2012 23:28:02 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 09E5F6E803F
-	for <linux-pci@vger.kernel.org>; Mon,  3 Sep 2012 23:27:22 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q843RLTG082648
-	for <linux-pci@vger.kernel.org>; Mon, 3 Sep 2012 23:27:21 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q843RLCe007996
-	for <linux-pci@vger.kernel.org>; Mon, 3 Sep 2012 23:27:21 -0400
-Date: Tue, 4 Sep 2012 11:27:17 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v3 ]pci: pci resource iterator
-Message-ID: <20120904032717.GD2438@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <20120822101533.GA2332@ram-ThinkPad-T61>
- <CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
- <CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
- <CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
- <20120823050958.GB2332@ram-ThinkPad-T61>
- <CAE9FiQVq=6Shv_4taNzN3h4OBs1PgoFJZqV0i3tRvmz04qZbXw@mail.gmail.com>
- <20120827073335.GE20843@ram-ThinkPad-T61>
- <CAE9FiQVEuH=ZwL4R+wyO0H0853hQ8bpGBYKQJwkAJ5g7FKtY7g@mail.gmail.com>
- <20120903090821.GC2438@ram-ThinkPad-T61>
- <CAE9FiQV+_cuDV1WqVZK5SO4JYuJ8_=Gj3qG3Rz9bJsGhUSLV4w@mail.gmail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:40763 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab2IGQTu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 12:19:50 -0400
+Message-ID: <504A1EA2.9030008@wwwdotorg.org>
+Date: Fri, 07 Sep 2012 10:19:46 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQV+_cuDV1WqVZK5SO4JYuJ8_=Gj3qG3Rz9bJsGhUSLV4w@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 01/10] PCI: Keep pci_fixup_irqs() around after init
+References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de> <CAErSpo7v+i8i=mXCs7ZW8DtGTDN_4AEntwYLqGG8FcCzweySFg@mail.gmail.com> <20120815192814.GA12870@avionic-0098.mockup.avionic-design.de> <CAErSpo6cjOzJegJqXzmk59DChExcbLK1sOhwyAyQL4FZkTN21A@mail.gmail.com>
+In-Reply-To: <CAErSpo6cjOzJegJqXzmk59DChExcbLK1sOhwyAyQL4FZkTN21A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 03, 2012 at 11:20:45AM -0700, Yinghai Lu wrote:
-> On Mon, Sep 3, 2012 at 2:08 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> > On Mon, Sep 03, 2012 at 01:07:46AM -0700, Yinghai Lu wrote:
-> >
-> > Anyway I am ok with either patch.
+On 08/15/2012 01:42 PM, Bjorn Helgaas wrote:
+> On Wed, Aug 15, 2012 at 1:28 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+>> On Wed, Aug 15, 2012 at 10:06:27AM -0700, Bjorn Helgaas wrote:
+>>> On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
+>>> <thierry.reding@avionic-design.de> wrote:
+>>>> When using deferred driver probing, PCI host controller drivers may
+>>>> actually require this function after the init stage.
+>>>>
+>>>> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>>>> ---
+>>>> Changes in v3:
+>>>> - none
+>>>>
+>>>> Changes in v2:
+>>>> - use __devinit annotations
+>>>
+>>> Your original patch removed __init completely.  Here you change it to
+>>> __devinit.  That means we decide whether to discard the function based
+>>> on whether CONFIG_HOTPLUG is supported.  But I think your point is not
+>>> about hotplug; it's merely that we should be able to scan a PCI bus
+>>> after init-time.  We ought to be able to do a late PCI scan even if
+>>> hotplug is not supported.
+>>>
+>>> Therefore, I'd be inclined to remove __init completely unless you have
+>>> another reason for preferring __devinit.
+>>
+>> I thought __devinit would resolve to nothing if HOTPLUG is defined and
+>> __init otherwise. That seemed more appropriate. However you are right
+>> that it is useful to always have it available, so I'm fine with removing
+>> the annotations altogether. Do you want me to follow up with a patch? Or
+>> can you just take the first version? I'm not sure if it still applies.
 > 
-> please check -v7.
+> You're right about how __devinit works.  It's just that I don't think
+> hotplug is actually relevant here.  We're trying to make
+> pci_fixup_irqs() work after init, whether it's because of hotplug or
+> simply because the arch scans host bridges after init.
+> 
+> I applied this to my "next" branch.  Thanks!
 
-Looks good to me. I am inlining the patch for others to comment.
-BTW: your patch that introduces pci_dev_resource_n() will have 
-to be applied before applying this patch.
+Bjorn, I don't see this patch in next-20120907. Did it get dropped for
+some reason?
 
+For the full history, see: http://patchwork.ozlabs.org/patch/173495/.
 
-From: Ram Pai <linuxram@us.ibm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v7]pci: pci resource iterator
-
-Currently pci_dev structure holds an array of 17 PCI resources; six base
-BARs, one ROM BAR, four BRIDGE BARs, six sriov BARs.  This is wasteful.
-A bridge device just needs the 4 bridge resources. A non-bridge device
-just needs the six base resources and one ROM resource. The sriov
-resources are needed only if the device has SRIOV capability.
-
-The pci_dev structure needs to be re-organized to avoid unnecessary
-bloating.  However too much code outside the pci-bus driver, assumes the
-internal details of the pci_dev structure, thus making it hard to
-re-organize the datastructure.
-
-As a first step this patch provides generic methods to access the
-resource structure of the pci_dev.
-
-Finally we can re-organize the resource structure in the pci_dev
-structure and correspondingly update the methods.
-
--v2: Consolidated iterator interface as per Bjorn's suggestion.
--v3: Add the idx back - Yinghai Lu
--v7: Change to use bitmap for searching - Yinghai Lu
-
-Signed-off-by: Ram Pai <linuxram@us.ibm.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/probe.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |   24 ++++++++++++++++++++++++
- 2 files changed, 71 insertions(+)
-
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -360,6 +360,30 @@ struct pci_dev {
- struct resource *pci_dev_resource_n(struct pci_dev *dev, int n);
- int pci_dev_resource_idx(struct pci_dev *dev, struct resource *res);
- 
-+#define PCI_STD_RES		(1<<0)
-+#define PCI_ROM_RES		(1<<1)
-+#define PCI_IOV_RES		(1<<2)
-+#define PCI_BRIDGE_RES		(1<<3)
-+#define PCI_RES_BLOCK_NUM	4
-+
-+#define PCI_ALL_RES		(PCI_STD_RES | PCI_ROM_RES | PCI_BRIDGE_RES | PCI_IOV_RES)
-+#define PCI_NOSTD_RES		(PCI_ALL_RES & ~PCI_STD_RES)
-+#define PCI_NOIOV_RES		(PCI_ALL_RES & ~PCI_IOV_RES)
-+#define PCI_NOROM_RES		(PCI_ALL_RES & ~PCI_ROM_RES)
-+#define PCI_NOBRIDGE_RES	(PCI_ALL_RES & ~PCI_BRIDGE_RES)
-+#define PCI_STD_ROM_RES		(PCI_STD_RES | PCI_ROM_RES)
-+#define PCI_STD_IOV_RES		(PCI_STD_RES | PCI_IOV_RES)
-+#define PCI_STD_ROM_IOV_RES	(PCI_STD_RES | PCI_ROM_RES | PCI_IOV_RES)
-+
-+int pci_next_resource_idx(int i, int flag);
-+
-+#define for_each_pci_resource(dev, res, i, flag)	\
-+	for (i = pci_next_resource_idx(-1, flag),	\
-+		res = pci_dev_resource_n(dev, i);	\
-+	     res;					\
-+	     i = pci_next_resource_idx(i, flag),	\
-+		res = pci_dev_resource_n(dev, i))
-+
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
- {
- #ifdef CONFIG_PCI_IOV
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -123,6 +123,53 @@ int pci_dev_resource_idx(struct pci_dev
- 	return -1;
- }
- 
-+static void __init_res_idx_mask(unsigned long *mask, int flag)
-+{
-+	bitmap_zero(mask, PCI_NUM_RESOURCES);
-+	if (flag & PCI_STD_RES)
-+		bitmap_set(mask, PCI_STD_RESOURCES,
-+			PCI_STD_RESOURCE_END - PCI_STD_RESOURCES + 1);
-+	if (flag & PCI_ROM_RES)
-+		bitmap_set(mask, PCI_ROM_RESOURCE, 1);
-+#ifdef CONFIG_PCI_IOV
-+	if (flag & PCI_IOV_RES)
-+		bitmap_set(mask, PCI_IOV_RESOURCES,
-+			PCI_IOV_RESOURCE_END - PCI_IOV_RESOURCES + 1);
-+#endif
-+	if (flag & PCI_BRIDGE_RES)
-+		bitmap_set(mask, PCI_BRIDGE_RESOURCES,
-+			PCI_BRIDGE_RESOURCE_END - PCI_BRIDGE_RESOURCES + 1);
-+}
-+
-+static DECLARE_BITMAP(res_idx_mask[1 << PCI_RES_BLOCK_NUM], PCI_NUM_RESOURCES);
-+static int __init pci_res_idx_mask_init(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < (1 << PCI_RES_BLOCK_NUM); i++)
-+		__init_res_idx_mask(res_idx_mask[i], i);
-+
-+	return 0;
-+}
-+postcore_initcall(pci_res_idx_mask_init);
-+
-+static inline unsigned long *get_res_idx_mask(int flag)
-+{
-+	return res_idx_mask[flag & ((1 << PCI_RES_BLOCK_NUM) - 1)];
-+}
-+
-+int pci_next_resource_idx(int i, int flag)
-+{
-+	i++;
-+	if (i < PCI_NUM_RESOURCES)
-+		i = find_next_bit(get_res_idx_mask(flag), PCI_NUM_RESOURCES, i);
-+
-+	if (i < PCI_NUM_RESOURCES)
-+		return i;
-+
-+	return -1;
-+}
-+
- static u64 pci_size(u64 base, u64 maxbase, u64 mask)
- {
- 	u64 size = mask & maxbase;	/* Find the significant bits */
-
+Thanks.
