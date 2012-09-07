@@ -1,225 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, linux-mips@linux-mips.org,
-	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 1/2] PCI: Keep pci_fixup_irqs() around after init
-Date: Mon, 17 Sep 2012 13:22:53 +0200
-Message-Id: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:56252 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab2IGFA5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 01:00:57 -0400
+Received: from /spool/local
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
+	Thu, 6 Sep 2012 23:00:56 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 785823E40039
+	for <linux-pci@vger.kernel.org>; Thu,  6 Sep 2012 23:00:52 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q8750nD0185448
+	for <linux-pci@vger.kernel.org>; Thu, 6 Sep 2012 23:00:49 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q8750mX0005854
+	for <linux-pci@vger.kernel.org>; Thu, 6 Sep 2012 23:00:49 -0600
+From: Gavin Shan <shangw@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, benh@kernel.crashing.org,
+	Gavin Shan <shangw@linux.vnet.ibm.com>
+Subject: [PATCH 5/5] ppc/pnv: I/O and memory alignment for p2p bridges
+Date: Fri,  7 Sep 2012 13:00:35 +0800
+Message-Id: <1346994035-16218-6-git-send-email-shangw@linux.vnet.ibm.com>
+In-Reply-To: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
+References: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the __init annotations in order to keep pci_fixup_irqs() around
-after init (e.g. for hotplug). This requires the same change for the
-implementation of pcibios_update_irq() on all architectures. While at
-it, all __devinit annotations are removed as well, since they will be
-useless now that HOTPLUG is always on.
+The patch implements ppc_md.pcibios_window_alignment for powernv
+platform so that the resource reassignment in PCI core will be
+done according to the I/O and memory alignment returned from
+powernv platform. The alignments returned from powernv platform
+is closely depending on the scheme for PE segmenting. Besides,
+the patch isn't useful for now, but the subsequent patches will
+be working based on it.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
 ---
-Changes in v2:
-- remove __init and __devinit annotations altogether
+ arch/powerpc/platforms/powernv/pci-ioda.c |   39 +++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
 
- arch/alpha/kernel/pci.c      | 2 +-
- arch/arm/kernel/bios32.c     | 2 +-
- arch/ia64/pci/pci.c          | 2 +-
- arch/mips/pci/pci.c          | 2 +-
- arch/sh/drivers/pci/pci.c    | 2 +-
- arch/sparc/kernel/leon_pci.c | 2 +-
- arch/tile/kernel/pci.c       | 2 +-
- arch/tile/kernel/pci_gx.c    | 2 +-
- arch/unicore32/kernel/pci.c  | 2 +-
- arch/x86/pci/visws.c         | 2 +-
- arch/xtensa/kernel/pci.c     | 2 +-
- drivers/pci/setup-irq.c      | 4 ++--
- 12 files changed, 13 insertions(+), 13 deletions(-)
-
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 9816d5a..920392f 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -256,7 +256,7 @@ pcibios_fixup_bus(struct pci_bus *bus)
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 9cda6a1..f5479fe 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1139,6 +1139,44 @@ static void __devinit pnv_pci_ioda_fixup_phb(struct pci_controller *hose)
  	}
  }
  
--void __init
-+void
- pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 2b2f25e..0174fe6 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -272,7 +272,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ITE, PCI_DEVICE_ID_ITE_8152, pci_fixup_it
- 
- 
- 
--void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	if (debug_pci)
- 		printk("PCI: Assigning IRQ %02d to %s\n", irq, pci_name(dev));
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 81acc7a..27db6a8 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -461,7 +461,7 @@ void pcibios_set_master (struct pci_dev *dev)
- 	/* No special bus mastering setup handling */
- }
- 
--void __devinit
-+void
- pcibios_update_irq (struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index 6903568..64f0419 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -313,7 +313,7 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
- 	}
- }
- 
--void __init
-+void
- pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 40db2d0..1bd3e08 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -192,7 +192,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return pci_enable_resources(dev, mask);
- }
- 
--void __init pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
-diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
-index 21dcda7..404621b 100644
---- a/arch/sparc/kernel/leon_pci.c
-+++ b/arch/sparc/kernel/leon_pci.c
-@@ -102,7 +102,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return pci_enable_resources(dev, mask);
- }
- 
--void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- #ifdef CONFIG_PCI_DEBUG
- 	printk(KERN_DEBUG "LEONPCI: Assigning IRQ %02d to %s\n", irq,
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index 33c1086..6245bba 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -406,7 +406,7 @@ void pcibios_set_master(struct pci_dev *dev)
- /*
-  * This is called from the generic Linux layer.
++/*
++ * Returns the alignment for I/O or memory windows for p2p
++ * bridges. That actually depends on how PEs are segmented.
++ * For now, we return I/O or M32 segment size for PE sensitive
++ * p2p bridges. Otherwise, the default values (4KiB for I/O,
++ * 1MiB for memory) will be returned.
++ *
++ * The current PCI bus might be put into one PE, which was
++ * create againt the parent PCI bridge. For that case, we
++ * needn't enlarge the alignment so that we can save some
++ * resources.
++ */
++static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
++						unsigned long type)
++{
++	struct pci_dev *bridge;
++	struct pci_controller *hose = pci_bus_to_host(bus);
++	struct pnv_phb *phb = hose->private_data;
++	int num_pci_bridges = 0;
++
++	bridge = bus->self;
++	while (bridge) {
++		if (bridge->pcie_type == PCI_EXP_TYPE_PCI_BRIDGE) {
++			num_pci_bridges++;
++			if (num_pci_bridges >= 2)
++				return 1;
++		}
++
++		bridge = bridge->bus->self;
++	}
++
++	/* We need support prefetchable memory window later */
++	if (type & IORESOURCE_MEM)
++		return phb->ioda.m32_segsize;
++
++	return phb->ioda.io_segsize;
++}
++
+ /* Prevent enabling devices for which we couldn't properly
+  * assign a PE
   */
--void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index 0e213e3..5faad0b 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1036,7 +1036,7 @@ char __devinit *pcibios_setup(char *str)
- /*
-  * This is called from the generic Linux layer.
-  */
--void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 46cb6c9..c07ecc5 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -154,7 +154,7 @@ void __init puv3_pci_adjust_zones(unsigned long *zone_size,
- 	zhole_size[0] = 0;
- }
+@@ -1306,6 +1344,7 @@ void __init pnv_pci_init_ioda1_phb(struct device_node *np)
+ 	 */
+ 	ppc_md.pcibios_fixup_phb = pnv_pci_ioda_fixup_phb;
+ 	ppc_md.pcibios_enable_device_hook = pnv_pci_enable_device_hook;
++	ppc_md.pcibios_window_alignment = pnv_pci_window_alignment;
+ 	pci_add_flags(PCI_PROBE_ONLY | PCI_REASSIGN_ALL_RSRC);
  
--void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	if (debug_pci)
- 		printk(KERN_DEBUG "PCI: Assigning IRQ %02d to %s\n",
-diff --git a/arch/x86/pci/visws.c b/arch/x86/pci/visws.c
-index 6f2f8ee..9d736e7 100644
---- a/arch/x86/pci/visws.c
-+++ b/arch/x86/pci/visws.c
-@@ -62,7 +62,7 @@ out:
- 	return irq;
- }
- 
--void __init pcibios_update_irq(struct pci_dev *dev, int irq)
-+void pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 69759e9..6f9b40c 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -212,7 +212,7 @@ void pcibios_set_master(struct pci_dev *dev)
- 
- /* the next one is stolen from the alpha port... */
- 
--void __init
-+void
- pcibios_update_irq(struct pci_dev *dev, int irq)
- {
- 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index eb219a1..270ae7b 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -18,7 +18,7 @@
- #include <linux/cache.h>
- 
- 
--static void __init
-+static void
- pdev_fixup_irq(struct pci_dev *dev,
- 	       u8 (*swizzle)(struct pci_dev *, u8 *),
- 	       int (*map_irq)(const struct pci_dev *, u8, u8))
-@@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
- 	pcibios_update_irq(dev, irq);
- }
- 
--void __init
-+void
- pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
- 	       int (*map_irq)(const struct pci_dev *, u8, u8))
- {
+ 	/* Reset IODA tables to a clean state */
 -- 
-1.7.12
+1.7.5.4
 
