@@ -1,39 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15194 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754610Ab2IUR6K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 13:58:10 -0400
-Message-ID: <505CAAA1.3040409@redhat.com>
-Date: Fri, 21 Sep 2012 13:57:53 -0400
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-CC: Takao Indoh <indou.takao@jp.fujitsu.com>, vgoyal@redhat.com,
-	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120914200334.GA9041@phenom.dumpdata.com>
-In-Reply-To: <20120914200334.GA9041@phenom.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <504A78E9.4030005@lwfinger.net>
+References: <504A78E9.4030005@lwfinger.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Sep 2012 15:48:15 -0700
+Message-ID: <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com>
+Subject: Re: Question about failure in PCI power-state change
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	=?GB2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/14/2012 04:03 PM, Konrad Rzeszutek Wilk wrote:
->> As to the boot parameter to enable this function, you suggested using
->> reset_devices. I found that on a certain platform resetting devices
->> caused PCIe error due to a hardware bug. Therefore I think we need
->> new parameter apart from reset_devices to disable this function on
->> such a machine.
->
-> Wouldn't a DMI quirk be better for this? That way the second kernel
-> internally would know not to do this.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-a DMI quirk for a PCIe switch?  pci-quirk maybe?  there is a hook
-in per-device pci reset code path, which could be setup for such
-a case.
++cc Rafael, Huang, linux-pm
 
+On Fri, Sep 7, 2012 at 3:44 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Hi,
+>
+> On occasion when I unload and reload driver rtl8192ce, I get the message
+>
+> "Refused to change power state, currently in D3"
+>
+> I added additional info to the printk and discovered that it was trying to
+> change to state D0. The problem seems to occur when I have made a
+> connection, unloaded the driver, and reloaded it. If I do not make a
+> connection before unloading, then the problem is a lot less likely.
+>
+> This is with kernel 3.6-rc4 from wireless-testing. A Google search shows
+> that the problem is usually due to suspend/resume difficulties, but this
+> machine has not been suspended.
+>
+> I would appreciate any help that you might give in solving this issue.
+>
+> Thanks,
+>
+> Larry
