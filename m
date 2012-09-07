@@ -1,81 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:34569 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754147Ab2ISGNI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 02:13:08 -0400
-Message-ID: <50596209.5060201@huawei.com>
-Date: Wed, 19 Sep 2012 14:11:21 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>  <1348022442-7816-6-git-send-email-wangyijing@huawei.com> <1348034627.8212.136.camel@yhuang-dev>
-In-Reply-To: <1348034627.8212.136.camel@yhuang-dev>
-Content-Type: text/plain; charset="UTF-8"
+Received: from fiji.vyatta.com ([76.74.103.50]:35652 "EHLO fiji.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752007Ab2IGQpo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Sep 2012 12:45:44 -0400
+Message-Id: <20120907163438.026331954@vyatta.com>
+Date: Fri, 07 Sep 2012 09:33:16 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Linas Vepstas <linasvepstas@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH 3/4] scsi: make pci error handlers const
+References: <20120907163313.614852012@vyatta.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/19 14:03, Huang Ying wrote:
-> On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/pcie/aer/aer_inject.c |   14 +++++++++++---
->>  1 files changed, 11 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
->> index 0a12ac7..79b611d 100644
->> --- a/drivers/pci/pcie/aer/aer_inject.c
->> +++ b/drivers/pci/pcie/aer/aer_inject.c
->> @@ -162,6 +162,16 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
->>  	return bus_ops;
->>  }
->>  
->> +static void pci_bus_ops_free(void)
->> +{
->> +	struct pci_bus_ops *bus_ops, *tmp_ops;
->> +
->> +	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
->> +		list_del(&bus_ops->list);
->> +		kfree(bus_ops);
->> +	}
->> +}
-> 
-> IMHO, this can be inlined into aer_inject_exit
-> 
->>  static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
->>  {
->>  	struct pci_bus_ops *bus_ops = NULL;
->> @@ -641,9 +651,7 @@ static void __exit aer_inject_exit(void)
->>  	 * module exit
->>  	 */
->>  	clean_untracked_pci_ops_aer();
->> -
->> -	while ((bus_ops = pci_bus_ops_pop()))
-> 
-> You can remove pci_bus_ops_pop now.
-> 
-
-OK, I will move pci_bus_ops_free inlined into aer_inject_exit and remove pci_bus_ops_pop in this patch.
-
-> Best Regards,
-> Huang Ying
-> 
->> -		kfree(bus_ops);
->> +	pci_bus_ops_free();
->>  
->>  	spin_lock_irqsave(&inject_lock, flags);
->>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
-> 
-> 
-> 
-> .
-> 
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
 
--- 
-Thanks!
-Yijing
+---
+Depends on first patch that changes PCI core.
+
+ drivers/scsi/ipr.c                   |    2 +-
+ drivers/scsi/lpfc/lpfc_init.c        |    2 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c        |    2 +-
+ drivers/scsi/qla4xxx/ql4_os.c        |    2 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c  |    2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
+
+--- a/drivers/scsi/ipr.c	2012-09-07 09:21:37.154557681 -0700
++++ b/drivers/scsi/ipr.c	2012-09-07 09:27:25.495059297 -0700
+@@ -9228,7 +9228,7 @@ static struct pci_device_id ipr_pci_tabl
+ };
+ MODULE_DEVICE_TABLE(pci, ipr_pci_table);
+ 
+-static struct pci_error_handlers ipr_err_handler = {
++static const struct pci_error_handlers ipr_err_handler = {
+ 	.error_detected = ipr_pci_error_detected,
+ 	.slot_reset = ipr_pci_slot_reset,
+ };
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-09-07 09:21:37.154557681 -0700
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-09-07 09:27:25.499059257 -0700
+@@ -10425,7 +10425,7 @@ static struct pci_device_id lpfc_id_tabl
+ 
+ MODULE_DEVICE_TABLE(pci, lpfc_id_table);
+ 
+-static struct pci_error_handlers lpfc_err_handler = {
++static const struct pci_error_handlers lpfc_err_handler = {
+ 	.error_detected = lpfc_io_error_detected,
+ 	.slot_reset = lpfc_io_slot_reset,
+ 	.resume = lpfc_io_resume,
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2012-09-07 09:21:37.154557681 -0700
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2012-09-07 09:27:25.499059257 -0700
+@@ -8306,7 +8306,7 @@ _scsih_pci_mmio_enabled(struct pci_dev *
+ 	return PCI_ERS_RESULT_NEED_RESET;
+ }
+ 
+-static struct pci_error_handlers _scsih_err_handler = {
++static const struct pci_error_handlers _scsih_err_handler = {
+ 	.error_detected = _scsih_pci_error_detected,
+ 	.mmio_enabled = _scsih_pci_mmio_enabled,
+ 	.slot_reset =	_scsih_pci_slot_reset,
+--- a/drivers/scsi/qla2xxx/qla_os.c	2012-09-07 09:21:37.154557681 -0700
++++ b/drivers/scsi/qla2xxx/qla_os.c	2012-09-07 09:27:25.499059257 -0700
+@@ -4471,7 +4471,7 @@ qla2xxx_pci_resume(struct pci_dev *pdev)
+ 	ha->flags.eeh_busy = 0;
+ }
+ 
+-static struct pci_error_handlers qla2xxx_err_handler = {
++static const struct pci_error_handlers qla2xxx_err_handler = {
+ 	.error_detected = qla2xxx_pci_error_detected,
+ 	.mmio_enabled = qla2xxx_pci_mmio_enabled,
+ 	.slot_reset = qla2xxx_pci_slot_reset,
+--- a/drivers/scsi/qla4xxx/ql4_os.c	2012-09-07 09:21:37.154557681 -0700
++++ b/drivers/scsi/qla4xxx/ql4_os.c	2012-09-07 09:27:25.503059217 -0700
+@@ -6148,7 +6148,7 @@ qla4xxx_pci_resume(struct pci_dev *pdev)
+ 	clear_bit(AF_EEH_BUSY, &ha->flags);
+ }
+ 
+-static struct pci_error_handlers qla4xxx_err_handler = {
++static const struct pci_error_handlers qla4xxx_err_handler = {
+ 	.error_detected = qla4xxx_pci_error_detected,
+ 	.mmio_enabled = qla4xxx_pci_mmio_enabled,
+ 	.slot_reset = qla4xxx_pci_slot_reset,
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c	2012-09-07 09:21:37.154557681 -0700
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c	2012-09-07 09:27:25.503059217 -0700
+@@ -2117,7 +2117,7 @@ static struct pci_device_id sym2_id_tabl
+ 
+ MODULE_DEVICE_TABLE(pci, sym2_id_table);
+ 
+-static struct pci_error_handlers sym2_err_handler = {
++static const struct pci_error_handlers sym2_err_handler = {
+ 	.error_detected	= sym2_io_error_detected,
+ 	.mmio_enabled	= sym2_io_slot_dump,
+ 	.slot_reset	= sym2_io_slot_reset,
+
 
