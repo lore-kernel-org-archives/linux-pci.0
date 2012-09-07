@@ -1,45 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [RFC 2/3] PCI/PM: Make PCI devices notified when its power resource turned on
-Date: Mon, 17 Sep 2012 16:54:35 +0800
-Message-Id: <1347872076-5260-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:38577 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab2IGWPu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 18:15:50 -0400
+Received: by eaac11 with SMTP id c11so27221eaa.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 15:15:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6vMjr=veZs8AWg1X5EfWfGNeUFkz1EExF4+km9fnOwmQ@mail.gmail.com>
+References: <bug-18412-41252@https.bugzilla.kernel.org/>
+	<20120907214005.5077211FC43@bugzilla.kernel.org>
+	<CAErSpo6vMjr=veZs8AWg1X5EfWfGNeUFkz1EExF4+km9fnOwmQ@mail.gmail.com>
+Date: Fri, 7 Sep 2012 15:15:49 -0700
+Message-ID: <CAE9FiQXO3R8oQH2rNky64SWe-4DRx7HJr3-rp0eqEZvQbN4W2A@mail.gmail.com>
+Subject: Re: [Bug 18412] Intel DP43BF requires "pci=assign-busses" to discover
+ some devices
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, vl.homutov@gmail.com
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A set of power resources may be shared by multiple devices.  When all
-devices share one set of power resources is put into D3_COLD state,
-the power resources will be turned off.  When one of the device is
-waked, the power resource will be turned on and all devices share it
-will be powered on to D0uninitialized state.  These devices should be
-resumed, so that they can get opportunity to go to low power state
-later.
+On Fri, Sep 7, 2012 at 2:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 7, 2012 at 2:40 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=18412
+>
+>> --- Comment #4 from VL <vl.homutov@gmail.com>  2012-09-07 21:40:04 ---
+>> The bug is still there with behaviour exactly as specified by reporter.
+>>
+>> Tested with linux-3.4.9 (gentoo), DP43BF motherboard and Intel PRO/1000 NICs.
+>> With pci=assign-busses lspci shows devices properly, without it nothing
+>> is in the list.
 
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/acpi/pci_bind.c |    2 ++
- 1 file changed, 2 insertions(+)
+VL,
 
---- a/drivers/acpi/pci_bind.c
-+++ b/drivers/acpi/pci_bind.c
-@@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
- 
- 	device_set_run_wake(&dev->dev, false);
- 	pci_acpi_remove_pm_notifier(device);
-+	acpi_power_resource_unregister_device(dev, device->handle);
- 
- 	if (!dev->subordinate)
- 		goto out;
-@@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
- 		return 0;
- 
- 	pci_acpi_add_pm_notifier(device, dev);
-+	acpi_power_resource_register_device(dev, device->handle);
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(&dev->dev, true);
- 
+I rebased for-pci-busn-alloc branch to current pci-next
+
+please check if could fix the problem.
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-busn-alloc
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-busn-alloc
+
+Thanks
+
+Yinghai
