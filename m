@@ -1,96 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Subject: [RFD][PATCH 3/7] PM / QoS: Prepare struct dev_pm_qos_request for more request types
-Date: Fri, 28 Sep 2012 23:53:33 +0200
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-References: <201209282351.10663.rjw@sisk.pl>
-In-Reply-To: <201209282351.10663.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209282353.33982.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:43029 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196Ab2IGJ0V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 05:26:21 -0400
+Date: Fri, 7 Sep 2012 18:26:12 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
+Subject: Re: [PATCH v2 6/6] ACPI, PCI: add resoruce-assign code for devices
+ under hot-added hostbridge
+Message-Id: <20120907182612.92efef7d.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CAE9FiQVXtTf3+jpbYzHk3D3VVm-bXEB9EcgkBwkEtYR-SRiKHA@mail.gmail.com>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+	<20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
+	<CAE9FiQVXtTf3+jpbYzHk3D3VVm-bXEB9EcgkBwkEtYR-SRiKHA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The subsequent patches will use struct dev_pm_qos_request for
-representing both latency requests and flags requests.  To make that
-easier, put the node member of struct dev_pm_qos_request (under the
-name "pnode") into a union called "data" that will represent the
-request's  value and list node depending on its type.
+On Mon, 3 Sep 2012 13:27:11 -0700
+Yinghai Lu <yinghai@kernel.org> wrote:
 
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/base/power/qos.c   |    6 +++---
- drivers/base/power/sysfs.c |    2 +-
- include/linux/pm_qos.h     |    4 +++-
- 3 files changed, 7 insertions(+), 5 deletions(-)
+> On Mon, Sep 3, 2012 at 1:07 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >
+> > Devices under hot-added hostbridge have no chance to assign resources
+> > and to configure them, so this patch adds such code for hot-added
+> > hostbridges at acpi_pci_root_start().
+> >
+> > Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> > ---
+> >  drivers/acpi/pci_root.c |   17 +++++++++++++++++
+> >  include/acpi/acpi_bus.h |    1 +
+> >  2 files changed, 18 insertions(+)
+> >
+> > Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+> > ===================================================================
+> > --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
+> > +++ Bjorn-next-0903/drivers/acpi/pci_root.c
+> > @@ -39,6 +39,7 @@
+> >  #include <acpi/acpi_bus.h>
+> >  #include <acpi/acpi_drivers.h>
+> >  #include <acpi/apei.h>
+> > +#include <linux/pci_hotplug.h>
+> >
+> >  #define PREFIX "ACPI: "
+> >
+> > @@ -461,6 +462,9 @@ static int __devinit acpi_pci_root_add(s
+> >         if (!root)
+> >                 return -ENOMEM;
+> >
+> > +       if (system_state != SYSTEM_BOOTING)
+> > +               root->hot_added = true;
+> > +
+> >         segment = 0;
+> >         status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
+> >                                        &segment);
+> > @@ -639,6 +643,7 @@ static int acpi_pci_root_start(struct ac
+> >  {
+> >         struct acpi_pci_root *root = acpi_driver_data(device);
+> >         struct acpi_pci_driver *driver;
+> > +       struct pci_dev *pdev;
+> >
+> >         mutex_lock(&acpi_pci_root_lock);
+> >         list_for_each_entry(driver, &acpi_pci_drivers, node)
+> > @@ -646,6 +651,18 @@ static int acpi_pci_root_start(struct ac
+> >                         driver->add(device->handle);
+> >         mutex_unlock(&acpi_pci_root_lock);
+> >
+> > +       /*
+> > +        * Devices under hot-added hostbridge have no chance to assign
+> > +        * resources and to configure them, so do that here
+> > +        */
+> > +       if (root->hot_added) {
+> > +               pci_bus_size_bridges(root->bus);
+> > +               pci_bus_assign_resources(root->bus);
+> > +               list_for_each_entry(pdev, &root->bus->devices, bus_list)
+> > +                       pci_configure_slot(pdev);
+> > +               pci_enable_bridges(root->bus);
+> > +       }
+> > +
+> >         pci_bus_add_devices(root->bus);
+> 
+> after looking at your simplified version in patch5 and patch6
+> found that you do not understand my patchset correctly.
+> 
+> in my patchset there is change on:
+> acpi_pci_root_add
+> acpi_pci_root_start
+> acpi_pci_root_remove
+> 
+> and
+> handle_root_bridge_insertion/acpi_root_configure_bridge
+> handle_root_bridge_removal
+> 
+> for hot add path:
+> handle_root_bridge_insertion will call
+>       acpi_pci_root_add: it will scan the root bus and find all pci device
+>       acpi_root_configure_bridge: it will survey fw set pci resource,
+> and assigned unsigned resource
+>       acpi_pci_root_start: it will start acpi_pci driver for ioapic
+> controller and dmar iommu
+>                                     then call pci_bus_add_devices to
+> load other pci device drivers.
+> 
+> for hot remove path:
+>       acpi_pci_root_remove: will call pci_stop_bus_devices() to stop
+> drivers for all normal pci devices.
+>                                         then stop acpi_pci driver for
+> dmar and ioapic driver
+>                                         then call
+> pci_stop_and_remove_bus to remove the root bus.
+> 
+> the point is : keep the driver of ioapic and dmar  driver loading
+> before normal pci drivers, and later
+> stop driver for dmar/iommu, after unloading pci drivers.
 
-Index: linux/include/linux/pm_qos.h
-===================================================================
---- linux.orig/include/linux/pm_qos.h
-+++ linux/include/linux/pm_qos.h
-@@ -39,7 +39,9 @@ struct pm_qos_flags_request {
- };
- 
- struct dev_pm_qos_request {
--	struct plist_node node;
-+	union {
-+		struct plist_node pnode;
-+	} data;
- 	struct device *dev;
- };
- 
-Index: linux/drivers/base/power/sysfs.c
-===================================================================
---- linux.orig/drivers/base/power/sysfs.c
-+++ linux/drivers/base/power/sysfs.c
-@@ -221,7 +221,7 @@ static DEVICE_ATTR(autosuspend_delay_ms,
- static ssize_t pm_qos_latency_show(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
--	return sprintf(buf, "%d\n", dev->power.pq_req->node.prio);
-+	return sprintf(buf, "%d\n", dev->power.pq_req->data.pnode.prio);
- }
- 
- static ssize_t pm_qos_latency_store(struct device *dev,
-Index: linux/drivers/base/power/qos.c
-===================================================================
---- linux.orig/drivers/base/power/qos.c
-+++ linux/drivers/base/power/qos.c
-@@ -90,7 +90,7 @@ static int apply_constraint(struct dev_p
- 	int ret, curr_value;
- 
- 	ret = pm_qos_update_target(&req->dev->power.qos->latency,
--				   &req->node, action, value);
-+				   &req->data.pnode, action, value);
- 
- 	if (ret) {
- 		/* Call the global callbacks if needed */
-@@ -183,7 +183,7 @@ void dev_pm_qos_constraints_destroy(stru
- 
- 	c = &qos->latency;
- 	/* Flush the constraints list for the device */
--	plist_for_each_entry_safe(req, tmp, &c->list, node) {
-+	plist_for_each_entry_safe(req, tmp, &c->list, data.pnode) {
- 		/*
- 		 * Update constraints list and call the notification
- 		 * callbacks if needed
-@@ -293,7 +293,7 @@ int dev_pm_qos_update_request(struct dev
- 	mutex_lock(&dev_pm_qos_mtx);
- 
- 	if (req->dev->power.qos) {
--		if (new_value != req->node.prio)
-+		if (new_value != req->data.pnode.prio)
- 			ret = apply_constraint(req, PM_QOS_UPDATE_REQ,
- 					       new_value);
- 	} else {
+ Sorry for too late response.
+ I failed at rebasing. I'll resend this patch.
+ Could you please review these again?
+
+Best regards,
+Taku Izumi <izumi.taku@jp.fujitsu.com>
 
