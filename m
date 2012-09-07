@@ -1,99 +1,18 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:5440 "EHLO mga03.intel.com"
+Received: from fiji.vyatta.com ([76.74.103.50]:35653 "EHLO fiji.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754086Ab2ISF50 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Sep 2012 01:57:26 -0400
-Message-ID: <1348034243.8212.134.camel@yhuang-dev>
-Subject: Re: [PATCH 3/6] PCI/AER: clean all untracked pci_ops_aer when rmmod
- aer_inject
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Wed, 19 Sep 2012 13:57:23 +0800
-In-Reply-To: <1348022442-7816-4-git-send-email-wangyijing@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-	 <1348022442-7816-4-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752604Ab2IGQpo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Sep 2012 12:45:44 -0400
+Message-Id: <20120907163313.614852012@vyatta.com>
+Date: Fri, 07 Sep 2012 09:33:13 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Linas Vepstas <linasvepstas@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH 0/4] PCI error handler const
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
-> Since hot plug for pci devices while doing aer inject, some newly created child buses'
-> pci_ops will be assigned to pci_ops_aer. Aer_inject does not track these pci_ops_aer(not
-> list in pci_bus_ops_list),we should clean all of these when rmmod aer_inject module.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   35 +++++++++++++++++++++++++++++++++++
->  1 files changed, 35 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 442147b..e2400b5 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -299,6 +299,32 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
->  	bus_ops->ops = ops;
->  }
->  
-> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
-> +{
-> +	struct pci_bus *child;
-> +
-> +	list_for_each_entry(child, &bus->children, node) {
-> +		if (child->ops == &pci_ops_aer)
-> +			pci_bus_set_ops(child, bus->ops);
-> +		pci_clean_child_aer_ops(child);
-> +	}
-
-Why not use pci_walk_bus?
-
-> +}
-> +
-> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
-> + * pci_ops of root bus won't be pci_ops_aer here*/
-> +static void clean_untracked_pci_ops_aer(void)
-> +{
-> +	struct pci_bus_ops *bus_ops;
-> +
-> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
-> +		/* the bus with untracked pci_ops_aer always the
-> +		 * child bus of root bus tracked in pci_bus_ops_list
-> +		 */
-> +		if (pci_is_root_bus(bus_ops->bus))
-> +			pci_clean_child_aer_ops(bus_ops->bus);
-> +	}
-> +}
-> +
->  static int pci_bus_set_aer_ops(struct pci_bus *bus)
->  {
->  	struct pci_ops *ops;
-> @@ -558,9 +584,18 @@ static void __exit aer_inject_exit(void)
->  
->  	misc_deregister(&aer_inject_device);
->  
-> +	/* clean pci_bus_ops tracked in pci_bus_ops_list */
->  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
->  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-
-Why not do clean here inside loop?
-
-Best Regards,
-Huang Ying
-
->  
-> +	/* Inject aer errors and hotplug the same pcie device
-> +	 * maybe assign some newly created buses' pci_ops pci_ops_aer.
-> +	 * Since these pci_ops_aer are not tracked in pci_bus_ops_list,
-> +	 * we need to find and clean untracked pci_ops_aer before aer_inject
-> +	 * module exit
-> +	 */
-> +	clean_untracked_pci_ops_aer();
-> +
->  	while ((bus_ops = pci_bus_ops_pop()))
->  		kfree(bus_ops);
->  
-
+This is a trivial patch to make PCI error handler function
+tables const. Split into pieces so that core changes are first.
 
