@@ -1,53 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7670 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754579Ab2IUSGV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 14:06:21 -0400
-Message-ID: <505CAC93.8020304@redhat.com>
-Date: Fri, 21 Sep 2012 14:06:11 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:53588 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757928Ab2IGWIs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 18:08:48 -0400
+Received: by lbbgj3 with SMTP id gj3so132372lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 15:08:47 -0700 (PDT)
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Ariel Elior <ariele@broadcom.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: New commands to configure IOV features
-References: <5003DC9B.8000706@broadcom.com> <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com> <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com> <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com> <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com> <500D6932.8090306@genband.com> <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net> <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com> <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown> <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com> <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com> <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk> <C5551D9AAB213A418B7FD5E4A6F30A07152FA5F6@ORSMSX106.amr.corp.intel.com> <CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.c!
- om>
-In-Reply-To: <CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <3E027F8168735B46AC006B1D0C7BB002079D6153@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1342591614-1840-1-git-send-email-Shengzhou.Liu@freescale.com>
+ <3F453DDFF675A64A89321A1F35281021771A8B@039-SN1MPN1-003.039d.mgd.msft.net> <3E027F8168735B46AC006B1D0C7BB002079D6153@039-SN2MPN1-012.039d.mgd.msft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Sep 2012 15:08:26 -0700
+Message-ID: <CAErSpo78VePbVtz1CQrKA5f6tmpU7v_qY6ZYozh9FrW-m0g2rA@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non
+ MSI/INTx interrupt
+To: Zang Roy-R61911 <r61911@freescale.com>
+Cc: Liu Shengzhou-B36685 <B36685@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/21/2012 01:50 AM, Yinghai Lu wrote:
-> On Thu, Sep 20, 2012 at 8:39 AM, Rose, Gregory V
-> <gregory.v.rose@intel.com>  wrote:
->>> -----Original Message-----
->>> From: Ben Hutchings [mailto:bhutchings@solarflare.com]
->>>>
->>>> could just stop the device and add it back again?
->>>
->>> This is highly disruptive and I think it would be totally unacceptable for
->>> at least networking devices.
+On Mon, Aug 6, 2012 at 8:45 PM, Zang Roy-R61911 <r61911@freescale.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: Linuxppc-dev [mailto:linuxppc-dev-bounces+tie-
+>> fei.zang=freescale.com@lists.ozlabs.org] On Behalf Of Liu Shengzhou-B36685
+>> Sent: Thursday, July 26, 2012 11:45 AM
+>> To: bhelgaas@google.com; linux-pci@vger.kernel.org; akpm@linux-
+>> foundation.org
+>> Cc: Wood Scott-B07421; linuxppc-dev@lists.ozlabs.org; Liu Shengzhou-B36685
+>> Subject: RE: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non
+>> MSI/INTx interrupt
 >>
->> Agreed.
+>> Hello,
 >>
->> We need the driver callback.
+>> A gentle reminder!
+>> Any comments are appreciated.
 >
-> ok, something like attached patches?
->
-> ixgbe change need more cleanup from ixgbe guys.
->
-> -Yinghai
-yuk, no.
-I have a set of patches almost done.
-It provides 3 sysfs files (enable, disable, num_max_vfs);
-callbacks for enable & disable.
+> Who can help to review and pick up this patch?
 
-i'm tied up until Monday on RHEL6, then I'll switch gears & post a set of patches.
+I merged this to a staging branch and will merge it to my "next"
+branch as soon as it gets a build/smoke test by Fengguang.  Thanks!
+
+Bjorn
