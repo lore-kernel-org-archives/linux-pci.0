@@ -1,56 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:40943 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871Ab2IOAsy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 20:48:54 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Subject: [PATCH] PCI, x86: fix default vga ref_count
-Date: Fri, 14 Sep 2012 17:48:40 -0700
-Message-Id: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54912 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758331Ab2IGWmZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 18:42:25 -0400
+Received: by lagy9 with SMTP id y9so55139lag.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 15:42:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120907163313.614852012@vyatta.com>
+References: <20120907163313.614852012@vyatta.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Sep 2012 15:42:03 -0700
+Message-ID: <CAErSpo6T=vQnP2u6KP0+sDvT5=iQs1UFjpOLub+9y=B2k_MRgQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] PCI error handler const
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: Linas Vepstas <linasvepstas@gmail.com>, linux-pci@vger.kernel.org,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-when __ARCH_HAS_VGA_DEFAULT_DEVICE is not defined, aka EFIFB is not used,
+On Fri, Sep 7, 2012 at 9:33 AM, Stephen Hemminger <shemminger@vyatta.com> wrote:
+> This is a trivial patch to make PCI error handler function
+> tables const. Split into pieces so that core changes are first.
 
-for static path, vga_default setting is through vga_arbiter_add_pci_device.
-and for x86 pci_fixup_video, will skip that.
-because subsys_initcall(vga_arb_device_init) come first to call vga_arbiter_add_pci_device.
+I put all four of these on this branch:
 
-for hotplug path, even vga_arbiter_add_pci_device is called via notifier, but it
-will check VGA_RSRC_LEGACY_MASK that is not set for hotplug path.
-So x86 pci_fixup_video will take over to call vga_set_default_device().
+http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/stephen-const
 
-We need to hold one dev reference there.
+If the netdev and scsi folks approve, I can handle them all through my PCI tree.
 
-otherwise vga_arbiter_del_pci_device that does not check VGA_RSRC_LEGACY_MASK
-will call put_device and it will cause ref_count to decrease extra.
-that will have that device get deleted early wrongly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
-
----
- arch/x86/pci/fixup.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-Index: linux-2.6/arch/x86/pci/fixup.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/fixup.c
-+++ linux-2.6/arch/x86/pci/fixup.c
-@@ -349,8 +349,12 @@ static void __devinit pci_fixup_video(st
- 	if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
- 		pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
- 		dev_printk(KERN_DEBUG, &pdev->dev, "Boot video device\n");
--		if (!vga_default_device())
-+		if (!vga_default_device()) {
-+#ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
-+			pdev = pci_dev_get(pdev);
-+#endif
- 			vga_set_default_device(pdev);
-+		}
- 	}
- }
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+Bjorn
