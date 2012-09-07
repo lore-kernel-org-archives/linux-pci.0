@@ -1,55 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20120917113423.GA28759@kroah.com>
-References: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
- <20120917113423.GA28759@kroah.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Sep 2012 10:57:15 -0600
-Message-ID: <CAErSpo4q7KYn3bvNQ0wAXV=+PRAFH_c=MgOLOTDKgaNCjE_aXg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] PCI: Keep pci_fixup_irqs() around after init
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fiji.vyatta.com ([76.74.103.50]:35651 "EHLO fiji.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752088Ab2IGQpo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Sep 2012 12:45:44 -0400
+Message-Id: <20120907163438.085433610@vyatta.com>
+Date: Fri, 07 Sep 2012 09:33:17 -0700
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Linas Vepstas <linasvepstas@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] make drivers with pci error handlers const
+References: <20120907163313.614852012@vyatta.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2012 at 5:34 AM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Mon, Sep 17, 2012 at 01:22:53PM +0200, Thierry Reding wrote:
->> Remove the __init annotations in order to keep pci_fixup_irqs() around
->> after init (e.g. for hotplug). This requires the same change for the
->> implementation of pcibios_update_irq() on all architectures. While at
->> it, all __devinit annotations are removed as well, since they will be
->> useless now that HOTPLUG is always on.
->>
->> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
->> ---
->> Changes in v2:
->> - remove __init and __devinit annotations altogether
->
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Covers the rest of the uses of pci error handler.
 
-I applied these (both 1/2 and 2/2) to my "next" branch.  Thanks!
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Bjorn
+
+---
+Depends on first patch that changes PCI core.
+
+ drivers/block/nvme.c                  |    2 +-
+ drivers/infiniband/hw/qib/qib.h       |    2 +-
+ drivers/infiniband/hw/qib/qib_pcie.c  |    2 +-
+ drivers/media/dvb/ngene/ngene-cards.c |    2 +-
+ drivers/tty/serial/8250/8250_pci.c    |    2 +-
+ drivers/tty/serial/jsm/jsm_driver.c   |    2 +-
+ drivers/xen/xen-pciback/pci_stub.c    |    2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+--- a/drivers/block/nvme.c	2012-09-07 09:29:55.901548765 -0700
++++ b/drivers/block/nvme.c	2012-09-07 09:31:23.240671617 -0700
+@@ -1675,7 +1675,7 @@ static void __devexit nvme_remove(struct
+ #define nvme_suspend NULL
+ #define nvme_resume NULL
+ 
+-static struct pci_error_handlers nvme_err_handler = {
++static const struct pci_error_handlers nvme_err_handler = {
+ 	.error_detected	= nvme_error_detected,
+ 	.mmio_enabled	= nvme_dump_registers,
+ 	.link_reset	= nvme_link_reset,
+--- a/drivers/media/dvb/ngene/ngene-cards.c	2012-09-07 09:29:55.901548765 -0700
++++ b/drivers/media/dvb/ngene/ngene-cards.c	2012-09-07 09:31:23.240671617 -0700
+@@ -524,7 +524,7 @@ static void ngene_resume(struct pci_dev
+ 	printk(KERN_INFO DEVICE_NAME ": resume\n");
+ }
+ 
+-static struct pci_error_handlers ngene_errors = {
++static const struct pci_error_handlers ngene_errors = {
+ 	.error_detected = ngene_error_detected,
+ 	.link_reset = ngene_link_reset,
+ 	.slot_reset = ngene_slot_reset,
+--- a/drivers/tty/serial/8250/8250_pci.c	2012-09-07 09:29:55.901548765 -0700
++++ b/drivers/tty/serial/8250/8250_pci.c	2012-09-07 09:31:23.240671617 -0700
+@@ -4236,7 +4236,7 @@ static void serial8250_io_resume(struct
+ 		pciserial_resume_ports(priv);
+ }
+ 
+-static struct pci_error_handlers serial8250_err_handler = {
++static const struct pci_error_handlers serial8250_err_handler = {
+ 	.error_detected = serial8250_io_error_detected,
+ 	.slot_reset = serial8250_io_slot_reset,
+ 	.resume = serial8250_io_resume,
+--- a/drivers/tty/serial/jsm/jsm_driver.c	2012-09-07 09:29:55.901548765 -0700
++++ b/drivers/tty/serial/jsm/jsm_driver.c	2012-09-07 09:31:23.240671617 -0700
+@@ -54,7 +54,7 @@ static pci_ers_result_t jsm_io_error_det
+ static pci_ers_result_t jsm_io_slot_reset(struct pci_dev *pdev);
+ static void jsm_io_resume(struct pci_dev *pdev);
+ 
+-static struct pci_error_handlers jsm_err_handler = {
++static const struct pci_error_handlers jsm_err_handler = {
+ 	.error_detected = jsm_io_error_detected,
+ 	.slot_reset = jsm_io_slot_reset,
+ 	.resume = jsm_io_resume,
+--- a/drivers/xen/xen-pciback/pci_stub.c	2012-09-07 09:29:55.901548765 -0700
++++ b/drivers/xen/xen-pciback/pci_stub.c	2012-09-07 09:31:23.240671617 -0700
+@@ -871,7 +871,7 @@ end:
+ }
+ 
+ /*add xen_pcibk AER handling*/
+-static struct pci_error_handlers xen_pcibk_error_handler = {
++static const struct pci_error_handlers xen_pcibk_error_handler = {
+ 	.error_detected = xen_pcibk_error_detected,
+ 	.mmio_enabled = xen_pcibk_mmio_enabled,
+ 	.slot_reset = xen_pcibk_slot_reset,
+--- a/drivers/infiniband/hw/qib/qib.h	2012-09-07 09:29:56.901538722 -0700
++++ b/drivers/infiniband/hw/qib/qib.h	2012-09-07 09:31:23.244671576 -0700
+@@ -87,7 +87,7 @@ struct qlogic_ib_stats {
+ };
+ 
+ extern struct qlogic_ib_stats qib_stats;
+-extern struct pci_error_handlers qib_pci_err_handler;
++extern const struct pci_error_handlers qib_pci_err_handler;
+ extern struct pci_driver qib_driver;
+ 
+ #define QIB_CHIP_SWVERSION QIB_CHIP_VERS_MAJ
+--- a/drivers/infiniband/hw/qib/qib_pcie.c	2012-09-07 09:29:56.901538722 -0700
++++ b/drivers/infiniband/hw/qib/qib_pcie.c	2012-09-07 09:31:23.244671576 -0700
+@@ -753,7 +753,7 @@ qib_pci_resume(struct pci_dev *pdev)
+ 	qib_init(dd, 1); /* same as re-init after reset */
+ }
+ 
+-struct pci_error_handlers qib_pci_err_handler = {
++const struct pci_error_handlers qib_pci_err_handler = {
+ 	.error_detected = qib_pci_error_detected,
+ 	.mmio_enabled = qib_pci_mmio_enabled,
+ 	.link_reset = qib_pci_link_reset,
+
+
