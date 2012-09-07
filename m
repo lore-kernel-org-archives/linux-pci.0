@@ -1,58 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53634 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755817Ab2IRGXP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 02:23:15 -0400
-Date: Tue, 18 Sep 2012 15:23:23 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
-Message-Id: <20120918152323.48cb2703.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64687 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757067Ab2IGX2z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 19:28:55 -0400
+Received: by lbbgj3 with SMTP id gj3so162233lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 16:28:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201209072328.30553.rjw@sisk.pl>
+References: <201209072328.30553.rjw@sisk.pl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Sep 2012 16:28:33 -0700
+Message-ID: <CAErSpo7-6PEEt+pDV-XRrfHVKDuw+_CbtKK-fEguyGhd_qapdw@mail.gmail.com>
+Subject: Re: [Resend][PATCH] pciehp: always implement resume
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Oliver Neukum <oliver@neukum.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Sep 7, 2012 at 2:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Oliver Neukum <oliver@neukum.org>
+> Subject: pciehp: always implement resume
+>
+> The driver by default ignores resume. On some laptops
+> that means that interrupts are not delivered after S3.
+> So card removals and insertions will not be handled. Requiring
+> a forced load isn't right.
+>
+> Signed-off-by: Oliver Neukum <oneukum@suse.de>
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-This patch changes the implementation of acpi_pci_find_root().
+I applied this (with fixed From: email address and slightly modified
+changelog) to http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/oliver-pciehp-resume
+and will merge it to "next" after Fengguang's build/smoke tests.
 
-We can access acpi_pci_root without scanning acpi_pci_roots list.
-If hostbridge hotplug is supported, acpi_pci_roots list will be
-protected by mutex. We should not access acpi_pci_roots list 
-if preventable to lessen deadlock risk.
+Thanks!
 
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
----
- drivers/acpi/pci_root.c |   13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+Bjorn
 
-Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0903/drivers/acpi/pci_root.c
-@@ -265,12 +265,15 @@ static acpi_status acpi_pci_osc_support(
- struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle)
- {
- 	struct acpi_pci_root *root;
-+	struct acpi_device *device;
- 
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		if (root->device->handle == handle)
--			return root;
--	}
--	return NULL;
-+	if (acpi_bus_get_device(handle, &device) ||
-+	    acpi_match_device_ids(device, root_device_ids))
-+		return NULL;
-+
-+	root = acpi_driver_data(device);
-+
-+	return root;
- }
- EXPORT_SYMBOL_GPL(acpi_pci_find_root);
- 
-
+> ---
+> drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
+>  drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
+>  1 file changed, 14 insertions(+), 14 deletions(-)
+>
+> Index: linux/drivers/pci/hotplug/pciehp_core.c
+> ===================================================================
+> --- linux.orig/drivers/pci/hotplug/pciehp_core.c
+> +++ linux/drivers/pci/hotplug/pciehp_core.c
+> @@ -300,24 +300,24 @@ static int pciehp_suspend (struct pcie_d
+>
+>  static int pciehp_resume (struct pcie_device *dev)
+>  {
+> +       struct controller *ctrl;
+> +       struct slot *slot;
+> +       u8 status;
+> +
+>         dev_info(&dev->device, "%s ENTRY\n", __func__);
+> -       if (pciehp_force) {
+> -               struct controller *ctrl = get_service_data(dev);
+> -               struct slot *slot;
+> -               u8 status;
+> +       ctrl = get_service_data(dev);
+>
+> -               /* reinitialize the chipset's event detection logic */
+> -               pcie_enable_notification(ctrl);
+> +       /* reinitialize the chipset's event detection logic */
+> +       pcie_enable_notification(ctrl);
+>
+> -               slot = ctrl->slot;
+> +       slot = ctrl->slot;
+>
+> -               /* Check if slot is occupied */
+> -               pciehp_get_adapter_status(slot, &status);
+> -               if (status)
+> -                       pciehp_enable_slot(slot);
+> -               else
+> -                       pciehp_disable_slot(slot);
+> -       }
+> +       /* Check if slot is occupied */
+> +       pciehp_get_adapter_status(slot, &status);
+> +       if (status)
+> +               pciehp_enable_slot(slot);
+> +       else
+> +               pciehp_disable_slot(slot);
+>         return 0;
+>  }
+>  #endif /* PM */
