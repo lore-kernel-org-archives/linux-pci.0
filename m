@@ -1,59 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:46826 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902Ab2IHFxK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Sep 2012 01:53:10 -0400
+Message-ID: <504ADD44.6040501@wwwdotorg.org>
+Date: Fri, 07 Sep 2012 23:53:08 -0600
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo54LO_mow3dNSJ2-Aj4xBs=Zrk9fiAuFzZKdh9=YKyWuA@mail.gmail.com>
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-	<20120903170602.375b00cc.izumi.taku@jp.fujitsu.com>
-	<CAErSpo54LO_mow3dNSJ2-Aj4xBs=Zrk9fiAuFzZKdh9=YKyWuA@mail.gmail.com>
-Date: Thu, 13 Sep 2012 12:09:31 -0700
-Message-ID: <CAE9FiQVHgLGCmU2GTPkRKO8qRrWDwXOXNXoOf0OxvjWJBPLWMA@mail.gmail.com>
-Subject: Re: [PATCH v2 4/6] ACPI, PCI: add acpi_pci_roots protection
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
+References: <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com> <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de> <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com> <502AD82F.3080702@wwwdotorg.org> <502AE485.8060307@wwwdotorg.org> <504A848B.1090703@wwwdotorg.org> <20120908000430.GF13739@n2100.arm.linux.org.uk>
+In-Reply-To: <20120908000430.GF13739@n2100.arm.linux.org.uk>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2012 at 4:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Sep 3, 2012 at 2:06 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->> Use mutex and RCU to protect global acpi_pci_roots list against
->> PCI host bridge hotplug operations.
->>
->> RCU is used to avoid possible deadlock in function acpi_pci_find_root()
->> and acpi_get_pci_rootbridge_handle(). A possible call graph:
->> acpi_pci_register_driver()
->>         mutex_lock(&acpi_pci_root_lock)
->>                 driver->add(root)
->>                         ......
->>                                 acpi_pci_find_root()
->
-> Where does this path occur?  I didn't see in in the current tree
-> (where the only users of acpi_pci_register_driver() are for
-> acpi_pci_slot_driver and acpi_pci_hp_driver).  Maybe it's in Yinghai's
-> work, which adds more acpi_pci_register_driver() users.
->
-> RCU seems unnecessarily complicated for this list, but I haven't gone
-> through Yinghai's work yet, so I don't know what it requires.
->
-> In acpi_pci_root_start() and acpi_pci_root_remove(), we have the
-> struct acpi_pci_root, which has all sorts of information that would be
-> useful to the .add() and .remove() methods of sub-drivers.  It seems
-> sort of stupid that we only pass the acpi_handle to the sub-drivers,
-> forcing them to use hacks like acpi_pci_find_root() to look up the
-> information we just threw away.  Can we just fix the .add() and
-> .remove() interfaces to pass something more useful so we avoid the
-> need for this deadlock path?
+On 09/07/2012 06:04 PM, Russell King - ARM Linux wrote:
+> On Fri, Sep 07, 2012 at 05:34:35PM -0600, Stephen Warren wrote:
+>> I guess it's a pretty basic premise of the current PCI code that all the
+>> PCI scanning happens well before any device drivers are registered,
+>> which in turn means that device_add() doesn't trigger the device's
+>> probe() until much later, after all the fixups and resource assignments
+>> are done?
+> 
+> Are you saying that the PCI layer is again screwed up after all my
+> hard work several years ago to ensure that PCI devices are properly
+> setup _before_ they're made available to the PCI drivers then?  That
+> was around the time I was looking at Cardbus stuff, ensuring that that
+> worked with the same guarantees.
+> 
+> Not amused.
+> 
+> What is wrong with the "probe devices, apply fixups, setup resources,
+> apply more fixups, publish" process that it's had to be yet again
+> broken?
 
-new added acpi_pci_driver for ioapic, and iommu does not call
-acpi_pci_find_root().
-
-after split out pci_root_hp.c from acpiphp_glue.c, there will be
-acpi_root_configure_bridge in pci_root_hp.c. that one could be
-converted to
-passing device instead of handle.
-
-Thanks
-
-Yinghai
+I must admit, I'm having a hard time finding when the code worked like
+that; ARM's bios32.c:pcibios_init_hw() seems to have always called
+pci_scan_root_bus(), or ops function hw->scan(), which at least in the 1
+PCIe controller driver I looked at, in turn always called either
+pci_scan_root_bus() or another similar function that I believe always
+called pci_bus_add_devices(), which is before pci_common_init() could
+assign the resources. Maybe I'm just looking at the wrong PCIe
+controller driver, or not looking back far enough in git history (or
+pre-git)? If you could point out when it was working as you describe
+(which sounds reasonable), I'd be interested in tracing the history from
+there to see when/why it changed.
