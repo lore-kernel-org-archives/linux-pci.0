@@ -1,83 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59210 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:53867 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751960Ab2IUFNK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 01:13:10 -0400
-Message-ID: <1348204383.23395.22.camel@yhuang-dev>
-Subject: Re: [PATCH v4 3/5] PCI/AER: clean all untracked pci_ops_aer when
- rmmod aer_inject
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Fri, 21 Sep 2012 13:13:03 +0800
-In-Reply-To: <1348199056-7696-4-git-send-email-wangyijing@huawei.com>
-References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
-	 <1348199056-7696-4-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751013Ab2IHNm2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Sep 2012 09:42:28 -0400
+Date: Sat, 8 Sep 2012 21:42:20 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Feng Tang <feng.tang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for
+ pci_get_subsys/class()
+Message-ID: <20120908134220.GA24831@localhost>
+References: <20120731235705.GW2422@linux.vnet.ibm.com>
+ <1343779778.27983.73.camel@gandalf.stny.rr.com>
+ <20120801001811.GX2422@linux.vnet.ibm.com>
+ <20120801004319.GA7043@localhost>
+ <20120822025008.GA8066@localhost>
+ <20120822154908.2e6ef3c0@feng-i7>
+ <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+ <20120823154503.15a45b14@feng-i7>
+ <CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
+ <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
-> When we do hot plug for pci devices that were injected aer errors, some newly created child buses'
-> pci_ops will be assigned to pci_ops_aer. Aer_inject module will not track these pci_ops_aer(not
-> list in pci_bus_ops_list),so we should clean all of these when rmmod aer_inject module.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   24 ++++++++++++++++++++++++
->  1 files changed, 24 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 0123120..e04cf24 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -299,6 +299,29 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
->  	bus_ops->ops = ops;
->  }
->  
-> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
-> +{
-> +	struct pci_bus *child;
-> +
-> +	list_for_each_entry(child, &bus->children, node) {
-> +		if (child->ops == &pci_ops_aer)
-> +			pci_bus_set_ops(child, bus->ops);
-> +		pci_clean_child_aer_ops(child);
-> +	}
-> +}
-> +
-> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
-> + * pci_ops of root bus won't be pci_ops_aer here*/
-> +static void clean_untracked_pci_ops_aer(void)
-> +{
-> +	struct pci_bus_ops *bus_ops;
-> +
-> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
-> +		if (pci_is_root_bus(bus_ops->bus))
+On Fri, Sep 07, 2012 at 06:32:48PM -0700, Yinghai Lu wrote:
 
-Why do cleanup only for root bus?
+> > with this one in pci/next pci config in /sys are not created.
+> >
+> > 10:~ # lspci -tv
+> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:03.0/config
+> > lspci: Unable to read the standard configuration space header of
+> > device 0000:00:03.0
+> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:02.0/config
+> > lspci: Unable to read the standard configuration space header of
+> > device 0000:00:02.0
+> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.3/config
+> > lspci: Unable to read the standard configuration space header of
+> > device 0000:00:01.3
+> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.1/config
+> > lspci: Unable to read the standard configuration space header of
+> > device 0000:00:01.1
+> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.0/config
+> > lspci: Unable to read the standard configuration space header of
+> > device 0000:00:01.0
+> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:00.0/config
+> > lspci: Unable to read the standard configuration space header of
+> > device 0000:00:00.0
+> > -[0000:00]-
+> >
+> > bisected to this commit
+> >
+> > ccee7d23102f5e5765ec24779c5b77472af8f79e is the first bad commit
+> > commit ccee7d23102f5e5765ec24779c5b77472af8f79e
+> > Author: Feng Tang <feng.tang@intel.com>
+> > Date:   Thu Aug 23 15:45:03 2012 +0800
+> >
+> >     PCI: Use pci_device_id on stack for pci_get_subsys/class() to avoid kmalloc
+> >
+> >     This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
+> >
+> >     pci_get_subsys() may get called in late system reboot stage, using
+> >     a sleepable kmalloc() sounds fragile and will cause a kernel warning
+> >     with my recent commmit 55c844a "x86/reboot: Fix a warning message
+> >     triggered by stop_other_cpus()" which disable local interrupt in
+> >     late system shutdown/reboot phase. Using a local parameter instead
+> >     will fix it and make it eligible for calling forom atomic context.
+> >
+> >     Do the same change for the pci_get_class() as suggested by Bjorn Helgaas
+> >
+> >     [bhelgaas: changelog]
+> >     Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
+> >     Signed-off-by: Feng Tang <feng.tang@intel.com>
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >     Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
+> >
+> > :040000 040000 dee62a035816b73abc68e40de8f21c7349efc4cb
+> > 70b2a6258bffa1ab963bd650d8f5d02da774fbce M      drivers
+> >
+> > so the stack get overrun ?
+> >
+> > Bjorn, I think it is this one that cause lspci broken that I mentioned
+> > during meeting at San Diego.
 
-Best Regards,
-Huang Ying
+This makes lspci work again on my side. The caveat is, kzalloc() will
+zero out all data while the new local variable leaves some data
+uninitialized.
 
-> +			pci_clean_child_aer_ops(bus_ops->bus);
-> +	}
-> +}
-> +
->  static int pci_bus_set_aer_ops(struct pci_bus *bus)
->  {
->  	struct pci_ops *ops;
-> @@ -560,6 +583,7 @@ static void __exit aer_inject_exit(void)
->  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
->  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
->  
-> +	clean_untracked_pci_ops_aer();
->  	while ((bus_ops = pci_bus_ops_pop()))
->  		kfree(bus_ops);
->  
-
-
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 78a08b1..9148b6e 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -245,7 +245,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 			       unsigned int ss_vendor, unsigned int ss_device,
+ 			       struct pci_dev *from)
+ {
+-	struct pci_device_id id;
++	struct pci_device_id id = {
++		.vendor = vendor,
++		.device = device,
++		.subvendor = ss_vendor,
++		.subdevice = ss_device,
++	};
+ 
+ 	/*
+ 	 * pci_find_subsys() can be called on the ide_setup() path,
+@@ -256,11 +261,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 	if (unlikely(no_pci_devices()))
+ 		return NULL;
+ 
+-	id.vendor = vendor;
+-	id.device = device;
+-	id.subvendor = ss_vendor;
+-	id.subdevice = ss_device;
+-
+ 	return pci_get_dev_by_id(&id, from);
+ }
+ 
+@@ -300,11 +300,14 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+  */
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+ {
+-	struct pci_device_id id;
+-
+-	id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
+-	id.class_mask = PCI_ANY_ID;
+-	id.class = class;
++	struct pci_device_id id = {
++		.vendor = PCI_ANY_ID,
++		.device = PCI_ANY_ID,
++		.subvendor = PCI_ANY_ID,
++		.subdevice = PCI_ANY_ID,
++		.class_mask = PCI_ANY_ID,
++		.class = class,
++	};
+ 
+ 	return pci_get_dev_by_id(&id, from);
+ }
