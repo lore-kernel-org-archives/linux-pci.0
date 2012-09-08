@@ -1,65 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60947 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753244Ab2ISN5G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 09:57:06 -0400
-Received: by lbbgj3 with SMTP id gj3so943695lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 19 Sep 2012 06:57:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXeKxZ5XHqxqXBiyjagmCFqyKsJLcpz0h+Zn3-9aP3EwA@mail.gmail.com>
-References: <1347322773-32283-1-git-send-email-yinghai@kernel.org>
- <CAErSpo4d2qirLLcbNBdSSdy0u7N87mVD1ArC=uDr9S7q+=dN8A@mail.gmail.com> <CAE9FiQXeKxZ5XHqxqXBiyjagmCFqyKsJLcpz0h+Zn3-9aP3EwA@mail.gmail.com>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:34444 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754593Ab2IHVGs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Sep 2012 17:06:48 -0400
+Received: by fass10 with SMTP id s10so35354fas.1
+        for <linux-pci@vger.kernel.org>; Sat, 08 Sep 2012 14:06:46 -0700 (PDT)
+Date: Sat, 8 Sep 2012 15:06:45 -0600
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Sep 2012 07:56:43 -0600
-Message-ID: <CAErSpo4E8vghuGsjz31G+0Qv3HYCJ1br_KRatAfnYF+3Dcq7cQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Check bridge secondary/subordinate bus register
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Feng Tang <feng.tang@intel.com>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for
+ pci_get_subsys/class()
+Message-ID: <20120908210645.GA8678@google.com>
+References: <20120801004319.GA7043@localhost>
+ <20120822025008.GA8066@localhost>
+ <20120822154908.2e6ef3c0@feng-i7>
+ <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+ <20120823154503.15a45b14@feng-i7>
+ <CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
+ <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
+ <20120908134220.GA24831@localhost>
+ <20120908233455.0d0527b3@feng-i7>
+ <CAE9FiQU1MxyRvYapi35j5_N7Ob7rnPTYNcvDbMYcSy9VNmaz=g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU1MxyRvYapi35j5_N7Ob7rnPTYNcvDbMYcSy9VNmaz=g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 5:55 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Sep 18, 2012 at 3:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Mon, Sep 10, 2012 at 6:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Intel DP43BF requires "pci=assign-busses" to discover some devices.
->>>
->>> It turns out BIOS set the bridge 00:1e.0 bus register wrong.
->>>
->>> Try to check that wrong range and reject so next pass could only assign
->>> bus for that bridge.
->>>
->>>         https://bugzilla.kernel.org/show_bug.cgi?id=18412
->>
->> Applied to pci/yinghai-misc, thanks!
->
-> ?
-> you already put it in pci/yinghai-bridge-subordinate and next
+On Sat, Sep 08, 2012 at 11:40:52AM -0700, Yinghai Lu wrote:
+> On Sat, Sep 8, 2012 at 8:34 AM, Feng Tang <feng.tang@intel.com> wrote:
+> >> This makes lspci work again on my side. The caveat is, kzalloc() will
+> >> zero out all data while the new local variable leaves some data
+> >> uninitialized.
+> >
+> > Yes, thanks for the quick root cause and fix to the bug in my code.
+> 
+> Can you resubmit your patch with two extra "memset" line?
 
-I did, but I thought it wasn't worth having a separate branch for each
-of these onesy-twosy patches (this one, vgaarb, kmalloc/kzalloc, bus
-resource free, etc.), so I decided to consolidate several of them on
-pci/yinghai-misc and then merge *that* into next.
+I updated the patch as follows and rebased my "next" branch to include it:
 
-So pci/yinghai-bridge-subordinate is dead and I dropped it from next
-(but as I said, it will get to next eventually via pci/yinghai-misc).
-I don't recommend using my "next" branch as a base.  There's usually
-no need, because patches usually don't depend on other things in
-"next".  If they do, it's simpler to base them on the specific
-"pci/yinghai-xxx" branch they require.
+commit e664f5bd55247bba3a6ebd61f83d6c9cd87ce0de
+Author: Feng Tang <feng.tang@intel.com>
+Date:   Thu Aug 23 15:45:03 2012 +0800
 
-> commit 4fe24116ccc5518d5b692cb4354342ee59970ca5
-> Merge: 8704936 a53d8d3
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Sep 18 11:08:09 2012 -0600
->
->     Merge branch 'pci/yinghai-bridge-subordinate' into next
->
->     * pci/yinghai-bridge-subordinate:
->       PCI: Check P2P bridge for invalid secondary/subordinate range
->
-> commit a53d8d32a2b768cdcdd0703f4754f49b02753d2c
-> Author: Yinghai Lu <yinghai@kernel.org>
-> Date:   Mon Sep 10 17:19:33 2012 -0700
->
->     PCI: Check P2P bridge for invalid secondary/subordinate range
+    PCI: Use pci_device_id on stack for pci_get_subsys/class() to avoid kmalloc
+    
+    This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
+    
+    pci_get_subsys() may get called in late system reboot stage, using
+    a sleepable kmalloc() sounds fragile and will cause a kernel warning
+    with my recent commmit 55c844a "x86/reboot: Fix a warning message
+    triggered by stop_other_cpus()" which disable local interrupt in
+    late system shutdown/reboot phase. Using a local parameter instead
+    will fix it and make it eligible for calling forom atomic context.
+    
+    Do the same change for the pci_get_class() as suggested by Bjorn Helgaas
+    
+    [bhelgaas: changelog, clear pci_device_id on stack with memset()]
+    Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
+    Signed-off-by: Feng Tang <feng.tang@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
+
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 993d4a0..e0a0310 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -245,8 +245,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 			       unsigned int ss_vendor, unsigned int ss_device,
+ 			       struct pci_dev *from)
+ {
+-	struct pci_dev *pdev;
+-	struct pci_device_id *id;
++	struct pci_device_id id;
+ 
+ 	/*
+ 	 * pci_find_subsys() can be called on the ide_setup() path,
+@@ -257,18 +256,13 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 	if (unlikely(no_pci_devices()))
+ 		return NULL;
+ 
+-	id = kzalloc(sizeof(*id), GFP_KERNEL);
+-	if (!id)
+-		return NULL;
+-	id->vendor = vendor;
+-	id->device = device;
+-	id->subvendor = ss_vendor;
+-	id->subdevice = ss_device;
+-
+-	pdev = pci_get_dev_by_id(id, from);
+-	kfree(id);
++	memset(&id, 0, sizeof(id));
++	id.vendor = vendor;
++	id.device = device;
++	id.subvendor = ss_vendor;
++	id.subdevice = ss_device;
+ 
+-	return pdev;
++	return pci_get_dev_by_id(&id, from);
+ }
+ 
+ /**
+@@ -307,19 +301,14 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+  */
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+ {
+-	struct pci_dev *dev;
+-	struct pci_device_id *id;
++	struct pci_device_id id;
+ 
+-	id = kzalloc(sizeof(*id), GFP_KERNEL);
+-	if (!id)
+-		return NULL;
+-	id->vendor = id->device = id->subvendor = id->subdevice = PCI_ANY_ID;
+-	id->class_mask = PCI_ANY_ID;
+-	id->class = class;
++	memset(&id, 0, sizeof(id));
++	id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
++	id.class_mask = PCI_ANY_ID;
++	id.class = class;
+ 
+-	dev = pci_get_dev_by_id(id, from);
+-	kfree(id);
+-	return dev;
++	return pci_get_dev_by_id(&id, from);
+ }
+ 
+ /**
