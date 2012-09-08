@@ -1,70 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27283 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754669Ab2ISGD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Sep 2012 02:03:56 -0400
-Message-ID: <1348034627.8212.136.camel@yhuang-dev>
-Subject: Re: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free
- pci_bus_ops
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:56234 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197Ab2IHAFv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 20:05:51 -0400
+Date: Sat, 8 Sep 2012 01:04:30 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Stephen Warren <swarren@wwwdotorg.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Wed, 19 Sep 2012 14:03:47 +0800
-In-Reply-To: <1348022442-7816-6-git-send-email-wangyijing@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-	 <1348022442-7816-6-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	devicetree-discuss@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	Mitch Bradley <wmb@firmworks.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
+Message-ID: <20120908000430.GF13739@n2100.arm.linux.org.uk>
+References: <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com> <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de> <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com> <502AD82F.3080702@wwwdotorg.org> <502AE485.8060307@wwwdotorg.org> <504A848B.1090703@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <504A848B.1090703@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   14 +++++++++++---
->  1 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 0a12ac7..79b611d 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -162,6 +162,16 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
->  	return bus_ops;
->  }
->  
-> +static void pci_bus_ops_free(void)
-> +{
-> +	struct pci_bus_ops *bus_ops, *tmp_ops;
-> +
-> +	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
-> +		list_del(&bus_ops->list);
-> +		kfree(bus_ops);
-> +	}
-> +}
+On Fri, Sep 07, 2012 at 05:34:35PM -0600, Stephen Warren wrote:
+> I guess it's a pretty basic premise of the current PCI code that all the
+> PCI scanning happens well before any device drivers are registered,
+> which in turn means that device_add() doesn't trigger the device's
+> probe() until much later, after all the fixups and resource assignments
+> are done?
 
-IMHO, this can be inlined into aer_inject_exit
+Are you saying that the PCI layer is again screwed up after all my
+hard work several years ago to ensure that PCI devices are properly
+setup _before_ they're made available to the PCI drivers then?  That
+was around the time I was looking at Cardbus stuff, ensuring that that
+worked with the same guarantees.
 
->  static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
->  {
->  	struct pci_bus_ops *bus_ops = NULL;
-> @@ -641,9 +651,7 @@ static void __exit aer_inject_exit(void)
->  	 * module exit
->  	 */
->  	clean_untracked_pci_ops_aer();
-> -
-> -	while ((bus_ops = pci_bus_ops_pop()))
+Not amused.
 
-You can remove pci_bus_ops_pop now.
-
-Best Regards,
-Huang Ying
-
-> -		kfree(bus_ops);
-> +	pci_bus_ops_free();
->  
->  	spin_lock_irqsave(&inject_lock, flags);
->  	list_for_each_entry_safe(err, err_next, &einjected, list) {
-
-
+What is wrong with the "probe devices, apply fixups, setup resources,
+apply more fixups, publish" process that it's had to be yet again
+broken?
