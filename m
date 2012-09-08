@@ -1,54 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43660 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757722Ab2IYQdW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 12:33:22 -0400
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:63453 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760138Ab2IHB7d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 21:59:33 -0400
+Received: by pbbrr13 with SMTP id rr13so422718pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 18:59:33 -0700 (PDT)
+Date: Fri, 7 Sep 2012 18:59:27 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Feng Tang <feng.tang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for
+ pci_get_subsys/class()
+Message-ID: <20120908015927.GA29784@kroah.com>
+References: <20120731235705.GW2422@linux.vnet.ibm.com>
+ <1343779778.27983.73.camel@gandalf.stny.rr.com>
+ <20120801001811.GX2422@linux.vnet.ibm.com>
+ <20120801004319.GA7043@localhost>
+ <20120822025008.GA8066@localhost>
+ <20120822154908.2e6ef3c0@feng-i7>
+ <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+ <20120823154503.15a45b14@feng-i7>
+ <CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
+ <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20120925084004.GA6652@wooyd.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-	<1348561590-28067-21-git-send-email-yinghai@kernel.org>
-	<20120925084004.GA6652@wooyd.org>
-Date: Tue, 25 Sep 2012 09:33:20 -0700
-Message-ID: <CAE9FiQXKe8okPLfRdjUz-+f3A7zN94tzVpq3vN8eBM+SeyLZnA@mail.gmail.com>
-Subject: Re: [PATCH 20/29] PCI, sparc: kill pci_find_next_bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jurij Smakov <jurij@wooyd.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 1:40 AM, Jurij Smakov <jurij@wooyd.org> wrote:
-> On Tue, Sep 25, 2012 at 01:26:21AM -0700, Yinghai Lu wrote:
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: "David S. Miller" <davem@davemloft.net>
->> Cc: sparclinux@vger.kernel.org
->> ---
->>  arch/sparc/kernel/pci.c |    6 ++++--
->>  1 files changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
->> index acc8c83..70d8c16 100644
->> --- a/arch/sparc/kernel/pci.c
->> +++ b/arch/sparc/kernel/pci.c
->> @@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct device_node *node,
->>
->>  static int __init of_pci_slot_init(void)
->>  {
->> -     struct pci_bus *pbus = NULL;
->> +     struct pci_host_bridge *host_bridge = NULL;
->> +     struct pci_bus *pbus;
->>
->> -     while ((pbus = pci_find_next_bus(pbus)) != NULL) {
->> +     for_each_pci_host_bridge(host_bridge) {
->>               struct device_node *node;
->>
->> +             pbus = hot_bridge->bus;
->
-> Should this be 'host_bridge' and not 'hot_bridge'?
+On Fri, Sep 07, 2012 at 06:32:48PM -0700, Yinghai Lu wrote:
+> Greg,
+> 
+> Any reason for using kmalloc instead of local variable during your
+> rewriting pci search code?
+> 
+> commit 95247b57ed844511a212265b45cf9a919753aea1
+> Author: Greg Kroah-Hartman <gregkh@suse.de>
+> Date:   Wed Feb 13 11:03:58 2008 -0800
 
-fixed.
+Seriously?  Something I wrote 4 years ago?  I really have no idea,
+sorry.
 
-Thanks
+greg k-h
