@@ -1,121 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fiji.vyatta.com ([76.74.103.50]:35654 "EHLO fiji.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752531Ab2IGQpo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Sep 2012 12:45:44 -0400
-Message-Id: <20120907163437.912797971@vyatta.com>
-Date: Fri, 07 Sep 2012 09:33:14 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: Linas Vepstas <linasvepstas@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120908134220.GA24831@localhost>
+References: <20120731235705.GW2422@linux.vnet.ibm.com>
+	<1343779778.27983.73.camel@gandalf.stny.rr.com>
+	<20120801001811.GX2422@linux.vnet.ibm.com>
+	<20120801004319.GA7043@localhost>
+	<20120822025008.GA8066@localhost>
+	<20120822154908.2e6ef3c0@feng-i7>
+	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+	<20120823154503.15a45b14@feng-i7>
+	<CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
+	<CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
+	<20120908134220.GA24831@localhost>
+Date: Sat, 8 Sep 2012 08:30:26 -0700
+Message-ID: <CAE9FiQXT6jH4tK7-6KqkUVc=Yezpi18+5Lk-yEPDwTYpnL_wpA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for pci_get_subsys/class()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Feng Tang <feng.tang@intel.com>,
 	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/4] pci: make pci_error_handlers const
-References: <20120907163313.614852012@vyatta.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since pic_error_handlers is just a function table make it const.
+On Sat, Sep 8, 2012 at 6:42 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+> On Fri, Sep 07, 2012 at 06:32:48PM -0700, Yinghai Lu wrote:
+>
+>> > with this one in pci/next pci config in /sys are not created.
+>> >
+>> > 10:~ # lspci -tv
+>> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:03.0/config
+>> > lspci: Unable to read the standard configuration space header of
+>> > device 0000:00:03.0
+>> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:02.0/config
+>> > lspci: Unable to read the standard configuration space header of
+>> > device 0000:00:02.0
+>> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.3/config
+>> > lspci: Unable to read the standard configuration space header of
+>> > device 0000:00:01.3
+>> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.1/config
+>> > lspci: Unable to read the standard configuration space header of
+>> > device 0000:00:01.1
+>> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.0/config
+>> > lspci: Unable to read the standard configuration space header of
+>> > device 0000:00:01.0
+>> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:00.0/config
+>> > lspci: Unable to read the standard configuration space header of
+>> > device 0000:00:00.0
+>> > -[0000:00]-
+>> >
+>> > bisected to this commit
+>> >
+>> > ccee7d23102f5e5765ec24779c5b77472af8f79e is the first bad commit
+>> > commit ccee7d23102f5e5765ec24779c5b77472af8f79e
+>> > Author: Feng Tang <feng.tang@intel.com>
+>> > Date:   Thu Aug 23 15:45:03 2012 +0800
+>> >
+>> >     PCI: Use pci_device_id on stack for pci_get_subsys/class() to avoid kmalloc
+>> >
+>> >     This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
+>> >
+>> >     pci_get_subsys() may get called in late system reboot stage, using
+>> >     a sleepable kmalloc() sounds fragile and will cause a kernel warning
+>> >     with my recent commmit 55c844a "x86/reboot: Fix a warning message
+>> >     triggered by stop_other_cpus()" which disable local interrupt in
+>> >     late system shutdown/reboot phase. Using a local parameter instead
+>> >     will fix it and make it eligible for calling forom atomic context.
+>> >
+>> >     Do the same change for the pci_get_class() as suggested by Bjorn Helgaas
+>> >
+>> >     [bhelgaas: changelog]
+>> >     Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
+>> >     Signed-off-by: Feng Tang <feng.tang@intel.com>
+>> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> >     Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
+>> >
+>> > :040000 040000 dee62a035816b73abc68e40de8f21c7349efc4cb
+>> > 70b2a6258bffa1ab963bd650d8f5d02da774fbce M      drivers
+>> >
+>> > so the stack get overrun ?
+>> >
+>> > Bjorn, I think it is this one that cause lspci broken that I mentioned
+>> > during meeting at San Diego.
+>
+> This makes lspci work again on my side. The caveat is, kzalloc() will
+> zero out all data while the new local variable leaves some data
+> uninitialized.
+>
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index 78a08b1..9148b6e 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -245,7 +245,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>                                unsigned int ss_vendor, unsigned int ss_device,
+>                                struct pci_dev *from)
+>  {
+> -       struct pci_device_id id;
+> +       struct pci_device_id id = {
+> +               .vendor = vendor,
+> +               .device = device,
+> +               .subvendor = ss_vendor,
+> +               .subdevice = ss_device,
+> +       };
+>
+>         /*
+>          * pci_find_subsys() can be called on the ide_setup() path,
+> @@ -256,11 +261,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>         if (unlikely(no_pci_devices()))
+>                 return NULL;
+>
+> -       id.vendor = vendor;
+> -       id.device = device;
+> -       id.subvendor = ss_vendor;
+> -       id.subdevice = ss_device;
+> -
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+yes, here forget to clear .class and .class_mask
 
-
----
- drivers/pci/pcie/aer/aerdrv.c      |    2 +-
- drivers/pci/pcie/aer/aerdrv_core.c |    8 ++++----
- drivers/pci/pcie/portdrv_pci.c     |   10 +++++-----
- include/linux/pci.h                |    2 +-
- include/linux/pcieport_if.h        |    2 +-
- 5 files changed, 12 insertions(+), 12 deletions(-)
-
---- a/include/linux/pci.h	2012-09-07 09:21:37.154557681 -0700
-+++ b/include/linux/pci.h	2012-09-07 09:26:01.739900450 -0700
-@@ -596,7 +596,7 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
--	struct pci_error_handlers *err_handler;
-+	const struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
- };
---- a/include/linux/pcieport_if.h	2012-09-07 09:21:37.154557681 -0700
-+++ b/include/linux/pcieport_if.h	2012-09-07 09:26:01.739900450 -0700
-@@ -49,7 +49,7 @@ struct pcie_port_service_driver {
- 	int (*resume) (struct pcie_device *dev);
- 
- 	/* Service Error Recovery Handler */
--	struct pci_error_handlers *err_handler;
-+	const struct pci_error_handlers *err_handler;
- 
- 	/* Link Reset Capability - AER service driver specific */
- 	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
---- a/drivers/pci/pcie/aer/aerdrv.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/pci/pcie/aer/aerdrv.c	2012-09-07 09:26:01.739900450 -0700
-@@ -48,7 +48,7 @@ static pci_ers_result_t aer_error_detect
- static void aer_error_resume(struct pci_dev *dev);
- static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
- 
--static struct pci_error_handlers aer_error_handlers = {
-+static const struct pci_error_handlers aer_error_handlers = {
- 	.error_detected = aer_error_detected,
- 	.resume		= aer_error_resume,
- };
---- a/drivers/pci/pcie/aer/aerdrv_core.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c	2012-09-07 09:26:01.739900450 -0700
-@@ -240,7 +240,7 @@ static bool find_source_device(struct pc
- static int report_error_detected(struct pci_dev *dev, void *data)
- {
- 	pci_ers_result_t vote;
--	struct pci_error_handlers *err_handler;
-+	const struct pci_error_handlers *err_handler;
- 	struct aer_broadcast_data *result_data;
- 	result_data = (struct aer_broadcast_data *) data;
- 
-@@ -274,7 +274,7 @@ static int report_error_detected(struct
- static int report_mmio_enabled(struct pci_dev *dev, void *data)
- {
- 	pci_ers_result_t vote;
--	struct pci_error_handlers *err_handler;
-+	const struct pci_error_handlers *err_handler;
- 	struct aer_broadcast_data *result_data;
- 	result_data = (struct aer_broadcast_data *) data;
- 
-@@ -292,7 +292,7 @@ static int report_mmio_enabled(struct pc
- static int report_slot_reset(struct pci_dev *dev, void *data)
- {
- 	pci_ers_result_t vote;
--	struct pci_error_handlers *err_handler;
-+	const struct pci_error_handlers *err_handler;
- 	struct aer_broadcast_data *result_data;
- 	result_data = (struct aer_broadcast_data *) data;
- 
-@@ -309,7 +309,7 @@ static int report_slot_reset(struct pci_
- 
- static int report_resume(struct pci_dev *dev, void *data)
- {
--	struct pci_error_handlers *err_handler;
-+	const struct pci_error_handlers *err_handler;
- 
- 	dev->error_state = pci_channel_io_normal;
- 
---- a/drivers/pci/pcie/portdrv_pci.c	2012-09-07 09:21:37.154557681 -0700
-+++ b/drivers/pci/pcie/portdrv_pci.c	2012-09-07 09:26:01.739900450 -0700
-@@ -371,11 +371,11 @@ static const struct pci_device_id port_p
- };
- MODULE_DEVICE_TABLE(pci, port_pci_ids);
- 
--static struct pci_error_handlers pcie_portdrv_err_handler = {
--		.error_detected = pcie_portdrv_error_detected,
--		.mmio_enabled = pcie_portdrv_mmio_enabled,
--		.slot_reset = pcie_portdrv_slot_reset,
--		.resume = pcie_portdrv_err_resume,
-+static const struct pci_error_handlers pcie_portdrv_err_handler = {
-+	.error_detected = pcie_portdrv_error_detected,
-+	.mmio_enabled = pcie_portdrv_mmio_enabled,
-+	.slot_reset = pcie_portdrv_slot_reset,
-+	.resume = pcie_portdrv_err_resume,
- };
- 
- static struct pci_driver pcie_portdriver = {
-
-
+>         return pci_get_dev_by_id(&id, from);
+>  }
+>
+> @@ -300,11 +300,14 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+>   */
+>  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+>  {
+> -       struct pci_device_id id;
+> -
+> -       id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
+> -       id.class_mask = PCI_ANY_ID;
+> -       id.class = class;
+> +       struct pci_device_id id = {
+> +               .vendor = PCI_ANY_ID,
+> +               .device = PCI_ANY_ID,
+> +               .subvendor = PCI_ANY_ID,
+> +               .subdevice = PCI_ANY_ID,
+> +               .class_mask = PCI_ANY_ID,
+> +               .class = class,
+> +       };
+>
+>         return pci_get_dev_by_id(&id, from);
+>  }
