@@ -1,127 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31714 "EHLO mga09.intel.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:43808 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755298Ab2IUGPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 02:15:45 -0400
-Message-ID: <1348208142.23395.28.camel@yhuang-dev>
-Subject: Re: [PATCH v4 3/5] PCI/AER: clean all untracked pci_ops_aer when
- rmmod aer_inject
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Fri, 21 Sep 2012 14:15:42 +0800
-In-Reply-To: <505BFF8A.2080404@huawei.com>
-References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
-	  <1348199056-7696-4-git-send-email-wangyijing@huawei.com>
-	 <1348204383.23395.22.camel@yhuang-dev> <505BFF8A.2080404@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752789Ab2IHUWp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 8 Sep 2012 16:22:45 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Question about failure in PCI power-state change
+Date: Sat, 8 Sep 2012 22:29:01 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?utf-8?q?=E6=9D=8E=E6=9C=9D=E6=98=8E?=
+	<chaoming_li@realsil.com.cn>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Huang Ying <ying.huang@intel.com>
+References: <504A78E9.4030005@lwfinger.net> <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com>
+In-Reply-To: <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201209082229.01465.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-09-21 at 13:47 +0800, Yijing Wang wrote:
-> On 2012/9/21 13:13, Huang Ying wrote:
-> > On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
-> >> When we do hot plug for pci devices that were injected aer errors, some newly created child buses'
-> >> pci_ops will be assigned to pci_ops_aer. Aer_inject module will not track these pci_ops_aer(not
-> >> list in pci_bus_ops_list),so we should clean all of these when rmmod aer_inject module.
-> >>
-> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> Signed-off-by: Huang Ying <ying.huang@intel.com>
-
-Please remove my signed-off.
-
-> >> ---
-> >>  drivers/pci/pcie/aer/aer_inject.c |   24 ++++++++++++++++++++++++
-> >>  1 files changed, 24 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> >> index 0123120..e04cf24 100644
-> >> --- a/drivers/pci/pcie/aer/aer_inject.c
-> >> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> >> @@ -299,6 +299,29 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
-> >>  	bus_ops->ops = ops;
-> >>  }
-> >>  
-> >> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
-> >> +{
-> >> +	struct pci_bus *child;
-> >> +
-> >> +	list_for_each_entry(child, &bus->children, node) {
-> >> +		if (child->ops == &pci_ops_aer)
-> >> +			pci_bus_set_ops(child, bus->ops);
-> >> +		pci_clean_child_aer_ops(child);
-> >> +	}
-> >> +}
-> >> +
-> >> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
-> >> + * pci_ops of root bus won't be pci_ops_aer here*/
-> >> +static void clean_untracked_pci_ops_aer(void)
-> >> +{
-> >> +	struct pci_bus_ops *bus_ops;
-> >> +
-> >> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
-> >> +		if (pci_is_root_bus(bus_ops->bus))
-> > 
-> > Why do cleanup only for root bus?
-> > 
+On Saturday, September 08, 2012, Bjorn Helgaas wrote:
+> +cc Rafael, Huang, linux-pm
 > 
-> Because the bus with untracked pci_ops_aer always is the child bus of the root bus
-> whose pci_ops_aer is tracked in pci_bus_ops_list. So here only do cleanup for root bus to
-> avoid unnecessary pci_clean_child_aer_ops() called.
-> eg.
-> If inject aer errors into 0000:46:00.0, so the pci_ops of bus 0000:40 and bus 0000:46 will be assign to pci_ops_aer
-> hot remove and hot add 0000:46:00.0, so newly created bus 0000:47 0000:48 and 0000:49 have untracked pci_ops_aer;
-> In this case 0000:40 and 0000:46 are tracked in pci_bus_ops_list, but 0000:47 0000:48 and 0000:49 are not.
-> So when we clean untracked pci_ops_aer, I think only cleanup root bus's child bus is enough. cleanup bus 0000:46's child bus
-> is unnecessary.
-> 
->  |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
->  |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
->  |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
->  |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
+> On Fri, Sep 7, 2012 at 3:44 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > Hi,
+> >
+> > On occasion when I unload and reload driver rtl8192ce, I get the message
+> >
+> > "Refused to change power state, currently in D3"
+> >
+> > I added additional info to the printk and discovered that it was trying to
+> > change to state D0. The problem seems to occur when I have made a
+> > connection, unloaded the driver, and reloaded it. If I do not make a
+> > connection before unloading, then the problem is a lot less likely.
+> >
+> > This is with kernel 3.6-rc4 from wireless-testing. A Google search shows
+> > that the problem is usually due to suspend/resume difficulties, but this
+> > machine has not been suspended.
+> >
+> > I would appreciate any help that you might give in solving this issue.
 
-I see.
+I think writing "on" to the /sys/devices/.../power/control attribute of the device
+in question would help.
 
-Reviewed-by: Huang Ying <ying.huang@intel.com>
-
-Best Regards,
-Huang Ying
-
-> Thanks
-> Yijing
-> 
-> 
-> > Best Regards,
-> > Huang Ying
-> > 
-> >> +			pci_clean_child_aer_ops(bus_ops->bus);
-> >> +	}
-> >> +}
-> >> +
-> >>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
-> >>  {
-> >>  	struct pci_ops *ops;
-> >> @@ -560,6 +583,7 @@ static void __exit aer_inject_exit(void)
-> >>  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
-> >>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-> >>  
-> >> +	clean_untracked_pci_ops_aer();
-> >>  	while ((bus_ops = pci_bus_ops_pop()))
-> >>  		kfree(bus_ops);
-> >>  
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > .
-> > 
-> 
-> 
-
-
+Thanks,
+Rafael
