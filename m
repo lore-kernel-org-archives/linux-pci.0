@@ -1,81 +1,209 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:63125 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755343Ab2IQVmD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 17:42:03 -0400
-Received: by lagy9 with SMTP id y9so4514760lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 14:42:02 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
-References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Sep 2012 15:41:41 -0600
-Message-ID: <CAErSpo6j==2_HsLrMsJ30SFZkG6q_JqrcKe=XMa1Woy4C_if5Q@mail.gmail.com>
-Subject: Re: [RFC/PATCH] ia64, SR870, EFI bug breaks ata_piix, uninitialized
- ICH4 IDE EXBAR mem resource
-To: Stephan Schreiber <info@fs-driver.org>
-Cc: linux-ia64@vger.kernel.org, alan@lxorguk.ukuu.org.uk,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, 679545@bugs.debian.org,
-	jrnieder@gmail.com
+In-Reply-To: <CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
+References: <5017D19B.5080806@redhat.com>
+	<1343738627.27983.30.camel@gandalf.stny.rr.com>
+	<5017D4AB.3090107@redhat.com>
+	<1343740419.27983.33.camel@gandalf.stny.rr.com>
+	<20120731234336.GA5526@localhost>
+	<1343778699.27983.70.camel@gandalf.stny.rr.com>
+	<20120731235705.GW2422@linux.vnet.ibm.com>
+	<1343779778.27983.73.camel@gandalf.stny.rr.com>
+	<20120801001811.GX2422@linux.vnet.ibm.com>
+	<20120801004319.GA7043@localhost>
+	<20120822025008.GA8066@localhost>
+	<20120822154908.2e6ef3c0@feng-i7>
+	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
+	<20120823154503.15a45b14@feng-i7>
+	<CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
+Date: Fri, 7 Sep 2012 18:32:48 -0700
+Message-ID: <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for pci_get_subsys/class()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Fengguang Wu <fengguang.wu@intel.com>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Avi Kivity <avi@redhat.com>,
+	Steven Rostedt <srostedt@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, Feng Tang <feng.tang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 16, 2012 at 10:39 AM, Stephan Schreiber <info@fs-driver.org> wrote:
-
-> [    0.065516] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
-> [    0.065530] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
-> [    0.065541] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
-> [    0.065552] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
-> [    0.065563] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
-> [    0.065574] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
-> [    0.065585] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff]
-> ...
-> [    1.640965] libata version 3.00 loaded.
-> [    1.641656] ata_piix 0000:00:1f.1: version 2.13
-> [    1.641671] ata_piix 0000:00:1f.1: device not available (can't reserve
-> [mem 0x00000000-0x000003ff])
-> [    1.641747] ata_piix: probe of 0000:00:1f.1 failed with error -22
-> ...
+On Fri, Sep 7, 2012 at 6:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Aug 23, 2012 at 12:45 AM, Feng Tang <feng.tang@intel.com> wrote:
+>> From 57a28ee5e7662ca28ba4c793aa037d64bd082dee Mon Sep 17 00:00:00 2001
+>> From: Feng Tang <feng.tang@intel.com>
+>> Date: Wed, 22 Aug 2012 15:41:51 +0800
+>> Subject: [PATCH 1/2] PCI: Use local parameter pci_device_id for pci_get_subsys/class()
+>>
+>> This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
+>>
+>> pci_get_subsys() may get called in late system reboot stage, using
+>> a sleepable kmalloc() sounds fragile and will casue a kernel warning
+>> with my recent commmit 55c844a "x86/reboot: Fix a warning message
+>> triggered by stop_other_cpus()" which disable local interrupt in
+>> late system shutdown/reboot phase. Using a local parameter instead
+>> will fix it and make it eligible for calling forom atomic context.
+>>
+>> Do the same change for the pci_get_class() as suggeted by Bjorn Helgaas
+>>
+>> Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
+>> Signed-off-by: Feng Tang <feng.tang@intel.com>
+>> Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
+>> ---
+>>  drivers/pci/search.c |   35 +++++++++++------------------------
+>>  1 files changed, 11 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+>> index 993d4a0..78a08b1 100644
+>> --- a/drivers/pci/search.c
+>> +++ b/drivers/pci/search.c
+>> @@ -245,8 +245,7 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>>                                unsigned int ss_vendor, unsigned int ss_device,
+>>                                struct pci_dev *from)
+>>  {
+>> -       struct pci_dev *pdev;
+>> -       struct pci_device_id *id;
+>> +       struct pci_device_id id;
+>>
+>>         /*
+>>          * pci_find_subsys() can be called on the ide_setup() path,
+>> @@ -257,18 +256,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>>         if (unlikely(no_pci_devices()))
+>>                 return NULL;
+>>
+>> -       id = kzalloc(sizeof(*id), GFP_KERNEL);
+>> -       if (!id)
+>> -               return NULL;
+>> -       id->vendor = vendor;
+>> -       id->device = device;
+>> -       id->subvendor = ss_vendor;
+>> -       id->subdevice = ss_device;
+>> -
+>> -       pdev = pci_get_dev_by_id(id, from);
+>> -       kfree(id);
+>> +       id.vendor = vendor;
+>> +       id.device = device;
+>> +       id.subvendor = ss_vendor;
+>> +       id.subdevice = ss_device;
+>>
+>> -       return pdev;
+>> +       return pci_get_dev_by_id(&id, from);
+>>  }
+>>
+>>  /**
+>> @@ -307,19 +300,13 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+>>   */
+>>  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+>>  {
+>> -       struct pci_dev *dev;
+>> -       struct pci_device_id *id;
+>> +       struct pci_device_id id;
+>>
+>> -       id = kzalloc(sizeof(*id), GFP_KERNEL);
+>> -       if (!id)
+>> -               return NULL;
+>> -       id->vendor = id->device = id->subvendor = id->subdevice = PCI_ANY_ID;
+>> -       id->class_mask = PCI_ANY_ID;
+>> -       id->class = class;
+>> +       id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
+>> +       id.class_mask = PCI_ANY_ID;
+>> +       id.class = class;
+>>
+>> -       dev = pci_get_dev_by_id(id, from);
+>> -       kfree(id);
+>> -       return dev;
+>> +       return pci_get_dev_by_id(&id, from);
+>>  }
+>>
+>>  /**
 >
-> lspci -vvxxx reports:
+> with this one in pci/next pci config in /sys are not created.
 >
-> 00:1f.1 IDE interface: Intel Corporation 82801DB (ICH4) IDE Controller (rev
-> 02) (prog-if 8a [Master SecP PriP])
->         Subsystem: Intel Corporation Device 3404
->         Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-> Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0
->         Interrupt: pin A routed to IRQ 0
->         Region 0: I/O ports at 01f0 [size=8]
->         Region 1: I/O ports at 03f4 [size=1]
->         Region 2: I/O ports at 0170 [size=8]
->         Region 3: I/O ports at 0374 [size=1]
->         Region 4: I/O ports at 1000 [size=16]
-> 00: 86 80 cb 24 05 00 80 02 02 8a 01 01 00 00 00 00
-> 10: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
-> 20: 01 10 00 00 00 00 00 00 00 00 00 00 86 80 04 34
-> 30: 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00
+> 10:~ # lspci -tv
+> pcilib: Cannot open /sys/bus/pci/devices/0000:00:03.0/config
+> lspci: Unable to read the standard configuration space header of
+> device 0000:00:03.0
+> pcilib: Cannot open /sys/bus/pci/devices/0000:00:02.0/config
+> lspci: Unable to read the standard configuration space header of
+> device 0000:00:02.0
+> pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.3/config
+> lspci: Unable to read the standard configuration space header of
+> device 0000:00:01.3
+> pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.1/config
+> lspci: Unable to read the standard configuration space header of
+> device 0000:00:01.1
+> pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.0/config
+> lspci: Unable to read the standard configuration space header of
+> device 0000:00:01.0
+> pcilib: Cannot open /sys/bus/pci/devices/0000:00:00.0/config
+> lspci: Unable to read the standard configuration space header of
+> device 0000:00:00.0
+> -[0000:00]-
+>
+> bisected to this commit
+>
+> ccee7d23102f5e5765ec24779c5b77472af8f79e is the first bad commit
+> commit ccee7d23102f5e5765ec24779c5b77472af8f79e
+> Author: Feng Tang <feng.tang@intel.com>
+> Date:   Thu Aug 23 15:45:03 2012 +0800
+>
+>     PCI: Use pci_device_id on stack for pci_get_subsys/class() to avoid kmalloc
+>
+>     This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
+>
+>     pci_get_subsys() may get called in late system reboot stage, using
+>     a sleepable kmalloc() sounds fragile and will cause a kernel warning
+>     with my recent commmit 55c844a "x86/reboot: Fix a warning message
+>     triggered by stop_other_cpus()" which disable local interrupt in
+>     late system shutdown/reboot phase. Using a local parameter instead
+>     will fix it and make it eligible for calling forom atomic context.
+>
+>     Do the same change for the pci_get_class() as suggested by Bjorn Helgaas
+>
+>     [bhelgaas: changelog]
+>     Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
+>     Signed-off-by: Feng Tang <feng.tang@intel.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
+>
+> :040000 040000 dee62a035816b73abc68e40de8f21c7349efc4cb
+> 70b2a6258bffa1ab963bd650d8f5d02da774fbce M      drivers
+>
+> so the stack get overrun ?
+>
+> Bjorn, I think it is this one that cause lspci broken that I mentioned
+> during meeting at San Diego.
+>
 
-I agree that we should have a generic way to do this rather than an
-ia64-specific way.  In this case you have EFI, but the same thing
-could happen with BIOS.
+Greg,
 
-The firmware left the memory BAR at 0x24 cleared (0x00000000), but it
-also left the MEM bit in the command register disabled.  So it seems
-like a Linux bug that we're trying to use that zero address from the
-BAR.  If the firmware left the MEM or IO decode enable bit cleared,
-why would we assume it put anything useful in the corresponding BARs?
+Any reason for using kmalloc instead of local variable during your
+rewriting pci search code?
 
-What would break if we paid attention to the command register enables
-in the PCI core and just cleared the resource flags for MEM BARs if
-the MEM-decode bit was off, and those for IO BARs if the IO-decode bit
-was off?
+commit 95247b57ed844511a212265b45cf9a919753aea1
+Author: Greg Kroah-Hartman <gregkh@suse.de>
+Date:   Wed Feb 13 11:03:58 2008 -0800
 
-I don't know much of the ancient history here, so maybe there's a good
-reason why this works the way it currently does.
+    PCI: clean up search.c a lot
 
-Bjorn
+    This cleans up the search.c file, now using the pci list of devices that
+    are created for the driver core, instead of relying on our separate list
+    of devices.  It's better to use the functions already created for this
+    kind of thing, instead of rolling our own all the time.
+
+    This work is done in anticipation of getting rid of that second list of
+    pci devices all together.
+
+    And it ends up saving code, always a nice benefit.
+
+    This also removes one compiler warning for when CONFIG_PCI_LEGACY is
+    enabled as we no longer internally use the deprecated functions anymore.
+
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
