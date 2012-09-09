@@ -1,247 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part5 3/7] ACPI, PCI: Protect global lists in drivers/acpi/pci_root.c
-Date: Sun,  2 Sep 2012 14:56:01 -0700
-Message-Id: <1346622965-30937-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
-References: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:52649 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753255Ab2IIOnF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Sep 2012 10:43:05 -0400
+Subject: Re: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non MSI/INTx interrupt
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=US-ASCII
+From: Kumar Gala <galak@kernel.crashing.org>
+In-Reply-To: <CAErSpo78VePbVtz1CQrKA5f6tmpU7v_qY6ZYozh9FrW-m0g2rA@mail.gmail.com>
+Date: Sun, 9 Sep 2012 09:42:41 -0500
+Cc: Zang Roy-R61911 <r61911@freescale.com>,
+	Liu Shengzhou-B36685 <B36685@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	Wood Scott-B07421 <B07421@freescale.com>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Message-Id: <E01863CB-C76F-4498-8520-BE1817F122BC@kernel.crashing.org>
+References: <1342591614-1840-1-git-send-email-Shengzhou.Liu@freescale.com> <3F453DDFF675A64A89321A1F35281021771A8B@039-SN1MPN1-003.039d.mgd.msft.net> <3E027F8168735B46AC006B1D0C7BB002079D6153@039-SN2MPN1-012.039d.mgd.msft.net> <CAErSpo78VePbVtz1CQrKA5f6tmpU7v_qY6ZYozh9FrW-m0g2rA@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
 
-There are two global lists inf file drivers/acpi/pci_root.c.
-One is for registered acpi_pci_drivers, the other is for
-enumerated ACPI PCI root bridge objects. These two global
-lists may change dynamically when registering/deregistering
-acpi_pci_drivers or adding/removing ACPI PCI root bridge
-objects. So protect them by mutex lock and RCU list.
+On Sep 7, 2012, at 5:08 PM, Bjorn Helgaas wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |   87 ++++++++++++++++++++++++++++------------------
- 1 files changed, 53 insertions(+), 34 deletions(-)
+> On Mon, Aug 6, 2012 at 8:45 PM, Zang Roy-R61911 <r61911@freescale.com> wrote:
+>> 
+>> 
+>>> -----Original Message-----
+>>> From: Linuxppc-dev [mailto:linuxppc-dev-bounces+tie-
+>>> fei.zang=freescale.com@lists.ozlabs.org] On Behalf Of Liu Shengzhou-B36685
+>>> Sent: Thursday, July 26, 2012 11:45 AM
+>>> To: bhelgaas@google.com; linux-pci@vger.kernel.org; akpm@linux-
+>>> foundation.org
+>>> Cc: Wood Scott-B07421; linuxppc-dev@lists.ozlabs.org; Liu Shengzhou-B36685
+>>> Subject: RE: [PATCH v2] PCI: use dev->irq instead of dev->pin to enable non
+>>> MSI/INTx interrupt
+>>> 
+>>> Hello,
+>>> 
+>>> A gentle reminder!
+>>> Any comments are appreciated.
+>> 
+>> Who can help to review and pick up this patch?
+> 
+> I merged this to a staging branch and will merge it to my "next"
+> branch as soon as it gets a build/smoke test by Fengguang.  Thanks!
+> 
+> Bjorn
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 9ba516b..f3402df 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -27,7 +27,8 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/types.h>
--#include <linux/spinlock.h>
-+#include <linux/mutex.h>
-+#include <linux/rculist.h>
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
-@@ -71,6 +72,8 @@ static struct acpi_driver acpi_pci_root_driver = {
- 		},
- };
- 
-+/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
-+static DEFINE_MUTEX(acpi_pci_root_lock);
- static LIST_HEAD(acpi_pci_roots);
- static LIST_HEAD(acpi_pci_drivers);
- 
-@@ -81,47 +84,48 @@ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
- 	int n = 0;
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_add_tail(&driver->node, &acpi_pci_drivers);
--
--	if (!driver->add)
--		return 0;
--
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		driver->add(root->device->handle);
--		n++;
--	}
-+	if (driver->add)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
-+			driver->add(root->device->handle);
-+			n++;
-+		}
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	return n;
- }
--
- EXPORT_SYMBOL(acpi_pci_register_driver);
- 
- void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
- {
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_del(&driver->node);
--
--	if (!driver->remove)
--		return;
--
--	list_for_each_entry(root, &acpi_pci_roots, node)
--		driver->remove(root->device->handle);
-+	if (driver->remove)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node)
-+			driver->remove(root->device->handle);
-+	mutex_unlock(&acpi_pci_root_lock);
- }
--
- EXPORT_SYMBOL(acpi_pci_unregister_driver);
- 
- acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
- {
- 	struct acpi_pci_root *root;
-+	struct acpi_handle *handle = NULL;
- 	
--	list_for_each_entry(root, &acpi_pci_roots, node)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
- 		if ((root->segment == (u16) seg) &&
--		    (root->secondary.start == (u16) bus))
--			return root->device->handle;
--	return NULL;		
--}
-+		    (root->secondary.start == (u16) bus)) {
-+			handle = root->device->handle;
-+			break;
-+		}
-+	rcu_read_unlock();
- 
-+	return handle;
-+}
- EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
- 
- /**
-@@ -268,10 +272,15 @@ struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle)
- {
- 	struct acpi_pci_root *root;
- 
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		if (root->device->handle == handle)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
-+		if (root->device->handle == handle) {
-+			rcu_read_unlock();
- 			return root;
-+		}
- 	}
-+	rcu_read_unlock();
-+
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(acpi_pci_find_root);
-@@ -459,7 +468,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND) {
- 		printk(KERN_ERR PREFIX "can't evaluate _SEG\n");
- 		result = -ENODEV;
--		goto end;
-+		goto out_free;
- 	}
- 
- 	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
-@@ -484,7 +493,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 		else {
- 			printk(KERN_ERR PREFIX "can't evaluate _BBN\n");
- 			result = -ENODEV;
--			goto end;
-+			goto out_free;
- 		}
- 	}
- 
-@@ -508,8 +517,8 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
- 	 */
- 
--	/* TBD: Locking */
--	list_add_tail(&root->node, &acpi_pci_roots);
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_add_tail_rcu(&root->node, &acpi_pci_roots);
- 
- 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
-@@ -528,7 +537,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 			    "Bus %04x:%02x not present in PCI namespace\n",
- 			    root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
--		goto end;
-+		goto out_del_root;
- 	}
- 
- 	/*
-@@ -538,7 +547,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	 */
- 	result = acpi_pci_bind_root(device);
- 	if (result)
--		goto end;
-+		goto out_del_root;
- 
- 	/*
- 	 * PCI Routing Table
-@@ -614,11 +623,15 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
-+	mutex_unlock(&acpi_pci_root_lock);
-+
- 	return 0;
- 
--end:
--	if (!list_empty(&root->node))
--		list_del(&root->node);
-+out_del_root:
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
-+out_free:
- 	kfree(root);
- 	return result;
- }
-@@ -628,11 +641,13 @@ static int acpi_pci_root_start(struct acpi_device *device)
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
- 			driver->add(device->handle);
- 
- 	pci_bus_add_devices(root->bus);
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	return 0;
- }
-@@ -642,6 +657,8 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	mutex_lock(&acpi_pci_root_lock);
-+
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->remove)
- 			driver->remove(root->device->handle);
-@@ -661,7 +678,9 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	pci_stop_and_remove_bus(root->bus);
- 
- out:
--	list_del(&root->node);
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
- 	kfree(root);
- 
- 	return 0;
--- 
-1.7.7
+Thanks
 
+- k
