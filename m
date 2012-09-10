@@ -1,154 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24996 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755499Ab2ICJSm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Sep 2012 05:18:42 -0400
-Date: Mon, 3 Sep 2012 11:18:28 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH v2 -tip 2/5] x86, MSI: Allocate as many multiple IRQs as
- requested
-Message-ID: <6685ab469cc043dab2780d6c7bf05c52a589fc24.1346653435.git.agordeev@redhat.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:61121 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753766Ab2IJWr6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2012 18:47:58 -0400
+Received: by lagy9 with SMTP id y9so1492199lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Sep 2012 15:47:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1346653435.git.agordeev@redhat.com>
+In-Reply-To: <20120904143946.25201.77305.stgit@localhost.localdomain>
+References: <20120904143946.25201.77305.stgit@localhost.localdomain>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Sep 2012 16:47:36 -0600
+Message-ID: <CAErSpo5c8y8mO7QAUr2tUn-SAMhzcbaC4secHzw1k--uUoK60A@mail.gmail.com>
+Subject: Re: [PATCH] cpqphp_ctrl: remove unreachable path
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When multiple MSIs are enabled with pci_enable_msi_block() the number of
-allocated IRQs 'nvec' is rounded up to the nearest value of power of two.
-That could lead to a condition when number of requested and used IRQs is
-less than number of actually allocated IRQs.
+On Tue, Sep 4, 2012 at 8:39 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> From: Alan Cox <alan@linux.intel.com>
+>
+> register & 0x0B == 0x04 is never true, the code will always take the
+> (identical) 0x00 path anyway. Remove the dead code paths.
+>
+> Resolves-bug: https://bugzilla.kernel.org/show_bug.cgi?id=44151
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
 
-This fix introduces 'msi_desc::nvec' field to address the above issue -
-when non-zero, it holds the number of allocated IRQs. Otherwise, the old
-method is used.
+Applied to my "pci/trivial" branch, thanks!
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/x86/kernel/apic/io_apic.c |   16 +++++++---------
- drivers/pci/msi.c              |   10 ++++++++--
- include/linux/msi.h            |    1 +
- 3 files changed, 16 insertions(+), 11 deletions(-)
+Bjorn
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 5fd2577..fbf3916 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3116,16 +3116,12 @@ static inline void destroy_irqs(unsigned int irq, unsigned int count)
- }
- 
- static inline int
--can_create_pow_of_two_irqs(unsigned int from, unsigned int count)
-+can_create_irqs(unsigned int from, unsigned int count)
- {
--	if ((count > 1) && (count % 2))
--		return -EINVAL;
--
--	for (; count; count = count / 2) {
-+	for (; count; count = count - 1) {
- 		if (!irq_can_alloc_irqs(from, count))
- 			return count;
- 	}
--
- 	return -ENOSPC;
- }
- 
-@@ -3307,8 +3303,7 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	if (nvec > 1 && !irq_remapping_enabled)
- 		return 1;
- 
--	nvec = __roundup_pow_of_two(nvec);
--	ret = can_create_pow_of_two_irqs(nr_irqs_gsi, nvec);
-+	ret = can_create_irqs(nr_irqs_gsi, nvec);
- 	if (ret != nvec)
- 		return ret;
- 
-@@ -3316,11 +3311,13 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
-+	WARN_ON(msidesc->nvec);
- 
- 	node = dev_to_node(&dev->dev);
- 	irq = create_irqs(nr_irqs_gsi, nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
-+	msidesc->nvec = nvec;
- 
- 	if (!irq_remapping_enabled) {
- 		ret = setup_msi_irq(dev, msidesc, irq, 0);
-@@ -3329,7 +3326,7 @@ int setup_msi_irqs(struct pci_dev *dev, int nvec)
- 		return 0;
- 	}
- 
--	msidesc->msi_attrib.multiple = ilog2(nvec);
-+	msidesc->msi_attrib.multiple = ilog2(__roundup_pow_of_two(nvec));
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
- 			index = msi_alloc_remapped_irq(dev, irq, nvec);
-@@ -3357,6 +3354,7 @@ error:
- 	 */
- 	msidesc->irq = 0;
- 	msidesc->msi_attrib.multiple = 0;
-+	msidesc->nvec = 0;
- 
- 	return ret;
- }
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a825d78..f0752d1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -79,7 +79,10 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
- 		int i, nvec;
- 		if (entry->irq == 0)
- 			continue;
--		nvec = 1 << entry->msi_attrib.multiple;
-+		if (entry->nvec)
-+			nvec = entry->nvec;
-+		else
-+			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
- 			arch_teardown_msi_irq(entry->irq + i);
- 	}
-@@ -336,7 +339,10 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		int i, nvec;
- 		if (!entry->irq)
- 			continue;
--		nvec = 1 << entry->msi_attrib.multiple;
-+		if (entry->nvec)
-+			nvec = entry->nvec;
-+		else
-+			nvec = 1 << entry->msi_attrib.multiple;
- 		for (i = 0; i < nvec; i++)
- 			BUG_ON(irq_has_action(entry->irq + i));
- 	}
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ce93a34..6f4dfba 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -35,6 +35,7 @@ struct msi_desc {
- 
- 	u32 masked;			/* mask bits */
- 	unsigned int irq;
-+	unsigned int nvec;
- 	struct list_head list;
- 
- 	union {
--- 
-1.7.7.6
-
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+> ---
+>
+>  drivers/pci/hotplug/cpqphp_ctrl.c |   21 +--------------------
+>  1 file changed, 1 insertion(+), 20 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
+> index e43908d..36112fe 100644
+> --- a/drivers/pci/hotplug/cpqphp_ctrl.c
+> +++ b/drivers/pci/hotplug/cpqphp_ctrl.c
+> @@ -2890,27 +2890,8 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+>                                                 func->mem_head = mem_node;
+>                                         } else
+>                                                 return -ENOMEM;
+> -                               } else if ((temp_register & 0x0BL) == 0x04) {
+> -                                       /* Map memory */
+> -                                       base = temp_register & 0xFFFFFFF0;
+> -                                       base = ~base + 1;
+> -
+> -                                       dbg("CND:      length = 0x%x\n", base);
+> -                                       mem_node = get_resource(&(resources->mem_head), base);
+> -
+> -                                       /* allocate the resource to the board */
+> -                                       if (mem_node) {
+> -                                               base = mem_node->base;
+> -
+> -                                               mem_node->next = func->mem_head;
+> -                                               func->mem_head = mem_node;
+> -                                       } else
+> -                                               return -ENOMEM;
+> -                               } else if ((temp_register & 0x0BL) == 0x06) {
+> -                                       /* Those bits are reserved, we can't handle this */
+> -                                       return 1;
+>                                 } else {
+> -                                       /* Requesting space below 1M */
+> +                                       /* Reserved bits or requesting space below 1M */
+>                                         return NOT_ENOUGH_RESOURCES;
+>                                 }
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
