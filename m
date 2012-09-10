@@ -1,86 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:4744 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989Ab2IUDp6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:45:58 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v4 2/5] PCI/AER: introduce pci_bus_ops_get() to avoid a small race condition window
-Date: Fri, 21 Sep 2012 11:44:13 +0800
-Message-ID: <1348199056-7696-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
-References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61309 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753271Ab2IJD4i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 9 Sep 2012 23:56:38 -0400
+Message-ID: <504D64F1.206@lwfinger.net>
+Date: Sun, 09 Sep 2012 22:56:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: Question about failure in PCI power-state change
+References: <504A78E9.4030005@lwfinger.net>  <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com> <1347236699.28607.17.camel@yhuang-dev>
+In-Reply-To: <1347236699.28607.17.camel@yhuang-dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
-and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
-them. So introduce pci_bus_ops_get() to avoid this.
+On 09/09/2012 07:24 PM, Huang Ying wrote:
+> On Fri, 2012-09-07 at 15:48 -0700, Bjorn Helgaas wrote:
+>> +cc Rafael, Huang, linux-pm
+>>
+>> On Fri, Sep 7, 2012 at 3:44 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> Hi,
+>>>
+>>> On occasion when I unload and reload driver rtl8192ce, I get the message
+>>>
+>>> "Refused to change power state, currently in D3"
+>
+> Hi, Larry,
+>
+> We fixed a similar issue recently.  And the patch has been merged by
+> v3.6-rc5.  Can you try v3.6-rc5?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
- 1 files changed, 18 insertions(+), 3 deletions(-)
+V3.6-rc5 was merged with wireless-testing today. It did not change my symptoms, 
+but I think I have identified another problem with my driver.
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index fdab3bb..0123120 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -67,6 +67,8 @@ struct pci_bus_ops {
- 	struct pci_ops *ops;
- };
- 
-+#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
-+
- static LIST_HEAD(einjected);
- 
- static LIST_HEAD(pci_bus_ops_list);
-@@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
- 	return bus_ops;
- }
- 
-+static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
-+{
-+	struct pci_bus_ops *bus_ops = NULL;
-+	struct list_head *n;
-+
-+	n = from ? from->list.next : pci_bus_ops_list.next;
-+	if (n != &pci_bus_ops_list)
-+		bus_ops = to_pci_bus_ops(n);
-+
-+	return bus_ops;
-+}
-+
- static u32 *find_pci_config_dword(struct aer_error *err, int where,
- 				  int *prw1cs)
- {
-@@ -539,14 +553,15 @@ static void __exit aer_inject_exit(void)
- {
- 	struct aer_error *err, *err_next;
- 	unsigned long flags;
--	struct pci_bus_ops *bus_ops;
-+	struct pci_bus_ops *bus_ops = NULL;
- 
- 	misc_deregister(&aer_inject_device);
- 
--	while ((bus_ops = pci_bus_ops_pop())) {
-+	while ((bus_ops = pci_bus_ops_get(bus_ops)))
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-+
-+	while ((bus_ops = pci_bus_ops_pop()))
- 		kfree(bus_ops);
--	}
- 
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
--- 
-1.7.1
+Thanks for the heads-up.
+
+Larry
 
 
