@@ -1,39 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:52768 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab2ISCmJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:42:09 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: =?utf-8?q?=5BPATCH=200/6=5D=20fix=20aer=5Finject=20bug=20while=20doing=20pci=20hot-plug?=
-Date: Wed, 19 Sep 2012 10:40:36 +0800
-Message-ID: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+Received: from mga11.intel.com ([192.55.52.93]:65456 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757328Ab2IJWze (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Sep 2012 18:55:34 -0400
+Date: Tue, 11 Sep 2012 06:55:04 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiri Slaby <jslaby@suse.cz>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	Feng Tang <feng.tang@intel.com>
+Subject: Re: [PATCH 1/1] PCI: fix on-stack pci_device_id's
+Message-ID: <20120910225504.GA18038@localhost>
+References: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
+ <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2--->v3
-1、find the pci_ops of nearest parent bus in patch 1;
-2、introduce pci_bus_ops_get to avoid race condition window in aer_inject_exit;
-3、scan the root bus for cleaning untracked pci_ops_aer instead of scan all pci bus as Huang Ying suggestion;
-4、remove unused code pci_bus_ops_pop;
+On Mon, Sep 10, 2012 at 02:44:32PM -0600, Bjorn Helgaas wrote:
+> On Mon, Sep 10, 2012 at 1:36 PM, Jiri Slaby <jslaby@suse.cz> wrote:
+> > Commit "PCI: Use pci_device_id on stack for pci_get_subsys/class() to
+> > avoid kmalloc" changed heap allocations to on-stack variables, but it
+> > did not add initialization of other than set members. This causes
+> > random failures during bootup wherever pci device is needed to be
+> > found. Hence the boot just hangs or panics.
+> >
+> > This patches fixes it by setting the content of pci_device_id directly
+> > in the initializer.
+> 
+> Nice!  I fixed this already by adding a memset(), but I like your way
+> better.  I knew we could initialize members of a structure on the
+> stack, but I didn't know C guaranteed that uninitialized members would
+> be implicitly initialized also.  But apparently it does:
+> 
+> http://stackoverflow.com/questions/10828294/c-and-c-partial-initialization-of-automatic-structure
 
-Yijing Wang (6):
-  PCI/AER: fix pci_ops return NULL when hotplug a pci bus doing aer
-    error inject
-  PCI/AER: introduce pci_bus_ops_get() function to avoid a small race
-    condition window
-  PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
-  PCI/AER: clean pci_bus_ops when related pci bus was removed
-  PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
-  PCI/AER: clean unused code pci_bus_ops_pop
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
 
- drivers/pci/pcie/aer/aer_inject.c |  149 ++++++++++++++++++++++++++++++++-----
- 1 files changed, 131 insertions(+), 18 deletions(-)
+For the record, I proposed the same initializer-style fix in the very
+beginning that you didn't realize its beauty until now ;-)
 
-
+Thanks,
+Fengguang
