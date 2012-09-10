@@ -1,126 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41131 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757473Ab2IQXin (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 19:38:43 -0400
-Received: by iahk25 with SMTP id k25so5706639iah.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 16:38:42 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56492 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752861Ab2IJWnL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2012 18:43:11 -0400
+Received: by lagy9 with SMTP id y9so1489827lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Sep 2012 15:43:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1346622653-30741-5-git-send-email-yinghai@kernel.org>
-References: <1346622653-30741-1-git-send-email-yinghai@kernel.org> <1346622653-30741-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1347061864.2385.59.camel@pasglop>
+References: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
+ <CAErSpo559Hr-fnZTDZGOfz9T6_GSHKhoKChgNbq-apLuLqbaYQ@mail.gmail.com> <1347061864.2385.59.camel@pasglop>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Sep 2012 17:38:22 -0600
-Message-ID: <CAErSpo40tRGynUQEfyB6svinH_wizevXvg5kEMFQtvCdmO1duw@mail.gmail.com>
-Subject: Re: [PATCH part2 4/6] x86, PCI: Separate rom resource claim out
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
+Date: Mon, 10 Sep 2012 16:42:49 -0600
+Message-ID: <CAErSpo41vr4f4YkLZc-QwHU8CTQv1FxzGF9h5-eu85NaTUhPaw@mail.gmail.com>
+Subject: Re: [PATCH V9 0/5] Minimal alignment for p2p bars
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 2, 2012 at 3:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> So could use it with hot-added root bus.
+On Fri, Sep 7, 2012 at 5:51 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2012-09-07 at 15:49 -0700, Bjorn Helgaas wrote:
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/gavin-window-alignment
+>>
+>> Assuming they pass Fengguang's build/smoke test, I'll merge that to my
+>> "next" branch soon.  Thanks!
 >
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  arch/x86/pci/i386.c |   58 ++++++++++++++++++++++++++++++++++++---------------
->  1 files changed, 41 insertions(+), 17 deletions(-)
+> Thanks !
 >
-> diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-> index 84696ed..4fdf0b2 100644
-> --- a/arch/x86/pci/i386.c
-> +++ b/arch/x86/pci/i386.c
-> @@ -298,27 +298,51 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
->         }
->  }
->
-> -static int __init pcibios_assign_resources(void)
-> +static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
->  {
-> -       struct pci_dev *dev = NULL;
->         struct resource *r;
->
-> -       if (!(pci_probe & PCI_ASSIGN_ROMS)) {
-> -               /*
-> -                * Try to use BIOS settings for ROMs, otherwise let
-> -                * pci_assign_unassigned_resources() allocate the new
-> -                * addresses.
-> -                */
-> -               for_each_pci_dev(dev) {
-> -                       r = &dev->resource[PCI_ROM_RESOURCE];
-> -                       if (!r->flags || !r->start)
-> -                               continue;
-> -                       if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-> -                               r->end -= r->start;
-> -                               r->start = 0;
-> -                       }
-> -               }
-> +       /*
-> +        * Try to use BIOS settings for ROMs, otherwise let
-> +        * pci_assign_unassigned_resources() allocate the new
-> +        * addresses.
-> +        */
-> +       r = &dev->resource[PCI_ROM_RESOURCE];
-> +       if (!r->flags || !r->start)
-> +               return;
-> +
-> +       if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-> +               r->end -= r->start;
-> +               r->start = 0;
->         }
-> +}
-> +static void __init __pcibios_allocate_rom_resources(struct pci_bus *bus)
-> +{
-> +       struct pci_dev *dev;
-> +       struct pci_bus *child;
-> +
-> +       list_for_each_entry(dev, &bus->devices, bus_list) {
-> +               pcibios_allocate_dev_rom_resource(dev);
-> +
-> +               child = dev->subordinate;
-> +               if (child)
-> +                       __pcibios_allocate_rom_resources(child);
+> Any chance you can poke me when you do so ? At that point I'll include
+> them as well along with the rest of the stuff that depends on them.
 
-I really dislike the "__" prefix on the function names.  It seems
-pointless to add another function and the "__" when all you need is a
-test of PCI_ASSIGN_ROMS.  Also, it makes the structure of
-__pcibios_allocate_rom_resources() different from
-pcibios_allocate_resources() when they should be exactly the same.
+I merged these to my "next" branch and pushed it.  Are you sure you
+want to pull that as opposed to just using the
+pci/gavin-window-alignment branch?  Both "next" and
+"pci/gavin-window-alignment" have identical commits, but
+"pci/gavin-window-alignment" is less likely to be rebased.
 
-What if you made pcibios_assign_resources() look like this:
-
-    if (!!(pci_probe & PCI_ASSIGN_ROMS)) {
-        list_for_each_entry(bus, &pci_root_buses, node)
-            pcibios_allocate_rom_resources(bus);
-    }
-
-Then I don't think you'd need the extra function.
-
-> +       }
-> +}
-> +static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
-> +{
-> +       if (pci_probe & PCI_ASSIGN_ROMS)
-> +               return;
-> +
-> +       __pcibios_allocate_rom_resources(bus);
-> +}
-> +
-> +static int __init pcibios_assign_resources(void)
-> +{
-> +       struct pci_bus *bus;
-> +
-> +       list_for_each_entry(bus, &pci_root_buses, node)
-> +               pcibios_allocate_rom_resources(bus);
->
->         pci_assign_unassigned_resources();
->         pcibios_fw_addr_list_del();
-> --
-> 1.7.7
->
+Bjorn
