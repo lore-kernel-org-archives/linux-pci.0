@@ -1,104 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53377 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab2ISCmr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:42:47 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 4/6] PCI/AER: clean pci_bus_ops when related pci bus was removed
-Date: Wed, 19 Sep 2012 10:40:40 +0800
-Message-ID: <1348022442-7816-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:42689 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932434Ab2IJUox (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2012 16:44:53 -0400
+Received: by ieje11 with SMTP id e11so4101823iej.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Sep 2012 13:44:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
+References: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Sep 2012 14:44:32 -0600
+Message-ID: <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com>
+Subject: Re: [PATCH 1/1] PCI: fix on-stack pci_device_id's
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jirislaby@gmail.com, Feng Tang <feng.tang@intel.com>,
+	Fengguang Wu <fengguang.wu@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When Inject aer errors to the target pci device, a pci_bus_ops will
-be allocated for the pci device's pci bus.When the pci bus was removed,
-we should also release the pci_bus_ops.
+On Mon, Sep 10, 2012 at 1:36 PM, Jiri Slaby <jslaby@suse.cz> wrote:
+> Commit "PCI: Use pci_device_id on stack for pci_get_subsys/class() to
+> avoid kmalloc" changed heap allocations to on-stack variables, but it
+> did not add initialization of other than set members. This causes
+> random failures during bootup wherever pci device is needed to be
+> found. Hence the boot just hangs or panics.
+>
+> This patches fixes it by setting the content of pci_device_id directly
+> in the initializer.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   48 ++++++++++++++++++++++++++++++++++++-
- 1 files changed, 47 insertions(+), 1 deletions(-)
+Nice!  I fixed this already by adding a memset(), but I like your way
+better.  I knew we could initialize members of a structure on the
+stack, but I didn't know C guaranteed that uninitialized members would
+be implicitly initialized also.  But apparently it does:
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index e2400b5..0a12ac7 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -570,10 +570,55 @@ static struct miscdevice aer_inject_device = {
- 	.fops = &aer_inject_fops,
- };
- 
-+static void aer_clean_pci_bus_ops(struct pci_dev *dev)
-+{
-+	unsigned long flags;
-+	struct pci_bus_ops *bus_ops, *tmp_ops;
-+	struct pci_bus *bus;
-+	bus = dev->subordinate;
-+	if (!bus)
-+		return;
-+
-+	spin_lock_irqsave(&inject_lock, flags);
-+	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list)
-+		if (bus_ops->bus == bus) {
-+			list_del(&bus_ops->list);
-+			kfree(bus_ops);
-+			break;
-+		}
-+	spin_unlock_irqrestore(&inject_lock, flags);
-+}
-+
-+static int aer_hp_notify_fn(struct notifier_block *nb,
-+		unsigned long event, void *data)
-+{
-+	switch (event) {
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		aer_clean_pci_bus_ops(to_pci_dev(data));
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block aerinj_hp_notifier = {
-+	.notifier_call = &aer_hp_notify_fn,
-+};
- 
- static int __init aer_inject_init(void)
- {
--	return misc_register(&aer_inject_device);
-+	int ret;
-+	ret = misc_register(&aer_inject_device);
-+	if (ret)
-+		goto out;
-+
-+	ret = bus_register_notifier(&pci_bus_type, &aerinj_hp_notifier);
-+	if (ret)
-+		misc_deregister(&aer_inject_device);
-+out:
-+	return ret;
- }
- 
- static void __exit aer_inject_exit(void)
-@@ -582,6 +627,7 @@ static void __exit aer_inject_exit(void)
- 	unsigned long flags;
- 	struct pci_bus_ops *bus_ops = NULL;
- 
-+	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
- 	misc_deregister(&aer_inject_device);
- 
- 	/* clean pci_bus_ops tracked in pci_bus_ops_list */
--- 
-1.7.1
+http://stackoverflow.com/questions/10828294/c-and-c-partial-initialization-of-automatic-structure
 
-
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: Feng Tang <feng.tang@intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Fengguang Wu <fengguang.wu@intel.com>
+> ---
+>  drivers/pci/search.c | 25 ++++++++++++++-----------
+>  1 file changed, 14 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index 00d486a..bf969ba 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -243,12 +243,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>                                unsigned int ss_vendor, unsigned int ss_device,
+>                                struct pci_dev *from)
+>  {
+> -       struct pci_device_id id;
+> -
+> -       id.vendor = vendor;
+> -       id.device = device;
+> -       id.subvendor = ss_vendor;
+> -       id.subdevice = ss_device;
+> +       struct pci_device_id id = {
+> +               .vendor = vendor,
+> +               .device = device,
+> +               .subvendor = ss_vendor,
+> +               .subdevice = ss_device,
+> +       };
+>
+>         return pci_get_dev_by_id(&id, from);
+>  }
+> @@ -289,11 +289,14 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+>   */
+>  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
+>  {
+> -       struct pci_device_id id;
+> -
+> -       id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
+> -       id.class_mask = PCI_ANY_ID;
+> -       id.class = class;
+> +       struct pci_device_id id = {
+> +               .vendor = PCI_ANY_ID,
+> +               .device = PCI_ANY_ID,
+> +               .subvendor = PCI_ANY_ID,
+> +               .subdevice = PCI_ANY_ID,
+> +               .class_mask = PCI_ANY_ID,
+> +               .class = class,
+> +       };
+>
+>         return pci_get_dev_by_id(&id, from);
+>  }
+> --
+> 1.7.11.5
+>
+>
