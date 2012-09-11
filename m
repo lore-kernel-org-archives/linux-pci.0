@@ -1,91 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:64687 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757067Ab2IGX2z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 19:28:55 -0400
-Received: by lbbgj3 with SMTP id gj3so162233lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 16:28:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201209072328.30553.rjw@sisk.pl>
-References: <201209072328.30553.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 16:28:33 -0700
-Message-ID: <CAErSpo7-6PEEt+pDV-XRrfHVKDuw+_CbtKK-fEguyGhd_qapdw@mail.gmail.com>
-Subject: Re: [Resend][PATCH] pciehp: always implement resume
+Received: from netrider.rowland.org ([192.131.102.5]:45486 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758474Ab2IKVcY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 17:32:24 -0400
+Date: Tue, 11 Sep 2012 17:32:23 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>,
+cc: Dave Airlie <airlied@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
 	Linux PM list <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Oliver Neukum <oliver@neukum.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: runtime PM and special power switches
+In-Reply-To: <201209112255.10486.rjw@sisk.pl>
+Message-ID: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 7, 2012 at 2:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Oliver Neukum <oliver@neukum.org>
-> Subject: pciehp: always implement resume
->
-> The driver by default ignores resume. On some laptops
-> that means that interrupts are not delivered after S3.
-> So card removals and insertions will not be handled. Requiring
-> a forced load isn't right.
->
-> Signed-off-by: Oliver Neukum <oneukum@suse.de>
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
 
-I applied this (with fixed From: email address and slightly modified
-changelog) to http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/oliver-pciehp-resume
-and will merge it to "next" after Fengguang's build/smoke tests.
+> Hi,
+> 
+> On Tuesday, September 11, 2012, Dave Airlie wrote:
+> > Hi Rafael,
+> > 
+> > I've been investigating runtime PM support for some use-cases on GPUs.
+> > 
+> > In some laptops we have a secondary GPU (optimus) that can be powered
+> > up for certain 3D tasks and then turned off when finished with. Now I
+> > did an initial pass on supporting it without using the kernel runtime
+> > PM stuff, but Alan said I should take a look so here I am.
+> 
+> Alan Stern or Alan Cox? :-)
+> 
+> > While I've started to get a handle on things, we have a bit of an
+> > extra that I'm not sure we cater for.
+> > 
+> > Currently we get called from the PCI layer which after we are finished
+> > with our runtime suspend callback, will go put the device into the
+> > correct state etc, however on these optimus/powerxpress laptops we
+> > have a separate ACPI or platform driver controlled power switch that
+> > we need to call once the PCI layer is finished the job. This switch
+> > effectively turns the power to the card completely off leaving it
+> > drawing no power.
+> > 
+> > No we can't hit the switch from the driver callback as the PCI layer
+> > will get lost, so I'm wondering how you'd envisage we could plug this
+> > in.
+> 
+> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
+> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
+> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
+> so perhaps it's not even too dangerous.
 
-Thanks!
+This sounds more like a job for a power domain.  Unless the power
+switch is already in the device hierarchy as a parent to the PCI
+device.
 
-Bjorn
+Alan Stern
 
-> ---
-> drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
->  drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
->  1 file changed, 14 insertions(+), 14 deletions(-)
->
-> Index: linux/drivers/pci/hotplug/pciehp_core.c
-> ===================================================================
-> --- linux.orig/drivers/pci/hotplug/pciehp_core.c
-> +++ linux/drivers/pci/hotplug/pciehp_core.c
-> @@ -300,24 +300,24 @@ static int pciehp_suspend (struct pcie_d
->
->  static int pciehp_resume (struct pcie_device *dev)
->  {
-> +       struct controller *ctrl;
-> +       struct slot *slot;
-> +       u8 status;
-> +
->         dev_info(&dev->device, "%s ENTRY\n", __func__);
-> -       if (pciehp_force) {
-> -               struct controller *ctrl = get_service_data(dev);
-> -               struct slot *slot;
-> -               u8 status;
-> +       ctrl = get_service_data(dev);
->
-> -               /* reinitialize the chipset's event detection logic */
-> -               pcie_enable_notification(ctrl);
-> +       /* reinitialize the chipset's event detection logic */
-> +       pcie_enable_notification(ctrl);
->
-> -               slot = ctrl->slot;
-> +       slot = ctrl->slot;
->
-> -               /* Check if slot is occupied */
-> -               pciehp_get_adapter_status(slot, &status);
-> -               if (status)
-> -                       pciehp_enable_slot(slot);
-> -               else
-> -                       pciehp_disable_slot(slot);
-> -       }
-> +       /* Check if slot is occupied */
-> +       pciehp_get_adapter_status(slot, &status);
-> +       if (status)
-> +               pciehp_enable_slot(slot);
-> +       else
-> +               pciehp_disable_slot(slot);
->         return 0;
->  }
->  #endif /* PM */
