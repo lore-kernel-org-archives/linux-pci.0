@@ -1,114 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:29001 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754616Ab2IUGBo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 02:01:44 -0400
-Message-ID: <505C02A1.50601@huawei.com>
-Date: Fri, 21 Sep 2012 14:01:05 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Dave Airlie <airlied@gmail.com>
+Subject: Re: runtime PM and special power switches
+Date: Tue, 11 Sep 2012 22:55:10 +0200
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"dri-devel" <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
+References: <CAPM=9tzq2+LO2BzEmmByeozKzX6nswi1EwvEEM_bgo9kFv1hhA@mail.gmail.com>
+In-Reply-To: <CAPM=9tzq2+LO2BzEmmByeozKzX6nswi1EwvEEM_bgo9kFv1hhA@mail.gmail.com>
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 2/5] PCI/AER: introduce pci_bus_ops_get() to avoid
- a small race condition window
-References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>  <1348199056-7696-3-git-send-email-wangyijing@huawei.com> <1348204119.23395.21.camel@yhuang-dev>
-In-Reply-To: <1348204119.23395.21.camel@yhuang-dev>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201209112255.10486.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/21 13:08, Huang Ying wrote:
-> On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
->> When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
->> and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
->> them. So introduce pci_bus_ops_get() to avoid this.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> 
-> Please don't add my signed-off.
-> 
->> ---
->>  drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
->>  1 files changed, 18 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
->> index fdab3bb..0123120 100644
->> --- a/drivers/pci/pcie/aer/aer_inject.c
->> +++ b/drivers/pci/pcie/aer/aer_inject.c
->> @@ -67,6 +67,8 @@ struct pci_bus_ops {
->>  	struct pci_ops *ops;
->>  };
->>  
->> +#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
->> +
->>  static LIST_HEAD(einjected);
->>  
->>  static LIST_HEAD(pci_bus_ops_list);
->> @@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
->>  	return bus_ops;
->>  }
->>  
->> +static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
->> +{
->> +	struct pci_bus_ops *bus_ops = NULL;
->> +	struct list_head *n;
->> +
->> +	n = from ? from->list.next : pci_bus_ops_list.next;
->> +	if (n != &pci_bus_ops_list)
->> +		bus_ops = to_pci_bus_ops(n);
->> +
->> +	return bus_ops;
->> +}
->> +
->>  static u32 *find_pci_config_dword(struct aer_error *err, int where,
->>  				  int *prw1cs)
->>  {
->> @@ -539,14 +553,15 @@ static void __exit aer_inject_exit(void)
->>  {
->>  	struct aer_error *err, *err_next;
->>  	unsigned long flags;
->> -	struct pci_bus_ops *bus_ops;
->> +	struct pci_bus_ops *bus_ops = NULL;
->>  
->>  	misc_deregister(&aer_inject_device);
->>  
->> -	while ((bus_ops = pci_bus_ops_pop())) {
->> +	while ((bus_ops = pci_bus_ops_get(bus_ops)))
->>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-> 
-> Why not just use
-> 
-> 	list_for_each_entry(&pci_bus_ops_list) {
-> 		pci_bus_set_ops();
-> 	}
-> 
+Hi,
 
-Yes, you are right, use list_for_each_entry(&pci_bus_ops_list) is cleaner.
-
-Thanks
-Yijing
-
-> Best Regards,
-> Huang Ying
+On Tuesday, September 11, 2012, Dave Airlie wrote:
+> Hi Rafael,
 > 
->> +
->> +	while ((bus_ops = pci_bus_ops_pop()))
->>  		kfree(bus_ops);
->> -	}
->>  
->>  	spin_lock_irqsave(&inject_lock, flags);
->>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
+> I've been investigating runtime PM support for some use-cases on GPUs.
 > 
-> 
-> 
-> .
-> 
+> In some laptops we have a secondary GPU (optimus) that can be powered
+> up for certain 3D tasks and then turned off when finished with. Now I
+> did an initial pass on supporting it without using the kernel runtime
+> PM stuff, but Alan said I should take a look so here I am.
 
+Alan Stern or Alan Cox? :-)
 
--- 
-Thanks!
-Yijing
+> While I've started to get a handle on things, we have a bit of an
+> extra that I'm not sure we cater for.
+> 
+> Currently we get called from the PCI layer which after we are finished
+> with our runtime suspend callback, will go put the device into the
+> correct state etc, however on these optimus/powerxpress laptops we
+> have a separate ACPI or platform driver controlled power switch that
+> we need to call once the PCI layer is finished the job. This switch
+> effectively turns the power to the card completely off leaving it
+> drawing no power.
+> 
+> No we can't hit the switch from the driver callback as the PCI layer
+> will get lost, so I'm wondering how you'd envisage we could plug this
+> in.
 
+Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
+doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
+set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
+so perhaps it's not even too dangerous.
+
+Thanks,
+Rafael
