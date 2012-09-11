@@ -1,80 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out01.mta.xmission.com ([166.70.13.231]:58825 "EHLO
-	out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752944Ab2ITHir (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 03:38:47 -0400
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Huang Ying <ying.huang@intel.com>, linux-pm@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
-	<1347872076-5260-2-git-send-email-ying.huang@intel.com>
-	<CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
-Date: Thu, 20 Sep 2012 00:38:33 -0700
-In-Reply-To: <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
-	(Bjorn Helgaas's message of "Mon, 17 Sep 2012 14:54:16 -0600")
-Message-ID: <877grpywhy.fsf@xmission.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1344355862-2726-20-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-20-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 11 Sep 2012 17:22:30 -0600
+Message-ID: <CAErSpo7CYY0AucKj1_e=a8FDP6beQ6LKKaAEFbKxJp_ViwGhsA@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 19/22] PCI/x86: enable PCI bus lock mechanism for
+ x86 platforms
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
-
-> +cc Eric and kexec list
+On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> This patch turns on PCI bus lock mechanism for x86 platforms. It also
+> enhances x86 specific PCI implementation to support PCI bus lock.
 >
-> On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
->> If PCI devices are put into D3cold before kexec, because the
->> configuration registers of PCI devices in D3cold are not accessible.
->>
->> And if PCI bridges are put into low power state before kexec,
->> configuration registers of PCI devices underneath the PCI bridges are
->> not accessible too.
->>
->> These will make some PCI devices can not be scanned after kexec, so
->> resume the PCI devices in D3cold or PCI bridges in low power state
->> before kexec.
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  arch/x86/pci/acpi.c   |    6 +++++-
+>  arch/x86/pci/common.c |   12 ++++++++++++
+>  drivers/pci/Kconfig   |    3 +--
+>  3 files changed, 18 insertions(+), 3 deletions(-)
 >
-> Don't we need to resume the device even without the kexec issue?  And
-> even if it's in D1 or D2?
-
-The basic requirement is that the device needs to be visible so we can
-auto discover it.  As I recall most sleep states don't make the device
-invisible and we can handle the rest in the device initializatoin code.
-
-> It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
-> depend on the device being in D0.
-
-There is certainly a depenency on the config registers being visible.
-Although I don't know if much will go wrong if they aren't.
-
-Ceratinly pci_msi_shutdown doesn't have anything to do if the device has
-had so much power removed that the device is not even exectuing.
-
-Eric
-
->> Signed-off-by: Huang Ying <ying.huang@intel.com>
->> ---
->>  drivers/pci/pci-driver.c |    4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
->>         struct pci_dev *pci_dev = to_pci_dev(dev);
->>         struct pci_driver *drv = pci_dev->driver;
->>
->> +       /* Resume bridges and devices in D3cold for kexec to work properly */
->> +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
->> +               pm_runtime_resume(dev);
->> +
->>         if (drv && drv->shutdown)
->>                 drv->shutdown(pci_dev);
->>         pci_msi_shutdown(pci_dev);
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 2bb885a..c68dbdf 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -414,7 +414,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>          * Maybe the desired pci bus has been already scanned. In such case
+>          * it is unnecessary to scan the pci bus with the given domain,busnum.
+>          */
+> -       bus = pci_find_bus(domain, busnum);
+> +       bus = __pci_get_and_lock_bus(domain, busnum,
+> +                                    PCI_BUS_STATE_STOPPING - 1);
+>         if (bus) {
+>                 /*
+>                  * If the desired bus exits, the content of bus->sysdata will
+> @@ -449,6 +450,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>                         pci_free_resource_list(&resources);
+>                         __release_pci_root_info(info);
+>                 }
+> +               pci_bus_get(bus);
+>         }
 >
-> _______________________________________________
-> kexec mailing list
-> kexec@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/kexec
+>         /* After the PCI-E bus has been walked and all devices discovered,
+> @@ -475,6 +477,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>  #endif
+>         }
+>
+> +       pci_unlock_and_put_bus(bus);
+> +
+>         return bus;
+>  }
+>
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 0ad990a..8b7ae63 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -667,6 +667,18 @@ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
+>         return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
+>  }
+>
+> +static DEFINE_MUTEX(pci_root_bus_mutex);
+> +
+> +void arch_pci_lock_host_bridge_hotplug(void)
+> +{
+> +       mutex_lock(&pci_root_bus_mutex);
+> +}
+> +
+> +void arch_pci_unlock_host_bridge_hotplug(void)
+> +{
+> +       mutex_unlock(&pci_root_bus_mutex);
+> +}
+
+Are these left over from previous work?  I don't see any reference to
+them elsewhere in your patch series.
+
+>  /*
+>   * NUMA info for PCI busses
+>   *
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index a6df8b1..1bbe924 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -122,5 +122,4 @@ config PCI_LABEL
+>         select NLS
+>
+>  config PCI_BUS_LOCK
+> -       bool
+> -       default n
+> +       def_bool y if X86
+> --
+> 1.7.9.5
+>
