@@ -1,42 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:35482 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753469Ab2IYI0l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH 11/29] PCI, ACPI: remove find_bridge in acpi_bus_type
-Date: Tue, 25 Sep 2012 01:26:12 -0700
-Message-Id: <1348561590-28067-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:35587 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755489Ab2IKXfd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 19:35:33 -0400
+Received: by lbbgj3 with SMTP id gj3so751893lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 11 Sep 2012 16:35:32 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1346800307-11041-1-git-send-email-Jiang.Wang@riverbed.com>
+References: <1346800307-11041-1-git-send-email-Jiang.Wang@riverbed.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 11 Sep 2012 17:35:11 -0600
+Message-ID: <CAErSpo7vu0uS=06Dr82-LZ3KBzxaje6fV+H=Foi-bD1c6mUcFA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] pci-iov: Fix warnings when CONFIG_PCI_IOV is enabled
+To: Jiang Wang <Jiang.Wang@riverbed.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	clala@riverbed.com, Francis.St.Amant@riverbed.com,
+	Jiang Wang <jwang@riverbed.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The struct member is not used anymore, remove it.
+On Tue, Sep 4, 2012 at 5:11 PM, Jiang Wang <Jiang.Wang@riverbed.com> wrote:
+> When CONFIG_PCI_IOV is enabled, the kernel will call sriov_init().
+> This function tries to allocate virtual resources even if the
+> virtual function of a PCI devive is not enabled by the BIOS.
+>
+> This sometimes causes following warning messages during boot up:
+> pci 0000:02:00.0: BAR 9: can't allocate mem resource [0x000000-0x3fffff]
+> pci 0000:02:00.0: BAR 7: can't allocate mem resource [0x000000-0x03ffff]
+>
+> Tested on three Mitac motherboards.
+>
+> Signed-off-by: Jiang Wang <jwang@riverbed.com>
+> ---
+>  drivers/pci/iov.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 6554e1a..0ca8cb2 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -441,7 +441,8 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>         if (ctrl & PCI_SRIOV_CTRL_VFE) {
+>                 pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
+>                 ssleep(1);
+> -       }
+> +       } else
+> +               return 0;
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- include/acpi/acpi_bus.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+But this would mean that Linux can't *ever* enable VFs unless the BIOS
+enabled them, right?  I don't think that's what we want -- there's
+code in sriov_enable() to turn on VFE, assuming we have enough
+resources for the VFs.
 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index bde976e..0e41e5f 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -389,8 +389,6 @@ struct acpi_bus_type {
- 	struct bus_type *bus;
- 	/* For general devices under the bus */
- 	int (*find_device) (struct device *, acpi_handle *);
--	/* For bridges, such as PCI root bridge, IDE controller */
--	int (*find_bridge) (struct device *, acpi_handle *);
- };
- int register_acpi_bus_type(struct acpi_bus_type *);
- int unregister_acpi_bus_type(struct acpi_bus_type *);
--- 
-1.7.7
+It's certainly possible that the BIOS didn't allocate large enough
+apertures in the bridges leading to the SR-IOV device to accommodate
+all the VFs, and Linux may not be smart enough to enlarge them.  And
+probably our warning messages in that case are not very enlightening.
 
+Bjorn
+
+>         pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
+>         if (!total)
+> --
+> 1.7.1
+>
