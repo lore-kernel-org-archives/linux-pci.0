@@ -1,110 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:55954 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745Ab2IPGv7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 02:51:59 -0400
-Date: Sun, 16 Sep 2012 08:50:38 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: Provide a default pcibios_update_irq()
-Message-ID: <20120916065038.GB11030@avionic-0098.mockup.avionic-design.de>
-References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
- <1347655456-2542-2-git-send-email-thierry.reding@avionic-design.de>
- <CAMuHMdWuR_tdMw9iVkaQ3D9p1HVU_L05ap=MzBuo1jLD6YdHHw@mail.gmail.com>
- <20120915075301.GA31044@avionic-0098.mockup.avionic-design.de>
- <CAErSpo6WaFv=CXtiWeDDvThjZRBRJKfJMgovuMjjZRpQGK-WJA@mail.gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:38830 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752116Ab2IKWD1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 18:03:27 -0400
+Received: by lbbgj3 with SMTP id gj3so713283lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 11 Sep 2012 15:03:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
-In-Reply-To: <CAErSpo6WaFv=CXtiWeDDvThjZRBRJKfJMgovuMjjZRpQGK-WJA@mail.gmail.com>
+In-Reply-To: <1344355862-2726-3-git-send-email-jiang.liu@huawei.com>
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-3-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 11 Sep 2012 16:03:05 -0600
+Message-ID: <CAErSpo7oXFGARWS+M=_7_R_4Hw6j5pufRbaNKtwTr5BT-_xeAA@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 02/22] PCI: trivial cleanups for drivers/pci/remove.c
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Trivial cleanups for drivers/pci/remove.c:
+> 1) move the comment for pci_stop_and_remove_bus_device() to the right place
+> 2) rename __pci_remove_behind_bridge() to pci_remove_behind_bridge()
 
---8GpibOaaTibBMecb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This seems fine, but I think my pci/bjorn-cleanup-remove branch subsumes it.
 
-On Sat, Sep 15, 2012 at 04:23:33PM -0600, Bjorn Helgaas wrote:
-> On Sat, Sep 15, 2012 at 1:53 AM, Thierry Reding
-> <thierry.reding@avionic-design.de> wrote:
-> > On Sat, Sep 15, 2012 at 09:32:10AM +0200, Geert Uytterhoeven wrote:
-> >> On Fri, Sep 14, 2012 at 10:44 PM, Thierry Reding
-> >> <thierry.reding@avionic-design.de> wrote:
-> >> > --- a/drivers/pci/setup-irq.c
-> >> > +++ b/drivers/pci/setup-irq.c
-> >> > @@ -17,6 +17,14 @@
-> >> >  #include <linux/ioport.h>
-> >> >  #include <linux/cache.h>
-> >> >
-> >> > +void __devinit __weak pcibios_update_irq(struct pci_dev *dev, int i=
-rq)
-> >> > +{
-> >> > +#ifdef CONFIG_PCI_DEBUG
-> >> > +       printk(KERN_DEBUG "PCI: Assigning IRQ %02d to %s\n", irq,
-> >> > +              pci_name(dev));
-> >>
-> >> pr_debug()?
-> >> Or even better, dev_dbg()?
-> >
-> > The problem with pr_debug() and dev_dbg() is that they will be compiled
-> > out if DEBUG is not defined. Perhaps we should pass -DDEBUG if PCI_DEBUG
-> > is configured and make this dev_dbg()?
->=20
-> Sorry, fat-fingered the previous empty response.
->=20
-> We already have this in drivers/pci/Makefile:
->=20
->     ccflags-$(CONFIG_PCI_DEBUG) :=3D -DDEBUG
->=20
-> so dev_dbg() should be perfect.
-
-Yeah, this occurred to me as well and I was just about to look it up
-when I read your response. I'll make it dev_dbg() then.
-
-Thierry
-
---8GpibOaaTibBMecb
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQVXa+AAoJEN0jrNd/PrOh00IQAJSTG1Ukqu3ay8m7AznzjD2Y
-eRN6wDO0Pd37qkHr46rMO2UVPCavDFnoS6gsGhuTzdQgIOnVO9NKGUPm71xAhBnt
-Yq+rYhg8i2cHNjZVKy8Kn5EY0Ly8k0yunH1KFMEodzeS2ZU/wrHSJZmkyKIUzMdN
-AdMoFV81Q7So+JEdG1zIaM1hsDl3t18gt+9SlRSJZ6T4kXlv0j1pD9Jy2d0OC7bx
-Yu8DDnNI33FIcZQnHsO50okCU0o4SqZHFmL/xm4Aa3JiQ5H4gMKiCYNXvFQ5M/gr
-jU+cj0P1WdIPQVof9uie8TCiPCtNEJMbUQsgbhQuFf6eEefuUIbqkfETjmY8rNk9
-NoNp1anLNxxxp2L17e8dN9VTJgNUi+lrpvcG6gqVBs7rE9ruo/6NVnFHwUUHd3Q3
-o9ivpbuYPfJCRSW1r+TbE74iVQdg7jKO+p1cIZjMQOcv9B88M8KJaS60wpgxn9S+
-f/eLoMlUK2wIbP3Zj4MR3DIorUOTyi7f14+J448Y5D9Ci86QU/+4bmMexqEVxsRS
-Un+iARiZQlrWnmVjva4iG8g2mOxcmDPzHSlcE9+uIIdNdPCUWusrt81PAyIjTlUX
-xo2R3G3LIVA4lfOiUSdQB2RYPmQHAXW/Tul5aBvXk11jsl0BN1Hbk2qO4641Puej
-LLzcEjPu0384yupX0hSL
-=/+fm
------END PGP SIGNATURE-----
-
---8GpibOaaTibBMecb--
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> ---
+>  drivers/pci/remove.c |   33 +++++++++++++++++----------------
+>  1 file changed, 17 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 04a4861..33b6318 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -78,25 +78,14 @@ void pci_remove_bus(struct pci_bus *pci_bus)
+>  }
+>  EXPORT_SYMBOL(pci_remove_bus);
+>
+> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
+> -/**
+> - * pci_stop_and_remove_bus_device - remove a PCI device and any children
+> - * @dev: the device to remove
+> - *
+> - * Remove a PCI device from the device lists, informing the drivers
+> - * that the device has been removed.  We also remove any subordinate
+> - * buses and children in a depth-first manner.
+> - *
+> - * For each device we remove, delete the device structure from the
+> - * device lists, remove the /proc entry, and notify userspace
+> - * (/sbin/hotplug).
+> - */
+> +static void pci_remove_behind_bridge(struct pci_dev *dev);
+> +
+>  void __pci_remove_bus_device(struct pci_dev *dev)
+>  {
+>         if (dev->subordinate) {
+>                 struct pci_bus *b = dev->subordinate;
+>
+> -               __pci_remove_behind_bridge(dev);
+> +               pci_remove_behind_bridge(dev);
+>                 pci_remove_bus(b);
+>                 dev->subordinate = NULL;
+>         }
+> @@ -105,13 +94,25 @@ void __pci_remove_bus_device(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(__pci_remove_bus_device);
+>
+> +/**
+> + * pci_stop_and_remove_bus_device - remove a PCI device and any children
+> + * @dev: the device to remove
+> + *
+> + * Remove a PCI device from the device lists, informing the drivers
+> + * that the device has been removed.  We also remove any subordinate
+> + * buses and children in a depth-first manner.
+> + *
+> + * For each device we remove, delete the device structure from the
+> + * device lists, remove the /proc entry, and notify userspace
+> + * (/sbin/hotplug).
+> + */
+>  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>  {
+>         pci_stop_bus_device(dev);
+>         __pci_remove_bus_device(dev);
+>  }
+>
+> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
+> +static void pci_remove_behind_bridge(struct pci_dev *dev)
+>  {
+>         struct list_head *l, *n;
+>
+> @@ -141,7 +142,7 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
+>  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
+>  {
+>         pci_stop_behind_bridge(dev);
+> -       __pci_remove_behind_bridge(dev);
+> +       pci_remove_behind_bridge(dev);
+>  }
+>
+>  static void pci_stop_bus_devices(struct pci_bus *bus)
+> --
+> 1.7.9.5
+>
