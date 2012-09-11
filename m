@@ -1,61 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:54702 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932242Ab2IQUyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 16:54:38 -0400
-Received: by lbbgj3 with SMTP id gj3so4510555lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 13:54:36 -0700 (PDT)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52689 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017Ab2IKWXd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 18:23:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <1347872076-5260-2-git-send-email-ying.huang@intel.com>
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com> <1347872076-5260-2-git-send-email-ying.huang@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Sep 2012 14:54:16 -0600
-Message-ID: <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
-Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
-To: Huang Ying <ying.huang@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Eric Biederman <ebiederm@xmission.com>,
-	kexec@lists.infradead.org
+In-Reply-To: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
+References: <201209112255.10486.rjw@sisk.pl>
+	<Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
+Date: Wed, 12 Sep 2012 08:23:32 +1000
+Message-ID: <CAPM=9tzp8MnoGttxB=WrOZ8nMAESJn_0GAHT84PdmSgri==aCA@mail.gmail.com>
+Subject: Re: runtime PM and special power switches
+From: Dave Airlie <airlied@gmail.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	LKML <linux-kernel@vger.kernel.org>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+cc Eric and kexec list
-
-On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
-> If PCI devices are put into D3cold before kexec, because the
-> configuration registers of PCI devices in D3cold are not accessible.
+On Wed, Sep 12, 2012 at 7:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
 >
-> And if PCI bridges are put into low power state before kexec,
-> configuration registers of PCI devices underneath the PCI bridges are
-> not accessible too.
+>> Hi,
+>>
+>> On Tuesday, September 11, 2012, Dave Airlie wrote:
+>> > Hi Rafael,
+>> >
+>> > I've been investigating runtime PM support for some use-cases on GPUs.
+>> >
+>> > In some laptops we have a secondary GPU (optimus) that can be powered
+>> > up for certain 3D tasks and then turned off when finished with. Now I
+>> > did an initial pass on supporting it without using the kernel runtime
+>> > PM stuff, but Alan said I should take a look so here I am.
+>>
+>> Alan Stern or Alan Cox? :-)
+>>
+>> > While I've started to get a handle on things, we have a bit of an
+>> > extra that I'm not sure we cater for.
+>> >
+>> > Currently we get called from the PCI layer which after we are finished
+>> > with our runtime suspend callback, will go put the device into the
+>> > correct state etc, however on these optimus/powerxpress laptops we
+>> > have a separate ACPI or platform driver controlled power switch that
+>> > we need to call once the PCI layer is finished the job. This switch
+>> > effectively turns the power to the card completely off leaving it
+>> > drawing no power.
+>> >
+>> > No we can't hit the switch from the driver callback as the PCI layer
+>> > will get lost, so I'm wondering how you'd envisage we could plug this
+>> > in.
+>>
+>> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
+>> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
+>> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
+>> so perhaps it's not even too dangerous.
 >
-> These will make some PCI devices can not be scanned after kexec, so
-> resume the PCI devices in D3cold or PCI bridges in low power state
-> before kexec.
+> This sounds more like a job for a power domain.  Unless the power
+> switch is already in the device hierarchy as a parent to the PCI
+> device.
 
-Don't we need to resume the device even without the kexec issue?  And
-even if it's in D1 or D2?
+I'll have to investigate power domains then,
 
-It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
-depend on the device being in D0.
+The switch is hidden in many different places, one some laptops its in
+a ACPI _DSM on one GPU, on others its in an ACPI _DSM on the other
+one, in some its in a different ACPI _DSM, then we have it in the ACPI
+ATPX method on others, and finally Apple have it in a piece of hw that
+isn't just on the LPC bus or somewhere like that.
 
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> ---
->  drivers/pci/pci-driver.c |    4 ++++
->  1 file changed, 4 insertions(+)
->
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
->         struct pci_dev *pci_dev = to_pci_dev(dev);
->         struct pci_driver *drv = pci_dev->driver;
->
-> +       /* Resume bridges and devices in D3cold for kexec to work properly */
-> +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
-> +               pm_runtime_resume(dev);
-> +
->         if (drv && drv->shutdown)
->                 drv->shutdown(pci_dev);
->         pci_msi_shutdown(pci_dev);
+Currently we just hide it all inside vga_switcheroo and I'd just need
+an interface to call that once the layers have stopped poking
+registers in PCI config space, if we could fix PCI runtime suspend so
+the driver was the last to get called then that would also not suck.
+
+Dave.
