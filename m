@@ -1,43 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Lan Tianyu <tianyu.lan@intel.com>
-Subject: Re: [RFD][PATCH 2/7] PM / QoS: Introduce request and constraint data types for PM QoS flags
-Date: Sat, 29 Sep 2012 23:36:22 +0200
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-References: <201209282351.10663.rjw@sisk.pl> <201209282352.49615.rjw@sisk.pl> <50668F01.7030406@intel.com>
-In-Reply-To: <50668F01.7030406@intel.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209292336.22960.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:36227 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748Ab2IKDsd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Sep 2012 23:48:33 -0400
+Message-ID: <1347335307.2603.13.camel@pasglop>
+Subject: Re: Improvements to MSI-X API
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: linux-pci@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 11 Sep 2012 13:48:27 +1000
+In-Reply-To: <1347335238.2603.12.camel@pasglop>
+References: <1347335238.2603.12.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, September 29, 2012, Lan Tianyu wrote:
-> On 2012/9/29 5:52, Rafael J. Wysocki wrote:
-> > Index: linux/kernel/power/qos.c
-> > ===================================================================
-> > --- linux.orig/kernel/power/qos.c
-> > +++ linux/kernel/power/qos.c
-> > @@ -213,6 +213,69 @@ int pm_qos_update_target(struct pm_qos_c
-> >   }
-> >
-> >   /**
-> > + * pm_qos_flags_remove_req - Remove device PM QoS flags request.
-> > + * @f: Device PM QoS flags set to remove the request from.
-> -------^
-> A typo     	
-> > + * @req: Request to remove from the set.
-> > + */
+On Tue, 2012-09-11 at 13:47 +1000, Benjamin Herrenschmidt wrote:
+> Hi folks !
+> 
+> A while back, Matthew was mentioning (iirc) some work on improving the
+> MSI-X APIs to be a bit less inflexible, for example by allowing setting
+> up individual MSI-X interrupts independently at runtime.
+> 
+> Is that still something being worked on ?
+> 
+> Another thing I've got poked about by some folks working on a new
+> adapter is that they would like the ability to control aliasing if we
+> cannot provide all the MSI-X. IE. IF the adapter has 16 sources but we
+> can only provide 10, they want the driver to be able to enable all 16,
+> but configure some of them to shoot the same message to the same
+> address.
+> 
+> This is useful in the case where the sources aren't really separate
+> queues but totally different type of messages, to be able to do some
+> fine grained control of what goes where, as the HW doesn't do that sort
+> of aliasing itself.
 
-Yes, thanks!
+Note that a way to avoid problems with existing kernels & APIs might be
+in HW to:
 
-Rafael
+ - Have a "mandatory" interrupt (MSI-X entry 0 ?)
+ - Have the HW route any unconfigured source to that interrupt
+
+IE. Enforce the aliasing.
+
+Cheers,
+Ben.
+
+
