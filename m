@@ -1,147 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part1 4/4] PCI: Split out stop_bus_device and remove_bus_dev again.
-Date: Sun,  2 Sep 2012 14:47:38 -0700
-Message-Id: <1346622458-30595-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
-References: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:48292 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750966Ab2IKWQu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 11 Sep 2012 18:16:50 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: runtime PM and special power switches
+Date: Wed, 12 Sep 2012 00:23:11 +0200
+Cc: Dave Airlie <airlied@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"dri-devel" <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
+References: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
+In-Reply-To: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201209120023.11662.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So add back some functions that are needed for pci root bus hotplug support.
+On Tuesday, September 11, 2012, Alan Stern wrote:
+> On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
+> 
+> > Hi,
+> > 
+> > On Tuesday, September 11, 2012, Dave Airlie wrote:
+> > > Hi Rafael,
+> > > 
+> > > I've been investigating runtime PM support for some use-cases on GPUs.
+> > > 
+> > > In some laptops we have a secondary GPU (optimus) that can be powered
+> > > up for certain 3D tasks and then turned off when finished with. Now I
+> > > did an initial pass on supporting it without using the kernel runtime
+> > > PM stuff, but Alan said I should take a look so here I am.
+> > 
+> > Alan Stern or Alan Cox? :-)
+> > 
+> > > While I've started to get a handle on things, we have a bit of an
+> > > extra that I'm not sure we cater for.
+> > > 
+> > > Currently we get called from the PCI layer which after we are finished
+> > > with our runtime suspend callback, will go put the device into the
+> > > correct state etc, however on these optimus/powerxpress laptops we
+> > > have a separate ACPI or platform driver controlled power switch that
+> > > we need to call once the PCI layer is finished the job. This switch
+> > > effectively turns the power to the card completely off leaving it
+> > > drawing no power.
+> > > 
+> > > No we can't hit the switch from the driver callback as the PCI layer
+> > > will get lost, so I'm wondering how you'd envisage we could plug this
+> > > in.
+> > 
+> > Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
+> > doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
+> > set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
+> > so perhaps it's not even too dangerous.
+> 
+> This sounds more like a job for a power domain.  Unless the power
+> switch is already in the device hierarchy as a parent to the PCI
+> device.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/remove.c |   77 +++++++++++++++++++++++++++++++++++++++----------
- include/linux/pci.h  |    2 +
- 2 files changed, 63 insertions(+), 16 deletions(-)
+Good idea. :-)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 4f9ca91..aaae16e 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -56,25 +56,13 @@ void pci_remove_bus(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_remove_bus);
- 
--/**
-- * pci_stop_and_remove_bus_device - remove a PCI device and any children
-- * @dev: the device to remove
-- *
-- * Remove a PCI device from the device lists, informing the drivers
-- * that the device has been removed.  We also remove any subordinate
-- * buses and children in a depth-first manner.
-- *
-- * For each device we remove, delete the device structure from the
-- * device lists, remove the /proc entry, and notify userspace
-- * (/sbin/hotplug).
-- */
--void pci_stop_and_remove_bus_device(struct pci_dev *dev)
-+static void pci_stop_bus_device(struct pci_dev *dev)
- {
- 	struct pci_bus *bus = dev->subordinate;
- 	struct pci_dev *child, *tmp;
- 
- 	/*
--	 * Removing an SR-IOV PF device removes all the associated VFs,
-+	 * Stopping an SR-IOV PF device removes all the associated VFs,
- 	 * which will update the bus->devices list and confuse the
- 	 * iterator.  Therefore, iterate in reverse so we remove the VFs
- 	 * first, then the PF.
-@@ -82,13 +70,70 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 	if (bus) {
- 		list_for_each_entry_safe_reverse(child, tmp,
- 						 &bus->devices, bus_list)
--			pci_stop_and_remove_bus_device(child);
-+			pci_stop_bus_device(child);
-+	}
-+
-+	pci_stop_dev(dev);
-+}
-+
-+static void pci_remove_bus_device(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->subordinate;
-+	struct pci_dev *child, *tmp;
-+
-+	if (bus) {
-+		list_for_each_entry_safe(child, tmp,
-+					 &bus->devices, bus_list)
-+			pci_remove_bus_device(child);
- 
- 		pci_remove_bus(bus);
- 		dev->subordinate = NULL;
- 	}
- 
--	pci_stop_dev(dev);
- 	pci_destroy_dev(dev);
- }
-+
-+/**
-+ * pci_stop_and_remove_bus_device - remove a PCI device and any children
-+ * @dev: the device to remove
-+ *
-+ * Remove a PCI device from the device lists, informing the drivers
-+ * that the device has been removed.  We also remove any subordinate
-+ * buses and children in a depth-first manner.
-+ *
-+ * For each device we remove, delete the device structure from the
-+ * device lists, remove the /proc entry, and notify userspace
-+ * (/sbin/hotplug).
-+ */
-+void pci_stop_and_remove_bus_device(struct pci_dev *dev)
-+{
-+	pci_stop_bus_device(dev);
-+	pci_remove_bus_device(dev);
-+}
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
-+
-+void pci_stop_bus_devices(struct pci_bus *bus)
-+{
-+	struct pci_dev *child, *tmp;
-+
-+	list_for_each_entry_safe_reverse(child, tmp,
-+					 &bus->devices, bus_list)
-+		pci_stop_bus_device(child);
-+}
-+
-+static void pci_remove_bus_devices(struct pci_bus *bus)
-+{
-+	struct pci_dev *child, *tmp;
-+
-+	list_for_each_entry_safe(child, tmp,
-+				 &bus->devices, bus_list)
-+		pci_remove_bus_device(child);
-+}
-+
-+void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
-+{
-+	pci_stop_bus_device(dev);
-+
-+	if (dev->subordinate)
-+		pci_remove_bus_devices(dev->subordinate);
-+}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0d87189..1b460e1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
- extern void pci_dev_put(struct pci_dev *dev);
- extern void pci_remove_bus(struct pci_bus *b);
- extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-+void pci_stop_bus_devices(struct pci_bus *bus);
-+void pci_stop_and_remove_behind_bridge(struct pci_dev *dev);
- void pci_setup_cardbus(struct pci_bus *bus);
- extern void pci_sort_breadthfirst(void);
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
--- 
-1.7.7
-
+Thanks,
+Rafael
