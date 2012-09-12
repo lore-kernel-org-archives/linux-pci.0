@@ -1,61 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:61982 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921Ab2IYIf2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:35:28 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50504F47.80909@jp.fujitsu.com>
+Date: Wed, 12 Sep 2012 18:00:55 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <1348561590-28067-11-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-	<1348561590-28067-11-git-send-email-yinghai@kernel.org>
-Date: Tue, 25 Sep 2012 16:35:27 +0800
-Message-ID: <CAOLK0pzmP6bZqPJTi6h2XqbX72gb79VKMYObegP1X3xmEX3TJA@mail.gmail.com>
-Subject: Re: [PATCH 10/29] PCI, USB: remove find_bridge in acpi_bus_type
-From: Lan Tianyu <lantianyu1986@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: vgoyal@redhat.com
+CC: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120911144323.GF12039@redhat.com>
+In-Reply-To: <20120911144323.GF12039@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2012/9/25 Yinghai Lu <yinghai@kernel.org>:
-> The struct member is not used anymore, remove it.
+(2012/09/11 23:43), Vivek Goyal wrote:
+> On Tue, Sep 11, 2012 at 07:32:35PM +0900, Takao Indoh wrote:
 >
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: linux-usb@vger.kernel.org
-> ---
->  drivers/usb/core/usb-acpi.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
+> [..]
+>> I'll post new patch which clears bus master bit and resets devices in
+>> second kernel.
+>>
+>> As to the boot parameter to enable this function, you suggested using
+>> reset_devices. I found that on a certain platform resetting devices
+>> caused PCIe error due to a hardware bug. Therefore I think we need
+>> new parameter apart from reset_devices to disable this function on
+>> such a machine.
 >
-> diff --git a/drivers/usb/core/usb-acpi.c b/drivers/usb/core/usb-acpi.c
-> index 8947b20..a6ea613 100644
-> --- a/drivers/usb/core/usb-acpi.c
-> +++ b/drivers/usb/core/usb-acpi.c
-> @@ -102,7 +102,6 @@ static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
->
->  static struct acpi_bus_type usb_acpi_bus = {
->         .bus = &usb_bus_type,
-> -       .find_bridge = NULL,
->         .find_device = usb_acpi_find_device,
->  };
->
-HI Yinghai:
-                 This member has been populated in the usb-next tree.
+> Can you explain a bit more how the error happens. I still don't think
+> that because of a bug in a platform somewhere we should be introducing
+> a separate command line parameter and not reuse the exisiting one. Also
+> you have not explained what's the bug and how a new parameter will
+> avoid the bug.
 
-http://git.kernel.org/?p=linux/kernel/git/gregkh/usb.git;a=commit;h=d557542421da643358201664903e67fd01dfca1a
-> --
-> 1.7.7
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The bug I mentioned is that ACS Violation occurs at PCIe switch when
+reading PCI configuration after device reset. I got information that
+this violation is caused by PCIe switch bug. The machine becomes fatal
+status by this error.
 
+The reason why I try to introduce new parameter is that I want to avoid
+regression by this patch. Let's say this patch was included in kernel
+and its reset function was enabled by reset_devices as you said. AFAIK
+reset_devices is always needed for kdump, so it means that devices are
+always reset at kdump boot time. It causes a regression that system
+always becomes abnormal status when we run kdump on the machine which has
+a bug I mentioned.
 
+To avoid this regression, I want to separate reset_devices from this
+reset function. Or how about this?
+- if user specify reset_devices, devices are reset by this patch, as you
+   said.
+- To avoid a regression I said, add new parameter like "pci=noreset".
+   If this parameter is specified, the reset function I add is disabled
+   and we can avoid regression.
 
---
-Best regards
-Tianyu Lan
+Thanks,
+Takao Indoh
+
