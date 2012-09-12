@@ -1,76 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:35425 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753499Ab2IYI0g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:36 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 06/29] PCI: Add dummy bus_type for pci_host_bridge
-Date: Tue, 25 Sep 2012 01:26:07 -0700
-Message-Id: <1348561590-28067-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50505C44.1040003@huawei.com>
+Date: Wed, 12 Sep 2012 17:56:20 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH v1 19/22] PCI/x86: enable PCI bus lock mechanism for
+ x86 platforms
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-20-git-send-email-jiang.liu@huawei.com> <CAErSpo7CYY0AucKj1_e=a8FDP6beQ6LKKaAEFbKxJp_ViwGhsA@mail.gmail.com>
+In-Reply-To: <CAErSpo7CYY0AucKj1_e=a8FDP6beQ6LKKaAEFbKxJp_ViwGhsA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci-driver.c |   11 ++++++++++-
- drivers/pci/probe.c      |    1 +
- include/linux/pci.h      |    1 +
- 3 files changed, 12 insertions(+), 1 deletions(-)
+On 2012-9-12 7:22, Bjorn Helgaas wrote:
+> On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> This patch turns on PCI bus lock mechanism for x86 platforms. It also
+>> enhances x86 specific PCI implementation to support PCI bus lock.
+>>
+>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>> ---
+>>  arch/x86/pci/acpi.c   |    6 +++++-
+>>  arch/x86/pci/common.c |   12 ++++++++++++
+>>  drivers/pci/Kconfig   |    3 +--
+>>  3 files changed, 18 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index 2bb885a..c68dbdf 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -414,7 +414,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>>          * Maybe the desired pci bus has been already scanned. In such case
+>>          * it is unnecessary to scan the pci bus with the given domain,busnum.
+>>          */
+>> -       bus = pci_find_bus(domain, busnum);
+>> +       bus = __pci_get_and_lock_bus(domain, busnum,
+>> +                                    PCI_BUS_STATE_STOPPING - 1);
+>>         if (bus) {
+>>                 /*
+>>                  * If the desired bus exits, the content of bus->sysdata will
+>> @@ -449,6 +450,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>>                         pci_free_resource_list(&resources);
+>>                         __release_pci_root_info(info);
+>>                 }
+>> +               pci_bus_get(bus);
+>>         }
+>>
+>>         /* After the PCI-E bus has been walked and all devices discovered,
+>> @@ -475,6 +477,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+>>  #endif
+>>         }
+>>
+>> +       pci_unlock_and_put_bus(bus);
+>> +
+>>         return bus;
+>>  }
+>>
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index 0ad990a..8b7ae63 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -667,6 +667,18 @@ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
+>>         return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
+>>  }
+>>
+>> +static DEFINE_MUTEX(pci_root_bus_mutex);
+>> +
+>> +void arch_pci_lock_host_bridge_hotplug(void)
+>> +{
+>> +       mutex_lock(&pci_root_bus_mutex);
+>> +}
+>> +
+>> +void arch_pci_unlock_host_bridge_hotplug(void)
+>> +{
+>> +       mutex_unlock(&pci_root_bus_mutex);
+>> +}
+> 
+> Are these left over from previous work?  I don't see any reference to
+> them elsewhere in your patch series.
+Hi Bjorn
+	Eagle eyes! Yes, it's left from previous work and I have changed to
+other mechanism for root bus locks.
+	--Gerry
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 9e1d295..93aff7f 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1268,11 +1268,20 @@ struct bus_type pci_bus_type = {
- 	.pm		= PCI_PM_OPS_PTR,
- };
- 
-+struct bus_type pci_host_bridge_bus_type = {
-+	.name           = "pci_host_bridge",
-+};
-+
-+static int __init pci_host_bridge_driver_init(void)
-+{
-+	return bus_register(&pci_host_bridge_bus_type);
-+}
-+postcore_initcall(pci_host_bridge_driver_init);
-+
- static int __init pci_driver_init(void)
- {
- 	return bus_register(&pci_bus_type);
- }
--
- postcore_initcall(pci_driver_init);
- 
- EXPORT_SYMBOL_GPL(pci_add_dynid);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 87d1cb0..30b1624 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1660,6 +1660,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		goto err_out;
- 
- 	bridge->dev.parent = parent;
-+	bridge->dev.bus = &pci_host_bridge_bus_type;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = device_register(&bridge->dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index be1de01..cc8b558 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -668,6 +668,7 @@ enum pcie_bus_config_types {
- 
- extern enum pcie_bus_config_types pcie_bus_config;
- 
-+extern struct bus_type pci_host_bridge_bus_type;
- extern struct bus_type pci_bus_type;
- 
- /* Do NOT directly access these two variables, unless you are arch specific pci
--- 
-1.7.7
+> 
+>>  /*
+>>   * NUMA info for PCI busses
+>>   *
+>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>> index a6df8b1..1bbe924 100644
+>> --- a/drivers/pci/Kconfig
+>> +++ b/drivers/pci/Kconfig
+>> @@ -122,5 +122,4 @@ config PCI_LABEL
+>>         select NLS
+>>
+>>  config PCI_BUS_LOCK
+>> -       bool
+>> -       default n
+>> +       def_bool y if X86
+>> --
+>> 1.7.9.5
+>>
+> 
+> .
+> 
+
 
