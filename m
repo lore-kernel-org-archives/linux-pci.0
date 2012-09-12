@@ -1,46 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:56234 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197Ab2IHAFv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 20:05:51 -0400
-Date: Sat, 8 Sep 2012 01:04:30 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-Message-ID: <20120908000430.GF13739@n2100.arm.linux.org.uk>
-References: <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com> <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de> <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com> <502AD82F.3080702@wwwdotorg.org> <502AE485.8060307@wwwdotorg.org> <504A848B.1090703@wwwdotorg.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55480 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752123Ab2ILUB7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2012 16:01:59 -0400
+Received: by lbbgj3 with SMTP id gj3so1443855lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2012 13:01:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <504A848B.1090703@wwwdotorg.org>
+In-Reply-To: <CAErSpo6T=vQnP2u6KP0+sDvT5=iQs1UFjpOLub+9y=B2k_MRgQ@mail.gmail.com>
+References: <20120907163313.614852012@vyatta.com> <CAErSpo6T=vQnP2u6KP0+sDvT5=iQs1UFjpOLub+9y=B2k_MRgQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Sep 2012 14:01:37 -0600
+Message-ID: <CAErSpo5q6-afy-ekqTAZnDKxsy=cmj4-GP5gjSaDJEutFm+xyg@mail.gmail.com>
+Subject: Re: [PATCH 0/4] PCI error handler const
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: Linas Vepstas <linasvepstas@gmail.com>, linux-pci@vger.kernel.org,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 07, 2012 at 05:34:35PM -0600, Stephen Warren wrote:
-> I guess it's a pretty basic premise of the current PCI code that all the
-> PCI scanning happens well before any device drivers are registered,
-> which in turn means that device_add() doesn't trigger the device's
-> probe() until much later, after all the fixups and resource assignments
-> are done?
+On Fri, Sep 7, 2012 at 4:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 7, 2012 at 9:33 AM, Stephen Hemminger <shemminger@vyatta.com> wrote:
+>> This is a trivial patch to make PCI error handler function
+>> tables const. Split into pieces so that core changes are first.
+>
+> I put all four of these on this branch:
+>
+> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/stephen-const
+>
+> If the netdev and scsi folks approve, I can handle them all through my PCI tree.
 
-Are you saying that the PCI layer is again screwed up after all my
-hard work several years ago to ensure that PCI devices are properly
-setup _before_ they're made available to the PCI drivers then?  That
-was around the time I was looking at Cardbus stuff, ensuring that that
-worked with the same guarantees.
+I didn't see any objection, so I pushed these four patches to the PCI
+"next" branch.
 
-Not amused.
+Thanks!
 
-What is wrong with the "probe devices, apply fixups, setup resources,
-apply more fixups, publish" process that it's had to be yet again
-broken?
+Bjorn
