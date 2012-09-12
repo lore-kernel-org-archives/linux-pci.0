@@ -1,63 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:60908 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754820Ab2ILMff (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2012 08:35:35 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2 2/4] PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
+Date: Wed, 12 Sep 2012 20:33:43 +0800
+Message-ID: <1347453225-7704-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1347453225-7704-1-git-send-email-wangyijing@huawei.com>
+References: <1347453225-7704-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20120918152323.48cb2703.izumi.taku@jp.fujitsu.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com> <20120918152323.48cb2703.izumi.taku@jp.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Sep 2012 16:03:27 -0600
-Message-ID: <CAErSpo6VeKfwzVmv=WjH7wNPMf6_PLHpo99FeKoHXOrYPnYVPQ@mail.gmail.com>
-Subject: Re: [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 12:23 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->
-> This patch changes the implementation of acpi_pci_find_root().
->
-> We can access acpi_pci_root without scanning acpi_pci_roots list.
-> If hostbridge hotplug is supported, acpi_pci_roots list will be
-> protected by mutex. We should not access acpi_pci_roots list
-> if preventable to lessen deadlock risk.
->
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  drivers/acpi/pci_root.c |   13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
->
-> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-> ===================================================================
-> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
-> @@ -265,12 +265,15 @@ static acpi_status acpi_pci_osc_support(
->  struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle)
->  {
->         struct acpi_pci_root *root;
-> +       struct acpi_device *device;
->
-> -       list_for_each_entry(root, &acpi_pci_roots, node) {
-> -               if (root->device->handle == handle)
-> -                       return root;
-> -       }
-> -       return NULL;
-> +       if (acpi_bus_get_device(handle, &device) ||
-> +           acpi_match_device_ids(device, root_device_ids))
+Since hot plug for pci devices while doing aer inject, some newly created child buses'
+pci_ops will be assigned to pci_ops_aer. Aer_inject does not track these pci_ops_aer(not
+list in pci_bus_ops_list),we should clean all of these when rmmod aer_inject module.
 
-What's the purpose of the acpi_match_device_ids() check?  It's not
-obvious, so worth calling it out in the changelog, and maybe even a
-comment in the code.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
 
-Nice to get rid of the list traversal.
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 0816483..9d195ae 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -283,6 +283,28 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
+ 	bus_ops->ops = ops;
+ }
+ 
++static void pci_clean_child_aer_ops(struct pci_bus *bus)
++{
++	struct pci_bus *child;
++
++	list_for_each_entry(child, &bus->children, node) {
++		if (child->ops == &pci_ops_aer)
++			pci_bus_set_ops(child, bus->ops);
++		pci_clean_child_aer_ops(child);
++	}
++}
++
++/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
++ * pci_ops of root bus won't be pci_ops_aer here*/
++static void clean_untracked_pci_ops_aer(void)
++{
++	struct pci_bus *bus = NULL;
++
++	while ((bus = pci_find_next_bus(bus)) != NULL)
++		pci_clean_child_aer_ops(bus);
++}
++
++
+ static int pci_bus_set_aer_ops(struct pci_bus *bus)
+ {
+ 	struct pci_ops *ops;
+@@ -546,6 +568,8 @@ static void __exit aer_inject_exit(void)
+ 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+ 		kfree(bus_ops);
+ 	}
++
++	clean_untracked_pci_aer_ops();
+ 
+ 	spin_lock_irqsave(&inject_lock, flags);
+ 	list_for_each_entry_safe(err, err_next, &einjected, list) {
+@@ -553,6 +577,14 @@ static void __exit aer_inject_exit(void)
+ 		kfree(err);
+ 	}
+ 	spin_unlock_irqrestore(&inject_lock, flags);
++
++	/* Inject aer errors and hotplug the same pcie device
++	 * maybe assign some newly created buses' pci_ops pci_ops_aer.
++	 * Since these pci_ops_aer are not tracked in pci_bus_ops_list,
++	 * we need to find and clean untracked pci_ops_aer before aer_inject
++	 * module exit
++	 */
++	clean_untracked_pci_ops_aer();
+ }
+ 
+ module_init(aer_inject_init);
+-- 
+1.7.1
 
-> +               return NULL;
-> +
-> +       root = acpi_driver_data(device);
-> +
-> +       return root;
->  }
->  EXPORT_SYMBOL_GPL(acpi_pci_find_root);
->
->
+
