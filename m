@@ -1,183 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:43562 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752360Ab2IKWBA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 18:01:00 -0400
-Received: by lbbgj3 with SMTP id gj3so712165lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 11 Sep 2012 15:00:58 -0700 (PDT)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:33020 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966Ab2ILJAQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2012 05:00:16 -0400
+Message-ID: <50504EB9.7000906@huawei.com>
+Date: Wed, 12 Sep 2012 16:58:33 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1344355862-2726-2-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-2-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Sep 2012 16:00:38 -0600
-Message-ID: <CAErSpo5nOJBCags9=e1y9ZcSDK9y69mZy=_+x0m_9bK78yVUJg@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 01/22] PCI: use pci_get_domain_bus_and_slot() to
- avoid race conditions
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Greg KH <gregkh@linuxfoundation.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	"Rafael J . Wysocki" <rjw@sisk.pl>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Xinwei Hu <huxinwei@huawei.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [RFC PATCH v1 21/22] PCI: cleanups for PCI bus lock implementation
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-22-git-send-email-jiang.liu@huawei.com> <CAErSpo4ubTSu5cSrLVfs5UHc44KgtzO_OxL_QganfhqYn2hUWQ@mail.gmail.com>
+In-Reply-To: <CAErSpo4ubTSu5cSrLVfs5UHc44KgtzO_OxL_QganfhqYn2hUWQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> There's a typical usage pattern to search a PCI device under a specific
-> PCI bus (domian, busno) as below:
-> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
-> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
->
-> The above code has a race window between pci_find_bus() and pci_get_slot()
-> if PCI hotplug operations happen between them which removes the pci_bus.
-> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
-> which also reduces code complexity.
+On 2012-9-12 7:21, Bjorn Helgaas wrote:
+> On Tue, Aug 7, 2012 at 10:11 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Now all Archs have been converted to the new PCI bus lock mechanism,
+>> so clean up unused code.
+> 
+> When you say "all arches," do you really mean "x86 and ia64"?  I
+> assume all the other architectures have similar issues.  Or is this
+> somehow ACPI-specific?
+Hi Bjorn,
+	It's still RFC to give an overview of the whole patch set. 
+Here I mean once we have enhanced all arches, we will apply following patches:)
+I'm working to enhance all arches recently, and will post the latest patch
+once it passes basic tests.
+	Thanks!
 
-This makes sense to me.  If we support hotplug, it's fundamentally
-unsafe to keep a struct pci_bus * without having a reference or some
-way to make sure it doesn't go away.  I think we should try to
-eradicate all uses of pci_find_bus() and pci_find_next_bus().
+> 
+>> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+>> ---
+>>  drivers/pci/Kconfig     |    3 ---
+>>  drivers/pci/bus.c       |    1 -
+>>  drivers/pci/pci-sysfs.c |    9 ---------
+>>  drivers/pci/probe.c     |    4 +---
+>>  include/linux/pci.h     |   10 ----------
+>>  5 files changed, 1 insertion(+), 26 deletions(-)
+>>
+>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>> index 5a796c0..848bfb8 100644
+>> --- a/drivers/pci/Kconfig
+>> +++ b/drivers/pci/Kconfig
+>> @@ -120,6 +120,3 @@ config PCI_IOAPIC
+>>  config PCI_LABEL
+>>         def_bool y if (DMI || ACPI)
+>>         select NLS
+>> -
+>> -config PCI_BUS_LOCK
+>> -       def_bool y if (X86 || IA64)
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index 371f20a..308c376 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -196,7 +196,6 @@ int pci_bus_add_child(struct pci_bus *bus)
+>>                         pci_create_legacy_files(bus);
+>>                         pci_bus_change_state(bus, PCI_BUS_STATE_INITIALIZED,
+>>                                         PCI_BUS_STATE_WORKING, false);
+>> -                       bus->is_added = 1;
+>>                 }
+>>         }
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 11043b4..a5a4195 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -284,7 +284,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
+>>  }
+>>
+>>  #ifdef CONFIG_HOTPLUG
+>> -static DEFINE_MUTEX(pci_remove_rescan_mutex);
+>>  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>>                                 size_t count)
+>>  {
+>> @@ -296,13 +295,11 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+>>
+>>         if (val) {
+>>                 pci_host_bridge_hotplug_lock();
+>> -               mutex_lock(&pci_remove_rescan_mutex);
+>>                 while ((b = pci_find_next_bus(b)) != NULL)
+>>                         if (pci_bus_lock_states(b, PCI_BUS_STATE_WORKING) > 0) {
+>>                                 pci_rescan_bus(b);
+>>                                 pci_bus_unlock(b);
+>>                         }
+>> -               mutex_unlock(&pci_remove_rescan_mutex);
+>>                 pci_host_bridge_hotplug_unlock();
+>>         }
+>>         return count;
+>> @@ -326,13 +323,11 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>>         if (val) {
+>>                 struct pci_bus *bus = pdev->bus;
+>>
+>> -               mutex_lock(&pci_remove_rescan_mutex);
+>>                 if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
+>>                         if (pdev->is_added)
+>>                                 pci_rescan_bus(bus);
+>>                         pci_bus_unlock(bus);
+>>                 }
+>> -               mutex_unlock(&pci_remove_rescan_mutex);
+>>         }
+>>         return count;
+>>  }
+>> @@ -342,13 +337,11 @@ static void remove_callback(struct device *dev)
+>>         struct pci_dev *pdev = to_pci_dev(dev);
+>>         struct pci_bus *bus = pdev->bus;
+>>
+>> -       mutex_lock(&pci_remove_rescan_mutex);
+>>         if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
+>>                 pci_bus_get(bus);
+>>                 pci_stop_and_remove_bus_device(pdev);
+>>                 pci_unlock_and_put_bus(bus);
+>>         }
+>> -       mutex_unlock(&pci_remove_rescan_mutex);
+>>  }
+>>
+>>  static ssize_t
+>> @@ -382,14 +375,12 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+>>                 return -EINVAL;
+>>
+>>         if (val) {
+>> -               mutex_lock(&pci_remove_rescan_mutex);
+>>                 if (!pci_is_root_bus(bus))
+>>                         pci_rescan_bus_bridge_resize(bus->self);
+>>                 else if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
+>>                         pci_rescan_bus(bus);
+>>                         pci_bus_unlock(bus);
+>>                 }
+>> -               mutex_unlock(&pci_remove_rescan_mutex);
+>>         }
+>>         return count;
+>>  }
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index da6f04c..09517c3 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1626,11 +1626,9 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
+>>         if (pci_bus_get_state(bus) < PCI_BUS_STATE_WORKING) {
+>>                 dev_dbg(&bus->dev, "fixups for bus\n");
+>>                 pcibios_fixup_bus(bus);
+>> -               if (pci_is_root_bus(bus)) {
+>> +               if (pci_is_root_bus(bus))
+>>                         pci_bus_change_state(bus, PCI_BUS_STATE_REGISTERED,
+>>                                              PCI_BUS_STATE_WORKING, false);
+>> -                       bus->is_added = 1;
+>> -               }
+>>         }
+>>
+>>         for (pass=0; pass < 2; pass++)
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 9e52e88..0e50ec8 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -442,7 +442,6 @@ struct pci_bus {
+>>         struct device           dev;
+>>         struct bin_attribute    *legacy_io; /* legacy I/O for this bus */
+>>         struct bin_attribute    *legacy_mem; /* legacy mem */
+>> -       unsigned int            is_added:1;
+>>         atomic_t                state;
+>>  };
+>>
+>> @@ -463,21 +462,12 @@ struct pci_bus {
+>>  #define        PCI_BUS_STATE_DESTROYED         0x40    /* invalid state */
+>>  #define        PCI_BUS_STATE_MASK              0x7F
+>>
+>> -#ifdef CONFIG_PCI_BUS_LOCK
+>>  #define        PCI_BUS_STATE_LOCK              0x10000 /* for pci core only */
+>>
+>>  static inline bool pci_bus_is_locked(struct pci_bus *bus)
+>>  {
+>>         return !!(atomic_read(&bus->state) & PCI_BUS_STATE_LOCK);
+>>  }
+>> -#else /* CONFIG_PCI_BUS_LOCK */
+>> -#define        PCI_BUS_STATE_LOCK              0x0000  /* for pci core only */
+>> -
+>> -static inline bool pci_bus_is_locked(struct pci_bus *bus)
+>> -{
+>> -       return true;
+>> -}
+>> -#endif /* CONFIG_PCI_BUS_LOCK */
+>>
+>>  static inline int pci_bus_get_state(struct pci_bus *bus)
+>>  {
+>> --
+>> 1.7.9.5
+>>
+> 
+> .
+> 
 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  arch/ia64/sn/kernel/io_common.c      |    4 +---
->  drivers/gpu/vga/vgaarb.c             |   15 +++------------
->  drivers/pci/hotplug/cpcihp_generic.c |    8 ++------
->  drivers/pci/iov.c                    |    8 ++------
->  drivers/pci/xen-pcifront.c           |   10 ++--------
->  5 files changed, 10 insertions(+), 35 deletions(-)
->
-> diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
-> index fbb5f2f..8630875 100644
-> --- a/arch/ia64/sn/kernel/io_common.c
-> +++ b/arch/ia64/sn/kernel/io_common.c
-> @@ -229,7 +229,6 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
->  {
->         int segment = pci_domain_nr(dev->bus);
->         struct pcibus_bussoft *bs;
-> -       struct pci_bus *host_pci_bus;
->         struct pci_dev *host_pci_dev;
->         unsigned int bus_no, devfn;
->
-> @@ -245,8 +244,7 @@ void sn_pci_fixup_slot(struct pci_dev *dev, struct pcidev_info *pcidev_info,
->
->         bus_no = (pcidev_info->pdi_slot_host_handle >> 32) & 0xff;
->         devfn = pcidev_info->pdi_slot_host_handle & 0xffffffff;
-> -       host_pci_bus = pci_find_bus(segment, bus_no);
-> -       host_pci_dev = pci_get_slot(host_pci_bus, devfn);
-> +       host_pci_dev = pci_get_domain_bus_and_slot(segment, bus_no, devfn);
->
->         pcidev_info->host_pci_dev = host_pci_dev;
->         pcidev_info->pdi_linux_pcidev = dev;
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index 3df8fc0..b6852b7 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -1066,7 +1066,6 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
->                 }
->
->         } else if (strncmp(curr_pos, "target ", 7) == 0) {
-> -               struct pci_bus *pbus;
->                 unsigned int domain, bus, devfn;
->                 struct vga_device *vgadev;
->
-> @@ -1085,19 +1084,11 @@ static ssize_t vga_arb_write(struct file *file, const char __user * buf,
->                         pr_debug("vgaarb: %s ==> %x:%x:%x.%x\n", curr_pos,
->                                 domain, bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
->
-> -                       pbus = pci_find_bus(domain, bus);
-> -                       pr_debug("vgaarb: pbus %p\n", pbus);
-> -                       if (pbus == NULL) {
-> -                               pr_err("vgaarb: invalid PCI domain and/or bus address %x:%x\n",
-> -                                       domain, bus);
-> -                               ret_val = -ENODEV;
-> -                               goto done;
-> -                       }
-> -                       pdev = pci_get_slot(pbus, devfn);
-> +                       pdev = pci_get_domain_bus_and_slot(domain, bus, devfn);
->                         pr_debug("vgaarb: pdev %p\n", pdev);
->                         if (!pdev) {
-> -                               pr_err("vgaarb: invalid PCI address %x:%x\n",
-> -                                       bus, devfn);
-> +                               pr_err("vgaarb: invalid PCI address %x:%x:%x\n",
-> +                                       domain, bus, devfn);
->                                 ret_val = -ENODEV;
->                                 goto done;
->                         }
-> diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-> index 81af764..a6a71c4 100644
-> --- a/drivers/pci/hotplug/cpcihp_generic.c
-> +++ b/drivers/pci/hotplug/cpcihp_generic.c
-> @@ -154,12 +154,8 @@ static int __init cpcihp_generic_init(void)
->         if(!r)
->                 return -EBUSY;
->
-> -       bus = pci_find_bus(0, bridge_busnr);
-> -       if (!bus) {
-> -               err("Invalid bus number %d", bridge_busnr);
-> -               return -EINVAL;
-> -       }
-> -       dev = pci_get_slot(bus, PCI_DEVFN(bridge_slot, 0));
-> +       dev = pci_get_domain_bus_and_slot(0, bridge_busnr,
-> +                                         PCI_DEVFN(bridge_slot, 0));
->         if(!dev || dev->hdr_type != PCI_HEADER_TYPE_BRIDGE) {
->                 err("Invalid bridge device %s", bridge);
->                 pci_dev_put(dev);
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 74bbaf8..c7d2969 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -152,15 +152,11 @@ failed1:
->  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
->  {
->         char buf[VIRTFN_ID_LEN];
-> -       struct pci_bus *bus;
->         struct pci_dev *virtfn;
->         struct pci_sriov *iov = dev->sriov;
->
-> -       bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
-> -       if (!bus)
-> -               return;
-> -
-> -       virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
-> +       virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-> +                       virtfn_bus(dev, id), virtfn_devfn(dev, id));
->         if (!virtfn)
->                 return;
->
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index d6cc62c..def8d0b 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -982,7 +982,6 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
->         int err = 0;
->         int i, num_devs;
->         unsigned int domain, bus, slot, func;
-> -       struct pci_bus *pci_bus;
->         struct pci_dev *pci_dev;
->         char str[64];
->
-> @@ -1032,13 +1031,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
->                         goto out;
->                 }
->
-> -               pci_bus = pci_find_bus(domain, bus);
-> -               if (!pci_bus) {
-> -                       dev_dbg(&pdev->xdev->dev, "Cannot get bus %04x:%02x\n",
-> -                               domain, bus);
-> -                       continue;
-> -               }
-> -               pci_dev = pci_get_slot(pci_bus, PCI_DEVFN(slot, func));
-> +               pci_dev = pci_get_domain_bus_and_slot(domain, bus,
-> +                               PCI_DEVFN(slot, func));
->                 if (!pci_dev) {
->                         dev_dbg(&pdev->xdev->dev,
->                                 "Cannot get PCI device %04x:%02x:%02x.%d\n",
-> --
-> 1.7.9.5
->
+
