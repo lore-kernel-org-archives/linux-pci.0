@@ -1,468 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27717 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757418Ab2IUSJ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 14:09:58 -0400
-From: Jon Mason <jon.mason@intel.com>
-To: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@risingtidesystems.com>
-Subject: [RFC v3 2/2] net: Add support for NTB virtual ethernet device
-Date: Fri, 21 Sep 2012 11:09:49 -0700
-Message-Id: <1348250989-6962-3-git-send-email-jon.mason@intel.com>
-In-Reply-To: <1348250989-6962-1-git-send-email-jon.mason@intel.com>
-References: <1348250989-6962-1-git-send-email-jon.mason@intel.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53386 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758221Ab2IMQnf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 12:43:35 -0400
+Received: by lagy9 with SMTP id y9so2075098lag.19
+        for <linux-pci@vger.kernel.org>; Thu, 13 Sep 2012 09:43:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <503DD9A7.70007@huawei.com>
+References: <503DD9A7.70007@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Sep 2012 10:43:13 -0600
+Message-ID: <CAErSpo7JknWsMGpYnxyLqmLQO5Xr5jMGYnpgdCmEjYWN-=5vjA@mail.gmail.com>
+Subject: Re: a small problem about pci_stop_and_remove_bus_device() function
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: PCI <linux-pci@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A virtual ethernet device that uses the NTB transport API to send/receive data.
+On Wed, Aug 29, 2012 at 2:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Hi Bjorn,
+>    The drivers/pci/remove.c now is so clean after applied series "[PATCH v2 00/16] Clean up drivers/pci/remove.c"(very good ^_^).
+> I have a small problem about pci_stop_and_remove_bus_device() function. Traditionally, pci_bus is removed after its pci bridge stop.
+> But now pci_bus is remove before its pci brdige.
 
-Signed-off-by: Jon Mason <jon.mason@intel.com>
----
- drivers/net/Kconfig      |    4 +
- drivers/net/Makefile     |    1 +
- drivers/net/ntb_netdev.c |  407 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 412 insertions(+)
- create mode 100644 drivers/net/ntb_netdev.c
+Let me restate this to make sure I understand the problem.  Prior to
+my cleanups, the flow when removing a bridge device was like this:
 
-diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index 0c2bd80..9bf8a71 100644
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -178,6 +178,10 @@ config NETPOLL_TRAP
- config NET_POLL_CONTROLLER
- 	def_bool NETPOLL
- 
-+config NTB_NETDEV
-+	tristate "Virtual Ethernet over NTB"
-+	depends on NTB
-+
- config RIONET
- 	tristate "RapidIO Ethernet over messaging driver support"
- 	depends on RAPIDIO
-diff --git a/drivers/net/Makefile b/drivers/net/Makefile
-index 3d375ca..9890148 100644
---- a/drivers/net/Makefile
-+++ b/drivers/net/Makefile
-@@ -69,3 +69,4 @@ obj-$(CONFIG_USB_IPHETH)        += usb/
- obj-$(CONFIG_USB_CDC_PHONET)   += usb/
- 
- obj-$(CONFIG_HYPERV_NET) += hyperv/
-+obj-$(CONFIG_NTB_NETDEV) += ntb_netdev.o
-diff --git a/drivers/net/ntb_netdev.c b/drivers/net/ntb_netdev.c
-new file mode 100644
-index 0000000..bc76c63
---- /dev/null
-+++ b/drivers/net/ntb_netdev.c
-@@ -0,0 +1,407 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ *   redistributing this file, you may do so under either license.
-+ *
-+ *   GPL LICENSE SUMMARY
-+ *
-+ *   Copyright(c) 2012 Intel Corporation. All rights reserved.
-+ *
-+ *   This program is free software; you can redistribute it and/or modify
-+ *   it under the terms of version 2 of the GNU General Public License as
-+ *   published by the Free Software Foundation.
-+ *
-+ *   BSD LICENSE
-+ *
-+ *   Copyright(c) 2012 Intel Corporation. All rights reserved.
-+ *
-+ *   Redistribution and use in source and binary forms, with or without
-+ *   modification, are permitted provided that the following conditions
-+ *   are met:
-+ *
-+ *     * Redistributions of source code must retain the above copyright
-+ *       notice, this list of conditions and the following disclaimer.
-+ *     * Redistributions in binary form must reproduce the above copy
-+ *       notice, this list of conditions and the following disclaimer in
-+ *       the documentation and/or other materials provided with the
-+ *       distribution.
-+ *     * Neither the name of Intel Corporation nor the names of its
-+ *       contributors may be used to endorse or promote products derived
-+ *       from this software without specific prior written permission.
-+ *
-+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ * Intel PCIe NTB Network Linux driver
-+ *
-+ * Contact Information:
-+ * Jon Mason <jon.mason@intel.com>
-+ */
-+#include <linux/etherdevice.h>
-+#include <linux/ethtool.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/ntb.h>
-+
-+#define NTB_NETDEV_VER	"0.5"
-+
-+MODULE_DESCRIPTION(KBUILD_MODNAME);
-+MODULE_VERSION(NTB_NETDEV_VER);
-+MODULE_LICENSE("Dual BSD/GPL");
-+MODULE_AUTHOR("Intel Corporation");
-+
-+struct ntb_netdev {
-+	struct list_head list;
-+	struct pci_dev *pdev;
-+	struct net_device *ndev;
-+	struct ntb_transport_qp *qp;
-+};
-+
-+#define	NTB_TX_TIMEOUT_MS	1000
-+#define	NTB_RXQ_SIZE		100
-+
-+static LIST_HEAD(dev_list);
-+
-+static void ntb_netdev_event_handler(void *data, int status)
-+{
-+	struct net_device *ndev = data;
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+
-+	netdev_dbg(ndev, "Event %x, Link %x\n", status,
-+		   ntb_transport_link_query(dev->qp));
-+
-+	/* Currently, only link status event is supported */
-+	if (status)
-+		netif_carrier_on(ndev);
-+	else
-+		netif_carrier_off(ndev);
-+}
-+
-+static void ntb_netdev_rx_handler(void *data, struct ntb_transport_qp *qp)
-+{
-+	struct net_device *ndev = data;
-+	struct sk_buff *skb;
-+	int len, rc;
-+
-+	while ((skb = ntb_transport_rx_dequeue(qp, &len))) {
-+		netdev_dbg(ndev, "%s: %d byte payload received\n", __func__,
-+			   len);
-+
-+		skb_put(skb, len);
-+		skb->protocol = eth_type_trans(skb, ndev);
-+		skb->ip_summed = CHECKSUM_NONE;
-+
-+		if (netif_rx(skb) == NET_RX_DROP) {
-+			ndev->stats.rx_errors++;
-+			ndev->stats.rx_dropped++;
-+		} else {
-+			ndev->stats.rx_packets++;
-+			ndev->stats.rx_bytes += len;
-+		}
-+
-+		skb = netdev_alloc_skb(ndev, ndev->mtu + ETH_HLEN);
-+		if (!skb) {
-+			ndev->stats.rx_errors++;
-+			ndev->stats.rx_frame_errors++;
-+			break;
-+		}
-+
-+		rc = ntb_transport_rx_enqueue(qp, skb, skb->data,
-+					      ndev->mtu + ETH_HLEN);
-+		if (rc) {
-+			ndev->stats.rx_errors++;
-+			ndev->stats.rx_fifo_errors++;
-+			break;
-+		}
-+	}
-+}
-+
-+static void ntb_netdev_tx_handler(void *data, struct ntb_transport_qp *qp)
-+{
-+	struct net_device *ndev = data;
-+	struct sk_buff *skb;
-+	int len;
-+
-+	while ((skb = ntb_transport_tx_dequeue(qp, &len))) {
-+		ndev->stats.tx_packets++;
-+		ndev->stats.tx_bytes += skb->len;
-+		dev_kfree_skb(skb);
-+	}
-+
-+	if (ndev && netif_queue_stopped(ndev))
-+		netif_wake_queue(ndev);
-+}
-+
-+static netdev_tx_t ntb_netdev_start_xmit(struct sk_buff *skb,
-+					 struct net_device *ndev)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	int rc;
-+
-+	netdev_dbg(ndev, "ntb_transport_tx_enqueue\n");
-+
-+	rc = ntb_transport_tx_enqueue(dev->qp, skb, skb->data, skb->len);
-+	if (rc)
-+		goto err;
-+
-+	return NETDEV_TX_OK;
-+
-+err:
-+	ndev->stats.tx_dropped++;
-+	ndev->stats.tx_errors++;
-+	netif_stop_queue(ndev);
-+	return NETDEV_TX_BUSY;
-+}
-+
-+static int ntb_netdev_open(struct net_device *ndev)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	struct sk_buff *skb;
-+	int rc, i, len;
-+
-+	/* Add some empty rx bufs */
-+	for (i = 0; i < NTB_RXQ_SIZE; i++) {
-+		skb = netdev_alloc_skb(ndev, ndev->mtu + ETH_HLEN);
-+		if (!skb) {
-+			rc = -ENOMEM;
-+			goto err;
-+		}
-+
-+		rc = ntb_transport_rx_enqueue(dev->qp, skb, skb->data,
-+					      ndev->mtu + ETH_HLEN);
-+		if (rc == -EINVAL)
-+			goto err;
-+	}
-+
-+	netif_carrier_off(ndev);
-+	ntb_transport_link_up(dev->qp);
-+
-+	return 0;
-+
-+err:
-+	while ((skb = ntb_transport_rx_remove(dev->qp, &len)))
-+		dev_kfree_skb(skb);
-+	return rc;
-+}
-+
-+static int ntb_netdev_close(struct net_device *ndev)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	struct sk_buff *skb;
-+	int len;
-+
-+	ntb_transport_link_down(dev->qp);
-+
-+	while ((skb = ntb_transport_rx_remove(dev->qp, &len)))
-+		dev_kfree_skb(skb);
-+
-+	return 0;
-+}
-+
-+static int ntb_netdev_change_mtu(struct net_device *ndev, int new_mtu)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+	struct sk_buff *skb;
-+	int len, rc;
-+
-+	if (new_mtu > ntb_transport_max_size(dev->qp) - ETH_HLEN)
-+		return -EINVAL;
-+
-+	if (!netif_running(ndev)) {
-+		ndev->mtu = new_mtu;
-+		return 0;
-+	}
-+
-+	/* Bring down the link and dispose of posted rx entries */
-+	ntb_transport_link_down(dev->qp);
-+
-+	if (ndev->mtu < new_mtu) {
-+		int i;
-+
-+		for (i = 0; (skb = ntb_transport_rx_remove(dev->qp, &len)); i++)
-+			dev_kfree_skb(skb);
-+
-+		for (; i; i--) {
-+			skb = netdev_alloc_skb(ndev, new_mtu + ETH_HLEN);
-+			if (!skb) {
-+				rc = -ENOMEM;
-+				goto err;
-+			}
-+
-+			rc = ntb_transport_rx_enqueue(dev->qp, skb, skb->data,
-+						      new_mtu + ETH_HLEN);
-+			if (rc) {
-+				dev_kfree_skb(skb);
-+				goto err;
-+			}
-+		}
-+	}
-+
-+	ndev->mtu = new_mtu;
-+
-+	ntb_transport_link_up(dev->qp);
-+
-+	return 0;
-+
-+err:
-+	ntb_transport_link_down(dev->qp);
-+
-+	while ((skb = ntb_transport_rx_remove(dev->qp, &len)))
-+		dev_kfree_skb(skb);
-+
-+	netdev_err(ndev, "Error changing MTU, device inoperable\n");
-+	return rc;
-+}
-+
-+static void ntb_netdev_tx_timeout(struct net_device *ndev)
-+{
-+	if (netif_running(ndev))
-+		netif_wake_queue(ndev);
-+}
-+
-+static const struct net_device_ops ntb_netdev_ops = {
-+	.ndo_open = ntb_netdev_open,
-+	.ndo_stop = ntb_netdev_close,
-+	.ndo_start_xmit = ntb_netdev_start_xmit,
-+	.ndo_change_mtu = ntb_netdev_change_mtu,
-+	.ndo_tx_timeout = ntb_netdev_tx_timeout,
-+	.ndo_set_mac_address = eth_mac_addr,
-+};
-+
-+static void ntb_get_drvinfo(struct net_device *ndev,
-+			    struct ethtool_drvinfo *info)
-+{
-+	struct ntb_netdev *dev = netdev_priv(ndev);
-+
-+	strlcpy(info->driver, KBUILD_MODNAME, sizeof(info->driver));
-+	strlcpy(info->version, NTB_NETDEV_VER, sizeof(info->version));
-+	strlcpy(info->bus_info, pci_name(dev->pdev), sizeof(info->bus_info));
-+}
-+
-+static int ntb_get_settings(struct net_device *dev, struct ethtool_cmd *cmd)
-+{
-+	cmd->supported = SUPPORTED_Backplane;
-+	cmd->advertising = ADVERTISED_Backplane;
-+	cmd->speed = SPEED_UNKNOWN;
-+	ethtool_cmd_speed_set(cmd, SPEED_UNKNOWN);
-+	cmd->duplex = DUPLEX_FULL;
-+	cmd->port = PORT_OTHER;
-+	cmd->phy_address = 0;
-+	cmd->transceiver = XCVR_DUMMY1;
-+	cmd->autoneg = AUTONEG_ENABLE;
-+	cmd->maxtxpkt = 0;
-+	cmd->maxrxpkt = 0;
-+
-+	return 0;
-+}
-+
-+static const struct ethtool_ops ntb_ethtool_ops = {
-+	.get_drvinfo = ntb_get_drvinfo,
-+	.get_link = ethtool_op_get_link,
-+	.get_settings = ntb_get_settings,
-+};
-+
-+static const struct ntb_queue_handlers ntb_netdev_handlers = {
-+	.tx_handler = ntb_netdev_tx_handler,
-+	.rx_handler = ntb_netdev_rx_handler,
-+	.event_handler = ntb_netdev_event_handler,
-+};
-+
-+static int __devinit ntb_netdev_probe(struct pci_dev *pdev)
-+{
-+	struct net_device *ndev;
-+	struct ntb_netdev *dev;
-+	int rc;
-+
-+	ndev = alloc_etherdev(sizeof(struct ntb_netdev));
-+	if (!ndev)
-+		return -ENOMEM;
-+
-+	dev = netdev_priv(ndev);
-+	dev->ndev = ndev;
-+	dev->pdev = pdev;
-+	BUG_ON(!dev->pdev);
-+	ndev->features = NETIF_F_HIGHDMA;
-+
-+	ndev->priv_flags |= IFF_LIVE_ADDR_CHANGE;
-+
-+	ndev->hw_features = ndev->features;
-+	ndev->watchdog_timeo = msecs_to_jiffies(NTB_TX_TIMEOUT_MS);
-+
-+	random_ether_addr(ndev->perm_addr);
-+	memcpy(ndev->dev_addr, ndev->perm_addr, ndev->addr_len);
-+
-+	ndev->netdev_ops = &ntb_netdev_ops;
-+	SET_ETHTOOL_OPS(ndev, &ntb_ethtool_ops);
-+
-+	dev->qp = ntb_transport_create_queue(ndev, pdev, &ntb_netdev_handlers);
-+	if (!dev->qp) {
-+		rc = -EIO;
-+		goto err;
-+	}
-+
-+	ndev->mtu = ntb_transport_max_size(dev->qp) - ETH_HLEN;
-+
-+	rc = register_netdev(ndev);
-+	if (rc)
-+		goto err1;
-+
-+	list_add(&dev->list, &dev_list);
-+	pr_info("%s: %s created\n", KBUILD_MODNAME, ndev->name);
-+	return 0;
-+
-+err1:
-+	ntb_transport_free_queue(dev->qp);
-+err:
-+	free_netdev(ndev);
-+	return rc;
-+}
-+
-+static void __exit ntb_netdev_remove(struct pci_dev *pdev)
-+{
-+	struct net_device *ndev;
-+	struct ntb_netdev *dev;
-+
-+	list_for_each_entry(dev, &dev_list, list) {
-+		if (dev->pdev == pdev)
-+			break;
-+	}
-+	if (dev == NULL)
-+		return;
-+
-+	ndev = dev->ndev;
-+
-+	unregister_netdev(ndev);
-+	ntb_transport_free_queue(dev->qp);
-+	free_netdev(ndev);
-+}
-+
-+static struct ntb_client ntb_netdev_client = {
-+	.driver.name = KBUILD_MODNAME,
-+	.driver.owner = THIS_MODULE,
-+	.probe = ntb_netdev_probe,
-+	.remove = ntb_netdev_remove,
-+};
-+
-+static int __init ntb_netdev_init_module(void)
-+{
-+	return ntb_register_client(&ntb_netdev_client);
-+}
-+
-+module_init(ntb_netdev_init_module);
-+
-+static void __exit ntb_netdev_exit_module(void)
-+{
-+	ntb_unregister_client(&ntb_netdev_client);
-+	pr_info("%s: Driver removed\n", KBUILD_MODNAME);
-+}
-+
-+module_exit(ntb_netdev_exit_module);
--- 
-1.7.9.5
+    pci_stop_and_remove_bus_device(bridge)
+        pci_stop_bus_device(bridge)
+            pci_stop_bus_devices(bridge->subordinate)
+            pci_stop_dev(bridge)
+                device_unregister(bridge->dev)
+                    device_del(bridge->dev)
+                        blocking_notifier_call_chain(pci_bus_type, ...)
+                            <notifier>
+                                if (dev->bus == &pci_bus_type)
+                                    pdev = to_pci_dev(dev)
+                                    if (pdev->subordinate)
+                                        ...
+        __pci_remove_bus_device(bridge)
+            if (bridge->subordinate)
+                pci_remove_bus(bridge->subordinate)
+                bridge->subordinate = NULL
 
+After my changes, the flow is like this:
+
+    pci_stop_and_remove_bus_device(bridge)
+        pci_remove_bus(bridge->subordinate)
+        bridge->subordinate = NULL
+        pci_stop_dev(bridge)
+            device_unregister(bridge->dev)
+                device_del(bridge->dev)
+                    blocking_notifier_call_chain(pci_bus_type, ...)
+                        <notifier>
+                            if (dev->bus == &pci_bus_type)
+                                pdev = to_pci_dev(dev)
+                                if (pdev->subordinate)
+                                    ** broken because
+pdev->subordinate is always NULL **
+
+The problem is that before, a notifier could check "dev->subordinate"
+to identify a bridge device, but now, "dev->subordinate" has already
+been cleared by the time the notifier runs, so that test no longer
+identifies bridges.
+
+I didn't intend this change in behavior, so in that sense, this is a
+regression.  We could restore the previous behavior by changing
+pci_stop_and_remove_bus_device() so the "pci_remove_bus();
+dev->subordinate = NULL;" code is after the pci_stop_dev() call, as
+you suggest.
+
+But I'm not 100% sure that's the correct fix.  I think it's possible
+to have a bridge device that has no secondary bus.  For example, I
+don't think a bridge configured with "secondary > subordinate", e.g.,
+"[bus ff-00]", will forward any config transactions downstream.  In
+that case, we'll have a struct pci_dev for the bridge device, but
+there won't be a struct pci_bus for the secondary bus, so
+dev->subordinate will be NULL.  There are actually quite a few
+existing tests for this situation in pnv_ioda_setup_bus_PE(),
+eeh_add_device_tree_late(), yenta_probe(), etc.
+
+When we enumerate bridges, we build the bridge pci_dev before building
+the downstream pci_bus, so symmetry suggests that we should tear down
+the pci_bus before tearing down the pci_dev.
+
+So I wonder if a better fix is remove the assumption that
+"dev->subordinate != NULL means this is a bridge device."  There are
+many places where we test "dev->subordinate" to iterate through
+downstream devices or something similar; those should be fine.  We'd
+only have to change the places that care about actual type of the
+device, e.g., the config space differences between header types.
+
+Where did you trip over this?  If you just found this by inspection,
+my congratulations, it's a pretty subtle issue :)
+
+> So If I use pci_bus_type notifier, I can't identify pci_dev whether is bridge(by pci_dev->subordinate)
+> when notifier arrives.
+>    What about move pci_remove_bus after stop pci bridge?
+>
+>  82     if (bus) {
+>  83         list_for_each_entry_safe_reverse(child, tmp,
+>  84                          &bus->devices, bus_list)
+>  85             pci_stop_and_remove_bus_device(child);
+>  86
+>  87     }
+>  88
+>  89     pci_stop_dev(dev);
+>  90     if (bus) {
+>  91         pci_remove_bus(bus);
+>  92         dev->subordinate = NULL;
+>  93     }
+>  94     pci_destroy_dev(dev);
+>
+>
+> --
+> Thanks!
+> Yijing
+>
