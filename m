@@ -1,99 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54164 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757040Ab2IUIxl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 04:53:41 -0400
-Message-ID: <1348217616.23395.55.camel@yhuang-dev>
-Subject: Re: [PATCH v5 1/5] PCI/AER: Fix pci_ops return NULL in
- pci_read/write_aer
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Fri, 21 Sep 2012 16:53:36 +0800
-In-Reply-To: <1348216993-6948-2-git-send-email-wangyijing@huawei.com>
-References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
-	 <1348216993-6948-2-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:39282 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758534Ab2IMQCp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 12:02:45 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr13so4170633pbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 13 Sep 2012 09:02:45 -0700 (PDT)
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/2] PCI: remove host bridge hotplug unsafe interface pci_get_next_bus()
+Date: Fri, 14 Sep 2012 00:00:10 +0800
+Message-Id: <1347552010-6718-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1347552010-6718-1-git-send-email-jiang.liu@huawei.com>
+References: <1347552010-6718-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
+References: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-09-21 at 16:43 +0800, Yijing Wang wrote:
-> When we injected aer errors to the pcie device by aer_inject module, pci_ops of the pci
-> bus the device on will be assigned to pci_ops_aer.So if the target pci device
-> is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
-> will be assigned to pci_ops_aer too.Now every access to the child bus's device will cause the
-> system panic, because it will get a NULL pci_ops in pci_read_aer/pci_write_aer.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
+Remove host bridge hotplug unsafe interface pci_get_next_bus(), it has
+been replaced by pci_{get|put}_root_buses().
 
-Reviewed-by: Huang Ying <ying.huang@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/search.c |   25 -------------------------
+ include/linux/pci.h  |    4 ----
+ 2 files changed, 29 deletions(-)
 
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   26 +++++++++++++++++++++++++-
->  1 files changed, 25 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 4e24cb8..fdab3bb 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
->  	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
->  }
->  
-> +/* find pci_ops of the nearest parent bus */
-> +static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
-> +{
-> +	struct pci_bus_ops *bus_ops;
-> +	struct pci_bus *pbus = bus->parent;
-> +
-> +	if (!pbus)
-> +		return NULL;
-> +
-> +	while (pbus) {
-> +		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
-> +			if (bus_ops->bus == pbus)
-> +				return bus_ops->ops;
-> +
-> +		pbus = pbus->parent;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
->  /* inject_lock must be held before calling */
->  static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  {
-> @@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  		if (bus_ops->bus == bus)
->  			return bus_ops->ops;
->  	}
-> -	return NULL;
-> +
-> +	/* can't find bus_ops, fall back to get bus_ops of parent bus */
-> +	return __find_pci_bus_ops_parent(bus);
->  }
->  
->  static struct pci_bus_ops *pci_bus_ops_pop(void)
-> @@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
->  	}
->  out:
->  	ops = __find_pci_bus_ops(bus);
-> +	BUG_ON(!ops);
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return ops->read(bus, devfn, where, size, val);
->  }
-> @@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
->  	}
->  out:
->  	ops = __find_pci_bus_ops(bus);
-> +	BUG_ON(!ops);
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return ops->write(bus, devfn, where, size, val);
->  }
-
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 8b20a33..7aadd45 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -116,30 +116,6 @@ struct pci_bus * pci_find_bus(int domain, int busnr)
+ 	return bus;
+ }
+ 
+-/**
+- * pci_find_next_bus - begin or continue searching for a PCI bus
+- * @from: Previous PCI bus found, or %NULL for new search.
+- *
+- * Iterates through the list of known PCI busses.  A new search is
+- * initiated by passing %NULL as the @from argument.  Otherwise if
+- * @from is not %NULL, searches continue from next device on the
+- * global list.
+- */
+-struct pci_bus * 
+-pci_find_next_bus(const struct pci_bus *from)
+-{
+-	struct list_head *n;
+-	struct pci_bus *b = NULL;
+-
+-	WARN_ON(in_interrupt());
+-	down_read(&pci_bus_sem);
+-	n = from ? from->node.next : pci_root_buses.next;
+-	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
+-	up_read(&pci_bus_sem);
+-	return b;
+-}
+-
+ struct pci_bus **
+ pci_get_root_buses(int *bus_num)
+ {
+@@ -396,7 +372,6 @@ EXPORT_SYMBOL(pci_dev_present);
+ 
+ /* For boot time work */
+ EXPORT_SYMBOL(pci_find_bus);
+-EXPORT_SYMBOL(pci_find_next_bus);
+ /* For everyone */
+ EXPORT_SYMBOL(pci_get_device);
+ EXPORT_SYMBOL(pci_get_subsys);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bc1ab5f..ea78235 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -756,7 +756,6 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+-struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ struct pci_bus ** pci_get_root_buses(int *bus_num);
+ void pci_put_root_buses(struct pci_bus **buses, int count);
+ 
+@@ -1401,9 +1400,6 @@ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ { }
+ 
+-static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+-{ return NULL; }
+-
+ static inline struct pci_bus ** pci_get_root_buses(int *bus_num)
+ {
+ 	*bus_num = 0;
+-- 
+1.7.9.5
 
