@@ -1,150 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53867 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751013Ab2IHNm2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Sep 2012 09:42:28 -0400
-Date: Sat, 8 Sep 2012 21:42:20 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, Feng Tang <feng.tang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for
- pci_get_subsys/class()
-Message-ID: <20120908134220.GA24831@localhost>
-References: <20120731235705.GW2422@linux.vnet.ibm.com>
- <1343779778.27983.73.camel@gandalf.stny.rr.com>
- <20120801001811.GX2422@linux.vnet.ibm.com>
- <20120801004319.GA7043@localhost>
- <20120822025008.GA8066@localhost>
- <20120822154908.2e6ef3c0@feng-i7>
- <CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
- <20120823154503.15a45b14@feng-i7>
- <CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
- <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:57360 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756282Ab2IMJeF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 05:34:05 -0400
+Received: by oago6 with SMTP id o6so1715293oag.19
+        for <linux-pci@vger.kernel.org>; Thu, 13 Sep 2012 02:34:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
+In-Reply-To: <CA+icZUWQtYB2yJYKh9MRqA40Qu5v7V=SOqpu5jvdqDhR_teiFg@mail.gmail.com>
+References: <CA+icZUWQtYB2yJYKh9MRqA40Qu5v7V=SOqpu5jvdqDhR_teiFg@mail.gmail.com>
+Date: Thu, 13 Sep 2012 19:34:04 +1000
+Message-ID: <CAPM=9tz-pc2cZs+WTMxcNH8YVa2JEDwH1hmxVeGLOkdFyC-Xxg@mail.gmail.com>
+Subject: Re: [pci-next] Include patches from mmotm and drm-opt-pwr GIT trees?
+From: Dave Airlie <airlied@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 07, 2012 at 06:32:48PM -0700, Yinghai Lu wrote:
+On Thu, Sep 13, 2012 at 7:20 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> Hi Bjorn,
+>
+> those two patches would IMHO be nice to have also in pci.git#next?
+> The 1st could have given me more infos when I had some troubles with
+> drm in Linux-Next some days ago.
+> The 2nd one was sent already by Dave to linux-pci ML.
 
-> > with this one in pci/next pci config in /sys are not created.
-> >
-> > 10:~ # lspci -tv
-> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:03.0/config
-> > lspci: Unable to read the standard configuration space header of
-> > device 0000:00:03.0
-> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:02.0/config
-> > lspci: Unable to read the standard configuration space header of
-> > device 0000:00:02.0
-> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.3/config
-> > lspci: Unable to read the standard configuration space header of
-> > device 0000:00:01.3
-> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.1/config
-> > lspci: Unable to read the standard configuration space header of
-> > device 0000:00:01.1
-> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:01.0/config
-> > lspci: Unable to read the standard configuration space header of
-> > device 0000:00:01.0
-> > pcilib: Cannot open /sys/bus/pci/devices/0000:00:00.0/config
-> > lspci: Unable to read the standard configuration space header of
-> > device 0000:00:00.0
-> > -[0000:00]-
-> >
-> > bisected to this commit
-> >
-> > ccee7d23102f5e5765ec24779c5b77472af8f79e is the first bad commit
-> > commit ccee7d23102f5e5765ec24779c5b77472af8f79e
-> > Author: Feng Tang <feng.tang@intel.com>
-> > Date:   Thu Aug 23 15:45:03 2012 +0800
-> >
-> >     PCI: Use pci_device_id on stack for pci_get_subsys/class() to avoid kmalloc
-> >
-> >     This fixes a kernel warning https://lkml.org/lkml/2012/7/31/682
-> >
-> >     pci_get_subsys() may get called in late system reboot stage, using
-> >     a sleepable kmalloc() sounds fragile and will cause a kernel warning
-> >     with my recent commmit 55c844a "x86/reboot: Fix a warning message
-> >     triggered by stop_other_cpus()" which disable local interrupt in
-> >     late system shutdown/reboot phase. Using a local parameter instead
-> >     will fix it and make it eligible for calling forom atomic context.
-> >
-> >     Do the same change for the pci_get_class() as suggested by Bjorn Helgaas
-> >
-> >     [bhelgaas: changelog]
-> >     Bisected-by: Fengguang Wu <fengguang.wu@intel.com>
-> >     Signed-off-by: Feng Tang <feng.tang@intel.com>
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >     Reviewed-by: Fengguang Wu <fengguang.wu@intel.com>
-> >
-> > :040000 040000 dee62a035816b73abc68e40de8f21c7349efc4cb
-> > 70b2a6258bffa1ab963bd650d8f5d02da774fbce M      drivers
-> >
-> > so the stack get overrun ?
-> >
-> > Bjorn, I think it is this one that cause lspci broken that I mentioned
-> > during meeting at San Diego.
+The 2nd isn't really ready yet, please don't jump the maintainer gun.
 
-This makes lspci work again on my side. The caveat is, kzalloc() will
-zero out all data while the new local variable leaves some data
-uninitialized.
-
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 78a08b1..9148b6e 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -245,7 +245,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- 			       unsigned int ss_vendor, unsigned int ss_device,
- 			       struct pci_dev *from)
- {
--	struct pci_device_id id;
-+	struct pci_device_id id = {
-+		.vendor = vendor,
-+		.device = device,
-+		.subvendor = ss_vendor,
-+		.subdevice = ss_device,
-+	};
- 
- 	/*
- 	 * pci_find_subsys() can be called on the ide_setup() path,
-@@ -256,11 +261,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- 	if (unlikely(no_pci_devices()))
- 		return NULL;
- 
--	id.vendor = vendor;
--	id.device = device;
--	id.subvendor = ss_vendor;
--	id.subdevice = ss_device;
--
- 	return pci_get_dev_by_id(&id, from);
- }
- 
-@@ -300,11 +300,14 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
-  */
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
- {
--	struct pci_device_id id;
--
--	id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
--	id.class_mask = PCI_ANY_ID;
--	id.class = class;
-+	struct pci_device_id id = {
-+		.vendor = PCI_ANY_ID,
-+		.device = PCI_ANY_ID,
-+		.subvendor = PCI_ANY_ID,
-+		.subdevice = PCI_ANY_ID,
-+		.class_mask = PCI_ANY_ID,
-+		.class = class,
-+	};
- 
- 	return pci_get_dev_by_id(&id, from);
- }
+Dave.
