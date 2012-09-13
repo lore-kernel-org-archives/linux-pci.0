@@ -1,29 +1,30 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60127 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753641Ab2IYTix (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 15:38:53 -0400
-Received: by bkcjk13 with SMTP id jk13so1477068bkc.19
-        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 12:38:52 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-Date: Tue, 25 Sep 2012 12:38:52 -0700
-Message-ID: <CAE9FiQVuRt2wN3Tecng6L-J--mQ1On5Z8J62TCO0h0iWe6Wnrw@mail.gmail.com>
-Subject: Re: [PATCH 00/29] PCI: use pci host bridge to loop pci root bus
+In-Reply-To: <CAErSpo7xuhxv5Fev1JCKdK72fKFN8TGdAL3g8JcE8SLUzfXKSw@mail.gmail.com>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+	<20120903170602.375b00cc.izumi.taku@jp.fujitsu.com>
+	<CAErSpo54LO_mow3dNSJ2-Aj4xBs=Zrk9fiAuFzZKdh9=YKyWuA@mail.gmail.com>
+	<CAE9FiQVHgLGCmU2GTPkRKO8qRrWDwXOXNXoOf0OxvjWJBPLWMA@mail.gmail.com>
+	<CAErSpo7xuhxv5Fev1JCKdK72fKFN8TGdAL3g8JcE8SLUzfXKSw@mail.gmail.com>
+Date: Thu, 13 Sep 2012 14:17:04 -0700
+Message-ID: <CAE9FiQXWU-PPJceZAafBxypMf6ieZFdLzyR9NmStbkNmmg_P5g@mail.gmail.com>
+Subject: Re: [PATCH v2 4/6] ACPI, PCI: add acpi_pci_roots protection
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 1:26 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> could remove pci_root_buses list.
+On Thu, Sep 13, 2012 at 12:39 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> If I understand you correctly, you're agreeing that if we change the
+> .add()/.remove() interfaces, there is no need for RCU here.  Correct
+> me if I'm wrong.
 
-updated brach: two typo fixing and two Acked-by.
+yes.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-kill-pci-root-buses
+just passing acpi_pci_root point or acpi_device pointer.
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-kill-pci-root-buses
+Yinghai
