@@ -1,118 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:63310 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754147Ab2ISGSo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Sep 2012 02:18:44 -0400
-Message-ID: <1348035521.8212.142.camel@yhuang-dev>
-Subject: Re: [PATCH 3/6] PCI/AER: clean all untracked pci_ops_aer when rmmod
- aer_inject
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Wed, 19 Sep 2012 14:18:41 +0800
-In-Reply-To: <505961B5.8070108@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-	  <1348022442-7816-4-git-send-email-wangyijing@huawei.com>
-	 <1348034243.8212.134.camel@yhuang-dev> <505961B5.8070108@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:35305 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892Ab2IMJVA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 05:21:00 -0400
+Received: by lbbgj3 with SMTP id gj3so1800537lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 13 Sep 2012 02:20:59 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Thu, 13 Sep 2012 11:20:59 +0200
+Message-ID: <CA+icZUWQtYB2yJYKh9MRqA40Qu5v7V=SOqpu5jvdqDhR_teiFg@mail.gmail.com>
+Subject: [pci-next] Include patches from mmotm and drm-opt-pwr GIT trees?
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Dave Airlie <airlied@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-19 at 14:09 +0800, Yijing Wang wrote:
-> On 2012/9/19 13:57, Huang Ying wrote:
-> > On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
-> >> Since hot plug for pci devices while doing aer inject, some newly created child buses'
-> >> pci_ops will be assigned to pci_ops_aer. Aer_inject does not track these pci_ops_aer(not
-> >> list in pci_bus_ops_list),we should clean all of these when rmmod aer_inject module.
-> >>
-> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> ---
-> >>  drivers/pci/pcie/aer/aer_inject.c |   35 +++++++++++++++++++++++++++++++++++
-> >>  1 files changed, 35 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> >> index 442147b..e2400b5 100644
-> >> --- a/drivers/pci/pcie/aer/aer_inject.c
-> >> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> >> @@ -299,6 +299,32 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
-> >>  	bus_ops->ops = ops;
-> >>  }
-> >>  
-> >> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
-> >> +{
-> >> +	struct pci_bus *child;
-> >> +
-> >> +	list_for_each_entry(child, &bus->children, node) {
-> >> +		if (child->ops == &pci_ops_aer)
-> >> +			pci_bus_set_ops(child, bus->ops);
-> >> +		pci_clean_child_aer_ops(child);
-> >> +	}
-> > 
-> > Why not use pci_walk_bus?
-> > 
-> 
-> I think here walk all child buses is enough, pci_walk_bus will walk all child devices under this bus.
-> 
-> >> +}
-> >> +
-> >> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
-> >> + * pci_ops of root bus won't be pci_ops_aer here*/
-> >> +static void clean_untracked_pci_ops_aer(void)
-> >> +{
-> >> +	struct pci_bus_ops *bus_ops;
-> >> +
-> >> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
-> >> +		/* the bus with untracked pci_ops_aer always the
-> >> +		 * child bus of root bus tracked in pci_bus_ops_list
-> >> +		 */
-> >> +		if (pci_is_root_bus(bus_ops->bus))
-> >> +			pci_clean_child_aer_ops(bus_ops->bus);
-> >> +	}
-> >> +}
-> >> +
-> >>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
-> >>  {
-> >>  	struct pci_ops *ops;
-> >> @@ -558,9 +584,18 @@ static void __exit aer_inject_exit(void)
-> >>  
-> >>  	misc_deregister(&aer_inject_device);
-> >>  
-> >> +	/* clean pci_bus_ops tracked in pci_bus_ops_list */
-> >>  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
-> >>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-> > 
-> > Why not do clean here inside loop?
-> > 
-> 
-> Because I also need these bus_ops to scan untracked pci_ops_aer.
+Hi Bjorn,
 
-I mean why not call pci_clean_child_aer_ops() inside loop.
+those two patches would IMHO be nice to have also in pci.git#next?
+The 1st could have given me more infos when I had some troubles with
+drm in Linux-Next some days ago.
+The 2nd one was sent already by Dave to linux-pci ML.
 
-Best Regards,
-Huang Ying
+[1] pci: test for unexpectedly disabled bridges
+[2] pci: don't touch card regs after runtime suspend D3
 
-> > 
-> >>  
-> >> +	/* Inject aer errors and hotplug the same pcie device
-> >> +	 * maybe assign some newly created buses' pci_ops pci_ops_aer.
-> >> +	 * Since these pci_ops_aer are not tracked in pci_bus_ops_list,
-> >> +	 * we need to find and clean untracked pci_ops_aer before aer_inject
-> >> +	 * module exit
-> >> +	 */
-> >> +	clean_untracked_pci_ops_aer();
-> >> +
-> >>  	while ((bus_ops = pci_bus_ops_pop()))
-> >>  		kfree(bus_ops);
-> >>  
-> > 
-> > 
-> > 
-> > .
-> > 
-> 
-> 
+Regards,
+- Sedat -
 
 
+[1] http://git.cmpxchg.org/?p=linux-mmotm.git;a=patch;h=173546b1e91460b550247b3303164797949dc5a3
+[2] http://cgit.freedesktop.org/~airlied/linux/patch/?id=005fdf5c184f9b857cbd8cb7195898d776f68670
