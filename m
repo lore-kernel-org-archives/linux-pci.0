@@ -1,85 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:10791 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756701Ab2IUIoa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 04:44:30 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 5/5] PCI/AER: free pci_bus_ops_list and remove pci_bus_ops_pop
-Date: Fri, 21 Sep 2012 16:43:13 +0800
-Message-ID: <1348216993-6948-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
-References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiri Slaby <jslaby@suse.cz>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
+	Grant Grundler <grundler@parisc-linux.org>,
+	Nobin Mathew <nobin.mathew@gmail.com>,
+	Robert Hancock <hancockr@shaw.ca>,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Altobelli <david.altobelli@hp.com>
+Subject: [RFC 1/1] MISC: hpilo, remove pci_disable_device
+Date: Thu, 13 Sep 2012 16:06:48 +0200
+Message-Id: <1347545208-18512-1-git-send-email-jslaby@suse.cz>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rewrite pci_bus_ops_list release code for simplification, and clean
-no used function pci_bus_ops_pop().
+pci_disable_device(pdev) used to be in pci remove function. But this
+PCI device has two functions with interrupt lines connected to a
+single pin. The other one is a USB host controller. So when we disable
+the PIN there e.g. by rmmod hpilo, the controller stops working. It is
+because the interrupt link is disabled in ACPI since it is not
+refcounted yet. See acpi_pci_link_free_irq called from
+acpi_pci_irq_disable.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Reviewed-by: Huang Ying <ying.huang@intel.com>
+It is not the best solution whatsoever, but as a workaround until the
+ACPI irq link refcounting is sorted out this should fix the reported
+errors.
+
+References: https://lkml.org/lkml/2008/11/4/535
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Grant Grundler <grundler@parisc-linux.org>
+Cc: Nobin Mathew <nobin.mathew@gmail.com>
+Cc: Robert Hancock <hancockr@shaw.ca>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: David Altobelli <david.altobelli@hp.com>
 ---
- drivers/pci/pcie/aer/aer_inject.c |   25 ++++++-------------------
- 1 files changed, 6 insertions(+), 19 deletions(-)
+ drivers/misc/hpilo.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index c5372dd..14d2c92 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -143,23 +143,6 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- 	return __find_pci_bus_ops_parent(bus);
+diff --git a/drivers/misc/hpilo.c b/drivers/misc/hpilo.c
+index 6df0da4..12ccdf9 100644
+--- a/drivers/misc/hpilo.c
++++ b/drivers/misc/hpilo.c
+@@ -736,7 +736,14 @@ static void ilo_remove(struct pci_dev *pdev)
+ 	free_irq(pdev->irq, ilo_hw);
+ 	ilo_unmap_device(pdev, ilo_hw);
+ 	pci_release_regions(pdev);
+-	pci_disable_device(pdev);
++	/*
++	 * pci_disable_device(pdev) used to be here. But this PCI device has
++	 * two functions with interrupt lines connected to a single pin. The
++	 * other one is a USB host controller. So when we disable the PIN here
++	 * e.g. by rmmod hpilo, the controller stops working. It is because
++	 * the interrupt link is disabled in ACPI since it is not refcounted
++	 * yet. See acpi_pci_link_free_irq called from acpi_pci_irq_disable.
++	 */
+ 	kfree(ilo_hw);
+ 	ilo_hwdev[(minor / max_ccb)] = 0;
  }
- 
--static struct pci_bus_ops *pci_bus_ops_pop(void)
--{
--	unsigned long flags;
--	struct pci_bus_ops *bus_ops = NULL;
--
--	spin_lock_irqsave(&inject_lock, flags);
--	if (list_empty(&pci_bus_ops_list))
--		bus_ops = NULL;
--	else {
--		struct list_head *lh = pci_bus_ops_list.next;
--		list_del(lh);
--		bus_ops = list_entry(lh, struct pci_bus_ops, list);
--	}
--	spin_unlock_irqrestore(&inject_lock, flags);
--	return bus_ops;
--}
--
- static u32 *find_pci_config_dword(struct aer_error *err, int where,
- 				  int *prw1cs)
- {
-@@ -608,7 +591,7 @@ static void __exit aer_inject_exit(void)
- {
- 	struct aer_error *err, *err_next;
- 	unsigned long flags;
--	struct pci_bus_ops *bus_ops;
-+	struct pci_bus_ops *bus_ops, *tmp_ops;
- 
- 	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
- 	misc_deregister(&aer_inject_device);
-@@ -617,8 +600,12 @@ static void __exit aer_inject_exit(void)
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
- 
- 	clean_untracked_pci_ops_aer();
--	while ((bus_ops = pci_bus_ops_pop()))
-+
-+	/* free pci_bus_ops_list */
-+	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
-+		list_del(&bus_ops->list);
- 		kfree(bus_ops);
-+	}
- 
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
+@@ -826,7 +833,7 @@ unmap:
+ free_regions:
+ 	pci_release_regions(pdev);
+ disable:
+-	pci_disable_device(pdev);
++/*	pci_disable_device(pdev);  see comment in ilo_remove */
+ free:
+ 	kfree(ilo_hw);
+ out:
 -- 
-1.7.1
+1.7.11.5
 
 
