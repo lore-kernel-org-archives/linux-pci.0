@@ -1,126 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:16990 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752153Ab2ISHAk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Sep 2012 03:00:40 -0400
-Message-ID: <1348038016.8212.160.camel@yhuang-dev>
-Subject: Re: [PATCH 2/6] PCI/AER: introduce pci_bus_ops_get() function to
- avoid a small race condition window
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Wed, 19 Sep 2012 15:00:16 +0800
-In-Reply-To: <50596951.8010000@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-	  <1348022442-7816-3-git-send-email-wangyijing@huawei.com>
-	 <1348033973.8212.132.camel@yhuang-dev> <50596951.8010000@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:60893 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755069Ab2INOoW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 10:44:22 -0400
+Received: by lbbgj3 with SMTP id gj3so2804814lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2012 07:44:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120914133501.e17d1395.izumi.taku@jp.fujitsu.com>
+References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
+ <20120903170602.375b00cc.izumi.taku@jp.fujitsu.com> <CAErSpo54LO_mow3dNSJ2-Aj4xBs=Zrk9fiAuFzZKdh9=YKyWuA@mail.gmail.com>
+ <20120914133501.e17d1395.izumi.taku@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Sep 2012 08:43:59 -0600
+Message-ID: <CAErSpo7MHmOQAj95xsfyZ1A5oZ9UcF8djQhQedKUkS4fX_uw8w@mail.gmail.com>
+Subject: Re: [PATCH v2 4/6] ACPI, PCI: add acpi_pci_roots protection
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-19 at 14:42 +0800, Yijing Wang wrote:
-> On 2012/9/19 13:52, Huang Ying wrote:
-> > On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
-> >> When we rmmod aer_inject module, there is a race condition window between pci_bus_ops_pop()
-> >> and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
-> >> them. So introduce pci_bus_ops_get() to avoid this.
-> >>
-> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> ---
-> >>  drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
-> >>  1 files changed, 18 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> >> index 0f00a27..442147b 100644
-> >> --- a/drivers/pci/pcie/aer/aer_inject.c
-> >> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> >> @@ -67,6 +67,8 @@ struct pci_bus_ops {
-> >>  	struct pci_ops *ops;
-> >>  };
-> >>  
-> >> +#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
-> >> +
-> >>  static LIST_HEAD(einjected);
-> >>  
-> >>  static LIST_HEAD(pci_bus_ops_list);
-> >> @@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
-> >>  	return bus_ops;
-> >>  }
-> >>  
-> >> +static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
-> >> +{
-> >> +	struct pci_bus_ops *bus_ops = NULL;
-> >> +	struct list_head *n;
-> >> +
-> >> +	n = from ? from->list.next : pci_bus_ops_list.next;
-> >> +	if (n != &pci_bus_ops_list)
-> >> +		bus_ops = to_pci_bus_ops(n);
-> >> +
-> >> +	return bus_ops;
-> >> +}
-> >> +
-> >>  static u32 *find_pci_config_dword(struct aer_error *err, int where,
-> >>  				  int *prw1cs)
-> >>  {
-> >> @@ -540,14 +554,15 @@ static void __exit aer_inject_exit(void)
-> >>  {
-> >>  	struct aer_error *err, *err_next;
-> >>  	unsigned long flags;
-> >> -	struct pci_bus_ops *bus_ops;
-> >> +	struct pci_bus_ops *bus_ops = NULL;
-> >>  
-> >>  	misc_deregister(&aer_inject_device);
-> >>  
-> >> -	while ((bus_ops = pci_bus_ops_pop())) {
-> >> +	while ((bus_ops = pci_bus_ops_get(bus_ops)))
-> >>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-> > 
-> > In fact, this is
-> > 
-> > list_for_each_entry(&pci_bus_ops_list)
-> > 	pci_bus_set_ops()
-> > 
-> > Because we are in module exit path, there will be no new user of
-> > pci_bus_ops_list, it appears safe to do that without lock.
-> > 
-> > But the bus_ops may be deleted from the list when accessed via
-> > pci_ops_aer.  So It may be better to wait for all pci_ops_aer functions
-> 
-> Hi Huang Ying,
->    I have some confusions about this, can you explain this? Thanks very much!
-> In my idea, if pci_ops_aer be called, it hold the pci_lock, so pci_bus_set_ops will wait for
-> pci_ops_aer functions to exit.So in my idea, after pci_bus_set_ops loop completed. pci_ops_aer functions
-> have been exit, and will never be called again(because all pci_ops_aer).
+On Thu, Sep 13, 2012 at 10:35 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> On Wed, 12 Sep 2012 17:40:45 -0600
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> On Mon, Sep 3, 2012 at 2:06 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>> > Use mutex and RCU to protect global acpi_pci_roots list against
+>> > PCI host bridge hotplug operations.
+>> >
+>> > RCU is used to avoid possible deadlock in function acpi_pci_find_root()
+>> > and acpi_get_pci_rootbridge_handle(). A possible call graph:
+>> > acpi_pci_register_driver()
+>> >         mutex_lock(&acpi_pci_root_lock)
+>> >                 driver->add(root)
+>> >                         ......
+>> >                                 acpi_pci_find_root()
+>>
+>> Where does this path occur?  I didn't see in in the current tree
+>> (where the only users of acpi_pci_register_driver() are for
+>> acpi_pci_slot_driver and acpi_pci_hp_driver).  Maybe it's in Yinghai's
+>> work, which adds more acpi_pci_register_driver() users.
+>
+>   First I protected acpi_pci_roots list by using mutex(acpi_pci_root_lock).
+>   In that case I faced deadlock at the following path:
+>   acpiphp_glue_init
+>      + acpi_pci_register_driver
+>        ...
+>          + add_bridge
+>            + acpi_pci_find_root
+>
+>   So I used RCU instead.
 
-Yes. You are right,  waiting is not necessary here.
+Oh, right.  I missed the acpiphp_glue_init() path.  That's clearly a problem.
 
-Best Regards,
-Huang Ying
+>> RCU seems unnecessarily complicated for this list, but I haven't gone
+>> through Yinghai's work yet, so I don't know what it requires.
+>>
+>> In acpi_pci_root_start() and acpi_pci_root_remove(), we have the
+>> struct acpi_pci_root, which has all sorts of information that would be
+>> useful to the .add() and .remove() methods of sub-drivers.  It seems
+>> sort of stupid that we only pass the acpi_handle to the sub-drivers,
+>> forcing them to use hacks like acpi_pci_find_root() to look up the
+>> information we just threw away.  Can we just fix the .add() and
+>> .remove() interfaces to pass something more useful so we avoid the
+>> need for this deadlock path?
+>
+>   Maybe yes. Do you prefer imprementation without RCU ?
 
-> > return before delete them.  synchronize_rcu() should be sufficient for
-> > that, because all pci_ops_aer functions are called with spinlock held.
-> > 
-> 
-> 
-> > Best Regards,
-> > Huang Ying
-> > 
-> >> +
-> >> +	while ((bus_ops = pci_bus_ops_pop()))
-> >>  		kfree(bus_ops);
-> >> -	}
-> >>  
-> >>  	spin_lock_irqsave(&inject_lock, flags);
-> >>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
-> > 
-> > 
-> > 
-> > .
-> > 
-> 
-> 
+Yes, if it's possible, I prefer to avoid RCU in this case.  RCU is
+appropriate for performance paths, but it's much more difficult to
+analyze than mutex locking.
 
+Host bridge hotplug is definitely not a path where performance is an
+issue, and I think reworking the .add()/.remove() interfaces will
+allow us to use mutex locking.
 
+I think it will also simplify the sub-drivers because having the
+struct acpi_pci_root means they can get rid of acpi_pci_find_root(),
+they don't have to re-evaluate _SEG and _BBN (in acpi_pci_slot_add()
+-> walk_root_bridge()), they don't have to use pci_find_bus(), etc.
