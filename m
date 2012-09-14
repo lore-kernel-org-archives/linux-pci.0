@@ -1,93 +1,148 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: [PATCH part4 10/11] PCI, pci_root_hp: Use acpi_hp_work
-Date: Sun,  2 Sep 2012 14:54:20 -0700
-Message-Id: <1346622861-30865-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
-References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Sep 2012 14:53:11 -0600
+Message-ID: <CAErSpo6BqPUEpMmh2+FuEi-mHFK0U1XCmdCpJfo6V2XcNxzMNg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: Annotate pci_fixup_irqs with __devinit
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Chris Zankel <chris@zankel.net>,
+	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove local copy: acpi_root_hp_work
++cc Greg KH
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root_hp.c |   34 +++-------------------------------
- 1 files changed, 3 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index 214adcb..d2ace81 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -79,34 +79,6 @@ static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
- 	kfree(bridge);
- }
- 
--struct acpi_root_hp_work {
--	struct work_struct work;
--	acpi_handle handle;
--	u32 type;
--	void *context;
--};
--
--static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
--					void *context,
--					void (*func)(struct work_struct *work))
--{
--	struct acpi_root_hp_work *hp_work;
--	int ret;
--
--	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
--	if (!hp_work)
--		return;
--
--	hp_work->handle = handle;
--	hp_work->type = type;
--	hp_work->context = context;
--
--	INIT_WORK(&hp_work->work, func);
--	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
--	if (!ret)
--		kfree(hp_work);
--}
--
- /* Program resources in newly inserted bridge */
- static void acpi_root_configure_bridge(acpi_handle handle)
- {
-@@ -204,11 +176,11 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
--	struct acpi_root_hp_work *hp_work;
-+	struct acpi_hp_work *hp_work;
- 	acpi_handle handle;
- 	u32 type;
- 
--	hp_work = container_of(work, struct acpi_root_hp_work, work);
-+	hp_work = container_of(work, struct acpi_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 
-@@ -256,7 +228,7 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- static void handle_hotplug_event_root(acpi_handle handle, u32 type,
- 					void *context)
- {
--	alloc_acpi_root_hp_work(handle, type, context,
-+	alloc_acpi_hp_work(handle, type, context,
- 				_handle_hotplug_event_root);
- }
- 
--- 
-1.7.7
-
+On Fri, Sep 14, 2012 at 2:44 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> In order to keep pci_fixup_irqs() around after init (e.g. for hotplug),
+> mark it __devinit instead of __init. This requires the same change for
+> the implementation of the pcibios_update_irq() function on all
+> architectures.
+>
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> ---
+> Note: Ideally these annotations should go away completely in order to
+> be independent of the HOTPLUG symbol. However, there is work underway
+> to get rid of HOTPLUG altogether, so I've kept the __devinit for now.
+>
+>  arch/alpha/kernel/pci.c   | 2 +-
+>  arch/mips/pci/pci.c       | 2 +-
+>  arch/sh/drivers/pci/pci.c | 2 +-
+>  arch/x86/pci/visws.c      | 2 +-
+>  arch/xtensa/kernel/pci.c  | 2 +-
+>  drivers/pci/setup-irq.c   | 4 ++--
+>  6 files changed, 7 insertions(+), 7 deletions(-)
+>
+> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+> index 9816d5a..6192b35 100644
+> --- a/arch/alpha/kernel/pci.c
+> +++ b/arch/alpha/kernel/pci.c
+> @@ -256,7 +256,7 @@ pcibios_fixup_bus(struct pci_bus *bus)
+>         }
+>  }
+>
+> -void __init
+> +void __devinit
+>  pcibios_update_irq(struct pci_dev *dev, int irq)
+>  {
+>         pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+> index 6903568..af3dc05 100644
+> --- a/arch/mips/pci/pci.c
+> +++ b/arch/mips/pci/pci.c
+> @@ -313,7 +313,7 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+>         }
+>  }
+>
+> -void __init
+> +void __devinit
+>  pcibios_update_irq(struct pci_dev *dev, int irq)
+>  {
+>         pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+> index 40db2d0..d16fabe 100644
+> --- a/arch/sh/drivers/pci/pci.c
+> +++ b/arch/sh/drivers/pci/pci.c
+> @@ -192,7 +192,7 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>         return pci_enable_resources(dev, mask);
+>  }
+>
+> -void __init pcibios_update_irq(struct pci_dev *dev, int irq)
+> +void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
+>  {
+>         pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+>  }
+> diff --git a/arch/x86/pci/visws.c b/arch/x86/pci/visws.c
+> index 6f2f8ee..15bdfbf 100644
+> --- a/arch/x86/pci/visws.c
+> +++ b/arch/x86/pci/visws.c
+> @@ -62,7 +62,7 @@ out:
+>         return irq;
+>  }
+>
+> -void __init pcibios_update_irq(struct pci_dev *dev, int irq)
+> +void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
+>  {
+>         pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+>  }
+> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+> index 69759e9..efc3369 100644
+> --- a/arch/xtensa/kernel/pci.c
+> +++ b/arch/xtensa/kernel/pci.c
+> @@ -212,7 +212,7 @@ void pcibios_set_master(struct pci_dev *dev)
+>
+>  /* the next one is stolen from the alpha port... */
+>
+> -void __init
+> +void __devinit
+>  pcibios_update_irq(struct pci_dev *dev, int irq)
+>  {
+>         pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index eb219a1..f0bcd56 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -18,7 +18,7 @@
+>  #include <linux/cache.h>
+>
+>
+> -static void __init
+> +static void __devinit
+>  pdev_fixup_irq(struct pci_dev *dev,
+>                u8 (*swizzle)(struct pci_dev *, u8 *),
+>                int (*map_irq)(const struct pci_dev *, u8, u8))
+> @@ -54,7 +54,7 @@ pdev_fixup_irq(struct pci_dev *dev,
+>         pcibios_update_irq(dev, irq);
+>  }
+>
+> -void __init
+> +void __devinit
+>  pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+>                int (*map_irq)(const struct pci_dev *, u8, u8))
+>  {
+> --
+> 1.7.12
+>
