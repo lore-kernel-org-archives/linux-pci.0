@@ -1,62 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:4652 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753810Ab2IUDpz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:45:55 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v4 0/5] Fix aer_inject bug caused by pci hot-plug
-Date: Fri, 21 Sep 2012 11:44:11 +0800
-Message-ID: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:33984 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760162Ab2INWfg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 18:35:36 -0400
+Received: by pbbrr13 with SMTP id rr13so6286910pbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 14 Sep 2012 15:35:36 -0700 (PDT)
+Date: Fri, 14 Sep 2012 15:35:31 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Chris Zankel <chris@zankel.net>,
+	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: Annotate pci_fixup_irqs with __devinit
+Message-ID: <20120914223531.GA8771@kroah.com>
+References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
+ <CAErSpo6BqPUEpMmh2+FuEi-mHFK0U1XCmdCpJfo6V2XcNxzMNg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6BqPUEpMmh2+FuEi-mHFK0U1XCmdCpJfo6V2XcNxzMNg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series of patch mainly to fix the aer_inject bug described as below:
+On Fri, Sep 14, 2012 at 02:53:11PM -0600, Bjorn Helgaas wrote:
+> +cc Greg KH
+> 
+> On Fri, Sep 14, 2012 at 2:44 PM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+> > In order to keep pci_fixup_irqs() around after init (e.g. for hotplug),
+> > mark it __devinit instead of __init. This requires the same change for
+> > the implementation of the pcibios_update_irq() function on all
+> > architectures.
+> >
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> > ---
+> > Note: Ideally these annotations should go away completely in order to
+> > be independent of the HOTPLUG symbol. However, there is work underway
+> > to get rid of HOTPLUG altogether, so I've kept the __devinit for now.
 
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
+No, just take away the __init marking completly.  For 3.7,
+CONFIG_HOTPLUG will always be enabled, making it be the same thing.
+That way this saves me the time and energy from deleting the __devinit
+markings when I get to that point in the patch series :)
 
-my steps:
-1)modprobe aer_inject
-2)inject aer errors to pcie device 0000:48:00.0
-3)modprobe pciehp
-4)hot remove Network Card in slot(port 0000:40:07.0)
-5)hot add Network Card in slot(port 0000:40:07.0)
-6)system panic
+thanks,
 
-in step 2) the pci_ops of bus 0000:48 and bus 0000:40 will be assigned to pci_ops_aer
-in step 5) the pci_ops of the newly created bus 0000:46 will be assigned to pci_ops_aer(inherited by parent pci_ops),
-but this pci_ops(0000:46) is not tracked in pci_bus_ops_list in aer_inject module. So every access to pci_config space
-by pci_ops of 0000:46 will cause system panic, Since pci_ops_aer cannot find its original pci_ops, thus , a NULL pci_ops return;
-
-The first patch fix this bug by finding parent pci_ops(tracked in pci_ops_list) instead of returning NULL in step 5);
-The second patch fix a small race condition window in aer_inject_exit;
-The Third patch to find and clean all untracked pci_ops_aer in system when aer_inject module exit
-The rest two patch mainly about to clean bus_ops;
-
-Yijing Wang (5):
-  PCI/AER: Fix pci_ops return NULL in pci_read/write_aer
-  PCI/AER: introduce pci_bus_ops_get() to avoid a small race condition
-    window
-  PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
-  PCI/AER: clean pci_bus_ops when related pci bus was removed
-  PCI/AER: free pci_bus_ops_list and remove pci_bus_ops_pop
-
- drivers/pci/pcie/aer/aer_inject.c |  127 ++++++++++++++++++++++++++++++++-----
- 1 files changed, 112 insertions(+), 15 deletions(-)
-
-
+greg k-h
