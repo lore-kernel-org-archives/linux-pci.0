@@ -1,59 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:40942 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752358Ab2ITDIX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 23:08:23 -0400
+Received: from szxga02-in.huawei.com ([119.145.14.65]:42314 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200Ab2INBb0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 21:31:26 -0400
+Message-ID: <50528872.8000809@huawei.com>
+Date: Fri, 14 Sep 2012 09:29:22 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQX72SE+NSx=P26x3Ta74U0_UHM28n9cwfy6HeK3bPiXeg@mail.gmail.com>
-References: <5003DC9B.8000706@broadcom.com> <5005BD00.4090106@redhat.com>
- <5005D45D.1040302@genband.com> <20120717.141153.46613285253481776.davem@davemloft.net>
- <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
- <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
- <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
- <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
- <500D6932.8090306@genband.com> <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
- <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
- <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown>
- <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
- <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
- <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
- <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com>
- <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk> <CAE9FiQX72SE+NSx=P26x3Ta74U0_UHM28n9cwfy6HeK3bPiXeg@mail.gmail.com>
-From: Subhendu Ghosh <sghosh151@gmail.com>
-Date: Wed, 19 Sep 2012 23:08:02 -0400
-Message-ID: <CA+MMT=k_tKiW=peLkbTJR+5DvNiAq6Qi1MPbhbbsjbuhMQ4LpA@mail.gmail.com>
-Subject: Re: New commands to configure IOV features
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ben Hutchings <bhutchings@solarflare.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Ariel Elior <ariele@broadcom.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 2/4] PCI/AER: clean all untracked pci_ops_aer when
+ rmmod aer_inject
+References: <1347453225-7704-1-git-send-email-wangyijing@huawei.com>   <1347453225-7704-2-git-send-email-wangyijing@huawei.com>  <1347500602.30040.142.camel@yhuang-dev> <5051BB6C.8020002@huawei.com> <1347584206.30040.187.camel@yhuang-dev>
+In-Reply-To: <1347584206.30040.187.camel@yhuang-dev>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 19, 2012 at 10:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Sep 19, 2012 at 6:23 PM, Ben Hutchings
-> <bhutchings@solarflare.com> wrote:
->> On Wed, 2012-09-19 at 17:19 -0700, Yinghai Lu wrote:
->>> could just stop the device and add it back again?
+On 2012/9/14 8:56, Huang Ying wrote:
+> On Thu, 2012-09-13 at 18:54 +0800, Yijing Wang wrote:
+>> On 2012/9/13 9:43, Huang Ying wrote:
+>>> On Wed, 2012-09-12 at 20:33 +0800, Yijing Wang wrote:
+>>>> Since hot plug for pci devices while doing aer inject, some newly created child buses'
+>>>> pci_ops will be assigned to pci_ops_aer. Aer_inject does not track these pci_ops_aer(not
+>>>> list in pci_bus_ops_list),we should clean all of these when rmmod aer_inject module.
+>>>>
+>>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>>> ---
+>>>>  drivers/pci/pcie/aer/aer_inject.c |   32 ++++++++++++++++++++++++++++++++
+>>>>  1 files changed, 32 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+>>>> index 0816483..9d195ae 100644
+>>>> --- a/drivers/pci/pcie/aer/aer_inject.c
+>>>> +++ b/drivers/pci/pcie/aer/aer_inject.c
+>>>> @@ -283,6 +283,28 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
+>>>>  	bus_ops->ops = ops;
+>>>>  }
+>>>>  
+>>>> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
+>>>> +{
+>>>> +	struct pci_bus *child;
+>>>> +
+>>>> +	list_for_each_entry(child, &bus->children, node) {
+>>>> +		if (child->ops == &pci_ops_aer)
+>>>> +			pci_bus_set_ops(child, bus->ops);
+>>>> +		pci_clean_child_aer_ops(child);
+>>>> +	}
+>>>> +}
+>>>> +
+>>>> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
+>>>> + * pci_ops of root bus won't be pci_ops_aer here*/
+>>>
+>>> Why scan all pci buses?  Is it possible just to check buses in
+>>> pci_bus_ops_list.
+>>>
 >>
->> This is highly disruptive and I think it would be totally unacceptable
->> for at least networking devices.
->
-> so you want PF network device continue work while enable VF on it?
->
+>> Hi Huang Ying,
+>>    Some buses' pci_ops_aer may be not assigned by pci_bus_set_aer_ops() function,
+>> As the first patch [PATCH v2 1/4] said. Some newly created buses' pci_ops assigned to
+>> pci_ops_aer because their parent just doing aer inject, parent bus's pci_ops was pci_ops_aer.
+>> So when we rmmod aer_inject module, these buses' pci_ops_aer will be invalid.
+>>
+>> 1、Tracked pci_ops_aer will be cleaned and pci_ops will reassign to their original pci_ops saved in pci_bus_ops_list.
+>> 2、Un-tracked pci_ops_aer won't be cleaned.so we need to fix it.
+> 
+> Can we just check all bus and its children in pci_bus_ops_list?  If my
+> understanding were correct, bus itself or some of its parents should be
+> saved in pci_bus_ops_list?
+> 
 
-Yes - normal scenario a system is installed thru automation over a
-network. The default initrd for installer does not configure VFs.
-Post install, a management tool like Openstack Quantum or others are
-used to enable VFs. If the PF NIC happens to be the communication path
-- disrupting the PF during a remote configuration cycle can leave you
-blind and the system unreachable.
+Yes, good idea! I think the buses that owned untracked pci_ops_aer always are child buses of the root buses
+tracked in the pci_bus_ops_list. I will improve this patch in this way.
 
--subhendu
+Thanks
+Yijing
+
+> Best Regards,
+> Huang Ying
+> 
+>>>
+>>>> +static void clean_untracked_pci_ops_aer(void)
+>>>> +{
+>>>> +	struct pci_bus *bus = NULL;
+>>>> +
+>>>> +	while ((bus = pci_find_next_bus(bus)) != NULL)
+>>>> +		pci_clean_child_aer_ops(bus);
+>>>> +}
+>>>> +
+>>>> +
+>>>>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
+>>>>  {
+>>>>  	struct pci_ops *ops;
+>>>> @@ -546,6 +568,8 @@ static void __exit aer_inject_exit(void)
+>>>>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+>>>>  		kfree(bus_ops);
+>>>>  	}
+>>>> +
+>>>> +	clean_untracked_pci_aer_ops();
+>>>>  
+>>>>  	spin_lock_irqsave(&inject_lock, flags);
+>>>>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
+>>>> @@ -553,6 +577,14 @@ static void __exit aer_inject_exit(void)
+>>>>  		kfree(err);
+>>>>  	}
+>>>>  	spin_unlock_irqrestore(&inject_lock, flags);
+>>>> +
+>>>> +	/* Inject aer errors and hotplug the same pcie device
+>>>> +	 * maybe assign some newly created buses' pci_ops pci_ops_aer.
+>>>> +	 * Since these pci_ops_aer are not tracked in pci_bus_ops_list,
+>>>> +	 * we need to find and clean untracked pci_ops_aer before aer_inject
+>>>> +	 * module exit
+>>>> +	 */
+>>>> +	clean_untracked_pci_ops_aer();
+>>>>  }
+>>>>  
+>>>>  module_init(aer_inject_init);
+>>>
+>>>
+>>>
+>>> .
+>>>
+>>
+>>
+> 
+> 
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
