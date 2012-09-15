@@ -1,75 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37890 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757683Ab2IGWf7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 18:35:59 -0400
-Received: by eekc1 with SMTP id c1so40015eek.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 15:35:57 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:65402 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172Ab2IOFJj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 01:09:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXO3R8oQH2rNky64SWe-4DRx7HJr3-rp0eqEZvQbN4W2A@mail.gmail.com>
-References: <bug-18412-41252@https.bugzilla.kernel.org/>
-	<20120907214005.5077211FC43@bugzilla.kernel.org>
-	<CAErSpo6vMjr=veZs8AWg1X5EfWfGNeUFkz1EExF4+km9fnOwmQ@mail.gmail.com>
-	<CAE9FiQXO3R8oQH2rNky64SWe-4DRx7HJr3-rp0eqEZvQbN4W2A@mail.gmail.com>
-Date: Fri, 7 Sep 2012 15:35:57 -0700
-Message-ID: <CAE9FiQWaY_RzxRtSfNi-u9rBW0SOVzTeXnOvc6NAbLPyzYigxA@mail.gmail.com>
-Subject: Re: [Bug 18412] Intel DP43BF requires "pci=assign-busses" to discover
- some devices
+In-Reply-To: <1347678312-11124-4-git-send-email-jiang.liu@huawei.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+	<1347678312-11124-4-git-send-email-jiang.liu@huawei.com>
+Date: Fri, 14 Sep 2012 22:09:37 -0700
+Message-ID: <CAE9FiQU66sW4HsDuqh69evvcT0cfx61=6JtgrU7FTJjMo-_Njw@mail.gmail.com>
+Subject: Re: [PATCH v2 3/9] PCI: preserve dev->subordinate until
+ pci_stop_dev() has been called
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, vl.homutov@gmail.com
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-pci@vger.kernel.org
-Content-Type: multipart/mixed; boundary=000e0cdfcbcc4b078804c9243b9d
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <jiang.liu@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---000e0cdfcbcc4b078804c9243b9d
-Content-Type: text/plain; charset=ISO-8859-1
+On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Yijing Wang <wangyijing@huawei.com>
+>
+> Changeset 2ed168eeb3edec029aa0eca5cb981d6376f931f9 "PCI: Fold stop and
+> remove helpers into their callers" has changed the behavior when
+> removing a PCI device.
+>
+> Previously, for a PCI bridge device with secondary bus, dev->subordinate
+> is valid when calling PCI bus notification callbacks for
+> BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events. Now dev->subordinate
+> has been reset to NULL when calling callbacks for BUS_NOTIFY_DEL_DEVICE
+> events, which may break some PCI bus notification callbacks.
+>
+> So revert to the original behavior to keep dev->subordinate valid for
+> both BUS_NOTIFY_ADD_DEVICE events and BUS_NOTIFY_DEL_DEVICE events.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  drivers/pci/remove.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 86a4636..6244956 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -79,16 +79,16 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>          * iterator.  Therefore, iterate in reverse so we remove the VFs
+>          * first, then the PF.
+>          */
+> -       if (bus) {
+> +       if (bus)
+>                 list_for_each_entry_safe_reverse(child, tmp,
+>                                                  &bus->devices, bus_list)
+>                         pci_stop_and_remove_bus_device(child);
+> +       pci_stop_dev(dev);
+>
+> +       if (bus) {
+>                 pci_remove_bus(bus);
+>                 dev->subordinate = NULL;
+>         }
+> -
+> -       pci_stop_dev(dev);
+>         pci_destroy_dev(dev);
+>  }
+>  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
 
-On Fri, Sep 7, 2012 at 3:15 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Sep 7, 2012 at 2:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Sep 7, 2012 at 2:40 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=18412
->>
->>> --- Comment #4 from VL <vl.homutov@gmail.com>  2012-09-07 21:40:04 ---
->>> The bug is still there with behaviour exactly as specified by reporter.
->>>
->>> Tested with linux-3.4.9 (gentoo), DP43BF motherboard and Intel PRO/1000 NICs.
->>> With pci=assign-busses lspci shows devices properly, without it nothing
->>> is in the list.
->
-> VL,
->
-> I rebased for-pci-busn-alloc branch to current pci-next
->
-> please check if could fix the problem.
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-busn-alloc
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-busn-alloc
->
+for support root bus support with acpi_pci_root (ioapic/iommu) will
+need pci_stop_bus_devices()
 
-also you could try attached patch
+so I just put those function back...
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=247a40206cf44488f21bc6074cf0ba2805d4d840
 
 Thanks
 
 Yinghai
-
---000e0cdfcbcc4b078804c9243b9d
-Content-Type: application/octet-stream;
-	name="pci_bridge_more_bus_check.patch"
-Content-Disposition: attachment; filename="pci_bridge_more_bus_check.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h6tv68re0
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3Byb2JlLmMgYi9kcml2ZXJzL3BjaS9wcm9iZS5jCmlu
-ZGV4IDNjZGJhOGIuLjBmYzI3MDMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysr
-IGIvZHJpdmVycy9wY2kvcHJvYmUuYwpAQCAtNzI5LDcgKzcyOSw4IEBAIGludCBfX2RldmluaXQg
-cGNpX3NjYW5fYnJpZGdlKHN0cnVjdCBwY2lfYnVzICpidXMsIHN0cnVjdCBwY2lfZGV2ICpkZXYs
-IGludCBtYXgsCiAKIAkvKiBDaGVjayBpZiBzZXR1cCBpcyBzZW5zaWJsZSBhdCBhbGwgKi8KIAlp
-ZiAoIXBhc3MgJiYKLQkgICAgKHByaW1hcnkgIT0gYnVzLT5udW1iZXIgfHwgc2Vjb25kYXJ5IDw9
-IGJ1cy0+bnVtYmVyKSkgeworCSAgICAocHJpbWFyeSAhPSBidXMtPm51bWJlciB8fCBzZWNvbmRh
-cnkgPD0gYnVzLT5udW1iZXIgfHwKKwkgICAgIHNlY29uZGFyeSA+IHN1Ym9yZGluYXRlICkpIHsK
-IAkJZGV2X2RiZygmZGV2LT5kZXYsICJidXMgY29uZmlndXJhdGlvbiBpbnZhbGlkLCByZWNvbmZp
-Z3VyaW5nXG4iKTsKIAkJYnJva2VuID0gMTsKIAl9Cg==
---000e0cdfcbcc4b078804c9243b9d--
