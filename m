@@ -1,117 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:52917 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186Ab2IOX1Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 19:27:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <20120823213529.GH14962@google.com>
-References: <20120823213529.GH14962@google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Sep 2012 12:13:21 -0600
-Message-ID: <CAErSpo7p_fx9oCNFXdP7JVN_2ZPWN=t4Gsx9M7JLy8hpSn0dYQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: rewrite pci_call_probe() to use workqueue instead of work_on_cpu()
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1347678312-11124-6-git-send-email-jiang.liu@huawei.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+	<1347678312-11124-6-git-send-email-jiang.liu@huawei.com>
+Date: Sat, 15 Sep 2012 16:27:22 -0700
+Message-ID: <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
+Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 23, 2012 at 3:35 PM, Tejun Heo <tj@kernel.org> wrote:
-> pci_call_probe() uses work_on_cpu(), which creates and tears down a
-> full kthread on each call, to invoke ->probe() on node local CPU for
-> allocation affinity.
+On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>  From: Jiang Liu <jiang.liu@huawei.com>
 >
-> The same goal can easily be achieved using a work item.  This patch
-> rewrites pci_call_probe() so that it uses a work item instead of
-> work_on_cpu().
+> Now ACPI devices are created before/destroyed after corresponding PCI
+> devices, and acpi_platform_notify/acpi_platform_notify_remove will
+> update PCI<->ACPI binding relationship when creating/destroying PCI
+> devices, there's no need to invoke bind/unbind callbacks from ACPI
+> device probe/destroy routines anymore. So remove bind/unbind callbacks
+> from acpi_device_ops.
 >
-> Note that the function is restructured for simplicity.  This adds
-> get/put_online_cpus() pair for devices without node but the overhead
-> of doing so isn't anything material at this level.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-
-I applied this to my "next" branch and pushed it.  Thanks!
-
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > ---
-> I tested both paths but had to simulate device on foreign node.
+>  drivers/acpi/pci_bind.c     |  100 +++++++++----------------------------------
+>  drivers/acpi/pci_root.c     |    9 ----
+>  drivers/acpi/scan.c         |   21 +--------
+>  include/acpi/acpi_bus.h     |    4 --
+>  include/acpi/acpi_drivers.h |    1 -
+>  5 files changed, 23 insertions(+), 112 deletions(-)
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index d1ecca2..f31cb2f 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1232,17 +1232,8 @@ static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
+>         dev->removal_type = ACPI_BUS_REMOVAL_EJECT;
+>         device_release_driver(&dev->dev);
 >
-> Thanks.
+> -       if (!rmdevice)
+> -               return 0;
+> -
+> -       /*
+> -        * unbind _ADR-Based Devices when hot removal
+> -        */
+> -       if (dev->flags.bus_address) {
+> -               if ((dev->parent) && (dev->parent->ops.unbind))
+> -                       dev->parent->ops.unbind(dev);
+> -       }
+> -       acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
+> +       if (rmdevice)
+> +               acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
 >
->  drivers/pci/pci-driver.c |   48 +++++++++++++++++++++++++++--------------------
->  1 file changed, 28 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 5270f1a..554c15a 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -274,11 +274,14 @@ struct drv_dev_and_id {
->         struct pci_driver *drv;
->         struct pci_dev *dev;
->         const struct pci_device_id *id;
-> +       struct work_struct work;
-> +       int error;
->  };
->
-> -static long local_pci_probe(void *_ddi)
-> +static void pci_probe_fn(struct work_struct *work)
->  {
-> -       struct drv_dev_and_id *ddi = _ddi;
-> +       struct drv_dev_and_id *ddi = container_of(work, struct drv_dev_and_id,
-> +                                                 work);
->         struct device *dev = &ddi->dev->dev;
->         int rc;
->
-> @@ -298,33 +301,38 @@ static long local_pci_probe(void *_ddi)
->                 pm_runtime_set_suspended(dev);
->                 pm_runtime_put_noidle(dev);
->         }
-> -       return rc;
-> +
-> +       ddi->error = rc;
+>         return 0;
 >  }
->
->  static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->                           const struct pci_device_id *id)
->  {
-> -       int error, node;
-> +       int node;
-> +       int cpu = nr_cpu_ids;
->         struct drv_dev_and_id ddi = { drv, dev, id };
->
-> -       /* Execute driver initialization on node where the device's
-> -          bus is attached to.  This way the driver likely allocates
-> -          its local memory on the right node without any need to
-> -          change it. */
-> -       node = dev_to_node(&dev->dev);
-> -       if (node >= 0) {
-> -               int cpu;
-> +       /*
-> +        * Execute driver initialization on node where the device's bus is
-> +        * attached to.  This way the driver likely allocates its local
-> +        * memory on the right node without any need to change it.
-> +        */
-> +       get_online_cpus();
->
-> -               get_online_cpus();
-> +       node = dev_to_node(&dev->dev);
-> +       if (node >= 0)
->                 cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
-> -               if (cpu < nr_cpu_ids)
-> -                       error = work_on_cpu(cpu, local_pci_probe, &ddi);
-> -               else
-> -                       error = local_pci_probe(&ddi);
-> -               put_online_cpus();
-> -       } else
-> -               error = local_pci_probe(&ddi);
-> -       return error;
-> +
-> +       if (cpu < nr_cpu_ids) {
-> +               INIT_WORK_ONSTACK(&ddi.work, pci_probe_fn);
-> +               schedule_work_on(cpu, &ddi.work);
-> +               flush_work(&ddi.work);
-> +       } else {
-> +               pci_probe_fn(&ddi.work);
-> +       }
-> +
-> +       put_online_cpus();
-> +       return ddi.error;
->  }
->
->  /**
+
+for pci root bus, acpi_bus_trim() is used to remove acpi_device.
+
+and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
+iommu driver then remove pci devices.
+
+if call back is removed there, then could some functions in
+acpi_pci_unbind() will be skipped.
+
+I really do not want to add pci_stop_bus_devices() in
+pci_root_hp.c::handle_root_bridge_removal before
+calling acpi_bus_trim...
+
+Thanks
+
+Yinghai
