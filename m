@@ -1,140 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:34064 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755698Ab2ICJIa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Sep 2012 05:08:30 -0400
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
-	Mon, 3 Sep 2012 05:08:29 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id D32E9C90040
-	for <linux-pci@vger.kernel.org>; Mon,  3 Sep 2012 05:08:26 -0400 (EDT)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q8398QSc111026
-	for <linux-pci@vger.kernel.org>; Mon, 3 Sep 2012 05:08:26 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q8398Qlh020529
-	for <linux-pci@vger.kernel.org>; Mon, 3 Sep 2012 06:08:26 -0300
-Date: Mon, 3 Sep 2012 17:08:21 +0800
-From: Ram Pai <linuxram@us.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ram Pai <linuxram@us.ibm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v3 ]pci: pci resource iterator
-Message-ID: <20120903090821.GC2438@ram-ThinkPad-T61>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
-References: <20120821151245.GA2356@ram-ThinkPad-T61>
- <CAE9FiQUW2rB8X18=X6hVb-ZV8AnoL4RA+8P7897vHxwjj63bsg@mail.gmail.com>
- <20120822101533.GA2332@ram-ThinkPad-T61>
- <CAE9FiQVDkzFkjrBrZC9JpLW7JoquE_f-5BKGrbmmZMHFVcw=cw@mail.gmail.com>
- <CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
- <CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
- <20120823050958.GB2332@ram-ThinkPad-T61>
- <CAE9FiQVq=6Shv_4taNzN3h4OBs1PgoFJZqV0i3tRvmz04qZbXw@mail.gmail.com>
- <20120827073335.GE20843@ram-ThinkPad-T61>
- <CAE9FiQVEuH=ZwL4R+wyO0H0853hQ8bpGBYKQJwkAJ5g7FKtY7g@mail.gmail.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:55248 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978Ab2IOHcM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 03:32:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVEuH=ZwL4R+wyO0H0853hQ8bpGBYKQJwkAJ5g7FKtY7g@mail.gmail.com>
+In-Reply-To: <1347655456-2542-2-git-send-email-thierry.reding@avionic-design.de>
+References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
+	<1347655456-2542-2-git-send-email-thierry.reding@avionic-design.de>
+Date: Sat, 15 Sep 2012 09:32:10 +0200
+Message-ID: <CAMuHMdWuR_tdMw9iVkaQ3D9p1HVU_L05ap=MzBuo1jLD6YdHHw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Provide a default pcibios_update_irq()
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Chris Zankel <chris@zankel.net>,
+	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 03, 2012 at 01:07:46AM -0700, Yinghai Lu wrote:
-> On Mon, Aug 27, 2012 at 12:33 AM, Ram Pai <linuxram@us.ibm.com> wrote:
-> > On Thu, Aug 23, 2012 at 12:30:05PM -0700, Yinghai Lu wrote:
-> >> Hi, Ram and Bjorn,
-> >>
-> >> On Wed, Aug 22, 2012 at 10:09 PM, Ram Pai <linuxram@us.ibm.com> wrote:
-> >> > +static inline int pci_next_resource_idx(int i, int flag)
-> >> > +{
-> >> > +       while (++i < PCI_NUM_RESOURCES) {
-> >> > +               if ((i >= 0 && i < PCI_ROM_RESOURCE && (flag & PCI_STD_RES)) ||
-> >> > +                   (i == PCI_ROM_RESOURCE && (flag & PCI_ROM_RES)) ||
-> >> > +#ifdef CONFIG_PCI_IOV
-> >> > +                   (i <= PCI_IOV_RESOURCE_END && (flag & PCI_IOV_RES)) ||
-> >> > +#endif
-> >> > +                   (i <= PCI_BRIDGE_RESOURCE_END && (flag & PCI_BRIDGE_RES)))
-> >> > +                       return i;
-> >> > +       }
-> >> > +       return -1;
-> >> > +}
-> >>
+On Fri, Sep 14, 2012 at 10:44 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -17,6 +17,14 @@
+>  #include <linux/ioport.h>
+>  #include <linux/cache.h>
+>
+> +void __devinit __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+> +{
+> +#ifdef CONFIG_PCI_DEBUG
+> +       printk(KERN_DEBUG "PCI: Assigning IRQ %02d to %s\n", irq,
+> +              pci_name(dev));
 
-.snip....
+pr_debug()?
+Or even better, dev_dbg()?
 
-> >
-> > Please decide which version you want and lets take the next step. I
-> > think we have iterated over this interface quite a lot. Time to move on
-> > :)
-> >
-> >
-> > ---------------------------------------------------------------------
-> > Signed-off-by: Ram Pai <linuxram@us.ibm.com>
-> >
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 5e1ca3c..d95a31c 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -146,6 +146,54 @@ static int __init pcibus_class_init(void)
-> >  }
-> >  postcore_initcall(pcibus_class_init);
-> >
-> > +
-> > +#define PCI_RES_SHIFT 4
-> > +/*
-> > + * capture the starting index of the next resource type
-> > + * as well as the type of the resource
-> > + */
-> > +int res_idx[PCI_NUM_RESOURCES] = {
-> > +(PCI_ROM_RESOURCE << PCI_RES_SHIFT) | PCI_STD_RES, /* PCI_STD_RESOURCES   */
-> > +(PCI_ROM_RESOURCE << PCI_RES_SHIFT) | PCI_STD_RES, /* PCI_STD_RESOURCES+1 */
-> > +(PCI_ROM_RESOURCE << PCI_RES_SHIFT) | PCI_STD_RES, /* PCI_STD_RESOURCES+2 */
-> > +(PCI_ROM_RESOURCE << PCI_RES_SHIFT) | PCI_STD_RES, /* PCI_STD_RESOURCES+3 */
-> > +(PCI_ROM_RESOURCE << PCI_RES_SHIFT) | PCI_STD_RES, /* PCI_STD_RESOURCES+4 */
-> > +(PCI_ROM_RESOURCE << PCI_RES_SHIFT) | PCI_STD_RES, /* PCI_STD_RESOURCES+5 */
-> > +(PCI_IOV_RESOURCES << PCI_RES_SHIFT) | PCI_ROM_RES, /* PCI_ROM_RESOURCE */
-> > +(PCI_BRIDGE_RESOURCES << PCI_RES_SHIFT) | PCI_IOV_RES, /* PCI_IOV_START */
-> > +(PCI_BRIDGE_RESOURCES << PCI_RES_SHIFT) | PCI_IOV_RES, /* PCI_IOV_START+1 */
-> > +(PCI_BRIDGE_RESOURCES << PCI_RES_SHIFT) | PCI_IOV_RES, /* PCI_IOV_START+2 */
-> > +(PCI_BRIDGE_RESOURCES << PCI_RES_SHIFT) | PCI_IOV_RES, /* PCI_IOV_START+3 */
-> > +(PCI_BRIDGE_RESOURCES << PCI_RES_SHIFT) | PCI_IOV_RES, /* PCI_IOV_START+4 */
-> > +(PCI_BRIDGE_RESOURCES << PCI_RES_SHIFT) | PCI_IOV_RES, /* PCI_IOV_START+5 */
-> > +(PCI_NUM_RESOURCES << PCI_RES_SHIFT) | PCI_BRIDGE_RES, /* PCI_BRIDGE_START */
-> > +(PCI_NUM_RESOURCES << PCI_RES_SHIFT) | PCI_BRIDGE_RES, /* PCI_BRIDGE_START+1 */
-> > +(PCI_NUM_RESOURCES << PCI_RES_SHIFT) | PCI_BRIDGE_RES, /* PCI_BRIDGE_START+2 */
-> > +(PCI_NUM_RESOURCES << PCI_RES_SHIFT) | PCI_BRIDGE_RES, /* PCI_BRIDGE_START+3 */
-> > +};
-> 
-> how about some one change the some type resource number?
+> +#endif
+> +       pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> +}
 
-She/he will have to change this code correspondingly. :) I can put in
-some comments towards that. However this iterator implementation will
-eventually change anyway; ones we restructure the resources in pci_dev
-structure.
+Gr{oetje,eeting}s,
 
-> 
-> better have some marco helper.
-> 
-> > +#define res_type(idx)  (res_idx[idx] &  ((0x1 << PCI_RES_SHIFT) - 1))
-> > +#define res_next(idx)  (res_idx[idx] >> PCI_RES_SHIFT)
-> > +
-> > +int pci_next_resource_idx(int i, int flag)
-> > +{
-> > +       i++;
-> > +       while (i < PCI_NUM_RESOURCES) {
-> > +               if (res_type(i) & flag)
-> > +                       return i;
-> > +               i = res_next(i);
-> > +       }
-> 
-> here still have some two extra loop when only need to loop STD + BRIDGE.
+                        Geert
 
-true. its a tradeoff between space; your bitmap patch, and time; my code
-above.  The loss of a few cycles or a few bytes of memory should be
-highly insignificant in the grand scheme, as long as it is bounded by a
-constant.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-Anyway I am ok with either patch.
-RP
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
