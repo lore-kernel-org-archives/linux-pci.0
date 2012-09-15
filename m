@@ -1,99 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:48421 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755201Ab2I0IMW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:22 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/8] PCI: Separate out pci_assign_unassigned_bus_resources()
-Date: Thu, 27 Sep 2012 01:11:52 -0700
-Message-Id: <1348733519-24684-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tony Luck <tony.luck@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 8/9] PCI/acpiphp: serialize access to the bridge_list list
+Date: Sat, 15 Sep 2012 11:05:11 +0800
+Message-Id: <1347678312-11124-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is main portion of pci_rescan_bus().
+Serialize access to the bridge_list in the acpiphp driver.
 
-Separate it out and prepare to use it for pci root bus hot add later.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/setup-bus.c |   32 ++++++++++++++++++--------------
- include/linux/pci.h     |    1 +
- 2 files changed, 19 insertions(+), 14 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1e808ca..1f34929 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1550,25 +1550,12 @@ enable_all:
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 1fb0eb7..348afd7 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -53,6 +53,7 @@
+ #include "../pci.h"
+ #include "acpiphp.h"
  
--#ifdef CONFIG_HOTPLUG
--/**
-- * pci_rescan_bus - scan a PCI bus for devices.
-- * @bus: PCI bus to scan
-- *
-- * Scan a PCI bus and child buses for new devices, adds them,
-- * and enables them.
-- *
-- * Returns the max number of subordinate bus discovered.
-- */
--unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
-+void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
++static DEFINE_MUTEX(bridge_mutex);
+ static LIST_HEAD(bridge_list);
+ 
+ #define MY_NAME "acpiphp_glue"
+@@ -497,8 +498,10 @@ static int add_bridge(acpi_handle handle)
+ 	}
+ 
+ 	/* search P2P bridges under this host bridge */
++	mutex_lock(&bridge_mutex);
+ 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+ 				     find_p2p_bridge, NULL, NULL, NULL);
++	mutex_unlock(&bridge_mutex);
+ 
+ 	if (ACPI_FAILURE(status))
+ 		warn("find_p2p_bridge failed (error code = 0x%x)\n", status);
+@@ -595,6 +598,8 @@ static void remove_bridge(acpi_handle handle)
  {
--	unsigned int max;
- 	struct pci_dev *dev;
- 	LIST_HEAD(add_list); /* list of resources that
- 					want additional resources */
+ 	struct acpiphp_bridge *bridge;
  
--	max = pci_scan_child_bus(bus);
--
- 	down_read(&pci_bus_sem);
- 	list_for_each_entry(dev, &bus->devices, bus_list)
- 		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
-@@ -1581,6 +1568,23 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
- 	BUG_ON(!list_empty(&add_list));
- 
- 	pci_enable_bridges(bus);
-+}
-+#ifdef CONFIG_HOTPLUG
-+/**
-+ * pci_rescan_bus - scan a PCI bus for devices.
-+ * @bus: PCI bus to scan
-+ *
-+ * Scan a PCI bus and child buses for new devices, adds them,
-+ * and enables them.
-+ *
-+ * Returns the max number of subordinate bus discovered.
-+ */
-+unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
-+{
-+	unsigned int max;
++	mutex_lock(&bridge_mutex);
 +
-+	max = pci_scan_child_bus(bus);
-+	pci_assign_unassigned_bus_resources(bus);
- 	pci_bus_add_devices(bus);
+ 	/* cleanup p2p bridges under this host bridge
+ 	   in a depth-first manner */
+ 	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+@@ -613,6 +618,8 @@ static void remove_bridge(acpi_handle handle)
+ 	else
+ 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 					   handle_hotplug_event_bridge);
++
++	mutex_unlock(&bridge_mutex);
+ }
  
- 	return max;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index be1de01..505c05a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -980,6 +980,7 @@ void pci_bus_size_bridges(struct pci_bus *bus);
- int pci_claim_resource(struct pci_dev *, int);
- void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
-+void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
- void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ static int power_on_slot(struct acpiphp_slot *slot)
+@@ -1415,11 +1422,13 @@ static void acpiphp_hp_notify_add(struct pci_dev *dev)
+ 	if (!dev->subordinate || !handle)
+ 		return;
+ 
++	mutex_lock(&bridge_mutex);
+ 	/* check if this bridge has ejectable slots */
+ 	if (detect_ejectable_slots(handle) > 0) {
+ 		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
+ 		add_p2p_bridge(handle);
+ 	}
++	mutex_unlock(&bridge_mutex);
+ }
+ 
+ static void acpiphp_hp_notify_del(struct pci_dev *dev)
+@@ -1430,11 +1439,13 @@ static void acpiphp_hp_notify_del(struct pci_dev *dev)
+ 	if (!bus)
+ 		return;
+ 
++	mutex_lock(&bridge_mutex);
+ 	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
+ 		if (bridge->pci_bus == bus) {
+ 			cleanup_bridge(bridge);
+ 			break;
+ 		}
++	mutex_unlock(&bridge_mutex);
+ }
+ 
+ static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
 -- 
-1.7.7
+1.7.9.5
 
