@@ -1,53 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30159 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750787Ab2ISBIu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Sep 2012 21:08:50 -0400
-From: Dave Airlie <airlied@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH] pci: don't touch card regs after runtime suspend D3
-Date: Wed, 19 Sep 2012 11:07:04 +1000
-Message-Id: <1348016824-1895-1-git-send-email-airlied@redhat.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:33180 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756507Ab2IODNj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 23:13:39 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tony Luck <tony.luck@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 7/9] PCI/acpiphp: update ACPI hotplug slot information when PCI hotplug happens
+Date: Sat, 15 Sep 2012 11:05:10 +0800
+Message-Id: <1347678312-11124-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the driver takes care of state saving, don't touch any registers on it.
+Currently the acpiphp driver fails to update hotplug slot information under
+several conditions, such as:
+1) The bridge device is removed through /sys/bus/pci/devices/.../remove
+2) The bridge device is added/removed by PCI hotplug driver other than the
+   acpiphp driver itself. For example, if an IO expansion box with ACPI
+   hotplug slots available is hot-added by the pciehp driver, all ACPI
+   hotplug slots won't be discovered by the acpiphp driver.
 
-Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
-unfortunately enter it on normal D3 transitions via the ACPI callback.
+So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
+update ACPI hotplug slot information when PCI hotplug event happens.
 
-So when we use runtime PM to transition to D3, the card disappears off
-the PCI bus, however we then try to access registers on it in the 
-runtime suspend finish, which really doesn't work.
-
-This patch check is the pci state is saved and doesn't attempt to hit
-any registers after that point if it is.
-
-(Looks okay to Rafael)
-
-Signed-off-by: Dave Airlie <airlied@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/pci-driver.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 5270f1a..214a40b 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1057,10 +1057,11 @@ static int pci_pm_runtime_suspend(struct device *dev)
- 		return 0;
- 	}
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 7be4ca5..1fb0eb7 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -61,6 +61,7 @@ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
+ static void acpiphp_sanitize_bus(struct pci_bus *bus);
+ static void acpiphp_set_hpp_values(struct pci_bus *bus);
+ static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
++static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle);
  
--	if (!pci_dev->state_saved)
-+	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
+ /* callback routine to check for the existence of a pci dock device */
+ static acpi_status
+@@ -382,7 +383,7 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
  
--	pci_finish_runtime_suspend(pci_dev);
-+		pci_finish_runtime_suspend(pci_dev);
+ 
+ /* allocate and initialize host bridge data structure */
+-static void add_host_bridge(acpi_handle *handle)
++static void add_host_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_bridge *bridge;
+ 	struct acpi_pci_root *root = acpi_pci_find_root(handle);
+@@ -399,12 +400,14 @@ static void add_host_bridge(acpi_handle *handle)
+ 	init_bridge_misc(bridge);
+ }
+ 
+-
+ /* allocate and initialize PCI-to-PCI bridge data structure */
+-static void add_p2p_bridge(acpi_handle *handle)
++static void add_p2p_bridge(acpi_handle handle)
+ {
+ 	struct acpiphp_bridge *bridge;
+ 
++	if (acpiphp_handle_to_bridge(handle))
++		return;
++
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (bridge == NULL) {
+ 		err("out of memory\n");
+@@ -1405,6 +1408,58 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK ;
+ }
+ 
++static void acpiphp_hp_notify_add(struct pci_dev *dev)
++{
++	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->dev);
++
++	if (!dev->subordinate || !handle)
++		return;
++
++	/* check if this bridge has ejectable slots */
++	if (detect_ejectable_slots(handle) > 0) {
++		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
++		add_p2p_bridge(handle);
 +	}
++}
++
++static void acpiphp_hp_notify_del(struct pci_dev *dev)
++{
++	struct acpiphp_bridge *bridge, *tmp;
++	struct pci_bus *bus = dev->subordinate;
++
++	if (!bus)
++		return;
++
++	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
++		if (bridge->pci_bus == bus) {
++			cleanup_bridge(bridge);
++			break;
++		}
++}
++
++static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
++				 unsigned long event, void *data)
++{
++	struct device *dev = data;
++
++	switch (event) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		acpiphp_hp_notify_add(to_pci_dev(dev));
++		break;
++	case BUS_NOTIFY_DEL_DEVICE:
++		acpiphp_hp_notify_del(to_pci_dev(dev));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block acpi_pci_hp_notifier = {
++	.notifier_call = &acpi_pci_hp_notify_fn,
++};
++
+ static struct acpi_pci_driver acpi_pci_hp_driver = {
+ 	.add =		add_bridge,
+ 	.remove =	remove_bridge,
+@@ -1425,6 +1480,8 @@ int __init acpiphp_glue_init(void)
+ 	else
+ 		acpi_pci_register_driver(&acpi_pci_hp_driver);
  
++	bus_register_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
++
  	return 0;
  }
+ 
+@@ -1436,6 +1493,7 @@ int __init acpiphp_glue_init(void)
+  */
+ void  acpiphp_glue_exit(void)
+ {
++	bus_unregister_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
+ 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+ }
+ 
 -- 
-1.7.12
+1.7.9.5
 
