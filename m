@@ -1,46 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65456 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757328Ab2IJWze (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Sep 2012 18:55:34 -0400
-Date: Tue, 11 Sep 2012 06:55:04 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	Feng Tang <feng.tang@intel.com>
-Subject: Re: [PATCH 1/1] PCI: fix on-stack pci_device_id's
-Message-ID: <20120910225504.GA18038@localhost>
-References: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
- <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:36655 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539Ab2IOWWd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 18:22:33 -0400
+Received: by lbbgj3 with SMTP id gj3so3488556lbb.19
+        for <linux-pci@vger.kernel.org>; Sat, 15 Sep 2012 15:22:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com>
+In-Reply-To: <20120915075301.GA31044@avionic-0098.mockup.avionic-design.de>
+References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
+ <1347655456-2542-2-git-send-email-thierry.reding@avionic-design.de>
+ <CAMuHMdWuR_tdMw9iVkaQ3D9p1HVU_L05ap=MzBuo1jLD6YdHHw@mail.gmail.com> <20120915075301.GA31044@avionic-0098.mockup.avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 15 Sep 2012 16:22:11 -0600
+Message-ID: <CAErSpo7q9fvtjatfKqtb8SP3UOJdEXpbvFC_qMBTc6mAoRTQuA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Provide a default pcibios_update_irq()
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Chris Zankel <chris@zankel.net>,
+	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2012 at 02:44:32PM -0600, Bjorn Helgaas wrote:
-> On Mon, Sep 10, 2012 at 1:36 PM, Jiri Slaby <jslaby@suse.cz> wrote:
-> > Commit "PCI: Use pci_device_id on stack for pci_get_subsys/class() to
-> > avoid kmalloc" changed heap allocations to on-stack variables, but it
-> > did not add initialization of other than set members. This causes
-> > random failures during bootup wherever pci device is needed to be
-> > found. Hence the boot just hangs or panics.
-> >
-> > This patches fixes it by setting the content of pci_device_id directly
-> > in the initializer.
-> 
-> Nice!  I fixed this already by adding a memset(), but I like your way
-> better.  I knew we could initialize members of a structure on the
-> stack, but I didn't know C guaranteed that uninitialized members would
-> be implicitly initialized also.  But apparently it does:
-> 
-> http://stackoverflow.com/questions/10828294/c-and-c-partial-initialization-of-automatic-structure
-
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-
-For the record, I proposed the same initializer-style fix in the very
-beginning that you didn't realize its beauty until now ;-)
-
-Thanks,
-Fengguang
+On Sat, Sep 15, 2012 at 1:53 AM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> On Sat, Sep 15, 2012 at 09:32:10AM +0200, Geert Uytterhoeven wrote:
+>> On Fri, Sep 14, 2012 at 10:44 PM, Thierry Reding
+>> <thierry.reding@avionic-design.de> wrote:
+>> > --- a/drivers/pci/setup-irq.c
+>> > +++ b/drivers/pci/setup-irq.c
+>> > @@ -17,6 +17,14 @@
+>> >  #include <linux/ioport.h>
+>> >  #include <linux/cache.h>
+>> >
+>> > +void __devinit __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+>> > +{
+>> > +#ifdef CONFIG_PCI_DEBUG
+>> > +       printk(KERN_DEBUG "PCI: Assigning IRQ %02d to %s\n", irq,
+>> > +              pci_name(dev));
+>>
+>> pr_debug()?
+>> Or even better, dev_dbg()?
+>
+> The problem with pr_debug() and dev_dbg() is that they will be compiled
+> out if DEBUG is not defined. Perhaps we should pass -DDEBUG if PCI_DEBUG
+> is configured and make this dev_dbg()?
