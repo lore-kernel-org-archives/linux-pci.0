@@ -1,104 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:6775 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146Ab2ISClh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:41:37 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 1/6] PCI/AER: fix pci_ops return NULL when hotplug a pci bus doing aer error inject
-Date: Wed, 19 Sep 2012 10:40:37 +0800
-Message-ID: <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:56270 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905Ab2IOHCU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 03:02:20 -0400
+Message-ID: <505427F2.7080709@gmail.com>
+Date: Sat, 15 Sep 2012 15:02:10 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jiang Liu <jiang.liu@huawei.com>
+Subject: Re: [PATCH v2 3/9] PCI: preserve dev->subordinate until pci_stop_dev()
+ has been called
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com> <1347678312-11124-4-git-send-email-jiang.liu@huawei.com> <CAE9FiQU66sW4HsDuqh69evvcT0cfx61=6JtgrU7FTJjMo-_Njw@mail.gmail.com>
+In-Reply-To: <CAE9FiQU66sW4HsDuqh69evvcT0cfx61=6JtgrU7FTJjMo-_Njw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we inject aer errors to the target pcie device by aer_inject module, the pci_ops of pci
-bus which the target device is on will be assigned to pci_ops_aer.So if the target pci device
-is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
-will be assigned to pci_ops_aer too.Now every access to the child bus's devices will result to
-system panic, because it get a NULL pci_ops in pci_read_aer/pci_write_aer.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   27 ++++++++++++++++++++++++++-
- 1 files changed, 26 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 4e24cb8..0f00a27 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
- 	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
- }
- 
-+/* find pci_ops of the nearest parent bus */
-+static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
-+{
-+	struct pci_bus_ops *bus_ops;
-+	struct pci_bus *pbus = bus->parent;
-+
-+	if (!pbus)
-+		return NULL;
-+
-+	while (pbus) {
-+		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
-+			if (bus_ops->bus == pbus)
-+				return bus_ops->ops;
-+
-+		pbus = pbus->parent;
-+	}
-+
-+	return NULL;
-+}
-+
- /* inject_lock must be held before calling */
- static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- {
-@@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- 		if (bus_ops->bus == bus)
- 			return bus_ops->ops;
- 	}
--	return NULL;
-+
-+	/* can't find bus_ops, fall back to get bus_ops of upstream bus */
-+	return __find_pci_bus_ops_parent(bus);
- }
- 
- static struct pci_bus_ops *pci_bus_ops_pop(void)
-@@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	}
- out:
- 	ops = __find_pci_bus_ops(bus);
-+	BUG_ON(!ops);
- 	spin_unlock_irqrestore(&inject_lock, flags);
- 	return ops->read(bus, devfn, where, size, val);
- }
-@@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
- 	}
- out:
- 	ops = __find_pci_bus_ops(bus);
-+	BUG_ON(!ops);
- 	spin_unlock_irqrestore(&inject_lock, flags);
- 	return ops->write(bus, devfn, where, size, val);
- }
-@@ -506,6 +530,7 @@ static struct miscdevice aer_inject_device = {
- 	.fops = &aer_inject_fops,
- };
- 
-+
- static int __init aer_inject_init(void)
- {
- 	return misc_register(&aer_inject_device);
--- 
-1.7.1
+On 09/15/2012 01:09 PM, Yinghai Lu wrote:
+> On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>> From: Yijing Wang <wangyijing@huawei.com>
+>>
+>> Changeset 2ed168eeb3edec029aa0eca5cb981d6376f931f9 "PCI: Fold stop and
+>> remove helpers into their callers" has changed the behavior when
+>> removing a PCI device.
+>>
+>> Previously, for a PCI bridge device with secondary bus, dev->subordinate
+>> is valid when calling PCI bus notification callbacks for
+>> BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events. Now dev->subordinate
+>> has been reset to NULL when calling callbacks for BUS_NOTIFY_DEL_DEVICE
+>> events, which may break some PCI bus notification callbacks.
+>>
+>> So revert to the original behavior to keep dev->subordinate valid for
+>> both BUS_NOTIFY_ADD_DEVICE events and BUS_NOTIFY_DEL_DEVICE events.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> ---
+>>  drivers/pci/remove.c |    6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index 86a4636..6244956 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -79,16 +79,16 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+>>          * iterator.  Therefore, iterate in reverse so we remove the VFs
+>>          * first, then the PF.
+>>          */
+>> -       if (bus) {
+>> +       if (bus)
+>>                 list_for_each_entry_safe_reverse(child, tmp,
+>>                                                  &bus->devices, bus_list)
+>>                         pci_stop_and_remove_bus_device(child);
+>> +       pci_stop_dev(dev);
+>>
+>> +       if (bus) {
+>>                 pci_remove_bus(bus);
+>>                 dev->subordinate = NULL;
+>>         }
+>> -
+>> -       pci_stop_dev(dev);
+>>         pci_destroy_dev(dev);
+>>  }
+>>  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+> 
+> for support root bus support with acpi_pci_root (ioapic/iommu) will
+> need pci_stop_bus_devices()
+> 
+> so I just put those function back...
+> 
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=247a40206cf44488f21bc6074cf0ba2805d4d840
+Hi Yinghai,
+	I will just drop this patch when merging with your pci root bus hotplug work.
+	--Gerry
 
 
