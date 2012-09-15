@@ -1,58 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:19698 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756992Ab2ISSza (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:30 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 23/40] PCI, ACPI: Pass device instead of handle when config root bridge
-Date: Wed, 19 Sep 2012 11:54:37 -0700
-Message-Id: <1348080894-23412-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:64718 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755911Ab2IODM5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 23:12:57 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tony Luck <tony.luck@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/9] PCI: split registration of PCI bus devices into two stages
+Date: Sat, 15 Sep 2012 11:05:05 +0800
+Message-Id: <1347678312-11124-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we can avoid one calling of acpi_pci_find_root().
+When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+the notification handler can't hold reference count to the new PCI bus
+because the device object for the new bus (pci_dev->subordinate->dev)
+hasn't been initialized yet.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Split the registration of PCI bus device into two stages as below,
+so that the event handler could hold reference count to the new PCI bus
+when handling BUS_NOTIFY_ADD_DEVICE event.
+
+1) device_initialize(&pci_dev->dev)
+2) device_initialize(&pci_dev->subordinate->dev)
+3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+4) device_add(&pci_dev->dev)
+5) device_add(&pci_dev->subordinate->dev)
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/acpi/pci_root_hp.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/bus.c    |    2 +-
+ drivers/pci/probe.c  |    3 ++-
+ drivers/pci/remove.c |   10 +++++-----
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index e07c31b..eb4344c 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -102,9 +102,9 @@ static void alloc_acpi_root_hp_work(acpi_handle handle, u32 type,
- }
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4b0970b..11a5c28 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -189,7 +189,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+ 	if (bus->bridge)
+ 		bus->dev.parent = bus->bridge;
  
- /* Program resources in newly inserted bridge */
--static void acpi_root_configure_bridge(acpi_handle handle)
-+static void acpi_root_configure_bridge(struct acpi_device *device)
- {
--	struct acpi_pci_root *root = acpi_pci_find_root(handle);
-+	struct acpi_pci_root *root = acpi_driver_data(device);
+-	retval = device_register(&bus->dev);
++	retval = device_add(&bus->dev);
+ 	if (retval)
+ 		return retval;
  
- 	pcibios_resource_survey_bus(root->bus);
- 	pci_assign_unassigned_bus_resources(root->bus);
-@@ -138,7 +138,7 @@ static void handle_root_bridge_insertion(acpi_handle handle)
- 		printk(KERN_ERR "cannot add bridge to acpi list\n");
- 		return;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5dbad03..ddc8f7f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -464,6 +464,7 @@ static struct pci_bus * pci_alloc_bus(void)
+ 		INIT_LIST_HEAD(&b->resources);
+ 		b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 		b->cur_bus_speed = PCI_SPEED_UNKNOWN;
++		device_initialize(&b->dev);
  	}
--	acpi_root_configure_bridge(handle);
-+	acpi_root_configure_bridge(device);
- 	if (acpi_bus_start(device))
- 		printk(KERN_ERR "cannot start bridge\n");
+ 	return b;
  }
+@@ -1672,7 +1673,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+ 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+-	error = device_register(&b->dev);
++	error = device_add(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+ 
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 37b9407..86a4636 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(bus);
+-	device_unregister(&bus->dev);
++	if (bus->is_added) {
++		pci_remove_legacy_files(bus);
++		device_del(&bus->dev);
++	}
++	put_device(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
 -- 
-1.7.7
+1.7.9.5
 
