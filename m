@@ -1,99 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:61158 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757067Ab2IGXdp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 19:33:45 -0400
-Received: by lbbgj3 with SMTP id gj3so163853lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 16:33:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7-6PEEt+pDV-XRrfHVKDuw+_CbtKK-fEguyGhd_qapdw@mail.gmail.com>
-References: <201209072328.30553.rjw@sisk.pl> <CAErSpo7-6PEEt+pDV-XRrfHVKDuw+_CbtKK-fEguyGhd_qapdw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 16:33:22 -0700
-Message-ID: <CAErSpo7YZ75Q7zSfNPGONAwpMjr0MViBJH52uAOWjPuQYoTsAw@mail.gmail.com>
-Subject: Re: [Resend][PATCH] pciehp: always implement resume
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Oliver Neukum <oliver@neukum.org>, linux-pci@vger.kernel.org,
-	Mark Lord <mlord@pobox.com>,
-	Kristen Carlson Accardi <kristen.c.accardi@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tony Luck <tony.luck@intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@huawei.com>
+Subject: [PATCH v2 9/9] PCI/AER: update AER configuration when PCI hotplug event happens
+Date: Sat, 15 Sep 2012 11:05:12 +0800
+Message-Id: <1347678312-11124-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+cc Mark & Kristen
+From: Yijing Wang <wangyijing@huawei.com>
 
-Commit cd2fe83a815 by Mark added the code we're changing here, so this
-is your chance to speak up if we're not doing the right thing :)
+The AER driver only configures downstream PCIe devices at driver
+binding time and all hot-added PCIe devices won't be managed by
+the AER driver.  So hook PCIe device hotplug events to setup AER
+configuration for hot-added PCIe devices.
 
-On Fri, Sep 7, 2012 at 4:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 7, 2012 at 2:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> From: Oliver Neukum <oliver@neukum.org>
->> Subject: pciehp: always implement resume
->>
->> The driver by default ignores resume. On some laptops
->> that means that interrupts are not delivered after S3.
->> So card removals and insertions will not be handled. Requiring
->> a forced load isn't right.
->>
->> Signed-off-by: Oliver Neukum <oneukum@suse.de>
->> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
->
-> I applied this (with fixed From: email address and slightly modified
-> changelog) to http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/oliver-pciehp-resume
-> and will merge it to "next" after Fengguang's build/smoke tests.
->
-> Thanks!
->
-> Bjorn
->
->> ---
->> drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
->>  drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
->>  1 file changed, 14 insertions(+), 14 deletions(-)
->>
->> Index: linux/drivers/pci/hotplug/pciehp_core.c
->> ===================================================================
->> --- linux.orig/drivers/pci/hotplug/pciehp_core.c
->> +++ linux/drivers/pci/hotplug/pciehp_core.c
->> @@ -300,24 +300,24 @@ static int pciehp_suspend (struct pcie_d
->>
->>  static int pciehp_resume (struct pcie_device *dev)
->>  {
->> +       struct controller *ctrl;
->> +       struct slot *slot;
->> +       u8 status;
->> +
->>         dev_info(&dev->device, "%s ENTRY\n", __func__);
->> -       if (pciehp_force) {
->> -               struct controller *ctrl = get_service_data(dev);
->> -               struct slot *slot;
->> -               u8 status;
->> +       ctrl = get_service_data(dev);
->>
->> -               /* reinitialize the chipset's event detection logic */
->> -               pcie_enable_notification(ctrl);
->> +       /* reinitialize the chipset's event detection logic */
->> +       pcie_enable_notification(ctrl);
->>
->> -               slot = ctrl->slot;
->> +       slot = ctrl->slot;
->>
->> -               /* Check if slot is occupied */
->> -               pciehp_get_adapter_status(slot, &status);
->> -               if (status)
->> -                       pciehp_enable_slot(slot);
->> -               else
->> -                       pciehp_disable_slot(slot);
->> -       }
->> +       /* Check if slot is occupied */
->> +       pciehp_get_adapter_status(slot, &status);
->> +       if (status)
->> +               pciehp_enable_slot(slot);
->> +       else
->> +               pciehp_disable_slot(slot);
->>         return 0;
->>  }
->>  #endif /* PM */
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c |   63 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 62 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 030cf12..b70ec84 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -408,6 +408,55 @@ static void aer_error_resume(struct pci_dev *dev)
+ 	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+ }
+ 
++static void acpi_pcie_aer_notify_dev(struct pcie_device *dev, bool enable)
++{
++	int rc, pos;
++	u32 val = 0;
++	struct pci_dev *pdev = dev->port;
++
++	if (dev->service != PCIE_PORT_SERVICE_AER)
++		return;
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
++		return;
++	while (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT) {
++		pdev = pdev->bus->self;
++		if (!pdev)
++			return;
++	}
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ERR);
++	if (!pos)
++		return;
++	rc = pci_read_config_dword(pdev, pos + PCI_ERR_ROOT_COMMAND, &val);
++	if (rc || val == 0xFFFFFFFF || !(val & ROOT_PORT_INTR_ON_MESG_MASK))
++		return;
++
++	set_device_error_reporting(dev->port, &enable);
++}
++
++static int acpi_pcie_aer_notify(struct notifier_block *nb,
++		unsigned long event, void *data)
++{
++	struct device *dev = data;
++
++	switch (event) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		acpi_pcie_aer_notify_dev(to_pcie_device(dev), true);
++		break;
++	case BUS_NOTIFY_DEL_DEVICE:
++		acpi_pcie_aer_notify_dev(to_pcie_device(dev), false);
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block acpi_pcie_aer_notifier = {
++	.notifier_call = &acpi_pcie_aer_notify,
++};
++
+ /**
+  * aer_service_init - register AER root service driver
+  *
+@@ -415,9 +464,20 @@ static void aer_error_resume(struct pci_dev *dev)
+  */
+ static int __init aer_service_init(void)
+ {
++	int ret;
++
+ 	if (!pci_aer_available() || aer_acpi_firmware_first())
+ 		return -ENXIO;
+-	return pcie_port_service_register(&aerdriver);
++
++	ret = pcie_port_service_register(&aerdriver);
++	if (!ret) {
++		ret = bus_register_notifier(&pcie_port_bus_type,
++					    &acpi_pcie_aer_notifier);
++		if (ret)
++			pcie_port_service_unregister(&aerdriver);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -427,6 +487,7 @@ static int __init aer_service_init(void)
+  */
+ static void __exit aer_service_exit(void)
+ {
++	bus_unregister_notifier(&pcie_port_bus_type, &acpi_pcie_aer_notifier);
+ 	pcie_port_service_unregister(&aerdriver);
+ }
+ 
+-- 
+1.7.9.5
+
