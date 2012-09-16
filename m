@@ -1,84 +1,206 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay01.ispgateway.de ([80.67.18.13]:47485 "EHLO
+	smtprelay01.ispgateway.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633Ab2IPQtB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 12:49:01 -0400
+Date: Sun, 16 Sep 2012 18:39:14 +0200
+Message-ID: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
+From: Stephan Schreiber <info@fs-driver.org>
+To: linux-ia64@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk, linux-pci@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+	679545@bugs.debian.org, jrnieder@gmail.com
+Subject: [RFC/PATCH] ia64, SR870, EFI bug breaks ata_piix, uninitialized
+ ICH4 IDE EXBAR mem resource
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
 MIME-Version: 1.0
-In-Reply-To: <20120922081009.GA5677@localhost>
-References: <20120922003557.GF5959@localhost>
-	<CAE9FiQVQJQfBZn7AH4M5hibx=iNa9RbfSaBdb35FWxDiRXHvrA@mail.gmail.com>
-	<CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
-	<20120922081009.GA5677@localhost>
-Date: Sat, 22 Sep 2012 07:11:34 -0700
-Message-ID: <CAE9FiQWi46m4rP9chVK0W5ahtgk7cuCO60dTYzP6JVM=x=5abA@mail.gmail.com>
-Subject: Re: [ACPI/PCI] possible recursive locking detected
-From: Yinghai Lu <yinghai@kernel.org>
-To: Fengguang Wu <fengguang.wu@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: multipart/mixed; boundary=bcaec555517a1d060c04ca4aef10
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---bcaec555517a1d060c04ca4aef10
-Content-Type: text/plain; charset=ISO-8859-1
+Hello,
+please could you add some comments about the problem or review the  
+proposed patch?
 
-On Sat, Sep 22, 2012 at 1:10 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->
->> > Please check attached patch that should fix the problem.
->>
->> updated more aggressive version. two patches.
->
-> Yes they work nicely. Thank you very much!
+Kernel 3.2.23 with Debian patches (Debian Wheezy, testing)
+Debian bug#679545 (http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=679545)
 
-Thanks.
+Machine: Dell PowerEdge 3250 (equivalent with Intel SR870BH2)
+Processor: 2x Itanium Madison 1.5GHz 6M
+Memory: 4GB
 
-v2 breaks acpi_bind_one.
+Intel ICH4 (82801DB), IDE host adapter. The ata_piix module fails to  
+initialize.
 
-So we should use attached -v3.
+A snippet from dmesg:
+[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Linux version 3.2.0-3-mckinley (Debian 3.2.23-1)  
+(debian-kernel@lists.debian.org) (gcc version 4.6.3 (Debian 4.6.3-8) )  
+#1 SMP Mon Jul 23 09:01:02 UTC 2012
+...
+[    0.065516] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
+[    0.065530] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
+[    0.065541] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
+[    0.065552] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
+[    0.065563] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
+[    0.065574] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
+[    0.065585] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff]
+...
+[    1.640965] libata version 3.00 loaded.
+[    1.641656] ata_piix 0000:00:1f.1: version 2.13
+[    1.641671] ata_piix 0000:00:1f.1: device not available (can't  
+reserve [mem 0x00000000-0x000003ff])
+[    1.641747] ata_piix: probe of 0000:00:1f.1 failed with error -22
+...
 
-Bjorn, please apply -v3 before Taku's patchset.
+lspci -vvxxx reports:
 
--Yinghai
+00:1f.1 IDE interface: Intel Corporation 82801DB (ICH4) IDE Controller  
+(rev 02) (prog-if 8a [Master SecP PriP])
+	Subsystem: Intel Corporation Device 3404
+	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-  
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-  
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 0
+	Region 0: I/O ports at 01f0 [size=8]
+	Region 1: I/O ports at 03f4 [size=1]
+	Region 2: I/O ports at 0170 [size=8]
+	Region 3: I/O ports at 0374 [size=1]
+	Region 4: I/O ports at 1000 [size=16]
+00: 86 80 cb 24 05 00 80 02 02 8a 01 01 00 00 00 00
+10: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+20: 01 10 00 00 00 00 00 00 00 00 00 00 86 80 04 34
+30: 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00
+40: 03 a3 00 80 00 00 00 00 01 00 02 00 00 00 00 00
+50: 00 00 00 00 00 04 00 00 00 00 00 00 00 00 00 00
+60: 08 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 60 0f 00 00 00 00 00 00
 
---bcaec555517a1d060c04ca4aef10
-Content-Type: application/octet-stream;
-	name="pci_root_bus_to_handle_v3.patch"
-Content-Disposition: attachment; filename="pci_root_bus_to_handle_v3.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h7esqp4k0
 
-U3ViamVjdDogW1BBVENIIC12M10gUENJLCBBQ1BJOiBVc2UgREVWSUNFX0FDUElfSEFORExFIGZv
-ciByb290IGJ1cyBzdHJ1Y3QgcG9pbnRlcgoKU28gd2UgY291bGQgYXZvaWQgY2FsbGluZyBhY3Bp
-X2dldF9wY2lfcm9vdGJyaWRnZV9oYW5kbGUgdGhhdCBjb3VsZCBjYXVzZSBkZWFkbG9jay4KCm5v
-biByb290IHBjaSBidXMgaXMgdXNpbmcgYnJpZGdlLT5kZXYgYXJjaGRhdGEuYWNwaV9oYW5kbGUu
-CndlIHNob3VkbCB1c2UgdGhhdCBzYW1lIGZpZWxkIGZvciBmb3Igcm9vdCBidXMKCi12MzogZG8g
-bm90IG5lZWQgdG8gYW5kICBzaG91bGQgbm90IHNldCB0aGF0IGFyY2hkYXRhLmFjcGlfaGFuZGxl
-IGRpcmVjdGx5CiAgICAgYWNwaV9wY2lfcm9vdF9hZGQKCT09PiBwY2lfYWNwaV9zY2FuX3Jvb3QK
-CQk9PT4gcGNpX2NyZWF0ZV9yb290X2J1cwoJCQk9PT4gZGV2aWNlX3JlZ2lzdGVyKCZicmlkZ2Ut
-PmRldikKCQkJCT09PiBkZXZpY2VfYWRkCgkJCQkJPT0+IHBsYXRmb3JtX25vdGlmeQoJCQkJCQk9
-PT4gYWNwaV9iaW5kX29uZQogICAgIHdpbGwgc2V0IHRoYXQgZm9yIHVzLgoJdGhhdCBtZWFuJ3Mg
-d2Ugc3RpbGwgbmVlZCB0byBrZWVwIGFjcGlfZ2V0X3BjaV9yb290YnJpZGdlX2hhbmRsZSBmb3IK
-CWFjcGlfcGNpX2ZpbmRfcm9vdF9icmlkZ2UgaW4gYWNwaV9wY2lfYnVzIGJ1c190eXBlLgoKU2ln
-bmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgpDYzogTGVuIEJyb3du
-IDxsZW5iQGtlcm5lbC5vcmc+CkNjOiBsaW51eC1hY3BpQHZnZXIua2VybmVsLm9yZwoKLS0tCiBp
-bmNsdWRlL2xpbnV4L3BjaS1hY3BpLmggfCAgIDE1ICsrKysrKysrKystLS0tLQogMSBmaWxlIGNo
-YW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42
-L2luY2x1ZGUvbGludXgvcGNpLWFjcGkuaAo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9p
-bmNsdWRlL2xpbnV4L3BjaS1hY3BpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS1h
-Y3BpLmgKQEAgLTIyLDE5ICsyMiwyNCBAQCBleHRlcm4gcGh5c19hZGRyX3QgYWNwaV9wY2lfcm9v
-dF9nZXRfbWNmCiBzdGF0aWMgaW5saW5lIGFjcGlfaGFuZGxlIGFjcGlfZmluZF9yb290X2JyaWRn
-ZV9oYW5kbGUoc3RydWN0IHBjaV9kZXYgKnBkZXYpCiB7CiAJc3RydWN0IHBjaV9idXMgKnBidXMg
-PSBwZGV2LT5idXM7CisKIAkvKiBGaW5kIGEgUENJIHJvb3QgYnVzICovCiAJd2hpbGUgKCFwY2lf
-aXNfcm9vdF9idXMocGJ1cykpCiAJCXBidXMgPSBwYnVzLT5wYXJlbnQ7Ci0JcmV0dXJuIGFjcGlf
-Z2V0X3BjaV9yb290YnJpZGdlX2hhbmRsZShwY2lfZG9tYWluX25yKHBidXMpLAotCQkJCQkgICAg
-ICBwYnVzLT5udW1iZXIpOworCisJcmV0dXJuIERFVklDRV9BQ1BJX0hBTkRMRShwYnVzLT5icmlk
-Z2UpOwogfQogCiBzdGF0aWMgaW5saW5lIGFjcGlfaGFuZGxlIGFjcGlfcGNpX2dldF9icmlkZ2Vf
-aGFuZGxlKHN0cnVjdCBwY2lfYnVzICpwYnVzKQogeworCXN0cnVjdCBkZXZpY2UgKmRldjsKKwog
-CWlmICghcGNpX2lzX3Jvb3RfYnVzKHBidXMpKQotCQlyZXR1cm4gREVWSUNFX0FDUElfSEFORExF
-KCYocGJ1cy0+c2VsZi0+ZGV2KSk7Ci0JcmV0dXJuIGFjcGlfZ2V0X3BjaV9yb290YnJpZGdlX2hh
-bmRsZShwY2lfZG9tYWluX25yKHBidXMpLAotCQkJCQkgICAgICBwYnVzLT5udW1iZXIpOworCQlk
-ZXYgPSAmcGJ1cy0+c2VsZi0+ZGV2OworCWVsc2UKKwkJZGV2ID0gcGJ1cy0+YnJpZGdlOworCisJ
-cmV0dXJuIERFVklDRV9BQ1BJX0hBTkRMRShkZXYpOwogfQogI2VuZGlmCiAK
---bcaec555517a1d060c04ca4aef10--
+You can read in the "Intel 82801DB I/O Controller Hub 4 (ICH4)" datasheet
+(http://www.intel.com/content/dam/www/public/us/en/documents/datasheets/82801db-io-controller-hub-4-datasheet.pdf)
+about the EXBAR register at offset 0x24 (4 bytes):
+"EXBAR register
+This is a memory mapped BAR that requires 1 KB of DWord-aligned memory  
+that is Intel reserved
+for future functionality. BIOS needs to program the base address for a  
+1-KB memory space."
+
+The dump shows that EXBAR is 0x0000, equal to the default value after  
+reset; EFI doesn't initialize it.
+
+ata_piix uses pcim_enable_device() which enables this along with the  
+I/O BARs. In systems based on the Intel SR870 platform the firmware  
+does not initialize the EXBAR and pcim_enable_device() fails because  
+the memory region 0x0-0x3FF cannot be allocated.
+
+The proposed patch adds ia64 arch-specific 'pci quirk' code.
+Since the patched Kernel doesn't see any memory resource of IDE  
+hostadapter, it doesn't set the PCI_COMMAND_MEMORY bit in the CMD  
+register; the EXBAR resource is *not* visible in the memeory space at  
+all.
+
+A snippet of the dmesg output on the patched Kernel:
+[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Linux version 3.2.0-3-mckinley (Debian 3.2.23-1)  
+(debian-kernel@lists.debian.org) (gcc version 4.6.3 (Debian 4.6.3-8) )  
+#1 SMP Sun Sep 16 15:16:55 CEST 2012
+...
+[    0.065491] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
+[    0.065505] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
+[    0.065516] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
+[    0.065527] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
+[    0.065537] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
+[    0.065548] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
+[    0.065559] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff]
+[    0.065574] pci 0000:00:1f.1: SR870 EFI bug workaround; hide EXBAR  
+memory resource.
+...
+[    1.391942] libata version 3.00 loaded.
+[    1.392567] ata_piix 0000:00:1f.1: version 2.13
+[    1.392807] ata_piix 0000:00:1f.1: can't derive routing for PCI INT A
+[    1.399383] scsi0 : ata_piix
+[    1.402505] scsi1 : ata_piix
+[    1.402609] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1000 irq 34
+[    1.402658] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1008 irq 33
+[    1.565703] ata1.00: ATAPI: HL-DT-ST DVDRAM GSA-T40N, JR03, max UDMA/33
+[    1.581571] ata1.00: configured for UDMA/33
+[    1.587075] scsi 0:0:0:0: CD-ROM            HL-DT-ST DVDRAM  
+GSA-T40N  JR03 PQ: 0 ANSI: 5
+[    1.598796] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw  
+xa/form2 cdda tray
+[    1.598863] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.599263] sr 0:0:0:0: Attached scsi CD-ROM sr0
+[    1.601972] sr 0:0:0:0: Attached scsi generic sg0 type 5
+...
+
+
+(Note: The patch of this posting differs slightly from the one which I  
+have posted on Debian bug#679545 - just cosmetic improvements.)
+
+Kind regards,
+Stephan Schreiber
+
+
+
+--- linux-3.2.23/arch/ia64/pci/fixup.c.orig	2012-09-16  
+11:23:30.000000000 +0200
++++ linux-3.2.23/arch/ia64/pci/fixup.c	2012-09-16 11:52:13.000000000 +0200
+@@ -67,3 +67,40 @@ static void __devinit pci_fixup_video(st
+  	}
+  }
+  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pci_fixup_video);
++
++
++/*
++ * Fixup the EFI bug of Intel's SR870 platform
++ *
++ * The EFI of Intel's SR870BH2 and SR870BN4 including their OEM  
+equivalents by
++ * Fujitsu and Dell doesn't initialize the memory resource of the ICH4 IDE
++ * hostadapter. The memory resource has the default after reset: 0x0-0x3FF.
++ * The ata_piix driver uses pcim_enable_device() which attempts to  
+enable this
++ * along with the I/O BARs and pcim_enable_device() fails because the memory
++ * region 0x0-0x3FF cannot be allocated.
++ * The memory resource is the 6th resource of the ICH4 IDE hostadapter;
++ * Intel's datasheet "Intel 82801DB I/O Controller Hub 4 (ICH4)" (Document
++ * Number: 290744-001) states in section "10.1.15 EXBAR - Expansion Base
++ * Address Register (IDE-D31:F1)" on page 389:
++ * "This is a memory mapped BAR ... that is Intel reserved for future
++ * functionality. BIOS needs to program the base address for a 1-KB memory
++ * space."
++ * Since nothing uses the EXBAR, we hide it so that only the I/O BARs will be
++ * enabled.
++ */
++
++static void __devinit pci_fixup_sr870_ich4(struct pci_dev *dev)
++{
++	struct resource *r;
++
++	r = &dev->resource[5];
++	if ((r->flags & IORESOURCE_MEM)
++	&& r->start == 0 && r->end != 0) {
++		dev_info(&dev->dev,
++			"SR870 EFI bug workaround; hide EXBAR memory resource.\n");
++		r->flags = 0;
++		r->end = 0;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82801DB_11,
++						pci_fixup_sr870_ich4);
+
+Signed-off-by: Stephan Schreiber <info@fs-driver.org>
+
+
