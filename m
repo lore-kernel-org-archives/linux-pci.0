@@ -1,45 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:51301 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab2IXLRE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2012 07:17:04 -0400
-Message-ID: <50604002.8050500@jp.fujitsu.com>
-Date: Mon, 24 Sep 2012 20:12:02 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-MIME-Version: 1.0
-To: ddutile@redhat.com
-CC: konrad@kernel.org, vgoyal@redhat.com, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120914200334.GA9041@phenom.dumpdata.com> <505CAAA1.3040409@redhat.com>
-In-Reply-To: <505CAAA1.3040409@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:37761 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930Ab2IPNSg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 09:18:36 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3] PCI: split registration of PCI bus devices into two stages
+Date: Sun, 16 Sep 2012 21:16:01 +0800
+Message-Id: <1347801361-18565-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAE9FiQX=NoSBY1vJSqEpRASY92A1C0x2rZONx1Xor_Zm4zCweQ@mail.gmail.com>
+References: <CAE9FiQX=NoSBY1vJSqEpRASY92A1C0x2rZONx1Xor_Zm4zCweQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/09/22 2:57), Don Dutile wrote:
-> On 09/14/2012 04:03 PM, Konrad Rzeszutek Wilk wrote:
->>> As to the boot parameter to enable this function, you suggested using
->>> reset_devices. I found that on a certain platform resetting devices
->>> caused PCIe error due to a hardware bug. Therefore I think we need
->>> new parameter apart from reset_devices to disable this function on
->>> such a machine.
->>
->> Wouldn't a DMI quirk be better for this? That way the second kernel
->> internally would know not to do this.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> a DMI quirk for a PCIe switch?  pci-quirk maybe?  there is a hook
-> in per-device pci reset code path, which could be setup for such
-> a case.
+When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+the notification handler can't hold reference count to the new PCI bus
+because the device object for the new bus (pci_dev->subordinate->dev)
+hasn't been initialized yet.
 
-Yep, I think early-quirk is better.
+Split the registration of PCI bus device into two stages as below,
+so that the event handler could hold reference count to the new PCI bus
+when handling BUS_NOTIFY_ADD_DEVICE event.
 
-Thanks,
-Takao Indoh
+1) device_initialize(&pci_dev->dev)
+2) device_initialize(&pci_dev->subordinate->dev)
+3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+4) device_add(&pci_dev->dev)
+5) device_add(&pci_dev->subordinate->dev)
+
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+V2->V3
+Fix a failing in error recover path according to Yinghai's suggestion.
+---
+ drivers/pci/bus.c    |    2 +-
+ drivers/pci/probe.c  |    4 +++-
+ drivers/pci/remove.c |   10 +++++-----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4b0970b..11a5c28 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -189,7 +189,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+ 	if (bus->bridge)
+ 		bus->dev.parent = bus->bridge;
+ 
+-	retval = device_register(&bus->dev);
++	retval = device_add(&bus->dev);
+ 	if (retval)
+ 		return retval;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5dbad03..7ef8c1b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -639,6 +639,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	 */
+ 	child->dev.class = &pcibus_class;
+ 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
++	device_initialize(&child->dev);
+ 
+ 	/*
+ 	 * Set up the primary, secondary and subordinate
+@@ -1672,7 +1673,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+ 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+-	error = device_register(&b->dev);
++	device_initialize(&b->dev);
++	error = device_add(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+ 
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 37b9407..86a4636 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(bus);
+-	device_unregister(&bus->dev);
++	if (bus->is_added) {
++		pci_remove_legacy_files(bus);
++		device_del(&bus->dev);
++	}
++	put_device(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-- 
+1.7.9.5
 
