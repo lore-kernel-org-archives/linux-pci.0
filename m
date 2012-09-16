@@ -1,69 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64796 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757778Ab2IUUI0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 16:08:26 -0400
-Message-ID: <505CC930.5070807@redhat.com>
-Date: Fri, 21 Sep 2012 16:08:16 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from moutng.kundenserver.de ([212.227.126.186]:55954 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745Ab2IPGv7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 02:51:59 -0400
+Date: Sun, 16 Sep 2012 08:50:38 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Chris Zankel <chris@zankel.net>,
+	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: Provide a default pcibios_update_irq()
+Message-ID: <20120916065038.GB11030@avionic-0098.mockup.avionic-design.de>
+References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
+ <1347655456-2542-2-git-send-email-thierry.reding@avionic-design.de>
+ <CAMuHMdWuR_tdMw9iVkaQ3D9p1HVU_L05ap=MzBuo1jLD6YdHHw@mail.gmail.com>
+ <20120915075301.GA31044@avionic-0098.mockup.avionic-design.de>
+ <CAErSpo6WaFv=CXtiWeDDvThjZRBRJKfJMgovuMjjZRpQGK-WJA@mail.gmail.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Ariel Elior <ariele@broadcom.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: New commands to configure IOV features
-References: <5003DC9B.8000706@broadcom.com> <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com> <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com> <500D6932.8090306@genband.com> <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net> <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com> <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown> <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com> <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com> <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk> <C5551D9AAB213A418B7FD5E4A6F30A07152FA5F6@ORSMSX106.amr.corp.intel.com> <CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.com> <505CAC93.8020304@redhat.com> <CAE9FiQW4vY3SwAt1TGhSa=bcmKnzxS96b9HGoU5_CDb3FRvGVA@mail.gmail.com>
-In-Reply-To: <CAE9FiQW4vY3SwAt1TGhSa=bcmKnzxS96b9HGoU5_CDb3FRvGVA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
+In-Reply-To: <CAErSpo6WaFv=CXtiWeDDvThjZRBRJKfJMgovuMjjZRpQGK-WJA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/21/2012 03:49 PM, Yinghai Lu wrote:
-> On Fri, Sep 21, 2012 at 11:06 AM, Don Dutile<ddutile@redhat.com>  wrote:
->>>
->>> ok, something like attached patches?
->>>
->>> ixgbe change need more cleanup from ixgbe guys.
->>>
->> yuk, no.
->> I have a set of patches almost done.
->
-> good. includes update to those network drivers?
->
->> It provides 3 sysfs files (enable, disable, num_max_vfs);
->> callbacks for enable&  disable.
->
-> why using three? only pass max_vfs should be enough...
->
-> aka pass 0 mean disabling, pass other value mean enabling.
->
-could do that.  but I wouldn't use 'max_vfs'; I would recommend
-'num_vfs', as max implies, er, um, the maximum, and what one
-wants is to be able to enable a number from 1->max_vfs.
-'max_vfs' will be provided by another file.
 
->>
->> i'm tied up until Monday on RHEL6, then I'll switch gears&  post a set of
->> patches.
->
-> so that is your employer 'sinternal policy? for RHEL 6 kernel first,
-> then upstream kernel?
-No, I have deadlines for RHEL6 for *other work* until Monday.  After that,
-I can re-focus on upstream work.  Some of us actually have other work than
-just upstream.... crazy talk, I know! ;-)
+--8GpibOaaTibBMecb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> thought RH only accept backporting only patches get into upstream already.
->
-yup. 'upstream first' is the rule at RH before it gets into a RHEL release...
-and sometimes that isn't sufficient!
+On Sat, Sep 15, 2012 at 04:23:33PM -0600, Bjorn Helgaas wrote:
+> On Sat, Sep 15, 2012 at 1:53 AM, Thierry Reding
+> <thierry.reding@avionic-design.de> wrote:
+> > On Sat, Sep 15, 2012 at 09:32:10AM +0200, Geert Uytterhoeven wrote:
+> >> On Fri, Sep 14, 2012 at 10:44 PM, Thierry Reding
+> >> <thierry.reding@avionic-design.de> wrote:
+> >> > --- a/drivers/pci/setup-irq.c
+> >> > +++ b/drivers/pci/setup-irq.c
+> >> > @@ -17,6 +17,14 @@
+> >> >  #include <linux/ioport.h>
+> >> >  #include <linux/cache.h>
+> >> >
+> >> > +void __devinit __weak pcibios_update_irq(struct pci_dev *dev, int i=
+rq)
+> >> > +{
+> >> > +#ifdef CONFIG_PCI_DEBUG
+> >> > +       printk(KERN_DEBUG "PCI: Assigning IRQ %02d to %s\n", irq,
+> >> > +              pci_name(dev));
+> >>
+> >> pr_debug()?
+> >> Or even better, dev_dbg()?
+> >
+> > The problem with pr_debug() and dev_dbg() is that they will be compiled
+> > out if DEBUG is not defined. Perhaps we should pass -DDEBUG if PCI_DEBUG
+> > is configured and make this dev_dbg()?
+>=20
+> Sorry, fat-fingered the previous empty response.
+>=20
+> We already have this in drivers/pci/Makefile:
+>=20
+>     ccflags-$(CONFIG_PCI_DEBUG) :=3D -DDEBUG
+>=20
+> so dev_dbg() should be perfect.
 
-Have a beer, enjoy the weekend, posting forthcoming next week!
+Yeah, this occurred to me as well and I was just about to look it up
+when I read your response. I'll make it dev_dbg() then.
 
-> -Yinghai
+Thierry
 
+--8GpibOaaTibBMecb
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQVXa+AAoJEN0jrNd/PrOh00IQAJSTG1Ukqu3ay8m7AznzjD2Y
+eRN6wDO0Pd37qkHr46rMO2UVPCavDFnoS6gsGhuTzdQgIOnVO9NKGUPm71xAhBnt
+Yq+rYhg8i2cHNjZVKy8Kn5EY0Ly8k0yunH1KFMEodzeS2ZU/wrHSJZmkyKIUzMdN
+AdMoFV81Q7So+JEdG1zIaM1hsDl3t18gt+9SlRSJZ6T4kXlv0j1pD9Jy2d0OC7bx
+Yu8DDnNI33FIcZQnHsO50okCU0o4SqZHFmL/xm4Aa3JiQ5H4gMKiCYNXvFQ5M/gr
+jU+cj0P1WdIPQVof9uie8TCiPCtNEJMbUQsgbhQuFf6eEefuUIbqkfETjmY8rNk9
+NoNp1anLNxxxp2L17e8dN9VTJgNUi+lrpvcG6gqVBs7rE9ruo/6NVnFHwUUHd3Q3
+o9ivpbuYPfJCRSW1r+TbE74iVQdg7jKO+p1cIZjMQOcv9B88M8KJaS60wpgxn9S+
+f/eLoMlUK2wIbP3Zj4MR3DIorUOTyi7f14+J448Y5D9Ci86QU/+4bmMexqEVxsRS
+Un+iARiZQlrWnmVjva4iG8g2mOxcmDPzHSlcE9+uIIdNdPCUWusrt81PAyIjTlUX
+xo2R3G3LIVA4lfOiUSdQB2RYPmQHAXW/Tul5aBvXk11jsl0BN1Hbk2qO4641Puej
+LLzcEjPu0384yupX0hSL
+=/+fm
+-----END PGP SIGNATURE-----
+
+--8GpibOaaTibBMecb--
