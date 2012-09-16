@@ -1,111 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:50224 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986Ab2ILFNn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2012 01:13:43 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:51551 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756Ab2IPQtp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 12:49:45 -0400
 MIME-Version: 1.0
-In-Reply-To: <201209120058.16701.rjw@sisk.pl>
-References: <201209112255.10486.rjw@sisk.pl>
-	<Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
-	<CAPM=9tzp8MnoGttxB=WrOZ8nMAESJn_0GAHT84PdmSgri==aCA@mail.gmail.com>
-	<201209120058.16701.rjw@sisk.pl>
-Date: Wed, 12 Sep 2012 15:13:40 +1000
-Message-ID: <CAPM=9twQJSCX64kYsAikteZoJOH9m8e6AWuj-e_Ouyk3HmyOuQ@mail.gmail.com>
-Subject: Re: runtime PM and special power switches
-From: Dave Airlie <airlied@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	LKML <linux-kernel@vger.kernel.org>,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
+In-Reply-To: <1347804577-23015-1-git-send-email-jiang.liu@huawei.com>
+References: <CAE9FiQWBYmRj5--pg8eAwH_RKZsCWo+CVGN_KpeGXeE_3cSq9g@mail.gmail.com>
+	<1347804577-23015-1-git-send-email-jiang.liu@huawei.com>
+Date: Sun, 16 Sep 2012 09:49:43 -0700
+Message-ID: <CAE9FiQUC9OyPQYDTC1xR45qd1an63H13LBKGaPueqihwq=yhSw@mail.gmail.com>
+Subject: Re: [PATCH v3] ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2012 at 8:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, September 12, 2012, Dave Airlie wrote:
->> On Wed, Sep 12, 2012 at 7:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
->> > On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
->> >
->> >> Hi,
->> >>
->> >> On Tuesday, September 11, 2012, Dave Airlie wrote:
->> >> > Hi Rafael,
->> >> >
->> >> > I've been investigating runtime PM support for some use-cases on GPUs.
->> >> >
->> >> > In some laptops we have a secondary GPU (optimus) that can be powered
->> >> > up for certain 3D tasks and then turned off when finished with. Now I
->> >> > did an initial pass on supporting it without using the kernel runtime
->> >> > PM stuff, but Alan said I should take a look so here I am.
->> >>
->> >> Alan Stern or Alan Cox? :-)
->> >>
->> >> > While I've started to get a handle on things, we have a bit of an
->> >> > extra that I'm not sure we cater for.
->> >> >
->> >> > Currently we get called from the PCI layer which after we are finished
->> >> > with our runtime suspend callback, will go put the device into the
->> >> > correct state etc, however on these optimus/powerxpress laptops we
->> >> > have a separate ACPI or platform driver controlled power switch that
->> >> > we need to call once the PCI layer is finished the job. This switch
->> >> > effectively turns the power to the card completely off leaving it
->> >> > drawing no power.
->> >> >
->> >> > No we can't hit the switch from the driver callback as the PCI layer
->> >> > will get lost, so I'm wondering how you'd envisage we could plug this
->> >> > in.
->> >>
->> >> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
->> >> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
->> >> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
->> >> so perhaps it's not even too dangerous.
->> >
->> > This sounds more like a job for a power domain.  Unless the power
->> > switch is already in the device hierarchy as a parent to the PCI
->> > device.
->>
->> I'll have to investigate power domains then,
->>
->> The switch is hidden in many different places, one some laptops its in
->> a ACPI _DSM on one GPU, on others its in an ACPI _DSM on the other
->> one, in some its in a different ACPI _DSM, then we have it in the ACPI
->> ATPX method on others, and finally Apple have it in a piece of hw that
->> isn't just on the LPC bus or somewhere like that.
->>
->> Currently we just hide it all inside vga_switcheroo and I'd just need
->> an interface to call that once the layers have stopped poking
->> registers in PCI config space, if we could fix PCI runtime suspend so
->> the driver was the last to g 2et called then that would also not suck.
+On Sun, Sep 16, 2012 at 7:09 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Now ACPI devices are created before/destroyed after corresponding PCI
+> devices, and acpi_platform_notify/acpi_platform_notify_remove will
+> update PCI<->ACPI binding relationship when creating/destroying PCI
+> devices, there's no need to invoke bind/unbind callbacks from ACPI
+> device probe/destroy routines anymore. So remove bind/unbind callbacks
+> from acpi_device_ops.
 >
-> Well, as I said, we may try to change the PCI layer so that it doesn't
-> access the device any more in pci_pm_runtime_suspend() if it sees that
-> pci_dev->state_saved has been set by the driver's callback.  Then,
-> your drivers would only need to set pci_dev->state_saved in their
-> .runtime_suspend() callbacks.
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+> V2->V3:
+>         Simplify implementation according to Yinghai's suggestion.
+> ---
+>  drivers/acpi/glue.c         |   15 ++++---
+>  drivers/acpi/internal.h     |    3 +-
+>  drivers/acpi/pci_bind.c     |  102 ++++++++++---------------------------------
+>  drivers/acpi/pci_root.c     |    9 ----
+>  drivers/acpi/scan.c         |   21 +--------
+>  include/acpi/acpi_bus.h     |    4 --
+>  include/acpi/acpi_drivers.h |    1 -
+>  7 files changed, 36 insertions(+), 119 deletions(-)
 >
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index 4904700..9779fb7 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+> @@ -160,10 +160,13 @@ static int acpi_bind_one(struct device *dev, acpi_handle handle)
+>         }
+>         dev->archdata.acpi_handle = handle;
+>
+> -       acpi_pci_bind_notify(dev->archdata.acpi_handle, dev, true);
+> -
+>         status = acpi_bus_get_device(handle, &acpi_dev);
+> -       if (!ACPI_FAILURE(status)) {
+> +       if (!ACPI_FAILURE(status))
+> +               acpi_dev = NULL;
+> +
+> +       acpi_pci_bind_notify(dev->archdata.acpi_handle, acpi_dev, dev, true);
 
-Actually it appears I'll need this, I'd forgotten things are a bit
-messier than I thought
+It seems you can do
+    acpi_pci_bind_notify(acpi_dev, dev, true);
+instead.
 
-So there are two variants on the _DSM for nvidia dual-gpu machines,
-the older pre-optimus _DSM requires
-an explicit power off call post-D3, however for optimus _DSM the D3
-transition will flick the power switch, however
-the pci code then goes and seem to turn the device back to D0 for some
-reason. So yes after save state,
-I'd really appreciate if it the pci layer would stop poking my device.
+aka:
+Do you have test case acpi_dev is not created before pci device?
 
-> Alternatively, which may be less hackish but more work, you can set the
-> pm_domain pointer in the device structure to a struct dev_pm_domain whose
-> ops will just call the corresponding bus type's ops except for
-> .runtime_suspend() that will execute the additional ACPI stuff after calling
-> the bus type's method.
+Thanks
 
-I've mostly written this, and it seems to work, I've jsut set a
-pm_domain in the vga switcheroo code that copies the dev->bus->pm
-into a private structure. I'll need this for the old nvidia and radeon
-poweroffs.
-
-Dave.
+Yinghai
