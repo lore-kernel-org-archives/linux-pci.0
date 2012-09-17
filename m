@@ -1,68 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:46066 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754975Ab2IQXZz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 19:25:55 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXWxgBQDPisGdVKb_r3hy6pA7LpamV-jW5OX0SqDyrCCw@mail.gmail.com>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-	<1348733519-24684-4-git-send-email-yinghai@kernel.org>
-	<CAErSpo63QeF-Wd8nW-K_Qfp5rjMd0mhWADGW-fZiw4Up5-0ezA@mail.gmail.com>
-	<CAE9FiQXDw+D8FeMiojmcX0k_g939zkRM3XmJP08yJJG6o7_Cyg@mail.gmail.com>
-	<CAE9FiQXWxgBQDPisGdVKb_r3hy6pA7LpamV-jW5OX0SqDyrCCw@mail.gmail.com>
-Date: Fri, 28 Sep 2012 21:13:42 -0700
-Message-ID: <CAE9FiQWvozrogC2L5kXpYY2Lp3jmx65CVn3yCs8MAJd9GoGV2A@mail.gmail.com>
-Subject: Re: [PATCH 3/8] PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
+In-Reply-To: <CAErSpo5bg2miZ4qwLiXewDuURX5NhD5wNmPdfpKTtGF0z9OuzA@mail.gmail.com>
+References: <1346622458-30595-2-git-send-email-yinghai@kernel.org>
+	<1346942071-15188-1-git-send-email-prarit@redhat.com>
+	<CAE9FiQUwFbeRG9Rqj0HC-Nu-HPwe0GJt22HSnaTHu5A0FV7-9Q@mail.gmail.com>
+	<CAErSpo5bg2miZ4qwLiXewDuURX5NhD5wNmPdfpKTtGF0z9OuzA@mail.gmail.com>
+Date: Mon, 17 Sep 2012 16:25:54 -0700
+Message-ID: <CAE9FiQXW4GcKwt0d2S1qGLCQk86X0j7_xSTrGD7Sy5h3-rUWHw@mail.gmail.com>
+Subject: Re: [PATCH part1 1/4] PCI, pciehp: Turn on link again after power off
+ the slot
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	stable@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 6:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Sep 28, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>>> So could use assign_unassigned_bus_res pci root bus add
->>>
->>> After your series, acpi_pci_root_start() looks like this:
->>>
->>>     pci_assign_unassigned_bus_resources
->>>     list_for_each_entry(driver, &acpi_pci_drivers, node)
->>>         driver->add(root);
->>>     pci_enable_bridges(root->bus);
->>>
->>> so apparently it's important that the driver->add() methods be run
->>> *before* the bridges are enabled.  Why?
->>
+On Mon, Sep 17, 2012 at 4:06 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >
-> During rebase, the changelog get lost.
+> So now we have two situations that should be the same, but they're not:
 >
->  pci_enable_bridges
->     ==> pci_enable_device
->         ==> ...
->            ===> pcibios_enable_device
->                ===> pcibios_enable_irq
+>   1) Slot is empty at boot, and BIOS leaves link disabled.  Link
+> remains disabled until pciehp_power_on_slot() enables it.
+>   2) We hot-remove a card, so the slot is now empty, but
+> pciehp_power_off_slot() leaves the link enabled.  Link stays *enabled*
+> until another disable/enable sequence in pciehp_power_off_slot().
 >
-> and one of driver in acpi_pci_drivers, is ioapic drivers and it will
-> enable ioapic there.
+> Why should these be different?  In both cases the slot is empty, but
+> in case 1 the link is disabled, while in case 2 it is enabled.  If we
+> can detect a hot-add in case 1, why can't we detect it after a
+> hot-remove even if the link is disabled?
+
+silicon problem. assume that case is not well tested.
+
+we filed the bug to vendor, and they can not explain that so far.
+system hotplug fpga report correct present status to the chipset.
+looks like the silicon get confused somehow.
+
 >
-> So we need to enable bridges that later.
+> Or maybe case 1 is broken on this box, and hot-add to that slot
+> doesn't work correctly either?
 
-old changelog before rebase:
+works. with and without this patch.
 
------
-Subject: [PATCH] PCI, x86: Move pci_enable_bridges() down
-
-After we get hot-added ioapic registered.
-pci_enable_bridges will try to enable ioapic irq for pci bridge.
-
-So need to move it down.
-
-Or We can move out pcibios_enable_irq() out of pci_enable_device()
-and call pcibios_enable_irq in pci_bus_add_devices ?
-also will need to move ...
-        pcibios_resource_survey_bus(root->bus);
-        pci_assign_unassigned_bus_resources(root->bus);
-to the start add ....
-----
+Yinghai
