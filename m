@@ -1,168 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 3 Sep 2012 17:06:02 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH v2 4/6] ACPI, PCI: add acpi_pci_roots protection
-Message-Id: <20120903170602.375b00cc.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:59798 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932093Ab2IQPve (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 11:51:34 -0400
+Message-ID: <505746FA.5030904@gmail.com>
+Date: Mon, 17 Sep 2012 23:51:22 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v1 06/22] PCI: use a global lock to serialize PCI
+ root bridge hotplug operations
+References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-7-git-send-email-jiang.liu@huawei.com> <CAErSpo5ixjvv3r9wzCXFrDZ790u9_K5KCuQ7GQO3fFuFuiVJZg@mail.gmail.com> <5050AD65.1000801@gmail.com> <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
+In-Reply-To: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use mutex and RCU to protect global acpi_pci_roots list against
-PCI host bridge hotplug operations.
-
-RCU is used to avoid possible deadlock in function acpi_pci_find_root()
-and acpi_get_pci_rootbridge_handle(). A possible call graph:
-acpi_pci_register_driver()
-	mutex_lock(&acpi_pci_root_lock)
-		driver->add(root)
-			......
-				acpi_pci_find_root()
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
----
- drivers/acpi/pci_root.c |   50 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 17 deletions(-)
-
-Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0903/drivers/acpi/pci_root.c
-@@ -28,6 +28,7 @@
- #include <linux/init.h>
- #include <linux/types.h>
- #include <linux/mutex.h>
-+#include <linux/rculist.h>
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
-@@ -86,7 +87,7 @@ int acpi_pci_register_driver(struct acpi
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_add_tail(&driver->node, &acpi_pci_drivers);
- 	if (driver->add)
--		list_for_each_entry(root, &acpi_pci_roots, node) {
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node) {
- 			driver->add(root->device->handle);
- 			n++;
- 		}
-@@ -103,7 +104,7 @@ void acpi_pci_unregister_driver(struct a
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_del(&driver->node);
- 	if (driver->remove)
--		list_for_each_entry(root, &acpi_pci_roots, node)
-+		list_for_each_entry_rcu(root, &acpi_pci_roots, node)
- 			driver->remove(root->device->handle);
- 	mutex_unlock(&acpi_pci_root_lock);
- }
-@@ -112,14 +113,19 @@ EXPORT_SYMBOL(acpi_pci_unregister_driver
- acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
- {
- 	struct acpi_pci_root *root;
-+	struct acpi_handle *handle = NULL;
- 	
--	list_for_each_entry(root, &acpi_pci_roots, node)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
- 		if ((root->segment == (u16) seg) &&
--		    (root->secondary.start == (u16) bus))
--			return root->device->handle;
--	return NULL;		
--}
-+		    (root->secondary.start == (u16) bus)) {
-+			handle = root->device->handle;
-+			break;
-+		}
-+	rcu_read_unlock();
- 
-+	return handle;
-+}
- EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
- 
- /**
-@@ -266,10 +272,14 @@ struct acpi_pci_root *acpi_pci_find_root
- {
- 	struct acpi_pci_root *root;
- 
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		if (root->device->handle == handle)
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(root, &acpi_pci_roots, node)
-+		if (root->device->handle == handle) {
-+			rcu_read_unlock();
- 			return root;
--	}
-+		}
-+	rcu_read_unlock();
-+
- 	return NULL;
- }
- EXPORT_SYMBOL_GPL(acpi_pci_find_root);
-@@ -506,8 +516,9 @@ static int __devinit acpi_pci_root_add(s
- 	 * TBD: Need PCI interface for enumeration/configuration of roots.
- 	 */
- 
--	/* TBD: Locking */
--	list_add_tail(&root->node, &acpi_pci_roots);
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_add_tail_rcu(&root->node, &acpi_pci_roots);
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
-@@ -526,7 +537,7 @@ static int __devinit acpi_pci_root_add(s
- 			    "Bus %04x:%02x not present in PCI namespace\n",
- 			    root->segment, (unsigned int)root->secondary.start);
- 		result = -ENODEV;
--		goto end;
-+		goto out_del_root;
- 	}
- 
- 	/*
-@@ -536,7 +547,7 @@ static int __devinit acpi_pci_root_add(s
- 	 */
- 	result = acpi_pci_bind_root(device);
- 	if (result)
--		goto end;
-+		goto out_del_root;
- 
- 	/*
- 	 * PCI Routing Table
-@@ -614,9 +625,12 @@ static int __devinit acpi_pci_root_add(s
- 
- 	return 0;
- 
-+out_del_root:
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
- end:
--	if (!list_empty(&root->node))
--		list_del(&root->node);
- 	kfree(root);
- 	return result;
- }
-@@ -646,11 +660,13 @@ static int acpi_pci_root_remove(struct a
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->remove)
- 			driver->remove(root->device->handle);
--	mutex_unlock(&acpi_pci_root_lock);
- 
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
-+	list_del_rcu(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+	synchronize_rcu();
- 	kfree(root);
- 	return 0;
- }
-
+>>> I'm not sure why you didn't add a pci_host_bridge_hotplug_lock() in
+>>> the sba_init() path, since it looks similar to the drm_open_helper()
+>>> path above.  But in any case, I think that would be the wrong thing to
+>>> do because it would fix the superficial problem while leaving the
+>>> deeper problem of host bridge hot-add not setting the iommu pointer.
+> 
+>> sba_init is called during system initialization stages through subsys_initcall,
+>> so no extra protection for it.
+> 
+> OK, I see your reasoning.  But I don't agree :)  All the users of an
+> interface should use the same locking scheme, even if they're at
+> boot-time where we "know" we don't need it.  It's too hard to analyze
+> differences, and code gets copied from one place to somewhere else
+> where it might not be appropriate.
+Hi Bjorn,
+	"All the users of an interface should use the same locking scheme", a really
+good design pattern to follow. It's so easy for everybody to remove the __init
+modifier without noticing the design limitation.
+	--Gerry
