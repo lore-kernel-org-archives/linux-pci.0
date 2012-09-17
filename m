@@ -1,37 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61814 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137Ab2IGWpD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 18:45:03 -0400
-Message-ID: <504A78E9.4030005@lwfinger.net>
-Date: Fri, 07 Sep 2012 17:44:57 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:48522 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932584Ab2IQX4d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 19:56:33 -0400
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo7czA3C_yQcX_ntCMGEYLUHdbJysNFwTWY=QZ=bD9OpmA@mail.gmail.com>
+References: <1346622458-30595-2-git-send-email-yinghai@kernel.org>
+	<1346942071-15188-1-git-send-email-prarit@redhat.com>
+	<CAE9FiQUwFbeRG9Rqj0HC-Nu-HPwe0GJt22HSnaTHu5A0FV7-9Q@mail.gmail.com>
+	<CAErSpo5bg2miZ4qwLiXewDuURX5NhD5wNmPdfpKTtGF0z9OuzA@mail.gmail.com>
+	<CAE9FiQXW4GcKwt0d2S1qGLCQk86X0j7_xSTrGD7Sy5h3-rUWHw@mail.gmail.com>
+	<CAErSpo7czA3C_yQcX_ntCMGEYLUHdbJysNFwTWY=QZ=bD9OpmA@mail.gmail.com>
+Date: Mon, 17 Sep 2012 16:56:31 -0700
+Message-ID: <CAE9FiQW5QsoJbCSxJsEJu+jWxgMiY8TYsxZxhozq6M3h2vWpzw@mail.gmail.com>
+Subject: Re: [PATCH part1 1/4] PCI, pciehp: Turn on link again after power off
+ the slot
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	=?UTF-8?B?5p2O5pyd5piO?= <chaoming_li@realsil.com.cn>
-Subject: Question about failure in PCI power-state change
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Sep 17, 2012 at 4:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> This patch is just black magic then.  I don't want to intentionally
+> treat a slot that's empty at boot differently than one that is empty
+> after a hot-remove.
 
-On occasion when I unload and reload driver rtl8192ce, I get the message
+sure. Please drop this one.
 
-"Refused to change power state, currently in D3"
+Thanks
 
-I added additional info to the printk and discovered that it was trying to 
-change to state D0. The problem seems to occur when I have made a connection, 
-unloaded the driver, and reloaded it. If I do not make a connection before 
-unloading, then the problem is a lot less likely.
-
-This is with kernel 3.6-rc4 from wireless-testing. A Google search shows that 
-the problem is usually due to suspend/resume difficulties, but this machine has 
-not been suspended.
-
-I would appreciate any help that you might give in solving this issue.
-
-Thanks,
-
-Larry
+Yinghai
