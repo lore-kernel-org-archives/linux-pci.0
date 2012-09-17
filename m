@@ -1,152 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:33667 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932093Ab2IQPzp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 11:55:45 -0400
+Received: by dady13 with SMTP id y13so976156dad.19
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 08:55:45 -0700 (PDT)
+Message-ID: <505747FA.6060708@gmail.com>
+Date: Mon, 17 Sep 2012 23:55:38 +0800
 From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 6/7] PCI/acpiphp: update ACPI hotplug slot information when PCI hotplug happens
-Date: Tue, 25 Sep 2012 22:29:29 +0800
-Message-Id: <1348583370-11006-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1348583370-11006-1-git-send-email-jiang.liu@huawei.com>
-References: <1348583370-11006-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+CC: Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 1/2] PCI: introduce root bridge hotplug safe interfaces
+ to walk root buses
+References: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com> <1347552010-6718-1-git-send-email-jiang.liu@huawei.com> <CAErSpo781H+k=veR19WoRvRRKe-pVpxYV4UK74iaQv36Ms3LrA@mail.gmail.com>
+In-Reply-To: <CAErSpo781H+k=veR19WoRvRRKe-pVpxYV4UK74iaQv36Ms3LrA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- From: Jiang Liu <jiang.liu@huawei.com>
+On 09/14/2012 01:40 AM, Bjorn Helgaas wrote:
+> On Thu, Sep 13, 2012 at 10:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> This patch introduces two root bridge hotplug safe interfaces to walk
+>> all root buses. Function pci_get_root_buses() takes a snopshot of the
+>> pci_root_buses list and holds a reference count to each root buses.
+>> pci_{get|put}_root_buses are used to replace hotplug unsafe interface
+>> pci_find_next_bus().
+> 
+> Honestly, I think the whole idea of walking these lists is wrong, and
+> adding safer interfaces just perpetuates the idea that it's OK to walk
+> them.
+> 
+> We should be doing the setup in the device add path instead.  I know
+> we have other issues with that in some cases, but I'd like to at least
+> move in that direction.
+> 
+> For example, sba_init() is a problem because it's an ACPI driver, and
+> we currently enumerate PCI devices before binding most ACPI drivers.
+> That's broken -- in that particular case, there's an HWP0001 IOMMU
+> device that encloses the PNP0A03 PCI host bridge.  Currently we bind
+> the PNP0A03 driver first, enumerate the PCI devices below it, then
+> bind the HWP0001 driver (sba_init).  Obviously that's backwards and
+> the HWP0001 driver should have been bound first, then the PNP0A03
+> driver.  But I don't think we're ready to make that shift yet (though
+> it'd be nice if somebody were working on it).
+I remember there were some discussions on the mail list above the divergence
+between boot and hotplug paths. But it's a little hard for me to work on
+this, I only have experience with PCI on IA64 and x86:(
 
-Currently the acpiphp driver fails to update hotplug slot information under
-several conditions, such as:
-1) The bridge device is removed through /sys/bus/pci/devices/.../remove
-2) The bridge device is added/removed by PCI hotplug driver other than the
-   acpiphp driver itself. For example, if an IO expansion box with ACPI
-   hotplug slots available is hot-added by the pciehp driver, all ACPI
-   hotplug slots won't be discovered by the acpiphp driver.
+> 
+> I wonder if we could add some kind of iterator that does the list
+> traversals in the PCI core and calls a callback for every device?  I
+> think that would work for sba_init(), but I don't know about the
+> others.  This would still be ugly in that the iterator would have to
+> hold some sort of hotplug lock while doing for_each_pci_dev() and the
+> callers, e.g., sba_init(), are not solving the problem for hot-added
+> devices, but at least the locking would be in the core and the drivers
+> would stop depending on the lists themselves.
+I will try the iterator first, hope we could find a solution here.
+--Gerry
 
-So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
-update ACPI hotplug slot information when PCI hotplug event happens.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   64 ++++++++++++++++++++++++++++++++++--
- 1 file changed, 61 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 7be4ca5..1fb0eb7 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -61,6 +61,7 @@ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
- static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
-+static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle);
- 
- /* callback routine to check for the existence of a pci dock device */
- static acpi_status
-@@ -382,7 +383,7 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
- 
- 
- /* allocate and initialize host bridge data structure */
--static void add_host_bridge(acpi_handle *handle)
-+static void add_host_bridge(acpi_handle handle)
- {
- 	struct acpiphp_bridge *bridge;
- 	struct acpi_pci_root *root = acpi_pci_find_root(handle);
-@@ -399,12 +400,14 @@ static void add_host_bridge(acpi_handle *handle)
- 	init_bridge_misc(bridge);
- }
- 
--
- /* allocate and initialize PCI-to-PCI bridge data structure */
--static void add_p2p_bridge(acpi_handle *handle)
-+static void add_p2p_bridge(acpi_handle handle)
- {
- 	struct acpiphp_bridge *bridge;
- 
-+	if (acpiphp_handle_to_bridge(handle))
-+		return;
-+
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
- 	if (bridge == NULL) {
- 		err("out of memory\n");
-@@ -1405,6 +1408,58 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	return AE_OK ;
- }
- 
-+static void acpiphp_hp_notify_add(struct pci_dev *dev)
-+{
-+	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->dev);
-+
-+	if (!dev->subordinate || !handle)
-+		return;
-+
-+	/* check if this bridge has ejectable slots */
-+	if (detect_ejectable_slots(handle) > 0) {
-+		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
-+		add_p2p_bridge(handle);
-+	}
-+}
-+
-+static void acpiphp_hp_notify_del(struct pci_dev *dev)
-+{
-+	struct acpiphp_bridge *bridge, *tmp;
-+	struct pci_bus *bus = dev->subordinate;
-+
-+	if (!bus)
-+		return;
-+
-+	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
-+		if (bridge->pci_bus == bus) {
-+			cleanup_bridge(bridge);
-+			break;
-+		}
-+}
-+
-+static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
-+				 unsigned long event, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (event) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		acpiphp_hp_notify_add(to_pci_dev(dev));
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		acpiphp_hp_notify_del(to_pci_dev(dev));
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block acpi_pci_hp_notifier = {
-+	.notifier_call = &acpi_pci_hp_notify_fn,
-+};
-+
- static struct acpi_pci_driver acpi_pci_hp_driver = {
- 	.add =		add_bridge,
- 	.remove =	remove_bridge,
-@@ -1425,6 +1480,8 @@ int __init acpiphp_glue_init(void)
- 	else
- 		acpi_pci_register_driver(&acpi_pci_hp_driver);
- 
-+	bus_register_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
-+
- 	return 0;
- }
- 
-@@ -1436,6 +1493,7 @@ int __init acpiphp_glue_init(void)
-  */
- void  acpiphp_glue_exit(void)
- {
-+	bus_unregister_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
--- 
-1.7.9.5
+> 
 
