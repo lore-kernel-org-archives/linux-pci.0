@@ -1,48 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part3 00/11] PCI, x86: pci root bus hotplug support - part3
-Date: Sun,  2 Sep 2012 14:52:10 -0700
-Message-Id: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: [RFC 2/3] PCI/PM: Make PCI devices notified when its power resource turned on
+Date: Mon, 17 Sep 2012 16:54:35 +0800
+Message-Id: <1347872076-5260-3-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci bus rescan related changes.
-So later root bus hotadd path could use pci_assign_unassigned_resource for root bus.
+A set of power resources may be shared by multiple devices.  When all
+devices share one set of power resources is put into D3_COLD state,
+the power resources will be turned off.  When one of the device is
+waked, the power resource will be turned on and all devices share it
+will be powered on to D0uninitialized state.  These devices should be
+resumed, so that they can get opportunity to go to low power state
+later.
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug-part3
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/acpi/pci_bind.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Yinghai Lu (11):
-  PCI: Separate out pci_assign_unassigned_bus_resources()
-  PCI: Move back pci_rescan_bus() to probe.c
-  PCI: pci_bus_size_bridges() should not size own bridge
-  PCI: Use __pci_bus_size_bridges() directly in pci_assign_unassigned_bus_resources()
-  PCI, sysfs: Use device_type and attr_groups with pci dev
-  PCI, sysfs: Create rescan_bridge under /sys/.../pci/devices/... for pci bridges
-  PCI: Add pci_bus_add_single_device()
-  PCI: Make pci_rescan_bus_bridge_resize() use pci_scan_bridge
-  PCI: Clean up rescan_bus_bridge_resize()
-  PCI: Rescan bus or bridge using callback method too
-  PCI, sysfs: Clean up rescan/remove with scheule_callback
-
- Documentation/ABI/testing/sysfs-bus-pci |   10 +++
- drivers/pci/bus.c                       |   39 ++++++++++++
- drivers/pci/hotplug/acpiphp_glue.c      |    3 +-
- drivers/pci/pci-sysfs.c                 |  101 ++++++++++++++++++++++++++----
- drivers/pci/pci.h                       |    1 +
- drivers/pci/probe.c                     |   30 ++++++++-
- drivers/pci/setup-bus.c                 |   50 +++++----------
- include/linux/pci.h                     |    3 +
- 8 files changed, 185 insertions(+), 52 deletions(-)
-
--- 
-1.7.7
-
+--- a/drivers/acpi/pci_bind.c
++++ b/drivers/acpi/pci_bind.c
+@@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
+ 
+ 	device_set_run_wake(&dev->dev, false);
+ 	pci_acpi_remove_pm_notifier(device);
++	acpi_power_resource_unregister_device(dev, device->handle);
+ 
+ 	if (!dev->subordinate)
+ 		goto out;
+@@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
+ 		return 0;
+ 
+ 	pci_acpi_add_pm_notifier(device, dev);
++	acpi_power_resource_register_device(dev, device->handle);
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(&dev->dev, true);
+ 
