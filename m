@@ -1,84 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:52917 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186Ab2IOX1Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 19:27:24 -0400
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:46433 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932417Ab2IQTfJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 15:35:09 -0400
+Received: by lagy9 with SMTP id y9so4436064lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 12:35:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1347678312-11124-6-git-send-email-jiang.liu@huawei.com>
-References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
-	<1347678312-11124-6-git-send-email-jiang.liu@huawei.com>
-Date: Sat, 15 Sep 2012 16:27:22 -0700
-Message-ID: <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
-Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
-From: Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Sep 2012 13:34:46 -0600
+Message-ID: <CAErSpo6qSZ3Kgr7rDZt4wMW5nPiGhJBiQyaJPiA7+BY=ttyJLQ@mail.gmail.com>
+Subject: Re: [PATCH 0/5] Simplify code by using hotplug safe pci_get_domain_bus_and_slot()
 To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
+Cc: Jiang Liu <jiang.liu@huawei.com>, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
 	Yijing Wang <wangyijing@huawei.com>,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
+	Dave Airlie <airlied@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
->  From: Jiang Liu <jiang.liu@huawei.com>
+On Tue, Aug 28, 2012 at 9:43 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Following code has a race window between pci_find_bus() and pci_get_slot()
+> if PCI hotplug operation happens between them which removes the pci_bus.
+> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+> which also reduces code complexity.
 >
-> Now ACPI devices are created before/destroyed after corresponding PCI
-> devices, and acpi_platform_notify/acpi_platform_notify_remove will
-> update PCI<->ACPI binding relationship when creating/destroying PCI
-> devices, there's no need to invoke bind/unbind callbacks from ACPI
-> device probe/destroy routines anymore. So remove bind/unbind callbacks
-> from acpi_device_ops.
+> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
 >
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/acpi/pci_bind.c     |  100 +++++++++----------------------------------
->  drivers/acpi/pci_root.c     |    9 ----
->  drivers/acpi/scan.c         |   21 +--------
->  include/acpi/acpi_bus.h     |    4 --
->  include/acpi/acpi_drivers.h |    1 -
->  5 files changed, 23 insertions(+), 112 deletions(-)
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index d1ecca2..f31cb2f 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1232,17 +1232,8 @@ static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
->         dev->removal_type = ACPI_BUS_REMOVAL_EJECT;
->         device_release_driver(&dev->dev);
+> Jiang Liu (5):
+>   PCI/IA64: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+>   PCI/vga: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+>   PCI/cpcihp: simplify code by hotplug safe
+>     pci_get_domain_bus_and_slot()
+>   PCI/IOV: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+>   PCI/xen-pcifront: simplify code by hotplug safe
+>     pci_get_domain_bus_and_slot()
+
+I applied these to my "next" branch, including the vgaarb and xen bits.  Thanks!
+
+>  arch/ia64/sn/kernel/io_common.c      |    4 +---
+>  drivers/gpu/vga/vgaarb.c             |   15 +++------------
+>  drivers/pci/hotplug/cpcihp_generic.c |    8 ++------
+>  drivers/pci/iov.c                    |    8 ++------
+>  drivers/pci/xen-pcifront.c           |   10 ++--------
+>  5 files changed, 10 insertions(+), 35 deletions(-)
 >
-> -       if (!rmdevice)
-> -               return 0;
-> -
-> -       /*
-> -        * unbind _ADR-Based Devices when hot removal
-> -        */
-> -       if (dev->flags.bus_address) {
-> -               if ((dev->parent) && (dev->parent->ops.unbind))
-> -                       dev->parent->ops.unbind(dev);
-> -       }
-> -       acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
-> +       if (rmdevice)
-> +               acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
+> --
+> 1.7.9.5
 >
->         return 0;
->  }
-
-for pci root bus, acpi_bus_trim() is used to remove acpi_device.
-
-and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
-iommu driver then remove pci devices.
-
-if call back is removed there, then could some functions in
-acpi_pci_unbind() will be skipped.
-
-I really do not want to add pci_stop_bus_devices() in
-pci_root_hp.c::handle_root_bridge_removal before
-calling acpi_bus_trim...
-
-Thanks
-
-Yinghai
