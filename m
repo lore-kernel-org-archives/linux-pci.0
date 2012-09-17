@@ -1,54 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:53388 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887Ab2IQLe3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 07:34:29 -0400
-Received: by dady13 with SMTP id y13so833609dad.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 04:34:29 -0700 (PDT)
-Date: Mon, 17 Sep 2012 04:34:23 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Keep pci_fixup_irqs() around after init
-Message-ID: <20120917113423.GA28759@kroah.com>
-References: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+	<1347678312-11124-6-git-send-email-jiang.liu@huawei.com>
+	<CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
+Date: Sun, 16 Sep 2012 20:03:48 -0700
+Message-ID: <CAE9FiQX2hgxQo3GC3_0h5D5uo9coRZqcpPCKGtzF7jYbUfvxUw@mail.gmail.com>
+Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: multipart/mixed; boundary=bcaec555517ac78a2704c9dd0559
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2012 at 01:22:53PM +0200, Thierry Reding wrote:
-> Remove the __init annotations in order to keep pci_fixup_irqs() around
-> after init (e.g. for hotplug). This requires the same change for the
-> implementation of pcibios_update_irq() on all architectures. While at
-> it, all __devinit annotations are removed as well, since they will be
-> useless now that HOTPLUG is always on.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> ---
-> Changes in v2:
-> - remove __init and __devinit annotations altogether
+--bcaec555517ac78a2704c9dd0559
+Content-Type: text/plain; charset=ISO-8859-1
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+On Sat, Sep 15, 2012 at 4:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>>  From: Jiang Liu <jiang.liu@huawei.com>
+>>
+>> Now ACPI devices are created before/destroyed after corresponding PCI
+>> devices, and acpi_platform_notify/acpi_platform_notify_remove will
+>> update PCI<->ACPI binding relationship when creating/destroying PCI
+>> devices, there's no need to invoke bind/unbind callbacks from ACPI
+>> device probe/destroy routines anymore. So remove bind/unbind callbacks
+>> from acpi_device_ops.
+> for pci root bus, acpi_bus_trim() is used to remove acpi_device.
+>
+> and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
+> iommu driver then remove pci devices.
+>
+> if call back is removed there, then could some functions in
+> acpi_pci_unbind() will be skipped.
+>
+> I really do not want to add pci_stop_bus_devices() in
+> pci_root_hp.c::handle_root_bridge_removal before
+> calling acpi_bus_trim...
+
+FYI, I solved the problem.  will call apci_bus_remove() two times. it
+will make sure pci devices
+get removed at first before acpi devices...
+
+Thanks
+
+Yinghai
+
+--bcaec555517ac78a2704c9dd0559
+Content-Type: application/octet-stream; name="pci_root_hp_1.patch"
+Content-Disposition: attachment; filename="pci_root_hp_1.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h76zoini0
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIEFDUEk6IEFkZCBwY2lfcm9vdF9ocCBob3QgcmVtb3ZhbCBu
+b3RpZmljYXRpb24gc3VwcG9ydC4KCkFkZCBtaXNzaW5nIGhvdF9yZW1vdmUgc3VwcG9ydCBmb3Ig
+cm9vdCBkZXZpY2UuCgpIb3cgdG8gdXNlIGl0PwpGaW5kIG91dCByb290IGJ1cyBudW1iZXIgdG8g
+YWNwaSByb290IG5hbWUgbWFwcGluZyBmcm9tIGRtZXNnIG9yIC9zeXMKCiAgZWNobyAiXF9TQi5Q
+Q0lCIDMiID4gL3N5cy9rZXJuZWwvZGVidWcvYWNwaS9zY2lfbm90aWZ5CnRvIHJlbW92ZSByb290
+IGJ1cwoKLXYyOiBzZXBhcmF0ZSBzdG9wIGFuZCByZW1vdmUsIHNvIGNvdWxkIHVzZSBhY3BpX3Bj
+aV9iaW5kX25vdGlmeSgpLi4uCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtl
+cm5lbC5vcmc+CkNjOiBMZW4gQnJvd24gPGxlbmJAa2VybmVsLm9yZz4KQ2M6IGxpbnV4LWFjcGlA
+dmdlci5rZXJuZWwub3JnCgotLS0KIGRyaXZlcnMvYWNwaS9wY2lfcm9vdF9ocC5jIHwgICA2NyAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIGRyaXZlcnMvYWNw
+aS9zY2FuLmMgICAgICAgIHwgICAgNSAtLS0KIDIgZmlsZXMgY2hhbmdlZCwgNjggaW5zZXJ0aW9u
+cygrKSwgNCBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9hY3BpL3BjaV9y
+b290X2hwLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9hY3BpL3BjaV9y
+b290X2hwLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3RfaHAuYwpAQCAtNzMs
+NiArNzMsMTIgQEAgc3RhdGljIHZvaWQgYWRkX2FjcGlfcm9vdF9icmlkZ2UoYWNwaV9oYQogCWxp
+c3RfYWRkKCZicmlkZ2UtPmxpc3QsICZhY3BpX3Jvb3RfYnJpZGdlX2xpc3QpOwogfQogCitzdGF0
+aWMgdm9pZCByZW1vdmVfYWNwaV9yb290X2JyaWRnZShzdHJ1Y3QgYWNwaV9yb290X2JyaWRnZSAq
+YnJpZGdlKQoreworCWxpc3RfZGVsKCZicmlkZ2UtPmxpc3QpOworCWtmcmVlKGJyaWRnZSk7Cit9
+CisKIHN0cnVjdCBhY3BpX3Jvb3RfaHBfd29yayB7CiAJc3RydWN0IHdvcmtfc3RydWN0IHdvcms7
+CiAJYWNwaV9oYW5kbGUgaGFuZGxlOwpAQCAtMTQzLDYgKzE0OSw2MSBAQCBzdGF0aWMgdm9pZCBo
+YW5kbGVfcm9vdF9icmlkZ2VfaW5zZXJ0aW9uCiAJCXByaW50ayhLRVJOX0VSUiAiY2Fubm90IHN0
+YXJ0IGJyaWRnZVxuIik7CiB9CiAKK3N0YXRpYyBpbnQgYWNwaV9yb290X2V2YWx1YXRlX29iamVj
+dChhY3BpX2hhbmRsZSBoYW5kbGUsIGNoYXIgKmNtZCwgaW50IHZhbCkKK3sKKwlhY3BpX3N0YXR1
+cyBzdGF0dXM7CisJc3RydWN0IGFjcGlfb2JqZWN0X2xpc3QgYXJnX2xpc3Q7CisJdW5pb24gYWNw
+aV9vYmplY3QgYXJnOworCisJYXJnX2xpc3QuY291bnQgPSAxOworCWFyZ19saXN0LnBvaW50ZXIg
+PSAmYXJnOworCWFyZy50eXBlID0gQUNQSV9UWVBFX0lOVEVHRVI7CisJYXJnLmludGVnZXIudmFs
+dWUgPSB2YWw7CisKKwlzdGF0dXMgPSBhY3BpX2V2YWx1YXRlX29iamVjdChoYW5kbGUsIGNtZCwg
+JmFyZ19saXN0LCBOVUxMKTsKKwlpZiAoQUNQSV9GQUlMVVJFKHN0YXR1cykpIHsKKwkJcHJpbnRr
+KEtFUk5fV0FSTklORyAiJXM6ICVzIHRvICVkIGZhaWxlZFxuIiwKKwkJCQkgX19mdW5jX18sIGNt
+ZCwgdmFsKTsKKwkJcmV0dXJuIC0xOworCX0KKworCXJldHVybiAwOworfQorCitzdGF0aWMgdm9p
+ZCBoYW5kbGVfcm9vdF9icmlkZ2VfcmVtb3ZhbChhY3BpX2hhbmRsZSBoYW5kbGUsCisJCSBzdHJ1
+Y3QgYWNwaV9yb290X2JyaWRnZSAqYnJpZGdlKQoreworCXUzMiBmbGFncyA9IDA7CisJc3RydWN0
+IGFjcGlfZGV2aWNlICpkZXZpY2U7CisKKwlpZiAoYnJpZGdlKSB7CisJCWZsYWdzID0gYnJpZGdl
+LT5mbGFnczsKKwkJcmVtb3ZlX2FjcGlfcm9vdF9icmlkZ2UoYnJpZGdlKTsKKwl9CisKKwlpZiAo
+IWFjcGlfYnVzX2dldF9kZXZpY2UoaGFuZGxlLCAmZGV2aWNlKSkgeworCQlpbnQgcmV0X3ZhbDsK
+KworCQkvKiByZW1vdmUgcGNpIGRldmljZXMgYXQgZmlyc3QgKi8KKwkJcmV0X3ZhbCA9IGFjcGlf
+YnVzX3RyaW0oZGV2aWNlLCAwKTsKKwkJcHJpbnRrKEtFUk5fREVCVUcgImFjcGlfYnVzX3RyaW0g
+c3RvcCByZXR1cm4gJXhcbiIsIHJldF92YWwpOworCisJCS8qIHJlbW92ZSBhY3BpIGRldmljZXMg
+Ki8KKwkJcmV0X3ZhbCA9IGFjcGlfYnVzX3RyaW0oZGV2aWNlLCAxKTsKKwkJcHJpbnRrKEtFUk5f
+REVCVUcgImFjcGlfYnVzX3RyaW0gcmVtb3ZlIHJldHVybiAleFxuIiwgcmV0X3ZhbCk7CisJfQor
+CisJaWYgKGZsYWdzICYgUk9PVF9CUklER0VfSEFTX1BTMykgeworCQlhY3BpX3N0YXR1cyBzdGF0
+dXM7CisKKwkJc3RhdHVzID0gYWNwaV9ldmFsdWF0ZV9vYmplY3QoaGFuZGxlLCAiX1BTMyIsIE5V
+TEwsIE5VTEwpOworCQlpZiAoQUNQSV9GQUlMVVJFKHN0YXR1cykpCisJCQlwcmludGsoS0VSTl9X
+QVJOSU5HICIlczogX1BTMyBmYWlsZWRcbiIsIF9fZnVuY19fKTsKKwl9CisJaWYgKGZsYWdzICYg
+Uk9PVF9CUklER0VfSEFTX0VKMCkKKwkJYWNwaV9yb290X2V2YWx1YXRlX29iamVjdChoYW5kbGUs
+ICJfRUowIiwgMSk7Cit9CisKIHN0YXRpYyB2b2lkIF9oYW5kbGVfaG90cGx1Z19ldmVudF9yb290
+KHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykKIHsKIAlzdHJ1Y3QgYWNwaV9yb290X2JyaWRnZSAq
+YnJpZGdlOwpAQCAtMTgzLDYgKzI0NCwxMiBAQCBzdGF0aWMgdm9pZCBfaGFuZGxlX2hvdHBsdWdf
+ZXZlbnRfcm9vdChzCiAJCX0KIAkJYnJlYWs7CiAKKwljYXNlIEFDUElfTk9USUZZX0VKRUNUX1JF
+UVVFU1Q6CisJCS8qIHJlcXVlc3QgZGV2aWNlIGVqZWN0ICovCisJCXByaW50ayhLRVJOX0RFQlVH
+ICIlczogRGV2aWNlIGVqZWN0IG5vdGlmeSBvbiAlc1xuIiwgX19mdW5jX18sCisJCQkJIG9iam5h
+bWUpOworCQloYW5kbGVfcm9vdF9icmlkZ2VfcmVtb3ZhbChoYW5kbGUsIGJyaWRnZSk7CisJCWJy
+ZWFrOwogCWRlZmF1bHQ6CiAJCXByaW50ayhLRVJOX1dBUk5JTkcgIm5vdGlmeV9oYW5kbGVyOiB1
+bmtub3duIGV2ZW50IHR5cGUgMHgleCBmb3IgJXNcbiIsCiAJCQkJIHR5cGUsIG9iam5hbWUpOwpJ
+bmRleDogbGludXgtMi42L2RyaXZlcnMvYWNwaS9zY2FuLmMKPT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgt
+Mi42Lm9yaWcvZHJpdmVycy9hY3BpL3NjYW4uYworKysgbGludXgtMi42L2RyaXZlcnMvYWNwaS9z
+Y2FuLmMKQEAgLTE1MjIsMTAgKzE1MjIsNyBAQCBpbnQgYWNwaV9idXNfdHJpbShzdHJ1Y3QgYWNw
+aV9kZXZpY2UgKnN0CiAJCQljaGlsZCA9IHBhcmVudDsKIAkJCXBhcmVudCA9IHBhcmVudC0+cGFy
+ZW50OwogCi0JCQlpZiAobGV2ZWwgPT0gMCkKLQkJCQllcnIgPSBhY3BpX2J1c19yZW1vdmUoY2hp
+bGQsIHJtZGV2aWNlKTsKLQkJCWVsc2UKLQkJCQllcnIgPSBhY3BpX2J1c19yZW1vdmUoY2hpbGQs
+IDEpOworCQkJZXJyID0gYWNwaV9idXNfcmVtb3ZlKGNoaWxkLCBybWRldmljZSk7CiAKIAkJCWNv
+bnRpbnVlOwogCQl9Cg==
+--bcaec555517ac78a2704c9dd0559--
