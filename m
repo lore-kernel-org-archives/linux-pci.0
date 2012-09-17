@@ -1,88 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:43335 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756564Ab2IQObf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 10:31:35 -0400
+Message-ID: <5057343C.2010201@gmail.com>
+Date: Mon, 17 Sep 2012 22:31:24 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1348733519-24684-5-git-send-email-yinghai@kernel.org>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org> <1348733519-24684-5-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 28 Sep 2012 17:46:11 -0600
-Message-ID: <CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com>
-Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
- root bus
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from
+ acpi_device_ops
+References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com> <1347678312-11124-6-git-send-email-jiang.liu@huawei.com> <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
+In-Reply-To: <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> After we get hot-added ioapic registered.
-> pci_enable_bridges will try to enable ioapic irq for pci bridges.
+On 09/16/2012 07:27 AM, Yinghai Lu wrote:
+> On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>>  From: Jiang Liu <jiang.liu@huawei.com>
+>>
+>> Now ACPI devices are created before/destroyed after corresponding PCI
+>> devices, and acpi_platform_notify/acpi_platform_notify_remove will
+>> update PCI<->ACPI binding relationship when creating/destroying PCI
+>> devices, there's no need to invoke bind/unbind callbacks from ACPI
+>> device probe/destroy routines anymore. So remove bind/unbind callbacks
+>> from acpi_device_ops.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/acpi/pci_bind.c     |  100 +++++++++----------------------------------
+>>  drivers/acpi/pci_root.c     |    9 ----
+>>  drivers/acpi/scan.c         |   21 +--------
+>>  include/acpi/acpi_bus.h     |    4 --
+>>  include/acpi/acpi_drivers.h |    1 -
+>>  5 files changed, 23 insertions(+), 112 deletions(-)
+>> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+>> index d1ecca2..f31cb2f 100644
+>> --- a/drivers/acpi/scan.c
+>> +++ b/drivers/acpi/scan.c
+>> @@ -1232,17 +1232,8 @@ static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
+>>         dev->removal_type = ACPI_BUS_REMOVAL_EJECT;
+>>         device_release_driver(&dev->dev);
+>>
+>> -       if (!rmdevice)
+>> -               return 0;
+>> -
+>> -       /*
+>> -        * unbind _ADR-Based Devices when hot removal
+>> -        */
+>> -       if (dev->flags.bus_address) {
+>> -               if ((dev->parent) && (dev->parent->ops.unbind))
+>> -                       dev->parent->ops.unbind(dev);
+>> -       }
+>> -       acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
+>> +       if (rmdevice)
+>> +               acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
+>>
+>>         return 0;
+>>  }
+> 
+> for pci root bus, acpi_bus_trim() is used to remove acpi_device.
+> 
+> and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
+> iommu driver then remove pci devices.
+> 
+> if call back is removed there, then could some functions in
+> acpi_pci_unbind() will be skipped.
+> 
+> I really do not want to add pci_stop_bus_devices() in
+> pci_root_hp.c::handle_root_bridge_removal before
+> calling acpi_bus_trim...
+Hi Yinghai,
+	We are working on a ACPI based hotplug framework for CPU, memory and IOH.
+With our framework, the sequence to remove a IOH is:
+1) unbind all PCI device drivers for affected PCI devices.
+2) stop and remove all affected PCI devices.
+3) stop ACPI ioapic drivers(a new driver like PCI version).
+4) destroy all ACPI devices.
 
-What makes this specifically related to IOAPICs?
+--Gerry
+> 
+> Thanks
+> 
+> Yinghai
+> 
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/acpi/pci_root.c |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index bce469c..27adbfd 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
->         struct acpi_pci_root *root = acpi_driver_data(device);
->         struct acpi_pci_driver *driver;
->
-> +       if (system_state != SYSTEM_BOOTING)
-> +               pci_assign_unassigned_bus_resources(root->bus);
-> +
->         mutex_lock(&acpi_pci_root_lock);
->         list_for_each_entry(driver, &acpi_pci_drivers, node)
->                 if (driver->add)
->                         driver->add(root);
->         mutex_unlock(&acpi_pci_root_lock);
->
-> +       /* need to after hot-added ioapic is registered */
-> +       if (system_state != SYSTEM_BOOTING)
-> +               pci_enable_bridges(root->bus);
-
-Theoretically, we should be able to assign resources and enable
-bridges here regardless of the system_state.
-
-I think the reason you don't want to do it while SYSTEM_BOOTING is
-because we currently do this at boot-time:
-
-    acpi_pci_root_add
-        pci_scan_child_bus
-    acpi_pci_root_start
-        pci_bus_add_devices
-    <account for some motherboard (PNP0C01) resources>
-    pcibios_assign_resources            # fs_initcall
-        pci_assign_unassigned_resources
-            pci_enable_bridges
-
-and without the SYSTEM_BOOTING check, we might assign PCI resources at
-boot-time that conflict with motherboard resources.
-
-Is that right?
-
-This is completely non-obvious and future readers deserve a hint about
-what's going on here.
-
-The right way to do this would be to pay attention to the host bridge
-apertures, and assign resources from within the apertures.  Then we
-could always assign PCI resources when adding a host bridge instead of
-in an fs_initcall.  I understand we still have legacy issues and
-machines where we still don't pay attention to _CRS.  But if we're
-doing things to work around a broken design, it's important to be
-aware of how the design is broken so we have some hope of eventually
-fixing the design.
-
->         pci_bus_add_devices(root->bus);
->
->         return 0;
-> --
-> 1.7.7
->
