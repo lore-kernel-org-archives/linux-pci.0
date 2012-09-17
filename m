@@ -1,111 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:38916 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753929Ab2IYI04 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 28/29] PCI: kill pci_find_next_bus
-Date: Tue, 25 Sep 2012 01:26:29 -0700
-Message-Id: <1348561590-28067-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:53388 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755887Ab2IQLe3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 07:34:29 -0400
+Received: by dady13 with SMTP id y13so833609dad.19
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 04:34:29 -0700 (PDT)
+Date: Mon, 17 Sep 2012 04:34:23 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Paul Mundt <lethal@linux-sh.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@tilera.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Chris Zankel <chris@zankel.net>,
+	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Keep pci_fixup_irqs() around after init
+Message-ID: <20120917113423.GA28759@kroah.com>
+References: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/search.c |   37 +++++++------------------------------
- include/linux/pci.h  |    4 ----
- 2 files changed, 7 insertions(+), 34 deletions(-)
+On Mon, Sep 17, 2012 at 01:22:53PM +0200, Thierry Reding wrote:
+> Remove the __init annotations in order to keep pci_fixup_irqs() around
+> after init (e.g. for hotplug). This requires the same change for the
+> implementation of pcibios_update_irq() on all architectures. While at
+> it, all __devinit annotations are removed as well, since they will be
+> useless now that HOTPLUG is always on.
+> 
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> ---
+> Changes in v2:
+> - remove __init and __devinit annotations altogether
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index f072b54..630e788 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -79,44 +79,22 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
-  */
- struct pci_bus * pci_find_bus(int domain, int busnr)
- {
--	struct pci_bus *bus = NULL;
-+	struct pci_host_bridge *host_bridge = NULL;
- 	struct pci_bus *tmp_bus;
- 
--	while ((bus = pci_find_next_bus(bus)) != NULL)  {
--		if (pci_domain_nr(bus) != domain)
-+	for_each_pci_host_bridge(host_bridge) {
-+		if (pci_domain_nr(host_bridge->bus) != domain)
- 			continue;
--		tmp_bus = pci_do_find_bus(bus, busnr);
--		if (tmp_bus)
-+		tmp_bus = pci_do_find_bus(host_bridge->bus, busnr);
-+		if (tmp_bus) {
-+			put_device(&host_bridge->dev);
- 			return tmp_bus;
-+		}
- 	}
- 	return NULL;
- }
- 
- /**
-- * pci_find_next_bus - begin or continue searching for a PCI bus
-- * @from: Previous PCI bus found, or %NULL for new search.
-- *
-- * Iterates through the list of known PCI busses.  A new search is
-- * initiated by passing %NULL as the @from argument.  Otherwise if
-- * @from is not %NULL, searches continue from next device on the
-- * global list.
-- */
--struct pci_bus * 
--pci_find_next_bus(const struct pci_bus *from)
--{
--	struct list_head *n;
--	struct pci_bus *b = NULL;
--
--	WARN_ON(in_interrupt());
--	down_read(&pci_bus_sem);
--	n = from ? from->node.next : pci_root_buses.next;
--	if (n != &pci_root_buses)
--		b = pci_bus_b(n);
--	up_read(&pci_bus_sem);
--	return b;
--}
--
--/**
-  * pci_get_slot - locate PCI device for a given PCI slot
-  * @bus: PCI bus on which desired PCI device resides
-  * @devfn: encodes number of PCI slot in which the desired PCI 
-@@ -355,7 +333,6 @@ EXPORT_SYMBOL(pci_dev_present);
- 
- /* For boot time work */
- EXPORT_SYMBOL(pci_find_bus);
--EXPORT_SYMBOL(pci_find_next_bus);
- /* For everyone */
- EXPORT_SYMBOL(pci_get_device);
- EXPORT_SYMBOL(pci_get_subsys);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1e45d6f..c7ca6e9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -758,7 +758,6 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
- int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
- int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
- int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
--struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
- 
- struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
- struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
-@@ -1400,9 +1399,6 @@ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
- static inline void pci_unblock_cfg_access(struct pci_dev *dev)
- { }
- 
--static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
--{ return NULL; }
--
- static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
- 						unsigned int devfn)
- { return NULL; }
--- 
-1.7.7
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
