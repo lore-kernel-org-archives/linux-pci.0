@@ -1,51 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:62292 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012Ab2IRXtv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 19:49:51 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
-References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
-	<1347670122-25824-3-git-send-email-yinghai@kernel.org>
-	<CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
-Date: Tue, 18 Sep 2012 16:49:49 -0700
-Message-ID: <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:12419 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754784Ab2IQIyv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Sep 2012 04:54:51 -0400
+From: Huang Ying <ying.huang@intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, Tony Luck <tony.luck@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: [RFC 3/3] PCI/PM: Disable PME poll for PCIe devices
+Date: Mon, 17 Sep 2012 16:54:36 +0800
+Message-Id: <1347872076-5260-4-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 3:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> Found one system one root bus hot remove get panic.
->> Panic happens when try to release hostbridge resource.
->>
->> It turns out that resource get reject during put into resource tree
->> because of conflicts.
->> Also that resource parent pointer have random value.
->>
->> That invalid value cause it pass through check __release_pci_root_info
->> and panic in release_resource.
->>
->> Try to use kzalloc instead.
->
-> Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
-> what it does:
->
->         if (windows) {
->                 controller->window =
->                         kmalloc_node(sizeof(*controller->window) * windows,
->                                      GFP_KERNEL, controller->node);
->
+PME poll is not necessary for PCIe devices, because PCIe devices use
+in-band PME message and IRQ on PCIe port to report PME.
 
+PME poll is useful for PCI devices.  Because for PCI devices, PME is
+reported via a side-band PME# line and some platform logic, and the
+platform logic is often missing on many systems.
 
-yes, but they don't support pci_set_host_bridge_release yet. so they
-should not meet this problem yet.
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pcie/pme.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks
-
-Yinghai
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -313,6 +313,7 @@ static int pcie_pme_set_native(struct pc
+ 
+ 	device_set_run_wake(&dev->dev, true);
+ 	dev->pme_interrupt = true;
++	dev->pme_poll = false;
+ 	return 0;
+ }
+ 
