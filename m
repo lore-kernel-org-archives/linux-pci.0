@@ -1,105 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:39880 "EHLO
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:54702 "EHLO
 	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756968Ab2IUC5G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 22:57:06 -0400
-Received: by lbbgj3 with SMTP id gj3so3286197lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 20 Sep 2012 19:57:03 -0700 (PDT)
+	with ESMTP id S932242Ab2IQUyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 16:54:38 -0400
+Received: by lbbgj3 with SMTP id gj3so4510555lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 13:54:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWuVW6U9cE+iY0Gpua_0xhdxp6HxcWyhqqSN+L3Da_1Qg@mail.gmail.com>
-References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
- <1346168638-32724-5-git-send-email-jiang.liu@huawei.com> <CAE9FiQVAOEUHMSFHCpZLVK-Rbso3Rh1nUQHmfcujwb6tpUTz8A@mail.gmail.com>
- <CAErSpo58sSCPYF9Ug-o-f3odJovECkdxPOoahx9+Ob6kmP_srw@mail.gmail.com> <CAE9FiQWuVW6U9cE+iY0Gpua_0xhdxp6HxcWyhqqSN+L3Da_1Qg@mail.gmail.com>
+In-Reply-To: <1347872076-5260-2-git-send-email-ying.huang@intel.com>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com> <1347872076-5260-2-git-send-email-ying.huang@intel.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Sep 2012 20:56:43 -0600
-Message-ID: <CAErSpo5zeBVBowMyQS8QgAzrVbTJOb=Tuees9r1BnUZ3x13V0A@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI/IOV: simplify code by hotplug safe pci_get_domain_bus_and_slot()
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Date: Mon, 17 Sep 2012 14:54:16 -0600
+Message-ID: <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
+Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
+To: Huang Ying <ying.huang@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Eric Biederman <ebiederm@xmission.com>,
+	kexec@lists.infradead.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 20, 2012 at 7:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Sep 20, 2012 at 4:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Thu, Sep 20, 2012 at 2:38 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> in that case, VFs  are stopped before PF, so they are not in device
->>> tree anymore.
->>> so pci_get_domain_bus_and_slot will not find those VFs.
->>>
->>> So the reference to PF is not released. Also vit_bus may not be released too.
->>>
->>> So you have to rework
->>>     pci_get_domain_bus_and_slot to make it work on pci devices get stopped only.
->>>
->>> or just drop this from the tree.
->>
->> pci_find_bus() is a broken interface (because there's no reference
->> counting or safety with respect to hot-plug), and if the design
->> depends on it, that means the design is broken, too.  I don't think
->> reworking pci_get_domain_bus_and_slot() is the right answer.
->>
->> It's not clear to me why we need the split between stopping and
->> removing devices.  That split leads to these zombie devices that have
->> been stopped and are no longer findable by bus_find_device() (which is
->> used by pci_get_domain_bus_and_slot()), but still "exist" in some
->> fashion until they're removed.  It's unreasonable for random PCI and
->> driver code to have to worry about that zombie state.
++cc Eric and kexec list
+
+On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> If PCI devices are put into D3cold before kexec, because the
+> configuration registers of PCI devices in D3cold are not accessible.
 >
-> That is not zombie state. that is driver unloaded, and not in /sys, /proc.
-> that pci device only can be found under bus->devices.
-
-It doesn't matter whether we call this a "zombie state" or just refer
-to it as "devices not in /sys & /proc but still in bus->devices."  The
-point is that this state is not very useful, and code outside the PCI
-core should not have to know that it exists.
-
-> just like we have pci_device_add and pci_bus_add_device
-> or acpi add and acpi start.
-
-The fact that ACPI drivers have both .add() and .start() methods is
-another artifact of poor design, in my opinion.  No other subsystem
-has that split, as far as I know.  The ACPI split exists because of a
-messed-up ACPI hotplug implementation.  That doesn't mean we should
-copy it.
-
->> I'm not happy about either reverting Jiang's patch or splitting
->> stop/remove again.  It complicates the design and the code.  I'll
->> apply them because they're regressions, and we don't have time for
->> redesign before 3.7.  But I encourage you to think about how to do
->> this more cleanly.
+> And if PCI bridges are put into low power state before kexec,
+> configuration registers of PCI devices underneath the PCI bridges are
+> not accessible too.
 >
-> That will need to redesign sriov implementation.
+> These will make some PCI devices can not be scanned after kexec, so
+> resume the PCI devices in D3cold or PCI bridges in low power state
+> before kexec.
 
-That's right.  If we can improve the situation by redesigning, that's
-what we should do.  The present situation, where we keep adding
-special cases because "that's the way the rest of the system works" is
-not sustainable in the long term.
+Don't we need to resume the device even without the kexec issue?  And
+even if it's in D1 or D2?
 
-> Also that pci root bus add/start, stop/remove will need special
-> sequence to make ioapic
-> and dmar to be started early before normal pci device drivers and
-> stopped after normal pci device drivers.
+It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
+depend on the device being in D0.
 
-This is another thing I'm curious about.  How do you handle this
-situation today (before host bridge hot-add)?
-
-The DMAR I'm not so worried about because as far as I know, there's no
-such thing as a DMAR that's discovered by PCI enumeration.  We should
-discover it via ACPI, and that can happen before we enumerate anything
-behind a host bridge, so I don't really see any ordering problem
-between the DMAR and the PCI devices that would use it.
-
-However, I know there *are* IOAPICs that are enumerated as PCI
-devices, and I don't know whether we can deduce a relationship between
-the IOAPIC and the devices that use it.  Don't we have this problem
-already?  I assume that even without hot-adding a host bridge, we
-might discover a PCI IOAPIC that was present at boot, and we'd have to
-make sure to bind a driver to it before we use any of the PCI devices
-connected to it.  How does that work?
-
-Bjorn
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
+> ---
+>  drivers/pci/pci-driver.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
+>         struct pci_dev *pci_dev = to_pci_dev(dev);
+>         struct pci_driver *drv = pci_dev->driver;
+>
+> +       /* Resume bridges and devices in D3cold for kexec to work properly */
+> +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
+> +               pm_runtime_resume(dev);
+> +
+>         if (drv && drv->shutdown)
+>                 drv->shutdown(pci_dev);
+>         pci_msi_shutdown(pci_dev);
