@@ -1,47 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11315 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759170Ab2IKOpf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Sep 2012 10:45:35 -0400
-Date: Tue, 11 Sep 2012 10:43:23 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-Message-ID: <20120911144323.GF12039@redhat.com>
-References: <501BB4EF.7080909@jp.fujitsu.com>
- <20120803114643.GA28330@redhat.com>
- <501F4877.5050605@jp.fujitsu.com>
- <20120806203902.GH25559@redhat.com>
- <50473306.1070803@jp.fujitsu.com>
- <20120910143604.GB639@redhat.com>
- <504F1343.7030607@jp.fujitsu.com>
+Received: from va3ehsobe010.messaging.microsoft.com ([216.32.180.30]:29201
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757184Ab2IQSPo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Sep 2012 14:15:44 -0400
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	PCI <linux-pci@vger.kernel.org>,
+	Saurav Kashyap <saurav.kashyap@qlogic.com>,
+	Chad Dupuis <chad.dupuis@qlogic.com>
+Date: Mon, 17 Sep 2012 11:15:43 -0700
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+Message-ID: <CC7CB653.20008%giridhar.malavali@qlogic.com>
+In-Reply-To: <50571243.4050001@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <504F1343.7030607@jp.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 11, 2012 at 07:32:35PM +0900, Takao Indoh wrote:
 
-[..]
-> I'll post new patch which clears bus master bit and resets devices in
-> second kernel.
-> 
-> As to the boot parameter to enable this function, you suggested using
-> reset_devices. I found that on a certain platform resetting devices
-> caused PCIe error due to a hardware bug. Therefore I think we need
-> new parameter apart from reset_devices to disable this function on
-> such a machine.
 
-Can you explain a bit more how the error happens. I still don't think
-that because of a bug in a platform somewhere we should be introducing
-a separate command line parameter and not reuse the exisiting one. Also
-you have not explained what's the bug and how a new parameter will 
-avoid the bug.
+On 9/17/12 5:06 AM, "Yijing Wang" <wangyijing@huawei.com> wrote:
 
-Thanks
-Vivek
+>[  769.531289] qla2xxx [0000:08:00.0]-001d: : Found an ISP2532 irq 32
+>iobase 0xffffc90016bcc000.
+>[  769.531748] qla2xxx 0000:08:00.0: irq 91 for MSI/MSI-X
+>[  769.531768] qla2xxx 0000:08:00.0: irq 92 for MSI/MSI-X
+>[  799.503673] qla2xxx [0000:08:00.0]-d008:10: No buffer available for
+>dump.
+>[  799.503682] qla2xxx [0000:08:00.0]-101c:10: Mailbox cmd timeout
+>occurred, cmd=0xb, mb[0]=0xb, eeh_busy=0x0. Scheduling ISP abort.
+>[  799.503689] qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0
+>of firmware.
+>[  829.853242] qla2xxx [0000:08:00.0]-d008:10: No buffer available for
+>dump.
+>[  829.853249] qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0
+>of firmware.
+>[  829.853253] qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
+>[  829.853258] qla2xxx [0000:08:00.0]-00d6:10: Failed to initialize
+>adapter - Adapter flags 2.
+>[  829.853893] qla2xxx 0000:08:00.1: enabling device (0104 -> 0106)
+>[  829.855251] qla2xxx [0000:08:00.1]-001d: : Found an ISP2532 irq 42
+>iobase 0xffffc90016b88000.
+>[  829.855828] qla2xxx 0000:08:00.1: irq 91 for MSI/MSI-X
+>[  829.855849] qla2xxx 0000:08:00.1: irq 92 for MSI/MSI-X
+>[  859.827388] qla2xxx [0000:08:00.1]-d008:11: No buffer available for
+>dump.
+>[  859.827395] qla2xxx [0000:08:00.1]-101c:11: Mailbox cmd timeout
+>occurred, cmd=0xb, mb[0]=0xb, eeh_busy=0x0. Scheduling ISP abort.
+>[  859.827400] qla2xxx [0000:08:00.1]-0098:11: Failed to load segment 0
+>of firmware.
+>[  890.176829] qla2xxx [0000:08:00.1]-d008:11: No buffer available for
+>dump.
+>[  890.176837] qla2xxx [0000:08:00.1]-008f:11: Failed to load segment 0
+>of firmware.
+>[  890.176841] qla2xxx [0000:08:00.1]-00cf:11: Setup chip ****FAILED****.
+>[  890.176845] qla2xxx [0000:08:00.1]-00d6:11: Failed to initialize
+>adapter - Adapter flags 2.
+
+I see that the one of the initial mailbox which loads data from system
+memory to RISC RAM failing causing the probe to fail.
+
+-- Giri
+
+
+
