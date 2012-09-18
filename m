@@ -1,120 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:18965 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752911Ab2ISGoL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 02:44:11 -0400
-Message-ID: <50596951.8010000@huawei.com>
-Date: Wed, 19 Sep 2012 14:42:25 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/6] PCI/AER: introduce pci_bus_ops_get() function to
- avoid a small race condition window
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>  <1348022442-7816-3-git-send-email-wangyijing@huawei.com> <1348033973.8212.132.camel@yhuang-dev>
-In-Reply-To: <1348033973.8212.132.camel@yhuang-dev>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQUB6wshovj=TBmCEL140nZB5K40BfKPYGNmmpZx536F+Q@mail.gmail.com>
+References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+	<1346622653-30741-7-git-send-email-yinghai@kernel.org>
+	<CAErSpo4wmnnFKZeY4XyZdmoOZeQz8sj-5VoAhGhCSqWTBi0GRw@mail.gmail.com>
+	<CAE9FiQUB6wshovj=TBmCEL140nZB5K40BfKPYGNmmpZx536F+Q@mail.gmail.com>
+Date: Mon, 17 Sep 2012 22:36:41 -0700
+Message-ID: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+Subject: Re: [PATCH part2 6/6] PCI: Claim hw/fw allocated resources in hot add path.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/19 13:52, Huang Ying wrote:
-> On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
->> When we rmmod aer_inject module, there is a race condition window between pci_bus_ops_pop()
->> and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
->> them. So introduce pci_bus_ops_get() to avoid this.
+On Mon, Sep 17, 2012 at 9:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Sep 17, 2012 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sun, Sep 2, 2012 at 3:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>>> -static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+>>> +static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
 >>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
->>  1 files changed, 18 insertions(+), 3 deletions(-)
+>> This patch has a little too much going on at the same time.  Can you
+>> split the __init removal into its own patch so we can focus on what's
+>> left by itself?
+>
+> ok.
+>
 >>
->> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
->> index 0f00a27..442147b 100644
->> --- a/drivers/pci/pcie/aer/aer_inject.c
->> +++ b/drivers/pci/pcie/aer/aer_inject.c
->> @@ -67,6 +67,8 @@ struct pci_bus_ops {
->>  	struct pci_ops *ops;
->>  };
->>  
->> +#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
->> +
->>  static LIST_HEAD(einjected);
->>  
->>  static LIST_HEAD(pci_bus_ops_list);
->> @@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
->>  	return bus_ops;
->>  }
->>  
->> +static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
->> +{
->> +	struct pci_bus_ops *bus_ops = NULL;
->> +	struct list_head *n;
->> +
->> +	n = from ? from->list.next : pci_bus_ops_list.next;
->> +	if (n != &pci_bus_ops_list)
->> +		bus_ops = to_pci_bus_ops(n);
->> +
->> +	return bus_ops;
->> +}
->> +
->>  static u32 *find_pci_config_dword(struct aer_error *err, int where,
->>  				  int *prw1cs)
->>  {
->> @@ -540,14 +554,15 @@ static void __exit aer_inject_exit(void)
->>  {
->>  	struct aer_error *err, *err_next;
->>  	unsigned long flags;
->> -	struct pci_bus_ops *bus_ops;
->> +	struct pci_bus_ops *bus_ops = NULL;
->>  
->>  	misc_deregister(&aer_inject_device);
->>  
->> -	while ((bus_ops = pci_bus_ops_pop())) {
->> +	while ((bus_ops = pci_bus_ops_get(bus_ops)))
->>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-> 
-> In fact, this is
-> 
-> list_for_each_entry(&pci_bus_ops_list)
-> 	pci_bus_set_ops()
-> 
-> Because we are in module exit path, there will be no new user of
-> pci_bus_ops_list, it appears safe to do that without lock.
-> 
-> But the bus_ops may be deleted from the list when accessed via
-> pci_ops_aer.  So It may be better to wait for all pci_ops_aer functions
+>>>  {
+>>>         int idx;
+>>>         struct resource *r;
+>>>
+>>>         for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
+>>>                 r = &dev->resource[idx];
+>>> +               if (r->parent)  /* Already allocated */
+>>> +                       continue;
+>>
+>> This is also a potentially interesting change that maybe should be in
+>> its own patch.
+>
+> oh, we don't need that extra checking anymore. because support
+> removing non-root bus is dropped.
 
-Hi Huang Ying,
-   I have some confusions about this, can you explain this? Thanks very much!
-In my idea, if pci_ops_aer be called, it hold the pci_lock, so pci_bus_set_ops will wait for
-pci_ops_aer functions to exit.So in my idea, after pci_bus_set_ops loop completed. pci_ops_aer functions
-have been exit, and will never be called again(because all pci_ops_aer).
+I updated for-pci-root-bus-hotplug-part2.
 
-> return before delete them.  synchronize_rcu() should be sufficient for
-> that, because all pci_ops_aer functions are called with spinlock held.
-> 
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part2
 
+Thanks
 
-> Best Regards,
-> Huang Ying
-> 
->> +
->> +	while ((bus_ops = pci_bus_ops_pop()))
->>  		kfree(bus_ops);
->> -	}
->>  
->>  	spin_lock_irqsave(&inject_lock, flags);
->>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
-> 
-> 
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Yinghai
