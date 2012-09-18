@@ -1,87 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:42927 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924Ab2IYI0z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:55 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	David Howells <dhowells@redhat.com>
-Subject: [PATCH 24/29] PCI, frv: kill pci_root_buses in resources reservations
-Date: Tue, 25 Sep 2012 01:26:25 -0700
-Message-Id: <1348561590-28067-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 19 Sep 2012 00:54:38 +0100
+From: Matthew Garrett <mjg@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	Dave Airlie <airlied@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: [PATCH] PCI: fix default vga ref_count
+Message-ID: <20120918235438.GA13373@srcf.ucam.org>
+References: <CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
+ <1348011882-31452-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1348011882-31452-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Howells <dhowells@redhat.com>
----
- arch/frv/mb93090-mb00/pci-frv.c |   37 ++++++++++++++++++++-----------------
- 1 files changed, 20 insertions(+), 17 deletions(-)
+On Tue, Sep 18, 2012 at 04:44:42PM -0700, Yinghai Lu wrote:
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.c b/arch/frv/mb93090-mb00/pci-frv.c
-index c281217..2a127f9 100644
---- a/arch/frv/mb93090-mb00/pci-frv.c
-+++ b/arch/frv/mb93090-mb00/pci-frv.c
-@@ -78,27 +78,26 @@ pcibios_align_resource(void *data, const struct resource *res,
-  *	    as well.
-  */
- 
--static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
-+static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- {
--	struct list_head *ln;
--	struct pci_bus *bus;
--	struct pci_dev *dev;
- 	int idx;
- 	struct resource *r;
-+	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
-+		r = &dev->resource[idx];
-+		if (!r->start)
-+			continue;
-+		pci_claim_resource(dev, idx);
-+	}
-+}
-+static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
-+{
-+	struct pci_bus *child;
- 
- 	/* Depth-First Search on bus tree */
--	for (ln=bus_list->next; ln != bus_list; ln=ln->next) {
--		bus = pci_bus_b(ln);
--		if ((dev = bus->self)) {
--			for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
--				r = &dev->resource[idx];
--				if (!r->start)
--					continue;
--				pci_claim_resource(dev, idx);
--			}
--		}
--		pcibios_allocate_bus_resources(&bus->children);
--	}
-+	if (bus->self)
-+		pcibios_allocate_bridge_resources(bus->self);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcibios_allocate_bus_resources(child);
- }
- 
- static void __init pcibios_allocate_resources(int pass)
-@@ -188,8 +187,12 @@ static void __init pcibios_assign_resources(void)
- 
- void __init pcibios_resource_survey(void)
- {
-+	struct pci_host_bridge *host_bridge = NULL;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
-+
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_allocate_bus_resources(host_bridge->bus);
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
- 	pcibios_assign_resources();
+>  void vga_set_default_device(struct pci_dev *pdev)
+>  {
+> +	if (vga_default)
+> +		pci_dev_put(vga_default);
+> +
+> +	if (pdev)
+> +		pdev = pci_dev_get(pdev);
+> +
+>  	vga_default = pdev;
+
+It shouldn't happen, but do we want to check for the vga_default == pdev 
+case?
+
 -- 
-1.7.7
-
+Matthew Garrett | mjg59@srcf.ucam.org
