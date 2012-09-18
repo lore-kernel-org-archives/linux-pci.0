@@ -1,73 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:38833 "EHLO
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:46430 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757929Ab2IUTtK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 15:49:10 -0400
+	with ESMTP id S1750862Ab2IRS6B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 14:58:01 -0400
 MIME-Version: 1.0
-In-Reply-To: <505CAC93.8020304@redhat.com>
-References: <5003DC9B.8000706@broadcom.com>
-	<500978C7.5050004@genband.com>
-	<50097FBD.9080202@redhat.com>
-	<1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-	<5009B186.6000806@genband.com>
-	<1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-	<5009ECDF.4090305@genband.com>
-	<500D59BF.9040006@redhat.com>
-	<500D6932.8090306@genband.com>
-	<20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
-	<C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
-	<5059A767.2090307@broadcom.com>
-	<20120919085306.00006af9@unknown>
-	<1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
-	<CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
-	<1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
-	<CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com>
-	<1348104190.4836.61.camel@deadeye.wl.decadent.org.uk>
-	<C5551D9AAB213A418B7FD5E4A6F30A07152FA5F6@ORSMSX106.amr.corp.intel.com>
-	<CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.com>
-	<505CAC93.8020304@redhat.com>
-Date: Fri, 21 Sep 2012 12:49:09 -0700
-Message-ID: <CAE9FiQW4vY3SwAt1TGhSa=bcmKnzxS96b9HGoU5_CDb3FRvGVA@mail.gmail.com>
-Subject: Re: New commands to configure IOV features
+In-Reply-To: <CAE9FiQVRGK-Of1RuvFZRtuT-yZ7LGDD_oNWr2ier2aaUqrugmA@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<CAE9FiQVRGK-Of1RuvFZRtuT-yZ7LGDD_oNWr2ier2aaUqrugmA@mail.gmail.com>
+Date: Tue, 18 Sep 2012 11:57:59 -0700
+Message-ID: <CAE9FiQW3pyFFt714yuG-BzuK55eUjN4ojhNZ6LvwGqGWuAtMYQ@mail.gmail.com>
+Subject: Re: [PATCH v3 0/6] acpi,pci: hostbridge hotplug support
 From: Yinghai Lu <yinghai@kernel.org>
-To: Don Dutile <ddutile@redhat.com>
-Cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Ariel Elior <ariele@broadcom.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	linux-pci <linux-pci@vger.kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 21, 2012 at 11:06 AM, Don Dutile <ddutile@redhat.com> wrote:
+On Tue, Sep 18, 2012 at 11:41 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Sep 17, 2012 at 11:12 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>> Hi all,
 >>
->> ok, something like attached patches?
+>>   This patchset is 3rd version of the following:
+>>     http://marc.info/?l=linux-pci&m=134457928913775&w=2
+>>     http://marc.info/?l=linux-pci&m=134665909321684&w=2
 >>
->> ixgbe change need more cleanup from ixgbe guys.
+>>  v2 -> v3:
+>>    - change acpi_pci_drivers' add/remove interface according to Bjorn's suggestion
+>>    - abandon RCU for protecting acpi_pci_roots list according to Bjorn's suggestion
+>>    - change acpi_pci_find_root implementation to avoid potential deadlock
 >>
-> yuk, no.
-> I have a set of patches almost done.
-
-good. includes update to those network drivers?
-
-> It provides 3 sysfs files (enable, disable, num_max_vfs);
-> callbacks for enable & disable.
-
-why using three? only pass max_vfs should be enough...
-
-aka pass 0 mean disabling, pass other value mean enabling.
-
+>>   * [PATCH v3 1/8] ACPI, PCI: Use normal list for struct acpi_pci_driver
+>>   * [PATCH v3 2/8] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
+>>   * [PATCH v3 3/8] ACPI, PCI: add acpi_pci_drivers protection
+>>   * [PATCH v3 4/8] ACPI, PCI: change acpi_pci_drivers' add/remove interface
+>>   * [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
+>>   * [PATCH v3 6/8] ACPI, PCI: add acpi_pci_roots protection
+>>   * [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+>>   * [PATCH v3 8/8] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
 >
-> i'm tied up until Monday on RHEL6, then I'll switch gears & post a set of
-> patches.
+> now it is more similar to my for-pci-root-bus-hotplug-part4 and part5
+>
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part5
+>
+> big difference:
+> I separated code from acpiphp_glue.c to pci_root_hp.c for root bridge
+> hotplug support
+>
+> I thought we all agreed on that acpi root bridge hotplug plug need to
+> be separated from acpiphp at first.
+>
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=ab9fd4ccbfb6120a4a4adf9833487d656b0501d3
+>
+> and CONFIG_HOTPLUG will always be enabled, so root bridge hotplug will
+> be always enabled.
+> acpiphp will still be used as one module, and to keep it simple pciehp
+> will be used for pcie etc.
+> That make the system BIOS much simple to avoid acpiphp.
 
-so that is your employer 'sinternal policy? for RHEL 6 kernel first,
-then upstream kernel?
-thought RH only accept backporting only patches get into upstream already.
+also current acpiphp only have root bridge add notification.
+and your code do not add any code for remove notification.
 
--Yinghai
+So how to you test your code with removal path?
+
+Thanks
+
+Yinghai
