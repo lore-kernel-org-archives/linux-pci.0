@@ -1,90 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:43282 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753786Ab2IYI1f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:27:35 -0400
+Received: from rcsinet15.oracle.com ([148.87.113.117]:29649 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008Ab2IRXqA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 19:46:00 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 27/29] PCI, powerpc: kill pci_root_buses in resources reservations
-Date: Tue, 25 Sep 2012 01:26:28 -0700
-Message-Id: <1348561590-28067-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org,
+	Dave Airlie <airlied@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Julia Lawall <julia@diku.dk>, Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH] PCI: fix default vga ref_count
+Date: Tue, 18 Sep 2012 16:44:42 -0700
+Message-Id: <1348011882-31452-1-git-send-email-yinghai@kernel.org>
+In-Reply-To: <CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
+References: <CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+when __ARCH_HAS_VGA_DEFAULT_DEVICE is not defined, aka EFIFB is not used,
+for static path, vga_default setting is through vga_arbiter_add_pci_device.
+and later x86 pci_fixup_video, will skip setting again.
+- subsys_initcall(vga_arb_device_init) come first to call vga_arbiter_add_pci_device. It will call pci_get_dev to hold one reference.
+
+for hotplug add path, even vga_arbiter_add_pci_device is called via notifier,
+but it will check VGA_RSRC_LEGACY_MASK that is not set for hotplug path.
+So x86 pci_fixup_video will take over to call vga_set_default_device().
+It will not hold one refrence.
+
+Later for hotplug remove path, vga_arbiter_del_pci_device that does not check
+VGA_RSRC_LEGACY_MASK will call put_device and it will cause ref_count to
+decrease extra. that will have that pci device get deleted early wrongly.
+
+Need to make get/put balance for both cases.
+
+-v2: According to Bjorn, update vga_set_default_device instead...
+
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
+Cc: x86@kernel.org
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Julia Lawall <julia@diku.dk>
+Cc: Matthew Garrett <mjg@redhat.com>
+
 ---
- arch/powerpc/kernel/pci-common.c |   13 ++++++-------
- arch/powerpc/kernel/pci_64.c     |    7 ++++---
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/gpu/vga/vgaarb.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 43fea54..1e13133 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1390,11 +1390,11 @@ static void __init pcibios_reserve_legacy_regions(struct pci_bus *bus)
+Index: linux-2.6/drivers/gpu/vga/vgaarb.c
+===================================================================
+--- linux-2.6.orig/drivers/gpu/vga/vgaarb.c
++++ linux-2.6/drivers/gpu/vga/vgaarb.c
+@@ -141,6 +141,12 @@ EXPORT_SYMBOL_GPL(vga_default_device);
  
- void __init pcibios_resource_survey(void)
+ void vga_set_default_device(struct pci_dev *pdev)
  {
--	struct pci_bus *b;
-+	struct pci_host_bridge *host_bridge = NULL;
++	if (vga_default)
++		pci_dev_put(vga_default);
++
++	if (pdev)
++		pdev = pci_dev_get(pdev);
++
+ 	vga_default = pdev;
+ }
+ #endif
+@@ -577,7 +583,7 @@ static bool vga_arbiter_add_pci_device(s
+ #ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+ 	if (vga_default == NULL &&
+ 	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK))
+-		vga_default = pci_dev_get(pdev);
++		vga_set_default_device(pdev);
+ #endif
  
- 	/* Allocate and assign resources */
--	list_for_each_entry(b, &pci_root_buses, node)
--		pcibios_allocate_bus_resources(b);
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_allocate_bus_resources(host_bridge->bus);
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
+ 	vga_arbiter_check_bridge_sharing(vgadev);
+@@ -613,10 +619,8 @@ static bool vga_arbiter_del_pci_device(s
+ 	}
  
-@@ -1402,10 +1402,9 @@ void __init pcibios_resource_survey(void)
- 	 * the low IO area and the VGA memory area if they intersect the
- 	 * bus available resources to avoid allocating things on top of them
- 	 */
--	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		list_for_each_entry(b, &pci_root_buses, node)
--			pcibios_reserve_legacy_regions(b);
+ #ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+-	if (vga_default == pdev) {
+-		pci_dev_put(vga_default);
+-		vga_default = NULL;
 -	}
-+	if (!pci_has_flag(PCI_PROBE_ONLY))
-+		for_each_pci_host_bridge(host_bridge)
-+			pcibios_reserve_legacy_regions(host_bridge);
++	if (vga_default == pdev)
++		vga_set_default_device(NULL);
+ #endif
  
- 	/* Now, if the platform didn't decide to blindly trust the firmware,
- 	 * we proceed to assigning things that were left unassigned
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index 4ff190f..dafa7c5 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -213,8 +213,9 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
- {
- 	struct pci_controller* hose;
- 	struct list_head *ln;
--	struct pci_bus *bus = NULL;
-+	struct pci_bus *bus;
- 	struct device_node *hose_node;
-+	struct pci_host_bridge *host_bridge = NULL;
- 
- 	/* Argh ! Please forgive me for that hack, but that's the
- 	 * simplest way to get existing XFree to not lockup on some
-@@ -234,8 +235,8 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
- 	 * used on pre-domains setup. We return the first match
- 	 */
- 
--	for (ln = pci_root_buses.next; ln != &pci_root_buses; ln = ln->next) {
--		bus = pci_bus_b(ln);
-+	for_each_pci_host_bridge(host_bridge) {
-+		bus = host_bridge->bus;
- 		if (in_bus >= bus->number && in_bus <= bus->busn_res.end)
- 			break;
- 		bus = NULL;
--- 
-1.7.7
-
+ 	if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
