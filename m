@@ -1,42 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part1 3/4] PCI: Add root bus children dev's res to fail list
-Date: Sun,  2 Sep 2012 14:47:37 -0700
-Message-Id: <1346622458-30595-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
-References: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53020 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932184Ab2IRWrI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 18:47:08 -0400
+Received: by lagy9 with SMTP id y9so273962lag.19
+        for <linux-pci@vger.kernel.org>; Tue, 18 Sep 2012 15:47:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347670122-25824-3-git-send-email-yinghai@kernel.org>
+References: <1347670122-25824-1-git-send-email-yinghai@kernel.org> <1347670122-25824-3-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 18 Sep 2012 16:46:46 -0600
+Message-ID: <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
+Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, Tony Luck <tony.luck@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can stop according to try number now and do not need to use root_bus checking
-as stop sign anymore.
+On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Found one system one root bus hot remove get panic.
+> Panic happens when try to release hostbridge resource.
+>
+> It turns out that resource get reject during put into resource tree
+> because of conflicts.
+> Also that resource parent pointer have random value.
+>
+> That invalid value cause it pass through check __release_pci_root_info
+> and panic in release_resource.
+>
+> Try to use kzalloc instead.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
+what it does:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index fb50613..f0e959c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -283,7 +283,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head && !pci_is_root_bus(dev_res->dev->bus)) {
-+			if (fail_head) {
- 				/*
- 				 * if the failed res is for ROM BAR, and it will
- 				 * be enabled later, don't add it to the list
--- 
-1.7.7
+        if (windows) {
+                controller->window =
+                        kmalloc_node(sizeof(*controller->window) * windows,
+                                     GFP_KERNEL, controller->node);
 
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: x86@kernel.org
+>
+> ---
+>  arch/x86/pci/acpi.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> Index: linux-2.6/arch/x86/pci/acpi.c
+> ===================================================================
+> --- linux-2.6.orig/arch/x86/pci/acpi.c
+> +++ linux-2.6/arch/x86/pci/acpi.c
+> @@ -305,7 +305,6 @@ setup_resource(struct acpi_resource *acp
+>         res->flags = flags;
+>         res->start = start;
+>         res->end = end;
+> -       res->child = NULL;
+>
+>         if (!pci_use_crs) {
+>                 dev_printk(KERN_DEBUG, &info->bridge->dev,
+> @@ -434,7 +433,7 @@ probe_pci_root_info(struct pci_root_info
+>
+>         size = sizeof(*info->res) * info->res_num;
+>         info->res_num = 0;
+> -       info->res = kmalloc(size, GFP_KERNEL);
+> +       info->res = kzalloc(size, GFP_KERNEL);
+>         if (!info->res)
+>                 return;
+>
