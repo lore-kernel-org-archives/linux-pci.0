@@ -1,92 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:48347 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753385Ab2IKWvz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Sep 2012 18:51:55 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Dave Airlie <airlied@gmail.com>
-Subject: Re: runtime PM and special power switches
-Date: Wed, 12 Sep 2012 00:58:16 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"dri-devel" <dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
-References: <201209112255.10486.rjw@sisk.pl> <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org> <CAPM=9tzp8MnoGttxB=WrOZ8nMAESJn_0GAHT84PdmSgri==aCA@mail.gmail.com>
-In-Reply-To: <CAPM=9tzp8MnoGttxB=WrOZ8nMAESJn_0GAHT84PdmSgri==aCA@mail.gmail.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:35333 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755735Ab2IRWj3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 18:39:29 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201209120058.16701.rjw@sisk.pl>
+In-Reply-To: <CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
+References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
+Date: Tue, 18 Sep 2012 15:39:27 -0700
+Message-ID: <CAE9FiQVPHoehcDfVqN-5=Hso0J9vf3+y=3PCz+GncGC5CvvZ4Q@mail.gmail.com>
+Subject: Re: [PATCH] PCI, x86: fix default vga ref_count
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, Dave Airlie <airlied@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, September 12, 2012, Dave Airlie wrote:
-> On Wed, Sep 12, 2012 at 7:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
-> >
-> >> Hi,
-> >>
-> >> On Tuesday, September 11, 2012, Dave Airlie wrote:
-> >> > Hi Rafael,
-> >> >
-> >> > I've been investigating runtime PM support for some use-cases on GPUs.
-> >> >
-> >> > In some laptops we have a secondary GPU (optimus) that can be powered
-> >> > up for certain 3D tasks and then turned off when finished with. Now I
-> >> > did an initial pass on supporting it without using the kernel runtime
-> >> > PM stuff, but Alan said I should take a look so here I am.
-> >>
-> >> Alan Stern or Alan Cox? :-)
-> >>
-> >> > While I've started to get a handle on things, we have a bit of an
-> >> > extra that I'm not sure we cater for.
-> >> >
-> >> > Currently we get called from the PCI layer which after we are finished
-> >> > with our runtime suspend callback, will go put the device into the
-> >> > correct state etc, however on these optimus/powerxpress laptops we
-> >> > have a separate ACPI or platform driver controlled power switch that
-> >> > we need to call once the PCI layer is finished the job. This switch
-> >> > effectively turns the power to the card completely off leaving it
-> >> > drawing no power.
-> >> >
-> >> > No we can't hit the switch from the driver callback as the PCI layer
-> >> > will get lost, so I'm wondering how you'd envisage we could plug this
-> >> > in.
-> >>
-> >> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
-> >> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
-> >> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
-> >> so perhaps it's not even too dangerous.
-> >
-> > This sounds more like a job for a power domain.  Unless the power
-> > switch is already in the device hierarchy as a parent to the PCI
-> > device.
-> 
-> I'll have to investigate power domains then,
-> 
-> The switch is hidden in many different places, one some laptops its in
-> a ACPI _DSM on one GPU, on others its in an ACPI _DSM on the other
-> one, in some its in a different ACPI _DSM, then we have it in the ACPI
-> ATPX method on others, and finally Apple have it in a piece of hw that
-> isn't just on the LPC bus or somewhere like that.
-> 
-> Currently we just hide it all inside vga_switcheroo and I'd just need
-> an interface to call that once the layers have stopped poking
-> registers in PCI config space, if we could fix PCI runtime suspend so
-> the driver was the last to get called then that would also not suck.
+On Tue, Sep 18, 2012 at 3:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> when __ARCH_HAS_VGA_DEFAULT_DEVICE is not defined, aka EFIFB is not used,
+>>
+>> for static path, vga_default setting is through vga_arbiter_add_pci_device.
+>> and for x86 pci_fixup_video, will skip that.
+>> because subsys_initcall(vga_arb_device_init) come first to call vga_arbiter_add_pci_device.
+>>
+>> for hotplug path, even vga_arbiter_add_pci_device is called via notifier, but it
+>> will check VGA_RSRC_LEGACY_MASK that is not set for hotplug path.
+>> So x86 pci_fixup_video will take over to call vga_set_default_device().
+>>
+>> We need to hold one dev reference there.
+>>
+>> otherwise vga_arbiter_del_pci_device that does not check VGA_RSRC_LEGACY_MASK
+>> will call put_device and it will cause ref_count to decrease extra.
+>> that will have that device get deleted early wrongly.
+>
+> I'm sure you're fixing a real bug, but this patch is completely unintelligible.
 
-Well, as I said, we may try to change the PCI layer so that it doesn't
-access the device any more in pci_pm_runtime_suspend() if it sees that
-pci_dev->state_saved has been set by the driver's callback.  Then,
-your drivers would only need to set pci_dev->state_saved in their
-.runtime_suspend() callbacks.
+yes, only can hit this bug while remove root bus with vga adapater.
 
-Alternatively, which may be less hackish but more work, you can set the
-pm_domain pointer in the device structure to a struct dev_pm_domain whose
-ops will just call the corresponding bus type's ops except for
-.runtime_suspend() that will execute the additional ACPI stuff after calling
-the bus type's method.
+or remove bridge with child pci device that is vga adapter.
 
-Thanks,
-Rafael
+for root bus removal, the less one ref_count will call that pci device
+get destroyed too early.
+
+>
+> I tried to decipher the changelog and I failed.  I tried to figure out
+> the PCI reference counting from the vgaarb code, and I failed there
+> too.
+>
+> Apparently the reference is connected with the vga_default device,
+> since that's what vga_arbiter_del_pci_device() checks, but
+> vga_set_default_device() is blissfully ignorant of references (and it
+> isn't used consistently anyway).
+
+yes, could fix vga_set_default_device instead, but it has two versions
+- no __ARCH_HAS_VGA_DEFAULT_DEVICE
+- EFI version...
+
+also there is one other user for vga switching...
+
+>
+> If you can do some rework to make this all make more sense, that would be great.
+>
+> While you're at it, look at both the x86 and ia64 versions of
+> pci_fixup_video().  They are 90% identical, and it's not clear why
+> they should be different.  In fact, it's not clear why there's a fixup
+> for x86 and ia64 but not for any other architecture with PCI.
+
+ok, will give it a try.
+
+Thanks
+
+Yinghai
