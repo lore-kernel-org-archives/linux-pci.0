@@ -1,148 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:60740 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755595Ab2IRVlI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Sep 2012 17:41:08 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Dave Airlie <airlied@gmail.com>
-Subject: Re: runtime PM and special power switches
-Date: Tue, 18 Sep 2012 23:47:33 +0200
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"dri-devel" <dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
-References: <201209112255.10486.rjw@sisk.pl> <CAPM=9twQJSCX64kYsAikteZoJOH9m8e6AWuj-e_Ouyk3HmyOuQ@mail.gmail.com> <CAPM=9tw8ydqLveJLAdDJ75gDW4UkUiXMSqHqvtYPwnn-wLmGhg@mail.gmail.com>
-In-Reply-To: <CAPM=9tw8ydqLveJLAdDJ75gDW4UkUiXMSqHqvtYPwnn-wLmGhg@mail.gmail.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:36900 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755554Ab2IRVjm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 17:39:42 -0400
+Received: by lagy9 with SMTP id y9so239957lag.19
+        for <linux-pci@vger.kernel.org>; Tue, 18 Sep 2012 14:39:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201209182347.34049.rjw@sisk.pl>
+In-Reply-To: <CAErSpo5uj9YwxjZweoLDsrx11S5NjCFwPeNfROsKySr1dTOjqQ@mail.gmail.com>
+References: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
+ <1347552010-6718-1-git-send-email-jiang.liu@huawei.com> <CAErSpo781H+k=veR19WoRvRRKe-pVpxYV4UK74iaQv36Ms3LrA@mail.gmail.com>
+ <505747FA.6060708@gmail.com> <CAErSpo5uj9YwxjZweoLDsrx11S5NjCFwPeNfROsKySr1dTOjqQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 18 Sep 2012 15:39:19 -0600
+Message-ID: <CAErSpo5QwebVypZK21R9_mXaWic0NJqMPzx8vd-FVfTDq9Ui4Q@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: introduce root bridge hotplug safe interfaces to
+ walk root buses
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for the delayed response.
+On Mon, Sep 17, 2012 at 10:24 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Sep 17, 2012 at 9:55 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> On 09/14/2012 01:40 AM, Bjorn Helgaas wrote:
+>>> On Thu, Sep 13, 2012 at 10:00 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>> This patch introduces two root bridge hotplug safe interfaces to walk
+>>>> all root buses. Function pci_get_root_buses() takes a snopshot of the
+>>>> pci_root_buses list and holds a reference count to each root buses.
+>>>> pci_{get|put}_root_buses are used to replace hotplug unsafe interface
+>>>> pci_find_next_bus().
+>>>
+>>> Honestly, I think the whole idea of walking these lists is wrong, and
+>>> adding safer interfaces just perpetuates the idea that it's OK to walk
+>>> them.
+>>>
+>>> We should be doing the setup in the device add path instead.  I know
+>>> we have other issues with that in some cases, but I'd like to at least
+>>> move in that direction.
+>>>
+>>> For example, sba_init() is a problem because it's an ACPI driver, and
+>>> we currently enumerate PCI devices before binding most ACPI drivers.
+>>> That's broken -- in that particular case, there's an HWP0001 IOMMU
+>>> device that encloses the PNP0A03 PCI host bridge.  Currently we bind
+>>> the PNP0A03 driver first, enumerate the PCI devices below it, then
+>>> bind the HWP0001 driver (sba_init).  Obviously that's backwards and
+>>> the HWP0001 driver should have been bound first, then the PNP0A03
+>>> driver.  But I don't think we're ready to make that shift yet (though
+>>> it'd be nice if somebody were working on it).
+>> I remember there were some discussions on the mail list above the divergence
+>> between boot and hotplug paths. But it's a little hard for me to work on
+>> this, I only have experience with PCI on IA64 and x86:(
+>>
+>>>
+>>> I wonder if we could add some kind of iterator that does the list
+>>> traversals in the PCI core and calls a callback for every device?  I
+>>> think that would work for sba_init(), but I don't know about the
+>>> others.  This would still be ugly in that the iterator would have to
+>>> hold some sort of hotplug lock while doing for_each_pci_dev() and the
+>>> callers, e.g., sba_init(), are not solving the problem for hot-added
+>>> devices, but at least the locking would be in the core and the drivers
+>>> would stop depending on the lists themselves.
+>
+>> I will try the iterator first, hope we could find a solution here.
+>
+> A plain iterator only handles devices that already exist.  But I
+> wonder if it would work to have an interface like "call this callback
+> for every device that exists already *and* for every device that's
+> hot-added in the future."  The bus notifiers are close to this, e.g.,
+> "bus_register_notifier(&pci_bus_type, ...)" handles this for hot-added
+> devices.  A little glue around it could take care of doing it for
+> already-existing devices as well.
 
-On Wednesday, September 12, 2012, Dave Airlie wrote:
-> On Wed, Sep 12, 2012 at 3:13 PM, Dave Airlie <airlied@gmail.com> wrote:
-> > On Wed, Sep 12, 2012 at 8:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> On Wednesday, September 12, 2012, Dave Airlie wrote:
-> >>> On Wed, Sep 12, 2012 at 7:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> >>> > On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
-> >>> >
-> >>> >> Hi,
-> >>> >>
-> >>> >> On Tuesday, September 11, 2012, Dave Airlie wrote:
-> >>> >> > Hi Rafael,
-> >>> >> >
-> >>> >> > I've been investigating runtime PM support for some use-cases on GPUs.
-> >>> >> >
-> >>> >> > In some laptops we have a secondary GPU (optimus) that can be powered
-> >>> >> > up for certain 3D tasks and then turned off when finished with. Now I
-> >>> >> > did an initial pass on supporting it without using the kernel runtime
-> >>> >> > PM stuff, but Alan said I should take a look so here I am.
-> >>> >>
-> >>> >> Alan Stern or Alan Cox? :-)
-> >>> >>
-> >>> >> > While I've started to get a handle on things, we have a bit of an
-> >>> >> > extra that I'm not sure we cater for.
-> >>> >> >
-> >>> >> > Currently we get called from the PCI layer which after we are finished
-> >>> >> > with our runtime suspend callback, will go put the device into the
-> >>> >> > correct state etc, however on these optimus/powerxpress laptops we
-> >>> >> > have a separate ACPI or platform driver controlled power switch that
-> >>> >> > we need to call once the PCI layer is finished the job. This switch
-> >>> >> > effectively turns the power to the card completely off leaving it
-> >>> >> > drawing no power.
-> >>> >> >
-> >>> >> > No we can't hit the switch from the driver callback as the PCI layer
-> >>> >> > will get lost, so I'm wondering how you'd envisage we could plug this
-> >>> >> > in.
-> >>> >>
-> >>> >> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
-> >>> >> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
-> >>> >> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
-> >>> >> so perhaps it's not even too dangerous.
-> >>> >
-> >>> > This sounds more like a job for a power domain.  Unless the power
-> >>> > switch is already in the device hierarchy as a parent to the PCI
-> >>> > device.
-> >>>
-> >>> I'll have to investigate power domains then,
-> >>>
-> >>> The switch is hidden in many different places, one some laptops its in
-> >>> a ACPI _DSM on one GPU, on others its in an ACPI _DSM on the other
-> >>> one, in some its in a different ACPI _DSM, then we have it in the ACPI
-> >>> ATPX method on others, and finally Apple have it in a piece of hw that
-> >>> isn't just on the LPC bus or somewhere like that.
-> >>>
-> >>> Currently we just hide it all inside vga_switcheroo and I'd just need
-> >>> an interface to call that once the layers have stopped poking
-> >>> registers in PCI config space, if we could fix PCI runtime suspend so
-> >>> the driver was the last to g 2et called then that would also not suck.
-> >>
-> >> Well, as I said, we may try to change the PCI layer so that it doesn't
-> >> access the device any more in pci_pm_runtime_suspend() if it sees that
-> >> pci_dev->state_saved has been set by the driver's callback.  Then,
-> >> your drivers would only need to set pci_dev->state_saved in their
-> >> .runtime_suspend() callbacks.
-> >>
-> >
-> > Actually it appears I'll need this, I'd forgotten things are a bit
-> > messier than I thought
-> >
-> > So there are two variants on the _DSM for nvidia dual-gpu machines,
-> > the older pre-optimus _DSM requires
-> > an explicit power off call post-D3, however for optimus _DSM the D3
-> > transition will flick the power switch, however
-> > the pci code then goes and seem to turn the device back to D0 for some
-> > reason. So yes after save state,
-> > I'd really appreciate if it the pci layer would stop poking my device.
-
-OK, so the patch for that is appended.  It would be nice if you could see
-if that's sufficient for your use cases.
-
-> >> Alternatively, which may be less hackish but more work, you can set the
-> >> pm_domain pointer in the device structure to a struct dev_pm_domain whose
-> >> ops will just call the corresponding bus type's ops except for
-> >> .runtime_suspend() that will execute the additional ACPI stuff after calling
-> >> the bus type's method.
-> >
-> > I've mostly written this, and it seems to work, I've jsut set a
-> > pm_domain in the vga switcheroo code that copies the dev->bus->pm
-> > into a private structure. I'll need this for the old nvidia and radeon
-> > poweroffs.
-> >
-> 
-> 
-> http://cgit.freedesktop.org/~airlied/linux/log/?h=drm-opt-pwr
-> is my current WIP branch
-
-It looks reasonable to me.
-
-Thanks,
-Rafael
-
-
----
- drivers/pci/pci-driver.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-Index: linux/drivers/pci/pci-driver.c
-===================================================================
---- linux.orig/drivers/pci/pci-driver.c
-+++ linux/drivers/pci/pci-driver.c
-@@ -1063,10 +1063,10 @@ static int pci_pm_runtime_suspend(struct
- 		return 0;
- 	}
- 
--	if (!pci_dev->state_saved)
-+	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
--
--	pci_finish_runtime_suspend(pci_dev);
-+		pci_finish_runtime_suspend(pci_dev);
-+	}
- 
- 	return 0;
- }
+BTW, while reviewing Yinghai's vga patch, I found a case in
+vga_arb_device_init() that does exactly this: registers a notifier to
+catch future hot-added devices, then calls the notifier "add" function
+for every existing device.  So that's another place that could use
+something like this.
