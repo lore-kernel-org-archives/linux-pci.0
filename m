@@ -1,129 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:34198 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755191Ab2IGXej (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 19:34:39 -0400
-Message-ID: <504A848B.1090703@wwwdotorg.org>
-Date: Fri, 07 Sep 2012 17:34:35 -0600
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Russell King <linux@arm.linux.org.uk>
-CC: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/10] ARM: tegra: Add PCIe device tree support
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de> <50201E1D.5060200@wwwdotorg.org> <20120813174003.GA2527@avionic-0098.mockup.avionic-design.de> <50294BCA.1070807@wwwdotorg.org> <CAErSpo7og1XgOSv_mFCQ=hP7pq0j3gXWh2QFL2wBJjz7kcAq=g@mail.gmail.com> <502AA96B.2050709@wwwdotorg.org> <20120814195834.GA10431@avionic-0098.mockup.avionic-design.de> <CAErSpo4Bm_Ryx=OK+svjqAwD4N8v0vrheLVdc-N1ijx8i_-N3w@mail.gmail.com> <502AD82F.3080702@wwwdotorg.org> <502AE485.8060307@wwwdotorg.org>
-In-Reply-To: <502AE485.8060307@wwwdotorg.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40488 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160Ab2IRGTl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 02:19:41 -0400
+Date: Tue, 18 Sep 2012 15:19:49 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH v3 1/8] ACPI, PCI: Use normal list for struct
+ acpi_pci_driver
+Message-Id: <20120918151949.b5903eaf.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/14/2012 05:51 PM, Stephen Warren wrote:
-> On 08/14/2012 04:58 PM, Stephen Warren wrote:
->> On 08/14/2012 03:55 PM, Bjorn Helgaas wrote:
->>> On Tue, Aug 14, 2012 at 12:58 PM, Thierry Reding
->>> <thierry.reding@avionic-design.de> wrote:
->>>> On Tue, Aug 14, 2012 at 01:39:23PM -0600, Stephen Warren wrote:
->>>>> On 08/13/2012 05:18 PM, Bjorn Helgaas wrote:
->>>>>> On Mon, Aug 13, 2012 at 11:47 AM, Stephen Warren <swarren@wwwdotorg.org> wrote:
->>>>> ...
->>>>>>> whereas for a device tree boot:
->>>>>>>
->>>>>>> (same):
->>>>>>>> [    2.112217] pci 0000:01:00.0: reg 10: [io  0x0000-0x00ff]
->>>>>>>> [    2.117635] pci 0000:01:00.0: reg 18: [mem 0x00000000-0x00000fff 64bit pref]
->>>>>>>> [    2.124690] pci 0000:01:00.0: reg 20: [mem 0x00000000-0x00003fff 64bit pref]
->>>>>>>> [    2.131731] pci 0000:01:00.0: reg 30: [mem 0x00000000-0x0001ffff pref]
->>>>>>> ... (request region happens early)
->>>>>>>> [    2.179838] r8169 0000:01:00.0: BAR 0: requesting [io  0x0000-0x00ff]
->>>>>>>> [    2.193312] r8169 0000:01:00.0: BAR 2: requesting [mem 0x00000000-0x00000fff 64bit pref]
->>>>>>>> [    2.201397] r8169 0000:01:00.0: BAR 2: can't reserve [mem 0x00000000-0x00000fff 64bit pref]
->>>>>>>> [    2.209742] r8169 0000:01:00.0: (unregistered net_device): could not request regions
->>>>>>> ... (same, just happens too late)
->>>>>>>> [    2.236818] pci 0000:01:00.0: BAR 6: assigned [mem 0xa0000000-0xa001ffff pref]
->>>>>>>> [    2.244027] pci 0000:01:00.0: BAR 4: assigned [mem 0xa0020000-0xa0023fff 64bit pref]
->>>>>>>> [    2.251794] pci 0000:01:00.0: BAR 2: assigned [mem 0xa0024000-0xa0024fff 64bit pref]
->>>>>>>> [    2.259542] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
->>>>>>>
->>>>>>> I suspect this is all still related to the PCI devices themselves being
->>>>>>> probed much earlier in the overall PCI initialization sequence when the
->>>>>>> PCI controller is probed later in the boot sequence, whereas PCI device
->>>>>>> probe is deferred until the overall PCI initialization sequence is
->>>>>>> complete if the PCI controller is probed very early in the boot sequence.
->>>>>>
->>>>>> I don't know what to apply your patches to (they don't apply cleanly
->>>>>> to v3.6-rc2), so I can't see exactly what you're doing.  But it looks
->>>>>> like you might be calling pci_bus_add_devices() before
->>>>>> pci_bus_assign_resource(), which isn't going to work.
->>>>>
->>>>> Yes, that's exactly what is happening.
->>>>>
->>>>> PCIe initialization starts in arch/arm/mach-tegra/pci.e
->>>>> tegra_pcie_init() which calls arch/arm/kernel/bios32.c
->>>>> pci_common_init(). That function first calls pcibios_init_hw() (in the
->>>>> same file, more about this later) and then loops over PCI buses, calling
->>>>> amongst other things pci_bus_assign_resources() then pci_bus_add_devices().
->>>>>
->>>>> The problem is that ARM's pcibios_init_hw() calls pci_scan_root_bus()
->>>>> (or a host-driver-specific function which that also calls
->>>>> pci_scan_root_bus() in Tegra's case) which in turn calls
->>>>> pci_bus_add_devices() right at the end, before control has returned to
->>>>> pci_common_init() and hence before pci_bus_assign_resources() has been
->>>>> called.
->>>>>
->>>>> If I modify pci_scan_root_bus() and remove the call to
->>>>> pci_bus_add_devices(), everything works as expected.
->>>>>
->>>>> So, I guess the question is: Should ARM's pcibios_init_hw() not be
->>>>> calling pci_scan_root_bus(), or at least presumably the ARM PCI code
->>>>> needs to do things in a slightly different order?
->>>
->>> I think you need to do something like this instead of using pci_scan_root_bus():
->>>
->>>     pci_create_root_bus()
->>>     pci_scan_child_bus()
->>>     pci_bus_assign_resources()
->>>     pci_bus_add_devices()
->>>
->>> This is the effective order used by most of the pci_create_root_bus() callers.
->>
->> That would pretty much duplicate everything in pci_scan_root_bus(). That
->> might cause divergence down the road.
->>
->> Can't we make the call to pci_bus_add_devices() optional in
->> pci_scan_root_bus() somehow; one of:
-> 
-> Sigh, that turns out not to work correctly; it solves at least this part
-> of the problem when booting using device tree, but when booting using a
-> board file, it causes the IRQ number passed to the PCIe device to be
-> bogus:-(
+From: Jiang Liu <jiang.liu@huawei.com>
 
-The reason this fails is because the following happens after
-pci_scan_bus_root():
+  ACPI, PCI: Use normal list for struct acpi_pci_driver
+    
+  Use normal list for struct acpi_pci_driver to simplify code.
+    
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/acpi/pci_root.c |   16 +++-------------
+ include/linux/acpi.h    |    2 +-
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0903/drivers/acpi/pci_root.c
+@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_
+ };
+ 
+ static LIST_HEAD(acpi_pci_roots);
++static LIST_HEAD(acpi_pci_drivers);
+ 
+-static struct acpi_pci_driver *sub_driver;
+ static DEFINE_MUTEX(osc_lock);
+ 
+ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi
+ 	int n = 0;
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr)
+-		pptr = &(*pptr)->next;
+-	*pptr = driver;
++	list_add_tail(&driver->node, &acpi_pci_drivers);
+ 
+ 	if (!driver->add)
+ 		return 0;
+@@ -103,14 +100,7 @@ void acpi_pci_unregister_driver(struct a
+ {
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr) {
+-		if (*pptr == driver)
+-			break;
+-		pptr = &(*pptr)->next;
+-	}
+-	BUG_ON(!*pptr);
+-	*pptr = (*pptr)->next;
++	list_del(&driver->node);
+ 
+ 	if (!driver->remove)
+ 		return;
+Index: Bjorn-next-0903/include/linux/acpi.h
+===================================================================
+--- Bjorn-next-0903.orig/include/linux/acpi.h
++++ Bjorn-next-0903/include/linux/acpi.h
+@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int 
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ struct acpi_pci_driver {
+-	struct acpi_pci_driver *next;
++	struct list_head node;
+ 	int (*add)(acpi_handle handle);
+ 	void (*remove)(acpi_handle handle);
+ };
 
-(in arch/arm/kernel/bios32.c:pci_common_init())
-
-So, if I replace the call to pci_scan_root_bus() with the code you wrote
-above, then the IRQ numbers aren't assigned into the pci_dev structures
-until after they're device_add()ed, and hence probed().
-
-Ideally, I could just add a call to pci_fixup_irqs() right before the
-call to pci_bus_add_devices() in the code you wrote above. However, that
-won't work, because pci_fixup_irqs() finds all the PCI devices to fix up
-by searching the list of devices that pci_bus_add_devices() adds to:-(
-
-I guess it's a pretty basic premise of the current PCI code that all the
-PCI scanning happens well before any device drivers are registered,
-which in turn means that device_add() doesn't trigger the device's
-probe() until much later, after all the fixups and resource assignments
-are done?
