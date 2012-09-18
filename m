@@ -1,60 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:47988 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756957Ab2ISSz0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:26 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:58817 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752005Ab2IREoK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 00:44:10 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4wmnnFKZeY4XyZdmoOZeQz8sj-5VoAhGhCSqWTBi0GRw@mail.gmail.com>
+References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
+	<1346622653-30741-7-git-send-email-yinghai@kernel.org>
+	<CAErSpo4wmnnFKZeY4XyZdmoOZeQz8sj-5VoAhGhCSqWTBi0GRw@mail.gmail.com>
+Date: Mon, 17 Sep 2012 21:44:08 -0700
+Message-ID: <CAE9FiQUB6wshovj=TBmCEL140nZB5K40BfKPYGNmmpZx536F+Q@mail.gmail.com>
+Subject: Re: [PATCH part2 6/6] PCI: Claim hw/fw allocated resources in hot add path.
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-acpi@vger.kernel.org
-Subject: [PATCH 20/40] PCI: Fix a device reference count leakage issue in pci_dev_present()
-Date: Wed, 19 Sep 2012 11:54:34 -0700
-Message-Id: <1348080894-23412-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Mon, Sep 17, 2012 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sun, Sep 2, 2012 at 3:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 
-Function pci_get_dev_by_id() will hold a reference count on the pci device
-returned, so pci_dev_present() should release the corresponding reference
-count to avoid memory leakage.
+>> -static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+>> +static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+>
+> This patch has a little too much going on at the same time.  Can you
+> split the __init removal into its own patch so we can focus on what's
+> left by itself?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/search.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ok.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index bf969ba..d0627fa 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -319,13 +319,13 @@ int pci_dev_present(const struct pci_device_id *ids)
- 	WARN_ON(in_interrupt());
- 	while (ids->vendor || ids->subvendor || ids->class_mask) {
- 		found = pci_get_dev_by_id(ids, NULL);
--		if (found)
--			goto exit;
-+		if (found) {
-+			pci_dev_put(found);
-+			return 1;
-+		}
- 		ids++;
- 	}
--exit:
--	if (found)
--		return 1;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(pci_dev_present);
--- 
-1.7.7
+>
+>>  {
+>>         int idx;
+>>         struct resource *r;
+>>
+>>         for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
+>>                 r = &dev->resource[idx];
+>> +               if (r->parent)  /* Already allocated */
+>> +                       continue;
+>
+> This is also a potentially interesting change that maybe should be in
+> its own patch.
 
+oh, we don't need that extra checking anymore. because support
+removing non-root bus is dropped.
+
+>> +void pcibios_resource_survey_bus(struct pci_bus *bus)
+>> +{
+>> +       dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
+>> +
+>> +       pcibios_allocate_bus_resources(bus);
+>> +
+>> +       pcibios_allocate_resources(bus, 0);
+>> +       pcibios_allocate_resources(bus, 1);
+>> +
+>> +       pcibios_allocate_rom_resources(bus);
+>> +}
+>> +
+>>  void __init pcibios_resource_survey(void)
+>
+> I wish pcibios_resource_survey() could look like this:
+>
+>     void __init pcibios_resource_survey(void)
+>     {
+>         list_for_each_entry(bus, &pci_root_buses, node)
+>             pcibios_resource_survey_bus(bus)
+>
+>         e820_reserve_resources_late();
+>         ...
+>
+> but maybe there's a reason why pcibios_allocate_rom_resources() really
+> has to be in the pcibios_assign_resources() fs_initcall rather than in
+> pcibios_resource_survey().
+
+that should be another patch later.
+
+Thanks
+
+Yinghai
