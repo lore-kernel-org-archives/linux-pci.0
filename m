@@ -1,62 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51468 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899Ab2IODMf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 23:12:35 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tony Luck <tony.luck@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 0/9] enhance PCI related drivers to handle hotplug events
-Date: Sat, 15 Sep 2012 11:05:03 +0800
-Message-Id: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44644 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755776Ab2IRWyO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 18:54:14 -0400
+Received: by lagy9 with SMTP id y9so277063lag.19
+        for <linux-pci@vger.kernel.org>; Tue, 18 Sep 2012 15:54:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1347670122-25824-2-git-send-email-yinghai@kernel.org>
+References: <1347670122-25824-1-git-send-email-yinghai@kernel.org> <1347670122-25824-2-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 18 Sep 2012 16:53:52 -0600
+Message-ID: <CAErSpo4-tGvDHrgmJJG5Q4wxmqWQGYx-rm+m2rV-=B1WOiGGaw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Use correct type when freeing bus resource list
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several PCI related drivers, such as pci_bind, pci_slot, acpiphp and
-aerdrv, don't handle PCI device hotplug events, which may cause stale
-state and even system crashes.
+On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Should use struct pci_bus_resource instead of struct pci_host_bridge_window
 
-This patch set registers bus notification callbacks to update driver
-states when PCI device hotplug happens.
+Looks good, and this is all my fault, sorry.  Applied to a
+pci/yinghai-misc branch.
 
-V1->V2:
-	Hook pcie_port_bus_type instead of pci_bus_type for aerdrv
-
-Jiang Liu (7):
-  PCI: make PCI device create/destroy logic symmetric
-  PCI: split registration of PCI bus devices into two stages
-  ACPI/pci_bind: correctly update binding relationship for PCI hotplug
-  ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
-  ACPI/pci_slot: update PCI slot information when PCI hotplug event
-    happens
-  PCI/acpiphp: update ACPI hotplug slot information when PCI hotplug
-    happens
-  PCI/acpiphp: serialize access to the bridge_list list
-
-Yijing Wang (2):
-  PCI: preserve dev->subordinate until pci_stop_dev() has been called
-  PCI/AER: update AER configuration when PCI hotplug event happens
-
- drivers/acpi/glue.c                |    6 ++-
- drivers/acpi/internal.h            |    2 +
- drivers/acpi/pci_bind.c            |   85 ++++++++++++-----------------------
- drivers/acpi/pci_root.c            |   31 -------------
- drivers/acpi/pci_slot.c            |   86 ++++++++++++++++++++++++++++++++----
- drivers/acpi/scan.c                |   21 +--------
- drivers/pci/bus.c                  |    2 +-
- drivers/pci/hotplug/acpiphp_glue.c |   75 +++++++++++++++++++++++++++++--
- drivers/pci/pcie/aer/aerdrv.c      |   63 +++++++++++++++++++++++++-
- drivers/pci/probe.c                |    4 +-
- drivers/pci/remove.c               |   20 ++++-----
- include/acpi/acpi_bus.h            |    4 --
- include/acpi/acpi_drivers.h        |    1 -
- 13 files changed, 262 insertions(+), 138 deletions(-)
-
--- 
-1.7.9.5
-
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> ---
+>  drivers/pci/bus.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+>
+> Index: linux-2.6/drivers/pci/bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/bus.c
+> +++ linux-2.6/drivers/pci/bus.c
+> @@ -87,11 +87,15 @@ EXPORT_SYMBOL_GPL(pci_bus_resource_n);
+>  void pci_bus_remove_resources(struct pci_bus *bus)
+>  {
+>         int i;
+> +       struct pci_bus_resource *bus_res, *tmp;
+>
+>         for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++)
+>                 bus->resource[i] = NULL;
+>
+> -       pci_free_resource_list(&bus->resources);
+> +       list_for_each_entry_safe(bus_res, tmp, &bus->resources, list) {
+> +               list_del(&bus_res->list);
+> +               kfree(bus_res);
+> +       }
+>  }
+>
+>  /**
