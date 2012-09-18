@@ -1,57 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:40153 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932791Ab2ISRtN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 13:49:13 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, x86@kernel.org
-Subject: [PATCH] PCI, x86: clear initial value for root info resources
-Date: Wed, 19 Sep 2012 10:49:00 -0700
-Message-Id: <1348076941-410-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <CAE9FiQW0PpBU0N9VzJyNKK9PvaUwokCYeB6w_j4mcN9EV0geLQ@mail.gmail.com>
-References: <CAE9FiQW0PpBU0N9VzJyNKK9PvaUwokCYeB6w_j4mcN9EV0geLQ@mail.gmail.com>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:43226 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751574Ab2IRL6L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 07:58:11 -0400
+Date: Tue, 18 Sep 2012 13:58:02 +0200
+From: Joerg Roedel <joerg.roedel@amd.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: <dwmw2@infradead.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <chrisw@sous-sol.org>,
+	<iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH v2] intel-iommu: Default to non-coherent for domains
+ unattached to iommus
+Message-ID: <20120918115802.GJ2505@amd.com>
+References: <20111112002421.10875.8307.stgit@bling.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20111112002421.10875.8307.stgit@bling.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found one system one root bus hot remove get panic.
-Panic happens when try to release hostbridge resource.
+On Fri, Nov 11, 2011 at 05:26:44PM -0700, Alex Williamson wrote:
+> domain_update_iommu_coherency() currently defaults to setting domains
+> as coherent when the domain is not attached to any iommus.  This
+> allows for a window in domain_context_mapping_one() where such a
+> domain can update context entries non-coherently, and only after
+> update the domain capability to clear iommu_coherency.
+> 
+> This can be seen using KVM device assignment on VT-d systems that
+> do not support coherency in the ecap register.  When a device is
+> added to a guest, a domain is created (iommu_coherency = 0), the
+> device is attached, and ranges are mapped.  If we then hot unplug
+> the device, the coherency is updated and set to the default (1)
+> since no iommus are attached to the domain.  A subsequent attach
+> of a device makes use of the same dmar domain (now marked coherent)
+> updates context entries with coherency enabled, and only disables
+> coherency as the last step in the process.
+> 
+> To fix this, switch domain_update_iommu_coherency() to use the
+> safer, non-coherent default for domains not attached to iommus.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Tested-by: Donald Dutile <ddutile@redhat.com>
+> Acked-by: Donald Dutile <ddutile@redhat.com>
+> Acked-by: Chris Wright <chrisw@sous-sol.org>
 
-It turns out that resource get reject during put into resource tree
-because of conflicts.
-Also that resource parent pointer have random value.
+Applied, thanks.
 
-That invalid value cause it pass through check __release_pci_root_info
-and panic in release_resource.
+-- 
+AMD Operating System Research Center
 
-Try to use kzalloc instead.
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
-
----
- arch/x86/pci/acpi.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-Index: linux-2.6/arch/x86/pci/acpi.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/acpi.c
-+++ linux-2.6/arch/x86/pci/acpi.c
-@@ -305,7 +305,6 @@ setup_resource(struct acpi_resource *acp
- 	res->flags = flags;
- 	res->start = start;
- 	res->end = end;
--	res->child = NULL;
- 
- 	if (!pci_use_crs) {
- 		dev_printk(KERN_DEBUG, &info->bridge->dev,
-@@ -434,7 +433,7 @@ probe_pci_root_info(struct pci_root_info
- 
- 	size = sizeof(*info->res) * info->res_num;
- 	info->res_num = 0;
--	info->res = kmalloc(size, GFP_KERNEL);
-+	info->res = kzalloc(size, GFP_KERNEL);
- 	if (!info->res)
- 		return;
- 
