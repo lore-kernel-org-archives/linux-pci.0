@@ -1,50 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Zhang, Yanmin" <yanmin.zhang@intel.com>
-To: "Huang, Ying" <ying.huang@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>
-Subject: RE: Why hold device_lock when calling callback in pci_walk_bus?
-Date: Fri, 28 Sep 2012 08:29:20 +0000
-Message-ID: <144086DDB7BB6D429C79280EB1C804D414B1F6@SHSMSX101.ccr.corp.intel.com>
-References: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
-In-Reply-To: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:60740 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755595Ab2IRVlI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Sep 2012 17:41:08 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Dave Airlie <airlied@gmail.com>
+Subject: Re: runtime PM and special power switches
+Date: Tue, 18 Sep 2012 23:47:33 +0200
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"dri-devel" <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
+References: <201209112255.10486.rjw@sisk.pl> <CAPM=9twQJSCX64kYsAikteZoJOH9m8e6AWuj-e_Ouyk3HmyOuQ@mail.gmail.com> <CAPM=9tw8ydqLveJLAdDJ75gDW4UkUiXMSqHqvtYPwnn-wLmGhg@mail.gmail.com>
+In-Reply-To: <CAPM=9tw8ydqLveJLAdDJ75gDW4UkUiXMSqHqvtYPwnn-wLmGhg@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201209182347.34049.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-U29tZSBlcnJvciBoYW5kbGluZyBmdW5jdGlvbnMgY2FsbCBwY2lfd2Fsa19idXMuIEZvciBleGFt
-cGxlLCBwY2ktZSBhZXIuIEhlcmUgd2UgbG9jayB0aGUgZGV2aWNlLCBzbyB0aGUgZHJpdmVyIHdv
-dWxkbid0IGRldGFjaCBmcm9tIHRoZSBkZXZpY2UsIGFzIHRoZSBjYiBtaWdodCBjYWxsIGRyaXZl
-cidzIGNhbGxiYWNrIGZ1bmN0aW9uLg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
-bTogSHVhbmcsIFlpbmcgDQpTZW50OiBGcmlkYXksIFNlcHRlbWJlciAyOCwgMjAxMiA0OjE1IFBN
-DQpUbzogYmhlbGdhYXNAZ29vZ2xlLmNvbQ0KQ2M6IEdyZWcgS3JvYWgtSGFydG1hbjsgWmhhbmcs
-IFlhbm1pbjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZzsgcmp3QHNpc2sucGwNClN1YmplY3Q6IFdoeSBob2xkIGRldmljZV9sb2NrIHdoZW4g
-Y2FsbGluZyBjYWxsYmFjayBpbiBwY2lfd2Fsa19idXM/DQoNCkhpLCBBbGwsDQoNCklmIG15IHVu
-ZGVyc3RhbmRpbmcgd2VyZSBjb3JyZWN0LCBkZXZpY2VfbG9jayBpcyB1c2VkIHRvIHByb3ZpZGUg
-bXV0dWFsIGV4Y2x1c2lvbiBiZXR3ZWVuIGRldmljZSBwcm9iZS9yZW1vdmUvc3VzcGVuZC9yZXN1
-bWUgZXRjLiAgV2h5IGhvbGQgZGV2aWNlX2xvY2sgd2hlbiBjYWxsaW5nIGNhbGxiYWNrIGluIHBj
-aV93YWxrX2J1cy4NCg0KVGhpcyBpcyBpbnRyb2R1Y2VkIGJ5IHRoZSBmb2xsb3dpbmcgY29tbWl0
-Lg0KDQpjb21taXQgZDcxMzc0ZGFmYmJhN2VjM2Y2NzM3MWQzYjdlOWY2MzEwYTU4ODgwOA0KQXV0
-aG9yOiBaaGFuZyBZYW5taW4gPHlhbm1pbi56aGFuZ0BpbnRlbC5jb20+DQpEYXRlOiAgIEZyaSBK
-dW4gMiAxMjozNTo0MyAyMDA2ICswODAwDQoNCiAgICBbUEFUQ0hdIFBDSTogZml4IHJhY2Ugd2l0
-aCBwY2lfd2Fsa19idXMgYW5kIHBjaV9kZXN0cm95X2Rldg0KICAgIA0KICAgIHBjaV93YWxrX2J1
-cyBoYXMgYSByYWNlIHdpdGggcGNpX2Rlc3Ryb3lfZGV2LiBXaGVuIGNiIGlzIGNhbGxlZA0KICAg
-IGluIHBjaV93YWxrX2J1cywgcGNpX2Rlc3Ryb3lfZGV2IG1pZ2h0IHVubGluayB0aGUgZGV2IHBv
-aW50ZWQgYnkgbmV4dC4NCiAgICBMYXRlciBvbiBpbiB0aGUgbmV4dCBsb29wLCBwb2ludGVyIG5l
-eHQgYmVjb21lcyBOVUxMIGFuZCBjYXVzZQ0KICAgIGtlcm5lbCBwYW5pYy4NCiAgICANCiAgICBC
-ZWxvdyBwYXRjaCBhZ2FpbnN0IDIuNi4xNy1yYzQgZml4ZXMgaXQgYnkgY2hhbmdpbmcgcGNpX2J1
-c19sb2NrIChzcGluX2xvY2spDQogICAgdG8gcGNpX2J1c19zZW0gKHJ3X3NlbWFwaG9yZSkuDQog
-ICAgDQogICAgU2lnbmVkLW9mZi1ieTogWmhhbmcgWWFubWluIDx5YW5taW4uemhhbmdAaW50ZWwu
-Y29tPg0KICAgIFNpZ25lZC1vZmYtYnk6IEdyZWcgS3JvYWgtSGFydG1hbiA8Z3JlZ2toQHN1c2Uu
-ZGU+DQoNCkNvcnJlc3BvbmRpbmcgZW1haWwgdGhyZWFkIGlzOiBodHRwczovL2xrbWwub3JnL2xr
-bWwvMjAwNi81LzI2LzM4DQoNCkJ1dCBmcm9tIHRoZSBjb21taXQgYW5kIGVtYWlsIHRocmVhZCwg
-SSBjYW4gbm90IGZpbmQgd2h5IHdlIG5lZWQgdG8gZG8gdGhhdC4NCg0KSSBhc2sgdGhpcyBxdWVz
-dGlvbiBiZWNhdXNlIEkgd2FudCB0byB1c2UgcGNpX3dhbGtfYnVzIGluIGEgZnVuY3Rpb24gKGlu
-IHBjaSBydW50aW1lIHJlc3VtZSBwYXRoKSB3aGljaCBtYXkgYmUgY2FsbGVkIHdpdGggZGV2aWNl
-X2xvY2sgaGVsZC4NCg0KQ2FuIGFueW9uZSBoZWxwIG1lIG9uIHRoYXQ/DQoNCkJlc3QgUmVnYXJk
-cywNCkh1YW5nIFlpbmcNCg0KDQo=
+Sorry for the delayed response.
+
+On Wednesday, September 12, 2012, Dave Airlie wrote:
+> On Wed, Sep 12, 2012 at 3:13 PM, Dave Airlie <airlied@gmail.com> wrote:
+> > On Wed, Sep 12, 2012 at 8:58 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> On Wednesday, September 12, 2012, Dave Airlie wrote:
+> >>> On Wed, Sep 12, 2012 at 7:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >>> > On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
+> >>> >
+> >>> >> Hi,
+> >>> >>
+> >>> >> On Tuesday, September 11, 2012, Dave Airlie wrote:
+> >>> >> > Hi Rafael,
+> >>> >> >
+> >>> >> > I've been investigating runtime PM support for some use-cases on GPUs.
+> >>> >> >
+> >>> >> > In some laptops we have a secondary GPU (optimus) that can be powered
+> >>> >> > up for certain 3D tasks and then turned off when finished with. Now I
+> >>> >> > did an initial pass on supporting it without using the kernel runtime
+> >>> >> > PM stuff, but Alan said I should take a look so here I am.
+> >>> >>
+> >>> >> Alan Stern or Alan Cox? :-)
+> >>> >>
+> >>> >> > While I've started to get a handle on things, we have a bit of an
+> >>> >> > extra that I'm not sure we cater for.
+> >>> >> >
+> >>> >> > Currently we get called from the PCI layer which after we are finished
+> >>> >> > with our runtime suspend callback, will go put the device into the
+> >>> >> > correct state etc, however on these optimus/powerxpress laptops we
+> >>> >> > have a separate ACPI or platform driver controlled power switch that
+> >>> >> > we need to call once the PCI layer is finished the job. This switch
+> >>> >> > effectively turns the power to the card completely off leaving it
+> >>> >> > drawing no power.
+> >>> >> >
+> >>> >> > No we can't hit the switch from the driver callback as the PCI layer
+> >>> >> > will get lost, so I'm wondering how you'd envisage we could plug this
+> >>> >> > in.
+> >>> >>
+> >>> >> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
+> >>> >> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
+> >>> >> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
+> >>> >> so perhaps it's not even too dangerous.
+> >>> >
+> >>> > This sounds more like a job for a power domain.  Unless the power
+> >>> > switch is already in the device hierarchy as a parent to the PCI
+> >>> > device.
+> >>>
+> >>> I'll have to investigate power domains then,
+> >>>
+> >>> The switch is hidden in many different places, one some laptops its in
+> >>> a ACPI _DSM on one GPU, on others its in an ACPI _DSM on the other
+> >>> one, in some its in a different ACPI _DSM, then we have it in the ACPI
+> >>> ATPX method on others, and finally Apple have it in a piece of hw that
+> >>> isn't just on the LPC bus or somewhere like that.
+> >>>
+> >>> Currently we just hide it all inside vga_switcheroo and I'd just need
+> >>> an interface to call that once the layers have stopped poking
+> >>> registers in PCI config space, if we could fix PCI runtime suspend so
+> >>> the driver was the last to g 2et called then that would also not suck.
+> >>
+> >> Well, as I said, we may try to change the PCI layer so that it doesn't
+> >> access the device any more in pci_pm_runtime_suspend() if it sees that
+> >> pci_dev->state_saved has been set by the driver's callback.  Then,
+> >> your drivers would only need to set pci_dev->state_saved in their
+> >> .runtime_suspend() callbacks.
+> >>
+> >
+> > Actually it appears I'll need this, I'd forgotten things are a bit
+> > messier than I thought
+> >
+> > So there are two variants on the _DSM for nvidia dual-gpu machines,
+> > the older pre-optimus _DSM requires
+> > an explicit power off call post-D3, however for optimus _DSM the D3
+> > transition will flick the power switch, however
+> > the pci code then goes and seem to turn the device back to D0 for some
+> > reason. So yes after save state,
+> > I'd really appreciate if it the pci layer would stop poking my device.
+
+OK, so the patch for that is appended.  It would be nice if you could see
+if that's sufficient for your use cases.
+
+> >> Alternatively, which may be less hackish but more work, you can set the
+> >> pm_domain pointer in the device structure to a struct dev_pm_domain whose
+> >> ops will just call the corresponding bus type's ops except for
+> >> .runtime_suspend() that will execute the additional ACPI stuff after calling
+> >> the bus type's method.
+> >
+> > I've mostly written this, and it seems to work, I've jsut set a
+> > pm_domain in the vga switcheroo code that copies the dev->bus->pm
+> > into a private structure. I'll need this for the old nvidia and radeon
+> > poweroffs.
+> >
+> 
+> 
+> http://cgit.freedesktop.org/~airlied/linux/log/?h=drm-opt-pwr
+> is my current WIP branch
+
+It looks reasonable to me.
+
+Thanks,
+Rafael
+
+
+---
+ drivers/pci/pci-driver.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Index: linux/drivers/pci/pci-driver.c
+===================================================================
+--- linux.orig/drivers/pci/pci-driver.c
++++ linux/drivers/pci/pci-driver.c
+@@ -1063,10 +1063,10 @@ static int pci_pm_runtime_suspend(struct
+ 		return 0;
+ 	}
+ 
+-	if (!pci_dev->state_saved)
++	if (!pci_dev->state_saved) {
+ 		pci_save_state(pci_dev);
+-
+-	pci_finish_runtime_suspend(pci_dev);
++		pci_finish_runtime_suspend(pci_dev);
++	}
+ 
+ 	return 0;
+ }
