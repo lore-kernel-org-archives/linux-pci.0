@@ -1,54 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:48481 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755522Ab2I0IM3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:29 -0400
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:62292 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752012Ab2IRXtv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 19:49:51 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
+References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
+	<1347670122-25824-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
+Date: Tue, 18 Sep 2012 16:49:49 -0700
+Message-ID: <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add root bus
-Date: Thu, 27 Sep 2012 01:11:55 -0700
-Message-Id: <1348733519-24684-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, Tony Luck <tony.luck@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we get hot-added ioapic registered.
-pci_enable_bridges will try to enable ioapic irq for pci bridges.
+On Tue, Sep 18, 2012 at 3:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Found one system one root bus hot remove get panic.
+>> Panic happens when try to release hostbridge resource.
+>>
+>> It turns out that resource get reject during put into resource tree
+>> because of conflicts.
+>> Also that resource parent pointer have random value.
+>>
+>> That invalid value cause it pass through check __release_pci_root_info
+>> and panic in release_resource.
+>>
+>> Try to use kzalloc instead.
+>
+> Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
+> what it does:
+>
+>         if (windows) {
+>                 controller->window =
+>                         kmalloc_node(sizeof(*controller->window) * windows,
+>                                      GFP_KERNEL, controller->node);
+>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index bce469c..27adbfd 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	if (system_state != SYSTEM_BOOTING)
-+		pci_assign_unassigned_bus_resources(root->bus);
-+
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
- 			driver->add(root);
- 	mutex_unlock(&acpi_pci_root_lock);
- 
-+	/* need to after hot-added ioapic is registered */
-+	if (system_state != SYSTEM_BOOTING)
-+		pci_enable_bridges(root->bus);
-+
- 	pci_bus_add_devices(root->bus);
- 
- 	return 0;
--- 
-1.7.7
+yes, but they don't support pci_set_host_bridge_release yet. so they
+should not meet this problem yet.
 
+Thanks
+
+Yinghai
