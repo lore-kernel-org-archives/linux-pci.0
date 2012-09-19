@@ -1,48 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62258 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754645Ab2IKADI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2012 20:03:08 -0400
-Received: by lagy9 with SMTP id y9so1522951lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 10 Sep 2012 17:03:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120910225504.GA18038@localhost>
-References: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
- <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com> <20120910225504.GA18038@localhost>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Sep 2012 18:02:45 -0600
-Message-ID: <CAErSpo7c+ttzzLJYqA=MNkMnoTu2V29BXc=ohD4uVSMQeCShkQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] PCI: fix on-stack pci_device_id's
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com,
-	Feng Tang <feng.tang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 14/40] PCI: Separate out pci_assign_unassigned_bus_resources()
+Date: Wed, 19 Sep 2012 11:54:28 -0700
+Message-Id: <1348080894-23412-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2012 at 4:55 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
-> On Mon, Sep 10, 2012 at 02:44:32PM -0600, Bjorn Helgaas wrote:
->> On Mon, Sep 10, 2012 at 1:36 PM, Jiri Slaby <jslaby@suse.cz> wrote:
->> > Commit "PCI: Use pci_device_id on stack for pci_get_subsys/class() to
->> > avoid kmalloc" changed heap allocations to on-stack variables, but it
->> > did not add initialization of other than set members. This causes
->> > random failures during bootup wherever pci device is needed to be
->> > found. Hence the boot just hangs or panics.
->> >
->> > This patches fixes it by setting the content of pci_device_id directly
->> > in the initializer.
->>
->> Nice!  I fixed this already by adding a memset(), but I like your way
->> better.  I knew we could initialize members of a structure on the
->> stack, but I didn't know C guaranteed that uninitialized members would
->> be implicitly initialized also.  But apparently it does:
->>
->> http://stackoverflow.com/questions/10828294/c-and-c-partial-initialization-of-automatic-structure
->
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
->
-> For the record, I proposed the same initializer-style fix in the very
-> beginning that you didn't realize its beauty until now ;-)
+It is main portion of pci_rescan_bus().
 
-Yep, I credited you :)  Sorry I didn't look closely enough to begin with.
+Separate it out and need to use it for pci root bus hot add later.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   32 ++++++++++++++++++--------------
+ include/linux/pci.h     |    1 +
+ 2 files changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9e625d84..7d7c1c9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1550,25 +1550,12 @@ enable_all:
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
+-#ifdef CONFIG_HOTPLUG
+-/**
+- * pci_rescan_bus - scan a PCI bus for devices.
+- * @bus: PCI bus to scan
+- *
+- * Scan a PCI bus and child buses for new devices, adds them,
+- * and enables them.
+- *
+- * Returns the max number of subordinate bus discovered.
+- */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+-	unsigned int max;
+ 	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
+ 
+-	max = pci_scan_child_bus(bus);
+-
+ 	down_read(&pci_bus_sem);
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+ 		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+@@ -1581,6 +1568,23 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+ 	BUG_ON(!list_empty(&add_list));
+ 
+ 	pci_enable_bridges(bus);
++}
++#ifdef CONFIG_HOTPLUG
++/**
++ * pci_rescan_bus - scan a PCI bus for devices.
++ * @bus: PCI bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++{
++	unsigned int max;
++
++	max = pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ec25403..02b8e10 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -981,6 +981,7 @@ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-- 
+1.7.7
+
