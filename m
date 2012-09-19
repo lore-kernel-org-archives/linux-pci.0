@@ -1,42 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56492 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752861Ab2IJWnL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2012 18:43:11 -0400
-Received: by lagy9 with SMTP id y9so1489827lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 10 Sep 2012 15:43:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1347061864.2385.59.camel@pasglop>
-References: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
- <CAErSpo559Hr-fnZTDZGOfz9T6_GSHKhoKChgNbq-apLuLqbaYQ@mail.gmail.com> <1347061864.2385.59.camel@pasglop>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Sep 2012 16:42:49 -0600
-Message-ID: <CAErSpo41vr4f4YkLZc-QwHU8CTQv1FxzGF9h5-eu85NaTUhPaw@mail.gmail.com>
-Subject: Re: [PATCH V9 0/5] Minimal alignment for p2p bars
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Gavin Shan <shangw@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 38/40] ACPI, PCI: Skip extra pci_enable_bridges for non hot-add root
+Date: Wed, 19 Sep 2012 11:54:52 -0700
+Message-Id: <1348080894-23412-39-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 7, 2012 at 5:51 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Fri, 2012-09-07 at 15:49 -0700, Bjorn Helgaas wrote:
->>
->> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/gavin-window-alignment
->>
->> Assuming they pass Fengguang's build/smoke test, I'll merge that to my
->> "next" branch soon.  Thanks!
->
-> Thanks !
->
-> Any chance you can poke me when you do so ? At that point I'll include
-> them as well along with the rest of the stuff that depends on them.
+Pre-installed will be handled later, need to skip the one only for hot-added
+roots.
 
-I merged these to my "next" branch and pushed it.  Are you sure you
-want to pull that as opposed to just using the
-pci/gavin-window-alignment branch?  Both "next" and
-"pci/gavin-window-alignment" have identical commits, but
-"pci/gavin-window-alignment" is less likely to be rebased.
+Otherwise will get anonying failing message about can not reserve, irq ...
 
-Bjorn
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c    |    3 ++-
+ drivers/acpi/pci_root_hp.c |    1 +
+ include/acpi/acpi_bus.h    |    1 +
+ 3 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 670511f..6151d83 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -645,7 +645,8 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ 			driver->add(root);
+ 
+ 	/* need to after hot-added ioapic is registered */
+-	pci_enable_bridges(root->bus);
++	if (root->hot_added)
++		pci_enable_bridges(root->bus);
+ 
+ 	pci_bus_add_devices(root->bus);
+ 	mutex_unlock(&acpi_pci_root_lock);
+diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+index e573298..1f60533 100644
+--- a/drivers/acpi/pci_root_hp.c
++++ b/drivers/acpi/pci_root_hp.c
+@@ -86,6 +86,7 @@ static void acpi_root_configure_bridge(struct acpi_device *device)
+ 
+ 	pcibios_resource_survey_bus(root->bus);
+ 	pci_assign_unassigned_bus_resources(root->bus);
++	root->hot_added = true;
+ }
+ 
+ static void handle_root_bridge_insertion(acpi_handle handle)
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index bde976e..47de196 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -406,6 +406,7 @@ struct acpi_pci_root {
+ 
+ 	u32 osc_support_set;	/* _OSC state of support bits */
+ 	u32 osc_control_set;	/* _OSC state of control bits */
++	bool hot_added;
+ 	phys_addr_t mcfg_addr;
+ };
+ 
+-- 
+1.7.7
+
