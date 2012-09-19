@@ -1,47 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:38869 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753890Ab2IYI0v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:51 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>, sparclinux@vger.kernel.org
-Subject: [PATCH 20/29] PCI, sparc: kill pci_find_next_bus
-Date: Tue, 25 Sep 2012 01:26:21 -0700
-Message-Id: <1348561590-28067-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:28529 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755146Ab2ISClx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:41:53 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 6/6] PCI/AER: clean unused code pci_bus_ops_pop
+Date: Wed, 19 Sep 2012 10:40:42 +0800
+Message-ID: <1348022442-7816-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/sparc/kernel/pci.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/pcie/aer/aer_inject.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index acc8c83..70d8c16 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct device_node *node,
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 79b611d..9a24af4 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -145,22 +145,6 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+ 	return __find_pci_bus_ops_parent(bus);
+ }
  
- static int __init of_pci_slot_init(void)
+-static struct pci_bus_ops *pci_bus_ops_pop(void)
+-{
+-	unsigned long flags;
+-	struct pci_bus_ops *bus_ops = NULL;
+-
+-	spin_lock_irqsave(&inject_lock, flags);
+-	if (list_empty(&pci_bus_ops_list))
+-		bus_ops = NULL;
+-	else {
+-		struct list_head *lh = pci_bus_ops_list.next;
+-		list_del(lh);
+-		bus_ops = list_entry(lh, struct pci_bus_ops, list);
+-	}
+-	spin_unlock_irqrestore(&inject_lock, flags);
+-	return bus_ops;
+-}
+ 
+ static void pci_bus_ops_free(void)
  {
--	struct pci_bus *pbus = NULL;
-+	struct pci_host_bridge *host_bridge = NULL;
-+	struct pci_bus *pbus;
- 
--	while ((pbus = pci_find_next_bus(pbus)) != NULL) {
-+	for_each_pci_host_bridge(host_bridge) {
- 		struct device_node *node;
- 
-+		pbus = hot_bridge->bus;
- 		if (pbus->self) {
- 			/* PCI->PCI bridge */
- 			node = pbus->self->dev.of_node;
 -- 
-1.7.7
+1.7.1
+
 
