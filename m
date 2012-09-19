@@ -1,112 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fiji.vyatta.com ([76.74.103.50]:35651 "EHLO fiji.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752088Ab2IGQpo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Sep 2012 12:45:44 -0400
-Message-Id: <20120907163438.085433610@vyatta.com>
-Date: Fri, 07 Sep 2012 09:33:17 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: Linas Vepstas <linasvepstas@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] make drivers with pci error handlers const
-References: <20120907163313.614852012@vyatta.com>
+Received: from webmail.solarflare.com ([12.187.104.25]:53365 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752569Ab2ISWqR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 18:46:17 -0400
+Message-ID: <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: Re: New commands to configure IOV features
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Yuval Mintz <yuvalmin@broadcom.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Ariel Elior <ariele@broadcom.com>,
+	Eilon Greenstein <eilong@broadcom.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Wed, 19 Sep 2012 23:46:13 +0100
+In-Reply-To: <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
+References: <5003DC9B.8000706@broadcom.com> <5005BD00.4090106@redhat.com>
+	 <5005D45D.1040302@genband.com>
+	 <20120717.141153.46613285253481776.davem@davemloft.net>
+	 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
+	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	 <5009B186.6000806@genband.com>
+	 <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+	 <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
+	 <500D6932.8090306@genband.com>
+	 <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+	 <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
+	 <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown>
+	 <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
+	 <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Covers the rest of the uses of pci error handler.
+On Wed, 2012-09-19 at 15:17 -0700, Yinghai Lu wrote:
+> On Wed, Sep 19, 2012 at 12:44 PM, Ben Hutchings
+> <bhutchings@solarflare.com> wrote:
+> > On Wed, 2012-09-19 at 08:53 -0700, Greg Rose wrote:
+> >> I was not able to attend the Linux conference held at the end of August
+> >> myself but coworkers of mine here at Intel informed that method 2 here
+> >> seems to be the preferred approach.  Perhaps some folks who attended
+> >> the the conference can chime in with more specifics.
+> >
+> > There really wasn't much more specific discussion.  Bjorn's summary of
+> > the mini-summit <http://lwn.net/Articles/514113/> says:
+> >
+> >> SR-IOV Management
+> >>
+> >>     Currently drivers implement module parameters like "max_vfs".  This means
+> >>     all devices claimed by the driver get the same number of VFs, and you can't
+> >>     change anything without unloading and reloading the driver.
+> >>
+> >>     Consensus that we should try to implement a knob for this in sysfs so it
+> >>     can be generic (not in each driver) and set individually for each device.
+> >
+> > I don't think any implementation has been posted to the linux-pci list
+> 
+> please check attached three patches...
+[...]
+> --- linux-2.6.orig/drivers/pci/pci-sysfs.c
+> +++ linux-2.6/drivers/pci/pci-sysfs.c
+> @@ -459,6 +459,30 @@ boot_vga_show(struct device *dev, struct
+>  }
+>  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+>  
+> +static ssize_t
+> +max_vfs_show(struct device *dev, struct device_attribute *attr, char *buf)
+> +{
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +       return sprintf(buf, "%u\n", pdev->max_vfs);
+> +}
+> +static ssize_t
+> +max_vfs_store(struct device *dev, struct device_attribute *attr,
+> +                const char *buf, size_t count)
+> +{
+> +       unsigned long val;
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +       if (strict_strtoul(buf, 0, &val) < 0)
+> +               return -EINVAL;
+> +
+> +       pdev->max_vfs = val;
+> +
+> +       return count;
+> +}
+[...]
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+Then what would actually trigger creation of the VFs?  There's no way we
+can assume that some sysfs attribute will be written before the PF
+driver is loaded (what if it's built-in?).  I thought the idea was to
+add a driver callback that would be called when the sysfs attribute was
+written.
 
+Ben.
 
----
-Depends on first patch that changes PCI core.
-
- drivers/block/nvme.c                  |    2 +-
- drivers/infiniband/hw/qib/qib.h       |    2 +-
- drivers/infiniband/hw/qib/qib_pcie.c  |    2 +-
- drivers/media/dvb/ngene/ngene-cards.c |    2 +-
- drivers/tty/serial/8250/8250_pci.c    |    2 +-
- drivers/tty/serial/jsm/jsm_driver.c   |    2 +-
- drivers/xen/xen-pciback/pci_stub.c    |    2 +-
- 7 files changed, 7 insertions(+), 7 deletions(-)
-
---- a/drivers/block/nvme.c	2012-09-07 09:29:55.901548765 -0700
-+++ b/drivers/block/nvme.c	2012-09-07 09:31:23.240671617 -0700
-@@ -1675,7 +1675,7 @@ static void __devexit nvme_remove(struct
- #define nvme_suspend NULL
- #define nvme_resume NULL
- 
--static struct pci_error_handlers nvme_err_handler = {
-+static const struct pci_error_handlers nvme_err_handler = {
- 	.error_detected	= nvme_error_detected,
- 	.mmio_enabled	= nvme_dump_registers,
- 	.link_reset	= nvme_link_reset,
---- a/drivers/media/dvb/ngene/ngene-cards.c	2012-09-07 09:29:55.901548765 -0700
-+++ b/drivers/media/dvb/ngene/ngene-cards.c	2012-09-07 09:31:23.240671617 -0700
-@@ -524,7 +524,7 @@ static void ngene_resume(struct pci_dev
- 	printk(KERN_INFO DEVICE_NAME ": resume\n");
- }
- 
--static struct pci_error_handlers ngene_errors = {
-+static const struct pci_error_handlers ngene_errors = {
- 	.error_detected = ngene_error_detected,
- 	.link_reset = ngene_link_reset,
- 	.slot_reset = ngene_slot_reset,
---- a/drivers/tty/serial/8250/8250_pci.c	2012-09-07 09:29:55.901548765 -0700
-+++ b/drivers/tty/serial/8250/8250_pci.c	2012-09-07 09:31:23.240671617 -0700
-@@ -4236,7 +4236,7 @@ static void serial8250_io_resume(struct
- 		pciserial_resume_ports(priv);
- }
- 
--static struct pci_error_handlers serial8250_err_handler = {
-+static const struct pci_error_handlers serial8250_err_handler = {
- 	.error_detected = serial8250_io_error_detected,
- 	.slot_reset = serial8250_io_slot_reset,
- 	.resume = serial8250_io_resume,
---- a/drivers/tty/serial/jsm/jsm_driver.c	2012-09-07 09:29:55.901548765 -0700
-+++ b/drivers/tty/serial/jsm/jsm_driver.c	2012-09-07 09:31:23.240671617 -0700
-@@ -54,7 +54,7 @@ static pci_ers_result_t jsm_io_error_det
- static pci_ers_result_t jsm_io_slot_reset(struct pci_dev *pdev);
- static void jsm_io_resume(struct pci_dev *pdev);
- 
--static struct pci_error_handlers jsm_err_handler = {
-+static const struct pci_error_handlers jsm_err_handler = {
- 	.error_detected = jsm_io_error_detected,
- 	.slot_reset = jsm_io_slot_reset,
- 	.resume = jsm_io_resume,
---- a/drivers/xen/xen-pciback/pci_stub.c	2012-09-07 09:29:55.901548765 -0700
-+++ b/drivers/xen/xen-pciback/pci_stub.c	2012-09-07 09:31:23.240671617 -0700
-@@ -871,7 +871,7 @@ end:
- }
- 
- /*add xen_pcibk AER handling*/
--static struct pci_error_handlers xen_pcibk_error_handler = {
-+static const struct pci_error_handlers xen_pcibk_error_handler = {
- 	.error_detected = xen_pcibk_error_detected,
- 	.mmio_enabled = xen_pcibk_mmio_enabled,
- 	.slot_reset = xen_pcibk_slot_reset,
---- a/drivers/infiniband/hw/qib/qib.h	2012-09-07 09:29:56.901538722 -0700
-+++ b/drivers/infiniband/hw/qib/qib.h	2012-09-07 09:31:23.244671576 -0700
-@@ -87,7 +87,7 @@ struct qlogic_ib_stats {
- };
- 
- extern struct qlogic_ib_stats qib_stats;
--extern struct pci_error_handlers qib_pci_err_handler;
-+extern const struct pci_error_handlers qib_pci_err_handler;
- extern struct pci_driver qib_driver;
- 
- #define QIB_CHIP_SWVERSION QIB_CHIP_VERS_MAJ
---- a/drivers/infiniband/hw/qib/qib_pcie.c	2012-09-07 09:29:56.901538722 -0700
-+++ b/drivers/infiniband/hw/qib/qib_pcie.c	2012-09-07 09:31:23.244671576 -0700
-@@ -753,7 +753,7 @@ qib_pci_resume(struct pci_dev *pdev)
- 	qib_init(dd, 1); /* same as re-init after reset */
- }
- 
--struct pci_error_handlers qib_pci_err_handler = {
-+const struct pci_error_handlers qib_pci_err_handler = {
- 	.error_detected = qib_pci_error_detected,
- 	.mmio_enabled = qib_pci_mmio_enabled,
- 	.link_reset = qib_pci_link_reset,
-
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
