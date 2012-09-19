@@ -1,76 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:36921 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684Ab2IEUnC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2012 16:43:02 -0400
-Date: Wed, 5 Sep 2012 16:32:17 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Don Dutile <ddutile@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 5/5] PCI/xen-pcifront: simplify code by hotplug safe
- pci_get_domain_bus_and_slot()
-Message-ID: <20120905203217.GA28018@phenom.dumpdata.com>
-References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
- <1346168638-32724-6-git-send-email-jiang.liu@huawei.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23173 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754107Ab2ISFxF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 01:53:05 -0400
+Message-ID: <50595DA3.4030103@huawei.com>
+Date: Wed, 19 Sep 2012 13:52:35 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1346168638-32724-6-git-send-email-jiang.liu@huawei.com>
+To: Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/6] PCI/AER: fix pci_ops return NULL when hotplug a pci
+ bus doing aer error inject
+References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>  <1348022442-7816-2-git-send-email-wangyijing@huawei.com> <1348031618.8212.124.camel@yhuang-dev>
+In-Reply-To: <1348031618.8212.124.camel@yhuang-dev>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 28, 2012 at 11:43:58PM +0800, Jiang Liu wrote:
-> Following code has a race window between pci_find_bus() and pci_get_slot()
-> if PCI hotplug operation happens between them which removes the pci_bus.
-> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
-> which also reduces code complexity.
+On 2012/9/19 13:13, Huang Ying wrote:
+> On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
+>> When we inject aer errors to the target pcie device by aer_inject module, the pci_ops of pci
+>> bus which the target device is on will be assigned to pci_ops_aer.So if the target pci device
+>> is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
+>> will be assigned to pci_ops_aer too.Now every access to the child bus's devices will result to
+>> system panic, because it get a NULL pci_ops in pci_read_aer/pci_write_aer.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
+>> ---
+>>  drivers/pci/pcie/aer/aer_inject.c |   27 ++++++++++++++++++++++++++-
+>>  1 files changed, 26 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+>> index 4e24cb8..0f00a27 100644
+>> --- a/drivers/pci/pcie/aer/aer_inject.c
+>> +++ b/drivers/pci/pcie/aer/aer_inject.c
+>> @@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+>>  	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
+>>  }
+>>  
+>> +/* find pci_ops of the nearest parent bus */
+>> +static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
+>> +{
+>> +	struct pci_bus_ops *bus_ops;
+>> +	struct pci_bus *pbus = bus->parent;
+>> +
+>> +	if (!pbus)
+>> +		return NULL;
+>> +
+>> +	while (pbus) {
+>> +		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
+>> +			if (bus_ops->bus == pbus)
+>> +				return bus_ops->ops;
+>> +
+>> +		pbus = pbus->parent;
+>> +	}
+>> +
+>> +	return NULL;
+>> +}
+>> +
+>>  /* inject_lock must be held before calling */
+>>  static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>>  {
+>> @@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>>  		if (bus_ops->bus == bus)
+>>  			return bus_ops->ops;
+>>  	}
+>> -	return NULL;
+>> +
+>> +	/* can't find bus_ops, fall back to get bus_ops of upstream bus */
+>> +	return __find_pci_bus_ops_parent(bus);
+>>  }
+>>  
+>>  static struct pci_bus_ops *pci_bus_ops_pop(void)
+>> @@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+>>  	}
+>>  out:
+>>  	ops = __find_pci_bus_ops(bus);
+>> +	BUG_ON(!ops);
+>>  	spin_unlock_irqrestore(&inject_lock, flags);
+>>  	return ops->read(bus, devfn, where, size, val);
+>>  }
+>> @@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
+>>  	}
+>>  out:
+>>  	ops = __find_pci_bus_ops(bus);
+>> +	BUG_ON(!ops);
+>>  	spin_unlock_irqrestore(&inject_lock, flags);
+>>  	return ops->write(bus, devfn, where, size, val);
+>>  }
+>> @@ -506,6 +530,7 @@ static struct miscdevice aer_inject_device = {
+>>  	.fops = &aer_inject_fops,
+>>  };
+>>  
+>> +
 > 
-> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
-> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
+> unnecessary new line?
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 
-So:
+Yes, it's unnecessary, I will clean this later.
 
-Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Tested-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Thanks
+Yijing
 
-> ---
->  drivers/pci/xen-pcifront.c |   10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
+> Best Regards,
+> Huang Ying
 > 
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index d6cc62c..def8d0b 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -982,7 +982,6 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
->  	int err = 0;
->  	int i, num_devs;
->  	unsigned int domain, bus, slot, func;
-> -	struct pci_bus *pci_bus;
->  	struct pci_dev *pci_dev;
->  	char str[64];
->  
-> @@ -1032,13 +1031,8 @@ static int pcifront_detach_devices(struct pcifront_device *pdev)
->  			goto out;
->  		}
->  
-> -		pci_bus = pci_find_bus(domain, bus);
-> -		if (!pci_bus) {
-> -			dev_dbg(&pdev->xdev->dev, "Cannot get bus %04x:%02x\n",
-> -				domain, bus);
-> -			continue;
-> -		}
-> -		pci_dev = pci_get_slot(pci_bus, PCI_DEVFN(slot, func));
-> +		pci_dev = pci_get_domain_bus_and_slot(domain, bus,
-> +				PCI_DEVFN(slot, func));
->  		if (!pci_dev) {
->  			dev_dbg(&pdev->xdev->dev,
->  				"Cannot get PCI device %04x:%02x:%02x.%d\n",
-> -- 
-> 1.7.9.5
+>>  static int __init aer_inject_init(void)
+>>  {
+>>  	return misc_register(&aer_inject_device);
+> 
+> 
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
