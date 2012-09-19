@@ -1,37 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56019 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751101Ab2IGVxC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 17:53:02 -0400
-Received: by lagy9 with SMTP id y9so34939lag.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 14:53:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120907214005.5077211FC43@bugzilla.kernel.org>
-References: <bug-18412-41252@https.bugzilla.kernel.org/> <20120907214005.5077211FC43@bugzilla.kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 14:52:40 -0700
-Message-ID: <CAErSpo6vMjr=veZs8AWg1X5EfWfGNeUFkz1EExF4+km9fnOwmQ@mail.gmail.com>
-Subject: Re: [Bug 18412] Intel DP43BF requires "pci=assign-busses" to discover
- some devices
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from acsinet15.oracle.com ([141.146.126.227]:48035 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756987Ab2ISSza (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:30 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 26/40] PCI, ACPI: del root bus prt
+Date: Wed, 19 Sep 2012 11:54:40 -0700
+Message-Id: <1348080894-23412-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 7, 2012 at 2:40 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=18412
+corresponding to add path.
 
-> --- Comment #4 from VL <vl.homutov@gmail.com>  2012-09-07 21:40:04 ---
-> The bug is still there with behaviour exactly as specified by reporter.
->
-> Tested with linux-3.4.9 (gentoo), DP43BF motherboard and Intel PRO/1000 NICs.
-> With pci=assign-busses lspci shows devices properly, without it nothing
-> is in the list.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Anybody who wants to help with bugs like this, feel free :)  There are
-a number of open regressions and bugs in the PCI subsystem of
-https://bugzilla.kernel.org/
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 92ec5c9..b72c85c 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -650,6 +650,8 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ 
+ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ {
++	acpi_status status;
++	acpi_handle handle;
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 
+ 	/* that root bus could be removed already */
+@@ -664,6 +666,10 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
++	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
++	if (ACPI_SUCCESS(status))
++		acpi_pci_irq_del_prt(root->bus);
++
+ 	dev_printk(KERN_DEBUG, &device->dev,
+ 		"freeing acpi_pci_root, will remove pci root bus at first");
+ 	pci_remove_root_bus(root->bus);
+-- 
+1.7.7
 
-I spend a lot of time looking at these bugs, and that reduces the time
-I have to review and apply patches.
