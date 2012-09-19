@@ -1,197 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:33215 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759153Ab2IKLwq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 07:52:46 -0400
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: "Indoh, Takao" <indou.takao@jp.fujitsu.com>
-CC: "vgoyal@redhat.com" <vgoyal@redhat.com>,
-	"kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"hbabu@us.ibm.com" <hbabu@us.ibm.com>,
-	"Ishii, Hironobu" <ishii.hironobu@jp.fujitsu.com>,
-	"martin.wilck@ts.fujitsu.com" <martin.wilck@ts.fujitsu.com>
-Subject: RE: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-Date: Tue, 11 Sep 2012 11:52:42 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A4AC9A5@G01JPEXMBYT03>
-References: <501BB4EF.7080909@jp.fujitsu.com>
- <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com>
- <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com>
- <4A338DB2991D2A44B9A44B8718AECF650A4AA6BF@G01JPEXMBYT03>
- <504D8A28.9090105@jp.fujitsu.com>
-In-Reply-To: <504D8A28.9090105@jp.fujitsu.com>
-Content-Type: text/plain; charset="iso-2022-jp"
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33364 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752715Ab2ISNMt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 09:12:49 -0400
+Received: by lbbgj3 with SMTP id gj3so873071lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 19 Sep 2012 06:12:47 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
+References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
+ <1347670122-25824-3-git-send-email-yinghai@kernel.org> <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
+ <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Sep 2012 07:12:27 -0600
+Message-ID: <CAErSpo7DJgtxCF2ubw4rwxcSQh-BkivQLJDsqJOGU32pcmTTnw@mail.gmail.com>
+Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, Tony Luck <tony.luck@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Takao Indoh [mailto:indou.takao@jp.fujitsu.com]
-> Sent: Monday, September 10, 2012 3:35 PM
-> To: Kaneshige, Kenji/金重 憲治
-> Cc: vgoyal@redhat.com; kexec@lists.infradead.org;
-> linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
-> bhelgaas@google.com; hbabu@us.ibm.com; Ishii, Hironobu/石井 宏延;
-> martin.wilck@ts.fujitsu.com
-> Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
-> with iommu
-> 
-> (2012/09/10 11:34), Kaneshige, Kenji wrote:
-> >> -----Original Message-----
-> >> From: linux-pci-owner@vger.kernel.org
-> >> [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Takao Indoh
-> >> Sent: Wednesday, September 05, 2012 8:10 PM
-> >> To: vgoyal@redhat.com
-> >> Cc: kexec@lists.infradead.org; linux-kernel@vger.kernel.org;
-> >> linux-pci@vger.kernel.org; bhelgaas@google.com; hbabu@us.ibm.com;
-> Ishii,
-> >> Hironobu/石井 宏延; martin.wilck@ts.fujitsu.com
-> >> Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on
-> kdump
-> >> with iommu
-> >>
-> >> (2012/08/07 5:39), Vivek Goyal wrote:
-> >>> On Mon, Aug 06, 2012 at 01:30:47PM +0900, Takao Indoh wrote:
-> >>>> Hi Vivek,
-> >>>>
-> >>>> (2012/08/03 20:46), Vivek Goyal wrote:
-> >>>>> On Fri, Aug 03, 2012 at 08:24:31PM +0900, Takao Indoh wrote:
-> >>>>>> Hi all,
-> >>>>>>
-> >>>>>> This patch adds kernel parameter "reset_pcie_devices" which resets
-> >> PCIe
-> >>>>>> devices at boot time to address DMA problem on kdump with iommu.
-> When
-> >>>>>> this parameter is specified, a hot reset is triggered on each PCIe
-> >> root
-> >>>>>> port and downstream port to reset its downstream endpoint.
-> >>>>>
-> >>>>> Hi Takao,
-> >>>>>
-> >>>>> Why not use existing "reset_devices" parameter instead of introducing
-> >>>>> a new one?
-> >>>>
-> >>>> "reset_devices" is used for each driver to reset their own device,
-> and
-> >>>> this patch resets all devices forcibly, so I thought they were different
-> >>>> things.
-> >>>
-> >>> Yes reset_devices currently is used for driver to reset its device.
-> I
-> >>> thought one could very well extend its reach to reset pci express devices
-> >>> at bus level.
-> >>>
-> >>> Having them separate is not going to be much useful from kdump
-> >>> perspective. We will end up passing both reset_devices and
-> >>> reset_pcie_devices to second kernel whill lead to bus level reset as
-> well
-> >>> as device level reset.
-> >>>
-> >>> Ideal situation would be that somehow detect that bus level reset has
-> >> been
-> >>> done and skip device level reset (assuming bus level reset obviates
-> the
-> >>> need of device level reset, please correct me if that's not the case).
-> >>>
-> >>> After pcie reset, can we store the state in a variable and drivers can
-> >>> use that variable to check if PCIe level reset was done or not. If yes,
-> >>> skip device level reset (Assuming driver knows that device is on a
-> >>> PCIe slot).
-> >>>
-> >>> In that case we will not have to introduce new kernel command line,
-> and
-> >>> also avoid double reset?
-> >>
-> >> I found a problem when testing my patch on some machines.
-> >>
-> >> Originally there are two problems in kdump kernel when iommu is enabled;
-> >> DMAR error and PCI SERR. I thought they are fixed by my patch, but I
-> >> noticed that PCI SERR is still detected after applying the patch. It
-> >> seems that something happens when Interrupt Remapping is initialized
-> in
-> >> kdump kernel.
-> >
-> > I'm not sure, but I guess the PCI SERR might be caused as follows.
-> >
-> > - The 1st kernel enables interrupt remapping. The MSI(-X) address and
-> >    data registers of PCI devices are programmed in remappable format.
-> >
-> > - At the beginning of 2nd kernel, interrupt remapping is still active.
-> >    And then it is disabled by enable_IR() function for initialization.
-> >
-> > - PCI device generate an interrupt. At this moment, interrupt remapping
-> >    is not enabled yet. On the other hand, MSI(-X) address and data of
-> this
-> >    interrupt is in remappable format because those are programmed by 1st
-> >    kernel. I guess this might be a cause of PCI SERR.
-> >
-> > I guess clearing command register or disabling MSI before interrupt
-> > remapping initialization in 2nd kernel might solve the PCI SERR problem.
-> 
-> Thank you for your comment. That makes sense.
-> 
-> Though I think clearing bus master bit is enough, do you think I need to
-> clear
-> all command register bit not only bus master?
+On Tue, Sep 18, 2012 at 5:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Sep 18, 2012 at 3:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> Found one system one root bus hot remove get panic.
+>>> Panic happens when try to release hostbridge resource.
+>>>
+>>> It turns out that resource get reject during put into resource tree
+>>> because of conflicts.
+>>> Also that resource parent pointer have random value.
+>>>
+>>> That invalid value cause it pass through check __release_pci_root_info
+>>> and panic in release_resource.
+>>>
+>>> Try to use kzalloc instead.
+>>
+>> Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
+>> what it does:
+>>
+>>         if (windows) {
+>>                 controller->window =
+>>                         kmalloc_node(sizeof(*controller->window) * windows,
+>>                                      GFP_KERNEL, controller->node);
+>>
+>
+>
+> yes, but they don't support pci_set_host_bridge_release yet. so they
+> should not meet this problem yet.
 
-I thought clearing bus master bit. But we might also need to set the
-disable INTx bit.
-
-It would not be needed if we can reset devices before interrupt remapping
-initialization. I guess resetting devices before interrupt remapping
-initialization would need complex code change and be difficult to implement.
-If so, clearing bus master bit would be one of the alternative solution
-against PCI SERR issue.
-
-Regards,
-Kenji Kaneshige
-
-
-
-> 
-> Thanks,
-> Takao Indoh
-> 
-> 
-> > Regards,
-> > Kenji Kaneshige
-> >
-> >
-> >>
-> >> Therefore resetting devices has to be done before enable_IR() is
-> >> called. I have three ideas for it.
-> >>
-> >>    (i) Resetting devices in 1st kernel(panic kernel)
-> >>    We can reset devices before jumping into 2nd kernel. Of course it
-> may
-> >>    be dangerous to scan pci device tree and call PCI functions in panic'd
-> >>    kernel. Beforehand we need to collect device information so that only
-> >>    minimal code could run on panic.
-> >>
-> >>    (ii) Resetting devices in purgatory
-> >>    It seems to be be appropriate place to do this, but I'm not sure
-> >>    where I can save/restore PCI config when resetting devices in
-> >>    purgatory.
-> >>
-> >>    (iii) Resetting devices in 2nd kernel(kdump kernel)
-> >>    Important point is to do reset before enable_IR() is called as I wrote
-> >>    above. I think I should add new function to do reset into
-> >>    arch/x86/pci/early.c and call it in setup_arch like
-> >>    early_dump_pci_devices() or early_quirks().
-> >>
-> >> Any comments?
-> >>
-> >> Thanks,
-> >> Takao Indoh
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> >
-
+Why should we wait to fix that bug until later?  I'm not interested in
+debugging this in the future.  If you fix a bug, you should always try
+to fix other occurrences of the same bug at the same time.
