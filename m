@@ -1,77 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 22 Sep 2012 16:10:09 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [ACPI/PCI] possible recursive locking detected
-Message-ID: <20120922081009.GA5677@localhost>
-References: <20120922003557.GF5959@localhost>
- <CAE9FiQVQJQfBZn7AH4M5hibx=iNa9RbfSaBdb35FWxDiRXHvrA@mail.gmail.com>
- <CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:30159 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750787Ab2ISBIu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Sep 2012 21:08:50 -0400
+From: Dave Airlie <airlied@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH] pci: don't touch card regs after runtime suspend D3
+Date: Wed, 19 Sep 2012 11:07:04 +1000
+Message-Id: <1348016824-1895-1-git-send-email-airlied@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 22, 2012 at 12:04:51AM -0700, Yinghai Lu wrote:
-> On Fri, Sep 21, 2012 at 9:53 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Fri, Sep 21, 2012 at 5:35 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
-> >> Hi Taku,
-> >>
-> >> The below oops is pretty reproducible, and shows up first in:
-> >>
-> >> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/taku-acpi-pci-host-bridge-v3
-> >> head:   e3faec8ea9c8aa683c56fa20ff2c58a4c5857960
-> >> commit: d3c663236318a43fed5d86a643e6ea2534e9220e [5/7] PCI/ACPI: Protect acpi_pci_roots list with mutex
-> >>
-> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
-> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
-> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
-> >> [    8.613239]   lock(acpi_pci_root_lock);
-> >> [    8.613239]   lock(acpi_pci_root_lock);
-> >> [    8.613239]  #0:  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
-> >> [    8.613239]  [<ffffffff81741e5f>] ? acpi_get_pci_rootbridge_handle+0x22/0x63
-> >> [    8.613239]  [<ffffffff81741e5f>] ? acpi_get_pci_rootbridge_handle+0x22/0x63
-> >> [    8.613239]  [<ffffffff81741e5f>] ? acpi_get_pci_rootbridge_handle+0x22/0x63
-> >> [    8.613239]  [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
-> >>
-> >> [    8.610859]
-> >> [    8.611385] =============================================
-> >> [    8.612505] [ INFO: possible recursive locking detected ]
-> >> [    8.613239] 3.6.0-rc1-00022-gd3c6632 #7512 Not tainted
-> >> [    8.613239] ---------------------------------------------
-> >> [    8.613239] swapper/0/1 is trying to acquire lock:
-> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
-> >> [    8.613239]
-> >> [    8.613239] but task is already holding lock:
-> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
-> >> [    8.613239]
-> >> [    8.613239] other info that might help us debug this:
-> >> [    8.613239]  Possible unsafe locking scenario:
-> >> [    8.613239]
-> >> [    8.613239]        CPU0
-> >> [    8.613239]        ----
-> >> [    8.613239]   lock(acpi_pci_root_lock);
-> >> [    8.613239]   lock(acpi_pci_root_lock);
-> >> [    8.613239]
-> >> [    8.613239]  *** DEADLOCK ***
-> >> [    8.613239]
-> >> [    8.613239]  May be due to missing lock nesting notation
-> >> [    8.613239]
-> >> [    8.613239] 1 lock held by swapper/0/1:
-> >> [    8.613239]  #0:  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
-> >> [    8.613239]
+If the driver takes care of state saving, don't touch any registers on it.
 
-> > Please check attached patch that should fix the problem.
-> 
-> updated more aggressive version. two patches.
+Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+unfortunately enter it on normal D3 transitions via the ACPI callback.
 
-Yes they work nicely. Thank you very much!
+So when we use runtime PM to transition to D3, the card disappears off
+the PCI bus, however we then try to access registers on it in the 
+runtime suspend finish, which really doesn't work.
 
-Thanks,
-Fengguang
+This patch check is the pci state is saved and doesn't attempt to hit
+any registers after that point if it is.
+
+(Looks okay to Rafael)
+
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+---
+ drivers/pci/pci-driver.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 5270f1a..214a40b 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1057,10 +1057,11 @@ static int pci_pm_runtime_suspend(struct device *dev)
+ 		return 0;
+ 	}
+ 
+-	if (!pci_dev->state_saved)
++	if (!pci_dev->state_saved) {
+ 		pci_save_state(pci_dev);
+ 
+-	pci_finish_runtime_suspend(pci_dev);
++		pci_finish_runtime_suspend(pci_dev);
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.7.12
+
