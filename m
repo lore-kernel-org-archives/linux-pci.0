@@ -1,6 +1,10 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:47905 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756910Ab2ISSzU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:20 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
@@ -8,101 +12,80 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part3 11/11] PCI, sysfs: Clean up rescan/remove with scheule_callback
-Date: Sun,  2 Sep 2012 14:52:21 -0700
-Message-Id: <1346622741-30799-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
-References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [PATCH 12/40] PCI, x86: Remove __init for hw/fw allocated functions
+Date: Wed, 19 Sep 2012 11:54:26 -0700
+Message-Id: <1348080894-23412-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change to use three return according to Bjorn.
+will need it for hot add path.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci-sysfs.c |   37 ++++++++++++++++++++-----------------
- 1 files changed, 20 insertions(+), 17 deletions(-)
+ arch/x86/pci/i386.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7ebc764..3601912 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -340,17 +340,17 @@ static ssize_t
- dev_bridge_rescan_store(struct device *dev, struct device_attribute *attr,
- 		 const char *buf, size_t count)
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index edfc376..1806e91 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -201,7 +201,7 @@ EXPORT_SYMBOL(pcibios_align_resource);
+  *	    as well.
+  */
+ 
+-static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
++static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
  {
--	int ret = 0;
-+	int err;
- 	unsigned long val;
- 
- 	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
-+	if (!val)
-+		return count;
- 
--	if (val)
--		ret = device_schedule_callback(dev, bridge_rescan_callback);
--
--	if (ret)
--		count = ret;
-+	err = device_schedule_callback(dev, bridge_rescan_callback);
-+	if (err)
-+		return err;
- 
- 	return count;
- }
-@@ -371,7 +371,7 @@ static ssize_t
- remove_store(struct device *dev, struct device_attribute *dummy,
- 	     const char *buf, size_t count)
- {
--	int ret = 0;
-+	int err;
- 	unsigned long val;
- 
- 	if (strict_strtoul(buf, 0, &val) < 0)
-@@ -380,10 +380,13 @@ remove_store(struct device *dev, struct device_attribute *dummy,
- 	/* An attribute cannot be unregistered by one of its own methods,
- 	 * so we have to use this roundabout approach.
- 	 */
--	if (val)
--		ret = device_schedule_callback(dev, remove_callback);
--	if (ret)
--		count = ret;
-+	if (!val)
-+		return count;
-+
-+	err = device_schedule_callback(dev, remove_callback);
-+	if (err)
-+		return err;
-+
- 	return count;
+ 	int idx;
+ 	struct resource *r;
+@@ -223,7 +223,7 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 	}
  }
  
-@@ -399,17 +402,17 @@ static ssize_t
- dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 		 const char *buf, size_t count)
+-static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
++static void pcibios_allocate_bus_resources(struct pci_bus *bus)
  {
--	int ret = 0;
-+	int err;
- 	unsigned long val;
+ 	struct pci_bus *child;
  
- 	if (strict_strtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
-+	if (!val)
-+		return count;
+@@ -239,7 +239,7 @@ struct pci_check_idx_range {
+ 	int end;
+ };
  
--	if (val)
--		ret = device_schedule_callback(dev, bus_rescan_callback);
--
--	if (ret)
--		count = ret;
-+	err = device_schedule_callback(dev, bus_rescan_callback);
-+	if (err)
-+		return err;
- 
- 	return count;
+-static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
++static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ {
+ 	int idx, disabled, i;
+ 	u16 command;
+@@ -292,7 +292,7 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 	}
  }
+ 
+-static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
++static void pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *child;
+@@ -306,7 +306,7 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ 	}
+ }
+ 
+-static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
++static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ {
+ 	struct resource *r;
+ 
+@@ -324,7 +324,7 @@ static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ 		r->start = 0;
+ 	}
+ }
+-static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
++static void pcibios_allocate_rom_resources(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+ 	struct pci_bus *child;
 -- 
 1.7.7
 
