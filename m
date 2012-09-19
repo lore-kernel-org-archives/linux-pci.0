@@ -1,92 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18064 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752953Ab2IEBly (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Sep 2012 21:41:54 -0400
-Message-ID: <5046ADDC.8090707@redhat.com>
-Date: Tue, 04 Sep 2012 21:41:48 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, Jon Mason <jdmason@kudzu.us>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI mini-summit notes
-References: <CAErSpo73r3yzzndUek-NJ3d0pDKtg8zTrnjk4ihudBE5gngBAA@mail.gmail.com> <503E39DE.7000109@gmail.com> <CAPoiz9yRzEr68=NB53SVXb5+nRmEa_J4Mtt6eGAAo5EWFbDbmQ@mail.gmail.com> <CAE9FiQWEE0aCPbM=aVfH4kYzWqpJ4orseh2isWuuGFj3yFxKqQ@mail.gmail.com> <CAErSpo60gh1Ph6jq5iWT6Vsc=UGW+4DFdGCZpL90-3vk+_H89g@mail.gmail.com> <5046ABE0.303@redhat.com>
-In-Reply-To: <5046ABE0.303@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 07/40] x86, PCI: Separate pcibios_allocate_bridge_resources()
+Date: Wed, 19 Sep 2012 11:54:21 -0700
+Message-Id: <1348080894-23412-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/04/2012 09:33 PM, Don Dutile wrote:
-> On 08/30/2012 02:02 AM, Bjorn Helgaas wrote:
->> [removed cc ksummit-2012-discuss]
->>
->> On Wed, Aug 29, 2012 at 3:54 PM, Yinghai Lu<yinghai@kernel.org> wrote:
->>> On Wed, Aug 29, 2012 at 3:44 PM, Jon Mason<jdmason@kudzu.us> wrote:
->>>>> Hi Bjorn,
->>>>> One of my team member reported another corner case for SR-IOV. There's
->>>>> are two NIC cards in the system driven by the same driver, but one supports
->>>>> SR-IOV and the other doesn't. It runs into trouble if "max_vfs" parameter is
->>>>> set for the NIC driver.
->>>>> --Gerry
->>>>
->>>> I believe it was decided that a per-pf sysfs interface would be used
->>>> to replace the current module parameter that specifies the number of
->>>> vf's. This should enable different numbers of vf's for each physical
->>>> device. The driver interface that was discussed would introduce new
->>>> function pointers for handlers to setup/teardown the vf's. I believe
->>>> this will solve your problem once it has been implemented.
->>>
->>> now we have ixgbe.max_vfs=63
->>>
->>> so if change to per pci device (PF),
->>>
->>> how about having the driver built-in?
->>> what kind of kernel parameters will be passed?
->
-> Having the driver built-in won't make a difference.
->
-> The model is to have files under sys fs, i.e.,
-> /sys/bus/pci/devices/0000:03:01.0/[sriov_vf_enable, sriov_vf_disable]
->
-> where one echo's the number of vf's one wants to configure for a pf
-> into the sriov_vf_enable file; if want to disable/deconfigure the vf's,
-> one echo's a 1 to sriov_vf_disable (all or nothing disable).
->
-> the pci core will be able to check & filter that the max num of vf's
-> is not exceeded. Also looking to add a file like 'sriov_num_vfs' to
-> indicate max number of vf's a PF supports. Whether the bus configuration
-> supports it (enough mmio space, enough pci bus nums, etc.) won't be
-> known until the enable count is written.
->
-> I have the code down to create the sysfs files & report the num_vfs.
-                   ^^^^ should be 'done' ...
+Thus pcibios_allocate_bus_resources() could more simple and clean
 
-> Hope to have the first enable/disable working within another week.
-> The tough part is to re-factor a pf driver that enables/configures pf;
-> I'm working with the igb(_main.c) driver right now.
->
-> - Don
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c |   46 ++++++++++++++++++++++++----------------------
+ 1 files changed, 24 insertions(+), 22 deletions(-)
 
-btw -- what we didn't resolve at summit, and I haven't taken a crack at it yet,
-is a method to set the vf-enablement on a per-pf basis at boot time...
--- kernel cmdline (sounds knarly for large PCIe config)
--- /etc/module.d/sriov.conf ?
--- other ?
-
->>
->> I don't think we really discussed things at this level, and I
->> personally don't know enough about the current SR-IOV support to even
->> know what the possible strategies are. I think it's really up to the
->> person doing the implementation to figure out what makes sense given
->> the constraints of the SR-IOV specs and the current Linux support.
->>
->> Bjorn
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
->
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index dd8ca6f..9800362 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -193,34 +193,36 @@ EXPORT_SYMBOL(pcibios_align_resource);
+  *	    as well.
+  */
+ 
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 	int idx;
+ 	struct resource *r;
+ 
++	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
++		r = &dev->resource[idx];
++		if (!r->flags)
++			continue;
++		if (!r->start || pci_claim_resource(dev, idx) < 0) {
++			/*
++			 * Something is wrong with the region.
++			 * Invalidate the resource to prevent
++			 * child resource allocations in this
++			 * range.
++			 */
++			r->start = r->end = 0;
++			r->flags = 0;
++		}
++	}
++}
++
++static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++{
++	struct pci_bus *bus;
++
+ 	/* Depth-First Search on bus tree */
+ 	list_for_each_entry(bus, bus_list, node) {
+-		if ((dev = bus->self)) {
+-			for (idx = PCI_BRIDGE_RESOURCES;
+-			    idx < PCI_NUM_RESOURCES; idx++) {
+-				r = &dev->resource[idx];
+-				if (!r->flags)
+-					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					/*
+-					 * Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range.
+-					 */
+-					r->start = r->end = 0;
+-					r->flags = 0;
+-				}
+-			}
+-		}
++		if (bus->self)
++			pcibios_allocate_bridge_resources(bus->self);
+ 		pcibios_allocate_bus_resources(&bus->children);
+ 	}
+ }
+-- 
+1.7.7
 
