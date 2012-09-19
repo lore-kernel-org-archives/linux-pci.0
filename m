@@ -1,94 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:34569 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754147Ab2ISGNI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 02:13:08 -0400
+Message-ID: <50596209.5060201@huawei.com>
+Date: Wed, 19 Sep 2012 14:11:21 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1344355862-2726-4-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-4-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Sep 2012 16:03:50 -0600
-Message-ID: <CAErSpo7C_-Yp6pNu0J9L3gMds9fuO2ZLRFvo28gVEGL0iM1JuQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 03/22] PCI: change PCI device management code to
- better follow device model
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+To: Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
+References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>  <1348022442-7816-6-git-send-email-wangyijing@huawei.com> <1348034627.8212.136.camel@yhuang-dev>
+In-Reply-To: <1348034627.8212.136.camel@yhuang-dev>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> According to device model documentation, the way to add/remove device
-> object should be symmetric.
->
-> /**
->  * device_del - delete device from system.
->  * @dev: device.
->  *
->  * This is the first part of the device unregistration
->  * sequence. This removes the device from the lists we control
->  * from here, has it removed from the other driver model
->  * subsystems it was added to in device_add(), and removes it
->  * from the kobject hierarchy.
->  *
->  * NOTE: this should be called manually _iff_ device_add() was
->  * also called manually.
->  */
->
-> The rule here is to either use
-> 1) device_register()/device_unregister()
-> or
-> 2) device_initialize()/device_add()/device_del()/put_device().
->
-> So change PCI core to follow the rule and get rid of the redundant
-> pci_dev_get()/pci_dev_put() pair.
+On 2012/9/19 14:03, Huang Ying wrote:
+> On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/pcie/aer/aer_inject.c |   14 +++++++++++---
+>>  1 files changed, 11 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+>> index 0a12ac7..79b611d 100644
+>> --- a/drivers/pci/pcie/aer/aer_inject.c
+>> +++ b/drivers/pci/pcie/aer/aer_inject.c
+>> @@ -162,6 +162,16 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
+>>  	return bus_ops;
+>>  }
+>>  
+>> +static void pci_bus_ops_free(void)
+>> +{
+>> +	struct pci_bus_ops *bus_ops, *tmp_ops;
+>> +
+>> +	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
+>> +		list_del(&bus_ops->list);
+>> +		kfree(bus_ops);
+>> +	}
+>> +}
+> 
+> IMHO, this can be inlined into aer_inject_exit
+> 
+>>  static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
+>>  {
+>>  	struct pci_bus_ops *bus_ops = NULL;
+>> @@ -641,9 +651,7 @@ static void __exit aer_inject_exit(void)
+>>  	 * module exit
+>>  	 */
+>>  	clean_untracked_pci_ops_aer();
+>> -
+>> -	while ((bus_ops = pci_bus_ops_pop()))
+> 
+> You can remove pci_bus_ops_pop now.
+> 
 
-Seems OK to me.
+OK, I will move pci_bus_ops_free inlined into aer_inject_exit and remove pci_bus_ops_pop in this patch.
 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  drivers/pci/probe.c  |    1 -
->  drivers/pci/remove.c |    4 ++--
->  2 files changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 0840409..dacca26 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->         device_initialize(&dev->dev);
->         dev->dev.release = pci_release_dev;
-> -       pci_dev_get(dev);
->
->         dev->dev.dma_mask = &dev->dma_mask;
->         dev->dev.dma_parms = &dev->dma_parms;
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 33b6318..b9ac765 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
->         if (dev->is_added) {
->                 pci_proc_detach_device(dev);
->                 pci_remove_sysfs_dev_files(dev);
-> -               device_unregister(&dev->dev);
-> +               device_del(&dev->dev);
->                 dev->is_added = 0;
->         }
->
-> @@ -40,7 +40,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
->         up_write(&pci_bus_sem);
->
->         pci_free_resources(dev);
-> -       pci_dev_put(dev);
-> +       put_device(&dev->dev);
->  }
->
->  /**
-> --
-> 1.7.9.5
->
+> Best Regards,
+> Huang Ying
+> 
+>> -		kfree(bus_ops);
+>> +	pci_bus_ops_free();
+>>  
+>>  	spin_lock_irqsave(&inject_lock, flags);
+>>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
+> 
+> 
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
