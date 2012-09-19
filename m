@@ -1,103 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:47379 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751558Ab2IHDBX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 23:01:23 -0400
-Received: by lbbgj3 with SMTP id gj3so221600lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 20:01:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7YZ75Q7zSfNPGONAwpMjr0MViBJH52uAOWjPuQYoTsAw@mail.gmail.com>
-References: <201209072328.30553.rjw@sisk.pl> <CAErSpo7-6PEEt+pDV-XRrfHVKDuw+_CbtKK-fEguyGhd_qapdw@mail.gmail.com>
- <CAErSpo7YZ75Q7zSfNPGONAwpMjr0MViBJH52uAOWjPuQYoTsAw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 21:01:00 -0600
-Message-ID: <CAErSpo4edqxnLS0tnpE2TuDqZYUsB4tLZOadUwOG2twQhuNZ_g@mail.gmail.com>
-Subject: Re: [Resend][PATCH] pciehp: always implement resume
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
+Received: from rcsinet15.oracle.com ([148.87.113.117]:19782 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757040Ab2ISSzi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:38 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Oliver Neukum <oliver@neukum.org>, linux-pci@vger.kernel.org,
-	Mark Lord <mlord@pobox.com>,
-	Kristen Carlson Accardi <kristen@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 32/40] PCI, ACPI: Make kacpi_hotplug_wq static
+Date: Wed, 19 Sep 2012 11:54:46 -0700
+Message-Id: <1348080894-23412-33-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[fix Kristen's email addr]
+No external user anymore.
 
-On Fri, Sep 7, 2012 at 5:33 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> +cc Mark & Kristen
->
-> Commit cd2fe83a815 by Mark added the code we're changing here, so this
-> is your chance to speak up if we're not doing the right thing :)
->
-> On Fri, Sep 7, 2012 at 4:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Sep 7, 2012 at 2:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> From: Oliver Neukum <oliver@neukum.org>
->>> Subject: pciehp: always implement resume
->>>
->>> The driver by default ignores resume. On some laptops
->>> that means that interrupts are not delivered after S3.
->>> So card removals and insertions will not be handled. Requiring
->>> a forced load isn't right.
->>>
->>> Signed-off-by: Oliver Neukum <oneukum@suse.de>
->>> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
->>
->> I applied this (with fixed From: email address and slightly modified
->> changelog) to http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/oliver-pciehp-resume
->> and will merge it to "next" after Fengguang's build/smoke tests.
->>
->> Thanks!
->>
->> Bjorn
->>
->>> ---
->>> drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
->>>  drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
->>>  1 file changed, 14 insertions(+), 14 deletions(-)
->>>
->>> Index: linux/drivers/pci/hotplug/pciehp_core.c
->>> ===================================================================
->>> --- linux.orig/drivers/pci/hotplug/pciehp_core.c
->>> +++ linux/drivers/pci/hotplug/pciehp_core.c
->>> @@ -300,24 +300,24 @@ static int pciehp_suspend (struct pcie_d
->>>
->>>  static int pciehp_resume (struct pcie_device *dev)
->>>  {
->>> +       struct controller *ctrl;
->>> +       struct slot *slot;
->>> +       u8 status;
->>> +
->>>         dev_info(&dev->device, "%s ENTRY\n", __func__);
->>> -       if (pciehp_force) {
->>> -               struct controller *ctrl = get_service_data(dev);
->>> -               struct slot *slot;
->>> -               u8 status;
->>> +       ctrl = get_service_data(dev);
->>>
->>> -               /* reinitialize the chipset's event detection logic */
->>> -               pcie_enable_notification(ctrl);
->>> +       /* reinitialize the chipset's event detection logic */
->>> +       pcie_enable_notification(ctrl);
->>>
->>> -               slot = ctrl->slot;
->>> +       slot = ctrl->slot;
->>>
->>> -               /* Check if slot is occupied */
->>> -               pciehp_get_adapter_status(slot, &status);
->>> -               if (status)
->>> -                       pciehp_enable_slot(slot);
->>> -               else
->>> -                       pciehp_disable_slot(slot);
->>> -       }
->>> +       /* Check if slot is occupied */
->>> +       pciehp_get_adapter_status(slot, &status);
->>> +       if (status)
->>> +               pciehp_enable_slot(slot);
->>> +       else
->>> +               pciehp_disable_slot(slot);
->>>         return 0;
->>>  }
->>>  #endif /* PM */
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/osl.c      |    3 +--
+ include/acpi/acpiosxf.h |    2 --
+ 2 files changed, 1 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 0719fa7..311a921 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
+ static void *acpi_irq_context;
+ static struct workqueue_struct *kacpid_wq;
+ static struct workqueue_struct *kacpi_notify_wq;
+-struct workqueue_struct *kacpi_hotplug_wq;
+-EXPORT_SYMBOL(kacpi_hotplug_wq);
++static struct workqueue_struct *kacpi_hotplug_wq;
+ 
+ /*
+  * This list of permanent mappings is for memory that may be accessed from
+diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
+index 6ff92ea..9f68f69 100644
+--- a/include/acpi/acpiosxf.h
++++ b/include/acpi/acpiosxf.h
+@@ -194,8 +194,6 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
+ /*
+  * Threads and Scheduling
+  */
+-extern struct workqueue_struct *kacpi_hotplug_wq;
+-
+ struct acpi_hp_work {
+ 	struct work_struct work;
+ 	acpi_handle handle;
+-- 
+1.7.7
+
