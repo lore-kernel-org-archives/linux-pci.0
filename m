@@ -1,40 +1,63 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWi46m4rP9chVK0W5ahtgk7cuCO60dTYzP6JVM=x=5abA@mail.gmail.com>
-References: <20120922003557.GF5959@localhost> <CAE9FiQVQJQfBZn7AH4M5hibx=iNa9RbfSaBdb35FWxDiRXHvrA@mail.gmail.com>
- <CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
- <20120922081009.GA5677@localhost> <CAE9FiQWi46m4rP9chVK0W5ahtgk7cuCO60dTYzP6JVM=x=5abA@mail.gmail.com>
+In-Reply-To: <20120918152323.48cb2703.izumi.taku@jp.fujitsu.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com> <20120918152323.48cb2703.izumi.taku@jp.fujitsu.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Sep 2012 16:38:53 -0600
-Message-ID: <CAErSpo6cwcYbi_pFrGrWgMLXH9dx4Po1s5KLDWtc596s+Kv2hQ@mail.gmail.com>
-Subject: Re: [ACPI/PCI] possible recursive locking detected
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Fengguang Wu <fengguang.wu@intel.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org
+Date: Wed, 19 Sep 2012 16:03:27 -0600
+Message-ID: <CAErSpo6VeKfwzVmv=WjH7wNPMf6_PLHpo99FeKoHXOrYPnYVPQ@mail.gmail.com>
+Subject: Re: [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 22, 2012 at 8:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sat, Sep 22, 2012 at 1:10 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
->>
->>> > Please check attached patch that should fix the problem.
->>>
->>> updated more aggressive version. two patches.
->>
->> Yes they work nicely. Thank you very much!
+On Tue, Sep 18, 2012 at 12:23 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
 >
-> Thanks.
+> This patch changes the implementation of acpi_pci_find_root().
 >
-> v2 breaks acpi_bind_one.
+> We can access acpi_pci_root without scanning acpi_pci_roots list.
+> If hostbridge hotplug is supported, acpi_pci_roots list will be
+> protected by mutex. We should not access acpi_pci_roots list
+> if preventable to lessen deadlock risk.
 >
-> So we should use attached -v3.
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  drivers/acpi/pci_root.c |   13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
 >
-> Bjorn, please apply -v3 before Taku's patchset.
+> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+> ===================================================================
+> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
+> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
+> @@ -265,12 +265,15 @@ static acpi_status acpi_pci_osc_support(
+>  struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle)
+>  {
+>         struct acpi_pci_root *root;
+> +       struct acpi_device *device;
+>
+> -       list_for_each_entry(root, &acpi_pci_roots, node) {
+> -               if (root->device->handle == handle)
+> -                       return root;
+> -       }
+> -       return NULL;
+> +       if (acpi_bus_get_device(handle, &device) ||
+> +           acpi_match_device_ids(device, root_device_ids))
 
-I  applied this as the first patch in
-pci/taku-acpi-pci-host-bridge-v3.  I also merged that branch to
-pci/next.
+What's the purpose of the acpi_match_device_ids() check?  It's not
+obvious, so worth calling it out in the changelog, and maybe even a
+comment in the code.
+
+Nice to get rid of the list traversal.
+
+> +               return NULL;
+> +
+> +       root = acpi_driver_data(device);
+> +
+> +       return root;
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_pci_find_root);
+>
+>
