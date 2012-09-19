@@ -1,11 +1,11 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:60646 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab2IOH6N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 03:58:13 -0400
-Date: Sat, 15 Sep 2012 09:57:37 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Received: from haggis.pcug.org.au ([203.10.76.10]:43071 "EHLO
+	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373Ab2ISWiI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 18:38:08 -0400
+Date: Thu, 20 Sep 2012 08:37:31 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Thierry Reding <thierry.reding@avionic-design.de>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Richard Henderson <rth@twiddle.net>,
 	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
@@ -23,76 +23,80 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
 	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>, linux-alpha@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: Annotate pci_fixup_irqs with __devinit
-Message-ID: <20120915075737.GA31258@avionic-0098.mockup.avionic-design.de>
-References: <1347655456-2542-1-git-send-email-thierry.reding@avionic-design.de>
- <CAErSpo6BqPUEpMmh2+FuEi-mHFK0U1XCmdCpJfo6V2XcNxzMNg@mail.gmail.com>
- <20120914223531.GA8771@kroah.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-In-Reply-To: <20120914223531.GA8771@kroah.com>
+	Greg Ungerer <gerg@uclinux.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org, linux-mips@linux-mips.org,
+	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: Provide a default pcibios_update_irq()
+Message-Id: <20120920083731.b99255eb8fdeea908d34ed2f@canb.auug.org.au>
+In-Reply-To: <1347880974-13615-2-git-send-email-thierry.reding@avionic-design.de>
+References: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
+	<1347880974-13615-2-git-send-email-thierry.reding@avionic-design.de>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
+--Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm
+Content-Type: text/plain; charset=US-ASCII
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Sep 14, 2012 at 03:35:31PM -0700, Greg Kroah-Hartman wrote:
-> On Fri, Sep 14, 2012 at 02:53:11PM -0600, Bjorn Helgaas wrote:
-> > +cc Greg KH
-> >=20
-> > On Fri, Sep 14, 2012 at 2:44 PM, Thierry Reding
-> > <thierry.reding@avionic-design.de> wrote:
-> > > In order to keep pci_fixup_irqs() around after init (e.g. for hotplug=
-),
-> > > mark it __devinit instead of __init. This requires the same change for
-> > > the implementation of the pcibios_update_irq() function on all
-> > > architectures.
-> > >
-> > > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> > > ---
-> > > Note: Ideally these annotations should go away completely in order to
-> > > be independent of the HOTPLUG symbol. However, there is work underway
-> > > to get rid of HOTPLUG altogether, so I've kept the __devinit for now.
->=20
-> No, just take away the __init marking completly.  For 3.7,
-> CONFIG_HOTPLUG will always be enabled, making it be the same thing.
-> That way this saves me the time and energy from deleting the __devinit
-> markings when I get to that point in the patch series :)
+Hi,
 
-Done. I'll give other people some time to comment before sending the
-updated series.
+On Mon, 17 Sep 2012 13:22:54 +0200 Thierry Reding <thierry.reding@avionic-d=
+esign.de> wrote:
+>
+> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+> index 270ae7b..3d61ce3 100644
+> --- a/drivers/pci/setup-irq.c
+> +++ b/drivers/pci/setup-irq.c
+> @@ -17,6 +17,11 @@
+>  #include <linux/ioport.h>
+>  #include <linux/cache.h>
+> =20
+> +void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+> +{
+> +	dev_dbg(&dev->dev, "Assigning IRQ %02d\n", irq);
+> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+> +}
+> =20
+>  static void
+>  pdev_fixup_irq(struct pci_dev *dev,
 
-Thierry
+Didn't we have a problem with some compiler versions when the weak
+definition was in the same file as the call (there is a call to this
+function in drivers/pci/setup-irq.c)?
 
---+QahgC5+KEYLbs62
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBAgAGBQJQVDTxAAoJEN0jrNd/PrOhY84P/1V6CjM7bTnYamaHDOKyZQUc
-IyLN3mZRN6AbMMO8awcN6B4BDXuB6ua8nN7ozdlqRnFSUgSXVwWwrezZnrpc+Sws
-yO4Axr8IOBxpG2IDX+d2bGWRV5W34kzty5WsZhlPEJxOBSQH0MiNJCgTojSIIf5n
-9a6+7fF5qsSamGnmtWKwe01nwvlAsJg0i3sxyguWlFuBqd1IyQMCptCWsSBzMQVc
-1EeCDtWdLTKzxNHhkl97rWcQYi3ov8LTK76zUutTSDlpc2+HhX0nu73Tz34fLs9m
-k4Z1mw2VLHRUorvFCptwhvB72LR2hssTZxGDt3xbPLERUECtV3wwpFTDT8J4jZj0
-bzHCpbfj11K1Y7/Ku/1FBWBXjFPh1+YS0lA39V00WnHBx9Xv2DX6Ytm8FwGCtqEN
-wfV+VGyR+tvIWI6oA8vIgc/1xuMuDlrK4Ldn2uwZBHZfq28ghCiKFHasHA5RW+D/
-kTA2p4Yvuujuvh6PbsvJv2h4A9Sudko6rzwlclnv7OGxsxCa624yF8YN+rqLVU9C
-7Sq/vSCmpj1E3AQ9TKcnYyFYP1sUsc9BnslLNEHNly+MFRJoAMOAx3M6s/30vRJp
-FKyDyeWTzkjnlCYDiH/ebSQRk1tO9h6HJXnzrAAU55iJYHDxCGQ15I2emj8v/bqT
-3iUVzezeZpRhZ0IPIxbq
-=Q8MZ
+iQIcBAEBCAAGBQJQWkkrAAoJEECxmPOUX5FEW9wP/RZUlNoHKF/hdMIqgBXmqu9j
+ziwT/7xAnOx2PyPXzlr360bi/PMcjIv3oqf4DHv1tBxYe7tzxS9j1M2Moq8UHiWW
+1wOj+EXsgex73bIKtudojQojTpY9lZML9cdD5ki6zxvIEZTynAH4dSdomk2knPxw
+er3HuNnawQIA4iad+FF4IFp9ojKsduCCRHEGzgC0sfLm1zT/pKgT/jQjZYjdWtKy
+cTujkETaHoMG6rZdnUwmmZryGHWtPUAlWVyg9BDebJfIL32zzU66lQlpIFREyTnI
+zmOrfeJ4Ypw/B0NRUvEMQbUZJtRk7L/ovddItq9NNWHgYn5pznuJOlTaPQb9owOd
+i4oOZguBUyIQL92SrzMMXjxkx5RaBf8dtgGwvdvvCGv5F48Cnr3eCbQN5YQL08xQ
+fek/sjc5izX0MbNjKYw4twCrOwYVpd6Hj7W8L0lhZ0NgFZIoXQi8zTmEjDtf5cHw
+heVKZnH2zdtboYaiIB6utdl1/20mrq6YUd4yuQxwGpc9LveCkPxpPZ1fwTYJj6Fq
+sjabH0KJVKmHTKr3LJg6xFKNh98p+Z3PlVAz4Ac6JTfCWLroBb9df9XAbHZ5kUZd
+Q8RvTloTEYY6hiYKVUn7QF6iO7fUxYuY8/7s8HBhGEyJrwCrVJTpFCOgm7ySBwO5
+fqCAlk6bhtq1THZ3WZZh
+=VZA6
 -----END PGP SIGNATURE-----
 
---+QahgC5+KEYLbs62--
+--Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm--
