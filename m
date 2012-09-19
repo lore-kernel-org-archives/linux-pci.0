@@ -1,4 +1,4 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
@@ -8,124 +8,91 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 28/40] PCI, ACPI: Add pci_root_hp hot removal notification support.
-Date: Wed, 19 Sep 2012 11:54:42 -0700
-Message-Id: <1348080894-23412-29-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 13/40] PCI: Claim hw/fw allocated resources in hot add path.
+Date: Wed, 19 Sep 2012 11:54:27 -0700
+Message-Id: <1348080894-23412-14-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
 References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
  <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add missing hot_remove support for root device.
+During testing remove/rescan root bus 00, found
+[  338.142574] bus: 'pci': really_probe: probing driver ata_piix with device 0000:00:01.1
+[  338.146788] ata_piix 0000:00:01.1: device not available (can't reserve [io  0x01f0-0x01f7])
+[  338.150565] ata_piix: probe of 0000:00:01.1 failed with error -22
 
-How to use it?
-Find out root bus number to acpi root name mapping from dmesg or /sys
+because that fixed resource is not claimed from
+        arch/x86/pci/i386.c::pcibios_allocate_resources()
+that is init path.
 
-  echo "\_SB.PCIB 3" > /sys/kernel/debug/acpi/sci_notify
-to remove root bus
+Try to claim those resources, so on the remove/rescan will still use old
+resources.
 
--v2: separate stop and remove, so could use acpi_pci_bind_notify()...
+It is some kind honoring HW/FW setting in the registers during hot add.
+esp root-bus hot add is through acpi, BIOS have chance to set some register
+for us.
+
+-v2: add rom resource claiming.
+-v3: separate __init removing to another patch, also
+   put pci_probe checking with caller from rom resource allocating
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/acpi/pci_root_hp.c |   67 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 67 insertions(+), 0 deletions(-)
+ arch/x86/pci/i386.c |   13 +++++++++++++
+ drivers/pci/bus.c   |    2 ++
+ include/linux/pci.h |    1 +
+ 3 files changed, 16 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index eb4344c..434ee35 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -73,6 +73,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
- 	list_add(&bridge->list, &acpi_root_bridge_list);
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 1806e91..e0b7f30 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -352,6 +352,19 @@ static int __init pcibios_assign_resources(void)
+ 	return 0;
  }
  
-+static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
++void pcibios_resource_survey_bus(struct pci_bus *bus)
 +{
-+	list_del(&bridge->list);
-+	kfree(bridge);
++	dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
++
++	pcibios_allocate_bus_resources(bus);
++
++	pcibios_allocate_resources(bus, 0);
++	pcibios_allocate_resources(bus, 1);
++
++	if (!(pci_probe & PCI_ASSIGN_ROMS))
++		pcibios_allocate_rom_resources(bus);
 +}
 +
- struct acpi_root_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
-@@ -143,6 +149,61 @@ static void handle_root_bridge_insertion(acpi_handle handle)
- 		printk(KERN_ERR "cannot start bridge\n");
- }
- 
-+static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
-+{
-+	acpi_status status;
-+	struct acpi_object_list arg_list;
-+	union acpi_object arg;
-+
-+	arg_list.count = 1;
-+	arg_list.pointer = &arg;
-+	arg.type = ACPI_TYPE_INTEGER;
-+	arg.integer.value = val;
-+
-+	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
-+	if (ACPI_FAILURE(status)) {
-+		printk(KERN_WARNING "%s: %s to %d failed\n",
-+				 __func__, cmd, val);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static void handle_root_bridge_removal(acpi_handle handle,
-+		 struct acpi_root_bridge *bridge)
-+{
-+	u32 flags = 0;
-+	struct acpi_device *device;
-+
-+	if (bridge) {
-+		flags = bridge->flags;
-+		remove_acpi_root_bridge(bridge);
-+	}
-+
-+	if (!acpi_bus_get_device(handle, &device)) {
-+		int ret_val;
-+
-+		/* remove pci devices at first */
-+		ret_val = acpi_bus_trim(device, 0);
-+		printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
-+
-+		/* remove acpi devices */
-+		ret_val = acpi_bus_trim(device, 1);
-+		printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
-+	}
-+
-+	if (flags & ROOT_BRIDGE_HAS_PS3) {
-+		acpi_status status;
-+
-+		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
-+		if (ACPI_FAILURE(status))
-+			printk(KERN_WARNING "%s: _PS3 failed\n", __func__);
-+	}
-+	if (flags & ROOT_BRIDGE_HAS_EJ0)
-+		acpi_root_evaluate_object(handle, "_EJ0", 1);
-+}
-+
- static void _handle_hotplug_event_root(struct work_struct *work)
+ void __init pcibios_resource_survey(void)
  {
- 	struct acpi_root_bridge *bridge;
-@@ -183,6 +244,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 		}
- 		break;
+ 	struct pci_bus *bus;
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 4b0970b..2882d01 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -154,6 +154,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 	return ret;
+ }
  
-+	case ACPI_NOTIFY_EJECT_REQUEST:
-+		/* request device eject */
-+		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-+				 objname);
-+		handle_root_bridge_removal(handle, bridge);
-+		break;
- 	default:
- 		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
- 				 type, objname);
++void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
++
+ /**
+  * pci_bus_add_device - add a single device
+  * @dev: device to add
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index be1de01..ec25403 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -676,6 +676,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
+ /* Some device drivers need know if pci is initiated */
+ extern int no_pci_devices(void);
+ 
++void pcibios_resource_survey_bus(struct pci_bus *bus);
+ void pcibios_fixup_bus(struct pci_bus *);
+ int __must_check pcibios_enable_device(struct pci_dev *, int mask);
+ /* Architecture specific versions may override this (weak) */
 -- 
 1.7.7
 
