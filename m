@@ -1,61 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7nfYxAmP-kotxBEo20eCZtrWxUzTmk=74MsiJXXZaxBg@mail.gmail.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
- <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com> <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
- <CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
- <20120928091520.92bf495b.izumi.taku@jp.fujitsu.com> <CAErSpo7nfYxAmP-kotxBEo20eCZtrWxUzTmk=74MsiJXXZaxBg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 28 Sep 2012 08:16:17 -0600
-Message-ID: <CAErSpo6S2kR6se2vVwe+9f0KN6_no7oMTJLs+B2-9yCofWwbVA@mail.gmail.com>
-Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:38705 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932791Ab2ISRt0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 13:49:26 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
+Subject: [PATCH] PCI, ia64: clear initial value for root info resources
+Date: Wed, 19 Sep 2012 10:49:01 -0700
+Message-Id: <1348076941-410-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348076941-410-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQW0PpBU0N9VzJyNKK9PvaUwokCYeB6w_j4mcN9EV0geLQ@mail.gmail.com>
+ <1348076941-410-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 27, 2012 at 6:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Sep 27, 2012 at 6:15 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->> On Thu, 27 Sep 2012 10:48:09 -0600
->> Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->>> On Fri, Sep 21, 2012 at 2:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> > On Tue, Sep 18, 2012 at 12:25 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+after
+	PCI, ia64: clear initial value for root info resources
 
->>> >> @@ -661,6 +663,11 @@ static int acpi_pci_root_remove(struct a
->>> >>         device_set_run_wake(root->bus->bridge, false);
->>> >>         pci_acpi_remove_bus_pm_notifier(device);
->>> >>
->>> >> +       acpi_pci_irq_del_prt(root->bus);
->>> >
->>> > acpi_pci_irq_del_prt() does not actually have a dependency on the
->>> > struct pci_bus, so I think its interface should be changed so it takes
->>> > a segment number and a bus number instead of the "struct pci_bus *".
->>> > The same applies to acpi_pci_irq_add_prt().
->>> >
->>> > This basically boils down to reverting 859a3f86ca8 and d9efae3688a.  I
->>> > acked those changes at the time, but I think they were a mistake.  The
->>> > reason is that passing in the struct pci_bus * ties them into the host
->>> > bridge add/remove flow in a way that's not necessary.
->>> >
->>> > If we get rid of the struct pci_bus * dependency, then we can easily
->>> > add the _PRT before doing PCI enumeration behind the bridge, and we
->>> > can remove the _PRT after removing the PCI devices.  I think this is
->>> > one small step toward getting rid of the add/start and stop/remove
->>> > split.
->>>
->>> I'm going to work on doing this if nobody else is interested.
->>
->>   I'll do that. Maybee that is separeted from this patchset.
->
-> Great, thanks!  A separate patchset is definitely fine.
+change ia64 code accordingly, because later ia64 will support root bus removal too.
 
-Whether this is a waste of time or not, I don't know.  But I did a
-little bit of work on this before you volunteered, Taku.  Sorry, I
-should have pointed you at the work-in-progress patches; maybe they
-could have saved you a bit of time.  Anyway, here they are:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
 
-http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/bjorn-misc
+---
+ arch/ia64/pci/pci.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+Index: linux-2.6/arch/ia64/pci/pci.c
+===================================================================
+--- linux-2.6.orig/arch/ia64/pci/pci.c
++++ linux-2.6/arch/ia64/pci/pci.c
+@@ -295,7 +295,6 @@ static __devinit acpi_status add_window(
+ 	window->resource.flags = flags;
+ 	window->resource.start = addr.minimum + offset;
+ 	window->resource.end = window->resource.start + addr.address_length - 1;
+-	window->resource.child = NULL;
+ 	window->offset = offset;
+ 
+ 	if (insert_resource(root, &window->resource)) {
+@@ -357,7 +356,7 @@ pci_acpi_scan_root(struct acpi_pci_root
+ 			&windows);
+ 	if (windows) {
+ 		controller->window =
+-			kmalloc_node(sizeof(*controller->window) * windows,
++			kzalloc_node(sizeof(*controller->window) * windows,
+ 				     GFP_KERNEL, controller->node);
+ 		if (!controller->window)
+ 			goto out2;
