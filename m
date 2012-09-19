@@ -1,124 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53535 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432Ab2IRGV2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 02:21:28 -0400
-Date: Tue, 18 Sep 2012 15:21:31 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH v3 3/8] ACPI, PCI: add acpi_pci_drivers protection
-Message-Id: <20120918152131.92c26a12.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga02-in.huawei.com ([119.145.14.65]:53377 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755259Ab2ISCmr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:42:47 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 4/6] PCI/AER: clean pci_bus_ops when related pci bus was removed
+Date: Wed, 19 Sep 2012 10:40:40 +0800
+Message-ID: <1348022442-7816-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+When Inject aer errors to the target pci device, a pci_bus_ops will
+be allocated for the pci device's pci bus.When the pci bus was removed,
+we should also release the pci_bus_ops.
 
-Use mutex to protect global acpi_pci_drivers list against PCI
-host bridge hotplug operations.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
 ---
- drivers/acpi/pci_root.c |   36 +++++++++++++++++++-----------------
- 1 file changed, 19 insertions(+), 17 deletions(-)
+ drivers/pci/pcie/aer/aer_inject.c |   48 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 47 insertions(+), 1 deletions(-)
 
-Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0903/drivers/acpi/pci_root.c
-@@ -27,7 +27,7 @@
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/types.h>
--#include <linux/spinlock.h>
-+#include <linux/mutex.h>
- #include <linux/pm.h>
- #include <linux/pm_runtime.h>
- #include <linux/pci.h>
-@@ -71,6 +71,8 @@ static struct acpi_driver acpi_pci_root_
- 		},
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index e2400b5..0a12ac7 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -570,10 +570,55 @@ static struct miscdevice aer_inject_device = {
+ 	.fops = &aer_inject_fops,
  };
  
-+/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
-+static DEFINE_MUTEX(acpi_pci_root_lock);
- static LIST_HEAD(acpi_pci_roots);
- static LIST_HEAD(acpi_pci_drivers);
- 
-@@ -81,34 +83,30 @@ int acpi_pci_register_driver(struct acpi
- 	int n = 0;
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_add_tail(&driver->node, &acpi_pci_drivers);
--
--	if (!driver->add)
--		return 0;
--
--	list_for_each_entry(root, &acpi_pci_roots, node) {
--		driver->add(root->device->handle);
--		n++;
--	}
-+	if (driver->add)
-+		list_for_each_entry(root, &acpi_pci_roots, node) {
-+			driver->add(root->device->handle);
-+			n++;
++static void aer_clean_pci_bus_ops(struct pci_dev *dev)
++{
++	unsigned long flags;
++	struct pci_bus_ops *bus_ops, *tmp_ops;
++	struct pci_bus *bus;
++	bus = dev->subordinate;
++	if (!bus)
++		return;
++
++	spin_lock_irqsave(&inject_lock, flags);
++	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list)
++		if (bus_ops->bus == bus) {
++			list_del(&bus_ops->list);
++			kfree(bus_ops);
++			break;
 +		}
-+	mutex_unlock(&acpi_pci_root_lock);
++	spin_unlock_irqrestore(&inject_lock, flags);
++}
++
++static int aer_hp_notify_fn(struct notifier_block *nb,
++		unsigned long event, void *data)
++{
++	switch (event) {
++	case BUS_NOTIFY_DEL_DEVICE:
++		aer_clean_pci_bus_ops(to_pci_dev(data));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block aerinj_hp_notifier = {
++	.notifier_call = &aer_hp_notify_fn,
++};
  
- 	return n;
- }
--
- EXPORT_SYMBOL(acpi_pci_register_driver);
- 
- void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+ static int __init aer_inject_init(void)
  {
- 	struct acpi_pci_root *root;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_del(&driver->node);
--
--	if (!driver->remove)
--		return;
--
--	list_for_each_entry(root, &acpi_pci_roots, node)
--		driver->remove(root->device->handle);
-+	if (driver->remove)
-+		list_for_each_entry(root, &acpi_pci_roots, node)
-+			driver->remove(root->device->handle);
-+	mutex_unlock(&acpi_pci_root_lock);
+-	return misc_register(&aer_inject_device);
++	int ret;
++	ret = misc_register(&aer_inject_device);
++	if (ret)
++		goto out;
++
++	ret = bus_register_notifier(&pci_bus_type, &aerinj_hp_notifier);
++	if (ret)
++		misc_deregister(&aer_inject_device);
++out:
++	return ret;
  }
--
- EXPORT_SYMBOL(acpi_pci_unregister_driver);
  
- acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
-@@ -628,9 +626,11 @@ static int acpi_pci_root_start(struct ac
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
+ static void __exit aer_inject_exit(void)
+@@ -582,6 +627,7 @@ static void __exit aer_inject_exit(void)
+ 	unsigned long flags;
+ 	struct pci_bus_ops *bus_ops = NULL;
  
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
- 			driver->add(device->handle);
-+	mutex_unlock(&acpi_pci_root_lock);
++	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
+ 	misc_deregister(&aer_inject_device);
  
- 	pci_bus_add_devices(root->bus);
- 
-@@ -642,9 +642,11 @@ static int acpi_pci_root_remove(struct a
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->remove)
- 			driver->remove(root->device->handle);
-+	mutex_unlock(&acpi_pci_root_lock);
- 
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
+ 	/* clean pci_bus_ops tracked in pci_bus_ops_list */
+-- 
+1.7.1
+
 
