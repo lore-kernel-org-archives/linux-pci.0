@@ -1,33 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:57091 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555Ab2IFUri (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Sep 2012 16:47:38 -0400
-Received: by lbbgj3 with SMTP id gj3so1436140lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 06 Sep 2012 13:47:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7c9VmKt_j-TPTJLTrd1ggj+E4byGkOka0jVGPKz28ATA@mail.gmail.com>
-References: <bug-750320-60020@http.bugzilla.novell.com/> <20120726204435.A2F49245526@molor.provo.novell.com>
- <CAErSpo7c9VmKt_j-TPTJLTrd1ggj+E4byGkOka0jVGPKz28ATA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 6 Sep 2012 14:47:16 -0600
-Message-ID: <CAErSpo5+NmftFsaK0vbxUHVtk=V8-cnLmSQtJ4UA0Bsutpuz6w@mail.gmail.com>
-Subject: Re: [Bug 750320] various Express Cards are not recognized by lspci
-To: bugzilla_noreply@novell.com
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 36/40] PCI: Set dev_node early for pci_dev
+Date: Wed, 19 Sep 2012 11:54:50 -0700
+Message-Id: <1348080894-23412-37-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 16, 2012 at 8:27 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> https://bugzilla.novell.com/show_bug.cgi?id=750320
->
-> I think this hotplug should be handled by the pciehp driver, but that
-> driver doesn't appear to be loaded.  Can you load it and try this
-> hotplug again, and attach the dmesg log?
+otherwise irq_desc for pci bridge with hot-added ioapic can not be
+on local node.
 
-Does anybody have time to look at this issue?  Elmar is very willing
-to collect information and run tests, but I just haven't had a chance
-to look into it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ab845aa..460ac84 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1295,6 +1295,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.release = pci_release_dev;
+ 	pci_dev_get(dev);
+ 
++	set_dev_node(&dev->dev, pcibus_to_node(bus));
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
+-- 
+1.7.7
+
