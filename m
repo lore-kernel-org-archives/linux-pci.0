@@ -1,76 +1,165 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:35333 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755735Ab2IRWj3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 18:39:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
-References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
-	<CAErSpo54VVFHj4TDA5JELW0LwFVMXjVOJywwFQ4fo4C1rX69mQ@mail.gmail.com>
-Date: Tue, 18 Sep 2012 15:39:27 -0700
-Message-ID: <CAE9FiQVPHoehcDfVqN-5=Hso0J9vf3+y=3PCz+GncGC5CvvZ4Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI, x86: fix default vga ref_count
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, Dave Airlie <airlied@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 24/40] PCI, acpi: Update acpi_pci_driver add/remove interface
+Date: Wed, 19 Sep 2012 11:54:38 -0700
+Message-Id: <1348080894-23412-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 3:15 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> when __ARCH_HAS_VGA_DEFAULT_DEVICE is not defined, aka EFIFB is not used,
->>
->> for static path, vga_default setting is through vga_arbiter_add_pci_device.
->> and for x86 pci_fixup_video, will skip that.
->> because subsys_initcall(vga_arb_device_init) come first to call vga_arbiter_add_pci_device.
->>
->> for hotplug path, even vga_arbiter_add_pci_device is called via notifier, but it
->> will check VGA_RSRC_LEGACY_MASK that is not set for hotplug path.
->> So x86 pci_fixup_video will take over to call vga_set_default_device().
->>
->> We need to hold one dev reference there.
->>
->> otherwise vga_arbiter_del_pci_device that does not check VGA_RSRC_LEGACY_MASK
->> will call put_device and it will cause ref_count to decrease extra.
->> that will have that device get deleted early wrongly.
->
-> I'm sure you're fixing a real bug, but this patch is completely unintelligible.
+To take acpi_pci_root pointer instead, so later caller will not need to
 
-yes, only can hit this bug while remove root bus with vga adapater.
+check the apci_pci_root list to find it.
 
-or remove bridge with child pci device that is vga adapter.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c            |    4 ++--
+ drivers/acpi/pci_slot.c            |   12 +++++++-----
+ drivers/pci/hotplug/acpiphp_glue.c |   12 +++++++-----
+ include/linux/acpi.h               |    4 ++--
+ 4 files changed, 18 insertions(+), 14 deletions(-)
 
-for root bus removal, the less one ref_count will call that pci device
-get destroyed too early.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 72a2c98..3d92c0e 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -90,7 +90,7 @@ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+ 		return 0;
+ 
+ 	list_for_each_entry(root, &acpi_pci_roots, node) {
+-		driver->add(root->device->handle);
++		driver->add(root);
+ 		n++;
+ 	}
+ 
+@@ -116,7 +116,7 @@ void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+ 		return;
+ 
+ 	list_for_each_entry(root, &acpi_pci_roots, node)
+-		driver->remove(root->device->handle);
++		driver->remove(root);
+ }
+ 
+ EXPORT_SYMBOL(acpi_pci_unregister_driver);
+diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+index e50e31a..1c16c20 100644
+--- a/drivers/acpi/pci_slot.c
++++ b/drivers/acpi/pci_slot.c
+@@ -67,8 +67,8 @@ struct acpi_pci_slot {
+ 	struct list_head list;		/* node in the list of slots */
+ };
+ 
+-static int acpi_pci_slot_add(acpi_handle handle);
+-static void acpi_pci_slot_remove(acpi_handle handle);
++static int acpi_pci_slot_add(struct acpi_pci_root *root);
++static void acpi_pci_slot_remove(struct acpi_pci_root *root);
+ 
+ static LIST_HEAD(slot_list);
+ static DEFINE_MUTEX(slot_list_lock);
+@@ -295,11 +295,11 @@ walk_root_bridge(acpi_handle handle, acpi_walk_callback user_function)
+  * @handle: points to an acpi_pci_root
+  */
+ static int
+-acpi_pci_slot_add(acpi_handle handle)
++acpi_pci_slot_add(struct acpi_pci_root *root)
+ {
+ 	acpi_status status;
+ 
+-	status = walk_root_bridge(handle, register_slot);
++	status = walk_root_bridge(root->device->handle, register_slot);
+ 	if (ACPI_FAILURE(status))
+ 		err("%s: register_slot failure - %d\n", __func__, status);
+ 
+@@ -311,12 +311,14 @@ acpi_pci_slot_add(acpi_handle handle)
+  * @handle: points to an acpi_pci_root
+  */
+ static void
+-acpi_pci_slot_remove(acpi_handle handle)
++acpi_pci_slot_remove(struct acpi_pci_root *root)
+ {
+ 	struct acpi_pci_slot *slot, *tmp;
+ 	struct pci_bus *pbus;
++	acpi_handle handle;
+ 
+ 	mutex_lock(&slot_list_lock);
++	handle = root->device->handle;
+ 	list_for_each_entry_safe(slot, tmp, &slot_list, list) {
+ 		if (slot->root_handle == handle) {
+ 			list_del(&slot->list);
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 00fa414..201c5f7 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -382,10 +382,10 @@ static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
+ 
+ 
+ /* allocate and initialize host bridge data structure */
+-static void add_host_bridge(acpi_handle *handle)
++static void add_host_bridge(struct acpi_pci_root *root)
+ {
++	acpi_handle handle = root->device->handle;
+ 	struct acpiphp_bridge *bridge;
+-	struct acpi_pci_root *root = acpi_pci_find_root(handle);
+ 
+ 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
+ 	if (bridge == NULL)
+@@ -468,8 +468,9 @@ find_p2p_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+ 
+ /* find hot-pluggable slots, and then find P2P bridge */
+-static int add_bridge(acpi_handle handle)
++static int add_bridge(struct acpi_pci_root *root)
+ {
++	acpi_handle handle = root->device->handle;
+ 	acpi_status status;
+ 	unsigned long long tmp;
+ 	acpi_handle dummy_handle;
+@@ -490,7 +491,7 @@ static int add_bridge(acpi_handle handle)
+ 	/* check if this bridge has ejectable slots */
+ 	if (detect_ejectable_slots(handle) > 0) {
+ 		dbg("found PCI host-bus bridge with hot-pluggable slots\n");
+-		add_host_bridge(handle);
++		add_host_bridge(root);
+ 	}
+ 
+ 	/* search P2P bridges under this host bridge */
+@@ -591,8 +592,9 @@ cleanup_p2p_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK;
+ }
+ 
+-static void remove_bridge(acpi_handle handle)
++static void remove_bridge(struct acpi_pci_root *root)
+ {
++	acpi_handle handle = root->device->handle;
+ 	struct acpiphp_bridge *bridge;
+ 
+ 	/* cleanup p2p bridges under this host bridge
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 4f2a762..a686098 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -139,8 +139,8 @@ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ struct acpi_pci_driver {
+ 	struct acpi_pci_driver *next;
+-	int (*add)(acpi_handle handle);
+-	void (*remove)(acpi_handle handle);
++	int (*add)(struct acpi_pci_root *root);
++	void (*remove)(struct acpi_pci_root *root);
+ };
+ 
+ int acpi_pci_register_driver(struct acpi_pci_driver *driver);
+-- 
+1.7.7
 
->
-> I tried to decipher the changelog and I failed.  I tried to figure out
-> the PCI reference counting from the vgaarb code, and I failed there
-> too.
->
-> Apparently the reference is connected with the vga_default device,
-> since that's what vga_arbiter_del_pci_device() checks, but
-> vga_set_default_device() is blissfully ignorant of references (and it
-> isn't used consistently anyway).
-
-yes, could fix vga_set_default_device instead, but it has two versions
-- no __ARCH_HAS_VGA_DEFAULT_DEVICE
-- EFI version...
-
-also there is one other user for vga switching...
-
->
-> If you can do some rework to make this all make more sense, that would be great.
->
-> While you're at it, look at both the x86 and ia64 versions of
-> pci_fixup_video().  They are 90% identical, and it's not clear why
-> they should be different.  In fact, it's not clear why there's a fixup
-> for x86 and ia64 but not for any other architecture with PCI.
-
-ok, will give it a try.
-
-Thanks
-
-Yinghai
