@@ -1,85 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:63044 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756013Ab2IODYA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Sep 2012 23:24:00 -0400
-Message-ID: <5053F4C7.8030506@gmail.com>
-Date: Sat, 15 Sep 2012 11:23:51 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: Re: [PATCH v2 4/6] ACPI, PCI: add acpi_pci_roots protection
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com> <20120903170602.375b00cc.izumi.taku@jp.fujitsu.com> <CAErSpo54LO_mow3dNSJ2-Aj4xBs=Zrk9fiAuFzZKdh9=YKyWuA@mail.gmail.com> <20120914133501.e17d1395.izumi.taku@jp.fujitsu.com> <CAErSpo7MHmOQAj95xsfyZ1A5oZ9UcF8djQhQedKUkS4fX_uw8w@mail.gmail.com>
-In-Reply-To: <CAErSpo7MHmOQAj95xsfyZ1A5oZ9UcF8djQhQedKUkS4fX_uw8w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:5440 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754086Ab2ISF50 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Sep 2012 01:57:26 -0400
+Message-ID: <1348034243.8212.134.camel@yhuang-dev>
+Subject: Re: [PATCH 3/6] PCI/AER: clean all untracked pci_ops_aer when rmmod
+ aer_inject
+From: Huang Ying <ying.huang@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
+	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
+Date: Wed, 19 Sep 2012 13:57:23 +0800
+In-Reply-To: <1348022442-7816-4-git-send-email-wangyijing@huawei.com>
+References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+	 <1348022442-7816-4-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/14/2012 10:43 PM, Bjorn Helgaas wrote:
-> On Thu, Sep 13, 2012 at 10:35 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->> On Wed, 12 Sep 2012 17:40:45 -0600
->> Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->>> On Mon, Sep 3, 2012 at 2:06 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->>>> Use mutex and RCU to protect global acpi_pci_roots list against
->>>> PCI host bridge hotplug operations.
->>>>
->>>> RCU is used to avoid possible deadlock in function acpi_pci_find_root()
->>>> and acpi_get_pci_rootbridge_handle(). A possible call graph:
->>>> acpi_pci_register_driver()
->>>>         mutex_lock(&acpi_pci_root_lock)
->>>>                 driver->add(root)
->>>>                         ......
->>>>                                 acpi_pci_find_root()
->>>
->>> Where does this path occur?  I didn't see in in the current tree
->>> (where the only users of acpi_pci_register_driver() are for
->>> acpi_pci_slot_driver and acpi_pci_hp_driver).  Maybe it's in Yinghai's
->>> work, which adds more acpi_pci_register_driver() users.
->>
->>   First I protected acpi_pci_roots list by using mutex(acpi_pci_root_lock).
->>   In that case I faced deadlock at the following path:
->>   acpiphp_glue_init
->>      + acpi_pci_register_driver
->>        ...
->>          + add_bridge
->>            + acpi_pci_find_root
->>
->>   So I used RCU instead.
+On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
+> Since hot plug for pci devices while doing aer inject, some newly created child buses'
+> pci_ops will be assigned to pci_ops_aer. Aer_inject does not track these pci_ops_aer(not
+> list in pci_bus_ops_list),we should clean all of these when rmmod aer_inject module.
 > 
-> Oh, right.  I missed the acpiphp_glue_init() path.  That's clearly a problem.
-It's amazing. When I was writing the code, I just realized there's a possible
-deadlock scenario and then wrote defensive code. Not it's proven to be true:)
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/pcie/aer/aer_inject.c |   35 +++++++++++++++++++++++++++++++++++
+>  1 files changed, 35 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+> index 442147b..e2400b5 100644
+> --- a/drivers/pci/pcie/aer/aer_inject.c
+> +++ b/drivers/pci/pcie/aer/aer_inject.c
+> @@ -299,6 +299,32 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
+>  	bus_ops->ops = ops;
+>  }
+>  
+> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
+> +{
+> +	struct pci_bus *child;
+> +
+> +	list_for_each_entry(child, &bus->children, node) {
+> +		if (child->ops == &pci_ops_aer)
+> +			pci_bus_set_ops(child, bus->ops);
+> +		pci_clean_child_aer_ops(child);
+> +	}
 
->>> RCU seems unnecessarily complicated for this list, but I haven't gone
->>> through Yinghai's work yet, so I don't know what it requires.
->>>
->>> In acpi_pci_root_start() and acpi_pci_root_remove(), we have the
->>> struct acpi_pci_root, which has all sorts of information that would be
->>> useful to the .add() and .remove() methods of sub-drivers.  It seems
->>> sort of stupid that we only pass the acpi_handle to the sub-drivers,
->>> forcing them to use hacks like acpi_pci_find_root() to look up the
->>> information we just threw away.  Can we just fix the .add() and
->>> .remove() interfaces to pass something more useful so we avoid the
->>> need for this deadlock path?
->>
->>   Maybe yes. Do you prefer imprementation without RCU ?
-> 
-> Yes, if it's possible, I prefer to avoid RCU in this case.  RCU is
-> appropriate for performance paths, but it's much more difficult to
-> analyze than mutex locking.
-> 
-> Host bridge hotplug is definitely not a path where performance is an
-> issue, and I think reworking the .add()/.remove() interfaces will
-> allow us to use mutex locking.
-> 
-> I think it will also simplify the sub-drivers because having the
-> struct acpi_pci_root means they can get rid of acpi_pci_find_root(),
-> they don't have to re-evaluate _SEG and _BBN (in acpi_pci_slot_add()
-> -> walk_root_bridge()), they don't have to use pci_find_bus(), etc.
-Yes, it would be better to get rid of the RCU staff.
+Why not use pci_walk_bus?
+
+> +}
+> +
+> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
+> + * pci_ops of root bus won't be pci_ops_aer here*/
+> +static void clean_untracked_pci_ops_aer(void)
+> +{
+> +	struct pci_bus_ops *bus_ops;
+> +
+> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
+> +		/* the bus with untracked pci_ops_aer always the
+> +		 * child bus of root bus tracked in pci_bus_ops_list
+> +		 */
+> +		if (pci_is_root_bus(bus_ops->bus))
+> +			pci_clean_child_aer_ops(bus_ops->bus);
+> +	}
+> +}
+> +
+>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
+>  {
+>  	struct pci_ops *ops;
+> @@ -558,9 +584,18 @@ static void __exit aer_inject_exit(void)
+>  
+>  	misc_deregister(&aer_inject_device);
+>  
+> +	/* clean pci_bus_ops tracked in pci_bus_ops_list */
+>  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+
+Why not do clean here inside loop?
+
+Best Regards,
+Huang Ying
+
+>  
+> +	/* Inject aer errors and hotplug the same pcie device
+> +	 * maybe assign some newly created buses' pci_ops pci_ops_aer.
+> +	 * Since these pci_ops_aer are not tracked in pci_bus_ops_list,
+> +	 * we need to find and clean untracked pci_ops_aer before aer_inject
+> +	 * module exit
+> +	 */
+> +	clean_untracked_pci_ops_aer();
+> +
+>  	while ((bus_ops = pci_bus_ops_pop()))
+>  		kfree(bus_ops);
+>  
 
 
