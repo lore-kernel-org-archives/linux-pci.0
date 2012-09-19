@@ -1,105 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:37761 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930Ab2IPNSg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 09:18:36 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3] PCI: split registration of PCI bus devices into two stages
-Date: Sun, 16 Sep 2012 21:16:01 +0800
-Message-Id: <1347801361-18565-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAE9FiQX=NoSBY1vJSqEpRASY92A1C0x2rZONx1Xor_Zm4zCweQ@mail.gmail.com>
-References: <CAE9FiQX=NoSBY1vJSqEpRASY92A1C0x2rZONx1Xor_Zm4zCweQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 19/40] PCI, sysfs: Clean up rescan/remove with schedule_callback
+Date: Wed, 19 Sep 2012 11:54:33 -0700
+Message-Id: <1348080894-23412-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
-the notification handler can't hold reference count to the new PCI bus
-because the device object for the new bus (pci_dev->subordinate->dev)
-hasn't been initialized yet.
+Change to use three return according to Bjorn.
 
-Split the registration of PCI bus device into two stages as below,
-so that the event handler could hold reference count to the new PCI bus
-when handling BUS_NOTIFY_ADD_DEVICE event.
-
-1) device_initialize(&pci_dev->dev)
-2) device_initialize(&pci_dev->subordinate->dev)
-3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
-4) device_add(&pci_dev->dev)
-5) device_add(&pci_dev->subordinate->dev)
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-V2->V3
-Fix a failing in error recover path according to Yinghai's suggestion.
----
- drivers/pci/bus.c    |    2 +-
- drivers/pci/probe.c  |    4 +++-
- drivers/pci/remove.c |   10 +++++-----
- 3 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/pci/pci-sysfs.c |   25 ++++++++++++++-----------
+ 1 files changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4b0970b..11a5c28 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -189,7 +189,7 @@ int pci_bus_add_child(struct pci_bus *bus)
- 	if (bus->bridge)
- 		bus->dev.parent = bus->bridge;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 60e04b2..b308558 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -340,7 +340,7 @@ static ssize_t
+ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	     const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
  
--	retval = device_register(&bus->dev);
-+	retval = device_add(&bus->dev);
- 	if (retval)
- 		return retval;
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5dbad03..7ef8c1b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -639,6 +639,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+@@ -349,10 +349,13 @@ remove_store(struct device *dev, struct device_attribute *dummy,
+ 	/* An attribute cannot be unregistered by one of its own methods,
+ 	 * so we have to use this roundabout approach.
  	 */
- 	child->dev.class = &pcibus_class;
- 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-+	device_initialize(&child->dev);
- 
- 	/*
- 	 * Set up the primary, secondary and subordinate
-@@ -1672,7 +1673,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
- 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(&b->dev);
-+	device_initialize(&b->dev);
-+	error = device_add(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
- 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 37b9407..86a4636 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
- 	list_del(&bus->node);
- 	pci_bus_release_busn_res(bus);
- 	up_write(&pci_bus_sem);
--	if (!bus->is_added)
--		return;
--
--	pci_remove_legacy_files(bus);
--	device_unregister(&bus->dev);
-+	if (bus->is_added) {
-+		pci_remove_legacy_files(bus);
-+		device_del(&bus->dev);
-+	}
-+	put_device(&bus->dev);
+-	if (val)
+-		ret = device_schedule_callback(dev, remove_callback);
+-	if (ret)
+-		count = ret;
++	if (!val)
++		return count;
++
++	err = device_schedule_callback(dev, remove_callback);
++	if (err)
++		return err;
++
+ 	return count;
  }
- EXPORT_SYMBOL(pci_remove_bus);
  
+@@ -372,17 +375,17 @@ static ssize_t
+ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		 const char *buf, size_t count)
+ {
+-	int ret = 0;
++	int err;
+ 	unsigned long val;
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
++	if (!val)
++		return count;
+ 
+-	if (val)
+-		ret = device_schedule_callback(dev, bus_rescan_callback);
+-
+-	if (ret)
+-		count = ret;
++	err = device_schedule_callback(dev, bus_rescan_callback);
++	if (err)
++		return err;
+ 
+ 	return count;
+ }
 -- 
-1.7.9.5
+1.7.7
 
