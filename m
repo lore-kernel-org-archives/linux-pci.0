@@ -1,61 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:44772 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab2IENZi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Sep 2012 09:25:38 -0400
-Date: Wed, 5 Sep 2012 14:30:10 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Don Dutile <ddutile@redhat.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	mfleming@intel.com, dwmw2@infradead.org, bhelgaas@google.com
-Subject: Re: [PATCH V3 3/4] PCI: Add support for non-BAR ROMs
-Message-ID: <20120905143010.557aa3fb@pyramind.ukuu.org.uk>
-In-Reply-To: <20120905132007.GB16399@srcf.ucam.org>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-	<1345739803-21017-4-git-send-email-mjg@redhat.com>
-	<5046B688.1070902@redhat.com>
-	<20120905022932.GA4087@srcf.ucam.org>
-	<20120905134621.73afe48a@pyramind.ukuu.org.uk>
-	<20120905132007.GB16399@srcf.ucam.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from acsinet15.oracle.com ([141.146.126.227]:48110 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757032Ab2ISSzg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:36 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 33/40] ACPI, PCI: Use normal list for struct acpi_pci_driver
+Date: Wed, 19 Sep 2012 11:54:47 -0700
+Message-Id: <1348080894-23412-34-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 5 Sep 2012 14:20:07 +0100
-Matthew Garrett <mjg@redhat.com> wrote:
+From: Jiang Liu <jiang.liu@huawei.com>
 
-> On Wed, Sep 05, 2012 at 01:46:21PM +0100, Alan Cox wrote:
-> > On Wed, 5 Sep 2012 03:29:32 +0100
-> > Matthew Garrett <mjg@redhat.com> wrote:
-> > 
-> > > On Tue, Sep 04, 2012 at 10:18:48PM -0400, Don Dutile wrote:
-> > > > >  	/*
-> > > > >+	 * Some devices may provide ROMs via a source other than the BAR
-> > > > >+	 */
-> > > > >+	if (pdev->rom&&  pdev->romlen) {
-> > > > >+		*size = pdev->romlen;
-> > > > >+		return phys_to_virt((phys_addr_t)pdev->rom);
-> > > >                        ^^^^^
-> > > >                          ioremap_nocache() ? ... or is caching rom ok?
-> > > 
-> > > If it's appearing through this pathway then it's not actually in ROM, 
-> > > the platform has pulled it out of somewhere else.
-> > 
-> > If that somewhere else is on the PCI bus then it should be a bus not a
-> > virt translation surely ?
-> 
-> We've no good way of knowing what the firmware's giving us - we copy it 
-> to RAM in the EFI init process, so by the time we're here it certainly 
-> shouldn't be on the PCI bus.
+Use normal list for struct acpi_pci_driver to simplify code.
 
-In which case how do you know that physical address you have been given
-actually has a mapping in kernel virtual space. It seems like it ought to
-be getting an ioremap in that case ?
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |   16 +++-------------
+ include/linux/acpi.h    |    2 +-
+ 2 files changed, 4 insertions(+), 14 deletions(-)
 
-phys_to_virt is not valid for arbitary addresses.
-
-Alan
-
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index b72c85c..325cf5c 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -72,8 +72,8 @@ static struct acpi_driver acpi_pci_root_driver = {
+ };
+ 
+ static LIST_HEAD(acpi_pci_roots);
++static LIST_HEAD(acpi_pci_drivers);
+ 
+-static struct acpi_pci_driver *sub_driver;
+ static DEFINE_MUTEX(osc_lock);
+ 
+ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+@@ -81,10 +81,7 @@ int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+ 	int n = 0;
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr)
+-		pptr = &(*pptr)->next;
+-	*pptr = driver;
++	list_add_tail(&driver->node, &acpi_pci_drivers);
+ 
+ 	if (!driver->add)
+ 		return 0;
+@@ -103,14 +100,7 @@ void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+ {
+ 	struct acpi_pci_root *root;
+ 
+-	struct acpi_pci_driver **pptr = &sub_driver;
+-	while (*pptr) {
+-		if (*pptr == driver)
+-			break;
+-		pptr = &(*pptr)->next;
+-	}
+-	BUG_ON(!*pptr);
+-	*pptr = (*pptr)->next;
++	list_del(&driver->node);
+ 
+ 	if (!driver->remove)
+ 		return;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index a686098..90be989 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -138,7 +138,7 @@ void acpi_penalize_isa_irq(int irq, int active);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ struct acpi_pci_driver {
+-	struct acpi_pci_driver *next;
++	struct list_head node;
+ 	int (*add)(struct acpi_pci_root *root);
+ 	void (*remove)(struct acpi_pci_root *root);
+ };
+-- 
+1.7.7
 
