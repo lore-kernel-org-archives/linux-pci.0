@@ -1,89 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 18 Sep 2012 15:26:41 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH v3 8/8] ACPI, PCI: add resoruce-assign code for devices
- under hot-added hostbridge
-Message-Id: <20120918152641.410dad43.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 11/40] PCI, x86: Add pcibios_fw_addr_done
+Date: Wed, 19 Sep 2012 11:54:25 -0700
+Message-Id: <1348080894-23412-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use it to skip not needed function after pcibios_fw_addr_list_del is called.
 
-Devices under hot-added hostbridge have no chance to assign resources
-and to configure them, so this patch adds such code for hot-added 
-hostbridges at acpi_pci_root_start().
+for pci root bus hot add, we will need to use pcibios_allocate_dev_resources(),
+and don't want to mess up with fw_addr.
 
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/pci_root.c |   17 +++++++++++++++++
- include/acpi/acpi_bus.h |    1 +
- 2 files changed, 18 insertions(+)
+ arch/x86/pci/i386.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0903/drivers/acpi/pci_root.c
-@@ -38,6 +38,7 @@
- #include <acpi/acpi_bus.h>
- #include <acpi/acpi_drivers.h>
- #include <acpi/apei.h>
-+#include <linux/pci_hotplug.h>
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 42dd755..edfc376 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -51,6 +51,7 @@ struct pcibios_fwaddrmap {
  
- #define PREFIX "ACPI: "
+ static LIST_HEAD(pcibios_fwaddrmappings);
+ static DEFINE_SPINLOCK(pcibios_fwaddrmap_lock);
++static bool pcibios_fw_addr_done;
  
-@@ -459,6 +460,9 @@ static int __devinit acpi_pci_root_add(s
- 	if (!root)
- 		return -ENOMEM;
+ /* Must be called with 'pcibios_fwaddrmap_lock' lock held. */
+ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
+@@ -72,6 +73,9 @@ pcibios_save_fw_addr(struct pci_dev *dev, int idx, resource_size_t fw_addr)
+ 	unsigned long flags;
+ 	struct pcibios_fwaddrmap *map;
  
-+	if (system_state != SYSTEM_BOOTING)
-+		root->hot_added = true;
++	if (pcibios_fw_addr_done)
++		return;
 +
- 	segment = 0;
- 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
- 				       &segment);
-@@ -636,6 +640,7 @@ static int acpi_pci_root_start(struct ac
+ 	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
+ 	map = pcibios_fwaddrmap_lookup(dev);
+ 	if (!map) {
+@@ -97,6 +101,9 @@ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx)
+ 	struct pcibios_fwaddrmap *map;
+ 	resource_size_t fw_addr = 0;
+ 
++	if (pcibios_fw_addr_done)
++		return fw_addr;
++
+ 	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
+ 	map = pcibios_fwaddrmap_lookup(dev);
+ 	if (map)
+@@ -106,7 +113,7 @@ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx)
+ 	return fw_addr;
+ }
+ 
+-static void pcibios_fw_addr_list_del(void)
++static void __init pcibios_fw_addr_list_del(void)
  {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
-+	struct pci_dev *pdev;
+ 	unsigned long flags;
+ 	struct pcibios_fwaddrmap *entry, *next;
+@@ -118,6 +125,7 @@ static void pcibios_fw_addr_list_del(void)
+ 		kfree(entry);
+ 	}
+ 	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
++	pcibios_fw_addr_done = true;
+ }
  
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
-@@ -643,6 +648,18 @@ static int acpi_pci_root_start(struct ac
- 			driver->add(root);
- 	mutex_unlock(&acpi_pci_root_lock);
- 
-+	/*
-+	 * Devices under hot-added hostbridge have no chance to assign
-+	 * resources and to configure them, so do that here
-+	 */
-+	if (root->hot_added) {
-+		pci_bus_size_bridges(root->bus);
-+		pci_bus_assign_resources(root->bus);
-+		list_for_each_entry(pdev, &root->bus->devices, bus_list)
-+			pci_configure_slot(pdev);
-+		pci_enable_bridges(root->bus);
-+	}
-+
- 	pci_bus_add_devices(root->bus);
- 
- 	return 0;
-Index: Bjorn-next-0903/include/acpi/acpi_bus.h
-===================================================================
---- Bjorn-next-0903.orig/include/acpi/acpi_bus.h
-+++ Bjorn-next-0903/include/acpi/acpi_bus.h
-@@ -407,6 +407,7 @@ struct acpi_pci_root {
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
- 	phys_addr_t mcfg_addr;
-+	bool hot_added;
- };
- 
- /* helper */
+ static int
+-- 
+1.7.7
 
