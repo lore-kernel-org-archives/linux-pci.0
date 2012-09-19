@@ -1,66 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:33548 "EHLO smtp1.it.da.ut.ee"
+Received: from mga02.intel.com ([134.134.136.20]:63547 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757967Ab2IEOVh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Sep 2012 10:21:37 -0400
-Date: Wed, 5 Sep 2012 17:21:32 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: David Miller <davem@davemloft.net>
-cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: PCI resource allocation problem on Sun Ultra 10
-In-Reply-To: <20120817.002443.1165562804832527200.davem@davemloft.net>
-Message-ID: <alpine.SOC.1.00.1208241617540.6161@math.ut.ee>
-References: <alpine.SOC.1.00.1208161813240.11061@math.ut.ee> <20120816.132557.173944271888805402.davem@davemloft.net> <alpine.SOC.1.00.1208170001370.93@math.ut.ee> <20120817.002443.1165562804832527200.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	id S1751201Ab2ISFNl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Sep 2012 01:13:41 -0400
+Message-ID: <1348031618.8212.124.camel@yhuang-dev>
+Subject: Re: [PATCH 1/6] PCI/AER: fix pci_ops return NULL when hotplug a pci
+ bus doing aer error inject
+From: Huang Ying <ying.huang@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
+	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
+Date: Wed, 19 Sep 2012 13:13:38 +0800
+In-Reply-To: <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
+References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+	 <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > There are 2 different onboard grpahics "cards" on U5/U10 mainboard, PGX 
-> > that is ATI Mach 64 with 2M SGRAM and PGX24 that has 4M SGRAM. I have 
-> > the latter. And these do not seem to need this reservation.
+On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
+> When we inject aer errors to the target pcie device by aer_inject module, the pci_ops of pci
+> bus which the target device is on will be assigned to pci_ops_aer.So if the target pci device
+> is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
+> will be assigned to pci_ops_aer too.Now every access to the child bus's devices will result to
+> system panic, because it get a NULL pci_ops in pci_read_aer/pci_write_aer.
 > 
-> Any VGA capable device can silently decode the VGA region.
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
+> ---
+>  drivers/pci/pcie/aer/aer_inject.c |   27 ++++++++++++++++++++++++++-
+>  1 files changed, 26 insertions(+), 1 deletions(-)
 > 
-> It is unconditionally reserved on x86 and other platforms as well.
-> 
-> > Maybe Sun does not support legacy VGA cards in PCI slots (only 
-> > PCI-assigned areas)?
-> 
-> It doesn't matter if the video card is "PCI assigned", if the chip is
-> put into VGA mode (which both MACH64 and PGX24 fully support) it will
-> start responding to accesses to the VGA region.
+> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+> index 4e24cb8..0f00a27 100644
+> --- a/drivers/pci/pcie/aer/aer_inject.c
+> +++ b/drivers/pci/pcie/aer/aer_inject.c
+> @@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+>  	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
+>  }
+>  
+> +/* find pci_ops of the nearest parent bus */
+> +static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
+> +{
+> +	struct pci_bus_ops *bus_ops;
+> +	struct pci_bus *pbus = bus->parent;
+> +
+> +	if (!pbus)
+> +		return NULL;
+> +
+> +	while (pbus) {
+> +		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
+> +			if (bus_ops->bus == pbus)
+> +				return bus_ops->ops;
+> +
+> +		pbus = pbus->parent;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+>  /* inject_lock must be held before calling */
+>  static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>  {
+> @@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>  		if (bus_ops->bus == bus)
+>  			return bus_ops->ops;
+>  	}
+> -	return NULL;
+> +
+> +	/* can't find bus_ops, fall back to get bus_ops of upstream bus */
+> +	return __find_pci_bus_ops_parent(bus);
+>  }
+>  
+>  static struct pci_bus_ops *pci_bus_ops_pop(void)
+> @@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+>  	}
+>  out:
+>  	ops = __find_pci_bus_ops(bus);
+> +	BUG_ON(!ops);
+>  	spin_unlock_irqrestore(&inject_lock, flags);
+>  	return ops->read(bus, devfn, where, size, val);
+>  }
+> @@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
+>  	}
+>  out:
+>  	ops = __find_pci_bus_ops(bus);
+> +	BUG_ON(!ops);
+>  	spin_unlock_irqrestore(&inject_lock, flags);
+>  	return ops->write(bus, devfn, where, size, val);
+>  }
+> @@ -506,6 +530,7 @@ static struct miscdevice aer_inject_device = {
+>  	.fops = &aer_inject_fops,
+>  };
+>  
+> +
 
-OK, I did some tests. Removed Video ROM reservation and put different 
-VGA cards into slots 2 and 3 (2 PC VGA cards in many combinations, 1 PC 
-and 1 Sun, 2 different Sun F-code ROM cards: mach64 and radeon). What 
-happens is that tg3 BARs change if there is a VGA on bus, like this:
+unnecessary new line?
 
-1fc00400000-1fc0040000f : ffb dac
-1fc00600000-1fc00600983 : ffb fbc
-1ff00000000-1ffffffffff : /pci@1f,0
-  1ff00002000-1ff00002fff : aic7xxx
-  1ff000a0000-1ff000bffff : Video RAM area
-  1ff000f0000-1ff000fffff : System ROM
-  1ff01000000-1ff01ffffff : atyfb
-  1ff02040000-1ff0204ffff : tg3
-  1ffc0000000-1ffdfffffff : IOMMU
-  1ffe0000000-1ffe000701f : sunhme
-  1ffe1000000-1ffe1ffffff : atyfb
-  1fff1000000-1fff1001fff : eeprom
-  1fff1200000-1fff120000f : cs4231
-  1fff13062f8-1fff13062ff : su
-  1fff13083f8-1fff13083ff : su
-  1fff1400000-1fff140003f : sab
-  1fff1400040-1fff140007f : sab
-  1fff1702000-1fff170200f : cs4231_pdma
-  1fff1704000-1fff170400f : cs4231_cdma
-  1fff1724000-1fff1724003 : power
-  1fff1726000-1fff1726003 : auxio
+Best Regards,
+Huang Ying
 
-So OBP seems to know what it is doing. On U10. I can also test on E220R, 
-E250, E450, E3500, V240, Blade 100. I suspect anything newer has not 
-gotten worse in this sense...
+>  static int __init aer_inject_init(void)
+>  {
+>  	return misc_register(&aer_inject_device);
 
--- 
-Meelis Roos (mroos@linux.ee)
+
