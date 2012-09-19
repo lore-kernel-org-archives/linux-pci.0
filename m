@@ -1,90 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:36065 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646Ab2IGFAv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 01:00:51 -0400
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <shangw@linux.vnet.ibm.com>;
-	Thu, 6 Sep 2012 23:00:51 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id B69863E40039
-	for <linux-pci@vger.kernel.org>; Thu,  6 Sep 2012 23:00:48 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q8750nRN221266
-	for <linux-pci@vger.kernel.org>; Thu, 6 Sep 2012 23:00:49 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q8750mVg005859
-	for <linux-pci@vger.kernel.org>; Thu, 6 Sep 2012 23:00:49 -0600
-From: Gavin Shan <shangw@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, benh@kernel.crashing.org,
-	Gavin Shan <shangw@linux.vnet.ibm.com>
-Subject: [PATCH 4/5] ppc/pci: override pcibios_window_alignment
-Date: Fri,  7 Sep 2012 13:00:34 +0800
-Message-Id: <1346994035-16218-5-git-send-email-shangw@linux.vnet.ibm.com>
-In-Reply-To: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:19538 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756881Ab2ISSzS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:18 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/40] x86, PCI: Separate rom resource claim out
+Date: Wed, 19 Sep 2012 11:54:24 -0700
+Message-Id: <1348080894-23412-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Function pcibios_window_alignment() has been implemented as "weak"
-in PCI core to return the default alignment of I/O and memory windows
-for the associated p2p bridge. The patch adds same function to
-override the weak one so that the default alignment could be changed
-for those platforms (e.g. powernv).
+So could use it with hot-added root bus.
 
-Signed-off-by: Gavin Shan <shangw@linux.vnet.ibm.com>
+-v2: remove extra functions.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/powerpc/include/asm/machdep.h |    3 +++
- arch/powerpc/kernel/pci-common.c   |   20 ++++++++++++++++++++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+ arch/x86/pci/i386.c |   52 ++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 35 insertions(+), 17 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 42ce570..f7706d7 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -214,6 +214,9 @@ struct machdep_calls {
- 	/* Called after scan and before resource survey */
- 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
- 
-+	/* Called during PCI resource reassignment */
-+	resource_size_t (*pcibios_window_alignment)(struct pci_bus *, unsigned long type);
-+
- 	/* Called to shutdown machine specific hardware not already controlled
- 	 * by other drivers.
- 	 */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 2aa04f2..43fea54 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -99,6 +99,26 @@ void pcibios_free_controller(struct pci_controller *phb)
- 		kfree(phb);
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 84696ed..42dd755 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -298,27 +298,45 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ 	}
  }
  
-+/*
-+ * The function is used to return the minimal alignment
-+ * for memory or I/O windows of the associated P2P bridge.
-+ * By default, 4KiB alignment for I/O windows and 1MiB for
-+ * memory windows.
-+ */
-+resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-+					 unsigned long type)
-+{
-+	if (ppc_md.pcibios_window_alignment)
-+		return ppc_md.pcibios_window_alignment(bus, type);
-+
+-static int __init pcibios_assign_resources(void)
++static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ {
+-	struct pci_dev *dev = NULL;
+ 	struct resource *r;
+ 
+-	if (!(pci_probe & PCI_ASSIGN_ROMS)) {
+-		/*
+-		 * Try to use BIOS settings for ROMs, otherwise let
+-		 * pci_assign_unassigned_resources() allocate the new
+-		 * addresses.
+-		 */
+-		for_each_pci_dev(dev) {
+-			r = &dev->resource[PCI_ROM_RESOURCE];
+-			if (!r->flags || !r->start)
+-				continue;
+-			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
+-				r->end -= r->start;
+-				r->start = 0;
+-			}
+-		}
 +	/*
-+	 * PCI core will figure out the default
-+	 * alignment: 4KiB for I/O and 1MiB for
-+	 * memory window.
++	 * Try to use BIOS settings for ROMs, otherwise let
++	 * pci_assign_unassigned_resources() allocate the new
++	 * addresses.
 +	 */
-+	return 1;
++	r = &dev->resource[PCI_ROM_RESOURCE];
++	if (!r->flags || !r->start)
++		return;
++
++	if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
++		r->end -= r->start;
++		r->start = 0;
+ 	}
++}
++static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	struct pci_bus *child;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pcibios_allocate_dev_rom_resource(dev);
++
++		child = dev->subordinate;
++		if (child)
++			pcibios_allocate_rom_resources(child);
++	}
 +}
 +
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
- {
- #ifdef CONFIG_PPC64
++static int __init pcibios_assign_resources(void)
++{
++	struct pci_bus *bus;
++
++	if (!(pci_probe & PCI_ASSIGN_ROMS))
++		list_for_each_entry(bus, &pci_root_buses, node)
++			pcibios_allocate_rom_resources(bus);
+ 
+ 	pci_assign_unassigned_resources();
+ 	pcibios_fw_addr_list_del();
 -- 
-1.7.5.4
+1.7.7
 
