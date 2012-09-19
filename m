@@ -1,85 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:52728 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab2ISCmH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 22:42:07 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/6] PCI/AER: introduce pci_bus_ops_get() function to avoid a small race condition window
-Date: Wed, 19 Sep 2012 10:40:38 +0800
-Message-ID: <1348022442-7816-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+Received: from mga03.intel.com ([143.182.124.21]:22309 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753144Ab2ISHOy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Sep 2012 03:14:54 -0400
+Date: Wed, 19 Sep 2012 03:11:38 -0400
+From: Chen Gong <gong.chen@linux.intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>, jiang.liu@huawei.com,
+	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free
+ pci_bus_ops
+Message-ID: <20120919071138.GA15513@gchen.bj.intel.com>
 References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+ <1348022442-7816-6-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Q68bSM7Ycu6FN28Q"
+In-Reply-To: <1348022442-7816-6-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we rmmod aer_inject module, there is a race condition window between pci_bus_ops_pop()
-and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
-them. So introduce pci_bus_ops_get() to avoid this.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
- 1 files changed, 18 insertions(+), 3 deletions(-)
+--Q68bSM7Ycu6FN28Q
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 0f00a27..442147b 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -67,6 +67,8 @@ struct pci_bus_ops {
- 	struct pci_ops *ops;
- };
- 
-+#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
-+
- static LIST_HEAD(einjected);
- 
- static LIST_HEAD(pci_bus_ops_list);
-@@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
- 	return bus_ops;
- }
- 
-+static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
-+{
-+	struct pci_bus_ops *bus_ops = NULL;
-+	struct list_head *n;
-+
-+	n = from ? from->list.next : pci_bus_ops_list.next;
-+	if (n != &pci_bus_ops_list)
-+		bus_ops = to_pci_bus_ops(n);
-+
-+	return bus_ops;
-+}
-+
- static u32 *find_pci_config_dword(struct aer_error *err, int where,
- 				  int *prw1cs)
- {
-@@ -540,14 +554,15 @@ static void __exit aer_inject_exit(void)
- {
- 	struct aer_error *err, *err_next;
- 	unsigned long flags;
--	struct pci_bus_ops *bus_ops;
-+	struct pci_bus_ops *bus_ops = NULL;
- 
- 	misc_deregister(&aer_inject_device);
- 
--	while ((bus_ops = pci_bus_ops_pop())) {
-+	while ((bus_ops = pci_bus_ops_get(bus_ops)))
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-+
-+	while ((bus_ops = pci_bus_ops_pop()))
- 		kfree(bus_ops);
--	}
- 
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
--- 
-1.7.1
+On Wed, Sep 19, 2012 at 10:40:41AM +0800, Yijing Wang wrote:
+> Date: Wed, 19 Sep 2012 10:40:41 +0800
+> From: Yijing Wang <wangyijing@huawei.com>
+> To: Bjorn Helgaas <bhelgaas@google.com>, Huang Ying <ying.huang@intel.com=
+>,
+>  Chen Gong <gong.chen@linux.intel.com>
+> CC: jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>,
+>  linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
+> Subject: [PATCH 5/6] PCI/AER: introduce pci_bus_ops_free to free pci_bus_=
+ops
+> X-Mailer: git-send-email 1.7.11.msysgit.1
+>=20
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 
+Your patch hasn't description.
 
+--Q68bSM7Ycu6FN28Q
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQWXAqAAoJEI01n1+kOSLHYdkQAKBDgU5RSMiKZ7xWHb8hE+6k
+rt/UDRXsYG3s8l0fOI1WIkG8pBhkkTWVmuB3oh5Fuj7k+thJOSCi3wPeoEK79aDs
+Jq5mhoK7R9AOLIPUXzOve2M/wQuKlokjtyCgk0BKPVXsWEMHZA+0FcypxzCPwwMH
+PuLIUlKLkV6BBFseU7iH0JTUbjms3dpfipoS8G3ZP/9uDHF6drV6xW7lejSp2fYP
++BIzxLUpi9FcJidS9RaAgtpQPBpKdUNs8gg/xyAVZSsRCMdWGl6rS+/cYoBmN22i
+cAZthU0zO/eOnL5bA5oOhtxyA3fP73TSswzrRsFNdu1ZR1HFM7+z4SNk08/Sgo8X
+3xMptQpjPLR3oVhx75AtkSBwpGze8fv7Se4lO3VqrKZvY2qUONqhymZEo3+9lAq2
+2/EjaP8lleKqkD46gDwb4eGEuZehhZYiv7FLqEyFfn/Vz9DIfGJTzUyPWpkOivmb
+H2fJlYIOdBiKNGhbWDQGu6LshSgIGY1w9HGFReOBRg7dk6HE3zDdZ86weF/b9nDM
+9HMvZtrgjkOTli20VGVjQTfenejHZuY1rWznwWqQ9E6mKhFaxaJUdzs82GEzgcbT
+DnHazFLOM0OMAPx+DIygkj6woFVto2t4uEiI6Rv6D/BXiJG/4N3hfSQX9JnbFkD8
+A+rj0mFIGuDI0eXm7eAB
+=75dO
+-----END PGP SIGNATURE-----
+
+--Q68bSM7Ycu6FN28Q--
