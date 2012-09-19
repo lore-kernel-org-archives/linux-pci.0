@@ -1,62 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:64004 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161Ab2IQDGv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 16 Sep 2012 23:06:51 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQU4tNDot3J9EEwhd=YUfTSoojtreb2JFVn-=KUsq=W+ow@mail.gmail.com>
-References: <CAE9FiQWBYmRj5--pg8eAwH_RKZsCWo+CVGN_KpeGXeE_3cSq9g@mail.gmail.com>
-	<1347804577-23015-1-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQUC9OyPQYDTC1xR45qd1an63H13LBKGaPueqihwq=yhSw@mail.gmail.com>
-	<CAE9FiQU4tNDot3J9EEwhd=YUfTSoojtreb2JFVn-=KUsq=W+ow@mail.gmail.com>
-Date: Sun, 16 Sep 2012 20:06:50 -0700
-Message-ID: <CAE9FiQXWzq+oA72pFAwkXwFAdnfJSwaMs0wtzOpKQU_xxNB=dg@mail.gmail.com>
-Subject: Re: [PATCH v3] ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 27/40] ACPI: acpi_bus_trim to support two steps.
+Date: Wed, 19 Sep 2012 11:54:41 -0700
+Message-Id: <1348080894-23412-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 16, 2012 at 11:02 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Sun, Sep 16, 2012 at 9:49 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Sun, Sep 16, 2012 at 7:09 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>> @@ -160,10 +160,13 @@ static int acpi_bind_one(struct device *dev, acpi_handle handle)
->>>         }
->>>         dev->archdata.acpi_handle = handle;
->>>
->>> -       acpi_pci_bind_notify(dev->archdata.acpi_handle, dev, true);
->>> -
->>>         status = acpi_bus_get_device(handle, &acpi_dev);
->>> -       if (!ACPI_FAILURE(status)) {
->>> +       if (!ACPI_FAILURE(status))
->>> +               acpi_dev = NULL;
->>> +
->>> +       acpi_pci_bind_notify(dev->archdata.acpi_handle, acpi_dev, dev, true);
->>
->> It seems you can do
->>     acpi_pci_bind_notify(acpi_dev, dev, true);
->> instead.
->>
->> aka:
->> Do you have test case acpi_dev is not created before pci device?
->>
->
-> updated your patch, and retrieve handle if needed from acpi_dev->handle or
-> pci_dev->dev.archdata.acpi_handle.
+current all acpi_bus_trim callers have rmdevice to 1.
+that means it will remove all acpi devices.
 
-please use this updated version.
+When 0, is passed, it will keep one parent.
 
-Also you could add
-Reviewed-by: Yinghai Lu <yinghai@kernel.org>
+For root bus hotremove support, we need to have pci device removed before
+acpi devices.
 
-for your patch 1, 2, 4, 5.
+So try to keep all acpi devices, and only stop drivers with them.
 
-Thanks
+This change should be safe because all current callers all have 1 passed.
 
-Yinghai
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/scan.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index d1ecca2..d1a1f25 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1539,10 +1539,7 @@ int acpi_bus_trim(struct acpi_device *start, int rmdevice)
+ 			child = parent;
+ 			parent = parent->parent;
+ 
+-			if (level == 0)
+-				err = acpi_bus_remove(child, rmdevice);
+-			else
+-				err = acpi_bus_remove(child, 1);
++			err = acpi_bus_remove(child, rmdevice);
+ 
+ 			continue;
+ 		}
+-- 
+1.7.7
+
