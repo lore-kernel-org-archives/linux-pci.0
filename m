@@ -1,42 +1,32 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:37566 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756570Ab2ISRRI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 13:17:08 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo7DJgtxCF2ubw4rwxcSQh-BkivQLJDsqJOGU32pcmTTnw@mail.gmail.com>
+References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
+	<1347670122-25824-3-git-send-email-yinghai@kernel.org>
+	<CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
+	<CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
+	<CAErSpo7DJgtxCF2ubw4rwxcSQh-BkivQLJDsqJOGU32pcmTTnw@mail.gmail.com>
+Date: Wed, 19 Sep 2012 10:17:05 -0700
+Message-ID: <CAE9FiQW0PpBU0N9VzJyNKK9PvaUwokCYeB6w_j4mcN9EV0geLQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 36/40] PCI: Set dev_node early for pci_dev
-Date: Wed, 19 Sep 2012 11:54:50 -0700
-Message-Id: <1348080894-23412-37-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, Tony Luck <tony.luck@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-otherwise irq_desc for pci bridge with hot-added ioapic can not be
-on local node.
+On Wed, Sep 19, 2012 at 6:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> yes, but they don't support pci_set_host_bridge_release yet. so they
+>> should not meet this problem yet.
+>
+> Why should we wait to fix that bug until later?  I'm not interested in
+> debugging this in the future.  If you fix a bug, you should always try
+> to fix other occurrences of the same bug at the same time.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ab845aa..460ac84 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1295,6 +1295,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.release = pci_release_dev;
- 	pci_dev_get(dev);
- 
-+	set_dev_node(&dev->dev, pcibus_to_node(bus));
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
--- 
-1.7.7
-
+ok, will update the patch.
