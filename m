@@ -1,108 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 21/40] PCI: Add pci_stop_and_remove_root_bus()
-Date: Wed, 19 Sep 2012 11:54:35 -0700
-Message-Id: <1348080894-23412-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Russell King <linux@arm.linux.org.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 2/2] ARM: pci: Allow passing per-controller private data
+Date: Thu, 20 Sep 2012 09:43:45 +0200
+Message-Id: <1348127025-29461-3-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It supports both pci root bus and pci bus under pci bridge.
+In order to allow drivers to specify private data for each controller,
+this commit adds a private_data field to the struct hw_pci. This field
+is an array of nr_controllers pointers that will be used to initialize
+the private_data field of the corresponding controller's pci_sys_data
+structure.
 
--v2: clear pci_bridge's subordinate.
--v3: only handle root bus. and also put Jiang's get/put pair in
--v4: fold pci_stop/remove_bus_devices in... reducing confusing.
--v5: split device_register/unregister to avoid extra get...
-     also remove extra blank line.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- drivers/pci/probe.c  |    3 ++-
- drivers/pci/remove.c |   36 ++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |    2 ++
- 3 files changed, 40 insertions(+), 1 deletions(-)
+ arch/arm/include/asm/mach/pci.h | 1 +
+ arch/arm/kernel/bios32.c        | 3 +++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 47238dd..ab845aa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1660,7 +1660,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_bus_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(&bridge->dev);
-+	device_initialize(&bridge->dev);
-+	error = device_add(&bridge->dev);
- 	if (error)
- 		goto bridge_dev_reg_err;
- 	b->bridge = get_device(&bridge->dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 513972f..7c0fd92 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -111,3 +111,39 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
- 	pci_remove_bus_device(dev);
- }
- EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index db9fedb..5cf2e97 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -23,6 +23,7 @@ struct hw_pci {
+ #endif
+ 	struct pci_ops	*ops;
+ 	int		nr_controllers;
++	void		**private_data;
+ 	int		(*setup)(int nr, struct pci_sys_data *);
+ 	struct pci_bus *(*scan)(int nr, struct pci_sys_data *);
+ 	void		(*preinit)(void);
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 2c80f36..88da2d4 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -475,6 +475,9 @@ static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 		sys->map_irq = hw->map_irq;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
++		if (hw->private_data)
++			sys->private_data = hw->private_data[nr];
 +
-+void pci_stop_root_bus(struct pci_bus *bus)
-+{
-+	struct pci_dev *child, *tmp;
-+	struct pci_host_bridge *host_bridge;
-+
-+	if (!pci_is_root_bus(bus))
-+		return;
-+
-+	host_bridge = to_pci_host_bridge(bus->bridge);
-+	list_for_each_entry_safe_reverse(child, tmp,
-+					 &bus->devices, bus_list)
-+		pci_stop_bus_device(child);
-+
-+	/* stop the host bridge */
-+	device_del(&host_bridge->dev);
-+}
-+
-+void pci_remove_root_bus(struct pci_bus *bus)
-+{
-+	struct pci_dev *child, *tmp;
-+	struct pci_host_bridge *host_bridge;
-+
-+	if (!pci_is_root_bus(bus))
-+		return;
-+
-+	host_bridge = to_pci_host_bridge(bus->bridge);
-+	list_for_each_entry_safe(child, tmp,
-+				 &bus->devices, bus_list)
-+		pci_remove_bus_device(child);
-+	pci_remove_bus(bus);
-+	host_bridge->bus = NULL;
-+
-+	/* remove the host bridge */
-+	put_device(&host_bridge->dev);
-+}
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7404077..88ae237 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -735,6 +735,8 @@ extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
- extern void pci_dev_put(struct pci_dev *dev);
- extern void pci_remove_bus(struct pci_bus *b);
- extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-+void pci_stop_root_bus(struct pci_bus *bus);
-+void pci_remove_root_bus(struct pci_bus *bus);
- void pci_setup_cardbus(struct pci_bus *bus);
- extern void pci_sort_breadthfirst(void);
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+ 		ret = hw->setup(nr, sys);
+ 
+ 		if (ret > 0) {
 -- 
-1.7.7
+1.7.12
 
