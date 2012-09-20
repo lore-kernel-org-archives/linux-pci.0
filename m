@@ -1,91 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:47905 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756910Ab2ISSzU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:20 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/40] PCI, x86: Remove __init for hw/fw allocated functions
-Date: Wed, 19 Sep 2012 11:54:26 -0700
-Message-Id: <1348080894-23412-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+Received: from webmail.solarflare.com ([12.187.104.25]:39571 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750913Ab2ITBXP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 21:23:15 -0400
+Message-ID: <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk>
+Subject: Re: New commands to configure IOV features
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Yuval Mintz <yuvalmin@broadcom.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Ariel Elior <ariele@broadcom.com>,
+	Eilon Greenstein <eilong@broadcom.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 20 Sep 2012 02:23:10 +0100
+In-Reply-To: <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com>
+References: <5003DC9B.8000706@broadcom.com> <5005BD00.4090106@redhat.com>
+	 <5005D45D.1040302@genband.com>
+	 <20120717.141153.46613285253481776.davem@davemloft.net>
+	 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
+	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	 <5009B186.6000806@genband.com>
+	 <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+	 <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
+	 <500D6932.8090306@genband.com>
+	 <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+	 <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
+	 <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown>
+	 <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
+	 <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
+	 <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
+	 <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will need it for hot add path.
+On Wed, 2012-09-19 at 17:19 -0700, Yinghai Lu wrote:
+> On Wed, Sep 19, 2012 at 3:46 PM, Ben Hutchings
+> <bhutchings@solarflare.com> wrote:
+> > On Wed, 2012-09-19 at 15:17 -0700, Yinghai Lu wrote:
+> >> +max_vfs_store(struct device *dev, struct device_attribute *attr,
+> >> +                const char *buf, size_t count)
+> >> +{
+> >> +       unsigned long val;
+> >> +       struct pci_dev *pdev = to_pci_dev(dev);
+> >> +
+> >> +       if (strict_strtoul(buf, 0, &val) < 0)
+> >> +               return -EINVAL;
+> >> +
+> >> +       pdev->max_vfs = val;
+> >> +
+> >> +       return count;
+> >> +}
+> > [...]
+> >
+> > Then what would actually trigger creation of the VFs?  There's no way we
+> > can assume that some sysfs attribute will be written before the PF
+> > driver is loaded (what if it's built-in?).  I thought the idea was to
+> > add a driver callback that would be called when the sysfs attribute was
+> > written.
+> 
+> could just stop the device and add it back again?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+This is highly disruptive and I think it would be totally unacceptable
+for at least networking devices.
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index edfc376..1806e91 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -201,7 +201,7 @@ EXPORT_SYMBOL(pcibios_align_resource);
-  *	    as well.
-  */
- 
--static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
-+static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- {
- 	int idx;
- 	struct resource *r;
-@@ -223,7 +223,7 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
- }
- 
--static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
-+static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_bus *child;
- 
-@@ -239,7 +239,7 @@ struct pci_check_idx_range {
- 	int end;
- };
- 
--static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
-+static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
- 	int idx, disabled, i;
- 	u16 command;
-@@ -292,7 +292,7 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
-+static void pcibios_allocate_resources(struct pci_bus *bus, int pass)
- {
- 	struct pci_dev *dev;
- 	struct pci_bus *child;
-@@ -306,7 +306,7 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
-+static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- {
- 	struct resource *r;
- 
-@@ -324,7 +324,7 @@ static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- 		r->start = 0;
- 	}
- }
--static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
-+static void pcibios_allocate_rom_resources(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
- 	struct pci_bus *child;
+Ben.
+
+> just like updated patch.
+> 
+> Thanks
+> 
+> Yinghai
+
 -- 
-1.7.7
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
