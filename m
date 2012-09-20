@@ -1,60 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:36798 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754093Ab2ITT1O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Sep 2012 15:27:14 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Huang Ying <ying.huang@intel.com>
-Subject: Re: [RFC 2/3] PCI/PM: Make PCI devices notified when its power resource turned on
-Date: Thu, 20 Sep 2012 21:33:44 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com> <1347872076-5260-3-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1347872076-5260-3-git-send-email-ying.huang@intel.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:40942 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752358Ab2ITDIX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 23:08:23 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201209202133.44738.rjw@sisk.pl>
+In-Reply-To: <CAE9FiQX72SE+NSx=P26x3Ta74U0_UHM28n9cwfy6HeK3bPiXeg@mail.gmail.com>
+References: <5003DC9B.8000706@broadcom.com> <5005BD00.4090106@redhat.com>
+ <5005D45D.1040302@genband.com> <20120717.141153.46613285253481776.davem@davemloft.net>
+ <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
+ <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+ <5009B186.6000806@genband.com> <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+ <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
+ <500D6932.8090306@genband.com> <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+ <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
+ <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown>
+ <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
+ <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
+ <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
+ <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com>
+ <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk> <CAE9FiQX72SE+NSx=P26x3Ta74U0_UHM28n9cwfy6HeK3bPiXeg@mail.gmail.com>
+From: Subhendu Ghosh <sghosh151@gmail.com>
+Date: Wed, 19 Sep 2012 23:08:02 -0400
+Message-ID: <CA+MMT=k_tKiW=peLkbTJR+5DvNiAq6Qi1MPbhbbsjbuhMQ4LpA@mail.gmail.com>
+Subject: Re: New commands to configure IOV features
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ben Hutchings <bhutchings@solarflare.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	Yuval Mintz <yuvalmin@broadcom.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Ariel Elior <ariele@broadcom.com>,
+	Eilon Greenstein <eilong@broadcom.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 17, 2012, Huang Ying wrote:
-> A set of power resources may be shared by multiple devices.  When all
-> devices share one set of power resources is put into D3_COLD state,
-> the power resources will be turned off.  When one of the device is
-> waked, the power resource will be turned on and all devices share it
-> will be powered on to D0uninitialized state.  These devices should be
-> resumed, so that they can get opportunity to go to low power state
-> later.
-> 
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
+On Wed, Sep 19, 2012 at 10:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Sep 19, 2012 at 6:23 PM, Ben Hutchings
+> <bhutchings@solarflare.com> wrote:
+>> On Wed, 2012-09-19 at 17:19 -0700, Yinghai Lu wrote:
+>>> could just stop the device and add it back again?
+>>
+>> This is highly disruptive and I think it would be totally unacceptable
+>> for at least networking devices.
+>
+> so you want PF network device continue work while enable VF on it?
+>
 
-Makes sense.
+Yes - normal scenario a system is installed thru automation over a
+network. The default initrd for installer does not configure VFs.
+Post install, a management tool like Openstack Quantum or others are
+used to enable VFs. If the PF NIC happens to be the communication path
+- disrupting the PF during a remote configuration cycle can leave you
+blind and the system unreachable.
 
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-
-> ---
->  drivers/acpi/pci_bind.c |    2 ++
->  1 file changed, 2 insertions(+)
-> 
-> --- a/drivers/acpi/pci_bind.c
-> +++ b/drivers/acpi/pci_bind.c
-> @@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
->  
->  	device_set_run_wake(&dev->dev, false);
->  	pci_acpi_remove_pm_notifier(device);
-> +	acpi_power_resource_unregister_device(dev, device->handle);
->  
->  	if (!dev->subordinate)
->  		goto out;
-> @@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
->  		return 0;
->  
->  	pci_acpi_add_pm_notifier(device, dev);
-> +	acpi_power_resource_register_device(dev, device->handle);
->  	if (device->wakeup.flags.run_wake)
->  		device_set_run_wake(&dev->dev, true);
->  
-> 
-> 
-
+-subhendu
