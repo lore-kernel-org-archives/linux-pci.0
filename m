@@ -1,73 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:35300 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab2IYRhc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 13:37:32 -0400
-Received: by lbon3 with SMTP id n3so488150lbo.19
-        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 10:37:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUu++bPNree995uY3bGURxJ6hSi8m77ah_8KK6S2aMUaQ@mail.gmail.com>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
- <CAErSpo5Arj=rh4mZJk3tEsaWKBFqxK6tAu1N5SKn2Cq=vTj+bw@mail.gmail.com> <CAE9FiQUu++bPNree995uY3bGURxJ6hSi8m77ah_8KK6S2aMUaQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 25 Sep 2012 11:37:11 -0600
-Message-ID: <CAErSpo6NOhTV0HX1dw5-mRkUtfO7XH_iCGVwiddBPpQvPZL=7g@mail.gmail.com>
-Subject: Re: [PATCH 00/29] PCI: use pci host bridge to loop pci root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from moutng.kundenserver.de ([212.227.126.186]:58766 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504Ab2ITHny (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 03:43:54 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Russell King <linux@arm.linux.org.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/2] ARM: pci: Prepare for Tegra PCIe controller driver
+Date: Thu, 20 Sep 2012 09:43:43 +0200
+Message-Id: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 10:29 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Sep 25, 2012 at 9:23 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Sep 25, 2012 at 2:26 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> could remove pci_root_buses list.
->>>
-> ...
->>>   PCI: Add dummy bus_type for pci_host_bridge
-> ...
->>>   PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
->>
->> I'm not thrilled about adding a new iterator for all host bridges.
->>
->> The iterator design pattern does not work for collections that can
->> change over time.  In this case, it looks like you're adding a safer
->> way to iterate through all host bridges we know about at this time.
->> But we still have the problem of the host bridge that's added
->> tomorrow.
->>
->> I'd prefer a design where the PCI core provides an interface that
->> means "call this function for every host bridge we know about now
->> *and* for every one that's added in the future."
->
-> yes, that is the point to add pci_root_bridge_bus_type. We can register
-> bus notifier on that.
+Hi Russell,
 
-I guess I missed your point.  In the patch below (20/29 from your
-series), you're still iterating through all the host bridges, so there
-would have to be something else to handle hot-added host bridges.
+These are two patches I've been carrying in a larger series that
+converts the Tegra PCIe controller driver to a proper platform driver.
+Since the complete series didn't get much feedback, I've begun to post
+smaller subsets in an effort to get them merged more easily.
 
-Are you saying you plan future patches to change this again to
-something using a bus notifier?
+The first patch in this series removes the __init annotations from the
+pci_common_init() function (and pcibios_init_hw(), pcibios_swizzle() as
+well as pcibios_init_resources() because they end up being called from
+the former) to make sure that they stay around after the init stage.
+This is required because the Tegra driver depends on regulators that
+become available only very late during boot and uses deferred probing to
+handle this situation. It turned out that this postpones the PCI bus
+initialization until after init, thus this patch.
 
+The second patch is used to pass per-controller or per-host-bridge data
+to the driver, such that it can be associated with the corresponding
+bus. This is also required by the Tegra driver in order to pass a
+driver-private structure to the PCI bus (or more precisely the
+pci_sys_data structure associated with a bus). It is subsequently used
+to obtain the root port private data given the corresponding PCI bus.
 
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct
-device_node *node,
+Note that v3 is pretty much the same as v2, except that it is rebased on
+linux-next and contains the removal of the __init annotation from the
+pcibios_init_resources() function which is only in linux-next.
 
- static int __init of_pci_slot_init(void)
- {
--       struct pci_bus *pbus = NULL;
-+       struct pci_host_bridge *host_bridge = NULL;
-+       struct pci_bus *pbus;
+Thierry
 
--       while ((pbus = pci_find_next_bus(pbus)) != NULL) {
-+       for_each_pci_host_bridge(host_bridge) {
-                struct device_node *node;
+Thierry Reding (2):
+  ARM: pci: Keep pci_common_init() around after init
+  ARM: pci: Allow passing per-controller private data
 
-+               pbus = hot_bridge->bus;
-                if (pbus->self) {
-                        /* PCI->PCI bridge */
-                        node = pbus->self->dev.of_node;
+ arch/arm/include/asm/mach/pci.h |  1 +
+ arch/arm/kernel/bios32.c        | 11 +++++++----
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+-- 
+1.7.12
+
