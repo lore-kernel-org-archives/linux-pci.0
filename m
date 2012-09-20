@@ -1,75 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:23303 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756183Ab2IBV43 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:56:29 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part5 7/7] ACPI, PCI: Skip extra pci_enable_bridges for non hot-add root
-Date: Sun,  2 Sep 2012 14:56:05 -0700
-Message-Id: <1346622965-30937-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
-References: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:59529 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674Ab2ITHn4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 03:43:56 -0400
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Russell King <linux@arm.linux.org.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/2] ARM: pci: Keep pci_common_init() around after init
+Date: Thu, 20 Sep 2012 09:43:44 +0200
+Message-Id: <1348127025-29461-2-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pre-installed will be handled later, need to skip the one only for hot-added
-roots.
+When using deferred driver probing, PCI host controller drivers may
+actually require this function after the init stage.
 
-Otherwise will get anonying failing message about can not reserve, irq ...
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- drivers/acpi/pci_root.c    |    3 ++-
- drivers/acpi/pci_root_hp.c |    1 +
- include/acpi/acpi_bus.h    |    1 +
- 3 files changed, 4 insertions(+), 1 deletions(-)
+Changes in v3:
+- remove __init annotation from pcibios_init_resources()
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 80adbbb..576fe9a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -647,7 +647,8 @@ static int acpi_pci_root_start(struct acpi_device *device)
- 			driver->add(device->handle);
- 
- 	/* need to after hot-added ioapic is registered */
--	pci_enable_bridges(root->bus);
-+	if (root->hot_added)
-+		pci_enable_bridges(root->bus);
- 
- 	pci_bus_add_devices(root->bus);
- 	mutex_unlock(&acpi_pci_root_lock);
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index d2ace81..2800fb4 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -86,6 +86,7 @@ static void acpi_root_configure_bridge(acpi_handle handle)
- 
- 	pcibios_resource_survey_bus(root->bus);
- 	pci_assign_unassigned_bus_resources(root->bus);
-+	root->hot_added = true;
+Changes in v2:
+- remove __devinit annotation from pcibios_swizzle
+- remove __init annotations altogether
+
+ arch/arm/kernel/bios32.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index b244696..2c80f36 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -389,7 +389,7 @@ EXPORT_SYMBOL(pcibios_fixup_bus);
+  * PCI standard swizzle is implemented on plug-in cards and Cardbus based
+  * PCI extenders, so it can not be ignored.
+  */
+-static u8 __devinit pcibios_swizzle(struct pci_dev *dev, u8 *pin)
++static u8 pcibios_swizzle(struct pci_dev *dev, u8 *pin)
+ {
+ 	struct pci_sys_data *sys = dev->sysdata;
+ 	int slot, oldpin = *pin;
+@@ -424,7 +424,7 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return irq;
  }
  
- static void handle_root_bridge_insertion(acpi_handle handle)
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index bde976e..47de196 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -406,6 +406,7 @@ struct acpi_pci_root {
+-static int __init pcibios_init_resources(int busnr, struct pci_sys_data *sys)
++static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
+ {
+ 	int ret;
+ 	struct pci_host_bridge_window *window;
+@@ -456,7 +456,7 @@ static int __init pcibios_init_resources(int busnr, struct pci_sys_data *sys)
+ 	return 0;
+ }
  
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
-+	bool hot_added;
- 	phys_addr_t mcfg_addr;
- };
+-static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
++static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ {
+ 	struct pci_sys_data *sys = NULL;
+ 	int ret;
+@@ -504,7 +504,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 	}
+ }
  
+-void __init pci_common_init(struct hw_pci *hw)
++void pci_common_init(struct hw_pci *hw)
+ {
+ 	struct pci_sys_data *sys;
+ 	LIST_HEAD(head);
 -- 
-1.7.7
+1.7.12
 
