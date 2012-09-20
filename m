@@ -1,121 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53386 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758221Ab2IMQnf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Sep 2012 12:43:35 -0400
-Received: by lagy9 with SMTP id y9so2075098lag.19
-        for <linux-pci@vger.kernel.org>; Thu, 13 Sep 2012 09:43:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <503DD9A7.70007@huawei.com>
-References: <503DD9A7.70007@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Sep 2012 10:43:13 -0600
-Message-ID: <CAErSpo7JknWsMGpYnxyLqmLQO5Xr5jMGYnpgdCmEjYWN-=5vjA@mail.gmail.com>
-Subject: Re: a small problem about pci_stop_and_remove_bus_device() function
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: PCI <linux-pci@vger.kernel.org>, Jiang Liu <jiang.liu@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:16928 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752942Ab2ITITg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Sep 2012 04:19:36 -0400
+Message-ID: <1348129173.8212.218.camel@yhuang-dev>
+Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
+From: Huang Ying <ying.huang@intel.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pm@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Thu, 20 Sep 2012 16:19:33 +0800
+In-Reply-To: <877grpywhy.fsf@xmission.com>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
+	 <1347872076-5260-2-git-send-email-ying.huang@intel.com>
+	 <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
+	 <877grpywhy.fsf@xmission.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 29, 2012 at 2:58 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Hi Bjorn,
->    The drivers/pci/remove.c now is so clean after applied series "[PATCH v2 00/16] Clean up drivers/pci/remove.c"(very good ^_^).
-> I have a small problem about pci_stop_and_remove_bus_device() function. Traditionally, pci_bus is removed after its pci bridge stop.
-> But now pci_bus is remove before its pci brdige.
+On Thu, 2012-09-20 at 00:38 -0700, Eric W. Biederman wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
+> 
+> > +cc Eric and kexec list
+> >
+> > On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> >> If PCI devices are put into D3cold before kexec, because the
+> >> configuration registers of PCI devices in D3cold are not accessible.
+> >>
+> >> And if PCI bridges are put into low power state before kexec,
+> >> configuration registers of PCI devices underneath the PCI bridges are
+> >> not accessible too.
+> >>
+> >> These will make some PCI devices can not be scanned after kexec, so
+> >> resume the PCI devices in D3cold or PCI bridges in low power state
+> >> before kexec.
+> >
+> > Don't we need to resume the device even without the kexec issue?  And
+> > even if it's in D1 or D2?
+> 
+> The basic requirement is that the device needs to be visible so we can
+> auto discover it.  As I recall most sleep states don't make the device
+> invisible and we can handle the rest in the device initializatoin code.
 
-Let me restate this to make sure I understand the problem.  Prior to
-my cleanups, the flow when removing a bridge device was like this:
+PCI devices in D3cold or under a bridge in D3hot will not be visible, so
+we must fix that for kexec to run properly.
 
-    pci_stop_and_remove_bus_device(bridge)
-        pci_stop_bus_device(bridge)
-            pci_stop_bus_devices(bridge->subordinate)
-            pci_stop_dev(bridge)
-                device_unregister(bridge->dev)
-                    device_del(bridge->dev)
-                        blocking_notifier_call_chain(pci_bus_type, ...)
-                            <notifier>
-                                if (dev->bus == &pci_bus_type)
-                                    pdev = to_pci_dev(dev)
-                                    if (pdev->subordinate)
-                                        ...
-        __pci_remove_bus_device(bridge)
-            if (bridge->subordinate)
-                pci_remove_bus(bridge->subordinate)
-                bridge->subordinate = NULL
+> > It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
+> > depend on the device being in D0.
+> 
+> There is certainly a depenency on the config registers being visible.
+> Although I don't know if much will go wrong if they aren't.
+> 
+> Ceratinly pci_msi_shutdown doesn't have anything to do if the device has
+> had so much power removed that the device is not even exectuing.
 
-After my changes, the flow is like this:
+Don't know which power state device should be in for pci_msi_shutdown
+etc.  But it appears that normal shutdown/reboot and kexec works at most
+times so far.  D3cold and bridge in D3hot works for normal
+shutdown/reboot, but not for kexec.  So I write some fix.
 
-    pci_stop_and_remove_bus_device(bridge)
-        pci_remove_bus(bridge->subordinate)
-        bridge->subordinate = NULL
-        pci_stop_dev(bridge)
-            device_unregister(bridge->dev)
-                device_del(bridge->dev)
-                    blocking_notifier_call_chain(pci_bus_type, ...)
-                        <notifier>
-                            if (dev->bus == &pci_bus_type)
-                                pdev = to_pci_dev(dev)
-                                if (pdev->subordinate)
-                                    ** broken because
-pdev->subordinate is always NULL **
+Best Regards,
+Huang Ying
 
-The problem is that before, a notifier could check "dev->subordinate"
-to identify a bridge device, but now, "dev->subordinate" has already
-been cleared by the time the notifier runs, so that test no longer
-identifies bridges.
+> >> Signed-off-by: Huang Ying <ying.huang@intel.com>
+> >> ---
+> >>  drivers/pci/pci-driver.c |    4 ++++
+> >>  1 file changed, 4 insertions(+)
+> >>
+> >> --- a/drivers/pci/pci-driver.c
+> >> +++ b/drivers/pci/pci-driver.c
+> >> @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
+> >>         struct pci_dev *pci_dev = to_pci_dev(dev);
+> >>         struct pci_driver *drv = pci_dev->driver;
+> >>
+> >> +       /* Resume bridges and devices in D3cold for kexec to work properly */
+> >> +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
+> >> +               pm_runtime_resume(dev);
+> >> +
+> >>         if (drv && drv->shutdown)
+> >>                 drv->shutdown(pci_dev);
+> >>         pci_msi_shutdown(pci_dev);
+> >
+> > _______________________________________________
+> > kexec mailing list
+> > kexec@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/kexec
 
-I didn't intend this change in behavior, so in that sense, this is a
-regression.  We could restore the previous behavior by changing
-pci_stop_and_remove_bus_device() so the "pci_remove_bus();
-dev->subordinate = NULL;" code is after the pci_stop_dev() call, as
-you suggest.
 
-But I'm not 100% sure that's the correct fix.  I think it's possible
-to have a bridge device that has no secondary bus.  For example, I
-don't think a bridge configured with "secondary > subordinate", e.g.,
-"[bus ff-00]", will forward any config transactions downstream.  In
-that case, we'll have a struct pci_dev for the bridge device, but
-there won't be a struct pci_bus for the secondary bus, so
-dev->subordinate will be NULL.  There are actually quite a few
-existing tests for this situation in pnv_ioda_setup_bus_PE(),
-eeh_add_device_tree_late(), yenta_probe(), etc.
-
-When we enumerate bridges, we build the bridge pci_dev before building
-the downstream pci_bus, so symmetry suggests that we should tear down
-the pci_bus before tearing down the pci_dev.
-
-So I wonder if a better fix is remove the assumption that
-"dev->subordinate != NULL means this is a bridge device."  There are
-many places where we test "dev->subordinate" to iterate through
-downstream devices or something similar; those should be fine.  We'd
-only have to change the places that care about actual type of the
-device, e.g., the config space differences between header types.
-
-Where did you trip over this?  If you just found this by inspection,
-my congratulations, it's a pretty subtle issue :)
-
-> So If I use pci_bus_type notifier, I can't identify pci_dev whether is bridge(by pci_dev->subordinate)
-> when notifier arrives.
->    What about move pci_remove_bus after stop pci bridge?
->
->  82     if (bus) {
->  83         list_for_each_entry_safe_reverse(child, tmp,
->  84                          &bus->devices, bus_list)
->  85             pci_stop_and_remove_bus_device(child);
->  86
->  87     }
->  88
->  89     pci_stop_dev(dev);
->  90     if (bus) {
->  91         pci_remove_bus(bus);
->  92         dev->subordinate = NULL;
->  93     }
->  94     pci_destroy_dev(dev);
->
->
-> --
-> Thanks!
-> Yijing
->
