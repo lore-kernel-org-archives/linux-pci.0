@@ -1,105 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44958 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751327Ab2IGRWu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 13:22:50 -0400
-Received: by lagy9 with SMTP id y9so1993541lag.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 10:22:48 -0700 (PDT)
+Received: from out03.mta.xmission.com ([166.70.13.233]:38577 "EHLO
+	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818Ab2ITI1k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 04:27:40 -0400
+From: ebiederm@xmission.com (Eric W. Biederman)
+To: Huang Ying <ying.huang@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pm@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
+	<1347872076-5260-2-git-send-email-ying.huang@intel.com>
+	<CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
+	<877grpywhy.fsf@xmission.com> <1348129173.8212.218.camel@yhuang-dev>
+Date: Thu, 20 Sep 2012 01:27:33 -0700
+In-Reply-To: <1348129173.8212.218.camel@yhuang-dev> (Huang Ying's message of
+	"Thu, 20 Sep 2012 16:19:33 +0800")
+Message-ID: <87fw6dxfnu.fsf@xmission.com>
 MIME-Version: 1.0
-In-Reply-To: <20120907170024.GA16114@avionic-0098.mockup.avionic-design.de>
-References: <1343332512-28762-1-git-send-email-thierry.reding@avionic-design.de>
- <1343332512-28762-2-git-send-email-thierry.reding@avionic-design.de>
- <CAErSpo7v+i8i=mXCs7ZW8DtGTDN_4AEntwYLqGG8FcCzweySFg@mail.gmail.com>
- <20120815192814.GA12870@avionic-0098.mockup.avionic-design.de>
- <CAErSpo6cjOzJegJqXzmk59DChExcbLK1sOhwyAyQL4FZkTN21A@mail.gmail.com>
- <504A1EA2.9030008@wwwdotorg.org> <20120907170024.GA16114@avionic-0098.mockup.avionic-design.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 10:22:28 -0700
-Message-ID: <CAErSpo4Y4QXfahRkBoJ_jmKy6VAYqOzixTmCPkwSATfO+rzVxg@mail.gmail.com>
-Subject: Re: [PATCH v3 01/10] PCI: Keep pci_fixup_irqs() around after init
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	devicetree-discuss@lists.ozlabs.org,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	Mitch Bradley <wmb@firmworks.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
+Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 7, 2012 at 10:00 AM, Thierry Reding
-<thierry.reding@avionic-design.de> wrote:
-> On Fri, Sep 07, 2012 at 10:19:46AM -0600, Stephen Warren wrote:
->> On 08/15/2012 01:42 PM, Bjorn Helgaas wrote:
->> > On Wed, Aug 15, 2012 at 1:28 PM, Thierry Reding
->> > <thierry.reding@avionic-design.de> wrote:
->> >> On Wed, Aug 15, 2012 at 10:06:27AM -0700, Bjorn Helgaas wrote:
->> >>> On Thu, Jul 26, 2012 at 12:55 PM, Thierry Reding
->> >>> <thierry.reding@avionic-design.de> wrote:
->> >>>> When using deferred driver probing, PCI host controller drivers may
->> >>>> actually require this function after the init stage.
->> >>>>
->> >>>> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
->> >>>> ---
->> >>>> Changes in v3:
->> >>>> - none
->> >>>>
->> >>>> Changes in v2:
->> >>>> - use __devinit annotations
->> >>>
->> >>> Your original patch removed __init completely.  Here you change it to
->> >>> __devinit.  That means we decide whether to discard the function based
->> >>> on whether CONFIG_HOTPLUG is supported.  But I think your point is not
->> >>> about hotplug; it's merely that we should be able to scan a PCI bus
->> >>> after init-time.  We ought to be able to do a late PCI scan even if
->> >>> hotplug is not supported.
->> >>>
->> >>> Therefore, I'd be inclined to remove __init completely unless you have
->> >>> another reason for preferring __devinit.
+Huang Ying <ying.huang@intel.com> writes:
+
+> On Thu, 2012-09-20 at 00:38 -0700, Eric W. Biederman wrote:
+>> Bjorn Helgaas <bhelgaas@google.com> writes:
+>> 
+>> > +cc Eric and kexec list
+>> >
+>> > On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+>> >> If PCI devices are put into D3cold before kexec, because the
+>> >> configuration registers of PCI devices in D3cold are not accessible.
 >> >>
->> >> I thought __devinit would resolve to nothing if HOTPLUG is defined and
->> >> __init otherwise. That seemed more appropriate. However you are right
->> >> that it is useful to always have it available, so I'm fine with removing
->> >> the annotations altogether. Do you want me to follow up with a patch? Or
->> >> can you just take the first version? I'm not sure if it still applies.
+>> >> And if PCI bridges are put into low power state before kexec,
+>> >> configuration registers of PCI devices underneath the PCI bridges are
+>> >> not accessible too.
+>> >>
+>> >> These will make some PCI devices can not be scanned after kexec, so
+>> >> resume the PCI devices in D3cold or PCI bridges in low power state
+>> >> before kexec.
 >> >
->> > You're right about how __devinit works.  It's just that I don't think
->> > hotplug is actually relevant here.  We're trying to make
->> > pci_fixup_irqs() work after init, whether it's because of hotplug or
->> > simply because the arch scans host bridges after init.
->> >
->> > I applied this to my "next" branch.  Thanks!
->>
->> Bjorn, I don't see this patch in next-20120907. Did it get dropped for
->> some reason?
+>> > Don't we need to resume the device even without the kexec issue?  And
+>> > even if it's in D1 or D2?
+>> 
+>> The basic requirement is that the device needs to be visible so we can
+>> auto discover it.  As I recall most sleep states don't make the device
+>> invisible and we can handle the rest in the device initializatoin code.
 >
-> Yes, it turns out that dropping the annotations causes lots of section
-> mismatches on other architectures. See here[0] for the details. I think
-> the solution to the issue would be to either remove HOTPLUG altogether
-> and drop __devinit and __devexit annotations or update all architectures
-> to fix these warnings. I think Bjorn and I settled on the latter because
-> it's obviously less intrusive. I've been busy building toolchains for
-> all the PCI architectures and I think I have all of them. I'll just need
-> some more time to build, find and fix any remaining section mismatches.
+> PCI devices in D3cold or under a bridge in D3hot will not be visible, so
+> we must fix that for kexec to run properly.
 
-Greg KH is actively removing CONFIG_HOTPLUG altogether -- see
-https://lkml.org/lkml/2012/9/4/489
+That seems reasonable to me.
 
-That will make __devinit resolve to nothing in all cases, and we'll
-eventually remove __devinit completely.  So we don't want to convert
-__init to __devinit; we have to remove the __init altogether.  I think
-that means we have to update all arches first to avoid the section
-mismatches.
+>> > It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
+>> > depend on the device being in D0.
+>> 
+>> There is certainly a depenency on the config registers being visible.
+>> Although I don't know if much will go wrong if they aren't.
+>> 
+>> Ceratinly pci_msi_shutdown doesn't have anything to do if the device has
+>> had so much power removed that the device is not even exectuing.
+>
+> Don't know which power state device should be in for pci_msi_shutdown
+> etc.  But it appears that normal shutdown/reboot and kexec works at most
+> times so far.  D3cold and bridge in D3hot works for normal
+> shutdown/reboot, but not for kexec.  So I write some fix.
 
-So I think Thierry is on the right track:
-  1) Change all arch pcibios_update_irq() implementations (and
-probably a few other things) to be non-__init
-  2) Change pci_fixup_irqs() to be non-__init
+To be clear.  Has someone picked up this patch yet?
 
-Bjorn
+Acked-by: "Eric W. Biederman" <ebiederm@xmission.com>
+
+As for reboot it tends to always work because frequently the firmware
+code triggers a soft reset of the entire machine, which puts devices in
+their power on reset state, which is not a suspended state.  Although
+that behavior is not required for a software reboot.
+
+Eric
+
+
+
+> Best Regards,
+> Huang Ying
+>
+>> >> Signed-off-by: Huang Ying <ying.huang@intel.com>
+>> >> ---
+>> >>  drivers/pci/pci-driver.c |    4 ++++
+>> >>  1 file changed, 4 insertions(+)
+>> >>
+>> >> --- a/drivers/pci/pci-driver.c
+>> >> +++ b/drivers/pci/pci-driver.c
+>> >> @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
+>> >>         struct pci_dev *pci_dev = to_pci_dev(dev);
+>> >>         struct pci_driver *drv = pci_dev->driver;
+>> >>
+>> >> +       /* Resume bridges and devices in D3cold for kexec to work properly */
+>> >> +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
+>> >> +               pm_runtime_resume(dev);
+>> >> +
+>> >>         if (drv && drv->shutdown)
+>> >>                 drv->shutdown(pci_dev);
+>> >>         pci_msi_shutdown(pci_dev);
+>> >
+>> > _______________________________________________
+>> > kexec mailing list
+>> > kexec@lists.infradead.org
+>> > http://lists.infradead.org/mailman/listinfo/kexec
