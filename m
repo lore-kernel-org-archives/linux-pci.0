@@ -1,81 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27578 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751560Ab2IEBd1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Sep 2012 21:33:27 -0400
-Message-ID: <5046ABE0.303@redhat.com>
-Date: Tue, 04 Sep 2012 21:33:20 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:44947 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752385Ab2ITB2f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 21:28:35 -0400
+Message-ID: <505A7102.3000308@huawei.com>
+Date: Thu, 20 Sep 2012 09:27:30 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, Jon Mason <jdmason@kudzu.us>,
-	Jiang Liu <liuj97@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI mini-summit notes
-References: <CAErSpo73r3yzzndUek-NJ3d0pDKtg8zTrnjk4ihudBE5gngBAA@mail.gmail.com> <503E39DE.7000109@gmail.com> <CAPoiz9yRzEr68=NB53SVXb5+nRmEa_J4Mtt6eGAAo5EWFbDbmQ@mail.gmail.com> <CAE9FiQWEE0aCPbM=aVfH4kYzWqpJ4orseh2isWuuGFj3yFxKqQ@mail.gmail.com> <CAErSpo60gh1Ph6jq5iWT6Vsc=UGW+4DFdGCZpL90-3vk+_H89g@mail.gmail.com>
-In-Reply-To: <CAErSpo60gh1Ph6jq5iWT6Vsc=UGW+4DFdGCZpL90-3vk+_H89g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Giridhar Malavali <giridhar.malavali@qlogic.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	PCI <linux-pci@vger.kernel.org>,
+	Saurav Kashyap <saurav.kashyap@qlogic.com>,
+	Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
+References: <CC7E5668.20296%giridhar.malavali@qlogic.com>
+In-Reply-To: <CC7E5668.20296%giridhar.malavali@qlogic.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/30/2012 02:02 AM, Bjorn Helgaas wrote:
-> [removed cc ksummit-2012-discuss]
->
-> On Wed, Aug 29, 2012 at 3:54 PM, Yinghai Lu<yinghai@kernel.org>  wrote:
->> On Wed, Aug 29, 2012 at 3:44 PM, Jon Mason<jdmason@kudzu.us>  wrote:
->>>> Hi Bjorn,
->>>>          One of my team member reported another corner case for SR-IOV. There's
->>>> are two NIC cards in the system driven by the same driver, but one supports
->>>> SR-IOV and the other doesn't. It runs into trouble if "max_vfs" parameter is
->>>> set for the NIC driver.
->>>>          --Gerry
+On 2012/9/19 7:49, Giridhar Malavali wrote:
+> 
+> 
+> On 9/18/12 10:54 AM, "Bjorn Helgaas" <bhelgaas@google.com> wrote:
+> 
+>> On Mon, Sep 17, 2012 at 6:06 AM, Yijing Wang <wangyijing@huawei.com>
+>> wrote:
+>>> On 2012/9/16 11:30, Bjorn Helgaas wrote:
+>>>> On Sat, Sep 15, 2012 at 4:22 AM, Yijing Wang <wangyijing@huawei.com>
+>>>> wrote:
+>>>>> Hi all,
+>>>>>    I encountered a very strange problem when I hot plug a fiber
+>>>>> channel card(using qla2xxx driver).
+>>>>> I did the hotplug in arch x86 machine, using pciehp driver for
+>>>>> hotplug, this platform supports pci hot-plug triggering from both
+>>>>> sysfs and attention button. If a hot-plug slot is empty when system
+>>>>> boot-up, then hotplug FC card in this slot is ok.
+>>>>> If a hot-plug slot has been embeded a FC card when system boot-up,
+>>>>> hot-remove this card is ok, but hot-add this card will fail.
+>>>>> I used
+>>>>> #modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
+>>>>> to get all probe info. As bellow:
+>>>>>
+>>>>> Can anyone give me any suggestion for this problem?
+>>>>
+>>>> It sounds like you did this:
+>>>>
+>>>>   1) Power down system
+>>>>   2) Remove FC card from slot
+>>>>   3) Boot system
+>>>>   4) Hot-add FC card
+>>>>   5) Load qla2xxx driver
+>>>>   6) qla2xxx driver claims FC card
+>>>>   7) FC card works correctly
+>>>>
+>>>>   8) Power down system
+>>>>   9) Install FC card in slot
+>>>>  10) Boot system
+>>>>  11) Load qla2xxx driver
+>>>>  12) qla2xxx driver claims FC card
+>>>>  13) FC card works correctly
+>>> I rmmod qla2xxx driver here and modprobe qla2xxx
+>>> ql2xextended_error_logging=0x1e400000 again for get errors info
+>>> Also I modprobe pciehp pciehp_debug=1 for getting debug info
+>>>>  14) Hot-remove card
+>>>>  15) Hot-add card
+>>>>  16) qla2xxx driver claims FC card
+>>>>  17) FC card does not work
+>>>>
+>>>> and I assume the dmesg log you included is just from steps 15 and 16
+>>>> (correct me if I'm wrong).
+>>>>
+>>>> It would be useful to see the entire log showing all these events so
+>>>> we can compare the working cases with the non-working one.  If you use
+>>>> the pciehp_debug module parameter, we should also see some pciehp
+>>>> events that would help me understand that driver.
+>>>>
 >>>
->>> I believe it was decided that a per-pf sysfs interface would be used
->>> to replace the current module parameter that specifies the number of
->>> vf's.  This should enable different numbers of vf's for each physical
->>> device.  The driver interface that was discussed would introduce new
->>> function pointers for handlers to setup/teardown the vf's.  I believe
->>> this will solve your problem once it has been implemented.
+>>> Hi Bjorn,
+>>>    Thanks for your comments very much!
+>>>
+>>> My steps:
+>>> 1) power down system
+>>> 2) Install FC card in slot
+>>> 3) Boot system
+>>> 4) Load qla2xxx driver
+>>> 5) qla2xxx driver claims FC card
+>>> 6) FC card works correctly(at least probe return ok, I don't know
+>>> qla2xxx driver much..)
+>>> 7) rmmod qla2xxx
+>>> 8) modprobe qla2xxx ql2xextended_error_logging=0x1e400000(for get
+>>> errors info)
+>>> 9) modprobe pciehp pciehp_debug=1
+>>> 10) Hot-remove card
+>>> 11) Hot-add card
+>>> 12) qla2xxx driver claims FC card fail(probe return fail, setup chip
+>>> fail)
+>>> --------------------------------------so this is failed
+>>> situation----------
+>>>
+>>> --------------------------------------continue to hot-add fc card into
+>>> empty slot(also support pci hp)
+>>> 13) Install FC card in empty slot
+>>> 14) Hot-add card
+>>> 15) qla2xxx driver claims FC card ok (probe return ok)
+>>>
+>>> btw:
+>>> If fc card firmware version 4.03, everything is ok (hot-plug in any
+>>> slots(empty or not))
+>>> fc card firmware version is 4.04 or 5.04 , situation as same as
+>>> 1)--->12)
+> 
+> That's good data pointer. Let me follow up with firmware team and get back
+> to you. 
+> 
+
+Hi Giri,
+   We Found that this problem(hot-plug fail for 4.04 and 4.05 fw fc card) is generated by Max Payload Size
+in DEVCTRL. The MPS was 256B when hot plug fail situation occurs. If manually force it set to 128B, everything will
+be ok. So maybe our hardware have some problems.
+
+Thanks!
+Yijing
+
+> -- Giri
 >>
->> now we have ixgbe.max_vfs=63
+>> Thanks.  The FW change is a good clue.  If everything works with
+>> version 4.03, but it doesn't work with version 4.04, it's likely to be
+>> a FW problem, not a Linux PCI core problem.
 >>
->> so if change to per pci device (PF),
+>> Here's what I see from your logs.  In slot 4 (bus 08), the card was
+>> present before boot, you removed it, re-added it, and it failed after
+>> being re-added.  Slot 3 (bus 06) was empty at boot, you hot-added a
+>> card, and it worked.  Here are the resources available on those two
+>> buses and the boot-time config of the first device in slot 4:
 >>
->> how about having the driver built-in?
->> what kind of kernel parameters will be passed?
+>>      pci 0000:00:07.0: PCI bridge to [bus 06-07]
+>>      pci 0000:00:07.0:   bridge window [io  0xc000-0xcfff]
+>>      pci 0000:00:07.0:   bridge window [mem 0xf9000000-0xf9ffffff]
+>>      pci 0000:00:07.0:   bridge window [mem 0xf1000000-0xf1ffffff 64bit
+>> pref]
+>>      pci 0000:00:09.0: PCI bridge to [bus 08-09]
+>>      pci 0000:00:09.0:   bridge window [io  0xb000-0xbfff]
+>>      pci 0000:00:09.0:   bridge window [mem 0xf8000000-0xf8ffffff]
+>>      pci 0000:00:09.0:   bridge window [mem 0xf0000000-0xf0ffffff 64bit
+>> pref]
+>>      pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
+>>      pci 0000:08:00.0: reg 10: [io  0xb100-0xb1ff]
+>>      pci 0000:08:00.0: reg 14: [mem 0xf8084000-0xf8087fff 64bit]
+>>      pci 0000:08:00.0: reg 30: [mem 0xf8040000-0xf807ffff pref]
+>>
+>> After you remove and re-add the card in slot 4, it starts with
+>> uninitialized BARs as expected, then we assign resources to it.  It's
+>> sort of interesting that the BIOS had originally put the ROM (reg 30)
+>> in the non-prefetchable window, while after the hot-add, Linux places
+>> it in the prefetchable window.  Either should work, and in fact the
+>> card you added in slot 3 *does* work with its ROM in the prefetchable
+>> window.
+>>
+>>      pci 0000:08:00.0: [1077:2532] type 00 class 0x0c0400
+>>      pci 0000:08:00.0: reg 10: [io  0x0000-0x00ff]
+>>      pci 0000:08:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+>>      pci 0000:08:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
+>>      pci 0000:08:00.0: BAR 0: assigned [io  0xb000-0xb0ff]
+>>      pci 0000:08:00.0: BAR 1: assigned [mem 0xf8000000-0xf8003fff 64bit]
+>>      pci 0000:08:00.0: BAR 6: assigned [mem 0xf0000000-0xf003ffff pref]
+>>      qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0 of
+>> firmware.
+>>      qla2xxx [0000:08:00.0]-d008:10: No buffer available for dump.
+>>      qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0 of
+>> firmware.
+>>      qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
+>>
+>> When you hot-add the card in slot 3, it starts with uninitialized BARs
+>> as expected, but again, we assign valid resources to it:
+>>
+>>      pci 0000:06:00.0: [1077:2532] type 00 class 0x0c0400
+>>      pci 0000:06:00.0: reg 10: [io  0x0000-0x00ff]
+>>      pci 0000:06:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+>>      pci 0000:06:00.0: reg 30: [mem 0x00000000-0x0003ffff pref]
+>>      pci 0000:06:00.0: BAR 0: assigned [io  0xc000-0xc0ff]
+>>      pci 0000:06:00.0: BAR 1: assigned [mem 0xf9000000-0xf9003fff 64bit]
+>>      pci 0000:06:00.0: BAR 6: assigned [mem 0xf1000000-0xf103ffff pref]
+>>
+>> I don't see anything wrong from a PCI perspective.  I suspect
+>> something strange in the card firmware.
+>>
+>> If you do figure out something wrong in PCI, let me know.
+>>
+>> Bjorn
+>>
+> 
+> 
+> 
+> .
+> 
 
-Having the driver built-in won't make a difference.
 
-The model is to have files under sys fs, i.e.,
-/sys/bus/pci/devices/0000:03:01.0/[sriov_vf_enable, sriov_vf_disable]
-
-where one echo's the number of vf's one wants to configure for a pf
-into the sriov_vf_enable file;  if want to disable/deconfigure the vf's,
-one echo's a 1 to sriov_vf_disable (all or nothing disable).
-
-the pci core will be able to check & filter that the max num of vf's
-is not exceeded.  Also looking to add a file like 'sriov_num_vfs' to
-indicate max number of vf's a PF supports.  Whether the bus configuration
-supports it (enough mmio space, enough pci bus nums, etc.) won't be
-known until the enable count is written.
-
-I have the code down to create the sysfs files & report the num_vfs.
-Hope to have the first enable/disable working within another week.
-The tough part is to re-factor a pf driver that enables/configures pf;
-I'm working with the igb(_main.c) driver right now.
-
-- Don
->
-> I don't think we really discussed things at this level, and I
-> personally don't know enough about the current SR-IOV support to even
-> know what the possible strategies are.  I think it's really up to the
-> person doing the implementation to figure out what makes sense given
-> the constraints of the SR-IOV specs and the current Linux support.
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+Thanks!
+Yijing
 
