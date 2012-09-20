@@ -1,68 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:48292 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750966Ab2IKWQu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 11 Sep 2012 18:16:50 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: runtime PM and special power switches
-Date: Wed, 12 Sep 2012 00:23:11 +0200
-Cc: Dave Airlie <airlied@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"dri-devel" <dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
-References: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:39588 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351Ab2ITUib (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 16:38:31 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201209120023.11662.rjw@sisk.pl>
+In-Reply-To: <1346168638-32724-5-git-send-email-jiang.liu@huawei.com>
+References: <1346168638-32724-1-git-send-email-jiang.liu@huawei.com>
+	<1346168638-32724-5-git-send-email-jiang.liu@huawei.com>
+Date: Thu, 20 Sep 2012 13:38:29 -0700
+Message-ID: <CAE9FiQVAOEUHMSFHCpZLVK-Rbso3Rh1nUQHmfcujwb6tpUTz8A@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI/IOV: simplify code by hotplug safe pci_get_domain_bus_and_slot()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Don Dutile <ddutile@redhat.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, September 11, 2012, Alan Stern wrote:
-> On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
-> 
-> > Hi,
-> > 
-> > On Tuesday, September 11, 2012, Dave Airlie wrote:
-> > > Hi Rafael,
-> > > 
-> > > I've been investigating runtime PM support for some use-cases on GPUs.
-> > > 
-> > > In some laptops we have a secondary GPU (optimus) that can be powered
-> > > up for certain 3D tasks and then turned off when finished with. Now I
-> > > did an initial pass on supporting it without using the kernel runtime
-> > > PM stuff, but Alan said I should take a look so here I am.
-> > 
-> > Alan Stern or Alan Cox? :-)
-> > 
-> > > While I've started to get a handle on things, we have a bit of an
-> > > extra that I'm not sure we cater for.
-> > > 
-> > > Currently we get called from the PCI layer which after we are finished
-> > > with our runtime suspend callback, will go put the device into the
-> > > correct state etc, however on these optimus/powerxpress laptops we
-> > > have a separate ACPI or platform driver controlled power switch that
-> > > we need to call once the PCI layer is finished the job. This switch
-> > > effectively turns the power to the card completely off leaving it
-> > > drawing no power.
-> > > 
-> > > No we can't hit the switch from the driver callback as the PCI layer
-> > > will get lost, so I'm wondering how you'd envisage we could plug this
-> > > in.
-> > 
-> > Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
-> > doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
-> > set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
-> > so perhaps it's not even too dangerous.
-> 
-> This sounds more like a job for a power domain.  Unless the power
-> switch is already in the device hierarchy as a parent to the PCI
-> device.
+On Tue, Aug 28, 2012 at 8:43 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Following code has a race window between pci_find_bus() and pci_get_slot()
+> if PCI hotplug operation happens between them which removes the pci_bus.
+> So use PCI hotplug safe interface pci_get_domain_bus_and_slot() instead,
+> which also reduces code complexity.
+>
+> struct pci_bus *pci_bus = pci_find_bus(domain, busno);
+> struct pci_dev *pci_dev = pci_get_slot(pci_bus, devfn);
+>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  drivers/pci/iov.c |    8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index aeccc91..b0fe771 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -152,15 +152,11 @@ failed1:
+>  static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+>  {
+>         char buf[VIRTFN_ID_LEN];
+> -       struct pci_bus *bus;
+>         struct pci_dev *virtfn;
+>         struct pci_sriov *iov = dev->sriov;
+>
+> -       bus = pci_find_bus(pci_domain_nr(dev->bus), virtfn_bus(dev, id));
+> -       if (!bus)
+> -               return;
+> -
+> -       virtfn = pci_get_slot(bus, virtfn_devfn(dev, id));
+> +       virtfn = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
+> +                       virtfn_bus(dev, id), virtfn_devfn(dev, id));
+>         if (!virtfn)
+>                 return;
+>
 
-Good idea. :-)
+Hi,
 
-Thanks,
-Rafael
+This one cause IOV regression, when remove bridge with pci devices under that.
+
+in that case, VFs  are stopped before PF, so they are not in device
+tree anymore.
+so pci_get_domain_bus_and_slot will not find those VFs.
+
+So the reference to PF is not released. Also vit_bus may not be released too.
+
+So you have to rework
+    pci_get_domain_bus_and_slot to make it work on pci devices get stopped only.
+
+or just drop this from the tree.
+
+BTW, Bjorn,
+for the similar reason,  you need to apply
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=e5a50aa3dfca1331c7c783412b1524bea06d2752
+
+ PCI: Split out stop_bus_device and remove_bus_dev again.
+
+ So later could use them for pci root bus hotplug support.
+
+Also restore old behavoir: stop all at first then remove all.
+
+-v2: only split the functions.
+
+the reason is:
+
+We stop all VFs at first , stop PF
+
+before we stop PF, we can not remove VFs,
+
+otherwise virtfn_remove does not work properly to remove reference and
+virtfn bus while can not find vf.
+
+I would like to have
+ PCI: Split out stop_bus_device and remove_bus_dev again.
+fold into
+
+http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=282e1d655fe7c7c2e6b0dd8166c4c6b7c2a1219b
+
+-Yinghai
