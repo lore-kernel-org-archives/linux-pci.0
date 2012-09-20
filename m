@@ -1,90 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 3 Sep 2012 17:07:05 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	yinghai@kernel.org, jiang.liu@huawei.com
-Subject: [PATCH v2 6/6] ACPI, PCI: add resoruce-assign code for devices
- under hot-added hostbridge
-Message-Id: <20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cavan.codon.org.uk ([93.93.128.6]:58864 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756095Ab2ITTje (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 15:39:34 -0400
+Date: Thu, 20 Sep 2012 20:39:26 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Huang Ying <ying.huang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [RFC 3/3] PCI/PM: Disable PME poll for PCIe devices
+Message-ID: <20120920193926.GA6623@srcf.ucam.org>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
+ <1347872076-5260-4-git-send-email-ying.huang@intel.com>
+ <201209202131.13483.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201209202131.13483.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Sep 20, 2012 at 09:31:13PM +0200, Rafael J. Wysocki wrote:
+> On Monday, September 17, 2012, Huang Ying wrote:
+> > PME poll is not necessary for PCIe devices, because PCIe devices use
+> > in-band PME message and IRQ on PCIe port to report PME.
+> 
+> Alas, not all of them as it turns out and even if they do, it doesn't
+> work for some of them. That's why we've added the PCIe devices polling
+> (quite recently, for that matter).
 
-Devices under hot-added hostbridge have no chance to assign resources
-and to configure them, so this patch adds such code for hot-added 
-hostbridges at acpi_pci_root_start().
+Right. I'd believe that there's some underlying bug that's causing the 
+missing PMEs and maybe it does work in theory, but the reality is that 
+right now some PCIe devices are not getting their PMEs delivered to us. 
+We don't know if it's our bug or a hardware bug, and until we do we need 
+to leave the polling code.
 
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
----
- drivers/acpi/pci_root.c |   17 +++++++++++++++++
- include/acpi/acpi_bus.h |    1 +
- 2 files changed, 18 insertions(+)
-
-Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0903/drivers/acpi/pci_root.c
-@@ -39,6 +39,7 @@
- #include <acpi/acpi_bus.h>
- #include <acpi/acpi_drivers.h>
- #include <acpi/apei.h>
-+#include <linux/pci_hotplug.h>
- 
- #define PREFIX "ACPI: "
- 
-@@ -461,6 +462,9 @@ static int __devinit acpi_pci_root_add(s
- 	if (!root)
- 		return -ENOMEM;
- 
-+	if (system_state != SYSTEM_BOOTING)
-+		root->hot_added = true;
-+
- 	segment = 0;
- 	status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
- 				       &segment);
-@@ -639,6 +643,7 @@ static int acpi_pci_root_start(struct ac
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
-+	struct pci_dev *pdev;
- 
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
-@@ -646,6 +651,18 @@ static int acpi_pci_root_start(struct ac
- 			driver->add(device->handle);
- 	mutex_unlock(&acpi_pci_root_lock);
- 
-+	/*
-+	 * Devices under hot-added hostbridge have no chance to assign
-+	 * resources and to configure them, so do that here
-+	 */
-+	if (root->hot_added) {
-+		pci_bus_size_bridges(root->bus);
-+		pci_bus_assign_resources(root->bus);
-+		list_for_each_entry(pdev, &root->bus->devices, bus_list)
-+			pci_configure_slot(pdev);
-+		pci_enable_bridges(root->bus);
-+	}
-+
- 	pci_bus_add_devices(root->bus);
- 
- 	return 0;
-Index: Bjorn-next-0903/include/acpi/acpi_bus.h
-===================================================================
---- Bjorn-next-0903.orig/include/acpi/acpi_bus.h
-+++ Bjorn-next-0903/include/acpi/acpi_bus.h
-@@ -407,6 +407,7 @@ struct acpi_pci_root {
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
- 	phys_addr_t mcfg_addr;
-+	bool hot_added;
- };
- 
- /* helper */
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
