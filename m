@@ -1,64 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:45486 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758474Ab2IKVcY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 17:32:24 -0400
-Date: Tue, 11 Sep 2012 17:32:23 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Dave Airlie <airlied@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: runtime PM and special power switches
-In-Reply-To: <201209112255.10486.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mga02.intel.com ([134.134.136.20]:54164 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757040Ab2IUIxl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Sep 2012 04:53:41 -0400
+Message-ID: <1348217616.23395.55.camel@yhuang-dev>
+Subject: Re: [PATCH v5 1/5] PCI/AER: Fix pci_ops return NULL in
+ pci_read/write_aer
+From: Huang Ying <ying.huang@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
+	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
+Date: Fri, 21 Sep 2012 16:53:36 +0800
+In-Reply-To: <1348216993-6948-2-git-send-email-wangyijing@huawei.com>
+References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
+	 <1348216993-6948-2-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
+On Fri, 2012-09-21 at 16:43 +0800, Yijing Wang wrote:
+> When we injected aer errors to the pcie device by aer_inject module, pci_ops of the pci
+> bus the device on will be assigned to pci_ops_aer.So if the target pci device
+> is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
+> will be assigned to pci_ops_aer too.Now every access to the child bus's device will cause the
+> system panic, because it will get a NULL pci_ops in pci_read_aer/pci_write_aer.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
 
-> Hi,
-> 
-> On Tuesday, September 11, 2012, Dave Airlie wrote:
-> > Hi Rafael,
-> > 
-> > I've been investigating runtime PM support for some use-cases on GPUs.
-> > 
-> > In some laptops we have a secondary GPU (optimus) that can be powered
-> > up for certain 3D tasks and then turned off when finished with. Now I
-> > did an initial pass on supporting it without using the kernel runtime
-> > PM stuff, but Alan said I should take a look so here I am.
-> 
-> Alan Stern or Alan Cox? :-)
-> 
-> > While I've started to get a handle on things, we have a bit of an
-> > extra that I'm not sure we cater for.
-> > 
-> > Currently we get called from the PCI layer which after we are finished
-> > with our runtime suspend callback, will go put the device into the
-> > correct state etc, however on these optimus/powerxpress laptops we
-> > have a separate ACPI or platform driver controlled power switch that
-> > we need to call once the PCI layer is finished the job. This switch
-> > effectively turns the power to the card completely off leaving it
-> > drawing no power.
-> > 
-> > No we can't hit the switch from the driver callback as the PCI layer
-> > will get lost, so I'm wondering how you'd envisage we could plug this
-> > in.
-> 
-> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
-> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
-> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
-> so perhaps it's not even too dangerous.
+Reviewed-by: Huang Ying <ying.huang@intel.com>
 
-This sounds more like a job for a power domain.  Unless the power
-switch is already in the device hierarchy as a parent to the PCI
-device.
+> ---
+>  drivers/pci/pcie/aer/aer_inject.c |   26 +++++++++++++++++++++++++-
+>  1 files changed, 25 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+> index 4e24cb8..fdab3bb 100644
+> --- a/drivers/pci/pcie/aer/aer_inject.c
+> +++ b/drivers/pci/pcie/aer/aer_inject.c
+> @@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+>  	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
+>  }
+>  
+> +/* find pci_ops of the nearest parent bus */
+> +static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
+> +{
+> +	struct pci_bus_ops *bus_ops;
+> +	struct pci_bus *pbus = bus->parent;
+> +
+> +	if (!pbus)
+> +		return NULL;
+> +
+> +	while (pbus) {
+> +		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
+> +			if (bus_ops->bus == pbus)
+> +				return bus_ops->ops;
+> +
+> +		pbus = pbus->parent;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+>  /* inject_lock must be held before calling */
+>  static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>  {
+> @@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>  		if (bus_ops->bus == bus)
+>  			return bus_ops->ops;
+>  	}
+> -	return NULL;
+> +
+> +	/* can't find bus_ops, fall back to get bus_ops of parent bus */
+> +	return __find_pci_bus_ops_parent(bus);
+>  }
+>  
+>  static struct pci_bus_ops *pci_bus_ops_pop(void)
+> @@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+>  	}
+>  out:
+>  	ops = __find_pci_bus_ops(bus);
+> +	BUG_ON(!ops);
+>  	spin_unlock_irqrestore(&inject_lock, flags);
+>  	return ops->read(bus, devfn, where, size, val);
+>  }
+> @@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
+>  	}
+>  out:
+>  	ops = __find_pci_bus_ops(bus);
+> +	BUG_ON(!ops);
+>  	spin_unlock_irqrestore(&inject_lock, flags);
+>  	return ops->write(bus, devfn, where, size, val);
+>  }
 
-Alan Stern
 
