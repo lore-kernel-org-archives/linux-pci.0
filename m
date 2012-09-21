@@ -1,69 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:41379 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932183Ab2IQXGZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 19:06:25 -0400
-Received: by lbbgj3 with SMTP id gj3so4579086lbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Sep 2012 16:06:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUwFbeRG9Rqj0HC-Nu-HPwe0GJt22HSnaTHu5A0FV7-9Q@mail.gmail.com>
-References: <1346622458-30595-2-git-send-email-yinghai@kernel.org>
- <1346942071-15188-1-git-send-email-prarit@redhat.com> <CAE9FiQUwFbeRG9Rqj0HC-Nu-HPwe0GJt22HSnaTHu5A0FV7-9Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Sep 2012 17:06:03 -0600
-Message-ID: <CAErSpo5bg2miZ4qwLiXewDuURX5NhD5wNmPdfpKTtGF0z9OuzA@mail.gmail.com>
-Subject: Re: [PATCH part1 1/4] PCI, pciehp: Turn on link again after power off
- the slot
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Prarit Bhargava <prarit@redhat.com>, linux-pci@vger.kernel.org,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	stable@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:31714 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755298Ab2IUGPp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Sep 2012 02:15:45 -0400
+Message-ID: <1348208142.23395.28.camel@yhuang-dev>
+Subject: Re: [PATCH v4 3/5] PCI/AER: clean all untracked pci_ops_aer when
+ rmmod aer_inject
+From: Huang Ying <ying.huang@intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
+	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
+Date: Fri, 21 Sep 2012 14:15:42 +0800
+In-Reply-To: <505BFF8A.2080404@huawei.com>
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+	  <1348199056-7696-4-git-send-email-wangyijing@huawei.com>
+	 <1348204383.23395.22.camel@yhuang-dev> <505BFF8A.2080404@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 6, 2012 at 11:30 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Sep 6, 2012 at 7:34 AM, Prarit Bhargava <prarit@redhat.com> wrote:
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
->> Cc: stable@vger.kernel.org
->>
->>>diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
->>>index 13b2eaf..7cee8db 100644
->>>--- a/drivers/pci/hotplug/pciehp_hpc.c
->>>+++ b/drivers/pci/hotplug/pciehp_hpc.c
->>>@@ -631,6 +631,8 @@ int pciehp_power_off_slot(struct slot * slot)
->>>       slot_cmd = POWER_OFF;
->>>       cmd_mask = PCI_EXP_SLTCTL_PCC;
->>>       retval = pcie_write_cmd(ctrl, slot_cmd, cmd_mask);
->>>+      /* need to enable link again for present bit report */
->>>+      pciehp_link_enable(ctrl);
->>
->> You're not checking the return value of pciehp_link_enable().  I wonder if
->> enabling the link is the only way to get the present bit to report correctly...
->
-> that is silicon problem. and no one noticed that before.
->
->>
->> Also, should the pciehp_link_enable() be called in pciehp_power_on_slot() if
->> we already reenable it on the power off?
->
-> we call that in pciehp_power_on_slot for another case:
-> BIOS could have link disable on pcie slot if there is no card plugged
-> in that slot.
+On Fri, 2012-09-21 at 13:47 +0800, Yijing Wang wrote:
+> On 2012/9/21 13:13, Huang Ying wrote:
+> > On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
+> >> When we do hot plug for pci devices that were injected aer errors, some newly created child buses'
+> >> pci_ops will be assigned to pci_ops_aer. Aer_inject module will not track these pci_ops_aer(not
+> >> list in pci_bus_ops_list),so we should clean all of these when rmmod aer_inject module.
+> >>
+> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> >> Signed-off-by: Huang Ying <ying.huang@intel.com>
 
-So now we have two situations that should be the same, but they're not:
+Please remove my signed-off.
 
-  1) Slot is empty at boot, and BIOS leaves link disabled.  Link
-remains disabled until pciehp_power_on_slot() enables it.
-  2) We hot-remove a card, so the slot is now empty, but
-pciehp_power_off_slot() leaves the link enabled.  Link stays *enabled*
-until another disable/enable sequence in pciehp_power_off_slot().
+> >> ---
+> >>  drivers/pci/pcie/aer/aer_inject.c |   24 ++++++++++++++++++++++++
+> >>  1 files changed, 24 insertions(+), 0 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+> >> index 0123120..e04cf24 100644
+> >> --- a/drivers/pci/pcie/aer/aer_inject.c
+> >> +++ b/drivers/pci/pcie/aer/aer_inject.c
+> >> @@ -299,6 +299,29 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
+> >>  	bus_ops->ops = ops;
+> >>  }
+> >>  
+> >> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
+> >> +{
+> >> +	struct pci_bus *child;
+> >> +
+> >> +	list_for_each_entry(child, &bus->children, node) {
+> >> +		if (child->ops == &pci_ops_aer)
+> >> +			pci_bus_set_ops(child, bus->ops);
+> >> +		pci_clean_child_aer_ops(child);
+> >> +	}
+> >> +}
+> >> +
+> >> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
+> >> + * pci_ops of root bus won't be pci_ops_aer here*/
+> >> +static void clean_untracked_pci_ops_aer(void)
+> >> +{
+> >> +	struct pci_bus_ops *bus_ops;
+> >> +
+> >> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
+> >> +		if (pci_is_root_bus(bus_ops->bus))
+> > 
+> > Why do cleanup only for root bus?
+> > 
+> 
+> Because the bus with untracked pci_ops_aer always is the child bus of the root bus
+> whose pci_ops_aer is tracked in pci_bus_ops_list. So here only do cleanup for root bus to
+> avoid unnecessary pci_clean_child_aer_ops() called.
+> eg.
+> If inject aer errors into 0000:46:00.0, so the pci_ops of bus 0000:40 and bus 0000:46 will be assign to pci_ops_aer
+> hot remove and hot add 0000:46:00.0, so newly created bus 0000:47 0000:48 and 0000:49 have untracked pci_ops_aer;
+> In this case 0000:40 and 0000:46 are tracked in pci_bus_ops_list, but 0000:47 0000:48 and 0000:49 are not.
+> So when we clean untracked pci_ops_aer, I think only cleanup root bus's child bus is enough. cleanup bus 0000:46's child bus
+> is unnecessary.
+> 
+>  |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+>  |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+>  |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+>  |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
 
-Why should these be different?  In both cases the slot is empty, but
-in case 1 the link is disabled, while in case 2 it is enabled.  If we
-can detect a hot-add in case 1, why can't we detect it after a
-hot-remove even if the link is disabled?
+I see.
 
-Or maybe case 1 is broken on this box, and hot-add to that slot
-doesn't work correctly either?
+Reviewed-by: Huang Ying <ying.huang@intel.com>
+
+Best Regards,
+Huang Ying
+
+> Thanks
+> Yijing
+> 
+> 
+> > Best Regards,
+> > Huang Ying
+> > 
+> >> +			pci_clean_child_aer_ops(bus_ops->bus);
+> >> +	}
+> >> +}
+> >> +
+> >>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
+> >>  {
+> >>  	struct pci_ops *ops;
+> >> @@ -560,6 +583,7 @@ static void __exit aer_inject_exit(void)
+> >>  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+> >>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+> >>  
+> >> +	clean_untracked_pci_ops_aer();
+> >>  	while ((bus_ops = pci_bus_ops_pop()))
+> >>  		kfree(bus_ops);
+> >>  
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > .
+> > 
+> 
+> 
+
+
