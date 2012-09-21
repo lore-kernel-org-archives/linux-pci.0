@@ -1,40 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55480 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123Ab2ILUB7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Sep 2012 16:01:59 -0400
-Received: by lbbgj3 with SMTP id gj3so1443855lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 12 Sep 2012 13:01:58 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:15194 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754610Ab2IUR6K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Sep 2012 13:58:10 -0400
+Message-ID: <505CAAA1.3040409@redhat.com>
+Date: Fri, 21 Sep 2012 13:57:53 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6T=vQnP2u6KP0+sDvT5=iQs1UFjpOLub+9y=B2k_MRgQ@mail.gmail.com>
-References: <20120907163313.614852012@vyatta.com> <CAErSpo6T=vQnP2u6KP0+sDvT5=iQs1UFjpOLub+9y=B2k_MRgQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Sep 2012 14:01:37 -0600
-Message-ID: <CAErSpo5q6-afy-ekqTAZnDKxsy=cmj4-GP5gjSaDJEutFm+xyg@mail.gmail.com>
-Subject: Re: [PATCH 0/4] PCI error handler const
-To: Stephen Hemminger <shemminger@vyatta.com>
-Cc: Linas Vepstas <linasvepstas@gmail.com>, linux-pci@vger.kernel.org,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	James Bottomley <James.Bottomley@hansenpartnership.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Konrad Rzeszutek Wilk <konrad@kernel.org>
+CC: Takao Indoh <indou.takao@jp.fujitsu.com>, vgoyal@redhat.com,
+	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120914200334.GA9041@phenom.dumpdata.com>
+In-Reply-To: <20120914200334.GA9041@phenom.dumpdata.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 7, 2012 at 4:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 7, 2012 at 9:33 AM, Stephen Hemminger <shemminger@vyatta.com> wrote:
->> This is a trivial patch to make PCI error handler function
->> tables const. Split into pieces so that core changes are first.
+On 09/14/2012 04:03 PM, Konrad Rzeszutek Wilk wrote:
+>> As to the boot parameter to enable this function, you suggested using
+>> reset_devices. I found that on a certain platform resetting devices
+>> caused PCIe error due to a hardware bug. Therefore I think we need
+>> new parameter apart from reset_devices to disable this function on
+>> such a machine.
 >
-> I put all four of these on this branch:
->
-> http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/stephen-const
->
-> If the netdev and scsi folks approve, I can handle them all through my PCI tree.
+> Wouldn't a DMI quirk be better for this? That way the second kernel
+> internally would know not to do this.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+a DMI quirk for a PCIe switch?  pci-quirk maybe?  there is a hook
+in per-device pci reset code path, which could be setup for such
+a case.
 
-I didn't see any objection, so I pushed these four patches to the PCI
-"next" branch.
-
-Thanks!
-
-Bjorn
