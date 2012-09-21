@@ -1,85 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:4740 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753810Ab2IUDp4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:45:56 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v4 5/5] PCI/AER: free pci_bus_ops_list and remove pci_bus_ops_pop
-Date: Fri, 21 Sep 2012 11:44:16 +0800
-Message-ID: <1348199056-7696-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
-References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 21 Sep 2012 14:14:47 -0400 (EDT)
+Message-Id: <20120921.141447.1146043198575242769.davem@davemloft.net>
+To: jon.mason@intel.com
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, dave.jiang@intel.com,
+	nab@risingtidesystems.com
+Subject: Re: [RFC v3 1/2] PCI-Express Non-Transparent Bridge Support
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1348250989-6962-2-git-send-email-jon.mason@intel.com>
+References: <1348250989-6962-1-git-send-email-jon.mason@intel.com>
+	<1348250989-6962-2-git-send-email-jon.mason@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rewrite pci_bus_ops_list release code for simplification, and clean
-no used function pci_bus_ops_pop().
+From: Jon Mason <jon.mason@intel.com>
+Date: Fri, 21 Sep 2012 11:09:48 -0700
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   25 ++++++-------------------
- 1 files changed, 6 insertions(+), 19 deletions(-)
+> A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+> connecting 2 systems, providing electrical isolation between the two subsystems.
+> A non-transparent bridge is functionally similar to a transparent bridge except
+> that both sides of the bridge have their own independent address domains.  The
+> host on one side of the bridge will not have the visibility of the complete
+> memory or I/O space on the other side of the bridge.  To communicate across the
+> non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+> the local system.  Writes to these apertures are mirrored to memory on the
+> remote system.  Communications can also occur through the use of doorbell
+> registers that initiate interrupts to the alternate domain, and scratch-pad
+> registers accessible from both sides.
+> 
+> The NTB device driver is needed to configure these memory windows, doorbell, and
+> scratch-pad registers as well as use them in such a way as they can be turned
+> into a viable communication channel to the remote system.  ntb_hw.[ch]
+> determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> the underlying hardware to provide access and a common interface to the doorbell
+> registers, scratch pads, and memory windows.  These hardware interfaces are
+> exported so that other, non-mainlined kernel drivers can access these.
+> ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+> communication channel(s) and provide a reliable way of transferring data from
+> one side to the other, which it then exports so that "client" drivers can access
+> them.  These client drivers are used to provide a standard kernel interface
+> (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+> system to the other in a standard way.
+> 
+> Signed-off-by: Jon Mason <jon.mason@intel.com>
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index a5fd393..4c9268a 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -145,23 +145,6 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- 	return __find_pci_bus_ops_parent(bus);
- }
- 
--static struct pci_bus_ops *pci_bus_ops_pop(void)
--{
--	unsigned long flags;
--	struct pci_bus_ops *bus_ops = NULL;
--
--	spin_lock_irqsave(&inject_lock, flags);
--	if (list_empty(&pci_bus_ops_list))
--		bus_ops = NULL;
--	else {
--		struct list_head *lh = pci_bus_ops_list.next;
--		list_del(lh);
--		bus_ops = list_entry(lh, struct pci_bus_ops, list);
--	}
--	spin_unlock_irqrestore(&inject_lock, flags);
--	return bus_ops;
--}
--
- static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
- {
- 	struct pci_bus_ops *bus_ops = NULL;
-@@ -622,7 +605,7 @@ static void __exit aer_inject_exit(void)
- {
- 	struct aer_error *err, *err_next;
- 	unsigned long flags;
--	struct pci_bus_ops *bus_ops = NULL;
-+	struct pci_bus_ops *bus_ops = NULL, *tmp_ops;
- 
- 	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
- 	misc_deregister(&aer_inject_device);
-@@ -631,8 +614,12 @@ static void __exit aer_inject_exit(void)
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
- 
- 	clean_untracked_pci_ops_aer();
--	while ((bus_ops = pci_bus_ops_pop()))
-+
-+	/* free pci_bus_ops_list */
-+	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
-+		list_del(&bus_ops->list);
- 		kfree(bus_ops);
-+	}
- 
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
--- 
-1.7.1
+I really don't see anything that requires the TX networking processing
+to occur in a tasklet.  I see no sleeping, strange locking, or
+anything like that.
 
-
+And if that's the case, it's just pure overhead.
