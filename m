@@ -1,37 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:43906 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752667Ab2ISB6m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 21:58:42 -0400
-Message-ID: <5059256B.2010708@jp.fujitsu.com>
-Date: Wed, 19 Sep 2012 10:52:43 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4744 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989Ab2IUDp6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:45:58 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v4 2/5] PCI/AER: introduce pci_bus_ops_get() to avoid a small race condition window
+Date: Fri, 21 Sep 2012 11:44:13 +0800
+Message-ID: <1348199056-7696-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: konrad@kernel.org
-CC: vgoyal@redhat.com, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, hbabu@us.ibm.com,
-	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
-Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120914200334.GA9041@phenom.dumpdata.com>
-In-Reply-To: <20120914200334.GA9041@phenom.dumpdata.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/09/15 5:03), Konrad Rzeszutek Wilk wrote:
->> As to the boot parameter to enable this function, you suggested using
->> reset_devices. I found that on a certain platform resetting devices
->> caused PCIe error due to a hardware bug. Therefore I think we need
->> new parameter apart from reset_devices to disable this function on
->> such a machine.
->
-> Wouldn't a DMI quirk be better for this? That way the second kernel
-> internally would know not to do this.
+When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
+and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
+them. So introduce pci_bus_ops_get() to avoid this.
 
-That sounds good. I'll try it, thanks.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
+ 1 files changed, 18 insertions(+), 3 deletions(-)
 
-Thanks,
-Takao Indoh
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index fdab3bb..0123120 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -67,6 +67,8 @@ struct pci_bus_ops {
+ 	struct pci_ops *ops;
+ };
+ 
++#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
++
+ static LIST_HEAD(einjected);
+ 
+ static LIST_HEAD(pci_bus_ops_list);
+@@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
+ 	return bus_ops;
+ }
+ 
++static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
++{
++	struct pci_bus_ops *bus_ops = NULL;
++	struct list_head *n;
++
++	n = from ? from->list.next : pci_bus_ops_list.next;
++	if (n != &pci_bus_ops_list)
++		bus_ops = to_pci_bus_ops(n);
++
++	return bus_ops;
++}
++
+ static u32 *find_pci_config_dword(struct aer_error *err, int where,
+ 				  int *prw1cs)
+ {
+@@ -539,14 +553,15 @@ static void __exit aer_inject_exit(void)
+ {
+ 	struct aer_error *err, *err_next;
+ 	unsigned long flags;
+-	struct pci_bus_ops *bus_ops;
++	struct pci_bus_ops *bus_ops = NULL;
+ 
+ 	misc_deregister(&aer_inject_device);
+ 
+-	while ((bus_ops = pci_bus_ops_pop())) {
++	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+ 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
++
++	while ((bus_ops = pci_bus_ops_pop()))
+ 		kfree(bus_ops);
+-	}
+ 
+ 	spin_lock_irqsave(&inject_lock, flags);
+ 	list_for_each_entry_safe(err, err_next, &einjected, list) {
+-- 
+1.7.1
+
 
