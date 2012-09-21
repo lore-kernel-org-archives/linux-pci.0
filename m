@@ -1,102 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from haggis.pcug.org.au ([203.10.76.10]:43071 "EHLO
-	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373Ab2ISWiI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 18:38:08 -0400
-Date: Thu, 20 Sep 2012 08:37:31 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Paul Mundt <lethal@linux-sh.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@tilera.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Chris Zankel <chris@zankel.net>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org, linux-mips@linux-mips.org,
-	linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: Provide a default pcibios_update_irq()
-Message-Id: <20120920083731.b99255eb8fdeea908d34ed2f@canb.auug.org.au>
-In-Reply-To: <1347880974-13615-2-git-send-email-thierry.reding@avionic-design.de>
-References: <1347880974-13615-1-git-send-email-thierry.reding@avionic-design.de>
-	<1347880974-13615-2-git-send-email-thierry.reding@avionic-design.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm"
+Received: from szxga02-in.huawei.com ([119.145.14.65]:61301 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755099Ab2IUFtk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 01:49:40 -0400
+Message-ID: <505BFF8A.2080404@huawei.com>
+Date: Fri, 21 Sep 2012 13:47:54 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 3/5] PCI/AER: clean all untracked pci_ops_aer when
+ rmmod aer_inject
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>  <1348199056-7696-4-git-send-email-wangyijing@huawei.com> <1348204383.23395.22.camel@yhuang-dev>
+In-Reply-To: <1348204383.23395.22.camel@yhuang-dev>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 2012/9/21 13:13, Huang Ying wrote:
+> On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
+>> When we do hot plug for pci devices that were injected aer errors, some newly created child buses'
+>> pci_ops will be assigned to pci_ops_aer. Aer_inject module will not track these pci_ops_aer(not
+>> list in pci_bus_ops_list),so we should clean all of these when rmmod aer_inject module.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Huang Ying <ying.huang@intel.com>
+>> ---
+>>  drivers/pci/pcie/aer/aer_inject.c |   24 ++++++++++++++++++++++++
+>>  1 files changed, 24 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+>> index 0123120..e04cf24 100644
+>> --- a/drivers/pci/pcie/aer/aer_inject.c
+>> +++ b/drivers/pci/pcie/aer/aer_inject.c
+>> @@ -299,6 +299,29 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
+>>  	bus_ops->ops = ops;
+>>  }
+>>  
+>> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
+>> +{
+>> +	struct pci_bus *child;
+>> +
+>> +	list_for_each_entry(child, &bus->children, node) {
+>> +		if (child->ops == &pci_ops_aer)
+>> +			pci_bus_set_ops(child, bus->ops);
+>> +		pci_clean_child_aer_ops(child);
+>> +	}
+>> +}
+>> +
+>> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
+>> + * pci_ops of root bus won't be pci_ops_aer here*/
+>> +static void clean_untracked_pci_ops_aer(void)
+>> +{
+>> +	struct pci_bus_ops *bus_ops;
+>> +
+>> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
+>> +		if (pci_is_root_bus(bus_ops->bus))
+> 
+> Why do cleanup only for root bus?
+> 
 
-Hi,
+Because the bus with untracked pci_ops_aer always is the child bus of the root bus
+whose pci_ops_aer is tracked in pci_bus_ops_list. So here only do cleanup for root bus to
+avoid unnecessary pci_clean_child_aer_ops() called.
+eg.
+If inject aer errors into 0000:46:00.0, so the pci_ops of bus 0000:40 and bus 0000:46 will be assign to pci_ops_aer
+hot remove and hot add 0000:46:00.0, so newly created bus 0000:47 0000:48 and 0000:49 have untracked pci_ops_aer;
+In this case 0000:40 and 0000:46 are tracked in pci_bus_ops_list, but 0000:47 0000:48 and 0000:49 are not.
+So when we clean untracked pci_ops_aer, I think only cleanup root bus's child bus is enough. cleanup bus 0000:46's child bus
+is unnecessary.
 
-On Mon, 17 Sep 2012 13:22:54 +0200 Thierry Reding <thierry.reding@avionic-d=
-esign.de> wrote:
->
-> diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-> index 270ae7b..3d61ce3 100644
-> --- a/drivers/pci/setup-irq.c
-> +++ b/drivers/pci/setup-irq.c
-> @@ -17,6 +17,11 @@
->  #include <linux/ioport.h>
->  #include <linux/cache.h>
-> =20
-> +void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
-> +{
-> +	dev_dbg(&dev->dev, "Assigning IRQ %02d\n", irq);
-> +	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
-> +}
-> =20
->  static void
->  pdev_fixup_irq(struct pci_dev *dev,
+ |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
 
-Didn't we have a problem with some compiler versions when the weak
-definition was in the same file as the call (there is a call to this
-function in drivers/pci/setup-irq.c)?
+Thanks
+Yijing
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
 
---Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm
-Content-Type: application/pgp-signature
+> Best Regards,
+> Huang Ying
+> 
+>> +			pci_clean_child_aer_ops(bus_ops->bus);
+>> +	}
+>> +}
+>> +
+>>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
+>>  {
+>>  	struct pci_ops *ops;
+>> @@ -560,6 +583,7 @@ static void __exit aer_inject_exit(void)
+>>  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+>>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+>>  
+>> +	clean_untracked_pci_ops_aer();
+>>  	while ((bus_ops = pci_bus_ops_pop()))
+>>  		kfree(bus_ops);
+>>  
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
 
-iQIcBAEBCAAGBQJQWkkrAAoJEECxmPOUX5FEW9wP/RZUlNoHKF/hdMIqgBXmqu9j
-ziwT/7xAnOx2PyPXzlr360bi/PMcjIv3oqf4DHv1tBxYe7tzxS9j1M2Moq8UHiWW
-1wOj+EXsgex73bIKtudojQojTpY9lZML9cdD5ki6zxvIEZTynAH4dSdomk2knPxw
-er3HuNnawQIA4iad+FF4IFp9ojKsduCCRHEGzgC0sfLm1zT/pKgT/jQjZYjdWtKy
-cTujkETaHoMG6rZdnUwmmZryGHWtPUAlWVyg9BDebJfIL32zzU66lQlpIFREyTnI
-zmOrfeJ4Ypw/B0NRUvEMQbUZJtRk7L/ovddItq9NNWHgYn5pznuJOlTaPQb9owOd
-i4oOZguBUyIQL92SrzMMXjxkx5RaBf8dtgGwvdvvCGv5F48Cnr3eCbQN5YQL08xQ
-fek/sjc5izX0MbNjKYw4twCrOwYVpd6Hj7W8L0lhZ0NgFZIoXQi8zTmEjDtf5cHw
-heVKZnH2zdtboYaiIB6utdl1/20mrq6YUd4yuQxwGpc9LveCkPxpPZ1fwTYJj6Fq
-sjabH0KJVKmHTKr3LJg6xFKNh98p+Z3PlVAz4Ac6JTfCWLroBb9df9XAbHZ5kUZd
-Q8RvTloTEYY6hiYKVUn7QF6iO7fUxYuY8/7s8HBhGEyJrwCrVJTpFCOgm7ySBwO5
-fqCAlk6bhtq1THZ3WZZh
-=VZA6
------END PGP SIGNATURE-----
+-- 
+Thanks!
+Yijing
 
---Signature=_Thu__20_Sep_2012_08_37_31_+1000_w3NxfdoHc7EAjbxm--
