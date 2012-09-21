@@ -1,32 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 4 Sep 2012 14:45:18 +0100
-From: Matthew Garrett <mjg@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org
-Subject: Re: [PATCH V3 1/4] EFI: Stash ROMs if they're not in the PCI BAR
-Message-ID: <20120904134518.GF18151@srcf.ucam.org>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
- <1345739803-21017-2-git-send-email-mjg@redhat.com>
- <CAErSpo4Y=z-sP6cjJSzCtD-Gsnrm6-CWWKJpqiScv6QdbzTeyA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:7543 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020Ab2IUDqo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:46:44 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v4 3/5] PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
+Date: Fri, 21 Sep 2012 11:44:14 +0800
+Message-ID: <1348199056-7696-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4Y=z-sP6cjJSzCtD-Gsnrm6-CWWKJpqiScv6QdbzTeyA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 23, 2012 at 05:44:22PM -0600, Bjorn Helgaas wrote:
-> On Thu, Aug 23, 2012 at 10:36 AM, Matthew Garrett <mjg@redhat.com> wrote:
-> > EFI provides support for providing PCI ROMs via means other than the ROM
-> > BAR. This support vanishes after we've exited boot services, so add support
-> > for stashing copies of the ROMs in setup_data if they're not otherwise
-> > available.
-> 
-> -ENO_SIGNED_OFF_BY
-> 
-> I'll add it if you confirm it.
+When we do hot plug for pci devices that were injected aer errors, some newly created child buses'
+pci_ops will be assigned to pci_ops_aer. Aer_inject module will not track these pci_ops_aer(not
+list in pci_bus_ops_list),so we should clean all of these when rmmod aer_inject module.
 
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 0123120..e04cf24 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -299,6 +299,29 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
+ 	bus_ops->ops = ops;
+ }
+ 
++static void pci_clean_child_aer_ops(struct pci_bus *bus)
++{
++	struct pci_bus *child;
++
++	list_for_each_entry(child, &bus->children, node) {
++		if (child->ops == &pci_ops_aer)
++			pci_bus_set_ops(child, bus->ops);
++		pci_clean_child_aer_ops(child);
++	}
++}
++
++/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
++ * pci_ops of root bus won't be pci_ops_aer here*/
++static void clean_untracked_pci_ops_aer(void)
++{
++	struct pci_bus_ops *bus_ops;
++
++	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
++		if (pci_is_root_bus(bus_ops->bus))
++			pci_clean_child_aer_ops(bus_ops->bus);
++	}
++}
++
+ static int pci_bus_set_aer_ops(struct pci_bus *bus)
+ {
+ 	struct pci_ops *ops;
+@@ -560,6 +583,7 @@ static void __exit aer_inject_exit(void)
+ 	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+ 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+ 
++	clean_untracked_pci_ops_aer();
+ 	while ((bus_ops = pci_bus_ops_pop()))
+ 		kfree(bus_ops);
+ 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.1
+
+
