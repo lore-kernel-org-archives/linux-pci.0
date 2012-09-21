@@ -1,92 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:7667 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755801Ab2IRB1b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 21:27:31 -0400
-Message-ID: <5057CDC8.9030500@huawei.com>
-Date: Tue, 18 Sep 2012 09:26:32 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	PCI <linux-pci@vger.kernel.org>,
-	Saurav Kashyap <saurav.kashyap@qlogic.com>,
-	Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
-References: <CC7CB653.20008%giridhar.malavali@qlogic.com>
-In-Reply-To: <CC7CB653.20008%giridhar.malavali@qlogic.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1348187322.8212.224.camel@yhuang-dev>
+Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
+From: Huang Ying <ying.huang@intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Eric Biederman <ebiederm@xmission.com>,
+	kexec@lists.infradead.org
+Date: Fri, 21 Sep 2012 08:28:42 +0800
+In-Reply-To: <201209202120.32029.rjw@sisk.pl>
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com>
+	 <1347872076-5260-2-git-send-email-ying.huang@intel.com>
+	 <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
+	 <201209202120.32029.rjw@sisk.pl>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/18 2:15, Giridhar Malavali wrote:
+On Thu, 2012-09-20 at 21:20 +0200, Rafael J. Wysocki wrote:
+> On Monday, September 17, 2012, Bjorn Helgaas wrote:
+> > +cc Eric and kexec list
+> > 
+> > On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> > > If PCI devices are put into D3cold before kexec, because the
+> > > configuration registers of PCI devices in D3cold are not accessible.
+> > >
+> > > And if PCI bridges are put into low power state before kexec,
+> > > configuration registers of PCI devices underneath the PCI bridges are
+> > > not accessible too.
+> > >
+> > > These will make some PCI devices can not be scanned after kexec, so
+> > > resume the PCI devices in D3cold or PCI bridges in low power state
+> > > before kexec.
+> > 
+> > Don't we need to resume the device even without the kexec issue?  And
+> > even if it's in D1 or D2?
+> > 
+> > It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
+> > depend on the device being in D0.
+> 
+> We should in theory, but we didn't do any power management of PCI bridges
+> before, so this is the first time we have a problem with it.
+> 
+> So I'd say, yeah, let's resume if current_state is between D1 and D3cold
+> inclusive and the kexec comment is not very helpful (the problem is not
+> kexec-specific in general).
+
+Resume from D1 to D3cold for any device or just bridges?
+
+Best Regards,
+Huang Ying
+
+> Speaking of kexec, it might consider using the hibernation device freeze
+> instead of device shutdown (which the kexec jump feature does).  I've seen
+> reports of problems that would be solved this way most likely.
+> 
+> Thanks,
+> Rafael
 > 
 > 
-> On 9/17/12 5:06 AM, "Yijing Wang" <wangyijing@huawei.com> wrote:
-> 
->> [  769.531289] qla2xxx [0000:08:00.0]-001d: : Found an ISP2532 irq 32
->> iobase 0xffffc90016bcc000.
->> [  769.531748] qla2xxx 0000:08:00.0: irq 91 for MSI/MSI-X
->> [  769.531768] qla2xxx 0000:08:00.0: irq 92 for MSI/MSI-X
->> [  799.503673] qla2xxx [0000:08:00.0]-d008:10: No buffer available for
->> dump.
->> [  799.503682] qla2xxx [0000:08:00.0]-101c:10: Mailbox cmd timeout
->> occurred, cmd=0xb, mb[0]=0xb, eeh_busy=0x0. Scheduling ISP abort.
->> [  799.503689] qla2xxx [0000:08:00.0]-0098:10: Failed to load segment 0
->> of firmware.
->> [  829.853242] qla2xxx [0000:08:00.0]-d008:10: No buffer available for
->> dump.
->> [  829.853249] qla2xxx [0000:08:00.0]-008f:10: Failed to load segment 0
->> of firmware.
->> [  829.853253] qla2xxx [0000:08:00.0]-00cf:10: Setup chip ****FAILED****.
->> [  829.853258] qla2xxx [0000:08:00.0]-00d6:10: Failed to initialize
->> adapter - Adapter flags 2.
->> [  829.853893] qla2xxx 0000:08:00.1: enabling device (0104 -> 0106)
->> [  829.855251] qla2xxx [0000:08:00.1]-001d: : Found an ISP2532 irq 42
->> iobase 0xffffc90016b88000.
->> [  829.855828] qla2xxx 0000:08:00.1: irq 91 for MSI/MSI-X
->> [  829.855849] qla2xxx 0000:08:00.1: irq 92 for MSI/MSI-X
->> [  859.827388] qla2xxx [0000:08:00.1]-d008:11: No buffer available for
->> dump.
->> [  859.827395] qla2xxx [0000:08:00.1]-101c:11: Mailbox cmd timeout
->> occurred, cmd=0xb, mb[0]=0xb, eeh_busy=0x0. Scheduling ISP abort.
->> [  859.827400] qla2xxx [0000:08:00.1]-0098:11: Failed to load segment 0
->> of firmware.
->> [  890.176829] qla2xxx [0000:08:00.1]-d008:11: No buffer available for
->> dump.
->> [  890.176837] qla2xxx [0000:08:00.1]-008f:11: Failed to load segment 0
->> of firmware.
->> [  890.176841] qla2xxx [0000:08:00.1]-00cf:11: Setup chip ****FAILED****.
->> [  890.176845] qla2xxx [0000:08:00.1]-00d6:11: Failed to initialize
->> adapter - Adapter flags 2.
-> 
-> I see that the one of the initial mailbox which loads data from system
-> memory to RISC RAM failing causing the probe to fail.
-> 
-> -- Giri
+> > > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> > > ---
+> > >  drivers/pci/pci-driver.c |    4 ++++
+> > >  1 file changed, 4 insertions(+)
+> > >
+> > > --- a/drivers/pci/pci-driver.c
+> > > +++ b/drivers/pci/pci-driver.c
+> > > @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
+> > >         struct pci_dev *pci_dev = to_pci_dev(dev);
+> > >         struct pci_driver *drv = pci_dev->driver;
+> > >
+> > > +       /* Resume bridges and devices in D3cold for kexec to work properly */
+> > > +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
+> > > +               pm_runtime_resume(dev);
+> > > +
+> > >         if (drv && drv->shutdown)
+> > >                 drv->shutdown(pci_dev);
+> > >         pci_msi_shutdown(pci_dev);
+> > 
+> > 
 > 
 
-Hi Giri,
-   Thanks for your comments very much!
-
-Because I hot-add FC card in empty slot is ok, so I think maybe FC card and driver have no problem(I'm not sure).
-So I want to know what hardware(or other) problem may result mailbox loads data from system memory to RISC RAM fail?
-
-Thanks
-Yijing
-
-
-> 
-> 
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
 
