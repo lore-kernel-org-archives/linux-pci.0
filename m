@@ -1,54 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33364 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752715Ab2ISNMt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 09:12:49 -0400
-Received: by lbbgj3 with SMTP id gj3so873071lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 19 Sep 2012 06:12:47 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:31775 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755872Ab2IUXqJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Sep 2012 19:46:09 -0400
+Date: Fri, 21 Sep 2012 16:45:59 -0700
+From: Jon Mason <jon.mason@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, dave.jiang@intel.com,
+	nab@risingtidesystems.com
+Subject: Re: [RFC v3 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20120921234558.GA6531@jonmason-lab>
+References: <1348250989-6962-1-git-send-email-jon.mason@intel.com>
+ <1348250989-6962-2-git-send-email-jon.mason@intel.com>
+ <20120921.141447.1146043198575242769.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
-References: <1347670122-25824-1-git-send-email-yinghai@kernel.org>
- <1347670122-25824-3-git-send-email-yinghai@kernel.org> <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
- <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Sep 2012 07:12:27 -0600
-Message-ID: <CAErSpo7DJgtxCF2ubw4rwxcSQh-BkivQLJDsqJOGU32pcmTTnw@mail.gmail.com>
-Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, Tony Luck <tony.luck@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120921.141447.1146043198575242769.davem@davemloft.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 5:49 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Sep 18, 2012 at 3:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Found one system one root bus hot remove get panic.
->>> Panic happens when try to release hostbridge resource.
->>>
->>> It turns out that resource get reject during put into resource tree
->>> because of conflicts.
->>> Also that resource parent pointer have random value.
->>>
->>> That invalid value cause it pass through check __release_pci_root_info
->>> and panic in release_resource.
->>>
->>> Try to use kzalloc instead.
->>
->> Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
->> what it does:
->>
->>         if (windows) {
->>                 controller->window =
->>                         kmalloc_node(sizeof(*controller->window) * windows,
->>                                      GFP_KERNEL, controller->node);
->>
->
->
-> yes, but they don't support pci_set_host_bridge_release yet. so they
-> should not meet this problem yet.
+On Fri, Sep 21, 2012 at 02:14:47PM -0400, David Miller wrote:
+> From: Jon Mason <jon.mason@intel.com>
+> Date: Fri, 21 Sep 2012 11:09:48 -0700
+> 
+> > A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+> > connecting 2 systems, providing electrical isolation between the two subsystems.
+> > A non-transparent bridge is functionally similar to a transparent bridge except
+> > that both sides of the bridge have their own independent address domains.  The
+> > host on one side of the bridge will not have the visibility of the complete
+> > memory or I/O space on the other side of the bridge.  To communicate across the
+> > non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+> > the local system.  Writes to these apertures are mirrored to memory on the
+> > remote system.  Communications can also occur through the use of doorbell
+> > registers that initiate interrupts to the alternate domain, and scratch-pad
+> > registers accessible from both sides.
+> > 
+> > The NTB device driver is needed to configure these memory windows, doorbell, and
+> > scratch-pad registers as well as use them in such a way as they can be turned
+> > into a viable communication channel to the remote system.  ntb_hw.[ch]
+> > determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> > the underlying hardware to provide access and a common interface to the doorbell
+> > registers, scratch pads, and memory windows.  These hardware interfaces are
+> > exported so that other, non-mainlined kernel drivers can access these.
+> > ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+> > communication channel(s) and provide a reliable way of transferring data from
+> > one side to the other, which it then exports so that "client" drivers can access
+> > them.  These client drivers are used to provide a standard kernel interface
+> > (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+> > system to the other in a standard way.
+> > 
+> > Signed-off-by: Jon Mason <jon.mason@intel.com>
+> 
+> I really don't see anything that requires the TX networking processing
+> to occur in a tasklet.  I see no sleeping, strange locking, or
+> anything like that.
+> 
+> And if that's the case, it's just pure overhead.
 
-Why should we wait to fix that bug until later?  I'm not interested in
-debugging this in the future.  If you fix a bug, you should always try
-to fix other occurrences of the same bug at the same time.
+Good point.  Removed (and I see a nice little perf bump).
+
+Thanks,
+Jon
