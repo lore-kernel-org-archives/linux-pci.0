@@ -1,86 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:61057 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:52791 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754505Ab2I1N2t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Sep 2012 09:28:49 -0400
-Message-ID: <1348838843.4922.5.camel@yhuang-mobile.sh.intel.com>
-Subject: Re: Why hold device_lock when calling callback in pci_walk_bus?
+	id S1752890Ab2IUFPQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Sep 2012 01:15:16 -0400
+Message-ID: <1348204513.23395.23.camel@yhuang-dev>
+Subject: Re: [PATCH v4 5/5] PCI/AER: free pci_bus_ops_list and remove
+ pci_bus_ops_pop
 From: Huang Ying <ying.huang@intel.com>
-To: "Zhang, Yanmin" <yanmin.zhang@intel.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"rjw@sisk.pl" <rjw@sisk.pl>
-Date: Fri, 28 Sep 2012 21:27:23 +0800
-In-Reply-To: <144086DDB7BB6D429C79280EB1C804D414B1F6@SHSMSX101.ccr.corp.intel.com>
-References: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
-	 <144086DDB7BB6D429C79280EB1C804D414B1F6@SHSMSX101.ccr.corp.intel.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
+	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
+Date: Fri, 21 Sep 2012 13:15:13 +0800
+In-Reply-To: <1348199056-7696-6-git-send-email-wangyijing@huawei.com>
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+	 <1348199056-7696-6-git-send-email-wangyijing@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Yanmin,
+On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
+> Rewrite pci_bus_ops_list release code for simplification, and clean
+> no used function pci_bus_ops_pop().
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
 
-Thanks for your explain.
+Please remove my signed-off.
 
-On Fri, 2012-09-28 at 02:29 -0600, Zhang, Yanmin wrote:
-> Some error handling functions call pci_walk_bus. For example, pci-e aer. Here we lock the device, so the driver wouldn't detach from the device, as the cb might call driver's callback function.
+Reviewed-by: Huang Ying <ying.huang@intel.com>
 
-Still has two question.
-
-1. Is it a good practice to hold device_lock when calling driver
-callback to prevent driver be unbind?
-
-2. Is it a good idea to let callback of pci_walk_bus to acquire
-device_lock when necessary.  Because pci_walk_bus may be used by driver
-callback too.
-
-Best Regards,
-Huang Ying
-
-> -----Original Message-----
-> From: Huang, Ying 
-> Sent: Friday, September 28, 2012 4:15 PM
-> To: bhelgaas@google.com
-> Cc: Greg Kroah-Hartman; Zhang, Yanmin; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; rjw@sisk.pl
-> Subject: Why hold device_lock when calling callback in pci_walk_bus?
+> ---
+>  drivers/pci/pcie/aer/aer_inject.c |   25 ++++++-------------------
+>  1 files changed, 6 insertions(+), 19 deletions(-)
 > 
-> Hi, All,
-> 
-> If my understanding were correct, device_lock is used to provide mutual exclusion between device probe/remove/suspend/resume etc.  Why hold device_lock when calling callback in pci_walk_bus.
-> 
-> This is introduced by the following commit.
-> 
-> commit d71374dafbba7ec3f67371d3b7e9f6310a588808
-> Author: Zhang Yanmin <yanmin.zhang@intel.com>
-> Date:   Fri Jun 2 12:35:43 2006 +0800
-> 
->     [PATCH] PCI: fix race with pci_walk_bus and pci_destroy_dev
->     
->     pci_walk_bus has a race with pci_destroy_dev. When cb is called
->     in pci_walk_bus, pci_destroy_dev might unlink the dev pointed by next.
->     Later on in the next loop, pointer next becomes NULL and cause
->     kernel panic.
->     
->     Below patch against 2.6.17-rc4 fixes it by changing pci_bus_lock (spin_lock)
->     to pci_bus_sem (rw_semaphore).
->     
->     Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
->     Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> 
-> Corresponding email thread is: https://lkml.org/lkml/2006/5/26/38
-> 
-> But from the commit and email thread, I can not find why we need to do that.
-> 
-> I ask this question because I want to use pci_walk_bus in a function (in pci runtime resume path) which may be called with device_lock held.
-> 
-> Can anyone help me on that?
-> 
-> Best Regards,
-> Huang Ying
-> 
-> 
+> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+> index a5fd393..4c9268a 100644
+> --- a/drivers/pci/pcie/aer/aer_inject.c
+> +++ b/drivers/pci/pcie/aer/aer_inject.c
+> @@ -145,23 +145,6 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+>  	return __find_pci_bus_ops_parent(bus);
+>  }
+>  
+> -static struct pci_bus_ops *pci_bus_ops_pop(void)
+> -{
+> -	unsigned long flags;
+> -	struct pci_bus_ops *bus_ops = NULL;
+> -
+> -	spin_lock_irqsave(&inject_lock, flags);
+> -	if (list_empty(&pci_bus_ops_list))
+> -		bus_ops = NULL;
+> -	else {
+> -		struct list_head *lh = pci_bus_ops_list.next;
+> -		list_del(lh);
+> -		bus_ops = list_entry(lh, struct pci_bus_ops, list);
+> -	}
+> -	spin_unlock_irqrestore(&inject_lock, flags);
+> -	return bus_ops;
+> -}
+> -
+>  static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
+>  {
+>  	struct pci_bus_ops *bus_ops = NULL;
+> @@ -622,7 +605,7 @@ static void __exit aer_inject_exit(void)
+>  {
+>  	struct aer_error *err, *err_next;
+>  	unsigned long flags;
+> -	struct pci_bus_ops *bus_ops = NULL;
+> +	struct pci_bus_ops *bus_ops = NULL, *tmp_ops;
+>  
+>  	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
+>  	misc_deregister(&aer_inject_device);
+> @@ -631,8 +614,12 @@ static void __exit aer_inject_exit(void)
+>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+>  
+>  	clean_untracked_pci_ops_aer();
+> -	while ((bus_ops = pci_bus_ops_pop()))
+> +
+> +	/* free pci_bus_ops_list */
+> +	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
+> +		list_del(&bus_ops->list);
+>  		kfree(bus_ops);
+> +	}
+>  
+>  	spin_lock_irqsave(&inject_lock, flags);
+>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
 
 
