@@ -1,68 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:65398 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753454Ab2IYQ5M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 12:57:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAOLK0pzmP6bZqPJTi6h2XqbX72gb79VKMYObegP1X3xmEX3TJA@mail.gmail.com>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-	<1348561590-28067-11-git-send-email-yinghai@kernel.org>
-	<CAOLK0pzmP6bZqPJTi6h2XqbX72gb79VKMYObegP1X3xmEX3TJA@mail.gmail.com>
-Date: Tue, 25 Sep 2012 09:57:11 -0700
-Message-ID: <CAE9FiQVQOw0Dt5Vkz4+8DpoXY0a_xKW7Etk-uCzvJpiMhsL=PQ@mail.gmail.com>
-Subject: Re: [PATCH 10/29] PCI, USB: remove find_bridge in acpi_bus_type
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lan Tianyu <lantianyu1986@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40449 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132Ab2IUHDx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 03:03:53 -0400
+Date: Fri, 21 Sep 2012 16:03:58 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	yinghai@kernel.org, jiang.liu@huawei.com
+Subject: [PATCH] change signature of walk_root_bridge() function
+Message-Id: <20120921160358.e6509b8c.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20120920191523.72cb21c3.izumi.taku@jp.fujitsu.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152235.fedf80b5.izumi.taku@jp.fujitsu.com>
+	<CAErSpo7MUNae9Aez8VMhj+z7bedrOVxSHKadFv7tgGYcZwLk_g@mail.gmail.com>
+	<20120920191523.72cb21c3.izumi.taku@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 25, 2012 at 1:35 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
-> 2012/9/25 Yinghai Lu <yinghai@kernel.org>:
->> The struct member is not used anymore, remove it.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> Cc: linux-usb@vger.kernel.org
->> ---
->>  drivers/usb/core/usb-acpi.c |    1 -
->>  1 files changed, 0 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/usb/core/usb-acpi.c b/drivers/usb/core/usb-acpi.c
->> index 8947b20..a6ea613 100644
->> --- a/drivers/usb/core/usb-acpi.c
->> +++ b/drivers/usb/core/usb-acpi.c
->> @@ -102,7 +102,6 @@ static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
->>
->>  static struct acpi_bus_type usb_acpi_bus = {
->>         .bus = &usb_bus_type,
->> -       .find_bridge = NULL,
->>         .find_device = usb_acpi_find_device,
->>  };
->>
-> HI Yinghai:
->                  This member has been populated in the usb-next tree.
->
-> http://git.kernel.org/?p=linux/kernel/git/gregkh/usb.git;a=commit;h=d557542421da643358201664903e67fd01dfca1a
 
-Thanks for pointing that out.
+This patch changes the function signature of walk_root_bridge().
 
-Looks that following change is not needed in that commit.
+We can omit _STA, _SEG, and _BBN evaluation by passing not acpi_handle 
+but acpi_pci_root. Now that acpi_pci_slot_add() which is the only 
+caller of walk_root_bridge() gets acpi_pci_root structure, changing
+signature of walk_root_bridge() is reasonable.
 
-@@ -102,7 +139,7 @@ static int usb_acpi_find_device(struct device
-*dev, acpi_handle *handle)
 
- static struct acpi_bus_type usb_acpi_bus = {
-        .bus = &usb_bus_type,
--       .find_bridge = NULL,
-+       .find_bridge = usb_acpi_find_device,
-        .find_device = usb_acpi_find_device,
- };
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/acpi/pci_slot.c |   35 +++++------------------------------
+ 1 file changed, 5 insertions(+), 30 deletions(-)
 
-Can you double check if it will work without that line change?
+Index: Bjorn-next-0903/drivers/acpi/pci_slot.c
+===================================================================
+--- Bjorn-next-0903.orig/drivers/acpi/pci_slot.c
++++ Bjorn-next-0903/drivers/acpi/pci_slot.c
+@@ -233,45 +233,20 @@ out:
+ 
+ /*
+  * walk_root_bridge - generic root bridge walker
+- * @handle: points to an acpi_pci_root
++ * @root: poiner of an acpi_pci_root
+  * @user_function: user callback for slot objects
+  *
+  * Call user_function for all objects underneath this root bridge.
+  * Walk p2p bridges underneath us and call user_function on those too.
+  */
+ static int
+-walk_root_bridge(acpi_handle handle, acpi_walk_callback user_function)
++walk_root_bridge(struct acpi_pci_root *root, acpi_walk_callback user_function)
+ {
+-	int seg, bus;
+-	unsigned long long tmp;
+ 	acpi_status status;
+-	acpi_handle dummy_handle;
+-	struct pci_bus *pci_bus;
++	acpi_handle handle = root->device->handle;
++	struct pci_bus *pci_bus = root->bus;
+ 	struct callback_args context;
+ 
+-	/* If the bridge doesn't have _STA, we assume it is always there */
+-	status = acpi_get_handle(handle, "_STA", &dummy_handle);
+-	if (ACPI_SUCCESS(status)) {
+-		status = acpi_evaluate_integer(handle, "_STA", NULL, &tmp);
+-		if (ACPI_FAILURE(status)) {
+-			info("%s: _STA evaluation failure\n", __func__);
+-			return 0;
+-		}
+-		if ((tmp & ACPI_STA_DEVICE_FUNCTIONING) == 0)
+-			/* don't register this object */
+-			return 0;
+-	}
+-
+-	status = acpi_evaluate_integer(handle, "_SEG", NULL, &tmp);
+-	seg = ACPI_SUCCESS(status) ? tmp : 0;
+-
+-	status = acpi_evaluate_integer(handle, "_BBN", NULL, &tmp);
+-	bus = ACPI_SUCCESS(status) ? tmp : 0;
+-
+-	pci_bus = pci_find_bus(seg, bus);
+-	if (!pci_bus)
+-		return 0;
+-
+ 	context.pci_bus = pci_bus;
+ 	context.user_function = user_function;
+ 	context.root_handle = handle;
+@@ -299,7 +274,7 @@ acpi_pci_slot_add(struct acpi_pci_root *
+ {
+ 	acpi_status status;
+ 
+-	status = walk_root_bridge(root->device->handle, register_slot);
++	status = walk_root_bridge(root, register_slot);
+ 	if (ACPI_FAILURE(status))
+ 		err("%s: register_slot failure - %d\n", __func__, status);
+ 
 
--Yinghai
