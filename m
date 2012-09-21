@@ -1,100 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 2/7] PCI: split registration of PCI bus devices into two stages
-Date: Tue, 25 Sep 2012 22:29:25 +0800
-Message-Id: <1348583370-11006-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1348583370-11006-1-git-send-email-jiang.liu@huawei.com>
-References: <1348583370-11006-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:16400 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756701Ab2IUIoe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 04:44:34 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 1/5] PCI/AER: Fix pci_ops return NULL in pci_read/write_aer
+Date: Fri, 21 Sep 2012 16:43:09 +0800
+Message-ID: <1348216993-6948-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
+References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- From: Jiang Liu <jiang.liu@huawei.com>
+When we injected aer errors to the pcie device by aer_inject module, pci_ops of the pci
+bus the device on will be assigned to pci_ops_aer.So if the target pci device
+is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
+will be assigned to pci_ops_aer too.Now every access to the child bus's device will cause the
+system panic, because it will get a NULL pci_ops in pci_read_aer/pci_write_aer.
 
-When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
-the notification handler can't hold reference count to the new PCI bus
-because the device object for the new bus (pci_dev->subordinate->dev)
-hasn't been initialized yet.
-
-Split the registration of PCI bus device into two stages as below,
-so that the event handler could hold reference count to the new PCI bus
-when handling BUS_NOTIFY_ADD_DEVICE event.
-
-1) device_initialize(&pci_dev->dev)
-2) device_initialize(&pci_dev->subordinate->dev)
-3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
-4) device_add(&pci_dev->dev)
-5) device_add(&pci_dev->subordinate->dev)
-
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
 ---
- drivers/pci/bus.c    |    2 +-
- drivers/pci/probe.c  |    4 +++-
- drivers/pci/remove.c |   10 +++++-----
- 3 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/pci/pcie/aer/aer_inject.c |   26 +++++++++++++++++++++++++-
+ 1 files changed, 25 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 4b0970b..11a5c28 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -189,7 +189,7 @@ int pci_bus_add_child(struct pci_bus *bus)
- 	if (bus->bridge)
- 		bus->dev.parent = bus->bridge;
- 
--	retval = device_register(&bus->dev);
-+	retval = device_add(&bus->dev);
- 	if (retval)
- 		return retval;
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5dbad03..7ef8c1b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -639,6 +639,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	 */
- 	child->dev.class = &pcibus_class;
- 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-+	device_initialize(&child->dev);
- 
- 	/*
- 	 * Set up the primary, secondary and subordinate
-@@ -1672,7 +1673,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
- 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(&b->dev);
-+	device_initialize(&b->dev);
-+	error = device_add(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
- 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 10693f5..0d03026 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
- 	list_del(&bus->node);
- 	pci_bus_release_busn_res(bus);
- 	up_write(&pci_bus_sem);
--	if (!bus->is_added)
--		return;
--
--	pci_remove_legacy_files(bus);
--	device_unregister(&bus->dev);
-+	if (bus->is_added) {
-+		pci_remove_legacy_files(bus);
-+		device_del(&bus->dev);
-+	}
-+	put_device(&bus->dev);
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 4e24cb8..fdab3bb 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+ 	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
  }
- EXPORT_SYMBOL(pci_remove_bus);
  
++/* find pci_ops of the nearest parent bus */
++static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
++{
++	struct pci_bus_ops *bus_ops;
++	struct pci_bus *pbus = bus->parent;
++
++	if (!pbus)
++		return NULL;
++
++	while (pbus) {
++		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
++			if (bus_ops->bus == pbus)
++				return bus_ops->ops;
++
++		pbus = pbus->parent;
++	}
++
++	return NULL;
++}
++
+ /* inject_lock must be held before calling */
+ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+ {
+@@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+ 		if (bus_ops->bus == bus)
+ 			return bus_ops->ops;
+ 	}
+-	return NULL;
++
++	/* can't find bus_ops, fall back to get bus_ops of parent bus */
++	return __find_pci_bus_ops_parent(bus);
+ }
+ 
+ static struct pci_bus_ops *pci_bus_ops_pop(void)
+@@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	}
+ out:
+ 	ops = __find_pci_bus_ops(bus);
++	BUG_ON(!ops);
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+ 	return ops->read(bus, devfn, where, size, val);
+ }
+@@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
+ 	}
+ out:
+ 	ops = __find_pci_bus_ops(bus);
++	BUG_ON(!ops);
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+ 	return ops->write(bus, devfn, where, size, val);
+ }
 -- 
-1.7.9.5
+1.7.1
+
 
