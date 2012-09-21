@@ -1,62 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:58239 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751687Ab2IPDbM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Sep 2012 23:31:12 -0400
-Received: by lbbgj3 with SMTP id gj3so3550742lbb.19
-        for <linux-pci@vger.kernel.org>; Sat, 15 Sep 2012 20:31:10 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:6895 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754020Ab2IUDqM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:46:12 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v4 4/5] PCI/AER: clean pci_bus_ops when related pci bus was removed
+Date: Fri, 21 Sep 2012 11:44:15 +0800
+Message-ID: <1348199056-7696-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <505456FD.6040801@huawei.com>
-References: <505456FD.6040801@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 15 Sep 2012 21:30:50 -0600
-Message-ID: <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com>
-Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	linux-driver@qlogic.com, linux-scsi@vger.kernel.org,
-	PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 15, 2012 at 4:22 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Hi all,
->    I encountered a very strange problem when I hot plug a fiber channel card(using qla2xxx driver).
-> I did the hotplug in arch x86 machine, using pciehp driver for hotplug, this platform supports pci hot-plug triggering from both
-> sysfs and attention button. If a hot-plug slot is empty when system boot-up, then hotplug FC card in this slot is ok.
-> If a hot-plug slot has been embeded a FC card when system boot-up, hot-remove this card is ok, but hot-add this card will fail.
-> I used
-> #modprobe qla2xxx ql2xextended_error_logging=0x7fffffff
-> to get all probe info. As bellow:
->
-> Can anyone give me any suggestion for this problem?
+When Inject aer errors to the target pci device, a pci_bus_ops will
+be allocated for the pci device's pci bus.When the pci bus was removed,
+we should also release the pci_bus_ops.
 
-It sounds like you did this:
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   49 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 48 insertions(+), 1 deletions(-)
 
-  1) Power down system
-  2) Remove FC card from slot
-  3) Boot system
-  4) Hot-add FC card
-  5) Load qla2xxx driver
-  6) qla2xxx driver claims FC card
-  7) FC card works correctly
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index e04cf24..a5fd393 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -567,9 +567,55 @@ static struct miscdevice aer_inject_device = {
+ 	.fops = &aer_inject_fops,
+ };
+ 
++static void aer_clean_pci_bus_ops(struct pci_dev *dev)
++{
++	unsigned long flags;
++	struct pci_bus_ops *bus_ops, *tmp_ops;
++	struct pci_bus *bus;
++	bus = dev->subordinate;
++	if (!bus)
++		return;
++
++	spin_lock_irqsave(&inject_lock, flags);
++	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list)
++		if (bus_ops->bus == bus) {
++			list_del(&bus_ops->list);
++			kfree(bus_ops);
++			break;
++		}
++	spin_unlock_irqrestore(&inject_lock, flags);
++}
++
++static int aer_hp_notify_fn(struct notifier_block *nb,
++		unsigned long event, void *data)
++{
++	switch (event) {
++	case BUS_NOTIFY_DEL_DEVICE:
++		aer_clean_pci_bus_ops(to_pci_dev(data));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block aerinj_hp_notifier = {
++	.notifier_call = &aer_hp_notify_fn,
++};
++
+ static int __init aer_inject_init(void)
+ {
+-	return misc_register(&aer_inject_device);
++	int ret;
++	ret = misc_register(&aer_inject_device);
++	if (ret)
++		goto out;
++
++	ret = bus_register_notifier(&pci_bus_type, &aerinj_hp_notifier);
++	if (ret)
++		misc_deregister(&aer_inject_device);
++out:
++	return ret;
+ }
+ 
+ static void __exit aer_inject_exit(void)
+@@ -578,6 +624,7 @@ static void __exit aer_inject_exit(void)
+ 	unsigned long flags;
+ 	struct pci_bus_ops *bus_ops = NULL;
+ 
++	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
+ 	misc_deregister(&aer_inject_device);
+ 
+ 	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+-- 
+1.7.1
 
-  8) Power down system
-  9) Install FC card in slot
- 10) Boot system
- 11) Load qla2xxx driver
- 12) qla2xxx driver claims FC card
- 13) FC card works correctly
- 14) Hot-remove card
- 15) Hot-add card
- 16) qla2xxx driver claims FC card
- 17) FC card does not work
 
-and I assume the dmesg log you included is just from steps 15 and 16
-(correct me if I'm wrong).
-
-It would be useful to see the entire log showing all these events so
-we can compare the working cases with the non-working one.  If you use
-the pciehp_debug module parameter, we should also see some pciehp
-events that would help me understand that driver.
