@@ -1,95 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:63289 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742Ab2IGWuD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Sep 2012 18:50:03 -0400
-Received: by lbbgj3 with SMTP id gj3so148636lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Sep 2012 15:50:01 -0700 (PDT)
+Received: from ogre.sisk.pl ([193.178.161.156]:38976 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757731Ab2IUTYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Sep 2012 15:24:19 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Huang Ying <ying.huang@intel.com>
+Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
+Date: Fri, 21 Sep 2012 21:30:49 +0200
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Eric Biederman <ebiederm@xmission.com>,
+	kexec@lists.infradead.org
+References: <1347872076-5260-1-git-send-email-ying.huang@intel.com> <201209202120.32029.rjw@sisk.pl> <1348187322.8212.224.camel@yhuang-dev>
+In-Reply-To: <1348187322.8212.224.camel@yhuang-dev>
 MIME-Version: 1.0
-In-Reply-To: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
-References: <1346994035-16218-1-git-send-email-shangw@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 15:49:41 -0700
-Message-ID: <CAErSpo559Hr-fnZTDZGOfz9T6_GSHKhoKChgNbq-apLuLqbaYQ@mail.gmail.com>
-Subject: Re: [PATCH V9 0/5] Minimal alignment for p2p bars
-To: Gavin Shan <shangw@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201209212130.50085.rjw@sisk.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 6, 2012 at 10:00 PM, Gavin Shan <shangw@linux.vnet.ibm.com> wrote:
-> v1 -> v2:
->         * Shorten the varaible names so that they looks more short.
->         * Changelog adjustment so that they looks more meaningful.
-> v2 -> v3:
->         * Rebase to 3.5.RC4
-> v3 -> v4:
->         * Merge Yinghai's patches.
->         * Split patch for easy review.
->         * Add function to retrieve the minimal alignment of p2p bridge.
-> v4 -> v5:
->         * Rebase to 3.5.RC7
->         * Introduce weak function pcibios_window_alignment() to retrieve
->           I/O and memory alignment for P2P bridges.
->         * Introduce pcibios_window_alignment() for ppc to override the
->           PCI function.
->         * Add ppc_md.pcibios_window_alignment() for specific platform like
->           powernv can override ppc's pcibios_window_alignment().
-> v5 -> v6:
->         * Refactor pcibios_window_alignment() so the platform-specific
->           implementation needn't return the default alignment according
->           to Bjorn's suggestion.
->         * Simplify pbus_size_mem() according to Bjorn's suggestion: Just
->           check the platform required alignment at very end and adjust
->           the "min_align" if necessary.
-> v6 -> v7:
->         * Change "type" to "b_res->flags & mask" while retrieving the
->           minimal alignment for memory window according to Ram's suggestion.
->         * Refactor pbus_size_mem() according to Ram's suggestion.
->         * ppc_md.pcibios_window_alignment returns 1 for those PCI bridges
->           behind PCI bridges so that PCI core will use default alignment
->           values.
-> v7 -> v8:
->         * Rebase to 3.6.RC2, which starts to use "struct resource" to represent
->           the range of PCI bus numbers that specific p2p bridge covers.
->         * Define macros for the default alignment of P2P bars according to
->           Richard's comments.
-> v8 -> v9:
->         * Rebase to 3.6.RC4
->         * Remove the original first 3 patches since they're irrevelant to the
->           intention.
->         * Platform can override p2p I/O alignment even the p2p bridge explicitly
->           requires 1KiB I/O alignment according to Bjorn's comments.
->         * In function pbus_size_io(), the maximal allowed I/O alignment was changed
->           from 4KiB to 1KiB for those p2p bridges that require 1KiB alignment, which
->           is traced by variable "io_align". I'm not sure that's correct for 100% since
->           the original implementation had 1KiB for "io_align" for the case.
->         * Adjustment for pnv_pci_window_alignment() so that we can use the default
->           alignments (4KiB for I/O, 1MiB for memory) if the PCI bus isn't the top
->           level bus in the associated EEH segment.
->
-> Gavin Shan(5)
->   pci: weak function returns alignment
->   pci: resource assignment based on p2p alignment
->   pci: refactor function pbus_size_mem
->   ppc/pci: override pcibios_window_alignment
->   ppc/pnv: I/O and memory alignment for p2p bridges
->
-> -----
->
-> arch/powerpc/include/asm/machdep.h        |    3 +
-> arch/powerpc/kernel/pci-common.c          |   20 +++++++
-> arch/powerpc/platforms/powernv/pci-ioda.c |   39 ++++++++++++++
-> drivers/pci/setup-bus.c                   |   81 +++++++++++++++++++++--------
-> include/linux/pci.h                       |    2 +
-> 5 files changed, 124 insertions(+), 21 deletions(-)
+On Friday, September 21, 2012, Huang Ying wrote:
+> On Thu, 2012-09-20 at 21:20 +0200, Rafael J. Wysocki wrote:
+> > On Monday, September 17, 2012, Bjorn Helgaas wrote:
+> > > +cc Eric and kexec list
+> > > 
+> > > On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> > > > If PCI devices are put into D3cold before kexec, because the
+> > > > configuration registers of PCI devices in D3cold are not accessible.
+> > > >
+> > > > And if PCI bridges are put into low power state before kexec,
+> > > > configuration registers of PCI devices underneath the PCI bridges are
+> > > > not accessible too.
+> > > >
+> > > > These will make some PCI devices can not be scanned after kexec, so
+> > > > resume the PCI devices in D3cold or PCI bridges in low power state
+> > > > before kexec.
+> > > 
+> > > Don't we need to resume the device even without the kexec issue?  And
+> > > even if it's in D1 or D2?
+> > > 
+> > > It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
+> > > depend on the device being in D0.
+> > 
+> > We should in theory, but we didn't do any power management of PCI bridges
+> > before, so this is the first time we have a problem with it.
+> > 
+> > So I'd say, yeah, let's resume if current_state is between D1 and D3cold
+> > inclusive and the kexec comment is not very helpful (the problem is not
+> > kexec-specific in general).
+> 
+> Resume from D1 to D3cold for any device or just bridges?
 
-I applied these to:
+I'd say every device for starters.
 
-http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/gavin-window-alignment
+Thanks,
+Rafael
 
-Assuming they pass Fengguang's build/smoke test, I'll merge that to my
-"next" branch soon.  Thanks!
 
-Bjorn
+> > Speaking of kexec, it might consider using the hibernation device freeze
+> > instead of device shutdown (which the kexec jump feature does).  I've seen
+> > reports of problems that would be solved this way most likely.
+> > 
+> > Thanks,
+> > Rafael
+> > 
+> > 
+> > > > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> > > > ---
+> > > >  drivers/pci/pci-driver.c |    4 ++++
+> > > >  1 file changed, 4 insertions(+)
+> > > >
+> > > > --- a/drivers/pci/pci-driver.c
+> > > > +++ b/drivers/pci/pci-driver.c
+> > > > @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
+> > > >         struct pci_dev *pci_dev = to_pci_dev(dev);
+> > > >         struct pci_driver *drv = pci_dev->driver;
+> > > >
+> > > > +       /* Resume bridges and devices in D3cold for kexec to work properly */
+> > > > +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
+> > > > +               pm_runtime_resume(dev);
+> > > > +
+> > > >         if (drv && drv->shutdown)
+> > > >                 drv->shutdown(pci_dev);
+> > > >         pci_msi_shutdown(pci_dev);
+> > > 
+> > > 
+> > 
+> 
+> 
+> 
+> 
+
