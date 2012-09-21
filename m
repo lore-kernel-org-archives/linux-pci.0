@@ -1,63 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34817 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754789Ab2I2CJH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2012 22:09:07 -0400
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4740 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753810Ab2IUDp4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 23:45:56 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v4 5/5] PCI/AER: free pci_bus_ops_list and remove pci_bus_ops_pop
+Date: Fri, 21 Sep 2012 11:44:16 +0800
+Message-ID: <1348199056-7696-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4c6ti0OCmBvP+_M43920HU5+8RgnvEHKw=zBw2LkmGDA@mail.gmail.com>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
-	<1348733519-24684-9-git-send-email-yinghai@kernel.org>
-	<CAErSpo4c6ti0OCmBvP+_M43920HU5+8RgnvEHKw=zBw2LkmGDA@mail.gmail.com>
-Date: Fri, 28 Sep 2012 19:09:05 -0700
-Message-ID: <CAE9FiQV8tvRB7ZiseSrkWbHoZ=DN9r=xOn_fwGy8Akj_R6y-nA@mail.gmail.com>
-Subject: Re: [PATCH 8/8] PCI, ACPI: remove acpi_root_driver in reserse order
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> aka stop acpi root driver in this sequence: acpiphp, iommu, ioapic.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/acpi/pci_root.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index a27cbb57..012f40d 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -672,7 +672,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
->>         pci_stop_root_bus(root->bus);
->>
->>         mutex_lock(&acpi_pci_root_lock);
->> -       list_for_each_entry(driver, &acpi_pci_drivers, node)
->> +       list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
->>                 if (driver->remove)
->>                         driver->remove(root);
->
-> This seems sort of OK just because we call the ->add() methods in
-> forward order, so it is symmetric to call the ->remove() methods in
-> reverse order.
->
-> But I'm uncomfortable with using this as a way to enforce ->remove()
-> ordering across acpiphp, iommu, and ioapic.  That seems fragile.
->
-> What are the dependencies between these drivers that require this ordering?
+Rewrite pci_bus_ops_list release code for simplification, and clean
+no used function pci_bus_ops_pop().
 
-ioapic should come at first, and iommu and last is acpiphp.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   25 ++++++-------------------
+ 1 files changed, 6 insertions(+), 19 deletions(-)
 
-iommu will check if intr-mapping is corresponding to ioapic controller number.
-also dmar controller will need one normal irq without intr-remapping
-for error handling.
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index a5fd393..4c9268a 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -145,23 +145,6 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+ 	return __find_pci_bus_ops_parent(bus);
+ }
+ 
+-static struct pci_bus_ops *pci_bus_ops_pop(void)
+-{
+-	unsigned long flags;
+-	struct pci_bus_ops *bus_ops = NULL;
+-
+-	spin_lock_irqsave(&inject_lock, flags);
+-	if (list_empty(&pci_bus_ops_list))
+-		bus_ops = NULL;
+-	else {
+-		struct list_head *lh = pci_bus_ops_list.next;
+-		list_del(lh);
+-		bus_ops = list_entry(lh, struct pci_bus_ops, list);
+-	}
+-	spin_unlock_irqrestore(&inject_lock, flags);
+-	return bus_ops;
+-}
+-
+ static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
+ {
+ 	struct pci_bus_ops *bus_ops = NULL;
+@@ -622,7 +605,7 @@ static void __exit aer_inject_exit(void)
+ {
+ 	struct aer_error *err, *err_next;
+ 	unsigned long flags;
+-	struct pci_bus_ops *bus_ops = NULL;
++	struct pci_bus_ops *bus_ops = NULL, *tmp_ops;
+ 
+ 	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
+ 	misc_deregister(&aer_inject_device);
+@@ -631,8 +614,12 @@ static void __exit aer_inject_exit(void)
+ 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+ 
+ 	clean_untracked_pci_ops_aer();
+-	while ((bus_ops = pci_bus_ops_pop()))
++
++	/* free pci_bus_ops_list */
++	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
++		list_del(&bus_ops->list);
+ 		kfree(bus_ops);
++	}
+ 
+ 	spin_lock_irqsave(&inject_lock, flags);
+ 	list_for_each_entry_safe(err, err_next, &einjected, list) {
+-- 
+1.7.1
 
-need to use link sequence in Makefile to make sure iommu come at first.
 
--Yinghai
