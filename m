@@ -1,79 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:59173 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752324Ab2ISEyF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 00:54:05 -0400
-Date: Wed, 19 Sep 2012 13:53:22 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1348080894-23412-2-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
+ <1348080894-23412-1-git-send-email-yinghai@kernel.org> <1348080894-23412-2-git-send-email-yinghai@kernel.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 21 Sep 2012 14:52:13 -0600
+Message-ID: <CAErSpo7S3DCMq1Rsj0Ya856ebyqFT_1pF2yirzaHrGPSSUJinQ@mail.gmail.com>
+Subject: Re: [PATCH 01/40] PCI: fix default vga ref_count
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
-Subject: Re: [PATCH v3 0/6] acpi,pci: hostbridge hotplug support
-Message-Id: <20120919135322.85c608fa.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <CAE9FiQW3pyFFt714yuG-BzuK55eUjN4ojhNZ6LvwGqGWuAtMYQ@mail.gmail.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-	<CAE9FiQVRGK-Of1RuvFZRtuT-yZ7LGDD_oNWr2ier2aaUqrugmA@mail.gmail.com>
-	<CAE9FiQW3pyFFt714yuG-BzuK55eUjN4ojhNZ6LvwGqGWuAtMYQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Dave Airlie <airlied@redhat.com>,
+	Julia Lawall <julia@diku.dk>, Matthew Garrett <mjg@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 18 Sep 2012 11:57:59 -0700
-Yinghai Lu <yinghai@kernel.org> wrote:
+On Wed, Sep 19, 2012 at 12:54 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> when __ARCH_HAS_VGA_DEFAULT_DEVICE is not defined, aka EFIFB is not used,
+> for static path, vga_default setting is through vga_arbiter_add_pci_device.
+> and later x86 pci_fixup_video, will skip setting again.
+> - subsys_initcall(vga_arb_device_init) come first to call vga_arbiter_add_pci_device. It will call pci_get_dev to hold one reference.
+>
+> for hotplug add path, even vga_arbiter_add_pci_device is called via notifier,
+> but it will check VGA_RSRC_LEGACY_MASK that is not set for hotplug path.
+> So x86 pci_fixup_video will take over to call vga_set_default_device().
+> It will not hold one refrence.
+>
+> Later for hotplug remove path, vga_arbiter_del_pci_device that does not check
+> VGA_RSRC_LEGACY_MASK will call put_device and it will cause ref_count to
+> decrease extra. that will have that pci device get deleted early wrongly.
+>
+> Need to make get/put balance for both cases.
+>
+> -v2: According to Bjorn, update vga_set_default_device instead...
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: x86@kernel.org
+> Cc: Dave Airlie <airlied@redhat.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Julia Lawall <julia@diku.dk>
+> Cc: Matthew Garrett <mjg@redhat.com>
+> ---
+>  drivers/gpu/vga/vgaarb.c |   14 +++++++++-----
+>  1 files changed, 9 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index b6852b7..0888951e 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -141,6 +141,12 @@ EXPORT_SYMBOL_GPL(vga_default_device);
+>
+>  void vga_set_default_device(struct pci_dev *pdev)
+>  {
+> +       if (vga_default)
+> +               pci_dev_put(vga_default);
+> +
+> +       if (pdev)
+> +               pdev = pci_dev_get(pdev);
+> +
+>         vga_default = pdev;
 
-> On Tue, Sep 18, 2012 at 11:41 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Mon, Sep 17, 2012 at 11:12 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
-> >> Hi all,
-> >>
-> >>   This patchset is 3rd version of the following:
-> >>     http://marc.info/?l=linux-pci&m=134457928913775&w=2
-> >>     http://marc.info/?l=linux-pci&m=134665909321684&w=2
-> >>
-> >>  v2 -> v3:
-> >>    - change acpi_pci_drivers' add/remove interface according to Bjorn's suggestion
-> >>    - abandon RCU for protecting acpi_pci_roots list according to Bjorn's suggestion
-> >>    - change acpi_pci_find_root implementation to avoid potential deadlock
-> >>
-> >>   * [PATCH v3 1/8] ACPI, PCI: Use normal list for struct acpi_pci_driver
-> >>   * [PATCH v3 2/8] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
-> >>   * [PATCH v3 3/8] ACPI, PCI: add acpi_pci_drivers protection
-> >>   * [PATCH v3 4/8] ACPI, PCI: change acpi_pci_drivers' add/remove interface
-> >>   * [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
-> >>   * [PATCH v3 6/8] ACPI, PCI: add acpi_pci_roots protection
-> >>   * [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
-> >>   * [PATCH v3 8/8] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
-> >
-> > now it is more similar to my for-pci-root-bus-hotplug-part4 and part5
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part5
-> >
-> > big difference:
-> > I separated code from acpiphp_glue.c to pci_root_hp.c for root bridge
-> > hotplug support
-> >
-> > I thought we all agreed on that acpi root bridge hotplug plug need to
-> > be separated from acpiphp at first.
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=ab9fd4ccbfb6120a4a4adf9833487d656b0501d3
-> >
-> > and CONFIG_HOTPLUG will always be enabled, so root bridge hotplug will
-> > be always enabled.
-> > acpiphp will still be used as one module, and to keep it simple pciehp
-> > will be used for pcie etc.
-> > That make the system BIOS much simple to avoid acpiphp.
-> 
-> also current acpiphp only have root bridge add notification.
-> and your code do not add any code for remove notification.
-> 
-> So how to you test your code with removal path?
+I think this is equivalent to:
 
- You were saying how to hot-remove hostbridge ?
- I tested by ejecting ACPI container which includes hostbridge.
- acpiphp is not the only way to hotplug hostbridge, so I ommit acpiphp
- work from this patchset. This patchset is core part.
-  
-Best regards,
-Taku Izumi <izumi.taku@jp.fujitsu.com>
+    pci_dev_put(vga_default);
+    vga_default = pci_dev_get(pdev);
 
+I haven't seen an answer to Matthew's question about whether we want
+to check for "vga_default == pdev".
+
+>  }
+>  #endif
+> @@ -577,7 +583,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>  #ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+>         if (vga_default == NULL &&
+>             ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK))
+> -               vga_default = pci_dev_get(pdev);
+> +               vga_set_default_device(pdev);
+>  #endif
+>
+>         vga_arbiter_check_bridge_sharing(vgadev);
+> @@ -613,10 +619,8 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+>         }
+>
+>  #ifndef __ARCH_HAS_VGA_DEFAULT_DEVICE
+> -       if (vga_default == pdev) {
+> -               pci_dev_put(vga_default);
+> -               vga_default = NULL;
+> -       }
+> +       if (vga_default == pdev)
+> +               vga_set_default_device(NULL);
+>  #endif
+>
+>         if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
+> --
+> 1.7.7
+>
