@@ -1,57 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55229 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965112Ab2I1Xqo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2012 19:46:44 -0400
-Received: by mail-lb0-f174.google.com with SMTP id n3so2517605lbo.19
-        for <linux-pci@vger.kernel.org>; Fri, 28 Sep 2012 16:46:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1348733519-24684-9-git-send-email-yinghai@kernel.org>
-References: <1348733519-24684-1-git-send-email-yinghai@kernel.org> <1348733519-24684-9-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 28 Sep 2012 17:46:23 -0600
-Message-ID: <CAErSpo4c6ti0OCmBvP+_M43920HU5+8RgnvEHKw=zBw2LkmGDA@mail.gmail.com>
-Subject: Re: [PATCH 8/8] PCI, ACPI: remove acpi_root_driver in reserse order
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:45239 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab2IUHOm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 03:14:42 -0400
+Date: Fri, 21 Sep 2012 16:14:47 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Subject: Re: [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root
+ implementation
+Message-Id: <20120921161447.46771be7.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CAErSpo6VeKfwzVmv=WjH7wNPMf6_PLHpo99FeKoHXOrYPnYVPQ@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152323.48cb2703.izumi.taku@jp.fujitsu.com>
+	<CAErSpo6VeKfwzVmv=WjH7wNPMf6_PLHpo99FeKoHXOrYPnYVPQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> aka stop acpi root driver in this sequence: acpiphp, iommu, ioapic.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/acpi/pci_root.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index a27cbb57..012f40d 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -672,7 +672,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
->         pci_stop_root_bus(root->bus);
->
->         mutex_lock(&acpi_pci_root_lock);
-> -       list_for_each_entry(driver, &acpi_pci_drivers, node)
-> +       list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
->                 if (driver->remove)
->                         driver->remove(root);
+On Wed, 19 Sep 2012 16:03:27 -0600
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-This seems sort of OK just because we call the ->add() methods in
-forward order, so it is symmetric to call the ->remove() methods in
-reverse order.
+> On Tue, Sep 18, 2012 at 12:23 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> >
+> > This patch changes the implementation of acpi_pci_find_root().
+> >
+> > We can access acpi_pci_root without scanning acpi_pci_roots list.
+> > If hostbridge hotplug is supported, acpi_pci_roots list will be
+> > protected by mutex. We should not access acpi_pci_roots list
+> > if preventable to lessen deadlock risk.
+> >
+> > Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> > ---
+> >  drivers/acpi/pci_root.c |   13 ++++++++-----
+> >  1 file changed, 8 insertions(+), 5 deletions(-)
+> >
+> > Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+> > ===================================================================
+> > --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
+> > +++ Bjorn-next-0903/drivers/acpi/pci_root.c
+> > @@ -265,12 +265,15 @@ static acpi_status acpi_pci_osc_support(
+> >  struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle)
+> >  {
+> >         struct acpi_pci_root *root;
+> > +       struct acpi_device *device;
+> >
+> > -       list_for_each_entry(root, &acpi_pci_roots, node) {
+> > -               if (root->device->handle == handle)
+> > -                       return root;
+> > -       }
+> > -       return NULL;
+> > +       if (acpi_bus_get_device(handle, &device) ||
+> > +           acpi_match_device_ids(device, root_device_ids))
+> 
+> What's the purpose of the acpi_match_device_ids() check?  It's not
+> obvious, so worth calling it out in the changelog, and maybe even a
+> comment in the code.
 
-But I'm uncomfortable with using this as a way to enforce ->remove()
-ordering across acpiphp, iommu, and ioapic.  That seems fragile.
+  My intention is to reject acpi_handle which doesn't represent 
+  hostbrige. I think this is reasonable...
 
-What are the dependencies between these drivers that require this ordering?
+  Best regards,
+  Taku Izumi
 
->         mutex_unlock(&acpi_pci_root_lock);
-> --
-> 1.7.7
->
+> 
+> Nice to get rid of the list traversal.
+> 
+> > +               return NULL;
+> > +
+> > +       root = acpi_driver_data(device);
+> > +
+> > +       return root;
+> >  }
+> >  EXPORT_SYMBOL_GPL(acpi_pci_find_root);
+> >
+> >
+> 
+
+
+-- 
+Taku Izumi <izumi.taku@jp.fujitsu.com>
+
