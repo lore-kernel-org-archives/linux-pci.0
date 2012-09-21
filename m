@@ -1,91 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30950 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754624Ab2ISH1v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Sep 2012 03:27:51 -0400
-Date: Wed, 19 Sep 2012 03:24:35 -0400
-From: Chen Gong <gong.chen@linux.intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/6] fix aer_inject bug while doing pci hot-plug
-Message-ID: <20120919072435.GB15513@gchen.bj.intel.com>
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:38833 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757929Ab2IUTtK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 15:49:10 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="l76fUT7nc3MelDdI"
-In-Reply-To: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <505CAC93.8020304@redhat.com>
+References: <5003DC9B.8000706@broadcom.com>
+	<500978C7.5050004@genband.com>
+	<50097FBD.9080202@redhat.com>
+	<1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
+	<5009B186.6000806@genband.com>
+	<1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
+	<5009ECDF.4090305@genband.com>
+	<500D59BF.9040006@redhat.com>
+	<500D6932.8090306@genband.com>
+	<20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
+	<C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
+	<5059A767.2090307@broadcom.com>
+	<20120919085306.00006af9@unknown>
+	<1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
+	<CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
+	<1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
+	<CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com>
+	<1348104190.4836.61.camel@deadeye.wl.decadent.org.uk>
+	<C5551D9AAB213A418B7FD5E4A6F30A07152FA5F6@ORSMSX106.amr.corp.intel.com>
+	<CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.com>
+	<505CAC93.8020304@redhat.com>
+Date: Fri, 21 Sep 2012 12:49:09 -0700
+Message-ID: <CAE9FiQW4vY3SwAt1TGhSa=bcmKnzxS96b9HGoU5_CDb3FRvGVA@mail.gmail.com>
+Subject: Re: New commands to configure IOV features
+From: Yinghai Lu <yinghai@kernel.org>
+To: Don Dutile <ddutile@redhat.com>
+Cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yuval Mintz <yuvalmin@broadcom.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Ariel Elior <ariele@broadcom.com>,
+	Eilon Greenstein <eilong@broadcom.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Sep 21, 2012 at 11:06 AM, Don Dutile <ddutile@redhat.com> wrote:
+>>
+>> ok, something like attached patches?
+>>
+>> ixgbe change need more cleanup from ixgbe guys.
+>>
+> yuk, no.
+> I have a set of patches almost done.
 
---l76fUT7nc3MelDdI
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+good. includes update to those network drivers?
 
-On Wed, Sep 19, 2012 at 10:40:36AM +0800, Yijing Wang wrote:
-> Date: Wed, 19 Sep 2012 10:40:36 +0800
-> From: Yijing Wang <wangyijing@huawei.com>
-> To: Bjorn Helgaas <bhelgaas@google.com>, Huang Ying <ying.huang@intel.com=
->,
->  Chen Gong <gong.chen@linux.intel.com>
-> CC: jiang.liu@huawei.com, Hanjun Guo <guohanjun@huawei.com>,
->  linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
-> Subject: [PATCH 0/6] fix aer_inject bug while doing pci hot-plug
-> X-Mailer: git-send-email 1.7.11.msysgit.1
->=20
-> v2--->v3
-> 1??find the pci_ops of nearest parent bus in patch 1;
-> 2??introduce pci_bus_ops_get to avoid race condition window in aer_inject=
-_exit;
-> 3??scan the root bus for cleaning untracked pci_ops_aer instead of scan a=
-ll pci bus as Huang Ying suggestion;
-> 4??remove unused code pci_bus_ops_pop;
->=20
-> Yijing Wang (6):
->   PCI/AER: fix pci_ops return NULL when hotplug a pci bus doing aer
->     error inject
->   PCI/AER: introduce pci_bus_ops_get() function to avoid a small race
->     condition window
->   PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
->   PCI/AER: clean pci_bus_ops when related pci bus was removed
->   PCI/AER: introduce pci_bus_ops_free to free pci_bus_ops
->   PCI/AER: clean unused code pci_bus_ops_pop
->=20
->  drivers/pci/pcie/aer/aer_inject.c |  149 +++++++++++++++++++++++++++++++=
-+-----
->  1 files changed, 131 insertions(+), 18 deletions(-)
->=20
-After reviewing the whole patch series, I hava a feeling that you don't
-desrcibe the whole usage model very clearly. I suggest you update the
-description and express it more clearly and in detail, so other guys never =
-touch
-aer-inject can understand it well. You patch is good but it doesn't mean
-others will like it because it is obscure to others never touching these co=
-des.
+> It provides 3 sysfs files (enable, disable, num_max_vfs);
+> callbacks for enable & disable.
 
---l76fUT7nc3MelDdI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+why using three? only pass max_vfs should be enough...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+aka pass 0 mean disabling, pass other value mean enabling.
 
-iQIcBAEBAgAGBQJQWXMzAAoJEI01n1+kOSLH5l8P/2eJ9gZylWJ4yeJh36cJmtVC
-DCnyLsEh2QAQIEVX0HfuKkvYosxNDKMjuRdckURtpEB1fdfua8teZFAZxte1XBZF
-ou+BgQvo5jmeog6pKfDPShwq+AlsWi/9c+mgSg+hqbO+gnp+RuHPk63GwvZBzMFi
-79w5gW8ZHlIrDC+cZB/4K0M0QD5psG0d0MXpNyAy+kLOoaElyWgPUowAUZSfFwWu
-PmBESQNwIPmd00j5aFxmEEI6sOallkITiLahNUk8m9FE4N5Sm9C8xPNGmHpqKGV+
-LtFjd9Ra/izbB0GcvQc7+fQYUjUDFNWrHx1VIjxAFKBxS1Sme3kdOjP9yvMLDSy5
-pugzKbi7N61j0NVLmhTzDvPpHtWQriLL4NdbogfMNXf1QaNLnxciDst0fKPysqvX
-b1tnQ4z0Yu0aqULpy/hVLwFQ4726q7xTv8IYmFqNbm53oaHlhbmk429ANy0wEYrE
-PvOFwkZheNo488kv0gwy8ERj/GYkJd4BdoZx4OQRmpx682oQl558CzwoQLea1aXD
-brjoa8jjvabWTqLBtxyNV+ZvwwcXyBVsnJXtK8gGPGsqiEuhQmA+xNvUWxvcFarV
-6uqytUcy9xX/sp7qrfG7ctEUnry5yHmLnjTCfcwqsuLd4/E/E9Dbzpf8kTJDy6R6
-cb7AUEvvDxWIOPgovj7/
-=r9aF
------END PGP SIGNATURE-----
+>
+> i'm tied up until Monday on RHEL6, then I'll switch gears & post a set of
+> patches.
 
---l76fUT7nc3MelDdI--
+so that is your employer 'sinternal policy? for RHEL 6 kernel first,
+then upstream kernel?
+thought RH only accept backporting only patches get into upstream already.
+
+-Yinghai
