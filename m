@@ -1,65 +1,114 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH 08/29] PCI, ACPI: Remove acpi_find_bridge_device for acpi_bus_type
-Date: Tue, 25 Sep 2012 01:26:09 -0700
-Message-Id: <1348561590-28067-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:29001 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754616Ab2IUGBo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 02:01:44 -0400
+Message-ID: <505C02A1.50601@huawei.com>
+Date: Fri, 21 Sep 2012 14:01:05 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Huang Ying <ying.huang@intel.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 2/5] PCI/AER: introduce pci_bus_ops_get() to avoid
+ a small race condition window
+References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>  <1348199056-7696-3-git-send-email-wangyijing@huawei.com> <1348204119.23395.21.camel@yhuang-dev>
+In-Reply-To: <1348204119.23395.21.camel@yhuang-dev>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now all acpi_bus_typs definitions have bus assigned, so remove not needed code.
+On 2012/9/21 13:08, Huang Ying wrote:
+> On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
+>> When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
+>> and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
+>> them. So introduce pci_bus_ops_get() to avoid this.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> Signed-off-by: Huang Ying <ying.huang@intel.com>
+> 
+> Please don't add my signed-off.
+> 
+>> ---
+>>  drivers/pci/pcie/aer/aer_inject.c |   21 ++++++++++++++++++---
+>>  1 files changed, 18 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+>> index fdab3bb..0123120 100644
+>> --- a/drivers/pci/pcie/aer/aer_inject.c
+>> +++ b/drivers/pci/pcie/aer/aer_inject.c
+>> @@ -67,6 +67,8 @@ struct pci_bus_ops {
+>>  	struct pci_ops *ops;
+>>  };
+>>  
+>> +#define to_pci_bus_ops(n) container_of(n, struct pci_bus_ops, list)
+>> +
+>>  static LIST_HEAD(einjected);
+>>  
+>>  static LIST_HEAD(pci_bus_ops_list);
+>> @@ -160,6 +162,18 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
+>>  	return bus_ops;
+>>  }
+>>  
+>> +static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
+>> +{
+>> +	struct pci_bus_ops *bus_ops = NULL;
+>> +	struct list_head *n;
+>> +
+>> +	n = from ? from->list.next : pci_bus_ops_list.next;
+>> +	if (n != &pci_bus_ops_list)
+>> +		bus_ops = to_pci_bus_ops(n);
+>> +
+>> +	return bus_ops;
+>> +}
+>> +
+>>  static u32 *find_pci_config_dword(struct aer_error *err, int where,
+>>  				  int *prw1cs)
+>>  {
+>> @@ -539,14 +553,15 @@ static void __exit aer_inject_exit(void)
+>>  {
+>>  	struct aer_error *err, *err_next;
+>>  	unsigned long flags;
+>> -	struct pci_bus_ops *bus_ops;
+>> +	struct pci_bus_ops *bus_ops = NULL;
+>>  
+>>  	misc_deregister(&aer_inject_device);
+>>  
+>> -	while ((bus_ops = pci_bus_ops_pop())) {
+>> +	while ((bus_ops = pci_bus_ops_get(bus_ops)))
+>>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+> 
+> Why not just use
+> 
+> 	list_for_each_entry(&pci_bus_ops_list) {
+> 		pci_bus_set_ops();
+> 	}
+> 
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/glue.c |   20 ++------------------
- 1 files changed, 2 insertions(+), 18 deletions(-)
+Yes, you are right, use list_for_each_entry(&pci_bus_ops_list) is cleaner.
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 3079634..db6b625 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -72,22 +72,6 @@ static struct acpi_bus_type *acpi_get_bus_type(struct bus_type *type)
- 	return ret;
- }
- 
--static int acpi_find_bridge_device(struct device *dev, acpi_handle * handle)
--{
--	struct acpi_bus_type *tmp;
--	int ret = -ENODEV;
--
--	down_read(&bus_type_sem);
--	list_for_each_entry(tmp, &bus_type_list, list) {
--		if (tmp->find_bridge && !tmp->find_bridge(dev, handle)) {
--			ret = 0;
--			break;
--		}
--	}
--	up_read(&bus_type_sem);
--	return ret;
--}
--
- /* Get device's handler per its address under its parent */
- struct acpi_find_child {
- 	acpi_handle handle;
-@@ -211,10 +195,10 @@ static int acpi_platform_notify(struct device *dev)
- 	int ret = -EINVAL;
- 
- 	if (!dev->bus) {
--		/* bridge devices genernally haven't bus */
--		ret = acpi_find_bridge_device(dev, &handle);
-+		DBG("No bus is set for %s\n", dev_name(dev));
- 		goto end;
- 	}
-+
- 	type = acpi_get_bus_type(dev->bus);
- 	if (!type) {
- 		DBG("No ACPI bus support for %s\n", dev_name(dev));
+Thanks
+Yijing
+
+> Best Regards,
+> Huang Ying
+> 
+>> +
+>> +	while ((bus_ops = pci_bus_ops_pop()))
+>>  		kfree(bus_ops);
+>> -	}
+>>  
+>>  	spin_lock_irqsave(&inject_lock, flags);
+>>  	list_for_each_entry_safe(err, err_next, &einjected, list) {
+> 
+> 
+> 
+> .
+> 
+
+
 -- 
-1.7.7
+Thanks!
+Yijing
 
