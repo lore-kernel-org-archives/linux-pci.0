@@ -1,41 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:17068 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757052Ab2IUIpA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 04:45:00 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Chen Gong <gong.chen@linux.intel.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 2/5] PCI/AER: use list_for_each_entry to avoid a small race condition window
+Date: Fri, 21 Sep 2012 16:43:10 +0800
+Message-ID: <1348216993-6948-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
+References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <504A78E9.4030005@lwfinger.net>
-References: <504A78E9.4030005@lwfinger.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Sep 2012 15:48:15 -0700
-Message-ID: <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com>
-Subject: Re: Question about failure in PCI power-state change
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	=?GB2312?B?wO6zr8P3?= <chaoming_li@realsil.com.cn>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Huang Ying <ying.huang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+cc Rafael, Huang, linux-pm
+When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
+and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
+them. So keep pci_bus_ops_list until pci_bus_set_ops complete, use list_for_each_entry() instead of
+pci_bus_ops_pop to get bus_ops.
 
-On Fri, Sep 7, 2012 at 3:44 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Hi,
->
-> On occasion when I unload and reload driver rtl8192ce, I get the message
->
-> "Refused to change power state, currently in D3"
->
-> I added additional info to the printk and discovered that it was trying to
-> change to state D0. The problem seems to occur when I have made a
-> connection, unloaded the driver, and reloaded it. If I do not make a
-> connection before unloading, then the problem is a lot less likely.
->
-> This is with kernel 3.6-rc4 from wireless-testing. A Google search shows
-> that the problem is usually due to suspend/resume difficulties, but this
-> machine has not been suspended.
->
-> I would appreciate any help that you might give in solving this issue.
->
-> Thanks,
->
-> Larry
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index fdab3bb..f499f01 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -543,10 +543,11 @@ static void __exit aer_inject_exit(void)
+ 
+ 	misc_deregister(&aer_inject_device);
+ 
+-	while ((bus_ops = pci_bus_ops_pop())) {
++	list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
+ 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
++
++	while ((bus_ops = pci_bus_ops_pop()))
+ 		kfree(bus_ops);
+-	}
+ 
+ 	spin_lock_irqsave(&inject_lock, flags);
+ 	list_for_each_entry_safe(err, err_next, &einjected, list) {
+-- 
+1.7.1
+
+
