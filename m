@@ -1,341 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 4/9] ACPI/pci_bind: correctly update binding relationship for PCI hotplug
-Date: Sat, 15 Sep 2012 11:05:07 +0800
-Message-Id: <1347678312-11124-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
-References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:50991 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675Ab2IUGSk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 02:18:40 -0400
+Received: from /spool/local
+	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <linuxram@us.ibm.com>;
+	Fri, 21 Sep 2012 00:18:40 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 193E73E4003D
+	for <linux-pci@vger.kernel.org>; Fri, 21 Sep 2012 00:18:36 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q8L6IbZk211596
+	for <linux-pci@vger.kernel.org>; Fri, 21 Sep 2012 00:18:37 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q8L6Iaao006767
+	for <linux-pci@vger.kernel.org>; Fri, 21 Sep 2012 00:18:37 -0600
+Date: Fri, 21 Sep 2012 14:18:33 +0800
+From: Ram Pai <linuxram@us.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ram Pai <linuxram@us.ibm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v3 ]pci: pci resource iterator
+Message-ID: <20120921061833.GC2401@ram-ThinkPad-T61>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
+References: <CAE9FiQW5KkgszD2F4aez-jtXABkiPmUDVqTiFF8MDNKxWLopxA@mail.gmail.com>
+ <CAE9FiQXyVB5AGGOd+a-SatL+dEo7Nvx=zPswtZ1QLk5QSLMm4Q@mail.gmail.com>
+ <20120823050958.GB2332@ram-ThinkPad-T61>
+ <CAE9FiQVq=6Shv_4taNzN3h4OBs1PgoFJZqV0i3tRvmz04qZbXw@mail.gmail.com>
+ <20120827073335.GE20843@ram-ThinkPad-T61>
+ <CAE9FiQVEuH=ZwL4R+wyO0H0853hQ8bpGBYKQJwkAJ5g7FKtY7g@mail.gmail.com>
+ <20120903090821.GC2438@ram-ThinkPad-T61>
+ <CAE9FiQV+_cuDV1WqVZK5SO4JYuJ8_=Gj3qG3Rz9bJsGhUSLV4w@mail.gmail.com>
+ <20120904032717.GD2438@ram-ThinkPad-T61>
+ <CAE9FiQVWdXed+v20Y-m6QeSpJ1H1F6yP9BVu5v=5PBM4mr=kog@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVWdXed+v20Y-m6QeSpJ1H1F6yP9BVu5v=5PBM4mr=kog@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- From: Jiang Liu <jiang.liu@huawei.com>
+On Mon, Sep 17, 2012 at 05:03:56PM -0700, Yinghai Lu wrote:
+> On Mon, Sep 3, 2012 at 8:27 PM, Ram Pai <linuxram@us.ibm.com> wrote:
+> > On Mon, Sep 03, 2012 at 11:20:45AM -0700, Yinghai Lu wrote:
+> >> On Mon, Sep 3, 2012 at 2:08 AM, Ram Pai <linuxram@us.ibm.com> wrote:
+> >> > On Mon, Sep 03, 2012 at 01:07:46AM -0700, Yinghai Lu wrote:
+> >> >
+> >> > Anyway I am ok with either patch.
+> >>
+> >> please check -v7.
+> >
+> > Looks good to me. I am inlining the patch for others to comment.
+> > BTW: your patch that introduces pci_dev_resource_n() will have
+> > to be applied before applying this patch.
+> >
+> >
+> 
+> just updated for-pci-for-each-res-addon branch...
+> 
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-for-each-res-addon
+> 
+> now it only depends on pci-root-bus-hotplug now, and
+> pci-root-bus-hotplug only depends on pci/next without busn-alloc.
+> 
+> So after Bjorn accept pci-root-bus-hotplug, we could push that to him.
+> 
+> Please check for-pci-for-each-addon branch.
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-pci-for-each-res-addon
 
-Currently pci_bind.c is used to maintain binding relationship between
-ACPI and PCI devices. But it's broken when handling PCI hotplug events.
+Checked and the patch looks good. 
 
-For the acpiphp driver, it's designed to update the binding relationship
-when PCI hotplug event happens, but the implementation is broken.
-For PCI device hot-adding:
-enable_device()
-    pci_scan_slot()
-    acpiphp_bus_add()
-        acpi_bus_add()
-	    acpi_pci_bind()
-		acpi_get_pci_dev()
-		    return NULL because dev->archdata.acpi_handle is
-		    still unset
-		return without updating actual binding relationship
-    pci_bus_add_devices()
-	pci_bus_add_device()
-	    device_add()
-		platform_notify()
-		    acpi_bind_one()
-			set dev->archdata.acpi_handle
+But later you have added another patch which introduces lot many macros ...
 
-For PCI device hot-removal,
-disable_device()
-    pci_stop_bus_device()
-    __pci_remove_bus_device()
-    acpiphp_bus_trim()
-	acpi_bus_remove()
-	    acpi_pci_unbind()
-		return without really unbinding because PCI device has
-		already been destroyed
+Will that patch also be pushed to Bjorn? I thought Bjorn resisted the
+idea of having multiple such iterators..
 
-For other PCI hotplug drivers, they even don't bother to update binding
-relationships. So hook into acpi_bind_one()/acpi_unbind_one() in
-drivers/acpi/glue.c to update PCI<->ACPI binding relationship.
+This is the patch I am talking about:
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/acpi/glue.c     |    6 ++-
- drivers/acpi/internal.h |    2 +
- drivers/acpi/pci_bind.c |  101 +++++++++++++++++++++++++++++++----------------
- drivers/acpi/pci_root.c |   40 +++++--------------
- 4 files changed, 81 insertions(+), 68 deletions(-)
+commit a37fbc4685ab086581f9842630c997ca78186ea4
+Author: Yinghai Lu <yinghai@kernel.org>
+Date:   Mon Sep 3 00:32:00 2012 -0700
 
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index 243ee85..4904700 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -121,7 +121,6 @@ acpi_handle acpi_get_child(acpi_handle parent, u64 address)
- 			    1, do_acpi_find_child, NULL, &find, NULL);
- 	return find.handle;
- }
--
- EXPORT_SYMBOL(acpi_get_child);
+PCI: Add for_each_resource helpers to make resource loop easier.
  
- /* Link ACPI devices with physical devices */
-@@ -142,7 +141,6 @@ struct device *acpi_get_physical_device(acpi_handle handle)
- 		return get_device(dev);
- 	return NULL;
- }
--
- EXPORT_SYMBOL(acpi_get_physical_device);
- 
- static int acpi_bind_one(struct device *dev, acpi_handle handle)
-@@ -162,6 +160,8 @@ static int acpi_bind_one(struct device *dev, acpi_handle handle)
- 	}
- 	dev->archdata.acpi_handle = handle;
- 
-+	acpi_pci_bind_notify(dev->archdata.acpi_handle, dev, true);
++#define resno_is_for_bridge(n)                                        \ 
++       ((n) >= PCI_BRIDGE_RESOURCES && (n) <= PCI_BRIDGE_RESOURCE_END)
 +
- 	status = acpi_bus_get_device(handle, &acpi_dev);
- 	if (!ACPI_FAILURE(status)) {
- 		int ret;
-@@ -193,6 +193,8 @@ static int acpi_unbind_one(struct device *dev)
- 			sysfs_remove_link(&acpi_dev->dev.kobj, "physical_node");
- 		}
- 
-+		acpi_pci_bind_notify(dev->archdata.acpi_handle, dev, false);
-+
- 		acpi_detach_data(dev->archdata.acpi_handle,
- 				 acpi_glue_data_handler);
- 		dev->archdata.acpi_handle = NULL;
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index ca75b9c..5396b20 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -93,4 +93,6 @@ static inline int suspend_nvs_save(void) { return 0; }
- static inline void suspend_nvs_restore(void) {}
- #endif
- 
-+void acpi_pci_bind_notify(acpi_handle handle, struct device *dev, bool bind);
-+
- #endif /* _ACPI_INTERNAL_H_ */
-diff --git a/drivers/acpi/pci_bind.c b/drivers/acpi/pci_bind.c
-index 2ef0409..320e698 100644
---- a/drivers/acpi/pci_bind.c
-+++ b/drivers/acpi/pci_bind.c
-@@ -35,40 +35,41 @@
- #define _COMPONENT		ACPI_PCI_COMPONENT
- ACPI_MODULE_NAME("pci_bind");
- 
--static int acpi_pci_unbind(struct acpi_device *device)
--{
--	struct pci_dev *dev;
--
--	dev = acpi_get_pci_dev(device->handle);
--	if (!dev)
--		goto out;
-+static int acpi_pci_bind_cb(struct acpi_device *device);
- 
-+static int acpi_pci_unbind(struct acpi_device *device, struct pci_dev *dev)
-+{
- 	device_set_run_wake(&dev->dev, false);
- 	pci_acpi_remove_pm_notifier(device);
- 
--	if (!dev->subordinate)
--		goto out;
-+	if (dev->subordinate) {
-+		acpi_pci_irq_del_prt(dev->subordinate);
-+		device->ops.bind = NULL;
-+		device->ops.unbind = NULL;
-+	}
-+
-+	return 0;
-+}
- 
--	acpi_pci_irq_del_prt(dev->subordinate);
-+static int acpi_pci_unbind_cb(struct acpi_device *device)
-+{
-+	int rc = 0;
-+	struct pci_dev *dev;
- 
--	device->ops.bind = NULL;
--	device->ops.unbind = NULL;
-+	dev = acpi_get_pci_dev(device->handle);
-+	if (dev) {
-+		rc = acpi_pci_unbind(device, dev);
-+		pci_dev_put(dev);
-+	}
- 
--out:
--	pci_dev_put(dev);
--	return 0;
-+	return rc;
- }
- 
--static int acpi_pci_bind(struct acpi_device *device)
-+static int acpi_pci_bind(struct acpi_device *device, struct pci_dev *dev)
- {
- 	acpi_status status;
- 	acpi_handle handle;
- 	struct pci_bus *bus;
--	struct pci_dev *dev;
--
--	dev = acpi_get_pci_dev(device->handle);
--	if (!dev)
--		return 0;
- 
- 	pci_acpi_add_pm_notifier(device, dev);
- 	if (device->wakeup.flags.run_wake)
-@@ -83,8 +84,8 @@ static int acpi_pci_bind(struct acpi_device *device)
- 				  "Device %04x:%02x:%02x.%d is a PCI bridge\n",
- 				  pci_domain_nr(dev->bus), dev->bus->number,
- 				  PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn)));
--		device->ops.bind = acpi_pci_bind;
--		device->ops.unbind = acpi_pci_unbind;
-+		device->ops.bind = acpi_pci_bind_cb;
-+		device->ops.unbind = acpi_pci_unbind_cb;
- 	}
- 
- 	/*
-@@ -96,25 +97,55 @@ static int acpi_pci_bind(struct acpi_device *device)
- 	 * TBD: Can _PRTs exist within the scope of non-bridge PCI devices?
- 	 */
- 	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
--	if (ACPI_FAILURE(status))
--		goto out;
-+	if (ACPI_SUCCESS(status)) {
-+		if (dev->subordinate)
-+			bus = dev->subordinate;
-+		else
-+			bus = dev->bus;
-+		acpi_pci_irq_add_prt(device->handle, bus);
-+	}
- 
--	if (dev->subordinate)
--		bus = dev->subordinate;
--	else
--		bus = dev->bus;
-+	return 0;
-+}
- 
--	acpi_pci_irq_add_prt(device->handle, bus);
-+static int acpi_pci_bind_cb(struct acpi_device *device)
-+{
-+	int rc = 0;
-+	struct pci_dev *dev;
- 
--out:
--	pci_dev_put(dev);
--	return 0;
-+	dev = acpi_get_pci_dev(device->handle);
-+	if (dev) {
-+		rc = acpi_pci_bind(device, dev);
-+		pci_dev_put(dev);
-+	}
-+
-+	return rc;
- }
- 
- int acpi_pci_bind_root(struct acpi_device *device)
- {
--	device->ops.bind = acpi_pci_bind;
--	device->ops.unbind = acpi_pci_unbind;
-+	device->ops.bind = acpi_pci_bind_cb;
-+	device->ops.unbind = acpi_pci_unbind_cb;
- 
- 	return 0;
- }
-+
-+void acpi_pci_bind_notify(acpi_handle handle, struct device *dev, bool bind)
-+{
-+	struct acpi_device *acpi_dev;
-+
-+	if (!dev_is_pci(dev))
-+		return;
-+	if (acpi_bus_get_device(handle, &acpi_dev) || !acpi_dev)
-+		return;
-+
-+	if (acpi_dev->parent) {
-+		if (bind) {
-+			if (acpi_dev->parent->ops.bind)
-+				acpi_pci_bind(acpi_dev, to_pci_dev(dev));
-+		} else {
-+			if (acpi_dev->parent->ops.unbind)
-+				acpi_pci_unbind(acpi_dev, to_pci_dev(dev));
-+		}
-+	}
-+}
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 72a2c98..7509034 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -195,21 +195,6 @@ static acpi_status try_get_root_bridge_busnr(acpi_handle handle,
- 	return AE_OK;
- }
- 
--static void acpi_pci_bridge_scan(struct acpi_device *device)
--{
--	int status;
--	struct acpi_device *child = NULL;
--
--	if (device->flags.bus_address)
--		if (device->parent && device->parent->ops.bind) {
--			status = device->parent->ops.bind(device);
--			if (!status) {
--				list_for_each_entry(child, &device->children, node)
--					acpi_pci_bridge_scan(child);
--			}
--		}
--}
--
- static u8 pci_osc_uuid_str[] = "33DB4D5B-1FF7-401C-9657-7441C03DD766";
- 
- static acpi_status acpi_pci_run_osc(acpi_handle handle,
-@@ -456,7 +441,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	int result;
- 	struct acpi_pci_root *root;
- 	acpi_handle handle;
--	struct acpi_device *child;
- 	u32 flags, base_flags;
- 
- 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
-@@ -521,6 +505,15 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	/* TBD: Locking */
- 	list_add_tail(&root->node, &acpi_pci_roots);
- 
-+	/*
-+	 * Attach ACPI-PCI Context
-+	 * -----------------------
-+	 * Thus binding the ACPI and PCI devices.
-+	 */
-+	result = acpi_pci_bind_root(device);
-+	if (result)
-+		goto end;
-+
- 	printk(KERN_INFO PREFIX "%s [%s] (domain %04x %pR)\n",
- 	       acpi_device_name(device), acpi_device_bid(device),
- 	       root->segment, &root->secondary);
-@@ -542,15 +535,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	}
- 
- 	/*
--	 * Attach ACPI-PCI Context
--	 * -----------------------
--	 * Thus binding the ACPI and PCI devices.
--	 */
--	result = acpi_pci_bind_root(device);
--	if (result)
--		goto end;
--
--	/*
- 	 * PCI Routing Table
- 	 * -----------------
- 	 * Evaluate and parse _PRT, if exists.
-@@ -559,12 +543,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (ACPI_SUCCESS(status))
- 		result = acpi_pci_irq_add_prt(device->handle, root->bus);
- 
--	/*
--	 * Scan and bind all _ADR-Based Devices
--	 */
--	list_for_each_entry(child, &device->children, node)
--		acpi_pci_bridge_scan(child);
--
- 	/* Indicate support for various _OSC capabilities. */
- 	if (pci_ext_cfg_avail(root->bus->self))
- 		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
++/* all (include bridge) resources */
++#define for_each_pci_dev_all_resource(dev, res, i)                     \
+	+ for_each_pci_resource(dev, res, i, PCI_ALL_RES)
+	.......
+	......
+
 -- 
-1.7.9.5
+Ram Pai
 
