@@ -1,102 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:19538 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756881Ab2ISSzS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 14:55:18 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 10/40] x86, PCI: Separate rom resource claim out
-Date: Wed, 19 Sep 2012 11:54:24 -0700
-Message-Id: <1348080894-23412-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20120921160358.e6509b8c.izumi.taku@jp.fujitsu.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+ <20120918152235.fedf80b5.izumi.taku@jp.fujitsu.com> <CAErSpo7MUNae9Aez8VMhj+z7bedrOVxSHKadFv7tgGYcZwLk_g@mail.gmail.com>
+ <20120920191523.72cb21c3.izumi.taku@jp.fujitsu.com> <20120921160358.e6509b8c.izumi.taku@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 21 Sep 2012 07:24:32 -0600
+Message-ID: <CAErSpo67fOjM7FV4Jq8rU1TTx6eqZpxWSO0b88opLFgPg8e=Jg@mail.gmail.com>
+Subject: Re: [PATCH] change signature of walk_root_bridge() function
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could use it with hot-added root bus.
+On Fri, Sep 21, 2012 at 1:03 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>
+> This patch changes the function signature of walk_root_bridge().
+>
+> We can omit _STA, _SEG, and _BBN evaluation by passing not acpi_handle
+> but acpi_pci_root. Now that acpi_pci_slot_add() which is the only
+> caller of walk_root_bridge() gets acpi_pci_root structure, changing
+> signature of walk_root_bridge() is reasonable.
+>
+>
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  drivers/acpi/pci_slot.c |   35 +++++------------------------------
+>  1 file changed, 5 insertions(+), 30 deletions(-)
 
--v2: remove extra functions.
+This is beautiful!
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c |   52 ++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 35 insertions(+), 17 deletions(-)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 84696ed..42dd755 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -298,27 +298,45 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- 	}
- }
- 
--static int __init pcibios_assign_resources(void)
-+static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- {
--	struct pci_dev *dev = NULL;
- 	struct resource *r;
- 
--	if (!(pci_probe & PCI_ASSIGN_ROMS)) {
--		/*
--		 * Try to use BIOS settings for ROMs, otherwise let
--		 * pci_assign_unassigned_resources() allocate the new
--		 * addresses.
--		 */
--		for_each_pci_dev(dev) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (!r->flags || !r->start)
--				continue;
--			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
--				r->end -= r->start;
--				r->start = 0;
--			}
--		}
-+	/*
-+	 * Try to use BIOS settings for ROMs, otherwise let
-+	 * pci_assign_unassigned_resources() allocate the new
-+	 * addresses.
-+	 */
-+	r = &dev->resource[PCI_ROM_RESOURCE];
-+	if (!r->flags || !r->start)
-+		return;
-+
-+	if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-+		r->end -= r->start;
-+		r->start = 0;
- 	}
-+}
-+static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *child;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		pcibios_allocate_dev_rom_resource(dev);
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pcibios_allocate_rom_resources(child);
-+	}
-+}
-+
-+static int __init pcibios_assign_resources(void)
-+{
-+	struct pci_bus *bus;
-+
-+	if (!(pci_probe & PCI_ASSIGN_ROMS))
-+		list_for_each_entry(bus, &pci_root_buses, node)
-+			pcibios_allocate_rom_resources(bus);
- 
- 	pci_assign_unassigned_resources();
- 	pcibios_fw_addr_list_del();
--- 
-1.7.7
-
+> Index: Bjorn-next-0903/drivers/acpi/pci_slot.c
+> ===================================================================
+> --- Bjorn-next-0903.orig/drivers/acpi/pci_slot.c
+> +++ Bjorn-next-0903/drivers/acpi/pci_slot.c
+> @@ -233,45 +233,20 @@ out:
+>
+>  /*
+>   * walk_root_bridge - generic root bridge walker
+> - * @handle: points to an acpi_pci_root
+> + * @root: poiner of an acpi_pci_root
+>   * @user_function: user callback for slot objects
+>   *
+>   * Call user_function for all objects underneath this root bridge.
+>   * Walk p2p bridges underneath us and call user_function on those too.
+>   */
+>  static int
+> -walk_root_bridge(acpi_handle handle, acpi_walk_callback user_function)
+> +walk_root_bridge(struct acpi_pci_root *root, acpi_walk_callback user_function)
+>  {
+> -       int seg, bus;
+> -       unsigned long long tmp;
+>         acpi_status status;
+> -       acpi_handle dummy_handle;
+> -       struct pci_bus *pci_bus;
+> +       acpi_handle handle = root->device->handle;
+> +       struct pci_bus *pci_bus = root->bus;
+>         struct callback_args context;
+>
+> -       /* If the bridge doesn't have _STA, we assume it is always there */
+> -       status = acpi_get_handle(handle, "_STA", &dummy_handle);
+> -       if (ACPI_SUCCESS(status)) {
+> -               status = acpi_evaluate_integer(handle, "_STA", NULL, &tmp);
+> -               if (ACPI_FAILURE(status)) {
+> -                       info("%s: _STA evaluation failure\n", __func__);
+> -                       return 0;
+> -               }
+> -               if ((tmp & ACPI_STA_DEVICE_FUNCTIONING) == 0)
+> -                       /* don't register this object */
+> -                       return 0;
+> -       }
+> -
+> -       status = acpi_evaluate_integer(handle, "_SEG", NULL, &tmp);
+> -       seg = ACPI_SUCCESS(status) ? tmp : 0;
+> -
+> -       status = acpi_evaluate_integer(handle, "_BBN", NULL, &tmp);
+> -       bus = ACPI_SUCCESS(status) ? tmp : 0;
+> -
+> -       pci_bus = pci_find_bus(seg, bus);
+> -       if (!pci_bus)
+> -               return 0;
+> -
+>         context.pci_bus = pci_bus;
+>         context.user_function = user_function;
+>         context.root_handle = handle;
+> @@ -299,7 +274,7 @@ acpi_pci_slot_add(struct acpi_pci_root *
+>  {
+>         acpi_status status;
+>
+> -       status = walk_root_bridge(root->device->handle, register_slot);
+> +       status = walk_root_bridge(root, register_slot);
+>         if (ACPI_FAILURE(status))
+>                 err("%s: register_slot failure - %d\n", __func__, status);
+>
+>
