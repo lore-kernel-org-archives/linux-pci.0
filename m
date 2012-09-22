@@ -1,114 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:11545 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755589Ab2ISGLg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 02:11:36 -0400
-Message-ID: <505961B5.8070108@huawei.com>
-Date: Wed, 19 Sep 2012 14:09:57 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 22 Sep 2012 16:10:09 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [ACPI/PCI] possible recursive locking detected
+Message-ID: <20120922081009.GA5677@localhost>
+References: <20120922003557.GF5959@localhost>
+ <CAE9FiQVQJQfBZn7AH4M5hibx=iNa9RbfSaBdb35FWxDiRXHvrA@mail.gmail.com>
+ <CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
 MIME-Version: 1.0
-To: Huang Ying <ying.huang@intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, <jiang.liu@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 3/6] PCI/AER: clean all untracked pci_ops_aer when rmmod
- aer_inject
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com>  <1348022442-7816-4-git-send-email-wangyijing@huawei.com> <1348034243.8212.134.camel@yhuang-dev>
-In-Reply-To: <1348034243.8212.134.camel@yhuang-dev>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/19 13:57, Huang Ying wrote:
-> On Wed, 2012-09-19 at 10:40 +0800, Yijing Wang wrote:
->> Since hot plug for pci devices while doing aer inject, some newly created child buses'
->> pci_ops will be assigned to pci_ops_aer. Aer_inject does not track these pci_ops_aer(not
->> list in pci_bus_ops_list),we should clean all of these when rmmod aer_inject module.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/pcie/aer/aer_inject.c |   35 +++++++++++++++++++++++++++++++++++
->>  1 files changed, 35 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
->> index 442147b..e2400b5 100644
->> --- a/drivers/pci/pcie/aer/aer_inject.c
->> +++ b/drivers/pci/pcie/aer/aer_inject.c
->> @@ -299,6 +299,32 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
->>  	bus_ops->ops = ops;
->>  }
->>  
->> +static void pci_clean_child_aer_ops(struct pci_bus *bus)
->> +{
->> +	struct pci_bus *child;
->> +
->> +	list_for_each_entry(child, &bus->children, node) {
->> +		if (child->ops == &pci_ops_aer)
->> +			pci_bus_set_ops(child, bus->ops);
->> +		pci_clean_child_aer_ops(child);
->> +	}
-> 
-> Why not use pci_walk_bus?
-> 
+On Sat, Sep 22, 2012 at 12:04:51AM -0700, Yinghai Lu wrote:
+> On Fri, Sep 21, 2012 at 9:53 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Fri, Sep 21, 2012 at 5:35 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+> >> Hi Taku,
+> >>
+> >> The below oops is pretty reproducible, and shows up first in:
+> >>
+> >> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/taku-acpi-pci-host-bridge-v3
+> >> head:   e3faec8ea9c8aa683c56fa20ff2c58a4c5857960
+> >> commit: d3c663236318a43fed5d86a643e6ea2534e9220e [5/7] PCI/ACPI: Protect acpi_pci_roots list with mutex
+> >>
+> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
+> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
+> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
+> >> [    8.613239]   lock(acpi_pci_root_lock);
+> >> [    8.613239]   lock(acpi_pci_root_lock);
+> >> [    8.613239]  #0:  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
+> >> [    8.613239]  [<ffffffff81741e5f>] ? acpi_get_pci_rootbridge_handle+0x22/0x63
+> >> [    8.613239]  [<ffffffff81741e5f>] ? acpi_get_pci_rootbridge_handle+0x22/0x63
+> >> [    8.613239]  [<ffffffff81741e5f>] ? acpi_get_pci_rootbridge_handle+0x22/0x63
+> >> [    8.613239]  [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
+> >>
+> >> [    8.610859]
+> >> [    8.611385] =============================================
+> >> [    8.612505] [ INFO: possible recursive locking detected ]
+> >> [    8.613239] 3.6.0-rc1-00022-gd3c6632 #7512 Not tainted
+> >> [    8.613239] ---------------------------------------------
+> >> [    8.613239] swapper/0/1 is trying to acquire lock:
+> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81741e5f>] acpi_get_pci_rootbridge_handle+0x22/0x63
+> >> [    8.613239]
+> >> [    8.613239] but task is already holding lock:
+> >> [    8.613239]  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
+> >> [    8.613239]
+> >> [    8.613239] other info that might help us debug this:
+> >> [    8.613239]  Possible unsafe locking scenario:
+> >> [    8.613239]
+> >> [    8.613239]        CPU0
+> >> [    8.613239]        ----
+> >> [    8.613239]   lock(acpi_pci_root_lock);
+> >> [    8.613239]   lock(acpi_pci_root_lock);
+> >> [    8.613239]
+> >> [    8.613239]  *** DEADLOCK ***
+> >> [    8.613239]
+> >> [    8.613239]  May be due to missing lock nesting notation
+> >> [    8.613239]
+> >> [    8.613239] 1 lock held by swapper/0/1:
+> >> [    8.613239]  #0:  (acpi_pci_root_lock){+.+.+.}, at: [<ffffffff81742398>] acpi_pci_register_driver+0x21/0x79
+> >> [    8.613239]
 
-I think here walk all child buses is enough, pci_walk_bus will walk all child devices under this bus.
+> > Please check attached patch that should fix the problem.
+> 
+> updated more aggressive version. two patches.
 
->> +}
->> +
->> +/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
->> + * pci_ops of root bus won't be pci_ops_aer here*/
->> +static void clean_untracked_pci_ops_aer(void)
->> +{
->> +	struct pci_bus_ops *bus_ops;
->> +
->> +	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
->> +		/* the bus with untracked pci_ops_aer always the
->> +		 * child bus of root bus tracked in pci_bus_ops_list
->> +		 */
->> +		if (pci_is_root_bus(bus_ops->bus))
->> +			pci_clean_child_aer_ops(bus_ops->bus);
->> +	}
->> +}
->> +
->>  static int pci_bus_set_aer_ops(struct pci_bus *bus)
->>  {
->>  	struct pci_ops *ops;
->> @@ -558,9 +584,18 @@ static void __exit aer_inject_exit(void)
->>  
->>  	misc_deregister(&aer_inject_device);
->>  
->> +	/* clean pci_bus_ops tracked in pci_bus_ops_list */
->>  	while ((bus_ops = pci_bus_ops_get(bus_ops)))
->>  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-> 
-> Why not do clean here inside loop?
-> 
+Yes they work nicely. Thank you very much!
 
-Because I also need these bus_ops to scan untracked pci_ops_aer.
-
-> Best Regards,
-> Huang Ying
-> 
->>  
->> +	/* Inject aer errors and hotplug the same pcie device
->> +	 * maybe assign some newly created buses' pci_ops pci_ops_aer.
->> +	 * Since these pci_ops_aer are not tracked in pci_bus_ops_list,
->> +	 * we need to find and clean untracked pci_ops_aer before aer_inject
->> +	 * module exit
->> +	 */
->> +	clean_untracked_pci_ops_aer();
->> +
->>  	while ((bus_ops = pci_bus_ops_pop()))
->>  		kfree(bus_ops);
->>  
-> 
-> 
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Thanks,
+Fengguang
