@@ -1,94 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:42689 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932434Ab2IJUox (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Sep 2012 16:44:53 -0400
-Received: by ieje11 with SMTP id e11so4101823iej.19
-        for <linux-pci@vger.kernel.org>; Mon, 10 Sep 2012 13:44:53 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55072 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754580Ab2IWWsr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 23 Sep 2012 18:48:47 -0400
 MIME-Version: 1.0
-In-Reply-To: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
-References: <1347305801-7712-1-git-send-email-jslaby@suse.cz>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Sep 2012 14:44:32 -0600
-Message-ID: <CAErSpo4+zvG-MmQ2V2QNKjx=mX+nLpqZNj5niJkG4f22XqYZNg@mail.gmail.com>
-Subject: Re: [PATCH 1/1] PCI: fix on-stack pci_device_id's
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jirislaby@gmail.com, Feng Tang <feng.tang@intel.com>,
-	Fengguang Wu <fengguang.wu@intel.com>
+In-Reply-To: <CAE9FiQU_-FYdy0ARuGaoCEg+F+5t0tDF-WToFhafGWbbAWBvDw@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152641.410dad43.izumi.taku@jp.fujitsu.com>
+	<CAE9FiQU_-FYdy0ARuGaoCEg+F+5t0tDF-WToFhafGWbbAWBvDw@mail.gmail.com>
+Date: Sun, 23 Sep 2012 15:48:45 -0700
+Message-ID: <CAE9FiQWujHz9D180Av8Vupdtu3Zqz2gKzv0FHW0PdpmJ3DM3sA@mail.gmail.com>
+Subject: Re: [PATCH v3 8/8] ACPI, PCI: add resoruce-assign code for devices
+ under hot-added hostbridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 10, 2012 at 1:36 PM, Jiri Slaby <jslaby@suse.cz> wrote:
-> Commit "PCI: Use pci_device_id on stack for pci_get_subsys/class() to
-> avoid kmalloc" changed heap allocations to on-stack variables, but it
-> did not add initialization of other than set members. This causes
-> random failures during bootup wherever pci device is needed to be
-> found. Hence the boot just hangs or panics.
->
-> This patches fixes it by setting the content of pci_device_id directly
-> in the initializer.
+On Wed, Sep 19, 2012 at 10:41 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Sep 17, 2012 at 11:26 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>>
+>> Devices under hot-added hostbridge have no chance to assign resources
+>> and to configure them, so this patch adds such code for hot-added
+>> hostbridges at acpi_pci_root_start().
+>>
+>> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+>> ---
+>>  drivers/acpi/pci_root.c |   17 +++++++++++++++++
+>>  include/acpi/acpi_bus.h |    1 +
+>>  2 files changed, 18 insertions(+)
+>>
+>> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+>> ===================================================================
+>> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
+>> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
+>> @@ -38,6 +38,7 @@
+>>  #include <acpi/acpi_bus.h>
+>>  #include <acpi/acpi_drivers.h>
+>>  #include <acpi/apei.h>
+>> +#include <linux/pci_hotplug.h>
+>>
+>>  #define PREFIX "ACPI: "
+>>
+>> @@ -636,6 +640,7 @@ static int acpi_pci_root_start(struct ac
+>>  {
+>>         struct acpi_pci_root *root = acpi_driver_data(device);
+>>         struct acpi_pci_driver *driver;
+>> +       struct pci_dev *pdev;
+>>
+>>         mutex_lock(&acpi_pci_root_lock);
+>>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+>> @@ -643,6 +648,18 @@ static int acpi_pci_root_start(struct ac
+>>                         driver->add(root);
+>>         mutex_unlock(&acpi_pci_root_lock);
+>>
+>> +       /*
+>> +        * Devices under hot-added hostbridge have no chance to assign
+>> +        * resources and to configure them, so do that here
+>> +        */
+>> +       if (root->hot_added) {
+>> +               pci_bus_size_bridges(root->bus);
+>> +               pci_bus_assign_resources(root->bus);
+>> +               list_for_each_entry(pdev, &root->bus->devices, bus_list)
+>> +                       pci_configure_slot(pdev);
 
-Nice!  I fixed this already by adding a memset(), but I like your way
-better.  I knew we could initialize members of a structure on the
-stack, but I didn't know C guaranteed that uninitialized members would
-be implicitly initialized also.  But apparently it does:
+one more problem, this one will have problem when CONFIG_HOTPLUG_PCI=m
+or not defined.
 
-http://stackoverflow.com/questions/10828294/c-and-c-partial-initialization-of-automatic-structure
+Also I do not see the point to call pci_config_slot here - my
+patcheset did not do that, So how do you figure that out?
 
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Feng Tang <feng.tang@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Fengguang Wu <fengguang.wu@intel.com>
-> ---
->  drivers/pci/search.c | 25 ++++++++++++++-----------
->  1 file changed, 14 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index 00d486a..bf969ba 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -243,12 +243,12 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
->                                unsigned int ss_vendor, unsigned int ss_device,
->                                struct pci_dev *from)
->  {
-> -       struct pci_device_id id;
-> -
-> -       id.vendor = vendor;
-> -       id.device = device;
-> -       id.subvendor = ss_vendor;
-> -       id.subdevice = ss_device;
-> +       struct pci_device_id id = {
-> +               .vendor = vendor,
-> +               .device = device,
-> +               .subvendor = ss_vendor,
-> +               .subdevice = ss_device,
-> +       };
->
->         return pci_get_dev_by_id(&id, from);
->  }
-> @@ -289,11 +289,14 @@ pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
->   */
->  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from)
->  {
-> -       struct pci_device_id id;
-> -
-> -       id.vendor = id.device = id.subvendor = id.subdevice = PCI_ANY_ID;
-> -       id.class_mask = PCI_ANY_ID;
-> -       id.class = class;
-> +       struct pci_device_id id = {
-> +               .vendor = PCI_ANY_ID,
-> +               .device = PCI_ANY_ID,
-> +               .subvendor = PCI_ANY_ID,
-> +               .subdevice = PCI_ANY_ID,
-> +               .class_mask = PCI_ANY_ID,
-> +               .class = class,
-> +       };
->
->         return pci_get_dev_by_id(&id, from);
->  }
-> --
-> 1.7.11.5
->
->
+or you just need to have mpss set?
+
+Bjorn, You may need to have a patch that will enable
+CONFIG_HOTPLUG_PCI just Greg's enabling CONIFG_HOTPLUG forcely.
+
+Yinghai
