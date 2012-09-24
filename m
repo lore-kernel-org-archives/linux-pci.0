@@ -1,65 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:38919 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753944Ab2IYI04 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 29/29] PCI: kill pci_root_buses
-Date: Tue, 25 Sep 2012 01:26:30 -0700
-Message-Id: <1348561590-28067-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:40204 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546Ab2IXL0s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2012 07:26:48 -0400
+Message-ID: <5060425A.8030303@jp.fujitsu.com>
+Date: Mon, 24 Sep 2012 20:22:02 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+MIME-Version: 1.0
+To: vgoyal@redhat.com
+CC: kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120911144323.GF12039@redhat.com> <50504F47.80909@jp.fujitsu.com> <20120914154817.GE6221@redhat.com>
+In-Reply-To: <20120914154817.GE6221@redhat.com>
+Content-Type: text/plain; charset=ISO-2022-JP
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c |    8 --------
- include/linux/pci.h |    3 ---
- 2 files changed, 0 insertions(+), 11 deletions(-)
+(2012/09/15 0:48), Vivek Goyal wrote:
+> On Wed, Sep 12, 2012 at 06:00:55PM +0900, Takao Indoh wrote:
+>> (2012/09/11 23:43), Vivek Goyal wrote:
+>>> On Tue, Sep 11, 2012 at 07:32:35PM +0900, Takao Indoh wrote:
+>>>
+>>> [..]
+>>>> I'll post new patch which clears bus master bit and resets devices in
+>>>> second kernel.
+>>>>
+>>>> As to the boot parameter to enable this function, you suggested using
+>>>> reset_devices. I found that on a certain platform resetting devices
+>>>> caused PCIe error due to a hardware bug. Therefore I think we need
+>>>> new parameter apart from reset_devices to disable this function on
+>>>> such a machine.
+>>>
+>>> Can you explain a bit more how the error happens. I still don't think
+>>> that because of a bug in a platform somewhere we should be introducing
+>>> a separate command line parameter and not reuse the exisiting one. Also
+>>> you have not explained what's the bug and how a new parameter will
+>>> avoid the bug.
+>>
+>> The bug I mentioned is that ACS Violation occurs at PCIe switch when
+>> reading PCI configuration after device reset. I got information that
+>> this violation is caused by PCIe switch bug. The machine becomes fatal
+>> status by this error.
+>>
+>> The reason why I try to introduce new parameter is that I want to avoid
+>> regression by this patch. Let's say this patch was included in kernel
+>> and its reset function was enabled by reset_devices as you said. AFAIK
+>> reset_devices is always needed for kdump, so it means that devices are
+>> always reset at kdump boot time. It causes a regression that system
+>> always becomes abnormal status when we run kdump on the machine which has
+>> a bug I mentioned.
+>>
+>> To avoid this regression, I want to separate reset_devices from this
+>> reset function. Or how about this?
+>> - if user specify reset_devices, devices are reset by this patch, as you
+>>    said.
+>> - To avoid a regression I said, add new parameter like "pci=noreset".
+>>    If this parameter is specified, the reset function I add is disabled
+>>    and we can avoid regression.
+>
+> Can we identify that particular switch in code and not reset it in code.
+> Introducing new paramenters to avoid bugs really feels odd.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 30b1624..0095554 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -23,10 +23,6 @@ struct resource busn_resource = {
- 	.flags	= IORESOURCE_BUS,
- };
- 
--/* Ugh.  Need to stop exporting this to modules. */
--LIST_HEAD(pci_root_buses);
--EXPORT_SYMBOL(pci_root_buses);
--
- static LIST_HEAD(pci_domain_busn_res_list);
- 
- struct pci_domain_busn_res {
-@@ -1712,10 +1708,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
- 
--	down_write(&pci_bus_sem);
--	list_add_tail(&b->node, &pci_root_buses);
--	up_write(&pci_bus_sem);
--
- 	return b;
- 
- class_dev_reg_err:
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c7ca6e9..a1b835f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -673,9 +673,6 @@ extern enum pcie_bus_config_types pcie_bus_config;
- extern struct bus_type pci_host_bridge_bus_type;
- extern struct bus_type pci_bus_type;
- 
--/* Do NOT directly access these two variables, unless you are arch specific pci
-- * code, or pci core code. */
--extern struct list_head pci_root_buses;	/* list of all known PCI buses */
- /* Some device drivers need know if pci is initiated */
- extern int no_pci_devices(void);
- 
--- 
-1.7.7
+Maybe we can do it using PCI quirk or DMI quirk as Konrad and Don said.
+But I'm still thinking whether I can add boot parameter or something to
+disable reset function so that we can use it as workaround untill we add
+quirk when we find such a buggy hardware.
+
+> Also, what was the conclusion to avoid double reset. I am assuming that
+> we don't want to do bus level reset as well as driver level reset based
+> on reset_devices.
+
+I don't have a good idea to do it yet. Maybe we need to write bus:slot:func
+information to somewhere when we reset device.
+
+Thanks,
+Takao Indoh
 
