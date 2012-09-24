@@ -1,78 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52689 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab2IKWXd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 18:23:33 -0400
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:51301 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459Ab2IXLRE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2012 07:17:04 -0400
+Message-ID: <50604002.8050500@jp.fujitsu.com>
+Date: Mon, 24 Sep 2012 20:12:02 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
-References: <201209112255.10486.rjw@sisk.pl>
-	<Pine.LNX.4.44L0.1209111730340.22718-100000@netrider.rowland.org>
-Date: Wed, 12 Sep 2012 08:23:32 +1000
-Message-ID: <CAPM=9tzp8MnoGttxB=WrOZ8nMAESJn_0GAHT84PdmSgri==aCA@mail.gmail.com>
-Subject: Re: runtime PM and special power switches
-From: Dave Airlie <airlied@gmail.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	LKML <linux-kernel@vger.kernel.org>,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: ddutile@redhat.com
+CC: konrad@kernel.org, vgoyal@redhat.com, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, hbabu@us.ibm.com,
+	ishii.hironobu@jp.fujitsu.com, martin.wilck@ts.fujitsu.com
+Subject: Re: [RFC][PATCH] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <501BB4EF.7080909@jp.fujitsu.com> <20120803114643.GA28330@redhat.com> <501F4877.5050605@jp.fujitsu.com> <20120806203902.GH25559@redhat.com> <50473306.1070803@jp.fujitsu.com> <20120910143604.GB639@redhat.com> <504F1343.7030607@jp.fujitsu.com> <20120914200334.GA9041@phenom.dumpdata.com> <505CAAA1.3040409@redhat.com>
+In-Reply-To: <505CAAA1.3040409@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 12, 2012 at 7:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Tue, 11 Sep 2012, Rafael J. Wysocki wrote:
->
->> Hi,
+(2012/09/22 2:57), Don Dutile wrote:
+> On 09/14/2012 04:03 PM, Konrad Rzeszutek Wilk wrote:
+>>> As to the boot parameter to enable this function, you suggested using
+>>> reset_devices. I found that on a certain platform resetting devices
+>>> caused PCIe error due to a hardware bug. Therefore I think we need
+>>> new parameter apart from reset_devices to disable this function on
+>>> such a machine.
 >>
->> On Tuesday, September 11, 2012, Dave Airlie wrote:
->> > Hi Rafael,
->> >
->> > I've been investigating runtime PM support for some use-cases on GPUs.
->> >
->> > In some laptops we have a secondary GPU (optimus) that can be powered
->> > up for certain 3D tasks and then turned off when finished with. Now I
->> > did an initial pass on supporting it without using the kernel runtime
->> > PM stuff, but Alan said I should take a look so here I am.
->>
->> Alan Stern or Alan Cox? :-)
->>
->> > While I've started to get a handle on things, we have a bit of an
->> > extra that I'm not sure we cater for.
->> >
->> > Currently we get called from the PCI layer which after we are finished
->> > with our runtime suspend callback, will go put the device into the
->> > correct state etc, however on these optimus/powerxpress laptops we
->> > have a separate ACPI or platform driver controlled power switch that
->> > we need to call once the PCI layer is finished the job. This switch
->> > effectively turns the power to the card completely off leaving it
->> > drawing no power.
->> >
->> > No we can't hit the switch from the driver callback as the PCI layer
->> > will get lost, so I'm wondering how you'd envisage we could plug this
->> > in.
->>
->> Hmm.  In principle we might modify pci_pm_runtime_suspend() so that it
->> doesn't call pci_finish_runtime_suspend() if pci_dev->state_saved is
->> set.  That would actually make it work in analogy with pci_pm_suspend_noirq(),
->> so perhaps it's not even too dangerous.
->
-> This sounds more like a job for a power domain.  Unless the power
-> switch is already in the device hierarchy as a parent to the PCI
-> device.
+>> Wouldn't a DMI quirk be better for this? That way the second kernel
+>> internally would know not to do this.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> a DMI quirk for a PCIe switch?  pci-quirk maybe?  there is a hook
+> in per-device pci reset code path, which could be setup for such
+> a case.
 
-I'll have to investigate power domains then,
+Yep, I think early-quirk is better.
 
-The switch is hidden in many different places, one some laptops its in
-a ACPI _DSM on one GPU, on others its in an ACPI _DSM on the other
-one, in some its in a different ACPI _DSM, then we have it in the ACPI
-ATPX method on others, and finally Apple have it in a piece of hw that
-isn't just on the LPC bus or somewhere like that.
+Thanks,
+Takao Indoh
 
-Currently we just hide it all inside vga_switcheroo and I'd just need
-an interface to call that once the layers have stopped poking
-registers in PCI config space, if we could fix PCI runtime suspend so
-the driver was the last to get called then that would also not suck.
-
-Dave.
