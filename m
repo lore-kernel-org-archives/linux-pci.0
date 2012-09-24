@@ -1,63 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:43759 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862Ab2IRSlx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 14:41:53 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-Date: Tue, 18 Sep 2012 11:41:51 -0700
-Message-ID: <CAE9FiQVRGK-Of1RuvFZRtuT-yZ7LGDD_oNWr2ier2aaUqrugmA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/6] acpi,pci: hostbridge hotplug support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
+In-Reply-To: <CAE9FiQWi46m4rP9chVK0W5ahtgk7cuCO60dTYzP6JVM=x=5abA@mail.gmail.com>
+References: <20120922003557.GF5959@localhost> <CAE9FiQVQJQfBZn7AH4M5hibx=iNa9RbfSaBdb35FWxDiRXHvrA@mail.gmail.com>
+ <CAE9FiQVQMVsqG2vHhyktTtUSJ_dDRpTpwB_x--agMWbm6PHsEg@mail.gmail.com>
+ <20120922081009.GA5677@localhost> <CAE9FiQWi46m4rP9chVK0W5ahtgk7cuCO60dTYzP6JVM=x=5abA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Sep 2012 16:38:53 -0600
+Message-ID: <CAErSpo6cwcYbi_pFrGrWgMLXH9dx4Po1s5KLDWtc596s+Kv2hQ@mail.gmail.com>
+Subject: Re: [ACPI/PCI] possible recursive locking detected
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Fengguang Wu <fengguang.wu@intel.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2012 at 11:12 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
-> Hi all,
+On Sat, Sep 22, 2012 at 8:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Sep 22, 2012 at 1:10 AM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+>>
+>>> > Please check attached patch that should fix the problem.
+>>>
+>>> updated more aggressive version. two patches.
+>>
+>> Yes they work nicely. Thank you very much!
 >
->   This patchset is 3rd version of the following:
->     http://marc.info/?l=linux-pci&m=134457928913775&w=2
->     http://marc.info/?l=linux-pci&m=134665909321684&w=2
+> Thanks.
 >
->  v2 -> v3:
->    - change acpi_pci_drivers' add/remove interface according to Bjorn's suggestion
->    - abandon RCU for protecting acpi_pci_roots list according to Bjorn's suggestion
->    - change acpi_pci_find_root implementation to avoid potential deadlock
+> v2 breaks acpi_bind_one.
 >
->   * [PATCH v3 1/8] ACPI, PCI: Use normal list for struct acpi_pci_driver
->   * [PATCH v3 2/8] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
->   * [PATCH v3 3/8] ACPI, PCI: add acpi_pci_drivers protection
->   * [PATCH v3 4/8] ACPI, PCI: change acpi_pci_drivers' add/remove interface
->   * [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
->   * [PATCH v3 6/8] ACPI, PCI: add acpi_pci_roots protection
->   * [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
->   * [PATCH v3 8/8] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
+> So we should use attached -v3.
+>
+> Bjorn, please apply -v3 before Taku's patchset.
 
-now it is more similar to my for-pci-root-bus-hotplug-part4 and part5
-
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part5
-
-big difference:
-I separated code from acpiphp_glue.c to pci_root_hp.c for root bridge
-hotplug support
-
-I thought we all agreed on that acpi root bridge hotplug plug need to
-be separated from acpiphp at first.
-
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=ab9fd4ccbfb6120a4a4adf9833487d656b0501d3
-
-and CONFIG_HOTPLUG will always be enabled, so root bridge hotplug will
-be always enabled.
-acpiphp will still be used as one module, and to keep it simple pciehp
-will be used for pcie etc.
-That make the system BIOS much simple to avoid acpiphp.
-
-Thanks
-
-Yinghai
+I  applied this as the first patch in
+pci/taku-acpi-pci-host-bridge-v3.  I also merged that branch to
+pci/next.
