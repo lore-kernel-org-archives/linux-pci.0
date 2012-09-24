@@ -1,70 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2382 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755537Ab2IXRho (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Sep 2012 13:37:44 -0400
-Message-ID: <50609A5E.7020104@redhat.com>
-Date: Mon, 24 Sep 2012 13:37:34 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:44284 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab2IXWK0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Sep 2012 18:10:26 -0400
+Received: by lbbgj3 with SMTP id gj3so7477307lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 24 Sep 2012 15:10:25 -0700 (PDT)
 MIME-Version: 1.0
-To: Yuval Mintz <yuvalmin@broadcom.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	"Rose, Gregory V" <gregory.v.rose@intel.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Ariel Elior <ariele@broadcom.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: New commands to configure IOV features
-References: <5003DC9B.8000706@broadcom.com> <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com> <500D6932.8090306@genband.com> <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net> <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com> <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown> <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com> <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com> <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk> <C5551D9AAB213A418B7FD5E4A6F30A07152FA5F6@ORSMSX106.amr.corp.intel.com> <CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.com> <505CAC93.8020304@redhat.com> <CAE9FiQW4vY3SwAt1TGhSa=bcmKnzxS96b9HGoU5_CDb3FRvGVA@mail.gmail.com> <505CC930.5070807@redhat.com> <505F2F99.9090302@broadcom.com>
-In-Reply-To: <505F2F99.9090302@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1345648605-7636-1-git-send-email-jiang.liu@huawei.com>
+References: <CAErSpo7ZtHDQNBnreZXsqDqKbqc=O+BKHDM8H0w+QkFep9ydFg@mail.gmail.com>
+ <1345648605-7636-1-git-send-email-jiang.liu@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Sep 2012 16:10:04 -0600
+Message-ID: <CAErSpo5gyZgxWxwTgXRMyZzDDbEBeXHtmhisPN2FqvvUarmTeg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: allow acpiphp to handle PCIe ports w/o native
+ PCIe hotplug capability
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/23/2012 11:49 AM, Yuval Mintz wrote:
->>>> It provides 3 sysfs files (enable, disable, num_max_vfs);
->>>> callbacks for enable&   disable.
->>>
->>> why using three? only pass max_vfs should be enough...
->>>
->>> aka pass 0 mean disabling, pass other value mean enabling.
->>>
->> could do that.  but I wouldn't use 'max_vfs'; I would recommend
->> 'num_vfs', as max implies, er, um, the maximum, and what one
->> wants is to be able to enable a number from 1->max_vfs.
->> 'max_vfs' will be provided by another file.
->>
+On Wed, Aug 22, 2012 at 9:16 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> From: Jiang Liu <jiang.liu@huawei.com>
 >
-> If we're at it, how do you suggest the configurations of the VFs
-> resources/properties should be made?
-> Notice I'm asking about properties which relate to all PCI devices,
-> E.g., number of interrupts assigned to each VF (for VF RSS).
+> Commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a (PCI / ACPI: Make acpiphp
+> ignore root bridges using PCIe native hotplug) added code that made the
+> acpiphp driver completely ignore PCIe root complexes for which the kernel
+> had been granted control of the native PCIe hotplug feature by the BIOS
+> through _OSC. Later commit 619a5182d1f38a3d629ee48e04fa182ef9170052
+> "PCI hotplug: Always allow acpiphp to handle non-PCIe bridges" relaxed
+> the constraints to allow acpiphp driver handle non-PCIe bridges under
+> such a complex. The constraint needs to be relaxed further to allow
+> acpiphp driver to hanlde PCIe ports without native PCIe hotplug capability.
 >
-This issue/question is indep of VFs & SRIOV.
-It's a generic problem for PFs and how many (msi) intr's a device
-is given, based on its request, i.e., system provides 8 MSI per cpu
-per device ... how are those 8 assigned/used by the device? ...
-how to free 4 of the 8 if one device doesn't use them, and another
-device could use them..   cache/memory affinity to intr's.... the list
-goes on...
+> Some MR-IOV switch chipsets, such PLX8696, support multiple virtual PCIe
+> switches and may migrate downstream ports among virtual switches.
+> To migrate a downstream port from the source virtual switch to the target,
+> the port needs to be hot-removed from the source and hot-added into the
+> target. pciehp driver can't be used here because there's no slots within
+> the virtual PCIe switch. So acpiphp driver is used to support downstream
+> port migration. A typical configuration is as below:
+> [Root w/o native PCIe HP]
+>         [Upstream port of vswitch w/o native PCIe HP]
+>                 [Downstream port of vswitch w/ native PCIe HP]
+>                         [PCIe enpoint]
+>
+> Here acpiphp driver will be used to handle root ports and upstream port
+> in the virtual switch, and pciehp driver will be used to handle downstream
+> ports in the virtual switch.
+>
+> v1->v2: use PCIe capability accessors to read PCI_EXP_SLTCAP register
+>
+> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+> Signed-off-by: Jiang Liu <liuj97@gmail.com>
 
-> (For properties which relate only to networking devices, we could
-> use standard network API such as netlink).
->
-> Perhaps given a configurable property that applies to all PCI devices,
-A VF is 'just another PCI device', so configurable properties
-for all PCI devices should encompass VF/SRIOV devices equally.
+I tweaked the changelog (typos, indentation) and applied this to my
+"pci/jiang-acpiphp" branch.  Kenji acked a previous version, but I
+didn't add it here because this is slightly updated.
 
-> once SRIOV is enabled and the VFs are created, there would be an
-> additional sysfs node under the VFs through which the user could
-> configure that property.
+If the PLX8696 supports moving downstream ports between upstream
+ports, it seems like a deficiency if the upstream port doesn't support
+native hotplug.  If I understand correctly, this patch allows the use
+of acpiphp for "hotplug" of the downstream ports, but that is only an
+option if the PLX8696 is in the ACPI namespace.
+
+It seems like the lack of PLX8696 native hotplug for upstream ports
+mean this virtual switch migration can only be done if the PLX8696 is
+soldered into the system -- for instance, we don't have any way to
+deal with an 8696 on a plug-in card because ACPI won't know anything
+about that device.
+
+I'm not objecting to this patch; I'm just trying to understand the
+situation better.
+
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   41 +++++++++++++++++++++++++++---------
+>  1 file changed, 31 insertions(+), 10 deletions(-)
 >
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index ad6fd66..e6da392 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -115,6 +115,35 @@ static const struct acpi_dock_ops acpiphp_dock_ops = {
+>         .handler = handle_hotplug_event_func,
+>  };
 >
+> +/* Check whether the PCI device is managed by native PCIe hotplug driver */
+> +static bool device_is_managed_by_native_pciehp(struct pci_dev *pdev)
+> +{
+> +       u32 reg32;
+> +       acpi_handle tmp;
+> +       struct acpi_pci_root *root;
+> +
+> +       /* Check whether the PCIe port supports native PCIe hotplug */
+> +       if (pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32))
+> +               return false;
+> +       if (!(reg32 & PCI_EXP_SLTCAP_HPC))
+> +               return false;
+> +
+> +       /*
+> +        * Check whether native PCIe hotplug has been enabled for
+> +        * this PCIe hierarchy.
+> +        */
+> +       tmp = acpi_find_root_bridge_handle(pdev);
+> +       if (!tmp)
+> +               return false;
+> +       root = acpi_pci_find_root(tmp);
+> +       if (!root)
+> +               return false;
+> +       if (!(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> +               return false;
+> +
+> +       return true;
+> +}
+> +
+>  /* callback routine to register each ACPI PCI slot object */
+>  static acpi_status
+>  register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+> @@ -142,16 +171,8 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+>         function = adr & 0xffff;
+>
+>         pdev = pbus->self;
+> -       if (pdev && pci_is_pcie(pdev)) {
+> -               tmp = acpi_find_root_bridge_handle(pdev);
+> -               if (tmp) {
+> -                       struct acpi_pci_root *root = acpi_pci_find_root(tmp);
+> -
+> -                       if (root && (root->osc_control_set &
+> -                                       OSC_PCI_EXPRESS_NATIVE_HP_CONTROL))
+> -                               return AE_OK;
+> -               }
+> -       }
+> +       if (pdev && device_is_managed_by_native_pciehp(pdev))
+> +               return AE_OK;
+>
+>         newfunc = kzalloc(sizeof(struct acpiphp_func), GFP_KERNEL);
+>         if (!newfunc)
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> 1.7.9.5
+>
