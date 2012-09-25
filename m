@@ -1,86 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56926 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411Ab2IYP7W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 11:59:22 -0400
-Received: by pbbrr4 with SMTP id rr4so332674pbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 08:59:22 -0700 (PDT)
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <liuj97@gmail.com>,
-	Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
-Date: Tue, 25 Sep 2012 23:56:19 +0800
-Message-Id: <1348588579-16970-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1348561590-28067-13-git-send-email-yinghai@kernel.org>
-References: <1348561590-28067-13-git-send-email-yinghai@kernel.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:65398 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753454Ab2IYQ5M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 12:57:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAOLK0pzmP6bZqPJTi6h2XqbX72gb79VKMYObegP1X3xmEX3TJA@mail.gmail.com>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	<1348561590-28067-11-git-send-email-yinghai@kernel.org>
+	<CAOLK0pzmP6bZqPJTi6h2XqbX72gb79VKMYObegP1X3xmEX3TJA@mail.gmail.com>
+Date: Tue, 25 Sep 2012 09:57:11 -0700
+Message-ID: <CAE9FiQVQOw0Dt5Vkz4+8DpoXY0a_xKW7Etk-uCzvJpiMhsL=PQ@mail.gmail.com>
+Subject: Re: [PATCH 10/29] PCI, USB: remove find_bridge in acpi_bus_type
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lan Tianyu <lantianyu1986@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On Tue, Sep 25, 2012 at 1:35 AM, Lan Tianyu <lantianyu1986@gmail.com> wrote:
+> 2012/9/25 Yinghai Lu <yinghai@kernel.org>:
+>> The struct member is not used anymore, remove it.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Cc: linux-usb@vger.kernel.org
+>> ---
+>>  drivers/usb/core/usb-acpi.c |    1 -
+>>  1 files changed, 0 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/usb/core/usb-acpi.c b/drivers/usb/core/usb-acpi.c
+>> index 8947b20..a6ea613 100644
+>> --- a/drivers/usb/core/usb-acpi.c
+>> +++ b/drivers/usb/core/usb-acpi.c
+>> @@ -102,7 +102,6 @@ static int usb_acpi_find_device(struct device *dev, acpi_handle *handle)
+>>
+>>  static struct acpi_bus_type usb_acpi_bus = {
+>>         .bus = &usb_bus_type,
+>> -       .find_bridge = NULL,
+>>         .find_device = usb_acpi_find_device,
+>>  };
+>>
+> HI Yinghai:
+>                  This member has been populated in the usb-next tree.
+>
+> http://git.kernel.org/?p=linux/kernel/git/gregkh/usb.git;a=commit;h=d557542421da643358201664903e67fd01dfca1a
 
-use bus_find_device to loop host_bridges.
+Thanks for pointing that out.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/search.c |   22 ++++++++++++++++++++++
- include/linux/pci.h  |    3 +++
- 2 files changed, 25 insertions(+)
+Looks that following change is not needed in that commit.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index bf969ba..5e82905 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -178,6 +178,28 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
- }
- EXPORT_SYMBOL(pci_get_domain_bus_and_slot);
- 
-+static int match_pci_host_bridge(struct device *dev, void *data)
-+{
-+	return 1;
-+}
-+
-+struct pci_bus *pci_get_next_root_bus(struct pci_bus *bus)
-+{
-+	struct device *dev;
-+
-+	WARN_ON(in_interrupt());
-+	dev = bus_find_device(&pci_host_bridge_bus_type,
-+			      bus ? bus->bridge : NULL,
-+			      NULL,
-+			      match_pci_host_bridge);
-+	if (bus)
-+		put_device(bus->bridge);
-+	if (dev)
-+		return to_pci_host_bridge(dev)->bus;
-+
-+	return NULL;
-+}
-+
- static int match_pci_dev_by_id(struct device *dev, void *data)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index be1de01..54e8fa1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -394,6 +394,8 @@ struct pci_host_bridge {
+@@ -102,7 +139,7 @@ static int usb_acpi_find_device(struct device
+*dev, acpi_handle *handle)
+
+ static struct acpi_bus_type usb_acpi_bus = {
+        .bus = &usb_bus_type,
+-       .find_bridge = NULL,
++       .find_bridge = usb_acpi_find_device,
+        .find_device = usb_acpi_find_device,
  };
- 
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-+#define for_each_pci_root_bus(bus) while (bus = pci_get_next_root_bus(bus))
-+
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 		     void (*release_fn)(struct pci_host_bridge *),
- 		     void *release_data);
-@@ -757,6 +759,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
- int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
- struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
- 
-+struct pci_bus *pci_get_next_root_bus(struct pci_bus *from);
- struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
- 				struct pci_dev *from);
- struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
--- 
-1.7.9.5
 
+Can you double check if it will work without that line change?
+
+-Yinghai
