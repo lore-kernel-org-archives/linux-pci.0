@@ -1,68 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:40059 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755930Ab2IBV4T (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:56:19 -0400
+Received: from acsinet15.oracle.com ([141.146.126.227]:42962 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753955Ab2IYI06 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:58 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part5 2/7] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
-Date: Sun,  2 Sep 2012 14:56:00 -0700
-Message-Id: <1346622965-30937-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
-References: <1346622965-30937-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH 26/29] PCI, mn10300: kill pci_root_buses in resources reservations
+Date: Tue, 25 Sep 2012 01:26:27 -0700
+Message-Id: <1348561590-28067-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
-
-When hot-plugging PCI root bridge, acpi_pci_drivers' add()/remove()
-methods should be invoked to notify registered drivers.
-
--v2: Move add calling to acpi_pci_root_start by Yinghai
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-am33-list@redhat.com
 ---
- drivers/acpi/pci_root.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ arch/mn10300/unit-asb2305/pci-asb2305.c |   62 ++++++++++++++++--------------
+ 1 files changed, 33 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 2aec08d..9ba516b 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -626,14 +626,25 @@ end:
- static int acpi_pci_root_start(struct acpi_device *device)
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index c4e2e79..87c945d 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -88,42 +88,42 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+  *	    requested by the user, configure expansion ROM address
+  *	    as well.
+  */
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
  {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
-+	struct acpi_pci_driver *driver;
-+
-+	list_for_each_entry(driver, &acpi_pci_drivers, node)
-+		if (driver->add)
-+			driver->add(device->handle);
+-	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 	int idx;
+ 	struct resource *r;
  
- 	pci_bus_add_devices(root->bus);
-+
- 	return 0;
+-	/* Depth-First Search on bus tree */
+-	list_for_each_entry(bus, bus_list, node) {
+-		dev = bus->self;
+-		if (dev) {
+-			for (idx = PCI_BRIDGE_RESOURCES;
+-			     idx < PCI_NUM_RESOURCES;
+-			     idx++) {
+-				r = &dev->resource[idx];
+-				if (!r->flags)
+-					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					printk(KERN_ERR "PCI:"
+-					       " Cannot allocate resource"
+-					       " region %d of bridge %s\n",
+-					       idx, pci_name(dev));
+-					/* Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range. */
+-					r->start = r->end = 0;
+-					r->flags = 0;
+-				}
+-			}
++	for (idx = PCI_BRIDGE_RESOURCES;
++	     idx < PCI_NUM_RESOURCES;
++	     idx++) {
++		r = &dev->resource[idx];
++		if (!r->flags)
++			continue;
++		if (!r->start ||
++		    pci_claim_resource(dev, idx) < 0) {
++			pr_err("PCI: Cannot allocate resource region %d of bridge %s\n",
++			       idx, pci_name(dev));
++			/* Something is wrong with the region.
++			 * Invalidate the resource to prevent
++			 * child resource allocations in this
++			 * range. */
++			r->start = r->end = 0;
++			r->flags = 0;
+ 		}
+-		pcibios_allocate_bus_resources(&bus->children);
+ 	}
  }
  
- static int acpi_pci_root_remove(struct acpi_device *device, int type)
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
-+	struct acpi_pci_driver *driver;
++static void pcibios_allocate_bus_resources(struct pci_bus *bus)
++{
++	struct pci_bus *child;
 +
-+	list_for_each_entry(driver, &acpi_pci_drivers, node)
-+		if (driver->remove)
-+			driver->remove(root->device->handle);
++	/* Depth-First Search on bus tree */
++	if (bus->self)
++		pcibios_allocate_bridge_resources(bus->self);
++	list_for_each_entry(child, &bus->children, node)
++		pcibios_allocate_bus_resources(child);
++}
++
+ static void __init pcibios_allocate_resources(int pass)
+ {
+ 	struct pci_dev *dev = NULL;
+@@ -207,8 +207,12 @@ fs_initcall(pcibios_assign_resources);
  
- 	/* that root bus could be removed already */
- 	if (!pci_find_bus(root->segment, root->secondary.start)) {
+ void __init pcibios_resource_survey(void)
+ {
++	struct pci_host_bridge *host_bridge = NULL;
++
+ 	DBG("PCI: Allocating resources\n");
+-	pcibios_allocate_bus_resources(&pci_root_buses);
++
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+ }
 -- 
 1.7.7
 
