@@ -1,50 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:43808 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752789Ab2IHUWp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 8 Sep 2012 16:22:45 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Question about failure in PCI power-state change
-Date: Sat, 8 Sep 2012 22:29:01 +0200
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?utf-8?q?=E6=9D=8E=E6=9C=9D=E6=98=8E?=
-	<chaoming_li@realsil.com.cn>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Huang Ying <ying.huang@intel.com>
-References: <504A78E9.4030005@lwfinger.net> <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com>
-In-Reply-To: <CAErSpo7GEkN1XLZ=UeXmDZrLnp_648mH-sLYa9hMgOqz7t+b7Q@mail.gmail.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35104 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750840Ab2IYO7r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 10:59:47 -0400
+Received: by eaac11 with SMTP id c11so2307325eaa.19
+        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 07:59:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201209082229.01465.rjw@sisk.pl>
+In-Reply-To: <5061C4FD.6070407@gmail.com>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	<1348561590-28067-13-git-send-email-yinghai@kernel.org>
+	<5061C4FD.6070407@gmail.com>
+Date: Tue, 25 Sep 2012 07:59:45 -0700
+Message-ID: <CAE9FiQU=NnVW+qgJTXimaDDEJ0G_3Z-AOXzzpvCf_+CM2SkexQ@mail.gmail.com>
+Subject: Re: [PATCH 12/29] PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>, Wu Fengguang <fengguang.wu@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=047d7b343e38f4e7bf04ca87f475
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, September 08, 2012, Bjorn Helgaas wrote:
-> +cc Rafael, Huang, linux-pm
-> 
-> On Fri, Sep 7, 2012 at 3:44 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > Hi,
-> >
-> > On occasion when I unload and reload driver rtl8192ce, I get the message
-> >
-> > "Refused to change power state, currently in D3"
-> >
-> > I added additional info to the printk and discovered that it was trying to
-> > change to state D0. The problem seems to occur when I have made a
-> > connection, unloaded the driver, and reloaded it. If I do not make a
-> > connection before unloading, then the problem is a lot less likely.
-> >
-> > This is with kernel 3.6-rc4 from wireless-testing. A Google search shows
-> > that the problem is usually due to suspend/resume difficulties, but this
-> > machine has not been suspended.
-> >
-> > I would appreciate any help that you might give in solving this issue.
+--047d7b343e38f4e7bf04ca87f475
+Content-Type: text/plain; charset=ISO-8859-1
 
-I think writing "on" to the /sys/devices/.../power/control attribute of the device
-in question would help.
+On Tue, Sep 25, 2012 at 7:51 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> Hi Yinghai,
+>         I'm working on a patchset to get rid of pci_find_next_bus() by using
+> class_for_each_device(&pcibus_class, xxx). I think your solution is better,
+> which removes both pci_find_next_bus() and pci_root_buses list. So I will give
+> up my version.
 
-Thanks,
-Rafael
+Good.
+
+updated version that fixes compiling problem that Fengguang found.
+
+-Yinghai
+
+--047d7b343e38f4e7bf04ca87f475
+Content-Type: application/octet-stream;
+	name="for_each_pci_host_bridge.patch"
+Content-Disposition: attachment; filename="for_each_pci_host_bridge.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7j4rzwp0
+
+U3ViamVjdDogW1BBVENIXSBQQ0k6IEFkZCBmb3JfZWFjaF9wY2lfaG9zdF9icmlkZ2UoKSBhbmQg
+cGNpX2dldF9uZXh0X2hvc3RfYnJpZGdlCgp1c2UgYnVzX2ZpbmRfZGV2aWNlIHRvIGxvb3AgaG9z
+dF9icmlkZ2VzLgoKLXYyOiBmaXhlcyBjb21waWxpbmcgZXJyb3Igd2hlbiBDT05GSUdfUENJIGlz
+IG5vdCBkZWZpbmVkIHRoYXQgRmVuZ2d1YW5nIFd1IGZvdW5kLgoKU2lnbmVkLW9mZi1ieTogWWlu
+Z2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL3BjaS9zZWFyY2guYyB8
+ICAgMjMgKysrKysrKysrKysrKysrKysrKysrKysKIGluY2x1ZGUvbGludXgvcGNpLmggIHwgICAg
+OSArKysrKysrKysKIDIgZmlsZXMgY2hhbmdlZCwgMzIgaW5zZXJ0aW9ucygrKQoKSW5kZXg6IGxp
+bnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmln
+L2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCkBA
+IC0zOTQsNiArMzk0LDggQEAgc3RydWN0IHBjaV9ob3N0X2JyaWRnZSB7CiB9OwogCiAjZGVmaW5l
+CXRvX3BjaV9ob3N0X2JyaWRnZShuKSBjb250YWluZXJfb2Yobiwgc3RydWN0IHBjaV9ob3N0X2Jy
+aWRnZSwgZGV2KQorI2RlZmluZSBmb3JfZWFjaF9wY2lfaG9zdF9icmlkZ2UoZCkgd2hpbGUgKGQg
+PSBwY2lfZ2V0X25leHRfaG9zdF9icmlkZ2UoZCkpCisKIHZvaWQgcGNpX3NldF9ob3N0X2JyaWRn
+ZV9yZWxlYXNlKHN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZSwKIAkJICAgICB2b2lkICgq
+cmVsZWFzZV9mbikoc3RydWN0IHBjaV9ob3N0X2JyaWRnZSAqKSwKIAkJICAgICB2b2lkICpyZWxl
+YXNlX2RhdGEpOwpAQCAtNzU5LDYgKzc2MSw3IEBAIGludCBwY2lfZmluZF9odF9jYXBhYmlsaXR5
+KHN0cnVjdCBwY2lfZGUKIGludCBwY2lfZmluZF9uZXh0X2h0X2NhcGFiaWxpdHkoc3RydWN0IHBj
+aV9kZXYgKmRldiwgaW50IHBvcywgaW50IGh0X2NhcCk7CiBzdHJ1Y3QgcGNpX2J1cyAqcGNpX2Zp
+bmRfbmV4dF9idXMoY29uc3Qgc3RydWN0IHBjaV9idXMgKmZyb20pOwogCitzdHJ1Y3QgcGNpX2hv
+c3RfYnJpZGdlICpwY2lfZ2V0X25leHRfaG9zdF9icmlkZ2Uoc3RydWN0IHBjaV9ob3N0X2JyaWRn
+ZSAqZnJvbSk7CiBzdHJ1Y3QgcGNpX2RldiAqcGNpX2dldF9kZXZpY2UodW5zaWduZWQgaW50IHZl
+bmRvciwgdW5zaWduZWQgaW50IGRldmljZSwKIAkJCQlzdHJ1Y3QgcGNpX2RldiAqZnJvbSk7CiBz
+dHJ1Y3QgcGNpX2RldiAqcGNpX2dldF9zdWJzeXModW5zaWduZWQgaW50IHZlbmRvciwgdW5zaWdu
+ZWQgaW50IGRldmljZSwKQEAgLTE0MTUsNiArMTQxOCwxMiBAQCBzdGF0aWMgaW5saW5lIGludCBw
+Y2lfZG9tYWluX25yKHN0cnVjdCBwCiBzdGF0aWMgaW5saW5lIHN0cnVjdCBwY2lfZGV2ICpwY2lf
+ZGV2X2dldChzdHJ1Y3QgcGNpX2RldiAqZGV2KQogeyByZXR1cm4gTlVMTDsgfQogCitzdGF0aWMg
+aW5saW5lIHN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKnBjaV9nZXRfbmV4dF9ob3N0X2JyaWRnZSgK
+KwkJCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmhvc3RfYnJpZGdlKQoreworCXJldHVybiBOVUxM
+OworfQorCiAjZGVmaW5lIGRldl9pc19wY2koZCkgKGZhbHNlKQogI2RlZmluZSBkZXZfaXNfcGYo
+ZCkgKGZhbHNlKQogI2RlZmluZSBkZXZfbnVtX3ZmKGQpICgwKQpJbmRleDogbGludXgtMi42L2Ry
+aXZlcnMvcGNpL3NlYXJjaC5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMv
+cGNpL3NlYXJjaC5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2VhcmNoLmMKQEAgLTE3OCw2
+ICsxNzgsMjkgQEAgc3RydWN0IHBjaV9kZXYgKnBjaV9nZXRfZG9tYWluX2J1c19hbmRfcwogfQog
+RVhQT1JUX1NZTUJPTChwY2lfZ2V0X2RvbWFpbl9idXNfYW5kX3Nsb3QpOwogCitzdGF0aWMgaW50
+IG1hdGNoX3BjaV9ob3N0X2JyaWRnZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKmRhdGEpCit7
+CisJcmV0dXJuIDE7Cit9CisKK3N0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKnBjaV9nZXRfbmV4dF9o
+b3N0X2JyaWRnZShzdHJ1Y3QgcGNpX2hvc3RfYnJpZGdlICpmcm9tKQoreworCXN0cnVjdCBkZXZp
+Y2UgKmRldjsKKwlzdHJ1Y3QgZGV2aWNlICpkZXZfc3RhcnQgPSBOVUxMOworCXN0cnVjdCBwY2lf
+aG9zdF9icmlkZ2UgKmJyaWRnZSA9IE5VTEw7CisKKwlXQVJOX09OKGluX2ludGVycnVwdCgpKTsK
+KwlpZiAoZnJvbSkKKwkJZGV2X3N0YXJ0ID0gJmZyb20tPmRldjsKKwlkZXYgPSBidXNfZmluZF9k
+ZXZpY2UoJnBjaV9ob3N0X2JyaWRnZV9idXNfdHlwZSwgZGV2X3N0YXJ0LCBOVUxMLAorCQkJICAg
+ICAgbWF0Y2hfcGNpX2hvc3RfYnJpZGdlKTsKKwlpZiAoZGV2KQorCQlicmlkZ2UgPSB0b19wY2lf
+aG9zdF9icmlkZ2UoZGV2KTsKKwlpZiAoZnJvbSkKKwkJcHV0X2RldmljZSgmZnJvbS0+ZGV2KTsK
+KwlyZXR1cm4gYnJpZGdlOworfQorCiBzdGF0aWMgaW50IG1hdGNoX3BjaV9kZXZfYnlfaWQoc3Ry
+dWN0IGRldmljZSAqZGV2LCB2b2lkICpkYXRhKQogewogCXN0cnVjdCBwY2lfZGV2ICpwZGV2ID0g
+dG9fcGNpX2RldihkZXYpOwo=
+--047d7b343e38f4e7bf04ca87f475--
