@@ -1,50 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:60312 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139Ab2IHSky (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 8 Sep 2012 14:40:54 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:63188 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920Ab2IYTSC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 15:18:02 -0400
+Received: by bkcjk13 with SMTP id jk13so1467939bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 12:18:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120908233455.0d0527b3@feng-i7>
-References: <20120731235705.GW2422@linux.vnet.ibm.com>
-	<1343779778.27983.73.camel@gandalf.stny.rr.com>
-	<20120801001811.GX2422@linux.vnet.ibm.com>
-	<20120801004319.GA7043@localhost>
-	<20120822025008.GA8066@localhost>
-	<20120822154908.2e6ef3c0@feng-i7>
-	<CAErSpo7HhdDi4EhbQZ-oZbsbGVvTfZW8MwKn7Tm+6B8jaQxLBg@mail.gmail.com>
-	<20120823154503.15a45b14@feng-i7>
-	<CAE9FiQVXj6sLEs0GiBnVsKAbms-Bnt06xYeT01MBtSjNqaqypA@mail.gmail.com>
-	<CAE9FiQU2sqXLyMg2KbdKQBaX8WDeagd=OmZ5ELhYgkUQ4b6jZA@mail.gmail.com>
-	<20120908134220.GA24831@localhost>
-	<20120908233455.0d0527b3@feng-i7>
-Date: Sat, 8 Sep 2012 11:40:52 -0700
-Message-ID: <CAE9FiQU1MxyRvYapi35j5_N7Ob7rnPTYNcvDbMYcSy9VNmaz=g@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: Use local parameter pci_device_id for pci_get_subsys/class()
+In-Reply-To: <CAErSpo44AyBF_rNjYotwpH-LVqZhSY-Nk_XAA+Gbni2maS2WzQ@mail.gmail.com>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5Arj=rh4mZJk3tEsaWKBFqxK6tAu1N5SKn2Cq=vTj+bw@mail.gmail.com>
+	<CAE9FiQUu++bPNree995uY3bGURxJ6hSi8m77ah_8KK6S2aMUaQ@mail.gmail.com>
+	<CAErSpo6NOhTV0HX1dw5-mRkUtfO7XH_iCGVwiddBPpQvPZL=7g@mail.gmail.com>
+	<CAE9FiQUdE90YygSZY3tnSZ5+V2SxDfqc5CPcX5scSF8OFVC3cw@mail.gmail.com>
+	<CAErSpo44AyBF_rNjYotwpH-LVqZhSY-Nk_XAA+Gbni2maS2WzQ@mail.gmail.com>
+Date: Tue, 25 Sep 2012 12:17:59 -0700
+Message-ID: <CAE9FiQUTigHgGDfSy6bTohzYauhBykMxdf4Xg5ZegWjBEqkfPA@mail.gmail.com>
+Subject: Re: [PATCH 00/29] PCI: use pci host bridge to loop pci root bus
 From: Yinghai Lu <yinghai@kernel.org>
-To: Feng Tang <feng.tang@intel.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Avi Kivity <avi@redhat.com>,
-	Steven Rostedt <srostedt@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=0015175d02a2826bd804ca8b90dc
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 8, 2012 at 8:34 AM, Feng Tang <feng.tang@intel.com> wrote:
->> This makes lspci work again on my side. The caveat is, kzalloc() will
->> zero out all data while the new local variable leaves some data
->> uninitialized.
+--0015175d02a2826bd804ca8b90dc
+Content-Type: text/plain; charset=ISO-8859-1
+
+On Tue, Sep 25, 2012 at 11:19 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 25, 2012 at 12:06 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+
+>> that is for initial booting path.
+>>
+>> for hot add/remove notifier add need to be done case by case.
 >
-> Yes, thanks for the quick root cause and fix to the bug in my code.
+> Can initial boot be done the same as hot-add?  If we add interfaces
+> like for_each_pci_host_bridge(), people will just copy that for use at
+> run-time.  So it would be better to have the same interfaces for use
+> at boot-time and at hot add-time.
 
-Can you resubmit your patch with two extra "memset" line?
+still need to check them case by case. some function may be too early
+to be called in work_fn in notifier. that need to find out when to get
+that bus notifier get
+register.
 
-Thanks
+I have one draft patch that will delay bridge enabling to BUS_ADD for
+pci bridge...
+that will need to get that register rather later otherwise that bridge
+can not be enabled because resources are not reserved/allocated for
+initial booting path.
+please refer to the attached patch. you should notice that fs_initcall
+is used for registration until boot path already have that pci bridges
+before.
 
-Yinghai
++static struct notifier_block pci_hp_nb = {
++	.notifier_call = &pci_hp_notifier,
++};
++
++static int __init pci_hp_init(void)
++{
++	return bus_register_notifier(&pci_bus_type, &pci_hp_nb);
++}
++
++fs_initcall(pci_hp_init);
+
+Also using that for_each_pci_host_bridge in run-time is still safe.
+
+-Yinghai
+
+--0015175d02a2826bd804ca8b90dc
+Content-Type: application/octet-stream;
+	name="pci_bridge_notifcation_1.patch"
+Content-Disposition: attachment; filename="pci_bridge_notifcation_1.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7jdvu9e0
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIGhvdHBsdWc6IFVzZSBwY2kgYnVzIG5vdGlmaWVyIHRvIGVu
+YWJsZSBicmlkZ2VzCgpwY2lfY29uZmlndXJlX3Nsb3Qgd2lsbCBuZWVkIHRvIHVzZSBERVZJQ0Vf
+QUNQSV9IQU5ETEUgdG8gZ2V0IHBjaSBkZXZpY2UKYWNwaSBoYW5kbGUsIGFuZCB1c2UgaGFuZGxl
+IHRvIGdldCBuZWVkZWQgaHBwIHBhcmFtZXRlci4KCmJ1dCBkZXYtPmFyY2hkYXRhLmFjcGlfaGFu
+ZGxlIGlzIG5vdCBkdXJpbmcgaG90cGx1ZyBwYXRoIHVudGlsIHBjaSBkZXZpY2UgaXMKYWRkZWQg
+dG8gZGV2aWNlcyB0cmVlLgoKTmVlZCB0byBwY2lfYnVzX3R5cGUgbm90aWZpZXIgdG8gY29uZmln
+IGJyaWRnZSBqdXN0IGFmdGVyCmRldi0+YXJjaGRhdGEuYWNwaV9oYW5kbGUgZ2V0IHNldC4KCkJ1
+dCBicmlkZ2UgbmVlZCB0byBiZSBlbmFibGVkIGFmdGVyIGNvbmZpZ3VyaW5nLCBTbyBmaXJzdCBz
+dGVwIHRoZSBwYXRjaCB3aWxsCm1vdmUgZW5hYmxpbmcgYnJpZGdlIGRvd24gYXQgZmlyc3QuCgpT
+aWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZl
+cnMvYWNwaS9wY2lfcm9vdC5jICAgICAgICAgICAgfCAgICA0IC0tLQogZHJpdmVycy9wY2kvaG90
+cGx1Zy5jICAgICAgICAgICAgICB8ICAgNDAgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKwogZHJpdmVycy9wY2kvaG90cGx1Zy9hY3BpcGhwX2dsdWUuYyB8ICAgIDIgLQogZHJp
+dmVycy9wY2kvc2V0dXAtYnVzLmMgICAgICAgICAgICB8ICAgIDMgLS0KIDQgZmlsZXMgY2hhbmdl
+ZCwgNDAgaW5zZXJ0aW9ucygrKSwgOSBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYvZHJp
+dmVycy9hY3BpL3BjaV9yb290LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVy
+cy9hY3BpL3BjaV9yb290LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYwpA
+QCAtNjY2LDEwICs2NjYsNiBAQCBzdGF0aWMgaW50IGFjcGlfcGNpX3Jvb3Rfc3RhcnQoc3RydWN0
+IGFjCiAJCQlkcml2ZXItPmFkZChyb290KTsKIAltdXRleF91bmxvY2soJmFjcGlfcGNpX3Jvb3Rf
+bG9jayk7CiAKLQkvKiBuZWVkIHRvIGFmdGVyIGhvdC1hZGRlZCBpb2FwaWMgaXMgcmVnaXN0ZXJl
+ZCAqLwotCWlmIChyb290LT5ob3RfYWRkZWQpCi0JCXBjaV9lbmFibGVfYnJpZGdlcyhyb290LT5i
+dXMpOwotCiAJcGNpX2J1c19hZGRfZGV2aWNlcyhyb290LT5idXMpOwogCiAJcmV0dXJuIDA7Cklu
+ZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGlu
+dXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJz
+L3BjaS9zZXR1cC1idXMuYwpAQCAtMTU0Niw3ICsxNTQ2LDYgQEAgYWdhaW46CiBlbmFibGVfYWxs
+OgogCXJldHZhbCA9IHBjaV9yZWVuYWJsZV9kZXZpY2UoYnJpZGdlKTsKIAlwY2lfc2V0X21hc3Rl
+cihicmlkZ2UpOwotCXBjaV9lbmFibGVfYnJpZGdlcyhwYXJlbnQpOwogfQogRVhQT1JUX1NZTUJP
+TF9HUEwocGNpX2Fzc2lnbl91bmFzc2lnbmVkX2JyaWRnZV9yZXNvdXJjZXMpOwogCkBAIC0xNTY2
+LDYgKzE1NjUsNCBAQCB2b2lkIHBjaV9hc3NpZ25fdW5hc3NpZ25lZF9idXNfcmVzb3VyY2VzCiAJ
+dXBfcmVhZCgmcGNpX2J1c19zZW0pOwogCV9fcGNpX2J1c19hc3NpZ25fcmVzb3VyY2VzKGJ1cywg
+JmFkZF9saXN0LCBOVUxMKTsKIAlCVUdfT04oIWxpc3RfZW1wdHkoJmFkZF9saXN0KSk7Ci0KLQlw
+Y2lfZW5hYmxlX2JyaWRnZXMoYnVzKTsKIH0KSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9o
+b3RwbHVnL2FjcGlwaHBfZ2x1ZS5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZl
+cnMvcGNpL2hvdHBsdWcvYWNwaXBocF9nbHVlLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9o
+b3RwbHVnL2FjcGlwaHBfZ2x1ZS5jCkBAIC04NTcsNyArODU3LDYgQEAgc3RhdGljIGludCBfX3Jl
+ZiBlbmFibGVfZGV2aWNlKHN0cnVjdCBhYwogCWFjcGlwaHBfc2FuaXRpemVfYnVzKGJ1cyk7CiAJ
+YWNwaXBocF9zZXRfaHBwX3ZhbHVlcyhidXMpOwogCWFjcGlwaHBfc2V0X2FjcGlfcmVnaW9uKHNs
+b3QpOwotCXBjaV9lbmFibGVfYnJpZGdlcyhidXMpOwogCiAJbGlzdF9mb3JfZWFjaF9lbnRyeShk
+ZXYsICZidXMtPmRldmljZXMsIGJ1c19saXN0KSB7CiAJCS8qIEFzc3VtZSB0aGF0IG5ld2x5IGFk
+ZGVkIGRldmljZXMgYXJlIHBvd2VyZWQgb24gYWxyZWFkeS4gKi8KQEAgLTExMjgsNyArMTEyNyw2
+IEBAIHN0YXRpYyBpbnQgYWNwaXBocF9jb25maWd1cmVfYnJpZGdlIChhY3AKIAlwY2lfYnVzX2Fz
+c2lnbl9yZXNvdXJjZXMoYnVzKTsKIAlhY3BpcGhwX3Nhbml0aXplX2J1cyhidXMpOwogCWFjcGlw
+aHBfc2V0X2hwcF92YWx1ZXMoYnVzKTsKLQlwY2lfZW5hYmxlX2JyaWRnZXMoYnVzKTsKIAlyZXR1
+cm4gMDsKIH0KIApJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL2hvdHBsdWcuYwo9PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9ob3RwbHVnLmMKKysrIGxpbnV4LTIu
+Ni9kcml2ZXJzL3BjaS9ob3RwbHVnLmMKQEAgLTEsNSArMSw2IEBACiAjaW5jbHVkZSA8bGludXgv
+a2VybmVsLmg+CiAjaW5jbHVkZSA8bGludXgvcGNpLmg+CisjaW5jbHVkZSA8bGludXgvcGNpX2hv
+dHBsdWcuaD4KICNpbmNsdWRlIDxsaW51eC9tb2R1bGUuaD4KICNpbmNsdWRlICJwY2kuaCIKIApA
+QCAtMzUsMyArMzYsNDIgQEAgaW50IHBjaV91ZXZlbnQoc3RydWN0IGRldmljZSAqZGV2LCBzdHJ1
+YwogCQlyZXR1cm4gLUVOT01FTTsKIAlyZXR1cm4gMDsKIH0KKworc3RhdGljIHZvaWQgcGNpX2hw
+X2NvbmZfYWRkKHN0cnVjdCBwY2lfZGV2ICpkZXYpCit7CisJLyogZW5hYmxlIGJyaWRnZSBhdCBs
+YXN0Ki8KKwlpZiAoZGV2LT5zdWJvcmRpbmF0ZSAmJiAhcGNpX2lzX2VuYWJsZWQoZGV2KSkgewor
+CQlpbnQgcmV0dmFsID0gcGNpX2VuYWJsZV9kZXZpY2UoZGV2KTsKKworCQlpZiAocmV0dmFsKQor
+CQkJZGV2X2VycigmZGV2LT5kZXYsCisJCQkJIkVycm9yIGVuYWJsaW5nIGJyaWRnZSAoJWQpLCBj
+b250aW51aW5nXG4iLAorCQkJCXJldHZhbCk7CisJCXBjaV9zZXRfbWFzdGVyKGRldik7CisJfQor
+fQorCitzdGF0aWMgaW50IHBjaV9ocF9ub3RpZmllcihzdHJ1Y3Qgbm90aWZpZXJfYmxvY2sgKm5i
+LAorCQkJCSB1bnNpZ25lZCBsb25nIGV2ZW50LCB2b2lkICpkYXRhKQoreworCXN0cnVjdCBkZXZp
+Y2UgKmRldiA9IGRhdGE7CisKKwlzd2l0Y2ggKGV2ZW50KSB7CisJY2FzZSBCVVNfTk9USUZZX0FE
+RF9ERVZJQ0U6CisJCXBjaV9ocF9jb25mX2FkZCh0b19wY2lfZGV2KGRldikpOworCQlicmVhazsK
+Kwl9CisKKwlyZXR1cm4gTk9USUZZX09LOworfQorCitzdGF0aWMgc3RydWN0IG5vdGlmaWVyX2Js
+b2NrIHBjaV9ocF9uYiA9IHsKKwkubm90aWZpZXJfY2FsbCA9ICZwY2lfaHBfbm90aWZpZXIsCit9
+OworCitzdGF0aWMgaW50IF9faW5pdCBwY2lfaHBfaW5pdCh2b2lkKQoreworCXJldHVybiBidXNf
+cmVnaXN0ZXJfbm90aWZpZXIoJnBjaV9idXNfdHlwZSwgJnBjaV9ocF9uYik7Cit9CisKK2ZzX2lu
+aXRjYWxsKHBjaV9ocF9pbml0KTsK
+--0015175d02a2826bd804ca8b90dc--
