@@ -1,53 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:17068 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757052Ab2IUIpA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 04:45:00 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 2/5] PCI/AER: use list_for_each_entry to avoid a small race condition window
-Date: Fri, 21 Sep 2012 16:43:10 +0800
-Message-ID: <1348216993-6948-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
-References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:43444 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781Ab2IYSGQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 14:06:16 -0400
+Received: by bkcjk13 with SMTP id jk13so1436332bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 11:06:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo6NOhTV0HX1dw5-mRkUtfO7XH_iCGVwiddBPpQvPZL=7g@mail.gmail.com>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	<CAErSpo5Arj=rh4mZJk3tEsaWKBFqxK6tAu1N5SKn2Cq=vTj+bw@mail.gmail.com>
+	<CAE9FiQUu++bPNree995uY3bGURxJ6hSi8m77ah_8KK6S2aMUaQ@mail.gmail.com>
+	<CAErSpo6NOhTV0HX1dw5-mRkUtfO7XH_iCGVwiddBPpQvPZL=7g@mail.gmail.com>
+Date: Tue, 25 Sep 2012 11:06:14 -0700
+Message-ID: <CAE9FiQUdE90YygSZY3tnSZ5+V2SxDfqc5CPcX5scSF8OFVC3cw@mail.gmail.com>
+Subject: Re: [PATCH 00/29] PCI: use pci host bridge to loop pci root bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
-and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
-them. So keep pci_bus_ops_list until pci_bus_set_ops complete, use list_for_each_entry() instead of
-pci_bus_ops_pop to get bus_ops.
+On Tue, Sep 25, 2012 at 10:37 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 25, 2012 at 10:29 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>
+>>> I'd prefer a design where the PCI core provides an interface that
+>>> means "call this function for every host bridge we know about now
+>>> *and* for every one that's added in the future."
+>>
+>> yes, that is the point to add pci_root_bridge_bus_type. We can register
+>> bus notifier on that.
+>
+> I guess I missed your point.  In the patch below (20/29 from your
+> series), you're still iterating through all the host bridges, so there
+> would have to be something else to handle hot-added host bridges.
+>
+> Are you saying you plan future patches to change this again to
+> something using a bus notifier?
+>
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct
+> device_node *node,
+>
+>  static int __init of_pci_slot_init(void)
+>  {
+> -       struct pci_bus *pbus = NULL;
+> +       struct pci_host_bridge *host_bridge = NULL;
+> +       struct pci_bus *pbus;
+>
+> -       while ((pbus = pci_find_next_bus(pbus)) != NULL) {
+> +       for_each_pci_host_bridge(host_bridge) {
+>                 struct device_node *node;
+>
+> +               pbus = hot_bridge->bus;
+>                 if (pbus->self) {
+>                         /* PCI->PCI bridge */
+>                         node = pbus->self->dev.of_node;
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pcie/aer/aer_inject.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+that is for initial booting path.
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index fdab3bb..f499f01 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -543,10 +543,11 @@ static void __exit aer_inject_exit(void)
- 
- 	misc_deregister(&aer_inject_device);
- 
--	while ((bus_ops = pci_bus_ops_pop())) {
-+	list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
-+
-+	while ((bus_ops = pci_bus_ops_pop()))
- 		kfree(bus_ops);
--	}
- 
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
--- 
-1.7.1
+for hot add/remove notifier add need to be done case by case.
 
-
+-Yinghai
