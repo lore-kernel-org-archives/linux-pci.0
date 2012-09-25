@@ -1,105 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:53365 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752569Ab2ISWqR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 18:46:17 -0400
-Message-ID: <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: New commands to configure IOV features
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Ariel Elior <ariele@broadcom.com>,
-	Eilon Greenstein <eilong@broadcom.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Wed, 19 Sep 2012 23:46:13 +0100
-In-Reply-To: <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
-References: <5003DC9B.8000706@broadcom.com> <5005BD00.4090106@redhat.com>
-	 <5005D45D.1040302@genband.com>
-	 <20120717.141153.46613285253481776.davem@davemloft.net>
-	 <500978C7.5050004@genband.com> <50097FBD.9080202@redhat.com>
-	 <1342806146.2678.31.camel@bwh-desktop.uk.solarflarecom.com>
-	 <5009B186.6000806@genband.com>
-	 <1342814473.2678.65.camel@bwh-desktop.uk.solarflarecom.com>
-	 <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com>
-	 <500D6932.8090306@genband.com>
-	 <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net>
-	 <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com>
-	 <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown>
-	 <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com>
-	 <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47822 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752676Ab2IYOvu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 10:51:50 -0400
+Received: by pbbrr4 with SMTP id rr4so232149pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 07:51:50 -0700 (PDT)
+Message-ID: <5061C4FD.6070407@gmail.com>
+Date: Tue, 25 Sep 2012 22:51:41 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 12/29] PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org> <1348561590-28067-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-13-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-19 at 15:17 -0700, Yinghai Lu wrote:
-> On Wed, Sep 19, 2012 at 12:44 PM, Ben Hutchings
-> <bhutchings@solarflare.com> wrote:
-> > On Wed, 2012-09-19 at 08:53 -0700, Greg Rose wrote:
-> >> I was not able to attend the Linux conference held at the end of August
-> >> myself but coworkers of mine here at Intel informed that method 2 here
-> >> seems to be the preferred approach.  Perhaps some folks who attended
-> >> the the conference can chime in with more specifics.
-> >
-> > There really wasn't much more specific discussion.  Bjorn's summary of
-> > the mini-summit <http://lwn.net/Articles/514113/> says:
-> >
-> >> SR-IOV Management
-> >>
-> >>     Currently drivers implement module parameters like "max_vfs".  This means
-> >>     all devices claimed by the driver get the same number of VFs, and you can't
-> >>     change anything without unloading and reloading the driver.
-> >>
-> >>     Consensus that we should try to implement a knob for this in sysfs so it
-> >>     can be generic (not in each driver) and set individually for each device.
-> >
-> > I don't think any implementation has been posted to the linux-pci list
+On 09/25/2012 04:26 PM, Yinghai Lu wrote:
+> use bus_find_device to loop host_bridges.
 > 
-> please check attached three patches...
-[...]
-> --- linux-2.6.orig/drivers/pci/pci-sysfs.c
-> +++ linux-2.6/drivers/pci/pci-sysfs.c
-> @@ -459,6 +459,30 @@ boot_vga_show(struct device *dev, struct
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/search.c |   23 +++++++++++++++++++++++
+>  include/linux/pci.h  |    3 +++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index bf969ba..f072b54 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -178,6 +178,29 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
 >  }
->  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+>  EXPORT_SYMBOL(pci_get_domain_bus_and_slot);
 >  
-> +static ssize_t
-> +max_vfs_show(struct device *dev, struct device_attribute *attr, char *buf)
+> +static int match_pci_host_bridge(struct device *dev, void *data)
 > +{
-> +       struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +       return sprintf(buf, "%u\n", pdev->max_vfs);
+> +	return 1;
 > +}
-> +static ssize_t
-> +max_vfs_store(struct device *dev, struct device_attribute *attr,
-> +                const char *buf, size_t count)
+> +
+> +struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from)
 > +{
-> +       unsigned long val;
-> +       struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct device *dev;
+> +	struct device *dev_start = NULL;
+> +	struct pci_host_bridge *bridge = NULL;
 > +
-> +       if (strict_strtoul(buf, 0, &val) < 0)
-> +               return -EINVAL;
-> +
-> +       pdev->max_vfs = val;
-> +
-> +       return count;
+> +	WARN_ON(in_interrupt());
+> +	if (from)
+> +		dev_start = &from->dev;
+> +	dev = bus_find_device(&pci_host_bridge_bus_type, dev_start, NULL,
+> +			      match_pci_host_bridge);
+> +	if (dev)
+> +		bridge = to_pci_host_bridge(dev);
+> +	if (from)
+> +		put_device(&from->dev);
+> +	return bridge;
 > +}
-[...]
-
-Then what would actually trigger creation of the VFs?  There's no way we
-can assume that some sysfs attribute will be written before the PF
-driver is loaded (what if it's built-in?).  I thought the idea was to
-add a driver callback that would be called when the sysfs attribute was
-written.
-
-Ben.
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
-
+> +
+>  static int match_pci_dev_by_id(struct device *dev, void *data)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index cc8b558..1e45d6f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -394,6 +394,8 @@ struct pci_host_bridge {
+>  };
+>  
+>  #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+> +#define for_each_pci_host_bridge(d) while (d = pci_get_next_host_bridge(d))
+> +
+>  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+>  		     void (*release_fn)(struct pci_host_bridge *),
+>  		     void *release_data);
+> @@ -758,6 +760,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+>  int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+>  struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+>  
+> +struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
+>  struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+>  				struct pci_dev *from);
+>  struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+> 
+Hi Yinghai,
+	I'm working on a patchset to get rid of pci_find_next_bus() by using
+class_for_each_device(&pcibus_class, xxx). I think your solution is better,
+which removes both pci_find_next_bus() and pci_root_buses list. So I will give
+up my version.
+	Thanks!
+	Gerry
