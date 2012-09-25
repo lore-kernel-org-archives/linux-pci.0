@@ -1,75 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: [RFC 1/3] PCI/PM: Fix kexec for D3cold and bridge suspending
-Date: Thu, 20 Sep 2012 21:20:31 +0200
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, Eric Biederman <ebiederm@xmission.com>,
-	kexec@lists.infradead.org
-References: <1347872076-5260-1-git-send-email-ying.huang@intel.com> <1347872076-5260-2-git-send-email-ying.huang@intel.com> <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
-In-Reply-To: <CAErSpo5fVbN2vD5Omc7dGJFWUccYZoCOVRF4YmXPe2Oxm81u5g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201209202120.32029.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:42836 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753894Ab2IYI0r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:47 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	x86@kernel.org
+Subject: [PATCH 17/29] PCI, x86: kill pci_root_buses in resources reservations
+Date: Tue, 25 Sep 2012 01:26:18 -0700
+Message-Id: <1348561590-28067-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, September 17, 2012, Bjorn Helgaas wrote:
-> +cc Eric and kexec list
-> 
-> On Mon, Sep 17, 2012 at 2:54 AM, Huang Ying <ying.huang@intel.com> wrote:
-> > If PCI devices are put into D3cold before kexec, because the
-> > configuration registers of PCI devices in D3cold are not accessible.
-> >
-> > And if PCI bridges are put into low power state before kexec,
-> > configuration registers of PCI devices underneath the PCI bridges are
-> > not accessible too.
-> >
-> > These will make some PCI devices can not be scanned after kexec, so
-> > resume the PCI devices in D3cold or PCI bridges in low power state
-> > before kexec.
-> 
-> Don't we need to resume the device even without the kexec issue?  And
-> even if it's in D1 or D2?
-> 
-> It looks to me like pci_msi_shutdown() (and probably drv->shutdown())
-> depend on the device being in D0.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: x86@kernel.org
+---
+ arch/x86/pci/i386.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
-We should in theory, but we didn't do any power management of PCI bridges
-before, so this is the first time we have a problem with it.
-
-So I'd say, yeah, let's resume if current_state is between D1 and D3cold
-inclusive and the kexec comment is not very helpful (the problem is not
-kexec-specific in general).
-
-Speaking of kexec, it might consider using the hibernation device freeze
-instead of device shutdown (which the kexec jump feature does).  I've seen
-reports of problems that would be solved this way most likely.
-
-Thanks,
-Rafael
-
-
-> > Signed-off-by: Huang Ying <ying.huang@intel.com>
-> > ---
-> >  drivers/pci/pci-driver.c |    4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -421,6 +421,10 @@ static void pci_device_shutdown(struct d
-> >         struct pci_dev *pci_dev = to_pci_dev(dev);
-> >         struct pci_driver *drv = pci_dev->driver;
-> >
-> > +       /* Resume bridges and devices in D3cold for kexec to work properly */
-> > +       if (pci_dev->current_state == PCI_D3cold || pci_dev->subordinate)
-> > +               pm_runtime_resume(dev);
-> > +
-> >         if (drv && drv->shutdown)
-> >                 drv->shutdown(pci_dev);
-> >         pci_msi_shutdown(pci_dev);
-> 
-> 
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 42dd755..c5055b8 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -332,11 +332,11 @@ static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
+ 
+ static int __init pcibios_assign_resources(void)
+ {
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+ 	if (!(pci_probe & PCI_ASSIGN_ROMS))
+-		list_for_each_entry(bus, &pci_root_buses, node)
+-			pcibios_allocate_rom_resources(bus);
++		for_each_pci_host_bridge(host_bridge)
++			pcibios_allocate_rom_resources(host_bridge->bus);
+ 
+ 	pci_assign_unassigned_resources();
+ 	pcibios_fw_addr_list_del();
+@@ -346,17 +346,17 @@ static int __init pcibios_assign_resources(void)
+ 
+ void __init pcibios_resource_survey(void)
+ {
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+ 	DBG("PCI: Allocating resources\n");
+ 
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pcibios_allocate_bus_resources(bus);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pcibios_allocate_resources(bus, 0);
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pcibios_allocate_resources(bus, 1);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_resources(host_bridge->bus, 0);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_resources(host_bridge->bus, 1);
+ 
+ 	e820_reserve_resources_late();
+ 	/*
+-- 
+1.7.7
 
