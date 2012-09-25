@@ -1,57 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 27/40] ACPI: acpi_bus_trim to support two steps.
-Date: Wed, 19 Sep 2012 11:54:41 -0700
-Message-Id: <1348080894-23412-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:64038 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750781Ab2IYJUN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 05:20:13 -0400
+Message-ID: <1348564801.10028.1.camel@localhost.localdomain>
+Subject: Re: [PATCH 15/29] PCI, edac: kill pci_find_next_bus in edac
+From: Mauro Carvalho Chehab <mchehab@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org,
+	Doug Thompson <dougthompson@xmission.com>,
+	linux-edac@vger.kernel.org
+Date: Tue, 25 Sep 2012 06:20:01 -0300
+In-Reply-To: <1348561590-28067-16-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	 <1348561590-28067-16-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset="ISO-8859-15"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-current all acpi_bus_trim callers have rmdevice to 1.
-that means it will remove all acpi devices.
+Em Ter, 2012-09-25 às 01:26 -0700, Yinghai Lu escreveu:
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
 
-When 0, is passed, it will keep one parent.
+Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
 
-For root bus hotremove support, we need to have pci device removed before
-acpi devices.
-
-So try to keep all acpi devices, and only stop drivers with them.
-
-This change should be safe because all current callers all have 1 passed.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/scan.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index d1ecca2..d1a1f25 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1539,10 +1539,7 @@ int acpi_bus_trim(struct acpi_device *start, int rmdevice)
- 			child = parent;
- 			parent = parent->parent;
- 
--			if (level == 0)
--				err = acpi_bus_remove(child, rmdevice);
--			else
--				err = acpi_bus_remove(child, 1);
-+			err = acpi_bus_remove(child, rmdevice);
- 
- 			continue;
- 		}
--- 
-1.7.7
+> Cc: Doug Thompson <dougthompson@xmission.com>
+> Cc: linux-edac@vger.kernel.org
+> ---
+>  drivers/edac/i7core_edac.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
+> index 3672101..ae4c484 100644
+> --- a/drivers/edac/i7core_edac.c
+> +++ b/drivers/edac/i7core_edac.c
+> @@ -1294,10 +1294,10 @@ static void __init i7core_xeon_pci_fixup(const struct pci_id_table *table)
+>  static unsigned i7core_pci_lastbus(void)
+>  {
+>  	int last_bus = 0, bus;
+> -	struct pci_bus *b = NULL;
+> +	struct pci_host_bridge *host_bridge = NULL;
+>  
+> -	while ((b = pci_find_next_bus(b)) != NULL) {
+> -		bus = b->number;
+> +	for_each_pci_host_bridge(host_bridge) {
+> +		bus = host_bridge->bus->number;
+>  		edac_dbg(0, "Found bus %d\n", bus);
+>  		if (bus > last_bus)
+>  			last_bus = bus;
 
