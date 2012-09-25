@@ -1,64 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43121 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757221Ab2IDOWO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Sep 2012 10:22:14 -0400
-Received: from localhost.localdomain (earthlight.etchedpixels.co.uk [81.2.110.250])
-	by lxorguk.ukuu.org.uk (8.14.5/8.14.1) with ESMTP id q84EsuVF007358
-	for <linux-pci@vger.kernel.org>; Tue, 4 Sep 2012 15:55:01 +0100
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] cpqphp_ctrl: remove unreachable path
-To: linux-pci@vger.kernel.org
-Date: Tue, 04 Sep 2012 15:39:57 +0100
-Message-ID: <20120904143946.25201.77305.stgit@localhost.localdomain>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43660 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757722Ab2IYQdW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 12:33:22 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20120925084004.GA6652@wooyd.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	<1348561590-28067-21-git-send-email-yinghai@kernel.org>
+	<20120925084004.GA6652@wooyd.org>
+Date: Tue, 25 Sep 2012 09:33:20 -0700
+Message-ID: <CAE9FiQXKe8okPLfRdjUz-+f3A7zN94tzVpq3vN8eBM+SeyLZnA@mail.gmail.com>
+Subject: Re: [PATCH 20/29] PCI, sparc: kill pci_find_next_bus
+From: Yinghai Lu <yinghai@kernel.org>
+To: Jurij Smakov <jurij@wooyd.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alan Cox <alan@linux.intel.com>
+On Tue, Sep 25, 2012 at 1:40 AM, Jurij Smakov <jurij@wooyd.org> wrote:
+> On Tue, Sep 25, 2012 at 01:26:21AM -0700, Yinghai Lu wrote:
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: "David S. Miller" <davem@davemloft.net>
+>> Cc: sparclinux@vger.kernel.org
+>> ---
+>>  arch/sparc/kernel/pci.c |    6 ++++--
+>>  1 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+>> index acc8c83..70d8c16 100644
+>> --- a/arch/sparc/kernel/pci.c
+>> +++ b/arch/sparc/kernel/pci.c
+>> @@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct device_node *node,
+>>
+>>  static int __init of_pci_slot_init(void)
+>>  {
+>> -     struct pci_bus *pbus = NULL;
+>> +     struct pci_host_bridge *host_bridge = NULL;
+>> +     struct pci_bus *pbus;
+>>
+>> -     while ((pbus = pci_find_next_bus(pbus)) != NULL) {
+>> +     for_each_pci_host_bridge(host_bridge) {
+>>               struct device_node *node;
+>>
+>> +             pbus = hot_bridge->bus;
+>
+> Should this be 'host_bridge' and not 'hot_bridge'?
 
-register & 0x0B == 0x04 is never true, the code will always take the
-(identical) 0x00 path anyway. Remove the dead code paths.
+fixed.
 
-Resolves-bug: https://bugzilla.kernel.org/show_bug.cgi?id=44151
-Signed-off-by: Alan Cox <alan@linux.intel.com>
----
-
- drivers/pci/hotplug/cpqphp_ctrl.c |   21 +--------------------
- 1 file changed, 1 insertion(+), 20 deletions(-)
-
-diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
-index e43908d..36112fe 100644
---- a/drivers/pci/hotplug/cpqphp_ctrl.c
-+++ b/drivers/pci/hotplug/cpqphp_ctrl.c
-@@ -2890,27 +2890,8 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
- 						func->mem_head = mem_node;
- 					} else
- 						return -ENOMEM;
--				} else if ((temp_register & 0x0BL) == 0x04) {
--					/* Map memory */
--					base = temp_register & 0xFFFFFFF0;
--					base = ~base + 1;
--
--					dbg("CND:      length = 0x%x\n", base);
--					mem_node = get_resource(&(resources->mem_head), base);
--
--					/* allocate the resource to the board */
--					if (mem_node) {
--						base = mem_node->base;
--
--						mem_node->next = func->mem_head;
--						func->mem_head = mem_node;
--					} else
--						return -ENOMEM;
--				} else if ((temp_register & 0x0BL) == 0x06) {
--					/* Those bits are reserved, we can't handle this */
--					return 1;
- 				} else {
--					/* Requesting space below 1M */
-+					/* Reserved bits or requesting space below 1M */
- 					return NOT_ENOUGH_RESOURCES;
- 				}
- 
-
+Thanks
