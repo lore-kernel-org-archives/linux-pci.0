@@ -1,80 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:6636 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576Ab2ITM2L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Sep 2012 08:28:11 -0400
-Message-ID: <505B0B6A.2050709@huawei.com>
-Date: Thu, 20 Sep 2012 20:26:18 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Giridhar Malavali <giridhar.malavali@qlogic.com>
-CC: Jon Mason <jdmason@kudzu.us>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	<linux-driver@qlogic.com>, <linux-scsi@vger.kernel.org>,
-	PCI <linux-pci@vger.kernel.org>,
-	Saurav Kashyap <saurav.kashyap@qlogic.com>,
-	Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: Fail to probe qla2xxx fiber channel card while doing pci hotplug
-References: <505456FD.6040801@huawei.com> <CAErSpo6OkAV-wwKnpMRAvisQ_Jj=w9dxLbO3JxkX2A_Vd8QX=Q@mail.gmail.com> <50571243.4050001@huawei.com> <CAErSpo7WwwB3ZO9g4WjQZKcfXAP0tKuXWKn=UTw1mDGJyX6=vQ@mail.gmail.com> <505924E4.5010502@huawei.com> <CAErSpo5PuwG1pvCRBxOUoyK-_ajg-AZkkuCUxeGbkb6TyBP_Kw@mail.gmail.com> <505A7599.5070103@huawei.com>
-In-Reply-To: <505A7599.5070103@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from shards.monkeyblade.net ([149.20.54.216]:35210 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757362Ab2IYRFv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 13:05:51 -0400
+Date: Tue, 25 Sep 2012 13:05:49 -0400 (EDT)
+Message-Id: <20120925.130549.320495729202541702.davem@davemloft.net>
+To: yinghai@kernel.org
+Cc: bhelgaas@google.com, lenb@kernel.org, linux-pci@vger.kernel.org,
+	sparclinux@vger.kernel.org
+Subject: Re: [PATCH 20/29] PCI, sparc: kill pci_find_next_bus
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1348561590-28067-21-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+	<1348561590-28067-21-git-send-email-yinghai@kernel.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/20 9:47, Yijing Wang wrote:
->>> We compared the two situations after BIOS initialization, and found Max Payload Size in DEVCTRL is 256B
->>> if FC card had been installed, if the slot is empty, Max Payload Size is 128B. We force it to be 128B when
->>> FC card installed when system boot up. Finally pci hotplug becomes ok. So I suspect maybe our PCIe hardware
->>> has problem supporting 256B.
->>
->> Ah, this sounds like something I've been worried about for a while,
->> i.e., do we handle MPS correctly when we hot-add devices?
->>
->> Yijing, I'm not quite clear on what you're observing.  I guess you're
->> saying that if an FC card is installed at boot, the BIOS sets MPS to
->> 256, and that if no FC card is installed, the BIOS sets MPS to 128?
-> 
-> Yes.
-> 
->> You haven't mentioned any Linux boot options, so I assume you haven't
->> tried any.  Does "pci=pcie_bus_safe" make any difference?
-> 
-> Yes, I don't add any Linux boot options before. I will try this boot option
-> "pci=pcie_bus_safe".
-> 
->> Jon, here's a pointer to the beginning of the thread:
->> http://marc.info/?l=linux-pci&m=134770460302298&w=2 (full dmesg log at
->> http://marc.info/?l=linux-scsi&m=134788365823217&w=2).  I'm not sure
->> we have enough in the dmesg log to diagnose an issue like this.  I
->> wonder if it would be useful to log the current setting, so we could
->> notice BIOS default differences like this one.
->>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 25 Sep 2012 01:26:21 -0700
 
-Hi Bjorn,
-   After add "pci=pcie_bus_safe" boot options, Hot-plug for FC card is OK.
-It's great! Thanks for your help!
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Giri, it's not the fc card problem, we fix this problem by add boot option
-"pci=pcie_bus_safe" which force the MPS of the entire system to the smallest
-possible.
-
-Thanks
-Yijing
-
->> Bjorn
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> .
->>
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Acked-by: David S. Miller <davem@davemloft.net>
