@@ -1,60 +1,83 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part4 04/11] PCI: Fix an access-after-free issue in function pci_stop_and_remove_bus()
-Date: Sun,  2 Sep 2012 14:54:14 -0700
-Message-Id: <1346622861-30865-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
-References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH 07/29] PCI, ACPI: add acpi_bus_type for host bridge
+Date: Tue, 25 Sep 2012 01:26:08 -0700
+Message-Id: <1348561590-28067-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+Instead of abusing of acp_bus_type for pci device and checking device
+name tricks
 
-If pci_stop_and_remove_bus() is called to remove a pci root bus,
-the host_bridge structure may have already been freed after returning
-from pci_remove_bus(). To avoid that, hold an extra reference count
-to the root bus before calling pci_remove_bus(), so we can safely
-access the pci_host_bridge structure after returning from function
-pci_remove_bus().
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/remove.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/acpi/glue.c    |    4 ++--
+ drivers/pci/pci-acpi.c |   13 +++++++++++--
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 94407d4..40f8148 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -154,6 +154,7 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index 243ee85..3079634 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -210,8 +210,8 @@ static int acpi_platform_notify(struct device *dev)
+ 	acpi_handle handle;
+ 	int ret = -EINVAL;
  
- 	if (pci_is_root_bus(bus)) {
- 		host_bridge = to_pci_host_bridge(bus->bridge);
-+		get_device(&host_bridge->dev);
- 		pci_stop_host_bridge(host_bridge);
- 	} else
- 		pci_bridge = bus->self;
-@@ -162,8 +163,10 @@ void pci_stop_and_remove_bus(struct pci_bus *bus)
+-	if (!dev->bus || !dev->parent) {
+-		/* bridge devices genernally haven't bus or parent */
++	if (!dev->bus) {
++		/* bridge devices genernally haven't bus */
+ 		ret = acpi_find_bridge_device(dev, &handle);
+ 		goto end;
+ 	}
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index c5792d6..a167f6d 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -360,7 +360,8 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+ 	return 0;
+ }
  
- 	pci_remove_bus(bus);
+-static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
++static int acpi_pci_host_bridge_find_device(struct device *dev,
++						acpi_handle *handle)
+ {
+ 	int num;
+ 	unsigned int seg, bus;
+@@ -378,10 +379,14 @@ static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
+ 	return 0;
+ }
  
--	if (host_bridge)
-+	if (host_bridge) {
- 		host_bridge->bus = NULL;
-+		put_device(&host_bridge->dev);
-+	}
++static struct acpi_bus_type acpi_pci_host_bridge_bus = {
++	.bus = &pci_host_bridge_bus_type,
++	.find_device = acpi_pci_host_bridge_find_device,
++};
++
+ static struct acpi_bus_type acpi_pci_bus = {
+ 	.bus = &pci_bus_type,
+ 	.find_device = acpi_pci_find_device,
+-	.find_bridge = acpi_pci_find_root_bridge,
+ };
  
- 	if (pci_bridge)
- 		pci_bridge->subordinate = NULL;
+ static int __init acpi_pci_init(void)
+@@ -398,6 +403,10 @@ static int __init acpi_pci_init(void)
+ 		pcie_no_aspm();
+ 	}
+ 
++	ret = register_acpi_bus_type(&acpi_pci_host_bridge_bus);
++	if (ret)
++		return 0;
++
+ 	ret = register_acpi_bus_type(&acpi_pci_bus);
+ 	if (ret)
+ 		return 0;
 -- 
 1.7.7
 
