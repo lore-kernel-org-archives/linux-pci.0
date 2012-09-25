@@ -1,92 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:38916 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753929Ab2IYI04 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:56 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part3 07/11] PCI: Add pci_bus_add_single_device()
-Date: Sun,  2 Sep 2012 14:52:17 -0700
-Message-Id: <1346622741-30799-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
-References: <1346622741-30799-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 28/29] PCI: kill pci_find_next_bus
+Date: Tue, 25 Sep 2012 01:26:29 -0700
+Message-Id: <1348561590-28067-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
-
-Will use it to pci_bus_bridge_scan_resize() to make bridge will
-have pci_bus directory created correctly.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/bus.c   |   39 +++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |    1 +
- 2 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/pci/search.c |   37 +++++++------------------------------
+ include/linux/pci.h  |    4 ----
+ 2 files changed, 7 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 2882d01..950b786 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -259,6 +259,45 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index f072b54..630e788 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -79,44 +79,22 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+  */
+ struct pci_bus * pci_find_bus(int domain, int busnr)
+ {
+-	struct pci_bus *bus = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
+ 	struct pci_bus *tmp_bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+-		if (pci_domain_nr(bus) != domain)
++	for_each_pci_host_bridge(host_bridge) {
++		if (pci_domain_nr(host_bridge->bus) != domain)
+ 			continue;
+-		tmp_bus = pci_do_find_bus(bus, busnr);
+-		if (tmp_bus)
++		tmp_bus = pci_do_find_bus(host_bridge->bus, busnr);
++		if (tmp_bus) {
++			put_device(&host_bridge->dev);
+ 			return tmp_bus;
++		}
  	}
+ 	return NULL;
  }
  
-+void pci_bus_add_single_device(struct pci_dev *dev)
-+{
-+	struct pci_bus *child;
-+	int retval;
-+
-+	/* Skip already-added devices */
-+	if (!dev->is_added) {
-+		retval = pci_bus_add_device(dev);
-+		if (retval)
-+			dev_err(&dev->dev, "Error adding device, continuing\n");
-+	}
-+
-+	BUG_ON(!dev->is_added);
-+
-+	child = dev->subordinate;
-+	/*
-+	 * If there is an unattached subordinate bus, attach
-+	 * it and then scan for unattached PCI devices.
-+	 */
-+	if (child) {
-+		if (list_empty(&child->node)) {
-+			down_write(&pci_bus_sem);
-+			list_add_tail(&child->node, &dev->bus->children);
-+			up_write(&pci_bus_sem);
-+		}
-+		pci_bus_add_devices(child);
-+
-+		/*
-+		 * register the bus with sysfs as the parent is now
-+		 * properly registered.
-+		 */
-+		if (!child->is_added) {
-+			retval = pci_bus_add_child(child);
-+			if (retval)
-+				dev_err(&dev->dev, "Error adding bus, continuing\n");
-+		}
-+	}
-+}
-+
- void pci_enable_bridges(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
+ /**
+- * pci_find_next_bus - begin or continue searching for a PCI bus
+- * @from: Previous PCI bus found, or %NULL for new search.
+- *
+- * Iterates through the list of known PCI busses.  A new search is
+- * initiated by passing %NULL as the @from argument.  Otherwise if
+- * @from is not %NULL, searches continue from next device on the
+- * global list.
+- */
+-struct pci_bus * 
+-pci_find_next_bus(const struct pci_bus *from)
+-{
+-	struct list_head *n;
+-	struct pci_bus *b = NULL;
+-
+-	WARN_ON(in_interrupt());
+-	down_read(&pci_bus_sem);
+-	n = from ? from->node.next : pci_root_buses.next;
+-	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
+-	up_read(&pci_bus_sem);
+-	return b;
+-}
+-
+-/**
+  * pci_get_slot - locate PCI device for a given PCI slot
+  * @bus: PCI bus on which desired PCI device resides
+  * @devfn: encodes number of PCI slot in which the desired PCI 
+@@ -355,7 +333,6 @@ EXPORT_SYMBOL(pci_dev_present);
+ 
+ /* For boot time work */
+ EXPORT_SYMBOL(pci_find_bus);
+-EXPORT_SYMBOL(pci_find_next_bus);
+ /* For everyone */
+ EXPORT_SYMBOL(pci_get_device);
+ EXPORT_SYMBOL(pci_get_subsys);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f994e93..4446448 100644
+index 1e45d6f..c7ca6e9 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -700,6 +700,7 @@ void pcibios_bus_to_resource(struct pci_dev *dev, struct resource *res,
- void pcibios_scan_specific_bus(int busn);
- extern struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
-+void pci_bus_add_single_device(struct pci_dev *dev);
- struct pci_bus *pci_scan_bus_parented(struct device *parent, int bus,
- 				      struct pci_ops *ops, void *sysdata);
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+@@ -758,7 +758,6 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+-struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
+ struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+@@ -1400,9 +1399,6 @@ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ { }
+ 
+-static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+-{ return NULL; }
+-
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
 -- 
 1.7.7
 
