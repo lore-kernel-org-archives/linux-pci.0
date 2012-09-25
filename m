@@ -1,78 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:42872 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756662Ab2IGVWM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Sep 2012 17:22:12 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [Resend][PATCH] pciehp: always implement resume
-Date: Fri, 7 Sep 2012 23:28:30 +0200
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Oliver Neukum <oliver@neukum.org>, linux-pci@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201209072328.30553.rjw@sisk.pl>
+Received: from acsinet15.oracle.com ([141.146.126.227]:42852 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924Ab2IYI0s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:48 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 19/29] PCI: kill pci_root_buses in setup-bus
+Date: Tue, 25 Sep 2012 01:26:20 -0700
+Message-Id: <1348561590-28067-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Oliver Neukum <oliver@neukum.org>
-Subject: pciehp: always implement resume
-
-The driver by default ignores resume. On some laptops
-that means that interrupts are not delivered after S3.
-So card removals and insertions will not be handled. Requiring
-a forced load isn't right.
-
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
- drivers/pci/hotplug/pciehp_core.c |   28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+ drivers/pci/setup-bus.c |   24 +++++++++++++-----------
+ 1 files changed, 13 insertions(+), 11 deletions(-)
 
-Index: linux/drivers/pci/hotplug/pciehp_core.c
-===================================================================
---- linux.orig/drivers/pci/hotplug/pciehp_core.c
-+++ linux/drivers/pci/hotplug/pciehp_core.c
-@@ -300,24 +300,24 @@ static int pciehp_suspend (struct pcie_d
- 
- static int pciehp_resume (struct pcie_device *dev)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1e808ca..9737185 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1318,12 +1318,12 @@ static int __init pci_bus_get_depth(struct pci_bus *bus)
+ static int __init pci_get_max_depth(void)
  {
-+	struct controller *ctrl;
-+	struct slot *slot;
-+	u8 status;
-+
- 	dev_info(&dev->device, "%s ENTRY\n", __func__);
--	if (pciehp_force) {
--		struct controller *ctrl = get_service_data(dev);
--		struct slot *slot;
--		u8 status;
-+	ctrl = get_service_data(dev);
+ 	int depth = 0;
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host_bridge = NULL;
  
--		/* reinitialize the chipset's event detection logic */
--		pcie_enable_notification(ctrl);
-+	/* reinitialize the chipset's event detection logic */
-+	pcie_enable_notification(ctrl);
+-	list_for_each_entry(bus, &pci_root_buses, node) {
++	for_each_pci_host_bridge(host_bridge) {
+ 		int ret;
  
--		slot = ctrl->slot;
-+	slot = ctrl->slot;
+-		ret = pci_bus_get_depth(bus);
++		ret = pci_bus_get_depth(host_bridge->bus);
+ 		if (ret > depth)
+ 			depth = ret;
+ 	}
+@@ -1393,6 +1393,7 @@ void __init
+ pci_assign_unassigned_resources(void)
+ {
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *host_bridge = NULL;
+ 	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
+ 	struct list_head *add_list = NULL;
+@@ -1423,12 +1424,13 @@ again:
+ 		add_list = &realloc_head;
+ 	/* Depth first, calculate sizes and alignments of all
+ 	   subordinate buses. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_size_bridges(bus, add_list);
++	for_each_pci_host_bridge(host_bridge)
++		__pci_bus_size_bridges(host_bridge->bus, add_list);
  
--		/* Check if slot is occupied */
--		pciehp_get_adapter_status(slot, &status);
--		if (status)
--			pciehp_enable_slot(slot);
--		else
--			pciehp_disable_slot(slot);
--	}
-+	/* Check if slot is occupied */
-+	pciehp_get_adapter_status(slot, &status);
-+	if (status)
-+		pciehp_enable_slot(slot);
-+	else
-+		pciehp_disable_slot(slot);
- 	return 0;
+ 	/* Depth last, allocate resources and update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		__pci_bus_assign_resources(bus, add_list, &fail_head);
++	for_each_pci_host_bridge(host_bridge)
++		__pci_bus_assign_resources(host_bridge->bus, add_list,
++						 &fail_head);
+ 	if (add_list)
+ 		BUG_ON(!list_empty(add_list));
+ 	tried_times++;
+@@ -1480,12 +1482,12 @@ again:
+ 
+ enable_and_dump:
+ 	/* Depth last, update the hardware. */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_enable_bridges(bus);
++	for_each_pci_host_bridge(host_bridge)
++		pci_enable_bridges(host_bridge->bus);
+ 
+ 	/* dump the resource on buses */
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pci_bus_dump_resources(bus);
++	for_each_pci_host_bridge(host_bridge)
++		pci_bus_dump_resources(host_bridge->bus);
  }
- #endif /* PM */
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+-- 
+1.7.7
+
