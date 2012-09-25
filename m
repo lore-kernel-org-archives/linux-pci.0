@@ -1,98 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56647 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755494Ab2IQPlJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 11:41:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <5057343C.2010201@gmail.com>
-References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com>
-	<1347678312-11124-6-git-send-email-jiang.liu@huawei.com>
-	<CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com>
-	<5057343C.2010201@gmail.com>
-Date: Mon, 17 Sep 2012 08:41:07 -0700
-Message-ID: <CAE9FiQWt2sPFRGTropM=oiiKv0qh2s__-MsMs=OFYx3OQkL2Tg@mail.gmail.com>
-Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
+Received: from rcsinet15.oracle.com ([148.87.113.117]:35382 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753451Ab2IYI0c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:32 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 00/29] PCI: use pci host bridge to loop pci root bus
+Date: Tue, 25 Sep 2012 01:26:01 -0700
+Message-Id: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2012 at 7:31 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> On 09/16/2012 07:27 AM, Yinghai Lu wrote:
->>> --- a/drivers/acpi/scan.c
->>> +++ b/drivers/acpi/scan.c
->>> @@ -1232,17 +1232,8 @@ static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
->>>         dev->removal_type = ACPI_BUS_REMOVAL_EJECT;
->>>         device_release_driver(&dev->dev);
->>>
->>> -       if (!rmdevice)
->>> -               return 0;
->>> -
->>> -       /*
->>> -        * unbind _ADR-Based Devices when hot removal
->>> -        */
->>> -       if (dev->flags.bus_address) {
->>> -               if ((dev->parent) && (dev->parent->ops.unbind))
->>> -                       dev->parent->ops.unbind(dev);
->>> -       }
->>> -       acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
->>> +       if (rmdevice)
->>> +               acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
->>>
->>>         return 0;
->>>  }
->>
->> for pci root bus, acpi_bus_trim() is used to remove acpi_device.
->>
->> and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
->> iommu driver then remove pci devices.
->>
->> if call back is removed there, then could some functions in
->> acpi_pci_unbind() will be skipped.
->>
->> I really do not want to add pci_stop_bus_devices() in
->> pci_root_hp.c::handle_root_bridge_removal before
->> calling acpi_bus_trim...
-> Hi Yinghai,
->         We are working on a ACPI based hotplug framework for CPU, memory and IOH.
-> With our framework, the sequence to remove a IOH is:
-> 1) unbind all PCI device drivers for affected PCI devices.
-> 2) stop and remove all affected PCI devices.
-> 3) stop ACPI ioapic drivers(a new driver like PCI version).
-> 4) destroy all ACPI devices.
+could remove pci_root_buses list.
 
-i solved the problem...
+Yinghai Lu (29):
+  PCI, x86: Separate out pcibios_allocate_bridge_resources()
+  PCI. x86: Separate out pcibios_allocate_dev_resources()
+  PCI, x86: Let pcibios_allocate_bus_resources() take bus instead
+  PCI, x86: Separate out rom resource claim
+  PCI: rename pci_release_bus_bridge_dev to pci_release_host_bridge_dev
+  PCI: Add dummy bus_type for pci_host_bridge
+  PCI, ACPI: add acpi_bus_type for host bridge
+  PCI, ACPI: Remove acpi_find_bridge_device for acpi_bus_type
+  PCI, libata: remove find_bridge in acpi_bus_type
+  PCI, USB: remove find_bridge in acpi_bus_type
+  PCI, ACPI: remove find_bridge in acpi_bus_type
+  PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
+  PCI, hotplug: kill pci_find_next_bus n sgi_hotplug
+  PCI: kill pci_find_next_bus in pci_sysfs
+  PCI, edac: kill pci_find_next_bus in edac
+  PCI, x86: kill pci_find_next_bus in pcibios_scan_root
+  PCI, x86: kill pci_root_buses in resources reservations
+  PCI, drm: kill pci_root_buses in alpha hose setting
+  PCI: kill pci_root_buses in setup-bus
+  PCI, sparc: kill pci_find_next_bus
+  PCI, ia64: kill pci_find_next_bus
+  PCI, alpha: kill pci_root_buses
+  PCI, arm: kill pci_root_buses
+  PCI, frv: kill pci_root_buses in resources reservations
+  PCI, microblaze: kill pci_root_buses in resources reservations
+  PCI, mn10300: kill pci_root_buses in resources reservations
+  PCI, powerpc: kill pci_root_buses in resources reservations
+  PCI: kill pci_find_next_bus
+  PCI: kill pci_root_buses
 
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=15967ed108f9543c160422a7aaec18de30a53373
+ arch/alpha/kernel/pci.c                 |    6 +-
+ arch/arm/kernel/bios32.c                |    9 +-
+ arch/frv/mb93090-mb00/pci-frv.c         |   37 ++++---
+ arch/ia64/hp/common/sba_iommu.c         |    7 +-
+ arch/ia64/sn/kernel/io_common.c         |    5 +-
+ arch/microblaze/pci/pci-common.c        |   10 +-
+ arch/mn10300/unit-asb2305/pci-asb2305.c |   62 ++++++------
+ arch/powerpc/kernel/pci-common.c        |   13 +--
+ arch/powerpc/kernel/pci_64.c            |    7 +-
+ arch/sparc/kernel/pci.c                 |    6 +-
+ arch/x86/pci/common.c                   |    9 +-
+ arch/x86/pci/i386.c                     |  162 +++++++++++++++++++------------
+ drivers/acpi/glue.c                     |   22 +----
+ drivers/ata/libata-acpi.c               |    6 -
+ drivers/edac/i7core_edac.c              |    6 +-
+ drivers/gpu/drm/drm_fops.c              |   10 ++-
+ drivers/pci/hotplug/sgi_hotplug.c       |    6 +-
+ drivers/pci/pci-acpi.c                  |   13 ++-
+ drivers/pci/pci-driver.c                |   11 ++-
+ drivers/pci/pci-sysfs.c                 |    6 +-
+ drivers/pci/probe.c                     |   13 +--
+ drivers/pci/search.c                    |   60 ++++++------
+ drivers/pci/setup-bus.c                 |   24 +++--
+ drivers/usb/core/usb-acpi.c             |    1 -
+ include/acpi/acpi_bus.h                 |    2 -
+ include/linux/pci.h                     |   11 +--
+ 26 files changed, 281 insertions(+), 243 deletions(-)
 
-+       if (!acpi_bus_get_device(handle, &device)) {
-+               int ret_val;
-+
-+               /* remove pci devices at first */
-+               ret_val = acpi_bus_trim(device, 0);
-+               printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
-+
-+               /* remove acpi devices */
-+               ret_val = acpi_bus_trim(device, 1);
-+               printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
-+       }
+-- 
+1.7.7
 
-...
-
-also need to update acpi_bus_trim
-
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=c8805fe6ec46c46f352cdbffb13191116ea794ba
-
-BTW, memory hot-remove may need some work.
-
-Thanks
-
-Yinghai
