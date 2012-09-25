@@ -1,44 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-	<20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
-	<CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
-	<CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
-	<CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
-Date: Thu, 27 Sep 2012 10:59:43 -0700
-Message-ID: <CAE9FiQXNdWO9pmr_vsMqaHCzm-TesMdBjTxHUUXTCY9m0G4KcQ@mail.gmail.com>
-Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:35490 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764Ab2IYI0l (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:41 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 12/29] PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
+Date: Tue, 25 Sep 2012 01:26:13 -0700
+Message-Id: <1348561590-28067-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 27, 2012 at 10:23 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Sep 27, 2012 at 9:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Sep 21, 2012 at 2:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> If we get rid of the struct pci_bus * dependency, then we can easily
->>> add the _PRT before doing PCI enumeration behind the bridge, and we
->>> can remove the _PRT after removing the PCI devices.  I think this is
->>> one small step toward getting rid of the add/start and stop/remove
->>> split.
->>
->> I'm going to work on doing this if nobody else is interested.
->
-> I'm not sure if that is needed.
+use bus_find_device to loop host_bridges.
 
-After patches that is using pci_host_bridge_bus_type and pci_bus_type
-notification, we can remove
-acpi_pci_root_start.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/search.c |   23 +++++++++++++++++++++++
+ include/linux/pci.h  |    3 +++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-please check patches in my for-pci-next branch: it include jiang's 7
-patches about notifier, and my kill pci_root_buses and etc.
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index bf969ba..f072b54 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -178,6 +178,29 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
+ }
+ EXPORT_SYMBOL(pci_get_domain_bus_and_slot);
+ 
++static int match_pci_host_bridge(struct device *dev, void *data)
++{
++	return 1;
++}
++
++struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from)
++{
++	struct device *dev;
++	struct device *dev_start = NULL;
++	struct pci_host_bridge *bridge = NULL;
++
++	WARN_ON(in_interrupt());
++	if (from)
++		dev_start = &from->dev;
++	dev = bus_find_device(&pci_host_bridge_bus_type, dev_start, NULL,
++			      match_pci_host_bridge);
++	if (dev)
++		bridge = to_pci_host_bridge(dev);
++	if (from)
++		put_device(&from->dev);
++	return bridge;
++}
++
+ static int match_pci_dev_by_id(struct device *dev, void *data)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index cc8b558..1e45d6f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -394,6 +394,8 @@ struct pci_host_bridge {
+ };
+ 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
++#define for_each_pci_host_bridge(d) while (d = pci_get_next_host_bridge(d))
++
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+@@ -758,6 +760,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
++struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+ 				struct pci_dev *from);
+ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+-- 
+1.7.7
 
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-for-pci-next
-
--Yinghai
