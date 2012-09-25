@@ -1,65 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 3 Sep 2012 11:19:04 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH v2 -tip 3/5] x86, MSI: Minor readability fixes
-Message-ID: <1d726903ec33bdc2da51e0756931e68c14d635ba.1346653435.git.agordeev@redhat.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hapkido.dreamhost.com ([66.33.216.122]:55987 "EHLO
+	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753743Ab2IYIlK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:41:10 -0400
+Received: from homiemail-a88.g.dreamhost.com (caiajhbdcbef.dreamhost.com [208.97.132.145])
+	by hapkido.dreamhost.com (Postfix) with ESMTP id 0BAACDC147
+	for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 01:41:10 -0700 (PDT)
+Date: Tue, 25 Sep 2012 09:40:04 +0100
+From: Jurij Smakov <jurij@wooyd.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	sparclinux@vger.kernel.org
+Subject: Re: [PATCH 20/29] PCI, sparc: kill pci_find_next_bus
+Message-ID: <20120925084004.GA6652@wooyd.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+ <1348561590-28067-21-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1346653435.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1348561590-28067-21-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- arch/x86/kernel/apic/io_apic.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Tue, Sep 25, 2012 at 01:26:21AM -0700, Yinghai Lu wrote:
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: sparclinux@vger.kernel.org
+> ---
+>  arch/sparc/kernel/pci.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+> index acc8c83..70d8c16 100644
+> --- a/arch/sparc/kernel/pci.c
+> +++ b/arch/sparc/kernel/pci.c
+> @@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct device_node *node,
+>  
+>  static int __init of_pci_slot_init(void)
+>  {
+> -	struct pci_bus *pbus = NULL;
+> +	struct pci_host_bridge *host_bridge = NULL;
+> +	struct pci_bus *pbus;
+>  
+> -	while ((pbus = pci_find_next_bus(pbus)) != NULL) {
+> +	for_each_pci_host_bridge(host_bridge) {
+>  		struct device_node *node;
+>  
+> +		pbus = hot_bridge->bus;
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index fbf3916..3c29b00 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3151,7 +3151,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- 
- 	if (irq_remapped(cfg)) {
- 		compose_remapped_msi_msg(pdev, irq, dest, msg, hpet_id);
--		return err;
-+		return 0;
- 	}
- 
- 	if (x2apic_enabled())
-@@ -3178,7 +3178,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- 			MSI_DATA_DELIVERY_LOWPRI) |
- 		MSI_DATA_VECTOR(cfg->vector);
- 
--	return err;
-+	return 0;
- }
- 
- static int
-@@ -3260,7 +3260,7 @@ int setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 		irq = create_irq_nr(irq_want, node);
- 		if (irq == 0)
--			return -1;
-+			return -ENOSPC;
- 		irq_want = irq + 1;
- 		if (!irq_remapping_enabled)
- 			goto no_ir;
+Should this be 'host_bridge' and not 'hot_bridge'?
+
+>  		if (pbus->self) {
+>  			/* PCI->PCI bridge */
+>  			node = pbus->self->dev.of_node;
+> -- 
+> 1.7.7
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe sparclinux" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-1.7.7.6
-
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Jurij Smakov                                           jurij@wooyd.org
+Key: http://www.wooyd.org/pgpkey/                      KeyID: C99E03CC
