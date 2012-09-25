@@ -1,80 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1763 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753038Ab2IECS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Sep 2012 22:18:57 -0400
-Message-ID: <5046B688.1070902@redhat.com>
-Date: Tue, 04 Sep 2012 22:18:48 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Matthew Garrett <mjg@redhat.com>
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
-	bhelgaas@google.com
-Subject: Re: [PATCH V3 3/4] PCI: Add support for non-BAR ROMs
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <1345739803-21017-4-git-send-email-mjg@redhat.com>
-In-Reply-To: <1345739803-21017-4-git-send-email-mjg@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from rcsinet15.oracle.com ([148.87.113.117]:38869 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753890Ab2IYI0v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:51 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>, sparclinux@vger.kernel.org
+Subject: [PATCH 20/29] PCI, sparc: kill pci_find_next_bus
+Date: Tue, 25 Sep 2012 01:26:21 -0700
+Message-Id: <1348561590-28067-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/23/2012 12:36 PM, Matthew Garrett wrote:
-> Platforms may provide their own mechanisms for obtaining ROMs. Add support
-> for using data provided by the platform in that case.
->
-> Signed-off-by: Matthew Garrett<mjg@redhat.com>
-> ---
->   drivers/pci/rom.c   | 11 +++++++++--
->   include/linux/pci.h |  2 ++
->   2 files changed, 11 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-> index 48ebdb2..46026e4 100644
-> --- a/drivers/pci/rom.c
-> +++ b/drivers/pci/rom.c
-> @@ -118,11 +118,17 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
->   	void __iomem *rom;
->
->   	/*
-> +	 * Some devices may provide ROMs via a source other than the BAR
-> +	 */
-> +	if (pdev->rom&&  pdev->romlen) {
-> +		*size = pdev->romlen;
-> +		return phys_to_virt((phys_addr_t)pdev->rom);
-                        ^^^^^
-                          ioremap_nocache() ? ... or is caching rom ok?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/pci.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> +	/*
->   	 * IORESOURCE_ROM_SHADOW set on x86, x86_64 and IA64 supports legacy
->   	 * memory map if the VGA enable bit of the Bridge Control register is
->   	 * set for embedded VGA.
->   	 */
-> -	if (res->flags&  IORESOURCE_ROM_SHADOW) {
-> +	} else if (res->flags&  IORESOURCE_ROM_SHADOW) {
->   		/* primary video rom always starts here */
->   		start = (loff_t)0xC0000;
->   		*size = 0x20000; /* cover C000:0 through E000:0 */
-> @@ -219,7 +225,8 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
->   	if (res->flags&  (IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY))
->   		return;
->
-> -	iounmap(rom);
-> +	if (!pdev->rom || !pdev->romlen)
-> +		iounmap(rom);
->
->   	/* Disable again before continuing, leave enabled if pci=rom */
->   	if (!(res->flags&  (IORESOURCE_ROM_ENABLE | IORESOURCE_ROM_SHADOW)))
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6a2625c..2668bb9 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -355,6 +355,8 @@ struct pci_dev {
->   	};
->   	struct pci_ats	*ats;	/* Address Translation Service */
->   #endif
-> +	void *rom; /* Physical pointer to ROM if it's not from the BAR */
-> +	size_t romlen; /* Length of ROM if it's not from the BAR */
->   };
->
->   static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index acc8c83..70d8c16 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct device_node *node,
+ 
+ static int __init of_pci_slot_init(void)
+ {
+-	struct pci_bus *pbus = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
++	struct pci_bus *pbus;
+ 
+-	while ((pbus = pci_find_next_bus(pbus)) != NULL) {
++	for_each_pci_host_bridge(host_bridge) {
+ 		struct device_node *node;
+ 
++		pbus = hot_bridge->bus;
+ 		if (pbus->self) {
+ 			/* PCI->PCI bridge */
+ 			node = pbus->self->dev.of_node;
+-- 
+1.7.7
 
