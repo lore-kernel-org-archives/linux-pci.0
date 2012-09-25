@@ -1,46 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:59798 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932093Ab2IQPve (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 11:51:34 -0400
-Message-ID: <505746FA.5030904@gmail.com>
-Date: Mon, 17 Sep 2012 23:51:22 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v1 06/22] PCI: use a global lock to serialize PCI
- root bridge hotplug operations
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-7-git-send-email-jiang.liu@huawei.com> <CAErSpo5ixjvv3r9wzCXFrDZ790u9_K5KCuQ7GQO3fFuFuiVJZg@mail.gmail.com> <5050AD65.1000801@gmail.com> <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
-In-Reply-To: <CAErSpo4=cakjCQ_Z_nUa2xZQr9KV72kxtsgrW0cjeFN=ktb8zQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from acsinet15.oracle.com ([141.146.126.227]:42795 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764Ab2IYI0n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 04:26:43 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Subject: [PATCH 09/29] PCI, libata: remove find_bridge in acpi_bus_type
+Date: Tue, 25 Sep 2012 01:26:10 -0700
+Message-Id: <1348561590-28067-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
+References: <1348561590-28067-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> I'm not sure why you didn't add a pci_host_bridge_hotplug_lock() in
->>> the sba_init() path, since it looks similar to the drm_open_helper()
->>> path above.  But in any case, I think that would be the wrong thing to
->>> do because it would fix the superficial problem while leaving the
->>> deeper problem of host bridge hot-add not setting the iommu pointer.
-> 
->> sba_init is called during system initialization stages through subsys_initcall,
->> so no extra protection for it.
-> 
-> OK, I see your reasoning.  But I don't agree :)  All the users of an
-> interface should use the same locking scheme, even if they're at
-> boot-time where we "know" we don't need it.  It's too hard to analyze
-> differences, and code gets copied from one place to somewhere else
-> where it might not be appropriate.
-Hi Bjorn,
-	"All the users of an interface should use the same locking scheme", a really
-good design pattern to follow. It's so easy for everybody to remove the __init
-modifier without noticing the design limitation.
-	--Gerry
+The struct member is not used anymore, remove it.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/libata-acpi.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index fd9ecf7..48976fe 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -1168,13 +1168,7 @@ static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
+ 		return -ENODEV;
+ }
+ 
+-static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
+-{
+-	return -ENODEV;
+-}
+-
+ static struct acpi_bus_type ata_acpi_bus = {
+-	.find_bridge = ata_acpi_find_dummy,
+ 	.find_device = ata_acpi_find_device,
+ };
+ 
+-- 
+1.7.7
+
