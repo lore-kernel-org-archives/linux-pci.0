@@ -1,90 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52791 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752890Ab2IUFPQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 21 Sep 2012 01:15:16 -0400
-Message-ID: <1348204513.23395.23.camel@yhuang-dev>
-Subject: Re: [PATCH v4 5/5] PCI/AER: free pci_bus_ops_list and remove
- pci_bus_ops_pop
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Fri, 21 Sep 2012 13:15:13 +0800
-In-Reply-To: <1348199056-7696-6-git-send-email-wangyijing@huawei.com>
-References: <1348199056-7696-1-git-send-email-wangyijing@huawei.com>
-	 <1348199056-7696-6-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Len Brown <lenb@kernel.org>
+Cc: linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	ying.huang@intel.com, linux-acpi@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH RESEND] ACPI/PCI: Make PCI devices notified when its power resource turned on
+Date: Wed, 26 Sep 2012 21:59:31 +0800
+Message-Id: <1348667971-30876-1-git-send-email-ying.huang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-09-21 at 11:44 +0800, Yijing Wang wrote:
-> Rewrite pci_bus_ops_list release code for simplification, and clean
-> no used function pci_bus_ops_pop().
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
+Sorry for bothering.  It appears that this patch should go through ACPI
+tree because code changed are under drivers/acpi.
 
-Please remove my signed-off.
+A set of power resources may be shared by multiple devices.  When all
+devices share one set of power resources is put into D3_COLD state,
+the power resources will be turned off.  When one of the device is
+waked, the power resource will be turned on and all devices share it
+will be powered on to D0uninitialized state.  These devices should be
+resumed, so that they can get opportunity to go to low power state
+later.
 
-Reviewed-by: Huang Ying <ying.huang@intel.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_bind.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   25 ++++++-------------------
->  1 files changed, 6 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index a5fd393..4c9268a 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -145,23 +145,6 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  	return __find_pci_bus_ops_parent(bus);
->  }
->  
-> -static struct pci_bus_ops *pci_bus_ops_pop(void)
-> -{
-> -	unsigned long flags;
-> -	struct pci_bus_ops *bus_ops = NULL;
-> -
-> -	spin_lock_irqsave(&inject_lock, flags);
-> -	if (list_empty(&pci_bus_ops_list))
-> -		bus_ops = NULL;
-> -	else {
-> -		struct list_head *lh = pci_bus_ops_list.next;
-> -		list_del(lh);
-> -		bus_ops = list_entry(lh, struct pci_bus_ops, list);
-> -	}
-> -	spin_unlock_irqrestore(&inject_lock, flags);
-> -	return bus_ops;
-> -}
-> -
->  static struct pci_bus_ops *pci_bus_ops_get(struct pci_bus_ops *from)
->  {
->  	struct pci_bus_ops *bus_ops = NULL;
-> @@ -622,7 +605,7 @@ static void __exit aer_inject_exit(void)
->  {
->  	struct aer_error *err, *err_next;
->  	unsigned long flags;
-> -	struct pci_bus_ops *bus_ops = NULL;
-> +	struct pci_bus_ops *bus_ops = NULL, *tmp_ops;
->  
->  	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
->  	misc_deregister(&aer_inject_device);
-> @@ -631,8 +614,12 @@ static void __exit aer_inject_exit(void)
->  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
->  
->  	clean_untracked_pci_ops_aer();
-> -	while ((bus_ops = pci_bus_ops_pop()))
-> +
-> +	/* free pci_bus_ops_list */
-> +	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list) {
-> +		list_del(&bus_ops->list);
->  		kfree(bus_ops);
-> +	}
->  
->  	spin_lock_irqsave(&inject_lock, flags);
->  	list_for_each_entry_safe(err, err_next, &einjected, list) {
-
-
+--- a/drivers/acpi/pci_bind.c
++++ b/drivers/acpi/pci_bind.c
+@@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
+ 
+ 	device_set_run_wake(&dev->dev, false);
+ 	pci_acpi_remove_pm_notifier(device);
++	acpi_power_resource_unregister_device(dev, device->handle);
+ 
+ 	if (!dev->subordinate)
+ 		goto out;
+@@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
+ 		return 0;
+ 
+ 	pci_acpi_add_pm_notifier(device, dev);
++	acpi_power_resource_register_device(dev, device->handle);
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(&dev->dev, true);
+ 
