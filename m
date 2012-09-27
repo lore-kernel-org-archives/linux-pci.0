@@ -1,52 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:48410 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754287Ab2ISPeT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 11:34:19 -0400
-Message-ID: <5059E5F3.2040809@gmail.com>
-Date: Wed, 19 Sep 2012 23:34:11 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>
-Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
-References: <1347670122-25824-1-git-send-email-yinghai@kernel.org> <1347670122-25824-3-git-send-email-yinghai@kernel.org> <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com> <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQUxt1kx_SpRWt5eMKvUXuUXwJrd9USeT+WMbCWkDDaQZQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48448 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755594Ab2I0IM0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:26 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 7/8] PCI, ACPI: delete root bus prt during hot remove path
+Date: Thu, 27 Sep 2012 01:11:58 -0700
+Message-Id: <1348733519-24684-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/19/2012 07:49 AM, Yinghai Lu wrote:
-> On Tue, Sep 18, 2012 at 3:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> Found one system one root bus hot remove get panic.
->>> Panic happens when try to release hostbridge resource.
->>>
->>> It turns out that resource get reject during put into resource tree
->>> because of conflicts.
->>> Also that resource parent pointer have random value.
->>>
->>> That invalid value cause it pass through check __release_pci_root_info
->>> and panic in release_resource.
->>>
->>> Try to use kzalloc instead.
->>
->> Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
->> what it does:
->>
->>         if (windows) {
->>                 controller->window =
->>                         kmalloc_node(sizeof(*controller->window) * windows,
->>                                      GFP_KERNEL, controller->node);
->>
-> 
-> 
-> yes, but they don't support pci_set_host_bridge_release yet. so they
-> should not meet this problem yet.
-Hi Yinghai,
-	We are trying to add pci_set_host_bridge_release() for IA64, so would
-appreciate it if you could help to fix IA64 too.
-	--Gerry
+corresponding to add path.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index aed0953..a27cbb57 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -664,6 +664,8 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ 
+ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ {
++	acpi_status status;
++	acpi_handle handle;
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
+ 
+@@ -678,6 +680,10 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
++	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
++	if (ACPI_SUCCESS(status))
++		acpi_pci_irq_del_prt(root->bus);
++
+ 	pci_remove_root_bus(root->bus);
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
+-- 
+1.7.7
 
