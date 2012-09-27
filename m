@@ -1,76 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:44351 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757572Ab2I1QTg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2012 12:19:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo74kQkxS2L5cmpn6++QoVODAf6LdUd-h=TzwQ==rTig5A@mail.gmail.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-	<20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
-	<CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
-	<CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
-	<CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
-	<CAErSpo7Vf1Pz3bFfMAfWXoh0gF844X2JT7RQ9-ecr3uWj=z9_w@mail.gmail.com>
-	<CAE9FiQUrovv143dTo_k2m0DYXqwGc4BtbjmzGxo2Fk21Fp2EJw@mail.gmail.com>
-	<CAErSpo74kQkxS2L5cmpn6++QoVODAf6LdUd-h=TzwQ==rTig5A@mail.gmail.com>
-Date: Fri, 28 Sep 2012 09:19:34 -0700
-Message-ID: <CAE9FiQUbk+Z0OVYMuouEfXTZuwG0ZyPOi=PNwFdmuij_J07-QA@mail.gmail.com>
-Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48421 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755201Ab2I0IMW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:22 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/8] PCI: Separate out pci_assign_unassigned_bus_resources()
+Date: Thu, 27 Sep 2012 01:11:52 -0700
+Message-Id: <1348733519-24684-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 9:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Sep 27, 2012 at 2:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Today we have this, which is more complicated than it should be.  Note
-> how we do some ACPI stuff, some PCI stuff, some more ACPI stuff, then
-> more PCI stuff:
->
->     acpi_pci_root_add
->         pci_acpi_scan_root
->             pci_scan_child_bus
->         acpi_pci_irq_add_prt
->         acpi_pci_osc_control_set
->     acpi_pci_root_start
->         pci_bus_add_devices
->
-> I don't think the ACPI/PCI mixture is anything essential dictated by
-> the way the hardware or firmware works.  I think it's just an artifact
-> of the current design, and it could be changed.  It would be better to
-> have this:
->
->     acpi_pci_root_add
->         acpi_pci_irq_add_prt
->         acpi_pci_osc_control_set
->         pci_acpi_scan_root
->             pci_scan_root_bus
->                 pci_scan_child_bus
->                 pci_bus_add_devices
->
-> We can't get to this latter strategy as long as the ACPI interfaces
-> depend on the struct pci_bus.  So the _PRT change is a small thing in
-> itself, but I do think it helps enable significant improvements in the
-> future.
+It is main portion of pci_rescan_bus().
 
-still to handle to those fallback path like create_bus and scan bus failure.
+Separate it out and prepare to use it for pci root bus hot add later.
 
-in my for-pci-next branch, with Jiang's patches and mine, now we achieved at
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   32 ++++++++++++++++++--------------
+ include/linux/pci.h     |    1 +
+ 2 files changed, 19 insertions(+), 14 deletions(-)
 
-    acpi_pci_root_add
-        pci_acpi_scan_root
-            pci_scan_root_bus
-                pci_scan_child_bus
-        acpi_pci_osc_control_set
-        pci_bus_add_devices
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1e808ca..1f34929 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1550,25 +1550,12 @@ enable_all:
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
+-#ifdef CONFIG_HOTPLUG
+-/**
+- * pci_rescan_bus - scan a PCI bus for devices.
+- * @bus: PCI bus to scan
+- *
+- * Scan a PCI bus and child buses for new devices, adds them,
+- * and enables them.
+- *
+- * Returns the max number of subordinate bus discovered.
+- */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+-	unsigned int max;
+ 	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
+ 
+-	max = pci_scan_child_bus(bus);
+-
+ 	down_read(&pci_bus_sem);
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+ 		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+@@ -1581,6 +1568,23 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+ 	BUG_ON(!list_empty(&add_list));
+ 
+ 	pci_enable_bridges(bus);
++}
++#ifdef CONFIG_HOTPLUG
++/**
++ * pci_rescan_bus - scan a PCI bus for devices.
++ * @bus: PCI bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++{
++	unsigned int max;
++
++	max = pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index be1de01..505c05a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -980,6 +980,7 @@ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-- 
+1.7.7
 
-acpi_pci_irq_add_prt is called later during acpi binding that is
-triggered by adding to device tree.
-thought os_control set via pci_host_bridge add interface..
-
-with those BUS ADD notification, we can pass bus safely, and without
-considering about cleanup PRT and OSC setting.
