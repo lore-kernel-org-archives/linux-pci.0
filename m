@@ -1,65 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:46077 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750747Ab2I0EDk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 00:03:40 -0400
-Date: Thu, 27 Sep 2012 06:03:35 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 -tip 0/5] x86, MSI, AHCI: Support multiple MSIs
-Message-ID: <20120927040335.GA1957@gmail.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
- <20120926123824.GB7123@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120926123824.GB7123@dhcp-26-207.brq.redhat.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48481 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755522Ab2I0IM3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:29 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add root bus
+Date: Thu, 27 Sep 2012 01:11:55 -0700
+Message-Id: <1348733519-24684-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+After we get hot-added ioapic registered.
+pci_enable_bridges will try to enable ioapic irq for pci bridges.
 
-* Alexander Gordeev <agordeev@redhat.com> wrote:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-> On Mon, Sep 03, 2012 at 11:16:55AM +0200, Alexander Gordeev wrote:
-> >   5/5:	based on Jeff's comments:
-> > 
-> > 	- AHCI specific code moved from libata-core.c to libahci.c;
-> > 
-> > 	- the host-wide lock concern addressed - ahci_interrupt() handler
-> > 	  split in two parts: ahci_hw_interrupt() hardware context handler
-> > 	  and ahci_thread_fn() threaded handler;
-> > 
-> > 	- host->lock statistics attached;
-> 
-> Hi Jeff,
-> 
-> Would you please comment on the changes and numbers?
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index bce469c..27adbfd 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
+ 
++	if (system_state != SYSTEM_BOOTING)
++		pci_assign_unassigned_bus_resources(root->bus);
++
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->add)
+ 			driver->add(root);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 
++	/* need to after hot-added ioapic is registered */
++	if (system_state != SYSTEM_BOOTING)
++		pci_enable_bridges(root->bus);
++
+ 	pci_bus_add_devices(root->bus);
+ 
+ 	return 0;
+-- 
+1.7.7
 
-Yep, given the diffstat:
-
- Documentation/PCI/MSI-HOWTO.txt |   37 ++++++-
- arch/x86/kernel/apic/io_apic.c  |  170 +++++++++++++++++++++++++++++--
- drivers/ata/ahci.c              |   14 ++-
- drivers/ata/ahci.h              |    5 +
- drivers/ata/libahci.c           |  211 +++++++++++++++++++++++++++++++++++++-
- drivers/pci/msi.c               |   36 ++++++-
- include/linux/irq.h             |    6 +
- include/linux/msi.h             |    1 +
- include/linux/pci.h             |    7 ++
- kernel/irq/chip.c               |   30 ++++--
- kernel/irq/irqdesc.c            |   31 ++++++
- 11 files changed, 509 insertions(+), 39 deletions(-)
-
-We absolutely need a very happy and enthusiastic Acked-by from 
-Jeff before we can pursue it :-)
-
-Thaks,
-
-	Ingo
