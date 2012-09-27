@@ -1,70 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:46430 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862Ab2IRS6B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 14:58:01 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVRGK-Of1RuvFZRtuT-yZ7LGDD_oNWr2ier2aaUqrugmA@mail.gmail.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
-	<CAE9FiQVRGK-Of1RuvFZRtuT-yZ7LGDD_oNWr2ier2aaUqrugmA@mail.gmail.com>
-Date: Tue, 18 Sep 2012 11:57:59 -0700
-Message-ID: <CAE9FiQW3pyFFt714yuG-BzuK55eUjN4ojhNZ6LvwGqGWuAtMYQ@mail.gmail.com>
-Subject: Re: [PATCH v3 0/6] acpi,pci: hostbridge hotplug support
+Received: from acsinet15.oracle.com ([141.146.126.227]:27421 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755522Ab2I0IMX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 04:12:23 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/8] PCI: Add pci_stop_and_remove_root_bus()
+Date: Thu, 27 Sep 2012 01:11:56 -0700
+Message-Id: <1348733519-24684-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 18, 2012 at 11:41 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Sep 17, 2012 at 11:12 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->> Hi all,
->>
->>   This patchset is 3rd version of the following:
->>     http://marc.info/?l=linux-pci&m=134457928913775&w=2
->>     http://marc.info/?l=linux-pci&m=134665909321684&w=2
->>
->>  v2 -> v3:
->>    - change acpi_pci_drivers' add/remove interface according to Bjorn's suggestion
->>    - abandon RCU for protecting acpi_pci_roots list according to Bjorn's suggestion
->>    - change acpi_pci_find_root implementation to avoid potential deadlock
->>
->>   * [PATCH v3 1/8] ACPI, PCI: Use normal list for struct acpi_pci_driver
->>   * [PATCH v3 2/8] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging PCI root bridges
->>   * [PATCH v3 3/8] ACPI, PCI: add acpi_pci_drivers protection
->>   * [PATCH v3 4/8] ACPI, PCI: change acpi_pci_drivers' add/remove interface
->>   * [PATCH v3 5/8] ACPI, PCI: change acpi_pci_find_root implementation
->>   * [PATCH v3 6/8] ACPI, PCI: add acpi_pci_roots protection
->>   * [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
->>   * [PATCH v3 8/8] ACPI, PCI: add resoruce-assign code for devices under hot-added hostbridge
->
-> now it is more similar to my for-pci-root-bus-hotplug-part4 and part5
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part5
->
-> big difference:
-> I separated code from acpiphp_glue.c to pci_root_hp.c for root bridge
-> hotplug support
->
-> I thought we all agreed on that acpi root bridge hotplug plug need to
-> be separated from acpiphp at first.
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=ab9fd4ccbfb6120a4a4adf9833487d656b0501d3
->
-> and CONFIG_HOTPLUG will always be enabled, so root bridge hotplug will
-> be always enabled.
-> acpiphp will still be used as one module, and to keep it simple pciehp
-> will be used for pcie etc.
-> That make the system BIOS much simple to avoid acpiphp.
+It supports both pci root bus and pci bus under pci bridge.
 
-also current acpiphp only have root bridge add notification.
-and your code do not add any code for remove notification.
+-v2: clear pci_bridge's subordinate.
+-v3: only handle root bus. and also put Jiang's get/put pair in
+-v4: fold pci_stop/remove_bus_devices in... reducing confusing.
+-v5: split device_register/unregister to avoid extra get...
+     also remove extra blank line.
 
-So how to you test your code with removal path?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |   36 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 38 insertions(+), 0 deletions(-)
 
-Thanks
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 513972f..7c0fd92 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -111,3 +111,39 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ 	pci_remove_bus_device(dev);
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
++
++void pci_stop_root_bus(struct pci_bus *bus)
++{
++	struct pci_dev *child, *tmp;
++	struct pci_host_bridge *host_bridge;
++
++	if (!pci_is_root_bus(bus))
++		return;
++
++	host_bridge = to_pci_host_bridge(bus->bridge);
++	list_for_each_entry_safe_reverse(child, tmp,
++					 &bus->devices, bus_list)
++		pci_stop_bus_device(child);
++
++	/* stop the host bridge */
++	device_del(&host_bridge->dev);
++}
++
++void pci_remove_root_bus(struct pci_bus *bus)
++{
++	struct pci_dev *child, *tmp;
++	struct pci_host_bridge *host_bridge;
++
++	if (!pci_is_root_bus(bus))
++		return;
++
++	host_bridge = to_pci_host_bridge(bus->bridge);
++	list_for_each_entry_safe(child, tmp,
++				 &bus->devices, bus_list)
++		pci_remove_bus_device(child);
++	pci_remove_bus(bus);
++	host_bridge->bus = NULL;
++
++	/* remove the host bridge */
++	put_device(&host_bridge->dev);
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 505c05a..a5cd03b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_root_bus(struct pci_bus *bus);
++void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+-- 
+1.7.7
 
-Yinghai
