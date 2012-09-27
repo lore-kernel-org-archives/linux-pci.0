@@ -1,191 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60685 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753630Ab2IKXWF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 19:22:05 -0400
-Received: by lagy9 with SMTP id y9so702655lag.19
-        for <linux-pci@vger.kernel.org>; Tue, 11 Sep 2012 16:22:03 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:54466 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752697Ab2I0URl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 16:17:41 -0400
 MIME-Version: 1.0
-In-Reply-To: <1344355862-2726-22-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-22-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Sep 2012 17:21:43 -0600
-Message-ID: <CAErSpo4ubTSu5cSrLVfs5UHc44KgtzO_OxL_QganfhqYn2hUWQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 21/22] PCI: cleanups for PCI bus lock implementation
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
+In-Reply-To: <CAErSpo7Vf1Pz3bFfMAfWXoh0gF844X2JT7RQ9-ecr3uWj=z9_w@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
+	<CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+	<CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
+	<CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
+	<CAErSpo7Vf1Pz3bFfMAfWXoh0gF844X2JT7RQ9-ecr3uWj=z9_w@mail.gmail.com>
+Date: Thu, 27 Sep 2012 13:17:39 -0700
+Message-ID: <CAE9FiQUrovv143dTo_k2m0DYXqwGc4BtbjmzGxo2Fk21Fp2EJw@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 7, 2012 at 10:11 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Now all Archs have been converted to the new PCI bus lock mechanism,
-> so clean up unused code.
+On Thu, Sep 27, 2012 at 11:44 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> I'm not sure if that is needed.
+>
+> That's a useless response.  Do you want to elaborate on *why* you
+> think this is a bad idea?
 
-When you say "all arches," do you really mean "x86 and ia64"?  I
-assume all the other architectures have similar issues.  Or is this
-somehow ACPI-specific?
+I did not say that is bad idea.
 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  drivers/pci/Kconfig     |    3 ---
->  drivers/pci/bus.c       |    1 -
->  drivers/pci/pci-sysfs.c |    9 ---------
->  drivers/pci/probe.c     |    4 +---
->  include/linux/pci.h     |   10 ----------
->  5 files changed, 1 insertion(+), 26 deletions(-)
+it is just not needed to waste your time.
+
 >
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 5a796c0..848bfb8 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -120,6 +120,3 @@ config PCI_IOAPIC
->  config PCI_LABEL
->         def_bool y if (DMI || ACPI)
->         select NLS
-> -
-> -config PCI_BUS_LOCK
-> -       def_bool y if (X86 || IA64)
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 371f20a..308c376 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -196,7 +196,6 @@ int pci_bus_add_child(struct pci_bus *bus)
->                         pci_create_legacy_files(bus);
->                         pci_bus_change_state(bus, PCI_BUS_STATE_INITIALIZED,
->                                         PCI_BUS_STATE_WORKING, false);
-> -                       bus->is_added = 1;
->                 }
->         }
+> I explained the reasons why I think it's a good idea above, but just
+> to expand on it, we currently have to create the struct pci_bus before
+> we can add _PRT information.   But adding the _PRT info doesn't
+> actually depend on the struct pci_bus; it only requires the segment
+> number and the bus number.  We have that information before we scan
+> the bus .
 >
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 11043b4..a5a4195 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -284,7 +284,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
->  }
+> I think it's useful to disentangle _PRT interface from the specifics
+> of PCI (in this case, the struct pci_bus).  We're currently using the
+> struct pci_bus here just as a convenient way to pass around the
+> segment/bus number, but I don't think it's the appropriate abstraction
+> for that.
 >
->  #ifdef CONFIG_HOTPLUG
-> -static DEFINE_MUTEX(pci_remove_rescan_mutex);
->  static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
->                                 size_t count)
->  {
-> @@ -296,13 +295,11 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+> Do you see a technical problem with it?  Even if it's not *necessary*
+> in order to make host bridge hotplug work, I think it's worth doing to
+> make the code more understandable.
 >
->         if (val) {
->                 pci_host_bridge_hotplug_lock();
-> -               mutex_lock(&pci_remove_rescan_mutex);
->                 while ((b = pci_find_next_bus(b)) != NULL)
->                         if (pci_bus_lock_states(b, PCI_BUS_STATE_WORKING) > 0) {
->                                 pci_rescan_bus(b);
->                                 pci_bus_unlock(b);
->                         }
-> -               mutex_unlock(&pci_remove_rescan_mutex);
->                 pci_host_bridge_hotplug_unlock();
->         }
->         return count;
-> @@ -326,13 +323,11 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
->         if (val) {
->                 struct pci_bus *bus = pdev->bus;
+> Do you see a problem with adding the _PRT info before scanning the bus
+> or with removing it after deleting the bus?
+
+If the bus is not there, do not need that prt.
+
+So if you find the prt and add it to the list before, later if
+scanning fail etc failing path
+you will need to clean that prt in the list.
+
+
+> I'd like the bus scan
+> code to be able to scan/add/bind drivers all at once in the PCI core.
+> Today I think we have scan/add _PRT/device_add, where we have to do
+> this _PRT stuff in the middle, so we have to use two PCI interfaces
+> rather than one.
+
+looks like we handle _PRT in pci_host_bridge add/remove notification,
+just like Jiang's put that for pci device bus notifier.
+
 >
-> -               mutex_lock(&pci_remove_rescan_mutex);
->                 if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
->                         if (pdev->is_added)
->                                 pci_rescan_bus(bus);
->                         pci_bus_unlock(bus);
->                 }
-> -               mutex_unlock(&pci_remove_rescan_mutex);
->         }
->         return count;
->  }
-> @@ -342,13 +337,11 @@ static void remove_callback(struct device *dev)
->         struct pci_dev *pdev = to_pci_dev(dev);
->         struct pci_bus *bus = pdev->bus;
->
-> -       mutex_lock(&pci_remove_rescan_mutex);
->         if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
->                 pci_bus_get(bus);
->                 pci_stop_and_remove_bus_device(pdev);
->                 pci_unlock_and_put_bus(bus);
->         }
-> -       mutex_unlock(&pci_remove_rescan_mutex);
->  }
->
->  static ssize_t
-> @@ -382,14 +375,12 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
->                 return -EINVAL;
->
->         if (val) {
-> -               mutex_lock(&pci_remove_rescan_mutex);
->                 if (!pci_is_root_bus(bus))
->                         pci_rescan_bus_bridge_resize(bus->self);
->                 else if (pci_bus_lock_states(bus, PCI_BUS_STATE_WORKING) > 0) {
->                         pci_rescan_bus(bus);
->                         pci_bus_unlock(bus);
->                 }
-> -               mutex_unlock(&pci_remove_rescan_mutex);
->         }
->         return count;
->  }
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index da6f04c..09517c3 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1626,11 +1626,9 @@ unsigned int __devinit pci_scan_child_bus(struct pci_bus *bus)
->         if (pci_bus_get_state(bus) < PCI_BUS_STATE_WORKING) {
->                 dev_dbg(&bus->dev, "fixups for bus\n");
->                 pcibios_fixup_bus(bus);
-> -               if (pci_is_root_bus(bus)) {
-> +               if (pci_is_root_bus(bus))
->                         pci_bus_change_state(bus, PCI_BUS_STATE_REGISTERED,
->                                              PCI_BUS_STATE_WORKING, false);
-> -                       bus->is_added = 1;
-> -               }
->         }
->
->         for (pass=0; pass < 2; pass++)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 9e52e88..0e50ec8 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -442,7 +442,6 @@ struct pci_bus {
->         struct device           dev;
->         struct bin_attribute    *legacy_io; /* legacy I/O for this bus */
->         struct bin_attribute    *legacy_mem; /* legacy mem */
-> -       unsigned int            is_added:1;
->         atomic_t                state;
->  };
->
-> @@ -463,21 +462,12 @@ struct pci_bus {
->  #define        PCI_BUS_STATE_DESTROYED         0x40    /* invalid state */
->  #define        PCI_BUS_STATE_MASK              0x7F
->
-> -#ifdef CONFIG_PCI_BUS_LOCK
->  #define        PCI_BUS_STATE_LOCK              0x10000 /* for pci core only */
->
->  static inline bool pci_bus_is_locked(struct pci_bus *bus)
->  {
->         return !!(atomic_read(&bus->state) & PCI_BUS_STATE_LOCK);
->  }
-> -#else /* CONFIG_PCI_BUS_LOCK */
-> -#define        PCI_BUS_STATE_LOCK              0x0000  /* for pci core only */
-> -
-> -static inline bool pci_bus_is_locked(struct pci_bus *bus)
-> -{
-> -       return true;
-> -}
-> -#endif /* CONFIG_PCI_BUS_LOCK */
->
->  static inline int pci_bus_get_state(struct pci_bus *bus)
->  {
-> --
-> 1.7.9.5
->
+> It's great if you see a way to remove acpi_pci_root_start() -- that
+> will be tremendous.
+
+that will need to more test.
+
+> I think the current PCI stop/remove split is a
+> similar issue, and I hope you can dream up a way to consolidate those,
+> too.
+
+that is SRIOV handling resign.
+
+I would suggest following way:
+use pf as parent for one new domain. and put all VFs on that domain.
+and the domain could have 256 buses for those VFs.
+and we have 16 bits domain number that could be used.
+
+current got too many patches in my quilt... hate to keep rebasing again.
+
+after pci root bus hotplug and for_each_res topic, will work on that SRIOV one.
+
+-Yinghai
