@@ -1,90 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:64987 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214Ab2IMB30 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Sep 2012 21:29:26 -0400
-Message-ID: <1347499761.30040.138.camel@yhuang-dev>
-Subject: Re: [PATCH v2 4/4] PCI/AER: fix a small race condition window when
- rmmod aer_inject
-From: Huang Ying <ying.huang@intel.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Chen Gong <gong.chen@linux.intel.com>, jiang.liu@huawei.com,
-	Hanjun Guo <guohanjun@huawei.com>, linux-pci@vger.kernel.org
-Date: Thu, 13 Sep 2012 09:29:21 +0800
-In-Reply-To: <1347453225-7704-4-git-send-email-wangyijing@huawei.com>
-References: <1347453225-7704-1-git-send-email-wangyijing@huawei.com>
-	 <1347453225-7704-4-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:51457 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977Ab2I0Son (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 14:44:43 -0400
+Received: by bkcjk13 with SMTP id jk13so2341264bkc.19
+        for <linux-pci@vger.kernel.org>; Thu, 27 Sep 2012 11:44:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+ <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com> <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+ <CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com> <CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 27 Sep 2012 12:44:21 -0600
+Message-ID: <CAErSpo7Vf1Pz3bFfMAfWXoh0gF844X2JT7RQ9-ecr3uWj=z9_w@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-09-12 at 20:33 +0800, Yijing Wang wrote:
-> Fix a small race condition window between pci_bus_ops_pop() and
-> pci_bus_set_ops() functions.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |    8 ++------
->  1 files changed, 2 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index bd043db..69c2d77 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -141,12 +141,11 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  	return NULL;
->  }
->  
-> +/* inject_lock must be held before calling */
->  static struct pci_bus_ops *pci_bus_ops_pop(void)
->  {
-> -	unsigned long flags;
->  	struct pci_bus_ops *bus_ops = NULL;
->  
-> -	spin_lock_irqsave(&inject_lock, flags);
->  	if (list_empty(&pci_bus_ops_list))
->  		bus_ops = NULL;
->  	else {
-> @@ -154,7 +153,6 @@ static struct pci_bus_ops *pci_bus_ops_pop(void)
->  		list_del(lh);
->  		bus_ops = list_entry(lh, struct pci_bus_ops, list);
->  	}
-> -	spin_unlock_irqrestore(&inject_lock, flags);
->  	return bus_ops;
->  }
->  
-> @@ -610,14 +608,12 @@ static void __exit aer_inject_exit(void)
->  	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
->  	misc_deregister(&aer_inject_device);
->  
-> +	spin_lock_irqsave(&inject_lock, flags);
->  	while ((bus_ops = pci_bus_ops_pop())) {
->  		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
->  		kfree(bus_ops);
->  	}
->  	
-> -	clean_untracked_pci_aer_ops();
-> -
-> -	spin_lock_irqsave(&inject_lock, flags);
->  	list_for_each_entry_safe(err, err_next, &einjected, list) {
->  		list_del(&err->list);
->  		kfree(err);
+On Thu, Sep 27, 2012 at 11:23 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Thu, Sep 27, 2012 at 9:48 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Fri, Sep 21, 2012 at 2:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> If we get rid of the struct pci_bus * dependency, then we can easily
+>>> add the _PRT before doing PCI enumeration behind the bridge, and we
+>>> can remove the _PRT after removing the PCI devices.  I think this is
+>>> one small step toward getting rid of the add/start and stop/remove
+>>> split.
+>>
+>> I'm going to work on doing this if nobody else is interested.
+>
+> I'm not sure if that is needed.
 
-This may trigger a AB BA dead lock.  In aer_inject_exit, the lock
-sequence is:
+That's a useless response.  Do you want to elaborate on *why* you
+think this is a bad idea?
 
-inject_lock -> pci_lock
+I explained the reasons why I think it's a good idea above, but just
+to expand on it, we currently have to create the struct pci_bus before
+we can add _PRT information.   But adding the _PRT info doesn't
+actually depend on the struct pci_bus; it only requires the segment
+number and the bus number.  We have that information before we scan
+the bus .
 
-In pci config read/write path, the lock sequence is:
+I think it's useful to disentangle _PRT interface from the specifics
+of PCI (in this case, the struct pci_bus).  We're currently using the
+struct pci_bus here just as a convenient way to pass around the
+segment/bus number, but I don't think it's the appropriate abstraction
+for that.
 
-pci_lock -> inject_lock
+Do you see a technical problem with it?  Even if it's not *necessary*
+in order to make host bridge hotplug work, I think it's worth doing to
+make the code more understandable.
 
-With lockdep enabled, you may found warning on that.
+Do you see a problem with adding the _PRT info before scanning the bus
+or with removing it after deleting the bus?  I'd like the bus scan
+code to be able to scan/add/bind drivers all at once in the PCI core.
+Today I think we have scan/add _PRT/device_add, where we have to do
+this _PRT stuff in the middle, so we have to use two PCI interfaces
+rather than one.
 
-Best Regards,
-Huang YIng
+It's great if you see a way to remove acpi_pci_root_start() -- that
+will be tremendous.  I think the current PCI stop/remove split is a
+similar issue, and I hope you can dream up a way to consolidate those,
+too.
 
-
+Bjorn
