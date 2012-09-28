@@ -1,79 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eng.riverbed.com ([208.70.196.44]:59814 "EHLO
-	smtp2.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754285Ab2ILBN5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 21:13:57 -0400
-From: Jiang Wang <Jiang.Wang@riverbed.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Chaitanya Lala <Chaitanya.Lala@riverbed.com>,
-	"Francis St. Amant" <Francis.St.Amant@riverbed.com>
-Subject: RE: [PATCH 1/1] pci-iov: Fix warnings when CONFIG_PCI_IOV is enabled
-Date: Wed, 12 Sep 2012 01:13:55 +0000
-Message-ID: <CEE05A0D7856E14880AD5560634EBEA834DB8E96@SFO1EXC-MBXP06.nbttech.com>
-References: <1346800307-11041-1-git-send-email-Jiang.Wang@riverbed.com>
- <CAErSpo7vu0uS=06Dr82-LZ3KBzxaje6fV+H=Foi-bD1c6mUcFA@mail.gmail.com>
-In-Reply-To: <CAErSpo7vu0uS=06Dr82-LZ3KBzxaje6fV+H=Foi-bD1c6mUcFA@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:46602 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030405Ab2I1To2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2012 15:44:28 -0400
+Received: by lbon3 with SMTP id n3so2342038lbo.19
+        for <linux-pci@vger.kernel.org>; Fri, 28 Sep 2012 12:44:26 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUbk+Z0OVYMuouEfXTZuwG0ZyPOi=PNwFdmuij_J07-QA@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+ <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com> <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+ <CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
+ <CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
+ <CAErSpo7Vf1Pz3bFfMAfWXoh0gF844X2JT7RQ9-ecr3uWj=z9_w@mail.gmail.com>
+ <CAE9FiQUrovv143dTo_k2m0DYXqwGc4BtbjmzGxo2Fk21Fp2EJw@mail.gmail.com>
+ <CAErSpo74kQkxS2L5cmpn6++QoVODAf6LdUd-h=TzwQ==rTig5A@mail.gmail.com> <CAE9FiQUbk+Z0OVYMuouEfXTZuwG0ZyPOi=PNwFdmuij_J07-QA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 28 Sep 2012 13:44:06 -0600
+Message-ID: <CAErSpo4cR0v0Hy9ujgizDcNOB4wgLrgGrewQH2GewWihHMV9jQ@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
------Original Message-----
-From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
-Sent: Tuesday, September 11, 2012 4:35 PM
-To: Jiang Wang
-Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Chaitanya Lala; Francis St. Amant; Jiang Wang
-Subject: Re: [PATCH 1/1] pci-iov: Fix warnings when CONFIG_PCI_IOV is enabled
-
-On Tue, Sep 4, 2012 at 5:11 PM, Jiang Wang <Jiang.Wang@riverbed.com> wrote:
-> When CONFIG_PCI_IOV is enabled, the kernel will call sriov_init().
-> This function tries to allocate virtual resources even if the virtual 
-> function of a PCI devive is not enabled by the BIOS.
+On Fri, Sep 28, 2012 at 10:19 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Sep 28, 2012 at 9:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Sep 27, 2012 at 2:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Today we have this, which is more complicated than it should be.  Note
+>> how we do some ACPI stuff, some PCI stuff, some more ACPI stuff, then
+>> more PCI stuff:
+>>
+>>     acpi_pci_root_add
+>>         pci_acpi_scan_root
+>>             pci_scan_child_bus
+>>         acpi_pci_irq_add_prt
+>>         acpi_pci_osc_control_set
+>>     acpi_pci_root_start
+>>         pci_bus_add_devices
+>>
+>> I don't think the ACPI/PCI mixture is anything essential dictated by
+>> the way the hardware or firmware works.  I think it's just an artifact
+>> of the current design, and it could be changed.  It would be better to
+>> have this:
+>>
+>>     acpi_pci_root_add
+>>         acpi_pci_irq_add_prt
+>>         acpi_pci_osc_control_set
+>>         pci_acpi_scan_root
+>>             pci_scan_root_bus
+>>                 pci_scan_child_bus
+>>                 pci_bus_add_devices
+>>
+>> We can't get to this latter strategy as long as the ACPI interfaces
+>> depend on the struct pci_bus.  So the _PRT change is a small thing in
+>> itself, but I do think it helps enable significant improvements in the
+>> future.
 >
-> This sometimes causes following warning messages during boot up:
-> pci 0000:02:00.0: BAR 9: can't allocate mem resource 
-> [0x000000-0x3fffff] pci 0000:02:00.0: BAR 7: can't allocate mem 
-> resource [0x000000-0x03ffff]
+> still to handle to those fallback path like create_bus and scan bus failure.
 >
-> Tested on three Mitac motherboards.
+> in my for-pci-next branch, with Jiang's patches and mine, now we achieved at
 >
-> Signed-off-by: Jiang Wang <jwang@riverbed.com>
-> ---
->  drivers/pci/iov.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
+>     acpi_pci_root_add
+>         pci_acpi_scan_root
+>             pci_scan_root_bus
+>                 pci_scan_child_bus
+>         acpi_pci_osc_control_set
+>         pci_bus_add_devices
 >
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c index 
-> 6554e1a..0ca8cb2 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -441,7 +441,8 @@ static int sriov_init(struct pci_dev *dev, int pos)
->         if (ctrl & PCI_SRIOV_CTRL_VFE) {
->                 pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
->                 ssleep(1);
-> -       }
-> +       } else
-> +               return 0;
-
-But this would mean that Linux can't *ever* enable VFs unless the BIOS enabled them, right?  I don't think that's what we want -- there's code in sriov_enable() to turn on VFE, assuming we have enough resources for the VFs.
-
---- I see. I didn't find the code in sriov_enable() before I send out the patch. Thanks for the info.
-
-It's certainly possible that the BIOS didn't allocate large enough apertures in the bridges leading to the SR-IOV device to accommodate all the VFs, and Linux may not be smart enough to enlarge them.  And probably our warning messages in that case are not very enlightening.
-
----- My purpose here is to remove those warnings. I also tried to disable CONFIG_PCI_IOV, but that causes another strange problem on one of machines. The LSI controller cannot get memory resources and 32 LSI controllers shown up even though only one actually exist.
-I will drop this patch and do more debug to see what that problem is. Thanks.
- 
-Bjorn
-
->         pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
->         if (!total)
-> --
-> 1.7.1
+> acpi_pci_irq_add_prt is called later during acpi binding that is
+> triggered by adding to device tree.
+> thought os_control set via pci_host_bridge add interface..
 >
+> with those BUS ADD notification, we can pass bus safely, and without
+> considering about cleanup PRT and OSC setting.
 
-Regards,
+I haven't looked at those patches yet.
 
-Jiang
+Is there a reason why acpi_pci_osc_control_set() needs to be done
+after pci_scan_child_bus()?  The argument that it might make the error
+path somewhat simpler is not very convincing to me.  Having the arch
+code call both pci_scan_child_bus() and pci_bus_add_devices() is a
+much more fundamental complexity -- it makes x86 and ia64 different
+from many architectures, and it exposes the intermediate state where
+"devices have been enumerated but not added" to a lot more code.
+
+It doesn't sound like an improvement to call acpi_pci_irq_add_prt()
+using a bus add notifier.  At least for the host bridge case, it's
+clear, simple, and straightforward to call it in acpi_pci_root_add().
+Notifiers are useful in some cases, but they definitely make the code
+harder to follow.
