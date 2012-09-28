@@ -1,58 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org
-Subject: [PATCH 03/40] PCI, ia64: clear initial value for root info resources
-Date: Wed, 19 Sep 2012 11:54:17 -0700
-Message-Id: <1348080894-23412-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Zhang, Yanmin" <yanmin.zhang@intel.com>
+To: "Huang, Ying" <ying.huang@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>
+Subject: RE: Why hold device_lock when calling callback in pci_walk_bus?
+Date: Fri, 28 Sep 2012 08:29:20 +0000
+Message-ID: <144086DDB7BB6D429C79280EB1C804D414B1F6@SHSMSX101.ccr.corp.intel.com>
+References: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
+In-Reply-To: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-after
-	PCI, x86: clear initial value for root info resources
-
-change ia64 code accordingly, because later ia64 will support root bus removal too.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
----
- arch/ia64/pci/pci.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index a7ebe94..5faa66c 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -295,7 +295,6 @@ static __devinit acpi_status add_window(struct acpi_resource *res, void *data)
- 	window->resource.flags = flags;
- 	window->resource.start = addr.minimum + offset;
- 	window->resource.end = window->resource.start + addr.address_length - 1;
--	window->resource.child = NULL;
- 	window->offset = offset;
- 
- 	if (insert_resource(root, &window->resource)) {
-@@ -357,7 +356,7 @@ pci_acpi_scan_root(struct acpi_pci_root *root)
- 			&windows);
- 	if (windows) {
- 		controller->window =
--			kmalloc_node(sizeof(*controller->window) * windows,
-+			kzalloc_node(sizeof(*controller->window) * windows,
- 				     GFP_KERNEL, controller->node);
- 		if (!controller->window)
- 			goto out2;
--- 
-1.7.7
-
+U29tZSBlcnJvciBoYW5kbGluZyBmdW5jdGlvbnMgY2FsbCBwY2lfd2Fsa19idXMuIEZvciBleGFt
+cGxlLCBwY2ktZSBhZXIuIEhlcmUgd2UgbG9jayB0aGUgZGV2aWNlLCBzbyB0aGUgZHJpdmVyIHdv
+dWxkbid0IGRldGFjaCBmcm9tIHRoZSBkZXZpY2UsIGFzIHRoZSBjYiBtaWdodCBjYWxsIGRyaXZl
+cidzIGNhbGxiYWNrIGZ1bmN0aW9uLg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
+bTogSHVhbmcsIFlpbmcgDQpTZW50OiBGcmlkYXksIFNlcHRlbWJlciAyOCwgMjAxMiA0OjE1IFBN
+DQpUbzogYmhlbGdhYXNAZ29vZ2xlLmNvbQ0KQ2M6IEdyZWcgS3JvYWgtSGFydG1hbjsgWmhhbmcs
+IFlhbm1pbjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
+bmVsLm9yZzsgcmp3QHNpc2sucGwNClN1YmplY3Q6IFdoeSBob2xkIGRldmljZV9sb2NrIHdoZW4g
+Y2FsbGluZyBjYWxsYmFjayBpbiBwY2lfd2Fsa19idXM/DQoNCkhpLCBBbGwsDQoNCklmIG15IHVu
+ZGVyc3RhbmRpbmcgd2VyZSBjb3JyZWN0LCBkZXZpY2VfbG9jayBpcyB1c2VkIHRvIHByb3ZpZGUg
+bXV0dWFsIGV4Y2x1c2lvbiBiZXR3ZWVuIGRldmljZSBwcm9iZS9yZW1vdmUvc3VzcGVuZC9yZXN1
+bWUgZXRjLiAgV2h5IGhvbGQgZGV2aWNlX2xvY2sgd2hlbiBjYWxsaW5nIGNhbGxiYWNrIGluIHBj
+aV93YWxrX2J1cy4NCg0KVGhpcyBpcyBpbnRyb2R1Y2VkIGJ5IHRoZSBmb2xsb3dpbmcgY29tbWl0
+Lg0KDQpjb21taXQgZDcxMzc0ZGFmYmJhN2VjM2Y2NzM3MWQzYjdlOWY2MzEwYTU4ODgwOA0KQXV0
+aG9yOiBaaGFuZyBZYW5taW4gPHlhbm1pbi56aGFuZ0BpbnRlbC5jb20+DQpEYXRlOiAgIEZyaSBK
+dW4gMiAxMjozNTo0MyAyMDA2ICswODAwDQoNCiAgICBbUEFUQ0hdIFBDSTogZml4IHJhY2Ugd2l0
+aCBwY2lfd2Fsa19idXMgYW5kIHBjaV9kZXN0cm95X2Rldg0KICAgIA0KICAgIHBjaV93YWxrX2J1
+cyBoYXMgYSByYWNlIHdpdGggcGNpX2Rlc3Ryb3lfZGV2LiBXaGVuIGNiIGlzIGNhbGxlZA0KICAg
+IGluIHBjaV93YWxrX2J1cywgcGNpX2Rlc3Ryb3lfZGV2IG1pZ2h0IHVubGluayB0aGUgZGV2IHBv
+aW50ZWQgYnkgbmV4dC4NCiAgICBMYXRlciBvbiBpbiB0aGUgbmV4dCBsb29wLCBwb2ludGVyIG5l
+eHQgYmVjb21lcyBOVUxMIGFuZCBjYXVzZQ0KICAgIGtlcm5lbCBwYW5pYy4NCiAgICANCiAgICBC
+ZWxvdyBwYXRjaCBhZ2FpbnN0IDIuNi4xNy1yYzQgZml4ZXMgaXQgYnkgY2hhbmdpbmcgcGNpX2J1
+c19sb2NrIChzcGluX2xvY2spDQogICAgdG8gcGNpX2J1c19zZW0gKHJ3X3NlbWFwaG9yZSkuDQog
+ICAgDQogICAgU2lnbmVkLW9mZi1ieTogWmhhbmcgWWFubWluIDx5YW5taW4uemhhbmdAaW50ZWwu
+Y29tPg0KICAgIFNpZ25lZC1vZmYtYnk6IEdyZWcgS3JvYWgtSGFydG1hbiA8Z3JlZ2toQHN1c2Uu
+ZGU+DQoNCkNvcnJlc3BvbmRpbmcgZW1haWwgdGhyZWFkIGlzOiBodHRwczovL2xrbWwub3JnL2xr
+bWwvMjAwNi81LzI2LzM4DQoNCkJ1dCBmcm9tIHRoZSBjb21taXQgYW5kIGVtYWlsIHRocmVhZCwg
+SSBjYW4gbm90IGZpbmQgd2h5IHdlIG5lZWQgdG8gZG8gdGhhdC4NCg0KSSBhc2sgdGhpcyBxdWVz
+dGlvbiBiZWNhdXNlIEkgd2FudCB0byB1c2UgcGNpX3dhbGtfYnVzIGluIGEgZnVuY3Rpb24gKGlu
+IHBjaSBydW50aW1lIHJlc3VtZSBwYXRoKSB3aGljaCBtYXkgYmUgY2FsbGVkIHdpdGggZGV2aWNl
+X2xvY2sgaGVsZC4NCg0KQ2FuIGFueW9uZSBoZWxwIG1lIG9uIHRoYXQ/DQoNCkJlc3QgUmVnYXJk
+cywNCkh1YW5nIFlpbmcNCg0KDQo=
