@@ -1,105 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Subject: [RFD][PATCH 3/7] PM / QoS: Prepare struct dev_pm_qos_request for more request types
+Date: Fri, 28 Sep 2012 23:53:33 +0200
+Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
+	linux-pci@vger.kernel.org,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	mark gross <markgross@thegnar.org>
+References: <201209282351.10663.rjw@sisk.pl>
+In-Reply-To: <201209282351.10663.rjw@sisk.pl>
 MIME-Version: 1.0
-In-Reply-To: <1344355862-2726-20-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-20-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Sep 2012 17:22:30 -0600
-Message-ID: <CAErSpo7CYY0AucKj1_e=a8FDP6beQ6LKKaAEFbKxJp_ViwGhsA@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 19/22] PCI/x86: enable PCI bus lock mechanism for
- x86 platforms
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201209282353.33982.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> This patch turns on PCI bus lock mechanism for x86 platforms. It also
-> enhances x86 specific PCI implementation to support PCI bus lock.
->
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
-> ---
->  arch/x86/pci/acpi.c   |    6 +++++-
->  arch/x86/pci/common.c |   12 ++++++++++++
->  drivers/pci/Kconfig   |    3 +--
->  3 files changed, 18 insertions(+), 3 deletions(-)
->
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 2bb885a..c68dbdf 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -414,7 +414,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->          * Maybe the desired pci bus has been already scanned. In such case
->          * it is unnecessary to scan the pci bus with the given domain,busnum.
->          */
-> -       bus = pci_find_bus(domain, busnum);
-> +       bus = __pci_get_and_lock_bus(domain, busnum,
-> +                                    PCI_BUS_STATE_STOPPING - 1);
->         if (bus) {
->                 /*
->                  * If the desired bus exits, the content of bus->sysdata will
-> @@ -449,6 +450,7 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->                         pci_free_resource_list(&resources);
->                         __release_pci_root_info(info);
->                 }
-> +               pci_bus_get(bus);
->         }
->
->         /* After the PCI-E bus has been walked and all devices discovered,
-> @@ -475,6 +477,8 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
->  #endif
->         }
->
-> +       pci_unlock_and_put_bus(bus);
-> +
->         return bus;
->  }
->
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 0ad990a..8b7ae63 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -667,6 +667,18 @@ struct pci_bus * __devinit pci_scan_bus_with_sysdata(int busno)
->         return pci_scan_bus_on_node(busno, &pci_root_ops, -1);
->  }
->
-> +static DEFINE_MUTEX(pci_root_bus_mutex);
-> +
-> +void arch_pci_lock_host_bridge_hotplug(void)
-> +{
-> +       mutex_lock(&pci_root_bus_mutex);
-> +}
-> +
-> +void arch_pci_unlock_host_bridge_hotplug(void)
-> +{
-> +       mutex_unlock(&pci_root_bus_mutex);
-> +}
+The subsequent patches will use struct dev_pm_qos_request for
+representing both latency requests and flags requests.  To make that
+easier, put the node member of struct dev_pm_qos_request (under the
+name "pnode") into a union called "data" that will represent the
+request's  value and list node depending on its type.
 
-Are these left over from previous work?  I don't see any reference to
-them elsewhere in your patch series.
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/base/power/qos.c   |    6 +++---
+ drivers/base/power/sysfs.c |    2 +-
+ include/linux/pm_qos.h     |    4 +++-
+ 3 files changed, 7 insertions(+), 5 deletions(-)
 
->  /*
->   * NUMA info for PCI busses
->   *
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index a6df8b1..1bbe924 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -122,5 +122,4 @@ config PCI_LABEL
->         select NLS
->
->  config PCI_BUS_LOCK
-> -       bool
-> -       default n
-> +       def_bool y if X86
-> --
-> 1.7.9.5
->
+Index: linux/include/linux/pm_qos.h
+===================================================================
+--- linux.orig/include/linux/pm_qos.h
++++ linux/include/linux/pm_qos.h
+@@ -39,7 +39,9 @@ struct pm_qos_flags_request {
+ };
+ 
+ struct dev_pm_qos_request {
+-	struct plist_node node;
++	union {
++		struct plist_node pnode;
++	} data;
+ 	struct device *dev;
+ };
+ 
+Index: linux/drivers/base/power/sysfs.c
+===================================================================
+--- linux.orig/drivers/base/power/sysfs.c
++++ linux/drivers/base/power/sysfs.c
+@@ -221,7 +221,7 @@ static DEVICE_ATTR(autosuspend_delay_ms,
+ static ssize_t pm_qos_latency_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+-	return sprintf(buf, "%d\n", dev->power.pq_req->node.prio);
++	return sprintf(buf, "%d\n", dev->power.pq_req->data.pnode.prio);
+ }
+ 
+ static ssize_t pm_qos_latency_store(struct device *dev,
+Index: linux/drivers/base/power/qos.c
+===================================================================
+--- linux.orig/drivers/base/power/qos.c
++++ linux/drivers/base/power/qos.c
+@@ -90,7 +90,7 @@ static int apply_constraint(struct dev_p
+ 	int ret, curr_value;
+ 
+ 	ret = pm_qos_update_target(&req->dev->power.qos->latency,
+-				   &req->node, action, value);
++				   &req->data.pnode, action, value);
+ 
+ 	if (ret) {
+ 		/* Call the global callbacks if needed */
+@@ -183,7 +183,7 @@ void dev_pm_qos_constraints_destroy(stru
+ 
+ 	c = &qos->latency;
+ 	/* Flush the constraints list for the device */
+-	plist_for_each_entry_safe(req, tmp, &c->list, node) {
++	plist_for_each_entry_safe(req, tmp, &c->list, data.pnode) {
+ 		/*
+ 		 * Update constraints list and call the notification
+ 		 * callbacks if needed
+@@ -293,7 +293,7 @@ int dev_pm_qos_update_request(struct dev
+ 	mutex_lock(&dev_pm_qos_mtx);
+ 
+ 	if (req->dev->power.qos) {
+-		if (new_value != req->node.prio)
++		if (new_value != req->data.pnode.prio)
+ 			ret = apply_constraint(req, PM_QOS_UPDATE_REQ,
+ 					       new_value);
+ 	} else {
+
