@@ -1,71 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53020 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932184Ab2IRWrI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 18:47:08 -0400
-Received: by lagy9 with SMTP id y9so273962lag.19
-        for <linux-pci@vger.kernel.org>; Tue, 18 Sep 2012 15:47:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1347670122-25824-3-git-send-email-yinghai@kernel.org>
-References: <1347670122-25824-1-git-send-email-yinghai@kernel.org> <1347670122-25824-3-git-send-email-yinghai@kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Sep 2012 16:46:46 -0600
-Message-ID: <CAErSpo5LMj=wPwYgJfk97hfx9b03fPHZXEvdR6gV2somBTD+4A@mail.gmail.com>
-Subject: Re: [PATCH] PCI, x86: clear initial value for root info resources
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org, Tony Luck <tony.luck@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:61057 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754505Ab2I1N2t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Sep 2012 09:28:49 -0400
+Message-ID: <1348838843.4922.5.camel@yhuang-mobile.sh.intel.com>
+Subject: Re: Why hold device_lock when calling callback in pci_walk_bus?
+From: Huang Ying <ying.huang@intel.com>
+To: "Zhang, Yanmin" <yanmin.zhang@intel.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"rjw@sisk.pl" <rjw@sisk.pl>
+Date: Fri, 28 Sep 2012 21:27:23 +0800
+In-Reply-To: <144086DDB7BB6D429C79280EB1C804D414B1F6@SHSMSX101.ccr.corp.intel.com>
+References: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
+	 <144086DDB7BB6D429C79280EB1C804D414B1F6@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 14, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Found one system one root bus hot remove get panic.
-> Panic happens when try to release hostbridge resource.
->
-> It turns out that resource get reject during put into resource tree
-> because of conflicts.
-> Also that resource parent pointer have random value.
->
-> That invalid value cause it pass through check __release_pci_root_info
-> and panic in release_resource.
->
-> Try to use kzalloc instead.
+Hi, Yanmin,
 
-Don't we need the same fix for ia64 in pci_acpi_scan_root()?  Here's
-what it does:
+Thanks for your explain.
 
-        if (windows) {
-                controller->window =
-                        kmalloc_node(sizeof(*controller->window) * windows,
-                                     GFP_KERNEL, controller->node);
+On Fri, 2012-09-28 at 02:29 -0600, Zhang, Yanmin wrote:
+> Some error handling functions call pci_walk_bus. For example, pci-e aer. Here we lock the device, so the driver wouldn't detach from the device, as the cb might call driver's callback function.
+
+Still has two question.
+
+1. Is it a good practice to hold device_lock when calling driver
+callback to prevent driver be unbind?
+
+2. Is it a good idea to let callback of pci_walk_bus to acquire
+device_lock when necessary.  Because pci_walk_bus may be used by driver
+callback too.
+
+Best Regards,
+Huang Ying
+
+> -----Original Message-----
+> From: Huang, Ying 
+> Sent: Friday, September 28, 2012 4:15 PM
+> To: bhelgaas@google.com
+> Cc: Greg Kroah-Hartman; Zhang, Yanmin; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; rjw@sisk.pl
+> Subject: Why hold device_lock when calling callback in pci_walk_bus?
+> 
+> Hi, All,
+> 
+> If my understanding were correct, device_lock is used to provide mutual exclusion between device probe/remove/suspend/resume etc.  Why hold device_lock when calling callback in pci_walk_bus.
+> 
+> This is introduced by the following commit.
+> 
+> commit d71374dafbba7ec3f67371d3b7e9f6310a588808
+> Author: Zhang Yanmin <yanmin.zhang@intel.com>
+> Date:   Fri Jun 2 12:35:43 2006 +0800
+> 
+>     [PATCH] PCI: fix race with pci_walk_bus and pci_destroy_dev
+>     
+>     pci_walk_bus has a race with pci_destroy_dev. When cb is called
+>     in pci_walk_bus, pci_destroy_dev might unlink the dev pointed by next.
+>     Later on in the next loop, pointer next becomes NULL and cause
+>     kernel panic.
+>     
+>     Below patch against 2.6.17-rc4 fixes it by changing pci_bus_lock (spin_lock)
+>     to pci_bus_sem (rw_semaphore).
+>     
+>     Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
+>     Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+> 
+> Corresponding email thread is: https://lkml.org/lkml/2006/5/26/38
+> 
+> But from the commit and email thread, I can not find why we need to do that.
+> 
+> I ask this question because I want to use pci_walk_bus in a function (in pci runtime resume path) which may be called with device_lock held.
+> 
+> Can anyone help me on that?
+> 
+> Best Regards,
+> Huang Ying
+> 
+> 
 
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: x86@kernel.org
->
-> ---
->  arch/x86/pci/acpi.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> Index: linux-2.6/arch/x86/pci/acpi.c
-> ===================================================================
-> --- linux-2.6.orig/arch/x86/pci/acpi.c
-> +++ linux-2.6/arch/x86/pci/acpi.c
-> @@ -305,7 +305,6 @@ setup_resource(struct acpi_resource *acp
->         res->flags = flags;
->         res->start = start;
->         res->end = end;
-> -       res->child = NULL;
->
->         if (!pci_use_crs) {
->                 dev_printk(KERN_DEBUG, &info->bridge->dev,
-> @@ -434,7 +433,7 @@ probe_pci_root_info(struct pci_root_info
->
->         size = sizeof(*info->res) * info->res_num;
->         info->res_num = 0;
-> -       info->res = kmalloc(size, GFP_KERNEL);
-> +       info->res = kzalloc(size, GFP_KERNEL);
->         if (!info->res)
->                 return;
->
