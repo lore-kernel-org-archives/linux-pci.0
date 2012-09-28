@@ -1,59 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <lenb@kernel.org>
-Subject: [PATCH part4 11/11] PCI, ACPI: Make kacpi_hotplug_wq static
-Date: Sun,  2 Sep 2012 14:54:21 -0700
-Message-Id: <1346622861-30865-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
-References: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:64051 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752232Ab2I1AYU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Sep 2012 20:24:20 -0400
+Received: by lagh6 with SMTP id h6so699094lag.19
+        for <linux-pci@vger.kernel.org>; Thu, 27 Sep 2012 17:24:18 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120928091520.92bf495b.izumi.taku@jp.fujitsu.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+ <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com> <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+ <CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com> <20120928091520.92bf495b.izumi.taku@jp.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 27 Sep 2012 18:23:57 -0600
+Message-ID: <CAErSpo7nfYxAmP-kotxBEo20eCZtrWxUzTmk=74MsiJXXZaxBg@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No external user anymore.
+On Thu, Sep 27, 2012 at 6:15 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+> On Thu, 27 Sep 2012 10:48:09 -0600
+> Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+>> On Fri, Sep 21, 2012 at 2:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > On Tue, Sep 18, 2012 at 12:25 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>> >>
+>> >> Currently there's no PCI-related clean-up code
+>> >> in acpi_pci_root_remove() function.
+>> >> This patch introduces function for hostbridge removal,
+>> >> and brings back pci_stop_bus_devices() function.
+>> >>
+>> >> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+>> >> ---
+>> >>  drivers/acpi/pci_bind.c     |    7 +++++++
+>> >>  drivers/acpi/pci_root.c     |    7 +++++++
+>> >>  drivers/pci/remove.c        |   27 +++++++++++++++++++++++++++
+>> >>  include/acpi/acpi_drivers.h |    1 +
+>> >>  include/linux/pci.h         |    2 ++
+>> >>  5 files changed, 44 insertions(+)
+>> >>
+>> >> Index: Bjorn-next-0903/drivers/pci/remove.c
+>> >> ===================================================================
+>> >> --- Bjorn-next-0903.orig/drivers/pci/remove.c
+>> >> +++ Bjorn-next-0903/drivers/pci/remove.c
+>> >> @@ -92,3 +92,30 @@ void pci_stop_and_remove_bus_device(stru
+>> >>         pci_destroy_dev(dev);
+>> >>  }
+>> >>  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
+>> >> +
+>> >> +void pci_stop_bus_devices(struct pci_bus *bus)
+>> >> +{
+>> >> +       struct pci_dev *dev, *tmp;
+>> >> +
+>> >> +       list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+>> >> +               if (dev->subordinate)
+>> >> +                       pci_stop_bus_devices(dev->subordinate);
+>> >> +               pci_stop_dev(dev);
+>> >> +       }
+>> >> +
+>> >> +}
+>> >> +EXPORT_SYMBOL(pci_stop_bus_devices);
+>> >> +
+>> >> +void pci_remove_host_bridge(struct pci_host_bridge *bridge)
+>> >> +{
+>> >> +       struct pci_bus *root = bridge->bus;
+>> >> +       struct pci_dev *dev, *tmp;
+>> >> +
+>> >> +       list_for_each_entry_safe_reverse(dev, tmp, &root->devices, bus_list)
+>> >> +               pci_stop_and_remove_bus_device(dev);
+>> >> +
+>> >> +       pci_remove_bus(root);
+>> >> +
+>> >> +       device_unregister(&bridge->dev);
+>> >> +}
+>> >> +EXPORT_SYMBOL(pci_remove_host_bridge);
+>> >> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
+>> >> ===================================================================
+>> >> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
+>> >> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
+>> >> @@ -652,8 +652,10 @@ static int acpi_pci_root_remove(struct a
+>> >>  {
+>> >>         struct acpi_pci_root *root = acpi_driver_data(device);
+>> >>         struct acpi_pci_driver *driver;
+>> >> +       struct pci_host_bridge *bridge = to_pci_host_bridge(root->bus->bridge);
+>> >>
+>> >>         mutex_lock(&acpi_pci_root_lock);
+>> >> +       pci_stop_bus_devices(root->bus);
+>> >>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+>> >>                 if (driver->remove)
+>> >>                         driver->remove(root);
+>> >> @@ -661,6 +663,11 @@ static int acpi_pci_root_remove(struct a
+>> >>         device_set_run_wake(root->bus->bridge, false);
+>> >>         pci_acpi_remove_bus_pm_notifier(device);
+>> >>
+>> >> +       acpi_pci_irq_del_prt(root->bus);
+>> >
+>> > acpi_pci_irq_del_prt() does not actually have a dependency on the
+>> > struct pci_bus, so I think its interface should be changed so it takes
+>> > a segment number and a bus number instead of the "struct pci_bus *".
+>> > The same applies to acpi_pci_irq_add_prt().
+>> >
+>> > This basically boils down to reverting 859a3f86ca8 and d9efae3688a.  I
+>> > acked those changes at the time, but I think they were a mistake.  The
+>> > reason is that passing in the struct pci_bus * ties them into the host
+>> > bridge add/remove flow in a way that's not necessary.
+>> >
+>> > If we get rid of the struct pci_bus * dependency, then we can easily
+>> > add the _PRT before doing PCI enumeration behind the bridge, and we
+>> > can remove the _PRT after removing the PCI devices.  I think this is
+>> > one small step toward getting rid of the add/start and stop/remove
+>> > split.
+>>
+>> I'm going to work on doing this if nobody else is interested.
+>
+>   I'll do that. Maybee that is separeted from this patchset.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/osl.c      |    3 +--
- include/acpi/acpiosxf.h |    2 --
- 2 files changed, 1 insertions(+), 4 deletions(-)
+Great, thanks!  A separate patchset is definitely fine.
 
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 0719fa7..311a921 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
- static void *acpi_irq_context;
- static struct workqueue_struct *kacpid_wq;
- static struct workqueue_struct *kacpi_notify_wq;
--struct workqueue_struct *kacpi_hotplug_wq;
--EXPORT_SYMBOL(kacpi_hotplug_wq);
-+static struct workqueue_struct *kacpi_hotplug_wq;
- 
- /*
-  * This list of permanent mappings is for memory that may be accessed from
-diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
-index 6ff92ea..9f68f69 100644
---- a/include/acpi/acpiosxf.h
-+++ b/include/acpi/acpiosxf.h
-@@ -194,8 +194,6 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
- /*
-  * Threads and Scheduling
-  */
--extern struct workqueue_struct *kacpi_hotplug_wq;
--
- struct acpi_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
--- 
-1.7.7
-
+>> >> +       acpi_pci_unbind_root(device);
+>> >> +
+>> >> +       pci_remove_host_bridge(bridge);
+>> >> +
+>> >>         list_del(&root->node);
+>> >>         mutex_unlock(&acpi_pci_root_lock);
+>> >>         kfree(root);
+>> >> Index: Bjorn-next-0903/include/linux/pci.h
+>> >> ===================================================================
+>> >> --- Bjorn-next-0903.orig/include/linux/pci.h
+>> >> +++ Bjorn-next-0903/include/linux/pci.h
+>> >> @@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struc
+>> >>  extern void pci_dev_put(struct pci_dev *dev);
+>> >>  extern void pci_remove_bus(struct pci_bus *b);
+>> >>  extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+>> >> +extern void pci_stop_bus_devices(struct pci_bus *bus);
+>> >> +extern void pci_remove_host_bridge(struct pci_host_bridge *bridge);
+>> >>  void pci_setup_cardbus(struct pci_bus *bus);
+>> >>  extern void pci_sort_breadthfirst(void);
+>> >>  #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+>> >> Index: Bjorn-next-0903/drivers/acpi/pci_bind.c
+>> >> ===================================================================
+>> >> --- Bjorn-next-0903.orig/drivers/acpi/pci_bind.c
+>> >> +++ Bjorn-next-0903/drivers/acpi/pci_bind.c
+>> >> @@ -118,3 +118,10 @@ int acpi_pci_bind_root(struct acpi_devic
+>> >>
+>> >>         return 0;
+>> >>  }
+>> >> +
+>> >> +void  acpi_pci_unbind_root(struct acpi_device *device)
+>> >> +{
+>> >> +       device->ops.bind = NULL;
+>> >> +       device->ops.unbind = NULL;
+>> >> +}
+>> >> +
+>> >> Index: Bjorn-next-0903/include/acpi/acpi_drivers.h
+>> >> ===================================================================
+>> >> --- Bjorn-next-0903.orig/include/acpi/acpi_drivers.h
+>> >> +++ Bjorn-next-0903/include/acpi/acpi_drivers.h
+>> >> @@ -101,6 +101,7 @@ struct pci_bus;
+>> >>
+>> >>  struct pci_dev *acpi_get_pci_dev(acpi_handle);
+>> >>  int acpi_pci_bind_root(struct acpi_device *device);
+>> >> +void acpi_pci_unbind_root(struct acpi_device *device);
+>> >>
+>> >>  /* Arch-defined function to add a bus to the system */
+>> >>
+>> >>
+>>
+>
+>
+> --
+> Taku Izumi <izumi.taku@jp.fujitsu.com>
+>
