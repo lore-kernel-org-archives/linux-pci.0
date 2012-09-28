@@ -1,56 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:65282 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756458Ab2IQOWx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Sep 2012 10:22:53 -0400
-Message-ID: <50573232.9080508@gmail.com>
-Date: Mon, 17 Sep 2012 22:22:42 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2 5/9] ACPI/pci-bind: remove bind/unbind callbacks from
- acpi_device_ops
-References: <1347678312-11124-1-git-send-email-jiang.liu@huawei.com> <1347678312-11124-6-git-send-email-jiang.liu@huawei.com> <CAE9FiQWk_2gPyVUiLgvRQ=qrFNby_R7Qh-QNruobQnhVFTn21w@mail.gmail.com> <CAE9FiQX2hgxQo3GC3_0h5D5uo9coRZqcpPCKGtzF7jYbUfvxUw@mail.gmail.com>
-In-Reply-To: <CAE9FiQX2hgxQo3GC3_0h5D5uo9coRZqcpPCKGtzF7jYbUfvxUw@mail.gmail.com>
+In-Reply-To: <CAErSpo7nfYxAmP-kotxBEo20eCZtrWxUzTmk=74MsiJXXZaxBg@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+ <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com> <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+ <CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
+ <20120928091520.92bf495b.izumi.taku@jp.fujitsu.com> <CAErSpo7nfYxAmP-kotxBEo20eCZtrWxUzTmk=74MsiJXXZaxBg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 28 Sep 2012 08:16:17 -0600
+Message-ID: <CAErSpo6S2kR6se2vVwe+9f0KN6_no7oMTJLs+B2-9yCofWwbVA@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/17/2012 11:03 AM, Yinghai Lu wrote:
-> On Sat, Sep 15, 2012 at 4:27 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Sep 14, 2012 at 8:05 PM, Jiang Liu <liuj97@gmail.com> wrote:
->>>  From: Jiang Liu <jiang.liu@huawei.com>
->>>
->>> Now ACPI devices are created before/destroyed after corresponding PCI
->>> devices, and acpi_platform_notify/acpi_platform_notify_remove will
->>> update PCI<->ACPI binding relationship when creating/destroying PCI
->>> devices, there's no need to invoke bind/unbind callbacks from ACPI
->>> device probe/destroy routines anymore. So remove bind/unbind callbacks
->>> from acpi_device_ops.
->> for pci root bus, acpi_bus_trim() is used to remove acpi_device.
+On Thu, Sep 27, 2012 at 6:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Sep 27, 2012 at 6:15 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>> On Thu, 27 Sep 2012 10:48:09 -0600
+>> Bjorn Helgaas <bhelgaas@google.com> wrote:
 >>
->> and later in acpi_pci_root_remove to stop pci drivers/ioapic driver,
->> iommu driver then remove pci devices.
->>
->> if call back is removed there, then could some functions in
->> acpi_pci_unbind() will be skipped.
->>
->> I really do not want to add pci_stop_bus_devices() in
->> pci_root_hp.c::handle_root_bridge_removal before
->> calling acpi_bus_trim...
-> 
-> FYI, I solved the problem.  will call apci_bus_remove() two times. it
-> will make sure pci devices
-> get removed at first before acpi devices...
-Hi Yinghai,
-	Great! So we could remove the acpi<->PCI logic now.
-	Thanks!
-	Gerry
+>>> On Fri, Sep 21, 2012 at 2:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> > On Tue, Sep 18, 2012 at 12:25 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
 
+>>> >> @@ -661,6 +663,11 @@ static int acpi_pci_root_remove(struct a
+>>> >>         device_set_run_wake(root->bus->bridge, false);
+>>> >>         pci_acpi_remove_bus_pm_notifier(device);
+>>> >>
+>>> >> +       acpi_pci_irq_del_prt(root->bus);
+>>> >
+>>> > acpi_pci_irq_del_prt() does not actually have a dependency on the
+>>> > struct pci_bus, so I think its interface should be changed so it takes
+>>> > a segment number and a bus number instead of the "struct pci_bus *".
+>>> > The same applies to acpi_pci_irq_add_prt().
+>>> >
+>>> > This basically boils down to reverting 859a3f86ca8 and d9efae3688a.  I
+>>> > acked those changes at the time, but I think they were a mistake.  The
+>>> > reason is that passing in the struct pci_bus * ties them into the host
+>>> > bridge add/remove flow in a way that's not necessary.
+>>> >
+>>> > If we get rid of the struct pci_bus * dependency, then we can easily
+>>> > add the _PRT before doing PCI enumeration behind the bridge, and we
+>>> > can remove the _PRT after removing the PCI devices.  I think this is
+>>> > one small step toward getting rid of the add/start and stop/remove
+>>> > split.
+>>>
+>>> I'm going to work on doing this if nobody else is interested.
+>>
+>>   I'll do that. Maybee that is separeted from this patchset.
+>
+> Great, thanks!  A separate patchset is definitely fine.
+
+Whether this is a waste of time or not, I don't know.  But I did a
+little bit of work on this before you volunteered, Taku.  Sorry, I
+should have pointed you at the work-in-progress patches; maybe they
+could have saved you a bit of time.  Anyway, here they are:
+
+http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/pci/bjorn-misc
