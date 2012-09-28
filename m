@@ -1,145 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 16/40] PCI: pci_bus_size_bridges() should not size own bridge
-Date: Wed, 19 Sep 2012 11:54:30 -0700
-Message-Id: <1348080894-23412-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com>
- <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:50882 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965203Ab2I1Vu5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Sep 2012 17:50:57 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Subject: [RFD][PATCH 7/7] PM / ACPI: Take device PM QoS flags into account
+Date: Fri, 28 Sep 2012 23:56:52 +0200
+Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
+	linux-pci@vger.kernel.org,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	mark gross <markgross@thegnar.org>
+References: <201209282351.10663.rjw@sisk.pl>
+In-Reply-To: <201209282351.10663.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201209282356.52558.rjw@sisk.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During checking acpiphp code, found following sequence:
-        pci_bus_size_bridges(bus);
-        pci_bus_assign_resources(bus);
-	pci_enable_bridges(bus);
+Make ACPI power management routines and PCI power management
+routines depending on ACPI take device PM QoS flags into account
+when deciding what power state to put the device into.
 
-The problem is that when bus is not root bus, pci_bus_size_bridges would also size
-own pci bridge bus->self if that bridge resource is not inserted before.
-but later pci_bus_assign_resources will not allocate those size bridge res.
+In particular, after this change acpi_pm_device_sleep_state() will
+not return ACPI_STATE_D3_COLD as the deepest available low-power
+state if PM_QOS_FLAG_NO_POWER_OFF is requested for the device and it
+will not require remote wakeup to work for the device in the returned
+low-power state if there is at least one PM QoS flags request for the
+device, but PM_QOS_FLAG_REMOTE_WAKEUP is not requested for it.
 
-So try make it less confusing, let it does not include self sizing.
-and add with_self parameter info __pci_bus_size_bridge()
+Accordingly, acpi_pci_set_power_state() will refuse to put the
+device into D3cold if PM_QOS_FLAG_NO_POWER_OFF is requested for it.
 
-Fixes caller in pci hotplug componets.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    3 ++-
- drivers/pci/setup-bus.c            |   24 +++++++++++++++---------
- include/linux/pci.h                |    1 +
- 3 files changed, 18 insertions(+), 10 deletions(-)
+ drivers/acpi/sleep.c   |   16 ++++++++++++----
+ drivers/pci/pci-acpi.c |    8 +++++++-
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 085eec7..6cb1923 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -842,7 +842,8 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 				max = pci_scan_bridge(bus, dev, max, pass);
- 				if (pass && dev->subordinate) {
- 					check_hotplug_bridge(slot, dev);
--					pci_bus_size_bridges(dev->subordinate);
-+					pci_bus_size_bridges_with_self(
-+							dev->subordinate);
- 				}
- 			}
- 		}
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 31821d4..85f7ec73 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1044,8 +1044,8 @@ handle_done:
- 	;
- }
+Index: linux/drivers/pci/pci-acpi.c
+===================================================================
+--- linux.orig/drivers/pci/pci-acpi.c
++++ linux/drivers/pci/pci-acpi.c
+@@ -17,6 +17,7 @@
  
--void __ref __pci_bus_size_bridges(struct pci_bus *bus,
--			struct list_head *realloc_head)
-+static void __ref __pci_bus_size_bridges(struct pci_bus *bus,
-+			struct list_head *realloc_head, bool with_self)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask;
-@@ -1063,13 +1063,13 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ #include <linux/pci-acpi.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pm_qos.h>
+ #include "pci.h"
  
- 		case PCI_CLASS_BRIDGE_PCI:
- 		default:
--			__pci_bus_size_bridges(b, realloc_head);
-+			__pci_bus_size_bridges(b, realloc_head, true);
- 			break;
- 		}
+ static DEFINE_MUTEX(pci_acpi_pm_notify_mtx);
+@@ -257,11 +258,16 @@ static int acpi_pci_set_power_state(stru
+ 		return -ENODEV;
+ 
+ 	switch (state) {
++	case PCI_D3cold:
++		if (dev_pm_qos_flags(&dev->dev, PM_QOS_FLAG_NO_POWER_OFF) ==
++				PM_QOS_FLAGS_ALL) {
++			error = -EBUSY;
++			break;
++		}
+ 	case PCI_D0:
+ 	case PCI_D1:
+ 	case PCI_D2:
+ 	case PCI_D3hot:
+-	case PCI_D3cold:
+ 		error = acpi_bus_set_power(handle, state_conv[state]);
  	}
  
--	/* The root bus? */
--	if (!bus->self)
-+	/* Is root bus or not wanted? */
-+	if (!bus->self || !with_self)
- 		return;
+Index: linux/drivers/acpi/sleep.c
+===================================================================
+--- linux.orig/drivers/acpi/sleep.c
++++ linux/drivers/acpi/sleep.c
+@@ -19,6 +19,7 @@
+ #include <linux/acpi.h>
+ #include <linux/module.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pm_qos.h>
  
- 	switch (bus->self->class >> 8) {
-@@ -1109,9 +1109,15 @@ void __ref __pci_bus_size_bridges(struct pci_bus *bus,
+ #include <asm/io.h>
+ 
+@@ -711,6 +712,7 @@ int acpi_pm_device_sleep_state(struct de
+ 	struct acpi_device *adev;
+ 	char acpi_method[] = "_SxD";
+ 	unsigned long long d_min, d_max;
++	bool wakeup = false;
+ 
+ 	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3)
+ 		return -EINVAL;
+@@ -718,6 +720,8 @@ int acpi_pm_device_sleep_state(struct de
+ 		printk(KERN_DEBUG "ACPI handle has no context!\n");
+ 		return -ENODEV;
  	}
- }
++	if (dev_pm_qos_flags(dev, PM_QOS_FLAG_NO_POWER_OFF) == PM_QOS_FLAGS_ALL)
++		d_max_in = ACPI_STATE_D3_HOT;
  
-+void __ref pci_bus_size_bridges_with_self(struct pci_bus *bus)
-+{
-+	__pci_bus_size_bridges(bus, NULL, true);
-+}
-+EXPORT_SYMBOL(pci_bus_size_bridges_with_self);
-+
- void __ref pci_bus_size_bridges(struct pci_bus *bus)
- {
--	__pci_bus_size_bridges(bus, NULL);
-+	__pci_bus_size_bridges(bus, NULL, false);
- }
- EXPORT_SYMBOL(pci_bus_size_bridges);
+ 	acpi_method[2] = '0' + acpi_target_sleep_state;
+ 	/*
+@@ -737,8 +741,14 @@ int acpi_pm_device_sleep_state(struct de
+ 	 * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
+ 	 * provided -- that's our fault recovery, we ignore retval.
+ 	 */
+-	if (acpi_target_sleep_state > ACPI_STATE_S0)
++	if (acpi_target_sleep_state > ACPI_STATE_S0) {
+ 		acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
++		wakeup = device_may_wakeup(dev) && adev->wakeup.flags.valid
++			&& adev->wakeup.sleep_state >= acpi_target_sleep_state;
++	} else if (dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) !=
++			PM_QOS_FLAGS_NONE) {
++		wakeup = adev->wakeup.flags.valid;
++	}
  
-@@ -1424,7 +1430,7 @@ again:
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
- 	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_size_bridges(bus, add_list);
-+		__pci_bus_size_bridges(bus, add_list, false);
+ 	/*
+ 	 * If _PRW says we can wake up the system from the target sleep state,
+@@ -747,9 +757,7 @@ int acpi_pm_device_sleep_state(struct de
+ 	 * (ACPI 3.x), it should return the maximum (lowest power) D-state that
+ 	 * can wake the system.  _S0W may be valid, too.
+ 	 */
+-	if (acpi_target_sleep_state == ACPI_STATE_S0 ||
+-	    (device_may_wakeup(dev) && adev->wakeup.flags.valid &&
+-	     adev->wakeup.sleep_state >= acpi_target_sleep_state)) {
++	if (wakeup) {
+ 		acpi_status status;
  
- 	/* Depth last, allocate resources and update the hardware. */
- 	list_for_each_entry(bus, &pci_root_buses, node)
-@@ -1501,7 +1507,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 				  IORESOURCE_PREFETCH;
- 
- again:
--	__pci_bus_size_bridges(parent, &add_list);
-+	__pci_bus_size_bridges(parent, &add_list, true);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
- 	BUG_ON(!list_empty(&add_list));
- 	tried_times++;
-@@ -1562,7 +1568,7 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 		    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS)
- 			if (dev->subordinate)
- 				__pci_bus_size_bridges(dev->subordinate,
--							 &add_list);
-+						 &add_list, true);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
- 	BUG_ON(!list_empty(&add_list));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 02b8e10..7404077 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -978,6 +978,7 @@ int pci_vpd_truncate(struct pci_dev *dev, size_t size);
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
- void pci_bus_size_bridges(struct pci_bus *bus);
-+void pci_bus_size_bridges_with_self(struct pci_bus *bus);
- int pci_claim_resource(struct pci_dev *, int);
- void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
--- 
-1.7.7
+ 		acpi_method[3] = 'W';
 
