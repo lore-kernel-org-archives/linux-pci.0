@@ -1,84 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
-Subject: RE: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
- hot-plugging PCI root bridges
-Date: Wed, 5 Sep 2012 04:32:17 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A4A4240@G01JPEXMBYT03>
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-	<20120903170442.c406455c.izumi.taku@jp.fujitsu.com>
-	<4A338DB2991D2A44B9A44B8718AECF650A4A2DCD@G01JPEXMBYT03>
- <CAE9FiQVJ0JRCgZsh+iSB8VC4TqJDcetPyno36L8=UW-UQUK4vQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQVJ0JRCgZsh+iSB8VC4TqJDcetPyno36L8=UW-UQUK4vQ@mail.gmail.com>
-Content-Type: text/plain; charset="iso-2022-jp"
-MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:57668 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750900Ab2I1IQ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Sep 2012 04:16:28 -0400
+Message-ID: <1348820118.4530.41.camel@yhuang-mobile.sh.intel.com>
+Subject: Why hold device_lock when calling callback in pci_walk_bus?
+From: Huang Ying <ying.huang@intel.com>
+To: bhelgaas@google.com
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	yanmin.zhang@intel.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rjw@sisk.pl
+Date: Fri, 28 Sep 2012 16:15:18 +0800
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
-> Yinghai Lu
-> Sent: Wednesday, September 05, 2012 4:12 AM
-> To: Kaneshige, Kenji/金重 憲治
-> Cc: Izumi, Taku/泉 拓; linux-pci@vger.kernel.org; bhelgaas@google.com;
-> linux-acpi@vger.kernel.org; jiang.liu@huawei.com
-> Subject: Re: [PATCH v2 2/6] ACPI, PCI: Notify acpi_pci_drivers when
-> hot-plugging PCI root bridges
-> 
-> On Tue, Sep 4, 2012 at 12:58 AM, Kaneshige, Kenji
-> <kaneshige.kenji@jp.fujitsu.com> wrote:
-> >>   -v2: Move add calling to acpi_pci_root_start by Yinghai
-> >>  static int acpi_pci_root_start(struct acpi_device *device)
-> >>  {
-> >>       struct acpi_pci_root *root = acpi_driver_data(device);
-> >> +     struct acpi_pci_driver *driver;
-> >> +
-> >> +     list_for_each_entry(driver, &acpi_pci_drivers, node)
-> >> +             if (driver->add)
-> >> +                     driver->add(device->handle);
-> >>
-> >
-> > I think this (invoke .add callback for each acpi pci driver) should be
-> done
-> > after pci_bus_add_devices().
-> 
-> We need to load ioapic driver and dmar driver before normal pci drivers.
+Hi, All,
 
-Ok, my understanding of your comment is that IOAPIC and DMAR drivers are implemented
-as ACPI PCI driver (or you have a plan to implement IOAPIC and DMAR drivers as ACPI
-PCI driver), and those drivers need to be loaded before PCI device drivers. Is my
-understanding correct?
+If my understanding were correct, device_lock is used to provide mutual
+exclusion between device probe/remove/suspend/resume etc.  Why hold
+device_lock when calling callback in pci_walk_bus.
 
-Regards,
-Kenji Kaneshige
+This is introduced by the following commit.
+
+commit d71374dafbba7ec3f67371d3b7e9f6310a588808
+Author: Zhang Yanmin <yanmin.zhang@intel.com>
+Date:   Fri Jun 2 12:35:43 2006 +0800
+
+    [PATCH] PCI: fix race with pci_walk_bus and pci_destroy_dev
+    
+    pci_walk_bus has a race with pci_destroy_dev. When cb is called
+    in pci_walk_bus, pci_destroy_dev might unlink the dev pointed by next.
+    Later on in the next loop, pointer next becomes NULL and cause
+    kernel panic.
+    
+    Below patch against 2.6.17-rc4 fixes it by changing pci_bus_lock (spin_lock)
+    to pci_bus_sem (rw_semaphore).
+    
+    Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+Corresponding email thread is: https://lkml.org/lkml/2006/5/26/38
+
+But from the commit and email thread, I can not find why we need to do
+that.
+
+I ask this question because I want to use pci_walk_bus in a function (in
+pci runtime resume path) which may be called with device_lock held.
+
+Can anyone help me on that?
+
+Best Regards,
+Huang Ying
 
 
-
-> 
-> >
-> > It seems ACPI pci drivers run *after* pci_bus_add_devices() at the boot
-> time
-> > (because no acpi pci drivers is loaded at that time). On the other hand,
-> it
-> > seems that ACPI pci drivers run *before* pci_bus_add_devices() at the
-> hotadd
-> > time. Those should be the same.
-> 
-> for boot time, sequence : normal pci driver still get loaded after
-> ioapic and dmar drivers.
-> otherwise those driver will have problem to get irq and iommu work correctly.
-> and if ioapic and dmar are static, and they will get initialized
-> around pci device get scanned and pci_bus_add_devices get called
-> already.
-> but that time normal devices driver does not get registered yet. those
-> pci drivers will get loaded (should be bounded)
-> for pci devices when those driver get registered.
-> 
-> Thanks
-> 
-> Yinghai
