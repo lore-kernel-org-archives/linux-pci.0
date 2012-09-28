@@ -1,56 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44351 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757572Ab2I1QTg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2012 12:19:36 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo74kQkxS2L5cmpn6++QoVODAf6LdUd-h=TzwQ==rTig5A@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
+	<CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+	<CAErSpo5bTDWCoVbzP-zz_ZcbSL-QJg+eFwoJHQxvaeQAY5OG2A@mail.gmail.com>
+	<CAE9FiQUUjPza9Hq8jJR0nLN__26zQooQAr=paB6dRjQtTM=ngw@mail.gmail.com>
+	<CAErSpo7Vf1Pz3bFfMAfWXoh0gF844X2JT7RQ9-ecr3uWj=z9_w@mail.gmail.com>
+	<CAE9FiQUrovv143dTo_k2m0DYXqwGc4BtbjmzGxo2Fk21Fp2EJw@mail.gmail.com>
+	<CAErSpo74kQkxS2L5cmpn6++QoVODAf6LdUd-h=TzwQ==rTig5A@mail.gmail.com>
+Date: Fri, 28 Sep 2012 09:19:34 -0700
+Message-ID: <CAE9FiQUbk+Z0OVYMuouEfXTZuwG0ZyPOi=PNwFdmuij_J07-QA@mail.gmail.com>
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part4 00/11] PCI, ACPI: pci root bus hotplug support - part4
-Date: Sun,  2 Sep 2012 14:54:10 -0700
-Message-Id: <1346622861-30865-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is core part of ACPI pci root bus hotplug support.
+On Fri, Sep 28, 2012 at 9:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Sep 27, 2012 at 2:17 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> Today we have this, which is more complicated than it should be.  Note
+> how we do some ACPI stuff, some PCI stuff, some more ACPI stuff, then
+> more PCI stuff:
+>
+>     acpi_pci_root_add
+>         pci_acpi_scan_root
+>             pci_scan_child_bus
+>         acpi_pci_irq_add_prt
+>         acpi_pci_osc_control_set
+>     acpi_pci_root_start
+>         pci_bus_add_devices
+>
+> I don't think the ACPI/PCI mixture is anything essential dictated by
+> the way the hardware or firmware works.  I think it's just an artifact
+> of the current design, and it could be changed.  It would be better to
+> have this:
+>
+>     acpi_pci_root_add
+>         acpi_pci_irq_add_prt
+>         acpi_pci_osc_control_set
+>         pci_acpi_scan_root
+>             pci_scan_root_bus
+>                 pci_scan_child_bus
+>                 pci_bus_add_devices
+>
+> We can't get to this latter strategy as long as the ACPI interfaces
+> depend on the struct pci_bus.  So the _PRT change is a small thing in
+> itself, but I do think it helps enable significant improvements in the
+> future.
 
-First add pci_stop_and_remove_bus support, so could use it to remove root bus.
+still to handle to those fallback path like create_bus and scan bus failure.
 
-Separate out hot add from acpiphp. User could only use pci_root_hp and pciehp.
-And add hot removal notification support.
+in my for-pci-next branch, with Jiang's patches and mine, now we achieved at
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug-part4
+    acpi_pci_root_add
+        pci_acpi_scan_root
+            pci_scan_root_bus
+                pci_scan_child_bus
+        acpi_pci_osc_control_set
+        pci_bus_add_devices
 
-Jiang Liu (3):
-  PCI: Fix a device reference count leakage issue in pci_dev_present()
-  PCI: Correctly clean up pci root buses in function pci_remove_bus()
-  PCI: Fix an access-after-free issue in function pci_stop_and_remove_bus()
+acpi_pci_irq_add_prt is called later during acpi binding that is
+triggered by adding to device tree.
+thought os_control set via pci_host_bridge add interface..
 
-Yinghai Lu (8):
-  PCI: Add pci_stop_and_remove_bus()
-  PCI, acpiphp: Separate out hot-add support of pci host bridge
-  PCI, ACPI: Make acpi_pci_root_remove remove pci root bus too
-  PCI, ACPI: Add pci_root_hp hot removal notification support.
-  PCI, ACPI: Add alloc_acpi_hp_work()
-  PCI, acpiphp: Use acpi_hp_work
-  PCI, pci_root_hp: Use acpi_hp_work
-  PCI, ACPI: Make kacpi_hotplug_wq static
-
- drivers/acpi/Makefile              |    1 +
- drivers/acpi/osl.c                 |   24 +++-
- drivers/acpi/pci_root.c            |   14 ++
- drivers/acpi/pci_root_hp.c         |  271 ++++++++++++++++++++++++++++++++++++
- drivers/pci/hotplug/acpiphp_glue.c |   79 ++---------
- drivers/pci/remove.c               |   44 +++++-
- drivers/pci/search.c               |   10 +-
- include/acpi/acpiosxf.h            |    9 +-
- include/linux/pci.h                |    1 +
- 9 files changed, 374 insertions(+), 79 deletions(-)
- create mode 100644 drivers/acpi/pci_root_hp.c
-
--- 
-1.7.7
-
+with those BUS ADD notification, we can pass bus safely, and without
+considering about cleanup PRT and OSC setting.
