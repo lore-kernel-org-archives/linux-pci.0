@@ -1,112 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:38830 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116Ab2IKWD1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Sep 2012 18:03:27 -0400
-Received: by lbbgj3 with SMTP id gj3so713283lbb.19
-        for <linux-pci@vger.kernel.org>; Tue, 11 Sep 2012 15:03:26 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1344355862-2726-3-git-send-email-jiang.liu@huawei.com>
-References: <1344355862-2726-1-git-send-email-jiang.liu@huawei.com> <1344355862-2726-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1348733519-24684-5-git-send-email-yinghai@kernel.org>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org> <1348733519-24684-5-git-send-email-yinghai@kernel.org>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Sep 2012 16:03:05 -0600
-Message-ID: <CAErSpo7oXFGARWS+M=_7_R_4Hw6j5pufRbaNKtwTr5BT-_xeAA@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 02/22] PCI: trivial cleanups for drivers/pci/remove.c
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Don Dutile <ddutile@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
+Date: Fri, 28 Sep 2012 17:46:11 -0600
+Message-ID: <CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com>
+Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
+ root bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Xinwei Hu <huxinwei@huawei.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 7, 2012 at 10:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> Trivial cleanups for drivers/pci/remove.c:
-> 1) move the comment for pci_stop_and_remove_bus_device() to the right place
-> 2) rename __pci_remove_behind_bridge() to pci_remove_behind_bridge()
+On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> After we get hot-added ioapic registered.
+> pci_enable_bridges will try to enable ioapic irq for pci bridges.
 
-This seems fine, but I think my pci/bjorn-cleanup-remove branch subsumes it.
+What makes this specifically related to IOAPICs?
 
-> Signed-off-by: Jiang Liu <liuj97@gmail.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  drivers/pci/remove.c |   33 +++++++++++++++++----------------
->  1 file changed, 17 insertions(+), 16 deletions(-)
+>  drivers/acpi/pci_root.c |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
 >
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 04a4861..33b6318 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -78,25 +78,14 @@ void pci_remove_bus(struct pci_bus *pci_bus)
->  }
->  EXPORT_SYMBOL(pci_remove_bus);
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index bce469c..27adbfd 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
+>         struct acpi_pci_root *root = acpi_driver_data(device);
+>         struct acpi_pci_driver *driver;
 >
-> -static void __pci_remove_behind_bridge(struct pci_dev *dev);
-> -/**
-> - * pci_stop_and_remove_bus_device - remove a PCI device and any children
-> - * @dev: the device to remove
-> - *
-> - * Remove a PCI device from the device lists, informing the drivers
-> - * that the device has been removed.  We also remove any subordinate
-> - * buses and children in a depth-first manner.
-> - *
-> - * For each device we remove, delete the device structure from the
-> - * device lists, remove the /proc entry, and notify userspace
-> - * (/sbin/hotplug).
-> - */
-> +static void pci_remove_behind_bridge(struct pci_dev *dev);
+> +       if (system_state != SYSTEM_BOOTING)
+> +               pci_assign_unassigned_bus_resources(root->bus);
 > +
->  void __pci_remove_bus_device(struct pci_dev *dev)
->  {
->         if (dev->subordinate) {
->                 struct pci_bus *b = dev->subordinate;
+>         mutex_lock(&acpi_pci_root_lock);
+>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+>                 if (driver->add)
+>                         driver->add(root);
+>         mutex_unlock(&acpi_pci_root_lock);
 >
-> -               __pci_remove_behind_bridge(dev);
-> +               pci_remove_behind_bridge(dev);
->                 pci_remove_bus(b);
->                 dev->subordinate = NULL;
->         }
-> @@ -105,13 +94,25 @@ void __pci_remove_bus_device(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL(__pci_remove_bus_device);
+> +       /* need to after hot-added ioapic is registered */
+> +       if (system_state != SYSTEM_BOOTING)
+> +               pci_enable_bridges(root->bus);
+
+Theoretically, we should be able to assign resources and enable
+bridges here regardless of the system_state.
+
+I think the reason you don't want to do it while SYSTEM_BOOTING is
+because we currently do this at boot-time:
+
+    acpi_pci_root_add
+        pci_scan_child_bus
+    acpi_pci_root_start
+        pci_bus_add_devices
+    <account for some motherboard (PNP0C01) resources>
+    pcibios_assign_resources            # fs_initcall
+        pci_assign_unassigned_resources
+            pci_enable_bridges
+
+and without the SYSTEM_BOOTING check, we might assign PCI resources at
+boot-time that conflict with motherboard resources.
+
+Is that right?
+
+This is completely non-obvious and future readers deserve a hint about
+what's going on here.
+
+The right way to do this would be to pay attention to the host bridge
+apertures, and assign resources from within the apertures.  Then we
+could always assign PCI resources when adding a host bridge instead of
+in an fs_initcall.  I understand we still have legacy issues and
+machines where we still don't pay attention to _CRS.  But if we're
+doing things to work around a broken design, it's important to be
+aware of how the design is broken so we have some hope of eventually
+fixing the design.
+
+>         pci_bus_add_devices(root->bus);
 >
-> +/**
-> + * pci_stop_and_remove_bus_device - remove a PCI device and any children
-> + * @dev: the device to remove
-> + *
-> + * Remove a PCI device from the device lists, informing the drivers
-> + * that the device has been removed.  We also remove any subordinate
-> + * buses and children in a depth-first manner.
-> + *
-> + * For each device we remove, delete the device structure from the
-> + * device lists, remove the /proc entry, and notify userspace
-> + * (/sbin/hotplug).
-> + */
->  void pci_stop_and_remove_bus_device(struct pci_dev *dev)
->  {
->         pci_stop_bus_device(dev);
->         __pci_remove_bus_device(dev);
->  }
->
-> -static void __pci_remove_behind_bridge(struct pci_dev *dev)
-> +static void pci_remove_behind_bridge(struct pci_dev *dev)
->  {
->         struct list_head *l, *n;
->
-> @@ -141,7 +142,7 @@ static void pci_stop_behind_bridge(struct pci_dev *dev)
->  void pci_stop_and_remove_behind_bridge(struct pci_dev *dev)
->  {
->         pci_stop_behind_bridge(dev);
-> -       __pci_remove_behind_bridge(dev);
-> +       pci_remove_behind_bridge(dev);
->  }
->
->  static void pci_stop_bus_devices(struct pci_bus *bus)
+>         return 0;
 > --
-> 1.7.9.5
+> 1.7.7
 >
