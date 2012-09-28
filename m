@@ -1,87 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:58817 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005Ab2IREoK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Sep 2012 00:44:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4wmnnFKZeY4XyZdmoOZeQz8sj-5VoAhGhCSqWTBi0GRw@mail.gmail.com>
-References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-	<1346622653-30741-7-git-send-email-yinghai@kernel.org>
-	<CAErSpo4wmnnFKZeY4XyZdmoOZeQz8sj-5VoAhGhCSqWTBi0GRw@mail.gmail.com>
-Date: Mon, 17 Sep 2012 21:44:08 -0700
-Message-ID: <CAE9FiQUB6wshovj=TBmCEL140nZB5K40BfKPYGNmmpZx536F+Q@mail.gmail.com>
-Subject: Re: [PATCH part2 6/6] PCI: Claim hw/fw allocated resources in hot add path.
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37078 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879Ab2I1JqQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Sep 2012 05:46:16 -0400
+Date: Fri, 28 Sep 2012 18:46:27 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
+	jiang.liu@huawei.com
+Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
+Message-Id: <20120928184627.0b039d14.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
+	<CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 17, 2012 at 5:12 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sun, Sep 2, 2012 at 3:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
 
->> -static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
->> +static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
->
-> This patch has a little too much going on at the same time.  Can you
-> split the __init removal into its own patch so we can focus on what's
-> left by itself?
+Currently there's no PCI-related clean-up code
+in acpi_pci_root_remove() function.
+This patch introduces function for hostbridge removal,
+and brings back pci_stop_bus_devices() function.
 
-ok.
+diff: rebased against current next
+      updated according to Bjorn's comment
 
->
->>  {
->>         int idx;
->>         struct resource *r;
->>
->>         for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
->>                 r = &dev->resource[idx];
->> +               if (r->parent)  /* Already allocated */
->> +                       continue;
->
-> This is also a potentially interesting change that maybe should be in
-> its own patch.
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/acpi/pci_bind.c     |    7 +++++++
+ drivers/acpi/pci_root.c     |    6 ++++++
+ drivers/pci/remove.c        |   28 ++++++++++++++++++++++++++++
+ include/acpi/acpi_drivers.h |    1 +
+ include/linux/pci.h         |    2 ++
+ 5 files changed, 44 insertions(+)
 
-oh, we don't need that extra checking anymore. because support
-removing non-root bus is dropped.
+Index: Bjorn-next-0925-configchange/drivers/pci/remove.c
+===================================================================
+--- Bjorn-next-0925-configchange.orig/drivers/pci/remove.c
++++ Bjorn-next-0925-configchange/drivers/pci/remove.c
+@@ -111,3 +111,31 @@ void pci_stop_and_remove_bus_device(stru
+ 	pci_remove_bus_device(dev);
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
++
++void pci_stop_bus_devices(struct pci_bus *bus)
++{
++	struct pci_dev *dev, *tmp;
++
++	list_for_each_entry_safe_reverse(dev, tmp,
++					 &bus->devices, bus_list) {
++		pci_stop_bus_device(dev);
++	}
++
++}
++EXPORT_SYMBOL(pci_stop_bus_devices);
++
++void pci_remove_host_bridge(struct pci_host_bridge *bridge)
++{
++	struct pci_bus *root = bridge->bus;
++	struct pci_dev *dev, *tmp;
++
++	list_for_each_entry_safe_reverse(dev, tmp,
++					 &root->devices, bus_list) {
++		pci_remove_bus_device(dev);
++	}
++
++	pci_remove_bus(root);
++
++	device_unregister(&bridge->dev);
++}
++EXPORT_SYMBOL(pci_remove_host_bridge);
+Index: Bjorn-next-0925-configchange/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0925-configchange.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0925-configchange/drivers/acpi/pci_root.c
+@@ -659,8 +659,10 @@ static int acpi_pci_root_remove(struct a
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
++	struct pci_host_bridge *bridge = to_pci_host_bridge(root->bus->bridge);
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
++	pci_stop_bus_devices(root->bus);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->remove)
+ 			driver->remove(root);
+@@ -668,6 +670,10 @@ static int acpi_pci_root_remove(struct a
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
++	acpi_pci_unbind_root(device);
++
++	pci_remove_host_bridge(bridge);
++
+ 	list_del(&root->node);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 	kfree(root);
+Index: Bjorn-next-0925-configchange/include/linux/pci.h
+===================================================================
+--- Bjorn-next-0925-configchange.orig/include/linux/pci.h
++++ Bjorn-next-0925-configchange/include/linux/pci.h
+@@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struc
+ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++extern void pci_stop_bus_devices(struct pci_bus *bus);
++extern void pci_remove_host_bridge(struct pci_host_bridge *bridge);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+Index: Bjorn-next-0925-configchange/drivers/acpi/pci_bind.c
+===================================================================
+--- Bjorn-next-0925-configchange.orig/drivers/acpi/pci_bind.c
++++ Bjorn-next-0925-configchange/drivers/acpi/pci_bind.c
+@@ -118,3 +118,10 @@ int acpi_pci_bind_root(struct acpi_devic
+ 
+ 	return 0;
+ }
++
++void  acpi_pci_unbind_root(struct acpi_device *device)
++{
++	device->ops.bind = NULL;
++	device->ops.unbind = NULL;
++}
++
+Index: Bjorn-next-0925-configchange/include/acpi/acpi_drivers.h
+===================================================================
+--- Bjorn-next-0925-configchange.orig/include/acpi/acpi_drivers.h
++++ Bjorn-next-0925-configchange/include/acpi/acpi_drivers.h
+@@ -101,6 +101,7 @@ struct pci_bus;
+ 
+ struct pci_dev *acpi_get_pci_dev(acpi_handle);
+ int acpi_pci_bind_root(struct acpi_device *device);
++void acpi_pci_unbind_root(struct acpi_device *device);
+ 
+ /* Arch-defined function to add a bus to the system */
+ 
 
->> +void pcibios_resource_survey_bus(struct pci_bus *bus)
->> +{
->> +       dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
->> +
->> +       pcibios_allocate_bus_resources(bus);
->> +
->> +       pcibios_allocate_resources(bus, 0);
->> +       pcibios_allocate_resources(bus, 1);
->> +
->> +       pcibios_allocate_rom_resources(bus);
->> +}
->> +
->>  void __init pcibios_resource_survey(void)
->
-> I wish pcibios_resource_survey() could look like this:
->
->     void __init pcibios_resource_survey(void)
->     {
->         list_for_each_entry(bus, &pci_root_buses, node)
->             pcibios_resource_survey_bus(bus)
->
->         e820_reserve_resources_late();
->         ...
->
-> but maybe there's a reason why pcibios_allocate_rom_resources() really
-> has to be in the pcibios_assign_resources() fs_initcall rather than in
-> pcibios_resource_survey().
-
-that should be another patch later.
-
-Thanks
-
-Yinghai
