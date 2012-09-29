@@ -1,115 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36826 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab2I2EIe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 29 Sep 2012 00:08:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
-References: <20120903165831.29aed72c.izumi.taku@jp.fujitsu.com>
-	<20120903170705.4e6dbc2c.izumi.taku@jp.fujitsu.com>
-Date: Mon, 3 Sep 2012 13:27:11 -0700
-Message-ID: <CAE9FiQVXtTf3+jpbYzHk3D3VVm-bXEB9EcgkBwkEtYR-SRiKHA@mail.gmail.com>
-Subject: Re: [PATCH v2 6/6] ACPI, PCI: add resoruce-assign code for devices
- under hot-added hostbridge
+In-Reply-To: <CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+	<1348733519-24684-5-git-send-email-yinghai@kernel.org>
+	<CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com>
+	<CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com>
+	<CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
+Date: Fri, 28 Sep 2012 21:08:32 -0700
+Message-ID: <CAE9FiQXno7kmQ526dFx+jVSicxxuqLk8Cz4a4Da9fb_Ha-yigQ@mail.gmail.com>
+Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
+ root bus
 From: Yinghai Lu <yinghai@kernel.org>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-acpi@vger.kernel.org, kaneshige.kenji@jp.fujitsu.com,
-	jiang.liu@huawei.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 3, 2012 at 1:07 AM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+On Fri, Sep 28, 2012 at 8:31 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Sep 28, 2012 at 7:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> After we get hot-added ioapic registered.
+>>>> pci_enable_bridges will try to enable ioapic irq for pci bridges.
+>>>
+>>> What makes this specifically related to IOAPICs?
 >
-> Devices under hot-added hostbridge have no chance to assign resources
-> and to configure them, so this patch adds such code for hot-added
-> hostbridges at acpi_pci_root_start().
->
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  drivers/acpi/pci_root.c |   17 +++++++++++++++++
->  include/acpi/acpi_bus.h |    1 +
->  2 files changed, 18 insertions(+)
->
-> Index: Bjorn-next-0903/drivers/acpi/pci_root.c
-> ===================================================================
-> --- Bjorn-next-0903.orig/drivers/acpi/pci_root.c
-> +++ Bjorn-next-0903/drivers/acpi/pci_root.c
-> @@ -39,6 +39,7 @@
->  #include <acpi/acpi_bus.h>
->  #include <acpi/acpi_drivers.h>
->  #include <acpi/apei.h>
-> +#include <linux/pci_hotplug.h>
->
->  #define PREFIX "ACPI: "
->
-> @@ -461,6 +462,9 @@ static int __devinit acpi_pci_root_add(s
->         if (!root)
->                 return -ENOMEM;
->
-> +       if (system_state != SYSTEM_BOOTING)
-> +               root->hot_added = true;
-> +
->         segment = 0;
->         status = acpi_evaluate_integer(device->handle, METHOD_NAME__SEG, NULL,
->                                        &segment);
-> @@ -639,6 +643,7 @@ static int acpi_pci_root_start(struct ac
->  {
->         struct acpi_pci_root *root = acpi_driver_data(device);
->         struct acpi_pci_driver *driver;
-> +       struct pci_dev *pdev;
->
->         mutex_lock(&acpi_pci_root_lock);
->         list_for_each_entry(driver, &acpi_pci_drivers, node)
-> @@ -646,6 +651,18 @@ static int acpi_pci_root_start(struct ac
->                         driver->add(device->handle);
->         mutex_unlock(&acpi_pci_root_lock);
->
-> +       /*
-> +        * Devices under hot-added hostbridge have no chance to assign
-> +        * resources and to configure them, so do that here
-> +        */
-> +       if (root->hot_added) {
-> +               pci_bus_size_bridges(root->bus);
-> +               pci_bus_assign_resources(root->bus);
-> +               list_for_each_entry(pdev, &root->bus->devices, bus_list)
-> +                       pci_configure_slot(pdev);
-> +               pci_enable_bridges(root->bus);
-> +       }
-> +
->         pci_bus_add_devices(root->bus);
+> I think you missed this question.
 
-after looking at your simplified version in patch5 and patch6
-found that you do not understand my patchset correctly.
+in another response:
 
-in my patchset there is change on:
-acpi_pci_root_add
-acpi_pci_root_start
-acpi_pci_root_remove
+ pci_enable_bridges
+    ==> pci_enable_device
+        ==> ...
+           ===> pcibios_enable_device
+               ===> pcibios_enable_irq
 
-and
-handle_root_bridge_insertion/acpi_root_configure_bridge
-handle_root_bridge_removal
+and one of driver in acpi_pci_drivers, is ioapic drivers and it will
+enable ioapic there.
 
-for hot add path:
-handle_root_bridge_insertion will call
-      acpi_pci_root_add: it will scan the root bus and find all pci device
-      acpi_root_configure_bridge: it will survey fw set pci resource,
-and assigned unsigned resource
-      acpi_pci_root_start: it will start acpi_pci driver for ioapic
-controller and dmar iommu
-                                    then call pci_bus_add_devices to
-load other pci device drivers.
-
-for hot remove path:
-      acpi_pci_root_remove: will call pci_stop_bus_devices() to stop
-drivers for all normal pci devices.
-                                        then stop acpi_pci driver for
-dmar and ioapic driver
-                                        then call
-pci_stop_and_remove_bus to remove the root bus.
-
-the point is : keep the driver of ioapic and dmar  driver loading
-before normal pci drivers, and later
-stop driver for dmar/iommu, after unloading pci drivers.
-
-Thanks
-
-Yinghai
+So we need to enable bridges that later.
