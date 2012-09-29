@@ -1,101 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:62095 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840Ab2IYPEk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Sep 2012 11:04:40 -0400
-Received: by padhz1 with SMTP id hz1so1727580pad.19
-        for <linux-pci@vger.kernel.org>; Tue, 25 Sep 2012 08:04:39 -0700 (PDT)
-Message-ID: <5061C800.5040106@gmail.com>
-Date: Tue, 25 Sep 2012 23:04:32 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <50666D08.6050509@huawei.com>
+Date: Sat, 29 Sep 2012 11:37:44 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 12/29] PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
-References: <1348561590-28067-1-git-send-email-yinghai@kernel.org> <1348561590-28067-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348561590-28067-13-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
+ root bus
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org> <1348733519-24684-5-git-send-email-yinghai@kernel.org> <CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com> <CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com> <CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
+In-Reply-To: <CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
-	Seems it would be better to change pci_get_next_host_bridge()
-to pci_get_next_root_bus(struct pci_bus *bus). Almost all caller of
-pci_get_next_host_bridge() has a pattern:
-
-host_bridge = pci_get_next_host_bridge();
-xxx_func(host_brige->bus);
-
-And you add:
-Reviewed-By: Jiang Liu <jiang.liu@huawei.com> to patch 12-29.
-
-Thanks
-Gerry
-
-On 09/25/2012 04:26 PM, Yinghai Lu wrote:
-> use bus_find_device to loop host_bridges.
+On 2012-9-29 11:31, Bjorn Helgaas wrote:
+> On Fri, Sep 28, 2012 at 7:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> After we get hot-added ioapic registered.
+>>>> pci_enable_bridges will try to enable ioapic irq for pci bridges.
+>>>
+>>> What makes this specifically related to IOAPICs?
 > 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/search.c |   23 +++++++++++++++++++++++
->  include/linux/pci.h  |    3 +++
->  2 files changed, 26 insertions(+), 0 deletions(-)
+> I think you missed this question.
 > 
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index bf969ba..f072b54 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -178,6 +178,29 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
->  }
->  EXPORT_SYMBOL(pci_get_domain_bus_and_slot);
->  
-> +static int match_pci_host_bridge(struct device *dev, void *data)
-> +{
-> +	return 1;
-> +}
-> +
-> +struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from)
-> +{
-> +	struct device *dev;
-> +	struct device *dev_start = NULL;
-> +	struct pci_host_bridge *bridge = NULL;
-> +
-> +	WARN_ON(in_interrupt());
-> +	if (from)
-> +		dev_start = &from->dev;
-> +	dev = bus_find_device(&pci_host_bridge_bus_type, dev_start, NULL,
-> +			      match_pci_host_bridge);
-> +	if (dev)
-> +		bridge = to_pci_host_bridge(dev);
-> +	if (from)
-> +		put_device(&from->dev);
-> +	return bridge;
-> +}
-> +
->  static int match_pci_dev_by_id(struct device *dev, void *data)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index cc8b558..1e45d6f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -394,6 +394,8 @@ struct pci_host_bridge {
->  };
->  
->  #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-> +#define for_each_pci_host_bridge(d) while (d = pci_get_next_host_bridge(d))
-> +
->  void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
->  		     void (*release_fn)(struct pci_host_bridge *),
->  		     void *release_data);
-> @@ -758,6 +760,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
->  int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
->  struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
->  
-> +struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
->  struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
->  				struct pci_dev *from);
->  struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+>>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>>> ---
+>>>>  drivers/acpi/pci_root.c |    7 +++++++
+>>>>  1 files changed, 7 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>>>> index bce469c..27adbfd 100644
+>>>> --- a/drivers/acpi/pci_root.c
+>>>> +++ b/drivers/acpi/pci_root.c
+>>>> @@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
+>>>>         struct acpi_pci_root *root = acpi_driver_data(device);
+>>>>         struct acpi_pci_driver *driver;
+>>>>
+>>>> +       if (system_state != SYSTEM_BOOTING)
+>>>> +               pci_assign_unassigned_bus_resources(root->bus);
+>>>> +
+>>>>         mutex_lock(&acpi_pci_root_lock);
+>>>>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+>>>>                 if (driver->add)
+>>>>                         driver->add(root);
+>>>>         mutex_unlock(&acpi_pci_root_lock);
+>>>>
+>>>> +       /* need to after hot-added ioapic is registered */
+>>>> +       if (system_state != SYSTEM_BOOTING)
+>>>> +               pci_enable_bridges(root->bus);
+>>>
+>>> Theoretically, we should be able to assign resources and enable
+>>> bridges here regardless of the system_state.
+>>>
+>>> I think the reason you don't want to do it while SYSTEM_BOOTING is
+>>> because we currently do this at boot-time:
+>>>
+>>>     acpi_pci_root_add
+>>>         pci_scan_child_bus
+>>>     acpi_pci_root_start
+>>>         pci_bus_add_devices
+>>>     <account for some motherboard (PNP0C01) resources>
+>>>     pcibios_assign_resources            # fs_initcall
+>>>         pci_assign_unassigned_resources
+>>>             pci_enable_bridges
+>>>
+>>> and without the SYSTEM_BOOTING check, we might assign PCI resources at
+>>> boot-time that conflict with motherboard resources.
+>>>
+>>> Is that right?
+>>
+>> yes.
+>>
+>>>
+>>> This is completely non-obvious and future readers deserve a hint about
+>>> what's going on here.
+>>>
+>>> The right way to do this would be to pay attention to the host bridge
+>>> apertures, and assign resources from within the apertures.  Then we
+>>> could always assign PCI resources when adding a host bridge instead of
+>>> in an fs_initcall.  I understand we still have legacy issues and
+>>> machines where we still don't pay attention to _CRS.  But if we're
+>>> doing things to work around a broken design, it's important to be
+>>> aware of how the design is broken so we have some hope of eventually
+>>> fixing the design.
+>>
+>> that could be another big topic.
 > 
+> I agree, and I'm not asking you to fix that.  I'm just trying to
+> understand what's going on and write some comments and changelogs that
+> will help make this maintainable in the future.
+> 
+> Also note the question at the top -- your changelog calls out IOAPICs,
+> but I'm still not sure what this patch has to do with IOAPICs.
+Hi Bjorn，
+	Another weay is to add an ACPI driver for IOAPIC, so we can control
+the order between IOAPIC and PCI host bridge.
+	Thanks!
+	Gerry
 
