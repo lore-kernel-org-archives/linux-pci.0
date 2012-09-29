@@ -1,43 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:32859 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755108Ab2IBVrw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Sep 2012 17:47:52 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part1 0/4] PCI: pci root bus hotplug support - part1
-Date: Sun,  2 Sep 2012 14:47:34 -0700
-Message-Id: <1346622458-30595-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 30 Sep 2012 00:09:34 +0200
+Message-ID: <20120930000934.Horde.grdOKKGZi1VQZ3GeI_YW9ZA@webmail.df.eu>
+From: Stephan Schreiber <info@fs-driver.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, 679545@bugs.debian.org,
+	jrnieder@gmail.com
+Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
+ uninitialized ICH4 IDE EXBAR mem resource
+References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
+ <20120917115619.13d3a3cb@pyramind.ukuu.org.uk>
+ <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
+ <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
+ <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
+ <20120924235457.GA31372@google.com>
+In-Reply-To: <20120924235457.GA31372@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is based on pci/next
+Hello Bjorn,
+thank you very much for the patch.
+I tested it; it works.
 
-Add back some functions for pci remove.
+(typing mistake: it must read PCI_COMMAND_MEMORY instead of  
+PCI_COMMAND_MEM at one location;
+some hunks of the patch couldn't be applied automatically on Kernel  
+3.2.23 because some comments in the contexts are different)
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug-part1
+The dmesg output:
+[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Linux version 3.2.0-3-mckinley (Debian 3.2.23-1)  
+(debian-kernel@lists.debian.org) (gcc version 4.6.3 (Debian 4.6.3-8) )  
+#1 SMP Fri Sep 28 21:57:11 CEST 2012
+...
+[    0.065510] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
+[    0.065524] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
+[    0.065535] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
+[    0.065546] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
+[    0.065556] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
+[    0.065567] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
+[    0.065578] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff unset]
+...
+[    1.391380] libata version 3.00 loaded.
+[    1.391922] ata_piix 0000:00:1f.1: version 2.13
+[    1.391938] ata_piix 0000:00:1f.1: can't derive routing for PCI INT A
+[    1.392493] scsi0 : ata_piix
+[    1.392886] scsi1 : ata_piix
+[    1.393018] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1000 irq 34
+[    1.393066] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1008 irq 33
+[    1.557756] ata1.00: ATAPI: HL-DT-ST DVDRAM GSA-T40N, JR03, max UDMA/33
+[    1.573616] ata1.00: configured for UDMA/33
+[    1.579147] scsi 0:0:0:0: CD-ROM            HL-DT-ST DVDRAM  
+GSA-T40N  JR03 PQ: 0 ANSI: 5
+[    1.590806] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw  
+xa/form2 cdda tray
+[    1.590872] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.591272] sr 0:0:0:0: Attached scsi CD-ROM sr0
+[    1.593910] sr 0:0:0:0: Attached scsi generic sg0 type 5
+...
 
-Yinghai Lu (4):
-  PCI, pciehp: Turn on link again after power off the slot
-  PCI, acpiphp: Add is_hotplug_bridge detection
-  PCI: Add root bus children dev's res to fail list
-  PCI: Split out stop_bus_device and remove_bus_dev again.
 
- drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++-
- drivers/pci/hotplug/pciehp_hpc.c   |    2 +
- drivers/pci/remove.c               |   77 ++++++++++++++++++++++++++++-------
- drivers/pci/setup-bus.c            |    2 +-
- include/linux/pci.h                |    2 +
- 5 files changed, 92 insertions(+), 18 deletions(-)
+How is the chance to get this patch or a similar one into linux-next?
 
--- 
-1.7.7
+
+
+> On x86, Windows normally doesn't reconfigure PCI devices unless it
+> finds a problem with the configuration done by the BIOS.  I suspect
+> it works similarly on ia64.  I would guess that Windows noticed that
+> the MEM bit was not set, and therefore ignored the MEM BAR contents.
+
+Since I have the four Windows versions 'for Itanium Based Systems' on  
+that box as well (XP, Server 2003, 2008, 2008 R2), I can tell you more:
+The Device Manager shows a memory range FFBFFC00-FFBFFFFF for the  
+"Intel 82801DB Ultra ATA Storage Controller-24CB" - on any of these  
+Windows versions.
+
+
+Stephan
+
+
 
