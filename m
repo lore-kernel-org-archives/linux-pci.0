@@ -1,108 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:45257 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752153Ab2ISIUH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Sep 2012 04:20:07 -0400
-Message-ID: <50598000.1040501@huawei.com>
-Date: Wed, 19 Sep 2012 16:19:12 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:45675 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab2I2EES (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 29 Sep 2012 00:04:18 -0400
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/6] PCI/AER: fix pci_ops return NULL when hotplug a pci
- bus doing aer error inject
-References: <1348022442-7816-1-git-send-email-wangyijing@huawei.com> <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348022442-7816-2-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CAErSpo4soM=HigBX3CxbGOGRtjr=4VgXneDXakaCHSufsOoH4Q@mail.gmail.com>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+	<1348733519-24684-4-git-send-email-yinghai@kernel.org>
+	<CAErSpo63QeF-Wd8nW-K_Qfp5rjMd0mhWADGW-fZiw4Up5-0ezA@mail.gmail.com>
+	<CAE9FiQXDw+D8FeMiojmcX0k_g939zkRM3XmJP08yJJG6o7_Cyg@mail.gmail.com>
+	<CAE9FiQXWxgBQDPisGdVKb_r3hy6pA7LpamV-jW5OX0SqDyrCCw@mail.gmail.com>
+	<CAErSpo4soM=HigBX3CxbGOGRtjr=4VgXneDXakaCHSufsOoH4Q@mail.gmail.com>
+Date: Fri, 28 Sep 2012 21:04:16 -0700
+Message-ID: <CAE9FiQWv9V7gV1SPcTGGhnCGMow2xT42MXvFh1s6T6S23xTgkQ@mail.gmail.com>
+Subject: Re: [PATCH 3/8] PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-9-19 10:40, Yijing Wang wrote:
-> When we inject aer errors to the target pcie device by aer_inject module, the pci_ops of pci
-> bus which the target device is on will be assigned to pci_ops_aer.So if the target pci device
-> is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
-> will be assigned to pci_ops_aer too.Now every access to the child bus's devices will result to
-> system panic, because it get a NULL pci_ops in pci_read_aer/pci_write_aer.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
-> ---
->  drivers/pci/pcie/aer/aer_inject.c |   27 ++++++++++++++++++++++++++-
->  1 files changed, 26 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 4e24cb8..0f00a27 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
->  	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
->  }
->  
-> +/* find pci_ops of the nearest parent bus */
-> +static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
-> +{
-> +	struct pci_bus_ops *bus_ops;
-> +	struct pci_bus *pbus = bus->parent;
-> +
-> +	if (!pbus)
-> +		return NULL;
-> +
-> +	while (pbus) {
-> +		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
-> +			if (bus_ops->bus == pbus)
-> +				return bus_ops->ops;
-> +
-> +		pbus = pbus->parent;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
->  /* inject_lock must be held before calling */
->  static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  {
-> @@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  		if (bus_ops->bus == bus)
->  			return bus_ops->ops;
->  	}
-> -	return NULL;
-> +
-> +	/* can't find bus_ops, fall back to get bus_ops of upstream bus */
-> +	return __find_pci_bus_ops_parent(bus);
->  }
->  
->  static struct pci_bus_ops *pci_bus_ops_pop(void)
-> @@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
->  	}
->  out:
->  	ops = __find_pci_bus_ops(bus);
-> +	BUG_ON(!ops);
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return ops->read(bus, devfn, where, size, val);
->  }
-> @@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
->  	}
->  out:
->  	ops = __find_pci_bus_ops(bus);
-> +	BUG_ON(!ops);
-How about move BUG_ON(!ops)into __find_pci_bus_ops?
+On Fri, Sep 28, 2012 at 8:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> Is it important that pci_assign_unassigned_bus_resources() be run
+> before the driver->add() methods?  Why?
 
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return ops->write(bus, devfn, where, size, val);
->  }
-> @@ -506,6 +530,7 @@ static struct miscdevice aer_inject_device = {
->  	.fops = &aer_inject_fops,
->  };
->  
-> +
-Please remove this above line.
+for ioapic controller that may need kernel to assign base bar.
 
->  static int __init aer_inject_init(void)
->  {
->  	return misc_register(&aer_inject_device);
+>
+> Do you have a pointer to this ioapic driver?  I don't think it's in
+> the tree yet.  I know about drivers/pci/ioapic.c, but it doesn't use
+> acpi_pci_register_driver().
 
+it is in my for-x86-irq branch.
 
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-x86-irq
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=c186df98f84336422088740ef8cedc1313ca2485
