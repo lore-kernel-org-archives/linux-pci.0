@@ -1,99 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQXWxgBQDPisGdVKb_r3hy6pA7LpamV-jW5OX0SqDyrCCw@mail.gmail.com>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+	<1348733519-24684-4-git-send-email-yinghai@kernel.org>
+	<CAErSpo63QeF-Wd8nW-K_Qfp5rjMd0mhWADGW-fZiw4Up5-0ezA@mail.gmail.com>
+	<CAE9FiQXDw+D8FeMiojmcX0k_g939zkRM3XmJP08yJJG6o7_Cyg@mail.gmail.com>
+	<CAE9FiQXWxgBQDPisGdVKb_r3hy6pA7LpamV-jW5OX0SqDyrCCw@mail.gmail.com>
+Date: Fri, 28 Sep 2012 21:13:42 -0700
+Message-ID: <CAE9FiQWvozrogC2L5kXpYY2Lp3jmx65CVn3yCs8MAJd9GoGV2A@mail.gmail.com>
+Subject: Re: [PATCH 3/8] PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH part2 3/6] x86, PCI: Let pcibios_allocate_bus_resources() take bus instead
-Date: Sun,  2 Sep 2012 14:50:50 -0700
-Message-Id: <1346622653-30741-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-References: <1346622653-30741-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will need call the same code for one single root bus during hot add.
-So try to make it take bus instead of bus_list.
+On Fri, Sep 28, 2012 at 6:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Sep 28, 2012 at 6:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>> So could use assign_unassigned_bus_res pci root bus add
+>>>
+>>> After your series, acpi_pci_root_start() looks like this:
+>>>
+>>>     pci_assign_unassigned_bus_resources
+>>>     list_for_each_entry(driver, &acpi_pci_drivers, node)
+>>>         driver->add(root);
+>>>     pci_enable_bridges(root->bus);
+>>>
+>>> so apparently it's important that the driver->add() methods be run
+>>> *before* the bridges are enabled.  Why?
+>>
+>
+> During rebase, the changelog get lost.
+>
+>  pci_enable_bridges
+>     ==> pci_enable_device
+>         ==> ...
+>            ===> pcibios_enable_device
+>                ===> pcibios_enable_irq
+>
+> and one of driver in acpi_pci_drivers, is ioapic drivers and it will
+> enable ioapic there.
+>
+> So we need to enable bridges that later.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c |   38 +++++++++++++++++++++++++-------------
- 1 files changed, 25 insertions(+), 13 deletions(-)
+old changelog before rebase:
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 5817cf2..84696ed 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -215,16 +215,15 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
- }
- 
--static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
-+static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *child;
- 
- 	/* Depth-First Search on bus tree */
--	list_for_each_entry(bus, bus_list, node) {
--		if (bus->self)
--			pcibios_allocate_bridge_resources(bus->self);
--		pcibios_allocate_bus_resources(&bus->children);
--	}
-+	if (bus->self)
-+		pcibios_allocate_bridge_resources(bus->self);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcibios_allocate_bus_resources(child);
- }
- 
- struct pci_check_idx_range {
-@@ -285,12 +284,18 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_resources(int pass)
-+static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- {
--	struct pci_dev *dev = NULL;
-+	struct pci_dev *dev;
-+	struct pci_bus *child;
- 
--	for_each_pci_dev(dev)
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		pcibios_allocate_dev_resources(dev, pass);
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pcibios_allocate_resources(child, pass);
-+	}
- }
- 
- static int __init pcibios_assign_resources(void)
-@@ -323,10 +328,17 @@ static int __init pcibios_assign_resources(void)
- 
- void __init pcibios_resource_survey(void)
- {
-+	struct pci_bus *bus;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
--	pcibios_allocate_resources(0);
--	pcibios_allocate_resources(1);
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_bus_resources(bus);
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_resources(bus, 0);
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_resources(bus, 1);
- 
- 	e820_reserve_resources_late();
- 	/*
--- 
-1.7.7
+-----
+Subject: [PATCH] PCI, x86: Move pci_enable_bridges() down
 
+After we get hot-added ioapic registered.
+pci_enable_bridges will try to enable ioapic irq for pci bridge.
+
+So need to move it down.
+
+Or We can move out pcibios_enable_irq() out of pci_enable_device()
+and call pcibios_enable_irq in pci_bus_add_devices ?
+also will need to move ...
+        pcibios_resource_survey_bus(root->bus);
+        pci_assign_unassigned_bus_resources(root->bus);
+to the start add ....
+----
