@@ -1,96 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:16400 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756701Ab2IUIoe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Sep 2012 04:44:34 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Chen Gong <gong.chen@linux.intel.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 1/5] PCI/AER: Fix pci_ops return NULL in pci_read/write_aer
-Date: Fri, 21 Sep 2012 16:43:09 +0800
-Message-ID: <1348216993-6948-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
-References: <1348216993-6948-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com>
+References: <1348733519-24684-1-git-send-email-yinghai@kernel.org>
+ <1348733519-24684-5-git-send-email-yinghai@kernel.org> <CAErSpo4WYEFg9HBRm8z=sSUTYLv5eLNfH07RQaQGh2+ZScp8sw@mail.gmail.com>
+ <CAE9FiQW2mvXGVKF7Wn0Td+_Wafu1sPMYr-sn2zffAfBycKi=Hg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 28 Sep 2012 21:31:25 -0600
+Message-ID: <CAErSpo4Or84GO-DjKcu=G7hqUo8BF8Lu7czHwfmZDecvVS-tMQ@mail.gmail.com>
+Subject: Re: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add
+ root bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we injected aer errors to the pcie device by aer_inject module, pci_ops of the pci
-bus the device on will be assigned to pci_ops_aer.So if the target pci device
-is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
-will be assigned to pci_ops_aer too.Now every access to the child bus's device will cause the
-system panic, because it will get a NULL pci_ops in pci_read_aer/pci_write_aer.
+On Fri, Sep 28, 2012 at 7:56 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Sep 28, 2012 at 4:46 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Sep 27, 2012 at 2:11 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> After we get hot-added ioapic registered.
+>>> pci_enable_bridges will try to enable ioapic irq for pci bridges.
+>>
+>> What makes this specifically related to IOAPICs?
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
----
- drivers/pci/pcie/aer/aer_inject.c |   26 +++++++++++++++++++++++++-
- 1 files changed, 25 insertions(+), 1 deletions(-)
+I think you missed this question.
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index 4e24cb8..fdab3bb 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
- 	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
- }
- 
-+/* find pci_ops of the nearest parent bus */
-+static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
-+{
-+	struct pci_bus_ops *bus_ops;
-+	struct pci_bus *pbus = bus->parent;
-+
-+	if (!pbus)
-+		return NULL;
-+
-+	while (pbus) {
-+		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
-+			if (bus_ops->bus == pbus)
-+				return bus_ops->ops;
-+
-+		pbus = pbus->parent;
-+	}
-+
-+	return NULL;
-+}
-+
- /* inject_lock must be held before calling */
- static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- {
-@@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
- 		if (bus_ops->bus == bus)
- 			return bus_ops->ops;
- 	}
--	return NULL;
-+
-+	/* can't find bus_ops, fall back to get bus_ops of parent bus */
-+	return __find_pci_bus_ops_parent(bus);
- }
- 
- static struct pci_bus_ops *pci_bus_ops_pop(void)
-@@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
- 	}
- out:
- 	ops = __find_pci_bus_ops(bus);
-+	BUG_ON(!ops);
- 	spin_unlock_irqrestore(&inject_lock, flags);
- 	return ops->read(bus, devfn, where, size, val);
- }
-@@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
- 	}
- out:
- 	ops = __find_pci_bus_ops(bus);
-+	BUG_ON(!ops);
- 	spin_unlock_irqrestore(&inject_lock, flags);
- 	return ops->write(bus, devfn, where, size, val);
- }
--- 
-1.7.1
+>>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>> ---
+>>>  drivers/acpi/pci_root.c |    7 +++++++
+>>>  1 files changed, 7 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>>> index bce469c..27adbfd 100644
+>>> --- a/drivers/acpi/pci_root.c
+>>> +++ b/drivers/acpi/pci_root.c
+>>> @@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
+>>>         struct acpi_pci_root *root = acpi_driver_data(device);
+>>>         struct acpi_pci_driver *driver;
+>>>
+>>> +       if (system_state != SYSTEM_BOOTING)
+>>> +               pci_assign_unassigned_bus_resources(root->bus);
+>>> +
+>>>         mutex_lock(&acpi_pci_root_lock);
+>>>         list_for_each_entry(driver, &acpi_pci_drivers, node)
+>>>                 if (driver->add)
+>>>                         driver->add(root);
+>>>         mutex_unlock(&acpi_pci_root_lock);
+>>>
+>>> +       /* need to after hot-added ioapic is registered */
+>>> +       if (system_state != SYSTEM_BOOTING)
+>>> +               pci_enable_bridges(root->bus);
+>>
+>> Theoretically, we should be able to assign resources and enable
+>> bridges here regardless of the system_state.
+>>
+>> I think the reason you don't want to do it while SYSTEM_BOOTING is
+>> because we currently do this at boot-time:
+>>
+>>     acpi_pci_root_add
+>>         pci_scan_child_bus
+>>     acpi_pci_root_start
+>>         pci_bus_add_devices
+>>     <account for some motherboard (PNP0C01) resources>
+>>     pcibios_assign_resources            # fs_initcall
+>>         pci_assign_unassigned_resources
+>>             pci_enable_bridges
+>>
+>> and without the SYSTEM_BOOTING check, we might assign PCI resources at
+>> boot-time that conflict with motherboard resources.
+>>
+>> Is that right?
+>
+> yes.
+>
+>>
+>> This is completely non-obvious and future readers deserve a hint about
+>> what's going on here.
+>>
+>> The right way to do this would be to pay attention to the host bridge
+>> apertures, and assign resources from within the apertures.  Then we
+>> could always assign PCI resources when adding a host bridge instead of
+>> in an fs_initcall.  I understand we still have legacy issues and
+>> machines where we still don't pay attention to _CRS.  But if we're
+>> doing things to work around a broken design, it's important to be
+>> aware of how the design is broken so we have some hope of eventually
+>> fixing the design.
+>
+> that could be another big topic.
 
+I agree, and I'm not asking you to fix that.  I'm just trying to
+understand what's going on and write some comments and changelogs that
+will help make this maintainable in the future.
 
+Also note the question at the top -- your changelog calls out IOAPICs,
+but I'm still not sure what this patch has to do with IOAPICs.
