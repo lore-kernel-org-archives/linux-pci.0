@@ -1,156 +1,359 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.mev.co.uk ([62.49.15.74]:51472 "EHLO mail.mev.co.uk"
+Received: from mx1.redhat.com ([209.132.183.28]:17950 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759202Ab2J3LDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Oct 2012 07:03:39 -0400
-Message-ID: <508FB3FC.4060001@mev.co.uk>
-Date: Tue, 30 Oct 2012 11:03:24 +0000
-From: Ian Abbott <abbotti@mev.co.uk>
+	id S1752162Ab2JAINl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Oct 2012 04:13:41 -0400
+Date: Mon, 1 Oct 2012 10:13:27 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
+Message-ID: <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Ian Abbott <ian.abbott@mev.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/2] PCI: add workaround for PLX PCI 9050 bug
-References: <1351521618-6818-1-git-send-email-abbotti@mev.co.uk> <CAErSpo7mOxU=5u_-kehBnPU0Hr0thY8uZk6CXvp3kUbaqgKs7g@mail.gmail.com> <508F8969.8030309@mev.co.uk>
-In-Reply-To: <508F8969.8030309@mev.co.uk>
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1349074231.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-10-30 08:01, Ian Abbott wrote:
-> On 30/10/12 03:13, Bjorn Helgaas wrote:
->> On Mon, Oct 29, 2012 at 8:40 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
->>> The PLX PCI 9050 PCI Target bridge controller has a bug that prevents
->>> its local configuration registers being read through BAR0 (memory) or
->>> BAR1 (i/o) if the base address lies on an odd 128-byte boundary, i.e. if
->>> bit 7 of the base address is non-zero.  This bug is described in the PCI
->>> 9050 errata list, version 1.4, May 2005.  It was fixed in the
->>> pin-compatible PCI 9052, which can be distinguished from the PCI 9050 by
->>> checking the revision in the PCI header, which is hard-coded for these
->>> chips.
->>>
->>> Workaround the problem by re-allocating the affected regions to a
->>> 256-byte boundary.  Note that BAR0 and/or BAR1 may have been disabled
->>> (size 0) during initialization of the PCI chip when its configuration is
->>> read from a serial EEPROM.
->>>
->>> Currently, the fix-up has only been used for devices with the default
->>> vendor and device ID of the PLX PCI 9050.  The PCI 9052 shares the same
->>> default device ID as the PCI 9050 but they have different PCI revision
->>> codes.
->>>
->>> Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
->>> ---
->>>    drivers/pci/quirks.c | 25 +++++++++++++++++++++++++
->>>    1 file changed, 25 insertions(+)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 7a451ff..7e6be56 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -1790,6 +1790,31 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA_2,
->>>                            PCI_DEVICE_ID_TOSHIBA_TC86C001_IDE,
->>>                            quirk_tc86c001_ide);
->>>
->>> +/*
->>> + * PLX PCI 9050 PCI Target bridge controller has an errata that prevents the
->>> + * local configuration registers accessible via BAR0 (memory) or BAR1 (i/o)
->>> + * being read correctly if bit 7 of the base address is set.
->>> + * The BAR0 or BAR1 region may be disabled (size 0) or enabled (size 128).
->>> + * Re-allocate the regions to a 256-byte boundary if necessary.
->>> + */
->>> +static void __devinit quirk_plx_pci9050(struct pci_dev *dev)
->>> +{
->>> +       unsigned int bar;
->>> +
->>> +       /* Fixed in revision 2 (PCI 9052). */
->>> +       if (dev->revision >= 2)
->>> +               return;
->>> +       for (bar = 0; bar <= 1; bar++)
->>> +               if (pci_resource_len(dev, bar) == 0x80 &&
->>> +                   (pci_resource_start(dev, bar) & 0x80)) {
->>> +                       struct resource *r = &dev->resource[bar];
->>> +                       r->start = 0;
->>> +                       r->end = 0xff;
->>
->> I assume the intent here is to make these BARs "unassigned" so they
->> will be reassigned later?  We don't yet have a clean generic way of
->> indicating "unassigned," so "r->start = 0" is the best we can do for
->> now.
->
-> I more-or-less copied the method from quirk_tc86c001_ide().  I don't
-> have any prior experience with writing PCI quirks, so I don't know if
-> this is the best way to do it!  All I really care about is that these
-> BARs don't have bit 7 set.
->
->> I think it'd be nice to have a dev_info() here to explain what's going
->> on.  Otherwise, the dmesg will be a bit mysterious.
->
-> OK, I'll add that in the next version of this patch.
+Take advantage of multiple MSIs implementation on x86 - on systems with
+IRQ remapping AHCI ports not only get assigned separate MSI vectors -
+but also separate IRQs. As result, interrupts generated by different
+ports could be serviced on different CPUs rather than on a single one.
 
-I've added a dev_info() on my local system that I'll submit in version 2 
-of the patch later but first I thought I'd show the dmesg output I get 
-with this patch:
+In cases when number of allocated MSIs is less than requested the Sharing
+Last MSI mode does not get used, no matter implemented in hardware or not.
+Instead, the driver assumes the advantage of multiple MSIs is negated and
+falls back to the single MSI mode as if MRSM bit was set (some Intel chips
+implement this strategy anyway - MRSM bit gets set even if the number of
+allocated MSIs exceeds the number of implemented ports).
 
-pci 0000:01:08.0: [14dc:0004] type 00 class 0x068000
-pci 0000:01:08.0: reg 14: [io  0xd400-0xd47f]
-pci 0000:01:08.0: reg 18: [io  0xd000-0xd007]
-pci 0000:01:08.0: reg 1c: [io  0xcc00-0xcc07]
-pci 0000:01:08.0: Re-allocating PLX PCI 9050 BAR 1 to avoid 0x80 
-boundary bug
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ata/ahci.c    |   91 ++++++++++++++++++++++++++++++++++++--
+ drivers/ata/ahci.h    |    6 +++
+ drivers/ata/libahci.c |  118 ++++++++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 205 insertions(+), 10 deletions(-)
 
-That last message is the one I added locally.  The vendor and device ID 
-in the first message is different than the ones I'm applying in these 
-patches; it's just a local change.  You may also notice that BAR 1 (reg 
-14) doesn't have bit 7 set to 1, so I had to temporarily disable that 
-check in the code to test the re-allocation mechanism.  This particular 
-device has BAR 0 (reg 10) disabled (size 0) but it would normally be a 
-memory region of size 128.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7862d17..5463fcea 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1057,6 +1057,84 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
++int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++{
++	int rc;
++	unsigned int maxvec;
++
++	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
++		rc = pci_enable_msi_block_auto(pdev, &maxvec);
++		if (rc > 0) {
++			if ((rc == maxvec) || (rc == 1))
++				return rc;
++			/* assume that advantage of multipe MSIs is negated,
++			 * so fallback to single MSI mode to save resources */
++			pci_disable_msi(pdev);
++			if (!pci_enable_msi(pdev))
++				return 1;
++		}
++	}
++
++	pci_intx(pdev, 1);
++	return 0;
++}
++
++/**
++ *	ahci_host_activate - start AHCI host, request IRQs and register it
++ *	@host: target ATA host
++ *	@irq: base IRQ number to request
++ *	@n_msis: number of MSIs allocated for this host
++ *	@irq_handler: irq_handler used when requesting IRQs
++ *	@irq_flags: irq_flags used when requesting IRQs
++ *
++ *	Similar to ata_host_activate, but requests IRQs according to AHCI-1.1
++ *	when multiple MSIs were allocated. That is one MSI per port, starting
++ *	from @irq.
++ *
++ *	LOCKING:
++ *	Inherited from calling layer (may sleep).
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
++{
++	int i, rc;
++
++	/* Sharing Last Message among several ports is not supported */
++	if (n_msis < host->n_ports)
++		return -EINVAL;
++
++	rc = ata_host_start(host);
++	if (rc)
++		return rc;
++
++	for (i = 0; i < host->n_ports; i++) {
++		rc = devm_request_threaded_irq(host->dev,
++			irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
++			dev_driver_string(host->dev), host->ports[i]);
++		if (rc)
++			goto out_free_irqs;
++	}
++
++	for (i = 0; i < host->n_ports; i++)
++		ata_port_desc(host->ports[i], "irq %d", irq + i);
++
++	rc = ata_host_register(host, &ahci_sht);
++	if (rc)
++		goto out_free_all_irqs;
++
++	return 0;
++
++out_free_all_irqs:
++	i = host->n_ports;
++out_free_irqs:
++	for (; i; i--)
++		devm_free_irq(host->dev, irq + i - 1, host->ports[i]);
++
++	return rc;
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1065,7 +1143,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+-	int n_ports, i, rc;
++	int n_ports, n_msis, i, rc;
+ 	int ahci_pci_bar = AHCI_PCI_BAR_STANDARD;
+ 
+ 	VPRINTK("ENTER\n");
+@@ -1150,11 +1228,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (ahci_sb600_enable_64bit(pdev))
+ 		hpriv->flags &= ~AHCI_HFLAG_32BIT_ONLY;
+ 
+-	if ((hpriv->flags & AHCI_HFLAG_NO_MSI) || pci_enable_msi(pdev))
+-		pci_intx(pdev, 1);
+-
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
++	n_msis = ahci_init_interrupts(pdev, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1250,6 +1329,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	ahci_pci_print_info(host);
+ 
+ 	pci_set_master(pdev);
++
++	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
++		return ahci_host_activate(host, pdev->irq, n_msis);
++
+ 	return ata_host_activate(host, pdev->irq, ahci_interrupt, IRQF_SHARED,
+ 				 &ahci_sht);
+ }
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 57eb1c2..24251e8 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -216,6 +216,7 @@ enum {
+ 	AHCI_HFLAG_DELAY_ENGINE		= (1 << 15), /* do not start engine on
+ 						        port start (wait until
+ 						        error-handling stage) */
++	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
+ 
+ 	/* ap->flags bits */
+ 
+@@ -282,6 +283,8 @@ struct ahci_port_priv {
+ 	unsigned int		ncq_saw_d2h:1;
+ 	unsigned int		ncq_saw_dmas:1;
+ 	unsigned int		ncq_saw_sdb:1;
++	u32			intr_status;	/* interrupts to handle */
++	spinlock_t		lock;
+ 	u32 			intr_mask;	/* interrupts to enable */
+ 	bool			fbs_supported;	/* set iff FBS is supported */
+ 	bool			fbs_enabled;	/* set iff FBS is enabled */
+@@ -343,7 +346,10 @@ void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+ 			  struct ata_port_info *pi);
+ int ahci_reset_em(struct ata_host *host);
+ irqreturn_t ahci_interrupt(int irq, void *dev_instance);
++irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance);
++irqreturn_t ahci_thread_fn(int irq, void *dev_instance);
+ void ahci_print_info(struct ata_host *host, const char *scc_s);
++int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis);
+ 
+ static inline void __iomem *__ahci_port_base(struct ata_host *host,
+ 					     unsigned int port_no)
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 555c07a..3b54e84 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1639,19 +1639,16 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ 		ata_port_abort(ap);
+ }
+ 
+-static void ahci_port_intr(struct ata_port *ap)
++static void ahci_handle_port_interrupt(struct ata_port *ap,
++				       void __iomem *port_mmio, u32 status)
+ {
+-	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ata_eh_info *ehi = &ap->link.eh_info;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
+-	u32 status, qc_active = 0;
++	u32 qc_active = 0;
+ 	int rc;
+ 
+-	status = readl(port_mmio + PORT_IRQ_STAT);
+-	writel(status, port_mmio + PORT_IRQ_STAT);
+-
+ 	/* ignore BAD_PMP while resetting */
+ 	if (unlikely(resetting))
+ 		status &= ~PORT_IRQ_BAD_PMP;
+@@ -1727,6 +1724,107 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	}
+ }
+ 
++void ahci_port_intr(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u32 status;
++
++	status = readl(port_mmio + PORT_IRQ_STAT);
++	writel(status, port_mmio + PORT_IRQ_STAT);
++
++	ahci_handle_port_interrupt(ap, port_mmio, status);
++}
++
++irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
++{
++	struct ata_port *ap = dev_instance;
++	struct ahci_port_priv *pp = ap->private_data;
++	void __iomem *port_mmio = ahci_port_base(ap);
++	unsigned long flags;
++	u32 status;
++
++	spin_lock_irqsave(&ap->host->lock, flags);
++	status = pp->intr_status;
++	if (status)
++		pp->intr_status = 0;
++	spin_unlock_irqrestore(&ap->host->lock, flags);
++
++	spin_lock_bh(ap->lock);
++	ahci_handle_port_interrupt(ap, port_mmio, status);
++	spin_unlock_bh(ap->lock);
++
++	return IRQ_HANDLED;
++}
++EXPORT_SYMBOL_GPL(ahci_thread_fn);
++
++void ahci_hw_port_interrupt(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_port_priv *pp = ap->private_data;
++	u32 status;
++
++	status = readl(port_mmio + PORT_IRQ_STAT);
++	writel(status, port_mmio + PORT_IRQ_STAT);
++
++	pp->intr_status |= status;
++}
++
++irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
++{
++	struct ata_port *ap_this = dev_instance;
++	struct ahci_port_priv *pp = ap_this->private_data;
++	struct ata_host *host = ap_this->host;
++	struct ahci_host_priv *hpriv = host->private_data;
++	void __iomem *mmio = hpriv->mmio;
++	unsigned int i;
++	u32 irq_stat, irq_masked;
++
++	VPRINTK("ENTER\n");
++
++	spin_lock(&host->lock);
++
++	irq_stat = readl(mmio + HOST_IRQ_STAT);
++
++	if (!irq_stat) {
++		u32 status = pp->intr_status;
++
++		spin_unlock(&host->lock);
++
++		VPRINTK("EXIT\n");
++
++		return status ? IRQ_WAKE_THREAD : IRQ_NONE;
++	}
++
++	irq_masked = irq_stat & hpriv->port_map;
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap;
++
++		if (!(irq_masked & (1 << i)))
++			continue;
++
++		ap = host->ports[i];
++		if (ap) {
++			ahci_hw_port_interrupt(ap);
++			VPRINTK("port %u\n", i);
++		} else {
++			VPRINTK("port %u (no irq)\n", i);
++			if (ata_ratelimit())
++				dev_warn(host->dev,
++					 "interrupt on disabled port %u\n", i);
++		}
++	}
++
++	writel(irq_stat, mmio + HOST_IRQ_STAT);
++
++	spin_unlock(&host->lock);
++
++	VPRINTK("EXIT\n");
++
++	return IRQ_WAKE_THREAD;
++}
++EXPORT_SYMBOL_GPL(ahci_hw_interrupt);
++
+ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+@@ -2105,6 +2203,14 @@ static int ahci_port_start(struct ata_port *ap)
+ 	 */
+ 	pp->intr_mask = DEF_PORT_IRQ;
+ 
++	/*
++	 * Switch to per-port locking in case each port has its own MSI vector.
++	 */
++	if ((hpriv->flags & AHCI_HFLAG_MULTI_MSI)) {
++		spin_lock_init(&pp->lock);
++		ap->lock = &pp->lock;
++	}
++
+ 	ap->private_data = pp;
+ 
+ 	/* engage engines, captain */
+-- 
+1.7.7.6
 
-Resetting the region's start address to 0 had some knock on effects that 
-I'm a bit concerned about:
-
-...
-pnp 00:02: [io  0x0010-0x001f]
-pnp 00:02: [io  0x0022-0x003f]
-pnp 00:02: [io  0x0044-0x005f]
-pnp 00:02: [io  0x0062-0x0063]
-pnp 00:02: [io  0x0065-0x006f]
-pnp 00:02: [io  0x0074-0x007f]
-pnp 00:02: [io  0x0091-0x0093]
-pnp 00:02: [io  0x00a2-0x00bf]
-pnp 00:02: [io  0x00e0-0x00ef]
-pnp 00:02: [io  0x04d0-0x04d1]
-pnp 00:02: [io  0x0800-0x087f]
-pnp 00:02: [io  0x0290-0x0297]
-pnp 00:02: disabling [io  0x0010-0x001f] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x0022-0x003f] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x0044-0x005f] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x0062-0x0063] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x0065-0x006f] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x0074-0x007f] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x0091-0x0093] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x00a2-0x00bf] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-pnp 00:02: disabling [io  0x00e0-0x00ef] because it overlaps 
-0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
-system 00:02: [io  0x04d0-0x04d1] has been reserved
-system 00:02: [io  0x0800-0x087f] has been reserved
-system 00:02: [io  0x0290-0x0297] has been reserved
-system 00:02: Plug and Play ACPI device, IDs PNP0c02 (active)
-
-Eventually, BAR 1 of the PCI device gets re-assigned:
-
-...
-pci 0000:01:08.0: BAR 1: assigned [io  0xc000-0xc0ff]
 
 -- 
--=( Ian Abbott @ MEV Ltd.    E-mail: <abbotti@mev.co.uk>        )=-
--=( Tel: +44 (0)161 477 1898   FAX: +44 (0)161 718 3587         )=-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
