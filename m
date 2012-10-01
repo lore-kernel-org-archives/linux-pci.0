@@ -1,176 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:43505 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759908Ab2J3REh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:04:37 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hq12so3440779wib.1
-        for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 10:04:35 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:32891 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751993Ab2JAIMz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Oct 2012 04:12:55 -0400
+Date: Mon, 1 Oct 2012 10:12:39 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v3 -tip 4/5] PCI, MSI: Enable multiple MSIs with
+ pci_enable_msi_block_auto()
+Message-ID: <a55c60fb7b96ab96195130d2827344d02e691f2c.1349074231.git.agordeev@redhat.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <508FB3FC.4060001@mev.co.uk>
-References: <1351521618-6818-1-git-send-email-abbotti@mev.co.uk>
- <CAErSpo7mOxU=5u_-kehBnPU0Hr0thY8uZk6CXvp3kUbaqgKs7g@mail.gmail.com>
- <508F8969.8030309@mev.co.uk> <508FB3FC.4060001@mev.co.uk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 30 Oct 2012 11:04:15 -0600
-Message-ID: <CAErSpo5-v5HpisXH9sf=ji38fM2jktBZf6yPnzm1DJci=pC_Aw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: add workaround for PLX PCI 9050 bug
-To: Ian Abbott <abbotti@mev.co.uk>
-Cc: Ian Abbott <ian.abbott@mev.co.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1349074231.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 30, 2012 at 5:03 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
-> On 2012-10-30 08:01, Ian Abbott wrote:
->>
->> On 30/10/12 03:13, Bjorn Helgaas wrote:
->>>
->>> On Mon, Oct 29, 2012 at 8:40 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
->>>>
->>>> The PLX PCI 9050 PCI Target bridge controller has a bug that prevents
->>>> its local configuration registers being read through BAR0 (memory) or
->>>> BAR1 (i/o) if the base address lies on an odd 128-byte boundary, i.e. if
->>>> bit 7 of the base address is non-zero.  This bug is described in the PCI
->>>> 9050 errata list, version 1.4, May 2005.  It was fixed in the
->>>> pin-compatible PCI 9052, which can be distinguished from the PCI 9050 by
->>>> checking the revision in the PCI header, which is hard-coded for these
->>>> chips.
->>>>
->>>> Workaround the problem by re-allocating the affected regions to a
->>>> 256-byte boundary.  Note that BAR0 and/or BAR1 may have been disabled
->>>> (size 0) during initialization of the PCI chip when its configuration is
->>>> read from a serial EEPROM.
->>>>
->>>> Currently, the fix-up has only been used for devices with the default
->>>> vendor and device ID of the PLX PCI 9050.  The PCI 9052 shares the same
->>>> default device ID as the PCI 9050 but they have different PCI revision
->>>> codes.
->>>>
->>>> Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
->>>> ---
->>>>    drivers/pci/quirks.c | 25 +++++++++++++++++++++++++
->>>>    1 file changed, 25 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>>> index 7a451ff..7e6be56 100644
->>>> --- a/drivers/pci/quirks.c
->>>> +++ b/drivers/pci/quirks.c
->>>> @@ -1790,6 +1790,31 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA_2,
->>>>                            PCI_DEVICE_ID_TOSHIBA_TC86C001_IDE,
->>>>                            quirk_tc86c001_ide);
->>>>
->>>> +/*
->>>> + * PLX PCI 9050 PCI Target bridge controller has an errata that
->>>> prevents the
->>>> + * local configuration registers accessible via BAR0 (memory) or BAR1
->>>> (i/o)
->>>> + * being read correctly if bit 7 of the base address is set.
->>>> + * The BAR0 or BAR1 region may be disabled (size 0) or enabled (size
->>>> 128).
->>>> + * Re-allocate the regions to a 256-byte boundary if necessary.
->>>> + */
->>>> +static void __devinit quirk_plx_pci9050(struct pci_dev *dev)
->>>> +{
->>>> +       unsigned int bar;
->>>> +
->>>> +       /* Fixed in revision 2 (PCI 9052). */
->>>> +       if (dev->revision >= 2)
->>>> +               return;
->>>> +       for (bar = 0; bar <= 1; bar++)
->>>> +               if (pci_resource_len(dev, bar) == 0x80 &&
->>>> +                   (pci_resource_start(dev, bar) & 0x80)) {
->>>> +                       struct resource *r = &dev->resource[bar];
->>>> +                       r->start = 0;
->>>> +                       r->end = 0xff;
->>>
->>>
->>> I assume the intent here is to make these BARs "unassigned" so they
->>> will be reassigned later?  We don't yet have a clean generic way of
->>> indicating "unassigned," so "r->start = 0" is the best we can do for
->>> now.
->>
->>
->> I more-or-less copied the method from quirk_tc86c001_ide().  I don't
->> have any prior experience with writing PCI quirks, so I don't know if
->> this is the best way to do it!  All I really care about is that these
->> BARs don't have bit 7 set.
->>
->>> I think it'd be nice to have a dev_info() here to explain what's going
->>> on.  Otherwise, the dmesg will be a bit mysterious.
->>
->>
->> OK, I'll add that in the next version of this patch.
->
->
-> I've added a dev_info() on my local system that I'll submit in version 2 of
-> the patch later but first I thought I'd show the dmesg output I get with
-> this patch:
->
-> pci 0000:01:08.0: [14dc:0004] type 00 class 0x068000
-> pci 0000:01:08.0: reg 14: [io  0xd400-0xd47f]
-> pci 0000:01:08.0: reg 18: [io  0xd000-0xd007]
-> pci 0000:01:08.0: reg 1c: [io  0xcc00-0xcc07]
-> pci 0000:01:08.0: Re-allocating PLX PCI 9050 BAR 1 to avoid 0x80 boundary
-> bug
->
-> That last message is the one I added locally.  The vendor and device ID in
-> the first message is different than the ones I'm applying in these patches;
-> it's just a local change.  You may also notice that BAR 1 (reg 14) doesn't
-> have bit 7 set to 1, so I had to temporarily disable that check in the code
-> to test the re-allocation mechanism.  This particular device has BAR 0 (reg
-> 10) disabled (size 0) but it would normally be a memory region of size 128.
->
-> Resetting the region's start address to 0 had some knock on effects that I'm
-> a bit concerned about:
->
-> ...
-> pnp 00:02: [io  0x0010-0x001f]
-> pnp 00:02: [io  0x0022-0x003f]
-> pnp 00:02: [io  0x0044-0x005f]
-> pnp 00:02: [io  0x0062-0x0063]
-> pnp 00:02: [io  0x0065-0x006f]
-> pnp 00:02: [io  0x0074-0x007f]
-> pnp 00:02: [io  0x0091-0x0093]
-> pnp 00:02: [io  0x00a2-0x00bf]
-> pnp 00:02: [io  0x00e0-0x00ef]
-> pnp 00:02: [io  0x04d0-0x04d1]
-> pnp 00:02: [io  0x0800-0x087f]
-> pnp 00:02: [io  0x0290-0x0297]
-> pnp 00:02: disabling [io  0x0010-0x001f] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x0022-0x003f] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x0044-0x005f] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x0062-0x0063] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x0065-0x006f] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x0074-0x007f] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x0091-0x0093] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x00a2-0x00bf] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
-> pnp 00:02: disabling [io  0x00e0-0x00ef] because it overlaps 0000:01:08.0
-> BAR 1 [io  0x0000-0x00ff]
+The new function pci_enable_msi_block_auto() tries to allocate maximum
+possible number of MSIs up to the number the device supports. It
+generalizes a pattern when pci_enable_msi_block() is contiguously called
+until it succeeds or fails.
 
-Yep, this is a long-standing issue, nothing to do with your quirk
-specifically.  We need to make this overlap check smarter, but you
-don't have to worry about it.
+Opposite to pci_enable_msi_block() which takes the number of MSIs to
+allocate as a input parameter, pci_enable_msi_block_auto() could be used
+by device drivers to obtain the number of assigned MSIs and the number
+of MSIs the device supports.
 
-> system 00:02: [io  0x04d0-0x04d1] has been reserved
-> system 00:02: [io  0x0800-0x087f] has been reserved
-> system 00:02: [io  0x0290-0x0297] has been reserved
-> system 00:02: Plug and Play ACPI device, IDs PNP0c02 (active)
->
-> Eventually, BAR 1 of the PCI device gets re-assigned:
->
-> ...
-> pci 0000:01:08.0: BAR 1: assigned [io  0xc000-0xc0ff]
->
->
-> --
-> -=( Ian Abbott @ MEV Ltd.    E-mail: <abbotti@mev.co.uk>        )=-
-> -=( Tel: +44 (0)161 477 1898   FAX: +44 (0)161 718 3587         )=-
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++++++++++++++++++++++++++-----
+ drivers/pci/msi.c               |   26 ++++++++++++++++++++++++++
+ include/linux/pci.h             |    7 +++++++
+ 3 files changed, 65 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 53e6fca..a091780 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -127,15 +127,42 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
+ returns as soon as it finds any constraint that doesn't allow the
+ call to succeed.
+ 
+-4.2.3 pci_disable_msi
++4.2.3 pci_enable_msi_block_auto
++
++int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
++
++This variation on pci_enable_msi() call allows a device driver to request
++the maximum possible number of MSIs.  The MSI specification only allows
++interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
++
++If this function returns a positive number, it indicates that it has
++succeeded and the returned value is the number of allocated interrupts. In
++this case, the function enables MSI on this device and updates dev->irq to
++be the lowest of the new interrupts assigned to it.  The other interrupts
++assigned to the device are in the range dev->irq to dev->irq + returned
++value - 1.
++
++If this function returns a negative number, it indicates an error and
++the driver should not attempt to request any more MSI interrupts for
++this device.
++
++If the device driver needs to know the number of interrupts the device
++supports it can pass the pointer count where that number is stored. The
++device driver must decide what action to take if pci_enable_msi_block_auto()
++succeeds, but returns a value less than the number of interrupts supported.
++If the device driver does not need to know the number of interrupts
++supported, it can set the pointer count to NULL.
++
++4.2.4 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+ This function should be used to undo the effect of pci_enable_msi() or
+-pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
+-interrupt number and frees the previously allocated message signaled
+-interrupt(s).  The interrupt may subsequently be assigned to another
+-device, so drivers should not cache the value of dev->irq.
++pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
++dev->irq to the pin-based interrupt number and frees the previously
++allocated message signaled interrupt(s).  The interrupt may subsequently be
++assigned to another device, so drivers should not cache the value of
++dev->irq.
+ 
+ Before calling this function, a device driver must always call free_irq()
+ on any interrupt for which it previously called request_irq().
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f0752d1..690b268 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -845,6 +845,32 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
++int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++{
++	int ret, pos, nvec;
++	u16 msgctl;
++
++	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
++	if (!pos)
++		return -EINVAL;
++
++	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
++	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
++
++	if (maxvec)
++		*maxvec = ret;
++
++	do {
++		nvec = ret;
++		ret = pci_enable_msi_block(dev, nvec);
++	} while (ret > 0);
++
++	if (ret < 0)
++		return ret;
++	return nvec;
++}
++EXPORT_SYMBOL(pci_enable_msi_block_auto);
++
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..b8a9454 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1070,6 +1070,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	return -1;
+ }
+ 
++static inline int
++pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
++{
++	return -1;
++}
++
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ { }
+ static inline void pci_disable_msi(struct pci_dev *dev)
+@@ -1101,6 +1107,7 @@ static inline int pci_msi_enabled(void)
+ }
+ #else
+ extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
++extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ extern void pci_msi_shutdown(struct pci_dev *dev);
+ extern void pci_disable_msi(struct pci_dev *dev);
+ extern int pci_msix_table_size(struct pci_dev *dev);
+-- 
+1.7.7.6
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
