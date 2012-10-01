@@ -1,71 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Tang Chen <tangchen@cn.fujitsu.com>
-Subject: [PATCH 2/3 v2] Do not use acpi_device to find pci root bridge in _init code.
-Date: Fri, 12 Oct 2012 20:34:20 +0800
-Message-Id: <1350045261-7344-3-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51383 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753035Ab2JAOM5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Oct 2012 10:12:57 -0400
+Message-ID: <5069A4DB.3030201@redhat.com>
+Date: Mon, 01 Oct 2012 10:12:43 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Yuval Mintz <yuvalmin@broadcom.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	"Rose, Gregory V" <gregory.v.rose@intel.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Ariel Elior <ariele@broadcom.com>,
+	Eilon Greenstein <eilong@broadcom.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: New commands to configure IOV features
+References: <5003DC9B.8000706@broadcom.com> <5009ECDF.4090305@genband.com> <500D59BF.9040006@redhat.com> <500D6932.8090306@genband.com> <20120723113607.56ce7aaf@nehalam.linuxnetplumber.net> <C5551D9AAB213A418B7FD5E4A6F30A070C7D9DCD@ORSMSX106.amr.corp.intel.com> <5059A767.2090307@broadcom.com> <20120919085306.00006af9@unknown> <1348083847.2636.37.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQXQj_KdWT-mVVsptxiEgGjScgDy_Lp-aXioZ4YAQh1wWQ@mail.gmail.com> <1348094773.2636.85.camel@bwh-desktop.uk.solarflarecom.com> <CAE9FiQVk-uXgLK6dM8q5-Xsh8LO+c-Dd_cEpu2WzJ6Uzt6ztnA@mail.gmail.com> <1348104190.4836.61.camel@deadeye.wl.decadent.org.uk> <C5551D9AAB213A418B7FD5E4A6F30A07152FA5F6@ORSMSX106.amr.corp.intel.com> <CAE9FiQXqFnrXT8ibD2zsmeTj-VzXb8sAOjUtryBOxEXj216pQQ@mail.gmail.com> <505CAC93.8020304@redhat.com> <CAE9FiQW4vY3SwAt1TGhSa=bcmKnzxS96b9HGoU5_CDb3FRvGVA@mail.gmail.com> <505CC930.5070807@redhat.com> <5067E90B.2030908@broadcom.com>
+In-Reply-To: <5067E90B.2030908@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the kernel is being initialized, and some hardwares are not added
-to system, there won't be acpi_device structs for these devices. But
-acpi_is_root_bridge() depends on acpi_device struct. As a result, all
-the not-added root bridge will not be judged as a root bridge in
-find_root_bridges(). And further more, no handle_hotplug_event_root()
-notifier will be installed for them.
+On 09/30/2012 02:39 AM, Yuval Mintz wrote:
+>>>> yuk, no.
+>>>> I have a set of patches almost done.
+>>>> i'm tied up until Monday on RHEL6, then I'll switch gears&   post a set of
+>>>> patches.
+>
+> hi Don - anything new about this incoming patch-series?
+>
+>>>
+>>> so that is your employer 'sinternal policy? for RHEL 6 kernel first,
+>>> then upstream kernel?
+>> No, I have deadlines for RHEL6 for *other work* until Monday.  After that,
+>> I can re-focus on upstream work.  Some of us actually have other work than
+>> just upstream.... crazy talk, I know! ;-)
+>
+>
+I should have the sysfs-level patches done & posted today.
+Need another day or 2 to get a driver refactored to use it (ixgbe).
 
-This patch introduces a new api to find all root bridges in system by
-getting HID directly from ACPI namespace, not depending on acpi_device
-struct.
+Although the patches will enable per-device sriov enablement/disablement,
+further thought on tools that will stack on top of it, probably will need
+to augment a new pci sysfs directory that tools can find sriov devices
+quicker/easier w/o traversing the entire /sys/bus/pci/devices tree
+searching for a 'sriov_max_vfs' file, but, I can do that as a follow-on patch.
+I'm thinking of what is done now with virtfn<X> linked files in the pf,
+but the inverse link in a directory, like /sys/bus/pci/sriov.
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Liu Jiang <jiang.liu@huawei.com>
----
- drivers/acpi/pci_root.c |   19 +++++++++++--------
- 1 files changed, 11 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 6151d83..582eb11 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -129,20 +129,23 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
-  * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
-  * @handle - the ACPI CA node in question.
-  *
-- * Note: we could make this API take a struct acpi_device * instead, but
-- * for now, it's more convenient to operate on an acpi_handle.
-+ * Note: If a device is not added to the system yet, there won't be an
-+ * acpi_device struct for it. So do not get HID and CID from acpi_device,
-+ * get them from ACPI namespace directly.
-  */
- int acpi_is_root_bridge(acpi_handle handle)
- {
--	int ret;
--	struct acpi_device *device;
-+	struct acpi_device_info *info;
-+	acpi_status status;
- 
--	ret = acpi_bus_get_device(handle, &device);
--	if (ret)
-+	status = acpi_get_object_info(handle, &info);
-+	if (ACPI_FAILURE(status)) {
-+		printk(KERN_ERR PREFIX "%s: Error reading"
-+				       "device info\n", __func__);
- 		return 0;
-+	}
- 
--	ret = acpi_match_device_ids(device, root_device_ids);
--	if (ret)
-+	if (acpi_match_object_info_ids(info, root_device_ids))
- 		return 0;
- 	else
- 		return 1;
--- 
-1.7.1
-
+Then there's the additional patches needed to do an 'all', or <DOMAIN:B:D.F>
+qualified enable/disable from a per-sysfs-driver perspective. ... fun stuff!
