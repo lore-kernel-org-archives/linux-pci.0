@@ -1,129 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/4] ACPI: use device drivers_autoprobe to delay loading acpi drivers
-Date: Wed,  3 Oct 2012 16:00:12 -0700
-Message-Id: <1349305214-3241-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349305214-3241-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
- <1349305214-3241-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:9116 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996Ab2JAIIY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Oct 2012 04:08:24 -0400
+Date: Mon, 1 Oct 2012 10:08:09 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v3 -tip 0/5] x86, MSI, AHCI: Support multiple MSIs
+Message-ID: <cover.1349074231.git.agordeev@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current acpi driver for pci_root is working like this way for hotplug:
+Currently multiple MSI mode is limited to a single vector per device (at
+least on x86 and PPC). This series breathes life into pci_enable_msi_block()
+and makes it possible to set interrupt affinity for multiple IRQs, similarly
+to MSI-X. Yet, only for x86 and only when IOMMUs are present.
 
-	acpi try to enumberate acpi device and create acpi_device for pci_root
-	and loading driver for it, and that drivers .add aka acpi_pci_root_add
-	calls pci_acpi_scan_root to enumerate pci devices but not add those pci
-	devices into device tree to prevent drivers for pci devices get probed.
+Although IRQ and PCI subsystems are modified, the current behaviour left
+intact. The drivers could just start using multiple MSIs just by following
+the existing documentation.
 
-	Later .start aka acpi_pci_root_start will call pci_bus_add_devices to
-	add pci devices into the tree to make drivers for pci devices get
-	attached or probed.
+The AHCI device driver makes use of the new mode and a new function -
+pci_enable_msi_block_auto() - patches 4,5.
 
-The reason for that .add must get back for pci_root, so could create acpi_device
-for other pci_devices. otherwise adding the pci device tree early than
-acpi_device will cause binding for acpi/pci failing becuse pci_device can not
-find acpi_dev that is not created yet.
+The series is adapted to Ingo's -tip repository.
 
-booting path is working becasue driver for acpi driver is registered later,
-that means all acpi_device get created at first, and later when acpi_driver
-get registered, and .add get called, that probe pci devices, when pci devices
-is found, it could find acpi_device and binding will be ok, even
-pci_add_bus_devices in done in acpi_pci_root_add.
 
-That .start design is broken, and it will leave pci devices out of device tree
-for a while.
+Compared to v2:
 
-We could use device drivers_autoprobe and acpi_bus_type notifier to control
-the process to make sure for hot adding path, will have all acpi_device get
-created, then attach acpi driver for acpi_device for pci_root.
-That will make the path more like booting path.
+	1/5:	v1 is conditionally acked by Suresh
 
-After that we could remove the workaround .start in acpi driver ops.
+		Based on Yinghai's comment:
+		- create_irqs() is updated to be __create_irqs(, count, );
+		- create_irq_nr() done as __create_irqs(, 1, ) call;
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/scan.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 45 insertions(+), 1 deletions(-)
+	2,3/5:	No changes since v1, conditionally acked by Suresh
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index cbb3ed1..1bafa2d 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1474,6 +1474,19 @@ static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
- 		return -ENODEV;
- }
- 
-+static void acpi_bus_attach(struct acpi_device *dev)
-+{
-+	struct acpi_device *child;
-+	int ret;
-+
-+	dev->drivers_autoprobe = true;
-+	ret = device_attach(&dev->dev);
-+	WARN_ON(ret < 0);
-+
-+	list_for_each_entry(child, &dev->children, node)
-+		acpi_bus_attach(child);
-+}
-+
- /*
-  * acpi_bus_add and acpi_bus_start
-  *
-@@ -1491,11 +1504,17 @@ acpi_bus_add(struct acpi_device **child,
- 	     struct acpi_device *parent, acpi_handle handle, int type)
- {
- 	struct acpi_bus_ops ops;
-+	int result;
- 
- 	memset(&ops, 0, sizeof(ops));
- 	ops.acpi_op_add = 1;
- 
--	return acpi_bus_scan(handle, &ops, child);
-+	result = acpi_bus_scan(handle, &ops, child);
-+
-+	if (*child)
-+		acpi_bus_attach(*child);
-+
-+	return result;
- }
- EXPORT_SYMBOL(acpi_bus_add);
- 
-@@ -1636,3 +1655,28 @@ int __init acpi_scan_init(void)
- 
- 	return result;
- }
-+
-+static int acpi_hp_notifier(struct notifier_block *nb,
-+				 unsigned long event, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (event) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		to_acpi_device(dev)->drivers_autoprobe = false;
-+		break;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block acpi_hp_nb = {
-+	.notifier_call = &acpi_hp_notifier,
-+};
-+
-+static int __init acpi_hp_init(void)
-+{
-+	return bus_register_notifier(&acpi_bus_type, &acpi_hp_nb);
-+}
-+
-+fs_initcall(acpi_hp_init);
+	4/5:	No changes, v2 acked by Bjorn
+
+	5/5:	"Shared Last Message" mode leftovers removed;
+
+		Based on Jeff's comments:
+
+		- PCI-specific code moved from libahci.c to ahci.c -
+		  ahci_host_activate() lost scsi_host_template* parameter
+		  as result;
+
+		- spinlock initialization moved to ahci_port_start() -
+		  AHCI_HFLAG_MULTI_MSI flag introduced for that;
+
+
+Alexander Gordeev (5):
+  1/5 x86, MSI: Support multiple MSIs in presense of IRQ remapping
+  2/5 x86, MSI: Allocate as many multiple IRQs as requested
+  3/5 x86, MSI: Minor readability fixes
+  4/5 PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
+  5/5 AHCI: Support multiple MSIs
+
+ Documentation/PCI/MSI-HOWTO.txt |   37 +++++++-
+ arch/x86/kernel/apic/io_apic.c  |  178 ++++++++++++++++++++++++++++++++-------
+ drivers/ata/ahci.c              |   91 +++++++++++++++++++-
+ drivers/ata/ahci.h              |    6 ++
+ drivers/ata/libahci.c           |  118 ++++++++++++++++++++++++--
+ drivers/pci/msi.c               |   36 ++++++++-
+ include/linux/irq.h             |    6 ++
+ include/linux/msi.h             |    1 +
+ include/linux/pci.h             |    7 ++
+ kernel/irq/chip.c               |   30 +++++--
+ kernel/irq/irqdesc.c            |   31 +++++++
+ 11 files changed, 486 insertions(+), 55 deletions(-)
+
 -- 
-1.7.7
+1.7.7.6
 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
