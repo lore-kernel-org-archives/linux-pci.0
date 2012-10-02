@@ -1,56 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:53026 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260Ab2JIDGL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:06:11 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
-	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 4/7] PCI, cpqphp: disable ARI forwarding for cpqphp
-Date: Tue, 9 Oct 2012 11:03:21 +0800
-Message-ID: <1349751804-7476-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
-References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 2 Oct 2012 06:57:41 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 -tip 3/5] x86, MSI: Minor readability fixes
+Message-ID: <20121002045741.GB7756@gmail.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
+ <1638b429b0e5684b6620ef36d101ef782ddeacb8.1349074231.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1638b429b0e5684b6620ef36d101ef782ddeacb8.1349074231.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Disable the port ARI forwarding after an ARI device hot removed.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
- drivers/pci/hotplug/cpqphp_pci.c       |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+* Alexander Gordeev <agordeev@redhat.com> wrote:
 
-diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-index dcc75c7..d59d228 100644
---- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-+++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-@@ -319,6 +319,7 @@ int cpci_unconfigure_slot(struct slot* slot)
- 				    PCI_DEVFN(PCI_SLOT(slot->devfn), i));
- 		if (dev) {
- 			pci_stop_and_remove_bus_device(dev);
-+			pci_configure_ari(dev, false);
- 			pci_dev_put(dev);
- 		}
- 	}
-diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
-index 09801c6..a818c1a 100644
---- a/drivers/pci/hotplug/cpqphp_pci.c
-+++ b/drivers/pci/hotplug/cpqphp_pci.c
-@@ -128,6 +128,7 @@ int cpqhp_unconfigure_device(struct pci_func* func)
- 		if (temp) {
- 			pci_dev_put(temp);
- 			pci_stop_and_remove_bus_device(temp);
-+			pci_configure_ari(temp, false);
- 		}
- 	}
- 	return 0;
--- 
-1.7.1
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index 84d632b..0489699 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -3123,7 +3123,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+>  
+>  	if (irq_remapped(cfg)) {
+>  		compose_remapped_msi_msg(pdev, irq, dest, msg, hpet_id);
+> -		return err;
+> +		return 0;
+>  	}
+>  
+>  	if (x2apic_enabled())
+> @@ -3150,7 +3150,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+>  			MSI_DATA_DELIVERY_LOWPRI) |
+>  		MSI_DATA_VECTOR(cfg->vector);
+>  
+> -	return err;
+> +	return 0;
+>  }
+>  
+>  static int
+> @@ -3232,7 +3232,7 @@ int setup_msix_irqs(struct pci_dev *dev, int nvec)
+>  	list_for_each_entry(msidesc, &dev->msi_list, list) {
+>  		irq = create_irq_nr(irq_want, node);
+>  		if (irq == 0)
+> -			return -1;
+> +			return -ENOSPC;
+>  		irq_want = irq + 1;
+>  		if (!irq_remapping_enabled)
+>  			goto no_ir;
 
+This should be backported into earlier patches.
 
+Thanks,
+
+	Ingo
