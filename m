@@ -1,39 +1,35 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:2804 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753412Ab2JBIBJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Oct 2012 04:01:09 -0400
+Message-ID: <506A9892.5090707@broadcom.com>
+Date: Tue, 2 Oct 2012 09:32:34 +0200
+From: "Yuval Mintz" <yuvalmin@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CACJDEmoeD+XwjGnA2WwkeJ5TrsaXfgw+mZHPDcX0+7QZ9_80SA@mail.gmail.com>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
-	<1349305214-3241-1-git-send-email-yinghai@kernel.org>
-	<1349305214-3241-2-git-send-email-yinghai@kernel.org>
-	<CACJDEmoeD+XwjGnA2WwkeJ5TrsaXfgw+mZHPDcX0+7QZ9_80SA@mail.gmail.com>
-Date: Thu, 4 Oct 2012 08:15:44 -0700
-Message-ID: <CAE9FiQVFY1M65smht2vkAAR3nvH+SMUe2NteBvUyZzqabARV2Q@mail.gmail.com>
-Subject: Re: [PATCH 1/4] ACPI: add drivers_autoprobe in struct acpi_device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+To: "Donald Dutile" <ddutile@redhat.com>
+cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at
+ per device level
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 4, 2012 at 6:03 AM, Konrad Rzeszutek Wilk <konrad@kernel.org> wrote:
-> On Wed, Oct 3, 2012 at 7:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> To use to control the delay attach driver for acpi_device.
->
-> <blinks>
-> I am not sure what this says. Can you please explain how it controls
-> the delaying of
-> attaching drivers?
->>
->> Will use bus notifier to toggle this bits when needed.
->
-> Will use ..? In a subsequent patch? Which patch? And when is this
-> needed? Is there a patch that needs this?
+> +static void pci_sriov_remove_sysfs_dev_files(struct pci_dev *dev)
+> +{
+> +	int pos;
+> +
+> +	if ((dev->is_physfn) && pci_is_pcie(dev)) {
+> +            pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
+> +            if (pos)
+> +		device_remove_file(&dev->dev, pci_dev_sriov_attrs);
 
-please check patch 0-4 as a whole.
+Shouldn't it iterate over the attributes when removing them?
 
-Yinghai
+
+
