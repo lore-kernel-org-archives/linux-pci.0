@@ -1,53 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.mev.co.uk ([62.49.15.74]:49723 "EHLO mail.mev.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759270Ab2J2Okc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Oct 2012 10:40:32 -0400
-From: Ian Abbott <abbotti@mev.co.uk>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ian Abbott <abbotti@mev.co.uk>
-Subject: [PATCH 2/2] PCI: add PLX PCI 9050 workaround for some Meilhaus DAQ cards
-Date: Mon, 29 Oct 2012 14:40:18 +0000
-Message-Id: <1351521618-6818-2-git-send-email-abbotti@mev.co.uk>
-In-Reply-To: <1351521618-6818-1-git-send-email-abbotti@mev.co.uk>
-References: <1351521618-6818-1-git-send-email-abbotti@mev.co.uk>
+Received: from acsinet15.oracle.com ([141.146.126.227]:31262 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab2JBGdJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 02:33:09 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 01/10] device: add drivers_autoprobe in struct device
+Date: Mon,  1 Oct 2012 23:32:59 -0700
+Message-Id: <1349159588-15029-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Meilhaus ME-2000i and ME-2600i data acquisition cards supported by
-the Comedi "me_daq" driver use the PLX PCI 9050 PCI Target bridge chip
-affected by the bug that prevents the chip's local configuration
-registers being read from BAR0 or BAR1 base addresses that are an odd
-multiple of 128 bytes.  Use the PLX PCI 9050 quirk handler for these
-devices to re-allocate affected regions to a 256-byte boundary.
+To use to control the delay attach driver for specific device.
 
-Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+Will use bus notifier to toggle this bits when needed.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/pci/quirks.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/base/bus.c     |    2 +-
+ drivers/base/core.c    |    1 +
+ include/linux/device.h |    1 +
+ 3 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7e6be56..f9a1b33 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1814,6 +1814,17 @@ static void __devinit quirk_plx_pci9050(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9050,
- 			 quirk_plx_pci9050);
-+/*
-+ * The following Meilhaus (vendor ID 0x1402) device IDs (amongst others)
-+ * may be using the PLX PCI 9050: 0x0630, 0x0940, 0x0950, 0x0960, 0x100b,
-+ * 0x1400, 0x140a, 0x140b, 0x14e0, 0x14ea, 0x14eb, 0x1604, 0x1608, 0x160c,
-+ * 0x168f, 0x2000, 0x2600, 0x3000, 0x810a, 0x810b.
-+ *
-+ * Currently, device IDs 0x2000 and 0x2600 are used by the Comedi "me_daq"
-+ * driver.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(0x1402, 0x2000, quirk_plx_pci9050);
-+DECLARE_PCI_FIXUP_HEADER(0x1402, 0x2600, quirk_plx_pci9050);
+diff --git a/drivers/base/bus.c b/drivers/base/bus.c
+index 181ed26..22b826a 100644
+--- a/drivers/base/bus.c
++++ b/drivers/base/bus.c
+@@ -538,7 +538,7 @@ void bus_probe_device(struct device *dev)
+ 	if (!bus)
+ 		return;
  
- static void __devinit quirk_netmos(struct pci_dev *dev)
- {
+-	if (bus->p->drivers_autoprobe) {
++	if (bus->p->drivers_autoprobe && dev->drivers_autoprobe) {
+ 		ret = device_attach(dev);
+ 		WARN_ON(ret < 0);
+ 	}
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 5e6e00b..8a71f88 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -656,6 +656,7 @@ void device_initialize(struct device *dev)
+ 	INIT_LIST_HEAD(&dev->devres_head);
+ 	device_pm_init(dev);
+ 	set_dev_node(dev, -1);
++	dev->drivers_autoprobe = true;
+ }
+ 
+ static struct kobject *virtual_device_parent(struct device *dev)
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 52a5f15..e08db26 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -647,6 +647,7 @@ struct device {
+ 	struct bus_type	*bus;		/* type of bus device is on */
+ 	struct device_driver *driver;	/* which driver has allocated this
+ 					   device */
++	bool	drivers_autoprobe;
+ 	void		*platform_data;	/* Platform specific data, device
+ 					   core doesn't touch it */
+ 	struct dev_pm_info	power;
 -- 
-1.7.12.4
+1.7.7
 
