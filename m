@@ -1,91 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:47857 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436Ab2JIJIY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 05:08:24 -0400
-Message-ID: <5073E84A.8080301@jp.fujitsu.com>
-Date: Tue, 09 Oct 2012 18:03:06 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54938 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751333Ab2JBUpu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 16:45:50 -0400
+Date: Tue, 2 Oct 2012 13:45:48 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
+Message-ID: <20121002204548.GC28663@kroah.com>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+ <1349159588-15029-2-git-send-email-yinghai@kernel.org>
+ <20121002133303.GA502@kroah.com>
+ <CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
+ <20121002174712.GA11843@kroah.com>
+ <CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
 MIME-Version: 1.0
-To: ddutile@redhat.com
-CC: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
-	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de
-Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <20121002074434.204.47750.sendpatchset@indoh> <506C3C4C.1060808@redhat.com>
-In-Reply-To: <506C3C4C.1060808@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/03 22:23), Don Dutile wrote:
-> On 10/02/2012 03:49 AM, Takao Indoh wrote:
->> These patches reset PCIe devices at boot time to address DMA problem on
->> kdump with iommu. When "reset_devices" is specified, a hot reset is
->> triggered on each PCIe root port and downstream port to reset its
->> downstream endpoint.
->>
->> Background:
->> A kdump problem about DMA has been discussed for a long time. That is,
->> when a kernel is switched to the kdump kernel DMA derived from first
->> kernel affects second kernel. Recently this problem surfaces when iommu
->> is used for PCI passthrough on KVM guest. In the case of the machine I
->> use, when intel_iommu=on is specified, DMAR error is detected in kdump
->> kernel and PCI SERR is also detected. Finally kdump fails because some
->> devices does not work correctly.
->>
->> The root cause is that ongoing DMA from first kernel causes DMAR fault
->> because page table of DMAR is initialized while kdump kernel is booting
->> up. Therefore to address this problem DMA needs to be stopped before
->> DMAR is initialized at kdump kernel boot time. By these patches, PCIe
->> devices are reset by hot reset and its DMA is stopped when reset_devices
->> is specified. One problem of this solution is that the monitor blacks
->> out when VGA controller is reset. So this patch does not reset the port
->> whose child endpoint is VGA device.
->>
->> v2:
->> Reset devices in setup_arch() because reset need to be done before
->> interrupt remapping is initialized.
->>
->> v1:
->> https://lkml.org/lkml/2012/8/3/160
->>
->> Thanks,
->> Takao Indoh
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-> Maybe you've tried the following, and I missed a thread on it,
-> but instead of a somewhat-large, reset hammer, did any one try
-> just reading all the endpoint-only device CMD register, flip the MasterEnable
-> bit off, and write it back? .... that would stop all DMA (should stop
-> all MSI writes as well since they are just another DMA), and then
-> restart the system?
-> May also have to do PCI INT Disable as well... and note, that's a PCI 2.3
-> optional feature.... so devices using INT signalling vs MSI
-> is just borked on IOMMU/intr-remapping systems... which I would expect
-> are few. Then again, if this is foolishly done, then reset legacy PCI
-> busses as the fallback.
+On Tue, Oct 02, 2012 at 01:20:58PM -0700, Yinghai Lu wrote:
+> On Tue, Oct 2, 2012 at 10:47 AM, Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> > On Tue, Oct 02, 2012 at 10:39:25AM -0700, Yinghai Lu wrote:
+> >> On Tue, Oct 2, 2012 at 6:33 AM, Greg Kroah-Hartman
+> >> Those patches address Bjorn's request:
+> >> 1. kill acpi_pci_root_start in drivers/acpi/pci_root.c
+> >> 2. register pci device to device as soon as possible, so for_each_pci_device
+> >>    could be used early before pci_bus_add_devices.
+> >>
+> >> please check change log patch2-4.
+> >
+> > Sorry, I still don't see what is so special about PCI that they have to
+> > do something different here.  What am I missing?
+> 
+> That is something that core related with hotplug:
+> 
+> for booting and hotplug, we have different code path.
+> 1. for booting, all device are enumerated and registered, and later
+> driver get registered, driver is attached to the devices.
+> 2. for hotplug, one device on the bus is found, and then registered
+> and driver is attached, after that
+>                      another device on the bus is found, and then
+> registered and driver is attached...
+> 
+> The reason for the difference, device driver is not registered later
+> during booting path.
 
-Just clearing bus master bit and INTx disable bit in setup_arch() did
-not solve this problem. I still got DMAR error on devices(for exmaple,
-igb and megaraid_sas).
+But on each case, the code path in the driver core is the same, and you
+don't know if for 1) a driver is not already registered in the system
+(think drivers built into the kernel).
 
-Clearing bus master in setup_arch() and resetting devices in fixup_final
-like v1 patch is better, DMAR error was not detected. But on certain
-machine kdump kernel hung up when resetting devices. It seems to be a
-problem specific to the platform.
+> We should make the two path have same sequence. the solution that I
+> suggest is adding per device drivers_autoprobe.
 
-And, resetting devices in setup_arch() like v2 patch solves all problems
-I found so far.
+No, now you have 2 code paths in the driver core, do not do that.
 
-Thanks,
-Takao Indoh
+> and thanking for bus_type notifier that we could toggle that bit
+> during device_add, so could make all device on same
+> bus get probed and registered but driver get skipped. and after that
+> call device_attach for all device at one batch.
+> 
+> That will remove those hotplug related hacks like acpi_pci_root_start
+> that try to delay registering of pci devices.
+> and make the code lesser and readable.
 
+I don't know what you are doing in the acpi code, but I do not think it
+requires a driver core change like this.
+
+Again, why is PCI different from any other bus type?  (hint, it
+shouldn't be...)
+
+greg k-h
