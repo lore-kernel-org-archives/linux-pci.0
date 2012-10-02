@@ -1,116 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:65511 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab2JBXUs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 19:20:48 -0400
-Received: by bkcjk13 with SMTP id jk13so5793168bkc.19
-        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 16:20:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-	<1349159588-15029-2-git-send-email-yinghai@kernel.org>
-	<20121002133303.GA502@kroah.com>
-	<CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
-	<20121002174712.GA11843@kroah.com>
-	<CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
-	<20121002204548.GC28663@kroah.com>
-	<CAE9FiQV51R2RBAZBPobDifq6jQUhBCyx_Bo8EHxOX4yrUMSnLg@mail.gmail.com>
-	<CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com>
-Date: Tue, 2 Oct 2012 16:20:46 -0700
-Message-ID: <CAE9FiQWrgOP57vZR=Pto+oTMrdjzWiVTR6BOH0r7ZvGip73Ssw@mail.gmail.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58531 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636Ab2JBNdH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 09:33:07 -0400
+Received: by pbbrr4 with SMTP id rr4so8771526pbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 06:33:07 -0700 (PDT)
+Date: Tue, 2 Oct 2012 06:33:03 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
 Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org
-Content-Type: multipart/mixed; boundary=00151758b32c98005f04cb1bc502
+Message-ID: <20121002133303.GA502@kroah.com>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+ <1349159588-15029-2-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1349159588-15029-2-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---00151758b32c98005f04cb1bc502
-Content-Type: text/plain; charset=ISO-8859-1
+On Mon, Oct 01, 2012 at 11:32:59PM -0700, Yinghai Lu wrote:
+> To use to control the delay attach driver for specific device.
+> 
+> Will use bus notifier to toggle this bits when needed.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-On Tue, Oct 2, 2012 at 3:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Oct 2, 2012 at 3:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, Oct 2, 2012 at 1:45 PM, Greg Kroah-Hartman
->
-> We enumerate ACPI devices by doing a depth-first traversal of the
-> namespace.  We should be able to bind a driver to a device as soon as
-> we discover it.  For PNP0A03/08 host bridges, that will be the
-> pci_root.c driver.  That driver's .add() method enumerates all the PCI
-> devices behind the host bridge, which is another depth-first
-> traversal, this time of the PCI hierarchy.  Similarly, we ought to be
-> able to bind drivers to the PCI devices as we discover them.
+Without a whole lot more context as to why you want this change, no,
+sorry, I'll not accept it.
 
-before introducing this per device .drivers_autoprobe, i did one acpi
-to pci bind version
-as attached patch.
-
-that mean that will have two version: for booting path: use pci to acpi binding.
-and hot plug path will use acpi to pci binding.
-Also that make code pretty ugly to consider platform_notifier at the same time.
-
-and acp_get_pci_dev in that acpi_pci_hp_notifier is not very efficient.
-
--Yinghai
-
---00151758b32c98005f04cb1bc502
-Content-Type: application/octet-stream;
-	name="add_acpi_pci_notifier_xx.patch"
-Content-Disposition: attachment; filename="add_acpi_pci_notifier_xx.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h7tmqs9n0
-
-U3ViamVjdDogW1BBVENIXSBQQ0ksIEFDUEk6IE1vdmUgcGNpX2J1c19hZGRfZGV2aWNlcyBpbnRv
-IGFjcGlfcGNpX3Jvb3RfYWRkCgpUaGF0IG1lYW4gYWNwaSBkZXZpY2UgZm9yIHBjaSBkZXZpY2Vz
-IGFyZSBub3QgYWRkZWQgZm9yIHBjaSByb290IGhvdCBhZGQgcGF0aC4KClNvIHdlIG5lZWQgdG8g
-YWRkIGFjcGkgbm90aWZpZXIgdG8gZG8gYWNwaV9wY2kgYmluZGluZyB0aGVyZS4KClNpZ25lZC1v
-ZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9hY3Bp
-L3BjaV9iaW5kLmMgfCAgIDU0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKystLS0tLQogZHJpdmVycy9hY3BpL3BjaV9yb290LmMgfCAgICA0ICstLQogMiBmaWxlcyBj
-aGFuZ2VkLCA1MSBpbnNlcnRpb25zKCspLCA3IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIu
-Ni9kcml2ZXJzL2FjcGkvcGNpX2JpbmQuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9k
-cml2ZXJzL2FjcGkvcGNpX2JpbmQuYworKysgbGludXgtMi42L2RyaXZlcnMvYWNwaS9wY2lfYmlu
-ZC5jCkBAIC0xMjEsMTUgKzEyMSwxNCBAQCBzdGF0aWMgaW50IHBjaV9kZXZfaHBfbm90aWZpZXIo
-c3RydWN0IG5vCiAJc3RydWN0IGRldmljZSAqZGV2ID0gZGF0YTsKIAlhY3BpX2hhbmRsZSBoYW5k
-bGUgPSBERVZJQ0VfQUNQSV9IQU5ETEUoZGV2KTsKIAlzdHJ1Y3QgYWNwaV9kZXZpY2UgKmFjcGlf
-ZGV2OworCWFjcGlfc3RhdHVzIHN0YXR1czsKIAogCWlmICghaGFuZGxlKQogCQlyZXR1cm4gTk9U
-SUZZX09LOwogCi0JaWYgKGFjcGlfYnVzX2dldF9kZXZpY2UoaGFuZGxlLCAmYWNwaV9kZXYpKQot
-CQlyZXR1cm4gTk9USUZZX09LOwotCi0JaWYgKCFhY3BpX2RldikKLQkJcmV0dXJuIE5PVElGWV9P
-SzsKKwlzdGF0dXMgPSBhY3BpX2J1c19nZXRfZGV2aWNlKGhhbmRsZSwgJmFjcGlfZGV2KTsKKwlp
-ZiAoQUNQSV9GQUlMVVJFKHN0YXR1cykpCisJCWFjcGlfZGV2ID0gTlVMTDsKIAogCXN3aXRjaCAo
-ZXZlbnQpIHsKIAljYXNlIEJVU19OT1RJRllfQUREX0RFVklDRToKQEAgLTE1NCwzICsxNTMsNDgg
-QEAgc3RhdGljIGludCBfX2luaXQgcGNpX2Rldl9ocF9pbml0KHZvaWQpCiB9CiAKIGFyY2hfaW5p
-dGNhbGwocGNpX2Rldl9ocF9pbml0KTsKKworc3RhdGljIGludCBhY3BpX3BjaV9ocF9ub3RpZmll
-cihzdHJ1Y3Qgbm90aWZpZXJfYmxvY2sgKm5iLAorCQkJCSB1bnNpZ25lZCBsb25nIGV2ZW50LCB2
-b2lkICpkYXRhKQoreworCXN0cnVjdCBkZXZpY2UgKmFkZXYgPSBkYXRhOworCXN0cnVjdCBhY3Bp
-X2RldmljZSAqYWNwaV9kZXYgPSB0b19hY3BpX2RldmljZShhZGV2KTsKKwlzdHJ1Y3QgcGNpX2Rl
-diAgKnBkZXY7CisJc3RydWN0IGRldmljZSAqZGV2OworCWludCByZXQ7CisKKwkvKiBvbmx5IG5l
-ZWQgdG8gd29ycnkgYWJvdXQgaG90IGFkZGluZyBwYXRoICovCisJaWYgKGV2ZW50ICE9IEJVU19O
-T1RJRllfQUREX0RFVklDRSkKKwkJcmV0dXJuIE5PVElGWV9PSzsKKworCXBkZXYgPSBhY3BpX2dl
-dF9wY2lfZGV2KGFjcGlfZGV2LT5oYW5kbGUpOworCWlmICghcGRldikKKwkJcmV0dXJuIE5PVElG
-WV9PSzsKKworCWRldiA9ICZwZGV2LT5kZXY7CisJaWYgKERFVklDRV9BQ1BJX0hBTkRMRShkZXYp
-ICE9IGFjcGlfZGV2LT5oYW5kbGUpCisJCXJldHVybiBOT1RJRllfT0s7CisKKwlyZXQgPSBzeXNm
-c19jcmVhdGVfbGluaygmZGV2LT5rb2JqLCAmYWNwaV9kZXYtPmRldi5rb2JqLAorICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAiZmlybXdhcmVfbm9kZSIpOworCXJldCA9IHN5c2ZzX2Ny
-ZWF0ZV9saW5rKCZhY3BpX2Rldi0+ZGV2LmtvYmosICZkZXYtPmtvYmosCisgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICJwaHlzaWNhbF9ub2RlIik7CisJaWYgKGFjcGlfZGV2LT53YWtl
-dXAuZmxhZ3MudmFsaWQpCisJCWRldmljZV9zZXRfd2FrZXVwX2NhcGFibGUoZGV2LCB0cnVlKTsK
-KworCWFjcGlfcGNpX2JpbmRfbm90aWZ5KGFjcGlfZGV2LCBkZXYsIHRydWUpOworCisJcmV0dXJu
-IE5PVElGWV9PSzsKK30KKworc3RhdGljIHN0cnVjdCBub3RpZmllcl9ibG9jayBhY3BpX3BjaV9o
-cF9uYiA9IHsKKwkubm90aWZpZXJfY2FsbCA9ICZhY3BpX3BjaV9ocF9ub3RpZmllciwKK307CisK
-K3N0YXRpYyBpbnQgX19pbml0IGFjcGlfcGNpX2hwX2luaXQodm9pZCkKK3sKKwlyZXR1cm4gYnVz
-X3JlZ2lzdGVyX25vdGlmaWVyKCZhY3BpX2J1c190eXBlLAorCQkJCQkgJmFjcGlfcGNpX2hwX25i
-KTsKK30KKworZnNfaW5pdGNhbGwoYWNwaV9wY2lfaHBfaW5pdCk7CkluZGV4OiBsaW51eC0yLjYv
-ZHJpdmVycy9hY3BpL3BjaV9yb290LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
-dmVycy9hY3BpL3BjaV9yb290LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3Qu
-YwpAQCAtNTk3LDYgKzU5Nyw4IEBAIHN0YXRpYyBpbnQgX19kZXZpbml0IGFjcGlfcGNpX3Jvb3Rf
-YWRkKHMKIAkJcGNpX2Fzc2lnbl91bmFzc2lnbmVkX2J1c19yZXNvdXJjZXMocm9vdC0+YnVzKTsK
-IAl9CiAKKwlwY2lfYnVzX2FkZF9kZXZpY2VzKHJvb3QtPmJ1cyk7CisKIAlyZXR1cm4gMDsKIAog
-b3V0X2RlbF9yb290OgpAQCAtNjEyLDggKzYxNCw2IEBAIHN0YXRpYyBpbnQgYWNwaV9wY2lfcm9v
-dF9zdGFydChzdHJ1Y3QgYWMKIHsKIAlzdHJ1Y3QgYWNwaV9wY2lfcm9vdCAqcm9vdCA9IGFjcGlf
-ZHJpdmVyX2RhdGEoZGV2aWNlKTsKIAotCXBjaV9idXNfYWRkX2RldmljZXMocm9vdC0+YnVzKTsK
-LQogCXJldHVybiAwOwogfQogCg==
---00151758b32c98005f04cb1bc502--
+greg k-h
