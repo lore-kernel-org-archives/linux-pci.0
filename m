@@ -1,55 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:51851 "EHLO mout0.freenet.de"
+Received: from mga03.intel.com ([143.182.124.21]:3589 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab2JNPJ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 14 Oct 2012 11:09:58 -0400
-Message-ID: <507AD532.7000707@01019freenet.de>
-Date: Sun, 14 Oct 2012 17:07:30 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1751732Ab2JBThq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Oct 2012 15:37:46 -0400
+From: Andi Kleen <andi@firstfloor.org>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump with iommu
+References: <20121002074434.204.47750.sendpatchset@indoh>
+Date: Tue, 02 Oct 2012 12:37:44 -0700
+In-Reply-To: <20121002074434.204.47750.sendpatchset@indoh> (Takao Indoh's
+	message of "Tue, 2 Oct 2012 16:49:56 +0900 (JST)")
+Message-ID: <m2mx04wtpz.fsf@firstfloor.org>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "Roedel, Joerg" <Joerg.Roedel@amd.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>,
-	kvm@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: vfio: missing patch in linux 3.6
-References: <506DA799.5090603@01019freenet.de> <1349364399.2759.42.camel@ul30vt.home> <20121004161421.GV4009@amd.com> <1349368080.2759.52.camel@ul30vt.home> <20121005130857.GX4009@amd.com>
-In-Reply-To: <20121005130857.GX4009@amd.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Roedel, Joerg wrote:
-> On Thu, Oct 04, 2012 at 10:28:00AM -0600, Alex Williamson wrote:
->> There are a couple questions in the link above.  Since the devices don't
->> expose a PCIe capability, we probably need to add a check to look at the
->> upstream device and verify we're not on a legacy bus where ACS can't be
->> enforced.
-> 
-> You can certainly do that, but for existing hardware (with an AMD IOMMU)
-> this check would never be true. These devices are always on a seperate
-> south-bridge chip which is connected to the north-bridge via PCIe. So
-> the topology where you find these devices is always the same in an AMD
-> IOMMU system.
-> 
->> Then there's the general question of whether the confirmation
->> of no peer-to-peer applies to every case where we might see this device
->> (some of them seem to have history that pre-dates this specific package
->> implementation) or do we need to try to identify specific package
->> properties in addition to just a device ID?
-> 
-> The device ids are kept the same to maintain compatability with older
-> software. Besides that, my statement about the peer-2-peer safety is
-> true for all south-bridges that you can find in an AMD IOMMU capable
-> system.
+Takao Indoh <indou.takao@jp.fujitsu.com> writes:
 
-http://news.gmane.org/find-root.php?group=gmane.linux.kernel.pci&article=16422
+> These patches reset PCIe devices at boot time to address DMA problem on
+> kdump with iommu. When "reset_devices" is specified, a hot reset is
+> triggered on each PCIe root port and downstream port to reset its
+> downstream endpoint.
 
-I think, Joerg wrote clearly that there is no problem any more to apply
-this patch. I run it since a long time meanwhile without any problem.
-Please, why aren't these patches applied?
+Great. I've been pondering this for a long time, but you did finally
+implement it. I hope this will make kdump a lot more reliable at least
+on the systems that support per port reset.
 
+Now the only question is: why make it a option and not default?
 
-Thanks,
-kind regards,
-Andreas Hartmann
+-Andi
+
+-- 
+ak@linux.intel.com -- Speaking for myself only
