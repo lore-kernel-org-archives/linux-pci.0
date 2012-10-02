@@ -1,195 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 7 Oct 2012 14:13:44 +0200
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@risingtidesystems.com>
-Subject: Re: [1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20121007141344.6624e873@wp.pl>
-In-Reply-To: <1349213177-9985-2-git-send-email-jon.mason@intel.com>
-References: <1349213177-9985-2-git-send-email-jon.mason@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:59994 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462Ab2JBQpa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 12:45:30 -0400
+Message-ID: <506B1A26.2060609@pobox.com>
+Date: Tue, 02 Oct 2012 12:45:26 -0400
+From: Jeff Garzik <jgarzik@pobox.com>
+MIME-Version: 1.0
+To: Alexander Gordeev <agordeev@redhat.com>
+CC: Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
+References: <cover.1349074231.git.agordeev@redhat.com> <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com> <20121002050929.GD7756@gmail.com> <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 10/02/2012 12:42 PM, Alexander Gordeev wrote:
+> On Tue, Oct 02, 2012 at 07:09:29AM +0200, Ingo Molnar wrote:
+>>> +irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
+>>> +{
+>>> +	struct ata_port *ap_this = dev_instance;
+>>> +	struct ahci_port_priv *pp = ap_this->private_data;
+>>> +	struct ata_host *host = ap_this->host;
+>>> +	struct ahci_host_priv *hpriv = host->private_data;
+>>> +	void __iomem *mmio = hpriv->mmio;
+>>> +	unsigned int i;
+>>> +	u32 irq_stat, irq_masked;
+>>> +
+>>> +	VPRINTK("ENTER\n");
+>>
+>> Is this per IRQ handler execution debugging code still needed?
+>> Same for the other VPRINTK() lines in this patch.
+>
+> These VPRINKs are only to make new handlers look like ahci_interrupt()
+> which did not change. I believe, if they need to go it is better to
+> remove them altogether, with a separate followup patch.
 
-it's good to see some NTB code getting into mainline! I have a few comments
-though.
+Definitely followup patch material + discussion :)
 
-On Tue, 02 Oct 2012 21:26:16 -0000, Jon Mason <jon.mason@intel.com>
-wrote:
+For the moment, the above is consistent with existing code, and by 
+default compiled out, as one would expect.
 
-[...]
->+/**
->+ * ntb_write_local_spad() - write to the secondary scratchpad register
->+ * @ndev: pointer to ntb_device instance
->+ * @idx: index to the scratchpad register, 0 based
->+ * @val: the data value to put into the register
->+ *
->+ * This function allows writing of a 32bit value to the indexed scratchpad
->+ * register. The register resides on the secondary (external) side.
->+ *
->+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
->+ */
-[...]
->+/**
->+ * ntb_write_remote_spad() - write to the secondary scratchpad register
->+ * @ndev: pointer to ntb_device instance
->+ * @idx: index to the scratchpad register, 0 based
->+ * @val: the data value to put into the register
->+ *
->+ * This function allows writing of a 32bit value to the indexed scratchpad
->+ * register. The register resides on the secondary (external) side.
->+ *
->+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
->+ */
+	Jeff
 
-Those comments look suspiciously similar. I think one of the functions
-does write to primary scratchpad?
 
-[...]
->+/**
->+ * ntb_read_local_spad() - read from the primary scratchpad register
->+ * @ndev: pointer to ntb_device instance
->+ * @idx: index to scratchpad register, 0 based
->+ * @val: pointer to 32bit integer for storing the register value
->+ *
->+ * This function allows reading of the 32bit scratchpad register on
->+ * the primary (internal) side.
->+ *
->+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
->+ */
-[...]
->+/**
->+ * ntb_read_remote_spad() - read from the primary scratchpad register
->+ * @ndev: pointer to ntb_device instance
->+ * @idx: index to scratchpad register, 0 based
->+ * @val: pointer to 32bit integer for storing the register value
->+ *
->+ * This function allows reading of the 32bit scratchpad register on
->+ * the primary (internal) side.
->+ *
->+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
->+ */
 
-Same here.
 
-[...]
->+static int ntb_setup_msix(struct ntb_device *ndev)
->+{
->+	struct pci_dev *pdev = ndev->pdev;
->+	struct msix_entry *msix;
->+	int msix_entries;
->+	int rc, i, pos;
->+	u16 val;
->+
->+	pos = pci_find_capability(pdev, PCI_CAP_ID_MSIX);
->+	if (!pos) {
->+		rc = -EIO;
->+		goto err;
->+	}
->+
->+	rc = pci_read_config_word(pdev, pos + PCI_MSIX_FLAGS, &val);
->+	if (rc)
->+		goto err;
->+
->+	msix_entries = msix_table_size(val);
->+	if (msix_entries > ndev->limits.msix_cnt) {
->+		rc = -EINVAL;
->+		goto err;
->+	}
->+
->+	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
->+				     GFP_KERNEL);
->+	if (!ndev->msix_entries) {
->+		rc = -ENOMEM;
->+		goto err;
->+	}
->+
->+	for (i = 0; i < msix_entries; i++)
->+		ndev->msix_entries[i].entry = i;
->+
->+	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
->+	if (rc < 0)
->+		goto err1;
->+	if (rc > 0) {
 
-rc > 0 doesn't mean that vectors were allocated. Have a look at the
-example in Documentation/PCI/MSI-HOWTO.txt.
-
->+		/* On SNB, the link interrupt is always tied to 4th vector.  If
->+		 * we can't get all 4, then we can't use MSI-X.
->+		 */
->+		if (ndev->hw_type != BWD_HW) {
->+			rc = -EIO;
->+			goto err1;
->+		}
-
-This looks fragile, what if msix_table_size(val) was < 4? 
-
->+
->+		dev_warn(&pdev->dev,
->+			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
->+			 rc);
->+		msix_entries = rc;
->+	}
->+
->+	for (i = 0; i < msix_entries; i++) {
->+		msix = &ndev->msix_entries[i];
->+		WARN_ON(!msix->vector);
->+
->+		/* Use the last MSI-X vector for Link status */
->+		if (ndev->hw_type == BWD_HW) {
->+			rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
->+					 "ntb-callback-msix", &ndev->db_cb[i]);
->+			if (rc)
->+				goto err2;
->+		} else {
->+			if (i == msix_entries - 1) {
->+				rc = request_irq(msix->vector,
->+						 xeon_event_msix_irq, 0,
->+						 "ntb-event-msix", ndev);
->+				if (rc)
->+					goto err2;
->+			} else {
->+				rc = request_irq(msix->vector,
->+						 xeon_callback_msix_irq, 0,
->+						 "ntb-callback-msix",
->+						 &ndev->db_cb[i]);
->+				if (rc)
->+					goto err2;
->+			}
->+		}
->+	}
->+
->+	ndev->num_msix = msix_entries;
->+	if (ndev->hw_type == BWD_HW)
->+		ndev->max_cbs = msix_entries;
->+	else
->+		ndev->max_cbs = msix_entries - 1;
->+
->+	return 0;
->+
->+err2:
->+	while (--i >= 0) {
->+		msix = &ndev->msix_entries[i];
->+		if (ndev->hw_type != BWD_HW && i == ndev->num_msix - 1)
->+			free_irq(msix->vector, ndev);
->+		else
->+			free_irq(msix->vector, &ndev->db_cb[i]);
->+	}
->+	pci_disable_msix(pdev);
->+err1:
->+	kfree(ndev->msix_entries);
->+	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
->+err:
->+	ndev->num_msix = 0;
->+	return rc;
->+}
-
-Thanks for your work,
-
-  -- Kuba
