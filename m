@@ -1,188 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:55513 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754727Ab2JFPgb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 11:36:31 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Gong Chen <gong.chen@linux.intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH v3 27/28] x86: simplify _acpi_map_lsapic()
-Date: Sat,  6 Oct 2012 23:27:35 +0800
-Message-Id: <1349537256-21670-28-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21987 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753382Ab2JBGdK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 02:33:10 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 05/10] PCI, ACPI: Separate out acpi_pci_root_osc_contorl_set
+Date: Mon,  1 Oct 2012 23:33:03 -0700
+Message-Id: <1349159588-15029-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify implementation of function _acpi_map_lsapic().
+acpi_pci_root_add is too big now. We could move out root osc related code
+out of it.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Only code moving.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/include/asm/mpspec.h |    2 +-
- arch/x86/kernel/acpi/boot.c   |   44 +++++++++--------------------------------
- arch/x86/kernel/apic/apic.c   |    8 +++++---
- 3 files changed, 15 insertions(+), 39 deletions(-)
+ drivers/acpi/pci_root.c |  136 +++++++++++++++++++++++++----------------------
+ 1 files changed, 73 insertions(+), 63 deletions(-)
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 3e2f42a..f1d6487 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -94,7 +94,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- #define default_get_smp_config x86_init_uint_noop
- #endif
- 
--void __cpuinit generic_processor_info(int apicid, int version);
-+int __cpuinit generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 5e76952..f354446 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -195,24 +195,24 @@ static int __init acpi_parse_madt(struct acpi_table_header *table)
- 	return 0;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 085fccf..75643ce 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -430,6 +430,76 @@ out:
  }
+ EXPORT_SYMBOL(acpi_pci_osc_control_set);
  
--static void __cpuinit acpi_register_lapic(int id, u8 enabled)
-+static int __cpuinit acpi_register_lapic(int id, u8 enabled)
- {
- 	unsigned int ver = 0;
- 
- 	if (id >= (MAX_LOCAL_APIC-1)) {
- 		printk(KERN_INFO PREFIX "skipped apicid that is too big\n");
--		return;
-+		return -1;
- 	}
- 
- 	if (!enabled) {
- 		++disabled_cpus;
--		return;
-+		return -1;
- 	}
- 
- 	if (boot_cpu_physical_apicid != -1U)
- 		ver = apic_version[boot_cpu_physical_apicid];
- 
--	generic_processor_info(id, ver);
-+	return generic_processor_info(id, ver);
- }
- 
- static int __init
-@@ -610,44 +610,19 @@ static void __cpuinit acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
- 
- static int __cpuinit _acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu)
- {
--	cpumask_var_t tmp_map, new_map;
- 	int cpu;
--	int retval = -ENOMEM;
- 
--	if (!alloc_cpumask_var(&tmp_map, GFP_KERNEL))
--		goto out;
--
--	if (!alloc_cpumask_var(&new_map, GFP_KERNEL))
--		goto free_tmp_map;
--
--	cpumask_copy(tmp_map, cpu_present_mask);
--	acpi_register_lapic(physid, ACPI_MADT_ENABLED);
--
--	/*
--	 * If acpi_register_lapic successfully generates a new logical cpu
--	 * number, then the following will get us exactly what was mapped
--	 */
--	cpumask_andnot(new_map, cpu_present_mask, tmp_map);
--	if (cpumask_empty(new_map)) {
-+	cpu = acpi_register_lapic(physid, ACPI_MADT_ENABLED);
-+	if (cpu == -1) {
- 		printk ("Unable to map lapic to logical cpu number\n");
--		retval = -EINVAL;
--		goto free_new_map;
-+		return -EINVAL;
- 	}
- 
- 	acpi_processor_set_pdc(handle);
--
--	cpu = cpumask_first(new_map);
- 	acpi_map_cpu2node(handle, cpu, physid);
--
- 	*pcpu = cpu;
--	retval = 0;
--
--free_new_map:
--	free_cpumask_var(new_map);
--free_tmp_map:
--	free_cpumask_var(tmp_map);
--out:
--	return retval;
++static void acpi_pci_root_osc_control_set(struct acpi_pci_root *root)
++{
++	u32 flags, base_flags;
++	acpi_status status;
 +
-+	return 0;
- }
- 
- /* wrapper to silence section mismatch warning */
-@@ -665,7 +640,6 @@ int acpi_unmap_lsapic(int cpu)
- 
- 	return (0);
- }
--
- EXPORT_SYMBOL(acpi_unmap_lsapic);
- #endif				/* CONFIG_ACPI_HOTPLUG_CPU */
- 
-diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
-index b17416e..9fdc293 100644
---- a/arch/x86/kernel/apic/apic.c
-+++ b/arch/x86/kernel/apic/apic.c
-@@ -2030,7 +2030,7 @@ void disconnect_bsp_APIC(int virt_wire_setup)
- 	apic_write(APIC_LVT1, value);
- }
- 
--void __cpuinit generic_processor_info(int apicid, int version)
-+int __cpuinit generic_processor_info(int apicid, int version)
- {
- 	int cpu, max = nr_cpu_ids;
- 	bool boot_cpu_detected = physid_isset(boot_cpu_physical_apicid,
-@@ -2050,7 +2050,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
- 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
- 
- 		disabled_cpus++;
--		return;
-+		return -1;
- 	}
- 
- 	if (num_processors >= nr_cpu_ids) {
-@@ -2061,7 +2061,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
- 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
- 
- 		disabled_cpus++;
--		return;
-+		return -1;
- 	}
- 
- 	num_processors++;
-@@ -2106,6 +2106,8 @@ void __cpuinit generic_processor_info(int apicid, int version)
- #endif
- 	set_cpu_possible(cpu, true);
- 	set_cpu_present(cpu, true);
++	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
 +
-+	return cpu;
- }
++	/* Indicate support for various _OSC capabilities. */
++	if (pci_ext_cfg_avail(root->bus->self))
++		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
++	if (pcie_aspm_support_enabled())
++		flags |= OSC_ACTIVE_STATE_PWR_SUPPORT |
++			OSC_CLOCK_PWR_CAPABILITY_SUPPORT;
++	if (pci_msi_enabled())
++		flags |= OSC_MSI_SUPPORT;
++	if (flags != base_flags) {
++		status = acpi_pci_osc_support(root, flags);
++		if (ACPI_FAILURE(status)) {
++			dev_info(root->bus->bridge, "ACPI _OSC support "
++				"notification failed, disabling PCIe ASPM\n");
++			pcie_no_aspm();
++			flags = base_flags;
++		}
++	}
++
++	if (!pcie_ports_disabled
++	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
++		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
++			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
++			| OSC_PCI_EXPRESS_PME_CONTROL;
++
++		if (pci_aer_available()) {
++			if (aer_acpi_firmware_first())
++				dev_dbg(root->bus->bridge,
++					"PCIe errors handled by BIOS.\n");
++			else
++				flags |= OSC_PCI_EXPRESS_AER_CONTROL;
++		}
++
++		dev_info(root->bus->bridge,
++			"Requesting ACPI _OSC control (0x%02x)\n", flags);
++
++		status = acpi_pci_osc_control_set(root->device->handle, &flags,
++					OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
++		if (ACPI_SUCCESS(status)) {
++			dev_info(root->bus->bridge,
++				"ACPI _OSC control (0x%02x) granted\n", flags);
++			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
++				/*
++				 * We have ASPM control, but the FADT indicates
++				 * that it's unsupported. Clear it.
++				 */
++				pcie_clear_aspm(root->bus);
++			}
++		} else {
++			dev_info(root->bus->bridge,
++				"ACPI _OSC request failed (%s), "
++				"returned control mask: 0x%02x\n",
++				acpi_format_exception(status), flags);
++			pr_info("ACPI _OSC control for PCIe not granted, "
++				"disabling ASPM\n");
++			pcie_no_aspm();
++		}
++	} else {
++		dev_info(root->bus->bridge,
++			 "Unable to request _OSC control "
++			 "(_OSC support mask: 0x%02x)\n", flags);
++	}
++}
++
+ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ {
+ 	unsigned long long segment, bus;
+@@ -437,7 +507,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	int result;
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle;
+-	u32 flags, base_flags;
++	u32 flags;
  
- int hard_smp_processor_id(void)
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -491,7 +561,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	 * All supported architectures that use ACPI have support for
+ 	 * PCI domains, so we indicate this in _OSC support capabilities.
+ 	 */
+-	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
++	flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+ 	acpi_pci_osc_support(root, flags);
+ 
+ 	/*
+@@ -531,67 +601,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (ACPI_SUCCESS(status))
+ 		result = acpi_pci_irq_add_prt(device->handle, root->bus);
+ 
+-	/* Indicate support for various _OSC capabilities. */
+-	if (pci_ext_cfg_avail(root->bus->self))
+-		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+-	if (pcie_aspm_support_enabled())
+-		flags |= OSC_ACTIVE_STATE_PWR_SUPPORT |
+-			OSC_CLOCK_PWR_CAPABILITY_SUPPORT;
+-	if (pci_msi_enabled())
+-		flags |= OSC_MSI_SUPPORT;
+-	if (flags != base_flags) {
+-		status = acpi_pci_osc_support(root, flags);
+-		if (ACPI_FAILURE(status)) {
+-			dev_info(root->bus->bridge, "ACPI _OSC support "
+-				"notification failed, disabling PCIe ASPM\n");
+-			pcie_no_aspm();
+-			flags = base_flags;
+-		}
+-	}
+-
+-	if (!pcie_ports_disabled
+-	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+-		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+-			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+-			| OSC_PCI_EXPRESS_PME_CONTROL;
+-
+-		if (pci_aer_available()) {
+-			if (aer_acpi_firmware_first())
+-				dev_dbg(root->bus->bridge,
+-					"PCIe errors handled by BIOS.\n");
+-			else
+-				flags |= OSC_PCI_EXPRESS_AER_CONTROL;
+-		}
+-
+-		dev_info(root->bus->bridge,
+-			"Requesting ACPI _OSC control (0x%02x)\n", flags);
+-
+-		status = acpi_pci_osc_control_set(device->handle, &flags,
+-					OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
+-		if (ACPI_SUCCESS(status)) {
+-			dev_info(root->bus->bridge,
+-				"ACPI _OSC control (0x%02x) granted\n", flags);
+-			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+-				/*
+-				 * We have ASPM control, but the FADT indicates
+-				 * that it's unsupported. Clear it.
+-				 */
+-				pcie_clear_aspm(root->bus);
+-			}
+-		} else {
+-			dev_info(root->bus->bridge,
+-				"ACPI _OSC request failed (%s), "
+-				"returned control mask: 0x%02x\n",
+-				acpi_format_exception(status), flags);
+-			pr_info("ACPI _OSC control for PCIe not granted, "
+-				"disabling ASPM\n");
+-			pcie_no_aspm();
+-		}
+-	} else {
+-		dev_info(root->bus->bridge,
+-			 "Unable to request _OSC control "
+-			 "(_OSC support mask: 0x%02x)\n", flags);
+-	}
++	acpi_pci_root_osc_control_set(root);
+ 
+ 	pci_acpi_add_bus_pm_notifier(device, root->bus);
+ 	if (device->wakeup.flags.run_wake)
 -- 
-1.7.9.5
+1.7.7
 
