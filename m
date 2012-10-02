@@ -1,77 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.mev.co.uk ([62.49.15.74]:49724 "EHLO mail.mev.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759269Ab2J2Okc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Oct 2012 10:40:32 -0400
-From: Ian Abbott <abbotti@mev.co.uk>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ian Abbott <abbotti@mev.co.uk>
-Subject: [PATCH 1/2] PCI: add workaround for PLX PCI 9050 bug
-Date: Mon, 29 Oct 2012 14:40:17 +0000
-Message-Id: <1351521618-6818-1-git-send-email-abbotti@mev.co.uk>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:47293 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755333Ab2JBSAg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 14:00:36 -0400
+Received: by lagh6 with SMTP id h6so2528982lag.19
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 11:00:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20121002174712.GA11843@kroah.com>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+ <1349159588-15029-2-git-send-email-yinghai@kernel.org> <20121002133303.GA502@kroah.com>
+ <CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com> <20121002174712.GA11843@kroah.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 2 Oct 2012 12:00:14 -0600
+Message-ID: <CAErSpo7_vKi9iov2t49hNYV==SmsW5arNdp8eYBKv+mu6VvWVA@mail.gmail.com>
+Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PLX PCI 9050 PCI Target bridge controller has a bug that prevents
-its local configuration registers being read through BAR0 (memory) or
-BAR1 (i/o) if the base address lies on an odd 128-byte boundary, i.e. if
-bit 7 of the base address is non-zero.  This bug is described in the PCI
-9050 errata list, version 1.4, May 2005.  It was fixed in the
-pin-compatible PCI 9052, which can be distinguished from the PCI 9050 by
-checking the revision in the PCI header, which is hard-coded for these
-chips.
+On Tue, Oct 2, 2012 at 11:47 AM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Tue, Oct 02, 2012 at 10:39:25AM -0700, Yinghai Lu wrote:
+>> On Tue, Oct 2, 2012 at 6:33 AM, Greg Kroah-Hartman
+>> <gregkh@linuxfoundation.org> wrote:
+>> > On Mon, Oct 01, 2012 at 11:32:59PM -0700, Yinghai Lu wrote:
+>> >> To use to control the delay attach driver for specific device.
+>> >>
+>> >> Will use bus notifier to toggle this bits when needed.
+>> >>
+>> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> >> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> >
+>> > Without a whole lot more context as to why you want this change, no,
+>> > sorry, I'll not accept it.
+>>
+>> Sorry, I should put you on the to list for the whole patchset.
+>>
+>> Those patches address Bjorn's request:
+>> 1. kill acpi_pci_root_start in drivers/acpi/pci_root.c
+>> 2. register pci device to device as soon as possible, so for_each_pci_device
+>>    could be used early before pci_bus_add_devices.
 
-Workaround the problem by re-allocating the affected regions to a
-256-byte boundary.  Note that BAR0 and/or BAR1 may have been disabled
-(size 0) during initialization of the PCI chip when its configuration is
-read from a serial EEPROM.
+Just to be clear, I'm in favor of eliminating acpi_pci_root_start()
+eventually, but I didn't suggest this approach, and I don't like it
+much either.  I don't have much constructive feedback yet, but this
+feels like a special case that's not cleanly integrated into the
+existing infrastructure.
 
-Currently, the fix-up has only been used for devices with the default
-vendor and device ID of the PLX PCI 9050.  The PCI 9052 shares the same
-default device ID as the PCI 9050 but they have different PCI revision
-codes.
-
-Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
----
- drivers/pci/quirks.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7a451ff..7e6be56 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1790,6 +1790,31 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA_2,
- 			 PCI_DEVICE_ID_TOSHIBA_TC86C001_IDE,
- 			 quirk_tc86c001_ide);
- 
-+/*
-+ * PLX PCI 9050 PCI Target bridge controller has an errata that prevents the
-+ * local configuration registers accessible via BAR0 (memory) or BAR1 (i/o)
-+ * being read correctly if bit 7 of the base address is set.
-+ * The BAR0 or BAR1 region may be disabled (size 0) or enabled (size 128).
-+ * Re-allocate the regions to a 256-byte boundary if necessary.
-+ */
-+static void __devinit quirk_plx_pci9050(struct pci_dev *dev)
-+{
-+	unsigned int bar;
-+
-+	/* Fixed in revision 2 (PCI 9052). */
-+	if (dev->revision >= 2)
-+		return;
-+	for (bar = 0; bar <= 1; bar++)
-+		if (pci_resource_len(dev, bar) == 0x80 &&
-+		    (pci_resource_start(dev, bar) & 0x80)) {
-+			struct resource *r = &dev->resource[bar];
-+			r->start = 0;
-+			r->end = 0xff;
-+		}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PLX, PCI_DEVICE_ID_PLX_9050,
-+			 quirk_plx_pci9050);
-+
- static void __devinit quirk_netmos(struct pci_dev *dev)
- {
- 	unsigned int num_parallel = (dev->subsystem_device & 0xf0) >> 4;
--- 
-1.7.12.4
-
+>> please check change log patch2-4.
+>
+> Sorry, I still don't see what is so special about PCI that they have to
+> do something different here.  What am I missing?
