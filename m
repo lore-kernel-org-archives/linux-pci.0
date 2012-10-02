@@ -1,178 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f202.google.com ([209.85.217.202]:40620 "EHLO
-	mail-lb0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab2J3ECk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 00:02:40 -0400
-Received: by mail-lb0-f202.google.com with SMTP id l12so351776lbo.1
-        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 21:02:38 -0700 (PDT)
-Date: Mon, 29 Oct 2012 22:02:37 -0600
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	kaneshige.kenji@jp.fujitsu.com, yinghai@kernel.org,
-	jiang.liu@huawei.com
-Subject: Re: [PATCH v3 7/8] ACPI, PCI: add hostbridge removal function
-Message-ID: <20121030040237.GA10472@google.com>
-References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
- <20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
- <CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
- <20120928184627.0b039d14.izumi.taku@jp.fujitsu.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:51215 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab2JBE6r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 00:58:47 -0400
+Date: Tue, 2 Oct 2012 06:58:42 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 -tip 2/5] x86, MSI: Allocate as many multiple IRQs as
+ requested
+Message-ID: <20121002045842.GC7756@gmail.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
+ <c588272d963c0f73957cc4b104291f8b19e7454f.1349074231.git.agordeev@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120928184627.0b039d14.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <c588272d963c0f73957cc4b104291f8b19e7454f.1349074231.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think I'm missing patches 7/8 and 8/8 from this series.  Can
-you repost them to make sure I have the latest versions?
 
-Note the comments below:
+* Alexander Gordeev <agordeev@redhat.com> wrote:
 
-On Fri, Sep 28, 2012 at 06:46:27PM +0900, Taku Izumi wrote:
+> When multiple MSIs are enabled with pci_enable_msi_block() the number of
+> allocated IRQs 'nvec' is rounded up to the nearest value of power of two.
+> That could lead to a condition when number of requested and used IRQs is
+> less than number of actually allocated IRQs.
 > 
-> Currently there's no PCI-related clean-up code
-> in acpi_pci_root_remove() function.
-> This patch introduces function for hostbridge removal,
-> and brings back pci_stop_bus_devices() function.
+> This fix introduces 'msi_desc::nvec' field to address the above issue -
+> when non-zero, it holds the number of allocated IRQs. Otherwise, the old
+> method is used.
 > 
-> diff: rebased against current next
->       updated according to Bjorn's comment
-> 
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
->  drivers/acpi/pci_bind.c     |    7 +++++++
->  drivers/acpi/pci_root.c     |    6 ++++++
->  drivers/pci/remove.c        |   28 ++++++++++++++++++++++++++++
->  include/acpi/acpi_drivers.h |    1 +
->  include/linux/pci.h         |    2 ++
->  5 files changed, 44 insertions(+)
-> 
-> Index: Bjorn-next-0925-configchange/drivers/pci/remove.c
-> ===================================================================
-> --- Bjorn-next-0925-configchange.orig/drivers/pci/remove.c
-> +++ Bjorn-next-0925-configchange/drivers/pci/remove.c
-> @@ -111,3 +111,31 @@ void pci_stop_and_remove_bus_device(stru
->  	pci_remove_bus_device(dev);
->  }
->  EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
-> +
-> +void pci_stop_bus_devices(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *dev, *tmp;
-> +
-> +	list_for_each_entry_safe_reverse(dev, tmp,
-> +					 &bus->devices, bus_list) {
-> +		pci_stop_bus_device(dev);
-> +	}
-> +
-> +}
-> +EXPORT_SYMBOL(pci_stop_bus_devices);
+>  arch/x86/kernel/apic/io_apic.c |   16 +++++++---------
+>  drivers/pci/msi.c              |   10 ++++++++--
+>  include/linux/msi.h            |    1 +
+>  3 files changed, 16 insertions(+), 11 deletions(-)
 
-I'm hesitant to introduce pci_stop_bus_devices() again, particularly
-when it is exported.  The stop/remove split introduces the state where
-devices are "stopped" but haven't been "removed" yet.
+This should be switched with the first patch: first extend the 
+generic MSI code, then add x86 support for that variant.
 
-In this state, the driver .remove() method has been called, sysfs has
-been cleaned up, and the struct device has been unregistered, but the 
-struct pci_dev itself still exists.  Obviously, this state *must*
-exist internally in the PCI core as we remove the PCI device.
+Adding multi-MSI support in one patch then tweaking it in the 
+very next patch makes little sense and cannot possibly have been 
+tested much so it's a potential bisection trap.
 
-The problem is that we have non-core code that *depends* on being
-run while in this transitory state.  I think this is a design mistake.
+Thanks,
 
-The code that depends on this state is basically just the stuff in the
-acpi_pci_drivers list, namely, acpi_pci_hp_driver and acpi_pci_slot_driver.
-I suspect that the main reason we have the acpi_pci_drivers list and the
-whole acpi_pci_register_driver() infrastructure is so that these PCI
-host bridge "sub-drivers" can be built as modules.
-
-I don't think there's really any value in having these sub-drivers as
-modules, and it leads to a lot of complication in the code.  I'm pretty
-sure that forcing them to be selected at build-time will let us make
-things much simpler.
-
-If we have to have pci_stop_bus_devices() as an interim measure, I can
-live with it, but it doesn't need to be exported, does it?
-
-> +void pci_remove_host_bridge(struct pci_host_bridge *bridge)
-> +{
-> +	struct pci_bus *root = bridge->bus;
-> +	struct pci_dev *dev, *tmp;
-> +
-> +	list_for_each_entry_safe_reverse(dev, tmp,
-> +					 &root->devices, bus_list) {
-> +		pci_remove_bus_device(dev);
-> +	}
-> +
-> +	pci_remove_bus(root);
-> +
-> +	device_unregister(&bridge->dev);
-> +}
-> +EXPORT_SYMBOL(pci_remove_host_bridge);
-> Index: Bjorn-next-0925-configchange/drivers/acpi/pci_root.c
-> ===================================================================
-> --- Bjorn-next-0925-configchange.orig/drivers/acpi/pci_root.c
-> +++ Bjorn-next-0925-configchange/drivers/acpi/pci_root.c
-> @@ -659,8 +659,10 @@ static int acpi_pci_root_remove(struct a
->  {
->  	struct acpi_pci_root *root = acpi_driver_data(device);
->  	struct acpi_pci_driver *driver;
-> +	struct pci_host_bridge *bridge = to_pci_host_bridge(root->bus->bridge);
->  
->  	mutex_lock(&acpi_pci_root_lock);
-> +	pci_stop_bus_devices(root->bus);
->  	list_for_each_entry(driver, &acpi_pci_drivers, node)
->  		if (driver->remove)
->  			driver->remove(root);
-> @@ -668,6 +670,10 @@ static int acpi_pci_root_remove(struct a
->  	device_set_run_wake(root->bus->bridge, false);
->  	pci_acpi_remove_bus_pm_notifier(device);
->  
-> +	acpi_pci_unbind_root(device);
-> +
-> +	pci_remove_host_bridge(bridge);
-> +
->  	list_del(&root->node);
->  	mutex_unlock(&acpi_pci_root_lock);
->  	kfree(root);
-> Index: Bjorn-next-0925-configchange/include/linux/pci.h
-> ===================================================================
-> --- Bjorn-next-0925-configchange.orig/include/linux/pci.h
-> +++ Bjorn-next-0925-configchange/include/linux/pci.h
-> @@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struc
->  extern void pci_dev_put(struct pci_dev *dev);
->  extern void pci_remove_bus(struct pci_bus *b);
->  extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
-> +extern void pci_stop_bus_devices(struct pci_bus *bus);
-> +extern void pci_remove_host_bridge(struct pci_host_bridge *bridge);
->  void pci_setup_cardbus(struct pci_bus *bus);
->  extern void pci_sort_breadthfirst(void);
->  #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
-> Index: Bjorn-next-0925-configchange/drivers/acpi/pci_bind.c
-> ===================================================================
-> --- Bjorn-next-0925-configchange.orig/drivers/acpi/pci_bind.c
-> +++ Bjorn-next-0925-configchange/drivers/acpi/pci_bind.c
-> @@ -118,3 +118,10 @@ int acpi_pci_bind_root(struct acpi_devic
->  
->  	return 0;
->  }
-> +
-> +void  acpi_pci_unbind_root(struct acpi_device *device)
-> +{
-> +	device->ops.bind = NULL;
-> +	device->ops.unbind = NULL;
-> +}
-> +
-> Index: Bjorn-next-0925-configchange/include/acpi/acpi_drivers.h
-> ===================================================================
-> --- Bjorn-next-0925-configchange.orig/include/acpi/acpi_drivers.h
-> +++ Bjorn-next-0925-configchange/include/acpi/acpi_drivers.h
-> @@ -101,6 +101,7 @@ struct pci_bus;
->  
->  struct pci_dev *acpi_get_pci_dev(acpi_handle);
->  int acpi_pci_bind_root(struct acpi_device *device);
-> +void acpi_pci_unbind_root(struct acpi_device *device);
->  
->  /* Arch-defined function to add a bus to the system */
->  
-> 
+	Ingo
