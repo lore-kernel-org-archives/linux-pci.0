@@ -1,148 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:61106 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754759Ab2JBUd6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 16:33:58 -0400
+Received: by bkcjk13 with SMTP id jk13so5740962bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 13:33:57 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <50811428.7040001@cn.fujitsu.com>
-References: <1350444308-27102-1-git-send-email-tangchen@cn.fujitsu.com>
-	<CAE9FiQVFc9VVfWZpEfjPeGvo5pby3BQNzDei3VTXdoR048_SPg@mail.gmail.com>
-	<507E60C2.6010104@cn.fujitsu.com>
-	<CAE9FiQX60dOE7odBx4OC0kawesZW3w9yLHEhmLoOvASaZ7q8dw@mail.gmail.com>
-	<50811428.7040001@cn.fujitsu.com>
-Date: Fri, 19 Oct 2012 13:36:46 -0700
-Message-ID: <CAE9FiQWOj2QcW9M6c8WZi-EJkUqUeSC4VsDfWUVch+wDLxTjEw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Update acpi_root_bridge_list in container hotplug path.
+In-Reply-To: <506B4D4C.3080101@redhat.com>
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+	<CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com>
+	<506B4D4C.3080101@redhat.com>
+Date: Tue, 2 Oct 2012 13:33:55 -0700
+Message-ID: <CAE9FiQVg6-JAo4fJL52bMo74Sc1DPY3nF_jXw6in1SG7A7HFXw@mail.gmail.com>
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
+ device level
 From: Yinghai Lu <yinghai@kernel.org>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: jiang.liu@huawei.com, bhelgaas@google.com, lenb@kernel.org,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: multipart/mixed; boundary=0015175d0442666a6c04cc6f76f3
-Sender: linux-acpi-owner@vger.kernel.org
+To: Don Dutile <ddutile@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	yuvalmin@broadcom.com, bhutchings@solarflare.com,
+	gregory.v.rose@intel.com, davem@davemloft.net
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---0015175d0442666a6c04cc6f76f3
-Content-Type: text/plain; charset=ISO-8859-1
+On Tue, Oct 2, 2012 at 1:23 PM, Don Dutile <ddutile@redhat.com> wrote:
 
-On Fri, Oct 19, 2012 at 1:49 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
-
-> Is it just container and pci_root_bridge hot-remove need to call
-> acpi_bus_trim() twice ? For normal device without sub-device, I think
-> it is OK to call acpi_bus_trim(device, 1).
 >
-> The reason why I'm asking this question is:
->
-> I saw in acpi_bus_hot_remove_device(), it almost does the same things
-> you did in handle_root_bridge_removal(), except calling acpi_bus_trim()
-> twice. And there are more than one path could do container hot-remove.
->
-> If I add a container_device_remove() doing the similar things, it could
-> be duplicated. So, shall we just remove handle_root_bridge_removal(),
-> and only use acpi_bus_hot_remove_device() ?
->
-> Of course, we need to call acpi_bus_trim() twice in
-> acpi_bus_hot_remove_device().
+> Yinghai: As for looking at your patches, I did that.... and
+> they made no sense, i.e., I don't see the value/use/need of
+> 'is_visible'.
 
-yes.  we could use acpi_bus_hot_remove_device to simply
-acpi_bus_hot_remove_device()
+sysfs frame work use it during create sysfs files for that group.
 
-but that eject_event should have device instead of passing handle, and
-later check if that device is there or not.
+> maybe if there was some decent
+> documentation/comments on this stuff, I could
+> confidently use them.... if they exist, please point me
+> in the that direction.  if not, then point me to better examples.
+> Looking in Documentation,
 
-like attached two patches.
+sriov_xxx.patch should create one file, you could just expand them to
+make three.
 
---0015175d0442666a6c04cc6f76f3
-Content-Type: application/octet-stream; name="root_bridge_remove_1.patch"
-Content-Disposition: attachment; filename="root_bridge_remove_1.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h8hre31c0
-
-U3ViamVjdDogW1BBVENIXSBBQ1BJOiB1cGRhdGUgZWpfZXZlbnQgaW50ZXJmYWNlIHRvIHRha2Ug
-YWNwaV9kZXZpY2UKClNob3VsZCB1c2UgYWNwaV9kZXZpY2UgcG9pbnRlciBkaXJlY3RseSBpbnN0
-ZWFkIG9mIHVzZSBoYW5kbGUgYW5kCmdldCB0aGUgZGV2aWNlIHBvaW50ZXIgYWdhaW4uCgpTaWdu
-ZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgotLS0KIGRyaXZlcnMv
-YWNwaS9zY2FuLmMgICAgIHwgICAxNCArKysrLS0tLS0tLS0tLQogaW5jbHVkZS9hY3BpL2FjcGlf
-YnVzLmggfCAgICAyICstCiAyIGZpbGVzIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgMTEgZGVs
-ZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2RyaXZlcnMvYWNwaS9zY2FuLmMKPT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9hY3BpL3NjYW4uYworKysgbGludXgtMi42L2Ry
-aXZlcnMvYWNwaS9zY2FuLmMKQEAgLTk1LDE5ICs5NSwxMyBAQCBzdGF0aWMgREVWSUNFX0FUVFIo
-bW9kYWxpYXMsIDA0NDQsIGFjcGlfCiB2b2lkIGFjcGlfYnVzX2hvdF9yZW1vdmVfZGV2aWNlKHZv
-aWQgKmNvbnRleHQpCiB7CiAJc3RydWN0IGFjcGlfZWplY3RfZXZlbnQgKmVqX2V2ZW50ID0gKHN0
-cnVjdCBhY3BpX2VqZWN0X2V2ZW50ICopIGNvbnRleHQ7Ci0Jc3RydWN0IGFjcGlfZGV2aWNlICpk
-ZXZpY2U7Ci0JYWNwaV9oYW5kbGUgaGFuZGxlID0gZWpfZXZlbnQtPmhhbmRsZTsKKwlzdHJ1Y3Qg
-YWNwaV9kZXZpY2UgKmRldmljZSA9IGVqX2V2ZW50LT5kZXZpY2U7CisJYWNwaV9oYW5kbGUgaGFu
-ZGxlID0gZGV2aWNlLT5oYW5kbGU7CiAJc3RydWN0IGFjcGlfb2JqZWN0X2xpc3QgYXJnX2xpc3Q7
-CiAJdW5pb24gYWNwaV9vYmplY3QgYXJnOwogCWFjcGlfc3RhdHVzIHN0YXR1cyA9IEFFX09LOwog
-CXUzMiBvc3RfY29kZSA9IEFDUElfT1NUX1NDX05PTl9TUEVDSUZJQ19GQUlMVVJFOyAvKiBkZWZh
-dWx0ICovCiAKLQlpZiAoYWNwaV9idXNfZ2V0X2RldmljZShoYW5kbGUsICZkZXZpY2UpKQotCQln
-b3RvIGVycl9vdXQ7Ci0KLQlpZiAoIWRldmljZSkKLQkJZ290byBlcnJfb3V0OwotCiAJQUNQSV9E
-RUJVR19QUklOVCgoQUNQSV9EQl9JTkZPLAogCQkiSG90LXJlbW92aW5nIGRldmljZSAlcy4uLlxu
-IiwgZGV2X25hbWUoJmRldmljZS0+ZGV2KSkpOwogCkBAIC0xODksNyArMTgzLDcgQEAgYWNwaV9l
-amVjdF9zdG9yZShzdHJ1Y3QgZGV2aWNlICpkLCBzdHJ1YwogCQlnb3RvIGVycjsKIAl9CiAKLQll
-al9ldmVudC0+aGFuZGxlID0gYWNwaV9kZXZpY2UtPmhhbmRsZTsKKwllal9ldmVudC0+ZGV2aWNl
-ID0gYWNwaV9kZXZpY2U7CiAJaWYgKGFjcGlfZGV2aWNlLT5mbGFncy5lamVjdF9wZW5kaW5nKSB7
-CiAJCS8qIGV2ZW50IG9yaWdpbmF0ZWQgZnJvbSBBQ1BJIGVqZWN0IG5vdGlmaWNhdGlvbiAqLwog
-CQllal9ldmVudC0+ZXZlbnQgPSBBQ1BJX05PVElGWV9FSkVDVF9SRVFVRVNUOwpAQCAtMTk3LDcg
-KzE5MSw3IEBAIGFjcGlfZWplY3Rfc3RvcmUoc3RydWN0IGRldmljZSAqZCwgc3RydWMKIAl9IGVs
-c2UgewogCQkvKiBldmVudCBvcmlnaW5hdGVkIGZyb20gdXNlciAqLwogCQllal9ldmVudC0+ZXZl
-bnQgPSBBQ1BJX09TVF9FQ19PU1BNX0VKRUNUOwotCQkodm9pZCkgYWNwaV9ldmFsdWF0ZV9ob3Rw
-bHVnX29zdChlal9ldmVudC0+aGFuZGxlLAorCQkodm9pZCkgYWNwaV9ldmFsdWF0ZV9ob3RwbHVn
-X29zdChhY3BpX2RldmljZS0+aGFuZGxlLAogCQkJZWpfZXZlbnQtPmV2ZW50LCBBQ1BJX09TVF9T
-Q19FSkVDVF9JTl9QUk9HUkVTUywgTlVMTCk7CiAJfQogCkluZGV4OiBsaW51eC0yLjYvaW5jbHVk
-ZS9hY3BpL2FjcGlfYnVzLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvaW5jbHVkZS9h
-Y3BpL2FjcGlfYnVzLmgKKysrIGxpbnV4LTIuNi9pbmNsdWRlL2FjcGkvYWNwaV9idXMuaApAQCAt
-MzA0LDcgKzMwNCw3IEBAIHN0cnVjdCBhY3BpX2J1c19ldmVudCB7CiB9OwogCiBzdHJ1Y3QgYWNw
-aV9lamVjdF9ldmVudCB7Ci0JYWNwaV9oYW5kbGUJaGFuZGxlOworCXN0cnVjdCBhY3BpX2Rldmlj
-ZQkqZGV2aWNlOwogCXUzMgkJZXZlbnQ7CiB9OwogCg==
---0015175d0442666a6c04cc6f76f3
-Content-Type: application/octet-stream; name="root_bridge_remove_2.patch"
-Content-Disposition: attachment; filename="root_bridge_remove_2.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h8hre31g1
-
-U3ViamVjdDogW1BBVENIXSBBQ1BJLCBQQ0k6IFNpbXBsaWZ5IGhhbmRsZV9yb290X2JyaWRnZV9y
-ZW1vdmFsKCkKClRhbmcgQ2hlbiBmb3VuZCBoYW5kbGVfcm9vdF9icmlkZ2VfcmVtb3ZhbCBpcyB2
-ZXJ5IHNpbWlsaWFyIHRvCmFjcGlfYnVzX2hvdF9yZW1vdmVfZGV2aWNlKCkuCk9ubHkgZGlmZmVy
-ZW5jZSBpcyB0aGF0IGl0IGNhbGwgdHJpbSB0d28gdGltZXMuCgpDaGFuZ2UgdG8gaGFuZGxlX3Jv
-b3RfYnJpZGdlX3JlbW92YWwgdG8gY2FsbCB0cmltIG9uZSB0aW1lIGFuZCB0aGVuIAp1c2UgYWNw
-aV9idXNfaG90X3JlbW92ZV9kZXZpY2UuIAoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWlu
-Z2hhaUBrZXJuZWwub3JnPgoKLS0tCiBkcml2ZXJzL2FjcGkvcGNpX3Jvb3RfaHAuYyB8ICAgNTEg
-KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiAxIGZpbGUgY2hh
-bmdlZCwgOSBpbnNlcnRpb25zKCspLCA0MiBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0yLjYv
-ZHJpdmVycy9hY3BpL3BjaV9yb290X2hwLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcv
-ZHJpdmVycy9hY3BpL3BjaV9yb290X2hwLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNp
-X3Jvb3RfaHAuYwpAQCAtNTYsNTYgKzU2LDIzIEBAIHN0YXRpYyB2b2lkIGhhbmRsZV9yb290X2Jy
-aWRnZV9pbnNlcnRpb24KIAkJcHJpbnRrKEtFUk5fRVJSICJjYW5ub3Qgc3RhcnQgYnJpZGdlXG4i
-KTsKIH0KIAotc3RhdGljIGludCBhY3BpX3Jvb3RfZXZhbHVhdGVfb2JqZWN0KGFjcGlfaGFuZGxl
-IGhhbmRsZSwgY2hhciAqY21kLCBpbnQgdmFsKQotewotCWFjcGlfc3RhdHVzIHN0YXR1czsKLQlz
-dHJ1Y3QgYWNwaV9vYmplY3RfbGlzdCBhcmdfbGlzdDsKLQl1bmlvbiBhY3BpX29iamVjdCBhcmc7
-Ci0KLQlhcmdfbGlzdC5jb3VudCA9IDE7Ci0JYXJnX2xpc3QucG9pbnRlciA9ICZhcmc7Ci0JYXJn
-LnR5cGUgPSBBQ1BJX1RZUEVfSU5URUdFUjsKLQlhcmcuaW50ZWdlci52YWx1ZSA9IHZhbDsKLQot
-CXN0YXR1cyA9IGFjcGlfZXZhbHVhdGVfb2JqZWN0KGhhbmRsZSwgY21kLCAmYXJnX2xpc3QsIE5V
-TEwpOwotCWlmIChBQ1BJX0ZBSUxVUkUoc3RhdHVzKSkgewotCQlwcl93YXJuKCIlczogJXMgdG8g
-JWQgZmFpbGVkXG4iLAotCQkJCSBfX2Z1bmNfXywgY21kLCB2YWwpOwotCQlyZXR1cm4gLTE7Ci0J
-fQotCi0JcmV0dXJuIDA7Ci19Ci0KIHN0YXRpYyB2b2lkIGhhbmRsZV9yb290X2JyaWRnZV9yZW1v
-dmFsKHN0cnVjdCBhY3BpX2RldmljZSAqZGV2aWNlKQogewogCWludCByZXRfdmFsOwotCXUzMiBm
-bGFncyA9IDA7Ci0JYWNwaV9oYW5kbGUgZHVtbXlfaGFuZGxlOwotCWFjcGlfaGFuZGxlIGhhbmRs
-ZSA9IGRldmljZS0+aGFuZGxlOwotCi0JaWYgKEFDUElfU1VDQ0VTUyhhY3BpX2dldF9oYW5kbGUo
-aGFuZGxlLCAiX0VKMCIsICZkdW1teV9oYW5kbGUpKSkKLQkJZmxhZ3MgfD0gUk9PVF9CUklER0Vf
-SEFTX0VKMDsKLQlpZiAoQUNQSV9TVUNDRVNTKGFjcGlfZ2V0X2hhbmRsZShoYW5kbGUsICJfUFMz
-IiwgJmR1bW15X2hhbmRsZSkpKQotCQlmbGFncyB8PSBST09UX0JSSURHRV9IQVNfUFMzOworCXN0
-cnVjdCBhY3BpX2VqZWN0X2V2ZW50ICplal9ldmVudDsKKworCWVqX2V2ZW50ID0ga21hbGxvYyhz
-aXplb2YoKmVqX2V2ZW50KSwgR0ZQX0tFUk5FTCk7CisJaWYgKCFlal9ldmVudCkKKwkJcmV0dXJu
-OworCisJZWpfZXZlbnQtPmRldmljZSA9IGRldmljZTsKKwllal9ldmVudC0+ZXZlbnQgPSBBQ1BJ
-X05PVElGWV9FSkVDVF9SRVFVRVNUOwogCiAJLyogcmVtb3ZlIHBjaSBkZXZpY2VzIGF0IGZpcnN0
-ICovCiAJcmV0X3ZhbCA9IGFjcGlfYnVzX3RyaW0oZGV2aWNlLCAwKTsKIAlwcmludGsoS0VSTl9E
-RUJVRyAiYWNwaV9idXNfdHJpbSBzdG9wIHJldHVybiAleFxuIiwgcmV0X3ZhbCk7CiAKLQkvKiBy
-ZW1vdmUgYWNwaSBkZXZpY2VzICovCi0JcmV0X3ZhbCA9IGFjcGlfYnVzX3RyaW0oZGV2aWNlLCAx
-KTsKLQlwcmludGsoS0VSTl9ERUJVRyAiYWNwaV9idXNfdHJpbSByZW1vdmUgcmV0dXJuICV4XG4i
-LCByZXRfdmFsKTsKLQotCWlmIChmbGFncyAmIFJPT1RfQlJJREdFX0hBU19QUzMpIHsKLQkJYWNw
-aV9zdGF0dXMgc3RhdHVzOwotCi0JCXN0YXR1cyA9IGFjcGlfZXZhbHVhdGVfb2JqZWN0KGhhbmRs
-ZSwgIl9QUzMiLCBOVUxMLCBOVUxMKTsKLQkJaWYgKEFDUElfRkFJTFVSRShzdGF0dXMpKQotCQkJ
-cHJfd2FybigiJXM6IF9QUzMgZmFpbGVkXG4iLCBfX2Z1bmNfXyk7Ci0JfQotCWlmIChmbGFncyAm
-IFJPT1RfQlJJREdFX0hBU19FSjApCi0JCWFjcGlfcm9vdF9ldmFsdWF0ZV9vYmplY3QoaGFuZGxl
-LCAiX0VKMCIsIDEpOworCWFjcGlfYnVzX2hvdF9yZW1vdmVfZGV2aWNlKGVqX2V2ZW50KTsKIH0K
-IAogc3RhdGljIHZvaWQgX2hhbmRsZV9ob3RwbHVnX2V2ZW50X3Jvb3Qoc3RydWN0IHdvcmtfc3Ry
-dWN0ICp3b3JrKQo=
---0015175d0442666a6c04cc6f76f3--
+Yinghai
