@@ -1,82 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60697 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752207Ab2JLFfw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2012 01:35:52 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so2593354pbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 11 Oct 2012 22:35:51 -0700 (PDT)
-From: Jon Mason <jdmason@kudzu.us>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>
-Subject: [PATCH 1/3] PCI: correct static code analysis tool issue
-Date: Thu, 11 Oct 2012 22:35:53 -0700
-Message-Id: <1350020155-3782-2-git-send-email-jdmason@kudzu.us>
-In-Reply-To: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
-References: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
+Received: from mx1.redhat.com ([209.132.183.28]:49983 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755143Ab2JBVGm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Oct 2012 17:06:42 -0400
+Message-ID: <506B575A.4060304@redhat.com>
+Date: Tue, 02 Oct 2012 17:06:34 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
+ device level
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com> <CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com> <506B4D4C.3080101@redhat.com> <20121002203951.GA28663@kroah.com>
+In-Reply-To: <20121002203951.GA28663@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Coverity noticed that pcie_bus_configure_settings() can call
-pcie_bus_configure_set() when "smpss" is uninitialized.  The smpss is
-used to make the bus and all child devices have a uniform value.
-Setting the smpss is moot for PCIE_BUS_PERFORMANCE, since it will be
-determined dynamically based on the max size of the parent device and
-the child device.  To avoid the erroneous detection of this issue, set
-the smpss to 0.  Also, add a case statement to make clearer the possible
-use cases and add a nice comment describing what is being done in the
-PCIE_BUS_PERFORMANCE case.
+On 10/02/2012 04:39 PM, Greg Kroah-Hartman wrote:
+> On Tue, Oct 02, 2012 at 04:23:40PM -0400, Don Dutile wrote:
+>> Greg: Why not use the above functions?
+>
+> What "above functions"?  You make a lot of calls in the code :)
+>
+> You are creating an attribute group, and then manually walking through
+> it to create/destroy the file?  That's not good, use the in-kernel
+> functions to do that automatically for you.
+>
+> Also, you need to do this _before_ the device shows up to userspace,
+> otherwise you have a race that you just lost with udev and the like.
+>
+> thanks,
+>
+> greg k-h
 
-Signed-off-by: Jon Mason <jdmason@kudzu.us>
----
- drivers/pci/probe.c |   25 ++++++++++++++++++++-----
- 1 file changed, 20 insertions(+), 5 deletions(-)
+So, why is it ok to create the 'reset' file after the device shows up?
+Like reset, SRIOV is optional.  The sysfs files are designed to only
+be used by userspace utils to enable/disable VFs after the system is up.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 9f8a6b7..6b672c1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1570,21 +1570,36 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 	if (!pci_is_pcie(bus->self))
- 		return;
- 
--	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
--		return;
--
-+	switch (pcie_bus_config) {
-+	/* The smpss is used to make the bus and all child devices have
-+	 * a uniform value.  Setting the smpss is moot for
-+	 * "Performance", since it will be determined dynamically based
-+	 * on the max size of the parent device and the child device.
-+	 * However, not setting the smpss can result in static code
-+	 * analysis tools erroniously reporting an issue.  To avoid
-+	 * this, set the smpss to 0.
-+	 */
-+	case PCIE_BUS_PERFORMANCE:
- 	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
- 	 * to be aware to the MPS of the destination.  To work around this,
- 	 * simply force the MPS of the entire system to the smallest possible.
- 	 */
--	if (pcie_bus_config == PCIE_BUS_PEER2PEER)
-+	case PCIE_BUS_PEER2PEER:
- 		smpss = 0;
-+		break;
- 
--	if (pcie_bus_config == PCIE_BUS_SAFE) {
-+	case PCIE_BUS_SAFE:
- 		smpss = mpss;
- 
- 		pcie_find_smpss(bus->self, &smpss);
- 		pci_walk_bus(bus, pcie_find_smpss, &smpss);
-+		break;
-+
-+	case PCIE_BUS_TUNE_OFF:
-+	default:
-+		return;
-+	}
-+
- 	}
- 
- 	pcie_bus_configure_set(bus->self, &smpss);
--- 
-1.7.9.5
+Or should the design allow a udev rule to be created that if one
+of these new sriov files exists, then perform a set of read-max-vf &
+enable n-vf ops ?
+
+
 
