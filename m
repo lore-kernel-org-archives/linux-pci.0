@@ -1,124 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:36086 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757633Ab2J2ILp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 04:11:45 -0400
-Message-ID: <508E3A2E.3000204@st.com>
-Date: Mon, 29 Oct 2012 13:41:26 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:65511 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753547Ab2JBXUs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 19:20:48 -0400
+Received: by bkcjk13 with SMTP id jk13so5793168bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 16:20:46 -0700 (PDT)
 MIME-Version: 1.0
-To: viresh kumar <viresh.kumar@linaro.org>
-Cc: "arnd@arndb.de" <arnd@arndb.de>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"olof@lixom.net" <olof@lixom.net>
-Subject: Re: [PATCH 03/15] SPEAr13xx: Add mach/io.h
-References: <cover.1351492562.git.pratyush.anand@st.com> <cce9cba6020c30f0edb15e43fa51208524b59322.1351492562.git.pratyush.anand@st.com> <CAOh2x==1McRP4eNFZa8qH4hjnOr003Ozb6J3XP8B87E9yZB4zw@mail.gmail.com>
-In-Reply-To: <CAOh2x==1McRP4eNFZa8qH4hjnOr003Ozb6J3XP8B87E9yZB4zw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+	<1349159588-15029-2-git-send-email-yinghai@kernel.org>
+	<20121002133303.GA502@kroah.com>
+	<CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
+	<20121002174712.GA11843@kroah.com>
+	<CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
+	<20121002204548.GC28663@kroah.com>
+	<CAE9FiQV51R2RBAZBPobDifq6jQUhBCyx_Bo8EHxOX4yrUMSnLg@mail.gmail.com>
+	<CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com>
+Date: Tue, 2 Oct 2012 16:20:46 -0700
+Message-ID: <CAE9FiQWrgOP57vZR=Pto+oTMrdjzWiVTR6BOH0r7ZvGip73Ssw@mail.gmail.com>
+Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org
+Content-Type: multipart/mixed; boundary=00151758b32c98005f04cb1bc502
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/29/2012 12:59 PM, viresh kumar wrote:
-> On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
->> In case of PCIe we need to have a different __io macro, which can write
->> into PCIe address space.
->
-> You may find this interesting:
->
-> Do, git log --stat -p dd9bf78040fa0da4cecc228e1682b9682b8cb180
->
-> There is a series of commits like:
->
-> commit dd9bf78040fa0da4cecc228e1682b9682b8cb180
-> Author: Rob Herring <rob.herring@calxeda.com>
-> Date:   Wed Jul 4 11:18:40 2012 -0500
->
->      ARM: iop3xx: use fixed PCI i/o mapping
->
->      Move iop33x and iop32x PCI to fixed i/o mapping and remove io.h. This
->      changes the PCI bus addresses from the cpu address to 0 based. It appears
->      that there is translation h/w for this, but its untested.
+--00151758b32c98005f04cb1bc502
+Content-Type: text/plain; charset=ISO-8859-1
 
-In case of SPEAr we can not translate a CPU address 0 to PCIe space. To 
-explain it better, lets say we allocate 0x0000 - 0xFFFF for PCIe IO 
-transaction. Now if CPU writes on these addressed, there is no way we 
-can route those transactions to PCIe bus.
+On Tue, Oct 2, 2012 at 3:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Oct 2, 2012 at 3:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Oct 2, 2012 at 1:45 PM, Greg Kroah-Hartman
+>
+> We enumerate ACPI devices by doing a depth-first traversal of the
+> namespace.  We should be able to bind a driver to a device as soon as
+> we discover it.  For PNP0A03/08 host bridges, that will be the
+> pci_root.c driver.  That driver's .add() method enumerates all the PCI
+> devices behind the host bridge, which is another depth-first
+> traversal, this time of the PCI hierarchy.  Similarly, we ought to be
+> able to bind drivers to the PCI devices as we discover them.
 
-Any transaction between 0x80000000 to 0x8FFFFFFF can only be used for 
-any type(IO/MEM/CFG0/CFG1) of PCIe transaction. Therefore , we need to 
-have this mapping in io.h.
+before introducing this per device .drivers_autoprobe, i did one acpi
+to pci bind version
+as attached patch.
 
-Regards
-Pratyush
+that mean that will have two version: for booting path: use pci to acpi binding.
+and hot plug path will use acpi to pci binding.
+Also that make code pretty ugly to consider platform_notifier at the same time.
 
->
->      Not sure what to do with io_offset. I think it should always be 0.
->      AFAICT, PCI setup is skipped if the ATU is already setup.
->
->      Signed-off-by: Rob Herring <rob.herring@calxeda.com>
->      Reviewed-by: Arnd Bergmann <arnd@arndb.de>
->
-> All mach/io.h are removed and you are adding one of those. :)
->
->>
->> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
->> ---
->>   arch/arm/mach-spear13xx/include/mach/io.h |   35 +++++++++++++++++++++++++++++
->>   1 files changed, 35 insertions(+), 0 deletions(-)
->>   create mode 100644 arch/arm/mach-spear13xx/include/mach/io.h
->>
->> diff --git a/arch/arm/mach-spear13xx/include/mach/io.h b/arch/arm/mach-spear13xx/include/mach/io.h
->> new file mode 100644
->> index 0000000..a0d93ca
->> --- /dev/null
->> +++ b/arch/arm/mach-spear13xx/include/mach/io.h
->> @@ -0,0 +1,35 @@
->> +/*
->> + * arch/arm/mach-spear13xx/include/mach/io.h
->> + *
->> + * spear13xx machine family generic header file
->
-> SPEAr
->
->> + *
->> + * Copyright (C) 2012 ST Microelectronics
->> + * Pratyush Anand <pratyush.anand@st.com>
->> + *
->> + * This file is licensed under the terms of the GNU General Public
->> + * License version 2. This program is licensed "as is" without any
->> + * warranty of any kind, whether express or implied.
->> + */
->> +
->> +#ifndef __MACH_IO_H
->> +#define __MACH_IO_H
->> +
->> +#define IO_SPACE_LIMIT 0xFFFF
->> +
->> +#ifdef CONFIG_SPEAR13XX_PCI
->> +extern void __iomem *spear13xx_pcie_io_base(unsigned long addr);
->> +
->> +static inline void __iomem *__io(unsigned long addr)
->> +{
->> +       return spear13xx_pcie_io_base(addr) + (addr & IO_SPACE_LIMIT);
->> +}
->> +#else
->> +static inline void __iomem *__io(unsigned long addr)
->> +{
->> +       return (void __iomem *)addr;
->> +}
->> +#endif
->> +
->> +#define __io(a)                __io(a)
->> +
->> +#endif /* __MACH_IO_H */
->> --
->> 1.7.5.4
->>
-> .
->
+and acp_get_pci_dev in that acpi_pci_hp_notifier is not very efficient.
 
+-Yinghai
 
+--00151758b32c98005f04cb1bc502
+Content-Type: application/octet-stream;
+	name="add_acpi_pci_notifier_xx.patch"
+Content-Disposition: attachment; filename="add_acpi_pci_notifier_xx.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7tmqs9n0
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIEFDUEk6IE1vdmUgcGNpX2J1c19hZGRfZGV2aWNlcyBpbnRv
+IGFjcGlfcGNpX3Jvb3RfYWRkCgpUaGF0IG1lYW4gYWNwaSBkZXZpY2UgZm9yIHBjaSBkZXZpY2Vz
+IGFyZSBub3QgYWRkZWQgZm9yIHBjaSByb290IGhvdCBhZGQgcGF0aC4KClNvIHdlIG5lZWQgdG8g
+YWRkIGFjcGkgbm90aWZpZXIgdG8gZG8gYWNwaV9wY2kgYmluZGluZyB0aGVyZS4KClNpZ25lZC1v
+ZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9hY3Bp
+L3BjaV9iaW5kLmMgfCAgIDU0ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKystLS0tLQogZHJpdmVycy9hY3BpL3BjaV9yb290LmMgfCAgICA0ICstLQogMiBmaWxlcyBj
+aGFuZ2VkLCA1MSBpbnNlcnRpb25zKCspLCA3IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIu
+Ni9kcml2ZXJzL2FjcGkvcGNpX2JpbmQuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9k
+cml2ZXJzL2FjcGkvcGNpX2JpbmQuYworKysgbGludXgtMi42L2RyaXZlcnMvYWNwaS9wY2lfYmlu
+ZC5jCkBAIC0xMjEsMTUgKzEyMSwxNCBAQCBzdGF0aWMgaW50IHBjaV9kZXZfaHBfbm90aWZpZXIo
+c3RydWN0IG5vCiAJc3RydWN0IGRldmljZSAqZGV2ID0gZGF0YTsKIAlhY3BpX2hhbmRsZSBoYW5k
+bGUgPSBERVZJQ0VfQUNQSV9IQU5ETEUoZGV2KTsKIAlzdHJ1Y3QgYWNwaV9kZXZpY2UgKmFjcGlf
+ZGV2OworCWFjcGlfc3RhdHVzIHN0YXR1czsKIAogCWlmICghaGFuZGxlKQogCQlyZXR1cm4gTk9U
+SUZZX09LOwogCi0JaWYgKGFjcGlfYnVzX2dldF9kZXZpY2UoaGFuZGxlLCAmYWNwaV9kZXYpKQot
+CQlyZXR1cm4gTk9USUZZX09LOwotCi0JaWYgKCFhY3BpX2RldikKLQkJcmV0dXJuIE5PVElGWV9P
+SzsKKwlzdGF0dXMgPSBhY3BpX2J1c19nZXRfZGV2aWNlKGhhbmRsZSwgJmFjcGlfZGV2KTsKKwlp
+ZiAoQUNQSV9GQUlMVVJFKHN0YXR1cykpCisJCWFjcGlfZGV2ID0gTlVMTDsKIAogCXN3aXRjaCAo
+ZXZlbnQpIHsKIAljYXNlIEJVU19OT1RJRllfQUREX0RFVklDRToKQEAgLTE1NCwzICsxNTMsNDgg
+QEAgc3RhdGljIGludCBfX2luaXQgcGNpX2Rldl9ocF9pbml0KHZvaWQpCiB9CiAKIGFyY2hfaW5p
+dGNhbGwocGNpX2Rldl9ocF9pbml0KTsKKworc3RhdGljIGludCBhY3BpX3BjaV9ocF9ub3RpZmll
+cihzdHJ1Y3Qgbm90aWZpZXJfYmxvY2sgKm5iLAorCQkJCSB1bnNpZ25lZCBsb25nIGV2ZW50LCB2
+b2lkICpkYXRhKQoreworCXN0cnVjdCBkZXZpY2UgKmFkZXYgPSBkYXRhOworCXN0cnVjdCBhY3Bp
+X2RldmljZSAqYWNwaV9kZXYgPSB0b19hY3BpX2RldmljZShhZGV2KTsKKwlzdHJ1Y3QgcGNpX2Rl
+diAgKnBkZXY7CisJc3RydWN0IGRldmljZSAqZGV2OworCWludCByZXQ7CisKKwkvKiBvbmx5IG5l
+ZWQgdG8gd29ycnkgYWJvdXQgaG90IGFkZGluZyBwYXRoICovCisJaWYgKGV2ZW50ICE9IEJVU19O
+T1RJRllfQUREX0RFVklDRSkKKwkJcmV0dXJuIE5PVElGWV9PSzsKKworCXBkZXYgPSBhY3BpX2dl
+dF9wY2lfZGV2KGFjcGlfZGV2LT5oYW5kbGUpOworCWlmICghcGRldikKKwkJcmV0dXJuIE5PVElG
+WV9PSzsKKworCWRldiA9ICZwZGV2LT5kZXY7CisJaWYgKERFVklDRV9BQ1BJX0hBTkRMRShkZXYp
+ICE9IGFjcGlfZGV2LT5oYW5kbGUpCisJCXJldHVybiBOT1RJRllfT0s7CisKKwlyZXQgPSBzeXNm
+c19jcmVhdGVfbGluaygmZGV2LT5rb2JqLCAmYWNwaV9kZXYtPmRldi5rb2JqLAorICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAiZmlybXdhcmVfbm9kZSIpOworCXJldCA9IHN5c2ZzX2Ny
+ZWF0ZV9saW5rKCZhY3BpX2Rldi0+ZGV2LmtvYmosICZkZXYtPmtvYmosCisgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICJwaHlzaWNhbF9ub2RlIik7CisJaWYgKGFjcGlfZGV2LT53YWtl
+dXAuZmxhZ3MudmFsaWQpCisJCWRldmljZV9zZXRfd2FrZXVwX2NhcGFibGUoZGV2LCB0cnVlKTsK
+KworCWFjcGlfcGNpX2JpbmRfbm90aWZ5KGFjcGlfZGV2LCBkZXYsIHRydWUpOworCisJcmV0dXJu
+IE5PVElGWV9PSzsKK30KKworc3RhdGljIHN0cnVjdCBub3RpZmllcl9ibG9jayBhY3BpX3BjaV9o
+cF9uYiA9IHsKKwkubm90aWZpZXJfY2FsbCA9ICZhY3BpX3BjaV9ocF9ub3RpZmllciwKK307CisK
+K3N0YXRpYyBpbnQgX19pbml0IGFjcGlfcGNpX2hwX2luaXQodm9pZCkKK3sKKwlyZXR1cm4gYnVz
+X3JlZ2lzdGVyX25vdGlmaWVyKCZhY3BpX2J1c190eXBlLAorCQkJCQkgJmFjcGlfcGNpX2hwX25i
+KTsKK30KKworZnNfaW5pdGNhbGwoYWNwaV9wY2lfaHBfaW5pdCk7CkluZGV4OiBsaW51eC0yLjYv
+ZHJpdmVycy9hY3BpL3BjaV9yb290LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJp
+dmVycy9hY3BpL3BjaV9yb290LmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL2FjcGkvcGNpX3Jvb3Qu
+YwpAQCAtNTk3LDYgKzU5Nyw4IEBAIHN0YXRpYyBpbnQgX19kZXZpbml0IGFjcGlfcGNpX3Jvb3Rf
+YWRkKHMKIAkJcGNpX2Fzc2lnbl91bmFzc2lnbmVkX2J1c19yZXNvdXJjZXMocm9vdC0+YnVzKTsK
+IAl9CiAKKwlwY2lfYnVzX2FkZF9kZXZpY2VzKHJvb3QtPmJ1cyk7CisKIAlyZXR1cm4gMDsKIAog
+b3V0X2RlbF9yb290OgpAQCAtNjEyLDggKzYxNCw2IEBAIHN0YXRpYyBpbnQgYWNwaV9wY2lfcm9v
+dF9zdGFydChzdHJ1Y3QgYWMKIHsKIAlzdHJ1Y3QgYWNwaV9wY2lfcm9vdCAqcm9vdCA9IGFjcGlf
+ZHJpdmVyX2RhdGEoZGV2aWNlKTsKIAotCXBjaV9idXNfYWRkX2RldmljZXMocm9vdC0+YnVzKTsK
+LQogCXJldHVybiAwOwogfQogCg==
+--00151758b32c98005f04cb1bc502--
