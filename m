@@ -1,67 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 6/7] PM / Domains: Check device PM QoS flags in pm_genpd_poweroff()
-Date: Mon, 08 Oct 2012 10:08:39 +0200
-Message-ID: <3595636.rclQsqiayj@vostro.rjw.lan>
-In-Reply-To: <1413438.1MkXj8vjQK@vostro.rjw.lan>
-References: <201209282351.10663.rjw@sisk.pl> <1413438.1MkXj8vjQK@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from acsinet15.oracle.com ([141.146.126.227]:31292 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753382Ab2JBGdM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 02:33:12 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH 06/10] PCI, ACPI: Move hot add root bus conf code to acpi_pci_root_add
+Date: Mon,  1 Oct 2012 23:33:04 -0700
+Message-Id: <1349159588-15029-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+It is safe before we really put those pci devices in the tree.
 
-Make the generic PM domains pm_genpd_poweroff() function take
-device PM QoS flags into account when deciding whether or not to
-remove power from the domain.
-
-After this change the routine will return -EBUSY without executing
-the domain's .power_off() callback if there is at least one PM QoS
-flags request for at least one device in the domain and at least of
-those request has at least one of the NO_POWER_OFF and REMOTE_WAKEUP
-flags set.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Jean Pihet <j-pihet@ti.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc:Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- drivers/base/power/domain.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/acpi/pci_root.c |   31 ++++++++++++++++---------------
+ 1 files changed, 16 insertions(+), 15 deletions(-)
 
-Index: linux/drivers/base/power/domain.c
-===================================================================
---- linux.orig/drivers/base/power/domain.c
-+++ linux/drivers/base/power/domain.c
-@@ -470,10 +470,19 @@ static int pm_genpd_poweroff(struct gene
- 		return -EBUSY;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 75643ce..e63a58d 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -506,6 +506,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	acpi_status status;
+ 	int result;
+ 	struct acpi_pci_root *root;
++	struct acpi_pci_driver *driver;
+ 	acpi_handle handle;
+ 	u32 flags;
  
- 	not_suspended = 0;
--	list_for_each_entry(pdd, &genpd->dev_list, list_node)
-+	list_for_each_entry(pdd, &genpd->dev_list, list_node) {
-+		enum pm_qos_flags_status stat;
-+
-+		stat = dev_pm_qos_flags(pdd->dev,
-+					PM_QOS_FLAG_NO_POWER_OFF
-+						| PM_QOS_FLAG_REMOTE_WAKEUP);
-+		if (stat > PM_QOS_FLAGS_NONE)
-+			return -EBUSY;
-+
- 		if (pdd->dev->driver && (!pm_runtime_suspended(pdd->dev)
- 		    || pdd->dev->power.irq_safe))
- 			not_suspended++;
+@@ -607,6 +608,21 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(root->bus->bridge, true);
+ 
++	if (system_state != SYSTEM_BOOTING) {
++		pcibios_resource_survey_bus(root->bus);
++		pci_assign_unassigned_bus_resources(root->bus);
 +	}
++
++	mutex_lock(&acpi_pci_root_lock);
++	list_for_each_entry(driver, &acpi_pci_drivers, node)
++		if (driver->add)
++			driver->add(root);
++	mutex_unlock(&acpi_pci_root_lock);
++
++	/* need to after hot-added ioapic is registered */
++	if (system_state != SYSTEM_BOOTING)
++		pci_enable_bridges(root->bus);
++
+ 	return 0;
  
- 	if (not_suspended > genpd->in_progress)
- 		return -EBUSY;
+ out_del_root:
+@@ -621,22 +637,7 @@ end:
+ static int acpi_pci_root_start(struct acpi_device *device)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+-	struct acpi_pci_driver *driver;
+-
+-	if (system_state != SYSTEM_BOOTING) {
+-		pcibios_resource_survey_bus(root->bus);
+-		pci_assign_unassigned_bus_resources(root->bus);
+-	}
+ 
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry(driver, &acpi_pci_drivers, node)
+-		if (driver->add)
+-			driver->add(root);
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+-	/* need to after hot-added ioapic is registered */
+-	if (system_state != SYSTEM_BOOTING)
+-		pci_enable_bridges(root->bus);
+ 
+ 	pci_bus_add_devices(root->bus);
+ 
+-- 
+1.7.7
 
