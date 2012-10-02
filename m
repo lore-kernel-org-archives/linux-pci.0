@@ -1,90 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:32470 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758133Ab2JYHar (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 03:30:47 -0400
-Message-ID: <5088EA6D.2070509@huawei.com>
-Date: Thu, 25 Oct 2012 15:29:49 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Jon Mason <jdmason@kudzu.us>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 1/3] PCI: correct static code analysis tool issue
-References: <1350020155-3782-1-git-send-email-jdmason@kudzu.us> <1350020155-3782-2-git-send-email-jdmason@kudzu.us>
-In-Reply-To: <1350020155-3782-2-git-send-email-jdmason@kudzu.us>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from plane.gmane.org ([80.91.229.3]:53356 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753195Ab2JBGZY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Oct 2012 02:25:24 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1TIvum-0007ti-AZ
+	for linux-pci@vger.kernel.org; Tue, 02 Oct 2012 08:25:08 +0200
+Received: from 99-119-199-15.lightspeed.sntcca.sbcglobal.net ([99.119.199.15])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 08:25:08 +0200
+Received: from paolopiace by 99-119-199-15.lightspeed.sntcca.sbcglobal.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 08:25:08 +0200
+To: linux-pci@vger.kernel.org
+From: Paolo <paolopiace@hotmail.com>
+Subject: Re: =?utf-8?b?cGNpX3JlcXVlc3RfcmVnaW9ucygp?=
+Date: Tue, 2 Oct 2012 06:16:53 +0000 (UTC)
+Message-ID: <loom.20121002T080608-96@post.gmane.org>
+References: <loom.20121002T002058-318@post.gmane.org> <CAErSpo7q4tYwCHnMjovyDVXdCpGrWkqmO5u=1yAAhh7XBL_ASA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/10/12 13:35, Jon Mason wrote:
-> Coverity noticed that pcie_bus_configure_settings() can call
-> pcie_bus_configure_set() when "smpss" is uninitialized.  The smpss is
-> used to make the bus and all child devices have a uniform value.
-> Setting the smpss is moot for PCIE_BUS_PERFORMANCE, since it will be
-> determined dynamically based on the max size of the parent device and
-> the child device.  To avoid the erroneous detection of this issue, set
-> the smpss to 0.  Also, add a case statement to make clearer the possible
-> use cases and add a nice comment describing what is being done in the
-> PCIE_BUS_PERFORMANCE case.
+Bjorn Helgaas <bhelgaas <at> google.com> writes:
 > 
-> Signed-off-by: Jon Mason <jdmason@kudzu.us>
-> ---
->  drivers/pci/probe.c |   25 ++++++++++++++++++++-----
->  1 file changed, 20 insertions(+), 5 deletions(-)
+> In 2.6.32, the function pci_request_regions() is in the file
+> drivers/pci/pci.c.  It's still there in the current kernel (v3.6).
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 9f8a6b7..6b672c1 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1570,21 +1570,36 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->  	if (!pci_is_pcie(bus->self))
->  		return;
->  
-> -	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-> -		return;
-> -
-> +	switch (pcie_bus_config) {
-> +	/* The smpss is used to make the bus and all child devices have
-> +	 * a uniform value.  Setting the smpss is moot for
-> +	 * "Performance", since it will be determined dynamically based
-> +	 * on the max size of the parent device and the child device.
-> +	 * However, not setting the smpss can result in static code
-> +	 * analysis tools erroniously reporting an issue.  To avoid
-> +	 * this, set the smpss to 0.
-> +	 */
-> +	case PCIE_BUS_PERFORMANCE:
->  	/* FIXME - Peer to peer DMA is possible, though the endpoint would need
->  	 * to be aware to the MPS of the destination.  To work around this,
->  	 * simply force the MPS of the entire system to the smallest possible.
->  	 */
-> -	if (pcie_bus_config == PCIE_BUS_PEER2PEER)
-> +	case PCIE_BUS_PEER2PEER:
->  		smpss = 0;
-> +		break;
->  
-> -	if (pcie_bus_config == PCIE_BUS_SAFE) {
-> +	case PCIE_BUS_SAFE:
->  		smpss = mpss;
->  
->  		pcie_find_smpss(bus->self, &smpss);
->  		pci_walk_bus(bus, pcie_find_smpss, &smpss);
-> +		break;
-> +
-> +	case PCIE_BUS_TUNE_OFF:
-> +	default:
-> +		return;
-> +	}
-> +
->  	}
+> The stuff below looks like a directory hierarchy, not information
+> about the *contents* of the files.
+>
 
-Remove bracket }
+Don't know what to say. There is NO string "pci_request_regions" in any of those
+files. They are just Makefile and Kconfig.
+Yet, I'm working on a driver that calls that function and works just fine.
+How/where does it find that pci_request_regions()?
 
->  
->  	pcie_bus_configure_set(bus->self, &smpss);
-> 
+Here is the output of the ls command, purged of the dot directories.
 
+paolo@paolo-DT0:/usr/src/linux-headers-2.6.32-43$ ls -laR drivers/pci/
 
--- 
-Thanks!
-Yijing
+drivers/pci/:
+drwxr-xr-x  2 root root 4096 2012-09-20 14:55 hotplug
+-rw-r--r--  1 root root 1977 2009-12-02 19:51 Kconfig
+-rw-r--r--  1 root root 1600 2009-12-02 19:51 Makefile
+drwxr-xr-x  3 root root 4096 2012-09-20 14:55 pcie
+
+drivers/pci/hotplug:
+-rw-r--r-- 1 root root 4907 2009-12-02 19:51 Kconfig
+-rw-r--r-- 1 root root 1855 2009-12-02 19:51 Makefile
+
+drivers/pci/pcie:
+drwxr-xr-x 2 root root 4096 2012-09-20 14:55 aer
+-rw-r--r-- 1 root root 1241 2009-12-02 19:51 Kconfig
+-rw-r--r-- 1 root root  286 2009-12-02 19:51 Makefile
+
+drivers/pci/pcie/aer:
+-rw-r--r-- 1 root root  634 2009-12-02 19:51 Kconfig
+-rw-r--r-- 1 root root  585 2009-12-02 19:51 Kconfig.debug
+-rw-r--r-- 1 root root  294 2009-12-02 19:51 Makefile
+
 
