@@ -1,83 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:38867 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45709 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1945991Ab2JaSZK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Oct 2012 14:25:10 -0400
-From: "Rose, Gregory V" <gregory.v.rose@intel.com>
-To: Don Dutile <ddutile@redhat.com>,
-	Ben Hutchings <bhutchings@solarflare.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: RE: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
-Date: Wed, 31 Oct 2012 18:25:08 +0000
-Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A072D54D17A@ORSMSX106.amr.corp.intel.com>
-References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
-  <1351190310-5043-4-git-send-email-ddutile@redhat.com>
-  <1351196234.2662.37.camel@bwh-desktop.uk.solarflarecom.com>
-  <508AA719.2060705@redhat.com>
-  <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com>
- <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
- <50916B93.9060807@redhat.com>
-In-Reply-To: <50916B93.9060807@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1755209Ab2JBRiv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Oct 2012 13:38:51 -0400
+Message-ID: <506B26A2.2070603@redhat.com>
+Date: Tue, 02 Oct 2012 13:38:42 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
+To: Yuval Mintz <yuvalmin@broadcom.com>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
+ device level
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com> <506A9892.5090707@broadcom.com>
+In-Reply-To: <506A9892.5090707@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEb24gRHV0aWxlIFttYWlsdG86
-ZGR1dGlsZUByZWRoYXQuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE9jdG9iZXIgMzEsIDIwMTIg
-MTE6MTkgQU0NCj4gVG86IEJlbiBIdXRjaGluZ3MNCj4gQ2M6IFJvc2UsIEdyZWdvcnkgVjsgbGlu
-dXgtcGNpQHZnZXIua2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4geXV2YWxtaW5A
-YnJvYWRjb20uY29tOyB5aW5naGFpQGtlcm5lbC5vcmc7IGRhdmVtQGRhdmVtbG9mdC5uZXQNCj4g
-U3ViamVjdDogUmU6IFtQQVRDSCAzLzhdIFBDSTogc3lzZnMgcGVyIGRldmljZSBTUklPViBjb250
-cm9sIGFuZCBzdGF0dXMNCj4gDQo+IE9uIDEwLzMxLzIwMTIgMDE6MzYgUE0sIEJlbiBIdXRjaGlu
-Z3Mgd3JvdGU6DQo+ID4gT24gV2VkLCAyMDEyLTEwLTMxIGF0IDE3OjAxICswMDAwLCBSb3NlLCBH
-cmVnb3J5IFYgd3JvdGU6DQo+ID4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+Pj4g
-RnJvbTogRG9uIER1dGlsZSBbbWFpbHRvOmRkdXRpbGVAcmVkaGF0LmNvbV0NCj4gPj4+IFNlbnQ6
-IEZyaWRheSwgT2N0b2JlciAyNiwgMjAxMiA4OjA3IEFNDQo+ID4+PiBUbzogQmVuIEh1dGNoaW5n
-cw0KPiA+Pj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5j
-b207DQo+ID4+PiB5dXZhbG1pbkBicm9hZGNvbS5jb207IFJvc2UsIEdyZWdvcnkgVjsgeWluZ2hh
-aUBrZXJuZWwub3JnOw0KPiA+Pj4gZGF2ZW1AZGF2ZW1sb2Z0Lm5ldA0KPiA+Pj4gU3ViamVjdDog
-UmU6IFtQQVRDSCAzLzhdIFBDSTogc3lzZnMgcGVyIGRldmljZSBTUklPViBjb250cm9sIGFuZA0K
-PiA+Pj4gc3RhdHVzDQo+ID4+Pg0KPiA+Pg0KPiA+Pj4NCj4gPj4+IE9rLCBteSB0dXJuOg0KPiA+
-Pj4gQW55IGZlZWRiYWNrIG9uIGhhdmluZyB0aGUgc3lzZnMgY29uZmlndXJlIGNhbGwNCj4gPj4+
-IHBjaV9zcmlvdl9bZW5hYmxlL2Rpc2FibGVdKCksIGFzIHdlbGwgYXMgZG8gdGhlIGRvbid0LWRp
-c2FibGUgaWYgVkZzDQo+ID4+PiBhcmUgYXNzaWduZWQgdG8gZ3Vlc3RzPw0KPiA+Pj4NCj4gPj4N
-Cj4gPj4gRG9uLA0KPiA+Pg0KPiA+PiBBcyBJJ3ZlIG1lbnRpb25lZCBiZWZvcmUgSSBzdGlsbCBw
-cmVmZXIgdG8gaGF2ZSB0aGUgc3lzZnMgaW50ZXJmYWNlDQo+ID4+IHlvdSd2ZSB3cml0dGVuIHVw
-IG1ha2UgdGhlIGNhbGxzIHRvIHBjaV9zcmlvdl9lbmFibGUvZGlzYWJsZSgpDQo+ID4NCj4gPiBJ
-IHRoaW5rIHRoYXQgd291bGQgd29yayBmb3Igc2ZjLCBhc3N1bWluZyB0aGUgZHJpdmVyIGZ1bmN0
-aW9uIGlzIHRvIGJlDQo+ID4gY2FsbGVkIGJlZm9yZSBlaXRoZXIgb2YgdGhvc2UuICBJIGRvbid0
-IGtub3cgd2hldGhlciBpdCB3b3VsZCB3b3JrIGZvcg0KPiA+IGFueSBvZiB0aGUgb3RoZXIgZHJp
-dmVycyB3aXRoIFNSLUlPViBiYWNrLWVuZHMsIHRob3VnaC4NCj4gPg0KPiA+PiBhbmQgaGF2ZSB0
-aGUgY2hlY2tpbmcgZm9yIHdoZXRoZXIgdGhlIFZGcyBhcmUgYXNzaWduZWQgdG8gZ3Vlc3RzIGRv
-bmUNCj4gPj4gdGhlcmUgYWxzbywNCj4gPg0KPiA+IEkgYWdyZWUgdGhhdCB0aGlzIGlzIHNob3Vs
-ZCBiZSBjZW50cmFsaXNlZCwgdGhvdWdoIEkgdGhpbmsgdGhhdCBjb3VsZA0KPiA+IGJlIGRvbmUg
-YXMgYSBsYXRlciBzdGVwIHdpdGhvdXQgdG9vIG11Y2ggcGFpbi4NCj4gPg0KPiA+PiBidXQgcmVh
-bGx5IGl0IGlzbid0IGFueXRoaW5nIHdvcnRoIGdvaW5nIHRvIHRoZSBtYXRzIGFib3V0LiAgQXMg
-aXQNCj4gPj4gc3RhbmRzIEkgdGhpbmsgaWYgeW91IGFkZHJlc3MgdGhlIGlzc3VlcyBicm91Z2h0
-IHVwIGJ5IEJlbiB0aGVuIEknbQ0KPiA+PiBmaW5lIHdpdGggd2hhdCB5b3UndmUgd29ya2VkIHVw
-IHNvIGZhci4gIFNpbmNlIG5vIG9uZSBlbHNlIHNlZW1zIHRvDQo+ID4+IGhhdmUgYW4gb3Bpbmlv
-biBhYm91dCBpdCAoYXMgZGVtb25zdHJhdGVkIGJ5IGEgbGFjayBvZiByZXNwb25zZSBvdmVyDQo+
-ID4+IHRoZSBsYXN0IDUgZGF5cykgdGhlbiBJJ2Qgc3VnZ2VzdCB3ZSBnbyBmb3J3YXJkIHdpdGgg
-dGhlIGN1cnJlbnQNCj4gPj4gaW1wbGVtZW50YXRpb24uICBJJ2QgcmVhbGx5IGxpa2UgdG8gc2Vl
-IHRoaXMgaW4gMy44IGlmIHBvc3NpYmxlLg0KPiA+Pg0KPiA+PiBUaGFua3MgZm9yIGFsbCB5b3Vy
-IHdvcmsuDQo+ID4NCj4gPiBBZ3JlZWQsIHRoYW5rcyBEb24uDQo+ID4NCj4gPiBCZW4uDQo+ID4N
-Cj4gR3JlZyAmIEJlbiwNCj4gVGhhbmtzIGZvciB5b3VyIGZlZWRiYWNrIG9uIHRoZSBjb3JlIGRv
-aW5nIHRoZSBzcmlvdl9lbmFibGUvZGlzYWJsZS4NCj4gSSBhZ3JlZSB0aGF0IGxldCdzIGdldCBl
-eGlzdGluZyB0aGUgY29yZSBzdHVmZiBpbnRvIDMuOCAmIGRvIHRoZQ0KPiBlbmFibGUvZGlzYWJs
-ZSBhcyBhIGZvbGxvdyB1cC4NCj4gSSdtIGp1c3QgcG9saXNoaW5nIHRoZSBwYXRjaCBzZXQgbm93
-IGJhc2VkIG9uIEJlbidzIGZlZWRiYWNrLi4uLg0KPiBJIHdhcyBkZWxheWVkIHdoZW4gbXkgdGVz
-dCBtYWNoaW5lIHdhcyAoaW1wcm9wZXJseSkgdGFrZW4gZnJvbSBtZSAoYmFkIElULA0KPiBiYWQh
-IDotKCApLg0KPiBKdXN0IGdvdCB0aGUgbWFjaGluZSBiYWNrIHRvZGF5IHRvIHRlc3QgdGhlIHZh
-cmlvdXMgKGVycm9yKSBjYXNlcywgYW5kDQo+IG1ha2UgY2hlY2twYXRjaC5wbCBoYXBweS4gIEkg
-ZXhwZWN0IHRvIHBvc3QgYSBQQVRDSCAobm9uLVJGQykgbGF0ZXIgdG9kYXkuDQo+IC0gRG9uDQo+
-IHBzIC0tIG9mIGNvdXJzZSwgaWYgR3JlZyB3YW50cyB0byBnaXZlIG1lIGEgc2V0IG9mIGlnYiBw
-YXRjaGVzIGxpa2UgdGhlDQo+IG9uZXMgaGUgZGlkDQo+ICAgICAgICBmb3IgaXhnYmUsIGl0J2Qg
-Z2V0IG1lIG91dCBvZiB0aGUgdGVzdCBtYWNoaW5lIGJhdHRsZXMgLS0gSSBoYXZlDQo+IHByaXZh
-dGUNCj4gICAgICAgIHRlc3QgbWFjaGluZSB3L2lnYidzLiA6KSAgaGludCwgaGludC4uLm9rLCBt
-b3JlIGxpa2UgJ2JlZywgYmVnJyAuLi4NCj4gYWdhaW4uLi4gOykNCg0KSSdsbCBzZWUgd2hhdCBJ
-IGNhbiBkby4NCg0KOikNCg0KLSBHcmVnDQo=
+On 10/02/2012 03:32 AM, Yuval Mintz wrote:
+>> +static void pci_sriov_remove_sysfs_dev_files(struct pci_dev *dev)
+>> +{
+>> +	int pos;
+>> +
+>> +	if ((dev->is_physfn)&&  pci_is_pcie(dev)) {
+>> +            pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
+>> +            if (pos)
+>> +		device_remove_file(&dev->dev, pci_dev_sriov_attrs);
+>
+> Shouldn't it iterate over the attributes when removing them?
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+good catch; that should be:
+  +	int pos, i;
+     ....
+  +                for (i = 0; attr_name(pci_dev_sriov_attrs[i]); i++)
+  +			device_remove_file(&dev->dev, &pci_dev_sriov_attrs);
+
+it doesn't remove the files in reverse order, but neither does
+the device-generic code for dev-attrs.
+
+
+Another question for RFC:
+-- above shows I didn't test with hot-plug
+-- which makes me wonder/think if [get,put]_device([dev,parent]) needed
+    during [create,remove]_file() calls.
+
