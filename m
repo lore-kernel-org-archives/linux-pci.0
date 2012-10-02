@@ -1,486 +1,457 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:54023 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932140Ab2JSG11 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2012 02:27:27 -0400
-Message-ID: <5080F18D.9050502@jp.fujitsu.com>
-Date: Fri, 19 Oct 2012 15:22:05 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:36567 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab2JBEzY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 00:55:24 -0400
+Date: Tue, 2 Oct 2012 06:55:18 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 -tip 1/5] x86, MSI: Support multiple MSIs in presense
+ of IRQ remapping
+Message-ID: <20121002045518.GA7756@gmail.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
+ <b15a9b5242c7de5770d2315ea8d13f4dcf63c00b.1349074231.git.agordeev@redhat.com>
 MIME-Version: 1.0
-To: khalid@gonehiking.org
-CC: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
-	kexec@lists.infradead.org, hbabu@us.ibm.com, andi@firstfloor.org,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-	vgoyal@redhat.com, alex.williamson@redhat.com
-Subject: Re: [PATCH v5 1/2] x86, pci: Reset PCIe devices at boot time
-References: <20121017061757.2944.36671.sendpatchset@indoh>  <20121017061807.2944.82578.sendpatchset@indoh> <1350574357.3894.29.camel@rhapsody>
-In-Reply-To: <1350574357.3894.29.camel@rhapsody>
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b15a9b5242c7de5770d2315ea8d13f4dcf63c00b.1349074231.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/19 0:32), Khalid Aziz wrote:
-> On Wed, 2012-10-17 at 15:23 +0900, Takao Indoh wrote:
->> This patch resets PCIe devices at boot time by hot reset when
->> "reset_devices" is specified.
->>
->> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->> ---
->>   arch/x86/include/asm/pci-direct.h |    1
->>   arch/x86/kernel/setup.c           |    3
->>   arch/x86/pci/early.c              |  353 ++++++++++++++++++++++++++++
->>   include/linux/pci.h               |    2
->>   init/main.c                       |    4
->>   5 files changed, 361 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
->> index b1e7a45..de30db2 100644
->> --- a/arch/x86/include/asm/pci-direct.h
->> +++ b/arch/x86/include/asm/pci-direct.h
->> @@ -18,4 +18,5 @@ extern int early_pci_allowed(void);
->>   extern unsigned int pci_early_dump_regs;
->>   extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
->>   extern void early_dump_pci_devices(void);
->> +extern void early_reset_pcie_devices(void);
->>   #endif /* _ASM_X86_PCI_DIRECT_H */
->> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
->> index a2bb18e..73d3425 100644
->> --- a/arch/x86/kernel/setup.c
->> +++ b/arch/x86/kernel/setup.c
->> @@ -987,6 +987,9 @@ void __init setup_arch(char **cmdline_p)
->>   	generic_apic_probe();
->>
->>   	early_quirks();
->> +#ifdef CONFIG_PCI
->> +	early_reset_pcie_devices();
->> +#endif
->>
->>   	/*
->>   	 * Read APIC and some other early information from ACPI tables.
->> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
->> index d1067d5..df7f4fc 100644
->> --- a/arch/x86/pci/early.c
->> +++ b/arch/x86/pci/early.c
->> @@ -1,5 +1,6 @@
->>   #include <linux/kernel.h>
->>   #include <linux/pci.h>
->> +#include <linux/bootmem.h>
->>   #include <asm/pci-direct.h>
->>   #include <asm/io.h>
->>   #include <asm/pci_x86.h>
->> @@ -109,3 +110,355 @@ void early_dump_pci_devices(void)
->>   		}
->>   	}
->>   }
->> +
->> +#define PCI_EXP_SAVE_REGS	7
->> +#define pcie_cap_has_devctl(type, flags)	1
->> +#define pcie_cap_has_lnkctl(type, flags)		\
->> +		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
->> +		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
->> +		  type == PCI_EXP_TYPE_ENDPOINT ||	\
->> +		  type == PCI_EXP_TYPE_LEG_END))
->> +#define pcie_cap_has_sltctl(type, flags)		\
->> +		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
->> +		 ((type == PCI_EXP_TYPE_ROOT_PORT) ||	\
->> +		  (type == PCI_EXP_TYPE_DOWNSTREAM &&	\
->> +		   (flags & PCI_EXP_FLAGS_SLOT))))
->> +#define pcie_cap_has_rtctl(type, flags)			\
->> +		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
->> +		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
->> +		  type == PCI_EXP_TYPE_RC_EC))
->> +
->> +struct save_config {
->> +	u32 pci[16];
->> +	u16 pcie[PCI_EXP_SAVE_REGS];
->> +};
->> +
->> +struct pcie_dev {
->> +	int cap;   /* position of PCI Express capability */
->> +	int flags; /* PCI_EXP_FLAGS */
->> +	struct save_config save; /* saved configration register */
->> +};
->> +
->> +struct pcie_port {
->> +	struct list_head dev;
->> +	u8 bus;
->> +	u8 slot;
->> +	u8 func;
->> +	u8 secondary;
->> +	struct pcie_dev child[PCI_MAX_FUNCTIONS];
->> +};
->> +
->> +static LIST_HEAD(device_list);
->> +static void __init pci_udelay(int loops)
->> +{
->> +	while (loops--) {
->> +		/* Approximately 1 us */
->> +		native_io_delay();
->> +	}
->> +}
->> +
->> +/* Derived from drivers/pci/pci.c */
->> +#define PCI_FIND_CAP_TTL	48
->> +static int __init __pci_find_next_cap_ttl(u8 bus, u8 slot, u8 func,
->> +					  u8 pos, int cap, int *ttl)
->> +{
->> +	u8 id;
->> +
->> +	while ((*ttl)--) {
->> +		pos = read_pci_config_byte(bus, slot, func, pos);
->> +		if (pos < 0x40)
->> +			break;
->> +		pos &= ~3;
->> +		id = read_pci_config_byte(bus, slot, func,
->> +					pos + PCI_CAP_LIST_ID);
->> +		if (id == 0xff)
->> +			break;
->> +		if (id == cap)
->> +			return pos;
->> +		pos += PCI_CAP_LIST_NEXT;
->> +	}
->> +	return 0;
->> +}
->> +
->> +static int __init __pci_find_next_cap(u8 bus, u8 slot, u8 func, u8 pos, int cap)
->> +{
->> +	int ttl = PCI_FIND_CAP_TTL;
->> +
->> +	return __pci_find_next_cap_ttl(bus, slot, func, pos, cap, &ttl);
->> +}
->> +
->> +static int __init __pci_bus_find_cap_start(u8 bus, u8 slot, u8 func,
->> +					   u8 hdr_type)
->> +{
->> +	u16 status;
->> +
->> +	status = read_pci_config_16(bus, slot, func, PCI_STATUS);
->> +	if (!(status & PCI_STATUS_CAP_LIST))
->> +		return 0;
->> +
->> +	switch (hdr_type) {
->> +	case PCI_HEADER_TYPE_NORMAL:
->> +	case PCI_HEADER_TYPE_BRIDGE:
->> +		return PCI_CAPABILITY_LIST;
->> +	case PCI_HEADER_TYPE_CARDBUS:
->> +		return PCI_CB_CAPABILITY_LIST;
->> +	default:
->> +		return 0;
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +static int __init early_pci_find_capability(u8 bus, u8 slot, u8 func, int cap)
->> +{
->> +	int pos;
->> +	u8 type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
->> +
->> +	pos = __pci_bus_find_cap_start(bus, slot, func, type & 0x7f);
->> +	if (pos)
->> +		pos = __pci_find_next_cap(bus, slot, func, pos, cap);
->> +
->> +	return pos;
->> +}
->> +
->> +static void __init do_reset(u8 bus, u8 slot, u8 func)
->> +{
->> +	u16 ctrl;
->> +
->> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
->> +
->> +	/* Assert Secondary Bus Reset */
->> +	ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
->> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
->> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->> +
->> +	/*
->> +	 * PCIe spec requires software to ensure a minimum reset duration
->> +	 * (Trst == 1ms). We have here 5ms safety margin because pci_udelay is
->> +	 * not precise.
->> +	 */
->> +	pci_udelay(5000);
->> +
->> +	/* De-assert Secondary Bus Reset */
->> +	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
->> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->> +}
->> +
->> +static void __init save_state(unsigned bus, unsigned slot, unsigned func,
->> +		struct pcie_dev *dev)
->> +{
->> +	int i;
->> +	int pcie, flags, pcie_type;
->> +	struct save_config *save;
->> +
->> +	pcie = dev->cap;
->> +	flags = dev->flags;
->> +	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->> +	save = &dev->save;
->> +
->> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
->> +
->> +	for (i = 0; i < 16; i++)
->> +		save->pci[i] = read_pci_config(bus, slot, func, i * 4);
->> +	i = 0;
->> +	if (pcie_cap_has_devctl(pcie_type, flags))
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_DEVCTL);
->> +	if (pcie_cap_has_lnkctl(pcie_type, flags))
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_LNKCTL);
->> +	if (pcie_cap_has_sltctl(pcie_type, flags))
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_SLTCTL);
->> +	if (pcie_cap_has_rtctl(pcie_type, flags))
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_RTCTL);
->> +
->> +	if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_DEVCTL2);
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_LNKCTL2);
->> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +						      pcie + PCI_EXP_SLTCTL2);
->> +	}
->> +}
->> +
->> +static void __init restore_state(unsigned bus, unsigned slot, unsigned func,
->> +		struct pcie_dev *dev)
->> +{
->> +	int i = 0;
->> +	int pcie, flags, pcie_type;
->> +	struct save_config *save;
->> +
->> +	pcie = dev->cap;
->> +	flags = dev->flags;
->> +	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->> +	save = &dev->save;
->> +
->> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
->> +	       bus, slot, func);
->> +
->> +	if (pcie_cap_has_devctl(pcie_type, flags))
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_DEVCTL, save->pcie[i++]);
->> +	if (pcie_cap_has_lnkctl(pcie_type, flags))
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_LNKCTL, save->pcie[i++]);
->> +	if (pcie_cap_has_sltctl(pcie_type, flags))
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_SLTCTL, save->pcie[i++]);
->> +	if (pcie_cap_has_rtctl(pcie_type, flags))
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_RTCTL, save->pcie[i++]);
->> +
->> +	if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_DEVCTL2, save->pcie[i++]);
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_LNKCTL2, save->pcie[i++]);
->> +		write_pci_config_16(bus, slot, func,
->> +				    pcie + PCI_EXP_SLTCTL2, save->pcie[i++]);
->> +	}
->> +
->> +	for (i = 15; i >= 0; i--)
->> +		write_pci_config(bus, slot, func, i * 4, save->pci[i]);
->> +}
->> +
->> +static void __init find_pcie_device(unsigned bus, unsigned slot, unsigned func)
->> +{
->> +	int f, count;
->> +	int pcie, pcie_type;
->> +	u8 type;
->> +	u16 vendor, flags;
->> +	u32 class;
->> +	int secondary;
->> +	struct pcie_port *port;
->> +	int pcie_cap[PCI_MAX_FUNCTIONS];
->> +	int pcie_flags[PCI_MAX_FUNCTIONS];
->> +
->> +	pcie = early_pci_find_capability(bus, slot, func, PCI_CAP_ID_EXP);
->> +	if (!pcie)
->> +		return;
->> +
->> +	flags = read_pci_config_16(bus, slot, func, pcie + PCI_EXP_FLAGS);
->> +	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->> +	if ((pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
->> +	    (pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
->> +		return;
->> +
->> +	type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
->> +	if ((type & 0x7f) != PCI_HEADER_TYPE_BRIDGE)
->> +		return;
->> +	secondary = read_pci_config_byte(bus, slot, func, PCI_SECONDARY_BUS);
->> +
->> +	memset(pcie_cap, 0, sizeof(pcie_cap));
->> +	memset(pcie_flags, 0, sizeof(pcie_flags));
->> +	for (count = 0, f = 0; f < PCI_MAX_FUNCTIONS; f++) {
->> +		vendor = read_pci_config_16(secondary, 0, f, PCI_VENDOR_ID);
->> +		if (vendor == 0xffff)
->> +			continue;
->> +
->> +		pcie = early_pci_find_capability(secondary, 0, f,
->> +				PCI_CAP_ID_EXP);
->> +		if (!pcie)
->> +			continue;
->> +
->> +		flags = read_pci_config_16(secondary, 0, f,
->> +				pcie + PCI_EXP_FLAGS);
->> +		pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->> +		if ((pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
->> +		    (pcie_type == PCI_EXP_TYPE_PCI_BRIDGE))
->> +			/* Don't reset switch, bridge */
->> +			return;
->> +
->> +		class = read_pci_config(secondary, 0, f, PCI_CLASS_REVISION);
->> +		if ((class >> 24) == PCI_BASE_CLASS_DISPLAY)
->> +			/* Don't reset VGA device */
->> +			return;
->> +
->> +		count++;
->> +		pcie_cap[f] = pcie;
->> +		pcie_flags[f] = flags;
->> +	}
->> +
->> +	if (!count)
->> +		return;
->> +
->> +	port = (struct pcie_port *)alloc_bootmem(sizeof(struct pcie_port));
->> +	if (port == NULL) {
->> +		printk(KERN_ERR "pci 0000:%02x:%02x.%d alloc_bootmem failed\n",
->> +		       bus, slot, func);
->> +		return;
->> +	}
->> +	memset(port, 0, sizeof(*port));
->> +	port->bus = bus;
->> +	port->slot = slot;
->> +	port->func = func;
->> +	port->secondary = secondary;
->> +	for (f = 0; f < PCI_MAX_FUNCTIONS; f++) {
->> +		if (pcie_cap[f] != 0) {
->> +			port->child[f].cap = pcie_cap[f];
->> +			port->child[f].flags = pcie_flags[f];
->> +			save_state(secondary, 0, f, &port->child[f]);
->> +		}
->> +	}
->> +	list_add_tail(&port->dev, &device_list);
->> +}
->> +
->> +void __init early_reset_pcie_devices(void)
->> +{
->> +	unsigned bus, slot, func;
->> +	struct pcie_port *port, *tmp;
->> +
->> +	if (!early_pci_allowed() || !reset_devices)
->> +		return;
->> +
->> +	/* Find PCIe port and save config registers of its downstream devices */
->> +	for (bus = 0; bus < 256; bus++) {
->> +		for (slot = 0; slot < 32; slot++) {
->> +			for (func = 0; func < PCI_MAX_FUNCTIONS; func++) {
->> +				u16 vendor;
->> +				u8 type;
->> +				vendor = read_pci_config_16(bus, slot, func,
->> +						PCI_VENDOR_ID);
->> +
->> +				if (vendor == 0xffff)
->> +					continue;
->> +
->> +				find_pcie_device(bus, slot, func);
->> +
->> +				if (func == 0) {
->> +					type = read_pci_config_byte(bus, slot,
->> +								    func,
->> +							       PCI_HEADER_TYPE);
->> +					if (!(type & 0x80))
->> +						break;
->> +				}
->> +			}
->> +		}
->> +	}
->> +
->> +	if (list_empty(&device_list))
->> +		return;
->> +
->> +	/* Do bus reset */
->> +	list_for_each_entry(port, &device_list, dev)
->> +		do_reset(port->bus, port->slot, port->func);
->> +
->> +	/*
->> +	 * According to PCIe spec, software must wait a minimum of 100 ms
->> +	 * before sending a configuration request. We have 500ms safety margin
->> +	 * here.
->> +	 */
->> +	pci_udelay(500000);
->> +
->> +	/* Restore config registers and free memory */
->> +	list_for_each_entry_safe(port, tmp, &device_list, dev) {
->> +		for (func = 0; func < PCI_MAX_FUNCTIONS; func++)
->> +			if (port->child[func].cap)
->> +				restore_state(port->secondary, 0, func,
->> +					      &port->child[func]);
->> +		free_bootmem(__pa(port), sizeof(*port));
->> +	}
->> +}
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index ee21795..eca3231 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -35,6 +35,8 @@
->>   /* Include the ID list */
->>   #include <linux/pci_ids.h>
->>
->> +#define PCI_MAX_FUNCTIONS 8
->> +
->>   /* pci_slot represents a physical slot */
->>   struct pci_slot {
->>   	struct pci_bus *bus;		/* The bus this slot is on */
->> diff --git a/init/main.c b/init/main.c
->> index 9cf77ab..0eb7430 100644
->> --- a/init/main.c
->> +++ b/init/main.c
->> @@ -144,10 +144,10 @@ EXPORT_SYMBOL(reset_devices);
->>   static int __init set_reset_devices(char *str)
->>   {
->>   	reset_devices = 1;
->> -	return 1;
->> +	return 0;
->>   }
->>
->> -__setup("reset_devices", set_reset_devices);
->> +early_param("reset_devices", set_reset_devices);
->>
->>   static const char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
->>   const char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
->>
->>
->> _______________________________________________
->> kexec mailing list
->> kexec@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/kexec
->
-> This looks good. Good catch on access to downstream devices after reset.
-> It is certainly safer to save all config registers before any resets.
->
-> One thing I am concerned about is would a reset affect SR-IOV extended
-> capability registers. If so, should save_state() save those registers as
-> well? Alex Williamson (cc'd) can possibly comment on that aspect.
 
-Yes, SR-IOV cap register is cleared by reset. For exmaple, SR-IOV spec
-says that:
-  2.2.1. Conventional Reset
-  Conventional Reset clears VF Enable in the PF. Thus, VFs no longer
-  exist after a Conventional Reset.
+* Alexander Gordeev <agordeev@redhat.com> wrote:
 
-I'm expecting all SR-IOV registers are set up again at kdump kernel boot
-time as well as normal boot. But for example if there are registers
-which are set up only in BIOS, maybe saving/restoring at reset is
-needed.
+> The MSI specification has several constraints in comparison with MSI-X,
+> most notable of them is the inability to configure MSIs independently.
+> As a result, it is impossible to dispatch interrupts from different
+> queues to different CPUs. This is largely devalues the support of
+> multiple MSIs in SMP systems.
+> 
+> Also, a necessity to allocate a contiguous block of vector numbers for
+> devices capable of multiple MSIs might cause a considerable pressure on
+> x86 interrupt vector allocator and could lead to fragmentation of the
+> interrupt vectors space.
+> 
+> This patch overcomes both drawbacks in presense of IRQ remapping and
+> lets devices take advantage of multiple queues and per-IRQ affinity
+> assignments.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |  174 +++++++++++++++++++++++++++++++++------
+>  include/linux/irq.h            |    6 ++
+>  kernel/irq/chip.c              |   30 +++++--
+>  kernel/irq/irqdesc.c           |   31 +++++++
+>  4 files changed, 206 insertions(+), 35 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index c265593..d5cb13c 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -305,6 +305,11 @@ static int alloc_irq_from(unsigned int from, int node)
+>  	return irq_alloc_desc_from(from, node);
+>  }
+>  
+> +static int alloc_irqs_from(unsigned int from, unsigned int count, int node)
+> +{
+> +	return irq_alloc_descs_from(from, count, node);
+> +}
+> +
+>  static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+>  {
+>  	free_irq_cfg(at, cfg);
+> @@ -2991,37 +2996,58 @@ device_initcall(ioapic_init_ops);
+>  /*
+>   * Dynamic irq allocate and deallocation
+>   */
+> -unsigned int create_irq_nr(unsigned int from, int node)
+> +unsigned int __create_irqs(unsigned int from, unsigned int count, int node)
+>  {
+> -	struct irq_cfg *cfg;
+> +	struct irq_cfg **cfg;
+>  	unsigned long flags;
+> -	unsigned int ret = 0;
+> -	int irq;
+> +	int irq, i;
+>  
+>  	if (from < nr_irqs_gsi)
+>  		from = nr_irqs_gsi;
+>  
+> -	irq = alloc_irq_from(from, node);
+> -	if (irq < 0)
+> -		return 0;
+> -	cfg = alloc_irq_cfg(irq, node);
+> -	if (!cfg) {
+> -		free_irq_at(irq, NULL);
+> +	cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
+> +	if (!cfg)
+>  		return 0;
+> +
+> +	irq = alloc_irqs_from(from, count, node);
+> +	if (irq < 0)
+> +		goto out_cfgs;
+> +
+> +	for (i = 0; i < count; i++) {
+> +		cfg[i] = alloc_irq_cfg(irq + i, node);
+> +		if (!cfg[i])
+> +			goto out_irqs;
+>  	}
+>  
+>  	raw_spin_lock_irqsave(&vector_lock, flags);
+> -	if (!__assign_irq_vector(irq, cfg, apic->target_cpus()))
+> -		ret = irq;
+> +	for (i = 0; i < count; i++)
+> +		if (__assign_irq_vector(irq + i, cfg[i], apic->target_cpus()))
+> +			goto out_vecs;
+>  	raw_spin_unlock_irqrestore(&vector_lock, flags);
+>  
+> -	if (ret) {
+> -		irq_set_chip_data(irq, cfg);
+> -		irq_clear_status_flags(irq, IRQ_NOREQUEST);
+> -	} else {
+> -		free_irq_at(irq, cfg);
+> +	for (i = 0; i < count; i++) {
+> +		irq_set_chip_data(irq + i, cfg[i]);
+> +		irq_clear_status_flags(irq + i, IRQ_NOREQUEST);
+>  	}
+> -	return ret;
+> +
+> +	kfree(cfg);
+> +	return irq;
+> +
+> +out_vecs:
+> +	for (; i; i--)
+> +		__clear_irq_vector(irq + i - 1, cfg[i - 1]);
+> +	raw_spin_unlock_irqrestore(&vector_lock, flags);
+> +out_irqs:
+> +	for (i = 0; i < count; i++)
+> +		free_irq_at(irq + i, cfg[i]);
+> +out_cfgs:
+> +	kfree(cfg);
+> +	return 0;
+> +}
+> +
+> +unsigned int create_irq_nr(unsigned int from, int node)
+> +{
+> +	return __create_irqs(from, 1, node);
+>  }
+>  
+>  int create_irq(void)
+> @@ -3054,6 +3080,27 @@ void destroy_irq(unsigned int irq)
+>  	free_irq_at(irq, cfg);
+>  }
+>  
+> +static inline void destroy_irqs(unsigned int irq, unsigned int count)
+> +{
+> +	unsigned int i;
+> +	for (i = 0; i < count; i++)
+
+Missing newline.
+
+> +		destroy_irq(irq + i);
+> +}
+> +
+> +static inline int
+> +can_create_pow_of_two_irqs(unsigned int from, unsigned int count)
+> +{
+> +	if ((count > 1) && (count % 2))
+> +		return -EINVAL;
+> +
+> +	for (; count; count = count / 2) {
+> +		if (!irq_can_alloc_irqs(from, count))
+> +			return count;
+> +	}
+> +
+> +	return -ENOSPC;
+> +}
+> +
+>  /*
+>   * MSI message composition
+>   */
+> @@ -3145,18 +3192,25 @@ static struct irq_chip msi_chip = {
+>  	.irq_retrigger		= ioapic_retrigger_irq,
+>  };
+>  
+> -static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc, int irq)
+> +static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+> +			 unsigned int irq_base, unsigned int irq_offset)
+>  {
+>  	struct irq_chip *chip = &msi_chip;
+>  	struct msi_msg msg;
+> +	unsigned int irq = irq_base + irq_offset;
+>  	int ret;
+>  
+>  	ret = msi_compose_msg(dev, irq, &msg, -1);
+>  	if (ret < 0)
+>  		return ret;
+>  
+> -	irq_set_msi_desc(irq, msidesc);
+> -	write_msi_msg(irq, &msg);
+> +	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
+> +
+> +	/* MSI-X message is written per-IRQ, the offset is always 0.
+> +	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
+> +	 */
+
+Please use the customary (multi-line) comment style:
+
+  /*
+   * Comment .....
+   * ...... goes here.
+   */
+
+specified in Documentation/CodingStyle.
+
+
+> +	if (!irq_offset)
+> +		write_msi_msg(irq, &msg);
+>  
+>  	if (irq_remapped(irq_get_chip_data(irq))) {
+>  		irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
+> @@ -3170,16 +3224,12 @@ static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc, int irq)
+>  	return 0;
+>  }
+>  
+> -int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> +int setup_msix_irqs(struct pci_dev *dev, int nvec)
+>  {
+>  	int node, ret, sub_handle, index = 0;
+>  	unsigned int irq, irq_want;
+>  	struct msi_desc *msidesc;
+>  
+> -	/* x86 doesn't support multiple MSI yet */
+> -	if (type == PCI_CAP_ID_MSI && nvec > 1)
+> -		return 1;
+> -
+>  	node = dev_to_node(&dev->dev);
+>  	irq_want = nr_irqs_gsi;
+>  	sub_handle = 0;
+> @@ -3208,7 +3258,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>  				goto error;
+>  		}
+>  no_ir:
+> -		ret = setup_msi_irq(dev, msidesc, irq);
+> +		ret = setup_msi_irq(dev, msidesc, irq, 0);
+>  		if (ret < 0)
+>  			goto error;
+>  		sub_handle++;
+> @@ -3220,6 +3270,76 @@ error:
+>  	return ret;
+>  }
+>  
+> +int setup_msi_irqs(struct pci_dev *dev, int nvec)
+> +{
+> +	int node, ret, sub_handle, index = 0;
+> +	unsigned int irq;
+> +	struct msi_desc *msidesc;
+> +
+> +	if (nvec > 1 && !irq_remapping_enabled)
+> +		return 1;
+> +
+> +	nvec = __roundup_pow_of_two(nvec);
+> +	ret = can_create_pow_of_two_irqs(nr_irqs_gsi, nvec);
+> +	if (ret != nvec)
+> +		return ret;
+> +
+> +	WARN_ON(!list_is_singular(&dev->msi_list));
+> +	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
+> +	WARN_ON(msidesc->irq);
+> +	WARN_ON(msidesc->msi_attrib.multiple);
+> +
+> +	node = dev_to_node(&dev->dev);
+> +	irq = __create_irqs(nr_irqs_gsi, nvec, node);
+> +	if (irq == 0)
+> +		return -ENOSPC;
+> +
+> +	if (!irq_remapping_enabled) {
+> +		ret = setup_msi_irq(dev, msidesc, irq, 0);
+> +		if (ret < 0)
+> +			goto error;
+> +		return 0;
+> +	}
+> +
+> +	msidesc->msi_attrib.multiple = ilog2(nvec);
+> +	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+> +		if (!sub_handle) {
+> +			index = msi_alloc_remapped_irq(dev, irq, nvec);
+> +			if (index < 0) {
+> +				ret = index;
+> +				goto error;
+> +			}
+> +		} else {
+> +			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
+> +						     index, sub_handle);
+> +			if (ret < 0)
+> +				goto error;
+> +		}
+> +		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
+> +		if (ret < 0)
+> +			goto error;
+> +	}
+> +	return 0;
+> +
+> +error:
+> +	destroy_irqs(irq, nvec);
+> +
+> +	/* Restore altered MSI descriptor fields and prevent just destroyed
+> +	 * IRQs from tearing down again in default_teardown_msi_irqs()
+> +	 */
+
+Ditto.
+
+> +	msidesc->irq = 0;
+> +	msidesc->msi_attrib.multiple = 0;
+> +
+> +	return ret;
+> +}
+> +
+> +int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> +{
+> +	if (type == PCI_CAP_ID_MSI)
+> +		return setup_msi_irqs(dev, nvec);
+> +	return setup_msix_irqs(dev, nvec);
+> +}
+> +
+>  void native_teardown_msi_irq(unsigned int irq)
+>  {
+>  	destroy_irq(irq);
+> diff --git a/include/linux/irq.h b/include/linux/irq.h
+> index 216b0ba..c3ba39f 100644
+> --- a/include/linux/irq.h
+> +++ b/include/linux/irq.h
+> @@ -522,6 +522,8 @@ extern int irq_set_handler_data(unsigned int irq, void *data);
+>  extern int irq_set_chip_data(unsigned int irq, void *data);
+>  extern int irq_set_irq_type(unsigned int irq, unsigned int type);
+>  extern int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry);
+> +extern int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
+> +				struct msi_desc *entry);
+>  extern struct irq_data *irq_get_irq_data(unsigned int irq);
+>  
+>  static inline struct irq_chip *irq_get_chip(unsigned int irq)
+> @@ -584,8 +586,12 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+>  #define irq_alloc_desc_from(from, node)		\
+>  	irq_alloc_descs(-1, from, 1, node)
+>  
+> +#define irq_alloc_descs_from(from, cnt, node)	\
+> +	irq_alloc_descs(-1, from, cnt, node)
+> +
+
+Please use inlines instead of macros. Might transform the one 
+above it as well in the process.
+
+>  void irq_free_descs(unsigned int irq, unsigned int cnt);
+>  int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+> +int irq_can_alloc_irqs(unsigned int from, unsigned int cnt);
+>  
+>  static inline void irq_free_desc(unsigned int irq)
+>  {
+> diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+> index 57d86d0..2230389 100644
+> --- a/kernel/irq/chip.c
+> +++ b/kernel/irq/chip.c
+> @@ -90,27 +90,41 @@ int irq_set_handler_data(unsigned int irq, void *data)
+>  EXPORT_SYMBOL(irq_set_handler_data);
+>  
+>  /**
+> - *	irq_set_msi_desc - set MSI descriptor data for an irq
+> - *	@irq:	Interrupt number
+> - *	@entry:	Pointer to MSI descriptor data
+> + *	irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
+> + *	@irq_base:	Interrupt number base
+> + *	@irq_offset:	Interrupt number offset
+> + *	@entry:		Pointer to MSI descriptor data
+>   *
+> - *	Set the MSI descriptor entry for an irq
+> + *	Set the MSI descriptor entry for an irq at offset
+>   */
+> -int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
+> +int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
+> +			 struct msi_desc *entry)
+>  {
+>  	unsigned long flags;
+> -	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+> +	struct irq_desc *desc = irq_get_desc_lock(irq_base + irq_offset, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+>  
+>  	if (!desc)
+>  		return -EINVAL;
+>  	desc->irq_data.msi_desc = entry;
+> -	if (entry)
+> -		entry->irq = irq;
+> +	if (entry && !irq_offset)
+> +		entry->irq = irq_base;
+>  	irq_put_desc_unlock(desc, flags);
+>  	return 0;
+>  }
+>  
+>  /**
+> + *	irq_set_msi_desc - set MSI descriptor data for an irq
+> + *	@irq:	Interrupt number
+> + *	@entry:	Pointer to MSI descriptor data
+> + *
+> + *	Set the MSI descriptor entry for an irq
+> + */
+> +int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
+> +{
+> +	return irq_set_msi_desc_off(irq, 0, entry);
+> +}
+> +
+> +/**
+>   *	irq_set_chip_data - set irq chip data for an irq
+>   *	@irq:	Interrupt number
+>   *	@data:	Pointer to chip specific data
+> diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+> index 192a302..8287b78 100644
+> --- a/kernel/irq/irqdesc.c
+> +++ b/kernel/irq/irqdesc.c
+> @@ -210,6 +210,13 @@ static int irq_expand_nr_irqs(unsigned int nr)
+>  	return 0;
+>  }
+>  
+> +static int irq_can_expand_nr_irqs(unsigned int nr)
+> +{
+> +	if (nr > IRQ_BITMAP_BITS)
+> +		return -ENOMEM;
+> +	return 0;
+> +}
+> +
+>  int __init early_irq_init(void)
+>  {
+>  	int i, initcnt, node = first_online_node;
+> @@ -414,6 +421,30 @@ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
+>  }
+>  
+>  /**
+> + * irq_can_alloc_irqs - checks if a range of irqs could be allocated
+> + * @from:	check from irq number
+> + * @cnt:	number of irqs to check
+> + *
+> + * Returns 0 on success or an appropriate error code
+> + */
+> +int irq_can_alloc_irqs(unsigned int from, unsigned int cnt)
+> +{
+> +	unsigned int start;
+> +	int ret = 0;
+> +
+> +	if (!cnt)
+> +		return -EINVAL;
+> +
+> +	mutex_lock(&sparse_irq_lock);
+> +	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
+> +					   from, cnt, 0);
+> +	mutex_unlock(&sparse_irq_lock);
+> +	if (start + cnt > nr_irqs)
+> +		ret = irq_can_expand_nr_irqs(start + cnt);
+> +	return ret;
+
+How is this supposed to work wrt. races?
 
 Thanks,
-Takao Indoh
 
+	Ingo
