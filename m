@@ -1,133 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:10214 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389Ab2JPHLo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 03:11:44 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>,
-	<kernel.openeuler@huawei.com>
-CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 3/3] PCI, pciehp: ARI device hotplug support
-Date: Tue, 16 Oct 2012 15:10:20 +0800
-Message-ID: <1350371420-7888-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1350371420-7888-1-git-send-email-wangyijing@huawei.com>
-References: <1350371420-7888-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21993 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753406Ab2JBGdK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 02:33:10 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 04/10] PCI: Use device_add for device and bus early
+Date: Mon,  1 Oct 2012 23:33:02 -0700
+Message-Id: <1349159588-15029-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ARI device supports up to 256 Functions, pciehp now only scan and configure
-Functions from 0 to 7, this patch fix this problem for ARI device hotplug.
+Move out device registering out of pci_bus_add_devices, so we could
+put new created pci devices in device tree early.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+new pci_bus_add_devices will do the device_attach work to load pci drivers
+instead.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/hotplug/pciehp_pci.c |   40 ++++++++++++++++++++++++++-----------
- 1 files changed, 28 insertions(+), 12 deletions(-)
+ drivers/pci/bus.c   |   34 ++--------------------------------
+ drivers/pci/iov.c   |    7 -------
+ drivers/pci/probe.c |   25 ++++++++++++++++++-------
+ 3 files changed, 20 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 09cecaf..b37e8a0 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -39,7 +39,7 @@ int pciehp_configure_device(struct slot *p_slot)
- 	struct pci_dev *dev;
- 	struct pci_dev *bridge = p_slot->ctrl->pcie->port;
- 	struct pci_bus *parent = bridge->subordinate;
--	int num, fn;
-+	int num, fn = 0;
- 	struct controller *ctrl = p_slot->ctrl;
- 
- 	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
-@@ -56,21 +56,31 @@ int pciehp_configure_device(struct slot *p_slot)
- 		ctrl_err(ctrl, "No new device found\n");
- 		return -ENODEV;
- 	}
--
--	for (fn = 0; fn < 8; fn++) {
--		dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-+
-+	do {
-+		if (pci_ari_enabled(parent))
-+			dev = pci_get_slot(parent, fn);
-+		else
-+			dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-+
-+		fn = pci_next_fn(parent, PCI_DEVFN(0, fn));
- 		if (!dev)
- 			continue;
- 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
- 				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
- 			pci_hp_add_bridge(dev);
- 		pci_dev_put(dev);
--	}
-+	} while (fn);
- 
- 	pci_assign_unassigned_bridge_resources(bridge);
- 
--	for (fn = 0; fn < 8; fn++) {
--		dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-+	do {
-+		if (pci_ari_enabled(parent))
-+			dev = pci_get_slot(parent, fn);
-+		else
-+			dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-+
-+		fn = pci_next_fn(parent, PCI_DEVFN(0, fn));
- 		if (!dev)
- 			continue;
- 		if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY) {
-@@ -79,7 +89,7 @@ int pciehp_configure_device(struct slot *p_slot)
- 		}
- 		pci_configure_slot(dev);
- 		pci_dev_put(dev);
--	}
-+	} while (fn);
- 
- 	pci_bus_add_devices(parent);
- 
-@@ -89,21 +99,27 @@ int pciehp_configure_device(struct slot *p_slot)
- int pciehp_unconfigure_device(struct slot *p_slot)
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 3144262..5b98505 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -179,12 +179,7 @@ static void pci_bus_attach_device(struct pci_dev *dev)
+  */
+ int pci_bus_add_device(struct pci_dev *dev)
  {
- 	int ret, rc = 0;
--	int j;
-+	int fn = 0;
- 	u8 bctl = 0;
- 	u8 presence = 0;
- 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
- 	u16 command;
- 	struct controller *ctrl = p_slot->ctrl;
-+	struct pci_dev *temp;
+-	int retval;
+-
+ 	pci_fixup_device(pci_fixup_final, dev);
+-	retval = device_add(&dev->dev);
+-	if (retval)
+-		return retval;
  
- 	ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
- 		 __func__, pci_domain_nr(parent), parent->number);
- 	ret = pciehp_get_adapter_status(p_slot, &presence);
- 	if (ret)
- 		presence = 0;
-+
-+	do {
-+		if (pci_ari_enabled(parent))
-+			temp = pci_get_slot(parent, fn);
-+		else
-+			temp = pci_get_slot(parent, PCI_DEVFN(0, fn));
+ 	pci_bus_attach_device(dev);
+ 	dev->is_added = 1;
+@@ -201,21 +196,12 @@ int pci_bus_add_device(struct pci_dev *dev)
+  */
+ int pci_bus_add_child(struct pci_bus *bus)
+ {
+-	int retval;
+-
+-	if (bus->bridge)
+-		bus->dev.parent = bus->bridge;
+-
+-	retval = device_add(&bus->dev);
+-	if (retval)
+-		return retval;
+-
+ 	bus->is_added = 1;
  
--	for (j = 0; j < 8; j++) {
--		struct pci_dev *temp = pci_get_slot(parent, PCI_DEVFN(0, j));
-+		fn = pci_next_fn(parent, PCI_DEVFN(0, fn));
- 		if (!temp)
- 			continue;
- 		if (temp->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-@@ -129,7 +145,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 			pci_write_config_word(temp, PCI_COMMAND, command);
- 		}
- 		pci_dev_put(temp);
--	}
-+	} while (fn);
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(bus);
  
- 	return rc;
+-	return retval;
++	return 0;
  }
+ 
+ /**
+@@ -241,36 +227,20 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 		if (dev->is_added)
+ 			continue;
+ 		retval = pci_bus_add_device(dev);
+-		if (retval)
+-			dev_err(&dev->dev, "Error adding device, continuing\n");
+ 	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		BUG_ON(!dev->is_added);
+ 
+ 		child = dev->subordinate;
+-		/*
+-		 * If there is an unattached subordinate bus, attach
+-		 * it and then scan for unattached PCI devices.
+-		 */
++
+ 		if (!child)
+ 			continue;
+-		if (list_empty(&child->node)) {
+-			down_write(&pci_bus_sem);
+-			list_add_tail(&child->node, &dev->bus->children);
+-			up_write(&pci_bus_sem);
+-		}
+ 		pci_bus_add_devices(child);
+ 
+-		/*
+-		 * register the bus with sysfs as the parent is now
+-		 * properly registered.
+-		 */
+ 		if (child->is_added)
+ 			continue;
+ 		retval = pci_bus_add_child(child);
+-		if (retval)
+-			dev_err(&dev->dev, "Error adding bus, continuing\n");
+ 	}
+ }
+ 
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index aeccc91..f286583 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -48,12 +48,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+ 		return NULL;
+ 
+ 	pci_bus_insert_busn_res(child, busnr, busnr);
+-	child->dev.parent = bus->bridge;
+ 	rc = pci_bus_add_child(child);
+-	if (rc) {
+-		pci_remove_bus(child);
+-		return NULL;
+-	}
+ 
+ 	return child;
+ }
+@@ -123,8 +118,6 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+ 	virtfn->is_virtfn = 1;
+ 
+ 	rc = pci_bus_add_device(virtfn);
+-	if (rc)
+-		goto failed1;
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+ 	if (rc)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c3da8f5..c1b7292 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -616,6 +616,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ {
+ 	struct pci_bus *child;
+ 	int i;
++	int ret;
+ 
+ 	/*
+ 	 * Allocate a new bus, and inherit stuff from the parent..
+@@ -630,8 +631,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	child->bus_flags = parent->bus_flags;
+ 
+ 	/* initialize some portions of the bus device, but don't register it
+-	 * now as the parent is not properly set up yet.  This device will get
+-	 * registered later in pci_bus_add_devices()
++	 * now as the parent is not properly set up yet.
+ 	 */
+ 	child->dev.class = &pcibus_class;
+ 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+@@ -645,11 +645,14 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	child->primary = parent->busn_res.start;
+ 	child->busn_res.end = 0xff;
+ 
+-	if (!bridge)
+-		return child;
++	if (!bridge) {
++		child->dev.parent = parent->bridge;
++		goto add_dev;
++	}
+ 
+ 	child->self = bridge;
+ 	child->bridge = get_device(&bridge->dev);
++	child->dev.parent = child->bridge;
+ 	pci_set_bus_of_node(child);
+ 	pci_set_bus_speed(child);
+ 
+@@ -660,6 +663,10 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	}
+ 	bridge->subordinate = child;
+ 
++add_dev:
++	ret = device_add(&child->dev);
++	WARN_ON(ret < 0);
++
+ 	return child;
+ }
+ 
+@@ -1290,6 +1297,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
++	int ret;
++
+ 	device_initialize(&dev->dev);
+ 	dev->dev.release = pci_release_dev;
+ 
+@@ -1320,6 +1329,10 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	down_write(&pci_bus_sem);
+ 	list_add_tail(&dev->bus_list, &bus->devices);
+ 	up_write(&pci_bus_sem);
++
++	/* notifier could use pci capabilities */
++	ret = device_add(&dev->dev);
++	WARN_ON(ret < 0);
+ }
+ 
+ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+@@ -1638,13 +1651,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
+-
+ 	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
+ 
+ 	b->sysdata = sysdata;
+ 	b->ops = ops;
++	b->number = b->busn_res.start = bus;
+ 	b2 = pci_find_bus(pci_domain_nr(b), bus);
+ 	if (b2) {
+ 		/* If we already got to this bus through a different bridge, ignore it */
+@@ -1681,8 +1694,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(b);
+ 
+-	b->number = b->busn_res.start = bus;
+-
+ 	if (parent)
+ 		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
+ 	else
 -- 
-1.7.1
-
+1.7.7
 
