@@ -1,213 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:7643 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755709Ab2JJRHZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Oct 2012 13:07:25 -0400
-Date: Wed, 10 Oct 2012 10:06:32 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@risingtidesystems.com>
-Subject: Re: [1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20121010170631.GE22838@jonmason-lab>
-References: <1349213177-9985-2-git-send-email-jon.mason@intel.com>
- <20121007141344.6624e873@wp.pl>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:59054 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134Ab2JCE6k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 00:58:40 -0400
+Received: by bkcjk13 with SMTP id jk13so5852730bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 21:58:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121007141344.6624e873@wp.pl>
+In-Reply-To: <20121003031018.GB13391@kroah.com>
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+	<CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com>
+	<506B4D4C.3080101@redhat.com>
+	<20121002203951.GA28663@kroah.com>
+	<506B575A.4060304@redhat.com>
+	<20121003031018.GB13391@kroah.com>
+Date: Tue, 2 Oct 2012 21:58:38 -0700
+Message-ID: <CAE9FiQWB-ofvCwHC6q9zUd6zWif79OQyvqdhDsPYFgCA3yxhuA@mail.gmail.com>
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
+ device level
+From: Yinghai Lu <yinghai@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Don Dutile <ddutile@redhat.com>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 07, 2012 at 02:13:44PM +0200, Jakub Kicinski wrote:
-> Hi,
-> 
-> it's good to see some NTB code getting into mainline! I have a few comments
-> though.
-> 
-> On Tue, 02 Oct 2012 21:26:16 -0000, Jon Mason <jon.mason@intel.com>
-> wrote:
-> 
-> [...]
-> >+/**
-> >+ * ntb_write_local_spad() - write to the secondary scratchpad register
-> >+ * @ndev: pointer to ntb_device instance
-> >+ * @idx: index to the scratchpad register, 0 based
-> >+ * @val: the data value to put into the register
-> >+ *
-> >+ * This function allows writing of a 32bit value to the indexed scratchpad
-> >+ * register. The register resides on the secondary (external) side.
-> >+ *
-> >+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
-> >+ */
-> [...]
-> >+/**
-> >+ * ntb_write_remote_spad() - write to the secondary scratchpad register
-> >+ * @ndev: pointer to ntb_device instance
-> >+ * @idx: index to the scratchpad register, 0 based
-> >+ * @val: the data value to put into the register
-> >+ *
-> >+ * This function allows writing of a 32bit value to the indexed scratchpad
-> >+ * register. The register resides on the secondary (external) side.
-> >+ *
-> >+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
-> >+ */
-> 
-> Those comments look suspiciously similar. I think one of the functions
-> does write to primary scratchpad?
+On Tue, Oct 2, 2012 at 8:10 PM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Tue, Oct 02, 2012 at 05:06:34PM -0400, Don Dutile wrote:
+>>
+>> So, why is it ok to create the 'reset' file after the device shows up?
+>
+> It's not, that should be fixed, patches are always welcome.
+>
 
-Yes, the comments can be improved.
+I tried to move "reset" to device type, but it did not work.
 
-> 
-> [...]
-> >+/**
-> >+ * ntb_read_local_spad() - read from the primary scratchpad register
-> >+ * @ndev: pointer to ntb_device instance
-> >+ * @idx: index to scratchpad register, 0 based
-> >+ * @val: pointer to 32bit integer for storing the register value
-> >+ *
-> >+ * This function allows reading of the 32bit scratchpad register on
-> >+ * the primary (internal) side.
-> >+ *
-> >+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
-> >+ */
-> [...]
-> >+/**
-> >+ * ntb_read_remote_spad() - read from the primary scratchpad register
-> >+ * @ndev: pointer to ntb_device instance
-> >+ * @idx: index to scratchpad register, 0 based
-> >+ * @val: pointer to 32bit integer for storing the register value
-> >+ *
-> >+ * This function allows reading of the 32bit scratchpad register on
-> >+ * the primary (internal) side.
-> >+ *
-> >+ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
-> >+ */
-> 
-> Same here.
-> 
-> [...]
-> >+static int ntb_setup_msix(struct ntb_device *ndev)
-> >+{
-> >+	struct pci_dev *pdev = ndev->pdev;
-> >+	struct msix_entry *msix;
-> >+	int msix_entries;
-> >+	int rc, i, pos;
-> >+	u16 val;
-> >+
-> >+	pos = pci_find_capability(pdev, PCI_CAP_ID_MSIX);
-> >+	if (!pos) {
-> >+		rc = -EIO;
-> >+		goto err;
-> >+	}
-> >+
-> >+	rc = pci_read_config_word(pdev, pos + PCI_MSIX_FLAGS, &val);
-> >+	if (rc)
-> >+		goto err;
-> >+
-> >+	msix_entries = msix_table_size(val);
-> >+	if (msix_entries > ndev->limits.msix_cnt) {
-> >+		rc = -EINVAL;
-> >+		goto err;
-> >+	}
-> >+
-> >+	ndev->msix_entries = kmalloc(sizeof(struct msix_entry) * msix_entries,
-> >+				     GFP_KERNEL);
-> >+	if (!ndev->msix_entries) {
-> >+		rc = -ENOMEM;
-> >+		goto err;
-> >+	}
-> >+
-> >+	for (i = 0; i < msix_entries; i++)
-> >+		ndev->msix_entries[i].entry = i;
-> >+
-> >+	rc = pci_enable_msix(pdev, ndev->msix_entries, msix_entries);
-> >+	if (rc < 0)
-> >+		goto err1;
-> >+	if (rc > 0) {
-> 
-> rc > 0 doesn't mean that vectors were allocated. Have a look at the
-> example in Documentation/PCI/MSI-HOWTO.txt.
+Anyway will send out two patches for dev_type and vga again.
 
-Thank you, I will correct this.
-
-> 
-> >+		/* On SNB, the link interrupt is always tied to 4th vector.  If
-> >+		 * we can't get all 4, then we can't use MSI-X.
-> >+		 */
-> >+		if (ndev->hw_type != BWD_HW) {
-> >+			rc = -EIO;
-> >+			goto err1;
-> >+		}
-> 
-> This looks fragile, what if msix_table_size(val) was < 4? 
-
-If there are not at least 4 vectors, then we shouldn't use MSI-X.
-
-> 
-> >+
-> >+		dev_warn(&pdev->dev,
-> >+			 "Only %d MSI-X vectors.  Limiting the number of queues to that number.\n",
-> >+			 rc);
-> >+		msix_entries = rc;
-> >+	}
-> >+
-> >+	for (i = 0; i < msix_entries; i++) {
-> >+		msix = &ndev->msix_entries[i];
-> >+		WARN_ON(!msix->vector);
-> >+
-> >+		/* Use the last MSI-X vector for Link status */
-> >+		if (ndev->hw_type == BWD_HW) {
-> >+			rc = request_irq(msix->vector, bwd_callback_msix_irq, 0,
-> >+					 "ntb-callback-msix", &ndev->db_cb[i]);
-> >+			if (rc)
-> >+				goto err2;
-> >+		} else {
-> >+			if (i == msix_entries - 1) {
-> >+				rc = request_irq(msix->vector,
-> >+						 xeon_event_msix_irq, 0,
-> >+						 "ntb-event-msix", ndev);
-> >+				if (rc)
-> >+					goto err2;
-> >+			} else {
-> >+				rc = request_irq(msix->vector,
-> >+						 xeon_callback_msix_irq, 0,
-> >+						 "ntb-callback-msix",
-> >+						 &ndev->db_cb[i]);
-> >+				if (rc)
-> >+					goto err2;
-> >+			}
-> >+		}
-> >+	}
-> >+
-> >+	ndev->num_msix = msix_entries;
-> >+	if (ndev->hw_type == BWD_HW)
-> >+		ndev->max_cbs = msix_entries;
-> >+	else
-> >+		ndev->max_cbs = msix_entries - 1;
-> >+
-> >+	return 0;
-> >+
-> >+err2:
-> >+	while (--i >= 0) {
-> >+		msix = &ndev->msix_entries[i];
-> >+		if (ndev->hw_type != BWD_HW && i == ndev->num_msix - 1)
-> >+			free_irq(msix->vector, ndev);
-> >+		else
-> >+			free_irq(msix->vector, &ndev->db_cb[i]);
-> >+	}
-> >+	pci_disable_msix(pdev);
-> >+err1:
-> >+	kfree(ndev->msix_entries);
-> >+	dev_err(&pdev->dev, "Error allocating MSI-X interrupt\n");
-> >+err:
-> >+	ndev->num_msix = 0;
-> >+	return rc;
-> >+}
-> 
-> Thanks for your work,
-
-Thanks for the review.
-
-> 
->   -- Kuba
+Yinghai
