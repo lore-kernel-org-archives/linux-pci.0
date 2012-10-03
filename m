@@ -1,243 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37313 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161030Ab2JaVT2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Oct 2012 17:19:28 -0400
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
-Date: Wed, 31 Oct 2012 17:19:08 -0400
-Message-Id: <1351718353-6124-4-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
-References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 2/4] ACPI: use device drivers_autoprobe to delay loading acpi drivers
+Date: Wed,  3 Oct 2012 16:00:12 -0700
+Message-Id: <1349305214-3241-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349305214-3241-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
+ <1349305214-3241-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide files under sysfs to determine the max number of vfs
-an SRIOV-capable PCIe device supports, and methods to enable and
-disable the vfs on a per device basis.
+Current acpi driver for pci_root is working like this way for hotplug:
 
-Currently, VF enablement by SRIOV-capable PCIe devices is done
-in driver-specific module parameters.  If not setup in modprobe files,
-it requires admin to unload & reload PF drivers with number of desired
-VFs to enable.  Additionally, the enablement is system wide: all
-devices controlled by the same driver have the same number of VFs
-enabled.  Although the latter is probably desired, there are PCI
-configurations setup by system BIOS that may not enable that to occur.
+	acpi try to enumberate acpi device and create acpi_device for pci_root
+	and loading driver for it, and that drivers .add aka acpi_pci_root_add
+	calls pci_acpi_scan_root to enumerate pci devices but not add those pci
+	devices into device tree to prevent drivers for pci devices get probed.
 
-Three files are created if a PCIe device has SRIOV support:
-sriov_totalvfs -- cat-ing this file returns the maximum number
-                  of VFs a PCIe device supports as reported by
-                  the TotalVFs in the SRIOV ext cap structure.
-sriov_numvfs -- echo'ing a positive number to this file enables this
-                number of VFs for this given PCIe device.
-             -- echo'ing a 0 to this file disables
-                any previously enabled VFs for this PCIe device.
-             -- cat-ing this file will return the number of VFs
-                currently enabled on this PCIe device, i.e.,
-                the NumVFs field in SRIOV ext. cap structure.
+	Later .start aka acpi_pci_root_start will call pci_bus_add_devices to
+	add pci devices into the tree to make drivers for pci devices get
+	attached or probed.
 
-VF enable and disablement is invoked much like other PCIe
-configuration functions -- via registered callbacks in the driver,
-i.e., probe, release, etc.
+The reason for that .add must get back for pci_root, so could create acpi_device
+for other pci_devices. otherwise adding the pci device tree early than
+acpi_device will cause binding for acpi/pci failing becuse pci_device can not
+find acpi_dev that is not created yet.
 
-Signed-off-by: Donald Dutile <ddutile@redhat.com>
+booting path is working becasue driver for acpi driver is registered later,
+that means all acpi_device get created at first, and later when acpi_driver
+get registered, and .add get called, that probe pci devices, when pci devices
+is found, it could find acpi_device and binding will be ok, even
+pci_add_bus_devices in done in acpi_pci_root_add.
+
+That .start design is broken, and it will leave pci devices out of device tree
+for a while.
+
+We could use device drivers_autoprobe and acpi_bus_type notifier to control
+the process to make sure for hot adding path, will have all acpi_device get
+created, then attach acpi driver for acpi_device for pci_root.
+That will make the path more like booting path.
+
+After that we could remove the workaround .start in acpi driver ops.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 137 +++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h     |   1 +
- 2 files changed, 136 insertions(+), 2 deletions(-)
+ drivers/acpi/scan.c |   46 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 45 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index fbbb97f..83be8ce 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -14,7 +14,6 @@
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index cbb3ed1..1bafa2d 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1474,6 +1474,19 @@ static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
+ 		return -ENODEV;
+ }
+ 
++static void acpi_bus_attach(struct acpi_device *dev)
++{
++	struct acpi_device *child;
++	int ret;
++
++	dev->drivers_autoprobe = true;
++	ret = device_attach(&dev->dev);
++	WARN_ON(ret < 0);
++
++	list_for_each_entry(child, &dev->children, node)
++		acpi_bus_attach(child);
++}
++
+ /*
+  * acpi_bus_add and acpi_bus_start
   *
-  */
- 
--
- #include <linux/kernel.h>
- #include <linux/sched.h>
- #include <linux/pci.h>
-@@ -404,6 +403,110 @@ static ssize_t d3cold_allowed_show(struct device *dev,
- }
- #endif
- 
-+#ifdef CONFIG_PCI_IOV
-+static ssize_t sriov_totalvfs_show(struct device *dev,
-+				   struct device_attribute *attr,
-+				   char *buf)
-+{
-+	struct pci_dev *pdev;
-+	u16 total;
-+
-+	pdev = to_pci_dev(dev);
-+	total = pdev->sriov->total;
-+	return sprintf(buf, "%u\n", total);
-+}
-+
-+
-+static ssize_t sriov_numvfs_show(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct pci_dev *pdev;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	return sprintf(buf, "%u\n", pdev->sriov->nr_virtfn);
-+}
-+
-+/*
-+ * num_vfs > 0; number of vfs to enable
-+ * num_vfs = 0; disable all vfs
-+ *
-+ * Note: SRIOV spec doesn't allow partial VF
-+ *       disable, so its all or none.
-+ */
-+static ssize_t sriov_numvfs_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev;
-+	int num_vfs_enabled = 0;
-+	int num_vfs;
-+	int ret = 0;
-+	u16 total;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	if (kstrtoint(buf, 0, &num_vfs) < 0)
-+		return -EINVAL;
-+
-+	/* is PF driver loaded w/callback */
-+	if (!pdev->driver || !pdev->driver->sriov_configure) {
-+		dev_info(&pdev->dev,
-+			 "Driver doesn't support SRIOV configuration via sysfs\n");
-+		return -ENOSYS;
-+	}
-+
-+	/* if enabling vf's ... */
-+	total = pdev->sriov->total;
-+	/* Requested VFs to enable < totalvfs and none enabled already */
-+	if ((num_vfs > 0) && (num_vfs <= total)) {
-+		if (pdev->sriov->nr_virtfn == 0) {
-+			num_vfs_enabled =
-+				pdev->driver->sriov_configure(pdev, num_vfs);
-+			if ((num_vfs_enabled >= 0) &&
-+			    (num_vfs_enabled != num_vfs))
-+				dev_warn(&pdev->dev,
-+					 "Only %d VFs enabled\n",
-+					 num_vfs_enabled);
-+			return count;
-+		} else if (num_vfs == pdev->sriov->nr_virtfn) {
-+			dev_warn(&pdev->dev,
-+				 "%d VFs already enabled; no enable action taken\n",
-+				 num_vfs);
-+			return count;
-+		} else {
-+			dev_warn(&pdev->dev,
-+				 "%d VFs already enabled. Disable before enabling %d VFs\n",
-+				 pdev->sriov->nr_virtfn, num_vfs);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	/* disable vfs */
-+	if (num_vfs == 0) {
-+		if (pdev->sriov->nr_virtfn != 0) {
-+			ret = pdev->driver->sriov_configure(pdev, 0);
-+			return ret ? ret : count;
-+		} else {
-+			dev_warn(&pdev->dev,
-+				 "All VFs disabled; no disable action taken\n");
-+			return count;
-+		}
-+	}
-+
-+	dev_err(&pdev->dev,
-+		"Invalid value for number of VFs to enable: %d\n", num_vfs);
-+
-+	return -EINVAL;
-+}
-+
-+static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-+static struct device_attribute sriov_numvfs_attr =
-+		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-+		       sriov_numvfs_show, sriov_numvfs_store);
-+#endif /* CONFIG_PCI_IOV */
-+
- struct device_attribute pci_dev_attrs[] = {
- 	__ATTR_RO(resource),
- 	__ATTR_RO(vendor),
-@@ -1409,7 +1512,7 @@ static struct attribute *pci_dev_dev_attrs[] = {
- };
- 
- static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
--						struct attribute *a, int n)
-+					 struct attribute *a, int n)
+@@ -1491,11 +1504,17 @@ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
  {
- 	struct device *dev = container_of(kobj, struct device, kobj);
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -1421,6 +1524,33 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- 	return a->mode;
- }
+ 	struct acpi_bus_ops ops;
++	int result;
  
-+#ifdef CONFIG_PCI_IOV
-+static struct attribute *sriov_dev_attrs[] = {
-+	&sriov_totalvfs_attr.attr,
-+	&sriov_numvfs_attr.attr,
-+	NULL,
-+};
+ 	memset(&ops, 0, sizeof(ops));
+ 	ops.acpi_op_add = 1;
+ 
+-	return acpi_bus_scan(handle, &ops, child);
++	result = acpi_bus_scan(handle, &ops, child);
 +
-+static umode_t sriov_attrs_are_visible(struct kobject *kobj,
-+					 struct attribute *a, int n)
++	if (*child)
++		acpi_bus_attach(*child);
++
++	return result;
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+@@ -1636,3 +1655,28 @@ int __init acpi_scan_init(void)
+ 
+ 	return result;
+ }
++
++static int acpi_hp_notifier(struct notifier_block *nb,
++				 unsigned long event, void *data)
 +{
-+	struct device *dev = container_of(kobj, struct device, kobj);
++	struct device *dev = data;
 +
-+	if ((a == &sriov_totalvfs_attr.attr) ||
-+	    (a == &sriov_numvfs_attr.attr)) {
-+		if (!dev_is_pf(dev))
-+			return 0;
++	switch (event) {
++	case BUS_NOTIFY_ADD_DEVICE:
++		to_acpi_device(dev)->drivers_autoprobe = false;
++		break;
 +	}
 +
-+	return a->mode;
++	return NOTIFY_OK;
 +}
 +
-+static struct attribute_group sriov_dev_attr_group = {
-+	.attrs = sriov_dev_attrs,
-+	.is_visible = sriov_attrs_are_visible,
++static struct notifier_block acpi_hp_nb = {
++	.notifier_call = &acpi_hp_notifier,
 +};
-+#endif /* CONFIG_PCI_IOV */
 +
- static struct attribute_group pci_dev_attr_group = {
- 	.attrs = pci_dev_dev_attrs,
- 	.is_visible = pci_dev_attrs_are_visible,
-@@ -1428,6 +1558,9 @@ static struct attribute_group pci_dev_attr_group = {
- 
- static const struct attribute_group *pci_dev_attr_groups[] = {
- 	&pci_dev_attr_group,
-+#ifdef CONFIG_PCI_IOV
-+	&sriov_dev_attr_group,
-+#endif
- 	NULL,
- };
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee21795..7ef8fba 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -573,6 +573,7 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
-+	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
- 	const struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
++static int __init acpi_hp_init(void)
++{
++	return bus_register_notifier(&acpi_bus_type, &acpi_hp_nb);
++}
++
++fs_initcall(acpi_hp_init);
 -- 
-1.7.10.2.552.gaa3bb87
+1.7.7
 
