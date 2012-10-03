@@ -1,66 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:53356 "EHLO plane.gmane.org"
+Received: from mx1.redhat.com ([209.132.183.28]:61400 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753195Ab2JBGZY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Oct 2012 02:25:24 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1TIvum-0007ti-AZ
-	for linux-pci@vger.kernel.org; Tue, 02 Oct 2012 08:25:08 +0200
-Received: from 99-119-199-15.lightspeed.sntcca.sbcglobal.net ([99.119.199.15])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 08:25:08 +0200
-Received: from paolopiace by 99-119-199-15.lightspeed.sntcca.sbcglobal.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 08:25:08 +0200
-To: linux-pci@vger.kernel.org
-From: Paolo <paolopiace@hotmail.com>
-Subject: Re: =?utf-8?b?cGNpX3JlcXVlc3RfcmVnaW9ucygp?=
-Date: Tue, 2 Oct 2012 06:16:53 +0000 (UTC)
-Message-ID: <loom.20121002T080608-96@post.gmane.org>
-References: <loom.20121002T002058-318@post.gmane.org> <CAErSpo7q4tYwCHnMjovyDVXdCpGrWkqmO5u=1yAAhh7XBL_ASA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S932723Ab2JCSzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Oct 2012 14:55:40 -0400
+Message-ID: <506C8A35.8010100@redhat.com>
+Date: Wed, 03 Oct 2012 14:55:49 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yuvalmin@broadcom.com, bhutchings@solarflare.com,
+	gregory.v.rose@intel.com, davem@davemloft.net--no-chain-reply-to
+Subject: Re: [PATCH 3/5] PCI: add set_max_vfs in pci_driver ops
+References: <506C3B11.9010009@redhat.com> <1349286695-26713-1-git-send-email-yinghai@kernel.org> <1349286695-26713-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349286695-26713-4-git-send-email-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas <at> google.com> writes:
-> 
-> In 2.6.32, the function pci_request_regions() is in the file
-> drivers/pci/pci.c.  It's still there in the current kernel (v3.6).
-> 
-> The stuff below looks like a directory hierarchy, not information
-> about the *contents* of the files.
+On 10/03/2012 01:51 PM, Yinghai Lu wrote:
+> Will use it enable sriov for pci devices.
 >
+> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+> ---
+>   include/linux/pci.h |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index be1de01..7d70a5e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -590,6 +590,7 @@ struct pci_driver {
+>   	const struct pci_device_id *id_table;	/* must be non-NULL for probe to be called */
+>   	int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);	/* New device inserted */
+>   	void (*remove) (struct pci_dev *dev);	/* Device removed (NULL if not a hot-plug capable driver) */
+> +	void (*set_max_vfs) (struct pci_dev *dev); /* enable sriov */
+>   	int  (*suspend) (struct pci_dev *dev, pm_message_t state);	/* Device suspended */
+>   	int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
+>   	int  (*resume_early) (struct pci_dev *dev);
 
-Don't know what to say. There is NO string "pci_request_regions" in any of those
-files. They are just Makefile and Kconfig.
-Yet, I'm working on a driver that calls that function and works just fine.
-How/where does it find that pci_request_regions()?
+I thought I stated the following in your earlier patch set....
 
-Here is the output of the ls command, purged of the dot directories.
+(a) don't use 'set_max_vfs' ;  it is not changing the max; the max
+     is whatever the device supports. This kind of terminology confuses
+     what is being done, and not descripting what is being done.
+(b) this is equiv to the sriov_enable_vfs in the RFC set I sent.
+     -- in this set, it prevents the user trying to do more than one enable,
+        and that check should be done, and reject the request, which solves one
+        of the complaints Alexander had.
 
-paolo@paolo-DT0:/usr/src/linux-headers-2.6.32-43$ ls -laR drivers/pci/
+I'll try to mind-meld your sysfs attr creation patches to mind later today
+and post a new series tonight or tomorrow.  Sorry, stuck in mtgs today (and right now!),
+thus the delay.
 
-drivers/pci/:
-drwxr-xr-x  2 root root 4096 2012-09-20 14:55 hotplug
--rw-r--r--  1 root root 1977 2009-12-02 19:51 Kconfig
--rw-r--r--  1 root root 1600 2009-12-02 19:51 Makefile
-drwxr-xr-x  3 root root 4096 2012-09-20 14:55 pcie
-
-drivers/pci/hotplug:
--rw-r--r-- 1 root root 4907 2009-12-02 19:51 Kconfig
--rw-r--r-- 1 root root 1855 2009-12-02 19:51 Makefile
-
-drivers/pci/pcie:
-drwxr-xr-x 2 root root 4096 2012-09-20 14:55 aer
--rw-r--r-- 1 root root 1241 2009-12-02 19:51 Kconfig
--rw-r--r-- 1 root root  286 2009-12-02 19:51 Makefile
-
-drivers/pci/pcie/aer:
--rw-r--r-- 1 root root  634 2009-12-02 19:51 Kconfig
--rw-r--r-- 1 root root  585 2009-12-02 19:51 Kconfig.debug
--rw-r--r-- 1 root root  294 2009-12-02 19:51 Makefile
-
+- Don
 
