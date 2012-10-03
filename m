@@ -1,55 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:35100 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964850Ab2JCS2G (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 14:28:06 -0400
-Received: by bkcjk13 with SMTP id jk13so6315841bkc.19
-        for <linux-pci@vger.kernel.org>; Wed, 03 Oct 2012 11:28:04 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <C5551D9AAB213A418B7FD5E4A6F30A07153272A0@ORSMSX106.amr.corp.intel.com>
-References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
-	<CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com>
-	<506B4D4C.3080101@redhat.com>
-	<20121002203951.GA28663@kroah.com>
-	<506B575A.4060304@redhat.com>
-	<20121003031018.GB13391@kroah.com>
-	<506C3B11.9010009@redhat.com>
-	<CAE9FiQUH9LUwrX2_5zoaDBe3pBHBXC4rOctpNMwGN2nJM5pMRQ@mail.gmail.com>
-	<C5551D9AAB213A418B7FD5E4A6F30A07153272A0@ORSMSX106.amr.corp.intel.com>
-Date: Wed, 3 Oct 2012 11:28:04 -0700
-Message-ID: <CAE9FiQXzZ_xeAjXgwkhP7iiTnPX-97Jtd=u_-VC7wjeCDWaQAw@mail.gmail.com>
-Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
- device level
+In-Reply-To: <CAE9FiQVpLtMMAvWF-ehKCpNXW=uxwQWhpcHmgRJFDP22AKY1Mw@mail.gmail.com>
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
+	<1349159588-15029-2-git-send-email-yinghai@kernel.org>
+	<20121002133303.GA502@kroah.com>
+	<CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
+	<20121002174712.GA11843@kroah.com>
+	<CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
+	<20121002204548.GC28663@kroah.com>
+	<CAE9FiQV51R2RBAZBPobDifq6jQUhBCyx_Bo8EHxOX4yrUMSnLg@mail.gmail.com>
+	<CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com>
+	<CAE9FiQUXmURaO40sA4ibf7j9sokEHYXK_EaGiEq9b-ob=d1MRw@mail.gmail.com>
+	<CAE9FiQVpLtMMAvWF-ehKCpNXW=uxwQWhpcHmgRJFDP22AKY1Mw@mail.gmail.com>
+Date: Tue, 2 Oct 2012 19:08:50 -0700
+Message-ID: <CAE9FiQUQO97UbWEEA5wrzzaQsUwZ9a9rhvpPwqjo3CbtbA4xAQ@mail.gmail.com>
+Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Rose, Gregory V" <gregory.v.rose@intel.com>
-Cc: Don Dutile <ddutile@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=000e0cd1e0ceabb44a04cb1e1e2a
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 3, 2012 at 11:16 AM, Rose, Gregory V
-<gregory.v.rose@intel.com> wrote:
+--000e0cd1e0ceabb44a04cb1e1e2a
+Content-Type: text/plain; charset=ISO-8859-1
+
+On Tue, Oct 2, 2012 at 7:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Tue, Oct 2, 2012 at 5:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Oct 2, 2012 at 3:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
 >>
->> I resent my patcheset in plain mail instead of attached form.
+>>> I don't know what the right answer is, but I do think it's better to
+>>> resolve it inside PCI and ACPI rather than playing games with driver
+>>> binding times in the driver core.
 >>
->> I am thinking we should ixgbe guys to sort out ixgbe change to use
->> set_max_vfs ops.
+>> is that ok to save that drivers_autoprobe bit in device.archdata for
+>> ia64 and x86 that using acpi?
 >
-> I'm willing to do that but I'm sort of waiting for things to settle out a bit and see which set of patches everyone settles on before diving into it.
+> updated patch to put the bit in pci_dev and acpi_device instead.
+>
+> please check attached patches.
 
-That would be great !
+attached.
 
-Actually your changes to ixgbe should be critical changes.
+--000e0cd1e0ceabb44a04cb1e1e2a
+Content-Type: application/octet-stream;
+	name="autoprobe_stop_core_acpi_only.patch"
+Content-Disposition: attachment;
+	filename="autoprobe_stop_core_acpi_only.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7tsrtcj0
 
-others change to drivers/pci/pci-sysfs.c or adding 3 or 1 methods in driver ops
-is not that really matter.
+U3ViamVjdDogW1BBVENIXSBBQ1BJOiBhZGQgZHJpdmVyc19hdXRvcHJvYmUgaW4gc3RydWN0IGFj
+cGlfZGV2aWNlCgpUbyB1c2UgdG8gY29udHJvbCB0aGUgZGVsYXkgYXR0YWNoIGRyaXZlciBmb3Ig
+YWNwaV9kZXZpY2UuCgpXaWxsIHVzZSBidXMgbm90aWZpZXIgdG8gdG9nZ2xlIHRoaXMgYml0cyB3
+aGVuIG5lZWRlZC4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9y
+Zz4KCi0tLQogZHJpdmVycy9hY3BpL3NjYW4uYyAgICAgfCAgICA4ICsrKysrKystCiBpbmNsdWRl
+L2FjcGkvYWNwaV9idXMuaCB8ICAgIDEgKwogMiBmaWxlcyBjaGFuZ2VkLCA4IGluc2VydGlvbnMo
+KyksIDEgZGVsZXRpb24oLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9hY3BpL3NjYW4uYwo9
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL2FjcGkvc2Nhbi5jCisrKyBsaW51
+eC0yLjYvZHJpdmVycy9hY3BpL3NjYW4uYwpAQCAtMzMzLDcgKzMzMywxMiBAQCBzdGF0aWMgdm9p
+ZCBhY3BpX2RldmljZV9yZWxlYXNlKHN0cnVjdCBkCiBzdGF0aWMgaW50IGFjcGlfYnVzX21hdGNo
+KHN0cnVjdCBkZXZpY2UgKmRldiwgc3RydWN0IGRldmljZV9kcml2ZXIgKmRydikKIHsKIAlzdHJ1
+Y3QgYWNwaV9kZXZpY2UgKmFjcGlfZGV2ID0gdG9fYWNwaV9kZXZpY2UoZGV2KTsKLQlzdHJ1Y3Qg
+YWNwaV9kcml2ZXIgKmFjcGlfZHJ2ID0gdG9fYWNwaV9kcml2ZXIoZHJ2KTsKKwlzdHJ1Y3QgYWNw
+aV9kcml2ZXIgKmFjcGlfZHJ2OworCisJaWYgKCFhY3BpX2Rldi0+ZHJpdmVyc19hdXRvcHJvYmUp
+CisJCXJldHVybiAwOworCisJYWNwaV9kcnYgPSB0b19hY3BpX2RyaXZlcihkcnYpOwogCiAJcmV0
+dXJuICFhY3BpX21hdGNoX2RldmljZV9pZHMoYWNwaV9kZXYsIGFjcGlfZHJ2LT5pZHMpOwogfQpA
+QCAtMTI1OSw2ICsxMjY0LDcgQEAgc3RhdGljIGludCBhY3BpX2FkZF9zaW5nbGVfb2JqZWN0KHN0
+cnVjdAogCWRldmljZS0+cGFyZW50ID0gYWNwaV9idXNfZ2V0X3BhcmVudChoYW5kbGUpOwogCWRl
+dmljZS0+YnVzX29wcyA9ICpvcHM7IC8qIHdvcmtyb3VuZCBmb3Igbm90IGNhbGwgLnN0YXJ0ICov
+CiAJU1RSVUNUX1RPX0lOVChkZXZpY2UtPnN0YXR1cykgPSBzdGE7CisJZGV2aWNlLT5kcml2ZXJz
+X2F1dG9wcm9iZSA9IHRydWU7CiAKIAlhY3BpX2RldmljZV9nZXRfYnVzaWQoZGV2aWNlKTsKIApJ
+bmRleDogbGludXgtMi42L2luY2x1ZGUvYWNwaS9hY3BpX2J1cy5oCj09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxp
+bnV4LTIuNi5vcmlnL2luY2x1ZGUvYWNwaS9hY3BpX2J1cy5oCisrKyBsaW51eC0yLjYvaW5jbHVk
+ZS9hY3BpL2FjcGlfYnVzLmgKQEAgLTMwMCw2ICszMDAsNyBAQCBzdHJ1Y3QgYWNwaV9kZXZpY2Ug
+ewogCXN0cnVjdCBkZXZpY2UgZGV2OwogCXN0cnVjdCBhY3BpX2J1c19vcHMgYnVzX29wczsJLyog
+d29ya2Fyb3VuZCBmb3IgZGlmZmVyZW50IGNvZGUgcGF0aCBmb3IgaG90cGx1ZyAqLwogCWVudW0g
+YWNwaV9idXNfcmVtb3ZhbF90eXBlIHJlbW92YWxfdHlwZTsJLyogaW5kaWNhdGUgZm9yIGRpZmZl
+cmVudCByZW1vdmFsIHR5cGUgKi8KKwlib29sIGRyaXZlcnNfYXV0b3Byb2JlOwogfTsKIAogc3Rh
+dGljIGlubGluZSB2b2lkICphY3BpX2RyaXZlcl9kYXRhKHN0cnVjdCBhY3BpX2RldmljZSAqZCkK
+--000e0cd1e0ceabb44a04cb1e1e2a
+Content-Type: application/octet-stream;
+	name="autoprobe_stop_core_pci_only.patch"
+Content-Disposition: attachment;
+	filename="autoprobe_stop_core_pci_only.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h7tss4wq1
 
-Thanks
-
-Yinghai
+U3ViamVjdDogW1BBVENIXSBQQ0k6IGFkZCBkcml2ZXJzX2F1dG9wcm9iZSBpbiBzdHJ1Y3QgcGNp
+X2RldgoKVG8gdXNlIHRvIGNvbnRyb2wgdGhlIGRlbGF5IGF0dGFjaCBkcml2ZXIgZm9yIHBjaV9k
+ZXYKCldpbGwgdXNlIGJ1cyBub3RpZmllciB0byB0b2dnbGUgdGhpcyBiaXRzIHdoZW4gbmVlZGVk
+LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBk
+cml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMgfCAgICA2ICsrKysrLQogZHJpdmVycy9wY2kvcHJvYmUu
+YyAgICAgIHwgICAgMSArCiBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgfCAgICAxICsKIDMgZmls
+ZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgt
+Mi42L2RyaXZlcnMvcGNpL3BjaS1kcml2ZXIuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3Jp
+Zy9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2kt
+ZHJpdmVyLmMKQEAgLTEyMDYsOSArMTIwNiwxMyBAQCBwY2lfZGV2X2RyaXZlcihjb25zdCBzdHJ1
+Y3QgcGNpX2RldiAqZGV2CiBzdGF0aWMgaW50IHBjaV9idXNfbWF0Y2goc3RydWN0IGRldmljZSAq
+ZGV2LCBzdHJ1Y3QgZGV2aWNlX2RyaXZlciAqZHJ2KQogewogCXN0cnVjdCBwY2lfZGV2ICpwY2lf
+ZGV2ID0gdG9fcGNpX2RldihkZXYpOwotCXN0cnVjdCBwY2lfZHJpdmVyICpwY2lfZHJ2ID0gdG9f
+cGNpX2RyaXZlcihkcnYpOworCXN0cnVjdCBwY2lfZHJpdmVyICpwY2lfZHJ2OwogCWNvbnN0IHN0
+cnVjdCBwY2lfZGV2aWNlX2lkICpmb3VuZF9pZDsKIAorCWlmICghcGNpX2Rldi0+ZHJpdmVyc19h
+dXRvcHJvYmUpCisJCXJldHVybiAwOworCisJcGNpX2RydiA9IHRvX3BjaV9kcml2ZXIoZHJ2KTsK
+IAlmb3VuZF9pZCA9IHBjaV9tYXRjaF9kZXZpY2UocGNpX2RydiwgcGNpX2Rldik7CiAJaWYgKGZv
+dW5kX2lkKQogCQlyZXR1cm4gMTsKSW5kZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5o
+Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxp
+bnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCkBAIC0zMDgsNiArMzA4LDcgQEAgc3RydWN0IHBj
+aV9kZXYgewogCXVuc2lnbmVkIGludAlpcnE7CiAJc3RydWN0IHJlc291cmNlIHJlc291cmNlW0RF
+VklDRV9DT1VOVF9SRVNPVVJDRV07IC8qIEkvTyBhbmQgbWVtb3J5IHJlZ2lvbnMgKyBleHBhbnNp
+b24gUk9NcyAqLwogCisJYm9vbCBkcml2ZXJzX2F1dG9wcm9iZTsKIAkvKiBUaGVzZSBmaWVsZHMg
+YXJlIHVzZWQgYnkgY29tbW9uIGZpeHVwcyAqLwogCXVuc2lnbmVkIGludAl0cmFuc3BhcmVudDox
+OwkvKiBUcmFuc3BhcmVudCBQQ0kgYnJpZGdlICovCiAJdW5zaWduZWQgaW50CW11bHRpZnVuY3Rp
+b246MTsvKiBQYXJ0IG9mIG11bHRpLWZ1bmN0aW9uIGRldmljZSAqLwpJbmRleDogbGludXgtMi42
+L2RyaXZlcnMvcGNpL3Byb2JlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVy
+cy9wY2kvcHJvYmUuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKQEAgLTExOTEs
+NiArMTE5MSw3IEBAIHN0cnVjdCBwY2lfZGV2ICphbGxvY19wY2lfZGV2KHZvaWQpCiAJCXJldHVy
+biBOVUxMOwogCiAJSU5JVF9MSVNUX0hFQUQoJmRldi0+YnVzX2xpc3QpOworCWRldi0+ZHJpdmVy
+c19hdXRvcHJvYmUgPSB0cnVlOwogCiAJcmV0dXJuIGRldjsKIH0K
+--000e0cd1e0ceabb44a04cb1e1e2a--
