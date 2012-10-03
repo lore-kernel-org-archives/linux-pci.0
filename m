@@ -1,48 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:42465 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753680Ab2J2Hpk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Oct 2012 03:45:40 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Micael <kam1kaz3@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Zheng Yan <zheng.z.yan@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: Power regression found on 3.6-rc1+
-Date: Mon, 29 Oct 2012 08:49:38 +0100
-Message-ID: <2972912.ooClOChIux@vostro.rjw.lan>
-In-Reply-To: <CAKw44fY_f69qGXHbcyXvr4i=or4FpB7TDQVijLkN7tv5iU-zrQ@mail.gmail.com>
-References: <CAKw44fY_f69qGXHbcyXvr4i=or4FpB7TDQVijLkN7tv5iU-zrQ@mail.gmail.com>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:41111 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751624Ab2JCBCh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 21:02:37 -0400
+Message-ID: <506B8D7B.8090004@jp.fujitsu.com>
+Date: Wed, 03 Oct 2012 09:57:31 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: andi@firstfloor.org
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121002074434.204.47750.sendpatchset@indoh> <m2mx04wtpz.fsf@firstfloor.org>
+In-Reply-To: <m2mx04wtpz.fsf@firstfloor.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 26, 2012 12:37:36 AM Micael wrote:
-> I have a laptop running Arch Linux and found that upgrading from 3.5.6
-> to 3.6.2 had a huge impact on my battery life. Power consumption went
-> from ~10W to ~20W.
-> I initially thought it was a i915 driver problem since the CPU temps
-> went up and so I opened this bug:
-> https://bugzilla.kernel.org/show_bug.cgi?id=49031
-> 
-> However, as you can see if you read the bug's comments, after
-> bisecting this I found the culprit to be commit
-> 71a83bd727cc31c5fe960c3758cb396267ff710e:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=71a83bd727cc31c5fe960c3758cb396267ff710e
+(2012/10/03 4:37), Andi Kleen wrote:
+> Takao Indoh <indou.takao@jp.fujitsu.com> writes:
+>
+>> These patches reset PCIe devices at boot time to address DMA problem on
+>> kdump with iommu. When "reset_devices" is specified, a hot reset is
+>> triggered on each PCIe root port and downstream port to reset its
+>> downstream endpoint.
+>
+> Great. I've been pondering this for a long time, but you did finally
+> implement it. I hope this will make kdump a lot more reliable at least
+> on the systems that support per port reset.
 
-I wonder what the problem may be here.
+Actually I got the idea of this patch from your comment below;-)
+http://permalink.gmane.org/gmane.linux.network/162414
 
-It looks like the polling change in pci_pme_list_scan() is causing problems
-to happen.
+>
+> Now the only question is: why make it a option and not default?
+
+Except kdump I don't know the situation where this reset is useful, so I
+introduced it as option so that it works only during kdump.
 
 Thanks,
-Rafael
+Takao Indoh
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
