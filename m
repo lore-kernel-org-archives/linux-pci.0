@@ -1,76 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:31856 "EHLO
-	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235Ab2JaKEZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 06:04:25 -0400
-Received: from G4W3011G.americas.hpqcorp.net (g4w3011g.houston.hp.com [16.234.25.125])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by g5t0008.atlanta.hp.com (Postfix) with ESMTPS id DB94324354
-	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 10:04:24 +0000 (UTC)
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: [RFC PATCH ] PCI-AER: Do not report successful error recovery for
- devices with AER-unaware drivers
-Date: Wed, 31 Oct 2012 10:02:10 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C901464A2A@G9W0717.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60882 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932197Ab2JCNAP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 09:00:15 -0400
+Received: by pbbrr4 with SMTP id rr4so9832020pbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 03 Oct 2012 06:00:14 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <506B575A.4060304@redhat.com>
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+	<CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com>
+	<506B4D4C.3080101@redhat.com>
+	<20121002203951.GA28663@kroah.com>
+	<506B575A.4060304@redhat.com>
+Date: Wed, 3 Oct 2012 09:00:14 -0400
+Message-ID: <CACJDEmroM_E3hXR9pc=9+j_gNJs9HZb76=4S5MJGWg2T=FBTWw@mail.gmail.com>
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
+ device level
+From: Konrad Rzeszutek Wilk <konrad@kernel.org>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When an error is detected on a PCIe device which does not have an
-AER-aware driver, prevent AER infrastructure from reporting
-successful error recovery.
+>> Also, you need to do this _before_ the device shows up to userspace,
+>> otherwise you have a race that you just lost with udev and the like.
+>>
+>> thanks,
+>>
+>> greg k-h
+>
+>
+> So, why is it ok to create the 'reset' file after the device shows up?
+> Like reset, SRIOV is optional.  The sysfs files are designed to only
+> be used by userspace utils to enable/disable VFs after the system is up.
 
-This is because the report_error_detected() function that gets
-called in the first phase of recovery process allows forward
-progress even when the driver for the device does not have AER
-capabilities. It seems that all callbacks (in pci_error_handlers
-structure) registered by drivers that gets called during error
-recovery are not mandatory. So the intention of the infrastructure
-design seems to be to allow forward progress even when a specific
-callback has not been registered by a driver. However, if error
-handler structure itself has not been registered, it doesn't make
-sense to allow forward progress.
+It should (the attribute) be there when the device is created. Otherwise you end
+up with the case when udev could call 'reset' attribute the moment the
+SR-IOV device shows up. Or the userspace utility could.
 
-As a result of the current design, in the case of a single device
-having an AER-unaware driver or in the case of any function in a
-multi-function card having an AER-unaware driver, a successful
-recovery is reported.
+> Or should the design allow a udev rule to be created that if one
+> of these new sriov files exists, then perform a set of read-max-vf &
+> enable n-vf ops ?
 
-Typical scenario this happens is when a PCI device is detached
-from a KVM host and the pci-stub driver on the host claims the
-device. The pci-stub driver does not have error handling capabilities
-but the AER infrastructure still reports that the device recovered
-successfully.
-
-The changes proposed here leaves the device in an unrecovered state
-if the driver for the device or for any function in a multi-function
-card does not have error handler structure registered. This reflects
-the true state of the device and prevents any partial recovery (or no
-recovery at all) reported as successful.
-
-This RFC is to understand if there was any other intention for the
-current design and if the changes proposed have any side-effects.
-
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
----
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 06bad96..030b229 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 
- 	dev->error_state = result_data->state;
- 
-+	if ((!dev->driver || !dev->driver->err_handler) &&
-+		!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
-+		dev_info(&dev->dev, "AER: Error detected but no driver has claimed this device or the driver is AER-unaware\n");
-+		result_data->result = PCI_ERS_RESULT_NONE;
-+		return 1;
-+	}
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
- 		!dev->driver->err_handler->error_detected) {
+Well, that depends on the ingenuity of the udev rules writers.  But we should
+also make sure that the concept is race-free. You don't want the udev
+rules to have 'sleep 1' to work-around the kernel code.
