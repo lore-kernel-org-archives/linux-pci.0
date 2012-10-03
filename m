@@ -1,95 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:37363 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755031Ab2JaXxP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 19:53:15 -0400
-Message-ID: <1351727591.2706.52.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: [PATCH 4/4] PCI,sriov: provide method to reduce the number of
- total VFs supported
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Donald Dutile <ddutile@redhat.com>
-CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-	<yuvalmin@broadcom.com>, <gregory.v.rose@intel.com>,
-	<yinghai@kernel.org>, <davem@davemloft.net>
-Date: Wed, 31 Oct 2012 23:53:11 +0000
-In-Reply-To: <1351718353-6124-5-git-send-email-ddutile@redhat.com>
-References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
-	 <1351718353-6124-5-git-send-email-ddutile@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Don Dutile <ddutile@redhat.com>, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net--no-chain-reply-to,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	John Fastabend <john.r.fastabend@intel.com>,
+	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org
+Subject: [PATCH 5/5] ixgbe: add driver set_max_vfs support
+Date: Wed,  3 Oct 2012 10:51:35 -0700
+Message-Id: <1349286695-26713-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1349286695-26713-1-git-send-email-yinghai@kernel.org>
+References: <506C3B11.9010009@redhat.com>
+ <1349286695-26713-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-10-31 at 17:19 -0400, Donald Dutile wrote:
-> Some implementations of SRIOV provide a capability structure
-> value of TotalVFs that is greater than what the software can support.
-> Provide a method to reduce the capability structure reported value
-> to the value the driver can support.
-> This ensures sysfs reports the current capability of the system,
-> hardware and software.
-> Example for its use: igb & ixgbe -- report 8 & 64 as TotalVFs,
-> but drivers only support 7 & 63 maximum.
-> 
-> Signed-off-by: Donald Dutile <ddutile@redhat.com>
-> ---
->  drivers/pci/iov.c       | 27 ++++++++++++++++++++++++++-
->  drivers/pci/pci-sysfs.c | 10 ++++++++--
->  drivers/pci/pci.h       |  1 +
->  include/linux/pci.h     |  5 +++++
->  4 files changed, 40 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index aeccc91..98c3d37 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -682,7 +682,6 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  
->  	if (!dev->is_physfn)
->  		return -ENODEV;
-> -
->  	return sriov_enable(dev, nr_virtfn);
->  }
->  EXPORT_SYMBOL_GPL(pci_enable_sriov);
+Need ixgbe guys to close the loop to use set_max_vfs instead
+kernel parameters.
 
-This hunk doesn't belong in this patch.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+Cc: Greg Rose <gregory.v.rose@intel.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: John Fastabend <john.r.fastabend@intel.com>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: netdev@vger.kernel.org
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe.h      |    2 +
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |   44 +++++++++++++++++++-----
+ 2 files changed, 37 insertions(+), 9 deletions(-)
 
-> @@ -735,3 +734,29 @@ int pci_num_vf(struct pci_dev *dev)
->  		return dev->sriov->nr_virtfn;
->  }
->  EXPORT_SYMBOL_GPL(pci_num_vf);
-> +
-> +/**
-> + * pci_sriov_set_totalvfs -- reduce the TotalVFs available
-> + * @dev: the PCI PF device
-> + * numvfs: number that should be used for TotalVFs supported
-> + *
-> + * Should be called from PF driver's probe routine with
-> + * device's mutex held.
-> + *
-> + * Returns 0 if PF is an SRIOV-capable device and
-> + * value of numvfs valid, otherwise -EINVAL
-
-This says the only possible error is -EINVAL, but it can also return
--EIO!  And the already-enabled case might be one that some drivers will
-need to handle specially.
-
-> + */
-> +int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
-> +{
-> +	if (!dev || !dev->is_physfn || (numvfs > dev->sriov->total))
-> +		return -EINVAL;
-> +
-> +	/* Shouldn't change if VFs already enabled */
-> +	if (dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
-> +		return -EIO;
-[...]
-
-EBUSY seems a bit more appropriate.
-
-Ben.
-
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe.h b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+index b9623e9..d39d975 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe.h
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+@@ -558,6 +558,8 @@ struct ixgbe_adapter {
+ 	u32 interrupt_event;
+ 	u32 led_reg;
+ 
++	struct ixgbe_info *ixgbe_info;
++
+ #ifdef CONFIG_IXGBE_PTP
+ 	struct ptp_clock *ptp_clock;
+ 	struct ptp_clock_info ptp_caps;
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+index ee61819..1c097c7 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+@@ -129,13 +129,6 @@ static struct notifier_block dca_notifier = {
+ };
+ #endif
+ 
+-#ifdef CONFIG_PCI_IOV
+-static unsigned int max_vfs;
+-module_param(max_vfs, uint, 0);
+-MODULE_PARM_DESC(max_vfs,
+-		 "Maximum number of virtual functions to allocate per physical function - default is zero and maximum value is 63");
+-#endif /* CONFIG_PCI_IOV */
+-
+ static unsigned int allow_unsupported_sfp;
+ module_param(allow_unsupported_sfp, uint, 0);
+ MODULE_PARM_DESC(allow_unsupported_sfp,
+@@ -4496,7 +4489,7 @@ static int __devinit ixgbe_sw_init(struct ixgbe_adapter *adapter)
+ #ifdef CONFIG_PCI_IOV
+ 	/* assign number of SR-IOV VFs */
+ 	if (hw->mac.type != ixgbe_mac_82598EB)
+-		adapter->num_vfs = (max_vfs > 63) ? 0 : max_vfs;
++		adapter->num_vfs = min_t(int, pdev->max_vfs, 63);
+ 
+ #endif
+ 	/* enable itr by default in dynamic mode */
+@@ -7220,8 +7213,9 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
+ 
+ #ifdef CONFIG_PCI_IOV
+ 	ixgbe_enable_sriov(adapter, ii);
+-
+ #endif
++	adapter->ixgbe_info = ii;
++
+ 	netdev->features = NETIF_F_SG |
+ 			   NETIF_F_IP_CSUM |
+ 			   NETIF_F_IPV6_CSUM |
+@@ -7683,11 +7677,43 @@ static const struct pci_error_handlers ixgbe_err_handler = {
+ 	.resume = ixgbe_io_resume,
+ };
+ 
++static void ixgbe_set_max_vfs(struct pci_dev *pdev)
++{
++#ifdef CONFIG_PCI_IOV
++	struct ixgbe_adapter *adapter = pci_get_drvdata(pdev);
++	struct ixgbe_hw *hw = &adapter->hw;
++	int num_vfs = 0;
++
++	/* assign number of SR-IOV VFs */
++	if (hw->mac.type != ixgbe_mac_82598EB)
++		num_vfs = min_t(int, pdev->max_vfs, 63);
++
++	/* no change */
++	if (adapter->num_vfs == num_vfs)
++		return;
++
++	if (!num_vfs) {
++		/* disable sriov */
++		ixgbe_disable_sriov(adapter);
++		adapter->num_vfs = 0;
++	} else if (!adapter->num_vfs && num_vfs) {
++		/* enable sriov */
++		adapter->num_vfs = num_vfs;
++		ixgbe_enable_sriov(adapter, adapter->ixgbe_info);
++	} else {
++		/* increase or decrease */
++	}
++
++	pdev->max_vfs = adapter->num_vfs;
++#endif
++}
++
+ static struct pci_driver ixgbe_driver = {
+ 	.name     = ixgbe_driver_name,
+ 	.id_table = ixgbe_pci_tbl,
+ 	.probe    = ixgbe_probe,
+ 	.remove   = __devexit_p(ixgbe_remove),
++	.set_max_vfs = ixgbe_set_max_vfs,
+ #ifdef CONFIG_PM
+ 	.suspend  = ixgbe_suspend,
+ 	.resume   = ixgbe_resume,
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+1.7.7
 
