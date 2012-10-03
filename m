@@ -1,51 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:27256 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757077Ab2JDQOW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 12:14:22 -0400
-Date: Thu, 4 Oct 2012 18:14:21 +0200
-From: "Roedel, Joerg" <Joerg.Roedel@amd.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Andreas Hartmann <andihartmann@01019freenet.de>,
-	<kvm@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: vfio: missing patch in linux 3.6
-Message-ID: <20121004161421.GV4009@amd.com>
-References: <506DA799.5090603@01019freenet.de>
- <1349364399.2759.42.camel@ul30vt.home>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:35100 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964850Ab2JCS2G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 14:28:06 -0400
+Received: by bkcjk13 with SMTP id jk13so6315841bkc.19
+        for <linux-pci@vger.kernel.org>; Wed, 03 Oct 2012 11:28:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1349364399.2759.42.camel@ul30vt.home>
+In-Reply-To: <C5551D9AAB213A418B7FD5E4A6F30A07153272A0@ORSMSX106.amr.corp.intel.com>
+References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+	<CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com>
+	<506B4D4C.3080101@redhat.com>
+	<20121002203951.GA28663@kroah.com>
+	<506B575A.4060304@redhat.com>
+	<20121003031018.GB13391@kroah.com>
+	<506C3B11.9010009@redhat.com>
+	<CAE9FiQUH9LUwrX2_5zoaDBe3pBHBXC4rOctpNMwGN2nJM5pMRQ@mail.gmail.com>
+	<C5551D9AAB213A418B7FD5E4A6F30A07153272A0@ORSMSX106.amr.corp.intel.com>
+Date: Wed, 3 Oct 2012 11:28:04 -0700
+Message-ID: <CAE9FiQXzZ_xeAjXgwkhP7iiTnPX-97Jtd=u_-VC7wjeCDWaQAw@mail.gmail.com>
+Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
+ device level
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rose, Gregory V" <gregory.v.rose@intel.com>
+Cc: Don Dutile <ddutile@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 04, 2012 at 09:26:39AM -0600, Alex Williamson wrote:
-> On Thu, 2012-10-04 at 17:13 +0200, Andreas Hartmann wrote:
-> > Hello Alex,
-> > 
-> > I just tested vfio as part of linux 3.6 and detected, that it doesn't
-> > work because of the following missing patch:
-> > 
-> > http://news.gmane.org/find-root.php?group=gmane.linux.kernel.pci&article=16422
-> > 
-> > Could you please get it applied for the next stable release?
-> 
-> Hi Andreas,
-> 
-> This patch needs to go through Bjorn's PCI tree, but as noted in the
-> comments I have some outstanding questions that need to be answered,
-> probably by Joerg.  Thanks,
+On Wed, Oct 3, 2012 at 11:16 AM, Rose, Gregory V
+<gregory.v.rose@intel.com> wrote:
+>>
+>> I resent my patcheset in plain mail instead of attached form.
+>>
+>> I am thinking we should ixgbe guys to sort out ixgbe change to use
+>> set_max_vfs ops.
+>
+> I'm willing to do that but I'm sort of waiting for things to settle out a bit and see which set of patches everyone settles on before diving into it.
 
-What are the open questions? I have confirmation from the hardware
-people that the south bridges are peer-2-peer safe. Other questions?
+That would be great !
 
+Actually your changes to ixgbe should be critical changes.
 
-	Joerg
+others change to drivers/pci/pci-sysfs.c or adding 3 or 1 methods in driver ops
+is not that really matter.
 
--- 
-AMD Operating System Research Center
+Thanks
 
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
-
+Yinghai
