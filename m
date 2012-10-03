@@ -1,105 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:48522 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473Ab2JAQ2m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Oct 2012 12:28:42 -0400
-Received: by lbon3 with SMTP id n3so4217750lbo.19
-        for <linux-pci@vger.kernel.org>; Mon, 01 Oct 2012 09:28:41 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:38687 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753696Ab2JCUle (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 16:41:34 -0400
 MIME-Version: 1.0
-In-Reply-To: <20120930000934.Horde.grdOKKGZi1VQZ3GeI_YW9ZA@webmail.df.eu>
-References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
- <20120917115619.13d3a3cb@pyramind.ukuu.org.uk> <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
- <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
- <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
- <20120924235457.GA31372@google.com> <20120930000934.Horde.grdOKKGZi1VQZ3GeI_YW9ZA@webmail.df.eu>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 1 Oct 2012 10:28:20 -0600
-Message-ID: <CAErSpo4ErJsp5pWNLsu3x4YL9ZrtxHfk0tkYL7hZaY5TmMtH+A@mail.gmail.com>
-Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
- uninitialized ICH4 IDE EXBAR mem resource
-To: Stephan Schreiber <info@fs-driver.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kernel@vger.kernel.org, 679545@bugs.debian.org,
-	jrnieder@gmail.com
+In-Reply-To: <506C8A35.8010100@redhat.com>
+References: <506C3B11.9010009@redhat.com>
+	<1349286695-26713-1-git-send-email-yinghai@kernel.org>
+	<1349286695-26713-4-git-send-email-yinghai@kernel.org>
+	<506C8A35.8010100@redhat.com>
+Date: Wed, 3 Oct 2012 13:41:33 -0700
+Message-ID: <CAE9FiQUq_AJUs04-UKYc+VbsXNihMh5cS_Xf4qW5=tSgU66kUQ@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: add set_max_vfs in pci_driver ops
+From: Yinghai Lu <yinghai@kernel.org>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	yuvalmin@broadcom.com, bhutchings@solarflare.com,
+	gregory.v.rose@intel.com, davem@davemloft.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 29, 2012 at 4:09 PM, Stephan Schreiber <info@fs-driver.org> wrote:
-> Hello Bjorn,
-> thank you very much for the patch.
-> I tested it; it works.
->
-> (typing mistake: it must read PCI_COMMAND_MEMORY instead of PCI_COMMAND_MEM
-> at one location;
-> some hunks of the patch couldn't be applied automatically on Kernel 3.2.23
-> because some comments in the contexts are different)
-
-Thanks a lot for testing this!  I'll fix up this typo and work on
-getting something like this merged.
-
-> The dmesg output:
->
-> [    0.000000] Initializing cgroup subsys cpuset
-> [    0.000000] Initializing cgroup subsys cpu
-> [    0.000000] Linux version 3.2.0-3-mckinley (Debian 3.2.23-1)
-> (debian-kernel@lists.debian.org) (gcc version 4.6.3 (Debian 4.6.3-8) ) #1
-> SMP Fri Sep 28 21:57:11 CEST 2012
-> ...
-> [    0.065510] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
-> [    0.065524] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
-> [    0.065535] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
-> [    0.065546] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
-> [    0.065556] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
-> [    0.065567] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
-> [    0.065578] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff unset]
-> ...
-> [    1.391380] libata version 3.00 loaded.
-> [    1.391922] ata_piix 0000:00:1f.1: version 2.13
-> [    1.391938] ata_piix 0000:00:1f.1: can't derive routing for PCI INT A
-> [    1.392493] scsi0 : ata_piix
-> [    1.392886] scsi1 : ata_piix
-> [    1.393018] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1000 irq
-> 34
-> [    1.393066] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1008 irq
-> 33
-> [    1.557756] ata1.00: ATAPI: HL-DT-ST DVDRAM GSA-T40N, JR03, max UDMA/33
-> [    1.573616] ata1.00: configured for UDMA/33
-> [    1.579147] scsi 0:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-T40N
-> JR03 PQ: 0 ANSI: 5
-> [    1.590806] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2
-> cdda tray
-> [    1.590872] cdrom: Uniform CD-ROM driver Revision: 3.20
-> [    1.591272] sr 0:0:0:0: Attached scsi CD-ROM sr0
-> [    1.593910] sr 0:0:0:0: Attached scsi generic sg0 type 5
-> ...
-
->> On x86, Windows normally doesn't reconfigure PCI devices unless it
->> finds a problem with the configuration done by the BIOS.  I suspect
->> it works similarly on ia64.  I would guess that Windows noticed that
->> the MEM bit was not set, and therefore ignored the MEM BAR contents.
+On Wed, Oct 3, 2012 at 11:55 AM, Don Dutile <ddutile@redhat.com> wrote:
+> On 10/03/2012 01:51 PM, Yinghai Lu wrote:
+>>
+>> Will use it enable sriov for pci devices.
+>>
+>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+>> ---
+>>   include/linux/pci.h |    1 +
+>>   1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index be1de01..7d70a5e 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -590,6 +590,7 @@ struct pci_driver {
+>>         const struct pci_device_id *id_table;   /* must be non-NULL for
+>> probe to be called */
+>>         int  (*probe)  (struct pci_dev *dev, const struct pci_device_id
+>> *id);   /* New device inserted */
+>>         void (*remove) (struct pci_dev *dev);   /* Device removed (NULL if
+>> not a hot-plug capable driver) */
+>> +       void (*set_max_vfs) (struct pci_dev *dev); /* enable sriov */
+>>         int  (*suspend) (struct pci_dev *dev, pm_message_t state);      /*
+>> Device suspended */
+>>         int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
+>>         int  (*resume_early) (struct pci_dev *dev);
 >
 >
-> Since I have the four Windows versions 'for Itanium Based Systems' on that
-> box as well (XP, Server 2003, 2008, 2008 R2), I can tell you more:
-> The Device Manager shows a memory range FFBFFC00-FFBFFFFF for the "Intel
-> 82801DB Ultra ATA Storage Controller-24CB" - on any of these Windows
-> versions.
+> I thought I stated the following in your earlier patch set....
+>
+> (a) don't use 'set_max_vfs' ;  it is not changing the max; the max
+>     is whatever the device supports. This kind of terminology confuses
+>     what is being done, and not descripting what is being done.
+> (b) this is equiv to the sriov_enable_vfs in the RFC set I sent.
+>     -- in this set, it prevents the user trying to do more than one enable,
+>        and that check should be done, and reject the request, which solves
+> one
+>        of the complaints Alexander had.
+>
+> I'll try to mind-meld your sysfs attr creation patches to mind later today
+> and post a new series tonight or tomorrow.  Sorry, stuck in mtgs today (and
+> right now!),
+> thus the delay.
 
-Oh, that's good data, thanks!  It looks like Windows noticed that the
-BAR was invalid and assigned a valid resource to it.  That's in the
-third aperture below:
+Sure. please update 3, 4 as your like, and ask greg.rose work on patch 5.
 
-ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-01])
-pci_root PNP0A03:00: host bridge window [mem 0x000a0000-0x000fffff]
-pci_root PNP0A03:00: host bridge window [mem 0xfa000000-0xfbffffff]
-pci_root PNP0A03:00: host bridge window [mem 0xff000000-0xffffffff]
-pci_root PNP0A03:00: host bridge window [mem 0xfec00000-0xfec0ffff]
+Thanks
 
-Linux *should* probably do the same (though at a different actual
-address because we assign bottom-up instead of top-down as Windows
-does).  I don't know off the top of my head whether we actually do in
-this case or not.
-
-What's the output of "dmesg | grep 0000:00:1f.1; lspci -vs00:1f.1"?
+Yinghai
