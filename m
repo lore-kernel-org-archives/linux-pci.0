@@ -1,68 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:18637 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756436Ab2JSNLa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2012 09:11:30 -0400
-Date: Fri, 19 Oct 2012 08:59:19 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: David Vrabel <david.vrabel@citrix.com>, bhelgaas@google.com
-Cc: xen-devel@lists.xen.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/5] xen-pcifront: handle backend CLOSED without CLOSING
-Message-ID: <20121019125919.GC26830@phenom.dumpdata.com>
-References: <507FD39F.4060601@citrix.com>
- <1350554618-14582-3-git-send-email-david.vrabel@citrix.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:62166 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412Ab2JDWBX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 18:01:23 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1350554618-14582-3-git-send-email-david.vrabel@citrix.com>
+In-Reply-To: <15022838.BvGHsiOjXu@vostro.rjw.lan>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
+	<16287303.8DVGGcjq5E@vostro.rjw.lan>
+	<CAE9FiQU=h8mchDHCQ31U-UpPhqmFiO_H5yX2uonsyOh3tK9DYA@mail.gmail.com>
+	<15022838.BvGHsiOjXu@vostro.rjw.lan>
+Date: Thu, 4 Oct 2012 15:01:21 -0700
+Message-ID: <CAE9FiQXDBaiwckKsUi4k34=O1GnkTOJf+mG33cKHDp8RGqrsnA@mail.gmail.com>
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 18, 2012 at 11:03:36AM +0100, David Vrabel wrote:
-> From: David Vrabel <david.vrabel@citrix.com>
-> 
-> Backend drivers shouldn't transistion to CLOSED unless the frontend is
-> CLOSED.  If a backend does transition to CLOSED too soon then the
-> frontend may not see the CLOSING state and will not properly shutdown.
-> 
-> So, treat an unexpected backend CLOSED state the same as CLOSING.
-> 
-> Signed-off-by: David Vrabel <david.vrabel@citrix.com>
-> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
-> Cc: linux-pci@vger.kernel.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Oct 4, 2012 at 2:53 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday 04 of October 2012 14:31:46 Yinghai Lu wrote:
+>> On Thu, Oct 4, 2012 at 2:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >>
+>> >> At last we could remove all acpi_bus_start workaround.
+>> >
+>> > Do I understand correctly that you just want to prevent acpi_pci_root_driver
+>> > from binding to the host bridge's struct acpi_device created while we're
+>> > walking the ACPI namespace?
+>>
+>> yes, during hot add path.
+>
+> Why exactly do you want to prevent that from happening?
+>
 
-Bjorn, do you want me to prep a git pull with this patch
-or can I have your Ack to put it my tree and have it part of my
-git pull to Linus?
+during adding pci root bus hotplug, Bjorn found some unsafe searching
+that caused by pci_bus_add_devices.
+pci devices are created during pci scan root, but until very late
+acpi_pci_root_start call pci_bus_add_devices.
 
-Thx.
-> ---
->  drivers/pci/xen-pcifront.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index 0aab85a..a0c7312 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -1068,13 +1068,16 @@ static void __init_refok pcifront_backend_changed(struct xenbus_device *xdev,
->  	case XenbusStateInitialising:
->  	case XenbusStateInitWait:
->  	case XenbusStateInitialised:
-> -	case XenbusStateClosed:
->  		break;
->  
->  	case XenbusStateConnected:
->  		pcifront_try_connect(pdev);
->  		break;
->  
-> +	case XenbusStateClosed:
-> +		if (xdev->state == XenbusStateClosed)
-> +			break;
-> +		/* Missed the backend's CLOSING state -- fallthrough */
->  	case XenbusStateClosing:
->  		dev_warn(&xdev->dev, "backend going away!\n");
->  		pcifront_try_disconnect(pdev);
-> -- 
-> 1.7.2.5
+To fill the gap, we need to move pci_bus_add_devices to acpi_pci_root_add
+at first.
+
+but after we move that there, pci device will be added to device tree, and it
+will try to bind with acpi devices that should be under acpi pci root,
+but are not
+created yet. because device_add for acpi_device for acpi pci root is done yet.
+it still calling the .add in the acpi_driver aka acpi_pci_root_add.
+
+So I want to hold the driver attach for pci root acpi devices, and
+later attach it
+until pci devices created.
+
+booting path, all acpi devices get created, and attach driver for them
+one by one.
