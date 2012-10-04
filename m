@@ -1,79 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, lenb@kernel.org, bhelgaas@google.com,
-	izumi.taku@jp.fujitsu.com, jiang.liu@huawei.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Tang Chen <tangchen@cn.fujitsu.com>
-Subject: [PATCH 2/3] Do not use acpi_device to find pci root bridge in _init code.
-Date: Fri, 12 Oct 2012 18:31:29 +0800
-Message-Id: <1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:50297 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965590Ab2JDPNv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 11:13:51 -0400
+MIME-Version: 1.0
+In-Reply-To: <20121004141505.GJ9158@phenom.dumpdata.com>
+References: <506C3B11.9010009@redhat.com>
+	<1349286695-26713-1-git-send-email-yinghai@kernel.org>
+	<1349286695-26713-5-git-send-email-yinghai@kernel.org>
+	<20121004141505.GJ9158@phenom.dumpdata.com>
+Date: Thu, 4 Oct 2012 08:13:50 -0700
+Message-ID: <CAE9FiQWK0jckdXx6S8LCLDSAfU8+318Qp1txe14McmvZN3v6MA@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI: Add max_vfs in sysfs per pci device where supports
+From: Yinghai Lu <yinghai@kernel.org>
+To: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Don Dutile <ddutile@redhat.com>, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the kernel is being initialized, and some hardwares are not added
-to system, there won't be acpi_device structs for these devices. But
-acpi_is_root_bridge() depends on acpi_device struct. As a result, all
-the not-added root bridge will not be judged as a root bridge in
-find_root_bridges(). And further more, no handle_hotplug_event_root()
-notifier will be installed for them.
+On Thu, Oct 4, 2012 at 7:15 AM, Konrad Rzeszutek Wilk <konrad@kernel.org> wrote:
+> On Wed, Oct 03, 2012 at 10:51:34AM -0700, Yinghai Lu wrote:
+>> only pci device that support sriov will have max_vfs show up in /sys
+>   ^-Only   ^-devices           ^-SRIOV
+>
+>>
+>> when user set value in /sys, driver ops set_max_vfs will be called to enable
+>> VF there.
+>
+> Huh? What value? What are they enabling? Your comment makes it sound as
+> if setting any value (say '0xdeadbeef') will be called to enable a VF.
+>
+> I don't think that is what the code does. Can you explain what the
+> proper values are to be submitted to the SysFS value 'max_vfs' and
+> what the kernel ought to be doing? Perhaps include a little snippet
+> from the kernel log so if somebody has a bug they can look at see
+> what you got and can compare?
 
-This patch introduces a new api to find all root bridges in system by
-getting HID directly from ACPI namespace, not depending on acpi_device
-struct.
+I sent out this patches  as reference or base for Don and greg.rose
+and other sriov guys.
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
----
- drivers/acpi/pci_root.c |   27 ++++++++++++++++++++++-----
- 1 files changed, 22 insertions(+), 5 deletions(-)
+Anyway, thank you for review them.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 7d0fb03..3819bee 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -128,9 +128,6 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
- /**
-  * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
-  * @handle - the ACPI CA node in question.
-- *
-- * Note: we could make this API take a struct acpi_device * instead, but
-- * for now, it's more convenient to operate on an acpi_handle.
-  */
- int acpi_is_root_bridge(acpi_handle handle)
- {
-@@ -138,8 +135,28 @@ int acpi_is_root_bridge(acpi_handle handle)
- 	struct acpi_device *device;
- 
- 	ret = acpi_bus_get_device(handle, &device);
--	if (ret)
--		return 0;
-+	if (ret) {
-+		/**
-+		 * If a device is not added to the system yet, there won't be
-+		 * an acpi_device struct for it. But it doesn't mean it is not
-+		 * a PCI root bridge. In this case we need to get HID and CID
-+		 * from ACPI namespace directly.
-+		 */
-+		struct acpi_device_info *info;
-+		acpi_status status;
-+		status = acpi_get_object_info(handle, &info);
-+		if (ACPI_FAILURE(status)) {
-+			printk(KERN_ERR PREFIX "%s: Error reading"
-+					       "device info\n", __func__);
-+			return 0;
-+		}
-+
-+		ret = acpi_match_object_info_ids(info, root_device_ids);
-+		if (ret)
-+			return 0;
-+		else
-+			return 1;
-+	}
- 
- 	ret = acpi_match_device_ids(device, root_device_ids);
- 	if (ret)
--- 
-1.7.1
-
+Yinghai
