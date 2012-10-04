@@ -1,52 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:36550 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754063Ab2JBOaO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 10:30:14 -0400
-Received: by lagh6 with SMTP id h6so2415417lag.19
-        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 07:30:13 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:5902 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754732Ab2JDHzF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Oct 2012 03:55:05 -0400
+Date: Thu, 4 Oct 2012 09:54:43 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 -tip 1/5] x86, MSI: Support multiple MSIs in presense
+ of IRQ remapping
+Message-ID: <20121004075442.GD2258@dhcp-26-207.brq.redhat.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
+ <b15a9b5242c7de5770d2315ea8d13f4dcf63c00b.1349074231.git.agordeev@redhat.com>
+ <20121002045518.GA7756@gmail.com>
+ <20121002110630.GA2258@dhcp-26-207.brq.redhat.com>
+ <20121002112524.GA12420@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <loom.20121002T080608-96@post.gmane.org>
-References: <loom.20121002T002058-318@post.gmane.org> <CAErSpo7q4tYwCHnMjovyDVXdCpGrWkqmO5u=1yAAhh7XBL_ASA@mail.gmail.com>
- <loom.20121002T080608-96@post.gmane.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 2 Oct 2012 08:29:52 -0600
-Message-ID: <CAErSpo6CtjZ-vWHF_q3Gi=kHHWLMMtJ7nOyoBOw_iU1YdA-tXA@mail.gmail.com>
-Subject: Re: pci_request_regions()
-To: Paolo <paolopiace@hotmail.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121002112524.GA12420@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 2, 2012 at 12:16 AM, Paolo <paolopiace@hotmail.com> wrote:
-> Bjorn Helgaas <bhelgaas <at> google.com> writes:
->>
->> In 2.6.32, the function pci_request_regions() is in the file
->> drivers/pci/pci.c.  It's still there in the current kernel (v3.6).
->>
->> The stuff below looks like a directory hierarchy, not information
->> about the *contents* of the files.
->>
->
-> Don't know what to say. There is NO string "pci_request_regions" in any of those
-> files. They are just Makefile and Kconfig.
-> Yet, I'm working on a driver that calls that function and works just fine.
-> How/where does it find that pci_request_regions()?
->
-> Here is the output of the ls command, purged of the dot directories.
->
-> paolo@paolo-DT0:/usr/src/linux-headers-2.6.32-43$ ls -laR drivers/pci/
->
-> drivers/pci/:
-> drwxr-xr-x  2 root root 4096 2012-09-20 14:55 hotplug
-> -rw-r--r--  1 root root 1977 2009-12-02 19:51 Kconfig
-> -rw-r--r--  1 root root 1600 2009-12-02 19:51 Makefile
-> drwxr-xr-x  3 root root 4096 2012-09-20 14:55 pcie
+On Tue, Oct 02, 2012 at 01:25:24PM +0200, Ingo Molnar wrote:
+> > > > @@ -584,8 +586,12 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+> > > >  #define irq_alloc_desc_from(from, node)		\
+> > > >  	irq_alloc_descs(-1, from, 1, node)
+> > > >  
+> > > > +#define irq_alloc_descs_from(from, cnt, node)	\
+> > > > +	irq_alloc_descs(-1, from, cnt, node)
+> > > > +
+> > > 
+> > > Please use inlines instead of macros. Might transform the one 
+> > > above it as well in the process.
+> > 
+> > You mean here do not introduce irq_alloc_descs_from, but rather use
+> > irq_alloc_descs() directly?
+> 
+> My suggestion is to add irq_alloc_descs_from() as a (very 
+> simple) inline function and change irq_alloc_desc_from() to be 
+> an inline function as well.
 
-You don't have a complete kernel source tree.  I think you're looking
-at just a kernel headers tree, e.g., what's installed in Ubuntu by the
-linux-headers package.  You need to install something like the
-"linux-source" package to get the entire source tree.
+These defines were added on purpose with commit ec53cf2 ("irq: don't put
+module.h into irq.h for tracking irqgen modules.") - the relevant hunk is
+below. I suppose we do not want to revert it?
 
-Bjorn
+
+@@ -567,29 +567,21 @@ static inline struct msi_desc *irq_data_get_msi(struct irq_data *d)
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 		struct module *owner);
+ 
+-static inline int irq_alloc_descs(int irq, unsigned int from, unsigned int cnt,
+-		int node)
+-{
+-	return __irq_alloc_descs(irq, from, cnt, node, THIS_MODULE);
+-}
++/* use macros to avoid needing export.h for THIS_MODULE */
++#define irq_alloc_descs(irq, from, cnt, node)	\
++	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE)
+ 
+-void irq_free_descs(unsigned int irq, unsigned int cnt);
+-int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++#define irq_alloc_desc(node)			\
++	irq_alloc_descs(-1, 0, 1, node)
+ 
+-static inline int irq_alloc_desc(int node)
+-{
+-	return irq_alloc_descs(-1, 0, 1, node);
+-}
++#define irq_alloc_desc_at(at, node)		\
++	irq_alloc_descs(at, at, 1, node)
+ 
+-static inline int irq_alloc_desc_at(unsigned int at, int node)
+-{
+-	return irq_alloc_descs(at, at, 1, node);
+-}
++#define irq_alloc_desc_from(from, node)		\
++	irq_alloc_descs(-1, from, 1, node)
+ 
+-static inline int irq_alloc_desc_from(unsigned int from, int node)
+-{
+-	return irq_alloc_descs(-1, from, 1, node);
+-}
++void irq_free_descs(unsigned int irq, unsigned int cnt);
++int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+ 
+ static inline void irq_free_desc(unsigned int irq)
+ {
+
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
