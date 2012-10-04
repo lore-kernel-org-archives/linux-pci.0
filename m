@@ -1,74 +1,39 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5077ECA6.4010302@jp.fujitsu.com>
-Date: Fri, 12 Oct 2012 19:10:46 +0900
-From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Tang Chen <tangchen@cn.fujitsu.com>
-CC: <bhelgaas@google.com>, <lenb@kernel.org>, <yinghai@kernel.org>,
-	<izumi.taku@jp.fujitsu.com>, <jiang.liu@huawei.com>,
-	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Fix a hard coding style when determining if a device
- is a container.
-References: <1350024916-3628-1-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350024916-3628-1-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset="ISO-2022-JP"
+In-Reply-To: <CACJDEmoeD+XwjGnA2WwkeJ5TrsaXfgw+mZHPDcX0+7QZ9_80SA@mail.gmail.com>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
+	<1349305214-3241-1-git-send-email-yinghai@kernel.org>
+	<1349305214-3241-2-git-send-email-yinghai@kernel.org>
+	<CACJDEmoeD+XwjGnA2WwkeJ5TrsaXfgw+mZHPDcX0+7QZ9_80SA@mail.gmail.com>
+Date: Thu, 4 Oct 2012 08:15:44 -0700
+Message-ID: <CAE9FiQVFY1M65smht2vkAAR3nvH+SMUe2NteBvUyZzqabARV2Q@mail.gmail.com>
+Subject: Re: [PATCH 1/4] ACPI: add drivers_autoprobe in struct acpi_device
+From: Yinghai Lu <yinghai@kernel.org>
+To: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tang,
+On Thu, Oct 4, 2012 at 6:03 AM, Konrad Rzeszutek Wilk <konrad@kernel.org> wrote:
+> On Wed, Oct 3, 2012 at 7:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> To use to control the delay attach driver for acpi_device.
+>
+> <blinks>
+> I am not sure what this says. Can you please explain how it controls
+> the delaying of
+> attaching drivers?
+>>
+>> Will use bus notifier to toggle this bits when needed.
+>
+> Will use ..? In a subsequent patch? Which patch? And when is this
+> needed? Is there a patch that needs this?
 
-2012/10/12 15:55, Tang Chen wrote:
-> "ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
-> container_device_ids[], so use it, but not the hard coding style.
+please check patch 0-4 as a whole.
 
-The idea is good.
-
-> 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->   drivers/acpi/container.c |   10 +++++++---
->   1 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-> index 1f9f7d7..448c0e2 100644
-> --- a/drivers/acpi/container.c
-> +++ b/drivers/acpi/container.c
-> @@ -217,6 +217,7 @@ container_walk_namespace_cb(acpi_handle handle,
->   {
->   	char *hid = NULL;
->   	struct acpi_device_info *info;
-> +	struct acpi_device_id *container_id;
->   	acpi_status status;
->   	int *action = context;
->   
-> @@ -232,10 +233,13 @@ container_walk_namespace_cb(acpi_handle handle,
->   		goto end;
->   	}
->   
-> -	if (strcmp(hid, "ACPI0004") && strcmp(hid, "PNP0A05") &&
-> -	    strcmp(hid, "PNP0A06")) {
-> -		goto end;
-> +	for (container_id = container_device_ids;
-> +	     container_id->id[0]; container_id++) {
-> +		if (!strcmp((char *)container_id->id, hid))
-> +			break;
->   	}
-> +	if (!container_id->id[0])
-> +		goto end;
-
-How about prepare is_container_device() function and check whether
-the device is the container device or not as below?
-
-	if (is_container_device())
-		goto end;
-
-Thanks,
-Yasuaki Ishimatsu
-
->   
->   	switch (*action) {
->   	case INSTALL_NOTIFY_HANDLER:
-> 
-
-
+Yinghai
