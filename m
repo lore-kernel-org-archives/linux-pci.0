@@ -1,74 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:38687 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696Ab2JCUle (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 16:41:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <506C8A35.8010100@redhat.com>
-References: <506C3B11.9010009@redhat.com>
-	<1349286695-26713-1-git-send-email-yinghai@kernel.org>
-	<1349286695-26713-4-git-send-email-yinghai@kernel.org>
-	<506C8A35.8010100@redhat.com>
-Date: Wed, 3 Oct 2012 13:41:33 -0700
-Message-ID: <CAE9FiQUq_AJUs04-UKYc+VbsXNihMh5cS_Xf4qW5=tSgU66kUQ@mail.gmail.com>
-Subject: Re: [PATCH 3/5] PCI: add set_max_vfs in pci_driver ops
-From: Yinghai Lu <yinghai@kernel.org>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
+Date: Thu, 04 Oct 2012 23:23:24 +0200
+Message-ID: <16287303.8DVGGcjq5E@vostro.rjw.lan>
+In-Reply-To: <1349305214-3241-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com> <1349305214-3241-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 3, 2012 at 11:55 AM, Don Dutile <ddutile@redhat.com> wrote:
-> On 10/03/2012 01:51 PM, Yinghai Lu wrote:
->>
->> Will use it enable sriov for pci devices.
->>
->> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->> ---
->>   include/linux/pci.h |    1 +
->>   1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index be1de01..7d70a5e 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -590,6 +590,7 @@ struct pci_driver {
->>         const struct pci_device_id *id_table;   /* must be non-NULL for
->> probe to be called */
->>         int  (*probe)  (struct pci_dev *dev, const struct pci_device_id
->> *id);   /* New device inserted */
->>         void (*remove) (struct pci_dev *dev);   /* Device removed (NULL if
->> not a hot-plug capable driver) */
->> +       void (*set_max_vfs) (struct pci_dev *dev); /* enable sriov */
->>         int  (*suspend) (struct pci_dev *dev, pm_message_t state);      /*
->> Device suspended */
->>         int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
->>         int  (*resume_early) (struct pci_dev *dev);
->
->
-> I thought I stated the following in your earlier patch set....
->
-> (a) don't use 'set_max_vfs' ;  it is not changing the max; the max
->     is whatever the device supports. This kind of terminology confuses
->     what is being done, and not descripting what is being done.
-> (b) this is equiv to the sriov_enable_vfs in the RFC set I sent.
->     -- in this set, it prevents the user trying to do more than one enable,
->        and that check should be done, and reject the request, which solves
-> one
->        of the complaints Alexander had.
->
-> I'll try to mind-meld your sysfs attr creation patches to mind later today
-> and post a new series tonight or tomorrow.  Sorry, stuck in mtgs today (and
-> right now!),
-> thus the delay.
+On Wednesday 03 of October 2012 16:00:10 Yinghai Lu wrote:
+> Now acpi_pci_root_driver has two ops: .add and .start, aka acpi_pci_root_add
+> and acpi_pci_root_start.
+> 
+> That is for hotplug handling: .add need to return early to make sure all
+> acpi device could be created and added early. So .start could device_add
+> pci device that are found in acpi_pci_root_add/pci_acpi_scan_root().
+> 
+> That is holding pci devics to be out of devices for while.
+> 
+> We could use bus notifier to handle hotplug case.
+> 	CONFIG_HOTPLUG is enabled always now.
+> Need to add drivers_autoprobe bit in acpi_device to hold attaching drivers
+> for acpi_devices, so could make sure all acpi_devices get created at first.
+> Then acpi_bus_attach() that is called from acpi_bus_add will attach driver
+> for all acpi_devices that are just created.
+> 
+> That make the logic more simple: hotplug path handling just like booting path
+> that drivers are attached after all acpi device get created.
+> 
+> At last we could remove all acpi_bus_start workaround.
 
-Sure. please update 3, 4 as your like, and ask greg.rose work on patch 5.
+Do I understand correctly that you just want to prevent acpi_pci_root_driver
+from binding to the host bridge's struct acpi_device created while we're
+walking the ACPI namespace?
 
-Thanks
+Rafael
 
-Yinghai
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
