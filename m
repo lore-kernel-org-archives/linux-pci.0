@@ -1,48 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51373 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755209Ab2JBRrO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 13:47:14 -0400
-Date: Tue, 2 Oct 2012 10:47:12 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
-Message-ID: <20121002174712.GA11843@kroah.com>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
- <1349159588-15029-2-git-send-email-yinghai@kernel.org>
- <20121002133303.GA502@kroah.com>
- <CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 4 Oct 2012 16:35:11 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
+Message-ID: <20121004143511.GE2258@dhcp-26-207.brq.redhat.com>
+References: <cover.1349074231.git.agordeev@redhat.com>
+ <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
+ <20121002050929.GD7756@gmail.com>
+ <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
+ <506B1A26.2060609@pobox.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <506B1A26.2060609@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 02, 2012 at 10:39:25AM -0700, Yinghai Lu wrote:
-> On Tue, Oct 2, 2012 at 6:33 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Mon, Oct 01, 2012 at 11:32:59PM -0700, Yinghai Lu wrote:
-> >> To use to control the delay attach driver for specific device.
+On Tue, Oct 02, 2012 at 12:45:26PM -0400, Jeff Garzik wrote:
+> >>>+	VPRINTK("ENTER\n");
 > >>
-> >> Will use bus notifier to toggle this bits when needed.
-> >>
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >>Is this per IRQ handler execution debugging code still needed?
+> >>Same for the other VPRINTK() lines in this patch.
 > >
-> > Without a whole lot more context as to why you want this change, no,
-> > sorry, I'll not accept it.
+> >These VPRINKs are only to make new handlers look like ahci_interrupt()
+> >which did not change. I believe, if they need to go it is better to
+> >remove them altogether, with a separate followup patch.
 > 
-> Sorry, I should put you on the to list for the whole patchset.
-> 
-> Those patches address Bjorn's request:
-> 1. kill acpi_pci_root_start in drivers/acpi/pci_root.c
-> 2. register pci device to device as soon as possible, so for_each_pci_device
->    could be used early before pci_bus_add_devices.
-> 
-> please check change log patch2-4.
+> Definitely followup patch material + discussion :)
 
-Sorry, I still don't see what is so special about PCI that they have to
-do something different here.  What am I missing?
+It appears the discussion comes first :)
 
-greg k-h
+As DPRINTKs/VPRINTKs are all over the ATA stack, I do not really realize
+why it should be eliminated in one places (i.e. in hardware handlers) and
+left in anothers. So as long as you would not like to remove them all, I
+would leave it as is for now.
+
+Does it make sense for you?
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
