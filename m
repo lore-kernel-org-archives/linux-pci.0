@@ -1,137 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:10820 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758729Ab2JXRky (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 13:40:54 -0400
-Message-ID: <1351100001.19172.26.camel@misato.fc.hp.com>
-Subject: Re: [PATCH 1/2] Use kacpi_hotplug_wq to handle container hotplug
- event.
-From: Toshi Kani <toshi.kani@hp.com>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 24 Oct 2012 11:33:21 -0600
-In-Reply-To: <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>
-	 <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:35993 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535Ab2JDUOy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 16:14:54 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo48XLzLvziACEi+0nWuRXurHCLnw+iwgqu8-BRutjNtWw@mail.gmail.com>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
+	<1349305214-3241-1-git-send-email-yinghai@kernel.org>
+	<20121004174746.GA24119@google.com>
+	<CAE9FiQWDnrk7VccFLLHucCVSxN5RRS0-8pwYazLy2aw3oqmPLQ@mail.gmail.com>
+	<CAErSpo48XLzLvziACEi+0nWuRXurHCLnw+iwgqu8-BRutjNtWw@mail.gmail.com>
+Date: Thu, 4 Oct 2012 13:14:52 -0700
+Message-ID: <CAE9FiQVyx5EL8RCuHF5rOoT5Zj7ksnAFJgg09hGE_sHfRJJXpw@mail.gmail.com>
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-10-23 at 21:10 +0800, Tang Chen wrote:
-> As the comments in __acpi_os_execute() said:
-> 
-> 	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-> 	because the hotplug code may call driver .remove() functions,
-> 	which invoke flush_scheduled_work/acpi_os_wait_events_complete
-> 	to flush these workqueues.
-> 
-> we should keep the hotplug code in kacpi_hotplug_wq.
-> 
-> But we have the following call series in kernel now:
-> 	acpi_ev_queue_notify_request()
-> 	|--> acpi_os_execute()
-> 	     |--> __acpi_os_execute(type, function, context, 0)
-> 
-> The last parameter 0 makes the container_notify_cb() executed in
-> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
-> into kacpi_hotplug_wq.
+On Thu, Oct 4, 2012 at 12:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> To answer your specific question, yes, I do think drivers that are
+> statically built in probably should be registered before devices are
+> enumerated.  That way, the boot-time case is more similar to the
+> hot-add case.
+>
+> Obviously, for drivers that can be modules, the reverse must work as
+> well (enumerate devices, then load and register the driver).  And then
+> the other order (register driver, then enumerate device) must also
+> work so future hot-adds of the same device type work.
 
-Hi Tang,
+so you will have to handle two paths instead one.
 
-I am curious; is there a particular reason why you use
-alloc_acpi_container_hp_work() instead of acpi_os_hotplug_execute(),
-which is already there in the tree?
-
-Thanks,
--Toshi
-
-
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->  drivers/acpi/container.c |   44 +++++++++++++++++++++++++++++++++++++++++++-
->  1 files changed, 43 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-> index 1f9f7d7..643657a 100644
-> --- a/drivers/acpi/container.c
-> +++ b/drivers/acpi/container.c
-> @@ -72,8 +72,36 @@ static struct acpi_driver acpi_container_driver = {
->  		},
->  };
->  
-> +struct acpi_container_hp_work {
-> +	struct work_struct work;
-> +	acpi_handle handle;
-> +	u32 type;
-> +	void *context;
-> +};
-> +
->  /*******************************************************************/
->  
-> +static void alloc_acpi_container_hp_work(acpi_handle handle, u32 type,
-> +					void *context,
-> +					void (*func)(struct work_struct *work))
-> +{
-> +	struct acpi_container_hp_work *hp_work;
-> +	int ret;
-> +
-> +	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-> +	if (!hp_work)
-> +		return;
-> +
-> +	hp_work->handle = handle;
-> +	hp_work->type = type;
-> +	hp_work->context = context;
-> +
-> +	INIT_WORK(&hp_work->work, func);
-> +	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-> +	if (!ret)
-> +		kfree(hp_work);
-> +}
-> +
->  static int is_device_present(acpi_handle handle)
->  {
->  	acpi_handle temp;
-> @@ -152,14 +180,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
->  	return result;
->  }
->  
-> -static void container_notify_cb(acpi_handle handle, u32 type, void *context)
-> +static void __container_notify_cb(struct work_struct *work)
->  {
->  	struct acpi_device *device = NULL;
->  	int result;
->  	int present;
->  	acpi_status status;
-> +	struct acpi_container_hp_work *hp_work;
-> +	acpi_handle handle;
-> +	u32 type;
->  	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
->  
-> +	hp_work = container_of(work, struct acpi_container_hp_work, work);
-> +	handle = hp_work->handle;
-> +	type = hp_work->type;
-> +
->  	switch (type) {
->  	case ACPI_NOTIFY_BUS_CHECK:
->  		/* Fall through */
-> @@ -211,6 +246,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
->  	return;
->  }
->  
-> +static void container_notify_cb(acpi_handle handle, u32 type,
-> +				void *context)
-> +{
-> +	alloc_acpi_container_hp_work(handle, type, context,
-> +				__container_notify_cb);
-> +}
-> +
->  static acpi_status
->  container_walk_namespace_cb(acpi_handle handle,
->  			    u32 lvl, void *context, void **rv)
-
-
+current booting path sequence are tested more than hot add path.
