@@ -1,144 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30666 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753942Ab2JIIQG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 04:16:06 -0400
-Message-ID: <5073DCCB.2050503@huawei.com>
-Date: Tue, 9 Oct 2012 16:14:03 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
+Date: Thu, 04 Oct 2012 21:54:36 +0200
+Message-ID: <1535647.4ENXPBYvrO@vostro.rjw.lan>
+In-Reply-To: <CAErSpo48XLzLvziACEi+0nWuRXurHCLnw+iwgqu8-BRutjNtWw@mail.gmail.com>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com> <CAE9FiQWDnrk7VccFLLHucCVSxN5RRS0-8pwYazLy2aw3oqmPLQ@mail.gmail.com> <CAErSpo48XLzLvziACEi+0nWuRXurHCLnw+iwgqu8-BRutjNtWw@mail.gmail.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
- device hot removed
-References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <50739D40.8040005@huawei.com> <5073D56C.40705@huawei.com> <5073D76C.9090304@huawei.com>
-In-Reply-To: <5073D76C.9090304@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/10/9 15:51, Jiang Liu wrote:
-> When scanning PCI devices for hot-add, it guarantee function 0 is scanned
-> at first. And when destroying PCI devices for hot-removal, we also need to
-> destroy function 0 at last, but currently there's no such guarantees. 
+On Thursday 04 of October 2012 13:44:42 Bjorn Helgaas wrote:
+> On Thu, Oct 4, 2012 at 12:36 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Thu, Oct 4, 2012 at 10:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> On Wed, Oct 03, 2012 at 04:00:10PM -0700, Yinghai Lu wrote:
+> >> This is a fundamental difference: at boot-time, all the ACPI devices below the
+> >> host bridge already exist before the pci_root.c driver claims the bridge,
+> >> while at hot-add time, pci_root.c claims the bridge *before* those ACPI
+> >> devices exist.
+> >>
+> >> I think this is wrong.  The hot-plug case (where the driver is already
+> >> loaded and binds to the device as soon as it's discovered, before the
+> >> ACPI hierarchy below it is enumerated) seems like the obviously correct
+> >> order.  I think we should change the boot-time order to match that, i.e.,
+> >> we should register pci_root.c *before* enumerating ACPI devices.
+> >
+> > in booting path, all device get probed at first, and then register driver...
+> > do you want to register all pci driver before probing pci devices?
 > 
+> I don't think we should have dependencies either way.  It shouldn't
+> matter whether we enumerate devices first or we register the driver
+> first.  That's why I think the current PCI/ACPI binding is broken --
+> it assumes that we fully enumerate ACPI before the driver is
+> registered.
+> 
+> To answer your specific question, yes, I do think drivers that are
+> statically built in probably should be registered before devices are
+> enumerated.  That way, the boot-time case is more similar to the
+> hot-add case.
+> 
+> Obviously, for drivers that can be modules, the reverse must work as
+> well (enumerate devices, then load and register the driver).  And then
+> the other order (register driver, then enumerate device) must also
+> work so future hot-adds of the same device type work.
 
-This is an issue, btw in pciehp now only try to hot remove fun from 0 --> 8,
-ARI device supports up to 256 function device.
-for (j = 0; j < 8; j++) {
-	struct pci_dev *temp = pci_get_slot(parent, PCI_DEVFN(0, j));
-	if (!temp)
-		continue;
+Agreed.
 
-
-> On 2012-10-9 15:42, Yijing Wang wrote:
->> On 2012/10/9 11:42, Jiang Liu wrote:
->>> How about this patch, which disables ARI when adding new PCI devices?
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 5485883..c841aa6 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->>>  void pci_enable_ari(struct pci_dev *dev)
->>>  {
->>
->> I think it's ok. Delay to disable ARI until next hot add is safe.
->> Maybe rename as pci_configure_ari is better.
->>
->>>         u32 cap;
->>> +       bool enable = true;
->>>         struct pci_dev *bridge;
->>>
->>>         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
->>>                 return;
->>>
->>>         if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
->>> -               return;
->>> +               enable = false;
->>>
->>>         bridge = dev->bus->self;
->>>         if (!bridge)
->>> @@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
->>>         if (!(cap & PCI_EXP_DEVCAP2_ARI))
->>>                 return;
->>>
->>> -       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
->>> -       bridge->ari_enabled = 1;
->>> +       if (enable) {
->>> +               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
->>> +                                        PCI_EXP_DEVCTL2_ARI);
->>> +               bridge->ari_enabled = 1;
->>> +       } else {
->>> +               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
->>> +                                        PCI_EXP_DEVCTL2_ARI);
->>> +               bridge->ari_enabled = 0;
->>> +       }
->>>  }
->>>
->>>  /**
->>>
->>> On 2012-10-9 11:03, Yijing Wang wrote:
->>>> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
->>>> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
->>>> when an ARI device hot removed.
->>>>
->>>> my steps:
->>>> 1. Hot add an ARI pci device;
->>>> 2. Hot remove the ARI pci device;
->>>> 3. Hot add an non ARI pci device;
->>>>
->>>> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
->>>> bit set.
->>>>
->>>> As PCIe Spec 2.0(6.13/441) recommends:
->>>> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
->>>> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
->>>> newly added component is in fact an ARI Device"
->>>>
->>>> This series of patches fix this problem.
->>>>
->>>> Yijing Wang (7):
->>>>   PCI: rework pci_enable_ari for support disable ari forwarding
->>>>   PCI, acpiphp: disable ARI forwarding for acpiphp
->>>>   PCI, pciehp: disable ARI forwarding for pciehp
->>>>   PCI, cpqphp: disable ARI forwarding for cpqphp
->>>>   PCI, shpchp: disable ARI forwarding for shpchp
->>>>   PCI, sgi: disable ARI forwarding for sgiphp
->>>>   PCI, ibmphp: disable ARI forwarding for ibmphp
->>>>
->>>>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
->>>>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
->>>>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
->>>>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
->>>>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
->>>>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
->>>>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
->>>>  drivers/pci/pci.c                      |   16 +++++++++++-----
->>>>  drivers/pci/pci.h                      |    2 +-
->>>>  drivers/pci/probe.c                    |    2 +-
->>>>  10 files changed, 20 insertions(+), 7 deletions(-)
->>>>
->>>>
->>>>
->>>> .
->>>>
->>>
->>>
->>>
->>> .
->>>
->>
->>
-> 
-> 
-> 
-> .
-> 
+Thanks,
+Rafael
 
 
 -- 
-Thanks!
-Yijing
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
