@@ -1,145 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:54886 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754389Ab2JPHLb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 03:11:31 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>,
-	<kernel.openeuler@huawei.com>
-CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 2/3] PCI: introduce pci_next_fn to get next func number
-Date: Tue, 16 Oct 2012 15:10:19 +0800
-Message-ID: <1350371420-7888-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1350371420-7888-1-git-send-email-wangyijing@huawei.com>
-References: <1350371420-7888-1-git-send-email-wangyijing@huawei.com>
+Received: from relay2.sgi.com ([192.48.179.30]:49965 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1422640Ab2JDQC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Oct 2012 12:02:26 -0400
+Message-ID: <506DB30F.2000704@sgi.com>
+Date: Thu, 4 Oct 2012 11:02:23 -0500
+From: Nathan Zimmer <nzimmer@sgi.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH] revert "PCI: log vendor/device ID always"
+References: <1349187780-25692-1-git-send-email-nzimmer@sgi.com> <CAErSpo7ZQEm9==nsGiH2c_ZG8LPP8MAA8M9xSPyWPtCW2EHUUQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7ZQEm9==nsGiH2c_ZG8LPP8MAA8M9xSPyWPtCW2EHUUQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_next_fn function to get next fn number.Since
-this function maybe used by PCI module(eg. pciehp),so export it.
+On 10/03/2012 05:54 PM, Bjorn Helgaas wrote:
+> On Tue, Oct 2, 2012 at 8:23 AM, Nathan Zimmer <nzimmer@sgi.com> wrote:
+>> Revert commit id 2c6413aee215a43b1f95e218067abcde50ccbc5e
+>> On larger systems (256 cores+) with signifigant IO attached this single message
+>> represents over 20% of the messages at boot.
+> Is this causing a problem?  The messages are at KERN_DEBUG, so they
+> shouldn't be going to the console by default anyway.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/pci.h   |    1 +
- drivers/pci/probe.c |   67 +++++++++++++++++++++++++++++---------------------
- 2 files changed, 40 insertions(+), 28 deletions(-)
+The problems is that it really does tend to overwhelm dmesg on large 
+systems.
+This causes two issues, one is it makes it harder to notice unexpected 
+messages, second it tends to push out more other messages.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d6eb3d9..fe411f4 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -212,6 +212,7 @@ extern int pci_resource_bar(struct pci_dev *dev, int resno,
- 			    enum pci_bar_type *type);
- extern int pci_bus_add_child(struct pci_bus *bus);
- extern void pci_configure_ari(struct pci_dev *dev);
-+extern int pci_next_fn(struct pci_bus *parent, int devfn);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index bb7ecf6..435ee60 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1345,33 +1345,49 @@ struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
- }
- EXPORT_SYMBOL(pci_scan_single_device);
- 
--static unsigned next_ari_fn(struct pci_dev *dev, unsigned fn)
-+/**
-+ * pci_next_fn - get next fn number for device
-+ * @bus: PCI bus on which desired PCI Function device resides
-+ * @devfn: encodes number of pci device
-+ *
-+ * return next_fn if success, if can not find next fn or fail,
-+ * 0 is returned.
-+ */
-+int pci_next_fn(struct pci_bus *bus, int devfn)
- {
- 	u16 cap;
--	unsigned pos, next_fn;
--
-+	unsigned pos, next_fn = 0;
-+	struct pci_dev *dev;
-+
-+	if (!bus || devfn < 0)
-+		goto out;
-+
-+	dev = pci_get_slot(bus, devfn);
- 	if (!dev)
--		return 0;
-+		goto out;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
--	if (!pos)
--		return 0;
--	pci_read_config_word(dev, pos + 4, &cap);
--	next_fn = cap >> 8;
--	if (next_fn <= fn)
--		return 0;
-+	if (!pci_ari_enabled(bus)) {
-+		if (!dev->multifunction)
-+			goto release;
-+		else
-+			next_fn = (PCI_FUNC(devfn) + 1) % 8;
-+	} else {
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI);
-+		if (!pos)
-+			goto release;
-+		pci_read_config_word(dev, pos + 4, &cap);
-+		next_fn = cap >> 8;
-+		if (next_fn <= PCI_FUNC(devfn)) {
-+			next_fn = 0;
-+			goto release;
-+		}
-+	}
-+release:
-+	pci_dev_put(dev);
-+out:
- 	return next_fn;
- }
--
--static unsigned next_trad_fn(struct pci_dev *dev, unsigned fn)
--{
--	return (fn + 1) % 8;
--}
--
--static unsigned no_next_fn(struct pci_dev *dev, unsigned fn)
--{
--	return 0;
--}
-+EXPORT_SYMBOL(pci_next_fn);
- 
- static int only_one_child(struct pci_bus *bus)
- {
-@@ -1402,7 +1418,6 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- {
- 	unsigned fn, nr = 0;
- 	struct pci_dev *dev;
--	unsigned (*next_fn)(struct pci_dev *, unsigned) = no_next_fn;
- 
- 	if (only_one_child(bus) && (devfn > 0))
- 		return 0; /* Already scanned the entire slot */
-@@ -1413,12 +1428,8 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- 	if (!dev->is_added)
- 		nr++;
- 
--	if (pci_ari_enabled(bus))
--		next_fn = next_ari_fn;
--	else if (dev->multifunction)
--		next_fn = next_trad_fn;
--
--	for (fn = next_fn(dev, 0); fn > 0; fn = next_fn(dev, fn)) {
-+	for (fn = pci_next_fn(bus, PCI_DEVFN(PCI_SLOT(devfn), 0)); fn > 0;
-+			fn = pci_next_fn(bus, PCI_DEVFN(PCI_SLOT(devfn), fn))) {
- 		dev = pci_scan_single_device(bus, devfn + fn);
- 		if (dev) {
- 			if (!dev->is_added)
--- 
-1.7.1
+At many of our customer sites the log level is set to KERN_DEBUG. It 
+helps avoid reboots due to operator impatience.  Machines this large 
+take significantly longer then typical to boot and seeing the extra 
+messages reassures them that the kernel isn't hung.
 
+> I/O devices normally have at least one BAR, as well as some PME
+> messages, so a change like this won't affect them too much.  My guess
+> is that it's really the large number of CPUs, where we find all the
+> uncore/memory controller/etc stuff where this is a problem.  Those
+> devices don't have BARs, so
+> this line is probably the only information about them in dmesg.
+It certainly appears that this is the only line about them in dmesg.
+
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+>>
+>> Signed-off-by: Nathan Zimmer <nzimmer@sgi.com>
+>> ---
+>>   drivers/pci/probe.c |    4 ++--
+>>   1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 9f8a6b7..a1add54 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1002,8 +1002,8 @@ int pci_setup_device(struct pci_dev *dev)
+>>          dev->revision = class & 0xff;
+>>          dev->class = class >> 8;                    /* upper 3 bytes */
+>>
+>> -       dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %02x class %#08x\n",
+>> -                  dev->vendor, dev->device, dev->hdr_type, dev->class);
+>> +       dev_dbg(&dev->dev, "[%04x:%04x] type %02x class %#08x\n",
+>> +               dev->vendor, dev->device, dev->hdr_type, dev->class);
+>>
+>>          /* need to have dev->class ready */
+>>          dev->cfg_size = pci_cfg_space_size(dev);
+>> --
+>> 1.6.0.2
+>>
 
