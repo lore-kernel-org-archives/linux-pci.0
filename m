@@ -1,80 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:43149 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1757951Ab2JLKcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Oct 2012 06:32:50 -0400
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, lenb@kernel.org, bhelgaas@google.com,
-	izumi.taku@jp.fujitsu.com, jiang.liu@huawei.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Tang Chen <tangchen@cn.fujitsu.com>
-Subject: [PATCH 1/3] Introduce a new acpi to determine HID match.
-Date: Fri, 12 Oct 2012 18:31:28 +0800
-Message-Id: <1350037890-5899-2-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:60988 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965014Ab2JDOW0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 10:22:26 -0400
+Date: Thu, 4 Oct 2012 10:10:59 -0400
+From: Konrad Rzeszutek Wilk <konrad@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Don Dutile <ddutile@redhat.com>, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net--no-chain-reply-to
+Subject: Re: [PATCH 1/5] PCI: Add pci_dev_type
+Message-ID: <20121004141058.GI9158@phenom.dumpdata.com>
+References: <506C3B11.9010009@redhat.com>
+ <1349286695-26713-1-git-send-email-yinghai@kernel.org>
+ <1349286695-26713-2-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1349286695-26713-2-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This introduce a new api to determine if a HID matches a list of IDs.
-Different from acpi_match_device_ids(), the new api gets HID from
-acpi_device_info struct.
+On Wed, Oct 03, 2012 at 10:51:31AM -0700, Yinghai Lu wrote:
+> need to use it for visiable attribute control in syfsfs for pci_dev.
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
----
- drivers/acpi/scan.c     |   24 ++++++++++++++++++++++++
- include/acpi/acpi_bus.h |    2 ++
- 2 files changed, 26 insertions(+), 0 deletions(-)
+Please use 'ispell' before sending your patches.
 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 03c12e6..41fd4c9 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -312,6 +312,30 @@ int acpi_match_device_ids(struct acpi_device *device,
- }
- EXPORT_SYMBOL(acpi_match_device_ids);
- 
-+int acpi_match_object_info_ids(struct acpi_device_info *info,
-+			       const struct acpi_device_id *ids)
-+{
-+	char *hardware_id;
-+	int i, j;
-+
-+	for (i = 0; ids[i].id[0]; i++) {
-+		hardware_id = info->hardware_id.string;
-+		if (hardware_id &&
-+		    !strcmp((char *)ids[i].id, hardware_id))
-+				return 0;
-+
-+		for (j = 0; j < info->compatible_id_list.count; j++) {
-+			hardware_id = info->compatible_id_list.ids[j].string;
-+			if (hardware_id &&
-+			    !strcmp((char *)ids[i].id, hardware_id))
-+				return 0;
-+		}
-+	}
-+
-+	return 1;
-+}
-+EXPORT_SYMBOL(acpi_match_object_info_ids);
-+
- static void acpi_free_ids(struct acpi_device *device)
- {
- 	struct acpi_hardware_id *id, *tmp;
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index f0b9681..f83d581 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -379,6 +379,8 @@ int acpi_bus_start(struct acpi_device *device);
- acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
- int acpi_match_device_ids(struct acpi_device *device,
- 			  const struct acpi_device_id *ids);
-+int acpi_match_object_info_ids(struct acpi_device_info *info,
-+			       const struct acpi_device_id *ids);
- int acpi_create_dir(struct acpi_device *);
- void acpi_remove_dir(struct acpi_device *);
- 
--- 
-1.7.1
 
+Also please explain why do you want this? If I do
+'git annotate' on that file (say six months from now when I've forgotten
+a lot) and try to lookup what 'is_visible' attribute is, I get
+this one line explanation. Worst, the explanation does not
+say *why* we need it - or the *purpose* behind it. Or if there
+are patches that are going to utilize it.
+
+The Documentation/SubmittingPatches says:
+
+	2) Describe your changes.
+
+	Describe the technical detail of the change(s) your patch includes.
+
+	Be as specific as possible.  The WORST descriptions possible include
+	things like "update driver X", "bug fix for driver X", or "this patch
+	includes updates for subsystem X.  Please apply."
+
+	The maintainer will thank you if you write your patch description in a
+	form which can be easily pulled into Linux's source code management
+	system, git, as a "commit log".  See #15, below.
+
+	If your description starts to get long, that's a sign that you probably
+	need to split up your patch.  See #3, next.
+
+	When you submit or resubmit a patch or patch series, include the
+	complete patch description and justification for it.  Don't just
+	say that this is version N of the patch (series).  Don't expect the
+	patch merger to refer back to earlier patch versions or referenced
+	URLs to find the patch description and put that into the patch.
+	I.e., the patch (series) and its description should be self-contained.
+	This benefits both the patch merger(s) and reviewers.  Some reviewers
+	probably didn't even receive earlier versions of the patch.
+
+	If the patch fixes a logged bug entry, refer to that bug entry by
+	number and URL.
+
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/pci-sysfs.c |   24 ++++++++++++++++++++++++
+>  drivers/pci/pci.h       |    1 +
+>  drivers/pci/probe.c     |    1 +
+>  3 files changed, 26 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 02d107b..3d160aa 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1411,3 +1411,27 @@ static int __init pci_sysfs_init(void)
+>  }
+>  
+>  late_initcall(pci_sysfs_init);
+> +
+> +static struct attribute *pci_dev_dev_attrs[] = {
+> +	NULL,
+> +};
+> +
+> +static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+> +						struct attribute *a, int n)
+> +{
+> +	return a->mode;
+> +}
+> +
+> +static struct attribute_group pci_dev_attr_group = {
+> +	.attrs = pci_dev_dev_attrs,
+> +	.is_visible = pci_dev_attrs_are_visible,
+> +};
+> +
+> +static const struct attribute_group *pci_dev_attr_groups[] = {
+> +	&pci_dev_attr_group,
+> +	NULL,
+> +};
+> +
+> +struct device_type pci_dev_type = {
+> +	.groups = pci_dev_attr_groups,
+> +};
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index bacbcba..6f6cd14 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -157,6 +157,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+>  }
+>  extern struct device_attribute pci_dev_attrs[];
+>  extern struct device_attribute pcibus_dev_attrs[];
+> +extern struct device_type pci_dev_type;
+>  #ifdef CONFIG_HOTPLUG
+>  extern struct bus_attribute pci_bus_attrs[];
+>  #else
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index ec909af..0312f1c48 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -975,6 +975,7 @@ int pci_setup_device(struct pci_dev *dev)
+>  	dev->sysdata = dev->bus->sysdata;
+>  	dev->dev.parent = dev->bus->bridge;
+>  	dev->dev.bus = &pci_bus_type;
+> +	dev->dev.type = &pci_dev_type;
+>  	dev->hdr_type = hdr_type & 0x7f;
+>  	dev->multifunction = !!(hdr_type & 0x80);
+>  	dev->error_state = pci_channel_io_normal;
+> -- 
+> 1.7.7
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
