@@ -1,29 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:52181 "HELO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751575Ab2JYWhJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Oct 2012 18:37:09 -0400
-Message-ID: <20121025223706.17034.qmail@stuge.se>
-Date: Fri, 26 Oct 2012 00:37:06 +0200
-From: Peter Stuge <peter@stuge.se>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: shashank chaturvedi <chaturvedi9950@gmail.com>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: xhci Portsc register issue
-References: <CALuomMuUD4xSaCUT6MZn3ZV2gjXnuBUhkz78PgXZ6XgV4e-NvA@mail.gmail.com> <20121025153552.GA5205@xanatos>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:35280 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab2JDSgR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 14:36:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121025153552.GA5205@xanatos>
+In-Reply-To: <20121004174746.GA24119@google.com>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
+	<1349305214-3241-1-git-send-email-yinghai@kernel.org>
+	<20121004174746.GA24119@google.com>
+Date: Thu, 4 Oct 2012 11:36:15 -0700
+Message-ID: <CAE9FiQWDnrk7VccFLLHucCVSxN5RRS0-8pwYazLy2aw3oqmPLQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Len Brown <lenb@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sarah Sharp wrote:
-> I'm not sure, since I've never attempted to memory map PCI registers
-> from userspace.  I was under the impression that you just can't do that.
+On Thu, Oct 4, 2012 at 10:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Oct 03, 2012 at 04:00:10PM -0700, Yinghai Lu wrote:
+> This is a fundamental difference: at boot-time, all the ACPI devices below the
+> host bridge already exist before the pci_root.c driver claims the bridge,
+> while at hot-add time, pci_root.c claims the bridge *before* those ACPI
+> devices exist.
+>
+> I think this is wrong.  The hot-plug case (where the driver is already
+> loaded and binds to the device as soon as it's discovered, before the
+> ACPI hierarchy below it is enumerated) seems like the obviously correct
+> order.  I think we should change the boot-time order to match that, i.e.,
+> we should register pci_root.c *before* enumerating ACPI devices.
 
-Need root, and the kernel still gets a say, but yes, you can just do that.
+in booting path, all device get probed at first, and then register driver...
+do you want to register all pci driver before probing pci devices?
 
-http://stuge.se/physrd.c
-
-
-//Peter
+Yinghai
