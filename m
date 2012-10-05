@@ -1,43 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59054 "EHLO
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:62973 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754134Ab2JCE6k (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 00:58:40 -0400
-Received: by bkcjk13 with SMTP id jk13so5852730bkc.19
-        for <linux-pci@vger.kernel.org>; Tue, 02 Oct 2012 21:58:39 -0700 (PDT)
+	with ESMTP id S1751753Ab2JEXKp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Oct 2012 19:10:45 -0400
 MIME-Version: 1.0
-In-Reply-To: <20121003031018.GB13391@kroah.com>
-References: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
-	<CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com>
-	<506B4D4C.3080101@redhat.com>
-	<20121002203951.GA28663@kroah.com>
-	<506B575A.4060304@redhat.com>
-	<20121003031018.GB13391@kroah.com>
-Date: Tue, 2 Oct 2012 21:58:38 -0700
-Message-ID: <CAE9FiQWB-ofvCwHC6q9zUd6zWif79OQyvqdhDsPYFgCA3yxhuA@mail.gmail.com>
-Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
- device level
+In-Reply-To: <1595267.JDdDB2dfnM@vostro.rjw.lan>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
+	<1938257.EXdpWtCqiy@vostro.rjw.lan>
+	<CAE9FiQXZqBE6BmQ5v-vDq2E5vmyU5QRNrjjYRYONQu6jiHGD6w@mail.gmail.com>
+	<1595267.JDdDB2dfnM@vostro.rjw.lan>
+Date: Fri, 5 Oct 2012 16:10:43 -0700
+Message-ID: <CAE9FiQXraKirjQgRad2t87SmxsonDupkpE2BM6Ktx8yUdCPPiQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
 From: Yinghai Lu <yinghai@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Don Dutile <ddutile@redhat.com>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	davem@davemloft.net
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 2, 2012 at 8:10 PM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Tue, Oct 02, 2012 at 05:06:34PM -0400, Don Dutile wrote:
+On Fri, Oct 5, 2012 at 4:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday 04 of October 2012 15:46:39 Yinghai Lu wrote:
+>> > Your patches seem to affect all devices in the ACPI namespace added after
+>> > boot, though, not only host bridges.
 >>
->> So, why is it ok to create the 'reset' file after the device shows up?
+>> yes, but it still should be safe.
 >
-> It's not, that should be fixed, patches are always welcome.
+> I'm not really sure of that (what about undock/dock, for exmaple?) and it's
+> damn ugly.
+
+only one acpi_driver has .start , that is acpi_pci_root_driver.
+
+should be clean than with .add/start pair.
+
 >
+>> > And the problem seems to be that the scanning of the ACPI namespace and
+>> > configuring the host bridge are kind of independent operations now.  What
+>> > we should do, actually, seems to be something like this:
+>> >
+>> > (1) Configure the host bridge when discovered (i.e. do what the current
+>> >     acpi_pci_root_add() does.
+>> > (2) Parse the ACPI namespace under the host bridge (without binding ACPI
+>> >     drivers to the struct acpi_device objects created in the process,
+>> >     because they are known to correspond to PCI devices).
+>> > (3) Run pci_bus_add_devices() for the bridge.
+>> >
+>> > in one routine.
+>>
+>> problem is still there. if 1 still has acpi_pci_root_add and pci_acpi_scan_root
+>
+> OK, so why don't we do (2) in acpi_pci_root_add(), before pci_acpi_scan_root()
+> is called?
+>
+>> that scan pci devices. what is need is we need to bind 1 and 3 together.
 
-I tried to move "reset" to device type, but it did not work.
+some one already walk the acpi space, and during that it create
+acpi_device for pci_root
+and then attach driver for that, aka acpi_pci_root_add is executing.
 
-Anyway will send out two patches for dev_type and vga again.
+Now you want to walking the acpi acpi space to create children devices
+before device_add really done for that pci root
+acpi device. ?
+
+is that some kind of nesting?
+
+>
+> I don't understand now.  You said previously that we need the ACPI namespace
+> below the bridge to be scanned before (3), so why do you want to do (3) before
+> (2) now?
+
+purpose is calling pci_bus_add_devices in pci_acpi_scan_root.
 
 Yinghai
