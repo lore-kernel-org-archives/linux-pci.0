@@ -1,99 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:35302 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808Ab2JOHAT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2012 03:00:19 -0400
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: martin.wilck@ts.fujitsu.com, andi@firstfloor.org,
-	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
-	ddutile@redhat.com, vgoyal@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, Takao Indoh <indou.takao@jp.fujitsu.com>,
-	khalid@gonehiking.org
-Message-Id: <20121015065516.2832.42378.sendpatchset@indoh>
-Subject: [PATCH v4 0/2] Reset PCIe devices to address DMA problem on kdump with iommu
-Date: Mon, 15 Oct 2012 16:00:17 +0900 (JST)
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:52219 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631Ab2JEPRE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Oct 2012 11:17:04 -0400
+Received: by mail-ie0-f174.google.com with SMTP id k13so4060752iea.19
+        for <linux-pci@vger.kernel.org>; Fri, 05 Oct 2012 08:17:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <506EF48B.5070801@sgi.com>
+References: <1349187780-25692-1-git-send-email-nzimmer@sgi.com>
+ <CAErSpo7ZQEm9==nsGiH2c_ZG8LPP8MAA8M9xSPyWPtCW2EHUUQ@mail.gmail.com>
+ <506DB30F.2000704@sgi.com> <1349368662.2008.20.camel@joe-AO722>
+ <506EE6D5.4010603@sgi.com> <1349446478.2008.66.camel@joe-AO722> <506EF48B.5070801@sgi.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 5 Oct 2012 09:16:43 -0600
+Message-ID: <CAErSpo6=9vdoR=Z83jyDrHAc_4XAL+rHw55=UeXf8C+N=xUHrw@mail.gmail.com>
+Subject: Re: [PATCH] revert "PCI: log vendor/device ID always"
+To: Nathan Zimmer <nzimmer@sgi.com>
+Cc: Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These patches reset PCIe devices at boot time to address DMA problem on
-kdump with iommu. When "reset_devices" is specified, a hot reset is
-triggered on each PCIe root port and downstream port to reset its
-downstream endpoint.
+On Fri, Oct 5, 2012 at 8:54 AM, Nathan Zimmer <nzimmer@sgi.com> wrote:
+> On 10/05/2012 09:14 AM, Joe Perches wrote:
+>>
+>> On Fri, 2012-10-05 at 08:55 -0500, Nathan Zimmer wrote:
+>>>
+>>> On 10/04/2012 11:37 AM, Joe Perches wrote:
+>>>>
+>>>> On Thu, 2012-10-04 at 11:02 -0500, Nathan Zimmer wrote:
+>>>>>
+>>>>> At many of our customer sites the log level is set to KERN_DEBUG. It
+>>>>> helps avoid reboots due to operator impatience.  Machines this large
+>>>>> take significantly longer then typical to boot and seeing the extra
+>>>>> messages reassures them that the kernel isn't hung.
+>>>>
+>>>> That argues for adding some KERN_INFO "still booting" messages
+>>>> not logging unnecessary KERN_DEBUG messages.
+>>>>
+>>> Actually I would think that argues for reducing boot times on these
+>>> large systems.
+>>
+>> Right.
+>>
+>> That's an independent argument, but sure, go ahead
+>> and do that too.
+>>
+>
+>
+> Here is output for my workstation a simple 4x box
+>
+> -bash-4.1$ dmesg | grep "type [0-9][0-9] class" | wc
+>      12     108     804
+> -bash-4.1$ dmesg | wc
+>     744    6359   49474
+>
+>
+> Here is some output from one of the biggest boxes.
+>
+> -bash-4.1$ dmesg | wc
+>   26503  235414 1811651
+> -bash-4.1$ dmesg | grep "type [0-9][0-9] class" | wc
+>   12085 108765  821780
 
-Background:
-A kdump problem about DMA has been discussed for a long time. That is,
-when a kernel is switched to the kdump kernel DMA derived from first
-kernel affects second kernel. Recently this problem surfaces when iommu
-is used for PCI passthrough on KVM guest. In the case of the machine I
-use, when intel_iommu=on is specified, DMAR error is detected in kdump
-kernel and PCI SERR is also detected. Finally kdump fails because some
-devices does not work correctly.
+Many vendors don't expose host bridges that lead to the CPU-related
+PCI devices because they don't want the OS to muck with them.  We
+currently blindly probe for these in domain 0, so we find them anyway
+(I think we should change this behavior).
 
-The root cause is that ongoing DMA from first kernel causes DMAR fault
-because page table of DMAR is initialized while kdump kernel is booting
-up. Therefore to address this problem DMA needs to be stopped before
-DMAR is initialized at kdump kernel boot time. By these patches, PCIe
-devices are reset by hot reset and its DMA is stopped when reset_devices
-is specified. One problem of this solution is that the monitor blacks
-out when VGA controller is reset. So this patch does not reset the port
-whose child endpoint is VGA device.
+I'd guess that having all these CPU-related devices around also really
+clutters up "lspci" output, and of course, consumes memory for all the
+pci_dev structs in the kernel.  It takes some time to enumerate them
+all, so avoiding that would speed up boot somewhat.
 
-What I tried:
-- Clearing bus master bit and INTx disable bit at boot time
-    This did not solve this problem. I still got DMAR error on devices.
-- Resetting devices in fixup_final(v1 patch)
-    DMAR error disappeared, but sometimes PCI SERR was detected. This
-    is well explained here.
-    https://lkml.org/lkml/2012/9/9/245
-    This PCI SERR seems to be related to interrupt remapping.
-- Clearing bus master in setup_arch() and resetting devices in
-  fixup_final
-    Neither DMAR error nor PCI SERR occurred. But on certain machine
-    kdump kernel hung up when resetting devices. It seems to be a
-    problem specific to the platform.
-- Resetting devices in setup_arch() (v2 and later patch)
-    This solution solves all problems I found so far.
+So I wonder if it might be more useful to figure out how to avoid
+enumerating those devices in the first place?  The first step would be
+to stop exposing PNP0A03/PNP0A08 host bridges that lead to them.  As I
+mentioned, we currently will probably find them anyway via blind
+probing.  You might be able to avoid that if you could place them in a
+PCI domain other than 0.
 
-v4:
-Reduce waiting time after resetting devices. A previous patch does reset
-like this:
-  for (each device) {
-    save config registers
-    reset
-    wait for 500 ms
-    restore config registers
-  }
-
-If there are N devices to be reset, it takes N*500 ms. On the other
-hand, the v4 patch does:
-  for (each device) {
-    save config registers
-    reset
-  }
-  wait 500 ms
-  for (each device) {
-    restore config registers
-  }
-Though it needs more memory space to save config registers, the waiting
-time is always 500ms.
-
-v3:
-Move alloc_bootmem and free_bootmem to early_reset_pcie_devices so that
-they are called only once.
-https://lkml.org/lkml/2012/10/10/57
-
-v2:
-Reset devices in setup_arch() because reset need to be done before
-interrupt remapping is initialized.
-https://lkml.org/lkml/2012/10/2/54
-
-v1:
-Add fixup_final quirk to reset PCIe devices
-https://lkml.org/lkml/2012/8/3/160
-
-Thanks,
-Takao Indoh
-
+Bjorn
