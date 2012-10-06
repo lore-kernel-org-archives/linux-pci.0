@@ -1,184 +1,291 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, jiang.liu@huawei.com, bhelgaas@google.com,
-	lenb@kernel.org, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Tang Chen <tangchen@cn.fujitsu.com>
-Subject: [PATCH 1/1] Update acpi_root_bridge_list in container hotplug path.
-Date: Wed, 17 Oct 2012 11:25:08 +0800
-Message-Id: <1350444308-27102-1-git-send-email-tangchen@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 04/28] ACPIHP: implement a fake ACPI system device hotplug slot enumerator
+Date: Sat,  6 Oct 2012 23:27:12 +0800
+Message-Id: <1349537256-21670-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
+This patch implements a fake ACPI system device hotplug slot enumerator,
+which could be used to test and verify hotplug logic on platforms with
+hardware hotplug capabilities.
 
-List acpi_root_bridge_list is only updated when kernel is booting,
-or in _handle_hotplug_event_root() when handling ACPI_NOTIFY_DEVICE_CHECK
-event on a pci root bridge device. But when we hotplug a container, which
-contains one or more pci root bridges, container_notify_cb() will be
-called but not _handle_hotplug_event_root(). As a result,
-acpi_root_bridge_list won't be updated.
+The fake slot enumerator will be enabled by passing module parameter
+"fake_slot=value". The encoding of "value" is:
+0x1: fake ACPI CONTAINER device as hotplug slot
+0x2: fake ACPI memory device as hotplug slot
+0x4: fake ACPI Processor object or Processor device as hotplug slot
+0x8: fake ACPI PCI host bridge device as hotplug slot.
 
-This patch makes the following api and struct public in pci_root_hp.h,
-	struct acpi_root_bridge;
-	add_acpi_root_bridge()
-	remove_acpi_root_bridge()
-	acpi_root_handle_to_bridge()
-and call add_acpi_root_bridge() in acpi_bus_check_add() and call
-remove_acpi_root_bridge() in acpi_bus_remove().
-
-This patch is based on Lu Yinghai's git tree branch for-pci-split-pci-root-hp-2.
-
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/acpi/pci_root_hp.c |   20 ++++++--------------
- drivers/acpi/scan.c        |   18 ++++++++++++++++--
- include/acpi/pci_root_hp.h |   13 +++++++++++++
- 3 files changed, 35 insertions(+), 16 deletions(-)
- create mode 100644 include/acpi/pci_root_hp.h
+ drivers/acpi/Kconfig             |    9 ++
+ drivers/acpi/hotplug/Makefile    |    1 +
+ drivers/acpi/hotplug/acpihp.h    |    3 +
+ drivers/acpi/hotplug/slot.c      |    3 +
+ drivers/acpi/hotplug/slot_fake.c |  177 ++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 193 insertions(+)
+ create mode 100644 drivers/acpi/hotplug/slot_fake.c
 
-diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
-index 01e71f6..6381a26 100644
---- a/drivers/acpi/pci_root_hp.c
-+++ b/drivers/acpi/pci_root_hp.c
-@@ -31,7 +31,7 @@ static const struct acpi_device_id root_device_ids[] = {
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index 915a25e..5a5a3e5 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -348,6 +348,15 @@ config ACPI_HOTPLUG_SLOT
+ 	  To compile this driver as a module, choose M here:
+ 	  the module will be called acpihp_slot.
  
- #define ACPI_STA_FUNCTIONING	(0x00000008)
- 
--static struct acpi_root_bridge *acpi_root_handle_to_bridge(acpi_handle handle)
-+struct acpi_root_bridge *acpi_root_handle_to_bridge(acpi_handle handle)
- {
- 	struct acpi_root_bridge *bridge;
- 
-@@ -43,7 +43,7 @@ static struct acpi_root_bridge *acpi_root_handle_to_bridge(acpi_handle handle)
- }
- 
- /* allocate and initialize host bridge data structure */
--static void add_acpi_root_bridge(acpi_handle handle)
-+void add_acpi_root_bridge(acpi_handle handle)
- {
- 	struct acpi_root_bridge *bridge;
- 	acpi_handle dummy_handle;
-@@ -79,7 +79,7 @@ static void add_acpi_root_bridge(acpi_handle handle)
- 	list_add(&bridge->list, &acpi_root_bridge_list);
- }
- 
--static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
-+void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
- {
- 	list_del(&bridge->list);
- 	kfree(bridge);
-@@ -172,10 +172,8 @@ static void handle_root_bridge_removal(acpi_handle handle,
- 	u32 flags = 0;
- 	struct acpi_device *device;
- 
--	if (bridge) {
-+	if (bridge)
- 		flags = bridge->flags;
--		remove_acpi_root_bridge(bridge);
--	}
- 
- 	if (!acpi_bus_get_device(handle, &device)) {
- 		int ret_val;
-@@ -223,10 +221,8 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 		/* bus enumerate */
- 		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
- 				 objname);
--		if (!bridge) {
-+		if (!bridge)
- 			handle_root_bridge_insertion(handle);
--			add_acpi_root_bridge(handle);
--		}
- 
- 		break;
- 
-@@ -234,10 +230,8 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 		/* device check */
- 		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
- 				 objname);
--		if (!bridge) {
-+		if (!bridge)
- 			handle_root_bridge_insertion(handle);
--			add_acpi_root_bridge(handle);
--		}
- 		break;
- 
- 	case ACPI_NOTIFY_EJECT_REQUEST:
-@@ -304,8 +298,6 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
- 				 objname);
- 
--	add_acpi_root_bridge(handle);
--
- 	return AE_OK;
- }
- 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 6ca2eaf..c258064 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -12,6 +12,7 @@
- #include <linux/dmi.h>
- 
- #include <acpi/acpi_drivers.h>
-+#include <acpi/pci_root_hp.h>
- 
- #include "internal.h"
- 
-@@ -1265,8 +1266,17 @@ int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
- 	dev->removal_type = ACPI_BUS_REMOVAL_EJECT;
- 	device_release_driver(&dev->dev);
- 
--	if (rmdevice)
-+	if (rmdevice) {
-+		if (acpi_is_root_bridge(dev->handle)) {
-+			struct acpi_root_bridge *bridge;
++config ACPI_HOTPLUG_SLOT_FAKE
++	bool "Fake Hotplug Slot Enumerator"
++	depends on ACPI_HOTPLUG_SLOT
++	default y
++	help
++	  Enable the fake ACPI system device hotplug slot enumerator, which
++	  could be used to test hotplug functionalities on hardware platforms
++	  with out system device hotplug capabilities.
 +
-+			bridge = acpi_root_handle_to_bridge(dev->handle);
-+			if (bridge)
-+				remove_acpi_root_bridge(bridge);
-+		}
-+
- 		acpi_device_unregister(dev, ACPI_BUS_REMOVAL_EJECT);
-+	}
+ config ACPI_CONTAINER
+ 	tristate "Container and Module Devices (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL
+diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
+index 5420ae7..c19b350 100644
+--- a/drivers/acpi/hotplug/Makefile
++++ b/drivers/acpi/hotplug/Makefile
+@@ -8,3 +8,4 @@ acpihp-y					= core.o
+ obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
+ acpihp_slot-y					= slot.o
+ acpihp_slot-y					+= slot_ej0.o
++acpihp_slot-$(CONFIG_ACPI_HOTPLUG_SLOT_FAKE)	+= slot_fake.o
+diff --git a/drivers/acpi/hotplug/acpihp.h b/drivers/acpi/hotplug/acpihp.h
+index 278c8c2..7c49eab 100644
+--- a/drivers/acpi/hotplug/acpihp.h
++++ b/drivers/acpi/hotplug/acpihp.h
+@@ -29,5 +29,8 @@
  
- 	return 0;
- }
-@@ -1448,9 +1458,13 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
- 	 */
- 	device = NULL;
- 	acpi_bus_get_device(handle, &device);
--	if (ops->acpi_op_add && !device)
-+	if (ops->acpi_op_add && !device) {
- 		acpi_add_single_object(&device, handle, type, sta, ops);
+ extern struct acpi_device *acpi_root;
+ extern struct acpihp_slot_ops acpihp_slot_ej0;
++#ifdef	CONFIG_ACPI_HOTPLUG_SLOT_FAKE
++extern struct acpihp_slot_ops acpihp_slot_fake;
++#endif
  
-+		if (acpi_is_root_bridge(handle))
-+			add_acpi_root_bridge(handle);
-+	}
-+
- 	if (!device)
- 		return AE_CTRL_DEPTH;
+ #endif
+diff --git a/drivers/acpi/hotplug/slot.c b/drivers/acpi/hotplug/slot.c
+index 8fdae61..38f39dc 100644
+--- a/drivers/acpi/hotplug/slot.c
++++ b/drivers/acpi/hotplug/slot.c
+@@ -44,6 +44,9 @@ static struct acpihp_slot_ops *slot_ops_curr;
+  */
+ static struct acpihp_slot_ops *slot_ops_array[] = {
+ 	&acpihp_slot_ej0,
++#ifdef	CONFIG_ACPI_HOTPLUG_SLOT_FAKE
++	&acpihp_slot_fake,
++#endif
+ 	NULL
+ };
  
-diff --git a/include/acpi/pci_root_hp.h b/include/acpi/pci_root_hp.h
+diff --git a/drivers/acpi/hotplug/slot_fake.c b/drivers/acpi/hotplug/slot_fake.c
 new file mode 100644
-index 0000000..2761add
+index 0000000..512e09b
 --- /dev/null
-+++ b/include/acpi/pci_root_hp.h
-@@ -0,0 +1,13 @@
++++ b/drivers/acpi/hotplug/slot_fake.c
+@@ -0,0 +1,177 @@
++/*
++ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
++ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or (at
++ *  your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful, but
++ *  WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License along
++ *  with this program.
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ */
 +
-+/*PCI root bridge hotplug API */
++#include <linux/acpi.h>
++#include <acpi/acpi.h>
++#include <acpi/acpi_hotplug.h>
++#include "acpihp.h"
 +
-+#ifndef __PCI_ROOT_HP__
-+#define __PCI_ROOT_HP__
++struct acpihp_slot_fake_data {
++	bool enabled;
++};
 +
-+struct acpi_root_bridge;
++/*
++ * Encoding of the fake_slot parameter:
++ * 0x1: fake ACPI CONTAINER device as hotplug slot
++ * 0x2: fake ACPI memory device as hotplug slot
++ * 0x4: fake ACPI Processor object or Processor device as hotplug slot
++ * 0x8: fake ACPI PCI host bridge device as hotplug slot.
++ * The above encoding must be kept in consistence with definition of
++ * 'enum acpihp_dev_type'.
++ */
++int acpihp_fake_slot;
++module_param_named(fake_slot, acpihp_fake_slot, int, S_IRUGO);
++MODULE_PARM_DESC(fake_slot, "fake ACPI hotplug slots, 0x1 for CONTAINER, 0x2 for memory, 0x4 for CPU, 0x8 for PCI host bridge.");
 +
-+void add_acpi_root_bridge(acpi_handle handle);
-+void remove_acpi_root_bridge(struct acpi_root_bridge *bridge);
-+struct acpi_root_bridge *acpi_root_handle_to_bridge(acpi_handle handle);
++static acpi_status acpihp_slot_fake_init(void)
++{
++	return acpihp_fake_slot ? AE_OK : AE_ERROR;
++}
 +
-+#endif				/* __PCI_ROOT_HP_H__ */
++static acpi_status
++acpihp_slot_fake_check(acpi_handle handle, u32 lvl, void *context, void **rv)
++{
++	int *valid = (int *)rv;
++	enum acpihp_dev_type type;
++
++	if (!acpihp_dev_get_type(handle, &type)) {
++		switch (type) {
++		case ACPIHP_DEV_TYPE_CPU:
++		case ACPIHP_DEV_TYPE_MEM:
++		case ACPIHP_DEV_TYPE_HOST_BRIDGE:
++			*valid = 1;
++			return AE_CTRL_TERMINATE;
++		default:
++			break;
++		}
++	}
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_capable(acpi_handle handle)
++{
++	int valid = 0;
++	acpi_status rc;
++	unsigned long long sta;
++	enum acpihp_dev_type type;
++
++	/* Only care about CPU, memory, PCI host bridge and CONTAINER */
++	if (acpihp_dev_get_type(handle, &type))
++		return AE_ERROR;
++	if (type == ACPIHP_DEV_TYPE_CPU || type == ACPIHP_DEV_TYPE_MEM ||
++	    type == ACPIHP_DEV_TYPE_HOST_BRIDGE) {
++		if (acpihp_fake_slot & (1 << (type - 1)))
++			valid = 1;
++	} else if (type == ACPIHP_DEV_TYPE_CONTAINER &&
++		   acpihp_fake_slot & (1 << (type - 1))) {
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++				ACPI_UINT32_MAX, acpihp_slot_fake_check,
++				NULL, NULL, (void **)&valid);
++		acpi_walk_namespace(ACPI_TYPE_PROCESSOR, handle,
++				ACPI_UINT32_MAX, acpihp_slot_fake_check,
++				NULL, NULL, (void **)&valid);
++	}
++	if (valid == 0)
++		return AE_ERROR;
++
++	/* Check whether device is present and enabled. */
++	rc = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++	if (rc == AE_NOT_FOUND)
++		sta = ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED;
++	else if (ACPI_FAILURE(rc))
++		sta = 0;
++	else if (sta & ACPI_STA_DEVICE_FUNCTIONING)
++		sta |= ACPI_STA_DEVICE_ENABLED;
++	if (!(sta & ACPI_STA_DEVICE_PRESENT) ||
++	    !(sta & ACPI_STA_DEVICE_ENABLED))
++		return AE_ERROR;
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_create(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return AE_ERROR;
++
++	data->enabled = true;
++	slot->slot_data = data;
++	slot->capabilities = ACPIHP_SLOT_CAP_ONLINE | ACPIHP_SLOT_CAP_OFFLINE;
++
++	return AE_OK;
++}
++
++static void acpihp_slot_fake_destroy(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	slot->slot_data = NULL;
++	kfree(data);
++}
++
++static acpi_status
++acpihp_slot_fake_get_status(struct acpihp_slot *slot, u64 *status)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	if (data->enabled)
++		*status = ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED |
++			  ACPI_STA_DEVICE_FUNCTIONING;
++	else
++		*status = ACPI_STA_DEVICE_PRESENT;
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_poweron(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	data->enabled = true;
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_poweroff(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	data->enabled = false;
++
++	return AE_OK;
++}
++
++struct acpihp_slot_ops acpihp_slot_fake = {
++	.owner = THIS_MODULE,
++	.desc = "Fake ACPI System Device Hotplug Slots for Testing",
++	.init = acpihp_slot_fake_init,
++	.check = acpihp_slot_fake_capable,
++	.create = acpihp_slot_fake_create,
++	.destroy = acpihp_slot_fake_destroy,
++	.poweron = acpihp_slot_fake_poweron,
++	.poweroff = acpihp_slot_fake_poweroff,
++	.get_status = acpihp_slot_fake_get_status,
++};
 -- 
-1.7.1
+1.7.9.5
 
