@@ -1,74 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usmamail.tilera.com ([12.216.194.151]:40451 "EHLO
-	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933111Ab2JZOI4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Oct 2012 10:08:56 -0400
-Message-ID: <508A9974.2090403@tilera.com>
-Date: Fri, 26 Oct 2012 10:08:52 -0400
-From: Chris Metcalf <cmetcalf@tilera.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Cyberman Wu <cypher.w@gmail.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: PCIe IO space support on Tilera GX: Is there any one who can
- confirm my modification to fix it is OK?
-References: <CADCVGbTDD-4WOVJWwaGBvay5=of=3VKBCVacrrW-z12BYZ1xbQ@mail.gmail.com> <CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 25/28] ACPIHP/processor: reject online/offline requests when doing processor hotplug
+Date: Sat,  6 Oct 2012 23:27:33 +0800
+Message-Id: <1349537256-21670-26-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/26/2012 4:03 AM, Bjorn Helgaas wrote:
-> [+cc Chris, also a few comments below]
+When doing physical processor hotplug, all affected CPUs should be
+handled in atomic, shouldn't be disturbed by online/offline requests
+from CPU device's online sysfs interface. For example, it's fatal
+if a CPU is onlined through CPU device's online sysfs interface
+between the hotplug driver offlines all affected CPUs and powers the
+physical processor off.
 
-Bjorn, thanks for looping me in.
+So temporarily reject online/offline requests from CPU device's online
+sysfs interface by setting the busy flag when doing physical processor
+hotplug.
 
-> On Fri, Oct 26, 2012 at 12:59 AM, Cyberman Wu <cypher.w@gmail.com> wrote:
->> After we upgrade to MDE 4.1.0 from Tilera, we encounter a problem that
->> only on HighPoint 2680 card works, I've
->> tried to fix it, but since most time I'm working in user space, I'm
->> not sure my fix is enough. Their FAE said that
->> the guy who add PCIe I/O space support is on vacation and I can't get
->> help from him now, I hope maybe there
->> will have somebody can help.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/processor_driver.c |   23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-I asked internally and I think the response provided by Tilera was more
-along the lines of "it may take a bit longer to get you an answer". :-)
-
-> Per http://lkml.indiana.edu/hypermail/linux/kernel/1205.1/01176.html,
-> Chris considered adding I/O space support and decided against it at
-> that time, partly because it would use up a TRIO PIO region.
->
-> I don't know his current thoughts.  Possibly it could be done under a
-> config option or something.
-
-In the end, we did code up I/O port support in the root complex driver,
-since we had a customer with a device that needed it.  We haven't yet
-returned it to the community - getting the basic PCI root complex support
-returned (and networking support) took way more time than I had anticipated
-so I'm batching up the next round of stuff to return for later.  But
-"later" is probably going to come fairly soon since it would make sense to
-target the 3.8 merge window.
-
->> It works now. But I really need some one to confirm whether my
->> modification is enough or not,
->> if there have other potential problems.
-
-Cyberman: it seems like your bias hack is working for you.  But, as Bjorn
-says, this sounds like a driver bug.  What happens if you just revert your
-changes, but then in mvsas.c change the "if (!res_start || !res_len)" to
-just say "if (!res_len)"?  That seems like the true error test.  If that
-works, you should submit that change to the community.
-
-Bjorn et al: does it seem reasonable to add a bias to the mappings so that
-we never report a zero value as valid?  This may be sufficiently defensive
-programming that it's just the right thing to do regardless of whether
-drivers are technically at fault or not.  If so, what's a good bias?  (I'm
-inclined to think 64K rather than 4K.)
-
-Thanks!
-
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index 447bd6d..51e3993 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -702,7 +702,7 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
+ 		if (result)
+ 			goto out_unlock;
+ 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+-		result = arch_register_cpu(pr->id, 0);
++		result = arch_register_cpu(pr->id, 1);
+ 		if (result)
+ 			goto out_unmap;
+ 
+@@ -755,10 +755,26 @@ static void acpi_processor_post_configure(struct acpi_device *device,
+ 		if (!cpu_online(pr->id) && cpu_up(pr->id))
+ 			dev_warn(&device->dev,
+ 				 "fails to online CPU%d.\n", pr->id);
++		cpu_set_busy(pr->id, 0);
+ 	} else if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
+ 		acpi_processor_reset(device, pr);
+ }
+ 
++static int acpi_processor_pre_release(struct acpi_device *device,
++				      struct acpihp_cancel_context *ctx)
++{
++	int result;
++	struct acpi_processor *pr;
++
++	if (!device || !acpi_driver_data(device))
++		return -EINVAL;
++	pr = acpi_driver_data(device);
++
++	result = cpu_set_busy(pr->id, 1);
++
++	return result ? -EBUSY : 0;
++}
++
+ static int acpi_processor_release(struct acpi_device *device,
+ 				  struct acpihp_cancel_context *ctx)
+ {
+@@ -783,9 +799,11 @@ static void acpi_processor_post_release(struct acpi_device *device,
+ 	BUG_ON(!device || !acpi_driver_data(device));
+ 	pr = acpi_driver_data(device);
+ 
+-	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
++	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK) {
+ 		if (!cpu_online(pr->id))
+ 			cpu_up(pr->id);
++		cpu_set_busy(pr->id, 0);
++	}
+ }
+ 
+ static void acpi_processor_unconfigure(struct acpi_device *device)
+@@ -803,6 +821,7 @@ static struct acpihp_dev_ops acpi_processor_hp_ops = {
+ 	.pre_configure = &acpi_processor_pre_configure,
+ 	.configure = &acpi_processor_configure,
+ 	.post_configure = &acpi_processor_post_configure,
++	.pre_release = &acpi_processor_pre_release,
+ 	.release = &acpi_processor_release,
+ 	.post_release = &acpi_processor_post_release,
+ 	.unconfigure = &acpi_processor_unconfigure,
 -- 
-Chris Metcalf, Tilera Corp.
-http://www.tilera.com
+1.7.9.5
 
