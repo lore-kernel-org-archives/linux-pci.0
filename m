@@ -1,218 +1,245 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:47261 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752588Ab2J2HCY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:24 -0400
-From: Pratyush Anand <pratyush.anand@st.com>
-To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
-Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
-	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
-	Pratyush Anand <pratyush.anand@st.com>
-Subject: [PATCH 08/15] SPEAr1310: Add PCIe auxdata for miphy clock initialization
-Date: Mon, 29 Oct 2012 12:31:22 +0530
-Message-ID: <06c4b001f57084702b42a66565248ae871b909bf.1351492562.git.pratyush.anand@st.com>
-In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33589 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751497Ab2JFPb2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 11:31:28 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 07/28] ACPIHP: use klist to manage ACPI devices connecting to a slot
+Date: Sat,  6 Oct 2012 23:27:15 +0800
+Message-Id: <1349537256-21670-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Miphy Clock initialization is very specific to controller and its
-instances. Pass this custom function using auxdata.
+ACPI devices connecting to an ACPI hotplug slot are divided into groups
+according to device types. Those devices will be configured/unconfigured
+in order of device types when hot-adding/hot-removing system devices.
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+For example, when hot-adding a computer node with CPUs, memory, PCI host
+bridges, IOAPICs, the order optimized for performance should be:
+memory -> CPU -> IOAPIC -> PCI host bridge.
+
+It relies on klist to manage and protect ACPI devices connecting to
+an ACPI hotplug slot.
+
+Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- arch/arm/mach-spear13xx/spear1310.c |  148 +++++++++++++++++++++++++++++++++++
- 1 files changed, 148 insertions(+), 0 deletions(-)
+ drivers/acpi/hotplug/core.c |  115 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |   27 ++++++++++
+ 2 files changed, 142 insertions(+)
 
-diff --git a/arch/arm/mach-spear13xx/spear1310.c b/arch/arm/mach-spear13xx/spear1310.c
-index 25e0fbb..3c673a1 100644
---- a/arch/arm/mach-spear13xx/spear1310.c
-+++ b/arch/arm/mach-spear13xx/spear1310.c
-@@ -24,6 +24,7 @@
- #include <asm/mach/arch.h>
- #include <asm/mach/map.h>
- #include <mach/generic.h>
-+#include <mach/pcie.h>
- #include <mach/spear.h>
- 
- /* Base addresses */
-@@ -35,6 +36,9 @@
- #define SPEAR1310_SATA0_BASE			UL(0xB1000000)
- #define SPEAR1310_SATA1_BASE			UL(0xB1800000)
- #define SPEAR1310_SATA2_BASE			UL(0xB4000000)
-+#define SPEAR1310_PCIE0_BASE			UL(0xB1000000)
-+#define SPEAR1310_PCIE1_BASE			UL(0xB1800000)
-+#define SPEAR1310_PCIE2_BASE			UL(0xB4000000)
- 
- /* RAS Area Control Register */
- #define VA_SPEAR1310_RAS_CTRL_REG1	(VA_SPEAR1310_RAS_BASE + 0x4)
-@@ -57,6 +61,81 @@
- #define SPEAR1310_PERIP1_SW_RST			(VA_MISC_BASE + 0x308)
- #define SPEAR1310_UOC_RST_ENB			11
- 
-+#define VA_SPEAR1310_PCIE_SATA_CFG		(VA_MISC_BASE + 0x3A4)
-+	/* PCIE CFG MASks */
-+	#define SPEAR1310_PCIE_SATA2_SEL_PCIE		(0 << 31)
-+	#define SPEAR1310_PCIE_SATA1_SEL_PCIE		(0 << 30)
-+	#define SPEAR1310_PCIE_SATA0_SEL_PCIE		(0 << 29)
-+	#define SPEAR1310_PCIE_SATA2_SEL_SATA		(1 << 31)
-+	#define SPEAR1310_PCIE_SATA1_SEL_SATA		(1 << 30)
-+	#define SPEAR1310_PCIE_SATA0_SEL_SATA		(1 << 29)
-+	#define SPEAR1310_SATA2_CFG_TX_CLK_EN		(1 << 27)
-+	#define SPEAR1310_SATA2_CFG_RX_CLK_EN		(1 << 26)
-+	#define SPEAR1310_SATA2_CFG_POWERUP_RESET	(1 << 25)
-+	#define SPEAR1310_SATA2_CFG_PM_CLK_EN		(1 << 24)
-+	#define SPEAR1310_SATA1_CFG_TX_CLK_EN		(1 << 23)
-+	#define SPEAR1310_SATA1_CFG_RX_CLK_EN		(1 << 22)
-+	#define SPEAR1310_SATA1_CFG_POWERUP_RESET	(1 << 21)
-+	#define SPEAR1310_SATA1_CFG_PM_CLK_EN		(1 << 20)
-+	#define SPEAR1310_SATA0_CFG_TX_CLK_EN		(1 << 19)
-+	#define SPEAR1310_SATA0_CFG_RX_CLK_EN		(1 << 18)
-+	#define SPEAR1310_SATA0_CFG_POWERUP_RESET	(1 << 17)
-+	#define SPEAR1310_SATA0_CFG_PM_CLK_EN		(1 << 16)
-+	#define SPEAR1310_PCIE2_CFG_DEVICE_PRESENT	(1 << 11)
-+	#define SPEAR1310_PCIE2_CFG_POWERUP_RESET	(1 << 10)
-+	#define SPEAR1310_PCIE2_CFG_CORE_CLK_EN		(1 << 9)
-+	#define SPEAR1310_PCIE2_CFG_AUX_CLK_EN		(1 << 8)
-+	#define SPEAR1310_PCIE1_CFG_DEVICE_PRESENT	(1 << 7)
-+	#define SPEAR1310_PCIE1_CFG_POWERUP_RESET	(1 << 6)
-+	#define SPEAR1310_PCIE1_CFG_CORE_CLK_EN		(1 << 5)
-+	#define SPEAR1310_PCIE1_CFG_AUX_CLK_EN		(1 << 4)
-+	#define SPEAR1310_PCIE0_CFG_DEVICE_PRESENT	(1 << 3)
-+	#define SPEAR1310_PCIE0_CFG_POWERUP_RESET	(1 << 2)
-+	#define SPEAR1310_PCIE0_CFG_CORE_CLK_EN		(1 << 1)
-+	#define SPEAR1310_PCIE0_CFG_AUX_CLK_EN		(1 << 0)
-+
-+	#define SPEAR1310_PCIE_CFG_MASK(x) ((0xF << (x * 4)) | (1 << (x + 29)))
-+	#define SPEAR1310_SATA_CFG_MASK(x) ((0xF << (x * 4 + 16)) | \
-+			(1 << (x + 29)))
-+	#define SPEAR1310_PCIE_CFG_VAL(x) \
-+			(SPEAR1310_PCIE_SATA##x##_SEL_PCIE | \
-+			SPEAR1310_PCIE##x##_CFG_AUX_CLK_EN | \
-+			SPEAR1310_PCIE##x##_CFG_CORE_CLK_EN | \
-+			SPEAR1310_PCIE##x##_CFG_POWERUP_RESET | \
-+			SPEAR1310_PCIE##x##_CFG_DEVICE_PRESENT)
-+	#define SPEAR1310_SATA_CFG_VAL(x) \
-+			(SPEAR1310_PCIE_SATA##x##_SEL_SATA | \
-+			SPEAR1310_SATA##x##_CFG_PM_CLK_EN | \
-+			SPEAR1310_SATA##x##_CFG_POWERUP_RESET | \
-+			SPEAR1310_SATA##x##_CFG_RX_CLK_EN | \
-+			SPEAR1310_SATA##x##_CFG_TX_CLK_EN)
-+
-+#define VA_SPEAR1310_PCIE_MIPHY_CFG_1		(VA_MISC_BASE + 0x3A8)
-+	#define SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT	(1 << 31)
-+	#define SPEAR1310_MIPHY_DUAL_CLK_REF_DIV2	(1 << 28)
-+	#define SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(x)	(x << 16)
-+	#define SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT	(1 << 15)
-+	#define SPEAR1310_MIPHY_SINGLE_CLK_REF_DIV2	(1 << 12)
-+	#define SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(x)	(x << 0)
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA_MASK (0xFFFF)
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK (0xFFFF << 16)
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA \
-+			(SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_DUAL_CLK_REF_DIV2 | \
-+			SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(60) | \
-+			SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_SINGLE_CLK_REF_DIV2 | \
-+			SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(60))
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK \
-+			(SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(120))
-+	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE \
-+			(SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(25) | \
-+			SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT | \
-+			SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(25))
-+
-+#define VA_SPEAR1310_PCIE_MIPHY_CFG_2		(VA_MISC_BASE + 0x3AC)
-+
- static int spear1310_eth_phy_clk_cfg(struct platform_device *pdev)
- {
- 	struct plat_stmmacenet_data *pdata = dev_get_platdata(&pdev->dev);
-@@ -342,6 +421,69 @@ static struct dwc_otg_plat_data spear1310_otg_plat_data = {
- 	.phy_init = spear1310_otg_phy_init,
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index 081b27f..1e6dbc8 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -114,6 +114,23 @@ static char *acpihp_dev_ioapic_ids[] = {
+ 	NULL
  };
  
-+static int spear1310_pcie_clk_init(struct pcie_port *pp)
++static void acpihp_dev_node_get(struct klist_node *lp)
 +{
-+	u32 temp;
++	struct acpihp_dev_node *dp;
 +
-+	temp = readl(VA_SPEAR1310_PCIE_MIPHY_CFG_1);
-+	temp &= ~SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK;
-+	temp |= SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE;
++	dp = container_of(lp, struct acpihp_dev_node, node);
++	get_device(dp->dev);
++}
 +
-+	writel(temp, VA_SPEAR1310_PCIE_MIPHY_CFG_1);
++static void acpihp_dev_node_put(struct klist_node *lp)
++{
++	struct acpihp_dev_node *dp;
 +
-+	temp = readl(VA_SPEAR1310_PCIE_SATA_CFG);
++	dp = container_of(lp, struct acpihp_dev_node, node);
++	put_device(dp->dev);
++	kfree(dp);
++}
 +
-+	switch (pp->controller) {
-+	case 0:
-+		temp &= ~SPEAR1310_PCIE_CFG_MASK(0);
-+		temp |= SPEAR1310_PCIE_CFG_VAL(0);
-+		break;
-+	case 1:
-+		temp &= ~SPEAR1310_PCIE_CFG_MASK(1);
-+		temp |= SPEAR1310_PCIE_CFG_VAL(1);
-+		break;
-+	case 2:
-+		temp &= ~SPEAR1310_PCIE_CFG_MASK(2);
-+		temp |= SPEAR1310_PCIE_CFG_VAL(2);
-+		break;
-+	default:
+ static void acpihp_slot_release(struct device *dev)
+ {
+ 	struct acpihp_slot *slot = to_acpihp_slot(dev);
+@@ -123,6 +140,7 @@ static void acpihp_slot_release(struct device *dev)
+ 
+ struct acpihp_slot *acpihp_create_slot(acpi_handle handle, char *name)
+ {
++	int i;
+ 	struct acpihp_slot *slot;
+ 
+ 	if (name && strlen(name) >= ACPIHP_SLOT_NAME_MAX_SIZE) {
+@@ -139,6 +157,9 @@ struct acpihp_slot *acpihp_create_slot(acpi_handle handle, char *name)
+ 	slot->handle = handle;
+ 	INIT_LIST_HEAD(&slot->slot_list);
+ 	INIT_LIST_HEAD(&slot->drvdata_list);
++	for (i = ACPIHP_DEV_TYPE_UNKNOWN; i < ACPIHP_DEV_TYPE_MAX; i++)
++		klist_init(&slot->dev_lists[i],
++			   &acpihp_dev_node_get, &acpihp_dev_node_put);
+ 	if (name)
+ 		strncpy(slot->name, name, sizeof(slot->name) - 1);
+ 	mutex_init(&slot->slot_mutex);
+@@ -402,6 +423,100 @@ acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot)
+ }
+ EXPORT_SYMBOL_GPL(acpihp_slot_poweroff);
+ 
++/* Insert an ACPI device onto a hotplug slot's device list. */
++int acpihp_slot_add_device(struct acpihp_slot *slot, enum acpihp_dev_type type,
++			   enum acpihp_dev_state state, struct device *dev)
++{
++	struct acpihp_dev_node *np;
++
++	if (type < ACPIHP_DEV_TYPE_UNKNOWN || type >= ACPIHP_DEV_TYPE_MAX) {
++		ACPIHP_DEBUG("device type %d is invalid.\n", type);
++		return -EINVAL;
++	} else if (slot == NULL) {
++		ACPIHP_DEBUG("invalid parameter, slot is NULL.\n");
++		return -EINVAL;
++	} else if (dev == NULL) {
++		ACPIHP_SLOT_DEBUG(slot, "invalid parameter, dev is NULL.\n");
 +		return -EINVAL;
 +	}
-+	writel(temp, VA_SPEAR1310_PCIE_SATA_CFG);
 +
-+	return 0;
-+}
-+
-+static int spear1310_pcie_clk_exit(struct pcie_port *pp)
-+{
-+	u32 temp;
-+
-+	temp = readl(VA_SPEAR1310_PCIE_SATA_CFG);
-+
-+	switch (pp->controller) {
-+	case 0:
-+		temp &= ~SPEAR1310_PCIE_CFG_MASK(0);
-+		break;
-+	case 1:
-+		temp &= ~SPEAR1310_PCIE_CFG_MASK(1);
-+		break;
-+	case 2:
-+		temp &= ~SPEAR1310_PCIE_CFG_MASK(2);
-+		break;
++	np = kzalloc(sizeof(*np), GFP_KERNEL);
++	if (np == NULL) {
++		ACPIHP_SLOT_WARN(slot, "fails to allocate memory.\n");
++		return -ENOMEM;
 +	}
 +
-+	writel(temp, VA_SPEAR1310_PCIE_SATA_CFG);
-+	writel(~SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK,
-+			VA_SPEAR1310_PCIE_MIPHY_CFG_1);
++	np->dev = dev;
++	np->state = state;
++	mutex_init(&np->lock);
++	klist_add_tail(&np->node, &slot->dev_lists[type]);
++	ACPIHP_SLOT_DEBUG(slot, "add device %s to klist.\n", dev_name(dev));
 +
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(acpihp_slot_add_device);
 +
-+static struct pcie_port_info pcie_pdata = {
-+	.clk_init = spear1310_pcie_clk_init,
-+	.clk_exit = spear1310_pcie_clk_exit,
++/* Remove an ACPI device from a hotplug slot's device list. */
++int acpihp_slot_remove_device(struct acpihp_slot *slot,
++			      enum acpihp_dev_type type, struct device *dev)
++{
++	int ret = -ENOENT;
++	struct klist_iter iter;
++	struct klist_node *ip;
++	struct acpihp_dev_node *np;
++
++	if (type < ACPIHP_DEV_TYPE_UNKNOWN || type >= ACPIHP_DEV_TYPE_MAX) {
++		ACPIHP_DEBUG("device type %d is invalid.\n", type);
++		return -EINVAL;
++	} else if (slot == NULL) {
++		ACPIHP_DEBUG("invalid parameter, slot is NULL.\n");
++		return -EINVAL;
++	} else if (dev == NULL) {
++		ACPIHP_SLOT_DEBUG(slot, "invalid parameter, dev is NULL.\n");
++		return -EINVAL;
++	}
++
++	klist_iter_init(&slot->dev_lists[type], &iter);
++	while ((ip = klist_next(&iter)) != NULL) {
++		np = container_of(ip, struct acpihp_dev_node, node);
++		if (np->dev == dev) {
++			ACPIHP_SLOT_DEBUG(slot,
++					  "remove device %s from klist.\n",
++					  dev_name(dev));
++			klist_del(&np->node);
++			ret = 0;
++			break;
++		}
++	}
++	klist_iter_exit(&iter);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_remove_device);
++
++/* Remove all ACPI devices from the list */
++int acpihp_remove_device_list(struct klist *dev_list)
++{
++	struct klist_iter iter;
++	struct klist_node *ip;
++	struct acpihp_dev_node *np;
++
++	if (dev_list == NULL) {
++		ACPIHP_DEBUG("invalid parameter, dev_list is NULL.\n");
++		return -EINVAL;
++	}
++
++	klist_iter_init(dev_list, &iter);
++	while ((ip = klist_next(&iter)) != NULL) {
++		np = container_of(ip, struct acpihp_dev_node, node);
++		klist_del(&np->node);
++	}
++	klist_iter_exit(&iter);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
++
+ /* SYSFS interfaces */
+ static ssize_t acpihp_slot_object_show(struct device *d,
+ 		struct device_attribute *attr, char *buf)
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 5025a16..2e7011e 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -47,6 +47,24 @@ enum acpihp_dev_type {
+ 	ACPIHP_DEV_TYPE_MAX
+ };
+ 
++enum acpihp_dev_state {
++	DEVICE_STATE_UNKOWN = 0x00,
++	DEVICE_STATE_CONNECTED,
++	DEVICE_STATE_PRE_CONFIGURE,
++	DEVICE_STATE_CONFIGURED,
++	DEVICE_STATE_PRE_RELEASE,
++	DEVICE_STATE_RELEASED,
++	DEVICE_STATE_PRE_UNCONFIGURE,
++	DEVICE_STATE_MAX
 +};
 +
- /* Add SPEAr1310 auxdata to pass platform data */
- static struct of_dev_auxdata spear1310_auxdata_lookup[] __initdata = {
- 	OF_DEV_AUXDATA("st,spear-adc", SPEAR13XX_ADC_BASE, NULL, &adc_pdata),
-@@ -363,6 +505,12 @@ static struct of_dev_auxdata spear1310_auxdata_lookup[] __initdata = {
- 			&eth4_data),
- 	OF_DEV_AUXDATA("snps,usb-otg", SPEAR_UOC_BASE, NULL,
- 			&spear1310_otg_plat_data),
-+	OF_DEV_AUXDATA("st,pcie-host", SPEAR1310_PCIE0_BASE, NULL,
-+			&pcie_pdata),
-+	OF_DEV_AUXDATA("st,pcie-host", SPEAR1310_PCIE1_BASE, NULL,
-+			&pcie_pdata),
-+	OF_DEV_AUXDATA("st,pcie-host", SPEAR1310_PCIE2_BASE, NULL,
-+			&pcie_pdata),
- 	OF_DEV_AUXDATA("st,db9000-clcd", SPEAR13XX_CLCD_BASE, NULL,
- 			&clcd_plat_info),
- 	{}
++struct acpihp_dev_node {
++	struct device		*dev;
++	enum acpihp_dev_state	state;
++	struct mutex		lock;
++	struct klist_node	node;
++};
++
+ /*
+  * ACPI hotplug slot is an abstraction of receptacles where a group of
+  * system devices could be attached, just like PCI slot in PCI hotplug.
+@@ -190,6 +208,15 @@ typedef acpi_status (*acpihp_walk_device_cb)(struct acpi_device *acpi_device,
+ extern int acpihp_walk_devices(acpi_handle handle, acpihp_walk_device_cb cb,
+ 			       void *argp);
+ 
++extern int acpihp_slot_add_device(struct acpihp_slot *slot,
++				  enum acpihp_dev_type type,
++				  enum acpihp_dev_state state,
++				  struct device *dev);
++extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
++				     enum acpihp_dev_type type,
++				     struct device *dev);
++extern int acpihp_remove_device_list(struct klist *dev_list);
++
+ extern int acpihp_debug;
+ 
+ #define ACPIHP_WARN(fmt, ...) \
 -- 
-1.7.5.4
+1.7.9.5
 
