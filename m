@@ -1,37 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:32984 "EHLO
-	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753084Ab2J2HCi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:38 -0400
-From: Pratyush Anand <pratyush.anand@st.com>
-To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
-Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
-	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
-	Pratyush Anand <pratyush.anand@st.com>
-Subject: [PATCH 14/15] SPEAR13xx: Update makefile for PCIe inclusion
-Date: Mon, 29 Oct 2012 12:31:28 +0530
-Message-ID: <a52b6d280831df4d8a4e4fe3d72f3caaf985a88f.1351492562.git.pratyush.anand@st.com>
-In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:43449 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951Ab2JFSVI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 14:21:08 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so829089dak.19
+        for <linux-pci@vger.kernel.org>; Sat, 06 Oct 2012 11:21:08 -0700 (PDT)
+Message-ID: <5070768C.4030905@gmail.com>
+Date: Sat, 06 Oct 2012 11:21:00 -0700
+From: Alexander Duyck <alexander.duyck@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Donald Dutile <ddutile@redhat.com>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	yuvalmin@broadcom.com, bhutchings@solarflare.com,
+	gregory.v.rose@intel.com, davem@davemloft.net
+Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
+References: <1349388885-43938-1-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1349388885-43938-1-git-send-email-ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
----
- arch/arm/mach-spear13xx/Makefile |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On 10/4/2012 3:14 PM, Donald Dutile wrote:
+> Provide files under sysfs to determine the max number of vfs
+> an SRIOV-capable PCIe device supports, and methods to enable and
+> disable the vfs on a per device basis.
+>
+> Currently, VF enablement by SRIOV-capable PCIe devices is done
+> in driver-specific module parameters.  If not setup in modprobe files,
+> it requires admin to unload & reload PF drivers with number of desired
+> VFs to enable.  Additionally, the enablement is system wide: all
+> devices controlled by the same driver have the same number of VFs
+> enabled.  Although the latter is probably desired, there are PCI
+> configurations setup by system BIOS that may not enable that to occur.
+>
+> Three files are created if a PCIe device has SRIOV support:
+> sriov_max_vfs -- cat-ing this file returns the maximum number
+>                   of VFs a PCIe device supports.
+> sriov_enable_vfs -- echo'ing a number to this file enables this
+>                      number of VFs for this given PCIe device.
+>                   -- cat-ing this file will return the number of VFs
+>                      currently enabled on this PCIe device.
+> sriov_disable_vfs -- echo-ing any number other than 0 disables all
+>                       VFs associated with this PCIe device.
+>
+> VF enable and disablement is invoked much like other PCIe
+> configuration functions -- via registered callbacks in the driver,
+> i.e., probe, release, etc.
+>
+> v1->v2:
+> This patch is based on previous 2 patches by Yinghai Lu
+> that cleaned up the vga attributes for PCI devices under sysfs,
+> and uses visibility-checking group attributes as recommended by
+> Greg K-H.
+>
+> Signed-off-by: Donald Dutile <ddutile@redhat.com>
 
-diff --git a/arch/arm/mach-spear13xx/Makefile b/arch/arm/mach-spear13xx/Makefile
-index b721566..f7a42fb 100644
---- a/arch/arm/mach-spear13xx/Makefile
-+++ b/arch/arm/mach-spear13xx/Makefile
-@@ -9,3 +9,4 @@ obj-$(CONFIG_ARCH_SPEAR13XX)	+= spear13xx.o
- obj-$(CONFIG_SUSPEND)		+= pm.o wakeup.o sleep_1340.o sleep_1310.o
- obj-$(CONFIG_MACH_SPEAR1310)	+= spear1310.o
- obj-$(CONFIG_MACH_SPEAR1340)	+= spear1340.o
-+obj-$(CONFIG_SPEAR13XX_PCI)	+= pcie.o
--- 
-1.7.5.4
+I'm not certain if having separate values/functions for enable and 
+disabling VFs will work out very well.  It seems like it would probably 
+make more sense just to have one value that manipulates NumVFs.  As is, 
+in the sriov_enable_vfs case we would end up having to disable SR-IOV 
+should we be changing the number of VFs anyway so it would probably make 
+sense to just merge both values into a single one and use 0 as the value 
+to disable SR-IOV.
 
+Also in the naming scheme for the values it may preferable to use the 
+names of the values from the SR-IOV PCIe capability to avoid any 
+confusion on what the values represent.  I believe the names for the two 
+values you are representing are TotalVFs and NumVFs.
+
+Thanks,
+
+Alex
