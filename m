@@ -1,46 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>
-	<1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
-Date: Tue, 23 Oct 2012 10:36:12 -0700
-Message-ID: <CAE9FiQVG9DYK64xy=epYjfOD8=_+zyGcDEZDBZoVGT2yDAvn5A@mail.gmail.com>
-Subject: Re: [PATCH 1/2] Use kacpi_hotplug_wq to handle container hotplug event.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 20/28] ACPI/processor: remove dead code from processor_driver.c
+Date: Sat,  6 Oct 2012 23:27:28 +0800
+Message-Id: <1349537256-21670-21-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 23, 2012 at 6:10 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
-> As the comments in __acpi_os_execute() said:
->
->         We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
->         because the hotplug code may call driver .remove() functions,
->         which invoke flush_scheduled_work/acpi_os_wait_events_complete
->         to flush these workqueues.
->
-> we should keep the hotplug code in kacpi_hotplug_wq.
->
-> But we have the following call series in kernel now:
->         acpi_ev_queue_notify_request()
->         |--> acpi_os_execute()
->              |--> __acpi_os_execute(type, function, context, 0)
->
-> The last parameter 0 makes the container_notify_cb() executed in
-> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
-> into kacpi_hotplug_wq.
+There are some dead code in processor_driver.c, so clean it up.
 
-I had other patches that merge acpi_hp_work in acpiphp and pci_root_hp.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/processor_driver.c |    9 ---------
+ 1 file changed, 9 deletions(-)
 
-I just put them in to for-pci-split-pci-root-hp-2.
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index bfc31cb..abbce9e 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -61,17 +61,11 @@
+ 
+ #define ACPI_PROCESSOR_CLASS		"processor"
+ #define ACPI_PROCESSOR_DEVICE_NAME	"Processor"
+-#define ACPI_PROCESSOR_FILE_INFO	"info"
+-#define ACPI_PROCESSOR_FILE_THROTTLING	"throttling"
+-#define ACPI_PROCESSOR_FILE_LIMIT	"limit"
+ #define ACPI_PROCESSOR_NOTIFY_PERFORMANCE 0x80
+ #define ACPI_PROCESSOR_NOTIFY_POWER	0x81
+ #define ACPI_PROCESSOR_NOTIFY_THROTTLING	0x82
+ #define ACPI_PROCESSOR_DEVICE_HID	"ACPI0007"
+ 
+-#define ACPI_PROCESSOR_LIMIT_USER	0
+-#define ACPI_PROCESSOR_LIMIT_THERMAL	1
+-
+ #define _COMPONENT		ACPI_PROCESSOR_COMPONENT
+ ACPI_MODULE_NAME("processor_driver");
+ 
+@@ -261,9 +255,6 @@ static int acpi_processor_get_info(struct acpi_device *device)
+ 	if (!pr)
+ 		return -EINVAL;
+ 
+-	if (num_online_cpus() > 1)
+-		errata.smp = TRUE;
+-
+ 	acpi_processor_errata(pr);
+ 
+ 	/*
+-- 
+1.7.9.5
 
-can you check them to see if you can use it?
-
-Thanks
-
-Yinghai
