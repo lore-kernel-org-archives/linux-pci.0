@@ -1,125 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:13758 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753427Ab2JIHwc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 03:52:32 -0400
-Message-ID: <5073D76C.9090304@huawei.com>
-Date: Tue, 9 Oct 2012 15:51:08 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
- device hot removed
-References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <50739D40.8040005@huawei.com> <5073D56C.40705@huawei.com>
-In-Reply-To: <5073D56C.40705@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:55513 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754727Ab2JFPgb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 11:36:31 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 27/28] x86: simplify _acpi_map_lsapic()
+Date: Sat,  6 Oct 2012 23:27:35 +0800
+Message-Id: <1349537256-21670-28-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When scanning PCI devices for hot-add, it guarantee function 0 is scanned
-at first. And when destroying PCI devices for hot-removal, we also need to
-destroy function 0 at last, but currently there's no such guarantees. 
+Simplify implementation of function _acpi_map_lsapic().
 
-On 2012-10-9 15:42, Yijing Wang wrote:
-> On 2012/10/9 11:42, Jiang Liu wrote:
->> How about this patch, which disables ARI when adding new PCI devices?
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 5485883..c841aa6 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->>  void pci_enable_ari(struct pci_dev *dev)
->>  {
-> 
-> I think it's ok. Delay to disable ARI until next hot add is safe.
-> Maybe rename as pci_configure_ari is better.
-> 
->>         u32 cap;
->> +       bool enable = true;
->>         struct pci_dev *bridge;
->>
->>         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
->>                 return;
->>
->>         if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
->> -               return;
->> +               enable = false;
->>
->>         bridge = dev->bus->self;
->>         if (!bridge)
->> @@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
->>         if (!(cap & PCI_EXP_DEVCAP2_ARI))
->>                 return;
->>
->> -       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
->> -       bridge->ari_enabled = 1;
->> +       if (enable) {
->> +               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
->> +                                        PCI_EXP_DEVCTL2_ARI);
->> +               bridge->ari_enabled = 1;
->> +       } else {
->> +               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
->> +                                        PCI_EXP_DEVCTL2_ARI);
->> +               bridge->ari_enabled = 0;
->> +       }
->>  }
->>
->>  /**
->>
->> On 2012-10-9 11:03, Yijing Wang wrote:
->>> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
->>> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
->>> when an ARI device hot removed.
->>>
->>> my steps:
->>> 1. Hot add an ARI pci device;
->>> 2. Hot remove the ARI pci device;
->>> 3. Hot add an non ARI pci device;
->>>
->>> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
->>> bit set.
->>>
->>> As PCIe Spec 2.0(6.13/441) recommends:
->>> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
->>> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
->>> newly added component is in fact an ARI Device"
->>>
->>> This series of patches fix this problem.
->>>
->>> Yijing Wang (7):
->>>   PCI: rework pci_enable_ari for support disable ari forwarding
->>>   PCI, acpiphp: disable ARI forwarding for acpiphp
->>>   PCI, pciehp: disable ARI forwarding for pciehp
->>>   PCI, cpqphp: disable ARI forwarding for cpqphp
->>>   PCI, shpchp: disable ARI forwarding for shpchp
->>>   PCI, sgi: disable ARI forwarding for sgiphp
->>>   PCI, ibmphp: disable ARI forwarding for ibmphp
->>>
->>>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
->>>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
->>>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
->>>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
->>>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
->>>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
->>>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
->>>  drivers/pci/pci.c                      |   16 +++++++++++-----
->>>  drivers/pci/pci.h                      |    2 +-
->>>  drivers/pci/probe.c                    |    2 +-
->>>  10 files changed, 20 insertions(+), 7 deletions(-)
->>>
->>>
->>>
->>> .
->>>
->>
->>
->>
->> .
->>
-> 
-> 
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/include/asm/mpspec.h |    2 +-
+ arch/x86/kernel/acpi/boot.c   |   44 +++++++++--------------------------------
+ arch/x86/kernel/apic/apic.c   |    8 +++++---
+ 3 files changed, 15 insertions(+), 39 deletions(-)
 
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index 3e2f42a..f1d6487 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -94,7 +94,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ #define default_get_smp_config x86_init_uint_noop
+ #endif
+ 
+-void __cpuinit generic_processor_info(int apicid, int version);
++int __cpuinit generic_processor_info(int apicid, int version);
+ #ifdef CONFIG_ACPI
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 5e76952..f354446 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -195,24 +195,24 @@ static int __init acpi_parse_madt(struct acpi_table_header *table)
+ 	return 0;
+ }
+ 
+-static void __cpuinit acpi_register_lapic(int id, u8 enabled)
++static int __cpuinit acpi_register_lapic(int id, u8 enabled)
+ {
+ 	unsigned int ver = 0;
+ 
+ 	if (id >= (MAX_LOCAL_APIC-1)) {
+ 		printk(KERN_INFO PREFIX "skipped apicid that is too big\n");
+-		return;
++		return -1;
+ 	}
+ 
+ 	if (!enabled) {
+ 		++disabled_cpus;
+-		return;
++		return -1;
+ 	}
+ 
+ 	if (boot_cpu_physical_apicid != -1U)
+ 		ver = apic_version[boot_cpu_physical_apicid];
+ 
+-	generic_processor_info(id, ver);
++	return generic_processor_info(id, ver);
+ }
+ 
+ static int __init
+@@ -610,44 +610,19 @@ static void __cpuinit acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
+ 
+ static int __cpuinit _acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu)
+ {
+-	cpumask_var_t tmp_map, new_map;
+ 	int cpu;
+-	int retval = -ENOMEM;
+ 
+-	if (!alloc_cpumask_var(&tmp_map, GFP_KERNEL))
+-		goto out;
+-
+-	if (!alloc_cpumask_var(&new_map, GFP_KERNEL))
+-		goto free_tmp_map;
+-
+-	cpumask_copy(tmp_map, cpu_present_mask);
+-	acpi_register_lapic(physid, ACPI_MADT_ENABLED);
+-
+-	/*
+-	 * If acpi_register_lapic successfully generates a new logical cpu
+-	 * number, then the following will get us exactly what was mapped
+-	 */
+-	cpumask_andnot(new_map, cpu_present_mask, tmp_map);
+-	if (cpumask_empty(new_map)) {
++	cpu = acpi_register_lapic(physid, ACPI_MADT_ENABLED);
++	if (cpu == -1) {
+ 		printk ("Unable to map lapic to logical cpu number\n");
+-		retval = -EINVAL;
+-		goto free_new_map;
++		return -EINVAL;
+ 	}
+ 
+ 	acpi_processor_set_pdc(handle);
+-
+-	cpu = cpumask_first(new_map);
+ 	acpi_map_cpu2node(handle, cpu, physid);
+-
+ 	*pcpu = cpu;
+-	retval = 0;
+-
+-free_new_map:
+-	free_cpumask_var(new_map);
+-free_tmp_map:
+-	free_cpumask_var(tmp_map);
+-out:
+-	return retval;
++
++	return 0;
+ }
+ 
+ /* wrapper to silence section mismatch warning */
+@@ -665,7 +640,6 @@ int acpi_unmap_lsapic(int cpu)
+ 
+ 	return (0);
+ }
+-
+ EXPORT_SYMBOL(acpi_unmap_lsapic);
+ #endif				/* CONFIG_ACPI_HOTPLUG_CPU */
+ 
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index b17416e..9fdc293 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -2030,7 +2030,7 @@ void disconnect_bsp_APIC(int virt_wire_setup)
+ 	apic_write(APIC_LVT1, value);
+ }
+ 
+-void __cpuinit generic_processor_info(int apicid, int version)
++int __cpuinit generic_processor_info(int apicid, int version)
+ {
+ 	int cpu, max = nr_cpu_ids;
+ 	bool boot_cpu_detected = physid_isset(boot_cpu_physical_apicid,
+@@ -2050,7 +2050,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
+ 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
+ 
+ 		disabled_cpus++;
+-		return;
++		return -1;
+ 	}
+ 
+ 	if (num_processors >= nr_cpu_ids) {
+@@ -2061,7 +2061,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
+ 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
+ 
+ 		disabled_cpus++;
+-		return;
++		return -1;
+ 	}
+ 
+ 	num_processors++;
+@@ -2106,6 +2106,8 @@ void __cpuinit generic_processor_info(int apicid, int version)
+ #endif
+ 	set_cpu_possible(cpu, true);
+ 	set_cpu_present(cpu, true);
++
++	return cpu;
+ }
+ 
+ int hard_smp_processor_id(void)
+-- 
+1.7.9.5
 
