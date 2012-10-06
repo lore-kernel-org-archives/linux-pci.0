@@ -1,71 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:37675 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760200Ab2JYUFi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Oct 2012 16:05:38 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-Date: Thu, 25 Oct 2012 22:09:33 +0200
-Message-ID: <7817698.0cRrnHoGZv@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com>
-References: <50841CCC.9030809@uli-eckhardt.de> <5086D067.4000900@uli-eckhardt.de> <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:55513 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755013Ab2JFPgn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 11:36:43 -0400
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 28/28] ACPI/processor: serialize call to acpi_map/unmap_lsapic
+Date: Sat,  6 Oct 2012 23:27:36 +0800
+Message-Id: <1349537256-21670-29-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 24, 2012 02:18:40 PM Bjorn Helgaas wrote:
-> On Tue, Oct 23, 2012 at 11:14 AM, Ulrich Eckhardt <usb@uli-eckhardt.de> wrote:
-> > Am 23.10.2012 01:40, schrieb Sarah Sharp:
-> >> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
-> >
-> >>> I have tested it with Kernel 3.6.2. The USB3 port is the one built
-> >>> in the Mainboard M4A87DT EVO.
-> >>
-> >> Did a previous kernel version work?
-> >
-> > Yes, I tried the Kernel shipped with OpenSUSE (3.4.11) several 3.5 and all
-> > available 3.6 kernel versions.
-> 
-> I assume you mean that every kernel you tried failed?  If some
-> kernel(s) did work, what is the newest working version and the oldest
-> broken version?
-> 
-> > I attach the complete dmesg logs and the lspci -vv output as requested by
-> > Bjorn for the situations when the controller does not work after startup
-> > (extension notworking), when the controller is working (extension OK), and
-> > after stopping (extension stop).
-> 
-> In the "notworking" logs, my guess is that the xHCI device is being
-> powered off.  The "notworking" lspci shows this:
-> 
->   00:0a.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI RD790 PCI
-> to PCI bridge (PCI express gpp port F) (prog-if 00 [Normal decode])
->         Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
->                 LnkCap: Port #247, Speed 5GT/s, Width x2, ASPM L0s L1,
-> Latency L0 <64ns, L1 <1us
->                 LnkSta: Speed unknown, Width x1, TrErr- Train-
-> SlotClk+ DLActive- BWMgmt+ ABWMgmt+
->   04:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
-> Controller (rev ff) (prog-if ff)
->         !!! Unknown header type 7f
->         Kernel driver in use: xhci_hcd
-> 
-> The bridge's "DLActive-" means that the downstream link leading to the
-> xHCI device is not active.  The "rev ff", "prog-if ff", and "header
-> type 7f" suggest that we read all 0xff's from the xHCI device, which
-> is what we get if the device doesn't respond.
+Add a mutex to serialize call to acpi_map/unmap_lsapic.
 
-Can it be an ASPM issue?
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/processor_driver.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Rafael
-
-
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index 2346b81..9fc20b4 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -108,6 +108,7 @@ static struct acpi_driver acpi_processor_driver = {
+ 	.drv.pm = &acpi_processor_pm,
+ };
+ 
++static DEFINE_MUTEX(acpi_processor_mutex);
+ static DEFINE_PER_CPU(void *, processor_device_array);
+ 
+ DEFINE_PER_CPU(struct acpi_processor *, processors);
+@@ -668,7 +669,9 @@ static void acpi_processor_reset(struct acpi_device *device, struct acpi_process
+ 	acpi_processor_unlink(device, pr);
+ 	put_online_cpus();
+ 	arch_unregister_cpu(pr->id);
++	mutex_lock(&acpi_processor_mutex);
+ 	acpi_unmap_lsapic(pr->id);
++	mutex_unlock(&acpi_processor_mutex);
+ 	pr->id = -1;
+ }
+ 
+@@ -702,7 +705,9 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
+ 	if (pr->id == -1) {
+ 		if (pr->apic_id == -1)
+ 			goto out;
++		mutex_lock(&acpi_processor_mutex);
+ 		result = acpi_map_lsapic(device->handle, pr->apic_id, &pr->id);
++		mutex_unlock(&acpi_processor_mutex);
+ 		if (result)
+ 			goto out;
+ 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+@@ -722,7 +727,9 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
+ 	return 0;
+ 
+ out_unmap:
++	mutex_lock(&acpi_processor_mutex);
+ 	acpi_unmap_lsapic(pr->id);
++	mutex_unlock(&acpi_processor_mutex);
+ 	pr->id = -1;
+ out:
+ 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
