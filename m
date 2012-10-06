@@ -1,47 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:50367 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab2JCTtT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 15:49:19 -0400
-Received: by ieak13 with SMTP id k13so18121989iea.19
-        for <linux-pci@vger.kernel.org>; Wed, 03 Oct 2012 12:49:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUXmURaO40sA4ibf7j9sokEHYXK_EaGiEq9b-ob=d1MRw@mail.gmail.com>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
- <1349159588-15029-2-git-send-email-yinghai@kernel.org> <20121002133303.GA502@kroah.com>
- <CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
- <20121002174712.GA11843@kroah.com> <CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
- <20121002204548.GC28663@kroah.com> <CAE9FiQV51R2RBAZBPobDifq6jQUhBCyx_Bo8EHxOX4yrUMSnLg@mail.gmail.com>
- <CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com> <CAE9FiQUXmURaO40sA4ibf7j9sokEHYXK_EaGiEq9b-ob=d1MRw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 3 Oct 2012 13:48:58 -0600
-Message-ID: <CAErSpo4gFhiyS8GdZG21Eo0NPjvedr1+rXtY-MP11hDWCZ+LzA@mail.gmail.com>
-Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 22/28] ACPIHP/processor: protect accesses to device->driver_data
+Date: Sat,  6 Oct 2012 23:27:30 +0800
+Message-Id: <1349537256-21670-23-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 2, 2012 at 6:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Oct 2, 2012 at 3:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
->> I don't know what the right answer is, but I do think it's better to
->> resolve it inside PCI and ACPI rather than playing games with driver
->> binding times in the driver core.
->
-> is that ok to save that drivers_autoprobe bit in device.archdata for
-> ia64 and x86 that using acpi?
+CPU hotplug notification handler acpi_cpu_soft_notify() and driver
+unbind method acpi_processor_remove() may be concurrently called.
+acpi_cpu_soft_notify() will access device->driver_data, but that
+data structure may be destroyed by acpi_processor_remove().
 
-You'll have to ask Len (cc'd) what he thinks about the ACPI piece, but
-I don't like the PCI piece.  It's the same idea that Greg already said
-he wouldn't put in the driver core.  Why would it be better to add
-this complexity in the ACPI and PCI cores?
+On the other hand, acpi_cpu_soft_notify() is always called under
+protection of get_online_cpus(), so use get_online_cpus() to serialize
+all accesses and modifications to device->driver_data.
 
-I still think you need to work on the ACPI/PCI binding issue.  Yes,
-it's hard, but I'm not in favor of avoiding that hard work by adding
-kludges everywhere.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/processor_driver.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Bjorn
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index 4f2fec0..110c5ac 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -616,6 +616,8 @@ static int __cpuinit acpi_processor_add(struct acpi_device *device)
+ 		return 0;
+ 	BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+ 
++	/* block CPU online/offline operations */
++	get_online_cpus();
+ 	result = acpi_processor_link(device, pr);
+ 	if (result)
+ 		goto err_unlock;
+@@ -624,6 +626,7 @@ static int __cpuinit acpi_processor_add(struct acpi_device *device)
+ 		if (result)
+ 			goto err_unlink;
+ 	}
++	put_online_cpus();
+ 
+ 	return 0;
+ 
+@@ -654,8 +657,10 @@ static int acpi_processor_remove(struct acpi_device *device, int type)
+ 			return -EINVAL;
+ 	}
+ 
+-	acpi_processor_stop(device, pr);
++	get_online_cpus();
++	acpi_processor_stop(pr);
+ 	acpi_processor_unlink(device, pr);
++	put_online_cpus();
+ 
+ free:
+ 	device->driver_data = NULL;
+-- 
+1.7.9.5
+
