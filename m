@@ -1,399 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22550 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751096Ab2JGFXJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 7 Oct 2012 01:23:09 -0400
-Date: Sun, 7 Oct 2012 07:25:49 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH v4 -tip 1/3] x86, MSI: Support multiple MSIs in presense of
- IRQ remapping
-Message-ID: <c9a201e06bfbd115c4861278ee6864e0c574a37c.1349517905.git.agordeev@redhat.com>
-References: <cover.1349517905.git.agordeev@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1349517905.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Gaohuai Han <hangaohuai@huawei.com>
+Subject: [RFC PATCH v3 09/28] ACPIHP: provide interfaces to associate driver specific data with slots
+Date: Sat,  6 Oct 2012 23:27:17 +0800
+Message-Id: <1349537256-21670-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MSI specification has several constraints in comparison with MSI-X,
-most notable of them is the inability to configure MSIs independently.
-As a result, it is impossible to dispatch interrupts from different
-queues to different CPUs. This is largely devalues the support of
-multiple MSIs in SMP systems.
+This patch implements interfaces to attach/detach/get driver specific data
+to/from ACPI hotplug slots.
 
-Also, a necessity to allocate a contiguous block of vector numbers for
-devices capable of multiple MSIs might cause a considerable pressure on
-x86 interrupt vector allocator and could lead to fragmentation of the
-interrupt vectors space.
-
-This patch overcomes both drawbacks in presense of IRQ remapping and
-lets devices take advantage of multiple queues and per-IRQ affinity
-assignments.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
 ---
- arch/x86/kernel/apic/io_apic.c |  165 ++++++++++++++++++++++++++++++++--------
- include/linux/irq.h            |    5 +
- kernel/irq/chip.c              |   30 +++++--
- 3 files changed, 160 insertions(+), 40 deletions(-)
+ drivers/acpi/hotplug/core.c |   88 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |    8 ++++
+ 2 files changed, 96 insertions(+)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index c265593..02ec1c6 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -300,9 +300,9 @@ static struct irq_cfg *alloc_irq_and_cfg_at(unsigned int at, int node)
- 	return cfg;
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index 1e6dbc8..ffd3b54 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -35,9 +35,16 @@
+ #include <acpi/acpi_hotplug.h>
+ #include "acpihp.h"
+ 
++struct acpihp_drv_data {
++	struct list_head		node;
++	struct class_interface		*key;
++	void				*data;
++};
++
+ #define to_acpihp_slot(d) container_of(d, struct acpihp_slot, dev)
+ 
+ static DEFINE_MUTEX(acpihp_mutex);
++static DEFINE_MUTEX(acpihp_drvdata_mutex);
+ static int acpihp_class_count;
+ static struct kset *acpihp_slot_kset;
+ 
+@@ -367,6 +374,87 @@ char *acpihp_get_slot_type_name(enum acpihp_slot_type type)
  }
+ EXPORT_SYMBOL_GPL(acpihp_get_slot_type_name);
  
--static int alloc_irq_from(unsigned int from, int node)
-+static int alloc_irqs_from(unsigned int from, unsigned int count, int node)
- {
--	return irq_alloc_desc_from(from, node);
-+	return irq_alloc_descs_from(from, count, node);
- }
- 
- static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
-@@ -2991,37 +2991,58 @@ device_initcall(ioapic_init_ops);
- /*
-  * Dynamic irq allocate and deallocation
-  */
--unsigned int create_irq_nr(unsigned int from, int node)
-+unsigned int __create_irqs(unsigned int from, unsigned int count, int node)
- {
--	struct irq_cfg *cfg;
-+	struct irq_cfg **cfg;
- 	unsigned long flags;
--	unsigned int ret = 0;
--	int irq;
-+	int irq, i;
- 
- 	if (from < nr_irqs_gsi)
- 		from = nr_irqs_gsi;
- 
--	irq = alloc_irq_from(from, node);
--	if (irq < 0)
--		return 0;
--	cfg = alloc_irq_cfg(irq, node);
--	if (!cfg) {
--		free_irq_at(irq, NULL);
-+	cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
-+	if (!cfg)
- 		return 0;
-+
-+	irq = alloc_irqs_from(from, count, node);
-+	if (irq < 0)
-+		goto out_cfgs;
-+
-+	for (i = 0; i < count; i++) {
-+		cfg[i] = alloc_irq_cfg(irq + i, node);
-+		if (!cfg[i])
-+			goto out_irqs;
- 	}
- 
- 	raw_spin_lock_irqsave(&vector_lock, flags);
--	if (!__assign_irq_vector(irq, cfg, apic->target_cpus()))
--		ret = irq;
-+	for (i = 0; i < count; i++)
-+		if (__assign_irq_vector(irq + i, cfg[i], apic->target_cpus()))
-+			goto out_vecs;
- 	raw_spin_unlock_irqrestore(&vector_lock, flags);
- 
--	if (ret) {
--		irq_set_chip_data(irq, cfg);
--		irq_clear_status_flags(irq, IRQ_NOREQUEST);
--	} else {
--		free_irq_at(irq, cfg);
-+	for (i = 0; i < count; i++) {
-+		irq_set_chip_data(irq + i, cfg[i]);
-+		irq_clear_status_flags(irq + i, IRQ_NOREQUEST);
- 	}
--	return ret;
-+
-+	kfree(cfg);
-+	return irq;
-+
-+out_vecs:
-+	for (i--; i >= 0; i--)
-+		__clear_irq_vector(irq + i, cfg[i]);
-+	raw_spin_unlock_irqrestore(&vector_lock, flags);
-+out_irqs:
-+	for (i = 0; i < count; i++)
-+		free_irq_at(irq + i, cfg[i]);
-+out_cfgs:
-+	kfree(cfg);
-+	return 0;
-+}
-+
-+unsigned int create_irq_nr(unsigned int from, int node)
++int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
++				struct class_interface *drv, void *data)
 +{
-+	return __create_irqs(from, 1, node);
- }
- 
- int create_irq(void)
-@@ -3054,6 +3075,14 @@ void destroy_irq(unsigned int irq)
- 	free_irq_at(irq, cfg);
- }
- 
-+static inline void destroy_irqs(unsigned int irq, unsigned int count)
-+{
-+	unsigned int i;
++	struct acpihp_drv_data *dp, *cp;
 +
-+	for (i = 0; i < count; i++)
-+		destroy_irq(irq + i);
-+}
-+
- /*
-  * MSI message composition
-  */
-@@ -3080,7 +3109,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- 
- 	if (irq_remapped(cfg)) {
- 		compose_remapped_msi_msg(pdev, irq, dest, msg, hpet_id);
--		return err;
-+		return 0;
- 	}
- 
- 	if (x2apic_enabled())
-@@ -3107,7 +3136,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- 			MSI_DATA_DELIVERY_LOWPRI) |
- 		MSI_DATA_VECTOR(cfg->vector);
- 
--	return err;
-+	return 0;
- }
- 
- static int
-@@ -3145,18 +3174,26 @@ static struct irq_chip msi_chip = {
- 	.irq_retrigger		= ioapic_retrigger_irq,
- };
- 
--static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc, int irq)
-+static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-+			 unsigned int irq_base, unsigned int irq_offset)
- {
- 	struct irq_chip *chip = &msi_chip;
- 	struct msi_msg msg;
-+	unsigned int irq = irq_base + irq_offset;
- 	int ret;
- 
- 	ret = msi_compose_msg(dev, irq, &msg, -1);
- 	if (ret < 0)
- 		return ret;
- 
--	irq_set_msi_desc(irq, msidesc);
--	write_msi_msg(irq, &msg);
-+	irq_set_msi_desc_off(irq_base, irq_offset, msidesc);
-+
-+	/*
-+	 * MSI-X message is written per-IRQ, the offset is always 0.
-+	 * MSI message denotes a contiguous group of IRQs, written for 0th IRQ.
-+	 */
-+	if (!irq_offset)
-+		write_msi_msg(irq, &msg);
- 
- 	if (irq_remapped(irq_get_chip_data(irq))) {
- 		irq_set_status_flags(irq, IRQ_MOVE_PCNTXT);
-@@ -3170,23 +3207,19 @@ static int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc, int irq)
- 	return 0;
- }
- 
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int setup_msix_irqs(struct pci_dev *dev, int nvec)
- {
- 	int node, ret, sub_handle, index = 0;
- 	unsigned int irq, irq_want;
- 	struct msi_desc *msidesc;
- 
--	/* x86 doesn't support multiple MSI yet */
--	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
--
- 	node = dev_to_node(&dev->dev);
- 	irq_want = nr_irqs_gsi;
- 	sub_handle = 0;
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 		irq = create_irq_nr(irq_want, node);
- 		if (irq == 0)
--			return -1;
-+			return -ENOSPC;
- 		irq_want = irq + 1;
- 		if (!irq_remapping_enabled)
- 			goto no_ir;
-@@ -3208,7 +3241,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 				goto error;
- 		}
- no_ir:
--		ret = setup_msi_irq(dev, msidesc, irq);
-+		ret = setup_msi_irq(dev, msidesc, irq, 0);
- 		if (ret < 0)
- 			goto error;
- 		sub_handle++;
-@@ -3220,6 +3253,74 @@ error:
- 	return ret;
- }
- 
-+int setup_msi_irqs(struct pci_dev *dev, int nvec)
-+{
-+	int node, ret, sub_handle, index = 0;
-+	unsigned int irq;
-+	struct msi_desc *msidesc;
-+
-+	if (nvec > 1 && !irq_remapping_enabled)
-+		return 1;
-+
-+	nvec = __roundup_pow_of_two(nvec);
-+
-+	WARN_ON(!list_is_singular(&dev->msi_list));
-+	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
-+	WARN_ON(msidesc->irq);
-+	WARN_ON(msidesc->msi_attrib.multiple);
-+
-+	node = dev_to_node(&dev->dev);
-+	irq = __create_irqs(nr_irqs_gsi, nvec, node);
-+	if (irq == 0)
-+		return -ENOSPC;
-+
-+	if (!irq_remapping_enabled) {
-+		ret = setup_msi_irq(dev, msidesc, irq, 0);
-+		if (ret < 0)
-+			goto error;
-+		return 0;
++	if (slot == NULL || drv == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
 +	}
 +
-+	msidesc->msi_attrib.multiple = ilog2(nvec);
-+	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
-+		if (!sub_handle) {
-+			index = msi_alloc_remapped_irq(dev, irq, nvec);
-+			if (index < 0) {
-+				ret = index;
-+				goto error;
-+			}
-+		} else {
-+			ret = msi_setup_remapped_irq(dev, irq + sub_handle,
-+						     index, sub_handle);
-+			if (ret < 0)
-+				goto error;
++	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
++	if (dp == NULL)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&dp->node);
++	dp->key = drv;
++	dp->data = data;
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			mutex_unlock(&acpihp_drvdata_mutex);
++			kfree(dp);
++			return -EEXIST;
 +		}
-+		ret = setup_msi_irq(dev, msidesc, irq, sub_handle);
-+		if (ret < 0)
-+			goto error;
-+	}
++	list_add(&dp->node, &slot->drvdata_list);
++	mutex_unlock(&acpihp_drvdata_mutex);
++
 +	return 0;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_attach_drv_data);
 +
-+error:
-+	destroy_irqs(irq, nvec);
++int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
++				struct class_interface *drv, void **data)
++{
++	struct acpihp_drv_data *cp;
 +
-+	/*
-+	 * Restore altered MSI descriptor fields and prevent just destroyed
-+	 * IRQs from tearing down again in default_teardown_msi_irqs()
-+	 */
-+	msidesc->irq = 0;
-+	msidesc->msi_attrib.multiple = 0;
++	if (slot == NULL || drv == NULL || data == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			list_del(&cp->node);
++			*data = cp->data;
++			mutex_unlock(&acpihp_drvdata_mutex);
++			kfree(cp);
++			return 0;
++		}
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return -ENOENT;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_detach_drv_data);
++
++int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
++			     struct class_interface *drv, void **data)
++{
++	int ret = -ENOENT;
++	struct acpihp_drv_data *cp;
++
++	if (slot == NULL || drv == NULL || data == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			*data = cp->data;
++			ret = 0;
++			break;
++		}
++	mutex_unlock(&acpihp_drvdata_mutex);
 +
 +	return ret;
 +}
++EXPORT_SYMBOL_GPL(acpihp_slot_get_drv_data);
 +
-+int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	if (type == PCI_CAP_ID_MSI)
-+		return setup_msi_irqs(dev, nvec);
-+	return setup_msix_irqs(dev, nvec);
-+}
-+
- void native_teardown_msi_irq(unsigned int irq)
- {
- 	destroy_irq(irq);
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 216b0ba..b23e2da 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -522,6 +522,8 @@ extern int irq_set_handler_data(unsigned int irq, void *data);
- extern int irq_set_chip_data(unsigned int irq, void *data);
- extern int irq_set_irq_type(unsigned int irq, unsigned int type);
- extern int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry);
-+extern int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
-+				struct msi_desc *entry);
- extern struct irq_data *irq_get_irq_data(unsigned int irq);
- 
- static inline struct irq_chip *irq_get_chip(unsigned int irq)
-@@ -584,6 +586,9 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- #define irq_alloc_desc_from(from, node)		\
- 	irq_alloc_descs(-1, from, 1, node)
- 
-+#define irq_alloc_descs_from(from, cnt, node)	\
-+	irq_alloc_descs(-1, from, cnt, node)
-+
- void irq_free_descs(unsigned int irq, unsigned int cnt);
- int irq_reserve_irqs(unsigned int from, unsigned int cnt);
- 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 57d86d0..2230389 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -90,27 +90,41 @@ int irq_set_handler_data(unsigned int irq, void *data)
- EXPORT_SYMBOL(irq_set_handler_data);
- 
- /**
-- *	irq_set_msi_desc - set MSI descriptor data for an irq
-- *	@irq:	Interrupt number
-- *	@entry:	Pointer to MSI descriptor data
-+ *	irq_set_msi_desc_off - set MSI descriptor data for an irq at offset
-+ *	@irq_base:	Interrupt number base
-+ *	@irq_offset:	Interrupt number offset
-+ *	@entry:		Pointer to MSI descriptor data
-  *
-- *	Set the MSI descriptor entry for an irq
-+ *	Set the MSI descriptor entry for an irq at offset
+ /*
+  * slot_ops should be valid during the life cycle of a slot, so no protection.
   */
--int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
-+int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
-+			 struct msi_desc *entry)
- {
- 	unsigned long flags;
--	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
-+	struct irq_desc *desc = irq_get_desc_lock(irq_base + irq_offset, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index fd46997..97febcb 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -257,6 +257,14 @@ extern acpi_status acpihp_slot_get_status(struct acpihp_slot *slot,
+ extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
+ extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
  
- 	if (!desc)
- 		return -EINVAL;
- 	desc->irq_data.msi_desc = entry;
--	if (entry)
--		entry->irq = irq;
-+	if (entry && !irq_offset)
-+		entry->irq = irq_base;
- 	irq_put_desc_unlock(desc, flags);
- 	return 0;
- }
- 
- /**
-+ *	irq_set_msi_desc - set MSI descriptor data for an irq
-+ *	@irq:	Interrupt number
-+ *	@entry:	Pointer to MSI descriptor data
-+ *
-+ *	Set the MSI descriptor entry for an irq
-+ */
-+int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
-+{
-+	return irq_set_msi_desc_off(irq, 0, entry);
-+}
++/* Help routines to associate driver data with hotplug slots. */
++extern int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void *data);
++extern int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void **data);
++extern int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void **data);
 +
-+/**
-  *	irq_set_chip_data - set irq chip data for an irq
-  *	@irq:	Interrupt number
-  *	@data:	Pointer to chip specific data
+ /*
+  * Add device objects for ACPI devices connecting to an ACPI hotplug slot,
+  * but don't cross the hotplug slot boundary.
 -- 
-1.7.7.6
+1.7.9.5
 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
