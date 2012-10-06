@@ -1,82 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:57121 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751164Ab2JFHDn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 03:03:43 -0400
-Date: Sat, 6 Oct 2012 09:03:30 +0200
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Russell King <linux@arm.linux.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v3 0/2] ARM: pci: Prepare for Tegra PCIe controller driver
-Message-ID: <20121006070330.GA4842@avionic-0098.mockup.avionic-design.de>
-References: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-In-Reply-To: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH v3 17/28] ACPIHP: block ACPI device driver unloading when executing hotplug operations
+Date: Sat,  6 Oct 2012 23:27:25 +0800
+Message-Id: <1349537256-21670-18-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The ACPI hotplug driver depends on ACPI device drivers to configure or
+unconfigure ACPI devices. It will confuse the hotplug driver if an ACPI
+device driver is unloaded when there are ongoing hotplug operations.
+So block ACPI device driver unbinding/unloading by holding the device
+lock when there are ongoing hotplug operations.
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/hotplug/configure.c |   18 ++++++++++++++++--
+ drivers/acpi/hotplug/device.c    |    8 --------
+ 2 files changed, 16 insertions(+), 10 deletions(-)
 
-On Thu, Sep 20, 2012 at 09:43:43AM +0200, Thierry Reding wrote:
-> Hi Russell,
->=20
-> These are two patches I've been carrying in a larger series that
-> converts the Tegra PCIe controller driver to a proper platform driver.
-> Since the complete series didn't get much feedback, I've begun to post
-> smaller subsets in an effort to get them merged more easily.
->=20
-> The first patch in this series removes the __init annotations from the
-> pci_common_init() function (and pcibios_init_hw(), pcibios_swizzle() as
-> well as pcibios_init_resources() because they end up being called from
-> the former) to make sure that they stay around after the init stage.
-> This is required because the Tegra driver depends on regulators that
-> become available only very late during boot and uses deferred probing to
-> handle this situation. It turned out that this postpones the PCI bus
-> initialization until after init, thus this patch.
->=20
-> The second patch is used to pass per-controller or per-host-bridge data
-> to the driver, such that it can be associated with the corresponding
-> bus. This is also required by the Tegra driver in order to pass a
-> driver-private structure to the PCI bus (or more precisely the
-> pci_sys_data structure associated with a bus). It is subsequently used
-> to obtain the root port private data given the corresponding PCI bus.
->=20
-> Note that v3 is pretty much the same as v2, except that it is rebased on
-> linux-next and contains the removal of the __init annotation from the
-> pcibios_init_resources() function which is only in linux-next.
+diff --git a/drivers/acpi/hotplug/configure.c b/drivers/acpi/hotplug/configure.c
+index 346b976..75e8752 100644
+--- a/drivers/acpi/hotplug/configure.c
++++ b/drivers/acpi/hotplug/configure.c
+@@ -37,7 +37,9 @@ enum config_op_code {
+ 	DRV_OP_POST_RELEASE,
+ 	DRV_OP_PRE_UNCONFIGURE,
+ 	DRV_OP_UNCONFIGURE,
+-	DRV_OP_POST_UNCONFIGURE
++	DRV_OP_POST_UNCONFIGURE,
++	DRV_OP_LOCK_DEVICE,
++	DRV_OP_UNLOCK_DEVICE,
+ };
+ 
+ /* All devices will be configured in following order. */
+@@ -102,6 +104,12 @@ static int acpihp_drv_invoke_method(enum config_op_code  opcode,
+ 		return acpihp_dev_unconfigure(dev);
+ 	case DRV_OP_POST_UNCONFIGURE:
+ 		return acpihp_dev_post_unconfigure(dev);
++	case DRV_OP_LOCK_DEVICE:
++		device_lock(&dev->dev);
++		return 0;
++	case DRV_OP_UNLOCK_DEVICE:
++		device_unlock(&dev->dev);
++		return 0;
+ 	default:
+ 		BUG_ON(opcode);
+ 		return -ENOSYS;
+@@ -126,7 +134,9 @@ static int acpihp_drv_call_method(enum config_op_code opcode,
+ 		result = acpihp_drv_invoke_method(opcode, slot, acpi_dev, 0);
+ 		if (result)
+ 			break;
+-		acpihp_drv_update_dev_state(np, state);
++		if (opcode != DRV_OP_LOCK_DEVICE &&
++		    opcode != DRV_OP_UNLOCK_DEVICE)
++			acpihp_drv_update_dev_state(np, state);
+ 	}
+ 	klist_iter_exit(&iter);
+ 
+@@ -248,6 +258,7 @@ int acpihp_drv_configure(struct list_head *list)
+ 		acpihp_slot_change_state(dep->slot,
+ 					 ACPIHP_SLOT_STATE_CONFIGURING);
+ 
++	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
+ 	result = acpihp_drv_walk_devs(&head, DRV_OP_PRE_CONFIGURE,
+ 				      DEVICE_STATE_PRE_CONFIGURE, false);
+ 	if (!result)
+@@ -257,6 +268,7 @@ int acpihp_drv_configure(struct list_head *list)
+ 		post = ACPIHP_DEV_POST_CMD_ROLLBACK;
+ 	acpihp_drv_walk_devs_post(&head, DRV_OP_POST_CONFIGURE,
+ 				  DEVICE_STATE_CONNECTED, post, false);
++	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
+ 
+ 	list_for_each_entry(dep, &head, node)
+ 		acpihp_drv_update_slot_state(dep->slot);
+@@ -327,9 +339,11 @@ int acpihp_drv_unconfigure(struct list_head *list)
+ 		acpihp_slot_change_state(dep->slot,
+ 					 ACPIHP_SLOT_STATE_UNCONFIGURING);
+ 
++	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
+ 	result = acpihp_drv_release(&head);
+ 	if (!result)
+ 		__acpihp_drv_unconfigure(&head);
++	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
+ 
+ 	list_for_each_entry(dep, &head, node)
+ 		acpihp_drv_update_slot_state(dep->slot);
+diff --git a/drivers/acpi/hotplug/device.c b/drivers/acpi/hotplug/device.c
+index d566522..90666f8 100644
+--- a/drivers/acpi/hotplug/device.c
++++ b/drivers/acpi/hotplug/device.c
+@@ -35,7 +35,6 @@ int acpihp_dev_get_info(struct acpi_device *device,
+ 
+ 	acpihp_dev_get_type(device->handle, &info->type);
+ 
+-	device_lock(&device->dev);
+ 	if (device->driver && device->driver->ops.hp_ops &&
+ 	    device->driver->ops.hp_ops->get_info)
+ 		ret = device->driver->ops.hp_ops->get_info(device, info);
+@@ -51,7 +50,6 @@ int acpihp_dev_get_info(struct acpi_device *device,
+ 
+ 	if (device->driver)
+ 		info->status |= ACPIHP_DEV_STATUS_ATTACHED;
+-	device_unlock(&device->dev);
+ 
+ 	return ret;
+ }
+@@ -62,14 +60,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
+ { \
+ 	int ret; \
+ 	BUG_ON(device == NULL); \
+-	device_lock(&device->dev); \
+ 	if (!device->driver || !device->driver->ops.hp_ops) \
+ 		ret = (err); \
+ 	else if (!device->driver->ops.hp_ops->method) \
+ 		ret = (def); \
+ 	else \
+ 		ret = device->driver->ops.hp_ops->method(device, val); \
+-	device_unlock(&device->dev); \
+ 	return ret; \
+ } \
+ EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+@@ -79,14 +75,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
+ { \
+ 	int ret = 0; \
+ 	BUG_ON(device == NULL); \
+-	device_lock(&device->dev); \
+ 	if (!device->driver || !device->driver->ops.hp_ops) \
+ 		ret = (err); \
+ 	else if (!device->driver->ops.hp_ops->method) \
+ 		ret = (def); \
+ 	else \
+ 		device->driver->ops.hp_ops->method(device, val); \
+-	device_unlock(&device->dev); \
+ 	return ret; \
+ } \
+ EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+@@ -96,14 +90,12 @@ int acpihp_dev_##method(struct acpi_device *device) \
+ { \
+ 	int ret = 0; \
+ 	BUG_ON(device == NULL); \
+-	device_lock(&device->dev); \
+ 	if (!device->driver || !device->driver->ops.hp_ops) \
+ 		ret = (err); \
+ 	else if (!device->driver->ops.hp_ops->method) \
+ 		ret = (def); \
+ 	else \
+ 		device->driver->ops.hp_ops->method(device);\
+-	device_unlock(&device->dev); \
+ 	return ret; \
+ } \
+ EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+-- 
+1.7.9.5
 
-Hi Russell,
-
-have you had a chance to look at these yet?
-
-Thierry
-
---+QahgC5+KEYLbs62
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQb9fCAAoJEN0jrNd/PrOhZLEP/2lcjO7SdKcH8OdpHjKhs5Ii
-lZXc/wJfHYIKLPEgPKwAHCA6wkCwuGx/VUotLkQRN7LqS/sHNsUHpQad43zBy2xV
-GIHXmRH+/U9yGOwS0W1HkfLj8MmKCu2P7W/7gaTNZTU6Zxcoek141ZzfIcHQFZtB
-ayTz7XrW2lg0C5A6snGvP+YpjlXAxf57iRXMe3nWtpETZY9RrELnraDwj/cxRi1I
-oYntOMMBpUR8Fh3044HN+pa+XlO+dlEtABfjgK+8qxc1GhC1IyZKp8/C+Mn7ii5o
-SHXXO3XYYkVaY0mp5G6ysUKxoK6p0UI043JPA9oz2c4I60xVvbkinNov94Brk1pZ
-nVQbWmnqBqcIbXLYDVM6PU7qIYdtwR0iE//0jGEYggTXieCyGKmdpsXpltnP4C3U
-U3grvmOYDeFhiY9kQuLnI5ImFR8Z1GDd1OyI3/nZ0g/0vGQOqKk+OvCTMUOZY5FR
-juGtVCIEDcwThwQaPWSpMu+KRDqaisdSJEvbmz/RnadKKgK3tXNLk5YdJBrs5sfn
-R/sGwrBGkJ4Xyd8jgwgWhTGQDz2U02koyu3Nn3s14oUVN+o0xbzIPteo9je0rQLl
-oUorgsV2+D7uH8u0gguvouDzXAgpJ5uZ9UkxhMGSL+sVA+dMnkJFDAyBorMWDaHc
-01wish0wPK7IFE9sRy4A
-=HdMe
------END PGP SIGNATURE-----
-
---+QahgC5+KEYLbs62--
