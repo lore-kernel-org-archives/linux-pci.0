@@ -1,91 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:57777 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198Ab2JGPSD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Oct 2012 11:18:03 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so3284842pbb.19
-        for <linux-pci@vger.kernel.org>; Sun, 07 Oct 2012 08:18:02 -0700 (PDT)
-Message-ID: <50719D20.8020009@gmail.com>
-Date: Sun, 07 Oct 2012 23:17:52 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.126.187]:57121 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164Ab2JFHDn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 03:03:43 -0400
+Date: Sat, 6 Oct 2012 09:03:30 +0200
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Russell King <linux@arm.linux.org.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 0/2] ARM: pci: Prepare for Tegra PCIe controller driver
+Message-ID: <20121006070330.GA4842@avionic-0098.mockup.avionic-design.de>
+References: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 00/10] PCI, ACPI: Use bus type notifier for root bus hotplug
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org> <506F9E0F.9010705@gmail.com> <CAE9FiQWj655cwN_e0ZmzCVYmJEnM2O_V453g4QTQqaApOPo2Fw@mail.gmail.com>
-In-Reply-To: <CAE9FiQWj655cwN_e0ZmzCVYmJEnM2O_V453g4QTQqaApOPo2Fw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
+In-Reply-To: <1348127025-29461-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/06/2012 03:25 PM, Yinghai Lu wrote:
-> On Fri, Oct 5, 2012 at 7:57 PM, Jiang Liu <liuj97@gmail.com> wrote:
->> Hi Yinghai,
->>         I like your idea to get rid of acpi_device_ops->start() method, actually
->> that's on my TODO list too.
->>         I think the ACPI based system device hotplug framework we are working on
->> may help to solve this issue. We define CPU, memory, PCI host bridge, IOAPIC,
->> and CONTAINER as system devices. We have added some callbacks into acpi_device_ops
->> to support system device hotplug. With the new ACPI system device hotplug framework,
->> the sequence is:
->> 1) Walk hot-added ACPI subtree, creates acpi devices and binds acpi drivers. Now
->> acpi_device_ops->add() method only setup basic data structure to manage the ACPI
->> device but without actually starting the system device.
->> 2) Classify hot-added ACPI devices into classes, such CPU, MEM, PCI HOST BRIGE, IOAPIC,
->> CONTAINER.
->> 3) Add all hot-added system device into running system in following order:
->> CONTAINER -> MEM -> CPU -> IOAPIC -> PCI_HOST_BRIDGE.
->>
->> With above sequence, we could scan and start PCI devices in step 3 above.
-> 
-> ioapic may need to be after pci device scan and pci assign-unassigned resource.
-> 
-> the same as iommu/dmar... need to after pci device scanning...
-Hi Yinghai,
-	I have no experience with AMD IOAPIC yet, seems IOAPIC on AMD platforms
-may have the special requirement above. So your solution is better and no need
-for the ACPI system device hotplug framework to handle IOAPIC device any more.
 
-> 
-> I have all pci root bus hot plug related patch in my tree
-> 
->  for-pci-x86-pcibios-alloc-res
->  for-pci-host-bridge-bus-type
->  for-pci-kill-pci-root-buses
-> 
->  for-pci-root-bus-hotplug
-> 
->  for-pci-misc
-> 
->  for-pci-jiang-hotplug
-> 
->  for-pci-root-bus-hotadd-survey-pcibios-res
->  for-pci-split-pci-root-hp
->  for-pci-notifier
-> 
-> 
->  for-acpi-next-pci
->  for-pci-next
-> 
-> after those patches (about 61) go through pci/next
-> 
-> will need to push for-x86-irq for ioapic through tip
-> and for-iommu for iommu support through iommu : david.W
-I have reviewed these branches, all seems great to me. It includes some nice clean
-up other than the "PCI host bridge hotplug".
-for-pci-split-pci-root-hp
-for-pci-root-bus-hotplug
-for-pci-misc
-for-pci-host-bridge-bus-type
-for-pci-jiang-hotplug
-for-pci-notifier
-for-pci-x86-pcibios-alloc-res
-for-pci-root-bus-hotadd-survey-pcibios-res
+--+QahgC5+KEYLbs62
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-And we I have several plan based on your work as below, what's your thoughts?
-1) replace pci_root_hp.c with our new hotplug framework
-2) enhance pci_root.c to support new hotplug framework
-3) enable PCI host bridge hotplug for IA64 platforms.
-4) try to make PCI host bridge hotplug work without "drivers_autoprobe".
+On Thu, Sep 20, 2012 at 09:43:43AM +0200, Thierry Reding wrote:
+> Hi Russell,
+>=20
+> These are two patches I've been carrying in a larger series that
+> converts the Tegra PCIe controller driver to a proper platform driver.
+> Since the complete series didn't get much feedback, I've begun to post
+> smaller subsets in an effort to get them merged more easily.
+>=20
+> The first patch in this series removes the __init annotations from the
+> pci_common_init() function (and pcibios_init_hw(), pcibios_swizzle() as
+> well as pcibios_init_resources() because they end up being called from
+> the former) to make sure that they stay around after the init stage.
+> This is required because the Tegra driver depends on regulators that
+> become available only very late during boot and uses deferred probing to
+> handle this situation. It turned out that this postpones the PCI bus
+> initialization until after init, thus this patch.
+>=20
+> The second patch is used to pass per-controller or per-host-bridge data
+> to the driver, such that it can be associated with the corresponding
+> bus. This is also required by the Tegra driver in order to pass a
+> driver-private structure to the PCI bus (or more precisely the
+> pci_sys_data structure associated with a bus). It is subsequently used
+> to obtain the root port private data given the corresponding PCI bus.
+>=20
+> Note that v3 is pretty much the same as v2, except that it is rebased on
+> linux-next and contains the removal of the __init annotation from the
+> pcibios_init_resources() function which is only in linux-next.
 
-Thanks!
+Hi Russell,
+
+have you had a chance to look at these yet?
+
+Thierry
+
+--+QahgC5+KEYLbs62
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQb9fCAAoJEN0jrNd/PrOhZLEP/2lcjO7SdKcH8OdpHjKhs5Ii
+lZXc/wJfHYIKLPEgPKwAHCA6wkCwuGx/VUotLkQRN7LqS/sHNsUHpQad43zBy2xV
+GIHXmRH+/U9yGOwS0W1HkfLj8MmKCu2P7W/7gaTNZTU6Zxcoek141ZzfIcHQFZtB
+ayTz7XrW2lg0C5A6snGvP+YpjlXAxf57iRXMe3nWtpETZY9RrELnraDwj/cxRi1I
+oYntOMMBpUR8Fh3044HN+pa+XlO+dlEtABfjgK+8qxc1GhC1IyZKp8/C+Mn7ii5o
+SHXXO3XYYkVaY0mp5G6ysUKxoK6p0UI043JPA9oz2c4I60xVvbkinNov94Brk1pZ
+nVQbWmnqBqcIbXLYDVM6PU7qIYdtwR0iE//0jGEYggTXieCyGKmdpsXpltnP4C3U
+U3grvmOYDeFhiY9kQuLnI5ImFR8Z1GDd1OyI3/nZ0g/0vGQOqKk+OvCTMUOZY5FR
+juGtVCIEDcwThwQaPWSpMu+KRDqaisdSJEvbmz/RnadKKgK3tXNLk5YdJBrs5sfn
+R/sGwrBGkJ4Xyd8jgwgWhTGQDz2U02koyu3Nn3s14oUVN+o0xbzIPteo9je0rQLl
+oUorgsV2+D7uH8u0gguvouDzXAgpJ5uZ9UkxhMGSL+sVA+dMnkJFDAyBorMWDaHc
+01wish0wPK7IFE9sRy4A
+=HdMe
+-----END PGP SIGNATURE-----
+
+--+QahgC5+KEYLbs62--
