@@ -1,65 +1,293 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:33152 "EHLO
-	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1422762Ab2JaLYq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 07:24:46 -0400
-Message-ID: <50910A70.7050209@st.com>
-Date: Wed, 31 Oct 2012 16:54:32 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: viresh kumar <viresh.kumar@linaro.org>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"olof@lixom.net" <olof@lixom.net>
-Subject: Re: [PATCH 03/15] SPEAr13xx: Add mach/io.h
-References: <cover.1351492562.git.pratyush.anand@st.com> <CAOh2x==1McRP4eNFZa8qH4hjnOr003Ozb6J3XP8B87E9yZB4zw@mail.gmail.com> <508E3A2E.3000204@st.com> <201210302145.47011.arnd@arndb.de>
-In-Reply-To: <201210302145.47011.arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Gaohuai Han <hangaohuai@huawei.com>
+Subject: [RFC PATCH v3 06/28] ACPIHP: introduce interfaces to scan and walk ACPI devices connecting to a slot
+Date: Sat,  6 Oct 2012 23:27:14 +0800
+Message-Id: <1349537256-21670-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/31/2012 3:15 AM, Arnd Bergmann wrote:
-> On Monday 29 October 2012, Pratyush Anand wrote:
->> Any transaction between 0x80000000 to 0x8FFFFFFF can only be used for
->> any type(IO/MEM/CFG0/CFG1) of PCIe transaction. Therefore , we need to
->> have this mapping in io.h.
->
-> No you don't.
->
-> The I/O space window will only be in one place on a given system, so you
-> should register that window using pci_ioremap_io() as all the other
+This patch enhances acpi_bus_scan() to implement acpihp_add_devices(),
+which creates ACPI devices for hot-added system devices connecting to
+an ACPI hotplug slot, but don't cross the slot boundary.
 
-Sorry, I could not find pci_ioremap_io function. May be you wanted to 
-refer something else.
+It also introduces a new interface to walk all ACPI devices connecting
+to an ACPI hotplug slot.
 
-In case of SPEAr too , we can reserve first 32Kb per controller as PCIe 
-IO space. So, lets say I fixed address 0x80000000--0x80007FFF for IO 
-transaction. I need to register address range of this window somehow.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+---
+ drivers/acpi/hotplug/Makefile |    2 +-
+ drivers/acpi/hotplug/acpihp.h |    1 +
+ drivers/acpi/hotplug/device.c |  123 +++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/internal.h       |    2 +
+ drivers/acpi/scan.c           |   11 +++-
+ include/acpi/acpi_bus.h       |    2 +
+ include/acpi/acpi_hotplug.h   |   15 +++++
+ 7 files changed, 154 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/acpi/hotplug/device.c
 
-But, issue which faced was that I was not able to successfully 
-request_resource(&ioport_resource, &res]) with res.start = 0x80000000 
-and res.end = 0x80007fff.
-
-So, I though first to change IO_SPACE_LIMIT. But I found it not a 
-correct way.
-
-May be I am missing something and not able to get how can I use 
-pci_ioremap_io or something else to register 0x80000000--0x80007FFF 
-window. A reference will help.
-
-
-Regards
-Pratyush
-> modern platforms. There is no excuse for having a per-platform mach/io.h
-> any more and that would prevent you from enabling spear in a multiplatform
-> configuration.
->
-> 	Arnd
-> .
->
-
+diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
+index c19b350..6e5daf6 100644
+--- a/drivers/acpi/hotplug/Makefile
++++ b/drivers/acpi/hotplug/Makefile
+@@ -3,7 +3,7 @@
+ #
+ 
+ obj-$(CONFIG_ACPI_HOTPLUG)			+= acpihp.o
+-acpihp-y					= core.o
++acpihp-y					= core.o device.o
+ 
+ obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
+ acpihp_slot-y					= slot.o
+diff --git a/drivers/acpi/hotplug/acpihp.h b/drivers/acpi/hotplug/acpihp.h
+index 7c49eab..54d9d95 100644
+--- a/drivers/acpi/hotplug/acpihp.h
++++ b/drivers/acpi/hotplug/acpihp.h
+@@ -26,6 +26,7 @@
+ #include <acpi/acpi.h>
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_hotplug.h>
++#include "../internal.h"
+ 
+ extern struct acpi_device *acpi_root;
+ extern struct acpihp_slot_ops acpihp_slot_ej0;
+diff --git a/drivers/acpi/hotplug/device.c b/drivers/acpi/hotplug/device.c
+new file mode 100644
+index 0000000..fb0451f
+--- /dev/null
++++ b/drivers/acpi/hotplug/device.c
+@@ -0,0 +1,123 @@
++/*
++ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
++ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ */
++#include <linux/types.h>
++#include <linux/device.h>
++#include <acpi/acpi.h>
++#include <acpi/acpi_bus.h>
++#include <acpi/acpi_hotplug.h>
++#include "acpihp.h"
++
++/*
++ * When creating ACPI devices for hot-added system devices connecting to slot,
++ * don't cross the slot boundary. Otherwise it will cause inconsistence
++ * to other hotplug slots.
++ */
++static acpi_status acpihp_filter_device(acpi_handle hdl, u32 level, void *arg)
++{
++	/* Skip if the handle corresponds to a child hotplug slot. */
++	if (level > 0 && acpihp_is_slot(hdl))
++		return AE_CTRL_DEPTH;
++
++	return AE_OK;
++}
++
++/* Create ACPI devices for hot-added system devices connecting to a slot. */
++int acpihp_add_devices(acpi_handle handle, struct acpi_device **child)
++{
++	struct acpi_bus_ops ops;
++
++	memset(&ops, 0, sizeof(ops));
++	ops.acpi_op_add = 1;
++	ops.acpi_op_filter_fn = &acpihp_filter_device;
++	ops.acpi_op_filter_arg = NULL;
++
++	return acpi_bus_scan(handle, &ops, child);
++}
++EXPORT_SYMBOL_GPL(acpihp_add_devices);
++
++struct acpihp_walk_arg {
++	acpihp_walk_device_cb cb;
++	void *arg;
++	acpi_status status;
++};
++
++static int acpihp_walk_cb(struct device *dev, void *data)
++{
++	acpi_status status;
++	struct acpihp_walk_arg *argp = (struct acpihp_walk_arg *)data;
++	struct acpi_device *acpi_dev;
++
++	if (dev->bus != &acpi_bus_type)
++		return 0;
++
++	/* Skip if the handle corresponds to a child hotplug slot. */
++	acpi_dev = container_of(dev, struct acpi_device, dev);
++	if (acpihp_is_slot(acpi_dev->handle))
++		return 0;
++
++	status = argp->cb(acpi_dev, argp->arg);
++	if (status == AE_OK) {
++		return device_for_each_child(dev, data, &acpihp_walk_cb);
++	} else if (status == AE_CTRL_DEPTH || status == AE_CTRL_SKIP) {
++		return 0;
++	} else {
++		argp->status = status;
++		return -1;
++	}
++}
++
++/*
++ * Walk all ACPI devices connecting to a hotplug slot, but don't cross the
++ * hotplug slot boundary.
++ */
++int acpihp_walk_devices(acpi_handle handle, acpihp_walk_device_cb cb,
++			void *argp)
++{
++	acpi_status status;
++	struct acpi_device *device;
++	struct acpihp_walk_arg arg;
++
++	if (acpi_bus_get_device(handle, &device))
++		return -ENODEV;
++
++	status = (*cb)(device, argp);
++	if (ACPI_SUCCESS(status)) {
++		arg.cb = cb;
++		arg.arg = argp;
++		arg.status = AE_OK;
++		(void) device_for_each_child(&device->dev, &arg,
++					     &acpihp_walk_cb);
++		status = arg.status;
++	}
++
++	if (status == AE_CTRL_DEPTH || status == AE_CTRL_TERMINATE ||
++	    status == AE_CTRL_SKIP)
++		status = AE_OK;
++	else if (ACPI_FAILURE(status))
++		ACPIHP_DEBUG("fails to walk devices under %p.\n", handle);
++
++	acpi_device_put(device);
++
++	return status == AE_OK ? 0 : -ENODEV;
++}
++EXPORT_SYMBOL_GPL(acpihp_walk_devices);
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 70843c0..6f0632d 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -95,5 +95,7 @@ static inline void suspend_nvs_restore(void) {}
+ 
+ extern struct rw_semaphore acpi_device_data_handler_sem;
+ void acpi_bus_data_handler(acpi_handle handle, void *context);
++int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++		  struct acpi_device **child);
+ 
+ #endif /* _ACPI_INTERNAL_H_ */
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index a1d5188..028294d 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1431,6 +1431,14 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 		return AE_CTRL_DEPTH;
+ 	}
+ 
++	/* Hooks for ACPI based system device hotplug */
++	if (ops->acpi_op_filter_fn != NULL) {
++		result = ops->acpi_op_filter_fn(handle, lvl,
++						ops->acpi_op_filter_arg);
++		if (result != AE_OK)
++			return result;
++	}
++
+ 	/*
+ 	 * We may already have an acpi_device from a previous enumeration.  If
+ 	 * so, we needn't add it again, but we may still have to start it.
+@@ -1454,7 +1462,7 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 	return AE_OK;
+ }
+ 
+-static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
+ 			 struct acpi_device **child)
+ {
+ 	acpi_status status;
+@@ -1612,6 +1620,7 @@ int __init acpi_scan_init(void)
+ 	memset(&ops, 0, sizeof(ops));
+ 	ops.acpi_op_add = 1;
+ 	ops.acpi_op_start = 1;
++	ops.acpi_op_filter_fn = NULL;
+ 
+ 	result = bus_register(&acpi_bus_type);
+ 	if (result) {
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 0a109fc..8136dd7 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -127,6 +127,8 @@ typedef void (*acpi_op_notify) (struct acpi_device * device, u32 event);
+ struct acpi_bus_ops {
+ 	u32 acpi_op_add:1;
+ 	u32 acpi_op_start:1;
++	acpi_status (*acpi_op_filter_fn)(acpi_handle, u32, void *);
++	void *acpi_op_filter_arg;
+ };
+ 
+ struct acpi_device_ops {
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 0b61a10..5025a16 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -175,6 +175,21 @@ extern acpi_status acpihp_slot_get_status(struct acpihp_slot *slot,
+ extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
+ extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
+ 
++/*
++ * Add device objects for ACPI devices connecting to an ACPI hotplug slot,
++ * but don't cross the hotplug slot boundary.
++ */
++extern int acpihp_add_devices(acpi_handle handle, struct acpi_device **child);
++
++/*
++ * Walk all ACPI devices connecting to an ACPI hotplug slot,
++ * but don't cross the hotplug slot boundary.
++ */
++typedef acpi_status (*acpihp_walk_device_cb)(struct acpi_device *acpi_device,
++					     void *argp);
++extern int acpihp_walk_devices(acpi_handle handle, acpihp_walk_device_cb cb,
++			       void *argp);
++
+ extern int acpihp_debug;
+ 
+ #define ACPIHP_WARN(fmt, ...) \
+-- 
+1.7.9.5
 
