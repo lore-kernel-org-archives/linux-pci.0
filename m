@@ -1,155 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43466 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965278Ab2JYSip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:38:45 -0400
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 6/8] ixgbe: refactor SRIOV enable and disable for sysfs interface
-Date: Thu, 25 Oct 2012 14:38:28 -0400
-Message-Id: <1351190310-5043-7-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
-References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:57777 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198Ab2JGPSD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Oct 2012 11:18:03 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so3284842pbb.19
+        for <linux-pci@vger.kernel.org>; Sun, 07 Oct 2012 08:18:02 -0700 (PDT)
+Message-ID: <50719D20.8020009@gmail.com>
+Date: Sun, 07 Oct 2012 23:17:52 +0800
+From: Jiang Liu <liuj97@gmail.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 00/10] PCI, ACPI: Use bus type notifier for root bus hotplug
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org> <506F9E0F.9010705@gmail.com> <CAE9FiQWj655cwN_e0ZmzCVYmJEnM2O_V453g4QTQqaApOPo2Fw@mail.gmail.com>
+In-Reply-To: <CAE9FiQWj655cwN_e0ZmzCVYmJEnM2O_V453g4QTQqaApOPo2Fw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In preparation for enable/disable of SR-IOV via the pci sysfs interface
-move some core SR-IOV enablement code that would be common to module
-parameter usage or callback from the pci bus driver to a separate
-function so that it can be used by either method.
+On 10/06/2012 03:25 PM, Yinghai Lu wrote:
+> On Fri, Oct 5, 2012 at 7:57 PM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Hi Yinghai,
+>>         I like your idea to get rid of acpi_device_ops->start() method, actually
+>> that's on my TODO list too.
+>>         I think the ACPI based system device hotplug framework we are working on
+>> may help to solve this issue. We define CPU, memory, PCI host bridge, IOAPIC,
+>> and CONTAINER as system devices. We have added some callbacks into acpi_device_ops
+>> to support system device hotplug. With the new ACPI system device hotplug framework,
+>> the sequence is:
+>> 1) Walk hot-added ACPI subtree, creates acpi devices and binds acpi drivers. Now
+>> acpi_device_ops->add() method only setup basic data structure to manage the ACPI
+>> device but without actually starting the system device.
+>> 2) Classify hot-added ACPI devices into classes, such CPU, MEM, PCI HOST BRIGE, IOAPIC,
+>> CONTAINER.
+>> 3) Add all hot-added system device into running system in following order:
+>> CONTAINER -> MEM -> CPU -> IOAPIC -> PCI_HOST_BRIDGE.
+>>
+>> With above sequence, we could scan and start PCI devices in step 3 above.
+> 
+> ioapic may need to be after pci device scan and pci assign-unassigned resource.
+> 
+> the same as iommu/dmar... need to after pci device scanning...
+Hi Yinghai,
+	I have no experience with AMD IOAPIC yet, seems IOAPIC on AMD platforms
+may have the special requirement above. So your solution is better and no need
+for the ACPI system device hotplug framework to handle IOAPIC device any more.
 
-Authored-by: Greg Rose <gregory.v.rose@intel.com>
-Signed-off-by: Donald Dutile <ddutile@redhat.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 98 +++++++++++++++-----------
- 1 file changed, 58 insertions(+), 40 deletions(-)
+> 
+> I have all pci root bus hot plug related patch in my tree
+> 
+>  for-pci-x86-pcibios-alloc-res
+>  for-pci-host-bridge-bus-type
+>  for-pci-kill-pci-root-buses
+> 
+>  for-pci-root-bus-hotplug
+> 
+>  for-pci-misc
+> 
+>  for-pci-jiang-hotplug
+> 
+>  for-pci-root-bus-hotadd-survey-pcibios-res
+>  for-pci-split-pci-root-hp
+>  for-pci-notifier
+> 
+> 
+>  for-acpi-next-pci
+>  for-pci-next
+> 
+> after those patches (about 61) go through pci/next
+> 
+> will need to push for-x86-irq for ioapic through tip
+> and for-iommu for iommu support through iommu : david.W
+I have reviewed these branches, all seems great to me. It includes some nice clean
+up other than the "PCI host bridge hotplug".
+for-pci-split-pci-root-hp
+for-pci-root-bus-hotplug
+for-pci-misc
+for-pci-host-bridge-bus-type
+for-pci-jiang-hotplug
+for-pci-notifier
+for-pci-x86-pcibios-alloc-res
+for-pci-root-bus-hotadd-survey-pcibios-res
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-index 9aeb929..7c068b4 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-@@ -44,49 +44,11 @@
- #include "ixgbe_sriov.h"
- 
- #ifdef CONFIG_PCI_IOV
--void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
-+static int __ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
- {
- 	struct ixgbe_hw *hw = &adapter->hw;
- 	int num_vf_macvlans, i;
- 	struct vf_macvlans *mv_list;
--	int pre_existing_vfs = 0;
--
--	pre_existing_vfs = pci_num_vf(adapter->pdev);
--	if (!pre_existing_vfs && !adapter->num_vfs)
--		return;
--
--	/* If there are pre-existing VFs then we have to force
--	 * use of that many because they were not deleted the last
--	 * time someone removed the PF driver.  That would have
--	 * been because they were allocated to guest VMs and can't
--	 * be removed.  Go ahead and just re-enable the old amount.
--	 * If the user wants to change the number of VFs they can
--	 * use ethtool while making sure no VFs are allocated to
--	 * guest VMs... i.e. the right way.
--	 */
--	if (pre_existing_vfs) {
--		adapter->num_vfs = pre_existing_vfs;
--		dev_warn(&adapter->pdev->dev, "Virtual Functions already "
--			 "enabled for this device - Please reload all "
--			 "VF drivers to avoid spoofed packet errors\n");
--	} else {
--		int err;
--		/*
--		 * The 82599 supports up to 64 VFs per physical function
--		 * but this implementation limits allocation to 63 so that
--		 * basic networking resources are still available to the
--		 * physical function.  If the user requests greater thn
--		 * 63 VFs then it is an error - reset to default of zero.
--		 */
--		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, 63);
--
--		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
--		if (err) {
--			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
--			adapter->num_vfs = 0;
--			return;
--		}
--	}
- 
- 	adapter->flags |= IXGBE_FLAG_SRIOV_ENABLED;
- 	e_info(probe, "SR-IOV enabled with %d VFs\n", adapter->num_vfs);
-@@ -156,10 +118,66 @@ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
- 		/* enable spoof checking for all VFs */
- 		for (i = 0; i < adapter->num_vfs; i++)
- 			adapter->vfinfo[i].spoofchk_enabled = true;
-+		return 0;
-+	}
-+
-+	return -ENOMEM;
-+}
-+
-+/*
-+ * Note this function is called when the user wants to enable SR-IOV
-+ * VFs using the now deprecated module parameter
-+ */
-+void ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
-+{
-+	int pre_existing_vfs = 0;
-+
-+	pre_existing_vfs = pci_num_vf(adapter->pdev);
-+	if (!pre_existing_vfs && !adapter->num_vfs)
- 		return;
-+
-+	if (!pre_existing_vfs)
-+		dev_warn(&adapter->pdev->dev,
-+		 	 "Enabling SR-IOV VFs using the module parameter is deprecated - please use the pci sysfs interface.\n");
-+
-+	/*
-+	 * If there are pre-existing VFs then we have to force
-+	 * use of that many - over ride any module parameter value.
-+	 * This may result from the user unloading the PF driver
-+	 * while VFs were assigned to guest VMs or because the VFs
-+	 * have been created via the new PCI SR-IOV sysfs interface.
-+	 */
-+	if (pre_existing_vfs) {
-+		adapter->num_vfs = pre_existing_vfs;
-+		dev_warn(&adapter->pdev->dev, "Virtual Functions already "
-+			 "enabled for this device - Please reload all "
-+			 "VF drivers to avoid spoofed packet errors\n");
-+	} else {
-+		int err;
-+		/*
-+		 * The 82599 supports up to 64 VFs per physical function
-+		 * but this implementation limits allocation to 63 so that
-+		 * basic networking resources are still available to the
-+		 * physical function.  If the user requests greater thn
-+		 * 63 VFs then it is an error - reset to default of zero.
-+		 */
-+		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, 63);
-+
-+		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
-+		if (err) {
-+			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
-+			adapter->num_vfs = 0;
-+			return;
-+		}
- 	}
- 
--	/* Oh oh */
-+	if (!__ixgbe_enable_sriov(adapter))
-+		return;
-+
-+	/*
-+	 * If we have gotten to this point then there is no memory available
-+	 * to manage the VF devices - print message and bail.
-+	 */
- 	e_err(probe, "Unable to allocate memory for VF Data Storage - "
- 	      "SRIOV disabled\n");
- 	ixgbe_disable_sriov(adapter);
--- 
-1.7.10.2.552.gaa3bb87
+And we I have several plan based on your work as below, what's your thoughts?
+1) replace pci_root_hp.c with our new hotplug framework
+2) enhance pci_root.c to support new hotplug framework
+3) enable PCI host bridge hotplug for IA64 platforms.
+4) try to make PCI host bridge hotplug work without "drivers_autoprobe".
 
+Thanks!
