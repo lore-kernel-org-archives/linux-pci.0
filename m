@@ -1,106 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
-Date: Sat, 06 Oct 2012 01:01:04 +0200
-Message-ID: <1595267.JDdDB2dfnM@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXZqBE6BmQ5v-vDq2E5vmyU5QRNrjjYRYONQu6jiHGD6w@mail.gmail.com>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com> <1938257.EXdpWtCqiy@vostro.rjw.lan> <CAE9FiQXZqBE6BmQ5v-vDq2E5vmyU5QRNrjjYRYONQu6jiHGD6w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:29117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820Ab2JGFWO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 7 Oct 2012 01:22:14 -0400
+Date: Sun, 7 Oct 2012 07:24:58 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jeff Garzik <jgarzik@pobox.com>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v4 -tip 0/3] x86, MSI, AHCI: Support multiple MSIs
+Message-ID: <cover.1349517905.git.agordeev@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 04 of October 2012 15:46:39 Yinghai Lu wrote:
-> On Thu, Oct 4, 2012 at 3:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Thursday 04 of October 2012 15:01:21 Yinghai Lu wrote:
-> >> during adding pci root bus hotplug, Bjorn found some unsafe searching
-> >> that caused by pci_bus_add_devices.
-> >
-> > Do you have a link to a description of that problem?
-> 
-> Maybe bjorn could expand it more.
-> 
-> >
-> >> pci devices are created during pci scan root, but until very late
-> >> acpi_pci_root_start call pci_bus_add_devices.
-> >
-> > So you mean that pci_bus_add_devices() is called too late, right?
-> 
-> yes.
-> 
-> >
-> >> To fill the gap, we need to move pci_bus_add_devices to acpi_pci_root_add
-> >> at first.
-> >>
-> >> but after we move that there, pci device will be added to device tree, and it
-> >> will try to bind with acpi devices that should be under acpi pci root,
-> >> but are not
-> >> created yet. because device_add for acpi_device for acpi pci root is done yet.
-> >> it still calling the .add in the acpi_driver aka acpi_pci_root_add.
-> >
-> > Quite obviously, we haven't walked the ACPI namespace below the host bridge
-> > object yet at that point.
-> 
-> yes.
-> 
-> >
-> >> So I want to hold the driver attach for pci root acpi devices, and
-> >> later attach it
-> >> until pci devices created.
-> >>
-> >> booting path, all acpi devices get created, and attach driver for them
-> >> one by one.
-> >
-> > I see.
-> >
-> > Your patches seem to affect all devices in the ACPI namespace added after
-> > boot, though, not only host bridges.
-> 
-> yes, but it still should be safe.
+Hello,
 
-I'm not really sure of that (what about undock/dock, for exmaple?) and it's
-damn ugly.
+Compared to v3:
 
-> > And the problem seems to be that the scanning of the ACPI namespace and
-> > configuring the host bridge are kind of independent operations now.  What
-> > we should do, actually, seems to be something like this:
-> >
-> > (1) Configure the host bridge when discovered (i.e. do what the current
-> >     acpi_pci_root_add() does.
-> > (2) Parse the ACPI namespace under the host bridge (without binding ACPI
-> >     drivers to the struct acpi_device objects created in the process,
-> >     because they are known to correspond to PCI devices).
-> > (3) Run pci_bus_add_devices() for the bridge.
-> >
-> > in one routine.
-> 
-> problem is still there. if 1 still has acpi_pci_root_add and pci_acpi_scan_root
+	Based on Ingo's review:
 
-OK, so why don't we do (2) in acpi_pci_root_add(), before pci_acpi_scan_root()
-is called?
+	I have not noticed that v3 2/5 patch "x86, MSI: Allocate as many
+	multiple IRQs as requested" is redundant, since the AHCI code
+	tries to allocate maximum possible number of MSIs. As there are
+	no other users of this functionality, I removed the patch for now;
 
-> that scan pci devices. what is need is we need to bind 1 and 3 together.
+	v3 patch 3/5 "x86, MSI: Minor readability fixes" merged into
+  	v4 patch 1/3 "x86, MSI: Support multiple MSIs in presense of IRQ
+	remapping";
 
-I don't understand now.  You said previously that we need the ACPI namespace
-below the bridge to be scanned before (3), so why do you want to do (3) before
-(2) now?
+	1,3/3:	multi-line comments fixed;
+		loops 'for (; i; i--)' changed to 'for (i--; i >= 0; i--)';
 
-> or we could move pci_scan_root_scan from acpi_pci_root_add to
-> acpi_pci_root_start?
+	3/3:	ahci_host_activate() failure path tested;
+		ahci_port_priv::lock field commented;
 
-No, I don't think so, because we call acpi_pci_bind_root() after that.
 
-Thanks,
-Rafael
+Alexander Gordeev (3):
+  1/3 x86, MSI: Support multiple MSIs in presense of IRQ remapping
+  2/3 PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
+  3/3 AHCI: Support multiple MSIs
+
+ Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++-
+ arch/x86/kernel/apic/io_apic.c  |  165 +++++++++++++++++++++++++++++++--------
+ drivers/ata/ahci.c              |   93 +++++++++++++++++++++-
+ drivers/ata/ahci.h              |    6 ++
+ drivers/ata/libahci.c           |  118 ++++++++++++++++++++++++++--
+ drivers/pci/msi.c               |   26 ++++++
+ include/linux/irq.h             |    5 +
+ include/linux/pci.h             |    7 ++
+ kernel/irq/chip.c               |   30 +++++--
+ 9 files changed, 432 insertions(+), 55 deletions(-)
+
+-- 
+1.7.7.6
 
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
