@@ -1,200 +1,262 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:60609 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753664Ab2JOCdI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Oct 2012 22:33:08 -0400
-Message-ID: <507B75D6.201@huawei.com>
-Date: Mon, 15 Oct 2012 10:32:54 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Gong Chen <gong.chen@linux.intel.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v3 00/28] ACPI based system device hotplug framework
+Date: Sun, 07 Oct 2012 23:47:12 +0200
+Message-ID: <4290643.jEcV9mqAac@vostro.rjw.lan>
+In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-To: Jon Mason <jdmason@kudzu.us>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 3/3] PCI: Add new default PCI-E MPS bus state
-References: <1350020155-3782-1-git-send-email-jdmason@kudzu.us> <1350020155-3782-4-git-send-email-jdmason@kudzu.us>
-In-Reply-To: <1350020155-3782-4-git-send-email-jdmason@kudzu.us>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/10/12 13:35, Jon Mason wrote:
-> Add a new default state for the PCI-E MPS determination, PCIE_BUS_WARN.
-> This state notifies the user that a suboptimal configuration is
-> occurring (most likely due to incorrect configuration in the BIOS), and
-> provides them the boot parameter to enable this error to be corrected.
-> This provides the users an ability to detect an issue with MPS, without
-> forcing them to correct the issue (which may cause system hangs).  This
-> is a much more sane default for the distros.
+Hi,
+
+On Saturday 06 of October 2012 23:27:08 Jiang Liu wrote:
+> The patchset is based on "5f3d2f2e1a63679cf1c4a4210f2f1cc2f335bef6"
+> from git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+> And you pull the changeset from git://github.com/jiangliu/linux.git acpihp
 > 
-> Also, add debug output to show the default device MPS and MPSS.
+> Modern high-end server may support advanced hotplug features for system
+> devices, including physical processor, memory board, IO extension board
+> and/or computer node. The ACPI specifications have provided standard
+> interfaces between firmware and OS to support device hotplug at runtime.
+> This patch series provide an ACPI based hotplug framework to support system
+> device hotplug at runtime, which will replace current existing ACPI device
+> driver based CPU/memory/CONTAINER hotplug mechanism.
 > 
-> Signed-off-by: Jon Mason <jdmason@kudzu.us>
-> CC: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/pci.c    |    2 +-
->  drivers/pci/probe.c  |   10 ++++++++++
->  drivers/pci/quirks.c |    3 ++-
->  include/linux/pci.h  |    1 +
->  4 files changed, 14 insertions(+), 2 deletions(-)
+> The new ACPI system device hotplug framework has following design goals:
+> 1) Provide a mechanism to detect hotplug slots by checking ACPI _EJ0 method,
+> ACPI PRCT (platform RAS capabilities table) and other platform specific
+> mechanisms.
+
+Which of the patches does that?
+
+> 2) Unify the way to enumerate ACPI based hotplug slots. All hotplug slots
+> will be enumerated by the enumeration driver
+
+What is the enumeration driver?
+
+> , instead of by ACPI device drivers.
+> 3) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
+> for system devices will be handled by a generic ACPI hotplug driver,
+> instead of handled by ACPI device drivers.
+
+What are "system devices"
+
+> 4) Solve dependencies among hotplug slots. You need first to remove the
+> memory device before removing a physical processor if a hotpluggable memory
+> device is connected to a hotpluggable physical processor.
+> 5) Provide better error handling and recover.
+> 6) Provide interface to cancel ongoing hotplug operations. It may take a
+> very long time to remove a memory device, so provide interface to cancel
+> the operation. This is important especially for memory hot-removal.
+> 7) Support new RAS features, such as socket/memory migration.
+> 8) Provide better user interfaces to the hotplug functionalities.
+> 9) Trigger hotplug events/operations by software. This feature is useful
+>    for hardware fault management and power saving.
+
+Well, this may or may not be OK.  I'm going to review the patches, but I can't
+really say when it's going to happen (not really soon for sure).
+
+> The new ACPI based hotplug framework is modelled after PCI hotplug
+> architecture, which uses a hotplug driver to manage hotplug operations
+> and different device drivers to manage individual devices.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ab4bf5a..1723c81 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -78,7 +78,7 @@ unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
->  unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
->  unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
->  
-> -enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
-> +enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_WARN;
->  
->  /*
->   * The default CLS is used if arch didn't set CLS explicitly and not
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 5a18652..64bb393 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1448,6 +1448,9 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
->  	if (!pci_is_pcie(dev))
->  		return 0;
->  
-> +	dev_dbg(&dev->dev, "Device MPS %d and MPSS %d\n",
-> +		pcie_get_mps(dev), 128 << dev->pcie_mpss);
-> +
-
-What about dev_prinkt(KERN_DEBUG, .....), so users can get this information from dmesg directly?
-
->  	/* For PCIE hotplug enabled slots not connected directly to a
->  	 * PCI-E root port, there can be problems when hotplugging
->  	 * devices.  This is due to the possibility of hotplugging a
-> @@ -1588,6 +1591,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->  		smpss = 0;
->  		break;
->  
-> +	case PCIE_BUS_WARN:
->  	case PCIE_BUS_SAFE:
->  		smpss = mpss;
->  
-> @@ -1600,6 +1604,12 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->  		return;
->  	}
->  
-> +	if (pcie_bus_config == PCIE_BUS_WARN) {
-> +		if (smpss != mpss)
-> +			dev_info(&bus->dev, "Non-optimal PCI-E Bus MPS value of %d being used instead of %d.\n"
-> +				 "Please use the pci=pcie_bus_safe boot parameter for better performance.\n",
-> +				 128 << smpss, 128 << mpss);
-
-test log in my ia64 machine(support pciehp)
-
- |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
- |           |                                         +-08.0-[0000:4a]--
- |           |                                         +-09.0-[0000:4b]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
-
-
-hot add log:
-pci 0000:4b:00.0: [8086:10c9] type 00 class 0x020000
-pci 0000:4b:00.0: reg 10: [mem 0x00000000-0x0001ffff]
-pci 0000:4b:00.0: reg 14: [mem 0x00000000-0x0001ffff]
-pci 0000:4b:00.0: reg 18: [io  0x0000-0x001f]
-pci 0000:4b:00.0: reg 1c: [mem 0x00000000-0x00003fff]
-pci 0000:4b:00.0: reg 30: [mem 0x00000000-0x0001ffff pref]
-pci 0000:4b:00.0: PME# supported from D0 D3hot D3cold
-pci 0000:4b:00.1: [8086:10c9] type 00 class 0x020000
-pci 0000:4b:00.1: reg 10: [mem 0x00000000-0x0001ffff]
-pci 0000:4b:00.1: reg 14: [mem 0x00000000-0x0001ffff]
-pci 0000:4b:00.1: reg 18: [io  0x0000-0x001f]
-pci 0000:4b:00.1: reg 1c: [mem 0x00000000-0x00003fff]
-pci 0000:4b:00.1: reg 30: [mem 0x00000000-0x0001ffff pref]
-pci 0000:4b:00.1: PME# supported from D0 D3hot D3cold
-pcieport 0000:47:09.0: bridge window [mem 0x00100000-0x001fffff pref] to [bus 4b] add_size 200000
-pcieport 0000:47:09.0: res[9]=[mem 0x00100000-0x001fffff pref] get_res_add_size add_size 200000
-pcieport 0000:47:09.0: BAR 9: can't assign mem pref (size 0x300000)
-pcieport 0000:47:09.0: BAR 9: can't assign mem pref (size 0x100000)
-pci 0000:4b:00.0: BAR 0: assigned [mem 0x80000000-0x8001ffff]
-pci 0000:4b:00.0: BAR 1: assigned [mem 0x80020000-0x8003ffff]
-pci 0000:4b:00.0: BAR 6: assigned [mem 0x80040000-0x8005ffff pref]
-pci 0000:4b:00.1: BAR 0: assigned [mem 0x80060000-0x8007ffff]
-pci 0000:4b:00.1: BAR 1: assigned [mem 0x80080000-0x8009ffff]
-pci 0000:4b:00.1: BAR 6: assigned [mem 0x800a0000-0x800bffff pref]
-pci 0000:4b:00.0: BAR 3: assigned [mem 0x800c0000-0x800c3fff]
-pci 0000:4b:00.1: BAR 3: assigned [mem 0x800c4000-0x800c7fff]
-pci 0000:4b:00.0: BAR 2: assigned [io  0x9000-0x901f]
-pci 0000:4b:00.1: BAR 2: assigned [io  0x9020-0x903f]
-pcieport 0000:47:09.0: PCI bridge to [bus 4b]
-pcieport 0000:47:09.0:   bridge window [io  0x9000-0x9fff]
-pcieport 0000:47:09.0:   bridge window [mem 0x80000000-0x800fffff]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:47:09.0: bridge window [mem 0x00100000-0x001fffff 64bit pref] to [bus 4b] add_size 200000
-pcieport 0000:47:09.0: res[9]=[mem 0x00100000-0x001fffff 64bit pref] get_res_add_size add_size 200000
-pcieport 0000:47:09.0: BAR 9: can't assign mem pref (size 0x300000)
-pcieport 0000:47:09.0: BAR 9: can't assign mem pref (size 0x100000)
-pcieport 0000:47:09.0: PCI bridge to [bus 4b]
-pcieport 0000:47:09.0:   bridge window [io  0x9000-0x9fff]
-pcieport 0000:47:09.0:   bridge window [mem 0x80000000-0x800fffff]
-pci_bus 0000:4b: Non-optimal PCI-E Bus MPS value of 128 being used instead of 1024.
-Please use the pci=pcie_bus_safe boot parameter for better performance.
-pci_bus 0000:4b: Non-optimal PCI-E Bus MPS value of 128 being used instead of 1024.
-Please use the pci=pcie_bus_safe boot parameter for better performance.
-
-I think above log has some confusion.
-pcieport 0000:47:09.0 device mps current is 256 and mpss is 1024;
-the newly hot added igb device 0000:4b:00.0 and 0000:4b:00.1 mps are 128 and mpss is 512;
-1、"pci_bus 0000:4b: Non-optimal PCI-E Bus MPS value of 128 being used instead of 1024."  should ".......instead of 256(bridge mps)"？
-2、“use the pci=pcie_bus_safe boot parameter for better performance”  should "....use pci=pcie_bus_safe for safe"?
-3、above logs is  duplicate.
-
-igb 0000:4b:00.0: enabling device (0100 -> 0102)
-igb 0000:4b:00.0: Intel(R) Gigabit Ethernet Network Connection
-igb 0000:4b:00.0: eth4: (PCIe:2.5Gb/s:Width x4) 00:0e:0c:ff:ff:ff
-igb 0000:4b:00.0: eth4: PBA No: FFFFFF-0FF
-igb 0000:4b:00.0: Using MSI-X interrupts. 8 rx queue(s), 8 tx queue(s)
-igb 0000:4b:00.1: enabling device (0100 -> 0102)
-GSI 63 (level, low) -> CPU 27 (0x3300) vector 137
-igb 0000:4b:00.1: Intel(R) Gigabit Ethernet Network Connection
-igb 0000:4b:00.1: eth4: (PCIe:2.5Gb/s:Width x4) 00:0e:0c:ff:ff:fe
-igb 0000:4b:00.1: eth4: PBA No: FFFFFF-0FF
-igb 0000:4b:00.1: Using MSI-X interrupts. 8 rx queue(s), 8 tx queue(s)
-
-
-Thanks!
-Yijing
-
-
-> +		return;
->  	}
->  
->  	pcie_bus_configure_set(bus->self, &smpss);
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 5155317..e4eede0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2787,7 +2787,8 @@ static void __devinit quirk_intel_mc_errata(struct pci_dev *dev)
->  	int err;
->  	u16 rcc;
->  
-> -	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-> +	if (pcie_bus_config == PCIE_BUS_TUNE_OFF ||
-> +	    pcie_bus_config == PCIE_BUS_WARN)
->  		return;
->  
->  	/* Intel errata specifies bits to change but does not say what they are.
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5faa831..410eaf9 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -662,6 +662,7 @@ extern void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
->  
->  enum pcie_bus_config_types {
->  	PCIE_BUS_TUNE_OFF,
-> +	PCIE_BUS_WARN,
->  	PCIE_BUS_SAFE,
->  	PCIE_BUS_PERFORMANCE,
->  	PCIE_BUS_PEER2PEER,
+> The new framework contains three main components as follow:
+> 1) ACPI system device hotplug slot enumerator, which enumerates all ACPI
+>    hotplug slots according to platform specific knowledges. And it also
+>    provides callbacks to control each slot, such as poweron, poweroff,
+>    get_status etc. Currently there are two built-in methods to detect
+>    hotplug slots.
+> 1.a) Detecting hotplug slot by checking _EJ0 method.
+> 1.b) Faking hotplug slot. Use "modprobe acpihp_slot fake_slot=0xnn",
+>      0x1 for CONTAINER, 0x2 for memory device, 0x4 for CPU and 0x8 PCI host
+>      bridge. The fake slot enumerator will treat each assigned ACPI device
+>      as a hotplug slot, so it could be used for testing on hardware platforms
+>      without hardware hotplug capabilities.
+> 2) ACPI system device hotplug driver, which implements a platform indenpendent
+>    state machine for hotplug slots and also provides sysfs based user
+>    interfaces.
+> 3) Enhanced ACPI device drivers for CONTAINER, CPU, Memroy and PCI host bridge.
+>    All logic to handle hotplug events has been moved from these ACPI device
+>    driver into the hotplug driver. Now these ACPI device dirvers only take
+>    resposibilities configure/unconfigure corresponding system devices when
+>    hotplug happens.
 > 
+> Now 1), 2) and part of 2) are ready, we still need to enhance mem_hotplug
+> and pci_root drivers to support new hotplug framework.
+> 
+> On my laptop with fake slot enumerator, we got:
+> root@cat:/sys/devices/LNXSYSTM:00/acpihp# ls
+> CPU00  CPU01  CPU02  CPU03  CPU04  CPU05  CPU06  CPU07  IOX00
+> root@cat:/sys/devices/LNXSYSTM:00/acpihp# cd CPU07/
+> root@cat:/sys/devices/LNXSYSTM:00/acpihp/CPU07# ls
+> capabilities  connect     device  object  state   subsystem  uevent
+> configure     dependency  enable  power   status  type
+> 
+> /* Hot-remove CPU07 */
+> root@cat:/sys/devices/LNXSYSTM:00/acpihp/CPU07# echo 0 > enable
+> /* Hot-add CPU07 */
+> root@cat:/sys/devices/LNXSYSTM:00/acpihp/CPU07# echo 1 > configure
+> 
+> V2->V3 changes:
+> 1) Fix minor bugs and refine code
+> 2) Implement fake slot enumerator for testing
+> 3) Enhance ACPI container driver to support new hotplug framework
+> 4) Enhance ACPI processor driver to support new hotplug framework
+> 5) Resolve dependencies among slots by evaluating _EDL method.
+> TODO:
+> 1) Enhance ACPI mem_hotplug driver to support new hotplug framework
+> 2) Enhance ACPI pci_root driver to support new PCI host bridge hotplug
+>    based on Yinghai's work
+> 
+> V1->V2 changes:
+> 1) implement the ACPI hotplug driver
+> 2) enhance ACPI container driver to support new hotplug framework
+> TODO:
+> 1) handle ACPI hotplug events in ACPI hotplug driver
+> 2) handle dependencies among slots by evaluating ACPI _EDL
+> 3) enhance ACPI processor, memory and PCI root drivers to support new
+>    hotplug framework
+> 4) develop an ACPI driver for IOAPIC
+> 5) thorough tests:)
+> 
+> Jiang Liu (28):
+>   ACPIHP: introduce a framework for ACPI based system device hotplug
+>   ACPIHP: ACPI system device hotplug slot enumerator driver
+>   ACPIHP: detect ACPI hotplug slots by checking ACPI _EJ0 method
+>   ACPIHP: implement a fake ACPI system device hotplug slot enumerator
+>   ACPI: introduce interfaces to manage ACPI device reference count
+>   ACPIHP: introduce interfaces to scan and walk ACPI devices connecting
+>     to a slot
+>   ACPIHP: use klist to manage ACPI devices connecting to a slot
+>   ACPIHP: add callbacks into acpi_device_ops to support new hotplug
+>     framework
+>   ACPIHP: provide interfaces to associate driver specific data with
+>     slots
+>   ACPIHP: implement utility functions to support system device hotplug
+>   ACPIHP: implement skeleton of ACPI system device hotplug driver
+>   ACPIHP: analyse dependencies among ACPI hotplug slots
+>   ACPIHP: provide interface to cancel inprogress hotplug operations
+>   ACPIHP: configure/unconfigure system devices connecting to a hotplug
+>     slot
+>   ACPIHP: implement the state machine for ACPI hotplug slots
+>   ACPIHP: implement sysfs interfaces for ACPI system device hotplug
+>   ACPIHP: block ACPI device driver unloading when executing hotplug
+>     operations
+>   ACPIHP/container: change ACPI container driver to support new hotplug
+>     framework
+>   ACPIHP/container: move container.c into drivers/acpi/hotplug
+>   ACPI/processor: remove dead code from processor_driver.c
+>   ACPIHP/processor: reorganize ACPI processor driver for new hotplug
+>     framework
+>   ACPIHP/processor: protect accesses to device->driver_data
+>   ACPIHP/processor: enhance processor driver to support new hotplug
+>     framework
+>   CPU: introduce busy flag to temporarily disable CPU online sysfs
+>     interface
+>   ACPIHP/processor: reject online/offline requests when doing processor
+>     hotplug
+>   ACPI/processor: save parsed APIC ID in processor driver data
+>     structure
+>   x86: simplify _acpi_map_lsapic()
+>   ACPI/processor: serialize call to acpi_map/unmap_lsapic
+> 
+>  arch/ia64/include/asm/cpu.h            |    2 +-
+>  arch/ia64/kernel/acpi.c                |   38 +-
+>  arch/ia64/kernel/topology.c            |   15 +-
+>  arch/x86/include/asm/cpu.h             |    2 +-
+>  arch/x86/include/asm/mpspec.h          |    2 +-
+>  arch/x86/kernel/acpi/boot.c            |   82 +---
+>  arch/x86/kernel/apic/apic.c            |    8 +-
+>  arch/x86/kernel/topology.c             |   10 +-
+>  drivers/acpi/Kconfig                   |   69 ++-
+>  drivers/acpi/Makefile                  |    3 +-
+>  drivers/acpi/bus.c                     |   22 +-
+>  drivers/acpi/container.c               |  296 -----------
+>  drivers/acpi/hotplug/Makefile          |   21 +
+>  drivers/acpi/hotplug/acpihp.h          |   37 ++
+>  drivers/acpi/hotplug/acpihp_drv.h      |  107 ++++
+>  drivers/acpi/hotplug/cancel.c          |  174 +++++++
+>  drivers/acpi/hotplug/configure.c       |  354 ++++++++++++++
+>  drivers/acpi/hotplug/container.c       |  135 +++++
+>  drivers/acpi/hotplug/core.c            |  842 ++++++++++++++++++++++++++++++++
+>  drivers/acpi/hotplug/dependency.c      |  249 ++++++++++
+>  drivers/acpi/hotplug/device.c          |  208 ++++++++
+>  drivers/acpi/hotplug/drv_main.c        |  351 +++++++++++++
+>  drivers/acpi/hotplug/slot.c            |  421 ++++++++++++++++
+>  drivers/acpi/hotplug/slot_ej0.c        |  153 ++++++
+>  drivers/acpi/hotplug/slot_fake.c       |  177 +++++++
+>  drivers/acpi/hotplug/state_machine.c   |  631 ++++++++++++++++++++++++
+>  drivers/acpi/hotplug/sysfs.c           |  245 ++++++++++
+>  drivers/acpi/internal.h                |    7 +
+>  drivers/acpi/processor_core.c          |   26 +-
+>  drivers/acpi/processor_driver.c        |  557 ++++++++++-----------
+>  drivers/acpi/scan.c                    |   17 +-
+>  drivers/base/cpu.c                     |   22 +
+>  drivers/gpu/drm/i915/intel_opregion.c  |    2 +
+>  drivers/gpu/drm/nouveau/nouveau_acpi.c |    1 +
+>  drivers/pci/hotplug/acpiphp_glue.c     |    9 +-
+>  drivers/pci/hotplug/acpiphp_ibm.c      |    5 +-
+>  drivers/pci/hotplug/sgi_hotplug.c      |    6 +-
+>  drivers/platform/x86/thinkpad_acpi.c   |    2 +
+>  drivers/pnp/pnpacpi/core.c             |   23 +-
+>  drivers/xen/cpu_hotplug.c              |    2 +-
+>  include/acpi/acpi_bus.h                |   21 +-
+>  include/acpi/acpi_hotplug.h            |  323 ++++++++++++
+>  include/acpi/container.h               |   12 -
+>  include/acpi/processor.h               |    3 +
+>  include/linux/acpi.h                   |    2 +-
+>  include/linux/cpu.h                    |    2 +
+>  46 files changed, 4923 insertions(+), 773 deletions(-)
+>  delete mode 100644 drivers/acpi/container.c
+>  create mode 100644 drivers/acpi/hotplug/Makefile
+>  create mode 100644 drivers/acpi/hotplug/acpihp.h
+>  create mode 100644 drivers/acpi/hotplug/acpihp_drv.h
+>  create mode 100644 drivers/acpi/hotplug/cancel.c
+>  create mode 100644 drivers/acpi/hotplug/configure.c
+>  create mode 100644 drivers/acpi/hotplug/container.c
+>  create mode 100644 drivers/acpi/hotplug/core.c
+>  create mode 100644 drivers/acpi/hotplug/dependency.c
+>  create mode 100644 drivers/acpi/hotplug/device.c
+>  create mode 100644 drivers/acpi/hotplug/drv_main.c
+>  create mode 100644 drivers/acpi/hotplug/slot.c
+>  create mode 100644 drivers/acpi/hotplug/slot_ej0.c
+>  create mode 100644 drivers/acpi/hotplug/slot_fake.c
+>  create mode 100644 drivers/acpi/hotplug/state_machine.c
+>  create mode 100644 drivers/acpi/hotplug/sysfs.c
+>  create mode 100644 include/acpi/acpi_hotplug.h
+>  delete mode 100644 include/acpi/container.h
+
+And I seriously think this is too much material for a single patchset.
+
+Please consider splitting it into smaller and well-documented series of
+patches, so that the reviewers can understand things more easily.
+
+Thanks,
+Rafael
 
 
 -- 
-Thanks!
-Yijing
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
