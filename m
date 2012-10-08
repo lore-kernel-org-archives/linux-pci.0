@@ -1,80 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:39090 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754136Ab2JZLOH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Oct 2012 07:14:07 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Huang Ying <ying.huang@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: PCI/PM: Add comments for PME poll support for PCIe
-Date: Fri, 26 Oct 2012 13:18:04 +0200
-Message-ID: <3515628.KRd0S4T47k@vostro.rjw.lan>
-In-Reply-To: <1351228071-15161-1-git-send-email-ying.huang@intel.com>
-References: <1351228071-15161-1-git-send-email-ying.huang@intel.com>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:57961 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab2JHPZU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 11:25:20 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so1612609dak.19
+        for <linux-pci@vger.kernel.org>; Mon, 08 Oct 2012 08:25:19 -0700 (PDT)
+Message-ID: <5072EFEF.30708@gmail.com>
+Date: Mon, 08 Oct 2012 23:23:27 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 00/10] PCI, ACPI: Use bus type notifier for root bus hotplug
+References: <1349159588-15029-1-git-send-email-yinghai@kernel.org> <506F9E0F.9010705@gmail.com> <CAE9FiQWj655cwN_e0ZmzCVYmJEnM2O_V453g4QTQqaApOPo2Fw@mail.gmail.com> <50719D20.8020009@gmail.com> <CAE9FiQXU3gwqkrmUPg-JzgRLXRzfZ2jd94q0eC4q1bpuo8_fvQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQXU3gwqkrmUPg-JzgRLXRzfZ2jd94q0eC4q1bpuo8_fvQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 26, 2012 01:07:51 PM Huang Ying wrote:
-> There are comments on why PME poll support is necessary for PCI
-> devices, but not for PCIe devices.  That may lead to misunderstanding
-> that PME poll is only necessary for PCI devices.  So add comments
-> related to PCIe PME poll to make it more clear.
+On 10/08/2012 06:33 AM, Yinghai Lu wrote:
+> On Sun, Oct 7, 2012 at 8:17 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> On 10/06/2012 03:25 PM, Yinghai Lu wrote:
+>>>> With above sequence, we could scan and start PCI devices in step 3 above.
+>>>
+>>> ioapic may need to be after pci device scan and pci assign-unassigned resource.
+>>>
+>>> the same as iommu/dmar... need to after pci device scanning...
+>> Hi Yinghai,
+>>         I have no experience with AMD IOAPIC yet, seems IOAPIC on AMD platforms
+>> may have the special requirement above. So your solution is better and no need
+>> for the ACPI system device hotplug framework to handle IOAPIC device any more.
+>>
+>>>
+>>> I have all pci root bus hot plug related patch in my tree
+>>>
+> ...
+>>>
+>>> after those patches (about 61) go through pci/next
+>>>
+>>> will need to push for-x86-irq for ioapic through tip
+>>> and for-iommu for iommu support through iommu : david.W
+>> I have reviewed these branches, all seems great to me. It includes some nice clean
+>> up other than the "PCI host bridge hotplug".
+>> for-pci-split-pci-root-hp
+>> for-pci-root-bus-hotplug
+>> for-pci-misc
+>> for-pci-host-bridge-bus-type
+>> for-pci-jiang-hotplug
+>> for-pci-notifier
+>> for-pci-x86-pcibios-alloc-res
+>> for-pci-root-bus-hotadd-survey-pcibios-res
+>>
+>> And we I have several plan based on your work as below, what's your thoughts?
+>> 1) replace pci_root_hp.c with our new hotplug framework
+>> 2) enhance pci_root.c to support new hotplug framework
+>> 3) enable PCI host bridge hotplug for IA64 platforms.
+>> 4) try to make PCI host bridge hotplug work without "drivers_autoprobe".
 > 
-> The content of comments comes from the changelog of commit:
+> I think my pci-root-bus hotplug should be all done.
 > 
-> 379021d5c0899fcf9410cae4ca7a59a5a94ca769
+> need to flush all patches except last 7 patches about drivers_autoprobe.
 > 
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
+> my concern about your new acpihp framework:
+> please make sure you change will still make user have the chance not
+> to use acpiphp
+> for normal pci slot hotplug support instead of pciehp.
+Hi Yinghai,
+	The new hotplug framework only handles CPU, memory, container and PCI host bridges,
+so it shouldn't affect acpiphp or pciehp drivers.	
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Also I would suggest you to start the new framework stuff after cpu,
+> memory, pci-root-bus work are all done separately.
+OK, hope the PCI host bridge hotplug work be merged for 3.8.
 
-> ---
->  drivers/pci/pci.c |   28 +++++++++++++++++++---------
->  1 file changed, 19 insertions(+), 9 deletions(-)
-> 
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1578,15 +1578,25 @@ void pci_pme_active(struct pci_dev *dev,
->  
->  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
->  
-> -	/* PCI (as opposed to PCIe) PME requires that the device have
-> -	   its PME# line hooked up correctly. Not all hardware vendors
-> -	   do this, so the PME never gets delivered and the device
-> -	   remains asleep. The easiest way around this is to
-> -	   periodically walk the list of suspended devices and check
-> -	   whether any have their PME flag set. The assumption is that
-> -	   we'll wake up often enough anyway that this won't be a huge
-> -	   hit, and the power savings from the devices will still be a
-> -	   win. */
-> +	/*
-> +	 * PCI (as opposed to PCIe) PME requires that the device have
-> +	 * its PME# line hooked up correctly. Not all hardware vendors
-> +	 * do this, so the PME never gets delivered and the device
-> +	 * remains asleep. The easiest way around this is to
-> +	 * periodically walk the list of suspended devices and check
-> +	 * whether any have their PME flag set. The assumption is that
-> +	 * we'll wake up often enough anyway that this won't be a huge
-> +	 * hit, and the power savings from the devices will still be a
-> +	 * win.
-> +	 *
-> +	 * Although PCIe uses in-band PME message instead of PME# line
-> +	 * to report PME, PME does not work for some PCIe devices in
-> +	 * reality.  For example, there are devices that set their PME
-> +	 * status bits, but don't really bother to send a PME message;
-> +	 * there are PCI Express Root Ports that don't bother to
-> +	 * trigger interrupts when they receive PME messages from the
-> +	 * devices below.  So PME poll is used for PCIe devices too.
-> +	 */
->  
->  	if (dev->pme_poll) {
->  		struct pci_pme_device *pme_dev;
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
