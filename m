@@ -1,67 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:47599 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755889Ab2J2NXS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 09:23:18 -0400
-Received: by mail-vb0-f46.google.com with SMTP id ff1so5258987vbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 06:23:17 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	mark gross <markgross@thegnar.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 7/7] PM / ACPI: Take device PM QoS flags into account
+Date: Mon, 08 Oct 2012 10:09:26 +0200
+Message-ID: <3734460.X8hLyTaasd@vostro.rjw.lan>
+In-Reply-To: <1413438.1MkXj8vjQK@vostro.rjw.lan>
+References: <201209282351.10663.rjw@sisk.pl> <1413438.1MkXj8vjQK@vostro.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <6ed9683e3149a640b4333cf3039ae31063b23e3b.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-	<6ed9683e3149a640b4333cf3039ae31063b23e3b.1351492562.git.pratyush.anand@st.com>
-Date: Mon, 29 Oct 2012 18:53:17 +0530
-Message-ID: <CAOh2x==TQ=6-9M7p8DD0qZepQzSZAdv-mNPu-pOUynb99ODWDw@mail.gmail.com>
-Subject: Re: [PATCH 09/15] SPEAr13xx: dts: Fix PCIe core address ranges
-From: viresh kumar <viresh.kumar@linaro.org>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	olof@lixom.net
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
-> Each PCIe controller has 256 MB of address space whcih is accessible by
-> AHB and used to communicate with PCIe devices connected with the host
-> controller.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-you haven't said what you have done here in this patch. i.e. extend AHB range
-to include pcie space.
+Make ACPI power management routines and PCI power management
+routines depending on ACPI take device PM QoS flags into account
+when deciding what power state to put the device into.
 
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> ---
->  arch/arm/boot/dts/spear13xx.dtsi |    9 +++++----
->  1 files changed, 5 insertions(+), 4 deletions(-)
->
-> diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
-> index 9ff4f5f..b7990754 100644
-> --- a/arch/arm/boot/dts/spear13xx.dtsi
-> +++ b/arch/arm/boot/dts/spear13xx.dtsi
-> @@ -76,7 +76,8 @@
->                 #size-cells = <1>;
->                 compatible = "simple-bus";
->                 ranges = <0x50000000 0x50000000 0x10000000
-> -                         0xb0000000 0xb0000000 0x10000000
-> +                         0x80000000 0x80000000 0x20000000
-> +                         0xb0000000 0xb0000000 0x20000000
->                           0xd0000000 0xd0000000 0x02000000
->                           0xd8000000 0xd8000000 0x01000000
->                           0xe0000000 0xe0000000 0x10000000>;
-> @@ -194,7 +195,7 @@
->                 pcie0@b1000000 {
->                         compatible = "st,pcie-gadget", "st,pcie-host" ;
->                         reg = < 0xb1000000 0x4000
-> -                               0x80000000 0x2000
-> +                               0x80000000 0x10000000
->                                 0xeb800000 0x1000 >;
->                         interrupts = <0 68 0x4>;
->                         status = "disabled";
+In particular, after this change acpi_pm_device_sleep_state() will
+not return ACPI_STATE_D3_COLD as the deepest available low-power
+state if PM_QOS_FLAG_NO_POWER_OFF is requested for the device and it
+will not require remote wakeup to work for the device in the returned
+low-power state if there is at least one PM QoS flags request for the
+device, but PM_QOS_FLAG_REMOTE_WAKEUP is not requested for it.
 
-That's a blunder. I am damn sure, you haven't rebased it
-on any rc. And you have rebased it on your local next.
+Accordingly, acpi_pci_set_power_state() will refuse to put the
+device into D3cold if PM_QOS_FLAG_NO_POWER_OFF is requested for it.
 
-There is no pci support in upstream kernel.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Jean Pihet <j-pihet@ti.com>
+---
+ drivers/acpi/sleep.c   |   21 +++++++++++++++++----
+ drivers/pci/pci-acpi.c |    8 +++++++-
+ 2 files changed, 24 insertions(+), 5 deletions(-)
 
---
-viresh
+Index: linux/drivers/pci/pci-acpi.c
+===================================================================
+--- linux.orig/drivers/pci/pci-acpi.c
++++ linux/drivers/pci/pci-acpi.c
+@@ -17,6 +17,7 @@
+ 
+ #include <linux/pci-acpi.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pm_qos.h>
+ #include "pci.h"
+ 
+ static DEFINE_MUTEX(pci_acpi_pm_notify_mtx);
+@@ -257,11 +258,16 @@ static int acpi_pci_set_power_state(stru
+ 		return -ENODEV;
+ 
+ 	switch (state) {
++	case PCI_D3cold:
++		if (dev_pm_qos_flags(&dev->dev, PM_QOS_FLAG_NO_POWER_OFF) ==
++				PM_QOS_FLAGS_ALL) {
++			error = -EBUSY;
++			break;
++		}
+ 	case PCI_D0:
+ 	case PCI_D1:
+ 	case PCI_D2:
+ 	case PCI_D3hot:
+-	case PCI_D3cold:
+ 		error = acpi_bus_set_power(handle, state_conv[state]);
+ 	}
+ 
+Index: linux/drivers/acpi/sleep.c
+===================================================================
+--- linux.orig/drivers/acpi/sleep.c
++++ linux/drivers/acpi/sleep.c
+@@ -19,6 +19,7 @@
+ #include <linux/acpi.h>
+ #include <linux/module.h>
+ #include <linux/pm_runtime.h>
++#include <linux/pm_qos.h>
+ 
+ #include <asm/io.h>
+ 
+@@ -711,6 +712,7 @@ int acpi_pm_device_sleep_state(struct de
+ 	struct acpi_device *adev;
+ 	char acpi_method[] = "_SxD";
+ 	unsigned long long d_min, d_max;
++	bool wakeup = false;
+ 
+ 	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3)
+ 		return -EINVAL;
+@@ -718,6 +720,13 @@ int acpi_pm_device_sleep_state(struct de
+ 		printk(KERN_DEBUG "ACPI handle has no context!\n");
+ 		return -ENODEV;
+ 	}
++	if (d_max_in > ACPI_STATE_D3_HOT) {
++		enum pm_qos_flags_status stat;
++
++		stat = dev_pm_qos_flags(dev, PM_QOS_FLAG_NO_POWER_OFF);
++		if (stat == PM_QOS_FLAGS_ALL)
++			d_max_in = ACPI_STATE_D3_HOT;
++	}
+ 
+ 	acpi_method[2] = '0' + acpi_target_sleep_state;
+ 	/*
+@@ -737,8 +746,14 @@ int acpi_pm_device_sleep_state(struct de
+ 	 * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
+ 	 * provided -- that's our fault recovery, we ignore retval.
+ 	 */
+-	if (acpi_target_sleep_state > ACPI_STATE_S0)
++	if (acpi_target_sleep_state > ACPI_STATE_S0) {
+ 		acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
++		wakeup = device_may_wakeup(dev) && adev->wakeup.flags.valid
++			&& adev->wakeup.sleep_state >= acpi_target_sleep_state;
++	} else if (dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) !=
++			PM_QOS_FLAGS_NONE) {
++		wakeup = adev->wakeup.flags.valid;
++	}
+ 
+ 	/*
+ 	 * If _PRW says we can wake up the system from the target sleep state,
+@@ -747,9 +762,7 @@ int acpi_pm_device_sleep_state(struct de
+ 	 * (ACPI 3.x), it should return the maximum (lowest power) D-state that
+ 	 * can wake the system.  _S0W may be valid, too.
+ 	 */
+-	if (acpi_target_sleep_state == ACPI_STATE_S0 ||
+-	    (device_may_wakeup(dev) && adev->wakeup.flags.valid &&
+-	     adev->wakeup.sleep_state >= acpi_target_sleep_state)) {
++	if (wakeup) {
+ 		acpi_status status;
+ 
+ 		acpi_method[3] = 'W';
+
