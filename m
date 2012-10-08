@@ -1,64 +1,61 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Tang Chen <tangchen@cn.fujitsu.com>
-Subject: [PATCH v2] Fix a hard coding style when determining if a device is a container.
-Date: Fri, 12 Oct 2012 20:31:38 +0800
-Message-Id: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux PM list <linux-pm@vger.kernel.org>
+Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	mark gross <markgross@thegnar.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/7] PM / QoS: Support for PM QoS device flags
+Date: Mon, 08 Oct 2012 10:02:39 +0200
+Message-ID: <1413438.1MkXj8vjQK@vostro.rjw.lan>
+In-Reply-To: <201209282351.10663.rjw@sisk.pl>
+References: <201209282351.10663.rjw@sisk.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
-container_device_ids[], so use it, but not the hard coding style.
+Hi All,
 
-Also, introduce a new api is_container_device() to determine if a
-device is a container device.
+On Friday 28 of September 2012 23:51:10 Rafael J. Wysocki wrote:
+> 
+> The following patch series extends the existing device PM QoS core code to
+> support PM QoS flags representing binary (on/off) requirements, such as
+> whether or not power may be removed entirely from the device or whether
+> or not remote wakeup (i.e. signalling of external events while suspended)
+> should work for it.
+> 
+> [1/7] Prepare PM QoS device structure for adding more constraint types.
+> [2/7] Introduce request and constraint data types for PM QoS flags.
+> [3/7] Prepare struct dev_pm_qos_request for representing more request types. 
+> [4/7] Introduce device PM QoS flags support.
+> [5/7] Make it possible to expose PM QoS device flags to user space.
+> [6/7] PM / Domains: Check device PM QoS flags in pm_genpd_poweroff().
+> [7/7] PM / ACPI: Take device PM QoS flags into account.
+> 
+> The last two patches make the generic PM domains framework and ACPI / PCI,
+> respectively, take the PM QoS device flags introduced by patch [5/7] into
+> accont when making their decisions.
+> 
+> The changelogs describe the details, but if anything isn't clear, please let
+> me know.
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
----
- drivers/acpi/container.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+Time for a real submission, it seems. :-)
 
-diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-index 1f9f7d7..ffd76ee 100644
---- a/drivers/acpi/container.c
-+++ b/drivers/acpi/container.c
-@@ -92,6 +92,19 @@ static int is_device_present(acpi_handle handle)
- 	return ((sta & ACPI_STA_DEVICE_PRESENT) == ACPI_STA_DEVICE_PRESENT);
- }
- 
-+static int is_container_device(const char *hid)
-+{
-+	const struct acpi_device_id *container_id;
-+
-+	for (container_id = container_device_ids;
-+	     container_id->id[0]; container_id++) {
-+		if (!strcmp((char *)container_id->id, hid))
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
- /*******************************************************************/
- static int acpi_container_add(struct acpi_device *device)
- {
-@@ -232,10 +245,8 @@ container_walk_namespace_cb(acpi_handle handle,
- 		goto end;
- 	}
- 
--	if (strcmp(hid, "ACPI0004") && strcmp(hid, "PNP0A05") &&
--	    strcmp(hid, "PNP0A06")) {
-+	if (!is_container_device(hid))
- 		goto end;
--	}
- 
- 	switch (*action) {
- 	case INSTALL_NOTIFY_HANDLER:
+The changes since the previous iteration are addressed comments and a small
+optimization in patch [5/7] (it won't resume the device if the setting is not
+going to change in dev_pm_qos_update_flags()).
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
