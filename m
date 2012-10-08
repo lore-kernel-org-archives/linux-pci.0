@@ -1,73 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4320 "EHLO mx1.redhat.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:36985 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244Ab2JIQMJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Oct 2012 12:12:09 -0400
-Message-ID: <50744CD1.6080105@redhat.com>
-Date: Tue, 09 Oct 2012 12:12:01 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S1752846Ab2JHUIi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Oct 2012 16:08:38 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
+Date: Mon, 08 Oct 2012 22:12:11 +0200
+Message-ID: <1391924.CXAbAIeqJX@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXraKirjQgRad2t87SmxsonDupkpE2BM6Ktx8yUdCPPiQ@mail.gmail.com>
+References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com> <1595267.JDdDB2dfnM@vostro.rjw.lan> <CAE9FiQXraKirjQgRad2t87SmxsonDupkpE2BM6Ktx8yUdCPPiQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Alexander Duyck <alexander.duyck@gmail.com>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net
-Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
-References: <1349388885-43938-1-git-send-email-ddutile@redhat.com> <5070768C.4030905@gmail.com>
-In-Reply-To: <5070768C.4030905@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/06/2012 02:21 PM, Alexander Duyck wrote:
-> On 10/4/2012 3:14 PM, Donald Dutile wrote:
->> Provide files under sysfs to determine the max number of vfs
->> an SRIOV-capable PCIe device supports, and methods to enable and
->> disable the vfs on a per device basis.
->>
->> Currently, VF enablement by SRIOV-capable PCIe devices is done
->> in driver-specific module parameters. If not setup in modprobe files,
->> it requires admin to unload & reload PF drivers with number of desired
->> VFs to enable. Additionally, the enablement is system wide: all
->> devices controlled by the same driver have the same number of VFs
->> enabled. Although the latter is probably desired, there are PCI
->> configurations setup by system BIOS that may not enable that to occur.
->>
->> Three files are created if a PCIe device has SRIOV support:
->> sriov_max_vfs -- cat-ing this file returns the maximum number
->> of VFs a PCIe device supports.
->> sriov_enable_vfs -- echo'ing a number to this file enables this
->> number of VFs for this given PCIe device.
->> -- cat-ing this file will return the number of VFs
->> currently enabled on this PCIe device.
->> sriov_disable_vfs -- echo-ing any number other than 0 disables all
->> VFs associated with this PCIe device.
->>
->> VF enable and disablement is invoked much like other PCIe
->> configuration functions -- via registered callbacks in the driver,
->> i.e., probe, release, etc.
->>
->> v1->v2:
->> This patch is based on previous 2 patches by Yinghai Lu
->> that cleaned up the vga attributes for PCI devices under sysfs,
->> and uses visibility-checking group attributes as recommended by
->> Greg K-H.
->>
->> Signed-off-by: Donald Dutile <ddutile@redhat.com>
->
-> I'm not certain if having separate values/functions for enable and disabling VFs will work out very well. It seems like it would probably make more sense just to have one value that manipulates NumVFs. As is, in the sriov_enable_vfs case we would end up having to disable SR-IOV should we be changing the number of VFs anyway so it would probably make sense to just merge both values into a single one and use 0 as the value to disable SR-IOV.
->
-> Also in the naming scheme for the values it may preferable to use the names of the values from the SR-IOV PCIe capability to avoid any confusion on what the values represent. I believe the names for the two values you are representing are TotalVFs and NumVFs.
->
-> Thanks,
->
-> Alex
-Agreed!
-The reason I changed the names from 'set_max_vfs' to 'sriov_enable_vfs' was to
-not confuse terms.  I think the 'set_max_vfs' was taken from the context that the
-drivers currently set the number of enabled vfs by a driver param named 'max_vfs' today;
-maybe that should be changed as well to 'numvfs'.
+On Friday 05 of October 2012 16:10:43 Yinghai Lu wrote:
+> On Fri, Oct 5, 2012 at 4:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Thursday 04 of October 2012 15:46:39 Yinghai Lu wrote:
+> >> > Your patches seem to affect all devices in the ACPI namespace added after
+> >> > boot, though, not only host bridges.
+> >>
+> >> yes, but it still should be safe.
+> >
+> > I'm not really sure of that (what about undock/dock, for exmaple?) and it's
+> > damn ugly.
+> 
+> only one acpi_driver has .start , that is acpi_pci_root_driver.
+> 
+> should be clean than with .add/start pair.
+> 
+> >
+> >> > And the problem seems to be that the scanning of the ACPI namespace and
+> >> > configuring the host bridge are kind of independent operations now.  What
+> >> > we should do, actually, seems to be something like this:
+> >> >
+> >> > (1) Configure the host bridge when discovered (i.e. do what the current
+> >> >     acpi_pci_root_add() does.
+> >> > (2) Parse the ACPI namespace under the host bridge (without binding ACPI
+> >> >     drivers to the struct acpi_device objects created in the process,
+> >> >     because they are known to correspond to PCI devices).
+> >> > (3) Run pci_bus_add_devices() for the bridge.
+> >> >
+> >> > in one routine.
+> >>
+> >> problem is still there. if 1 still has acpi_pci_root_add and pci_acpi_scan_root
+> >
+> > OK, so why don't we do (2) in acpi_pci_root_add(), before pci_acpi_scan_root()
+> > is called?
+> >
+> >> that scan pci devices. what is need is we need to bind 1 and 3 together.
+> 
+> some one already walk the acpi space, and during that it create
+> acpi_device for pci_root
+> and then attach driver for that, aka acpi_pci_root_add is executing.
+> 
+> Now you want to walking the acpi acpi space to create children devices
+> before device_add really done for that pci root
+> acpi device. ?
+> 
+> is that some kind of nesting?
 
-If patches go as you & Greg Rose suggest, then 'sriov_number_vfs' becomes 'sriov_totalvfs'.
-cat'ing the (renamed sriov_enable_vfs to ) 'sriov_numvfs' would work.
-  
+Yes, basically.  The idea is to do the scan of the host bridge's children in
+the ACPI tree synchronously within acpi_pci_root_add() instead of trying to
+delay the execution of it until the children have been scanned (and using
+notifiers to kind of trigger the driver binding, i.e. the execution of .add()).
 
+> > I don't understand now.  You said previously that we need the ACPI namespace
+> > below the bridge to be scanned before (3), so why do you want to do (3) before
+> > (2) now?
+> 
+> purpose is calling pci_bus_add_devices in pci_acpi_scan_root.
+
+OK, but what's the reason?
+
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
