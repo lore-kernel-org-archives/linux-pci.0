@@ -1,49 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 2 Oct 2012 18:42:21 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Ingo Molnar <mingo@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
-Message-ID: <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
-References: <cover.1349074231.git.agordeev@redhat.com>
- <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
- <20121002050929.GD7756@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:1364 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754746Ab2JIDE7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:04:59 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: add pcie max_payload_size debug info
+Date: Tue, 9 Oct 2012 11:02:51 +0800
+Message-ID: <1349751771-9512-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121002050929.GD7756@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 02, 2012 at 07:09:29AM +0200, Ingo Molnar wrote:
-> > +irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
-> > +{
-> > +	struct ata_port *ap_this = dev_instance;
-> > +	struct ahci_port_priv *pp = ap_this->private_data;
-> > +	struct ata_host *host = ap_this->host;
-> > +	struct ahci_host_priv *hpriv = host->private_data;
-> > +	void __iomem *mmio = hpriv->mmio;
-> > +	unsigned int i;
-> > +	u32 irq_stat, irq_masked;
-> > +
-> > +	VPRINTK("ENTER\n");
-> 
-> Is this per IRQ handler execution debugging code still needed? 
-> Same for the other VPRINTK() lines in this patch.
+PCIe device mps maybe not equal to its bridge mps after doing pci hotplug.
+This may result unexpected problem like
+http://marc.info/?l=linux-scsi&m=134788365823217&w=2. So add mps log for current
+mps setting to help diagnosis an issue like this.
 
-These VPRINKs are only to make new handlers look like ahci_interrupt()
-which did not change. I believe, if they need to go it is better to
-remove them altogether, with a separate followup patch.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   38 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 38 insertions(+), 0 deletions(-)
 
-Jeff, what do you think?
-
-Thanks!
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec909af..ff1f98d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1533,6 +1533,42 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+ 			"with pci=pcie_bus_safe.\n");
+ }
+ 
++static void pcie_dump_bus_mps(struct pci_bus *bus);
++
++static void pcie_dump_dev_mps(struct pci_dev *dev)
++{
++	int mps, mpss;
++
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (dev->subordinate)
++		pcie_dump_bus_mps(dev->subordinate);
++	else {
++		mps = pcie_get_mps(dev);
++		mpss = 128 << dev->pcie_mpss;
++		dev_printk(KERN_DEBUG, &dev->dev, "PCI-E Max_Payload_Size Supported %d, "
++			"Max_Payload_Size %d\n", mpss, mps);
++	}
++}
++
++static void pcie_dump_bus_mps(struct pci_bus *bus)
++{
++	int mps, mpss;
++	struct pci_dev *dev;
++
++	if (!bus->self || !pci_is_pcie(bus->self))
++		return;
++
++	mps = pcie_get_mps(bus->self);
++	mpss = 128 << bus->self->pcie_mpss;
++	dev_printk(KERN_DEBUG, &bus->self->dev, "PCI-E Max_Payload_Size Supported %d, "
++		"Max_Payload_Size %d\n", mpss, mps);
++
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		pcie_dump_dev_mps(dev);
++}
++
+ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ {
+ 	int mps, orig_mps;
+@@ -1564,6 +1600,8 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
+ 
++	pcie_dump_bus_mps(bus);
++
+ 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+ 		return;
+ 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
+
