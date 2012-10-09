@@ -1,78 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:26914 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753254Ab2JWMG2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Oct 2012 08:06:28 -0400
-Message-ID: <508687FB.9080701@cn.fujitsu.com>
-Date: Tue, 23 Oct 2012 20:05:15 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:65438 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517Ab2JIDEI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:04:08 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 1/7] PCI: rework pci_enable_ari for support disable ari forwarding
+Date: Tue, 9 Oct 2012 11:03:18 +0800
+Message-ID: <1349751804-7476-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
+References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Tang Chen <tangchen@cn.fujitsu.com>
-CC: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] Fix a hard coding style when determining if a device
- is a container.
-References: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+pci_enable_ari will be called if an ARI pci device found, set its bridge ARI Forwarding Enable
+bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
+when an ARI device hot removed.
 
-Would somebody give some comments ?
+As PCIe Spec 2.0(6.13/441) recommends:
+"Following a hot-plug event below a Downstream Port, it is strongly recommended that software
+Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
+newly added component is in fact an ARI Device"
 
-Thanks. :)
+So, this patch rework pci_enable_ari for support disable ari forwarding when a pci device
+was hot removed.
 
-On 10/12/2012 08:31 PM, Tang Chen wrote:
-> "ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
-> container_device_ids[], so use it, but not the hard coding style.
->
-> Also, introduce a new api is_container_device() to determine if a
-> device is a container device.
->
-> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
-> Signed-off-by: Yasuaki Ishimatsu<isimatu.yasuaki@jp.fujitsu.com>
-> ---
->   drivers/acpi/container.c |   17 ++++++++++++++---
->   1 files changed, 14 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-> index 1f9f7d7..ffd76ee 100644
-> --- a/drivers/acpi/container.c
-> +++ b/drivers/acpi/container.c
-> @@ -92,6 +92,19 @@ static int is_device_present(acpi_handle handle)
->   	return ((sta&  ACPI_STA_DEVICE_PRESENT) == ACPI_STA_DEVICE_PRESENT);
->   }
->
-> +static int is_container_device(const char *hid)
-> +{
-> +	const struct acpi_device_id *container_id;
-> +
-> +	for (container_id = container_device_ids;
-> +	     container_id->id[0]; container_id++) {
-> +		if (!strcmp((char *)container_id->id, hid))
-> +			return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->   /*******************************************************************/
->   static int acpi_container_add(struct acpi_device *device)
->   {
-> @@ -232,10 +245,8 @@ container_walk_namespace_cb(acpi_handle handle,
->   		goto end;
->   	}
->
-> -	if (strcmp(hid, "ACPI0004")&&  strcmp(hid, "PNP0A05")&&
-> -	    strcmp(hid, "PNP0A06")) {
-> +	if (!is_container_device(hid))
->   		goto end;
-> -	}
->
->   	switch (*action) {
->   	case INSTALL_NOTIFY_HANDLER:
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c   |   16 +++++++++++-----
+ drivers/pci/pci.h   |    2 +-
+ drivers/pci/probe.c |    2 +-
+ 3 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5485883..27f57d7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2010,10 +2010,10 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+ }
+ 
+ /**
+- * pci_enable_ari - enable ARI forwarding if hardware support it
++ * pci_configure_ari - enable or disable ARI forwarding if hardware support it
+  * @dev: the PCI device
+  */
+-void pci_enable_ari(struct pci_dev *dev)
++void pci_configure_ari(struct pci_dev *dev, bool enable)
+ {
+ 	u32 cap;
+ 	struct pci_dev *bridge;
+@@ -2031,10 +2031,16 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+ 	if (!(cap & PCI_EXP_DEVCAP2_ARI))
+ 		return;
+-
+-	pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
+-	bridge->ari_enabled = 1;
++	
++	if (enable) {
++		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
++		bridge->ari_enabled = 1;
++	} else {
++		pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
++		bridge->ari_enabled = 0;
++	}
+ }
++EXPORT_SYMBOL(pci_configure_ari);
+ 
+ /**
+  * pci_enable_ido - enable ID-based Ordering on a device
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index bacbcba..3eb05d4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -211,7 +211,7 @@ extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ extern int pci_resource_bar(struct pci_dev *dev, int resno,
+ 			    enum pci_bar_type *type);
+ extern int pci_bus_add_child(struct pci_bus *bus);
+-extern void pci_enable_ari(struct pci_dev *dev);
++extern void pci_configure_ari(struct pci_dev *dev, bool enable);
+ /**
+  * pci_ari_enabled - query ARI forwarding status
+  * @bus: the PCI bus
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec909af..9d6deb6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1282,7 +1282,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_vpd_pci22_init(dev);
+ 
+ 	/* Alternative Routing-ID Forwarding */
+-	pci_enable_ari(dev);
++	pci_configure_ari(dev, true);
+ 
+ 	/* Single Root I/O Virtualization */
+ 	pci_iov_init(dev);
+-- 
+1.7.1
+
 
