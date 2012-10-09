@@ -1,128 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:47857 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436Ab2JIJIY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 05:08:24 -0400
+Message-ID: <5073E84A.8080301@jp.fujitsu.com>
+Date: Tue, 09 Oct 2012 18:03:06 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVpLtMMAvWF-ehKCpNXW=uxwQWhpcHmgRJFDP22AKY1Mw@mail.gmail.com>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-	<1349159588-15029-2-git-send-email-yinghai@kernel.org>
-	<20121002133303.GA502@kroah.com>
-	<CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
-	<20121002174712.GA11843@kroah.com>
-	<CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
-	<20121002204548.GC28663@kroah.com>
-	<CAE9FiQV51R2RBAZBPobDifq6jQUhBCyx_Bo8EHxOX4yrUMSnLg@mail.gmail.com>
-	<CAErSpo5EuGVhu_ObioV-4n7930MkJzD9jrtkn6-JdBLikDBmMg@mail.gmail.com>
-	<CAE9FiQUXmURaO40sA4ibf7j9sokEHYXK_EaGiEq9b-ob=d1MRw@mail.gmail.com>
-	<CAE9FiQVpLtMMAvWF-ehKCpNXW=uxwQWhpcHmgRJFDP22AKY1Mw@mail.gmail.com>
-Date: Tue, 2 Oct 2012 19:08:50 -0700
-Message-ID: <CAE9FiQUQO97UbWEEA5wrzzaQsUwZ9a9rhvpPwqjo3CbtbA4xAQ@mail.gmail.com>
-Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=000e0cd1e0ceabb44a04cb1e1e2a
-Sender: linux-acpi-owner@vger.kernel.org
+To: ddutile@redhat.com
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121002074434.204.47750.sendpatchset@indoh> <506C3C4C.1060808@redhat.com>
+In-Reply-To: <506C3C4C.1060808@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---000e0cd1e0ceabb44a04cb1e1e2a
-Content-Type: text/plain; charset=ISO-8859-1
-
-On Tue, Oct 2, 2012 at 7:07 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Oct 2, 2012 at 5:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, Oct 2, 2012 at 3:38 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+(2012/10/03 22:23), Don Dutile wrote:
+> On 10/02/2012 03:49 AM, Takao Indoh wrote:
+>> These patches reset PCIe devices at boot time to address DMA problem on
+>> kdump with iommu. When "reset_devices" is specified, a hot reset is
+>> triggered on each PCIe root port and downstream port to reset its
+>> downstream endpoint.
 >>
->>> I don't know what the right answer is, but I do think it's better to
->>> resolve it inside PCI and ACPI rather than playing games with driver
->>> binding times in the driver core.
+>> Background:
+>> A kdump problem about DMA has been discussed for a long time. That is,
+>> when a kernel is switched to the kdump kernel DMA derived from first
+>> kernel affects second kernel. Recently this problem surfaces when iommu
+>> is used for PCI passthrough on KVM guest. In the case of the machine I
+>> use, when intel_iommu=on is specified, DMAR error is detected in kdump
+>> kernel and PCI SERR is also detected. Finally kdump fails because some
+>> devices does not work correctly.
 >>
->> is that ok to save that drivers_autoprobe bit in device.archdata for
->> ia64 and x86 that using acpi?
+>> The root cause is that ongoing DMA from first kernel causes DMAR fault
+>> because page table of DMAR is initialized while kdump kernel is booting
+>> up. Therefore to address this problem DMA needs to be stopped before
+>> DMAR is initialized at kdump kernel boot time. By these patches, PCIe
+>> devices are reset by hot reset and its DMA is stopped when reset_devices
+>> is specified. One problem of this solution is that the monitor blacks
+>> out when VGA controller is reset. So this patch does not reset the port
+>> whose child endpoint is VGA device.
+>>
+>> v2:
+>> Reset devices in setup_arch() because reset need to be done before
+>> interrupt remapping is initialized.
+>>
+>> v1:
+>> https://lkml.org/lkml/2012/8/3/160
+>>
+>> Thanks,
+>> Takao Indoh
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> updated patch to put the bit in pci_dev and acpi_device instead.
 >
-> please check attached patches.
+> Maybe you've tried the following, and I missed a thread on it,
+> but instead of a somewhat-large, reset hammer, did any one try
+> just reading all the endpoint-only device CMD register, flip the MasterEnable
+> bit off, and write it back? .... that would stop all DMA (should stop
+> all MSI writes as well since they are just another DMA), and then
+> restart the system?
+> May also have to do PCI INT Disable as well... and note, that's a PCI 2.3
+> optional feature.... so devices using INT signalling vs MSI
+> is just borked on IOMMU/intr-remapping systems... which I would expect
+> are few. Then again, if this is foolishly done, then reset legacy PCI
+> busses as the fallback.
 
-attached.
+Just clearing bus master bit and INTx disable bit in setup_arch() did
+not solve this problem. I still got DMAR error on devices(for exmaple,
+igb and megaraid_sas).
 
---000e0cd1e0ceabb44a04cb1e1e2a
-Content-Type: application/octet-stream;
-	name="autoprobe_stop_core_acpi_only.patch"
-Content-Disposition: attachment;
-	filename="autoprobe_stop_core_acpi_only.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h7tsrtcj0
+Clearing bus master in setup_arch() and resetting devices in fixup_final
+like v1 patch is better, DMAR error was not detected. But on certain
+machine kdump kernel hung up when resetting devices. It seems to be a
+problem specific to the platform.
 
-U3ViamVjdDogW1BBVENIXSBBQ1BJOiBhZGQgZHJpdmVyc19hdXRvcHJvYmUgaW4gc3RydWN0IGFj
-cGlfZGV2aWNlCgpUbyB1c2UgdG8gY29udHJvbCB0aGUgZGVsYXkgYXR0YWNoIGRyaXZlciBmb3Ig
-YWNwaV9kZXZpY2UuCgpXaWxsIHVzZSBidXMgbm90aWZpZXIgdG8gdG9nZ2xlIHRoaXMgYml0cyB3
-aGVuIG5lZWRlZC4KClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9y
-Zz4KCi0tLQogZHJpdmVycy9hY3BpL3NjYW4uYyAgICAgfCAgICA4ICsrKysrKystCiBpbmNsdWRl
-L2FjcGkvYWNwaV9idXMuaCB8ICAgIDEgKwogMiBmaWxlcyBjaGFuZ2VkLCA4IGluc2VydGlvbnMo
-KyksIDEgZGVsZXRpb24oLSkKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9hY3BpL3NjYW4uYwo9
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL2FjcGkvc2Nhbi5jCisrKyBsaW51
-eC0yLjYvZHJpdmVycy9hY3BpL3NjYW4uYwpAQCAtMzMzLDcgKzMzMywxMiBAQCBzdGF0aWMgdm9p
-ZCBhY3BpX2RldmljZV9yZWxlYXNlKHN0cnVjdCBkCiBzdGF0aWMgaW50IGFjcGlfYnVzX21hdGNo
-KHN0cnVjdCBkZXZpY2UgKmRldiwgc3RydWN0IGRldmljZV9kcml2ZXIgKmRydikKIHsKIAlzdHJ1
-Y3QgYWNwaV9kZXZpY2UgKmFjcGlfZGV2ID0gdG9fYWNwaV9kZXZpY2UoZGV2KTsKLQlzdHJ1Y3Qg
-YWNwaV9kcml2ZXIgKmFjcGlfZHJ2ID0gdG9fYWNwaV9kcml2ZXIoZHJ2KTsKKwlzdHJ1Y3QgYWNw
-aV9kcml2ZXIgKmFjcGlfZHJ2OworCisJaWYgKCFhY3BpX2Rldi0+ZHJpdmVyc19hdXRvcHJvYmUp
-CisJCXJldHVybiAwOworCisJYWNwaV9kcnYgPSB0b19hY3BpX2RyaXZlcihkcnYpOwogCiAJcmV0
-dXJuICFhY3BpX21hdGNoX2RldmljZV9pZHMoYWNwaV9kZXYsIGFjcGlfZHJ2LT5pZHMpOwogfQpA
-QCAtMTI1OSw2ICsxMjY0LDcgQEAgc3RhdGljIGludCBhY3BpX2FkZF9zaW5nbGVfb2JqZWN0KHN0
-cnVjdAogCWRldmljZS0+cGFyZW50ID0gYWNwaV9idXNfZ2V0X3BhcmVudChoYW5kbGUpOwogCWRl
-dmljZS0+YnVzX29wcyA9ICpvcHM7IC8qIHdvcmtyb3VuZCBmb3Igbm90IGNhbGwgLnN0YXJ0ICov
-CiAJU1RSVUNUX1RPX0lOVChkZXZpY2UtPnN0YXR1cykgPSBzdGE7CisJZGV2aWNlLT5kcml2ZXJz
-X2F1dG9wcm9iZSA9IHRydWU7CiAKIAlhY3BpX2RldmljZV9nZXRfYnVzaWQoZGV2aWNlKTsKIApJ
-bmRleDogbGludXgtMi42L2luY2x1ZGUvYWNwaS9hY3BpX2J1cy5oCj09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxp
-bnV4LTIuNi5vcmlnL2luY2x1ZGUvYWNwaS9hY3BpX2J1cy5oCisrKyBsaW51eC0yLjYvaW5jbHVk
-ZS9hY3BpL2FjcGlfYnVzLmgKQEAgLTMwMCw2ICszMDAsNyBAQCBzdHJ1Y3QgYWNwaV9kZXZpY2Ug
-ewogCXN0cnVjdCBkZXZpY2UgZGV2OwogCXN0cnVjdCBhY3BpX2J1c19vcHMgYnVzX29wczsJLyog
-d29ya2Fyb3VuZCBmb3IgZGlmZmVyZW50IGNvZGUgcGF0aCBmb3IgaG90cGx1ZyAqLwogCWVudW0g
-YWNwaV9idXNfcmVtb3ZhbF90eXBlIHJlbW92YWxfdHlwZTsJLyogaW5kaWNhdGUgZm9yIGRpZmZl
-cmVudCByZW1vdmFsIHR5cGUgKi8KKwlib29sIGRyaXZlcnNfYXV0b3Byb2JlOwogfTsKIAogc3Rh
-dGljIGlubGluZSB2b2lkICphY3BpX2RyaXZlcl9kYXRhKHN0cnVjdCBhY3BpX2RldmljZSAqZCkK
---000e0cd1e0ceabb44a04cb1e1e2a
-Content-Type: application/octet-stream;
-	name="autoprobe_stop_core_pci_only.patch"
-Content-Disposition: attachment;
-	filename="autoprobe_stop_core_pci_only.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h7tss4wq1
+And, resetting devices in setup_arch() like v2 patch solves all problems
+I found so far.
 
-U3ViamVjdDogW1BBVENIXSBQQ0k6IGFkZCBkcml2ZXJzX2F1dG9wcm9iZSBpbiBzdHJ1Y3QgcGNp
-X2RldgoKVG8gdXNlIHRvIGNvbnRyb2wgdGhlIGRlbGF5IGF0dGFjaCBkcml2ZXIgZm9yIHBjaV9k
-ZXYKCldpbGwgdXNlIGJ1cyBub3RpZmllciB0byB0b2dnbGUgdGhpcyBiaXRzIHdoZW4gbmVlZGVk
-LgoKU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3JnPgoKLS0tCiBk
-cml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMgfCAgICA2ICsrKysrLQogZHJpdmVycy9wY2kvcHJvYmUu
-YyAgICAgIHwgICAgMSArCiBpbmNsdWRlL2xpbnV4L3BjaS5oICAgICAgfCAgICAxICsKIDMgZmls
-ZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpJbmRleDogbGludXgt
-Mi42L2RyaXZlcnMvcGNpL3BjaS1kcml2ZXIuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3Jp
-Zy9kcml2ZXJzL3BjaS9wY2ktZHJpdmVyLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wY2kt
-ZHJpdmVyLmMKQEAgLTEyMDYsOSArMTIwNiwxMyBAQCBwY2lfZGV2X2RyaXZlcihjb25zdCBzdHJ1
-Y3QgcGNpX2RldiAqZGV2CiBzdGF0aWMgaW50IHBjaV9idXNfbWF0Y2goc3RydWN0IGRldmljZSAq
-ZGV2LCBzdHJ1Y3QgZGV2aWNlX2RyaXZlciAqZHJ2KQogewogCXN0cnVjdCBwY2lfZGV2ICpwY2lf
-ZGV2ID0gdG9fcGNpX2RldihkZXYpOwotCXN0cnVjdCBwY2lfZHJpdmVyICpwY2lfZHJ2ID0gdG9f
-cGNpX2RyaXZlcihkcnYpOworCXN0cnVjdCBwY2lfZHJpdmVyICpwY2lfZHJ2OwogCWNvbnN0IHN0
-cnVjdCBwY2lfZGV2aWNlX2lkICpmb3VuZF9pZDsKIAorCWlmICghcGNpX2Rldi0+ZHJpdmVyc19h
-dXRvcHJvYmUpCisJCXJldHVybiAwOworCisJcGNpX2RydiA9IHRvX3BjaV9kcml2ZXIoZHJ2KTsK
-IAlmb3VuZF9pZCA9IHBjaV9tYXRjaF9kZXZpY2UocGNpX2RydiwgcGNpX2Rldik7CiAJaWYgKGZv
-dW5kX2lkKQogCQlyZXR1cm4gMTsKSW5kZXg6IGxpbnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5o
-Cj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGludXgvcGNpLmgKKysrIGxp
-bnV4LTIuNi9pbmNsdWRlL2xpbnV4L3BjaS5oCkBAIC0zMDgsNiArMzA4LDcgQEAgc3RydWN0IHBj
-aV9kZXYgewogCXVuc2lnbmVkIGludAlpcnE7CiAJc3RydWN0IHJlc291cmNlIHJlc291cmNlW0RF
-VklDRV9DT1VOVF9SRVNPVVJDRV07IC8qIEkvTyBhbmQgbWVtb3J5IHJlZ2lvbnMgKyBleHBhbnNp
-b24gUk9NcyAqLwogCisJYm9vbCBkcml2ZXJzX2F1dG9wcm9iZTsKIAkvKiBUaGVzZSBmaWVsZHMg
-YXJlIHVzZWQgYnkgY29tbW9uIGZpeHVwcyAqLwogCXVuc2lnbmVkIGludAl0cmFuc3BhcmVudDox
-OwkvKiBUcmFuc3BhcmVudCBQQ0kgYnJpZGdlICovCiAJdW5zaWduZWQgaW50CW11bHRpZnVuY3Rp
-b246MTsvKiBQYXJ0IG9mIG11bHRpLWZ1bmN0aW9uIGRldmljZSAqLwpJbmRleDogbGludXgtMi42
-L2RyaXZlcnMvcGNpL3Byb2JlLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVy
-cy9wY2kvcHJvYmUuYworKysgbGludXgtMi42L2RyaXZlcnMvcGNpL3Byb2JlLmMKQEAgLTExOTEs
-NiArMTE5MSw3IEBAIHN0cnVjdCBwY2lfZGV2ICphbGxvY19wY2lfZGV2KHZvaWQpCiAJCXJldHVy
-biBOVUxMOwogCiAJSU5JVF9MSVNUX0hFQUQoJmRldi0+YnVzX2xpc3QpOworCWRldi0+ZHJpdmVy
-c19hdXRvcHJvYmUgPSB0cnVlOwogCiAJcmV0dXJuIGRldjsKIH0K
---000e0cd1e0ceabb44a04cb1e1e2a--
+Thanks,
+Takao Indoh
+
