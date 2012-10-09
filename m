@@ -1,185 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-Subject: Re: [RFD][PATCH 5/7] PM / QoS: Make it possible to expose PM QoS device flags to user space
-Date: Tue, 30 Oct 2012 16:29:07 +0100
-Message-ID: <3050749.si8v66pygi@vostro.rjw.lan>
-In-Reply-To: <508F9588.5040105@intel.com>
-References: <201209282351.10663.rjw@sisk.pl> <201209282355.31823.rjw@sisk.pl> <508F9588.5040105@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30666 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753942Ab2JIIQG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 04:16:06 -0400
+Message-ID: <5073DCCB.2050503@huawei.com>
+Date: Tue, 9 Oct 2012 16:14:03 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
+ device hot removed
+References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <50739D40.8040005@huawei.com> <5073D56C.40705@huawei.com> <5073D76C.9090304@huawei.com>
+In-Reply-To: <5073D76C.9090304@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 30, 2012 04:53:28 PM Aaron Lu wrote:
-> On 09/29/2012 05:55 AM, Rafael J. Wysocki wrote:
-> > Define two device PM QoS flags, PM_QOS_FLAG_NO_POWER_OFF
-> > and PM_QOS_FLAG_REMOTE_WAKEUP, and introduce routines
-> > dev_pm_qos_expose_flags() and dev_pm_qos_hide_flags() allowing the
-> > caller to expose those two flags to user space or to hide them
-> > from it, respectively.
-> > 
-> > After the flags have been exposed, user space will see two
-> > additional sysfs attributes, pm_qos_no_power_off and
-> > pm_qos_remote_wakeup, under the device's /sys/devices/.../power/
-> > directory.  Then, writing 1 to one of them will update the
-> > PM QoS flags request owned by user space so that the corresponding
-> > flag is requested to be set.  In turn, writing 0 to one of them
-> > will cause the corresponding flag in the user space's request to
-> > be cleared (however, the owners of the other PM QoS flags requests
-> > for the same device may still request the flag to be set and it
-> > may be effectively set even if user space doesn't request that).
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > ---
-> >  Documentation/ABI/testing/sysfs-devices-power |   31 ++++
-> >  drivers/base/power/power.h                    |    6 
-> >  drivers/base/power/qos.c                      |  169 ++++++++++++++++++++------
-> >  drivers/base/power/sysfs.c                    |   95 +++++++++++++-
-> >  include/linux/pm.h                            |    1 
-> >  include/linux/pm_qos.h                        |   26 ++++
-> >  6 files changed, 280 insertions(+), 48 deletions(-)
-> > 
-> > Index: linux/drivers/base/power/qos.c
-> > ===================================================================
-> > --- linux.orig/drivers/base/power/qos.c
-> > +++ linux/drivers/base/power/qos.c
-> > @@ -40,6 +40,7 @@
-> >  #include <linux/device.h>
-> >  #include <linux/mutex.h>
-> >  #include <linux/export.h>
-> > +#include <linux/pm_runtime.h>
-> >  
-> >  #include "power.h"
-> >  
-> > @@ -322,6 +323,38 @@ int dev_pm_qos_add_request(struct device
-> >  EXPORT_SYMBOL_GPL(dev_pm_qos_add_request);
-> >  
-> >  /**
-> > + * __dev_pm_qos_update_request - Modify an existing device PM QoS request.
-> > + * @req : PM QoS request to modify.
-> > + * @new_value: New value to request.
-> > + */
-> > +int __dev_pm_qos_update_request(struct dev_pm_qos_request *req, s32 new_value)
-> > +{
-> > +	s32 curr_value;
-> > +	int ret = 0;
-> > +
-> > +	if (!req->dev->power.qos) {
-> > +		ret = -ENODEV;
-> > +		goto out;
-> > +	}
-> > +
-> > +	switch(req->type) {
-> > +	case DEV_PM_QOS_LATENCY:
-> > +		curr_value = req->data.pnode.prio;
-> > +		break;
-> > +	case DEV_PM_QOS_FLAGS:
-> > +		curr_value = req->data.flr.flags;
-> > +		break;
-> > +	default:
-> > +		return -EINVAL;
-> > +	}
-> > +
-> > +	if (curr_value != new_value)
-> > +		ret = apply_constraint(req, PM_QOS_UPDATE_REQ, new_value);
-> > +
-> > +	return ret;
-> > +}
-> > +
-> > +/**
-> >   * dev_pm_qos_update_request - modifies an existing qos request
-> >   * @req : handle to list element holding a dev_pm_qos request to use
-> >   * @new_value: defines the qos request
-> > @@ -336,11 +369,9 @@ EXPORT_SYMBOL_GPL(dev_pm_qos_add_request
-> >   * -EINVAL in case of wrong parameters, -ENODEV if the device has been
-> >   * removed from the system
-> >   */
-> > -int dev_pm_qos_update_request(struct dev_pm_qos_request *req,
-> > -			      s32 new_value)
-> > +int dev_pm_qos_update_request(struct dev_pm_qos_request *req, s32 new_value)
-> >  {
-> > -	s32 curr_value;
-> > -	int ret = 0;
-> > +	int ret;
-> >  
-> >  	if (!req) /*guard against callers passing in null */
-> >  		return -EINVAL;
-> > @@ -350,29 +381,9 @@ int dev_pm_qos_update_request(struct dev
-> >  		return -EINVAL;
-> >  
-> >  	mutex_lock(&dev_pm_qos_mtx);
-> > -
-> > -	if (!req->dev->power.qos) {
-> > -		ret = -ENODEV;
-> > -		goto out;
-> > -	}
-> > -
-> > -	switch(req->type) {
-> > -	case DEV_PM_QOS_LATENCY:
-> > -		curr_value = req->data.pnode.prio;
-> > -		break;
-> > -	case DEV_PM_QOS_FLAGS:
-> > -		curr_value = req->data.flr.flags;
-> > -		break;
-> > -	default:
-> > -		ret = -EINVAL;
-> > -		goto out;
-> > -	}
-> > -
-> > -	if (curr_value != new_value)
-> > -		ret = apply_constraint(req, PM_QOS_UPDATE_REQ, new_value);
-> > -
-> > - out:
-> > +	__dev_pm_qos_update_request(req, new_value);
+On 2012/10/9 15:51, Jiang Liu wrote:
+> When scanning PCI devices for hot-add, it guarantee function 0 is scanned
+> at first. And when destroying PCI devices for hot-removal, we also need to
+> destroy function 0 at last, but currently there's no such guarantees. 
 > 
-> You forgot to assign the return value here.
 
-Quite obviously.  I'm going to apply the appended patch for that.
+This is an issue, btw in pciehp now only try to hot remove fun from 0 --> 8,
+ARI device supports up to 256 function device.
+for (j = 0; j < 8; j++) {
+	struct pci_dev *temp = pci_get_slot(parent, PCI_DEVFN(0, j));
+	if (!temp)
+		continue;
 
-Thanks for spotting it!
 
-Rafael
+> On 2012-10-9 15:42, Yijing Wang wrote:
+>> On 2012/10/9 11:42, Jiang Liu wrote:
+>>> How about this patch, which disables ARI when adding new PCI devices?
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 5485883..c841aa6 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+>>>  void pci_enable_ari(struct pci_dev *dev)
+>>>  {
+>>
+>> I think it's ok. Delay to disable ARI until next hot add is safe.
+>> Maybe rename as pci_configure_ari is better.
+>>
+>>>         u32 cap;
+>>> +       bool enable = true;
+>>>         struct pci_dev *bridge;
+>>>
+>>>         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+>>>                 return;
+>>>
+>>>         if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
+>>> -               return;
+>>> +               enable = false;
+>>>
+>>>         bridge = dev->bus->self;
+>>>         if (!bridge)
+>>> @@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
+>>>         if (!(cap & PCI_EXP_DEVCAP2_ARI))
+>>>                 return;
+>>>
+>>> -       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
+>>> -       bridge->ari_enabled = 1;
+>>> +       if (enable) {
+>>> +               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
+>>> +                                        PCI_EXP_DEVCTL2_ARI);
+>>> +               bridge->ari_enabled = 1;
+>>> +       } else {
+>>> +               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
+>>> +                                        PCI_EXP_DEVCTL2_ARI);
+>>> +               bridge->ari_enabled = 0;
+>>> +       }
+>>>  }
+>>>
+>>>  /**
+>>>
+>>> On 2012-10-9 11:03, Yijing Wang wrote:
+>>>> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
+>>>> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
+>>>> when an ARI device hot removed.
+>>>>
+>>>> my steps:
+>>>> 1. Hot add an ARI pci device;
+>>>> 2. Hot remove the ARI pci device;
+>>>> 3. Hot add an non ARI pci device;
+>>>>
+>>>> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
+>>>> bit set.
+>>>>
+>>>> As PCIe Spec 2.0(6.13/441) recommends:
+>>>> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
+>>>> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
+>>>> newly added component is in fact an ARI Device"
+>>>>
+>>>> This series of patches fix this problem.
+>>>>
+>>>> Yijing Wang (7):
+>>>>   PCI: rework pci_enable_ari for support disable ari forwarding
+>>>>   PCI, acpiphp: disable ARI forwarding for acpiphp
+>>>>   PCI, pciehp: disable ARI forwarding for pciehp
+>>>>   PCI, cpqphp: disable ARI forwarding for cpqphp
+>>>>   PCI, shpchp: disable ARI forwarding for shpchp
+>>>>   PCI, sgi: disable ARI forwarding for sgiphp
+>>>>   PCI, ibmphp: disable ARI forwarding for ibmphp
+>>>>
+>>>>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
+>>>>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
+>>>>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
+>>>>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
+>>>>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
+>>>>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
+>>>>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
+>>>>  drivers/pci/pci.c                      |   16 +++++++++++-----
+>>>>  drivers/pci/pci.h                      |    2 +-
+>>>>  drivers/pci/probe.c                    |    2 +-
+>>>>  10 files changed, 20 insertions(+), 7 deletions(-)
+>>>>
+>>>>
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>>
+>>> .
+>>>
+>>
+>>
+> 
+> 
+> 
+> .
+> 
 
-
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: PM / QoS: Fix the return value of dev_pm_qos_update_request()
-
-Commit e39473d (PM / QoS: Make it possible to expose PM QoS device)
-flags to user space introduced __dev_pm_qos_update_request() to be
-called internally by dev_pm_qos_update_request(), but forgot to make
-the latter actually use the return value of the former.  Fix this
-mistake.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/base/power/qos.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux/drivers/base/power/qos.c
-===================================================================
---- linux.orig/drivers/base/power/qos.c
-+++ linux/drivers/base/power/qos.c
-@@ -380,7 +380,7 @@ int dev_pm_qos_update_request(struct dev
- 		return -EINVAL;
- 
- 	mutex_lock(&dev_pm_qos_mtx);
--	__dev_pm_qos_update_request(req, new_value);
-+	ret = __dev_pm_qos_update_request(req, new_value);
- 	mutex_unlock(&dev_pm_qos_mtx);
- 
- 	return ret;
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thanks!
+Yijing
+
