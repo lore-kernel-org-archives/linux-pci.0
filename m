@@ -1,115 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:52402 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755806Ab2JLFf7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2012 01:35:59 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so1145065dak.19
-        for <linux-pci@vger.kernel.org>; Thu, 11 Oct 2012 22:35:59 -0700 (PDT)
-From: Jon Mason <jdmason@kudzu.us>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 3/3] PCI: Add new default PCI-E MPS bus state
-Date: Thu, 11 Oct 2012 22:35:55 -0700
-Message-Id: <1350020155-3782-4-git-send-email-jdmason@kudzu.us>
-In-Reply-To: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
-References: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
+Received: from mx1.redhat.com ([209.132.183.28]:34509 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727Ab2JIQGl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Oct 2012 12:06:41 -0400
+Message-ID: <50744B40.5030504@redhat.com>
+Date: Tue, 09 Oct 2012 12:05:20 -0400
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121002074434.204.47750.sendpatchset@indoh> <506C3C4C.1060808@redhat.com> <5073E84A.8080301@jp.fujitsu.com>
+In-Reply-To: <5073E84A.8080301@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new default state for the PCI-E MPS determination, PCIE_BUS_WARN.
-This state notifies the user that a suboptimal configuration is
-occurring (most likely due to incorrect configuration in the BIOS), and
-provides them the boot parameter to enable this error to be corrected.
-This provides the users an ability to detect an issue with MPS, without
-forcing them to correct the issue (which may cause system hangs).  This
-is a much more sane default for the distros.
-
-Also, add debug output to show the default device MPS and MPSS.
-
-Signed-off-by: Jon Mason <jdmason@kudzu.us>
-CC: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.c    |    2 +-
- drivers/pci/probe.c  |   10 ++++++++++
- drivers/pci/quirks.c |    3 ++-
- include/linux/pci.h  |    1 +
- 4 files changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ab4bf5a..1723c81 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -78,7 +78,7 @@ unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
- unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
- unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
- 
--enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
-+enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_WARN;
- 
- /*
-  * The default CLS is used if arch didn't set CLS explicitly and not
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5a18652..64bb393 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1448,6 +1448,9 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
- 	if (!pci_is_pcie(dev))
- 		return 0;
- 
-+	dev_dbg(&dev->dev, "Device MPS %d and MPSS %d\n",
-+		pcie_get_mps(dev), 128 << dev->pcie_mpss);
-+
- 	/* For PCIE hotplug enabled slots not connected directly to a
- 	 * PCI-E root port, there can be problems when hotplugging
- 	 * devices.  This is due to the possibility of hotplugging a
-@@ -1588,6 +1591,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 		smpss = 0;
- 		break;
- 
-+	case PCIE_BUS_WARN:
- 	case PCIE_BUS_SAFE:
- 		smpss = mpss;
- 
-@@ -1600,6 +1604,12 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
- 		return;
- 	}
- 
-+	if (pcie_bus_config == PCIE_BUS_WARN) {
-+		if (smpss != mpss)
-+			dev_info(&bus->dev, "Non-optimal PCI-E Bus MPS value of %d being used instead of %d.\n"
-+				 "Please use the pci=pcie_bus_safe boot parameter for better performance.\n",
-+				 128 << smpss, 128 << mpss);
-+		return;
- 	}
- 
- 	pcie_bus_configure_set(bus->self, &smpss);
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 5155317..e4eede0 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2787,7 +2787,8 @@ static void __devinit quirk_intel_mc_errata(struct pci_dev *dev)
- 	int err;
- 	u16 rcc;
- 
--	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-+	if (pcie_bus_config == PCIE_BUS_TUNE_OFF ||
-+	    pcie_bus_config == PCIE_BUS_WARN)
- 		return;
- 
- 	/* Intel errata specifies bits to change but does not say what they are.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..410eaf9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -662,6 +662,7 @@ extern void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
- 
- enum pcie_bus_config_types {
- 	PCIE_BUS_TUNE_OFF,
-+	PCIE_BUS_WARN,
- 	PCIE_BUS_SAFE,
- 	PCIE_BUS_PERFORMANCE,
- 	PCIE_BUS_PEER2PEER,
--- 
-1.7.9.5
+On 10/09/2012 05:03 AM, Takao Indoh wrote:
+> (2012/10/03 22:23), Don Dutile wrote:
+>> On 10/02/2012 03:49 AM, Takao Indoh wrote:
+>>> These patches reset PCIe devices at boot time to address DMA problem on
+>>> kdump with iommu. When "reset_devices" is specified, a hot reset is
+>>> triggered on each PCIe root port and downstream port to reset its
+>>> downstream endpoint.
+>>>
+>>> Background:
+>>> A kdump problem about DMA has been discussed for a long time. That is,
+>>> when a kernel is switched to the kdump kernel DMA derived from first
+>>> kernel affects second kernel. Recently this problem surfaces when iommu
+>>> is used for PCI passthrough on KVM guest. In the case of the machine I
+>>> use, when intel_iommu=on is specified, DMAR error is detected in kdump
+>>> kernel and PCI SERR is also detected. Finally kdump fails because some
+>>> devices does not work correctly.
+>>>
+>>> The root cause is that ongoing DMA from first kernel causes DMAR fault
+>>> because page table of DMAR is initialized while kdump kernel is booting
+>>> up. Therefore to address this problem DMA needs to be stopped before
+>>> DMAR is initialized at kdump kernel boot time. By these patches, PCIe
+>>> devices are reset by hot reset and its DMA is stopped when reset_devices
+>>> is specified. One problem of this solution is that the monitor blacks
+>>> out when VGA controller is reset. So this patch does not reset the port
+>>> whose child endpoint is VGA device.
+>>>
+>>> v2:
+>>> Reset devices in setup_arch() because reset need to be done before
+>>> interrupt remapping is initialized.
+>>>
+>>> v1:
+>>> https://lkml.org/lkml/2012/8/3/160
+>>>
+>>> Thanks,
+>>> Takao Indoh
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>> Maybe you've tried the following, and I missed a thread on it,
+>> but instead of a somewhat-large, reset hammer, did any one try
+>> just reading all the endpoint-only device CMD register, flip the MasterEnable
+>> bit off, and write it back? .... that would stop all DMA (should stop
+>> all MSI writes as well since they are just another DMA), and then
+>> restart the system?
+>> May also have to do PCI INT Disable as well... and note, that's a PCI 2.3
+>> optional feature.... so devices using INT signalling vs MSI
+>> is just borked on IOMMU/intr-remapping systems... which I would expect
+>> are few. Then again, if this is foolishly done, then reset legacy PCI
+>> busses as the fallback.
+>
+> Just clearing bus master bit and INTx disable bit in setup_arch() did
+> not solve this problem. I still got DMAR error on devices(for exmaple,
+> igb and megaraid_sas).
+>
+> Clearing bus master in setup_arch() and resetting devices in fixup_final
+> like v1 patch is better, DMAR error was not detected. But on certain
+> machine kdump kernel hung up when resetting devices. It seems to be a
+> problem specific to the platform.
+>
+> And, resetting devices in setup_arch() like v2 patch solves all problems
+> I found so far.
+>
+> Thanks,
+> Takao Indoh
+>
+this summary should be in the patch set, so others know/learn
+what was attempted, what failed, and how you reached this working conclusion.
 
