@@ -1,446 +1,183 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: martin.wilck@ts.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, vgoyal@redhat.com
-Message-Id: <20121002074442.204.61135.sendpatchset@indoh>
-In-Reply-To: <20121002074434.204.47750.sendpatchset@indoh>
-References: <20121002074434.204.47750.sendpatchset@indoh>
-Subject: [PATCH v2 1/2] x86, pci: Reset PCIe devices at boot time
-Date: Tue,  2 Oct 2012 16:50:18 +0900 (JST)
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:34478 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752124Ab2JIIsX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 04:48:23 -0400
+Message-ID: <5073E497.8020909@huawei.com>
+Date: Tue, 9 Oct 2012 16:47:19 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
+ device hot removed
+References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <50739D40.8040005@huawei.com> <5073D56C.40705@huawei.com> <5073D76C.9090304@huawei.com> <5073DCCB.2050503@huawei.com>
+In-Reply-To: <5073DCCB.2050503@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch resets PCIe devices at boot time by hot reset when
-"reset_devices" is specified.
-
-
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
----
- arch/x86/include/asm/pci-direct.h |    1 
- arch/x86/kernel/setup.c           |    3 
- arch/x86/pci/early.c              |  302 ++++++++++++++++++++++++++++
- drivers/pci/pci.c                 |   18 -
- include/linux/pci.h               |   18 +
- init/main.c                       |    4 
- 6 files changed, 326 insertions(+), 20 deletions(-)
-
-diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-index b1e7a45..de30db2 100644
---- a/arch/x86/include/asm/pci-direct.h
-+++ b/arch/x86/include/asm/pci-direct.h
-@@ -18,4 +18,5 @@ extern int early_pci_allowed(void);
- extern unsigned int pci_early_dump_regs;
- extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
- extern void early_dump_pci_devices(void);
-+extern void early_reset_pcie_devices(void);
- #endif /* _ASM_X86_PCI_DIRECT_H */
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index f4b9b80..24b011c 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -988,6 +988,9 @@ void __init setup_arch(char **cmdline_p)
- 	generic_apic_probe();
- 
- 	early_quirks();
-+#ifdef CONFIG_PCI
-+	early_reset_pcie_devices();
-+#endif
- 
- 	/*
- 	 * Read APIC and some other early information from ACPI tables.
-diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-index d1067d5..2ca5f0e 100644
---- a/arch/x86/pci/early.c
-+++ b/arch/x86/pci/early.c
-@@ -1,5 +1,6 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/bootmem.h>
- #include <asm/pci-direct.h>
- #include <asm/io.h>
- #include <asm/pci_x86.h>
-@@ -109,3 +110,304 @@ void early_dump_pci_devices(void)
- 		}
- 	}
- }
-+
-+struct save_config {
-+	u32 pci[16];
-+	u16 pcie[PCI_EXP_SAVE_REGS];
-+};
-+
-+struct devinfo {
-+	int pcie_pos;   /* position of PCI Express capability */
-+	int pcie_flags; /* PCI_EXP_FLAGS */
-+	struct save_config *save;
-+};
-+
-+static void pci_udelay(int loops)
-+{
-+	while (loops--) {
-+		/* Approximately 1 us */
-+		native_io_delay();
-+	}
-+}
-+
-+/* Derived from drivers/pci/pci.c */
-+#define PCI_FIND_CAP_TTL	48
-+static int __init __pci_find_next_cap_ttl(u8 bus, u8 slot, u8 func,
-+					  u8 pos, int cap, int *ttl)
-+{
-+	u8 id;
-+
-+	while ((*ttl)--) {
-+		pos = read_pci_config_byte(bus, slot, func, pos);
-+		if (pos < 0x40)
-+			break;
-+		pos &= ~3;
-+		id = read_pci_config_byte(bus, slot, func,
-+					pos + PCI_CAP_LIST_ID);
-+		if (id == 0xff)
-+			break;
-+		if (id == cap)
-+			return pos;
-+		pos += PCI_CAP_LIST_NEXT;
-+	}
-+	return 0;
-+}
-+
-+static int __init __pci_find_next_cap(u8 bus, u8 slot, u8 func, u8 pos, int cap)
-+{
-+	int ttl = PCI_FIND_CAP_TTL;
-+
-+	return __pci_find_next_cap_ttl(bus, slot, func, pos, cap, &ttl);
-+}
-+
-+static int __init __pci_bus_find_cap_start(u8 bus, u8 slot, u8 func,
-+					   u8 hdr_type)
-+{
-+	u16 status;
-+
-+	status = read_pci_config_16(bus, slot, func, PCI_STATUS);
-+	if (!(status & PCI_STATUS_CAP_LIST))
-+		return 0;
-+
-+	switch (hdr_type) {
-+	case PCI_HEADER_TYPE_NORMAL:
-+	case PCI_HEADER_TYPE_BRIDGE:
-+		return PCI_CAPABILITY_LIST;
-+	case PCI_HEADER_TYPE_CARDBUS:
-+		return PCI_CB_CAPABILITY_LIST;
-+	default:
-+		return 0;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init early_pci_find_capability(u8 bus, u8 slot, u8 func, int cap)
-+{
-+	int pos;
-+	u8 type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
-+
-+	pos = __pci_bus_find_cap_start(bus, slot, func, type & 0x7f);
-+	if (pos)
-+		pos = __pci_find_next_cap(bus, slot, func, pos, cap);
-+
-+	return pos;
-+}
-+
-+static void __init do_reset(u8 bus, u8 slot, u8 func)
-+{
-+	u16 ctrl;
-+
-+	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
-+
-+	/* Assert Secondary Bus Reset */
-+	ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
-+	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-+	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
-+
-+	pci_udelay(5000);
-+
-+	/* De-assert Secondary Bus Reset */
-+	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
-+
-+	pci_udelay(500000);
-+}
-+
-+static void __init save_state(unsigned bus, unsigned slot, unsigned func,
-+		struct devinfo *info)
-+{
-+	int i;
-+	int pcie, flags, pcie_type;
-+	struct save_config *save;
-+
-+	pcie = info->pcie_pos;
-+	flags = info->pcie_flags;
-+	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
-+	save = info->save;
-+
-+	printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
-+
-+	for (i = 0; i < 16; i++)
-+		save->pci[i] = read_pci_config(bus, slot, func, i * 4);
-+	i = 0;
-+	if (pcie_cap_has_devctl(pcie_type, flags))
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_DEVCTL);
-+	if (pcie_cap_has_lnkctl(pcie_type, flags))
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_LNKCTL);
-+	if (pcie_cap_has_sltctl(pcie_type, flags))
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_SLTCTL);
-+	if (pcie_cap_has_rtctl(pcie_type, flags))
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_RTCTL);
-+
-+	if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_DEVCTL2);
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_LNKCTL2);
-+		save->pcie[i++] = read_pci_config_16(bus, slot, func,
-+						      pcie + PCI_EXP_SLTCTL2);
-+	}
-+}
-+
-+static void __init restore_state(unsigned bus, unsigned slot, unsigned func,
-+		struct devinfo *info)
-+{
-+	int i = 0;
-+	int pcie, flags, pcie_type;
-+	struct save_config *save;
-+
-+	pcie = info->pcie_pos;
-+	flags = info->pcie_flags;
-+	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
-+	save = info->save;
-+
-+	printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
-+	       bus, slot, func);
-+
-+	if (pcie_cap_has_devctl(pcie_type, flags))
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_DEVCTL, save->pcie[i++]);
-+	if (pcie_cap_has_lnkctl(pcie_type, flags))
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_LNKCTL, save->pcie[i++]);
-+	if (pcie_cap_has_sltctl(pcie_type, flags))
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_SLTCTL, save->pcie[i++]);
-+	if (pcie_cap_has_rtctl(pcie_type, flags))
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_RTCTL, save->pcie[i++]);
-+
-+	if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_DEVCTL2, save->pcie[i++]);
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_LNKCTL2, save->pcie[i++]);
-+		write_pci_config_16(bus, slot, func,
-+				    pcie + PCI_EXP_SLTCTL2, save->pcie[i++]);
-+	}
-+
-+	for (i = 15; i >= 0; i--)
-+		write_pci_config(bus, slot, func, i * 4, save->pci[i]);
-+}
-+
-+static void __init reset_pcie_device(unsigned bus, unsigned slot, unsigned func)
-+{
-+	int f, count;
-+	int pcie, pcie_type;
-+	u8 type;
-+	u16 vendor, flags;
-+	u32 class;
-+	int secondary;
-+	struct devinfo child[8];
-+	struct save_config *save, *pos;
-+	int size;
-+
-+	pcie = early_pci_find_capability(bus, slot, func, PCI_CAP_ID_EXP);
-+	if (!pcie)
-+		return;
-+
-+	flags = read_pci_config_16(bus, slot, func, pcie + PCI_EXP_FLAGS);
-+	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
-+	if ((pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
-+	    (pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
-+		return;
-+
-+	type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
-+	if ((type & 0x7f) != PCI_HEADER_TYPE_BRIDGE)
-+		return;
-+	secondary = read_pci_config_byte(bus, slot, func, PCI_SECONDARY_BUS);
-+	memset(child, 0, sizeof(child));
-+	for (count = 0, f = 0; f < 8; f++) {
-+		vendor = read_pci_config_16(secondary, 0, f, PCI_VENDOR_ID);
-+		if (vendor == 0xffff)
-+			continue;
-+
-+		pcie = early_pci_find_capability(secondary, 0, f,
-+				PCI_CAP_ID_EXP);
-+		if (!pcie)
-+			continue;
-+
-+		flags = read_pci_config_16(secondary, 0, f,
-+				pcie + PCI_EXP_FLAGS);
-+		pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
-+		if ((pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
-+		    (pcie_type == PCI_EXP_TYPE_PCI_BRIDGE))
-+			/* Don't reset switch, bridge */
-+			return;
-+
-+		class = read_pci_config(secondary, 0, f, PCI_CLASS_REVISION);
-+		if ((class >> 24) == PCI_BASE_CLASS_DISPLAY)
-+			/* Don't reset VGA device */
-+			return;
-+
-+		count++;
-+		child[f].pcie_pos = pcie;
-+		child[f].pcie_flags = flags;
-+	}
-+
-+	if (!count)
-+		return;
-+
-+	/* alloc space to save config */
-+	size = sizeof(struct save_config);
-+	save = (struct save_config *)alloc_bootmem(size*count);
-+	if (save == NULL) {
-+		printk(KERN_ERR "reset_pcie: alloc_bootmem failed\n");
-+		return;
-+	}
-+
-+	/* save */
-+	pos = save;
-+	for (f = 0; f < 8; f++) {
-+		if (child[f].pcie_pos) {
-+			child[f].save = pos++;
-+			save_state(secondary, 0, f, &child[f]);
-+		}
-+	}
-+
-+	do_reset(bus, slot, func);
-+
-+	/* restore */
-+	for (f = 0; f < 8; f++)
-+		if (child[f].pcie_pos)
-+			restore_state(secondary, 0, f, &child[f]);
-+
-+	free_bootmem(__pa(save), size*count);
-+}
-+
-+void __init early_reset_pcie_devices(void)
-+{
-+	unsigned bus, slot, func;
-+
-+	if (!early_pci_allowed() || !reset_devices)
-+		return;
-+
-+	for (bus = 0; bus < 256; bus++) {
-+		for (slot = 0; slot < 32; slot++) {
-+			for (func = 0; func < 8; func++) {
-+				u16 vendor;
-+				u8 type;
-+				vendor = read_pci_config_16(bus, slot, func,
-+						PCI_VENDOR_ID);
-+
-+				if (vendor == 0xffff)
-+					continue;
-+
-+				reset_pcie_device(bus, slot, func);
-+
-+				if (func == 0) {
-+					type = read_pci_config_byte(bus, slot,
-+								    func,
-+							       PCI_HEADER_TYPE);
-+					if (!(type & 0x80))
-+						break;
-+				}
-+			}
-+		}
-+	}
-+}
+Please use this as your base
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ab4bf5a..a7a4125 100644
+index 5485883..8a277d7 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -852,24 +852,6 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
- 
- EXPORT_SYMBOL(pci_choose_state);
- 
--#define PCI_EXP_SAVE_REGS	7
+@@ -2018,22 +2018,25 @@ void pci_enable_ari(struct pci_dev *dev)
+        u32 cap;
+        struct pci_dev *bridge;
+
+-       if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+-               return;
 -
--#define pcie_cap_has_devctl(type, flags)	1
--#define pcie_cap_has_lnkctl(type, flags)		\
--		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
--		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
--		  type == PCI_EXP_TYPE_ENDPOINT ||	\
--		  type == PCI_EXP_TYPE_LEG_END))
--#define pcie_cap_has_sltctl(type, flags)		\
--		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
--		 ((type == PCI_EXP_TYPE_ROOT_PORT) ||	\
--		  (type == PCI_EXP_TYPE_DOWNSTREAM &&	\
--		   (flags & PCI_EXP_FLAGS_SLOT))))
--#define pcie_cap_has_rtctl(type, flags)			\
--		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
--		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
--		  type == PCI_EXP_TYPE_RC_EC))
+-       if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
++       if (pcie_ari_disabled || !pci_is_pcie(dev))
+                return;
+
+        bridge = dev->bus->self;
+-       if (!bridge)
++       if (!bridge || !list_empty(bridge->bus_list))
+                return;
 -
- static struct pci_cap_saved_state *pci_find_saved_cap(
- 	struct pci_dev *pci_dev, char cap)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..8e10401 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1790,5 +1790,23 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
-  */
- struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
- 
-+#define PCI_EXP_SAVE_REGS	7
-+
-+#define pcie_cap_has_devctl(type, flags)	1
-+#define pcie_cap_has_lnkctl(type, flags)		\
-+		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
-+		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
-+		  type == PCI_EXP_TYPE_ENDPOINT ||	\
-+		  type == PCI_EXP_TYPE_LEG_END))
-+#define pcie_cap_has_sltctl(type, flags)		\
-+		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
-+		 ((type == PCI_EXP_TYPE_ROOT_PORT) ||	\
-+		  (type == PCI_EXP_TYPE_DOWNSTREAM &&	\
-+		   (flags & PCI_EXP_FLAGS_SLOT))))
-+#define pcie_cap_has_rtctl(type, flags)			\
-+		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
-+		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
-+		  type == PCI_EXP_TYPE_RC_EC))
-+
- #endif /* __KERNEL__ */
- #endif /* LINUX_PCI_H */
-diff --git a/init/main.c b/init/main.c
-index b286730..ebaf067 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -144,10 +144,10 @@ EXPORT_SYMBOL(reset_devices);
- static int __init set_reset_devices(char *str)
- {
- 	reset_devices = 1;
--	return 1;
-+	return 0;
+        pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+        if (!(cap & PCI_EXP_DEVCAP2_ARI))
+                return;
+
+-       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
+-       bridge->ari_enabled = 1;
++       if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
++               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
++                                        PCI_EXP_DEVCTL2_ARI);
++               bridge->ari_enabled = 1;
++       } else {
++               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
++                                          PCI_EXP_DEVCTL2_ARI);
++               bridge->ari_enabled = 0;
++       }
  }
- 
--__setup("reset_devices", set_reset_devices);
-+early_param("reset_devices", set_reset_devices);
- 
- static const char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
- const char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
+
+ /**
+
+On 2012-10-9 16:14, Yijing Wang wrote:
+> On 2012/10/9 15:51, Jiang Liu wrote:
+>> When scanning PCI devices for hot-add, it guarantee function 0 is scanned
+>> at first. And when destroying PCI devices for hot-removal, we also need to
+>> destroy function 0 at last, but currently there's no such guarantees. 
+>>
+> 
+> This is an issue, btw in pciehp now only try to hot remove fun from 0 --> 8,
+> ARI device supports up to 256 function device.
+> for (j = 0; j < 8; j++) {
+> 	struct pci_dev *temp = pci_get_slot(parent, PCI_DEVFN(0, j));
+> 	if (!temp)
+> 		continue;
+> 
+> 
+>> On 2012-10-9 15:42, Yijing Wang wrote:
+>>> On 2012/10/9 11:42, Jiang Liu wrote:
+>>>> How about this patch, which disables ARI when adding new PCI devices?
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index 5485883..c841aa6 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+>>>>  void pci_enable_ari(struct pci_dev *dev)
+>>>>  {
+>>>
+>>> I think it's ok. Delay to disable ARI until next hot add is safe.
+>>> Maybe rename as pci_configure_ari is better.
+>>>
+>>>>         u32 cap;
+>>>> +       bool enable = true;
+>>>>         struct pci_dev *bridge;
+>>>>
+>>>>         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+>>>>                 return;
+>>>>
+>>>>         if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
+>>>> -               return;
+>>>> +               enable = false;
+>>>>
+>>>>         bridge = dev->bus->self;
+>>>>         if (!bridge)
+>>>> @@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
+>>>>         if (!(cap & PCI_EXP_DEVCAP2_ARI))
+>>>>                 return;
+>>>>
+>>>> -       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
+>>>> -       bridge->ari_enabled = 1;
+>>>> +       if (enable) {
+>>>> +               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
+>>>> +                                        PCI_EXP_DEVCTL2_ARI);
+>>>> +               bridge->ari_enabled = 1;
+>>>> +       } else {
+>>>> +               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
+>>>> +                                        PCI_EXP_DEVCTL2_ARI);
+>>>> +               bridge->ari_enabled = 0;
+>>>> +       }
+>>>>  }
+>>>>
+>>>>  /**
+>>>>
+>>>> On 2012-10-9 11:03, Yijing Wang wrote:
+>>>>> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
+>>>>> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
+>>>>> when an ARI device hot removed.
+>>>>>
+>>>>> my steps:
+>>>>> 1. Hot add an ARI pci device;
+>>>>> 2. Hot remove the ARI pci device;
+>>>>> 3. Hot add an non ARI pci device;
+>>>>>
+>>>>> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
+>>>>> bit set.
+>>>>>
+>>>>> As PCIe Spec 2.0(6.13/441) recommends:
+>>>>> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
+>>>>> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
+>>>>> newly added component is in fact an ARI Device"
+>>>>>
+>>>>> This series of patches fix this problem.
+>>>>>
+>>>>> Yijing Wang (7):
+>>>>>   PCI: rework pci_enable_ari for support disable ari forwarding
+>>>>>   PCI, acpiphp: disable ARI forwarding for acpiphp
+>>>>>   PCI, pciehp: disable ARI forwarding for pciehp
+>>>>>   PCI, cpqphp: disable ARI forwarding for cpqphp
+>>>>>   PCI, shpchp: disable ARI forwarding for shpchp
+>>>>>   PCI, sgi: disable ARI forwarding for sgiphp
+>>>>>   PCI, ibmphp: disable ARI forwarding for ibmphp
+>>>>>
+>>>>>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
+>>>>>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
+>>>>>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
+>>>>>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
+>>>>>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
+>>>>>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
+>>>>>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
+>>>>>  drivers/pci/pci.c                      |   16 +++++++++++-----
+>>>>>  drivers/pci/pci.h                      |    2 +-
+>>>>>  drivers/pci/probe.c                    |    2 +-
+>>>>>  10 files changed, 20 insertions(+), 7 deletions(-)
+>>>>>
+>>>>>
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>>
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>
+>>
+>>
+>> .
+>>
+> 
+> 
+
 
