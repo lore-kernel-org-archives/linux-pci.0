@@ -1,133 +1,104 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <507E6355.40904@huawei.com>
-Date: Wed, 17 Oct 2012 15:50:45 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:23122 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893Ab2JIDbD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:31:03 -0400
+Message-ID: <50739A4D.20200@huawei.com>
+Date: Tue, 9 Oct 2012 11:30:21 +0800
 From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH 00/40] PCI, ACPI, x86: pci root bus hotplug support
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com> <1348080894-23412-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1348080894-23412-1-git-send-email-yinghai@kernel.org>
+To: Jiang Liu <jiang.liu@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: add pcie max_payload_size debug info
+References: <1349751771-9512-1-git-send-email-wangyijing@huawei.com> <507395D3.7010101@huawei.com>
+In-Reply-To: <507395D3.7010101@huawei.com>
 Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/9/20 2:54, Yinghai Lu wrote:
+On 2012/10/9 11:11, Jiang Liu wrote:
+> Why not update MPS setting when hot-adding a PCI device?
 
-Hi Yinghai,
-   I applied this series patches to the latest pci-next, but git am fail occured.
-When I try to pull from for-pci-root-bus-hotplug branch, I found some patches missed(eg. SCI_EMULATE).
-Where can I get the newest pci root bus hotplug patches?
+I'm not sure whether different mps setting will certainly result the same problem.
+Do we need to set all pci devices mps same size in the same path for safe?
+Or leave this to boot option "pcie_bus_safe"?
 
 Thanks!
 Yijing
 
-> It supports pci root bus removal with
-> 	echo "PCI0 3" > /sys/kernel/debug/acpi/sci_notify
+> On 2012-10-9 11:02, Yijing Wang wrote:
+>> PCIe device mps maybe not equal to its bridge mps after doing pci hotplug.
+>> This may result unexpected problem like
+>> http://marc.info/?l=linux-scsi&m=134788365823217&w=2. So add mps log for current
+>> mps setting to help diagnosis an issue like this.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/probe.c |   38 ++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 38 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index ec909af..ff1f98d 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1533,6 +1533,42 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>>  			"with pci=pcie_bus_safe.\n");
+>>  }
+>>  
+>> +static void pcie_dump_bus_mps(struct pci_bus *bus);
+>> +
+>> +static void pcie_dump_dev_mps(struct pci_dev *dev)
+>> +{
+>> +	int mps, mpss;
+>> +
+>> +	if (!pci_is_pcie(dev))
+>> +		return;
+>> +
+>> +	if (dev->subordinate)
+>> +		pcie_dump_bus_mps(dev->subordinate);
+>> +	else {
+>> +		mps = pcie_get_mps(dev);
+>> +		mpss = 128 << dev->pcie_mpss;
+>> +		dev_printk(KERN_DEBUG, &dev->dev, "PCI-E Max_Payload_Size Supported %d, "
+>> +			"Max_Payload_Size %d\n", mpss, mps);
+>> +	}
+>> +}
+>> +
+>> +static void pcie_dump_bus_mps(struct pci_bus *bus)
+>> +{
+>> +	int mps, mpss;
+>> +	struct pci_dev *dev;
+>> +
+>> +	if (!bus->self || !pci_is_pcie(bus->self))
+>> +		return;
+>> +
+>> +	mps = pcie_get_mps(bus->self);
+>> +	mpss = 128 << bus->self->pcie_mpss;
+>> +	dev_printk(KERN_DEBUG, &bus->self->dev, "PCI-E Max_Payload_Size Supported %d, "
+>> +		"Max_Payload_Size %d\n", mpss, mps);
+>> +
+>> +	list_for_each_entry(dev, &bus->devices, bus_list)
+>> +		pcie_dump_dev_mps(dev);
+>> +}
+>> +
+>>  static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+>>  {
+>>  	int mps, orig_mps;
+>> @@ -1564,6 +1600,8 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+>>  	if (!pci_is_pcie(bus->self))
+>>  		return;
+>>  
+>> +	pcie_dump_bus_mps(bus);
+>> +
+>>  	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+>>  		return;
+>>  
 > 
-> add with
-> 	echo "PCI0 0" > /sys/kernel/debug/acpi/sci_notify
 > 
-> based on pci/next
 > 
-> We need to separate pci root bus add from acpiphp. so user could only root bus
-> hotplug and pciehp that will make system fw simple.
-> Also later CONFIG_HOTPLUG will be removed, so pci root bus hotplug will be
-> enabled by default and user still need select acpiphp and pciehp for normal
-> pci device hotplug support.
-> 
-> could get from
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
-> 
-> -v6: do not depend on busn-alloc anymore.
-> 
-> part1: cleanup for pci/next
-> [PATCH 01/40] PCI: fix default vga ref_count
-> [PATCH 02/40] PCI, x86: clear initial value for root info resources
-> [PATCH 03/40] PCI, ia64: clear initial value for root info resources
-> [PATCH 04/40] PCI, acpiphp: Add is_hotplug_bridge detection
-> [PATCH 05/40] PCI: Add root bus children dev's res to fail list
-> [PATCH 06/40] PCI: Split out stop_bus_device and remove_bus_dev
-> 
-> part2: reserve BIOS allocated resource for hotadd root bus
-> [PATCH 07/40] x86, PCI: Separate pcibios_allocate_bridge_resources()
-> [PATCH 08/40] x86, PCI: Separate pcibios_allocate_dev_resources()
-> [PATCH 09/40] x86, PCI: Let pcibios_allocate_bus_resources() take us instead
-> [PATCH 10/40] x86, PCI: Separate rom resource claim out
-> [PATCH 11/40] PCI, x86: Add pcibios_fw_addr_done
-> [PATCH 12/40] PCI, x86: Remove __init for hw/fw allocated functions
-> [PATCH 13/40] PCI: Claim hw/fw allocated resources in hot add path.
-> 
-> part3: pci_assign_unsissigned_bus_resources() for root bus add.
-> [PATCH 14/40] PCI: Separate out pci_assign_unassigned_bus_resources()
-> [PATCH 15/40] PCI: Move back pci_rescan_bus() to probe.c
-> [PATCH 16/40] PCI: pci_bus_size_bridges() should not size own bridge
-> [PATCH 17/40] PCI: Use __pci_bus_size_bridges() directly in pci_assign_unassigned_bus_resources()
-> [PATCH 18/40] PCI: Rescan bus using callback method too
-> [PATCH 19/40] PCI, sysfs: Clean up rescan/remove with schedule_callback
-> 
-> part4: Separate root bus add from acpiphp and add removal support.
-> [PATCH 20/40] PCI: Fix a device reference count leakage issue in
-> [PATCH 21/40] PCI: Add pci_stop_and_remove_root_bus()
-> [PATCH 22/40] PCI, acpiphp: Separate out hot-add support of pci host
-> [PATCH 23/40] PCI, ACPI: Pass device instead of handle when config
-> [PATCH 24/40] PCI, acpi: Update acpi_pci_driver add/remove interface
-> [PATCH 25/40] PCI, ACPI: Make acpi_pci_root_remove remove pci root
-> [PATCH 26/40] PCI, ACPI: del root bus prt
-> [PATCH 27/40] ACPI: acpi_bus_trim to support two steps.
-> [PATCH 28/40] PCI, ACPI: Add pci_root_hp hot removal notification
-> [PATCH 29/40] PCI, ACPI: Add alloc_acpi_hp_work()
-> [PATCH 30/40] PCI, acpiphp: Use acpi_hp_work
-> [PATCH 31/40] PCI, pci_root_hp: Use acpi_hp_work
-> [PATCH 32/40] PCI, ACPI: Make kacpi_hotplug_wq static
-> 
-> part5: add/remove calling for acpi_pci_drivers.
-> [PATCH 33/40] ACPI, PCI: Use normal list for struct acpi_pci_driver
-> [PATCH 34/40] ACPI, PCI: Notify acpi_pci_drivers when hot-plugging
-> [PATCH 35/40] ACPI, PCI: Protect global lists in
-> [PATCH 36/40] PCI: Set dev_node early for pci_dev
-> [PATCH 37/40] PCI, x86: Move pci_enable_bridges() down
-> [PATCH 38/40] ACPI, PCI: Skip extra pci_enable_bridges for non
-> [PATCH 39/40] PCI, acpiphp: Don't ailout even no slots found yet.
-> 
-> part6: acpi add/remove simulation
-> [PATCH 40/40] ACPI: Enable SCI_EMULATE to manually simulate physical
-> 
->  arch/ia64/pci/pci.c                |    3 +-
->  arch/x86/pci/acpi.c                |    3 +-
->  arch/x86/pci/i386.c                |  185 ++++++++++++++++--------
->  drivers/acpi/Kconfig               |   10 ++
->  drivers/acpi/Makefile              |    2 +
->  drivers/acpi/osl.c                 |   24 +++-
->  drivers/acpi/pci_root.c            |  123 ++++++++++------
->  drivers/acpi/pci_root_hp.c         |  278 ++++++++++++++++++++++++++++++++++++
->  drivers/acpi/pci_slot.c            |   12 +-
->  drivers/acpi/scan.c                |    5 +-
->  drivers/acpi/sci_emu.c             |  145 +++++++++++++++++++
->  drivers/gpu/vga/vgaarb.c           |   14 ++-
->  drivers/pci/bus.c                  |    2 +
->  drivers/pci/hotplug/acpiphp.h      |    1 -
->  drivers/pci/hotplug/acpiphp_core.c |   23 +---
->  drivers/pci/hotplug/acpiphp_glue.c |  165 +++++++--------------
->  drivers/pci/pci-sysfs.c            |   41 ++++--
->  drivers/pci/probe.c                |   26 ++++-
->  drivers/pci/remove.c               |   87 +++++++++--
->  drivers/pci/search.c               |   10 +-
->  drivers/pci/setup-bus.c            |   54 +++-----
->  include/acpi/acpi_bus.h            |    1 +
->  include/acpi/acpiosxf.h            |    9 +-
->  include/linux/acpi.h               |    6 +-
->  include/linux/pci.h                |    5 +
->  25 files changed, 899 insertions(+), 335 deletions(-)
->  create mode 100644 drivers/acpi/pci_root_hp.c
->  create mode 100644 drivers/acpi/sci_emu.c
+> .
 > 
 
 
