@@ -1,70 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33042 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965471Ab2JaVT3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Oct 2012 17:19:29 -0400
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [RFC] SRIOV device enable and disable via sysfs
-Date: Wed, 31 Oct 2012 17:19:05 -0400
-Message-Id: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:13758 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753427Ab2JIHwc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 03:52:32 -0400
+Message-ID: <5073D76C.9090304@huawei.com>
+Date: Tue, 9 Oct 2012 15:51:08 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
+ device hot removed
+References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <50739D40.8040005@huawei.com> <5073D56C.40705@huawei.com>
+In-Reply-To: <5073D56C.40705@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide files under sysfs to determine the max number of vfs
-an SRIOV-capable PCIe device supports, and methods to enable and
-disable the vfs on a per device basis.
+When scanning PCI devices for hot-add, it guarantee function 0 is scanned
+at first. And when destroying PCI devices for hot-removal, we also need to
+destroy function 0 at last, but currently there's no such guarantees. 
 
-Currently, VF enablement by SRIOV-capable PCIe devices is done
-in driver-specific module parameters.  If not setup in modprobe files,
-it requires admin to unload & reload PF drivers with number of desired
-VFs to enable.  Additionally, the enablement is system wide: all
-devices controlled by the same driver have the same number of VFs
-enabled.  Although the latter is probably desired, there are PCI
-configurations setup by system BIOS that may not enable that to occur.
+On 2012-10-9 15:42, Yijing Wang wrote:
+> On 2012/10/9 11:42, Jiang Liu wrote:
+>> How about this patch, which disables ARI when adding new PCI devices?
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 5485883..c841aa6 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+>>  void pci_enable_ari(struct pci_dev *dev)
+>>  {
+> 
+> I think it's ok. Delay to disable ARI until next hot add is safe.
+> Maybe rename as pci_configure_ari is better.
+> 
+>>         u32 cap;
+>> +       bool enable = true;
+>>         struct pci_dev *bridge;
+>>
+>>         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+>>                 return;
+>>
+>>         if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
+>> -               return;
+>> +               enable = false;
+>>
+>>         bridge = dev->bus->self;
+>>         if (!bridge)
+>> @@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
+>>         if (!(cap & PCI_EXP_DEVCAP2_ARI))
+>>                 return;
+>>
+>> -       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
+>> -       bridge->ari_enabled = 1;
+>> +       if (enable) {
+>> +               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
+>> +                                        PCI_EXP_DEVCTL2_ARI);
+>> +               bridge->ari_enabled = 1;
+>> +       } else {
+>> +               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
+>> +                                        PCI_EXP_DEVCTL2_ARI);
+>> +               bridge->ari_enabled = 0;
+>> +       }
+>>  }
+>>
+>>  /**
+>>
+>> On 2012-10-9 11:03, Yijing Wang wrote:
+>>> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
+>>> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
+>>> when an ARI device hot removed.
+>>>
+>>> my steps:
+>>> 1. Hot add an ARI pci device;
+>>> 2. Hot remove the ARI pci device;
+>>> 3. Hot add an non ARI pci device;
+>>>
+>>> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
+>>> bit set.
+>>>
+>>> As PCIe Spec 2.0(6.13/441) recommends:
+>>> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
+>>> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
+>>> newly added component is in fact an ARI Device"
+>>>
+>>> This series of patches fix this problem.
+>>>
+>>> Yijing Wang (7):
+>>>   PCI: rework pci_enable_ari for support disable ari forwarding
+>>>   PCI, acpiphp: disable ARI forwarding for acpiphp
+>>>   PCI, pciehp: disable ARI forwarding for pciehp
+>>>   PCI, cpqphp: disable ARI forwarding for cpqphp
+>>>   PCI, shpchp: disable ARI forwarding for shpchp
+>>>   PCI, sgi: disable ARI forwarding for sgiphp
+>>>   PCI, ibmphp: disable ARI forwarding for ibmphp
+>>>
+>>>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
+>>>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
+>>>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
+>>>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
+>>>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
+>>>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
+>>>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
+>>>  drivers/pci/pci.c                      |   16 +++++++++++-----
+>>>  drivers/pci/pci.h                      |    2 +-
+>>>  drivers/pci/probe.c                    |    2 +-
+>>>  10 files changed, 20 insertions(+), 7 deletions(-)
+>>>
+>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>>
+>> .
+>>
+> 
+> 
 
-Two files are created if a PCIe device has SRIOV support:
-sriov_totalvfs -- cat-ing this file returns the maximum number
-                  of VFs a PCIe device supports.
-sriov_numvfs -- echo'ing a positive number to this file enables 
-                & configures this number of VFs for this given PCIe
-                device.
-	     -- echo'ing 0 to this file disables and deconfigures
-                all VFs for this given PCIe device.
-             -- cat-ing this file will return the number of VFs
-                currently enabled on this PCIe device.
-
-VF enable and disablement is invoked much like other PCIe
-configuration functions -- via a registered callback in the driver,
-i.e., probe, release, etc.  In this case, sriov_configure
-
-RFC V3->PATCH:
--- incorporate feedback from Ben Hutchings.
--- clean up poor RFC patches & sanitize through checkpatch.pl
-
-RFC v2->v3:
--- change the file names to reflect the names used in the SRIOV spec
--- change to a single file for enable & disable; 
-   change driver interface to a single interface.
--- add more informative messages on failures
--- add a core method that a driver can invoke to modify
-   the totalvfs reported & supported by a driver.
--- a set of patches for ixgbe provided by Greg Rose to use the
-   new interfaces; the last patch modified from the original
-   two file, enable/disable interface to the current single file
-   enable/disable. Greg will eventually post the final version
-   of these patches via Intel's usual process for driver patches.
-   Provided here as an example, and enable other SRIOV drivers
-   to see how adoption of the interface can be added.
-
-RFC v1->v2:
-This patch is based on previous 2 patches by Yinghai Lu
-that cleaned up the vga attributes for PCI devices under sysfs,
-and uses visibility-checking group attributes as recommended by
-Greg K-H.
-
-Signed-off-by: Donald Dutile <ddutile@redhat.com>
 
