@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:64591 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932325Ab2JQQ2L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2012 12:28:11 -0400
+Received: from szxga01-in.huawei.com ([119.145.14.64]:65468 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716Ab2JIDEJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:04:09 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <jiang.liu@huawei.com>, Hanjun Guo <guohanjun@huawei.com>,
+	<linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/7] PCI, acpiphp: disable ARI forwarding for acpiphp
+Date: Tue, 9 Oct 2012 11:03:19 +0800
+Message-ID: <1349751804-7476-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
+References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <507E60C2.6010104@cn.fujitsu.com>
-References: <1350444308-27102-1-git-send-email-tangchen@cn.fujitsu.com>
-	<CAE9FiQVFc9VVfWZpEfjPeGvo5pby3BQNzDei3VTXdoR048_SPg@mail.gmail.com>
-	<507E60C2.6010104@cn.fujitsu.com>
-Date: Wed, 17 Oct 2012 09:28:09 -0700
-Message-ID: <CAE9FiQX60dOE7odBx4OC0kawesZW3w9yLHEhmLoOvASaZ7q8dw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] Update acpi_root_bridge_list in container hotplug path.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: jiang.liu@huawei.com, bhelgaas@google.com, lenb@kernel.org,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 17, 2012 at 12:39 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
-> On 10/17/2012 01:18 PM, Yinghai Lu wrote:
->
-> And also, I have another 2 questions, maybe you can help me.
-> 1) Do we need to put PNP0A08 into acpi_pci_roots ?
+Disable the port ARI forwarding after an ARI device hot removed.
 
-looks like we need to unify those two ids.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> 2) In container_notify_cb(), when it got a ACPI_NOTIFY_EJECT_REQUEST
->    event, it doesn't do the hot-remove things.
->    I use your sci emulator patch to test it. I did the following thing:
->         echo echo "\_SB_.LSB1" > /sys/kernel/debug/acpi/sci_notify
->    where \_SB_.LSB1 is a container, it just did nothing.
->    Do we need to support this operation ?
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 3d6d4fd..6c2a1b6 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -944,6 +944,7 @@ static int disable_device(struct acpiphp_slot *slot)
+ 	 */
+ 	while ((pdev = dev_in_slot(slot))) {
+ 		pci_stop_and_remove_bus_device(pdev);
++		pci_configure_ari(pdev, false);
+ 		pci_dev_put(pdev);
+ 	}
+ 
+-- 
+1.7.1
 
-yes, looks like need to add container_device_remove and call it under
- container_notify_cb/ACPI_NOTIFY_EJECT_REQUEST
 
-and should look like handle_root_bridge_removal to call acpi_bus_trim two times.
-
-Thanks
-
-Yinghai
