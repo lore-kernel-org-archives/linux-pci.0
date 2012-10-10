@@ -1,89 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:43041 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751226Ab2JBLZa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 07:25:30 -0400
-Date: Tue, 2 Oct 2012 13:25:24 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 -tip 1/5] x86, MSI: Support multiple MSIs in presense
- of IRQ remapping
-Message-ID: <20121002112524.GA12420@gmail.com>
-References: <cover.1349074231.git.agordeev@redhat.com>
- <b15a9b5242c7de5770d2315ea8d13f4dcf63c00b.1349074231.git.agordeev@redhat.com>
- <20121002045518.GA7756@gmail.com>
- <20121002110630.GA2258@dhcp-26-207.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121002110630.GA2258@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 0/2] PCI-Express Non-Transparent Bridge Support
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+	David Miller <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <1349213177-9985-1-git-send-email-jon.mason@intel.com>
+References: <1349213177-9985-1-git-send-email-jon.mason@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Oct 2012 11:05:32 -0700
+Message-ID: <1349892332.3776.269.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Jon & Co,
 
-* Alexander Gordeev <agordeev@redhat.com> wrote:
-
-> On Tue, Oct 02, 2012 at 06:55:18AM +0200, Ingo Molnar wrote:
+On Tue, 2012-10-02 at 14:26 -0700, Jon Mason wrote:
+> I am submitting version 4 of the PCI-Express Non-Transparent Bridge
+> patches for inclusion in 3.7.  All outstanding issues from the RFC
+> process have been addressed.
 > 
-> Thanks for the review, Ingo.
+> version 1
+> http://thread.gmane.org/gmane.linux.kernel.pci/16443
 > 
-> > > @@ -584,8 +586,12 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> > >  #define irq_alloc_desc_from(from, node)		\
-> > >  	irq_alloc_descs(-1, from, 1, node)
-> > >  
-> > > +#define irq_alloc_descs_from(from, cnt, node)	\
-> > > +	irq_alloc_descs(-1, from, cnt, node)
-> > > +
-> > 
-> > Please use inlines instead of macros. Might transform the one 
-> > above it as well in the process.
+> Version 2 incorporates numerous clean-ups 
+> http://thread.gmane.org/gmane.linux.kernel.pci/16696
 > 
-> You mean here do not introduce irq_alloc_descs_from, but rather use
-> irq_alloc_descs() directly?
-
-My suggestion is to add irq_alloc_descs_from() as a (very 
-simple) inline function and change irq_alloc_desc_from() to be 
-an inline function as well.
-
-> > > +int irq_can_alloc_irqs(unsigned int from, unsigned int cnt)
-> > > +{
-> > > +	unsigned int start;
-> > > +	int ret = 0;
-> > > +
-> > > +	if (!cnt)
-> > > +		return -EINVAL;
-> > > +
-> > > +	mutex_lock(&sparse_irq_lock);
-> > > +	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
-> > > +					   from, cnt, 0);
-> > > +	mutex_unlock(&sparse_irq_lock);
-> > > +	if (start + cnt > nr_irqs)
-> > > +		ret = irq_can_expand_nr_irqs(start + cnt);
-> > > +	return ret;
-> > 
-> > How is this supposed to work wrt. races?
+> Version 3 incorporates changes to conform NTB and client devices to the
+> Linux device model (per Greg KH's request).
+> http://thread.gmane.org/gmane.linux.kernel.pci/17808
 > 
-> It is not supposed. Just a quick check if there are enough bits before an
-> attempt to allocate memory in __create_irqs(). Otherwise __create_irqs()
-> might allocate irq_cfg's, then realize there are no bits, then deallocate
-> and fail.
->
-> But strictly speaking, irq_can_alloc_irqs() is unnecessary.
+> Version 4 removes the transport transmit tasklet (per Dave Miller's
+> request).
+> http://thread.gmane.org/gmane.linux.network/244491
+> 
 
-Why complicate it if it's unnecessary? The function is inviting 
-wrong logic: it *cannot* tell whether there are enough bits, 
-because the check is racy.
+I'm very happy with the current state of the new NTB subsystem code for
+an initial merge.
 
-So I'd suggest to keep this out - this will further simplify the 
-patches.
+As we are t-minus ~5 days until the v3.7 merge window closes, you'll
+want to (very soon) be sending a PULL request to Linus for drivers/ntb/
+with the appropriate Reviewed-By's + Acked-By's in place.
 
-Thanks,
+--nab
 
-	Ingo
+
+
+
+
+
+
