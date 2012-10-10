@@ -1,55 +1,97 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5074F7FB.9000601@jp.fujitsu.com>
+Date: Wed, 10 Oct 2012 13:22:19 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <508A9974.2090403@tilera.com>
-References: <CADCVGbTDD-4WOVJWwaGBvay5=of=3VKBCVacrrW-z12BYZ1xbQ@mail.gmail.com>
- <CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com> <508A9974.2090403@tilera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Oct 2012 10:28:52 -0600
-Message-ID: <CAErSpo6ozXuJcca0piSuoQwHJ3LfxTw8nsy+8oa=QmJ98_Ofug@mail.gmail.com>
-Subject: Re: PCIe IO space support on Tilera GX: Is there any one who can
- confirm my modification to fix it is OK?
-To: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Cyberman Wu <cypher.w@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: ddutile@redhat.com
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de
+Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121002074434.204.47750.sendpatchset@indoh> <506C3C4C.1060808@redhat.com> <5073E84A.8080301@jp.fujitsu.com> <50744B40.5030504@redhat.com>
+In-Reply-To: <50744B40.5030504@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 26, 2012 at 8:08 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+(2012/10/10 1:05), Don Dutile wrote:
+> On 10/09/2012 05:03 AM, Takao Indoh wrote:
+>> (2012/10/03 22:23), Don Dutile wrote:
+>>> On 10/02/2012 03:49 AM, Takao Indoh wrote:
+>>>> These patches reset PCIe devices at boot time to address DMA problem on
+>>>> kdump with iommu. When "reset_devices" is specified, a hot reset is
+>>>> triggered on each PCIe root port and downstream port to reset its
+>>>> downstream endpoint.
+>>>>
+>>>> Background:
+>>>> A kdump problem about DMA has been discussed for a long time. That is,
+>>>> when a kernel is switched to the kdump kernel DMA derived from first
+>>>> kernel affects second kernel. Recently this problem surfaces when iommu
+>>>> is used for PCI passthrough on KVM guest. In the case of the machine I
+>>>> use, when intel_iommu=on is specified, DMAR error is detected in kdump
+>>>> kernel and PCI SERR is also detected. Finally kdump fails because some
+>>>> devices does not work correctly.
+>>>>
+>>>> The root cause is that ongoing DMA from first kernel causes DMAR fault
+>>>> because page table of DMAR is initialized while kdump kernel is booting
+>>>> up. Therefore to address this problem DMA needs to be stopped before
+>>>> DMAR is initialized at kdump kernel boot time. By these patches, PCIe
+>>>> devices are reset by hot reset and its DMA is stopped when reset_devices
+>>>> is specified. One problem of this solution is that the monitor blacks
+>>>> out when VGA controller is reset. So this patch does not reset the port
+>>>> whose child endpoint is VGA device.
+>>>>
+>>>> v2:
+>>>> Reset devices in setup_arch() because reset need to be done before
+>>>> interrupt remapping is initialized.
+>>>>
+>>>> v1:
+>>>> https://lkml.org/lkml/2012/8/3/160
+>>>>
+>>>> Thanks,
+>>>> Takao Indoh
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>> Maybe you've tried the following, and I missed a thread on it,
+>>> but instead of a somewhat-large, reset hammer, did any one try
+>>> just reading all the endpoint-only device CMD register, flip the MasterEnable
+>>> bit off, and write it back? .... that would stop all DMA (should stop
+>>> all MSI writes as well since they are just another DMA), and then
+>>> restart the system?
+>>> May also have to do PCI INT Disable as well... and note, that's a PCI 2.3
+>>> optional feature.... so devices using INT signalling vs MSI
+>>> is just borked on IOMMU/intr-remapping systems... which I would expect
+>>> are few. Then again, if this is foolishly done, then reset legacy PCI
+>>> busses as the fallback.
+>>
+>> Just clearing bus master bit and INTx disable bit in setup_arch() did
+>> not solve this problem. I still got DMAR error on devices(for exmaple,
+>> igb and megaraid_sas).
+>>
+>> Clearing bus master in setup_arch() and resetting devices in fixup_final
+>> like v1 patch is better, DMAR error was not detected. But on certain
+>> machine kdump kernel hung up when resetting devices. It seems to be a
+>> problem specific to the platform.
+>>
+>> And, resetting devices in setup_arch() like v2 patch solves all problems
+>> I found so far.
+>>
+>> Thanks,
+>> Takao Indoh
+>>
+> this summary should be in the patch set, so others know/learn
+> what was attempted, what failed, and how you reached this working conclusion.
 
-> Cyberman: it seems like your bias hack is working for you.  But, as Bjorn
-> says, this sounds like a driver bug.  What happens if you just revert your
-> changes, but then in mvsas.c change the "if (!res_start || !res_len)" to
-> just say "if (!res_len)"?  That seems like the true error test.  If that
-> works, you should submit that change to the community.
+Ok, I'll post new patch with this information.
 
-I don't *think* that is going to be enough, even with the kernel that
-has some I/O space support, because both devices are assigned
-identical resources:
+Thanks,
+Takao Indoh
 
-  pci 0000:01:00.0: BAR 2: assigned [io  0x0000-0x007f]
-  pci 0001:01:00.0: BAR 2: assigned [io  0x0000-0x007f]
-
-The I/O space support that's there is broken because we think the same
-I/O range is available on both root buses, which is probably not the
-case:
-
-  pci_bus 0000:00: resource 0 [io  0x0000-0xffffffff]
-  pci_bus 0001:00: resource 0 [io  0x0000-0xffffffff]
-
-If mvsas really doesn't need the I/O BAR, I think it's likely that
-making it use pci_enable_device_mem() will make both devices work even
-without I/O space support in the kernel.
-
-> Bjorn et al: does it seem reasonable to add a bias to the mappings so that
-> we never report a zero value as valid?  This may be sufficiently defensive
-> programming that it's just the right thing to do regardless of whether
-> drivers are technically at fault or not.  If so, what's a good bias?  (I'm
-> inclined to think 64K rather than 4K.)
-
-I/O space is very limited to begin with (many architectures only
-*have* 64K), so I hesitate to add a bias in the PCI core.  But we do
-something similar in arch_remove_reservations(), and I think you could
-implement it that way if you wanted to.
-
-Bjorn
