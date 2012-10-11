@@ -1,41 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:54093 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756950Ab2J2NeU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 09:34:20 -0400
-Received: by mail-vb0-f46.google.com with SMTP id ff1so5272465vbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 06:34:19 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:65272 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab2JKMIt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Oct 2012 08:08:49 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Mason <jon.mason@intel.com>, Jon Mason <jdmason@kudzu.us>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH V2] PCI: print pcie max_payload_size default setting info to help diagnosis
+Date: Thu, 11 Oct 2012 20:03:27 +0800
+Message-ID: <1349957007-9920-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <a52b6d280831df4d8a4e4fe3d72f3caaf985a88f.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-	<a52b6d280831df4d8a4e4fe3d72f3caaf985a88f.1351492562.git.pratyush.anand@st.com>
-Date: Mon, 29 Oct 2012 19:04:19 +0530
-Message-ID: <CAOh2x=m+rrH4eR23TPvgNJy0Ui4oQ6ChsbYAL5AU61g-i1o05Q@mail.gmail.com>
-Subject: Re: [PATCH 14/15] SPEAR13xx: Update makefile for PCIe inclusion
-From: viresh kumar <viresh.kumar@linaro.org>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	olof@lixom.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> ---
->  arch/arm/mach-spear13xx/Makefile |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/arm/mach-spear13xx/Makefile b/arch/arm/mach-spear13xx/Makefile
-> index b721566..f7a42fb 100644
-> --- a/arch/arm/mach-spear13xx/Makefile
-> +++ b/arch/arm/mach-spear13xx/Makefile
-> @@ -9,3 +9,4 @@ obj-$(CONFIG_ARCH_SPEAR13XX)    += spear13xx.o
->  obj-$(CONFIG_SUSPEND)          += pm.o wakeup.o sleep_1340.o sleep_1310.o
->  obj-$(CONFIG_MACH_SPEAR1310)   += spear1310.o
->  obj-$(CONFIG_MACH_SPEAR1340)   += spear1340.o
-> +obj-$(CONFIG_SPEAR13XX_PCI)    += pcie.o
+PCIe device mps maybe not equal to its bridge mps after doing hotplug.
+This may result unexpected problem like
+http://marc.info/?l=linux-scsi&m=134788365823217&w=2. So add mps log for current
+mps setting to help diagnosis an issue like this.
 
-Add this before Machines. Also, you can add Kconfig and Makefile changes
-with drivers patch only.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/probe.c |   29 +++++++++++++++++++++++++++++
+ 1 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec909af..a31e615 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1533,6 +1533,33 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+ 			"with pci=pcie_bus_safe.\n");
+ }
+ 
++static int pcie_mps_info(struct pci_dev *dev, void *data)
++{
++	int mps, mpss;
++
++	if (!pci_is_pcie(dev))
++		return -EINVAL;
++
++	mps = pcie_get_mps(dev);
++	mpss = 128 << dev->pcie_mpss;
++	dev_printk(KERN_DEBUG, &dev->dev, "PCI-E Max_Payload_Size Supported %d, "
++			"Max_Payload_Size %d\n", mpss, mps);
++
++	return 0;
++}
++
++static void pcie_dump_mps_info(struct pci_bus *bus)
++{
++	int mps, mpss;
++
++	mps = pcie_get_mps(bus->self);
++	mpss = 128 << bus->self->pcie_mpss;
++	dev_printk(KERN_DEBUG, &bus->self->dev, "PCI-E Max_Payload_Size Supported %d, "
++		"Max_Payload_Size %d\n", mpss, mps);
++
++	pci_walk_bus(bus, pcie_mps_info, NULL);
++}
++
+ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+ {
+ 	int mps, orig_mps;
+@@ -1564,6 +1591,8 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 	if (!pci_is_pcie(bus->self))
+ 		return;
+ 
++	pcie_dump_mps_info(bus);
++
+ 	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+ 		return;
+ 
+-- 
+1.7.1
+
+
