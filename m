@@ -1,92 +1,140 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5062BA8B.7090503@peak-system.com>
-References: <5062BA8B.7090503@peak-system.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Oct 2012 02:29:33 -0600
-Message-ID: <CAErSpo7vk6d1RCWQPFL9PqqwbH5u+F=uyPywCM_3sAVF3RW34g@mail.gmail.com>
-Subject: Re: Info about ACPI/PCI vs ISA
-To: Stephane Grosjean <s.grosjean@peak-system.com>
-Cc: linux-acpi@vger.kernel.org, support@peak-system.com,
-	Robert Hancock <hancockrwd@gmail.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from qmta13.emeryville.ca.mail.comcast.net ([76.96.27.243]:44484
+	"EHLO qmta13.emeryville.ca.mail.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933146Ab2JKRds (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Oct 2012 13:33:48 -0400
+Message-ID: <1349976523.7065.22.camel@rhapsody>
+Subject: Re: [PATCH v3 1/2] x86, pci: Reset PCIe devices at boot time
+From: Khalid Aziz <khalid@gonehiking.org>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: martin.wilck@ts.fujitsu.com, linux-pci@vger.kernel.org,
+	x86@kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, hbabu@us.ibm.com,
+	andi@firstfloor.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, mingo@redhat.com, vgoyal@redhat.com
+Date: Thu, 11 Oct 2012 11:28:43 -0600
+In-Reply-To: <50766432.9000706@jp.fujitsu.com>
+References: <20121010074553.1084.52175.sendpatchset@indoh>
+	 <20121010074603.1084.92389.sendpatchset@indoh>
+	 <1349899704.25679.14.camel@rhapsody> <50766432.9000706@jp.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 26, 2012 at 2:19 AM, Stephane Grosjean
-<s.grosjean@peak-system.com> wrote:
+On Thu, 2012-10-11 at 15:16 +0900, Takao Indoh wrote:
+> (2012/10/11 5:08), Khalid Aziz wrote:
+.....
+> >> +static void __init do_reset(u8 bus, u8 slot, u8 func)
+> >> +{
+> >> +	u16 ctrl;
+> >> +
+> >> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
+> >> +
+> >> +	/* Assert Secondary Bus Reset */
+> >> +	ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
+> >> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+> >> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
+> >> +
+> >> +	pci_udelay(5000);
+> >> +
+> >> +	/* De-assert Secondary Bus Reset */
+> >> +	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+> >> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
+> >> +
+> >> +	pci_udelay(500000);
+> >
+> > This is 0.5 second. This will add up quickly on larger servers with
+> > multiple busses. Is 0.5 second required by the spec?
+> > aer_do_secondary_bus_reset() holds PCI_BRIDGE_CTL_BUS_RESET for 2 ms and
+> > then waits another 200 ms after de-asserting it. Still long, but less
+> > than half of the delay in above code..
+> 
+> According to PCIe spec, they should be more than 1ms and 100ms. The reason
+> why they're 2ms and 200ms in aer_do_secondary_bus_reset() is that it's a
+> kind of safety margin, I think.
+> 
+> At first these delay were 2ms and 200ms as well as
+> aer_do_secondary_bus_reset(), but I found a problem that on certain
+> machine it was not enough. I think this problem occurs because
+> native_io_delay() is not precise. Therefore I extended them to have more
+> margin.
+> 
+> If this delay should be shortened, I have two solutions.
+> 
+> 1)
+> Call early_reset_pcie_devices() after calibrate_delay() so that we can
+> use precise mdelay. Personally I don't want to do this because I think
+> DMA should be stopped asap.
+> 
+> 2)
+> Make it tuneable. For exmple, improve "reset_devices"
+>      reset_devices=reset_delay=500
+> or something like that. As default, 200ms is enough as far as I tested.
+> But if it is not enough, we can adjust delay time using this.
+> 
+> Any other idea?
+> 
 
-> I'm working on an issue with one of our PCI adapters.
-> This PCI adapter is a standard and well proven board, for many years:
->
-> $ lspci -v
-> ...
-> 04:08.0 Network controller: PEAK-System Technik GmbH PCAN-PCI CAN-Bus
-> controller (rev 02)
->     Subsystem: PEAK-System Technik GmbH 2 Channel CAN Bus SJC1000
->     Flags: medium devsel, IRQ 11
->     Memory at f0410000 (32-bit, non-prefetchable) [size=64K]
->     Memory at f0400000 (32-bit, non-prefetchable) [size=64K]
->     Kernel driver in use: pcan
->
-> The running system is:
->
-> [    0.000000] Initializing cgroup subsys cpuset
-> [    0.000000] Initializing cgroup subsys cpu
-> [    0.000000] Linux version 3.1.9-1.4-desktop (geeko@buildhost) (gcc
-> version 4.6.2 (SUSE Linux) ) #1 SMP PREEMPT Fri Jan 27 08:55:10 UTC 2012
-> (efb5ff4)
-> ...
-> [    0.000000] Kernel command line:
-> root=/dev/disk/by-id/ata-SPCC_Solid_State_DiskB28_00000000000000000015-part2
-> resume=/dev/disk/by-id/ata-SPCC_Solid_State_DiskB28_00000000000000000015-part1
-> splash=silent quiet vga=0x31b
-> ...
-> [    0.471267] ACPI: PCI Interrupt Link [LNKA] (IRQs 1 3 4 5 6 10 *11 12 14
-> 15)
-> [    0.471323] ACPI: PCI Interrupt Link [LNKB] (IRQs 1 3 4 5 6 10 11 12 14
-> 15) *7
-> [    0.471378] ACPI: PCI Interrupt Link [LNKC] (IRQs 1 3 4 5 6 10 11 12 14
-> 15) *7
-> [    0.471434] ACPI: PCI Interrupt Link [LNKD] (IRQs 1 3 4 5 6 *10 11 12 14
-> 15)
-> [    0.471487] ACPI: PCI Interrupt Link [LNKE] (IRQs 1 3 4 5 6 10 11 12 14
-> 15) *0, disabled.
-> [    0.471541] ACPI: PCI Interrupt Link [LNKF] (IRQs 1 3 4 5 6 10 11 12 14
-> 15) *0, disabled.
-> [    0.471594] ACPI: PCI Interrupt Link [LNKG] (IRQs 1 3 4 5 6 *10 11 12 14
-> 15)
-> [    0.471647] ACPI: PCI Interrupt Link [LNKH] (IRQs 1 3 4 5 6 10 *11 12 14
-> 15)
->
-> We don't succeed to send and receive data to/from this card and we suspect
-> an IRQ related issue. For example, loading our (good old) "pcan" driver
-> leads to the below logs:
->
-> ...
-> [    6.186877] pci 0000:00:1e.0: can't derive routing for PCI INT A
-> [    6.186878] pcan 0000:04:08.0: PCI INT A: no GSI - using ISA IRQ 11
+I don't like the idea of asking end user to determine how many msec of
+delay they would need on their system for a reset. If we have to go that
+route, I would rather have a default of 200 msec and then add a kernel
+option like "reset_devices=reset_delay=long" which changes the delay to
+500 msec.
 
-Where's the source for the "pcan" driver?  I see the pcan_usb driver
-in the tree, but that looks like something different from what you're
-looking at here.
+Here is another idea. The code you currently have does:
 
-Does the device work under any version of Linux?  If so, please
-collect the complete dmesg log from the newest working version, and
-the same log from the broken version.
+for (each device) {
+  save config registers
+  reset
+  wait for 500 ms
+  restore config registers
+}
 
-Does this adapter work in some systems but not others?  Under Windows
-but not under Linux?  You refer to the "good old" driver, so I infer
-that it works *somewhere* and I'm trying to figure out what's
-different about the case where it doesn't work.
+You need to wait for 500 ms because you can not access config registers
+until reset is complete. So how about this - why not just save config
+registers, reset each device and then wait only once for 500 ms before
+restoring config registers on all devices. Here is what this will look
+like:
 
-> My questions are:
->
-> - why does the system not succeed to "derive" routing for INTA? And why us?
+for (each device) {
+  save config registers
+  reset
+}
+wait 500 ms
+for (each device) {
+  restore config registers
+}
 
-The derivation is based on ACPI _PRT tables.  Regrettably, we don't
-dump the _PRT contents in dmesg, so we'd need an acpidump to look
-further into that.
+This is obviously more complex and requires you to allocate more space
+for saving state, but it has the benefits of minimizing boot up delay
+and making the delay constant irrespective of number of switches/bridges
+on the system.
 
-Bjorn
+Does this sound reasonable?
+
+
+> >
+> > We have been seeing problems with kexec/kdump kernel for quite some time
+> > that are related to I/O devices not being quiesced before kexec. I had
+> > added code to clear Bus Master bit to help stop runaway DMAs which
+> > helped many cases, but obviously not all. If resetting downstream ports
+> > helps stop runaway I/O from PCIe devices, I am all for this approach.
+> > This patch still doesn't do anything for old PCI devices though.
+> 
+> This patch does not reset PCI devices because of VGA problem. As I wrote
+> in patch description, the monitor blacks out when VGA controller is
+> reset. So when VGA device is found we need to skip it. In the case of
+> PCIe, we can decide whether we do bus reset or not on each device, but
+> we cannot in the case of PCI.
+
+OK. My concern is there are plenty of older servers out there that
+potentially have the problem with kexec/kdump failing often and we are
+not solving the problem for them. If we can only solve it for PCIe for
+now, I am ok with starting there.
+
+--
+Khalid
+
+
