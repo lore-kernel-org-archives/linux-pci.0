@@ -1,245 +1,522 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:60149 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195Ab2JFP36 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 11:29:58 -0400
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Gong Chen <gong.chen@linux.intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Gaohuai Han <hangaohuai@huawei.com>
-Subject: [RFC PATCH v3 03/28] ACPIHP: detect ACPI hotplug slots by checking ACPI _EJ0 method
-Date: Sat,  6 Oct 2012 23:27:11 +0800
-Message-Id: <1349537256-21670-4-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:52403 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757212Ab2JKGVU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Oct 2012 02:21:20 -0400
+Message-ID: <50766432.9000706@jp.fujitsu.com>
+Date: Thu, 11 Oct 2012 15:16:18 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+MIME-Version: 1.0
+To: khalid@gonehiking.org
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, andi@firstfloor.org,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+	vgoyal@redhat.com
+Subject: Re: [PATCH v3 1/2] x86, pci: Reset PCIe devices at boot time
+References: <20121010074553.1084.52175.sendpatchset@indoh>  <20121010074603.1084.92389.sendpatchset@indoh> <1349899704.25679.14.camel@rhapsody>
+In-Reply-To: <1349899704.25679.14.camel@rhapsody>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements a default mechanism to detect and manage ACPI
-system device hotplug slots based on standard ACPI interfaces.
-1) Detech hotplug slot by checking existence of _EJ0 and _STA methods.
-2) Power off a slot by evaluating _EJ0 method.
+(2012/10/11 5:08), Khalid Aziz wrote:
+> Please see comments inline:
+>
+> On Wed, 2012-10-10 at 16:51 +0900, Takao Indoh wrote:
+>> This patch resets PCIe devices at boot time by hot reset when
+>> "reset_devices" is specified.
+>>
+>>
+>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>> ---
+>>   arch/x86/include/asm/pci-direct.h |    1
+>>   arch/x86/kernel/setup.c           |    3
+>>   arch/x86/pci/early.c              |  299 ++++++++++++++++++++++++++++
+>>   drivers/pci/pci.c                 |   18 -
+>>   include/linux/pci.h               |   18 +
+>>   init/main.c                       |    4
+>>   6 files changed, 323 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+>> index b1e7a45..de30db2 100644
+>> --- a/arch/x86/include/asm/pci-direct.h
+>> +++ b/arch/x86/include/asm/pci-direct.h
+>> @@ -18,4 +18,5 @@ extern int early_pci_allowed(void);
+>>   extern unsigned int pci_early_dump_regs;
+>>   extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+>>   extern void early_dump_pci_devices(void);
+>> +extern void early_reset_pcie_devices(void);
+>>   #endif /* _ASM_X86_PCI_DIRECT_H */
+>> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+>> index f4b9b80..24b011c 100644
+>> --- a/arch/x86/kernel/setup.c
+>> +++ b/arch/x86/kernel/setup.c
+>> @@ -988,6 +988,9 @@ void __init setup_arch(char **cmdline_p)
+>>   	generic_apic_probe();
+>>
+>>   	early_quirks();
+>> +#ifdef CONFIG_PCI
+>> +	early_reset_pcie_devices();
+>> +#endif
+>>
+>>   	/*
+>>   	 * Read APIC and some other early information from ACPI tables.
+>> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+>> index d1067d5..584f16b 100644
+>> --- a/arch/x86/pci/early.c
+>> +++ b/arch/x86/pci/early.c
+>> @@ -1,5 +1,6 @@
+>>   #include <linux/kernel.h>
+>>   #include <linux/pci.h>
+>> +#include <linux/bootmem.h>
+>>   #include <asm/pci-direct.h>
+>>   #include <asm/io.h>
+>>   #include <asm/pci_x86.h>
+>> @@ -109,3 +110,301 @@ void early_dump_pci_devices(void)
+>>   		}
+>>   	}
+>>   }
+>> +
+>> +struct save_config {
+>> +	u32 pci[16];
+>> +	u16 pcie[PCI_EXP_SAVE_REGS];
+>> +};
+>> +
+>> +struct devinfo {
+>> +	int pcie_pos;   /* position of PCI Express capability */
+>> +	int pcie_flags; /* PCI_EXP_FLAGS */
+>> +	struct save_config *save;
+>> +};
+>> +
+>> +static struct save_config *save_cfg;
+>> +static void __init pci_udelay(int loops)
+>> +{
+>> +	while (loops--) {
+>> +		/* Approximately 1 us */
+>> +		native_io_delay();
+>> +	}
+>> +}
+>> +
+>> +/* Derived from drivers/pci/pci.c */
+>> +#define PCI_FIND_CAP_TTL	48
+>> +static int __init __pci_find_next_cap_ttl(u8 bus, u8 slot, u8 func,
+>> +					  u8 pos, int cap, int *ttl)
+>> +{
+>> +	u8 id;
+>> +
+>> +	while ((*ttl)--) {
+>> +		pos = read_pci_config_byte(bus, slot, func, pos);
+>> +		if (pos < 0x40)
+>> +			break;
+>> +		pos &= ~3;
+>> +		id = read_pci_config_byte(bus, slot, func,
+>> +					pos + PCI_CAP_LIST_ID);
+>> +		if (id == 0xff)
+>> +			break;
+>> +		if (id == cap)
+>> +			return pos;
+>> +		pos += PCI_CAP_LIST_NEXT;
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>> +static int __init __pci_find_next_cap(u8 bus, u8 slot, u8 func, u8 pos, int cap)
+>> +{
+>> +	int ttl = PCI_FIND_CAP_TTL;
+>> +
+>> +	return __pci_find_next_cap_ttl(bus, slot, func, pos, cap, &ttl);
+>> +}
+>> +
+>> +static int __init __pci_bus_find_cap_start(u8 bus, u8 slot, u8 func,
+>> +					   u8 hdr_type)
+>> +{
+>> +	u16 status;
+>> +
+>> +	status = read_pci_config_16(bus, slot, func, PCI_STATUS);
+>> +	if (!(status & PCI_STATUS_CAP_LIST))
+>> +		return 0;
+>> +
+>> +	switch (hdr_type) {
+>> +	case PCI_HEADER_TYPE_NORMAL:
+>> +	case PCI_HEADER_TYPE_BRIDGE:
+>> +		return PCI_CAPABILITY_LIST;
+>> +	case PCI_HEADER_TYPE_CARDBUS:
+>> +		return PCI_CB_CAPABILITY_LIST;
+>> +	default:
+>> +		return 0;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static int __init early_pci_find_capability(u8 bus, u8 slot, u8 func, int cap)
+>> +{
+>> +	int pos;
+>> +	u8 type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
+>> +
+>> +	pos = __pci_bus_find_cap_start(bus, slot, func, type & 0x7f);
+>> +	if (pos)
+>> +		pos = __pci_find_next_cap(bus, slot, func, pos, cap);
+>> +
+>> +	return pos;
+>> +}
+>> +
+>> +static void __init do_reset(u8 bus, u8 slot, u8 func)
+>> +{
+>> +	u16 ctrl;
+>> +
+>> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
+>> +
+>> +	/* Assert Secondary Bus Reset */
+>> +	ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
+>> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+>> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
+>> +
+>> +	pci_udelay(5000);
+>> +
+>> +	/* De-assert Secondary Bus Reset */
+>> +	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+>> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
+>> +
+>> +	pci_udelay(500000);
+>
+> This is 0.5 second. This will add up quickly on larger servers with
+> multiple busses. Is 0.5 second required by the spec?
+> aer_do_secondary_bus_reset() holds PCI_BRIDGE_CTL_BUS_RESET for 2 ms and
+> then waits another 200 ms after de-asserting it. Still long, but less
+> than half of the delay in above code..
 
-It's the default hotplug slot enumerating mechanism, platform specifc
-drivers may provide advanced implementation to override the default
-implementation.
+According to PCIe spec, they should be more than 1ms and 100ms. The reason
+why they're 2ms and 200ms in aer_do_secondary_bus_reset() is that it's a
+kind of safety margin, I think.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
----
- drivers/acpi/hotplug/Makefile   |    1 +
- drivers/acpi/hotplug/acpihp.h   |    1 +
- drivers/acpi/hotplug/slot.c     |    1 +
- drivers/acpi/hotplug/slot_ej0.c |  153 +++++++++++++++++++++++++++++++++++++++
- 4 files changed, 156 insertions(+)
- create mode 100644 drivers/acpi/hotplug/slot_ej0.c
+At first these delay were 2ms and 200ms as well as
+aer_do_secondary_bus_reset(), but I found a problem that on certain
+machine it was not enough. I think this problem occurs because
+native_io_delay() is not precise. Therefore I extended them to have more
+margin.
 
-diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index 2cbb03c..5420ae7 100644
---- a/drivers/acpi/hotplug/Makefile
-+++ b/drivers/acpi/hotplug/Makefile
-@@ -7,3 +7,4 @@ acpihp-y					= core.o
- 
- obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
- acpihp_slot-y					= slot.o
-+acpihp_slot-y					+= slot_ej0.o
-diff --git a/drivers/acpi/hotplug/acpihp.h b/drivers/acpi/hotplug/acpihp.h
-index 7467895..278c8c2 100644
---- a/drivers/acpi/hotplug/acpihp.h
-+++ b/drivers/acpi/hotplug/acpihp.h
-@@ -28,5 +28,6 @@
- #include <acpi/acpi_hotplug.h>
- 
- extern struct acpi_device *acpi_root;
-+extern struct acpihp_slot_ops acpihp_slot_ej0;
- 
- #endif
-diff --git a/drivers/acpi/hotplug/slot.c b/drivers/acpi/hotplug/slot.c
-index a230fc7..8fdae61 100644
---- a/drivers/acpi/hotplug/slot.c
-+++ b/drivers/acpi/hotplug/slot.c
-@@ -43,6 +43,7 @@ static struct acpihp_slot_ops *slot_ops_curr;
-  * The first entry whose init() method returns success will be used.
-  */
- static struct acpihp_slot_ops *slot_ops_array[] = {
-+	&acpihp_slot_ej0,
- 	NULL
- };
- 
-diff --git a/drivers/acpi/hotplug/slot_ej0.c b/drivers/acpi/hotplug/slot_ej0.c
-new file mode 100644
-index 0000000..caaa25e
---- /dev/null
-+++ b/drivers/acpi/hotplug/slot_ej0.c
-@@ -0,0 +1,153 @@
-+/*
-+ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
-+ * Copyright (C) 2012 Gaohuai Han <hangaohuai@huawei.com>
-+ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or (at
-+ *  your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful, but
-+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *  General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License along
-+ *  with this program.
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ */
-+
-+#include <linux/acpi.h>
-+#include <acpi/acpi.h>
-+#include <acpi/acpi_hotplug.h>
-+
-+static acpi_status acpihp_slot_ej0_capable(acpi_handle handle)
-+{
-+	acpi_handle tmp;
-+
-+	/* Assume a device object with _EJ0 and _STA has a hotplug slot. */
-+	if (ACPI_FAILURE(acpi_get_handle(handle, "_EJ0", &tmp)))
-+		return AE_ERROR;
-+	if (ACPI_FAILURE(acpi_get_handle(handle, METHOD_NAME__STA, &tmp)))
-+		return AE_ERROR;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status
-+acpihp_slot_ej0_check(acpi_handle handle, u32 lvl, void *context, void **rv)
-+{
-+	acpi_status rc = AE_OK;
-+	enum acpihp_dev_type type;
-+
-+	if (!acpihp_dev_get_type(handle, &type)) {
-+		switch (type) {
-+		case ACPIHP_DEV_TYPE_CPU:
-+		case ACPIHP_DEV_TYPE_MEM:
-+		case ACPIHP_DEV_TYPE_HOST_BRIDGE:
-+		case ACPIHP_DEV_TYPE_CONTAINER:
-+			if (ACPI_SUCCESS(acpihp_slot_ej0_capable(handle))) {
-+				*(int *)rv = 1;
-+				rc = AE_CTRL_TERMINATE;
-+			} else if (type == ACPIHP_DEV_TYPE_HOST_BRIDGE) {
-+				rc = AE_CTRL_DEPTH;
-+			}
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	return rc;
-+}
-+
-+static acpi_status acpihp_slot_ej0_init(void)
-+{
-+	int cap = 0;
-+
-+	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-+			ACPI_UINT32_MAX, acpihp_slot_ej0_check,
-+			NULL, NULL, (void **)&cap);
-+	acpi_walk_namespace(ACPI_TYPE_PROCESSOR, ACPI_ROOT_OBJECT,
-+			ACPI_UINT32_MAX, acpihp_slot_ej0_check,
-+			NULL, NULL, (void **)&cap);
-+
-+	return cap ? AE_OK : AE_ERROR;
-+}
-+
-+static void acpihp_slot_ej0_fini(void)
-+{
-+}
-+
-+static acpi_status acpihp_slot_ej0_create(struct acpihp_slot *slot)
-+{
-+	/*
-+	 * Assume device objects with _EJ0 are capable of:
-+	 * ONLINE, OFFLINE, POWEROFF, HOTPLUG
-+	 */
-+	slot->capabilities = ACPIHP_SLOT_CAP_ONLINE | ACPIHP_SLOT_CAP_OFFLINE |
-+			     ACPIHP_SLOT_CAP_POWEROFF | ACPIHP_SLOT_CAP_HOTPLUG;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status
-+acpihp_slot_ej0_get_status(struct acpihp_slot *slot, u64 *status)
-+{
-+	acpi_status rc;
-+
-+	rc = acpi_evaluate_integer(slot->handle, METHOD_NAME__STA,
-+				   NULL, status);
-+	if (ACPI_FAILURE(rc))
-+		ACPIHP_SLOT_DEBUG(slot, "fails to evaluate _STA method\n");
-+
-+	return rc;
-+}
-+
-+static acpi_status acpihp_slot_ej0_poweroff(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
-+	union acpi_object arg;
-+	struct acpi_object_list arg_list;
-+	acpi_handle handle = slot->handle;
-+
-+	arg_list.count = 1;
-+	arg_list.pointer = &arg;
-+	arg.type = ACPI_TYPE_INTEGER;
-+	arg.integer.value = 1;
-+	status = acpi_evaluate_object(handle, "_EJ0", &arg_list, NULL);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_SLOT_WARN(slot, "fails to power off.\n");
-+		return status;
-+	}
-+
-+	status = acpi_evaluate_integer(handle, METHOD_NAME__STA, NULL, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_SLOT_WARN(slot, "fails to evaluate _STA method\n");
-+		return status;
-+	}
-+
-+	if (sta & (ACPI_STA_DEVICE_FUNCTIONING | ACPI_STA_DEVICE_ENABLED)) {
-+		ACPIHP_SLOT_WARN(slot,
-+			 "object is still active after executing _EJ0.\n");
-+		return AE_ERROR;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+struct acpihp_slot_ops acpihp_slot_ej0 = {
-+	.owner = THIS_MODULE,
-+	.desc = "Detect Hotplug Slots by Checking ACPI _EJ0 Method",
-+	.init = acpihp_slot_ej0_init,
-+	.fini = acpihp_slot_ej0_fini,
-+	.check = acpihp_slot_ej0_capable,
-+	.create = acpihp_slot_ej0_create,
-+	.poweroff = acpihp_slot_ej0_poweroff,
-+	.get_status = acpihp_slot_ej0_get_status,
-+};
--- 
-1.7.9.5
+If this delay should be shortened, I have two solutions.
+
+1)
+Call early_reset_pcie_devices() after calibrate_delay() so that we can
+use precise mdelay. Personally I don't want to do this because I think
+DMA should be stopped asap.
+
+2)
+Make it tuneable. For exmple, improve "reset_devices"
+     reset_devices=reset_delay=500
+or something like that. As default, 200ms is enough as far as I tested.
+But if it is not enough, we can adjust delay time using this.
+
+Any other idea?
+
+>> +}
+>> +
+>> +static void __init save_state(unsigned bus, unsigned slot, unsigned func,
+>> +		struct devinfo *info)
+>> +{
+>> +	int i;
+>> +	int pcie, flags, pcie_type;
+>> +	struct save_config *save;
+>> +
+>> +	pcie = info->pcie_pos;
+>> +	flags = info->pcie_flags;
+>> +	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
+>> +	save = info->save;
+>> +
+>> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
+>> +
+>> +	for (i = 0; i < 16; i++)
+>> +		save->pci[i] = read_pci_config(bus, slot, func, i * 4);
+>> +	i = 0;
+>> +	if (pcie_cap_has_devctl(pcie_type, flags))
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_DEVCTL);
+>> +	if (pcie_cap_has_lnkctl(pcie_type, flags))
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_LNKCTL);
+>> +	if (pcie_cap_has_sltctl(pcie_type, flags))
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_SLTCTL);
+>> +	if (pcie_cap_has_rtctl(pcie_type, flags))
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_RTCTL);
+>> +
+>> +	if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_DEVCTL2);
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_LNKCTL2);
+>> +		save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +						      pcie + PCI_EXP_SLTCTL2);
+>> +	}
+>> +}
+>> +
+>> +static void __init restore_state(unsigned bus, unsigned slot, unsigned func,
+>> +		struct devinfo *info)
+>> +{
+>> +	int i = 0;
+>> +	int pcie, flags, pcie_type;
+>> +	struct save_config *save;
+>> +
+>> +	pcie = info->pcie_pos;
+>> +	flags = info->pcie_flags;
+>> +	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
+>> +	save = info->save;
+>> +
+>> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
+>> +	       bus, slot, func);
+>> +
+>> +	if (pcie_cap_has_devctl(pcie_type, flags))
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_DEVCTL, save->pcie[i++]);
+>> +	if (pcie_cap_has_lnkctl(pcie_type, flags))
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_LNKCTL, save->pcie[i++]);
+>> +	if (pcie_cap_has_sltctl(pcie_type, flags))
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_SLTCTL, save->pcie[i++]);
+>> +	if (pcie_cap_has_rtctl(pcie_type, flags))
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_RTCTL, save->pcie[i++]);
+>> +
+>> +	if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_DEVCTL2, save->pcie[i++]);
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_LNKCTL2, save->pcie[i++]);
+>> +		write_pci_config_16(bus, slot, func,
+>> +				    pcie + PCI_EXP_SLTCTL2, save->pcie[i++]);
+>> +	}
+>> +
+>> +	for (i = 15; i >= 0; i--)
+>> +		write_pci_config(bus, slot, func, i * 4, save->pci[i]);
+>> +}
+>> +
+>> +static void __init reset_pcie_device(unsigned bus, unsigned slot, unsigned func)
+>> +{
+>> +	int f, count;
+>> +	int pcie, pcie_type;
+>> +	u8 type;
+>> +	u16 vendor, flags;
+>> +	u32 class;
+>> +	int secondary;
+>> +	struct devinfo child[8];
+>> +
+>> +	pcie = early_pci_find_capability(bus, slot, func, PCI_CAP_ID_EXP);
+>> +	if (!pcie)
+>> +		return;
+>> +
+>> +	flags = read_pci_config_16(bus, slot, func, pcie + PCI_EXP_FLAGS);
+>> +	pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
+>> +	if ((pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
+>> +	    (pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
+>> +		return;
+>> +
+>> +	type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
+>> +	if ((type & 0x7f) != PCI_HEADER_TYPE_BRIDGE)
+>> +		return;
+>> +	secondary = read_pci_config_byte(bus, slot, func, PCI_SECONDARY_BUS);
+>> +	memset(child, 0, sizeof(child));
+>> +	for (count = 0, f = 0; f < 8; f++) {
+>
+> Can we use a constant instead of "8" in the loop here? There are a few
+> other places in kernel code with very similar loops enumerating over PCI
+> functions that again use "8" instead of a constant like
+> PCI_MAX_FUNCTIONS. I would suggest we use a constant at least in the new
+> code.
+
+Ok, I'll fix it.
+
+>> +		vendor = read_pci_config_16(secondary, 0, f, PCI_VENDOR_ID);
+>> +		if (vendor == 0xffff)
+>> +			continue;
+>> +
+>> +		pcie = early_pci_find_capability(secondary, 0, f,
+>> +				PCI_CAP_ID_EXP);
+>> +		if (!pcie)
+>> +			continue;
+>> +
+>> +		flags = read_pci_config_16(secondary, 0, f,
+>> +				pcie + PCI_EXP_FLAGS);
+>> +		pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
+>> +		if ((pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
+>> +		    (pcie_type == PCI_EXP_TYPE_PCI_BRIDGE))
+>> +			/* Don't reset switch, bridge */
+>> +			return;
+>> +
+>> +		class = read_pci_config(secondary, 0, f, PCI_CLASS_REVISION);
+>> +		if ((class >> 24) == PCI_BASE_CLASS_DISPLAY)
+>> +			/* Don't reset VGA device */
+>> +			return;
+>> +
+>> +		count++;
+>> +		child[f].pcie_pos = pcie;
+>> +		child[f].pcie_flags = flags;
+>> +		child[f].save = save_cfg + f;
+>> +	}
+>> +
+>> +	if (!count)
+>> +		return;
+>> +
+>> +	/* save */
+>> +	for (f = 0; f < 8; f++)
+>> +		if (child[f].pcie_pos)
+>> +			save_state(secondary, 0, f, &child[f]);
+>> +
+>> +	do_reset(bus, slot, func);
+>> +
+>> +	/* restore */
+>> +	for (f = 0; f < 8; f++)
+>> +		if (child[f].pcie_pos)
+>> +			restore_state(secondary, 0, f, &child[f]);
+>> +}
+>> +
+>> +void __init early_reset_pcie_devices(void)
+>> +{
+>> +	unsigned bus, slot, func;
+>> +	int size;
+>> +
+>> +	if (!early_pci_allowed() || !reset_devices)
+>> +		return;
+>> +
+>> +	/* alloc space to save config */
+>> +	size = sizeof(struct save_config)*8;
+>
+> Use a constant instead of "8", please.
+
+Will do.
+
+>
+>> +	save_cfg = (struct save_config *)alloc_bootmem(size);
+>> +	if (save_cfg == NULL) {
+>> +		printk(KERN_ERR "reset_pcie: alloc_bootmem failed\n");
+>> +		return;
+>> +	}
+>> +
+>> +	for (bus = 0; bus < 256; bus++) {
+>> +		for (slot = 0; slot < 32; slot++) {
+>> +			for (func = 0; func < 8; func++) {
+>> +				u16 vendor;
+>> +				u8 type;
+>> +				vendor = read_pci_config_16(bus, slot, func,
+>> +						PCI_VENDOR_ID);
+>> +
+>> +				if (vendor == 0xffff)
+>> +					continue;
+>> +
+>> +				reset_pcie_device(bus, slot, func);
+>> +
+>> +				if (func == 0) {
+>> +					type = read_pci_config_byte(bus, slot,
+>> +								    func,
+>> +							       PCI_HEADER_TYPE);
+>> +					if (!(type & 0x80))
+>> +						break;
+>> +				}
+>> +			}
+>> +		}
+>> +	}
+>> +
+>> +	free_bootmem(__pa(save_cfg), size);
+>> +}
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index ab4bf5a..a7a4125 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -852,24 +852,6 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
+>>
+>>   EXPORT_SYMBOL(pci_choose_state);
+>>
+>> -#define PCI_EXP_SAVE_REGS	7
+>> -
+>> -#define pcie_cap_has_devctl(type, flags)	1
+>> -#define pcie_cap_has_lnkctl(type, flags)		\
+>> -		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
+>> -		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
+>> -		  type == PCI_EXP_TYPE_ENDPOINT ||	\
+>> -		  type == PCI_EXP_TYPE_LEG_END))
+>> -#define pcie_cap_has_sltctl(type, flags)		\
+>> -		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
+>> -		 ((type == PCI_EXP_TYPE_ROOT_PORT) ||	\
+>> -		  (type == PCI_EXP_TYPE_DOWNSTREAM &&	\
+>> -		   (flags & PCI_EXP_FLAGS_SLOT))))
+>> -#define pcie_cap_has_rtctl(type, flags)			\
+>> -		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
+>> -		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
+>> -		  type == PCI_EXP_TYPE_RC_EC))
+>> -
+>>   static struct pci_cap_saved_state *pci_find_saved_cap(
+>>   	struct pci_dev *pci_dev, char cap)
+>>   {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 5faa831..8e10401 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1790,5 +1790,23 @@ static inline struct eeh_dev *pci_dev_to_eeh_dev(struct pci_dev *pdev)
+>>    */
+>>   struct pci_dev *pci_find_upstream_pcie_bridge(struct pci_dev *pdev);
+>>
+>> +#define PCI_EXP_SAVE_REGS	7
+>> +
+>> +#define pcie_cap_has_devctl(type, flags)	1
+>> +#define pcie_cap_has_lnkctl(type, flags)		\
+>> +		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
+>> +		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
+>> +		  type == PCI_EXP_TYPE_ENDPOINT ||	\
+>> +		  type == PCI_EXP_TYPE_LEG_END))
+>> +#define pcie_cap_has_sltctl(type, flags)		\
+>> +		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
+>> +		 ((type == PCI_EXP_TYPE_ROOT_PORT) ||	\
+>> +		  (type == PCI_EXP_TYPE_DOWNSTREAM &&	\
+>> +		   (flags & PCI_EXP_FLAGS_SLOT))))
+>> +#define pcie_cap_has_rtctl(type, flags)			\
+>> +		((flags & PCI_EXP_FLAGS_VERS) > 1 ||	\
+>> +		 (type == PCI_EXP_TYPE_ROOT_PORT ||	\
+>> +		  type == PCI_EXP_TYPE_RC_EC))
+>> +
+>>   #endif /* __KERNEL__ */
+>>   #endif /* LINUX_PCI_H */
+>> diff --git a/init/main.c b/init/main.c
+>> index b286730..ebaf067 100644
+>> --- a/init/main.c
+>> +++ b/init/main.c
+>> @@ -144,10 +144,10 @@ EXPORT_SYMBOL(reset_devices);
+>>   static int __init set_reset_devices(char *str)
+>>   {
+>>   	reset_devices = 1;
+>> -	return 1;
+>> +	return 0;
+>>   }
+>>
+>> -__setup("reset_devices", set_reset_devices);
+>> +early_param("reset_devices", set_reset_devices);
+>>
+>>   static const char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
+>>   const char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
+>>
+>>
+>> _______________________________________________
+>> kexec mailing list
+>> kexec@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/kexec
+>
+> We have been seeing problems with kexec/kdump kernel for quite some time
+> that are related to I/O devices not being quiesced before kexec. I had
+> added code to clear Bus Master bit to help stop runaway DMAs which
+> helped many cases, but obviously not all. If resetting downstream ports
+> helps stop runaway I/O from PCIe devices, I am all for this approach.
+> This patch still doesn't do anything for old PCI devices though.
+
+This patch does not reset PCI devices because of VGA problem. As I wrote
+in patch description, the monitor blacks out when VGA controller is
+reset. So when VGA device is found we need to skip it. In the case of
+PCIe, we can decide whether we do bus reset or not on each device, but
+we cannot in the case of PCI.
+
+Thanks,
+Takao Indoh
 
