@@ -1,56 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:59994 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462Ab2JBQpa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 12:45:30 -0400
-Message-ID: <506B1A26.2060609@pobox.com>
-Date: Tue, 02 Oct 2012 12:45:26 -0400
-From: Jeff Garzik <jgarzik@pobox.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Alexander Gordeev <agordeev@redhat.com>
-CC: Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
-References: <cover.1349074231.git.agordeev@redhat.com> <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com> <20121002050929.GD7756@gmail.com> <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
-In-Reply-To: <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1350045261-7344-2-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
+	<1350045261-7344-2-git-send-email-tangchen@cn.fujitsu.com>
+Date: Fri, 12 Oct 2012 11:26:26 -0700
+Message-ID: <CAE9FiQWVm-BxyGx5C89v0txn_Wdaf=Wk6oRjSjW8jTQ+3mXoMg@mail.gmail.com>
+Subject: Re: [PATCH 1/3 v2] Introduce a new acpi to determine HID match.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tang Chen <tangchen@cn.fujitsu.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
+	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2012 12:42 PM, Alexander Gordeev wrote:
-> On Tue, Oct 02, 2012 at 07:09:29AM +0200, Ingo Molnar wrote:
->>> +irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
->>> +{
->>> +	struct ata_port *ap_this = dev_instance;
->>> +	struct ahci_port_priv *pp = ap_this->private_data;
->>> +	struct ata_host *host = ap_this->host;
->>> +	struct ahci_host_priv *hpriv = host->private_data;
->>> +	void __iomem *mmio = hpriv->mmio;
->>> +	unsigned int i;
->>> +	u32 irq_stat, irq_masked;
->>> +
->>> +	VPRINTK("ENTER\n");
->>
->> Is this per IRQ handler execution debugging code still needed?
->> Same for the other VPRINTK() lines in this patch.
+On Fri, Oct 12, 2012 at 5:34 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
+> This introduce a new api to determine if a HID matches a list of IDs.
+> Different from acpi_match_device_ids(), the new api gets HID from
+> acpi_device_info struct.
 >
-> These VPRINKs are only to make new handlers look like ahci_interrupt()
-> which did not change. I believe, if they need to go it is better to
-> remove them altogether, with a separate followup patch.
+> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+> ---
+>  drivers/acpi/scan.c     |   24 ++++++++++++++++++++++++
+>  include/acpi/acpi_bus.h |    2 ++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 03c12e6..41fd4c9 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -312,6 +312,30 @@ int acpi_match_device_ids(struct acpi_device *device,
+>  }
+>  EXPORT_SYMBOL(acpi_match_device_ids);
+>
+> +int acpi_match_object_info_ids(struct acpi_device_info *info,
+> +                              const struct acpi_device_id *ids)
+> +{
+> +       char *hardware_id;
+> +       int i, j;
+> +
+> +       for (i = 0; ids[i].id[0]; i++) {
+> +               hardware_id = info->hardware_id.string;
+> +               if (hardware_id &&
+> +                   !strcmp((char *)ids[i].id, hardware_id))
+> +                               return 0;
+> +
+> +               for (j = 0; j < info->compatible_id_list.count; j++) {
+> +                       hardware_id = info->compatible_id_list.ids[j].string;
+> +                       if (hardware_id &&
+> +                           !strcmp((char *)ids[i].id, hardware_id))
+> +                               return 0;
+> +               }
+> +       }
+> +
+> +       return 1;
 
-Definitely followup patch material + discussion :)
+-ENOENT instead of 1?
 
-For the moment, the above is consistent with existing code, and by 
-default compiled out, as one would expect.
-
-	Jeff
-
-
-
-
-
+> +}
+> +EXPORT_SYMBOL(acpi_match_object_info_ids);
+> +
+>  static void acpi_free_ids(struct acpi_device *device)
+>  {
+>         struct acpi_hardware_id *id, *tmp;
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index f0b9681..f83d581 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -379,6 +379,8 @@ int acpi_bus_start(struct acpi_device *device);
+>  acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
+>  int acpi_match_device_ids(struct acpi_device *device,
+>                           const struct acpi_device_id *ids);
+> +int acpi_match_object_info_ids(struct acpi_device_info *info,
+> +                              const struct acpi_device_id *ids);
+>  int acpi_create_dir(struct acpi_device *);
+>  void acpi_remove_dir(struct acpi_device *);
+>
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
