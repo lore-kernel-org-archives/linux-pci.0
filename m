@@ -1,91 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31607 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965575Ab2JaVT3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Oct 2012 17:19:29 -0400
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 5/8] ixgbe: refactor mailbox ops init
-Date: Wed, 31 Oct 2012 17:19:10 -0400
-Message-Id: <1351718353-6124-6-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
-References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:52402 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755806Ab2JLFf7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2012 01:35:59 -0400
+Received: by mail-da0-f46.google.com with SMTP id n41so1145065dak.19
+        for <linux-pci@vger.kernel.org>; Thu, 11 Oct 2012 22:35:59 -0700 (PDT)
+From: Jon Mason <jdmason@kudzu.us>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 3/3] PCI: Add new default PCI-E MPS bus state
+Date: Thu, 11 Oct 2012 22:35:55 -0700
+Message-Id: <1350020155-3782-4-git-send-email-jdmason@kudzu.us>
+In-Reply-To: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
+References: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no actual dependency on initialization of the mailbox ops on
-whether SR-IOV is enabled or not and it doesn't hurt to go ahead and
-initialize ops unconditionally.  Move the initialization into the device
-probe so that the mailbox ops are initialized at the time we have the
-board info necessary to do it.
+Add a new default state for the PCI-E MPS determination, PCIE_BUS_WARN.
+This state notifies the user that a suboptimal configuration is
+occurring (most likely due to incorrect configuration in the BIOS), and
+provides them the boot parameter to enable this error to be corrected.
+This provides the users an ability to detect an issue with MPS, without
+forcing them to correct the issue (which may cause system hangs).  This
+is a much more sane default for the distros.
 
-Authored-by: Greg Rose <gregory.v.rose@intel.com>
+Also, add debug output to show the default device MPS and MPSS.
+
+Signed-off-by: Jon Mason <jdmason@kudzu.us>
+CC: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c  | 5 ++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 9 +--------
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h | 3 +--
- 3 files changed, 6 insertions(+), 11 deletions(-)
+ drivers/pci/pci.c    |    2 +-
+ drivers/pci/probe.c  |   10 ++++++++++
+ drivers/pci/quirks.c |    3 ++-
+ include/linux/pci.h  |    1 +
+ 4 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index 868af69..8d2a507 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -7249,7 +7249,10 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ab4bf5a..1723c81 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -78,7 +78,7 @@ unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
+ unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
+ unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
+ 
+-enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
++enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_WARN;
+ 
+ /*
+  * The default CLS is used if arch didn't set CLS explicitly and not
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5a18652..64bb393 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1448,6 +1448,9 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
+ 	if (!pci_is_pcie(dev))
+ 		return 0;
+ 
++	dev_dbg(&dev->dev, "Device MPS %d and MPSS %d\n",
++		pcie_get_mps(dev), 128 << dev->pcie_mpss);
++
+ 	/* For PCIE hotplug enabled slots not connected directly to a
+ 	 * PCI-E root port, there can be problems when hotplugging
+ 	 * devices.  This is due to the possibility of hotplugging a
+@@ -1588,6 +1591,7 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 		smpss = 0;
+ 		break;
+ 
++	case PCIE_BUS_WARN:
+ 	case PCIE_BUS_SAFE:
+ 		smpss = mpss;
+ 
+@@ -1600,6 +1604,12 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
+ 		return;
  	}
  
- #ifdef CONFIG_PCI_IOV
--	ixgbe_enable_sriov(adapter, ii);
-+	/* Mailbox */
-+	ixgbe_init_mbx_params_pf(hw);
-+	memcpy(&hw->mbx.ops, ii->mbx_ops, sizeof(hw->mbx.ops));
-+	ixgbe_enable_sriov(adapter);
++	if (pcie_bus_config == PCIE_BUS_WARN) {
++		if (smpss != mpss)
++			dev_info(&bus->dev, "Non-optimal PCI-E Bus MPS value of %d being used instead of %d.\n"
++				 "Please use the pci=pcie_bus_safe boot parameter for better performance.\n",
++				 128 << smpss, 128 << mpss);
++		return;
+ 	}
  
- #endif
- 	netdev->features = NETIF_F_SG |
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-index dce48bf..9aeb929 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-@@ -44,8 +44,7 @@
- #include "ixgbe_sriov.h"
+ 	pcie_bus_configure_set(bus->self, &smpss);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 5155317..e4eede0 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2787,7 +2787,8 @@ static void __devinit quirk_intel_mc_errata(struct pci_dev *dev)
+ 	int err;
+ 	u16 rcc;
  
- #ifdef CONFIG_PCI_IOV
--void ixgbe_enable_sriov(struct ixgbe_adapter *adapter,
--			 const struct ixgbe_info *ii)
-+void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
- {
- 	struct ixgbe_hw *hw = &adapter->hw;
- 	int num_vf_macvlans, i;
-@@ -124,12 +123,6 @@ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter,
- 		kcalloc(adapter->num_vfs,
- 			sizeof(struct vf_data_storage), GFP_KERNEL);
- 	if (adapter->vfinfo) {
--		/* Now that we're sure SR-IOV is enabled
--		 * and memory allocated set up the mailbox parameters
--		 */
--		ixgbe_init_mbx_params_pf(hw);
--		memcpy(&hw->mbx.ops, ii->mbx_ops, sizeof(hw->mbx.ops));
--
- 		/* limit trafffic classes based on VFs enabled */
- 		if ((adapter->hw.mac.type == ixgbe_mac_82599EB) &&
- 		    (adapter->num_vfs < 16)) {
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-index 1be1d30..d96ead2 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-@@ -43,8 +43,7 @@ int ixgbe_ndo_get_vf_config(struct net_device *netdev,
- void ixgbe_check_vf_rate_limit(struct ixgbe_adapter *adapter);
- void ixgbe_disable_sriov(struct ixgbe_adapter *adapter);
- #ifdef CONFIG_PCI_IOV
--void ixgbe_enable_sriov(struct ixgbe_adapter *adapter,
--			const struct ixgbe_info *ii);
-+void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
- #endif
+-	if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
++	if (pcie_bus_config == PCIE_BUS_TUNE_OFF ||
++	    pcie_bus_config == PCIE_BUS_WARN)
+ 		return;
  
+ 	/* Intel errata specifies bits to change but does not say what they are.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..410eaf9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -662,6 +662,7 @@ extern void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
  
+ enum pcie_bus_config_types {
+ 	PCIE_BUS_TUNE_OFF,
++	PCIE_BUS_WARN,
+ 	PCIE_BUS_SAFE,
+ 	PCIE_BUS_PERFORMANCE,
+ 	PCIE_BUS_PEER2PEER,
 -- 
-1.7.10.2.552.gaa3bb87
+1.7.9.5
 
