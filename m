@@ -1,59 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:56803 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934840Ab2JYNdu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 09:33:50 -0400
-Received: by mail-oa0-f46.google.com with SMTP id h16so1563700oag.19
-        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2012 06:33:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACVXFVNnrCLo76rh8-hxTdf3C=kvw3ejY6Jg1==COqFC+UHMBg@mail.gmail.com>
-References: <50841CCC.9030809@uli-eckhardt.de> <6817642.hqndXjdIQA@vostro.rjw.lan>
- <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
- <17130842.qTSs14eT8a@vostro.rjw.lan> <CACVXFVNnrCLo76rh8-hxTdf3C=kvw3ejY6Jg1==COqFC+UHMBg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 25 Oct 2012 07:33:29 -0600
-Message-ID: <CAErSpo7n-by0uj2NSH1gUNaqi=eR1tSy4L9YfiVPBgZNaY-sfw@mail.gmail.com>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-To: Ming Lei <ming.lei@canonical.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Ulrich Eckhardt <usb@uli-eckhardt.de>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tang Chen <tangchen@cn.fujitsu.com>
+To: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tang Chen <tangchen@cn.fujitsu.com>
+Subject: [PATCH 2/3 v2] Do not use acpi_device to find pci root bridge in _init code.
+Date: Fri, 12 Oct 2012 20:34:20 +0800
+Message-Id: <1350045261-7344-3-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 24, 2012 at 7:24 PM, Ming Lei <ming.lei@canonical.com> wrote:
-> On Thu, Oct 25, 2012 at 5:31 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->
->>> I don't know how to use those.  Is there a doc somewhere?
->>
->> I'm not sure, but let's ask the developer who added them.
->>
->> Lei, do you have any doc describing how to use those tracepoints?
->
-> Hi Bjorn Helgaas,
->
-> Firstly, please enable these tracepoints via below
->
->           echo 1 > /sys/kernel/debug/tracing/events/rpm/enable
->
-> then store the trace event result by below once you make sure your interested
-> events are completed:
->
->           echo 0 > /sys/kernel/debug/tracing/events/rpm/enable
->           cp /sys/kernel/debug/tracing/trace /media/ram/rpm-trace
->
-> For the format of the captured trace log(rpm-trace), please see
->
->                 include/trace/events/rpm.h
->
-> which is just a replacement of previous printk and add some extra fields
-> into that.  If you still don't understand the format, please post the
-> result onto list, and I think many guys here may help you out.
->
-> Hope the above can help you.
+When the kernel is being initialized, and some hardwares are not added
+to system, there won't be acpi_device structs for these devices. But
+acpi_is_root_bridge() depends on acpi_device struct. As a result, all
+the not-added root bridge will not be judged as a root bridge in
+find_root_bridges(). And further more, no handle_hotplug_event_root()
+notifier will be installed for them.
 
-For the archives, it looks like Documentation/trace/events.txt has a
-generic intro to this area.
+This patch introduces a new api to find all root bridges in system by
+getting HID directly from ACPI namespace, not depending on acpi_device
+struct.
+
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+Signed-off-by: Liu Jiang <jiang.liu@huawei.com>
+---
+ drivers/acpi/pci_root.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 6151d83..582eb11 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -129,20 +129,23 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
+  * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
+  * @handle - the ACPI CA node in question.
+  *
+- * Note: we could make this API take a struct acpi_device * instead, but
+- * for now, it's more convenient to operate on an acpi_handle.
++ * Note: If a device is not added to the system yet, there won't be an
++ * acpi_device struct for it. So do not get HID and CID from acpi_device,
++ * get them from ACPI namespace directly.
+  */
+ int acpi_is_root_bridge(acpi_handle handle)
+ {
+-	int ret;
+-	struct acpi_device *device;
++	struct acpi_device_info *info;
++	acpi_status status;
+ 
+-	ret = acpi_bus_get_device(handle, &device);
+-	if (ret)
++	status = acpi_get_object_info(handle, &info);
++	if (ACPI_FAILURE(status)) {
++		printk(KERN_ERR PREFIX "%s: Error reading"
++				       "device info\n", __func__);
+ 		return 0;
++	}
+ 
+-	ret = acpi_match_device_ids(device, root_device_ids);
+-	if (ret)
++	if (acpi_match_object_info_ids(info, root_device_ids))
+ 		return 0;
+ 	else
+ 		return 1;
+-- 
+1.7.1
+
