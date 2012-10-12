@@ -1,79 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:62973 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753Ab2JEXKp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Oct 2012 19:10:45 -0400
-MIME-Version: 1.0
-In-Reply-To: <1595267.JDdDB2dfnM@vostro.rjw.lan>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
-	<1938257.EXdpWtCqiy@vostro.rjw.lan>
-	<CAE9FiQXZqBE6BmQ5v-vDq2E5vmyU5QRNrjjYRYONQu6jiHGD6w@mail.gmail.com>
-	<1595267.JDdDB2dfnM@vostro.rjw.lan>
-Date: Fri, 5 Oct 2012 16:10:43 -0700
-Message-ID: <CAE9FiQXraKirjQgRad2t87SmxsonDupkpE2BM6Ktx8yUdCPPiQ@mail.gmail.com>
-Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from cn.fujitsu.com ([222.73.24.84]:2484 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S933542Ab2JLMfc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Oct 2012 08:35:32 -0400
+From: Tang Chen <tangchen@cn.fujitsu.com>
+To: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tang Chen <tangchen@cn.fujitsu.com>
+Subject: [PATCH 3/3 v2] Check exit status of acpi_install_notify_handler() in find_root_bridges().
+Date: Fri, 12 Oct 2012 20:34:21 +0800
+Message-Id: <1350045261-7344-4-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 5, 2012 at 4:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday 04 of October 2012 15:46:39 Yinghai Lu wrote:
->> > Your patches seem to affect all devices in the ACPI namespace added after
->> > boot, though, not only host bridges.
->>
->> yes, but it still should be safe.
->
-> I'm not really sure of that (what about undock/dock, for exmaple?) and it's
-> damn ugly.
+acpi_install_notify_handler() could fail. So check the exit status
+and give a better debug info.
 
-only one acpi_driver has .start , that is acpi_pci_root_driver.
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+---
+ drivers/acpi/pci_root_hp.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-should be clean than with .add/start pair.
+diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+index 1f60533..4c18573 100644
+--- a/drivers/acpi/pci_root_hp.c
++++ b/drivers/acpi/pci_root_hp.c
+@@ -242,6 +242,7 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+ static acpi_status __init
+ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ {
++	acpi_status status;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+@@ -254,9 +255,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+-	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-				handle_hotplug_event_root, NULL);
+-	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
++	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++					handle_hotplug_event_root, NULL);
++	if (ACPI_FAILURE(status))
++		printk(KERN_DEBUG "acpi root: %s notify handler not installed\n"
++				  "acpi root: exit status: %u\n",
++				  objname, (unsigned int)status);
++	else
++		printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
+ 
+ 	add_acpi_root_bridge(handle);
+ 
+-- 
+1.7.1
 
->
->> > And the problem seems to be that the scanning of the ACPI namespace and
->> > configuring the host bridge are kind of independent operations now.  What
->> > we should do, actually, seems to be something like this:
->> >
->> > (1) Configure the host bridge when discovered (i.e. do what the current
->> >     acpi_pci_root_add() does.
->> > (2) Parse the ACPI namespace under the host bridge (without binding ACPI
->> >     drivers to the struct acpi_device objects created in the process,
->> >     because they are known to correspond to PCI devices).
->> > (3) Run pci_bus_add_devices() for the bridge.
->> >
->> > in one routine.
->>
->> problem is still there. if 1 still has acpi_pci_root_add and pci_acpi_scan_root
->
-> OK, so why don't we do (2) in acpi_pci_root_add(), before pci_acpi_scan_root()
-> is called?
->
->> that scan pci devices. what is need is we need to bind 1 and 3 together.
-
-some one already walk the acpi space, and during that it create
-acpi_device for pci_root
-and then attach driver for that, aka acpi_pci_root_add is executing.
-
-Now you want to walking the acpi acpi space to create children devices
-before device_add really done for that pci root
-acpi device. ?
-
-is that some kind of nesting?
-
->
-> I don't understand now.  You said previously that we need the ACPI namespace
-> below the bridge to be scanned before (3), so why do you want to do (3) before
-> (2) now?
-
-purpose is calling pci_bus_add_devices in pci_acpi_scan_root.
-
-Yinghai
