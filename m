@@ -1,38 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31296 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754061Ab2JBGdN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 02:33:13 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 08/10] PCI: Add dev_is_pci_host_bridge() helper
-Date: Mon,  1 Oct 2012 23:33:06 -0700
-Message-Id: <1349159588-15029-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5077F407.3040205@cn.fujitsu.com>
+Date: Fri, 12 Oct 2012 18:42:15 +0800
+From: Tang Chen <tangchen@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@huawei.com>
+CC: yinghai@kernel.org, lenb@kernel.org, bhelgaas@google.com,
+	izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] Do not use acpi_device to find pci root bridge in
+ _init code.
+References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com> <1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com> <5077F2C2.1010300@huawei.com>
+In-Reply-To: <5077F2C2.1010300@huawei.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need to use it later for one function that is shared with pci device.
+On 10/12/2012 06:36 PM, Jiang Liu wrote:
+> On 2012-10-12 18:31, Tang Chen wrote:
+>> When the kernel is being initialized, and some hardwares are not added
+>> to system, there won't be acpi_device structs for these devices. But
+>> acpi_is_root_bridge() depends on acpi_device struct. As a result, all
+>> the not-added root bridge will not be judged as a root bridge in
+>> find_root_bridges(). And further more, no handle_hotplug_event_root()
+>> notifier will be installed for them.
+>>
+>> This patch introduces a new api to find all root bridges in system by
+>> getting HID directly from ACPI namespace, not depending on acpi_device
+>> struct.
+>>
+>> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
+>> ---
+>>   drivers/acpi/pci_root.c |   27 ++++++++++++++++++++++-----
+>>   1 files changed, 22 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 7d0fb03..3819bee 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -128,9 +128,6 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
+>>   /**
+>>    * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
+>>    * @handle - the ACPI CA node in question.
+>> - *
+>> - * Note: we could make this API take a struct acpi_device * instead, but
+>> - * for now, it's more convenient to operate on an acpi_handle.
+>>    */
+>>   int acpi_is_root_bridge(acpi_handle handle)
+>>   {
+>> @@ -138,8 +135,28 @@ int acpi_is_root_bridge(acpi_handle handle)
+>>   	struct acpi_device *device;
+>>
+>>   	ret = acpi_bus_get_device(handle,&device);
+>> -	if (ret)
+>> -		return 0;
+>> +	if (ret) {
+>> +		/**
+>> +		 * If a device is not added to the system yet, there won't be
+>> +		 * an acpi_device struct for it. But it doesn't mean it is not
+>> +		 * a PCI root bridge. In this case we need to get HID and CID
+>> +		 * from ACPI namespace directly.
+>> +		 */
+>> +		struct acpi_device_info *info;
+>> +		acpi_status status;
+>> +		status = acpi_get_object_info(handle,&info);
+>> +		if (ACPI_FAILURE(status)) {
+>> +			printk(KERN_ERR PREFIX "%s: Error reading"
+>> +					       "device info\n", __func__);
+>> +			return 0;
+>> +		}
+>> +
+>> +		ret = acpi_match_object_info_ids(info, root_device_ids);
+>> +		if (ret)
+>> +			return 0;
+>> +		else
+>> +			return 1;
+>> +	}
+> I have sent a similar patch to Yinghai before. For simplicity, we could
+> use acpi_match_object_info_ids() instead of acpi_match_device_ids()
+> directly.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- include/linux/pci.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Hum, I must have missed it. :)
+Using acpi_match_object_info_ids() directly seems good. I'm just worry
+about if it could cause any other problem. :)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 14703c5..7ee1028 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -739,6 +739,7 @@ void pci_stop_root_bus(struct pci_bus *bus);
- void pci_remove_root_bus(struct pci_bus *bus);
- void pci_setup_cardbus(struct pci_bus *bus);
- extern void pci_sort_breadthfirst(void);
-+#define dev_is_pci_host_bridge(d) ((d)->bus == &pci_host_bridge_bus_type)
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
- #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
- #define dev_num_vf(d) ((dev_is_pci(d) ? pci_num_vf(to_pci_dev(d)) : 0))
--- 
-1.7.7
+So now, is this bug fixed ? And we don't need these patches, right ?
+
+Thanks. :)
+
+> Thanks!
+> Gerry
+>
+>>
+>>   	ret = acpi_match_device_ids(device, root_device_ids);
+>>   	if (ret)
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
