@@ -1,76 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54938 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751333Ab2JBUpu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 16:45:50 -0400
-Date: Tue, 2 Oct 2012 13:45:48 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/10] device: add drivers_autoprobe in struct device
-Message-ID: <20121002204548.GC28663@kroah.com>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
- <1349159588-15029-2-git-send-email-yinghai@kernel.org>
- <20121002133303.GA502@kroah.com>
- <CAE9FiQVCFs8cgFoU2rb=a8MWCzBcfRT6iNh7UchV8q6Bg6XzGQ@mail.gmail.com>
- <20121002174712.GA11843@kroah.com>
- <CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5077F6E1.7090600@huawei.com>
+Date: Fri, 12 Oct 2012 18:54:25 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXM6Cy64ZbXtjsnQaMFJi0C1QABC7TNYSBZ3FGsjC8D8w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Tang Chen <tangchen@cn.fujitsu.com>
+CC: <yinghai@kernel.org>, <lenb@kernel.org>, <bhelgaas@google.com>,
+	<izumi.taku@jp.fujitsu.com>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/3] Do not use acpi_device to find pci root bridge in
+ _init code.
+References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com> <1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com> <5077F2C2.1010300@huawei.com> <5077F407.3040205@cn.fujitsu.com>
+In-Reply-To: <5077F407.3040205@cn.fujitsu.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 02, 2012 at 01:20:58PM -0700, Yinghai Lu wrote:
-> On Tue, Oct 2, 2012 at 10:47 AM, Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> > On Tue, Oct 02, 2012 at 10:39:25AM -0700, Yinghai Lu wrote:
-> >> On Tue, Oct 2, 2012 at 6:33 AM, Greg Kroah-Hartman
-> >> Those patches address Bjorn's request:
-> >> 1. kill acpi_pci_root_start in drivers/acpi/pci_root.c
-> >> 2. register pci device to device as soon as possible, so for_each_pci_device
-> >>    could be used early before pci_bus_add_devices.
-> >>
-> >> please check change log patch2-4.
-> >
-> > Sorry, I still don't see what is so special about PCI that they have to
-> > do something different here.  What am I missing?
+On 2012-10-12 18:42, Tang Chen wrote:
+> On 10/12/2012 06:36 PM, Jiang Liu wrote:
+>> On 2012-10-12 18:31, Tang Chen wrote:
+>>> When the kernel is being initialized, and some hardwares are not added
+>>> to system, there won't be acpi_device structs for these devices. But
+>>> acpi_is_root_bridge() depends on acpi_device struct. As a result, all
+>>> the not-added root bridge will not be judged as a root bridge in
+>>> find_root_bridges(). And further more, no handle_hotplug_event_root()
+>>> notifier will be installed for them.
+>>>
+>>> This patch introduces a new api to find all root bridges in system by
+>>> getting HID directly from ACPI namespace, not depending on acpi_device
+>>> struct.
+>>>
+>>> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
+>>> ---
+>>>   drivers/acpi/pci_root.c |   27 ++++++++++++++++++++++-----
+>>>   1 files changed, 22 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>>> index 7d0fb03..3819bee 100644
+>>> --- a/drivers/acpi/pci_root.c
+>>> +++ b/drivers/acpi/pci_root.c
+>>> @@ -128,9 +128,6 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
+>>>   /**
+>>>    * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
+>>>    * @handle - the ACPI CA node in question.
+>>> - *
+>>> - * Note: we could make this API take a struct acpi_device * instead, but
+>>> - * for now, it's more convenient to operate on an acpi_handle.
+>>>    */
+>>>   int acpi_is_root_bridge(acpi_handle handle)
+>>>   {
+>>> @@ -138,8 +135,28 @@ int acpi_is_root_bridge(acpi_handle handle)
+>>>       struct acpi_device *device;
+>>>
+>>>       ret = acpi_bus_get_device(handle,&device);
+>>> -    if (ret)
+>>> -        return 0;
+>>> +    if (ret) {
+>>> +        /**
+>>> +         * If a device is not added to the system yet, there won't be
+>>> +         * an acpi_device struct for it. But it doesn't mean it is not
+>>> +         * a PCI root bridge. In this case we need to get HID and CID
+>>> +         * from ACPI namespace directly.
+>>> +         */
+>>> +        struct acpi_device_info *info;
+>>> +        acpi_status status;
+>>> +        status = acpi_get_object_info(handle,&info);
+>>> +        if (ACPI_FAILURE(status)) {
+>>> +            printk(KERN_ERR PREFIX "%s: Error reading"
+>>> +                           "device info\n", __func__);
+>>> +            return 0;
+>>> +        }
+>>> +
+>>> +        ret = acpi_match_object_info_ids(info, root_device_ids);
+>>> +        if (ret)
+>>> +            return 0;
+>>> +        else
+>>> +            return 1;
+>>> +    }
+>> I have sent a similar patch to Yinghai before. For simplicity, we could
+>> use acpi_match_object_info_ids() instead of acpi_match_device_ids()
+>> directly.
 > 
-> That is something that core related with hotplug:
+> Hum, I must have missed it. :)
+> Using acpi_match_object_info_ids() directly seems good. I'm just worry
+> about if it could cause any other problem. :)
 > 
-> for booting and hotplug, we have different code path.
-> 1. for booting, all device are enumerated and registered, and later
-> driver get registered, driver is attached to the devices.
-> 2. for hotplug, one device on the bus is found, and then registered
-> and driver is attached, after that
->                      another device on the bus is found, and then
-> registered and driver is attached...
+> So now, is this bug fixed ? And we don't need these patches, right ?
 > 
-> The reason for the difference, device driver is not registered later
-> during booting path.
+> Thanks. :)
+I think Yinghai has missed my patch too, so just suggest to use 
+acpi_match_object_info_ids() directly.
 
-But on each case, the code path in the driver core is the same, and you
-don't know if for 1) a driver is not already registered in the system
-(think drivers built into the kernel).
+--Gerry
 
-> We should make the two path have same sequence. the solution that I
-> suggest is adding per device drivers_autoprobe.
-
-No, now you have 2 code paths in the driver core, do not do that.
-
-> and thanking for bus_type notifier that we could toggle that bit
-> during device_add, so could make all device on same
-> bus get probed and registered but driver get skipped. and after that
-> call device_attach for all device at one batch.
 > 
-> That will remove those hotplug related hacks like acpi_pci_root_start
-> that try to delay registering of pci devices.
-> and make the code lesser and readable.
+>> Thanks!
+>> Gerry
+>>
+>>>
+>>>       ret = acpi_match_device_ids(device, root_device_ids);
+>>>       if (ret)
+>>
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> 
+> .
+> 
 
-I don't know what you are doing in the acpi code, but I do not think it
-requires a driver core change like this.
 
-Again, why is PCI different from any other bus type?  (hint, it
-shouldn't be...)
-
-greg k-h
