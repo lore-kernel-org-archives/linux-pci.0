@@ -1,42 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:35280 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306Ab2JDSgR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 14:36:17 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5077F542.3010003@cn.fujitsu.com>
+Date: Fri, 12 Oct 2012 18:47:30 +0800
+From: Tang Chen <tangchen@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <20121004174746.GA24119@google.com>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
-	<1349305214-3241-1-git-send-email-yinghai@kernel.org>
-	<20121004174746.GA24119@google.com>
-Date: Thu, 4 Oct 2012 11:36:15 -0700
-Message-ID: <CAE9FiQWDnrk7VccFLLHucCVSxN5RRS0-8pwYazLy2aw3oqmPLQ@mail.gmail.com>
-Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+CC: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
+	izumi.taku@jp.fujitsu.com, jiang.liu@huawei.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Fix a hard coding style when determining if a device
+ is a container.
+References: <1350024916-3628-1-git-send-email-tangchen@cn.fujitsu.com> <5077ECA6.4010302@jp.fujitsu.com>
+In-Reply-To: <5077ECA6.4010302@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-2022-JP
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 4, 2012 at 10:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Oct 03, 2012 at 04:00:10PM -0700, Yinghai Lu wrote:
-> This is a fundamental difference: at boot-time, all the ACPI devices below the
-> host bridge already exist before the pci_root.c driver claims the bridge,
-> while at hot-add time, pci_root.c claims the bridge *before* those ACPI
-> devices exist.
->
-> I think this is wrong.  The hot-plug case (where the driver is already
-> loaded and binds to the device as soon as it's discovered, before the
-> ACPI hierarchy below it is enumerated) seems like the obviously correct
-> order.  I think we should change the boot-time order to match that, i.e.,
-> we should register pci_root.c *before* enumerating ACPI devices.
+On 10/12/2012 06:10 PM, Yasuaki Ishimatsu wrote:
+> Hi Tang,
+> 
+> 2012/10/12 15:55, Tang Chen wrote:
+>> "ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
+>> container_device_ids[], so use it, but not the hard coding style.
+> 
+> The idea is good.
+> 
+>>
+>> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
+>> ---
+>>    drivers/acpi/container.c |   10 +++++++---
+>>    1 files changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+>> index 1f9f7d7..448c0e2 100644
+>> --- a/drivers/acpi/container.c
+>> +++ b/drivers/acpi/container.c
+>> @@ -217,6 +217,7 @@ container_walk_namespace_cb(acpi_handle handle,
+>>    {
+>>    	char *hid = NULL;
+>>    	struct acpi_device_info *info;
+>> +	struct acpi_device_id *container_id;
+>>    	acpi_status status;
+>>    	int *action = context;
+>>
+>> @@ -232,10 +233,13 @@ container_walk_namespace_cb(acpi_handle handle,
+>>    		goto end;
+>>    	}
+>>
+>> -	if (strcmp(hid, "ACPI0004")&&  strcmp(hid, "PNP0A05")&&
+>> -	    strcmp(hid, "PNP0A06")) {
+>> -		goto end;
+>> +	for (container_id = container_device_ids;
+>> +	     container_id->id[0]; container_id++) {
+>> +		if (!strcmp((char *)container_id->id, hid))
+>> +			break;
+>>    	}
+>> +	if (!container_id->id[0])
+>> +		goto end;
+> 
+> How about prepare is_container_device() function and check whether
+> the device is the container device or not as below?
 
-in booting path, all device get probed at first, and then register driver...
-do you want to register all pci driver before probing pci devices?
+Sure. :)
+A new patch will be sent soon.
 
-Yinghai
+Thanks for the wonderful idea. :)
+
+> 
+> 	if (is_container_device())
+> 		goto end;
+> 
+> Thanks,
+> Yasuaki Ishimatsu
+> 
+>>
+>>    	switch (*action) {
+>>    	case INSTALL_NOTIFY_HANDLER:
+>>
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
