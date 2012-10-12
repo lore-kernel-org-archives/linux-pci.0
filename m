@@ -1,64 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:47018 "EHLO
-	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751113Ab2J2HCL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:11 -0400
-From: Pratyush Anand <pratyush.anand@st.com>
-To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
-Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
-	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
-	Pratyush Anand <pratyush.anand@st.com>
-Subject: [PATCH 00/15] SPEAr13xx PCIe patches
-Date: Mon, 29 Oct 2012 12:31:14 +0530
-Message-ID: <cover.1351492562.git.pratyush.anand@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cn.fujitsu.com ([222.73.24.84]:2484 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755720Ab2JLMfa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Oct 2012 08:35:30 -0400
+From: Tang Chen <tangchen@cn.fujitsu.com>
+To: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tang Chen <tangchen@cn.fujitsu.com>
+Subject: [PATCH 1/3 v2] Introduce a new acpi to determine HID match.
+Date: Fri, 12 Oct 2012 20:34:19 +0800
+Message-Id: <1350045261-7344-2-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
--- First two patches are common for all platforms on ARM architecture.
--- Remaining patches belongs to SPEAr13xx architecture.
--- SPEAr13xx supports both RC and EP mode of PCIe interface. This patchset
-	supports only RC mode.
+This introduce a new api to determine if a HID matches a list of IDs.
+Different from acpi_match_device_ids(), the new api gets HID from
+acpi_device_info struct.
 
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+---
+ drivers/acpi/scan.c     |   24 ++++++++++++++++++++++++
+ include/acpi/acpi_bus.h |    2 ++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-Pratyush Anand (15):
-  arm: source drivers/pci/pcie/kconfig
-  arm: Call pcie_bus_configure_settings for pcie devices
-  SPEAr13xx: Add mach/io.h
-  SPEAr13xx: Add PCIe Root Complex driver support
-  clk: SPEAr1340: Fix pcie0 clock name
-  clk: SPEAr1310: Fix pcie clock name
-  SPEAr1340: Add PCIe auxdata for miphy clock initialization
-  SPEAr1310: Add PCIe auxdata for miphy clock initialization
-  SPEAr13xx: dts: Fix PCIe core address ranges
-  SPEAr13xx: DTS: Add auxiliary data for PCIe host
-  SPEAr1340-evb: dts: Enable PCIe0
-  SPEAr1310-EVB: DTS: Fix PCIe1 enable
-  SPEAr13xx: update kconfig for PCIe selection
-  SPEAR13xx: Update makefile for PCIe inclusion
-  SPEAR13xx: update defconfig for PCIe compilation
-
- arch/arm/Kconfig                            |    1 +
- arch/arm/boot/dts/spear1310-evb.dts         |    4 -
- arch/arm/boot/dts/spear1340-evb.dts         |    4 +
- arch/arm/boot/dts/spear13xx.dtsi            |   33 +-
- arch/arm/configs/spear13xx_defconfig        |    1 +
- arch/arm/kernel/bios32.c                    |   12 +
- arch/arm/mach-spear13xx/Kconfig             |   12 +
- arch/arm/mach-spear13xx/Makefile            |    1 +
- arch/arm/mach-spear13xx/include/mach/io.h   |   35 +
- arch/arm/mach-spear13xx/include/mach/pcie.h |  233 ++++++
- arch/arm/mach-spear13xx/pcie.c              | 1145 +++++++++++++++++++++++++++
- arch/arm/mach-spear13xx/spear1310.c         |  148 ++++
- arch/arm/mach-spear13xx/spear1340.c         |   26 +
- drivers/clk/spear/spear1310_clock.c         |    6 +-
- drivers/clk/spear/spear1340_clock.c         |    2 +-
- 15 files changed, 1651 insertions(+), 12 deletions(-)
- create mode 100644 arch/arm/mach-spear13xx/include/mach/io.h
- create mode 100644 arch/arm/mach-spear13xx/include/mach/pcie.h
- create mode 100644 arch/arm/mach-spear13xx/pcie.c
-
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 03c12e6..41fd4c9 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -312,6 +312,30 @@ int acpi_match_device_ids(struct acpi_device *device,
+ }
+ EXPORT_SYMBOL(acpi_match_device_ids);
+ 
++int acpi_match_object_info_ids(struct acpi_device_info *info,
++			       const struct acpi_device_id *ids)
++{
++	char *hardware_id;
++	int i, j;
++
++	for (i = 0; ids[i].id[0]; i++) {
++		hardware_id = info->hardware_id.string;
++		if (hardware_id &&
++		    !strcmp((char *)ids[i].id, hardware_id))
++				return 0;
++
++		for (j = 0; j < info->compatible_id_list.count; j++) {
++			hardware_id = info->compatible_id_list.ids[j].string;
++			if (hardware_id &&
++			    !strcmp((char *)ids[i].id, hardware_id))
++				return 0;
++		}
++	}
++
++	return 1;
++}
++EXPORT_SYMBOL(acpi_match_object_info_ids);
++
+ static void acpi_free_ids(struct acpi_device *device)
+ {
+ 	struct acpi_hardware_id *id, *tmp;
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index f0b9681..f83d581 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -379,6 +379,8 @@ int acpi_bus_start(struct acpi_device *device);
+ acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
+ int acpi_match_device_ids(struct acpi_device *device,
+ 			  const struct acpi_device_id *ids);
++int acpi_match_object_info_ids(struct acpi_device_info *info,
++			       const struct acpi_device_id *ids);
+ int acpi_create_dir(struct acpi_device *);
+ void acpi_remove_dir(struct acpi_device *);
+ 
 -- 
-1.7.5.4
+1.7.1
 
