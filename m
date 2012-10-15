@@ -1,151 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:53826 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S932091Ab2JYB0L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Oct 2012 21:26:11 -0400
-Message-ID: <508894D7.1040008@cn.fujitsu.com>
-Date: Thu, 25 Oct 2012 09:24:39 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Toshi Kani <toshi.kani@hp.com>
-CC: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] Use kacpi_hotplug_wq to handle container hotplug
- event.
-References: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>  <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com> <1351100001.19172.26.camel@misato.fc.hp.com>
-In-Reply-To: <1351100001.19172.26.camel@misato.fc.hp.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:35302 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752808Ab2JOHAT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Oct 2012 03:00:19 -0400
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: martin.wilck@ts.fujitsu.com, andi@firstfloor.org,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	ddutile@redhat.com, vgoyal@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, Takao Indoh <indou.takao@jp.fujitsu.com>,
+	khalid@gonehiking.org
+Message-Id: <20121015065516.2832.42378.sendpatchset@indoh>
+Subject: [PATCH v4 0/2] Reset PCIe devices to address DMA problem on kdump with iommu
+Date: Mon, 15 Oct 2012 16:00:17 +0900 (JST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/25/2012 01:33 AM, Toshi Kani wrote:
-> On Tue, 2012-10-23 at 21:10 +0800, Tang Chen wrote:
->> As the comments in __acpi_os_execute() said:
->>
->> 	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
->> 	because the hotplug code may call driver .remove() functions,
->> 	which invoke flush_scheduled_work/acpi_os_wait_events_complete
->> 	to flush these workqueues.
->>
->> we should keep the hotplug code in kacpi_hotplug_wq.
->>
->> But we have the following call series in kernel now:
->> 	acpi_ev_queue_notify_request()
->> 	|-->  acpi_os_execute()
->> 	     |-->  __acpi_os_execute(type, function, context, 0)
->>
->> The last parameter 0 makes the container_notify_cb() executed in
->> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
->> into kacpi_hotplug_wq.
->
-> Hi Tang,
->
-> I am curious; is there a particular reason why you use
-> alloc_acpi_container_hp_work() instead of acpi_os_hotplug_execute(),
-> which is already there in the tree?
+These patches reset PCIe devices at boot time to address DMA problem on
+kdump with iommu. When "reset_devices" is specified, a hot reset is
+triggered on each PCIe root port and downstream port to reset its
+downstream endpoint.
 
-Hi Toshi,
+Background:
+A kdump problem about DMA has been discussed for a long time. That is,
+when a kernel is switched to the kdump kernel DMA derived from first
+kernel affects second kernel. Recently this problem surfaces when iommu
+is used for PCI passthrough on KVM guest. In the case of the machine I
+use, when intel_iommu=on is specified, DMAR error is detected in kdump
+kernel and PCI SERR is also detected. Finally kdump fails because some
+devices does not work correctly.
 
-Thanks for telling me this. I didn't realize this function. :)
-And yes, it is better.
+The root cause is that ongoing DMA from first kernel causes DMAR fault
+because page table of DMAR is initialized while kdump kernel is booting
+up. Therefore to address this problem DMA needs to be stopped before
+DMAR is initialized at kdump kernel boot time. By these patches, PCIe
+devices are reset by hot reset and its DMA is stopped when reset_devices
+is specified. One problem of this solution is that the monitor blacks
+out when VGA controller is reset. So this patch does not reset the port
+whose child endpoint is VGA device.
 
-Thanks. :)
+What I tried:
+- Clearing bus master bit and INTx disable bit at boot time
+    This did not solve this problem. I still got DMAR error on devices.
+- Resetting devices in fixup_final(v1 patch)
+    DMAR error disappeared, but sometimes PCI SERR was detected. This
+    is well explained here.
+    https://lkml.org/lkml/2012/9/9/245
+    This PCI SERR seems to be related to interrupt remapping.
+- Clearing bus master in setup_arch() and resetting devices in
+  fixup_final
+    Neither DMAR error nor PCI SERR occurred. But on certain machine
+    kdump kernel hung up when resetting devices. It seems to be a
+    problem specific to the platform.
+- Resetting devices in setup_arch() (v2 and later patch)
+    This solution solves all problems I found so far.
 
->
-> Thanks,
-> -Toshi
->
->
->> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
->> ---
->>   drivers/acpi/container.c |   44 +++++++++++++++++++++++++++++++++++++++++++-
->>   1 files changed, 43 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
->> index 1f9f7d7..643657a 100644
->> --- a/drivers/acpi/container.c
->> +++ b/drivers/acpi/container.c
->> @@ -72,8 +72,36 @@ static struct acpi_driver acpi_container_driver = {
->>   		},
->>   };
->>
->> +struct acpi_container_hp_work {
->> +	struct work_struct work;
->> +	acpi_handle handle;
->> +	u32 type;
->> +	void *context;
->> +};
->> +
->>   /*******************************************************************/
->>
->> +static void alloc_acpi_container_hp_work(acpi_handle handle, u32 type,
->> +					void *context,
->> +					void (*func)(struct work_struct *work))
->> +{
->> +	struct acpi_container_hp_work *hp_work;
->> +	int ret;
->> +
->> +	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
->> +	if (!hp_work)
->> +		return;
->> +
->> +	hp_work->handle = handle;
->> +	hp_work->type = type;
->> +	hp_work->context = context;
->> +
->> +	INIT_WORK(&hp_work->work, func);
->> +	ret = queue_work(kacpi_hotplug_wq,&hp_work->work);
->> +	if (!ret)
->> +		kfree(hp_work);
->> +}
->> +
->>   static int is_device_present(acpi_handle handle)
->>   {
->>   	acpi_handle temp;
->> @@ -152,14 +180,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
->>   	return result;
->>   }
->>
->> -static void container_notify_cb(acpi_handle handle, u32 type, void *context)
->> +static void __container_notify_cb(struct work_struct *work)
->>   {
->>   	struct acpi_device *device = NULL;
->>   	int result;
->>   	int present;
->>   	acpi_status status;
->> +	struct acpi_container_hp_work *hp_work;
->> +	acpi_handle handle;
->> +	u32 type;
->>   	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
->>
->> +	hp_work = container_of(work, struct acpi_container_hp_work, work);
->> +	handle = hp_work->handle;
->> +	type = hp_work->type;
->> +
->>   	switch (type) {
->>   	case ACPI_NOTIFY_BUS_CHECK:
->>   		/* Fall through */
->> @@ -211,6 +246,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
->>   	return;
->>   }
->>
->> +static void container_notify_cb(acpi_handle handle, u32 type,
->> +				void *context)
->> +{
->> +	alloc_acpi_container_hp_work(handle, type, context,
->> +				__container_notify_cb);
->> +}
->> +
->>   static acpi_status
->>   container_walk_namespace_cb(acpi_handle handle,
->>   			    u32 lvl, void *context, void **rv)
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+v4:
+Reduce waiting time after resetting devices. A previous patch does reset
+like this:
+  for (each device) {
+    save config registers
+    reset
+    wait for 500 ms
+    restore config registers
+  }
+
+If there are N devices to be reset, it takes N*500 ms. On the other
+hand, the v4 patch does:
+  for (each device) {
+    save config registers
+    reset
+  }
+  wait 500 ms
+  for (each device) {
+    restore config registers
+  }
+Though it needs more memory space to save config registers, the waiting
+time is always 500ms.
+
+v3:
+Move alloc_bootmem and free_bootmem to early_reset_pcie_devices so that
+they are called only once.
+https://lkml.org/lkml/2012/10/10/57
+
+v2:
+Reset devices in setup_arch() because reset need to be done before
+interrupt remapping is initialized.
+https://lkml.org/lkml/2012/10/2/54
+
+v1:
+Add fixup_final quirk to reset PCIe devices
+https://lkml.org/lkml/2012/8/3/160
+
+Thanks,
+Takao Indoh
 
