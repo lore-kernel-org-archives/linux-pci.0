@@ -1,44 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.uli-eckhardt.de ([85.214.28.137]:57311 "EHLO
-	mail.uli-eckhardt.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757204Ab2JYRQB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 13:16:01 -0400
-Message-ID: <508973CE.8080603@uli-eckhardt.de>
-Date: Thu, 25 Oct 2012 19:15:58 +0200
-From: Ulrich Eckhardt <usb@uli-eckhardt.de>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:36801 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab2JPLvA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 07:51:00 -0400
+Message-ID: <507D48EE.9010800@jp.fujitsu.com>
+Date: Tue, 16 Oct 2012 20:45:50 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-References: <50841CCC.9030809@uli-eckhardt.de> <5086D067.4000900@uli-eckhardt.de> <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com> <6817642.hqndXjdIQA@vostro.rjw.lan> <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
-In-Reply-To: <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: khalid@gonehiking.org
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, andi@firstfloor.org,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+	vgoyal@redhat.com
+Subject: Re: [PATCH v4 1/2] x86, pci: Reset PCIe devices at boot time
+References: <20121015065516.2832.42378.sendpatchset@indoh>  <20121015065526.2832.90867.sendpatchset@indoh> <1350321429.7065.97.camel@rhapsody>
+In-Reply-To: <1350321429.7065.97.camel@rhapsody>
+Content-Type: text/plain; charset=Shift_JIS
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 24.10.2012 23:13, schrieb Bjorn Helgaas:
-> On Wed, Oct 24, 2012 at 3:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+(2012/10/16 2:17), Khalid Aziz wrote:
+> On Mon, 2012-10-15 at 16:00 +0900, Takao Indoh wrote:
+>> This patch resets PCIe devices at boot time by hot reset when
+>> "reset_devices" is specified.
+>>
+>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>> ---
+>>   arch/x86/include/asm/pci-direct.h |    1
+>>   arch/x86/kernel/setup.c           |    3
+>>   arch/x86/pci/early.c              |  344 ++++++++++++++++++++++++++++
+>>   include/linux/pci.h               |    2
+>>   init/main.c                       |    4
+>>   5 files changed, 352 insertions(+), 2 deletions(-)
+>>
 >
->> It can be disabled by writing "on" to the controller's
->> /sys/devices/.../power/control file.
 >
-> Ulrich, if you boot in the working situation and write "on" to the
-> control file as above, can you still reproduce the failure?
+> Looks good.
+>
+> Reviewed-by: Khalid Aziz <khalid@gonehiking.org>
+>
 
-I have done first a cat to the control file which returns already on:
+Thanks! But unfortunately I found a bug, so I'll post v5 patch soon.
 
-uli:/ # cat /sys/devices/pci0000\:00/0000\:00\:04.0/power/control
-on
+A bug I found is that configuration register is accessed without
+delay after reset.
 
-Writing again on to the file does not change anything.
+This is an algorithm to reset devices.
 
-Best Regards
-Uli
--- 
-Ulrich Eckhardt                  http://www.uli-eckhardt.de
+  for (each device) {  <===== (A)
+    if (does not have downstream devices)
+      continue
+    for (each downstream device) {
+      save config registers
+    }
+    do_bus_reset <==== (B)
+  }
+  wait 500 ms
+  ...
 
-Ein Blitzableiter auf dem Kirchturm ist das denkbar stärkste
-Misstrauensvotum gegen den lieben Gott. (Karl Krauss)
+Let's say my system has the following devices.
+
+00:01.0 (root port)
+|
++- 01:00.0 (device)
+
+In this case,
+1) At first, 00:01.0 is found at (A). And its downstream devcice 01:00.0
+   is reset at (B).
+2) Next, 01:00.0 is found at (A). Then config register of 01:00.0 is
+   accessed. This is PCIe spec violation because the config register of
+   01:00.0 is accessed without delay after reset. PCIe spec requires
+   at least 100ms waiting time before sending a config request.
+
+Therefore I'll update patches like this so that devices could be reset
+after saving phase is done:
+
+  for (each device) {
+    if (does not have downstream devices)
+      continue
+    for_each (its downstream devices) {
+      save config registers
+    }
+-   do_bus_reset
+  }
++ for (each device) {
++   do_bus_reset
++ }
+  wait 500 ms
+  ...
+
+Thanks,
+Takao Indoh
+
