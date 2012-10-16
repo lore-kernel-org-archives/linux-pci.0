@@ -1,167 +1,331 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:16423 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S2992639Ab2JYUYL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 16:24:11 -0400
-Message-ID: <1351196647.2662.43.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: Re: [PATCH 4/8] sriov: provide method to reduce the number of total
- VFs supported
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Donald Dutile <ddutile@redhat.com>
-CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-	<yuvalmin@broadcom.com>, <gregory.v.rose@intel.com>,
-	<yinghai@kernel.org>, <davem@davemloft.net>
-Date: Thu, 25 Oct 2012 21:24:07 +0100
-In-Reply-To: <1351190310-5043-5-git-send-email-ddutile@redhat.com>
-References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
-	 <1351190310-5043-5-git-send-email-ddutile@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:33367 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755659Ab2JPE2v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 00:28:51 -0400
+Message-ID: <507CE14A.2020605@jp.fujitsu.com>
+Date: Tue, 16 Oct 2012 13:23:38 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
+To: yinghai@kernel.org
+CC: martin.wilck@ts.fujitsu.com, linux-pci@vger.kernel.org,
+	x86@kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, hbabu@us.ibm.com,
+	andi@firstfloor.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, mingo@redhat.com, vgoyal@redhat.com,
+	khalid@gonehiking.org
+Subject: Re: [PATCH v4 1/2] x86, pci: Reset PCIe devices at boot time
+References: <20121015065516.2832.42378.sendpatchset@indoh> <20121015065526.2832.90867.sendpatchset@indoh> <CAE9FiQXKjNU4Sasj4LmiFiNNu9quGgKAdW3ciVnXggoWZiYXJA@mail.gmail.com>
+In-Reply-To: <CAE9FiQXKjNU4Sasj4LmiFiNNu9quGgKAdW3ciVnXggoWZiYXJA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-10-25 at 14:38 -0400, Donald Dutile wrote:
-> Some implementations of SRIOV provide a capability structure
->  value of TotalVFs that is greater than what the software can support.
->  Provide a method to reduce the capability structure reported value
->  to the value the driver can support.
->  This ensures sysfs reports the current capability of the system,
->  hardware and software.
->  Example for its use: igb & ixgbe -- report 8 & 64 as TotalVFs,
->  but drivers only support 7 & 63 maximum.
-> 
-> Signed-off-by: Donald Dutile <ddutile@redhat.com>
-> ---
->  drivers/pci/iov.c       | 24 +++++++++++++++++++++++-
->  drivers/pci/pci-sysfs.c | 10 ++++++++--
->  drivers/pci/pci.h       |  1 +
->  include/linux/pci.h     |  5 +++++
->  4 files changed, 37 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index aeccc91..f1357b0 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -682,7 +682,6 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  
->  	if (!dev->is_physfn)
->  		return -ENODEV;
-> -
->  	return sriov_enable(dev, nr_virtfn);
->  }
->  EXPORT_SYMBOL_GPL(pci_enable_sriov);
-> @@ -735,3 +734,26 @@ int pci_num_vf(struct pci_dev *dev)
->  		return dev->sriov->nr_virtfn;
->  }
->  EXPORT_SYMBOL_GPL(pci_num_vf);
-> +
-> +/**
-> + * pci_sriov_set_totalvfs -- reduce the TotalVFs available
-> + * @dev: the PCI PF device
-> + * numvfs: number that should be used for TotalVFs supported
-> + *
-> + * Returns 0 if PF is an SRIOV-capable device and
-> + * value of numvfs valid, otherwise -EINVAL
+(2012/10/16 3:36), Yinghai Lu wrote:
+> On Mon, Oct 15, 2012 at 12:00 AM, Takao Indoh
+> <indou.takao@jp.fujitsu.com> wrote:
+>> This patch resets PCIe devices at boot time by hot reset when
+>> "reset_devices" is specified.
+>
+> how about pci devices that domain_nr is not zero ?
 
-What are the locking requirements?  Presumably this is expected to be
-called from the probe function, with the device's mutex held?
+This patch does not support multiple domains yet.
 
-> + */
-> +int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
-> +{
-> +	if (!dev || !dev->is_physfn || (numvfs > dev->sriov->total))
-> +		return -EINVAL;
-> +
-> +	/* Shouldn't change if VFs already enabled */
-> +	if (!dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
+>>
+>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>> ---
+>>   arch/x86/include/asm/pci-direct.h |    1
+>>   arch/x86/kernel/setup.c           |    3
+>>   arch/x86/pci/early.c              |  344 ++++++++++++++++++++++++++++
+>>   include/linux/pci.h               |    2
+>>   init/main.c                       |    4
+>>   5 files changed, 352 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+>> index b1e7a45..de30db2 100644
+>> --- a/arch/x86/include/asm/pci-direct.h
+>> +++ b/arch/x86/include/asm/pci-direct.h
+>> @@ -18,4 +18,5 @@ extern int early_pci_allowed(void);
+>>   extern unsigned int pci_early_dump_regs;
+>>   extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+>>   extern void early_dump_pci_devices(void);
+>> +extern void early_reset_pcie_devices(void);
+>>   #endif /* _ASM_X86_PCI_DIRECT_H */
+>> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+>> index a2bb18e..73d3425 100644
+>> --- a/arch/x86/kernel/setup.c
+>> +++ b/arch/x86/kernel/setup.c
+>> @@ -987,6 +987,9 @@ void __init setup_arch(char **cmdline_p)
+>>          generic_apic_probe();
+>>
+>>          early_quirks();
+>> +#ifdef CONFIG_PCI
+>> +       early_reset_pcie_devices();
+>> +#endif
+>>
+>>          /*
+>>           * Read APIC and some other early information from ACPI tables.
+>> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+>> index d1067d5..683b30f 100644
+>> --- a/arch/x86/pci/early.c
+>> +++ b/arch/x86/pci/early.c
+>> @@ -1,5 +1,6 @@
+>>   #include <linux/kernel.h>
+>>   #include <linux/pci.h>
+>> +#include <linux/bootmem.h>
+>>   #include <asm/pci-direct.h>
+>>   #include <asm/io.h>
+>>   #include <asm/pci_x86.h>
+>> @@ -109,3 +110,346 @@ void early_dump_pci_devices(void)
+>>                  }
+>>          }
+>>   }
+>> +
+>> +#define PCI_EXP_SAVE_REGS      7
+>> +#define pcie_cap_has_devctl(type, flags)       1
+>> +#define pcie_cap_has_lnkctl(type, flags)               \
+>> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
+>> +                (type == PCI_EXP_TYPE_ROOT_PORT ||     \
+>> +                 type == PCI_EXP_TYPE_ENDPOINT ||      \
+>> +                 type == PCI_EXP_TYPE_LEG_END))
+>> +#define pcie_cap_has_sltctl(type, flags)               \
+>> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
+>> +                ((type == PCI_EXP_TYPE_ROOT_PORT) ||   \
+>> +                 (type == PCI_EXP_TYPE_DOWNSTREAM &&   \
+>> +                  (flags & PCI_EXP_FLAGS_SLOT))))
+>> +#define pcie_cap_has_rtctl(type, flags)                        \
+>> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
+>> +                (type == PCI_EXP_TYPE_ROOT_PORT ||     \
+>> +                 type == PCI_EXP_TYPE_RC_EC))
+>> +
+>> +struct save_config {
+>> +       u32 pci[16];
+>> +       u16 pcie[PCI_EXP_SAVE_REGS];
+>> +};
+>> +
+>> +struct pcie_dev {
+>> +       int cap;   /* position of PCI Express capability */
+>> +       int flags; /* PCI_EXP_FLAGS */
+>> +       struct save_config save; /* saved configration register */
+>> +};
+>> +
+>> +struct pcie_port {
+>> +       struct list_head dev;
+>> +       u8 secondary;
+>> +       struct pcie_dev child[PCI_MAX_FUNCTIONS];
+>> +};
+>> +
+>> +static LIST_HEAD(device_list);
+>> +static void __init pci_udelay(int loops)
+>> +{
+>> +       while (loops--) {
+>> +               /* Approximately 1 us */
+>> +               native_io_delay();
+>> +       }
+>> +}
+>> +
+>> +/* Derived from drivers/pci/pci.c */
+>> +#define PCI_FIND_CAP_TTL       48
+>> +static int __init __pci_find_next_cap_ttl(u8 bus, u8 slot, u8 func,
+>> +                                         u8 pos, int cap, int *ttl)
+>> +{
+>> +       u8 id;
+>> +
+>> +       while ((*ttl)--) {
+>> +               pos = read_pci_config_byte(bus, slot, func, pos);
+>> +               if (pos < 0x40)
+>> +                       break;
+>> +               pos &= ~3;
+>> +               id = read_pci_config_byte(bus, slot, func,
+>> +                                       pos + PCI_CAP_LIST_ID);
+>> +               if (id == 0xff)
+>> +                       break;
+>> +               if (id == cap)
+>> +                       return pos;
+>> +               pos += PCI_CAP_LIST_NEXT;
+>> +       }
+>> +       return 0;
+>> +}
+>> +
+>> +static int __init __pci_find_next_cap(u8 bus, u8 slot, u8 func, u8 pos, int cap)
+>> +{
+>> +       int ttl = PCI_FIND_CAP_TTL;
+>> +
+>> +       return __pci_find_next_cap_ttl(bus, slot, func, pos, cap, &ttl);
+>> +}
+>> +
+>> +static int __init __pci_bus_find_cap_start(u8 bus, u8 slot, u8 func,
+>> +                                          u8 hdr_type)
+>> +{
+>> +       u16 status;
+>> +
+>> +       status = read_pci_config_16(bus, slot, func, PCI_STATUS);
+>> +       if (!(status & PCI_STATUS_CAP_LIST))
+>> +               return 0;
+>> +
+>> +       switch (hdr_type) {
+>> +       case PCI_HEADER_TYPE_NORMAL:
+>> +       case PCI_HEADER_TYPE_BRIDGE:
+>> +               return PCI_CAPABILITY_LIST;
+>> +       case PCI_HEADER_TYPE_CARDBUS:
+>> +               return PCI_CB_CAPABILITY_LIST;
+>> +       default:
+>> +               return 0;
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static int __init early_pci_find_capability(u8 bus, u8 slot, u8 func, int cap)
+>> +{
+>> +       int pos;
+>> +       u8 type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
+>> +
+>> +       pos = __pci_bus_find_cap_start(bus, slot, func, type & 0x7f);
+>> +       if (pos)
+>> +               pos = __pci_find_next_cap(bus, slot, func, pos, cap);
+>> +
+>> +       return pos;
+>> +}
+>> +
+>> +static void __init do_reset(u8 bus, u8 slot, u8 func)
+>> +{
+>> +       u16 ctrl;
+>> +
+>> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
+>> +
+>> +       /* Assert Secondary Bus Reset */
+>> +       ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
+>> +       ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+>> +       write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
+>> +
+>> +       /*
+>> +        * PCIe spec requires software to ensure a minimum reset duration
+>> +        * (Trst == 1ms). We have here 5ms safety margin because pci_udelay is
+>> +        * not precise.
+>> +        */
+>> +       pci_udelay(5000);
+>> +
+>> +       /* De-assert Secondary Bus Reset */
+>> +       ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+>> +       write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
+>> +}
+>> +
+>> +static void __init save_state(unsigned bus, unsigned slot, unsigned func,
+>> +               struct pcie_dev *dev)
+>> +{
+>> +       int i;
+>> +       int pcie, flags, pcie_type;
+>> +       struct save_config *save;
+>> +
+>> +       pcie = dev->cap;
+>> +       flags = dev->flags;
+>> +       pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
+>> +       save = &dev->save;
+>> +
+>> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
+>> +
+>> +       for (i = 0; i < 16; i++)
+>> +               save->pci[i] = read_pci_config(bus, slot, func, i * 4);
+>> +       i = 0;
+>> +       if (pcie_cap_has_devctl(pcie_type, flags))
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_DEVCTL);
+>> +       if (pcie_cap_has_lnkctl(pcie_type, flags))
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_LNKCTL);
+>> +       if (pcie_cap_has_sltctl(pcie_type, flags))
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_SLTCTL);
+>> +       if (pcie_cap_has_rtctl(pcie_type, flags))
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_RTCTL);
+>> +
+>> +       if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_DEVCTL2);
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_LNKCTL2);
+>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
+>> +                                                     pcie + PCI_EXP_SLTCTL2);
+>> +       }
+>> +}
+>> +
+>> +static void __init restore_state(unsigned bus, unsigned slot, unsigned func,
+>> +               struct pcie_dev *dev)
+>> +{
+>> +       int i = 0;
+>> +       int pcie, flags, pcie_type;
+>> +       struct save_config *save;
+>> +
+>> +       pcie = dev->cap;
+>> +       flags = dev->flags;
+>> +       pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
+>> +       save = &dev->save;
+>> +
+>> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
+>> +              bus, slot, func);
+>> +
+>> +       if (pcie_cap_has_devctl(pcie_type, flags))
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_DEVCTL, save->pcie[i++]);
+>> +       if (pcie_cap_has_lnkctl(pcie_type, flags))
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_LNKCTL, save->pcie[i++]);
+>> +       if (pcie_cap_has_sltctl(pcie_type, flags))
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_SLTCTL, save->pcie[i++]);
+>> +       if (pcie_cap_has_rtctl(pcie_type, flags))
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_RTCTL, save->pcie[i++]);
+>> +
+>> +       if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_DEVCTL2, save->pcie[i++]);
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_LNKCTL2, save->pcie[i++]);
+>> +               write_pci_config_16(bus, slot, func,
+>> +                                   pcie + PCI_EXP_SLTCTL2, save->pcie[i++]);
+>> +       }
+>> +
+>> +       for (i = 15; i >= 0; i--)
+>> +               write_pci_config(bus, slot, func, i * 4, save->pci[i]);
+>> +}
+>
+> do you have to pass bus/slot/func and use read/pci_config directly ?
+>
+> I had one patchset that use dummy pci device and reuse existing late quirk code
+> in early_quirk to do usb handoff early.
+>
+> please check
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+> for-x86-early-quirk-usb
+>
+> 678a023: x86: usb handoff in early_quirk
+> 2d418d8: pci, usb: Make usb handoff func all take base remapping
+> d9bd1ad: x86, pci: add dummy pci device for early stage
+> de38757: x86: early_quirk check all bus/dev/func in domain 0
+> 325cc7a: make msleep to do mdelay before scheduler is running
+> eec78a4: x86: set percpu cpu_info lpj to default
+> 52ebec4: x86, pci: early dump skip device the same way as later probe code
+>
+> if that could help.
+> you may reuse some later functions that take pci_dev as parameters.
+d9bd1ad looks very useful for my patch. Thanks for the information.
+What is the status of this patch? Already got in tip tree or
+somewhere?
 
-Missing parentheses.
+> also mdelay should work early...
+mdelay does not work in early.c as far as I tested. Maybe
+it works after calibration.
 
-> +		return -EIO; 
-> +
-> +	dev->sriov->drvttl = numvfs;
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index c2894ca..1cf6c15 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -414,7 +414,10 @@ static ssize_t sriov_totalvfs_show(struct device *dev,
->  	u16 total;
->  
->  	pdev = to_pci_dev(dev);
-> -	total = pdev->sriov->total;
-> +	if (pdev->sriov->drvttl)
-> +		total = pdev->sriov->drvttl;
-> +	else
-> +		total = pdev->sriov->total;
->  	return sprintf (buf, "%u\n", total);
->  }
->  
-> @@ -462,7 +465,10 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  	}
->  
->  	/* if enabling vf's ... */
-> -	total = pdev->sriov->total;
-> +	if (pdev->sriov->drvttl)
-> +		total = pdev->sriov->drvttl;
-> +	else
-> +		total = pdev->sriov->total;
->  	if ((num_vfs > 0) && (num_vfs <= total)) {
->  		if (pdev->sriov->nr_virtfn == 0) { /* if not already enabled */
->  		    num_vfs_enabled = pdev->driver->sriov_configure(pdev, num_vfs);
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 6f6cd14..553bbba 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -240,6 +240,7 @@ struct pci_sriov {
->  	u16 stride;		/* following VF stride */
->  	u32 pgsz;		/* page size for BAR alignment */
->  	u8 link;		/* Function Dependency Link */
-> +	u16 drvttl;		/* max num VFs driver supports */
+> and use early_quirk instead add another calling in setup.c
+I think this reset code should not be added to early_quirk.
+In my understanding "quirk" is used to avoid problems of specific
+hardware.
 
-It's a rather obscure possibility, but the device could be switched
-between two different versions of a driver where one has a lower limit
-and the other doesn't.  So this should be reset to 0 when the driver is
-removed.
-
->  	struct pci_dev *dev;	/* lowest numbered PF */
->  	struct pci_dev *self;	/* this PF */
->  	struct mutex lock;	/* lock for VF bus */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1d60a23..a5e08f2 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1633,6 +1633,7 @@ extern int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
->  extern void pci_disable_sriov(struct pci_dev *dev);
->  extern irqreturn_t pci_sriov_migration(struct pci_dev *dev);
->  extern int pci_num_vf(struct pci_dev *dev);
-> +extern int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->  #else
->  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  {
-> @@ -1649,6 +1650,10 @@ static inline int pci_num_vf(struct pci_dev *dev)
->  {
->  	return 0;
->  }
-> +static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
-> +{
-> +	return -EINVAL;
-> +}
-
-I think this should return 0, as the number of VFs certainly will be
-limited to <= numvfs.
-
-Ben.
-
->  #endif
->  
->  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
-
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Thanks,
+Takao Indoh
 
