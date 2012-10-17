@@ -1,96 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:36801 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab2JPLvA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 07:51:00 -0400
-Message-ID: <507D48EE.9010800@jp.fujitsu.com>
-Date: Tue, 16 Oct 2012 20:45:50 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:26378 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755690Ab2JQD1Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Oct 2012 23:27:25 -0400
+Message-ID: <507E255A.4070201@cn.fujitsu.com>
+Date: Wed, 17 Oct 2012 11:26:18 +0800
+From: Tang Chen <tangchen@cn.fujitsu.com>
 MIME-Version: 1.0
-To: khalid@gonehiking.org
-CC: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
-	kexec@lists.infradead.org, hbabu@us.ibm.com, andi@firstfloor.org,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-	vgoyal@redhat.com
-Subject: Re: [PATCH v4 1/2] x86, pci: Reset PCIe devices at boot time
-References: <20121015065516.2832.42378.sendpatchset@indoh>  <20121015065526.2832.90867.sendpatchset@indoh> <1350321429.7065.97.camel@rhapsody>
-In-Reply-To: <1350321429.7065.97.camel@rhapsody>
-Content-Type: text/plain; charset=Shift_JIS
+To: Tang Chen <tangchen@cn.fujitsu.com>
+CC: bhelgaas@google.com, lenb@kernel.org, yinghai@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] Fix a hard coding style when determining if a device
+ is a container.
+References: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/16 2:17), Khalid Aziz wrote:
-> On Mon, 2012-10-15 at 16:00 +0900, Takao Indoh wrote:
->> This patch resets PCIe devices at boot time by hot reset when
->> "reset_devices" is specified.
->>
->> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->> ---
->>   arch/x86/include/asm/pci-direct.h |    1
->>   arch/x86/kernel/setup.c           |    3
->>   arch/x86/pci/early.c              |  344 ++++++++++++++++++++++++++++
->>   include/linux/pci.h               |    2
->>   init/main.c                       |    4
->>   5 files changed, 352 insertions(+), 2 deletions(-)
->>
+Hi,
+
+Would anyone help to review this patch, and give some comments, please ?
+
+Thanks. :)
+
+On 10/12/2012 08:31 PM, Tang Chen wrote:
+> "ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
+> container_device_ids[], so use it, but not the hard coding style.
 >
+> Also, introduce a new api is_container_device() to determine if a
+> device is a container device.
 >
-> Looks good.
+> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
+> Signed-off-by: Yasuaki Ishimatsu<isimatu.yasuaki@jp.fujitsu.com>
+> ---
+>   drivers/acpi/container.c |   17 ++++++++++++++---
+>   1 files changed, 14 insertions(+), 3 deletions(-)
 >
-> Reviewed-by: Khalid Aziz <khalid@gonehiking.org>
+> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+> index 1f9f7d7..ffd76ee 100644
+> --- a/drivers/acpi/container.c
+> +++ b/drivers/acpi/container.c
+> @@ -92,6 +92,19 @@ static int is_device_present(acpi_handle handle)
+>   	return ((sta&  ACPI_STA_DEVICE_PRESENT) == ACPI_STA_DEVICE_PRESENT);
+>   }
 >
-
-Thanks! But unfortunately I found a bug, so I'll post v5 patch soon.
-
-A bug I found is that configuration register is accessed without
-delay after reset.
-
-This is an algorithm to reset devices.
-
-  for (each device) {  <===== (A)
-    if (does not have downstream devices)
-      continue
-    for (each downstream device) {
-      save config registers
-    }
-    do_bus_reset <==== (B)
-  }
-  wait 500 ms
-  ...
-
-Let's say my system has the following devices.
-
-00:01.0 (root port)
-|
-+- 01:00.0 (device)
-
-In this case,
-1) At first, 00:01.0 is found at (A). And its downstream devcice 01:00.0
-   is reset at (B).
-2) Next, 01:00.0 is found at (A). Then config register of 01:00.0 is
-   accessed. This is PCIe spec violation because the config register of
-   01:00.0 is accessed without delay after reset. PCIe spec requires
-   at least 100ms waiting time before sending a config request.
-
-Therefore I'll update patches like this so that devices could be reset
-after saving phase is done:
-
-  for (each device) {
-    if (does not have downstream devices)
-      continue
-    for_each (its downstream devices) {
-      save config registers
-    }
--   do_bus_reset
-  }
-+ for (each device) {
-+   do_bus_reset
-+ }
-  wait 500 ms
-  ...
-
-Thanks,
-Takao Indoh
+> +static int is_container_device(const char *hid)
+> +{
+> +	const struct acpi_device_id *container_id;
+> +
+> +	for (container_id = container_device_ids;
+> +	     container_id->id[0]; container_id++) {
+> +		if (!strcmp((char *)container_id->id, hid))
+> +			return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>   /*******************************************************************/
+>   static int acpi_container_add(struct acpi_device *device)
+>   {
+> @@ -232,10 +245,8 @@ container_walk_namespace_cb(acpi_handle handle,
+>   		goto end;
+>   	}
+>
+> -	if (strcmp(hid, "ACPI0004")&&  strcmp(hid, "PNP0A05")&&
+> -	    strcmp(hid, "PNP0A06")) {
+> +	if (!is_container_device(hid))
+>   		goto end;
+> -	}
+>
+>   	switch (*action) {
+>   	case INSTALL_NOTIFY_HANDLER:
 
