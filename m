@@ -1,30 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:37926 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756616Ab2J2NYz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 09:24:55 -0400
-Received: by mail-vc0-f174.google.com with SMTP id fk26so5204217vcb.19
-        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 06:24:55 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:64591 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932325Ab2JQQ2L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Oct 2012 12:28:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <91c2505d23f161ce535b220dea497e2c3abfd7f6.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-	<91c2505d23f161ce535b220dea497e2c3abfd7f6.1351492562.git.pratyush.anand@st.com>
-Date: Mon, 29 Oct 2012 18:54:55 +0530
-Message-ID: <CAOh2x=ndvJF6qFgXOOQOJfAjFh93vosBrYN4FbvnDK0SW0CcXA@mail.gmail.com>
-Subject: Re: [PATCH 10/15] SPEAr13xx: DTS: Add auxiliary data for PCIe host
-From: viresh kumar <viresh.kumar@linaro.org>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	olof@lixom.net
+In-Reply-To: <507E60C2.6010104@cn.fujitsu.com>
+References: <1350444308-27102-1-git-send-email-tangchen@cn.fujitsu.com>
+	<CAE9FiQVFc9VVfWZpEfjPeGvo5pby3BQNzDei3VTXdoR048_SPg@mail.gmail.com>
+	<507E60C2.6010104@cn.fujitsu.com>
+Date: Wed, 17 Oct 2012 09:28:09 -0700
+Message-ID: <CAE9FiQX60dOE7odBx4OC0kawesZW3w9yLHEhmLoOvASaZ7q8dw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] Update acpi_root_bridge_list in container hotplug path.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tang Chen <tangchen@cn.fujitsu.com>
+Cc: jiang.liu@huawei.com, bhelgaas@google.com, lenb@kernel.org,
+	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
-> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
-> ---
+On Wed, Oct 17, 2012 at 12:39 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
+> On 10/17/2012 01:18 PM, Yinghai Lu wrote:
+>
+> And also, I have another 2 questions, maybe you can help me.
+> 1) Do we need to put PNP0A08 into acpi_pci_roots ?
 
-Please add commit log in each and every message.
+looks like we need to unify those two ids.
 
-What do you mean by auxiliary data in subject?
+> 2) In container_notify_cb(), when it got a ACPI_NOTIFY_EJECT_REQUEST
+>    event, it doesn't do the hot-remove things.
+>    I use your sci emulator patch to test it. I did the following thing:
+>         echo echo "\_SB_.LSB1" > /sys/kernel/debug/acpi/sci_notify
+>    where \_SB_.LSB1 is a container, it just did nothing.
+>    Do we need to support this operation ?
+
+yes, looks like need to add container_device_remove and call it under
+ container_notify_cb/ACPI_NOTIFY_EJECT_REQUEST
+
+and should look like handle_root_bridge_removal to call acpi_bus_trim two times.
+
+Thanks
+
+Yinghai
