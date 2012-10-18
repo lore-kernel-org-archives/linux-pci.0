@@ -1,122 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:21036 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1756903Ab2JWNLy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Oct 2012 09:11:54 -0400
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] Use kacpi_hotplug_wq to handle container hotplug event.
-Date: Tue, 23 Oct 2012 21:10:38 +0800
-Message-Id: <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>
+Received: from smtp.citrix.com ([66.165.176.89]:11858 "EHLO SMTP.CITRIX.COM"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754123Ab2JRKCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Oct 2012 06:02:33 -0400
+Message-ID: <507FD39F.4060601@citrix.com>
+Date: Thu, 18 Oct 2012 11:02:07 +0100
+From: David Vrabel <david.vrabel@citrix.com>
+MIME-Version: 1.0
+To: "xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jens Axboe <axboe@kernel.dk>, <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-fbdev@vger.kernel.org>,
+	Florian Tobias Schandinat <FlorianSchandinat@gmx.de>,
+	<linux-input@vger.kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: David Vrabel <david.vrabel@citrix.com>
+Subject: [PATCH 0/5] drivers: xen frontend devices should handle missed backend
+ CLOSING
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As the comments in __acpi_os_execute() said:
+Subsystem maintainers, you can either pick up the relevant driver patch
+or ack it to go via Konrad's Xen tree.
 
-	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-	because the hotplug code may call driver .remove() functions,
-	which invoke flush_scheduled_work/acpi_os_wait_events_complete
-	to flush these workqueues.
+The series makes all the Xen frontend drivers handle the backend
+transitioning to CLOSED without the frontend having previously seen
+the backend in the CLOSING state.
 
-we should keep the hotplug code in kacpi_hotplug_wq.
+Backends shouldn't do this but some do.  e.g., if the host is
+XenServer and the toolstack decides to do a forced shutdown of a VBD,
+then the blkfront may miss the CLOSING transition and the /dev/xvdX
+device will not be destroyed which prevents it being reused.
 
-But we have the following call series in kernel now:
-	acpi_ev_queue_notify_request()
-	|--> acpi_os_execute()
-	     |--> __acpi_os_execute(type, function, context, 0)
+I have seen systems that ended up in this state but it's not clear if
+this was the actual cause.  However, I think in general it's a good
+thing to thing to improve the handling of unexpected state
+transitions.
 
-The last parameter 0 makes the container_notify_cb() executed in
-kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
-into kacpi_hotplug_wq.
-
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
----
- drivers/acpi/container.c |   44 +++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 43 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-index 1f9f7d7..643657a 100644
---- a/drivers/acpi/container.c
-+++ b/drivers/acpi/container.c
-@@ -72,8 +72,36 @@ static struct acpi_driver acpi_container_driver = {
- 		},
- };
- 
-+struct acpi_container_hp_work {
-+	struct work_struct work;
-+	acpi_handle handle;
-+	u32 type;
-+	void *context;
-+};
-+
- /*******************************************************************/
- 
-+static void alloc_acpi_container_hp_work(acpi_handle handle, u32 type,
-+					void *context,
-+					void (*func)(struct work_struct *work))
-+{
-+	struct acpi_container_hp_work *hp_work;
-+	int ret;
-+
-+	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-+	if (!hp_work)
-+		return;
-+
-+	hp_work->handle = handle;
-+	hp_work->type = type;
-+	hp_work->context = context;
-+
-+	INIT_WORK(&hp_work->work, func);
-+	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-+	if (!ret)
-+		kfree(hp_work);
-+}
-+
- static int is_device_present(acpi_handle handle)
- {
- 	acpi_handle temp;
-@@ -152,14 +180,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
- 	return result;
- }
- 
--static void container_notify_cb(acpi_handle handle, u32 type, void *context)
-+static void __container_notify_cb(struct work_struct *work)
- {
- 	struct acpi_device *device = NULL;
- 	int result;
- 	int present;
- 	acpi_status status;
-+	struct acpi_container_hp_work *hp_work;
-+	acpi_handle handle;
-+	u32 type;
- 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
- 
-+	hp_work = container_of(work, struct acpi_container_hp_work, work);
-+	handle = hp_work->handle;
-+	type = hp_work->type;
-+
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		/* Fall through */
-@@ -211,6 +246,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
- 	return;
- }
- 
-+static void container_notify_cb(acpi_handle handle, u32 type,
-+				void *context)
-+{
-+	alloc_acpi_container_hp_work(handle, type, context,
-+				__container_notify_cb);
-+}
-+
- static acpi_status
- container_walk_namespace_cb(acpi_handle handle,
- 			    u32 lvl, void *context, void **rv)
--- 
-1.7.1
-
+David
