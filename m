@@ -1,61 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:48285 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932770Ab2JWNyx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Oct 2012 09:54:53 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so3146762wgb.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 Oct 2012 06:54:52 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <507F52A1.1030800@huawei.com>
+Date: Thu, 18 Oct 2012 08:51:45 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20121022234057.GA20265@xanatos>
-References: <50841CCC.9030809@uli-eckhardt.de> <20121022234057.GA20265@xanatos>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 23 Oct 2012 07:54:32 -0600
-Message-ID: <CAErSpo5-cvL1AmhR+KWo-LY-zS1HvfdVdUj_3tS7nQdcQRdjUg@mail.gmail.com>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 00/40] PCI, ACPI, x86: pci root bus hotplug support
+References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com> <1348080894-23412-1-git-send-email-yinghai@kernel.org> <507E6355.40904@huawei.com> <CAE9FiQWW2zMK0fQ1RGox653PNxoH_RY_X8N4Oh_osu8Pt9gWpg@mail.gmail.com>
+In-Reply-To: <CAE9FiQWW2zMK0fQ1RGox653PNxoH_RY_X8N4Oh_osu8Pt9gWpg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 22, 2012 at 5:40 PM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
->> Hello,
+On 2012/10/18 0:19, Yinghai Lu wrote:
+> On Wed, Oct 17, 2012 at 12:50 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> On 2012/9/20 2:54, Yinghai Lu wrote:
 >>
->> I have problems to get my USB3 cardreader to work reliably when
->> connected to the USB3 port. Due to lack of other USB3 devices I
->> don't know if it is the cardreader or the USB3 host (NEC uPD720200)
->> but the cardreader always works reliable when connected to USB2.
->>
->> Sometimes it is not possible to use the cardreader directly after
->> power up and I have to restart the computer. Very often the
->> cardreader stops working after removing a SD-card and insert another
->> SD-card or during copying data.
->>
->> I have tested it with Kernel 3.6.2. The USB3 port is the one built
->> in the Mainboard M4A87DT EVO.
->
-> Did a previous kernel version work?
->
->> I saw, that the outputs of lspci are different, if there is a
->> problem directly after startup.
->
-> Bjorn, can you take a look at this PCI output, and tell me if it matters
-> that the host has bus master and latency 0 when it works and is missing
-> those properties when it doesn't?
+>> Hi Yinghai,
+>>    I applied this series patches to the latest pci-next, but git am fail occured.
+>> When I try to pull from for-pci-root-bus-hotplug branch, I found some patches missed(eg. SCI_EMULATE).
+>> Where can I get the newest pci root bus hotplug patches?
+> 
+> should be
+> for-pci-split-pci-root-hp-2
+> or
+> for-pci-next-2
+> branch.
+> 
+> but
+>>> part6: acpi add/remove simulation
+>>> [PATCH 40/40] ACPI: Enable SCI_EMULATE to manually simulate physical
+> 
+> is not in. you need to apply that separately.
+> 
 
-Yes, I would think that would matter.  If the Bus Master bit in the
-command register isn't set, the device won't be able to DMA.  Also, it
-looks like the memory BAR is disabled (probably the Memory Space bit
-in the command register is also cleared).
+OK, Thanks!
 
-My guess is that these are just a consequence of the driver being
-detached from the device for some reason.
+> .
+> 
 
-It'd be nice to have a complete dmesg log for a case where the device
-worked, then stopped working.  Also "lspci -vv" for both cases.
 
-Bjorn
+-- 
+Thanks!
+Yijing
+
