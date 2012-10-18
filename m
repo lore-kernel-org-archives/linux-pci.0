@@ -1,262 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Gong Chen <gong.chen@linux.intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v3 00/28] ACPI based system device hotplug framework
-Date: Sun, 07 Oct 2012 23:47:12 +0200
-Message-ID: <4290643.jEcV9mqAac@vostro.rjw.lan>
-In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:23314 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754275Ab2JRFx3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Oct 2012 01:53:29 -0400
+Message-ID: <507F9915.2080409@cn.fujitsu.com>
+Date: Thu, 18 Oct 2012 13:52:21 +0800
+From: Tang Chen <tangchen@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: lenb@kernel.org, yinghai@kernel.org, jiang.liu@huawei.com,
+	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Add PNP0A08 into acpi_pci_roots array.
+References: <1350526971-9427-1-git-send-email-tangchen@cn.fujitsu.com> <CAErSpo6ehw1JHMyE27MuX2VR89+1zC48QJe9Udih88N-W-73Wg@mail.gmail.com>
+In-Reply-To: <CAErSpo6ehw1JHMyE27MuX2VR89+1zC48QJe9Udih88N-W-73Wg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 10/18/2012 11:55 AM, Bjorn Helgaas wrote:
+> On Wed, Oct 17, 2012 at 8:22 PM, Tang Chen<tangchen@cn.fujitsu.com>  wrote:
+>> acpi_pci_roots array doesn't include PNP0A08, which is PCI Express
+>> Root Bridge.
+>
+> You need to explain why this change is necessary.  PNP0A08 devices
+> will have a PNP0A03 _CID, so the driver already claims PNP0A08 devices
+> because the _CID matches.
 
-On Saturday 06 of October 2012 23:27:08 Jiang Liu wrote:
-> The patchset is based on "5f3d2f2e1a63679cf1c4a4210f2f1cc2f335bef6"
-> from git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-> And you pull the changeset from git://github.com/jiangliu/linux.git acpihp
-> 
-> Modern high-end server may support advanced hotplug features for system
-> devices, including physical processor, memory board, IO extension board
-> and/or computer node. The ACPI specifications have provided standard
-> interfaces between firmware and OS to support device hotplug at runtime.
-> This patch series provide an ACPI based hotplug framework to support system
-> device hotplug at runtime, which will replace current existing ACPI device
-> driver based CPU/memory/CONTAINER hotplug mechanism.
-> 
-> The new ACPI system device hotplug framework has following design goals:
-> 1) Provide a mechanism to detect hotplug slots by checking ACPI _EJ0 method,
-> ACPI PRCT (platform RAS capabilities table) and other platform specific
-> mechanisms.
+Hi Bjorn,
 
-Which of the patches does that?
+Here is my reason, but just my personal opinion. :)
 
-> 2) Unify the way to enumerate ACPI based hotplug slots. All hotplug slots
-> will be enumerated by the enumeration driver
+1) There is no code to handle a pcie host bridge hotplug in kernel now.
+    And when this happens,  pci host bridge related code will be
+    executed, which makes me think that PNP0A03 and PNP0A08 are seen as
+    the same devices. At least for now they are.
+    So, acpi_pci_roots doesn't include PNP0A08 seems a little strange to
+    me.
 
-What is the enumeration driver?
+2) When I was reading Liu Jiang's "ACPI based hotplug framework"
+    patches, I happened to see that he defined the following:
 
-> , instead of by ACPI device drivers.
-> 3) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
-> for system devices will be handled by a generic ACPI hotplug driver,
-> instead of handled by ACPI device drivers.
+         static char *acpihp_dev_pcihb_ids[] = {
+	        "PNP0A03",
+                 "PNP0A08",
+                 NULL
+         };
 
-What are "system devices"
+    And also, Lu Yinghai defined the following in his own patch:
 
-> 4) Solve dependencies among hotplug slots. You need first to remove the
-> memory device before removing a physical processor if a hotpluggable memory
-> device is connected to a hotpluggable physical processor.
-> 5) Provide better error handling and recover.
-> 6) Provide interface to cancel ongoing hotplug operations. It may take a
-> very long time to remove a memory device, so provide interface to cancel
-> the operation. This is important especially for memory hot-removal.
-> 7) Support new RAS features, such as socket/memory migration.
-> 8) Provide better user interfaces to the hotplug functionalities.
-> 9) Trigger hotplug events/operations by software. This feature is useful
->    for hardware fault management and power saving.
+         static const struct acpi_device_id root_device_ids[] = {
+                 {"PNP0A03", 0},
+                 {"PNP0A08", 0},
+                 {NULL, 0}
+         };
 
-Well, this may or may not be OK.  I'm going to review the patches, but I can't
-really say when it's going to happen (not really soon for sure).
+    I think all these arraies should represent the same things, and we
+    need only one of them.
+    For now, it is root_device_ids[] in drivers/acpi/pci_root.c.
 
-> The new ACPI based hotplug framework is modelled after PCI hotplug
-> architecture, which uses a hotplug driver to manage hotplug operations
-> and different device drivers to manage individual devices.
-> 
-> The new framework contains three main components as follow:
-> 1) ACPI system device hotplug slot enumerator, which enumerates all ACPI
->    hotplug slots according to platform specific knowledges. And it also
->    provides callbacks to control each slot, such as poweron, poweroff,
->    get_status etc. Currently there are two built-in methods to detect
->    hotplug slots.
-> 1.a) Detecting hotplug slot by checking _EJ0 method.
-> 1.b) Faking hotplug slot. Use "modprobe acpihp_slot fake_slot=0xnn",
->      0x1 for CONTAINER, 0x2 for memory device, 0x4 for CPU and 0x8 PCI host
->      bridge. The fake slot enumerator will treat each assigned ACPI device
->      as a hotplug slot, so it could be used for testing on hardware platforms
->      without hardware hotplug capabilities.
-> 2) ACPI system device hotplug driver, which implements a platform indenpendent
->    state machine for hotplug slots and also provides sysfs based user
->    interfaces.
-> 3) Enhanced ACPI device drivers for CONTAINER, CPU, Memroy and PCI host bridge.
->    All logic to handle hotplug events has been moved from these ACPI device
->    driver into the hotplug driver. Now these ACPI device dirvers only take
->    resposibilities configure/unconfigure corresponding system devices when
->    hotplug happens.
-> 
-> Now 1), 2) and part of 2) are ready, we still need to enhance mem_hotplug
-> and pci_root drivers to support new hotplug framework.
-> 
-> On my laptop with fake slot enumerator, we got:
-> root@cat:/sys/devices/LNXSYSTM:00/acpihp# ls
-> CPU00  CPU01  CPU02  CPU03  CPU04  CPU05  CPU06  CPU07  IOX00
-> root@cat:/sys/devices/LNXSYSTM:00/acpihp# cd CPU07/
-> root@cat:/sys/devices/LNXSYSTM:00/acpihp/CPU07# ls
-> capabilities  connect     device  object  state   subsystem  uevent
-> configure     dependency  enable  power   status  type
-> 
-> /* Hot-remove CPU07 */
-> root@cat:/sys/devices/LNXSYSTM:00/acpihp/CPU07# echo 0 > enable
-> /* Hot-add CPU07 */
-> root@cat:/sys/devices/LNXSYSTM:00/acpihp/CPU07# echo 1 > configure
-> 
-> V2->V3 changes:
-> 1) Fix minor bugs and refine code
-> 2) Implement fake slot enumerator for testing
-> 3) Enhance ACPI container driver to support new hotplug framework
-> 4) Enhance ACPI processor driver to support new hotplug framework
-> 5) Resolve dependencies among slots by evaluating _EDL method.
-> TODO:
-> 1) Enhance ACPI mem_hotplug driver to support new hotplug framework
-> 2) Enhance ACPI pci_root driver to support new PCI host bridge hotplug
->    based on Yinghai's work
-> 
-> V1->V2 changes:
-> 1) implement the ACPI hotplug driver
-> 2) enhance ACPI container driver to support new hotplug framework
-> TODO:
-> 1) handle ACPI hotplug events in ACPI hotplug driver
-> 2) handle dependencies among slots by evaluating ACPI _EDL
-> 3) enhance ACPI processor, memory and PCI root drivers to support new
->    hotplug framework
-> 4) develop an ACPI driver for IOAPIC
-> 5) thorough tests:)
-> 
-> Jiang Liu (28):
->   ACPIHP: introduce a framework for ACPI based system device hotplug
->   ACPIHP: ACPI system device hotplug slot enumerator driver
->   ACPIHP: detect ACPI hotplug slots by checking ACPI _EJ0 method
->   ACPIHP: implement a fake ACPI system device hotplug slot enumerator
->   ACPI: introduce interfaces to manage ACPI device reference count
->   ACPIHP: introduce interfaces to scan and walk ACPI devices connecting
->     to a slot
->   ACPIHP: use klist to manage ACPI devices connecting to a slot
->   ACPIHP: add callbacks into acpi_device_ops to support new hotplug
->     framework
->   ACPIHP: provide interfaces to associate driver specific data with
->     slots
->   ACPIHP: implement utility functions to support system device hotplug
->   ACPIHP: implement skeleton of ACPI system device hotplug driver
->   ACPIHP: analyse dependencies among ACPI hotplug slots
->   ACPIHP: provide interface to cancel inprogress hotplug operations
->   ACPIHP: configure/unconfigure system devices connecting to a hotplug
->     slot
->   ACPIHP: implement the state machine for ACPI hotplug slots
->   ACPIHP: implement sysfs interfaces for ACPI system device hotplug
->   ACPIHP: block ACPI device driver unloading when executing hotplug
->     operations
->   ACPIHP/container: change ACPI container driver to support new hotplug
->     framework
->   ACPIHP/container: move container.c into drivers/acpi/hotplug
->   ACPI/processor: remove dead code from processor_driver.c
->   ACPIHP/processor: reorganize ACPI processor driver for new hotplug
->     framework
->   ACPIHP/processor: protect accesses to device->driver_data
->   ACPIHP/processor: enhance processor driver to support new hotplug
->     framework
->   CPU: introduce busy flag to temporarily disable CPU online sysfs
->     interface
->   ACPIHP/processor: reject online/offline requests when doing processor
->     hotplug
->   ACPI/processor: save parsed APIC ID in processor driver data
->     structure
->   x86: simplify _acpi_map_lsapic()
->   ACPI/processor: serialize call to acpi_map/unmap_lsapic
-> 
->  arch/ia64/include/asm/cpu.h            |    2 +-
->  arch/ia64/kernel/acpi.c                |   38 +-
->  arch/ia64/kernel/topology.c            |   15 +-
->  arch/x86/include/asm/cpu.h             |    2 +-
->  arch/x86/include/asm/mpspec.h          |    2 +-
->  arch/x86/kernel/acpi/boot.c            |   82 +---
->  arch/x86/kernel/apic/apic.c            |    8 +-
->  arch/x86/kernel/topology.c             |   10 +-
->  drivers/acpi/Kconfig                   |   69 ++-
->  drivers/acpi/Makefile                  |    3 +-
->  drivers/acpi/bus.c                     |   22 +-
->  drivers/acpi/container.c               |  296 -----------
->  drivers/acpi/hotplug/Makefile          |   21 +
->  drivers/acpi/hotplug/acpihp.h          |   37 ++
->  drivers/acpi/hotplug/acpihp_drv.h      |  107 ++++
->  drivers/acpi/hotplug/cancel.c          |  174 +++++++
->  drivers/acpi/hotplug/configure.c       |  354 ++++++++++++++
->  drivers/acpi/hotplug/container.c       |  135 +++++
->  drivers/acpi/hotplug/core.c            |  842 ++++++++++++++++++++++++++++++++
->  drivers/acpi/hotplug/dependency.c      |  249 ++++++++++
->  drivers/acpi/hotplug/device.c          |  208 ++++++++
->  drivers/acpi/hotplug/drv_main.c        |  351 +++++++++++++
->  drivers/acpi/hotplug/slot.c            |  421 ++++++++++++++++
->  drivers/acpi/hotplug/slot_ej0.c        |  153 ++++++
->  drivers/acpi/hotplug/slot_fake.c       |  177 +++++++
->  drivers/acpi/hotplug/state_machine.c   |  631 ++++++++++++++++++++++++
->  drivers/acpi/hotplug/sysfs.c           |  245 ++++++++++
->  drivers/acpi/internal.h                |    7 +
->  drivers/acpi/processor_core.c          |   26 +-
->  drivers/acpi/processor_driver.c        |  557 ++++++++++-----------
->  drivers/acpi/scan.c                    |   17 +-
->  drivers/base/cpu.c                     |   22 +
->  drivers/gpu/drm/i915/intel_opregion.c  |    2 +
->  drivers/gpu/drm/nouveau/nouveau_acpi.c |    1 +
->  drivers/pci/hotplug/acpiphp_glue.c     |    9 +-
->  drivers/pci/hotplug/acpiphp_ibm.c      |    5 +-
->  drivers/pci/hotplug/sgi_hotplug.c      |    6 +-
->  drivers/platform/x86/thinkpad_acpi.c   |    2 +
->  drivers/pnp/pnpacpi/core.c             |   23 +-
->  drivers/xen/cpu_hotplug.c              |    2 +-
->  include/acpi/acpi_bus.h                |   21 +-
->  include/acpi/acpi_hotplug.h            |  323 ++++++++++++
->  include/acpi/container.h               |   12 -
->  include/acpi/processor.h               |    3 +
->  include/linux/acpi.h                   |    2 +-
->  include/linux/cpu.h                    |    2 +
->  46 files changed, 4923 insertions(+), 773 deletions(-)
->  delete mode 100644 drivers/acpi/container.c
->  create mode 100644 drivers/acpi/hotplug/Makefile
->  create mode 100644 drivers/acpi/hotplug/acpihp.h
->  create mode 100644 drivers/acpi/hotplug/acpihp_drv.h
->  create mode 100644 drivers/acpi/hotplug/cancel.c
->  create mode 100644 drivers/acpi/hotplug/configure.c
->  create mode 100644 drivers/acpi/hotplug/container.c
->  create mode 100644 drivers/acpi/hotplug/core.c
->  create mode 100644 drivers/acpi/hotplug/dependency.c
->  create mode 100644 drivers/acpi/hotplug/device.c
->  create mode 100644 drivers/acpi/hotplug/drv_main.c
->  create mode 100644 drivers/acpi/hotplug/slot.c
->  create mode 100644 drivers/acpi/hotplug/slot_ej0.c
->  create mode 100644 drivers/acpi/hotplug/slot_fake.c
->  create mode 100644 drivers/acpi/hotplug/state_machine.c
->  create mode 100644 drivers/acpi/hotplug/sysfs.c
->  create mode 100644 include/acpi/acpi_hotplug.h
->  delete mode 100644 include/acpi/container.h
+Well, all above is my own opinion. And you are right, even if we don't
+change it, there won't be any problem.
 
-And I seriously think this is too much material for a single patchset.
-
-Please consider splitting it into smaller and well-documented series of
-patches, so that the reviewers can understand things more easily.
-
-Thanks,
-Rafael
+Thanks. :)
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
+>
+>> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
+>> ---
+>>   drivers/acpi/pci_root.c |    1 +
+>>   1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 037b59c..dedc4d6 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -56,6 +56,7 @@ static int acpi_pci_root_start(struct acpi_device *device);
+>>
+>>   static const struct acpi_device_id root_device_ids[] = {
+>>          {"PNP0A03", 0},
+>> +       {"PNP0A08", 0},
+>>          {"", 0},
+>>   };
+>>   MODULE_DEVICE_TABLE(acpi, root_device_ids);
+>> --
+>> 1.7.1
+>>
+>
+
