@@ -1,72 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:31193 "EHLO
+Received: from rcsinet15.oracle.com ([148.87.113.117]:18637 "EHLO
 	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932111Ab2JCXAZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 19:00:25 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 1/4] ACPI: add drivers_autoprobe in struct acpi_device
-Date: Wed,  3 Oct 2012 16:00:11 -0700
-Message-Id: <1349305214-3241-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349305214-3241-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
- <1349305214-3241-1-git-send-email-yinghai@kernel.org>
+	with ESMTP id S1756436Ab2JSNLa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2012 09:11:30 -0400
+Date: Fri, 19 Oct 2012 08:59:19 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: David Vrabel <david.vrabel@citrix.com>, bhelgaas@google.com
+Cc: xen-devel@lists.xen.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/5] xen-pcifront: handle backend CLOSED without CLOSING
+Message-ID: <20121019125919.GC26830@phenom.dumpdata.com>
+References: <507FD39F.4060601@citrix.com>
+ <1350554618-14582-3-git-send-email-david.vrabel@citrix.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1350554618-14582-3-git-send-email-david.vrabel@citrix.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To use to control the delay attach driver for acpi_device.
+On Thu, Oct 18, 2012 at 11:03:36AM +0100, David Vrabel wrote:
+> From: David Vrabel <david.vrabel@citrix.com>
+> 
+> Backend drivers shouldn't transistion to CLOSED unless the frontend is
+> CLOSED.  If a backend does transition to CLOSED too soon then the
+> frontend may not see the CLOSING state and will not properly shutdown.
+> 
+> So, treat an unexpected backend CLOSED state the same as CLOSING.
+> 
+> Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> ---
+> Cc: linux-pci@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-Will use bus notifier to toggle this bits when needed.
+Bjorn, do you want me to prep a git pull with this patch
+or can I have your Ack to put it my tree and have it part of my
+git pull to Linus?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/scan.c     |    8 +++++++-
- include/acpi/acpi_bus.h |    1 +
- 2 files changed, 8 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index d1ecca2..cbb3ed1 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -333,7 +333,12 @@ static void acpi_device_release(struct device *dev)
- static int acpi_bus_match(struct device *dev, struct device_driver *drv)
- {
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
--	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
-+	struct acpi_driver *acpi_drv;
-+
-+	if (!acpi_dev->drivers_autoprobe)
-+		return 0;
-+
-+	acpi_drv = to_acpi_driver(drv);
- 
- 	return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
- }
-@@ -1268,6 +1273,7 @@ static int acpi_add_single_object(struct acpi_device **child,
- 	device->parent = acpi_bus_get_parent(handle);
- 	device->bus_ops = *ops; /* workround for not call .start */
- 	STRUCT_TO_INT(device->status) = sta;
-+	device->drivers_autoprobe = true;
- 
- 	acpi_device_get_busid(device);
- 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index bde976e..969544e 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -304,6 +304,7 @@ struct acpi_device {
- 	struct device dev;
- 	struct acpi_bus_ops bus_ops;	/* workaround for different code path for hotplug */
- 	enum acpi_bus_removal_type removal_type;	/* indicate for different removal type */
-+	bool drivers_autoprobe;
- };
- 
- static inline void *acpi_driver_data(struct acpi_device *d)
--- 
-1.7.7
-
+Thx.
+> ---
+>  drivers/pci/xen-pcifront.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> index 0aab85a..a0c7312 100644
+> --- a/drivers/pci/xen-pcifront.c
+> +++ b/drivers/pci/xen-pcifront.c
+> @@ -1068,13 +1068,16 @@ static void __init_refok pcifront_backend_changed(struct xenbus_device *xdev,
+>  	case XenbusStateInitialising:
+>  	case XenbusStateInitWait:
+>  	case XenbusStateInitialised:
+> -	case XenbusStateClosed:
+>  		break;
+>  
+>  	case XenbusStateConnected:
+>  		pcifront_try_connect(pdev);
+>  		break;
+>  
+> +	case XenbusStateClosed:
+> +		if (xdev->state == XenbusStateClosed)
+> +			break;
+> +		/* Missed the backend's CLOSING state -- fallthrough */
+>  	case XenbusStateClosing:
+>  		dev_warn(&xdev->dev, "backend going away!\n");
+>  		pcifront_try_disconnect(pdev);
+> -- 
+> 1.7.2.5
