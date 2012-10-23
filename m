@@ -1,57 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:54625
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751642Ab2JENI7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Oct 2012 09:08:59 -0400
-Date: Fri, 5 Oct 2012 15:08:57 +0200
-From: "Roedel, Joerg" <Joerg.Roedel@amd.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Andreas Hartmann <andihartmann@01019freenet.de>,
-	<kvm@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: vfio: missing patch in linux 3.6
-Message-ID: <20121005130857.GX4009@amd.com>
-References: <506DA799.5090603@01019freenet.de>
- <1349364399.2759.42.camel@ul30vt.home>
- <20121004161421.GV4009@amd.com>
- <1349368080.2759.52.camel@ul30vt.home>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1349368080.2759.52.camel@ul30vt.home>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>
+	<1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
+Date: Tue, 23 Oct 2012 10:36:12 -0700
+Message-ID: <CAE9FiQVG9DYK64xy=epYjfOD8=_+zyGcDEZDBZoVGT2yDAvn5A@mail.gmail.com>
+Subject: Re: [PATCH 1/2] Use kacpi_hotplug_wq to handle container hotplug event.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tang Chen <tangchen@cn.fujitsu.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
+	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 04, 2012 at 10:28:00AM -0600, Alex Williamson wrote:
-> There are a couple questions in the link above.  Since the devices don't
-> expose a PCIe capability, we probably need to add a check to look at the
-> upstream device and verify we're not on a legacy bus where ACS can't be
-> enforced.
+On Tue, Oct 23, 2012 at 6:10 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
+> As the comments in __acpi_os_execute() said:
+>
+>         We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+>         because the hotplug code may call driver .remove() functions,
+>         which invoke flush_scheduled_work/acpi_os_wait_events_complete
+>         to flush these workqueues.
+>
+> we should keep the hotplug code in kacpi_hotplug_wq.
+>
+> But we have the following call series in kernel now:
+>         acpi_ev_queue_notify_request()
+>         |--> acpi_os_execute()
+>              |--> __acpi_os_execute(type, function, context, 0)
+>
+> The last parameter 0 makes the container_notify_cb() executed in
+> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
+> into kacpi_hotplug_wq.
 
-You can certainly do that, but for existing hardware (with an AMD IOMMU)
-this check would never be true. These devices are always on a seperate
-south-bridge chip which is connected to the north-bridge via PCIe. So
-the topology where you find these devices is always the same in an AMD
-IOMMU system.
+I had other patches that merge acpi_hp_work in acpiphp and pci_root_hp.
 
-> Then there's the general question of whether the confirmation
-> of no peer-to-peer applies to every case where we might see this device
-> (some of them seem to have history that pre-dates this specific package
-> implementation) or do we need to try to identify specific package
-> properties in addition to just a device ID?
+I just put them in to for-pci-split-pci-root-hp-2.
 
-The device ids are kept the same to maintain compatability with older
-software. Besides that, my statement about the peer-2-peer safety is
-true for all south-bridges that you can find in an AMD IOMMU capable
-system.
+can you check them to see if you can use it?
 
-Regards,
+Thanks
 
-	Joerg
-
--- 
-AMD Operating System Research Center
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
-
+Yinghai
