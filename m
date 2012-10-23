@@ -1,54 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:26208 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964822Ab2J3RnY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:43:24 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 7/8] PCI, ACPI: delete root bus prt during hot remove path
-Date: Tue, 30 Oct 2012 10:42:44 -0700
-Message-Id: <1351618965-16761-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40551 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754198Ab2JWQAq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Oct 2012 12:00:46 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so2119771wey.19
+        for <linux-pci@vger.kernel.org>; Tue, 23 Oct 2012 09:00:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350045098-7232-1-git-send-email-tangchen@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 23 Oct 2012 10:00:25 -0600
+Message-ID: <CAErSpo5QESO0J8LfzvvzCm4pTG=+9dOb0eYfsphoE7+mb2-MeA@mail.gmail.com>
+Subject: Re: [PATCH v2] Fix a hard coding style when determining if a device
+ is a container.
+To: Tang Chen <tangchen@cn.fujitsu.com>
+Cc: lenb@kernel.org, yinghai@kernel.org, jiang.liu@huawei.com,
+	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-corresponding to add path.
+On Fri, Oct 12, 2012 at 6:31 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
+> "ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
+> container_device_ids[], so use it, but not the hard coding style.
+>
+> Also, introduce a new api is_container_device() to determine if a
+> device is a container device.
+>
+> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+> Signed-off-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Looks good to me, but is_container_device() should be of type "bool",
+not type "int".
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index aed0953..a27cbb57 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -664,6 +664,8 @@ static int acpi_pci_root_start(struct acpi_device *device)
- 
- static int acpi_pci_root_remove(struct acpi_device *device, int type)
- {
-+	acpi_status status;
-+	acpi_handle handle;
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-@@ -678,6 +680,10 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
- 
-+	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
-+	if (ACPI_SUCCESS(status))
-+		acpi_pci_irq_del_prt(root->bus);
-+
- 	pci_remove_root_bus(root->bus);
- 
- 	mutex_lock(&acpi_pci_root_lock);
--- 
-1.7.7
+With that change,
 
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/acpi/container.c |   17 ++++++++++++++---
+>  1 files changed, 14 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+> index 1f9f7d7..ffd76ee 100644
+> --- a/drivers/acpi/container.c
+> +++ b/drivers/acpi/container.c
+> @@ -92,6 +92,19 @@ static int is_device_present(acpi_handle handle)
+>         return ((sta & ACPI_STA_DEVICE_PRESENT) == ACPI_STA_DEVICE_PRESENT);
+>  }
+>
+> +static int is_container_device(const char *hid)
+> +{
+> +       const struct acpi_device_id *container_id;
+> +
+> +       for (container_id = container_device_ids;
+> +            container_id->id[0]; container_id++) {
+> +               if (!strcmp((char *)container_id->id, hid))
+> +                       return 1;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+>  /*******************************************************************/
+>  static int acpi_container_add(struct acpi_device *device)
+>  {
+> @@ -232,10 +245,8 @@ container_walk_namespace_cb(acpi_handle handle,
+>                 goto end;
+>         }
+>
+> -       if (strcmp(hid, "ACPI0004") && strcmp(hid, "PNP0A05") &&
+> -           strcmp(hid, "PNP0A06")) {
+> +       if (!is_container_device(hid))
+>                 goto end;
+> -       }
+>
+>         switch (*action) {
+>         case INSTALL_NOTIFY_HANDLER:
+> --
+> 1.7.1
+>
