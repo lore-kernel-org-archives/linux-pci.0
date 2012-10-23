@@ -1,74 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:51672 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758290Ab2J0Bjj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Oct 2012 21:39:39 -0400
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48285 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932770Ab2JWNyx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Oct 2012 09:54:53 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so3146762wgb.1
+        for <linux-pci@vger.kernel.org>; Tue, 23 Oct 2012 06:54:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6ozXuJcca0piSuoQwHJ3LfxTw8nsy+8oa=QmJ98_Ofug@mail.gmail.com>
-References: <CADCVGbTDD-4WOVJWwaGBvay5=of=3VKBCVacrrW-z12BYZ1xbQ@mail.gmail.com>
-	<CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com>
-	<508A9974.2090403@tilera.com>
-	<CAErSpo6ozXuJcca0piSuoQwHJ3LfxTw8nsy+8oa=QmJ98_Ofug@mail.gmail.com>
-Date: Sat, 27 Oct 2012 09:39:37 +0800
-Message-ID: <CADCVGbSph2X7T3cTiVW3TdDwvRhOY+k7XYoz=Sxu1CC58yVhWQ@mail.gmail.com>
-Subject: Re: PCIe IO space support on Tilera GX: Is there any one who can
- confirm my modification to fix it is OK?
-From: Cyberman Wu <cypher.w@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chris Metcalf <cmetcalf@tilera.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <20121022234057.GA20265@xanatos>
+References: <50841CCC.9030809@uli-eckhardt.de> <20121022234057.GA20265@xanatos>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 23 Oct 2012 07:54:32 -0600
+Message-ID: <CAErSpo5-cvL1AmhR+KWo-LY-zS1HvfdVdUj_3tS7nQdcQRdjUg@mail.gmail.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 27, 2012 at 12:28 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Oct 26, 2012 at 8:08 AM, Chris Metcalf <cmetcalf@tilera.com> wrote:
+On Mon, Oct 22, 2012 at 5:40 PM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
+>> Hello,
+>>
+>> I have problems to get my USB3 cardreader to work reliably when
+>> connected to the USB3 port. Due to lack of other USB3 devices I
+>> don't know if it is the cardreader or the USB3 host (NEC uPD720200)
+>> but the cardreader always works reliable when connected to USB2.
+>>
+>> Sometimes it is not possible to use the cardreader directly after
+>> power up and I have to restart the computer. Very often the
+>> cardreader stops working after removing a SD-card and insert another
+>> SD-card or during copying data.
+>>
+>> I have tested it with Kernel 3.6.2. The USB3 port is the one built
+>> in the Mainboard M4A87DT EVO.
 >
->> Cyberman: it seems like your bias hack is working for you.  But, as Bjorn
->> says, this sounds like a driver bug.  What happens if you just revert your
->> changes, but then in mvsas.c change the "if (!res_start || !res_len)" to
->> just say "if (!res_len)"?  That seems like the true error test.  If that
->> works, you should submit that change to the community.
+> Did a previous kernel version work?
 >
-> I don't *think* that is going to be enough, even with the kernel that
-> has some I/O space support, because both devices are assigned
-> identical resources:
+>> I saw, that the outputs of lspci are different, if there is a
+>> problem directly after startup.
 >
->   pci 0000:01:00.0: BAR 2: assigned [io  0x0000-0x007f]
->   pci 0001:01:00.0: BAR 2: assigned [io  0x0000-0x007f]
->
-> The I/O space support that's there is broken because we think the same
-> I/O range is available on both root buses, which is probably not the
-> case:
->
->   pci_bus 0000:00: resource 0 [io  0x0000-0xffffffff]
->   pci_bus 0001:00: resource 0 [io  0x0000-0xffffffff]
->
-That's the problem I want to confirm what I've changed is correct. I've split
-the two RootComplex using separate I/O range, it seems works on our device,
-but since I'm not very clear about Linux kernel, I want some some to check it.
-For mvsas, I've already modified it some thing like Chris said when I began
-using MDE-4.0.0 GA release. I bring it out to see if there have some ideas
-about that issue.
+> Bjorn, can you take a look at this PCI output, and tell me if it matters
+> that the host has bus master and latency 0 when it works and is missing
+> those properties when it doesn't?
 
-> If mvsas really doesn't need the I/O BAR, I think it's likely that
-> making it use pci_enable_device_mem() will make both devices work even
-> without I/O space support in the kernel.
->
->> Bjorn et al: does it seem reasonable to add a bias to the mappings so that
->> we never report a zero value as valid?  This may be sufficiently defensive
->> programming that it's just the right thing to do regardless of whether
->> drivers are technically at fault or not.  If so, what's a good bias?  (I'm
->> inclined to think 64K rather than 4K.)
->
-> I/O space is very limited to begin with (many architectures only
-> *have* 64K), so I hesitate to add a bias in the PCI core.  But we do
-> something similar in arch_remove_reservations(), and I think you could
-> implement it that way if you wanted to.
->
-> Bjorn
+Yes, I would think that would matter.  If the Bus Master bit in the
+command register isn't set, the device won't be able to DMA.  Also, it
+looks like the memory BAR is disabled (probably the Memory Space bit
+in the command register is also cleared).
 
+My guess is that these are just a consequence of the driver being
+detached from the device for some reason.
 
+It'd be nice to have a complete dmesg log for a case where the device
+worked, then stopped working.  Also "lspci -vv" for both cases.
 
--- 
-Cyberman Wu
+Bjorn
