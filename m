@@ -1,46 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:61980 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1755208Ab2KABln (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Oct 2012 21:41:43 -0400
-Message-ID: <5091D30B.7040600@cn.fujitsu.com>
-Date: Thu, 01 Nov 2012 09:40:27 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <508790AC.5080001@jp.fujitsu.com>
+Date: Wed, 24 Oct 2012 15:54:36 +0900
+From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
 MIME-Version: 1.0
-To: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	yinghai@kernel.org
-CC: bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
-	izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] ACPI: container hot remove support.
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <509106E2.70008@jp.fujitsu.com>
-In-Reply-To: <509106E2.70008@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-2022-JP
-Sender: linux-pci-owner@vger.kernel.org
+To: Tang Chen <tangchen@cn.fujitsu.com>
+CC: <yinghai@kernel.org>, <bhelgaas@google.com>, <lenb@kernel.org>,
+	<jiang.liu@huawei.com>, <izumi.taku@jp.fujitsu.com>,
+	<mihailm@parallels.com>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] Use kacpi_hotplug_wq to handle container hotplug
+ event.
+References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com> <1351058750-4275-2-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1351058750-4275-2-git-send-email-tangchen@cn.fujitsu.com>
+Content-Type: text/plain; charset="ISO-2022-JP"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/31/2012 07:09 PM, Yasuaki Ishimatsu wrote:
-> Hi Tang,
-> 
-> If container device contains memory device, the function is
-> very danger. As you know, we are developing a memory hotplug.
-> If memory has kernel memory, memory hot remove operations fails.
-> But container_device_remove() cannot realize it. So even if
-> the memory hot remove operation fails, container_device_remove()
-> keeps hot remove operation. Finally, the function sends _EJ0
-> to firmware. In this case, if the memory is accessed, kernel
-> panic occurs.
-> The example is as follows:
-> 
->   https://lkml.org/lkml/2012/9/26/318
-> 
-Hi Ishimatsu,
+Hi Tang,
 
-I see, thanks for the info. So we need to do some roll back thing.
+2012/10/24 15:05, Tang Chen wrote:
+> As the comments in __acpi_os_execute() said:
+> 
+> 	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+> 	because the hotplug code may call driver .remove() functions,
+> 	which invoke flush_scheduled_work/acpi_os_wait_events_complete
+> 	to flush these workqueues.
+> 
+> we should keep the hotplug code in kacpi_hotplug_wq.
+> 
+> But we have the following call series in kernel now:
+> 	acpi_ev_queue_notify_request()
+> 	|--> acpi_os_execute()
+> 	     |--> __acpi_os_execute(type, function, context, 0)
+> 
+> The last parameter 0 makes the container_notify_cb() executed in
+> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
+> into kacpi_hotplug_wq.
 
-Is anyone doing this now ?
-If yes, would you please give me some links to refer to ? And I think I
-should push these patches later.
-If not, I think I can try to do it.
+I cannot understand the purpose of the patch.
+Is the patch a bug fix patch? If yes, what problem happens?
 
-Thanks. :)
+Thanks,
+Yasuaki Ishimatsu
+
+> 
+> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+> ---
+>   drivers/acpi/container.c |   17 ++++++++++++++++-
+>   1 files changed, 16 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+> index 69e2d6b..d300e03 100644
+> --- a/drivers/acpi/container.c
+> +++ b/drivers/acpi/container.c
+> @@ -35,6 +35,7 @@
+>   #include <acpi/acpi_bus.h>
+>   #include <acpi/acpi_drivers.h>
+>   #include <acpi/container.h>
+> +#include <acpi/acpiosxf.h>
+>   
+>   #define PREFIX "ACPI: "
+>   
+> @@ -165,14 +166,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
+>   	return result;
+>   }
+>   
+> -static void container_notify_cb(acpi_handle handle, u32 type, void *context)
+> +static void __container_notify_cb(struct work_struct *work)
+>   {
+>   	struct acpi_device *device = NULL;
+>   	int result;
+>   	int present;
+>   	acpi_status status;
+> +	struct acpi_hp_work *hp_work;
+> +	acpi_handle handle;
+> +	u32 type;
+>   	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+>   
+> +	hp_work = container_of(work, struct acpi_hp_work, work);
+> +	handle = hp_work->handle;
+> +	type = hp_work->type;
+> +
+>   	switch (type) {
+>   	case ACPI_NOTIFY_BUS_CHECK:
+>   		/* Fall through */
+> @@ -224,6 +232,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
+>   	return;
+>   }
+>   
+> +static void container_notify_cb(acpi_handle handle, u32 type,
+> +				void *context)
+> +{
+> +	alloc_acpi_hp_work(handle, type, context,
+> +			   __container_notify_cb);
+> +}
+> +
+>   static acpi_status
+>   container_walk_namespace_cb(acpi_handle handle,
+>   			    u32 lvl, void *context, void **rv)
+> 
+
+
