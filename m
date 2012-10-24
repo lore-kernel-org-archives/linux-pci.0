@@ -1,100 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:32935 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753216Ab2JEP1N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Oct 2012 11:27:13 -0400
-Message-ID: <1349450831.2008.71.camel@joe-AO722>
-Subject: Re: [PATCH] revert "PCI: log vendor/device ID always"
-From: Joe Perches <joe@perches.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nathan Zimmer <nzimmer@sgi.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>
-Date: Fri, 05 Oct 2012 08:27:11 -0700
-In-Reply-To: <CAErSpo6=9vdoR=Z83jyDrHAc_4XAL+rHw55=UeXf8C+N=xUHrw@mail.gmail.com>
-References: <1349187780-25692-1-git-send-email-nzimmer@sgi.com>
-	 <CAErSpo7ZQEm9==nsGiH2c_ZG8LPP8MAA8M9xSPyWPtCW2EHUUQ@mail.gmail.com>
-	 <506DB30F.2000704@sgi.com> <1349368662.2008.20.camel@joe-AO722>
-	 <506EE6D5.4010603@sgi.com> <1349446478.2008.66.camel@joe-AO722>
-	 <506EF48B.5070801@sgi.com>
-	 <CAErSpo6=9vdoR=Z83jyDrHAc_4XAL+rHw55=UeXf8C+N=xUHrw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:10820 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758729Ab2JXRky (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 13:40:54 -0400
+Message-ID: <1351100001.19172.26.camel@misato.fc.hp.com>
+Subject: Re: [PATCH 1/2] Use kacpi_hotplug_wq to handle container hotplug
+ event.
+From: Toshi Kani <toshi.kani@hp.com>
+To: Tang Chen <tangchen@cn.fujitsu.com>
+Cc: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 24 Oct 2012 11:33:21 -0600
+In-Reply-To: <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
+References: <1350997839-13260-1-git-send-email-tangchen@cn.fujitsu.com>
+	 <1350997839-13260-2-git-send-email-tangchen@cn.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-10-05 at 09:16 -0600, Bjorn Helgaas wrote:
-> On Fri, Oct 5, 2012 at 8:54 AM, Nathan Zimmer <nzimmer@sgi.com> wrote:
-> > On 10/05/2012 09:14 AM, Joe Perches wrote:
-> >> On Fri, 2012-10-05 at 08:55 -0500, Nathan Zimmer wrote:
-> >>> On 10/04/2012 11:37 AM, Joe Perches wrote:
-> >>>> On Thu, 2012-10-04 at 11:02 -0500, Nathan Zimmer wrote:
-> >>>>> At many of our customer sites the log level is set to KERN_DEBUG. It
-> >>>>> helps avoid reboots due to operator impatience.  Machines this large
-> >>>>> take significantly longer then typical to boot and seeing the extra
-> >>>>> messages reassures them that the kernel isn't hung.
-> >>>>
-> >>>> That argues for adding some KERN_INFO "still booting" messages
-> >>>> not logging unnecessary KERN_DEBUG messages.
-> >>>>
-> >>> Actually I would think that argues for reducing boot times on these
-> >>> large systems.
-> >>
-> >> Right.
-> >>
-> >> That's an independent argument, but sure, go ahead
-> >> and do that too.
-[]
-> > Here is output for my workstation a simple 4x box
-> >
-> > -bash-4.1$ dmesg | grep "type [0-9][0-9] class" | wc
-> >      12     108     804
-> > -bash-4.1$ dmesg | wc
-> >     744    6359   49474
-> > Here is some output from one of the biggest boxes.
-> > -bash-4.1$ dmesg | wc
-> >   26503  235414 1811651
-> > -bash-4.1$ dmesg | grep "type [0-9][0-9] class" | wc
-> >   12085 108765  821780
+On Tue, 2012-10-23 at 21:10 +0800, Tang Chen wrote:
+> As the comments in __acpi_os_execute() said:
 > 
-> Many vendors don't expose host bridges that lead to the CPU-related
-> PCI devices because they don't want the OS to muck with them.  We
-> currently blindly probe for these in domain 0, so we find them anyway
-> (I think we should change this behavior).
+> 	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+> 	because the hotplug code may call driver .remove() functions,
+> 	which invoke flush_scheduled_work/acpi_os_wait_events_complete
+> 	to flush these workqueues.
 > 
-> I'd guess that having all these CPU-related devices around also really
-> clutters up "lspci" output, and of course, consumes memory for all the
-> pci_dev structs in the kernel.  It takes some time to enumerate them
-> all, so avoiding that would speed up boot somewhat.
+> we should keep the hotplug code in kacpi_hotplug_wq.
 > 
-> So I wonder if it might be more useful to figure out how to avoid
-> enumerating those devices in the first place?  The first step would be
-> to stop exposing PNP0A03/PNP0A08 host bridges that lead to them.  As I
-> mentioned, we currently will probably find them anyway via blind
-> probing.  You might be able to avoid that if you could place them in a
-> PCI domain other than 0
+> But we have the following call series in kernel now:
+> 	acpi_ev_queue_notify_request()
+> 	|--> acpi_os_execute()
+> 	     |--> __acpi_os_execute(type, function, context, 0)
+> 
+> The last parameter 0 makes the container_notify_cb() executed in
+> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
+> into kacpi_hotplug_wq.
 
-And in the meantime, maybe something like this and not logging
-at KERN_DEBUG when using verbose_boot would help avoid impatient
-operator reboots.
+Hi Tang,
 
- drivers/pci/hotplug/sgi_hotplug.c |    4 ++++
- 1 file changed, 4 insertions(+)
+I am curious; is there a particular reason why you use
+alloc_acpi_container_hp_work() instead of acpi_os_hotplug_execute(),
+which is already there in the tree?
 
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index f64ca92..b3abd1a 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -368,6 +368,10 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
- 		}
- 	}
- 
-+	if (some_verbose_boot_flag)
-+		dev_info(&slot->pci_bus->self->dev, "Testing slot %d\n",
-+			 slot->device_num + 1);
-+
- 	num_funcs = pci_scan_slot(slot->pci_bus,
- 				  PCI_DEVFN(slot->device_num + 1, 0));
- 	if (!num_funcs) {
+Thanks,
+-Toshi
 
+
+> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+> ---
+>  drivers/acpi/container.c |   44 +++++++++++++++++++++++++++++++++++++++++++-
+>  1 files changed, 43 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+> index 1f9f7d7..643657a 100644
+> --- a/drivers/acpi/container.c
+> +++ b/drivers/acpi/container.c
+> @@ -72,8 +72,36 @@ static struct acpi_driver acpi_container_driver = {
+>  		},
+>  };
+>  
+> +struct acpi_container_hp_work {
+> +	struct work_struct work;
+> +	acpi_handle handle;
+> +	u32 type;
+> +	void *context;
+> +};
+> +
+>  /*******************************************************************/
+>  
+> +static void alloc_acpi_container_hp_work(acpi_handle handle, u32 type,
+> +					void *context,
+> +					void (*func)(struct work_struct *work))
+> +{
+> +	struct acpi_container_hp_work *hp_work;
+> +	int ret;
+> +
+> +	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+> +	if (!hp_work)
+> +		return;
+> +
+> +	hp_work->handle = handle;
+> +	hp_work->type = type;
+> +	hp_work->context = context;
+> +
+> +	INIT_WORK(&hp_work->work, func);
+> +	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+> +	if (!ret)
+> +		kfree(hp_work);
+> +}
+> +
+>  static int is_device_present(acpi_handle handle)
+>  {
+>  	acpi_handle temp;
+> @@ -152,14 +180,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
+>  	return result;
+>  }
+>  
+> -static void container_notify_cb(acpi_handle handle, u32 type, void *context)
+> +static void __container_notify_cb(struct work_struct *work)
+>  {
+>  	struct acpi_device *device = NULL;
+>  	int result;
+>  	int present;
+>  	acpi_status status;
+> +	struct acpi_container_hp_work *hp_work;
+> +	acpi_handle handle;
+> +	u32 type;
+>  	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+>  
+> +	hp_work = container_of(work, struct acpi_container_hp_work, work);
+> +	handle = hp_work->handle;
+> +	type = hp_work->type;
+> +
+>  	switch (type) {
+>  	case ACPI_NOTIFY_BUS_CHECK:
+>  		/* Fall through */
+> @@ -211,6 +246,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
+>  	return;
+>  }
+>  
+> +static void container_notify_cb(acpi_handle handle, u32 type,
+> +				void *context)
+> +{
+> +	alloc_acpi_container_hp_work(handle, type, context,
+> +				__container_notify_cb);
+> +}
+> +
+>  static acpi_status
+>  container_walk_namespace_cb(acpi_handle handle,
+>  			    u32 lvl, void *context, void **rv)
 
 
