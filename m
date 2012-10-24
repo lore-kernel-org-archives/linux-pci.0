@@ -1,100 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:43624 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755828Ab2JLAPZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Oct 2012 20:15:25 -0400
-Received: by mail-qc0-f174.google.com with SMTP id d3so1837695qch.19
-        for <linux-pci@vger.kernel.org>; Thu, 11 Oct 2012 17:15:24 -0700 (PDT)
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:47532 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933789Ab2JXUTB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 16:19:01 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so737883wgb.1
+        for <linux-pci@vger.kernel.org>; Wed, 24 Oct 2012 13:19:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1349957007-9920-1-git-send-email-wangyijing@huawei.com>
-References: <1349957007-9920-1-git-send-email-wangyijing@huawei.com>
-Date: Thu, 11 Oct 2012 17:15:24 -0700
-Message-ID: <CAPoiz9zYt6givdPEu7nMumSSJp6-o098_YnAQ3RmPi8s6ZUE4g@mail.gmail.com>
-Subject: Re: [PATCH V2] PCI: print pcie max_payload_size default setting info
- to help diagnosis
-From: Jon Mason <jdmason@kudzu.us>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jon Mason <jon.mason@intel.com>, linux-pci@vger.kernel.org,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
+In-Reply-To: <5086D067.4000900@uli-eckhardt.de>
+References: <50841CCC.9030809@uli-eckhardt.de> <20121022234057.GA20265@xanatos>
+ <5086D067.4000900@uli-eckhardt.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 24 Oct 2012 14:18:40 -0600
+Message-ID: <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+To: Ulrich Eckhardt <usb@uli-eckhardt.de>
+Cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 11, 2012 at 5:03 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> PCIe device mps maybe not equal to its bridge mps after doing hotplug.
-> This may result unexpected problem like
-> http://marc.info/?l=linux-scsi&m=134788365823217&w=2. So add mps log for current
-> mps setting to help diagnosis an issue like this.
+On Tue, Oct 23, 2012 at 11:14 AM, Ulrich Eckhardt <usb@uli-eckhardt.de> wrote:
+> Am 23.10.2012 01:40, schrieb Sarah Sharp:
+>> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
 >
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/probe.c |   29 +++++++++++++++++++++++++++++
->  1 files changed, 29 insertions(+), 0 deletions(-)
+>>> I have tested it with Kernel 3.6.2. The USB3 port is the one built
+>>> in the Mainboard M4A87DT EVO.
+>>
+>> Did a previous kernel version work?
 >
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ec909af..a31e615 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1533,6 +1533,33 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->                         "with pci=pcie_bus_safe.\n");
->  }
->
-> +static int pcie_mps_info(struct pci_dev *dev, void *data)
-> +{
-> +       int mps, mpss;
-> +
-> +       if (!pci_is_pcie(dev))
-> +               return -EINVAL;
-> +
-> +       mps = pcie_get_mps(dev);
-> +       mpss = 128 << dev->pcie_mpss;
-> +       dev_printk(KERN_DEBUG, &dev->dev, "PCI-E Max_Payload_Size Supported %d, "
-> +                       "Max_Payload_Size %d\n", mpss, mps);
-> +
-> +       return 0;
-> +}
-> +
-> +static void pcie_dump_mps_info(struct pci_bus *bus)
-> +{
-> +       int mps, mpss;
-> +
-> +       mps = pcie_get_mps(bus->self);
-> +       mpss = 128 << bus->self->pcie_mpss;
-> +       dev_printk(KERN_DEBUG, &bus->self->dev, "PCI-E Max_Payload_Size Supported %d, "
-> +               "Max_Payload_Size %d\n", mpss, mps);
-> +
-> +       pci_walk_bus(bus, pcie_mps_info, NULL);
-> +}
-> +
->  static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->  {
->         int mps, orig_mps;
-> @@ -1564,6 +1591,8 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->         if (!pci_is_pcie(bus->self))
->                 return;
->
-> +       pcie_dump_mps_info(bus);
-> +
+> Yes, I tried the Kernel shipped with OpenSUSE (3.4.11) several 3.5 and all
+> available 3.6 kernel versions.
 
-The patch looks fine, but a better way of doing things would be to
-create a new default pcie_bus_config state (PCIE_BUS_WARN) that:
-* prints the default MPS of the device
-* prints the suggested MPS
-* notifies the user that they would be better off running
-PCIE_BUS_SAFE (if that is the case).
+I assume you mean that every kernel you tried failed?  If some
+kernel(s) did work, what is the newest working version and the oldest
+broken version?
 
-I have a rough version of this in my tree already.  I'll try and push
-it out tonight.
+> I attach the complete dmesg logs and the lspci -vv output as requested by
+> Bjorn for the situations when the controller does not work after startup
+> (extension notworking), when the controller is working (extension OK), and
+> after stopping (extension stop).
 
-Thanks,
-Jon
+In the "notworking" logs, my guess is that the xHCI device is being
+powered off.  The "notworking" lspci shows this:
 
+  00:0a.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI RD790 PCI
+to PCI bridge (PCI express gpp port F) (prog-if 00 [Normal decode])
+        Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
+                LnkCap: Port #247, Speed 5GT/s, Width x2, ASPM L0s L1,
+Latency L0 <64ns, L1 <1us
+                LnkSta: Speed unknown, Width x1, TrErr- Train-
+SlotClk+ DLActive- BWMgmt+ ABWMgmt+
+  04:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
+Controller (rev ff) (prog-if ff)
+        !!! Unknown header type 7f
+        Kernel driver in use: xhci_hcd
 
->         if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->                 return;
->
-> --
-> 1.7.1
->
->
+The bridge's "DLActive-" means that the downstream link leading to the
+xHCI device is not active.  The "rev ff", "prog-if ff", and "header
+type 7f" suggest that we read all 0xff's from the xHCI device, which
+is what we get if the device doesn't respond.
+
+The xHCI device must have been powered up and working originally,
+because we enumerated it and bound the xhci_hcd driver to it.  I don't
+have any ideas about why it would be powered off.
+
+Rafael, Alan, is there any way we can disable power management or
+enable related debug messages?
+
+Bjorn
