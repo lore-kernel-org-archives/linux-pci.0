@@ -1,44 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:65284 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027Ab2J3Frk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 01:47:40 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so7726705iea.19
-        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 22:47:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <508F4863.2010605@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-	<91c2505d23f161ce535b220dea497e2c3abfd7f6.1351492562.git.pratyush.anand@st.com>
-	<CAOh2x=ndvJF6qFgXOOQOJfAjFh93vosBrYN4FbvnDK0SW0CcXA@mail.gmail.com>
-	<508F4863.2010605@st.com>
-Date: Tue, 30 Oct 2012 11:17:39 +0530
-Message-ID: <CAKohpo=JoZHCeOFTjoF+V0sSz7uJK2onUQqiJ=JhumSUUOVZOg@mail.gmail.com>
-Subject: Re: [PATCH 10/15] SPEAr13xx: DTS: Add auxiliary data for PCIe host
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: "arnd@arndb.de" <arnd@arndb.de>,
-	Shiraz HASHIM <shiraz.hashim@st.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"olof@lixom.net" <olof@lixom.net>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tang Chen <tangchen@cn.fujitsu.com>
+To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3] Fix a hard coding style when determining if a device is a container.
+Date: Wed, 24 Oct 2012 14:11:53 +0800
+Message-Id: <1351059113-4660-1-git-send-email-tangchen@cn.fujitsu.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30 October 2012 08:54, Pratyush Anand <pratyush.anand@st.com> wrote:
->> What do you mean by auxiliary data in subject?
->
-> It used to be plat data earlier, which is being passed from DT now.
+"ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
+container_device_ids[], so use it, but not the hard coding style.
 
-Yes. But how did you conclude that it should be called auxiliary data?
+Also, introduce a new api is_container_device() to determine if a
+device is a container device.
 
-I would change subject of this patch to:
-ARM: SPEAr13xx: Pass configuration information of PCIe via DT
+change log v2 -> v3:
 
-But i believe you wouldn't need any of above messages and the new message
-will also add basic DT support for PCIe.
+1. change the is_container_device()'s return value type from int to bool.
 
---
-viresh
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+Signed-off-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
+---
+ drivers/acpi/container.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+index 1f9f7d7..69e2d6b 100644
+--- a/drivers/acpi/container.c
++++ b/drivers/acpi/container.c
+@@ -92,6 +92,19 @@ static int is_device_present(acpi_handle handle)
+ 	return ((sta & ACPI_STA_DEVICE_PRESENT) == ACPI_STA_DEVICE_PRESENT);
+ }
+ 
++static bool is_container_device(const char *hid)
++{
++	const struct acpi_device_id *container_id;
++
++	for (container_id = container_device_ids;
++	     container_id->id[0]; container_id++) {
++		if (!strcmp((char *)container_id->id, hid))
++			return true;
++	}
++
++	return false;
++}
++
+ /*******************************************************************/
+ static int acpi_container_add(struct acpi_device *device)
+ {
+@@ -232,10 +245,8 @@ container_walk_namespace_cb(acpi_handle handle,
+ 		goto end;
+ 	}
+ 
+-	if (strcmp(hid, "ACPI0004") && strcmp(hid, "PNP0A05") &&
+-	    strcmp(hid, "PNP0A06")) {
++	if (!is_container_device(hid))
+ 		goto end;
+-	}
+ 
+ 	switch (*action) {
+ 	case INSTALL_NOTIFY_HANDLER:
+-- 
+1.7.1
+
