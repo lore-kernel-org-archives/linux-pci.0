@@ -1,38 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60434 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932787Ab2JCR5r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 13:57:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <1349286695-26713-6-git-send-email-yinghai@kernel.org>
-References: <506C3B11.9010009@redhat.com>
-	<1349286695-26713-1-git-send-email-yinghai@kernel.org>
-	<1349286695-26713-6-git-send-email-yinghai@kernel.org>
-Date: Wed, 3 Oct 2012 10:57:46 -0700
-Message-ID: <CAE9FiQVZuo7UwnF9UFTEH-9+yrt5GfPk6G+tU09xNOg6PFjfxA@mail.gmail.com>
-Subject: Re: [PATCH 5/5] ixgbe: add driver set_max_vfs support
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Don Dutile <ddutile@redhat.com>, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	John Fastabend <john.r.fastabend@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:38773 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964799Ab2JXGyU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 02:54:20 -0400
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
+Date: Wed, 24 Oct 2012 14:54:14 +0800
+Message-Id: <1351061654-8339-2-git-send-email-ying.huang@intel.com>
+In-Reply-To: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 3, 2012 at 10:51 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> Need ixgbe guys to close the loop to use set_max_vfs instead
-> kernel parameters.
+Some actions during shutdown need device to be in D0 state, such as
+MSI shutdown etc, so resume device before shutdown.
 
-Sorry, I should put RFC in the subject line for this one.
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pci-driver.c |   12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Thanks
-
-Yinghai
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	struct pci_driver *drv = pci_dev->driver;
+ 
++	pm_runtime_resume(dev);
++
+ 	if (drv && drv->shutdown)
+ 		drv->shutdown(pci_dev);
+ 	pci_msi_shutdown(pci_dev);
+@@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
+ 	 * continue to do DMA
+ 	 */
+ 	pci_disable_device(pci_dev);
+-
+-	/*
+-	 * Devices may be enabled to wake up by runtime PM, but they need not
+-	 * be supposed to wake up the system from its "power off" state (e.g.
+-	 * ACPI S5).  Therefore disable wakeup for all devices that aren't
+-	 * supposed to wake up the system at this point.  The state argument
+-	 * will be ignored by pci_enable_wake().
+-	 */
+-	if (!device_may_wakeup(dev))
+-		pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
+ }
+ 
+ #ifdef CONFIG_PM
