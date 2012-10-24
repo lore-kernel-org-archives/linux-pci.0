@@ -1,81 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30492 "EHLO mx1.redhat.com"
+Received: from ogre.sisk.pl ([193.178.161.156]:35488 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1945973Ab2JaSTH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 31 Oct 2012 14:19:07 -0400
-Message-ID: <50916B93.9060807@redhat.com>
-Date: Wed, 31 Oct 2012 14:18:59 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S1751822Ab2JXV1c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 17:27:32 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Ming Lei <ming.lei@canonical.com>
+Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+Date: Wed, 24 Oct 2012 23:31:27 +0200
+Message-ID: <17130842.qTSs14eT8a@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
+References: <50841CCC.9030809@uli-eckhardt.de> <6817642.hqndXjdIQA@vostro.rjw.lan> <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: Re: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
-References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>  <1351190310-5043-4-git-send-email-ddutile@redhat.com>  <1351196234.2662.37.camel@bwh-desktop.uk.solarflarecom.com>  <508AA719.2060705@redhat.com>  <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com> <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/31/2012 01:36 PM, Ben Hutchings wrote:
-> On Wed, 2012-10-31 at 17:01 +0000, Rose, Gregory V wrote:
->>> -----Original Message-----
->>> From: Don Dutile [mailto:ddutile@redhat.com]
->>> Sent: Friday, October 26, 2012 8:07 AM
->>> To: Ben Hutchings
->>> Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; yuvalmin@broadcom.com;
->>> Rose, Gregory V; yinghai@kernel.org; davem@davemloft.net
->>> Subject: Re: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
->>>
->>
->>>
->>> Ok, my turn:
->>> Any feedback on having the sysfs configure call
->>> pci_sriov_[enable/disable](), as well as do the don't-disable if VFs are
->>> assigned to guests?
->>>
->>
->> Don,
->>
->> As I've mentioned before I still prefer to have the sysfs interface
->> you've written up make the calls to pci_sriov_enable/disable()
->
-> I think that would work for sfc, assuming the driver function is to be
-> called before either of those.  I don't know whether it would work for
-> any of the other drivers with SR-IOV back-ends, though.
->
->> and have the checking for whether the VFs are assigned to guests done
->> there also,
->
-> I agree that this is should be centralised, though I think that could be
-> done as a later step without too much pain.
->
->> but really it isn't anything worth going to the mats about.  As it
->> stands I think if you address the issues brought up by Ben then I'm
->> fine with what you've worked up so far.  Since no one else seems to
->> have an opinion about it (as demonstrated by a lack of response over
->> the last 5 days) then I'd suggest we go forward with the current
->> implementation.  I'd really like to see this in 3.8 if possible.
->>
->> Thanks for all your work.
->
-> Agreed, thanks Don.
->
-> Ben.
->
-Greg & Ben,
-Thanks for your feedback on the core doing the sriov_enable/disable.
-I agree that let's get existing the core stuff into 3.8 & do the enable/disable as a follow up.
-I'm just polishing the patch set now based on Ben's feedback....
-I was delayed when my test machine was (improperly) taken from me (bad IT, bad! :-( ).
-Just got the machine back today to test the various (error) cases,
-and make checkpatch.pl happy.  I expect to post a PATCH (non-RFC) later today.
-- Don
-ps -- of course, if Greg wants to give me a set of igb patches like the ones he did
-       for ixgbe, it'd get me out of the test machine battles -- I have private
-       test machine w/igb's. :)  hint, hint...ok, more like 'beg, beg' ... again... ;)
+On Wednesday 24 of October 2012 15:13:45 Bjorn Helgaas wrote:
+> On Wed, Oct 24, 2012 at 3:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Wednesday 24 of October 2012 14:18:40 Bjorn Helgaas wrote:
+> >> On Tue, Oct 23, 2012 at 11:14 AM, Ulrich Eckhardt <usb@uli-eckhardt.de> wrote:
+> >> > Am 23.10.2012 01:40, schrieb Sarah Sharp:
+> >> >> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
+> >> >
+> >> >>> I have tested it with Kernel 3.6.2. The USB3 port is the one built
+> >> >>> in the Mainboard M4A87DT EVO.
+> >> >>
+> >> >> Did a previous kernel version work?
+> >> >
+> >> > Yes, I tried the Kernel shipped with OpenSUSE (3.4.11) several 3.5 and all
+> >> > available 3.6 kernel versions.
+> >>
+> >> I assume you mean that every kernel you tried failed?  If some
+> >> kernel(s) did work, what is the newest working version and the oldest
+> >> broken version?
+> >>
+> >> > I attach the complete dmesg logs and the lspci -vv output as requested by
+> >> > Bjorn for the situations when the controller does not work after startup
+> >> > (extension notworking), when the controller is working (extension OK), and
+> >> > after stopping (extension stop).
+> >>
+> >> In the "notworking" logs, my guess is that the xHCI device is being
+> >> powered off.  The "notworking" lspci shows this:
+> >>
+> >>   00:0a.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI RD790 PCI
+> >> to PCI bridge (PCI express gpp port F) (prog-if 00 [Normal decode])
+> >>         Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
+> >>                 LnkCap: Port #247, Speed 5GT/s, Width x2, ASPM L0s L1,
+> >> Latency L0 <64ns, L1 <1us
+> >>                 LnkSta: Speed unknown, Width x1, TrErr- Train-
+> >> SlotClk+ DLActive- BWMgmt+ ABWMgmt+
+> >>   04:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
+> >> Controller (rev ff) (prog-if ff)
+> >>         !!! Unknown header type 7f
+> >>         Kernel driver in use: xhci_hcd
+> >>
+> >> The bridge's "DLActive-" means that the downstream link leading to the
+> >> xHCI device is not active.  The "rev ff", "prog-if ff", and "header
+> >> type 7f" suggest that we read all 0xff's from the xHCI device, which
+> >> is what we get if the device doesn't respond.
+> >>
+> >> The xHCI device must have been powered up and working originally,
+> >> because we enumerated it and bound the xhci_hcd driver to it.  I don't
+> >> have any ideas about why it would be powered off.
+> >>
+> >> Rafael, Alan, is there any way we can disable power management or
+> >> enable related debug messages?
+> >
+> > It can be disabled by writing "on" to the controller's
+> > /sys/devices/.../power/control file.
+> 
+> Ulrich, if you boot in the working situation and write "on" to the
+> control file as above, can you still reproduce the failure?
+> 
+> > For debug, there are trace points in rpm_suspend() and rpm_resume().
+> 
+> I don't know how to use those.  Is there a doc somewhere?
 
+I'm not sure, but let's ask the developer who added them.
+
+Lei, do you have any doc describing how to use those tracepoints?
+
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
