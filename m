@@ -1,40 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44463 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750798Ab2JVP0M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Oct 2012 11:26:12 -0400
-Message-ID: <508565FA.4040908@redhat.com>
-Date: Mon, 22 Oct 2012 11:27:54 -0400
-From: Adam Jackson <ajax@redhat.com>
-MIME-Version: 1.0
-To: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-CC: dri-devel@lists.freedesktop.org,
-	Benjamin Herrenschmidt <benh@au1.ibm.com>,
-	linux-pci@vger.kernel.org,
-	Nishanth Aravamudan <nacc@linux.vnet.ibm.com>,
-	linux-kernel@vger.kernel.org,
-	Brian King <brking@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: radeon: RFC speed cap detection on ppc64
-References: <50819140.8030806@linux.vnet.ibm.com>
-In-Reply-To: <50819140.8030806@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from cn.fujitsu.com ([222.73.24.84]:53191 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1757500Ab2JXGHH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 02:07:07 -0400
+From: Tang Chen <tangchen@cn.fujitsu.com>
+To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, mihailm@parallels.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/2] Use kacpi_hotplug_wq to handle container hotplug event.
+Date: Wed, 24 Oct 2012 14:05:49 +0800
+Message-Id: <1351058750-4275-2-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
+References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/19/12 1:43 PM, Lucas Kannebley Tavares wrote:
-> The radeon driver does speed cap detection on the root PCI device for
-> the maximum speed with which the adapter can communicate. On ppc64
-> systems, however, the root device belongs to the Hypervisor, so the
-> current code would case a null pointer dereference.
->
-> I propose to look for the outmost bus with a parent node and get speed
-> caps from it, though I suppose the cleaner way would be to inspect all
-> devices along the way and choose the smallest speed cap.
+As the comments in __acpi_os_execute() said:
 
-That (walking all parent nodes) is probably the safest thing to do.  I'm 
-not sure whether it's optimal.  It would likely depend on whether you 
-can meaningfully have a bridge that's faster on the downstream side than 
-on the upstream.
+	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+	because the hotplug code may call driver .remove() functions,
+	which invoke flush_scheduled_work/acpi_os_wait_events_complete
+	to flush these workqueues.
 
-- ajax
+we should keep the hotplug code in kacpi_hotplug_wq.
+
+But we have the following call series in kernel now:
+	acpi_ev_queue_notify_request()
+	|--> acpi_os_execute()
+	     |--> __acpi_os_execute(type, function, context, 0)
+
+The last parameter 0 makes the container_notify_cb() executed in
+kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
+into kacpi_hotplug_wq.
+
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+---
+ drivers/acpi/container.c |   17 ++++++++++++++++-
+ 1 files changed, 16 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
+index 69e2d6b..d300e03 100644
+--- a/drivers/acpi/container.c
++++ b/drivers/acpi/container.c
+@@ -35,6 +35,7 @@
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_drivers.h>
+ #include <acpi/container.h>
++#include <acpi/acpiosxf.h>
+ 
+ #define PREFIX "ACPI: "
+ 
+@@ -165,14 +166,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
+ 	return result;
+ }
+ 
+-static void container_notify_cb(acpi_handle handle, u32 type, void *context)
++static void __container_notify_cb(struct work_struct *work)
+ {
+ 	struct acpi_device *device = NULL;
+ 	int result;
+ 	int present;
+ 	acpi_status status;
++	struct acpi_hp_work *hp_work;
++	acpi_handle handle;
++	u32 type;
+ 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+ 
++	hp_work = container_of(work, struct acpi_hp_work, work);
++	handle = hp_work->handle;
++	type = hp_work->type;
++
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		/* Fall through */
+@@ -224,6 +232,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
+ 	return;
+ }
+ 
++static void container_notify_cb(acpi_handle handle, u32 type,
++				void *context)
++{
++	alloc_acpi_hp_work(handle, type, context,
++			   __container_notify_cb);
++}
++
+ static acpi_status
+ container_walk_namespace_cb(acpi_handle handle,
+ 			    u32 lvl, void *context, void **rv)
+-- 
+1.7.1
+
