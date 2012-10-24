@@ -1,55 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:50995 "EHLO
-	userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965022Ab2J3RpY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:45:24 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add root bus
-Date: Tue, 30 Oct 2012 10:42:41 -0700
-Message-Id: <1351618965-16761-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2786 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753419Ab2JXFt7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 01:49:59 -0400
+Message-ID: <50878105.8000503@broadcom.com>
+Date: Wed, 24 Oct 2012 07:47:49 +0200
+From: "Yuval Mintz" <yuvalmin@broadcom.com>
+MIME-Version: 1.0
+To: "Don Dutile" <ddutile@redhat.com>
+cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	"Alexander Duyck" <alexander.duyck@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
+References: <1349388885-43938-1-git-send-email-ddutile@redhat.com>
+ <5070768C.4030905@gmail.com> <20121008084439.00006e56@unknown>
+ <50746F77.60201@redhat.com>
+ <C5551D9AAB213A418B7FD5E4A6F30A071533B57E@ORSMSX106.amr.corp.intel.com>
+ <5074A9DD.3000800@redhat.com>
+In-Reply-To: <5074A9DD.3000800@redhat.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we get hot-added ioapic registered.
-pci_enable_bridges will try to enable ioapic irq for pci bridges.
+>> I've finished some patches for the ixgbe driver and they are under internal review.  Testing turned out pretty well.  Hopefully they'll be ready for posting tomorrow afternoon since I'm gone Thursday and Friday.  They'll be based on your RFC v2 patch.  I don't expect many changes will be required for the next version of your patch.
+>>
+>> - Greg
+>>
+> Great!
+> I'll work on re-doing the patch set to have just the two sysfs files
+> as discussed above.
+> We can make an incremental change to move the sriov_enable/disable since
+> your patch has it ready to do just that.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index bce469c..27adbfd 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
- 	struct acpi_pci_root *root = acpi_driver_data(device);
- 	struct acpi_pci_driver *driver;
- 
-+	if (system_state != SYSTEM_BOOTING)
-+		pci_assign_unassigned_bus_resources(root->bus);
-+
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
- 			driver->add(root);
- 	mutex_unlock(&acpi_pci_root_lock);
- 
-+	/* need to after hot-added ioapic is registered */
-+	if (system_state != SYSTEM_BOOTING)
-+		pci_enable_bridges(root->bus);
-+
- 	pci_bus_add_devices(root->bus);
- 
- 	return 0;
--- 
-1.7.7
+I've failed to find [RFC v3]; Will such a series be sent in the imminent future?
+
+Thanks,
+Yuval
+
 
