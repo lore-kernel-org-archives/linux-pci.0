@@ -1,102 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from claranet-outbound-smtp02.uk.clara.net ([195.8.89.35]:59935 "EHLO
-	claranet-outbound-smtp02.uk.clara.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756731Ab2JSOws (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2012 10:52:48 -0400
-From: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
-To: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: linux-pci@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-	bhelgaas@google.com
-Subject: Re: GPU RC6 breaks PCIe to PCI bridge connected to CPU PCIe slot on SandyBridge systems
-Date: Fri, 19 Oct 2012 15:52:32 +0100
-Message-ID: <3896332.1fABn9rFR8@f17simon>
-In-Reply-To: <CAKMK7uHHn0H1usv=7Msdvg6vW4PDRaFvtRG7m=c9ENw+c_PE4g@mail.gmail.com>
-References: <1704067.2NCOGYajHN@f17simon> <CAKMK7uHHn0H1usv=7Msdvg6vW4PDRaFvtRG7m=c9ENw+c_PE4g@mail.gmail.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:33529 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758836Ab2JXVOH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 17:14:07 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so774272wgb.1
+        for <linux-pci@vger.kernel.org>; Wed, 24 Oct 2012 14:14:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart5364821.besjWlMyCd"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+In-Reply-To: <6817642.hqndXjdIQA@vostro.rjw.lan>
+References: <50841CCC.9030809@uli-eckhardt.de> <5086D067.4000900@uli-eckhardt.de>
+ <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com> <6817642.hqndXjdIQA@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 24 Oct 2012 15:13:45 -0600
+Message-ID: <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Oct 24, 2012 at 3:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday 24 of October 2012 14:18:40 Bjorn Helgaas wrote:
+>> On Tue, Oct 23, 2012 at 11:14 AM, Ulrich Eckhardt <usb@uli-eckhardt.de> wrote:
+>> > Am 23.10.2012 01:40, schrieb Sarah Sharp:
+>> >> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
+>> >
+>> >>> I have tested it with Kernel 3.6.2. The USB3 port is the one built
+>> >>> in the Mainboard M4A87DT EVO.
+>> >>
+>> >> Did a previous kernel version work?
+>> >
+>> > Yes, I tried the Kernel shipped with OpenSUSE (3.4.11) several 3.5 and all
+>> > available 3.6 kernel versions.
+>>
+>> I assume you mean that every kernel you tried failed?  If some
+>> kernel(s) did work, what is the newest working version and the oldest
+>> broken version?
+>>
+>> > I attach the complete dmesg logs and the lspci -vv output as requested by
+>> > Bjorn for the situations when the controller does not work after startup
+>> > (extension notworking), when the controller is working (extension OK), and
+>> > after stopping (extension stop).
+>>
+>> In the "notworking" logs, my guess is that the xHCI device is being
+>> powered off.  The "notworking" lspci shows this:
+>>
+>>   00:0a.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI RD790 PCI
+>> to PCI bridge (PCI express gpp port F) (prog-if 00 [Normal decode])
+>>         Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
+>>                 LnkCap: Port #247, Speed 5GT/s, Width x2, ASPM L0s L1,
+>> Latency L0 <64ns, L1 <1us
+>>                 LnkSta: Speed unknown, Width x1, TrErr- Train-
+>> SlotClk+ DLActive- BWMgmt+ ABWMgmt+
+>>   04:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
+>> Controller (rev ff) (prog-if ff)
+>>         !!! Unknown header type 7f
+>>         Kernel driver in use: xhci_hcd
+>>
+>> The bridge's "DLActive-" means that the downstream link leading to the
+>> xHCI device is not active.  The "rev ff", "prog-if ff", and "header
+>> type 7f" suggest that we read all 0xff's from the xHCI device, which
+>> is what we get if the device doesn't respond.
+>>
+>> The xHCI device must have been powered up and working originally,
+>> because we enumerated it and bound the xhci_hcd driver to it.  I don't
+>> have any ideas about why it would be powered off.
+>>
+>> Rafael, Alan, is there any way we can disable power management or
+>> enable related debug messages?
+>
+> It can be disabled by writing "on" to the controller's
+> /sys/devices/.../power/control file.
 
---nextPart5364821.besjWlMyCd
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Ulrich, if you boot in the working situation and write "on" to the
+control file as above, can you still reproduce the failure?
 
-On Friday 19 October 2012 16:26:08 Daniel Vetter wrote:
-> On Fri, Oct 19, 2012 at 12:26 PM, Simon Farnsworth
-> <simon.farnsworth@onelan.co.uk> wrote:
-> > Hello,
-> >
-> > I've just been trying to work out why a PCIe to PCI bridge worked with kernel
-> > 3.3, but not with kernel 3.5 or Linus's git master. I bisected down to bad:
-> > [aa46419186992e6b8b8010319f0ca7f40a0d13f5] drm/i915: enable plain RC6 on Sandy
-> > Bridge by default.
-> >
-> > I then confirmed that on a failing kernel (3.5 or Linus git
-> > 8d2b6b3ae280dcf6f6c7a95623670a57cdf562ed from Tuesday 16th, "Merge tag 'sh-
-> > for-linus' of git://github.com/pmundt/linux-sh"), I can make the failure
-> > disappear by adding i915.i915_enable_rc6=0 to the kernel command line, and I
-> > can make it reappear by changing the value of i915_enable_rc6 to -1.
-> >
-> > I've attached lspci -vvxxxxx output from a failure case and from a working
-> > case as lspci.faulty and lspci.working; if you need anything more, just ask
-> > for it.
-> >
-> > My hardware is an Intel DH67CF motherboard, with an i3-2100 CPU; there is a
-> > Startech branded PCIe to PCI bridge in the PCIe x16 slot (which I believe is
-> > connected to the CPU PCIe lanes, not the PCH PCIe lanes). I have a Hauppauge
-> > HVR-1110 in the PCI slot provided by the bridge.
-> >
-> > I have two test cases; one is transferring MPEG-2 transport streams from the
-> > DVB-T tuner on the card (no graphics involved), the other is using the V4L2
-> > interface to capture buffers via the mmap() mechanism, which are then uploaded
-> > to the XServer via the Xv extension, and composited using an OpenGL compositor
-> > that uses texture_from_pixmap.
-> 
-> Ok, this is really freaky stuff. One thing to triage: Is it just
-> sufficient to put the gpu into rc6 to corrupt the dma transfers, or is
-> some light X/gpu load required? In either case, rc6 being able to
-> corrupt random dma transfers (or at least prevent them from reaching
-> their destination) would be a fitting explanation for the leftover rc6
-> issues on snb ...
-> 
-In an attempt to have this happen with the GPU as idle as possible, I did the
-following (note that I'm on a gigabit Ethernet segment, so I can burn network
-bandwidth while testing):
+> For debug, there are trace points in rpm_suspend() and rpm_resume().
 
-1. Start X.org with -noreset, and don't start any X clients.
-2. Run "xset dpms force off ; xrandr --output DP2 --off" (DP2 is the connected output).
-3. On the affected machine, run "gst-launch v4l2src ! gdppay ! tcpclientsink host=f17simon port=65512"
-4. On my desktop, run "gst-launch tcpserversrc host=0.0.0.0 port=65512 ! gdpdepay ! xvimagesink"
-
-I see the corruption continue to happen, even though the GPU should be idle
-and in RC6 state most of the time (confirmed by reading
-/sys/class/drm/card0/power/rc6_residency_ms and seeing it increase between
-reads). When I run intel_forcewaked from intel_gpu_tools, the corruption goes
-away, and I can confirm by reading /sys/class/drm/card0/power/rc6_residency_ms
-that the GPU does not enter RC6. Killing intel_forcewaked makes the corruption
-reappear while streaming over the network (X11 idle).
--- 
-Simon Farnsworth
-Software Engineer
-ONELAN Ltd
-http://www.onelan.com
-
---nextPart5364821.besjWlMyCd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQEcBAABAgAGBQJQgWkzAAoJEIKsye9/dtRWTAwH/3fAns8K7PhmvTt/4c/dUIIS
-EGK/oKP6r8dPeIit+Hv2LNIEe4SLdAdF9XpLSQQMkM99JjA9/NVakPhAAiqtyHbI
-3OikjP+tUaXZQ8WcArU56RFgEegb07TDt0huH6xMmIZag07paz/E3nOdwbopWDJB
-DAUbhUPJuAfemjGblo/3lfe+SD3HIVnWUNlIl06e30k+NFwUunIBNnQTMgucVTuO
-GT5Idvm3lJtCbxGY/Ky5uqipQcfsDdTl8Qe8yQxP0KKKdor481w6LiYAppXGv81g
-Xrx3PN/IhJEmlLogz4cWndJ+YeZb7lPzbx8fRL6cjBhHd5q9N+2WhFnoleYa6Pc=
-=hqTy
------END PGP SIGNATURE-----
-
---nextPart5364821.besjWlMyCd--
-
+I don't know how to use those.  Is there a doc somewhere?
