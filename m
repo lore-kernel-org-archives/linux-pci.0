@@ -1,92 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:23314 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754275Ab2JRFx3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Oct 2012 01:53:29 -0400
-Message-ID: <507F9915.2080409@cn.fujitsu.com>
-Date: Thu, 18 Oct 2012 13:52:21 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:38862 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751170Ab2JXHYc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 03:24:32 -0400
+From: Huang Ying <ying.huang@intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: lenb@kernel.org, yinghai@kernel.org, jiang.liu@huawei.com,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Add PNP0A08 into acpi_pci_roots array.
-References: <1350526971-9427-1-git-send-email-tangchen@cn.fujitsu.com> <CAErSpo6ehw1JHMyE27MuX2VR89+1zC48QJe9Udih88N-W-73Wg@mail.gmail.com>
-In-Reply-To: <CAErSpo6ehw1JHMyE27MuX2VR89+1zC48QJe9Udih88N-W-73Wg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	Zhang Yanmin <yanmin.zhang@intel.com>
+Subject: [BUGFIX 1/2] PCI/PM: Fix deadlock when unbind device if its parent in D3cold
+Date: Wed, 24 Oct 2012 14:54:13 +0800
+Message-Id: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2012 11:55 AM, Bjorn Helgaas wrote:
-> On Wed, Oct 17, 2012 at 8:22 PM, Tang Chen<tangchen@cn.fujitsu.com>  wrote:
->> acpi_pci_roots array doesn't include PNP0A08, which is PCI Express
->> Root Bridge.
->
-> You need to explain why this change is necessary.  PNP0A08 devices
-> will have a PNP0A03 _CID, so the driver already claims PNP0A08 devices
-> because the _CID matches.
+If a PCI device and its parents are put into D3cold, unbinding the
+device will trigger deadlock as follow:
 
-Hi Bjorn,
-
-Here is my reason, but just my personal opinion. :)
-
-1) There is no code to handle a pcie host bridge hotplug in kernel now.
-    And when this happens,  pci host bridge related code will be
-    executed, which makes me think that PNP0A03 and PNP0A08 are seen as
-    the same devices. At least for now they are.
-    So, acpi_pci_roots doesn't include PNP0A08 seems a little strange to
-    me.
-
-2) When I was reading Liu Jiang's "ACPI based hotplug framework"
-    patches, I happened to see that he defined the following:
-
-         static char *acpihp_dev_pcihb_ids[] = {
-	        "PNP0A03",
-                 "PNP0A08",
-                 NULL
-         };
-
-    And also, Lu Yinghai defined the following in his own patch:
-
-         static const struct acpi_device_id root_device_ids[] = {
-                 {"PNP0A03", 0},
-                 {"PNP0A08", 0},
-                 {NULL, 0}
-         };
-
-    I think all these arraies should represent the same things, and we
-    need only one of them.
-    For now, it is root_device_ids[] in drivers/acpi/pci_root.c.
-
-Well, all above is my own opinion. And you are right, even if we don't
-change it, there won't be any problem.
-
-Thanks. :)
+- driver_unbind
+  - device_release_driver
+    - device_lock(dev)				<--- previous lock here
+    - __device_release_driver
+      - pm_runtime_get_sync
+        ...
+          - rpm_resume(dev)
+            - rpm_resume(dev->parent)
+              ...
+                - pci_pm_runtime_resume
+                  ...
+                  - pci_set_power_state
+                    - __pci_start_power_transition
+                      - pci_wakeup_bus(dev->parent->subordinate)
+                        - pci_walk_bus
+                          - device_lock(dev)	<--- dead lock here
 
 
+If we do not do device_lock in pci_walk_bus, we can avoid dead lock.
+Device_lock in pci_walk_bus is introduced in commit:
+d71374dafbba7ec3f67371d3b7e9f6310a588808, corresponding email thread
+is: https://lkml.org/lkml/2006/5/26/38.  The patch author Zhang Yanmin
+said device_lock is added to pci_walk_bus because:
 
->
->> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
->> ---
->>   drivers/acpi/pci_root.c |    1 +
->>   1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 037b59c..dedc4d6 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -56,6 +56,7 @@ static int acpi_pci_root_start(struct acpi_device *device);
->>
->>   static const struct acpi_device_id root_device_ids[] = {
->>          {"PNP0A03", 0},
->> +       {"PNP0A08", 0},
->>          {"", 0},
->>   };
->>   MODULE_DEVICE_TABLE(acpi, root_device_ids);
->> --
->> 1.7.1
->>
->
+  Some error handling functions call pci_walk_bus. For example, PCIe
+  aer. Here we lock the device, so the driver wouldn't detach from the
+  device, as the cb might call driver's callback function.
 
+So I fixed the dead lock as follow:
+
+- remove device_lock from pci_walk_bus
+- add device_lock into callback if callback will call driver's callback
+
+I checked pci_walk_bus users one by one, and found only PCIe aer needs
+device lock.
+
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Cc: Zhang Yanmin <yanmin.zhang@intel.com>
+---
+ drivers/pci/bus.c                  |    3 ---
+ drivers/pci/pcie/aer/aerdrv_core.c |   20 ++++++++++++++++----
+ 2 files changed, 16 insertions(+), 7 deletions(-)
+
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -320,10 +320,7 @@ void pci_walk_bus(struct pci_bus *top, i
+ 		} else
+ 			next = dev->bus_list.next;
+ 
+-		/* Run device routines with the device locked */
+-		device_lock(&dev->dev);
+ 		retval = cb(dev, userdata);
+-		device_unlock(&dev->dev);
+ 		if (retval)
+ 			break;
+ 	}
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -213,6 +213,7 @@ static int report_error_detected(struct
+ 	struct aer_broadcast_data *result_data;
+ 	result_data = (struct aer_broadcast_data *) data;
+ 
++	device_lock(&dev->dev);
+ 	dev->error_state = result_data->state;
+ 
+ 	if (!dev->driver ||
+@@ -231,12 +232,14 @@ static int report_error_detected(struct
+ 				   dev->driver ?
+ 				   "no AER-aware driver" : "no driver");
+ 		}
+-		return 0;
++		goto out;
+ 	}
+ 
+ 	err_handler = dev->driver->err_handler;
+ 	vote = err_handler->error_detected(dev, result_data->state);
+ 	result_data->result = merge_result(result_data->result, vote);
++out:
++	device_unlock(&dev->dev);
+ 	return 0;
+ }
+ 
+@@ -247,14 +250,17 @@ static int report_mmio_enabled(struct pc
+ 	struct aer_broadcast_data *result_data;
+ 	result_data = (struct aer_broadcast_data *) data;
+ 
++	device_lock(&dev->dev);
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->mmio_enabled)
+-		return 0;
++		goto out;
+ 
+ 	err_handler = dev->driver->err_handler;
+ 	vote = err_handler->mmio_enabled(dev);
+ 	result_data->result = merge_result(result_data->result, vote);
++out:
++	device_unlock(&dev->dev);
+ 	return 0;
+ }
+ 
+@@ -265,14 +271,17 @@ static int report_slot_reset(struct pci_
+ 	struct aer_broadcast_data *result_data;
+ 	result_data = (struct aer_broadcast_data *) data;
+ 
++	device_lock(&dev->dev);
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->slot_reset)
+-		return 0;
++		goto out;
+ 
+ 	err_handler = dev->driver->err_handler;
+ 	vote = err_handler->slot_reset(dev);
+ 	result_data->result = merge_result(result_data->result, vote);
++out:
++	device_unlock(&dev->dev);
+ 	return 0;
+ }
+ 
+@@ -280,15 +289,18 @@ static int report_resume(struct pci_dev
+ {
+ 	const struct pci_error_handlers *err_handler;
+ 
++	device_lock(&dev->dev);
+ 	dev->error_state = pci_channel_io_normal;
+ 
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->resume)
+-		return 0;
++		goto out;
+ 
+ 	err_handler = dev->driver->err_handler;
+ 	err_handler->resume(dev);
++out:
++	device_unlock(&dev->dev);
+ 	return 0;
+ }
+ 
