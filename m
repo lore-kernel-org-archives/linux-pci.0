@@ -1,94 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:53191 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1757500Ab2JXGHH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Oct 2012 02:07:07 -0400
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, mihailm@parallels.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] Use kacpi_hotplug_wq to handle container hotplug event.
-Date: Wed, 24 Oct 2012 14:05:49 +0800
-Message-Id: <1351058750-4275-2-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
-References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:35420 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161047Ab2JXVHA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 17:07:00 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+Date: Wed, 24 Oct 2012 23:10:54 +0200
+Message-ID: <6817642.hqndXjdIQA@vostro.rjw.lan>
+In-Reply-To: <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com>
+References: <50841CCC.9030809@uli-eckhardt.de> <5086D067.4000900@uli-eckhardt.de> <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As the comments in __acpi_os_execute() said:
+On Wednesday 24 of October 2012 14:18:40 Bjorn Helgaas wrote:
+> On Tue, Oct 23, 2012 at 11:14 AM, Ulrich Eckhardt <usb@uli-eckhardt.de> wrote:
+> > Am 23.10.2012 01:40, schrieb Sarah Sharp:
+> >> On Sun, Oct 21, 2012 at 06:03:24PM +0200, Ulrich Eckhardt wrote:
+> >
+> >>> I have tested it with Kernel 3.6.2. The USB3 port is the one built
+> >>> in the Mainboard M4A87DT EVO.
+> >>
+> >> Did a previous kernel version work?
+> >
+> > Yes, I tried the Kernel shipped with OpenSUSE (3.4.11) several 3.5 and all
+> > available 3.6 kernel versions.
+> 
+> I assume you mean that every kernel you tried failed?  If some
+> kernel(s) did work, what is the newest working version and the oldest
+> broken version?
+> 
+> > I attach the complete dmesg logs and the lspci -vv output as requested by
+> > Bjorn for the situations when the controller does not work after startup
+> > (extension notworking), when the controller is working (extension OK), and
+> > after stopping (extension stop).
+> 
+> In the "notworking" logs, my guess is that the xHCI device is being
+> powered off.  The "notworking" lspci shows this:
+> 
+>   00:0a.0 PCI bridge: Advanced Micro Devices [AMD] nee ATI RD790 PCI
+> to PCI bridge (PCI express gpp port F) (prog-if 00 [Normal decode])
+>         Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
+>                 LnkCap: Port #247, Speed 5GT/s, Width x2, ASPM L0s L1,
+> Latency L0 <64ns, L1 <1us
+>                 LnkSta: Speed unknown, Width x1, TrErr- Train-
+> SlotClk+ DLActive- BWMgmt+ ABWMgmt+
+>   04:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host
+> Controller (rev ff) (prog-if ff)
+>         !!! Unknown header type 7f
+>         Kernel driver in use: xhci_hcd
+> 
+> The bridge's "DLActive-" means that the downstream link leading to the
+> xHCI device is not active.  The "rev ff", "prog-if ff", and "header
+> type 7f" suggest that we read all 0xff's from the xHCI device, which
+> is what we get if the device doesn't respond.
+> 
+> The xHCI device must have been powered up and working originally,
+> because we enumerated it and bound the xhci_hcd driver to it.  I don't
+> have any ideas about why it would be powered off.
+> 
+> Rafael, Alan, is there any way we can disable power management or
+> enable related debug messages?
 
-	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-	because the hotplug code may call driver .remove() functions,
-	which invoke flush_scheduled_work/acpi_os_wait_events_complete
-	to flush these workqueues.
+It can be disabled by writing "on" to the controller's
+/sys/devices/.../power/control file.
 
-we should keep the hotplug code in kacpi_hotplug_wq.
+For debug, there are trace points in rpm_suspend() and rpm_resume().
 
-But we have the following call series in kernel now:
-	acpi_ev_queue_notify_request()
-	|--> acpi_os_execute()
-	     |--> __acpi_os_execute(type, function, context, 0)
+That's if we're talking about runtime PM, of course.
 
-The last parameter 0 makes the container_notify_cb() executed in
-kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
-into kacpi_hotplug_wq.
+Thanks,
+Rafael
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
----
- drivers/acpi/container.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-index 69e2d6b..d300e03 100644
---- a/drivers/acpi/container.c
-+++ b/drivers/acpi/container.c
-@@ -35,6 +35,7 @@
- #include <acpi/acpi_bus.h>
- #include <acpi/acpi_drivers.h>
- #include <acpi/container.h>
-+#include <acpi/acpiosxf.h>
- 
- #define PREFIX "ACPI: "
- 
-@@ -165,14 +166,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
- 	return result;
- }
- 
--static void container_notify_cb(acpi_handle handle, u32 type, void *context)
-+static void __container_notify_cb(struct work_struct *work)
- {
- 	struct acpi_device *device = NULL;
- 	int result;
- 	int present;
- 	acpi_status status;
-+	struct acpi_hp_work *hp_work;
-+	acpi_handle handle;
-+	u32 type;
- 	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
- 
-+	hp_work = container_of(work, struct acpi_hp_work, work);
-+	handle = hp_work->handle;
-+	type = hp_work->type;
-+
- 	switch (type) {
- 	case ACPI_NOTIFY_BUS_CHECK:
- 		/* Fall through */
-@@ -224,6 +232,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
- 	return;
- }
- 
-+static void container_notify_cb(acpi_handle handle, u32 type,
-+				void *context)
-+{
-+	alloc_acpi_hp_work(handle, type, context,
-+			   __container_notify_cb);
-+}
-+
- static acpi_status
- container_walk_namespace_cb(acpi_handle handle,
- 			    u32 lvl, void *context, void **rv)
 -- 
-1.7.1
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
