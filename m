@@ -1,53 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <507F52A1.1030800@huawei.com>
-Date: Thu, 18 Oct 2012 08:51:45 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([193.178.161.156]:37687 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760197Ab2JYUHl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 16:07:41 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Ulrich Eckhardt <usb@uli-eckhardt.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+Date: Thu, 25 Oct 2012 22:11:37 +0200
+Message-ID: <42232189.sLGmN8Uve8@vostro.rjw.lan>
+In-Reply-To: <508973CE.8080603@uli-eckhardt.de>
+References: <50841CCC.9030809@uli-eckhardt.de> <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com> <508973CE.8080603@uli-eckhardt.de>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, x86 <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH 00/40] PCI, ACPI, x86: pci root bus hotplug support
-References: <CAE9FiQWFcVNKMnV1qaHchwCXfZuMpyxf_f7GQy3FZid9YuLD3w@mail.gmail.com> <1348080894-23412-1-git-send-email-yinghai@kernel.org> <507E6355.40904@huawei.com> <CAE9FiQWW2zMK0fQ1RGox653PNxoH_RY_X8N4Oh_osu8Pt9gWpg@mail.gmail.com>
-In-Reply-To: <CAE9FiQWW2zMK0fQ1RGox653PNxoH_RY_X8N4Oh_osu8Pt9gWpg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/10/18 0:19, Yinghai Lu wrote:
-> On Wed, Oct 17, 2012 at 12:50 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> On 2012/9/20 2:54, Yinghai Lu wrote:
->>
->> Hi Yinghai,
->>    I applied this series patches to the latest pci-next, but git am fail occured.
->> When I try to pull from for-pci-root-bus-hotplug branch, I found some patches missed(eg. SCI_EMULATE).
->> Where can I get the newest pci root bus hotplug patches?
+On Thursday, October 25, 2012 07:15:58 PM Ulrich Eckhardt wrote:
+> Am 24.10.2012 23:13, schrieb Bjorn Helgaas:
+> > On Wed, Oct 24, 2012 at 3:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >
+> >> It can be disabled by writing "on" to the controller's
+> >> /sys/devices/.../power/control file.
+> >
+> > Ulrich, if you boot in the working situation and write "on" to the
+> > control file as above, can you still reproduce the failure?
 > 
-> should be
-> for-pci-split-pci-root-hp-2
-> or
-> for-pci-next-2
-> branch.
+> I have done first a cat to the control file which returns already on:
 > 
-> but
->>> part6: acpi add/remove simulation
->>> [PATCH 40/40] ACPI: Enable SCI_EMULATE to manually simulate physical
+> uli:/ # cat /sys/devices/pci0000\:00/0000\:00\:04.0/power/control
+> on
 > 
-> is not in. you need to apply that separately.
-> 
+> Writing again on to the file does not change anything.
 
-OK, Thanks!
+Yes, and this means that runtime PM is disabled on the controller.
 
-> .
-> 
+ASPM remains as a possible culprit, then.
+
+Can you please boot with pcie_aspm=off in the kernel command line and see
+if this makes a difference?
+
+Rafael
 
 
 -- 
-Thanks!
-Yijing
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
