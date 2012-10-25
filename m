@@ -1,103 +1,172 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5077F407.3040205@cn.fujitsu.com>
-Date: Fri, 12 Oct 2012 18:42:15 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: yinghai@kernel.org, lenb@kernel.org, bhelgaas@google.com,
-	izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] Do not use acpi_device to find pci root bridge in
- _init code.
-References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com> <1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com> <5077F2C2.1010300@huawei.com>
-In-Reply-To: <5077F2C2.1010300@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:3744 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751243Ab2JYBgO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Oct 2012 21:36:14 -0400
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>, stable@vger.kernel.org
+Subject: [BUGFIX] PCI/PM: Fix proc config reg access for D3cold and bridge suspending
+Date: Thu, 25 Oct 2012 09:36:03 +0800
+Message-Id: <1351128963-10347-1-git-send-email-ying.huang@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/12/2012 06:36 PM, Jiang Liu wrote:
-> On 2012-10-12 18:31, Tang Chen wrote:
->> When the kernel is being initialized, and some hardwares are not added
->> to system, there won't be acpi_device structs for these devices. But
->> acpi_is_root_bridge() depends on acpi_device struct. As a result, all
->> the not-added root bridge will not be judged as a root bridge in
->> find_root_bridges(). And further more, no handle_hotplug_event_root()
->> notifier will be installed for them.
->>
->> This patch introduces a new api to find all root bridges in system by
->> getting HID directly from ACPI namespace, not depending on acpi_device
->> struct.
->>
->> Signed-off-by: Tang Chen<tangchen@cn.fujitsu.com>
->> ---
->>   drivers/acpi/pci_root.c |   27 ++++++++++++++++++++++-----
->>   1 files changed, 22 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 7d0fb03..3819bee 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -128,9 +128,6 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
->>   /**
->>    * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
->>    * @handle - the ACPI CA node in question.
->> - *
->> - * Note: we could make this API take a struct acpi_device * instead, but
->> - * for now, it's more convenient to operate on an acpi_handle.
->>    */
->>   int acpi_is_root_bridge(acpi_handle handle)
->>   {
->> @@ -138,8 +135,28 @@ int acpi_is_root_bridge(acpi_handle handle)
->>   	struct acpi_device *device;
->>
->>   	ret = acpi_bus_get_device(handle,&device);
->> -	if (ret)
->> -		return 0;
->> +	if (ret) {
->> +		/**
->> +		 * If a device is not added to the system yet, there won't be
->> +		 * an acpi_device struct for it. But it doesn't mean it is not
->> +		 * a PCI root bridge. In this case we need to get HID and CID
->> +		 * from ACPI namespace directly.
->> +		 */
->> +		struct acpi_device_info *info;
->> +		acpi_status status;
->> +		status = acpi_get_object_info(handle,&info);
->> +		if (ACPI_FAILURE(status)) {
->> +			printk(KERN_ERR PREFIX "%s: Error reading"
->> +					       "device info\n", __func__);
->> +			return 0;
->> +		}
->> +
->> +		ret = acpi_match_object_info_ids(info, root_device_ids);
->> +		if (ret)
->> +			return 0;
->> +		else
->> +			return 1;
->> +	}
-> I have sent a similar patch to Yinghai before. For simplicity, we could
-> use acpi_match_object_info_ids() instead of acpi_match_device_ids()
-> directly.
+In
 
-Hum, I must have missed it. :)
-Using acpi_match_object_info_ids() directly seems good. I'm just worry
-about if it could cause any other problem. :)
+  https://bugzilla.kernel.org/show_bug.cgi?id=48981
 
-So now, is this bug fixed ? And we don't need these patches, right ?
+Peter reported that /proc/bus/pci/??/??.? does not works for 3.6.
+This is This is because the device configuration space registers will
+be not accessible if the corresponding parent bridge is suspended or
+the device is put into D3cold state.
 
-Thanks. :)
+This is the same as /sys/bus/pci/devices/0000:??:??.?/config access
+issue.  So the function used to solve sysfs issue is used to solve
+this issue.
 
-> Thanks!
-> Gerry
->
->>
->>   	ret = acpi_match_device_ids(device, root_device_ids);
->>   	if (ret)
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Cc: stable@vger.kernel.org
+Reported-by: Peter <lekensteyn@gmail.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pci-sysfs.c |   34 ----------------------------------
+ drivers/pci/pci.c       |   32 ++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h       |    2 ++
+ drivers/pci/proc.c      |    8 ++++++++
+ 4 files changed, 42 insertions(+), 34 deletions(-)
 
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -458,40 +458,6 @@ boot_vga_show(struct device *dev, struct
+ }
+ struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+ 
+-static void
+-pci_config_pm_runtime_get(struct pci_dev *pdev)
+-{
+-	struct device *dev = &pdev->dev;
+-	struct device *parent = dev->parent;
+-
+-	if (parent)
+-		pm_runtime_get_sync(parent);
+-	pm_runtime_get_noresume(dev);
+-	/*
+-	 * pdev->current_state is set to PCI_D3cold during suspending,
+-	 * so wait until suspending completes
+-	 */
+-	pm_runtime_barrier(dev);
+-	/*
+-	 * Only need to resume devices in D3cold, because config
+-	 * registers are still accessible for devices suspended but
+-	 * not in D3cold.
+-	 */
+-	if (pdev->current_state == PCI_D3cold)
+-		pm_runtime_resume(dev);
+-}
+-
+-static void
+-pci_config_pm_runtime_put(struct pci_dev *pdev)
+-{
+-	struct device *dev = &pdev->dev;
+-	struct device *parent = dev->parent;
+-
+-	pm_runtime_put(dev);
+-	if (parent)
+-		pm_runtime_put_sync(parent);
+-}
+-
+ static ssize_t
+ pci_read_config(struct file *filp, struct kobject *kobj,
+ 		struct bin_attribute *bin_attr,
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1858,6 +1858,38 @@ bool pci_dev_run_wake(struct pci_dev *de
+ }
+ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
+ 
++void pci_config_pm_runtime_get(struct pci_dev *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device *parent = dev->parent;
++
++	if (parent)
++		pm_runtime_get_sync(parent);
++	pm_runtime_get_noresume(dev);
++	/*
++	 * pdev->current_state is set to PCI_D3cold during suspending,
++	 * so wait until suspending completes
++	 */
++	pm_runtime_barrier(dev);
++	/*
++	 * Only need to resume devices in D3cold, because config
++	 * registers are still accessible for devices suspended but
++	 * not in D3cold.
++	 */
++	if (pdev->current_state == PCI_D3cold)
++		pm_runtime_resume(dev);
++}
++
++void pci_config_pm_runtime_put(struct pci_dev *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device *parent = dev->parent;
++
++	pm_runtime_put(dev);
++	if (parent)
++		pm_runtime_put_sync(parent);
++}
++
+ /**
+  * pci_pm_init - Initialize PM functions of given PCI device
+  * @dev: PCI device to handle.
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -72,6 +72,8 @@ extern void pci_disable_enabled_device(s
+ extern int pci_finish_runtime_suspend(struct pci_dev *dev);
+ extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
+ extern void pci_wakeup_bus(struct pci_bus *bus);
++extern void pci_config_pm_runtime_get(struct pci_dev *dev);
++extern void pci_config_pm_runtime_put(struct pci_dev *dev);
+ extern void pci_pm_init(struct pci_dev *dev);
+ extern void platform_pci_wakeup_init(struct pci_dev *dev);
+ extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -76,6 +76,8 @@ proc_bus_pci_read(struct file *file, cha
+ 	if (!access_ok(VERIFY_WRITE, buf, cnt))
+ 		return -EINVAL;
+ 
++	pci_config_pm_runtime_get(dev);
++
+ 	if ((pos & 1) && cnt) {
+ 		unsigned char val;
+ 		pci_user_read_config_byte(dev, pos, &val);
+@@ -121,6 +123,8 @@ proc_bus_pci_read(struct file *file, cha
+ 		cnt--;
+ 	}
+ 
++	pci_config_pm_runtime_put(dev);
++
+ 	*ppos = pos;
+ 	return nbytes;
+ }
+@@ -146,6 +150,8 @@ proc_bus_pci_write(struct file *file, co
+ 	if (!access_ok(VERIFY_READ, buf, cnt))
+ 		return -EINVAL;
+ 
++	pci_config_pm_runtime_get(dev);
++
+ 	if ((pos & 1) && cnt) {
+ 		unsigned char val;
+ 		__get_user(val, buf);
+@@ -191,6 +197,8 @@ proc_bus_pci_write(struct file *file, co
+ 		cnt--;
+ 	}
+ 
++	pci_config_pm_runtime_put(dev);
++
+ 	*ppos = pos;
+ 	i_size_write(ino, dp->size);
+ 	return nbytes;
