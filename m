@@ -1,91 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:44206 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755980Ab2JZJcG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Oct 2012 05:32:06 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1990489wgb.1
-        for <linux-pci@vger.kernel.org>; Fri, 26 Oct 2012 02:32:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <508A544F.1030007@peak-system.com>
-References: <5062BA8B.7090503@peak-system.com> <CAErSpo7vk6d1RCWQPFL9PqqwbH5u+F=uyPywCM_3sAVF3RW34g@mail.gmail.com>
- <508A544F.1030007@peak-system.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 26 Oct 2012 03:31:44 -0600
-Message-ID: <CAErSpo4GFn_xSzMb7Y8cR+oJUT4LPi046zJs5iLUY0cp2c85zQ@mail.gmail.com>
-Subject: Re: Info about ACPI/PCI vs ISA
-To: Stephane Grosjean <s.grosjean@peak-system.com>
-Cc: linux-acpi@vger.kernel.org, support@peak-system.com,
-	Robert Hancock <hancockrwd@gmail.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:43466 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965278Ab2JYSip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 14:38:45 -0400
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 6/8] ixgbe: refactor SRIOV enable and disable for sysfs interface
+Date: Thu, 25 Oct 2012 14:38:28 -0400
+Message-Id: <1351190310-5043-7-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 26, 2012 at 3:13 AM, Stephane Grosjean
-<s.grosjean@peak-system.com> wrote:
-> Hi Bjorn,
->
-> Thanks for your answer. See my comments below...
->
-> Le 26/10/2012 10:29, Bjorn Helgaas a écrit :
->>
->> On Wed, Sep 26, 2012 at 2:19 AM, Stephane Grosjean
->> <s.grosjean@peak-system.com> wrote:
->>
->>> I'm working on an issue with one of our PCI adapters.
->>> This PCI adapter is a standard and well proven board, for many years:
->>>
->>> $ lspci -v
->>> ...
->>> 04:08.0 Network controller: PEAK-System Technik GmbH PCAN-PCI CAN-Bus
->>> controller (rev 02)
->>>      Subsystem: PEAK-System Technik GmbH 2 Channel CAN Bus SJC1000
->>>      Flags: medium devsel, IRQ 11
->>>      Memory at f0410000 (32-bit, non-prefetchable) [size=64K]
->>>      Memory at f0400000 (32-bit, non-prefetchable) [size=64K]
->>>      Kernel driver in use: pcan
->>>
->>>
->> Where's the source for the "pcan" driver?  I see the pcan_usb driver
->> in the tree, but that looks like something different from what you're
->> looking at here.
->
->
-> The "pcan" driver is an out-ot-tree driver which offers a chardev interface,
-> not a mainline driver. The "pcan_usb" (as well as peak_pci...) are our
-> recent linux-can (only) drivers.
-> Since the "pcan" driver does exist since the old ages of 2.4 kernels, we
-> need to continue to support it. See also below for more information about
-> that...
->
->> Does the device work under any version of Linux?  If so, please
->> collect the complete dmesg log from the newest working version, and
->> the same log from the broken version.
->
->
-> Yes it does! Anyway, you'll find the complete dmesg.txt attached to that
-> e-mail. Hoping this could help.
+In preparation for enable/disable of SR-IOV via the pci sysfs interface
+move some core SR-IOV enablement code that would be common to module
+parameter usage or callback from the pci bus driver to a separate
+function so that it can be used by either method.
 
-Thanks.  You attached the log for the broken version.  Can you also
-attach a log from the newest working version of Linux?
+Authored-by: Greg Rose <gregory.v.rose@intel.com>
+Signed-off-by: Donald Dutile <ddutile@redhat.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 98 +++++++++++++++-----------
+ 1 file changed, 58 insertions(+), 40 deletions(-)
 
-I assume the same driver works on the old version but fails on new
-versions.  If so, it sounds like this might be a Linux regression, and
-finding the newest working and oldest broken versions will help
-identify it.
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+index 9aeb929..7c068b4 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+@@ -44,49 +44,11 @@
+ #include "ixgbe_sriov.h"
+ 
+ #ifdef CONFIG_PCI_IOV
+-void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
++static int __ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
+ {
+ 	struct ixgbe_hw *hw = &adapter->hw;
+ 	int num_vf_macvlans, i;
+ 	struct vf_macvlans *mv_list;
+-	int pre_existing_vfs = 0;
+-
+-	pre_existing_vfs = pci_num_vf(adapter->pdev);
+-	if (!pre_existing_vfs && !adapter->num_vfs)
+-		return;
+-
+-	/* If there are pre-existing VFs then we have to force
+-	 * use of that many because they were not deleted the last
+-	 * time someone removed the PF driver.  That would have
+-	 * been because they were allocated to guest VMs and can't
+-	 * be removed.  Go ahead and just re-enable the old amount.
+-	 * If the user wants to change the number of VFs they can
+-	 * use ethtool while making sure no VFs are allocated to
+-	 * guest VMs... i.e. the right way.
+-	 */
+-	if (pre_existing_vfs) {
+-		adapter->num_vfs = pre_existing_vfs;
+-		dev_warn(&adapter->pdev->dev, "Virtual Functions already "
+-			 "enabled for this device - Please reload all "
+-			 "VF drivers to avoid spoofed packet errors\n");
+-	} else {
+-		int err;
+-		/*
+-		 * The 82599 supports up to 64 VFs per physical function
+-		 * but this implementation limits allocation to 63 so that
+-		 * basic networking resources are still available to the
+-		 * physical function.  If the user requests greater thn
+-		 * 63 VFs then it is an error - reset to default of zero.
+-		 */
+-		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, 63);
+-
+-		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
+-		if (err) {
+-			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
+-			adapter->num_vfs = 0;
+-			return;
+-		}
+-	}
+ 
+ 	adapter->flags |= IXGBE_FLAG_SRIOV_ENABLED;
+ 	e_info(probe, "SR-IOV enabled with %d VFs\n", adapter->num_vfs);
+@@ -156,10 +118,66 @@ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
+ 		/* enable spoof checking for all VFs */
+ 		for (i = 0; i < adapter->num_vfs; i++)
+ 			adapter->vfinfo[i].spoofchk_enabled = true;
++		return 0;
++	}
++
++	return -ENOMEM;
++}
++
++/*
++ * Note this function is called when the user wants to enable SR-IOV
++ * VFs using the now deprecated module parameter
++ */
++void ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
++{
++	int pre_existing_vfs = 0;
++
++	pre_existing_vfs = pci_num_vf(adapter->pdev);
++	if (!pre_existing_vfs && !adapter->num_vfs)
+ 		return;
++
++	if (!pre_existing_vfs)
++		dev_warn(&adapter->pdev->dev,
++		 	 "Enabling SR-IOV VFs using the module parameter is deprecated - please use the pci sysfs interface.\n");
++
++	/*
++	 * If there are pre-existing VFs then we have to force
++	 * use of that many - over ride any module parameter value.
++	 * This may result from the user unloading the PF driver
++	 * while VFs were assigned to guest VMs or because the VFs
++	 * have been created via the new PCI SR-IOV sysfs interface.
++	 */
++	if (pre_existing_vfs) {
++		adapter->num_vfs = pre_existing_vfs;
++		dev_warn(&adapter->pdev->dev, "Virtual Functions already "
++			 "enabled for this device - Please reload all "
++			 "VF drivers to avoid spoofed packet errors\n");
++	} else {
++		int err;
++		/*
++		 * The 82599 supports up to 64 VFs per physical function
++		 * but this implementation limits allocation to 63 so that
++		 * basic networking resources are still available to the
++		 * physical function.  If the user requests greater thn
++		 * 63 VFs then it is an error - reset to default of zero.
++		 */
++		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, 63);
++
++		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
++		if (err) {
++			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
++			adapter->num_vfs = 0;
++			return;
++		}
+ 	}
+ 
+-	/* Oh oh */
++	if (!__ixgbe_enable_sriov(adapter))
++		return;
++
++	/*
++	 * If we have gotten to this point then there is no memory available
++	 * to manage the VF devices - print message and bail.
++	 */
+ 	e_err(probe, "Unable to allocate memory for VF Data Storage - "
+ 	      "SRIOV disabled\n");
+ 	ixgbe_disable_sriov(adapter);
+-- 
+1.7.10.2.552.gaa3bb87
 
->>> - why does the system not succeed to "derive" routing for INTA? And why
->>> us?
->>
->> The derivation is based on ACPI _PRT tables.  Regrettably, we don't
->> dump the _PRT contents in dmesg, so we'd need an acpidump to look
->> further into that.
->
-> Well unfortunately, we are not able to provide this kind of information at
-> this moment.
-
-The acpidump isn't secret (it's not part of the BIOS source); it's
-just information extracted from the running system.  See
-https://lesswatts.org/projects/acpi/utilities.php for details.
-
-Bjorn
