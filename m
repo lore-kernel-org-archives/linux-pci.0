@@ -1,172 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3744 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:30154 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751243Ab2JYBgO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Oct 2012 21:36:14 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>, stable@vger.kernel.org
-Subject: [BUGFIX] PCI/PM: Fix proc config reg access for D3cold and bridge suspending
-Date: Thu, 25 Oct 2012 09:36:03 +0800
-Message-Id: <1351128963-10347-1-git-send-email-ying.huang@intel.com>
+	id S1760064Ab2JYSil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 14:38:41 -0400
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 1/8] Yinghai's patch 1 of 2
+Date: Thu, 25 Oct 2012 14:38:23 -0400
+Message-Id: <1351190310-5043-2-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In
-
-  https://bugzilla.kernel.org/show_bug.cgi?id=48981
-
-Peter reported that /proc/bus/pci/??/??.? does not works for 3.6.
-This is This is because the device configuration space registers will
-be not accessible if the corresponding parent bridge is suspended or
-the device is put into D3cold state.
-
-This is the same as /sys/bus/pci/devices/0000:??:??.?/config access
-issue.  So the function used to solve sysfs issue is used to solve
-this issue.
-
-Cc: stable@vger.kernel.org
-Reported-by: Peter <lekensteyn@gmail.com>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
 ---
- drivers/pci/pci-sysfs.c |   34 ----------------------------------
- drivers/pci/pci.c       |   32 ++++++++++++++++++++++++++++++++
- drivers/pci/pci.h       |    2 ++
- drivers/pci/proc.c      |    8 ++++++++
- 4 files changed, 42 insertions(+), 34 deletions(-)
+ drivers/pci/pci-sysfs.c | 24 ++++++++++++++++++++++++
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/probe.c     |  1 +
+ 3 files changed, 26 insertions(+)
 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 02d107b..3d160aa 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -458,40 +458,6 @@ boot_vga_show(struct device *dev, struct
+@@ -1411,3 +1411,27 @@ static int __init pci_sysfs_init(void)
  }
- struct device_attribute vga_attr = __ATTR_RO(boot_vga);
  
--static void
--pci_config_pm_runtime_get(struct pci_dev *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct device *parent = dev->parent;
--
--	if (parent)
--		pm_runtime_get_sync(parent);
--	pm_runtime_get_noresume(dev);
--	/*
--	 * pdev->current_state is set to PCI_D3cold during suspending,
--	 * so wait until suspending completes
--	 */
--	pm_runtime_barrier(dev);
--	/*
--	 * Only need to resume devices in D3cold, because config
--	 * registers are still accessible for devices suspended but
--	 * not in D3cold.
--	 */
--	if (pdev->current_state == PCI_D3cold)
--		pm_runtime_resume(dev);
--}
--
--static void
--pci_config_pm_runtime_put(struct pci_dev *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct device *parent = dev->parent;
--
--	pm_runtime_put(dev);
--	if (parent)
--		pm_runtime_put_sync(parent);
--}
--
- static ssize_t
- pci_read_config(struct file *filp, struct kobject *kobj,
- 		struct bin_attribute *bin_attr,
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1858,6 +1858,38 @@ bool pci_dev_run_wake(struct pci_dev *de
- }
- EXPORT_SYMBOL_GPL(pci_dev_run_wake);
- 
-+void pci_config_pm_runtime_get(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
+ late_initcall(pci_sysfs_init);
 +
-+	if (parent)
-+		pm_runtime_get_sync(parent);
-+	pm_runtime_get_noresume(dev);
-+	/*
-+	 * pdev->current_state is set to PCI_D3cold during suspending,
-+	 * so wait until suspending completes
-+	 */
-+	pm_runtime_barrier(dev);
-+	/*
-+	 * Only need to resume devices in D3cold, because config
-+	 * registers are still accessible for devices suspended but
-+	 * not in D3cold.
-+	 */
-+	if (pdev->current_state == PCI_D3cold)
-+		pm_runtime_resume(dev);
++static struct attribute *pci_dev_dev_attrs[] = {
++	NULL,
++};
++
++static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
++{
++	return a->mode;
 +}
 +
-+void pci_config_pm_runtime_put(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device *parent = dev->parent;
++static struct attribute_group pci_dev_attr_group = {
++	.attrs = pci_dev_dev_attrs,
++	.is_visible = pci_dev_attrs_are_visible,
++};
 +
-+	pm_runtime_put(dev);
-+	if (parent)
-+		pm_runtime_put_sync(parent);
-+}
++static const struct attribute_group *pci_dev_attr_groups[] = {
++	&pci_dev_attr_group,
++	NULL,
++};
 +
- /**
-  * pci_pm_init - Initialize PM functions of given PCI device
-  * @dev: PCI device to handle.
++struct device_type pci_dev_type = {
++	.groups = pci_dev_attr_groups,
++};
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index bacbcba..6f6cd14 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -72,6 +72,8 @@ extern void pci_disable_enabled_device(s
- extern int pci_finish_runtime_suspend(struct pci_dev *dev);
- extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
- extern void pci_wakeup_bus(struct pci_bus *bus);
-+extern void pci_config_pm_runtime_get(struct pci_dev *dev);
-+extern void pci_config_pm_runtime_put(struct pci_dev *dev);
- extern void pci_pm_init(struct pci_dev *dev);
- extern void platform_pci_wakeup_init(struct pci_dev *dev);
- extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -76,6 +76,8 @@ proc_bus_pci_read(struct file *file, cha
- 	if (!access_ok(VERIFY_WRITE, buf, cnt))
- 		return -EINVAL;
- 
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((pos & 1) && cnt) {
- 		unsigned char val;
- 		pci_user_read_config_byte(dev, pos, &val);
-@@ -121,6 +123,8 @@ proc_bus_pci_read(struct file *file, cha
- 		cnt--;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	*ppos = pos;
- 	return nbytes;
+@@ -157,6 +157,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
  }
-@@ -146,6 +150,8 @@ proc_bus_pci_write(struct file *file, co
- 	if (!access_ok(VERIFY_READ, buf, cnt))
- 		return -EINVAL;
- 
-+	pci_config_pm_runtime_get(dev);
-+
- 	if ((pos & 1) && cnt) {
- 		unsigned char val;
- 		__get_user(val, buf);
-@@ -191,6 +197,8 @@ proc_bus_pci_write(struct file *file, co
- 		cnt--;
- 	}
- 
-+	pci_config_pm_runtime_put(dev);
-+
- 	*ppos = pos;
- 	i_size_write(ino, dp->size);
- 	return nbytes;
+ extern struct device_attribute pci_dev_attrs[];
+ extern struct device_attribute pcibus_dev_attrs[];
++extern struct device_type pci_dev_type;
+ #ifdef CONFIG_HOTPLUG
+ extern struct bus_attribute pci_bus_attrs[];
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec909af..0312f1c48 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -975,6 +975,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->sysdata = dev->bus->sysdata;
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
+-- 
+1.7.10.2.552.gaa3bb87
+
