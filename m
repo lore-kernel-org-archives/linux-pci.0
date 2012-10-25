@@ -1,54 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:30053 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1753111Ab2JRBBu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Oct 2012 21:01:50 -0400
-Message-ID: <507F54BA.2050103@cn.fujitsu.com>
-Date: Thu, 18 Oct 2012 09:00:42 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: jiang.liu@huawei.com, bhelgaas@google.com, lenb@kernel.org,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] Update acpi_root_bridge_list in container hotplug
- path.
-References: <1350444308-27102-1-git-send-email-tangchen@cn.fujitsu.com> <CAE9FiQVFc9VVfWZpEfjPeGvo5pby3BQNzDei3VTXdoR048_SPg@mail.gmail.com> <507E60C2.6010104@cn.fujitsu.com> <CAE9FiQX60dOE7odBx4OC0kawesZW3w9yLHEhmLoOvASaZ7q8dw@mail.gmail.com>
-In-Reply-To: <CAE9FiQX60dOE7odBx4OC0kawesZW3w9yLHEhmLoOvASaZ7q8dw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:53667 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760027Ab2JYSil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 14:38:41 -0400
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [RFC] SRIOV device enable and disable via sysfs
+Date: Thu, 25 Oct 2012 14:38:22 -0400
+Message-Id: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2012 12:28 AM, Yinghai Lu wrote:
-> On Wed, Oct 17, 2012 at 12:39 AM, Tang Chen<tangchen@cn.fujitsu.com>  wrote:
->> On 10/17/2012 01:18 PM, Yinghai Lu wrote:
->>
->> And also, I have another 2 questions, maybe you can help me.
->> 1) Do we need to put PNP0A08 into acpi_pci_roots ?
->
-> looks like we need to unify those two ids.
->
->> 2) In container_notify_cb(), when it got a ACPI_NOTIFY_EJECT_REQUEST
->>     event, it doesn't do the hot-remove things.
->>     I use your sci emulator patch to test it. I did the following thing:
->>          echo echo "\_SB_.LSB1">  /sys/kernel/debug/acpi/sci_notify
->>     where \_SB_.LSB1 is a container, it just did nothing.
->>     Do we need to support this operation ?
->
-> yes, looks like need to add container_device_remove and call it under
->   container_notify_cb/ACPI_NOTIFY_EJECT_REQUEST
->
-> and should look like handle_root_bridge_removal to call acpi_bus_trim two times.
+Currently, VF enablement by SRIOV-capable PCIe devices is done
+in driver-specific module parameters.  If not setup in modprobe files,
+it requires admin to unload & reload PF drivers with number of desired
+VFs to enable.  Additionally, the enablement is system wide: all
+devices controlled by the same driver have the same number of VFs
+enabled.  Although the latter is probably desired, there are PCI
+configurations setup by system BIOS that may not enable that to occur.
 
-Hi Yinghai,
+Two files are created if a PCIe device has SRIOV support:
+sriov_totalvfs -- cat-ing this file returns the maximum number
+                  of VFs a PCIe device supports.
+sriov_numvfs -- echo'ing a positive number to this file enables 
+                & configures this number of VFs for this given PCIe
+                device.
+	     -- echo'ing 0 to this file disables and deconfigures
+                all VFs for this given PCIe device.
+             -- cat-ing this file will return the number of VFs
+                currently enabled on this PCIe device.
 
-OK, I can do that. :)
-And I'll send patches for that soon. :)
+VF enable and disablement is invoked much like other PCIe
+configuration functions -- via a registered callback in the driver,
+i.e., probe, release, etc.  In this case, sriov_configure
 
->
-> Thanks
->
-> Yinghai
->
+Patches 1 & 2 are copies of Yinghai's patches to change
+the PCI device attribute 'vga' to a visible attribute,
+and showed me how to do it for SRIOV attributes.
+
+Patches 3 & 4 are the heart of this patch.
+
+Patches 5 through 7 are refactoring of the ixgbe modules
+to use the sysfs-based sriov enable/disable feature, provided
+by Greg Rose; I modified the last patch when going from v2->v3.
+
+Patch 8 is using a new method that allows a driver to change
+the sriov sysfs core code to use a differnt max-supported-numvfs
+than what totalvfs reports in the SRIOV capability structure.
+ixgbe is one of these devices; igb is as well.  This patch could
+be excluded and rely on the drivers to do the numvfs filtering, but
+this patch set tries to remove this dependency on the drivers,
+and does so in the core code. 
+
+Two other proposals for this core logic have been made:
+(1) Move the pci_sriov_[enable,disable]() calls out of the drivers 
+    and into this framework. Looking at the ixgbe driver,
+    the calls would be made prior to invoking the driver's 
+    sriov_configure() interface.  If one reviews the ixgbe driver,
+    to implement this proposal, the second proposal would have to
+    be adopted....
+(2) Add a check to prevent a VF from being unconfigured
+    if it is assigned to a virtual machine (VM).  This is currently
+    tracked by the PCI_DEV_FLAGS_ASSIGNED bit in the pdev's dev_flags
+    field. KVM & Xen currently set this flag when a PCI device
+    (PF or VF) is assigned to a VM.
+
+v2->v3:
+-- change the file names to reflect the names used in the SRIOV spec
+-- change to a single file for enable & disable; 
+   change driver interface to a single interface.
+-- add more informative messages on failures
+-- add a core method that a driver can invoke to modify
+   the totalvfs reported & supported by a driver.
+-- a set of patches for ixgbe provided by Greg Rose to use the
+   new interfaces; the last patch modified from the original
+   two file, enable/disable interface to the current single file
+   enable/disable. Greg will eventually post the final version
+   of these patches via Intel's usual process for driver patches.
+   Provided here as an example, and enable other SRIOV drivers
+   to see how adoption of the interface can be added.
+
+v1->v2:
+This patch is based on previous 2 patches by Yinghai Lu
+that cleaned up the vga attributes for PCI devices under sysfs,
+and uses visibility-checking group attributes as recommended by
+Greg K-H.
+
+Signed-off-by: Donald Dutile <ddutile@redhat.com>
+
+>From Donald Dutile <ddutile@redhat.com> # This line is ignored.
+From: Donald Dutile <ddutile@redhat.com>
+Subject: [RFC] SRIOV device enable and disable via sysfs
+In-Reply-To: 
 
