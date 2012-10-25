@@ -1,148 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:59730 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756789Ab2JLLdp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2012 07:33:45 -0400
-Message-ID: <5077FEE6.7060000@jp.fujitsu.com>
-Date: Fri, 12 Oct 2012 20:28:38 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:7207 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759008Ab2JYBro (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 21:47:44 -0400
+Message-ID: <50889A14.9030607@huawei.com>
+Date: Thu, 25 Oct 2012 09:47:00 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-To: khalid@gonehiking.org
-CC: martin.wilck@ts.fujitsu.com, linux-pci@vger.kernel.org,
-	x86@kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, hbabu@us.ibm.com,
-	andi@firstfloor.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, mingo@redhat.com, vgoyal@redhat.com
-Subject: Re: [PATCH v3 1/2] x86, pci: Reset PCIe devices at boot time
-References: <20121010074553.1084.52175.sendpatchset@indoh>  <20121010074603.1084.92389.sendpatchset@indoh>  <1349899704.25679.14.camel@rhapsody> <50766432.9000706@jp.fujitsu.com> <1349976523.7065.22.camel@rhapsody>
-In-Reply-To: <1349976523.7065.22.camel@rhapsody>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Tang Chen <tangchen@cn.fujitsu.com>
+CC: Toshi Kani <toshi.kani@hp.com>, <yinghai@kernel.org>,
+	<bhelgaas@google.com>, <lenb@kernel.org>,
+	<izumi.taku@jp.fujitsu.com>, <isimatu.yasuaki@jp.fujitsu.com>,
+	<mihailm@parallels.com>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] Improve container_notify_cb() to support container
+ hot-remove.
+References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>  <1351058750-4275-3-git-send-email-tangchen@cn.fujitsu.com> <1351098875.19172.21.camel@misato.fc.hp.com> <5088967E.3060204@cn.fujitsu.com>
+In-Reply-To: <5088967E.3060204@cn.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/12 2:28), Khalid Aziz wrote:
-> On Thu, 2012-10-11 at 15:16 +0900, Takao Indoh wrote:
->> (2012/10/11 5:08), Khalid Aziz wrote:
-> .....
->>>> +static void __init do_reset(u8 bus, u8 slot, u8 func)
->>>> +{
->>>> +	u16 ctrl;
->>>> +
->>>> +	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
->>>> +
->>>> +	/* Assert Secondary Bus Reset */
->>>> +	ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
->>>> +	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
->>>> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->>>> +
->>>> +	pci_udelay(5000);
->>>> +
->>>> +	/* De-assert Secondary Bus Reset */
->>>> +	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
->>>> +	write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->>>> +
->>>> +	pci_udelay(500000);
+On 2012-10-25 9:31, Tang Chen wrote:
+> Hi Toshi,
+> 
+> On 10/25/2012 01:14 AM, Toshi Kani wrote:
+>> On Wed, 2012-10-24 at 14:05 +0800, Tang Chen wrote:
+>>> +static int container_device_remove(struct acpi_device *device)
+>>> +{
+>>> +    int ret;
+>>> +    struct acpi_eject_event *ej_event;
+>>> +
+>>> +    /* stop container device at first */
+>>> +    ret = acpi_bus_trim(device, 0);
+>>
+>> Hi Tang,
+>>
+>> Why do you need to call acpi_bus_trim(device,0) to stop the container
+>> device first?
+> 
+> This issue was introduced by Lu Yinghai, I think he could give a better
+> answer than me. :)
+> Please refer to the following url:
+> 
+> http://www.spinics.net/lists/linux-pci/msg17667.html
+> 
+> However, this is not applied into the pci tree yet.
+We have worked out a patch set to clean up the logic for PCI/ACPI binding
+relationship. It updates PCI/ACPI binding relationship by registering bus
+notification onto pci_bus_type instead of hooking into the ACPI/glue.c.
+
+To accommodate that patch set, the ACPI device destroy process has been
+split into two steps:
+1) acpi_bus_trim(device,0) to unbind ACPI drivers
+2) acpi_bus_trim(device,1) to destroy ACPI devices
+
+> 
+>>
+>>> +    printk(KERN_WARNING "acpi_bus_trim stop return %x\n", ret);
+>>
+>> Do you need this message in the normal case?  If so, I'd suggest to use
+>> pr_debug().
+>>
+>>> +    if (ret)
+>>> +        return ret;
+>>> +
+>>> +    /* event originated from ACPI eject notification */
+>>> +    device->flags.eject_pending = 1;
+>>
+>> You do not need to set the eject_pending flag when the handler calls
+>> acpi_bus_hot_remove_device().  It was set before because the handler did
+>> not initiate the hot-remove operation.
+> 
+> I just set it to keep the logic the same as before.
+> And thanks for telling me this. :)
+> 
+>>
+> ...
+>>> +        printk(KERN_WARNING "Container driver received %s event\n",
+>>> +            "ACPI_NOTIFY_EJECT_REQUEST");
+>>
+>> Same as other comment.  Suggest to use pr_debug().
+> 
+> OK. :)
+> 
+>>
+>>> +
+>>> +        if (!present || ACPI_FAILURE(status) || !device)
+>>> +            break;
+>>> +
+>>> +        result = container_device_remove(device);
+>>> +        if (result) {
+>>> +            printk(KERN_WARNING "Failed to remove container\n");
+>>
+>> Please use pr_warn().
+>>
+>> Thanks,
+>> -Toshi
+>>
+>>> +            break;
+>>>           }
+>>> -        break;
+>>> +
+>>> +        return;
 >>>
->>> This is 0.5 second. This will add up quickly on larger servers with
->>> multiple busses. Is 0.5 second required by the spec?
->>> aer_do_secondary_bus_reset() holds PCI_BRIDGE_CTL_BUS_RESET for 2 ms and
->>> then waits another 200 ms after de-asserting it. Still long, but less
->>> than half of the delay in above code..
+>>>       default:
+>>>           /* non-hotplug event; possibly handled by other handler */
 >>
->> According to PCIe spec, they should be more than 1ms and 100ms. The reason
->> why they're 2ms and 200ms in aer_do_secondary_bus_reset() is that it's a
->> kind of safety margin, I think.
 >>
->> At first these delay were 2ms and 200ms as well as
->> aer_do_secondary_bus_reset(), but I found a problem that on certain
->> machine it was not enough. I think this problem occurs because
->> native_io_delay() is not precise. Therefore I extended them to have more
->> margin.
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >>
->> If this delay should be shortened, I have two solutions.
->>
->> 1)
->> Call early_reset_pcie_devices() after calibrate_delay() so that we can
->> use precise mdelay. Personally I don't want to do this because I think
->> DMA should be stopped asap.
->>
->> 2)
->> Make it tuneable. For exmple, improve "reset_devices"
->>       reset_devices=reset_delay=500
->> or something like that. As default, 200ms is enough as far as I tested.
->> But if it is not enough, we can adjust delay time using this.
->>
->> Any other idea?
->>
->
-> I don't like the idea of asking end user to determine how many msec of
-> delay they would need on their system for a reset. If we have to go that
-> route, I would rather have a default of 200 msec and then add a kernel
-> option like "reset_devices=reset_delay=long" which changes the delay to
-> 500 msec.
->
-> Here is another idea. The code you currently have does:
->
-> for (each device) {
->    save config registers
->    reset
->    wait for 500 ms
->    restore config registers
-> }
->
-> You need to wait for 500 ms because you can not access config registers
-> until reset is complete. So how about this - why not just save config
-> registers, reset each device and then wait only once for 500 ms before
-> restoring config registers on all devices. Here is what this will look
-> like:
->
-> for (each device) {
->    save config registers
->    reset
-> }
-> wait 500 ms
-> for (each device) {
->    restore config registers
-> }
->
-> This is obviously more complex and requires you to allocate more space
-> for saving state, but it has the benefits of minimizing boot up delay
-> and making the delay constant irrespective of number of switches/bridges
-> on the system.
->
-> Does this sound reasonable?
+> 
+> 
+> .
+> 
 
-Yep, that looks good idea. I'll update my patch with this idea.
-
-Thanks,
-Takao Indoh
-
->
->
->>>
->>> We have been seeing problems with kexec/kdump kernel for quite some time
->>> that are related to I/O devices not being quiesced before kexec. I had
->>> added code to clear Bus Master bit to help stop runaway DMAs which
->>> helped many cases, but obviously not all. If resetting downstream ports
->>> helps stop runaway I/O from PCIe devices, I am all for this approach.
->>> This patch still doesn't do anything for old PCI devices though.
->>
->> This patch does not reset PCI devices because of VGA problem. As I wrote
->> in patch description, the monitor blacks out when VGA controller is
->> reset. So when VGA device is found we need to skip it. In the case of
->> PCIe, we can decide whether we do bus reset or not on each device, but
->> we cannot in the case of PCI.
->
-> OK. My concern is there are plenty of older servers out there that
-> potentially have the problem with kexec/kdump failing often and we are
-> not solving the problem for them. If we can only solve it for PCIe for
-> now, I am ok with starting there.
->
-> --
-> Khalid
->
->
->
->
 
