@@ -1,44 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:34335 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965427Ab2JCRwE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Oct 2012 13:52:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from ns.uli-eckhardt.de ([85.214.28.137]:57311 "EHLO
+	mail.uli-eckhardt.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757204Ab2JYRQB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 13:16:01 -0400
+Message-ID: <508973CE.8080603@uli-eckhardt.de>
+Date: Thu, 25 Oct 2012 19:15:58 +0200
+From: Ulrich Eckhardt <usb@uli-eckhardt.de>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Don Dutile <ddutile@redhat.com>, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	davem@davemloft.net--no-chain-reply-to,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/5] PCI: add set_max_vfs in pci_driver ops
-Date: Wed,  3 Oct 2012 10:51:33 -0700
-Message-Id: <1349286695-26713-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349286695-26713-1-git-send-email-yinghai@kernel.org>
-References: <506C3B11.9010009@redhat.com>
- <1349286695-26713-1-git-send-email-yinghai@kernel.org>
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+References: <50841CCC.9030809@uli-eckhardt.de> <5086D067.4000900@uli-eckhardt.de> <CAErSpo4TG8F94qkQzD7XrZnozBcTo3ZGdJsJ0PeLmCtpsU1MtA@mail.gmail.com> <6817642.hqndXjdIQA@vostro.rjw.lan> <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
+In-Reply-To: <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will use it enable sriov for pci devices.
+Am 24.10.2012 23:13, schrieb Bjorn Helgaas:
+> On Wed, Oct 24, 2012 at 3:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>
+>> It can be disabled by writing "on" to the controller's
+>> /sys/devices/.../power/control file.
+>
+> Ulrich, if you boot in the working situation and write "on" to the
+> control file as above, can you still reproduce the failure?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- include/linux/pci.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I have done first a cat to the control file which returns already on:
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index be1de01..7d70a5e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -590,6 +590,7 @@ struct pci_driver {
- 	const struct pci_device_id *id_table;	/* must be non-NULL for probe to be called */
- 	int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);	/* New device inserted */
- 	void (*remove) (struct pci_dev *dev);	/* Device removed (NULL if not a hot-plug capable driver) */
-+	void (*set_max_vfs) (struct pci_dev *dev); /* enable sriov */
- 	int  (*suspend) (struct pci_dev *dev, pm_message_t state);	/* Device suspended */
- 	int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
- 	int  (*resume_early) (struct pci_dev *dev);
+uli:/ # cat /sys/devices/pci0000\:00/0000\:00\:04.0/power/control
+on
+
+Writing again on to the file does not change anything.
+
+Best Regards
+Uli
 -- 
-1.7.7
+Ulrich Eckhardt                  http://www.uli-eckhardt.de
 
+Ein Blitzableiter auf dem Kirchturm ist das denkbar stärkste
+Misstrauensvotum gegen den lieben Gott. (Karl Krauss)
