@@ -1,51 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:49023 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335Ab2JBHt6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 03:49:58 -0400
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: martin.wilck@ts.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, vgoyal@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, Takao Indoh <indou.takao@jp.fujitsu.com>
-Message-Id: <20121002074434.204.47750.sendpatchset@indoh>
-Subject: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump with iommu
-Date: Tue,  2 Oct 2012 16:49:56 +0900 (JST)
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <50888D77.2090006@huawei.com>
+Date: Thu, 25 Oct 2012 08:53:11 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Toshi Kani <toshi.kani@hp.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>, <yinghai@kernel.org>,
+	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
+	<isimatu.yasuaki@jp.fujitsu.com>, <mihailm@parallels.com>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] Improve container_notify_cb() to support container
+ hot-remove.
+References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com> <1351058750-4275-3-git-send-email-tangchen@cn.fujitsu.com> <1351098875.19172.21.camel@misato.fc.hp.com> <CAErSpo7KRTY+M1gSO7s_PGRPkXABK6x9CQsaMXbZ__C11mmTWQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7KRTY+M1gSO7s_PGRPkXABK6x9CQsaMXbZ__C11mmTWQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These patches reset PCIe devices at boot time to address DMA problem on
-kdump with iommu. When "reset_devices" is specified, a hot reset is
-triggered on each PCIe root port and downstream port to reset its
-downstream endpoint.
+On 2012-10-25 2:02, Bjorn Helgaas wrote:
+> On Wed, Oct 24, 2012 at 11:14 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+>> On Wed, 2012-10-24 at 14:05 +0800, Tang Chen wrote:
+> 
+>>> +             result = container_device_remove(device);
+>>> +             if (result) {
+>>> +                     printk(KERN_WARNING "Failed to remove container\n");
+>>
+>> Please use pr_warn().
+> 
+> I think you should use dev_warn() and similar when possible.  In a
+> year or two, the text "Failed to remove container" all by itself in a
+> dmesg log is not going to mean anything to anybody except you, and it
+> doesn't give any clue where to start looking for issues.
+> 
+> I also have a larger question.  I'm not sure if
+> drivers/acpi/container.c does anything important in the first place.
+> The code in it looks an awful lot like the code in
+> drivers/acpi/processor_driver.c, drivers/acpi/acpi_memhotplug.c, and
+> drivers/pci/hotplug/acpiphp_glue.c.
+> 
+> To me, it looks like container.c (as well as the other places I
+> mentioned) is an attempt to compensate for the lack of hotplug support
+> in the ACPI core.  If the ACPI core had generic hotplug support, e.g.,
+> if it handled BUS_CHECK, DEVICE_CHECK, and EJECT_REQUEST notifications
+> and turned those into the appropriate calls to driver .add()/.start()
+> and .remove() methods, would we need container.c at all?
+Hi Bjorn,
+	It's true that container driver is just for hotplug. We are working
+on a hotplug framework which will consolidate all hotplug logic into one
+driver.
+	--Gerry
 
-Background:
-A kdump problem about DMA has been discussed for a long time. That is,
-when a kernel is switched to the kdump kernel DMA derived from first
-kernel affects second kernel. Recently this problem surfaces when iommu
-is used for PCI passthrough on KVM guest. In the case of the machine I
-use, when intel_iommu=on is specified, DMAR error is detected in kdump
-kernel and PCI SERR is also detected. Finally kdump fails because some
-devices does not work correctly.
+> 
+> Bjorn
+> 
+> .
+> 
 
-The root cause is that ongoing DMA from first kernel causes DMAR fault
-because page table of DMAR is initialized while kdump kernel is booting
-up. Therefore to address this problem DMA needs to be stopped before
-DMAR is initialized at kdump kernel boot time. By these patches, PCIe
-devices are reset by hot reset and its DMA is stopped when reset_devices
-is specified. One problem of this solution is that the monitor blacks
-out when VGA controller is reset. So this patch does not reset the port
-whose child endpoint is VGA device.
-
-v2:
-Reset devices in setup_arch() because reset need to be done before
-interrupt remapping is initialized.
-
-v1:
-https://lkml.org/lkml/2012/8/3/160
-
-Thanks,
-Takao Indoh
 
