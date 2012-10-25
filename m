@@ -1,94 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog111.obsmtp.com ([207.126.144.131]:59331 "EHLO
-	eu1sys200aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1422661Ab2JaLYw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 07:24:52 -0400
-Message-ID: <50910A76.9030308@st.com>
-Date: Wed, 31 Oct 2012 16:54:38 +0530
-From: Pratyush Anand <pratyush.anand@st.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:47678 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759429Ab2JYSTx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 14:19:53 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hr7so1939001wib.1
+        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2012 11:19:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Shiraz HASHIM <shiraz.hashim@st.com>,
-	"viresh.linux@gmail.com" <viresh.linux@gmail.com>,
-	spear-devel <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"olof@lixom.net" <olof@lixom.net>
-Subject: Re: [PATCH 09/15] SPEAr13xx: dts: Fix PCIe core address ranges
-References: <cover.1351492562.git.pratyush.anand@st.com> <6ed9683e3149a640b4333cf3039ae31063b23e3b.1351492562.git.pratyush.anand@st.com> <201210302155.05206.arnd@arndb.de>
-In-Reply-To: <201210302155.05206.arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+In-Reply-To: <1349742167.6336.3.camel@deadeye.wl.decadent.org.uk>
+References: <1349643467.16173.148.camel@deadeye.wl.decadent.org.uk>
+ <20121008162830.GA1307@kroah.com> <CAErSpo5WymA1qf_mL4F_VYeNt0Ed5EY0RHW4ts76DLbipLp8pQ@mail.gmail.com>
+ <1349742167.6336.3.camel@deadeye.wl.decadent.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Oct 2012 12:19:21 -0600
+Message-ID: <CAErSpo5Xs8pW6eQjjoDD289e_EiFMxdQyBJ4cVFdn5mfOU=Vnw@mail.gmail.com>
+Subject: Re: [stable] PCI: acpiphp: check whether _ADR evaluation succeeded
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Greg KH <greg@kroah.com>, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org, jeroen@nijhof.uklinux.net,
+	public@stefan-nagy.at
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/31/2012 3:25 AM, Arnd Bergmann wrote:
-> On Monday 29 October 2012, Pratyush Anand wrote:
->> sible by
->> AHB and used to communicate with PCIe devices connected with the host
->> controller.
+On Mon, Oct 8, 2012 at 6:22 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
+> On Mon, 2012-10-08 at 10:37 -0600, Bjorn Helgaas wrote:
+>> On Mon, Oct 8, 2012 at 10:28 AM, Greg KH <greg@kroah.com> wrote:
+>> > On Sun, Oct 07, 2012 at 09:57:47PM +0100, Ben Hutchings wrote:
+>> >> Based on <https://bugzilla.kernel.org/show_bug.cgi?id=46481>, the
+>> >> following commit should be cherry-picked for stable series < 3.6:
+>> >>
+>> >> commit dfb117b3e50c52c7b3416db4a4569224b8db80bb
+>> >> Author: Bjorn Helgaas <bhelgaas@google.com>
+>> >> Date:   Wed Jun 20 16:18:29 2012 -0600
+>> >>
+>> >>     PCI: acpiphp: check whether _ADR evaluation succeeded
+>> >>
+>> >> It applies cleanly to 3.2.y and presumably also to later stable
+>> >> branches.  I've attached a version that applies to 2.6.32.y and 3.0.y,
+>> >> and presumably also to the intermediate stable branches.  Only 3.2.y has
+>> >> actually been tested with this, though.
+>> >
+>> > Thanks, now applied.
 >>
->> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
->> ---
->>   arch/arm/boot/dts/spear13xx.dtsi |    9 +++++----
->>   1 files changed, 5 insertions(+), 4 deletions(-)
->>
->> diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
->> index 9ff4f5f..b7990754 100644
->> --- a/arch/arm/boot/dts/spear13xx.dtsi
->> +++ b/arch/arm/boot/dts/spear13xx.dtsi
->> @@ -76,7 +76,8 @@
->>                  #size-cells = <1>;
->>                  compatible = "simple-bus";
->>                  ranges = <0x50000000 0x50000000 0x10000000
->> -                         0xb0000000 0xb0000000 0x10000000
->> +                         0x80000000 0x80000000 0x20000000
->> +                         0xb0000000 0xb0000000 0x20000000
->>                            0xd0000000 0xd0000000 0x02000000
->>                            0xd8000000 0xd8000000 0x01000000
->>                            0xe0000000 0xe0000000 0x10000000>;
->> @@ -194,7 +195,7 @@
->>                  pcie0@b1000000 {
->>                          compatible = "st,pcie-gadget", "st,pcie-host" ;
->>                          reg = < 0xb1000000 0x4000
->> -                               0x80000000 0x2000
->> +                               0x80000000 0x10000000
->>                                  0xeb800000 0x1000 >;
->>                          interrupts = <0 68 0x4>;
->>                          status = "disabled";
+>> Has anybody looked deeper to see exactly *how* this patch fixes the
+>> problem?  The original reports were oopses caused by dereferencing bad
+>> pointers in DRM, and it's not obvious to me how this patch is
+>> connected to those.
 >
-> The code that I'm looking at in the upstream kernel looks very different, so I don't
-> see how this patch would apply. Also, the version that you are patching as well
-> as the changes you do don't actually follow the generic PCI bindings at all
-> and should be done quite differently.
->
+> Oh, I completely missed the oops log.  Yes, it does look like there's
+> another more serious bug still to be fixed in 3.2.y (maybe in DRM, maybe
+> not).
 
-Yes, this was my mistake. I rebased with ST repo. Will send V2 with 
-correct rebase.
+With a lot of help from Jeroen Nijhof <jeroen@nijhof.uklinux.net> and
+Stefan Nagy <public@stefan-nagy.at>, I analyzed this and convinced
+myself that the DRM oopses were in fact caused by the bogus slot we
+registered when we ignored the _ADR evaluation failures.
 
+More details in https://bugzilla.kernel.org/show_bug.cgi?id=46481
 
-> Please have a look at how to configure the PCI ranges in the IEEE1275 PCI
-> bindings and in examples you find in arch/powerpc/.
->
+So I believe this _ADR problem was the root cause and we don't need to
+look for more DRM issues.
 
-Will look into.
-
-> Most importantly, the compatible string used here can't really refer to both
-> the host and the endpoint mode, you really need separate bindings for those
-> and have only one of the two used in a particular system. What you can do is
-> to put both into the dtsi file and mark them as "disabled" and then enable
-> just one of the two on a given board file.
-
-Yes, we had though of this limitation and had decided to do exactly the 
-same way you have suggested.
-
-thanks for your review comments.
-Regards
-Pratyush
-
->
-> 	Arnd
-> .
->
-
-
+Bjorn
