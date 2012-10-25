@@ -1,72 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:38689 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102Ab2JFHZn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 03:25:43 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so1278534bkc.19
-        for <linux-pci@vger.kernel.org>; Sat, 06 Oct 2012 00:25:41 -0700 (PDT)
+Received: from iolanthe.rowland.org ([192.131.102.54]:55790 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757050Ab2JYSTv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 14:19:51 -0400
+Date: Thu, 25 Oct 2012 14:19:50 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ulrich Eckhardt <usb@uli-eckhardt.de>
+cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+In-Reply-To: <50897A30.1040207@uli-eckhardt.de>
+Message-ID: <Pine.LNX.4.44L0.1210251418210.1278-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <506F9E0F.9010705@gmail.com>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-	<506F9E0F.9010705@gmail.com>
-Date: Sat, 6 Oct 2012 00:25:41 -0700
-Message-ID: <CAE9FiQWj655cwN_e0ZmzCVYmJEnM2O_V453g4QTQqaApOPo2Fw@mail.gmail.com>
-Subject: Re: [PATCH 00/10] PCI, ACPI: Use bus type notifier for root bus hotplug
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 5, 2012 at 7:57 PM, Jiang Liu <liuj97@gmail.com> wrote:
-> Hi Yinghai,
->         I like your idea to get rid of acpi_device_ops->start() method, actually
-> that's on my TODO list too.
->         I think the ACPI based system device hotplug framework we are working on
-> may help to solve this issue. We define CPU, memory, PCI host bridge, IOAPIC,
-> and CONTAINER as system devices. We have added some callbacks into acpi_device_ops
-> to support system device hotplug. With the new ACPI system device hotplug framework,
-> the sequence is:
-> 1) Walk hot-added ACPI subtree, creates acpi devices and binds acpi drivers. Now
-> acpi_device_ops->add() method only setup basic data structure to manage the ACPI
-> device but without actually starting the system device.
-> 2) Classify hot-added ACPI devices into classes, such CPU, MEM, PCI HOST BRIGE, IOAPIC,
-> CONTAINER.
-> 3) Add all hot-added system device into running system in following order:
-> CONTAINER -> MEM -> CPU -> IOAPIC -> PCI_HOST_BRIDGE.
->
-> With above sequence, we could scan and start PCI devices in step 3 above.
+On Thu, 25 Oct 2012, Ulrich Eckhardt wrote:
 
-ioapic may need to be after pci device scan and pci assign-unassigned resource.
+> Am 25.10.2012 03:24, schrieb Ming Lei:
+> >> Lei, do you have any doc describing how to use those tracepoints?
+> >
+> > Hi Bjorn Helgaas,
+> >
+> > Firstly, please enable these tracepoints via below
+> >
+> >            echo 1 > /sys/kernel/debug/tracing/events/rpm/enable
+> >
+> > then store the trace event result by below once you make sure your interested
+> > events are completed:
+> >
+> >            echo 0 > /sys/kernel/debug/tracing/events/rpm/enable
+> >            cp /sys/kernel/debug/tracing/trace /media/ram/rpm-trace
+> >
+> Hi,
+> 
+> I have created a trace according this description. Therefore I have 
+> rebooted my system, enabled the trace and inserted and removed the 
+> SD-card until the controller stops working. During this procedure I 
+> observed that the controller seems to be more stable. I had to insert 
+> and remove the SD-card several times until the controller stopped 
+> working. Normally the controller will fail on the first attempt. Also I 
+> had the impression (not sure about this since I have not measured it) 
+> that the card reader reads the data faster.
+> 
+> I append the gzipped trace and the corresponding dmesg output.
 
-the same as iommu/dmar... need to after pci device scanning...
+There's a much more straightforward way of telling when a PCI-based USB 
+host controller gets suspended or resumed.  Just enable 
+CONFIG_USB_DEBUG; then there will appropriate lines in the dmesg log.
 
-I have all pci root bus hot plug related patch in my tree
+Alan Stern
 
- for-pci-x86-pcibios-alloc-res
- for-pci-host-bridge-bus-type
- for-pci-kill-pci-root-buses
-
- for-pci-root-bus-hotplug
-
- for-pci-misc
-
- for-pci-jiang-hotplug
-
- for-pci-root-bus-hotadd-survey-pcibios-res
- for-pci-split-pci-root-hp
- for-pci-notifier
-
-
- for-acpi-next-pci
- for-pci-next
-
-after those patches (about 61) go through pci/next
-
-will need to push for-x86-irq for ioapic through tip
-and for-iommu for iommu support through iommu : david.W
-
-Thanks
-
-Yinghai
