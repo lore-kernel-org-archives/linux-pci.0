@@ -1,44 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.citrix.com ([66.165.176.89]:11858 "EHLO SMTP.CITRIX.COM"
+Received: from mx1.redhat.com ([209.132.183.28]:44004 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754123Ab2JRKCd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Oct 2012 06:02:33 -0400
-Message-ID: <507FD39F.4060601@citrix.com>
-Date: Thu, 18 Oct 2012 11:02:07 +0100
-From: David Vrabel <david.vrabel@citrix.com>
-MIME-Version: 1.0
-To: "xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jens Axboe <axboe@kernel.dk>, <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-fbdev@vger.kernel.org>,
-	Florian Tobias Schandinat <FlorianSchandinat@gmx.de>,
-	<linux-input@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-CC: David Vrabel <david.vrabel@citrix.com>
-Subject: [PATCH 0/5] drivers: xen frontend devices should handle missed backend
- CLOSING
-Content-Type: text/plain; charset="ISO-8859-1"
+	id S1760116Ab2JYSim (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 14:38:42 -0400
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 2/8] Yinghai's second patch for vga attr
+Date: Thu, 25 Oct 2012 14:38:24 -0400
+Message-Id: <1351190310-5043-3-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Subsystem maintainers, you can either pick up the relevant driver patch
-or ack it to go via Konrad's Xen tree.
+---
+ drivers/pci/pci-sysfs.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-The series makes all the Xen frontend drivers handle the backend
-transitioning to CLOSED without the frontend having previously seen
-the backend in the CLOSING state.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 3d160aa..fbbb97f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1303,29 +1303,20 @@ int __must_check pci_create_sysfs_dev_files (struct pci_dev *pdev)
+ 		pdev->rom_attr = attr;
+ 	}
+ 
+-	if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA) {
+-		retval = device_create_file(&pdev->dev, &vga_attr);
+-		if (retval)
+-			goto err_rom_file;
+-	}
+-
+ 	/* add platform-specific attributes */
+ 	retval = pcibios_add_platform_entries(pdev);
+ 	if (retval)
+-		goto err_vga_file;
++		goto err_rom_file;
+ 
+ 	/* add sysfs entries for various capabilities */
+ 	retval = pci_create_capabilities_sysfs(pdev);
+ 	if (retval)
+-		goto err_vga_file;
++		goto err_rom_file;
+ 
+ 	pci_create_firmware_label_files(pdev);
+ 
+ 	return 0;
+ 
+-err_vga_file:
+-	if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
+-		device_remove_file(&pdev->dev, &vga_attr);
+ err_rom_file:
+ 	if (rom_size) {
+ 		sysfs_remove_bin_file(&pdev->dev.kobj, pdev->rom_attr);
+@@ -1413,12 +1404,20 @@ static int __init pci_sysfs_init(void)
+ late_initcall(pci_sysfs_init);
+ 
+ static struct attribute *pci_dev_dev_attrs[] = {
++	&vga_attr.attr,
+ 	NULL,
+ };
+ 
+ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+ 						struct attribute *a, int n)
+ {
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (a == &vga_attr.attr)
++		if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
++			return 0;
++
+ 	return a->mode;
+ }
+ 
+-- 
+1.7.10.2.552.gaa3bb87
 
-Backends shouldn't do this but some do.  e.g., if the host is
-XenServer and the toolstack decides to do a forced shutdown of a VBD,
-then the blkfront may miss the CLOSING transition and the /dev/xvdX
-device will not be destroyed which prevents it being reused.
-
-I have seen systems that ended up in this state but it's not clear if
-this was the actual cause.  However, I think in general it's a good
-thing to thing to improve the handling of unexpected state
-transitions.
-
-David
