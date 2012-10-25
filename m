@@ -1,73 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:43449 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951Ab2JFSVI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 6 Oct 2012 14:21:08 -0400
-Received: by mail-da0-f46.google.com with SMTP id n41so829089dak.19
-        for <linux-pci@vger.kernel.org>; Sat, 06 Oct 2012 11:21:08 -0700 (PDT)
-Message-ID: <5070768C.4030905@gmail.com>
-Date: Sat, 06 Oct 2012 11:21:00 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:56803 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934840Ab2JYNdu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 09:33:50 -0400
+Received: by mail-oa0-f46.google.com with SMTP id h16so1563700oag.19
+        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2012 06:33:49 -0700 (PDT)
 MIME-Version: 1.0
-To: Donald Dutile <ddutile@redhat.com>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net
-Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
-References: <1349388885-43938-1-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1349388885-43938-1-git-send-email-ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CACVXFVNnrCLo76rh8-hxTdf3C=kvw3ejY6Jg1==COqFC+UHMBg@mail.gmail.com>
+References: <50841CCC.9030809@uli-eckhardt.de> <6817642.hqndXjdIQA@vostro.rjw.lan>
+ <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
+ <17130842.qTSs14eT8a@vostro.rjw.lan> <CACVXFVNnrCLo76rh8-hxTdf3C=kvw3ejY6Jg1==COqFC+UHMBg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Oct 2012 07:33:29 -0600
+Message-ID: <CAErSpo7n-by0uj2NSH1gUNaqi=eR1tSy4L9YfiVPBgZNaY-sfw@mail.gmail.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+To: Ming Lei <ming.lei@canonical.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/4/2012 3:14 PM, Donald Dutile wrote:
-> Provide files under sysfs to determine the max number of vfs
-> an SRIOV-capable PCIe device supports, and methods to enable and
-> disable the vfs on a per device basis.
+On Wed, Oct 24, 2012 at 7:24 PM, Ming Lei <ming.lei@canonical.com> wrote:
+> On Thu, Oct 25, 2012 at 5:31 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 >
-> Currently, VF enablement by SRIOV-capable PCIe devices is done
-> in driver-specific module parameters.  If not setup in modprobe files,
-> it requires admin to unload & reload PF drivers with number of desired
-> VFs to enable.  Additionally, the enablement is system wide: all
-> devices controlled by the same driver have the same number of VFs
-> enabled.  Although the latter is probably desired, there are PCI
-> configurations setup by system BIOS that may not enable that to occur.
+>>> I don't know how to use those.  Is there a doc somewhere?
+>>
+>> I'm not sure, but let's ask the developer who added them.
+>>
+>> Lei, do you have any doc describing how to use those tracepoints?
 >
-> Three files are created if a PCIe device has SRIOV support:
-> sriov_max_vfs -- cat-ing this file returns the maximum number
->                   of VFs a PCIe device supports.
-> sriov_enable_vfs -- echo'ing a number to this file enables this
->                      number of VFs for this given PCIe device.
->                   -- cat-ing this file will return the number of VFs
->                      currently enabled on this PCIe device.
-> sriov_disable_vfs -- echo-ing any number other than 0 disables all
->                       VFs associated with this PCIe device.
+> Hi Bjorn Helgaas,
 >
-> VF enable and disablement is invoked much like other PCIe
-> configuration functions -- via registered callbacks in the driver,
-> i.e., probe, release, etc.
+> Firstly, please enable these tracepoints via below
 >
-> v1->v2:
-> This patch is based on previous 2 patches by Yinghai Lu
-> that cleaned up the vga attributes for PCI devices under sysfs,
-> and uses visibility-checking group attributes as recommended by
-> Greg K-H.
+>           echo 1 > /sys/kernel/debug/tracing/events/rpm/enable
 >
-> Signed-off-by: Donald Dutile <ddutile@redhat.com>
+> then store the trace event result by below once you make sure your interested
+> events are completed:
+>
+>           echo 0 > /sys/kernel/debug/tracing/events/rpm/enable
+>           cp /sys/kernel/debug/tracing/trace /media/ram/rpm-trace
+>
+> For the format of the captured trace log(rpm-trace), please see
+>
+>                 include/trace/events/rpm.h
+>
+> which is just a replacement of previous printk and add some extra fields
+> into that.  If you still don't understand the format, please post the
+> result onto list, and I think many guys here may help you out.
+>
+> Hope the above can help you.
 
-I'm not certain if having separate values/functions for enable and 
-disabling VFs will work out very well.  It seems like it would probably 
-make more sense just to have one value that manipulates NumVFs.  As is, 
-in the sriov_enable_vfs case we would end up having to disable SR-IOV 
-should we be changing the number of VFs anyway so it would probably make 
-sense to just merge both values into a single one and use 0 as the value 
-to disable SR-IOV.
-
-Also in the naming scheme for the values it may preferable to use the 
-names of the values from the SR-IOV PCIe capability to avoid any 
-confusion on what the values represent.  I believe the names for the two 
-values you are representing are TotalVFs and NumVFs.
-
-Thanks,
-
-Alex
+For the archives, it looks like Documentation/trace/events.txt has a
+generic intro to this area.
