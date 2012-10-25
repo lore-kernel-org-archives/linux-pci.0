@@ -1,51 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:45495 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752185Ab2JaBea (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 21:34:30 -0400
-Received: by mail-bk0-f46.google.com with SMTP id jk13so426204bkc.19
-        for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 18:34:29 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:61214 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935050Ab2JYJgk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 05:36:40 -0400
+Date: Thu, 25 Oct 2012 11:36:27 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Ingo Molnar <mingo@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <suresh.b.siddha@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
+	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v4 -tip 3/3] AHCI: Support multiple MSIs
+Message-ID: <20121025093626.GG16350@dhcp-26-207.brq.redhat.com>
+References: <cover.1349517905.git.agordeev@redhat.com>
+ <b9a66434759a77b2fa870565ab9708fc286d7368.1349517905.git.agordeev@redhat.com>
+ <20121025090957.GA7424@gmail.com>
+ <20121025092555.GF16350@dhcp-26-207.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com>
-References: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com>
-Date: Tue, 30 Oct 2012 18:34:29 -0700
-Message-ID: <CAE9FiQVoNm3Wsi4LM1Hhk3RXyLr-UXPggSdJ6Y1Ha7BjjApC5A@mail.gmail.com>
-Subject: Re: [PATCH] PCI/portdrv: Fix regression introduced by commit 2dcfaf85
-From: Yinghai Lu <yinghai@kernel.org>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jiang Liu <jiang.liu@huawei.com>, wangyijing@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121025092555.GF16350@dhcp-26-207.brq.redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 30, 2012 at 5:51 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
->
-> PCI/portdrv: Fix regression introduced by commit 2dcfaf85
->
-> After commit 2dcfaf85, hotplug slots for port devices
-> w/o slot implementation come to be created.
-> This patch fixes this problem.
->
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> Index: pci/drivers/pci/pcie/portdrv_core.c
-> ===================================================================
-> --- pci.orig/drivers/pci/pcie/portdrv_core.c
-> +++ pci/drivers/pci/pcie/portdrv_core.c
-> @@ -272,7 +272,8 @@ static int get_port_device_capability(st
->         }
->
->         /* Hot-Plug Capable */
-> -       if (cap_mask & PCIE_PORT_SERVICE_HP) {
-> +       if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
-> +           dev->pcie_flags_reg & PCI_EXP_FLAGS_SLOT) {
->                 pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
->                 if (reg32 & PCI_EXP_SLTCAP_HPC) {
->                         services |= PCIE_PORT_SERVICE_HP;
->
+On Thu, Oct 25, 2012 at 11:25:55AM +0200, Alexander Gordeev wrote:
+> On Thu, Oct 25, 2012 at 11:09:57AM +0200, Ingo Molnar wrote:
+> > Has Jeff acked this patch?
+> 
+> Yep,
+> http://lkml.indiana.edu/hypermail/linux/kernel/1210.0/00795.html
 
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+Ah.. sorry - Jeff acked v3, not the recent one.
+Jeff, would you keep your ack for this patch?
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
