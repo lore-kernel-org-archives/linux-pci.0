@@ -1,84 +1,29 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:41324 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932606Ab2JJXI3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Oct 2012 19:08:29 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: markgross@thegnar.org
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/7] PM / QoS: Prepare device structure for adding more constraint types
-Date: Thu, 11 Oct 2012 01:12:04 +0200
-Message-ID: <1768451.HPQmsTHsyu@vostro.rjw.lan>
-In-Reply-To: <20121010031547.GA21067@MGROSS-X220VM>
-References: <201209282351.10663.rjw@sisk.pl> <5823653.QdHL6Lda2x@vostro.rjw.lan> <20121010031547.GA21067@MGROSS-X220VM>
+Received: from foo.stuge.se ([212.116.89.98]:52181 "HELO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751575Ab2JYWhJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 18:37:09 -0400
+Message-ID: <20121025223706.17034.qmail@stuge.se>
+Date: Fri, 26 Oct 2012 00:37:06 +0200
+From: Peter Stuge <peter@stuge.se>
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: shashank chaturvedi <chaturvedi9950@gmail.com>,
+	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: xhci Portsc register issue
+References: <CALuomMuUD4xSaCUT6MZn3ZV2gjXnuBUhkz78PgXZ6XgV4e-NvA@mail.gmail.com> <20121025153552.GA5205@xanatos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121025153552.GA5205@xanatos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 09 of October 2012 20:15:47 mark gross wrote:
-> On Mon, Oct 08, 2012 at 10:04:03AM +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Currently struct dev_pm_info contains only one PM QoS constraints
-> > pointer reserved for latency requirements.  Since one more device
-> > constraints type (i.e. flags) will be necessary, introduce a new
-> > structure, struct dev_pm_qos, that eventually will contain all of
-> > the available device PM QoS constraints and replace the "constraints"
-> > pointer in struct dev_pm_info with a pointer to the new structure
-> > called "qos".
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Reviewed-by: Jean Pihet <j-pihet@ti.com>
-> > ---
-> >  drivers/base/power/qos.c |   42 ++++++++++++++++++++++--------------------
-> >  include/linux/pm.h       |    2 +-
-> >  include/linux/pm_qos.h   |    4 ++++
-> >  3 files changed, 27 insertions(+), 21 deletions(-)
-> > 
-> > Index: linux/include/linux/pm.h
-> > ===================================================================
-> > --- linux.orig/include/linux/pm.h
-> > +++ linux/include/linux/pm.h
-> > @@ -551,7 +551,7 @@ struct dev_pm_info {
-> >  	struct dev_pm_qos_request *pq_req;
-> >  #endif
-> >  	struct pm_subsys_data	*subsys_data;  /* Owned by the subsystem. */
-> > -	struct pm_qos_constraints *constraints;
-> > +	struct dev_pm_qos	*qos;
-> >  };
-> >  
-> >  extern void update_pm_runtime_accounting(struct device *dev);
-> > Index: linux/include/linux/pm_qos.h
-> > ===================================================================
-> > --- linux.orig/include/linux/pm_qos.h
-> > +++ linux/include/linux/pm_qos.h
-> > @@ -57,6 +57,10 @@ struct pm_qos_constraints {
-> >  	struct blocking_notifier_head *notifiers;
-> >  };
-> >  
-> > +struct dev_pm_qos {
-> > +	struct pm_qos_constraints latency;
-> What about non-latency constraints?  This pretty much makes it explicit
-> that dev_pm_qos is all about latency.  from the commit comment I thought
-> you where trying to make it more genaric.  Why not call "latency"
-> "constraint" or something less specific?
+Sarah Sharp wrote:
+> I'm not sure, since I've never attempted to memory map PCI registers
+> from userspace.  I was under the impression that you just can't do that.
 
-Please see the next patches in the series that add one more constraint type.
+Need root, and the kernel still gets a say, but yes, you can just do that.
 
-Thanks,
-Rafael
+http://stuge.se/physrd.c
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+//Peter
