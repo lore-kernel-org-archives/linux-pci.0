@@ -1,67 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3] Fix a hard coding style when determining if a device is a container.
-Date: Wed, 24 Oct 2012 14:11:53 +0800
-Message-Id: <1351059113-4660-1-git-send-email-tangchen@cn.fujitsu.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:54838 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932178Ab2JYBYM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 21:24:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <17130842.qTSs14eT8a@vostro.rjw.lan>
+References: <50841CCC.9030809@uli-eckhardt.de>
+	<6817642.hqndXjdIQA@vostro.rjw.lan>
+	<CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com>
+	<17130842.qTSs14eT8a@vostro.rjw.lan>
+Date: Thu, 25 Oct 2012 09:24:10 +0800
+Message-ID: <CACVXFVNnrCLo76rh8-hxTdf3C=kvw3ejY6Jg1==COqFC+UHMBg@mail.gmail.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+From: Ming Lei <ming.lei@canonical.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"ACPI0004","PNP0A05" and "PNP0A06" are all defined in array
-container_device_ids[], so use it, but not the hard coding style.
+On Thu, Oct 25, 2012 at 5:31 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 
-Also, introduce a new api is_container_device() to determine if a
-device is a container device.
+>> I don't know how to use those.  Is there a doc somewhere?
+>
+> I'm not sure, but let's ask the developer who added them.
+>
+> Lei, do you have any doc describing how to use those tracepoints?
 
-change log v2 -> v3:
+Hi Bjorn Helgaas,
 
-1. change the is_container_device()'s return value type from int to bool.
+Firstly, please enable these tracepoints via below
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
----
- drivers/acpi/container.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+          echo 1 > /sys/kernel/debug/tracing/events/rpm/enable
 
-diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-index 1f9f7d7..69e2d6b 100644
---- a/drivers/acpi/container.c
-+++ b/drivers/acpi/container.c
-@@ -92,6 +92,19 @@ static int is_device_present(acpi_handle handle)
- 	return ((sta & ACPI_STA_DEVICE_PRESENT) == ACPI_STA_DEVICE_PRESENT);
- }
- 
-+static bool is_container_device(const char *hid)
-+{
-+	const struct acpi_device_id *container_id;
-+
-+	for (container_id = container_device_ids;
-+	     container_id->id[0]; container_id++) {
-+		if (!strcmp((char *)container_id->id, hid))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- /*******************************************************************/
- static int acpi_container_add(struct acpi_device *device)
- {
-@@ -232,10 +245,8 @@ container_walk_namespace_cb(acpi_handle handle,
- 		goto end;
- 	}
- 
--	if (strcmp(hid, "ACPI0004") && strcmp(hid, "PNP0A05") &&
--	    strcmp(hid, "PNP0A06")) {
-+	if (!is_container_device(hid))
- 		goto end;
--	}
- 
- 	switch (*action) {
- 	case INSTALL_NOTIFY_HANDLER:
--- 
-1.7.1
+then store the trace event result by below once you make sure your interested
+events are completed:
 
+          echo 0 > /sys/kernel/debug/tracing/events/rpm/enable
+          cp /sys/kernel/debug/tracing/trace /media/ram/rpm-trace
+
+For the format of the captured trace log(rpm-trace), please see
+
+                include/trace/events/rpm.h
+
+which is just a replacement of previous printk and add some extra fields
+into that.  If you still don't understand the format, please post the
+result onto list, and I think many guys here may help you out.
+
+Hope the above can help you.
+
+
+Thanks,
+--
+Ming Lei
