@@ -1,36 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:56097 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385Ab2J2HQ2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:16:28 -0400
-Received: by mail-vb0-f46.google.com with SMTP id ff1so4989831vbb.19
-        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 00:16:27 -0700 (PDT)
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:55830 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756494Ab2JYSda (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 14:33:30 -0400
+Received: by mail-wi0-f170.google.com with SMTP id hm2so5593034wib.1
+        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2012 11:33:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-Date: Mon, 29 Oct 2012 12:46:27 +0530
-Message-ID: <CAOh2x=mFS7awO7eoD4zA-sEzg0wY8KNjzTCcXMhOrqBhRcodKA@mail.gmail.com>
-Subject: Re: [PATCH 00/15] SPEAr13xx PCIe patches
-From: viresh kumar <viresh.kumar@linaro.org>
-To: Pratyush Anand <pratyush.anand@st.com>, arm@kernel.org
-Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	olof@lixom.net
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 25 Oct 2012 12:33:09 -0600
+Message-ID: <CAErSpo5AeAstcSoJccw75pPUvC8t=36OggcmAOE-56nhW96b8A@mail.gmail.com>
+Subject: DRM agp_init error path oops
+To: David Airlie <airlied@linux.ie>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
-> -- First two patches are common for all platforms on ARM architecture.
-> -- Remaining patches belongs to SPEAr13xx architecture.
-> -- SPEAr13xx supports both RC and EP mode of PCIe interface. This patchset
->         supports only RC mode.
+I think there's a latent bug in a DRM error path, at least when used
+by i915.  In the scenario below, if dev->driver->bus->agp_init()
+fails, we call drm_lastclose().  At least in i915_driver_lastclose(),
+this dereferences dev->dev_private (at "1" below).
 
-Hi Pratyush,
+But dev->dev_private isn't initialized until "2", in i915_driver_load().
 
-For ARM SoC specific patches, that you want Arnd or Olof to apply, please send
-them to arm@kernel.org. Arnd and Olof push ARM SoC trees in turns and they
-pick them from arm@kernel.org.
+    i915_pci_probe
+        drm_get_pci_dev
+            drm_fill_in_dev
+                drm_pci_agp_init                (dev->driver->bus->agp_init)
+                drm_lastclose                   # error path when agp_init fails
+                    i915_driver_lastclose       (dev->driver->lastclose)
+                        intel_fb_restore_mode
+1)
+drm_fb_helper_restore_fbdev_mode(&dev->dev_private->fbdev->helper)
+            i915_driver_load                    (dev->driver->load)
+2)              dev->dev_private = (void *)dev_priv
 
---
-viresh
+We tripped over this because a different bug caused drm_pci_agp_init()
+to fail when it shouldn't have.  Details about that bug are here:
+https://bugzilla.kernel.org/show_bug.cgi?id=46481#c16
+
+That bug has been fixed, but this dev_private initialization ordering
+problem is still there, waiting to bite us again on the next machine
+where drm_pci_agp_init() fails for some reason.
+
+Bjorn
