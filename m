@@ -1,121 +1,188 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from proofpoint-cluster.metrocast.net ([65.175.128.136]:51245 "EHLO
-	proofpoint-cluster.metrocast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753042Ab2JTMVP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Oct 2012 08:21:15 -0400
-Subject: Re: [Intel-gfx] GPU RC6 breaks PCIe to PCI bridge connected to CPU
- PCIe slot on SandyBridge systems
-From: Andy Walls <awalls@md.metrocast.net>
-To: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
-Cc: intel-gfx@lists.freedesktop.org,
-	Daniel Vetter <daniel.vetter@ffwll.ch>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
-	mchehab@infradead.org
-Date: Sat, 20 Oct 2012 08:20:57 -0400
-In-Reply-To: <2244094.6Dmq15viKH@f17simon>
-References: <1704067.2NCOGYajHN@f17simon> <3896332.1fABn9rFR8@f17simon>
-	 <2233216.7bl6QCud67@f17simon> <2244094.6Dmq15viKH@f17simon>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1350735659.2491.21.camel@palomino.walls.org>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([193.178.161.156]:37734 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934005Ab2JYUXs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Oct 2012 16:23:48 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Huang Ying <ying.huang@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [BUGFIX] PCI/PM: Fix proc config reg access for D3cold and bridge suspending
+Date: Thu, 25 Oct 2012 22:27:43 +0200
+Message-ID: <2615806.OTtS5H4PWK@vostro.rjw.lan>
+In-Reply-To: <1351128963-10347-1-git-send-email-ying.huang@intel.com>
+References: <1351128963-10347-1-git-send-email-ying.huang@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-10-19 at 18:06 +0100, Simon Farnsworth wrote:
-> On Friday 19 October 2012 17:10:17 Simon Farnsworth wrote:
-> > Mauro, Linux-Media
-> > 
-> > I have an issue where an SAA7134-based TV capture card connected via a PCIe to
-> > PCI bridge chip works when the GPU is kept out of RC6 state, but sometimes
-> > "skips" updating lines of the capture when the GPU is in RC6. We've confirmed
-> > that a CX23418 based chip doesn't have the problem, so the question is whether
-> > the SAA7134 and the saa7134 driver are at fault, or whether it's the PCIe bus.
-
-My money's on the saa7134 driver's irq_handler or the driver's locking
-scheme to protect data accessed by both irq handler and userspace file
-operations (aka videobuf's locking) in the driver.
-
-It could also be a system level problem with another driver's irq
-handler being stupid.
-
-> > This manifests as a regression, as I had no problems with kernel 3.3 (which
-> > never enabled RC6 on the Intel GPU), but I do have problems with 3.5 and with
-> > current Linus git master. I'm happy to try anything, 
-
-Profile the saa7134 driver in operation:
-
-http://www.spinics.net/lists/linux-media/msg15762.html
-
-That will give you and driver writers a clue as to where any big delays
-are hapeening in the saa7134 driver.
-
-Odds are the processor slowing down to a lower power/lower speed state
-is exposing inefficiencies in the irq handling of the saa7134 driver.
-
-
- 
-> > I've attached lspci -vvxxxxx output (suitable for feeding to lspci -F) for
-> > when the corruption is present (lspci.faulty) and when it's not
-> > (lspci.working). 
-
-Doing a diff between the two files and checking what devices have
-changed registers I noted that only 3 devices' PCI config space
-registers changed: 00:01.0 and 00:1c.1 (both PCIe ports/bridges) and
-00:1a.0. 
-
-$ lspci -F lspci.working -tv
--[0000:00]-+-00.0  Intel Corporation 2nd Generation Core Processor Family DRAM Controller
-           +-01.0-[01-02]----00.0-[02]----08.0  Philips Semiconductors SAA7131/SAA7133/SAA7135 Video Broadcast Decoder
-           +-02.0  Intel Corporation 2nd Generation Core Processor Family Integrated Graphics Controller
-           +-16.0  Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1
-           +-19.0  Intel Corporation 82579V Gigabit Network Connection
-           +-1a.0  Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2
-           +-1b.0  Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller
-           +-1c.0-[03]--
-           +-1c.1-[04]----00.0  NEC Corporation uPD720200 USB 3.0 Host Controller
-           +-1d.0  Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1
-           +-1f.0  Intel Corporation H67 Express Chipset Family LPC Controller
-           +-1f.2  Intel Corporation 6 Series/C200 Series Chipset Family 6 port SATA AHCI Controller
-           \-1f.3  Intel Corporation 6 Series/C200 Series Chipset Family SMBus Controller
-
-Obviously the changes to the bridge at 00:01.0 might matter, but I would
-need to dig up the data sheet for the "00:01.0 PCI bridge [0604]: Intel
-Corporation Xeon E3-1200/2nd Generation Core Processor Family PCI
-Express Root Port [8086:0101] (rev 09) (prog-if 00 [Normal decode])" to
-see if it really mattered.
-
-
-> The speculation is that the SAA7134 is somehow more
-> > sensitive to the changes in timings that RC6 introduces than the CX23418, and
-> > that someone who understands the saa7134 driver might be able to make it less
-> > sensitive.
-
-I heavily optimized the cx18 driver for the high throughput use case
-(mutliple cards running multiple data streams), which meant squeezing
-every little bit of useless junk out of the irq handler and adding
-highly granular buffer queue locking between the irq handling and the
-userspace file operations calls.  Also the CX23418 firmware has a "best
-effort" buffer notification handshake and the cx18 driver does some
-extra recovery processing to handle when it is late on handling buffer
-notifications.  All that optimzation and robustness coding took me a few
-months to get right.
-
-I don't see that sort of optimization of the saa7134 driver coming
-anytime soon.
-
-Regards,
-Andy
-
-> And timings are definitely the problem; I have a userspace provided pm_qos
-> request asking for 0 exit latency, but I can see CPU cores entering C6. I'll
-> take this problem to an appropriate list.
+On Thursday, October 25, 2012 09:36:03 AM Huang Ying wrote:
+> In
 > 
-> There is still be a bug in the SAA7134 driver, as the card clearly wants a
-> pm_qos request when streaming to stop the DMA latency becoming too high; this
-> doesn't directly affect me, as my userspace always requests minimal DMA
-> latency anyway, so consider this message as just closing down the thread for
-> now, and as a marker for the future (if people see such corruption, the
-> saa7134 driver needs a pm_qos request when streaming that isn't currently
-> present).
+>   https://bugzilla.kernel.org/show_bug.cgi?id=48981
+> 
+> Peter reported that /proc/bus/pci/??/??.? does not works for 3.6.
+> This is This is because the device configuration space registers will
+> be not accessible if the corresponding parent bridge is suspended or
+> the device is put into D3cold state.
+> 
+> This is the same as /sys/bus/pci/devices/0000:??:??.?/config access
+> issue.  So the function used to solve sysfs issue is used to solve
+> this issue.
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Peter <lekensteyn@gmail.com>
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
 
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+> ---
+>  drivers/pci/pci-sysfs.c |   34 ----------------------------------
+>  drivers/pci/pci.c       |   32 ++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h       |    2 ++
+>  drivers/pci/proc.c      |    8 ++++++++
+>  4 files changed, 42 insertions(+), 34 deletions(-)
+> 
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -458,40 +458,6 @@ boot_vga_show(struct device *dev, struct
+>  }
+>  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+>  
+> -static void
+> -pci_config_pm_runtime_get(struct pci_dev *pdev)
+> -{
+> -	struct device *dev = &pdev->dev;
+> -	struct device *parent = dev->parent;
+> -
+> -	if (parent)
+> -		pm_runtime_get_sync(parent);
+> -	pm_runtime_get_noresume(dev);
+> -	/*
+> -	 * pdev->current_state is set to PCI_D3cold during suspending,
+> -	 * so wait until suspending completes
+> -	 */
+> -	pm_runtime_barrier(dev);
+> -	/*
+> -	 * Only need to resume devices in D3cold, because config
+> -	 * registers are still accessible for devices suspended but
+> -	 * not in D3cold.
+> -	 */
+> -	if (pdev->current_state == PCI_D3cold)
+> -		pm_runtime_resume(dev);
+> -}
+> -
+> -static void
+> -pci_config_pm_runtime_put(struct pci_dev *pdev)
+> -{
+> -	struct device *dev = &pdev->dev;
+> -	struct device *parent = dev->parent;
+> -
+> -	pm_runtime_put(dev);
+> -	if (parent)
+> -		pm_runtime_put_sync(parent);
+> -}
+> -
+>  static ssize_t
+>  pci_read_config(struct file *filp, struct kobject *kobj,
+>  		struct bin_attribute *bin_attr,
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1858,6 +1858,38 @@ bool pci_dev_run_wake(struct pci_dev *de
+>  }
+>  EXPORT_SYMBOL_GPL(pci_dev_run_wake);
+>  
+> +void pci_config_pm_runtime_get(struct pci_dev *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct device *parent = dev->parent;
+> +
+> +	if (parent)
+> +		pm_runtime_get_sync(parent);
+> +	pm_runtime_get_noresume(dev);
+> +	/*
+> +	 * pdev->current_state is set to PCI_D3cold during suspending,
+> +	 * so wait until suspending completes
+> +	 */
+> +	pm_runtime_barrier(dev);
+> +	/*
+> +	 * Only need to resume devices in D3cold, because config
+> +	 * registers are still accessible for devices suspended but
+> +	 * not in D3cold.
+> +	 */
+> +	if (pdev->current_state == PCI_D3cold)
+> +		pm_runtime_resume(dev);
+> +}
+> +
+> +void pci_config_pm_runtime_put(struct pci_dev *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct device *parent = dev->parent;
+> +
+> +	pm_runtime_put(dev);
+> +	if (parent)
+> +		pm_runtime_put_sync(parent);
+> +}
+> +
+>  /**
+>   * pci_pm_init - Initialize PM functions of given PCI device
+>   * @dev: PCI device to handle.
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -72,6 +72,8 @@ extern void pci_disable_enabled_device(s
+>  extern int pci_finish_runtime_suspend(struct pci_dev *dev);
+>  extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
+>  extern void pci_wakeup_bus(struct pci_bus *bus);
+> +extern void pci_config_pm_runtime_get(struct pci_dev *dev);
+> +extern void pci_config_pm_runtime_put(struct pci_dev *dev);
+>  extern void pci_pm_init(struct pci_dev *dev);
+>  extern void platform_pci_wakeup_init(struct pci_dev *dev);
+>  extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -76,6 +76,8 @@ proc_bus_pci_read(struct file *file, cha
+>  	if (!access_ok(VERIFY_WRITE, buf, cnt))
+>  		return -EINVAL;
+>  
+> +	pci_config_pm_runtime_get(dev);
+> +
+>  	if ((pos & 1) && cnt) {
+>  		unsigned char val;
+>  		pci_user_read_config_byte(dev, pos, &val);
+> @@ -121,6 +123,8 @@ proc_bus_pci_read(struct file *file, cha
+>  		cnt--;
+>  	}
+>  
+> +	pci_config_pm_runtime_put(dev);
+> +
+>  	*ppos = pos;
+>  	return nbytes;
+>  }
+> @@ -146,6 +150,8 @@ proc_bus_pci_write(struct file *file, co
+>  	if (!access_ok(VERIFY_READ, buf, cnt))
+>  		return -EINVAL;
+>  
+> +	pci_config_pm_runtime_get(dev);
+> +
+>  	if ((pos & 1) && cnt) {
+>  		unsigned char val;
+>  		__get_user(val, buf);
+> @@ -191,6 +197,8 @@ proc_bus_pci_write(struct file *file, co
+>  		cnt--;
+>  	}
+>  
+> +	pci_config_pm_runtime_put(dev);
+> +
+>  	*ppos = pos;
+>  	i_size_write(ino, dp->size);
+>  	return nbytes;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
