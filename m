@@ -1,160 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38334 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756283Ab2J3Ixd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 30 Oct 2012 04:53:33 -0400
-Message-ID: <508F9588.5040105@intel.com>
-Date: Tue, 30 Oct 2012 16:53:28 +0800
-From: Aaron Lu <aaron.lu@intel.com>
+Received: from webmail.solarflare.com ([12.187.104.25]:16423 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S2992639Ab2JYUYL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 16:24:11 -0400
+Message-ID: <1351196647.2662.43.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: Re: [PATCH 4/8] sriov: provide method to reduce the number of total
+ VFs supported
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Donald Dutile <ddutile@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<yuvalmin@broadcom.com>, <gregory.v.rose@intel.com>,
+	<yinghai@kernel.org>, <davem@davemloft.net>
+Date: Thu, 25 Oct 2012 21:24:07 +0100
+In-Reply-To: <1351190310-5043-5-git-send-email-ddutile@redhat.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+	 <1351190310-5043-5-git-send-email-ddutile@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-Subject: Re: [RFD][PATCH 5/7] PM / QoS: Make it possible to expose PM QoS
- device flags to user space
-References: <201209282351.10663.rjw@sisk.pl> <201209282355.31823.rjw@sisk.pl>
-In-Reply-To: <201209282355.31823.rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/29/2012 05:55 AM, Rafael J. Wysocki wrote:
-> Define two device PM QoS flags, PM_QOS_FLAG_NO_POWER_OFF
-> and PM_QOS_FLAG_REMOTE_WAKEUP, and introduce routines
-> dev_pm_qos_expose_flags() and dev_pm_qos_hide_flags() allowing the
-> caller to expose those two flags to user space or to hide them
-> from it, respectively.
+On Thu, 2012-10-25 at 14:38 -0400, Donald Dutile wrote:
+> Some implementations of SRIOV provide a capability structure
+>  value of TotalVFs that is greater than what the software can support.
+>  Provide a method to reduce the capability structure reported value
+>  to the value the driver can support.
+>  This ensures sysfs reports the current capability of the system,
+>  hardware and software.
+>  Example for its use: igb & ixgbe -- report 8 & 64 as TotalVFs,
+>  but drivers only support 7 & 63 maximum.
 > 
-> After the flags have been exposed, user space will see two
-> additional sysfs attributes, pm_qos_no_power_off and
-> pm_qos_remote_wakeup, under the device's /sys/devices/.../power/
-> directory.  Then, writing 1 to one of them will update the
-> PM QoS flags request owned by user space so that the corresponding
-> flag is requested to be set.  In turn, writing 0 to one of them
-> will cause the corresponding flag in the user space's request to
-> be cleared (however, the owners of the other PM QoS flags requests
-> for the same device may still request the flag to be set and it
-> may be effectively set even if user space doesn't request that).
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> Signed-off-by: Donald Dutile <ddutile@redhat.com>
 > ---
->  Documentation/ABI/testing/sysfs-devices-power |   31 ++++
->  drivers/base/power/power.h                    |    6 
->  drivers/base/power/qos.c                      |  169 ++++++++++++++++++++------
->  drivers/base/power/sysfs.c                    |   95 +++++++++++++-
->  include/linux/pm.h                            |    1 
->  include/linux/pm_qos.h                        |   26 ++++
->  6 files changed, 280 insertions(+), 48 deletions(-)
+>  drivers/pci/iov.c       | 24 +++++++++++++++++++++++-
+>  drivers/pci/pci-sysfs.c | 10 ++++++++--
+>  drivers/pci/pci.h       |  1 +
+>  include/linux/pci.h     |  5 +++++
+>  4 files changed, 37 insertions(+), 3 deletions(-)
 > 
-> Index: linux/drivers/base/power/qos.c
-> ===================================================================
-> --- linux.orig/drivers/base/power/qos.c
-> +++ linux/drivers/base/power/qos.c
-> @@ -40,6 +40,7 @@
->  #include <linux/device.h>
->  #include <linux/mutex.h>
->  #include <linux/export.h>
-> +#include <linux/pm_runtime.h>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index aeccc91..f1357b0 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -682,7 +682,6 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
 >  
->  #include "power.h"
->  
-> @@ -322,6 +323,38 @@ int dev_pm_qos_add_request(struct device
->  EXPORT_SYMBOL_GPL(dev_pm_qos_add_request);
->  
->  /**
-> + * __dev_pm_qos_update_request - Modify an existing device PM QoS request.
-> + * @req : PM QoS request to modify.
-> + * @new_value: New value to request.
-> + */
-> +int __dev_pm_qos_update_request(struct dev_pm_qos_request *req, s32 new_value)
-> +{
-> +	s32 curr_value;
-> +	int ret = 0;
-> +
-> +	if (!req->dev->power.qos) {
-> +		ret = -ENODEV;
-> +		goto out;
-> +	}
-> +
-> +	switch(req->type) {
-> +	case DEV_PM_QOS_LATENCY:
-> +		curr_value = req->data.pnode.prio;
-> +		break;
-> +	case DEV_PM_QOS_FLAGS:
-> +		curr_value = req->data.flr.flags;
-> +		break;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (curr_value != new_value)
-> +		ret = apply_constraint(req, PM_QOS_UPDATE_REQ, new_value);
-> +
-> +	return ret;
-> +}
+>  	if (!dev->is_physfn)
+>  		return -ENODEV;
+> -
+>  	return sriov_enable(dev, nr_virtfn);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_enable_sriov);
+> @@ -735,3 +734,26 @@ int pci_num_vf(struct pci_dev *dev)
+>  		return dev->sriov->nr_virtfn;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_num_vf);
 > +
 > +/**
->   * dev_pm_qos_update_request - modifies an existing qos request
->   * @req : handle to list element holding a dev_pm_qos request to use
->   * @new_value: defines the qos request
-> @@ -336,11 +369,9 @@ EXPORT_SYMBOL_GPL(dev_pm_qos_add_request
->   * -EINVAL in case of wrong parameters, -ENODEV if the device has been
->   * removed from the system
->   */
-> -int dev_pm_qos_update_request(struct dev_pm_qos_request *req,
-> -			      s32 new_value)
-> +int dev_pm_qos_update_request(struct dev_pm_qos_request *req, s32 new_value)
->  {
-> -	s32 curr_value;
-> -	int ret = 0;
-> +	int ret;
->  
->  	if (!req) /*guard against callers passing in null */
->  		return -EINVAL;
-> @@ -350,29 +381,9 @@ int dev_pm_qos_update_request(struct dev
->  		return -EINVAL;
->  
->  	mutex_lock(&dev_pm_qos_mtx);
-> -
-> -	if (!req->dev->power.qos) {
-> -		ret = -ENODEV;
-> -		goto out;
-> -	}
-> -
-> -	switch(req->type) {
-> -	case DEV_PM_QOS_LATENCY:
-> -		curr_value = req->data.pnode.prio;
-> -		break;
-> -	case DEV_PM_QOS_FLAGS:
-> -		curr_value = req->data.flr.flags;
-> -		break;
-> -	default:
-> -		ret = -EINVAL;
-> -		goto out;
-> -	}
-> -
-> -	if (curr_value != new_value)
-> -		ret = apply_constraint(req, PM_QOS_UPDATE_REQ, new_value);
-> -
-> - out:
-> +	__dev_pm_qos_update_request(req, new_value);
+> + * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+> + * @dev: the PCI PF device
+> + * numvfs: number that should be used for TotalVFs supported
+> + *
+> + * Returns 0 if PF is an SRIOV-capable device and
+> + * value of numvfs valid, otherwise -EINVAL
 
-You forgot to assign the return value here.
+What are the locking requirements?  Presumably this is expected to be
+called from the probe function, with the device's mutex held?
 
-Thanks,
-Aaron
-
->  	mutex_unlock(&dev_pm_qos_mtx);
+> + */
+> +int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+> +{
+> +	if (!dev || !dev->is_physfn || (numvfs > dev->sriov->total))
+> +		return -EINVAL;
 > +
->  	return ret;
+> +	/* Shouldn't change if VFs already enabled */
+> +	if (!dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
+
+Missing parentheses.
+
+> +		return -EIO; 
+> +
+> +	dev->sriov->drvttl = numvfs;
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index c2894ca..1cf6c15 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -414,7 +414,10 @@ static ssize_t sriov_totalvfs_show(struct device *dev,
+>  	u16 total;
+>  
+>  	pdev = to_pci_dev(dev);
+> -	total = pdev->sriov->total;
+> +	if (pdev->sriov->drvttl)
+> +		total = pdev->sriov->drvttl;
+> +	else
+> +		total = pdev->sriov->total;
+>  	return sprintf (buf, "%u\n", total);
 >  }
->  EXPORT_SYMBOL_GPL(dev_pm_qos_update_request);
-> @@ -533,10 +544,19 @@ int dev_pm_qos_add_ancestor_request(stru
->  EXPORT_SYMBOL_GPL(dev_pm_qos_add_ancestor_request);
+>  
+> @@ -462,7 +465,10 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	}
+>  
+>  	/* if enabling vf's ... */
+> -	total = pdev->sriov->total;
+> +	if (pdev->sriov->drvttl)
+> +		total = pdev->sriov->drvttl;
+> +	else
+> +		total = pdev->sriov->total;
+>  	if ((num_vfs > 0) && (num_vfs <= total)) {
+>  		if (pdev->sriov->nr_virtfn == 0) { /* if not already enabled */
+>  		    num_vfs_enabled = pdev->driver->sriov_configure(pdev, num_vfs);
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 6f6cd14..553bbba 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -240,6 +240,7 @@ struct pci_sriov {
+>  	u16 stride;		/* following VF stride */
+>  	u32 pgsz;		/* page size for BAR alignment */
+>  	u8 link;		/* Function Dependency Link */
+> +	u16 drvttl;		/* max num VFs driver supports */
+
+It's a rather obscure possibility, but the device could be switched
+between two different versions of a driver where one has a lower limit
+and the other doesn't.  So this should be reset to 0 when the driver is
+removed.
+
+>  	struct pci_dev *dev;	/* lowest numbered PF */
+>  	struct pci_dev *self;	/* this PF */
+>  	struct mutex lock;	/* lock for VF bus */
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1d60a23..a5e08f2 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1633,6 +1633,7 @@ extern int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+>  extern void pci_disable_sriov(struct pci_dev *dev);
+>  extern irqreturn_t pci_sriov_migration(struct pci_dev *dev);
+>  extern int pci_num_vf(struct pci_dev *dev);
+> +extern int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  #else
+>  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  {
+> @@ -1649,6 +1650,10 @@ static inline int pci_num_vf(struct pci_dev *dev)
+>  {
+>  	return 0;
+>  }
+> +static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+> +{
+> +	return -EINVAL;
+> +}
+
+I think this should return 0, as the number of VFs certainly will be
+limited to <= numvfs.
+
+Ben.
+
+>  #endif
+>  
+>  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
