@@ -1,49 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49983 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755143Ab2JBVGm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Oct 2012 17:06:42 -0400
-Message-ID: <506B575A.4060304@redhat.com>
-Date: Tue, 02 Oct 2012 17:06:34 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	davem@davemloft.net
-Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
- device level
-References: <1349134020-62152-1-git-send-email-ddutile@redhat.com> <CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com> <506B4D4C.3080101@redhat.com> <20121002203951.GA28663@kroah.com>
-In-Reply-To: <20121002203951.GA28663@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1351281735.19172.82.camel@misato.fc.hp.com>
+Subject: Re: [PATCH v2 2/2] Improve container_notify_cb() to support
+ container hot-remove.
+From: Toshi Kani <toshi.kani@hp.com>
+To: Tang Chen <tangchen@cn.fujitsu.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, yinghai@kernel.org,
+	bhelgaas@google.com, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, mihailm@parallels.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Fri, 26 Oct 2012 14:02:15 -0600
+In-Reply-To: <508A22EE.1000607@cn.fujitsu.com>
+References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
+	   <1351058750-4275-3-git-send-email-tangchen@cn.fujitsu.com>
+	  <1351098875.19172.21.camel@misato.fc.hp.com>
+	  <5088967E.3060204@cn.fujitsu.com> <50889A14.9030607@huawei.com>
+	 <1351185648.19172.51.camel@misato.fc.hp.com>
+	 <508A22EE.1000607@cn.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2012 04:39 PM, Greg Kroah-Hartman wrote:
-> On Tue, Oct 02, 2012 at 04:23:40PM -0400, Don Dutile wrote:
->> Greg: Why not use the above functions?
->
-> What "above functions"?  You make a lot of calls in the code :)
->
-> You are creating an attribute group, and then manually walking through
-> it to create/destroy the file?  That's not good, use the in-kernel
-> functions to do that automatically for you.
->
-> Also, you need to do this _before_ the device shows up to userspace,
-> otherwise you have a race that you just lost with udev and the like.
->
-> thanks,
->
-> greg k-h
+On Fri, 2012-10-26 at 13:43 +0800, Tang Chen wrote:
+> Hi Toshi,
+> 
+> On 10/26/2012 01:20 AM, Toshi Kani wrote:
+> ...
+> >>>> Why do you need to call acpi_bus_trim(device,0) to stop the container
+> >>>> device first?
+> >>>
+> >>> This issue was introduced by Lu Yinghai, I think he could give a better
+> >>> answer than me. :)
+> >>> Please refer to the following url:
+> >>>
+> >>> http://www.spinics.net/lists/linux-pci/msg17667.html
+> >>>
+> >>> However, this is not applied into the pci tree yet.
+> >> We have worked out a patch set to clean up the logic for PCI/ACPI binding
+> >> relationship. It updates PCI/ACPI binding relationship by registering bus
+> >> notification onto pci_bus_type instead of hooking into the ACPI/glue.c.
+> >
+> > Thanks for the info and pointer.  Tang, I'd suggest you add such info to
+> > the comment so that others know that this step is needed for removing
+> > PCI bridges.  It helps us to know where to look at...
+> 
+> OK, I'll add it in the next version. :)
+> 
+> >
+> >> To accommodate that patch set, the ACPI device destroy process has been
+> >> split into two steps:
+> >> 1) acpi_bus_trim(device,0) to unbind ACPI drivers
+> >
+> > Does this step also detach PCI drivers from PCI cards as well?
+> 
+> Yes, it calls device_release_driver() to release the device driver.
+> 
+>      device_release_driver()
+>        |->__device_release_driver()
+>             |->dev->driver = NULL;
 
-So, why is it ok to create the 'reset' file after the device shows up?
-Like reset, SRIOV is optional.  The sysfs files are designed to only
-be used by userspace utils to enable/disable VFs after the system is up.
+I see.  Thanks for the info.
+-Toshi
 
-Or should the design allow a udev rule to be created that if one
-of these new sriov files exists, then perform a set of read-max-vf &
-enable n-vf ops ?
 
+> 
+> Thanks. :)
+> 
+> >
+> > Thanks,
+> > -Toshi
+> >
+> >
+> 
 
 
