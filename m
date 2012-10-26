@@ -1,80 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from claranet-outbound-smtp05.uk.clara.net ([195.8.89.38]:57591 "EHLO
-	claranet-outbound-smtp05.uk.clara.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751388Ab2JSRHA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Oct 2012 13:07:00 -0400
-From: Simon Farnsworth <simon.farnsworth@onelan.co.uk>
-To: intel-gfx@lists.freedesktop.org
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-media@vger.kernel.org,
-	mchehab@infradead.org
-Subject: Re: [Intel-gfx] GPU RC6 breaks PCIe to PCI bridge connected to CPU PCIe slot on SandyBridge systems
-Date: Fri, 19 Oct 2012 18:06:41 +0100
-Message-ID: <2244094.6Dmq15viKH@f17simon>
-In-Reply-To: <2233216.7bl6QCud67@f17simon>
-References: <1704067.2NCOGYajHN@f17simon> <3896332.1fABn9rFR8@f17simon> <2233216.7bl6QCud67@f17simon>
+Received: from ns.uli-eckhardt.de ([85.214.28.137]:58788 "EHLO
+	mail.uli-eckhardt.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965412Ab2JZQlp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Oct 2012 12:41:45 -0400
+Message-ID: <508ABD43.8080708@uli-eckhardt.de>
+Date: Fri, 26 Oct 2012 18:41:39 +0200
+From: Ulrich Eckhardt <usb@uli-eckhardt.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart4058091.mohbLKXv11"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+References: <50841CCC.9030809@uli-eckhardt.de> <CAErSpo5cN5w=E8GYyKE=bX0=67Qk0g0wAW4vVFe0QfPGxo=+MA@mail.gmail.com> <508973CE.8080603@uli-eckhardt.de> <42232189.sLGmN8Uve8@vostro.rjw.lan>
+In-Reply-To: <42232189.sLGmN8Uve8@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Am 25.10.2012 22:11, schrieb Rafael J. Wysocki:
+> On Thursday, October 25, 2012 07:15:58 PM Ulrich Eckhardt wrote:
+>> I have done first a cat to the control file which returns already on:
+>>
+>> uli:/ # cat /sys/devices/pci0000\:00/0000\:00\:04.0/power/control
+>> on
+>>
+>> Writing again on to the file does not change anything.
+>
+> Yes, and this means that runtime PM is disabled on the controller.
+>
+> ASPM remains as a possible culprit, then.
+>
+> Can you please boot with pcie_aspm=off in the kernel command line and see
+> if this makes a difference?
 
---nextPart4058091.mohbLKXv11
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+It make no difference:
+    ...
+[    0.000000] Policy zone: Normal
+[    0.000000] Kernel command line: 
+root=/dev/disk/by-id/ata-Corsair_Force_3_SSD_123079600000149504CF-part1 
+resume=/dev/disk/by-id/ata-WDC_WD20EARX-00PASB0_WD-WCAZA7766668-part2 
+splash=silent quiet vga=0x31a pcie_aspm=off
+[    0.000000] bootsplash: silent mode.
+[    0.000000] PCIe ASPM is disabled
+    ...
+[  124.949190] sdf: detected capacity change from 2032664576 to 0
+[  132.387722] sd 10:0:0:2: [sdf] 3970048 512-byte logical blocks: (2.03 
+GB/1.89 GiB)
+[  132.388881] sd 10:0:0:2: [sdf] No Caching mode page present
+[  132.388891] sd 10:0:0:2: [sdf] Assuming drive cache: write through
+[  132.390876] sd 10:0:0:2: [sdf] No Caching mode page present
+[  132.390885] sd 10:0:0:2: [sdf] Assuming drive cache: write through
+[  132.393259]  sdf: sdf1
+[  137.286335] sdf: detected capacity change from 2032664576 to 0
+[  144.304194] sd 10:0:0:2: [sdf] 3970048 512-byte logical blocks: (2.03 
+GB/1.89 GiB)
+[  144.305345] sd 10:0:0:2: [sdf] No Caching mode page present
+[  144.305356] sd 10:0:0:2: [sdf] Assuming drive cache: write through
+[  144.307389] sd 10:0:0:2: [sdf] No Caching mode page present
+[  144.307399] sd 10:0:0:2: [sdf] Assuming drive cache: write through
+[  144.309682]  sdf: sdf1
+[  217.179499] hub 9-0:1.0: cannot reset port 2 (err = -19)
+[  217.440798] hub 9-0:1.0: hub_port_status failed (err = -19)
+[  217.440865] sd 10:0:0:2: Device offlined - not ready after error recovery
+[  217.440873] sd 10:0:0:2: [sdf] Unhandled error code
+[  217.440875] sd 10:0:0:2: [sdf]
+[  217.440876] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  217.440878] sd 10:0:0:2: [sdf] CDB:
+[  217.440879] Read(10): 28 00 00 00 0f 00 00 00 f0 00
+[  217.440884] end_request: I/O error, dev sdf, sector 3840
+[  217.440909] sd 10:0:0:2: rejecting I/O to offline device
+[  217.440911] sd 10:0:0:2: killing request
+[  217.440945] sd 10:0:0:2: rejecting I/O to offline device
+[  217.440958] sd 10:0:0:2: [sdf] killing request
+[  217.440968] sd 10:0:0:2: rejecting I/O to offline device
+[  217.440977] sd 10:0:0:2: rejecting I/O to offline device
+[  217.440979] sd 10:0:0:2: rejecting I/O to offline device
+[  217.441003] sd 10:0:0:2: [sdf] Unhandled error code
+[  217.441008] sd 10:0:0:2: [sdf]
+[  217.441012] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+[  217.441017] sd 10:0:0:2: [sdf] CDB:
+[  217.441020] Read(10): 28 00 00 00 0f f0 00 00 10 00
+[  217.441036] end_request: I/O error, dev sdf, sector 4080
+[  217.442200] sd 10:0:0:2: rejecting I/O to offline device
+[  217.442252] sd 10:0:0:2: rejecting I/O to offline device
 
-On Friday 19 October 2012 17:10:17 Simon Farnsworth wrote:
-> Mauro, Linux-Media
-> 
-> I have an issue where an SAA7134-based TV capture card connected via a PCIe to
-> PCI bridge chip works when the GPU is kept out of RC6 state, but sometimes
-> "skips" updating lines of the capture when the GPU is in RC6. We've confirmed
-> that a CX23418 based chip doesn't have the problem, so the question is whether
-> the SAA7134 and the saa7134 driver are at fault, or whether it's the PCIe bus.
-> 
-> This manifests as a regression, as I had no problems with kernel 3.3 (which
-> never enabled RC6 on the Intel GPU), but I do have problems with 3.5 and with
-> current Linus git master. I'm happy to try anything, 
-> 
-> I've attached lspci -vvxxxxx output (suitable for feeding to lspci -F) for
-> when the corruption is present (lspci.faulty) and when it's not
-> (lspci.working). The speculation is that the SAA7134 is somehow more
-> sensitive to the changes in timings that RC6 introduces than the CX23418, and
-> that someone who understands the saa7134 driver might be able to make it less
-> sensitive.
-> 
-And timings are definitely the problem; I have a userspace provided pm_qos
-request asking for 0 exit latency, but I can see CPU cores entering C6. I'll
-take this problem to an appropriate list.
-
-There is still be a bug in the SAA7134 driver, as the card clearly wants a
-pm_qos request when streaming to stop the DMA latency becoming too high; this
-doesn't directly affect me, as my userspace always requests minimal DMA
-latency anyway, so consider this message as just closing down the thread for
-now, and as a marker for the future (if people see such corruption, the
-saa7134 driver needs a pm_qos request when streaming that isn't currently
-present).
 -- 
-Simon Farnsworth
-Software Engineer
-ONELAN Ltd
-http://www.onelan.com
+Ulrich Eckhardt                  http://www.uli-eckhardt.de
 
---nextPart4058091.mohbLKXv11
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQEcBAABAgAGBQJQgYimAAoJEIKsye9/dtRWos4H/jaQFkVCaajyMsUJvu7Doe3/
-6XxuEdETC/4YX4SCzbTfRUQ7NaKHP/0H0YxeRQdsFnU640QLApQ8RrRKBZ5EUD2Y
-xG36GKSWyGxJ9MLnSEDFy6z3xL8qRkq9oTASkDkKshP/oZsZDwIooqEUy/QhX3Sb
-jUxumcyNsfbrcApFhNOkzDavl7n/KdjB0NuwZh7+ZUnljYHqse9dGpsrovPPoJzA
-KfvXzzI672IPHEGPtpkbUP3/eZrcJ71Te+JXeWf2COx39DtuWCSZHu3+IpT5dYEk
-bx1CuYA+kw6WxPBhOC3hk9Dptryj0JbBCtAdLvT7xrhPw1sS+dUsEvz/LRxr3m0=
-=QFbN
------END PGP SIGNATURE-----
-
---nextPart4058091.mohbLKXv11--
-
+Ein Blitzableiter auf dem Kirchturm ist das denkbar stärkste
+Misstrauensvotum gegen den lieben Gott. (Karl Krauss)
