@@ -1,122 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:63121 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221Ab2JIHoR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Oct 2012 03:44:17 -0400
-Message-ID: <5073D56C.40705@huawei.com>
-Date: Tue, 9 Oct 2012 15:42:36 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:65111 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752665Ab2JZJWa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Oct 2012 05:22:30 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hq12so257491wib.1
+        for <linux-pci@vger.kernel.org>; Fri, 26 Oct 2012 02:22:29 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
- device hot removed
-References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <50739D40.8040005@huawei.com>
-In-Reply-To: <50739D40.8040005@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <CADCVGbTQTH05TtoGUm-oNYnM8NR9OKr0GVgK0sETnW6H29b+6A@mail.gmail.com>
+References: <CADCVGbTDD-4WOVJWwaGBvay5=of=3VKBCVacrrW-z12BYZ1xbQ@mail.gmail.com>
+ <CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com> <CADCVGbTQTH05TtoGUm-oNYnM8NR9OKr0GVgK0sETnW6H29b+6A@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 26 Oct 2012 03:22:08 -0600
+Message-ID: <CAErSpo5QG4O_ENko8AFazq9WCf9vkX9_JzrKUdhCWnOPJhaSBA@mail.gmail.com>
+Subject: Re: PCIe IO space support on Tilera GX: Is there any one who can
+ confirm my modification to fix it is OK?
+To: Cyberman Wu <cypher.w@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Chris Metcalf <cmetcalf@tilera.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/10/9 11:42, Jiang Liu wrote:
-> How about this patch, which disables ARI when adding new PCI devices?
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 5485883..c841aa6 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
->  void pci_enable_ari(struct pci_dev *dev)
->  {
+On Fri, Oct 26, 2012 at 3:01 AM, Cyberman Wu <cypher.w@gmail.com> wrote:
+> We're not using 3.6.x, we're using is from MDE-4.1.0 from Tilera and
+> it patch 3.0.38.
 
-I think it's ok. Delay to disable ARI until next hot add is safe.
-Maybe rename as pci_configure_ari is better.
+That's fine, but you sent the email to the linux-pci and linux-kernel
+lists, and on those lists, we're only concerned with the upstream
+Linux kernels, e.g., 3.6.  If you need support for MDE-4.1.0, you need
+to talk to whoever supplies that, because we have no idea what it is.
 
->         u32 cap;
-> +       bool enable = true;
->         struct pci_dev *bridge;
-> 
->         if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
->                 return;
-> 
->         if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
-> -               return;
-> +               enable = false;
-> 
->         bridge = dev->bus->self;
->         if (!bridge)
-> @@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
->         if (!(cap & PCI_EXP_DEVCAP2_ARI))
->                 return;
-> 
-> -       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
-> -       bridge->ari_enabled = 1;
-> +       if (enable) {
-> +               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-> +                                        PCI_EXP_DEVCTL2_ARI);
-> +               bridge->ari_enabled = 1;
-> +       } else {
-> +               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
-> +                                        PCI_EXP_DEVCTL2_ARI);
-> +               bridge->ari_enabled = 0;
-> +       }
->  }
-> 
->  /**
->
-> On 2012-10-9 11:03, Yijing Wang wrote:
->> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
->> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
->> when an ARI device hot removed.
->>
->> my steps:
->> 1. Hot add an ARI pci device;
->> 2. Hot remove the ARI pci device;
->> 3. Hot add an non ARI pci device;
->>
->> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
->> bit set.
->>
->> As PCIe Spec 2.0(6.13/441) recommends:
->> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
->> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
->> newly added component is in fact an ARI Device"
->>
->> This series of patches fix this problem.
->>
->> Yijing Wang (7):
->>   PCI: rework pci_enable_ari for support disable ari forwarding
->>   PCI, acpiphp: disable ARI forwarding for acpiphp
->>   PCI, pciehp: disable ARI forwarding for pciehp
->>   PCI, cpqphp: disable ARI forwarding for cpqphp
->>   PCI, shpchp: disable ARI forwarding for shpchp
->>   PCI, sgi: disable ARI forwarding for sgiphp
->>   PCI, ibmphp: disable ARI forwarding for ibmphp
->>
->>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
->>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
->>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
->>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
->>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
->>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
->>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
->>  drivers/pci/pci.c                      |   16 +++++++++++-----
->>  drivers/pci/pci.h                      |    2 +-
->>  drivers/pci/probe.c                    |    2 +-
->>  10 files changed, 20 insertions(+), 7 deletions(-)
->>
->>
->>
->> .
->>
-> 
-> 
-> 
-> .
-> 
+> For mvsas, it seems do think 0 I/O address invalied.
 
+That's a driver bug.  Zero is a perfectly valid I/O address.  On many
+systems it's not usable because of platform restrictions, but the
+driver has no way to know about those restrictions, and the driver
+should still work on the platforms where zero *is* usable.
 
--- 
-Thanks!
-Yijing
+> When we using MDE-4.0.0 it don't support I/O space, I just bypass
+> these check since after
+> investigate all code of mvsas it seems that I/O space map to BAR 2 is
+> not really used.
 
+If the driver doesn't need I/O space, it'd be a lot simpler to just
+change it to use pci_enable_device_mem(), which indicates that we
+don't need to enable I/O BARs, and strip out the code that checks
+whether the I/O BARs are valid.  Then you wouldn't need to mess with
+adding I/O space support in your platform.
+
+Bjorn
