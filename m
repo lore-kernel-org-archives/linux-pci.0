@@ -1,58 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:39179 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759914Ab2JYQqO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Oct 2012 12:46:14 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1475924wgb.1
-        for <linux-pci@vger.kernel.org>; Thu, 25 Oct 2012 09:46:13 -0700 (PDT)
+Received: from usmamail.tilera.com ([12.216.194.151]:40451 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933111Ab2JZOI4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Oct 2012 10:08:56 -0400
+Message-ID: <508A9974.2090403@tilera.com>
+Date: Fri, 26 Oct 2012 10:08:52 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-In-Reply-To: <20121025153552.GA5205@xanatos>
-References: <CALuomMuUD4xSaCUT6MZn3ZV2gjXnuBUhkz78PgXZ6XgV4e-NvA@mail.gmail.com>
- <20121025153552.GA5205@xanatos>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 25 Oct 2012 10:45:51 -0600
-Message-ID: <CAErSpo6m8YOJnv3gwPo8=HXNTMSJ5xfCgvdp2==tkWn6Wfvpnw@mail.gmail.com>
-Subject: Re: xhci Portsc register issue
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: shashank chaturvedi <chaturvedi9950@gmail.com>,
-	linux-usb@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Cyberman Wu <cypher.w@gmail.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: PCIe IO space support on Tilera GX: Is there any one who can
+ confirm my modification to fix it is OK?
+References: <CADCVGbTDD-4WOVJWwaGBvay5=of=3VKBCVacrrW-z12BYZ1xbQ@mail.gmail.com> <CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7mcDkWUhUBvnZ6P+5TOYsE=j6zB7MHqfY1wvqyyE1CBQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 25, 2012 at 9:36 AM, Sarah Sharp
-<sarah.a.sharp@linux.intel.com> wrote:
-> On Thu, Oct 25, 2012 at 12:31:09PM +0530, shashank chaturvedi wrote:
->> Hi sarah,
->>              I am using Ubuntu 11.04 OS and NEC USB3.0 Host controller.
->> I want to write the PLS [8:5] field in the PORTSC register through C
->> program ,as per xhci spec first we have to write the LWS field
->> I am doing that also,  But its unable to write above fields.
->> Can you help me for how to write these field of PORTSC register?
->> I am sending you the code below.  Please provide me the solution for
->> writing the PLS field of PORTSC register
->
-> Why would you want to do that?  For link power management?  What is the
-> xHCI kernel driver not providing you such that you have to write a
-> userspace program?
->
-> If you're trying to write the PLS register from userspace while the xHCI
-> driver is loaded, I don't think that will work.  The PCI registers have
-> already been mapped by the xHCI driver, and I don't think another
-> program would be able to map them again.
->
-> But I'm not sure, since I've never attempted to memory map PCI registers
-> from userspace.  I was under the impression that you just can't do that.
+On 10/26/2012 4:03 AM, Bjorn Helgaas wrote:
+> [+cc Chris, also a few comments below]
 
-PORTSC looks like an xHCI-specific register that would be inside one
-of the BARs (xHCI spec sec 5.4.8).  This would typically be mapped by
-the driver.  Writing it from userspace behind the driver's back is
-asking for trouble because the driver owns the device, and it won't be
-aware of what you're doing.
+Bjorn, thanks for looping me in.
 
-PCI config space isn't mapped by drivers in the same way PCI BARs are,
-and you can change things there with "setpci".  But again, this is
-asking for trouble because those registers are really owned by the PCI
-core, and things will go wrong if you change things behind its back.
+> On Fri, Oct 26, 2012 at 12:59 AM, Cyberman Wu <cypher.w@gmail.com> wrote:
+>> After we upgrade to MDE 4.1.0 from Tilera, we encounter a problem that
+>> only on HighPoint 2680 card works, I've
+>> tried to fix it, but since most time I'm working in user space, I'm
+>> not sure my fix is enough. Their FAE said that
+>> the guy who add PCIe I/O space support is on vacation and I can't get
+>> help from him now, I hope maybe there
+>> will have somebody can help.
 
-Bjorn
+I asked internally and I think the response provided by Tilera was more
+along the lines of "it may take a bit longer to get you an answer". :-)
+
+> Per http://lkml.indiana.edu/hypermail/linux/kernel/1205.1/01176.html,
+> Chris considered adding I/O space support and decided against it at
+> that time, partly because it would use up a TRIO PIO region.
+>
+> I don't know his current thoughts.  Possibly it could be done under a
+> config option or something.
+
+In the end, we did code up I/O port support in the root complex driver,
+since we had a customer with a device that needed it.  We haven't yet
+returned it to the community - getting the basic PCI root complex support
+returned (and networking support) took way more time than I had anticipated
+so I'm batching up the next round of stuff to return for later.  But
+"later" is probably going to come fairly soon since it would make sense to
+target the 3.8 merge window.
+
+>> It works now. But I really need some one to confirm whether my
+>> modification is enough or not,
+>> if there have other potential problems.
+
+Cyberman: it seems like your bias hack is working for you.  But, as Bjorn
+says, this sounds like a driver bug.  What happens if you just revert your
+changes, but then in mvsas.c change the "if (!res_start || !res_len)" to
+just say "if (!res_len)"?  That seems like the true error test.  If that
+works, you should submit that change to the community.
+
+Bjorn et al: does it seem reasonable to add a bias to the mappings so that
+we never report a zero value as valid?  This may be sufficiently defensive
+programming that it's just the right thing to do regardless of whether
+drivers are technically at fault or not.  If so, what's a good bias?  (I'm
+inclined to think 64K rather than 4K.)
+
+Thanks!
+
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
+
