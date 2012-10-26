@@ -1,49 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18280 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:18107 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759022Ab2JYNTq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Oct 2012 09:19:46 -0400
-Message-ID: <50893C5F.7000308@redhat.com>
-Date: Thu, 25 Oct 2012 09:19:27 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Yuval Mintz <yuvalmin@broadcom.com>
-CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
-References: <1349388885-43938-1-git-send-email-ddutile@redhat.com> <5070768C.4030905@gmail.com> <20121008084439.00006e56@unknown> <50746F77.60201@redhat.com> <C5551D9AAB213A418B7FD5E4A6F30A071533B57E@ORSMSX106.amr.corp.intel.com> <5074A9DD.3000800@redhat.com> <50878105.8000503@broadcom.com>
-In-Reply-To: <50878105.8000503@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1756165Ab2JZFIP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Oct 2012 01:08:15 -0400
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: PCI/PM: Add comments for PME poll support for PCIe
+Date: Fri, 26 Oct 2012 13:07:51 +0800
+Message-Id: <1351228071-15161-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/24/2012 01:47 AM, Yuval Mintz wrote:
->>> I've finished some patches for the ixgbe driver and they are under internal review.  Testing turned out pretty well.  Hopefully they'll be ready for posting tomorrow afternoon since I'm gone Thursday and Friday.  They'll be based on your RFC v2 patch.  I don't expect many changes will be required for the next version of your patch.
->>>
->>> - Greg
->>>
->> Great!
->> I'll work on re-doing the patch set to have just the two sysfs files
->> as discussed above.
->> We can make an incremental change to move the sriov_enable/disable since
->> your patch has it ready to do just that.
->
-> Hi,
->
-> I've failed to find [RFC v3]; Will such a series be sent in the imminent future?
->
-> Thanks,
-> Yuval
->
->
-Sorry for delay... (many) customers getting in the way again! ;-)
-I'll be posting a V3 set shortly.
-Testing w/patches Greg Rose gave me for ixgbe to fully exercise the
-good & failure paths, so the V3 set should be in good functional
-shape; just finished the testing late last night.
+There are comments on why PME poll support is necessary for PCI
+devices, but not for PCIe devices.  That may lead to misunderstanding
+that PME poll is only necessary for PCI devices.  So add comments
+related to PCIe PME poll to make it more clear.
 
+The content of comments comes from the changelog of commit:
 
+379021d5c0899fcf9410cae4ca7a59a5a94ca769
+
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+---
+ drivers/pci/pci.c |   28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
+
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1578,15 +1578,25 @@ void pci_pme_active(struct pci_dev *dev,
+ 
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+ 
+-	/* PCI (as opposed to PCIe) PME requires that the device have
+-	   its PME# line hooked up correctly. Not all hardware vendors
+-	   do this, so the PME never gets delivered and the device
+-	   remains asleep. The easiest way around this is to
+-	   periodically walk the list of suspended devices and check
+-	   whether any have their PME flag set. The assumption is that
+-	   we'll wake up often enough anyway that this won't be a huge
+-	   hit, and the power savings from the devices will still be a
+-	   win. */
++	/*
++	 * PCI (as opposed to PCIe) PME requires that the device have
++	 * its PME# line hooked up correctly. Not all hardware vendors
++	 * do this, so the PME never gets delivered and the device
++	 * remains asleep. The easiest way around this is to
++	 * periodically walk the list of suspended devices and check
++	 * whether any have their PME flag set. The assumption is that
++	 * we'll wake up often enough anyway that this won't be a huge
++	 * hit, and the power savings from the devices will still be a
++	 * win.
++	 *
++	 * Although PCIe uses in-band PME message instead of PME# line
++	 * to report PME, PME does not work for some PCIe devices in
++	 * reality.  For example, there are devices that set their PME
++	 * status bits, but don't really bother to send a PME message;
++	 * there are PCI Express Root Ports that don't bother to
++	 * trigger interrupts when they receive PME messages from the
++	 * devices below.  So PME poll is used for PCIe devices too.
++	 */
+ 
+ 	if (dev->pme_poll) {
+ 		struct pci_pme_device *pme_dev;
