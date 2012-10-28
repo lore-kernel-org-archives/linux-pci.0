@@ -1,161 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:31179 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758654Ab2JXRWI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Oct 2012 13:22:08 -0400
-Message-ID: <1351098875.19172.21.camel@misato.fc.hp.com>
-Subject: Re: [PATCH v2 2/2] Improve container_notify_cb() to support
- container hot-remove.
-From: Toshi Kani <toshi.kani@hp.com>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, mihailm@parallels.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 24 Oct 2012 11:14:35 -0600
-In-Reply-To: <1351058750-4275-3-git-send-email-tangchen@cn.fujitsu.com>
-References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
-	 <1351058750-4275-3-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Joe Perches <joe@perches.com>
+To: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pcmcia@lists.infradead.org, linux-scsi@vger.kernel.org,
+	devel@open-fcoe.org, virtualization@lists.linux-foundation.org,
+	linux-watchdog@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linux-usb@vger.kernel.org, alsa-devel@alsa-project.org
+Subject: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+Date: Sun, 28 Oct 2012 01:05:38 -0700
+Message-Id: <cover.1351411047.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-10-24 at 14:05 +0800, Tang Chen wrote:
-> This patch introduces a new function container_device_remove() to do
-> the container hot-remove job. It works like the following:
-> 
-> 1. call acpi_bus_trim(device, 0) to stop the container device.
-> 2. generate the KOBJ_OFFLINE uevent. (Did I do this correct ?)
-> 3. call acpi_bus_hot_remove_device(), which will call acpi_bus_trim(device, 1)
->    to remove the container.
-> 
-> This patch is based on Lu Yinghai's work.
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-split-pci-root-hp-2
-> 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->  drivers/acpi/container.c |   58 ++++++++++++++++++++++++++++++++++++++-------
->  1 files changed, 49 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-> index d300e03..9676578 100644
-> --- a/drivers/acpi/container.c
-> +++ b/drivers/acpi/container.c
-> @@ -166,6 +166,35 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
->  	return result;
->  }
->  
-> +static int container_device_remove(struct acpi_device *device)
-> +{
-> +	int ret;
-> +	struct acpi_eject_event *ej_event;
-> +
-> +	/* stop container device at first */
-> +	ret = acpi_bus_trim(device, 0);
+dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
+Convert non-debug calls to this form.
 
-Hi Tang,
+Joe Perches (16):
+  tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  ata: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  drivers: base: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  block: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  pcmcia: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  dma: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  gpu: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  i2c: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  wireless: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  ethernet: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  pci: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  scsi: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  usb: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  watchdog: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+  tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
 
-Why do you need to call acpi_bus_trim(device,0) to stop the container
-device first?
+ arch/tile/kernel/pci_gx.c                   |   15 ++---
+ drivers/ata/pata_cmd64x.c                   |    6 +-
+ drivers/base/attribute_container.c          |    2 +-
+ drivers/base/devres.c                       |    4 +-
+ drivers/block/umem.c                        |   97 ++++++++++++--------------
+ drivers/char/pcmcia/cm4040_cs.c             |    5 +-
+ drivers/dma/at_hdmac_regs.h                 |    8 +-
+ drivers/dma/iop-adma.c                      |   45 ++++++------
+ drivers/dma/mv_xor.c                        |   62 ++++++++----------
+ drivers/gpu/drm/gma500/cdv_intel_crt.c      |    3 +-
+ drivers/gpu/drm/gma500/cdv_intel_lvds.c     |    7 +-
+ drivers/gpu/drm/gma500/psb_intel_lvds.c     |    7 +-
+ drivers/gpu/drm/i915/intel_opregion.c       |    8 +-
+ drivers/i2c/busses/i2c-piix4.c              |    5 +-
+ drivers/net/ethernet/chelsio/cxgb3/common.h |    7 +-
+ drivers/net/ethernet/marvell/pxa168_eth.c   |    7 +-
+ drivers/net/wireless/at76c50x-usb.c         |   85 +++++++++++------------
+ drivers/net/wireless/iwlegacy/common.h      |    5 +-
+ drivers/net/wireless/iwlwifi/pcie/trans.c   |   28 +++-----
+ drivers/pci/irq.c                           |   10 ++--
+ drivers/pci/pci-stub.c                      |    2 +-
+ drivers/pci/pcie/aspm.c                     |    7 +--
+ drivers/pcmcia/cistpl.c                     |   10 +--
+ drivers/pcmcia/cs.c                         |   28 +++-----
+ drivers/pcmcia/ds.c                         |   38 +++++------
+ drivers/pcmcia/pcmcia_cis.c                 |    4 +-
+ drivers/pcmcia/pcmcia_resource.c            |   11 +--
+ drivers/pcmcia/rsrc_nonstatic.c             |   24 +++----
+ drivers/pcmcia/ti113x.h                     |   80 +++++++++++------------
+ drivers/pcmcia/yenta_socket.c               |   61 ++++++++---------
+ drivers/scsi/53c700.c                       |    2 +-
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c      |    4 +-
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c      |    4 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c          |    4 +-
+ drivers/scsi/bfa/bfad.c                     |   32 ++++-----
+ drivers/scsi/fcoe/fcoe_sysfs.c              |    3 +-
+ drivers/scsi/lasi700.c                      |    2 +-
+ drivers/scsi/libsas/sas_task.c              |    9 +--
+ drivers/scsi/lpfc/lpfc_attr.c               |    8 +-
+ drivers/scsi/lpfc/lpfc_debugfs.h            |    6 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c            |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c               |   45 ++++++-------
+ drivers/scsi/mpt2sas/mpt2sas_transport.c    |   91 ++++++++++++-------------
+ drivers/scsi/mvsas/mv_64xx.c                |    2 +-
+ drivers/scsi/mvsas/mv_chips.h               |    8 +-
+ drivers/scsi/mvsas/mv_init.c                |   14 ++--
+ drivers/scsi/mvsas/mv_sas.c                 |    9 +--
+ drivers/scsi/pm8001/pm8001_init.c           |   10 +--
+ drivers/scsi/pm8001/pm8001_sas.c            |    4 +-
+ drivers/scsi/raid_class.c                   |    8 +-
+ drivers/scsi/scsi_scan.c                    |    3 +-
+ drivers/scsi/scsi_transport_fc.c            |   31 ++++-----
+ drivers/scsi/scsi_transport_sas.c           |    7 +-
+ drivers/scsi/sni_53c710.c                   |    2 +-
+ drivers/scsi/zalon.c                        |    4 +-
+ drivers/usb/core/hub.c                      |    2 +-
+ drivers/virtio/virtio_balloon.c             |    7 +-
+ drivers/watchdog/mpcore_wdt.c               |   19 +++---
+ sound/pci/asihpi/hpidspcd.c                 |   22 +++----
+ sound/pci/asihpi/hpioctl.c                  |   17 ++---
+ 60 files changed, 485 insertions(+), 579 deletions(-)
 
-> +	printk(KERN_WARNING "acpi_bus_trim stop return %x\n", ret);
-
-Do you need this message in the normal case?  If so, I'd suggest to use
-pr_debug().
-
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* event originated from ACPI eject notification */
-> +	device->flags.eject_pending = 1;
-
-You do not need to set the eject_pending flag when the handler calls
-acpi_bus_hot_remove_device().  It was set before because the handler did
-not initiate the hot-remove operation.
-
-> +
-> +	/* send the uevent before remove the device */
-> +	kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
-> +
-> +	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
-> +	if (!ej_event)
-> +		return -ENOMEM;
-> +
-> +	ej_event->device = device;
-> +	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
-> +
-> +	acpi_bus_hot_remove_device(ej_event);
-> +
-> +	return 0;
-> +}
-> +
->  static void __container_notify_cb(struct work_struct *work)
->  {
->  	struct acpi_device *device = NULL;
-> @@ -181,6 +210,9 @@ static void __container_notify_cb(struct work_struct *work)
->  	handle = hp_work->handle;
->  	type = hp_work->type;
->  
-> +	present = is_device_present(handle);
-> +	status = acpi_bus_get_device(handle, &device);
-> +
->  	switch (type) {
->  	case ACPI_NOTIFY_BUS_CHECK:
->  		/* Fall through */
-> @@ -189,13 +221,14 @@ static void __container_notify_cb(struct work_struct *work)
->  		       (type == ACPI_NOTIFY_BUS_CHECK) ?
->  		       "ACPI_NOTIFY_BUS_CHECK" : "ACPI_NOTIFY_DEVICE_CHECK");
->  
-> -		present = is_device_present(handle);
-> -		status = acpi_bus_get_device(handle, &device);
->  		if (!present) {
->  			if (ACPI_SUCCESS(status)) {
->  				/* device exist and this is a remove request */
-> -				device->flags.eject_pending = 1;
-> -				kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
-> +				result = container_device_remove(device);
-> +				if (result) {
-> +					printk(KERN_WARNING "Failed to remove container\n");
-> +					break;
-> +				}
->  				return;
->  			}
->  			break;
-> @@ -215,12 +248,19 @@ static void __container_notify_cb(struct work_struct *work)
->  		break;
->  
->  	case ACPI_NOTIFY_EJECT_REQUEST:
-> -		if (!acpi_bus_get_device(handle, &device) && device) {
-> -			device->flags.eject_pending = 1;
-> -			kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
-> -			return;
-> +		printk(KERN_WARNING "Container driver received %s event\n",
-> +			"ACPI_NOTIFY_EJECT_REQUEST");
-
-Same as other comment.  Suggest to use pr_debug().
-
-> +
-> +		if (!present || ACPI_FAILURE(status) || !device)
-> +			break;
-> +
-> +		result = container_device_remove(device);
-> +		if (result) {
-> +			printk(KERN_WARNING "Failed to remove container\n");
-
-Please use pr_warn().
-
-Thanks,
--Toshi
-
-> +			break;
->  		}
-> -		break;
-> +
-> +		return;
->  
->  	default:
->  		/* non-hotplug event; possibly handled by other handler */
-
+-- 
+1.7.8.112.g3fd21
 
