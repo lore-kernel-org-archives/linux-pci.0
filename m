@@ -1,70 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16270 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755068Ab2JCNSU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Oct 2012 09:18:20 -0400
-Message-ID: <506C3B11.9010009@redhat.com>
-Date: Wed, 03 Oct 2012 09:18:09 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	davem@davemloft.net
-Subject: Re: [RFC] PCI: enable and disable sriov support via sysfs at per
- device level
-References: <1349134020-62152-1-git-send-email-ddutile@redhat.com> <CAE9FiQUd=sM3XaMKfJjnJq6mkugL7P=wEjdcMHtGjfe4ooRXUQ@mail.gmail.com> <506B4D4C.3080101@redhat.com> <20121002203951.GA28663@kroah.com> <506B575A.4060304@redhat.com> <20121003031018.GB13391@kroah.com>
-In-Reply-To: <20121003031018.GB13391@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:60891 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756012Ab2J1IJc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 28 Oct 2012 04:09:32 -0400
+From: Joe Perches <joe@perches.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 11/16] pci: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+Date: Sun, 28 Oct 2012 01:05:49 -0700
+Message-Id: <58d59961e0f3287afeda402e123e5d760471b0d9.1351411048.git.joe@perches.com>
+In-Reply-To: <cover.1351411047.git.joe@perches.com>
+References: <cover.1351411047.git.joe@perches.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2012 11:10 PM, Greg Kroah-Hartman wrote:
-> On Tue, Oct 02, 2012 at 05:06:34PM -0400, Don Dutile wrote:
->> On 10/02/2012 04:39 PM, Greg Kroah-Hartman wrote:
->>> On Tue, Oct 02, 2012 at 04:23:40PM -0400, Don Dutile wrote:
->>>> Greg: Why not use the above functions?
->>>
->>> What "above functions"?  You make a lot of calls in the code :)
->>>
->>> You are creating an attribute group, and then manually walking through
->>> it to create/destroy the file?  That's not good, use the in-kernel
->>> functions to do that automatically for you.
->>>
->>> Also, you need to do this _before_ the device shows up to userspace,
->>> otherwise you have a race that you just lost with udev and the like.
->>>
->>> thanks,
->>>
->>> greg k-h
->>
->> So, why is it ok to create the 'reset' file after the device shows up?
->
-> It's not, that should be fixed, patches are always welcome.
->
->> Like reset, SRIOV is optional.  The sysfs files are designed to only
->> be used by userspace utils to enable/disable VFs after the system is up.
->>
->> Or should the design allow a udev rule to be created that if one
->> of these new sriov files exists, then perform a set of read-max-vf&
->> enable n-vf ops ?
->
-> Yes it should.  Never create sysfs files after the device is present in
-> the system, otherwise userspace never knows about it.
->
-> thanks,
->
-> greg k-h
+dev_<level> calls take less code than dev_printk(KERN_<LEVEL>
+and reducing object size is good.
+Coalesce formats for easier grep.
 
-ok, thanks for feedback and bit of education ....
-still looking for more on this 'visible' tagging though.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/pci/irq.c       |   10 +++++-----
+ drivers/pci/pci-stub.c  |    2 +-
+ drivers/pci/pcie/aspm.c |    7 ++-----
+ 3 files changed, 8 insertions(+), 11 deletions(-)
 
-so, I guess Bjorn ought to add 'cleaning up pci-sysfs' to
-his PCI to-do list...
+diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+index e5f69a4..b008cf8 100644
+--- a/drivers/pci/irq.c
++++ b/drivers/pci/irq.c
+@@ -14,11 +14,11 @@ static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
+ {
+ 	struct pci_dev *parent = to_pci_dev(pdev->dev.parent);
+ 
+-	dev_printk(KERN_ERR, &pdev->dev,
+-		   "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
+-		   dev_name(&parent->dev), parent->vendor, parent->device);
+-	dev_printk(KERN_ERR, &pdev->dev, "%s\n", reason);
+-	dev_printk(KERN_ERR, &pdev->dev, "Please report to linux-kernel@vger.kernel.org\n");
++	dev_err(&pdev->dev,
++		"Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
++		dev_name(&parent->dev), parent->vendor, parent->device);
++	dev_err(&pdev->dev, "%s\n", reason);
++	dev_err(&pdev->dev, "Please report to linux-kernel@vger.kernel.org\n");
+ 	WARN_ON(1);
+ }
+ 
+diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
+index 775e933..6e47c51 100644
+--- a/drivers/pci/pci-stub.c
++++ b/drivers/pci/pci-stub.c
+@@ -28,7 +28,7 @@ MODULE_PARM_DESC(ids, "Initial PCI IDs to add to the stub driver, format is "
+ 
+ static int pci_stub_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ {
+-	dev_printk(KERN_INFO, &dev->dev, "claimed by stub\n");
++	dev_info(&dev->dev, "claimed by stub\n");
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 213753b..3da9ecc 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -242,8 +242,7 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+ 		return;
+ 
+ 	/* Training failed. Restore common clock configurations */
+-	dev_printk(KERN_ERR, &parent->dev,
+-		   "ASPM: Could not configure common clock\n");
++	dev_err(&parent->dev, "ASPM: Could not configure common clock\n");
+ 	list_for_each_entry(child, &linkbus->devices, bus_list)
+ 		pcie_capability_write_word(child, PCI_EXP_LNKCTL,
+ 					   child_reg[PCI_FUNC(child->devfn)]);
+@@ -507,9 +506,7 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ 		 */
+ 		pcie_capability_read_dword(child, PCI_EXP_DEVCAP, &reg32);
+ 		if (!(reg32 & PCI_EXP_DEVCAP_RBER) && !aspm_force) {
+-			dev_printk(KERN_INFO, &child->dev, "disabling ASPM"
+-				" on pre-1.1 PCIe device.  You can enable it"
+-				" with 'pcie_aspm=force'\n");
++			dev_info(&child->dev, "disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'\n");
+ 			return -EINVAL;
+ 		}
+ 	}
+-- 
+1.7.8.112.g3fd21
 
-maybe once i figure out the proper sriov sysfs code, I
-can duplicate that effort in the reset,vga & pm-capabilities
-section.
-
-- Don
