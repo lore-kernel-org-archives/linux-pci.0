@@ -1,175 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Gong Chen <gong.chen@linux.intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH v3 17/28] ACPIHP: block ACPI device driver unloading when executing hotplug operations
-Date: Sat,  6 Oct 2012 23:27:25 +0800
-Message-Id: <1349537256-21670-18-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:39276 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756433Ab2J2NdS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 09:33:18 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fk26so5213698vcb.19
+        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 06:33:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <d13ec089ce3a327746ddf20674a0c1f5d22acb88.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
+	<d13ec089ce3a327746ddf20674a0c1f5d22acb88.1351492562.git.pratyush.anand@st.com>
+Date: Mon, 29 Oct 2012 19:03:17 +0530
+Message-ID: <CAOh2x==OzbwA+4ArPG+yJuZHaQ-v_2VS8YNuFYH36ZqrkZLn3A@mail.gmail.com>
+Subject: Re: [PATCH 13/15] SPEAr13xx: update kconfig for PCIe selection
+From: viresh kumar <viresh.kumar@linaro.org>
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	olof@lixom.net
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI hotplug driver depends on ACPI device drivers to configure or
-unconfigure ACPI devices. It will confuse the hotplug driver if an ACPI
-device driver is unloaded when there are ongoing hotplug operations.
-So block ACPI device driver unbinding/unloading by holding the device
-lock when there are ongoing hotplug operations.
+On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> ---
+>  arch/arm/mach-spear13xx/Kconfig |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/arm/mach-spear13xx/Kconfig b/arch/arm/mach-spear13xx/Kconfig
+> index eaadc66..4817314 100644
+> --- a/arch/arm/mach-spear13xx/Kconfig
+> +++ b/arch/arm/mach-spear13xx/Kconfig
+> @@ -16,5 +16,17 @@ config MACH_SPEAR1340
+>         select PINCTRL_SPEAR1340
+>         help
+>           Supports ST SPEAr1340 machine configured via the device-tree
+> +
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/hotplug/configure.c |   18 ++++++++++++++++--
- drivers/acpi/hotplug/device.c    |    8 --------
- 2 files changed, 16 insertions(+), 10 deletions(-)
+change irrelevant to your patch
 
-diff --git a/drivers/acpi/hotplug/configure.c b/drivers/acpi/hotplug/configure.c
-index 346b976..75e8752 100644
---- a/drivers/acpi/hotplug/configure.c
-+++ b/drivers/acpi/hotplug/configure.c
-@@ -37,7 +37,9 @@ enum config_op_code {
- 	DRV_OP_POST_RELEASE,
- 	DRV_OP_PRE_UNCONFIGURE,
- 	DRV_OP_UNCONFIGURE,
--	DRV_OP_POST_UNCONFIGURE
-+	DRV_OP_POST_UNCONFIGURE,
-+	DRV_OP_LOCK_DEVICE,
-+	DRV_OP_UNLOCK_DEVICE,
- };
- 
- /* All devices will be configured in following order. */
-@@ -102,6 +104,12 @@ static int acpihp_drv_invoke_method(enum config_op_code  opcode,
- 		return acpihp_dev_unconfigure(dev);
- 	case DRV_OP_POST_UNCONFIGURE:
- 		return acpihp_dev_post_unconfigure(dev);
-+	case DRV_OP_LOCK_DEVICE:
-+		device_lock(&dev->dev);
-+		return 0;
-+	case DRV_OP_UNLOCK_DEVICE:
-+		device_unlock(&dev->dev);
-+		return 0;
- 	default:
- 		BUG_ON(opcode);
- 		return -ENOSYS;
-@@ -126,7 +134,9 @@ static int acpihp_drv_call_method(enum config_op_code opcode,
- 		result = acpihp_drv_invoke_method(opcode, slot, acpi_dev, 0);
- 		if (result)
- 			break;
--		acpihp_drv_update_dev_state(np, state);
-+		if (opcode != DRV_OP_LOCK_DEVICE &&
-+		    opcode != DRV_OP_UNLOCK_DEVICE)
-+			acpihp_drv_update_dev_state(np, state);
- 	}
- 	klist_iter_exit(&iter);
- 
-@@ -248,6 +258,7 @@ int acpihp_drv_configure(struct list_head *list)
- 		acpihp_slot_change_state(dep->slot,
- 					 ACPIHP_SLOT_STATE_CONFIGURING);
- 
-+	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
- 	result = acpihp_drv_walk_devs(&head, DRV_OP_PRE_CONFIGURE,
- 				      DEVICE_STATE_PRE_CONFIGURE, false);
- 	if (!result)
-@@ -257,6 +268,7 @@ int acpihp_drv_configure(struct list_head *list)
- 		post = ACPIHP_DEV_POST_CMD_ROLLBACK;
- 	acpihp_drv_walk_devs_post(&head, DRV_OP_POST_CONFIGURE,
- 				  DEVICE_STATE_CONNECTED, post, false);
-+	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
- 
- 	list_for_each_entry(dep, &head, node)
- 		acpihp_drv_update_slot_state(dep->slot);
-@@ -327,9 +339,11 @@ int acpihp_drv_unconfigure(struct list_head *list)
- 		acpihp_slot_change_state(dep->slot,
- 					 ACPIHP_SLOT_STATE_UNCONFIGURING);
- 
-+	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
- 	result = acpihp_drv_release(&head);
- 	if (!result)
- 		__acpihp_drv_unconfigure(&head);
-+	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
- 
- 	list_for_each_entry(dep, &head, node)
- 		acpihp_drv_update_slot_state(dep->slot);
-diff --git a/drivers/acpi/hotplug/device.c b/drivers/acpi/hotplug/device.c
-index d566522..90666f8 100644
---- a/drivers/acpi/hotplug/device.c
-+++ b/drivers/acpi/hotplug/device.c
-@@ -35,7 +35,6 @@ int acpihp_dev_get_info(struct acpi_device *device,
- 
- 	acpihp_dev_get_type(device->handle, &info->type);
- 
--	device_lock(&device->dev);
- 	if (device->driver && device->driver->ops.hp_ops &&
- 	    device->driver->ops.hp_ops->get_info)
- 		ret = device->driver->ops.hp_ops->get_info(device, info);
-@@ -51,7 +50,6 @@ int acpihp_dev_get_info(struct acpi_device *device,
- 
- 	if (device->driver)
- 		info->status |= ACPIHP_DEV_STATUS_ATTACHED;
--	device_unlock(&device->dev);
- 
- 	return ret;
- }
-@@ -62,14 +60,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
- { \
- 	int ret; \
- 	BUG_ON(device == NULL); \
--	device_lock(&device->dev); \
- 	if (!device->driver || !device->driver->ops.hp_ops) \
- 		ret = (err); \
- 	else if (!device->driver->ops.hp_ops->method) \
- 		ret = (def); \
- 	else \
- 		ret = device->driver->ops.hp_ops->method(device, val); \
--	device_unlock(&device->dev); \
- 	return ret; \
- } \
- EXPORT_SYMBOL_GPL(acpihp_dev_##method)
-@@ -79,14 +75,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
- { \
- 	int ret = 0; \
- 	BUG_ON(device == NULL); \
--	device_lock(&device->dev); \
- 	if (!device->driver || !device->driver->ops.hp_ops) \
- 		ret = (err); \
- 	else if (!device->driver->ops.hp_ops->method) \
- 		ret = (def); \
- 	else \
- 		device->driver->ops.hp_ops->method(device, val); \
--	device_unlock(&device->dev); \
- 	return ret; \
- } \
- EXPORT_SYMBOL_GPL(acpihp_dev_##method)
-@@ -96,14 +90,12 @@ int acpihp_dev_##method(struct acpi_device *device) \
- { \
- 	int ret = 0; \
- 	BUG_ON(device == NULL); \
--	device_lock(&device->dev); \
- 	if (!device->driver || !device->driver->ops.hp_ops) \
- 		ret = (err); \
- 	else if (!device->driver->ops.hp_ops->method) \
- 		ret = (def); \
- 	else \
- 		device->driver->ops.hp_ops->method(device);\
--	device_unlock(&device->dev); \
- 	return ret; \
- } \
- EXPORT_SYMBOL_GPL(acpihp_dev_##method)
--- 
-1.7.9.5
+>  endmenu
+> +
+> +config SPEAR13XX_PCI
+> +       bool "PCI Express support"
 
+cant this be module
+
+> +       select PCI
+> +       select PCIEPORTBUS
+> +       select ARCH_SUPPORTS_MSI
+> +       select PCI_MSI
+> +       select NEED_MACH_IO_H
+> +       help
+> +         Support SPEAr13xx PCIe Dual controler as a host
+
+s/controler/controller
+
+> +
+>  endif #ARCH_SPEAR13XX
+> --
+> 1.7.5.4
+>
