@@ -1,69 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65223 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217Ab2JAIym (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Oct 2012 04:54:42 -0400
-Date: Mon, 1 Oct 2012 10:11:46 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: [PATCH v3 -tip 3/5] x86, MSI: Minor readability fixes
-Message-ID: <1638b429b0e5684b6620ef36d101ef782ddeacb8.1349074231.git.agordeev@redhat.com>
-References: <cover.1349074231.git.agordeev@redhat.com>
+Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:59990 "EHLO
+	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753084Ab2J2HCc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:32 -0400
+From: Pratyush Anand <pratyush.anand@st.com>
+To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
+Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
+	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
+	Pratyush Anand <pratyush.anand@st.com>
+Subject: [PATCH 12/15] SPEAr1310-EVB: DTS: Fix PCIe1 enable
+Date: Mon, 29 Oct 2012 12:31:26 +0530
+Message-ID: <b0da4af3263beb2d747a3e81d91e0cf7b4a70312.1351492562.git.pratyush.anand@st.com>
+In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1349074231.git.agordeev@redhat.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+On SPEAr1310 EVB only PCIe2 can be used as PCIe host. Currently we do not
+have driver for PCIe EP. So keep PCIe1 disabled.
+
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
 ---
- arch/x86/kernel/apic/io_apic.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ arch/arm/boot/dts/spear1310-evb.dts |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 84d632b..0489699 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3123,7 +3123,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
+diff --git a/arch/arm/boot/dts/spear1310-evb.dts b/arch/arm/boot/dts/spear1310-evb.dts
+index 2c8da65..1bb5332 100644
+--- a/arch/arm/boot/dts/spear1310-evb.dts
++++ b/arch/arm/boot/dts/spear1310-evb.dts
+@@ -237,10 +237,6 @@
+ 			ignore_cpufreq_notification = <0>;
+ 		};
  
- 	if (irq_remapped(cfg)) {
- 		compose_remapped_msi_msg(pdev, irq, dest, msg, hpet_id);
--		return err;
-+		return 0;
- 	}
- 
- 	if (x2apic_enabled())
-@@ -3150,7 +3150,7 @@ static int msi_compose_msg(struct pci_dev *pdev, unsigned int irq,
- 			MSI_DATA_DELIVERY_LOWPRI) |
- 		MSI_DATA_VECTOR(cfg->vector);
- 
--	return err;
-+	return 0;
- }
- 
- static int
-@@ -3232,7 +3232,7 @@ int setup_msix_irqs(struct pci_dev *dev, int nvec)
- 	list_for_each_entry(msidesc, &dev->msi_list, list) {
- 		irq = create_irq_nr(irq_want, node);
- 		if (irq == 0)
--			return -1;
-+			return -ENOSPC;
- 		irq_want = irq + 1;
- 		if (!irq_remapping_enabled)
- 			goto no_ir;
+-		pcie1@b1800000 {
+-			status = "okay";
+-		};
+-
+ 		pcie2@b4000000 {
+ 			status = "okay";
+ 		};
 -- 
-1.7.7.6
+1.7.5.4
 
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
