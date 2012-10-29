@@ -1,57 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:50101 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742Ab2J3GZs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:25:48 -0400
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 988E83EE0C0
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 7E0DC45DE56
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 5772145DE5D
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 44A5B1DB804F
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
-Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id F1BCDE38003
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:46 +0900 (JST)
-Date: Tue, 30 Oct 2012 15:25:39 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/5] PCI,ACPI: Remove _PRT info when removing a host bridge
-Message-Id: <20121030152539.dad71d2b.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
-References: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:59991 "EHLO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751682Ab2J2HCR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:17 -0400
+From: Pratyush Anand <pratyush.anand@st.com>
+To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
+Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
+	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
+	Pratyush Anand <pratyush.anand@st.com>
+Subject: [PATCH 05/15] clk: SPEAr1340: Fix pcie0 clock name
+Date: Mon, 29 Oct 2012 12:31:19 +0530
+Message-ID: <bdf7a8419c5960c6d521b18f6e51cc5e170d1374.1351492562.git.pratyush.anand@st.com>
+In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Author: Bjorn Helgaas <bhelgaas@google.com>
-
-PCI/ACPI: Remove _PRT info when removing a host bridge
-    
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
 ---
- drivers/acpi/pci_root.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/clk/spear/spear1340_clock.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Index: Bjorn-next-0925/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0925.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0925/drivers/acpi/pci_root.c
-@@ -671,6 +671,8 @@ static int acpi_pci_root_remove(struct a
- 	device_set_run_wake(root->bus->bridge, false);
- 	pci_acpi_remove_bus_pm_notifier(device);
+diff --git a/drivers/clk/spear/spear1340_clock.c b/drivers/clk/spear/spear1340_clock.c
+index 364c947..9f69a61 100644
+--- a/drivers/clk/spear/spear1340_clock.c
++++ b/drivers/clk/spear/spear1340_clock.c
+@@ -844,7 +844,7 @@ void __init spear1340_clk_init(void)
+ 	clk = clk_register_gate(NULL, "pcie_sata_clk", "ahb_clk", 0,
+ 			SPEAR1340_PERIP1_CLK_ENB, SPEAR1340_PCIE_SATA_CLK_ENB,
+ 			0, &_lock);
+-	clk_register_clkdev(clk, NULL, "dw_pcie");
++	clk_register_clkdev(clk, NULL, "b1000000.pcie0");
+ 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
  
-+	acpi_pci_irq_del_prt(root->segment, root->secondary.start);
-+
- 	list_del(&root->node);
- 	mutex_unlock(&acpi_pci_root_lock);
- 	kfree(root);
+ 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
+-- 
+1.7.5.4
 
