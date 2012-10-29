@@ -1,47 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tang Chen <tangchen@cn.fujitsu.com>
-To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, mihailm@parallels.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/2] ACPI: container hot remove support.
-Date: Wed, 24 Oct 2012 14:05:48 +0800
-Message-Id: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:56097 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385Ab2J2HQ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:16:28 -0400
+Received: by mail-vb0-f46.google.com with SMTP id ff1so4989831vbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 00:16:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
+Date: Mon, 29 Oct 2012 12:46:27 +0530
+Message-ID: <CAOh2x=mFS7awO7eoD4zA-sEzg0wY8KNjzTCcXMhOrqBhRcodKA@mail.gmail.com>
+Subject: Re: [PATCH 00/15] SPEAr13xx PCIe patches
+From: viresh kumar <viresh.kumar@linaro.org>
+To: Pratyush Anand <pratyush.anand@st.com>, arm@kernel.org
+Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	olof@lixom.net
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+> -- First two patches are common for all platforms on ARM architecture.
+> -- Remaining patches belongs to SPEAr13xx architecture.
+> -- SPEAr13xx supports both RC and EP mode of PCIe interface. This patchset
+>         supports only RC mode.
 
-The container hotplug handler container_notify_cb() didn't implement
-the hot-remove functionality. So, these 2 patches implement it like
-the following way:
+Hi Pratyush,
 
-patch 1. Do not use kacpid_wq/kacpid_notify_wq to handle container hotplug event,
-         use kacpi_hotplug_wq instead to avoid deadlock.
-         Doing this is to reuse acpi_bus_hot_remove_device() in container
-         hot-remove handling.
+For ARM SoC specific patches, that you want Arnd or Olof to apply, please send
+them to arm@kernel.org. Arnd and Olof push ARM SoC trees in turns and they
+pick them from arm@kernel.org.
 
-patch 2. Introduce a new function container_device_remove() to handle
-         ACPI_NOTIFY_EJECT_REQUEST event for container.
-
-
-change log v1 -> v2:
-
-1. In patch1: Based on the lastest for-pci-split-pci-root-hp-2 branch from Lu Yinghai, 
-   use alloc_acpi_hp_work() to add container hotplug work into kacpi_hotplug_wq.
-
-2. In patch2: Allocate ej_event after container is stopped, so that we don't need to
-   kfree the ej_event if stopping container failed.
-
-
-This is based on Lu Yinghai's job.
-git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-split-pci-root-hp-2
-
-Tang Chen (2):
-  Use kacpi_hotplug_wq to handle container hotplug event.
-  Improve container_notify_cb() to support container hot-remove.
-
- drivers/acpi/container.c |   75 +++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 65 insertions(+), 10 deletions(-)
-
+--
+viresh
