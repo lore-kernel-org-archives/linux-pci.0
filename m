@@ -1,95 +1,218 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34509 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727Ab2JIQGl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Oct 2012 12:06:41 -0400
-Message-ID: <50744B40.5030504@redhat.com>
-Date: Tue, 09 Oct 2012 12:05:20 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:47261 "EHLO
+	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752588Ab2J2HCY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:24 -0400
+From: Pratyush Anand <pratyush.anand@st.com>
+To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
+Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
+	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
+	Pratyush Anand <pratyush.anand@st.com>
+Subject: [PATCH 08/15] SPEAr1310: Add PCIe auxdata for miphy clock initialization
+Date: Mon, 29 Oct 2012 12:31:22 +0530
+Message-ID: <06c4b001f57084702b42a66565248ae871b909bf.1351492562.git.pratyush.anand@st.com>
+In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
 MIME-Version: 1.0
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-CC: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
-	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de
-Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <20121002074434.204.47750.sendpatchset@indoh> <506C3C4C.1060808@redhat.com> <5073E84A.8080301@jp.fujitsu.com>
-In-Reply-To: <5073E84A.8080301@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/09/2012 05:03 AM, Takao Indoh wrote:
-> (2012/10/03 22:23), Don Dutile wrote:
->> On 10/02/2012 03:49 AM, Takao Indoh wrote:
->>> These patches reset PCIe devices at boot time to address DMA problem on
->>> kdump with iommu. When "reset_devices" is specified, a hot reset is
->>> triggered on each PCIe root port and downstream port to reset its
->>> downstream endpoint.
->>>
->>> Background:
->>> A kdump problem about DMA has been discussed for a long time. That is,
->>> when a kernel is switched to the kdump kernel DMA derived from first
->>> kernel affects second kernel. Recently this problem surfaces when iommu
->>> is used for PCI passthrough on KVM guest. In the case of the machine I
->>> use, when intel_iommu=on is specified, DMAR error is detected in kdump
->>> kernel and PCI SERR is also detected. Finally kdump fails because some
->>> devices does not work correctly.
->>>
->>> The root cause is that ongoing DMA from first kernel causes DMAR fault
->>> because page table of DMAR is initialized while kdump kernel is booting
->>> up. Therefore to address this problem DMA needs to be stopped before
->>> DMAR is initialized at kdump kernel boot time. By these patches, PCIe
->>> devices are reset by hot reset and its DMA is stopped when reset_devices
->>> is specified. One problem of this solution is that the monitor blacks
->>> out when VGA controller is reset. So this patch does not reset the port
->>> whose child endpoint is VGA device.
->>>
->>> v2:
->>> Reset devices in setup_arch() because reset need to be done before
->>> interrupt remapping is initialized.
->>>
->>> v1:
->>> https://lkml.org/lkml/2012/8/3/160
->>>
->>> Thanks,
->>> Takao Indoh
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>
->>
->> Maybe you've tried the following, and I missed a thread on it,
->> but instead of a somewhat-large, reset hammer, did any one try
->> just reading all the endpoint-only device CMD register, flip the MasterEnable
->> bit off, and write it back? .... that would stop all DMA (should stop
->> all MSI writes as well since they are just another DMA), and then
->> restart the system?
->> May also have to do PCI INT Disable as well... and note, that's a PCI 2.3
->> optional feature.... so devices using INT signalling vs MSI
->> is just borked on IOMMU/intr-remapping systems... which I would expect
->> are few. Then again, if this is foolishly done, then reset legacy PCI
->> busses as the fallback.
->
-> Just clearing bus master bit and INTx disable bit in setup_arch() did
-> not solve this problem. I still got DMAR error on devices(for exmaple,
-> igb and megaraid_sas).
->
-> Clearing bus master in setup_arch() and resetting devices in fixup_final
-> like v1 patch is better, DMAR error was not detected. But on certain
-> machine kdump kernel hung up when resetting devices. It seems to be a
-> problem specific to the platform.
->
-> And, resetting devices in setup_arch() like v2 patch solves all problems
-> I found so far.
->
-> Thanks,
-> Takao Indoh
->
-this summary should be in the patch set, so others know/learn
-what was attempted, what failed, and how you reached this working conclusion.
+Miphy Clock initialization is very specific to controller and its
+instances. Pass this custom function using auxdata.
+
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+---
+ arch/arm/mach-spear13xx/spear1310.c |  148 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 148 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-spear13xx/spear1310.c b/arch/arm/mach-spear13xx/spear1310.c
+index 25e0fbb..3c673a1 100644
+--- a/arch/arm/mach-spear13xx/spear1310.c
++++ b/arch/arm/mach-spear13xx/spear1310.c
+@@ -24,6 +24,7 @@
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ #include <mach/generic.h>
++#include <mach/pcie.h>
+ #include <mach/spear.h>
+ 
+ /* Base addresses */
+@@ -35,6 +36,9 @@
+ #define SPEAR1310_SATA0_BASE			UL(0xB1000000)
+ #define SPEAR1310_SATA1_BASE			UL(0xB1800000)
+ #define SPEAR1310_SATA2_BASE			UL(0xB4000000)
++#define SPEAR1310_PCIE0_BASE			UL(0xB1000000)
++#define SPEAR1310_PCIE1_BASE			UL(0xB1800000)
++#define SPEAR1310_PCIE2_BASE			UL(0xB4000000)
+ 
+ /* RAS Area Control Register */
+ #define VA_SPEAR1310_RAS_CTRL_REG1	(VA_SPEAR1310_RAS_BASE + 0x4)
+@@ -57,6 +61,81 @@
+ #define SPEAR1310_PERIP1_SW_RST			(VA_MISC_BASE + 0x308)
+ #define SPEAR1310_UOC_RST_ENB			11
+ 
++#define VA_SPEAR1310_PCIE_SATA_CFG		(VA_MISC_BASE + 0x3A4)
++	/* PCIE CFG MASks */
++	#define SPEAR1310_PCIE_SATA2_SEL_PCIE		(0 << 31)
++	#define SPEAR1310_PCIE_SATA1_SEL_PCIE		(0 << 30)
++	#define SPEAR1310_PCIE_SATA0_SEL_PCIE		(0 << 29)
++	#define SPEAR1310_PCIE_SATA2_SEL_SATA		(1 << 31)
++	#define SPEAR1310_PCIE_SATA1_SEL_SATA		(1 << 30)
++	#define SPEAR1310_PCIE_SATA0_SEL_SATA		(1 << 29)
++	#define SPEAR1310_SATA2_CFG_TX_CLK_EN		(1 << 27)
++	#define SPEAR1310_SATA2_CFG_RX_CLK_EN		(1 << 26)
++	#define SPEAR1310_SATA2_CFG_POWERUP_RESET	(1 << 25)
++	#define SPEAR1310_SATA2_CFG_PM_CLK_EN		(1 << 24)
++	#define SPEAR1310_SATA1_CFG_TX_CLK_EN		(1 << 23)
++	#define SPEAR1310_SATA1_CFG_RX_CLK_EN		(1 << 22)
++	#define SPEAR1310_SATA1_CFG_POWERUP_RESET	(1 << 21)
++	#define SPEAR1310_SATA1_CFG_PM_CLK_EN		(1 << 20)
++	#define SPEAR1310_SATA0_CFG_TX_CLK_EN		(1 << 19)
++	#define SPEAR1310_SATA0_CFG_RX_CLK_EN		(1 << 18)
++	#define SPEAR1310_SATA0_CFG_POWERUP_RESET	(1 << 17)
++	#define SPEAR1310_SATA0_CFG_PM_CLK_EN		(1 << 16)
++	#define SPEAR1310_PCIE2_CFG_DEVICE_PRESENT	(1 << 11)
++	#define SPEAR1310_PCIE2_CFG_POWERUP_RESET	(1 << 10)
++	#define SPEAR1310_PCIE2_CFG_CORE_CLK_EN		(1 << 9)
++	#define SPEAR1310_PCIE2_CFG_AUX_CLK_EN		(1 << 8)
++	#define SPEAR1310_PCIE1_CFG_DEVICE_PRESENT	(1 << 7)
++	#define SPEAR1310_PCIE1_CFG_POWERUP_RESET	(1 << 6)
++	#define SPEAR1310_PCIE1_CFG_CORE_CLK_EN		(1 << 5)
++	#define SPEAR1310_PCIE1_CFG_AUX_CLK_EN		(1 << 4)
++	#define SPEAR1310_PCIE0_CFG_DEVICE_PRESENT	(1 << 3)
++	#define SPEAR1310_PCIE0_CFG_POWERUP_RESET	(1 << 2)
++	#define SPEAR1310_PCIE0_CFG_CORE_CLK_EN		(1 << 1)
++	#define SPEAR1310_PCIE0_CFG_AUX_CLK_EN		(1 << 0)
++
++	#define SPEAR1310_PCIE_CFG_MASK(x) ((0xF << (x * 4)) | (1 << (x + 29)))
++	#define SPEAR1310_SATA_CFG_MASK(x) ((0xF << (x * 4 + 16)) | \
++			(1 << (x + 29)))
++	#define SPEAR1310_PCIE_CFG_VAL(x) \
++			(SPEAR1310_PCIE_SATA##x##_SEL_PCIE | \
++			SPEAR1310_PCIE##x##_CFG_AUX_CLK_EN | \
++			SPEAR1310_PCIE##x##_CFG_CORE_CLK_EN | \
++			SPEAR1310_PCIE##x##_CFG_POWERUP_RESET | \
++			SPEAR1310_PCIE##x##_CFG_DEVICE_PRESENT)
++	#define SPEAR1310_SATA_CFG_VAL(x) \
++			(SPEAR1310_PCIE_SATA##x##_SEL_SATA | \
++			SPEAR1310_SATA##x##_CFG_PM_CLK_EN | \
++			SPEAR1310_SATA##x##_CFG_POWERUP_RESET | \
++			SPEAR1310_SATA##x##_CFG_RX_CLK_EN | \
++			SPEAR1310_SATA##x##_CFG_TX_CLK_EN)
++
++#define VA_SPEAR1310_PCIE_MIPHY_CFG_1		(VA_MISC_BASE + 0x3A8)
++	#define SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT	(1 << 31)
++	#define SPEAR1310_MIPHY_DUAL_CLK_REF_DIV2	(1 << 28)
++	#define SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(x)	(x << 16)
++	#define SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT	(1 << 15)
++	#define SPEAR1310_MIPHY_SINGLE_CLK_REF_DIV2	(1 << 12)
++	#define SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(x)	(x << 0)
++	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA_MASK (0xFFFF)
++	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK (0xFFFF << 16)
++	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA \
++			(SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT | \
++			SPEAR1310_MIPHY_DUAL_CLK_REF_DIV2 | \
++			SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(60) | \
++			SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT | \
++			SPEAR1310_MIPHY_SINGLE_CLK_REF_DIV2 | \
++			SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(60))
++	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK \
++			(SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(120))
++	#define SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE \
++			(SPEAR1310_MIPHY_DUAL_OSC_BYPASS_EXT | \
++			SPEAR1310_MIPHY_DUAL_PLL_RATIO_TOP(25) | \
++			SPEAR1310_MIPHY_SINGLE_OSC_BYPASS_EXT | \
++			SPEAR1310_MIPHY_SINGLE_PLL_RATIO_TOP(25))
++
++#define VA_SPEAR1310_PCIE_MIPHY_CFG_2		(VA_MISC_BASE + 0x3AC)
++
+ static int spear1310_eth_phy_clk_cfg(struct platform_device *pdev)
+ {
+ 	struct plat_stmmacenet_data *pdata = dev_get_platdata(&pdev->dev);
+@@ -342,6 +421,69 @@ static struct dwc_otg_plat_data spear1310_otg_plat_data = {
+ 	.phy_init = spear1310_otg_phy_init,
+ };
+ 
++static int spear1310_pcie_clk_init(struct pcie_port *pp)
++{
++	u32 temp;
++
++	temp = readl(VA_SPEAR1310_PCIE_MIPHY_CFG_1);
++	temp &= ~SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK;
++	temp |= SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE;
++
++	writel(temp, VA_SPEAR1310_PCIE_MIPHY_CFG_1);
++
++	temp = readl(VA_SPEAR1310_PCIE_SATA_CFG);
++
++	switch (pp->controller) {
++	case 0:
++		temp &= ~SPEAR1310_PCIE_CFG_MASK(0);
++		temp |= SPEAR1310_PCIE_CFG_VAL(0);
++		break;
++	case 1:
++		temp &= ~SPEAR1310_PCIE_CFG_MASK(1);
++		temp |= SPEAR1310_PCIE_CFG_VAL(1);
++		break;
++	case 2:
++		temp &= ~SPEAR1310_PCIE_CFG_MASK(2);
++		temp |= SPEAR1310_PCIE_CFG_VAL(2);
++		break;
++	default:
++		return -EINVAL;
++	}
++	writel(temp, VA_SPEAR1310_PCIE_SATA_CFG);
++
++	return 0;
++}
++
++static int spear1310_pcie_clk_exit(struct pcie_port *pp)
++{
++	u32 temp;
++
++	temp = readl(VA_SPEAR1310_PCIE_SATA_CFG);
++
++	switch (pp->controller) {
++	case 0:
++		temp &= ~SPEAR1310_PCIE_CFG_MASK(0);
++		break;
++	case 1:
++		temp &= ~SPEAR1310_PCIE_CFG_MASK(1);
++		break;
++	case 2:
++		temp &= ~SPEAR1310_PCIE_CFG_MASK(2);
++		break;
++	}
++
++	writel(temp, VA_SPEAR1310_PCIE_SATA_CFG);
++	writel(~SPEAR1310_PCIE_SATA_MIPHY_CFG_PCIE_MASK,
++			VA_SPEAR1310_PCIE_MIPHY_CFG_1);
++
++	return 0;
++}
++
++static struct pcie_port_info pcie_pdata = {
++	.clk_init = spear1310_pcie_clk_init,
++	.clk_exit = spear1310_pcie_clk_exit,
++};
++
+ /* Add SPEAr1310 auxdata to pass platform data */
+ static struct of_dev_auxdata spear1310_auxdata_lookup[] __initdata = {
+ 	OF_DEV_AUXDATA("st,spear-adc", SPEAR13XX_ADC_BASE, NULL, &adc_pdata),
+@@ -363,6 +505,12 @@ static struct of_dev_auxdata spear1310_auxdata_lookup[] __initdata = {
+ 			&eth4_data),
+ 	OF_DEV_AUXDATA("snps,usb-otg", SPEAR_UOC_BASE, NULL,
+ 			&spear1310_otg_plat_data),
++	OF_DEV_AUXDATA("st,pcie-host", SPEAR1310_PCIE0_BASE, NULL,
++			&pcie_pdata),
++	OF_DEV_AUXDATA("st,pcie-host", SPEAR1310_PCIE1_BASE, NULL,
++			&pcie_pdata),
++	OF_DEV_AUXDATA("st,pcie-host", SPEAR1310_PCIE2_BASE, NULL,
++			&pcie_pdata),
+ 	OF_DEV_AUXDATA("st,db9000-clcd", SPEAR13XX_CLCD_BASE, NULL,
+ 			&clcd_plat_info),
+ 	{}
+-- 
+1.7.5.4
 
