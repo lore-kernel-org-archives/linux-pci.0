@@ -1,321 +1,105 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:45330 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab2J2H3D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:29:03 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fk26so4934189vcb.19
+        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 00:29:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1349305214-3241-5-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
-	<1349305214-3241-1-git-send-email-yinghai@kernel.org>
-	<1349305214-3241-5-git-send-email-yinghai@kernel.org>
-Date: Thu, 4 Oct 2012 08:57:56 -0400
-Message-ID: <CACJDEmq8hp8P4=KdFGqAE67fkEMdkQwTJhh3k-59U6CF2U-9GA@mail.gmail.com>
-Subject: Re: [PATCH 4/4] ACPI: remove acpi_op_start workaround
-From: Konrad Rzeszutek Wilk <konrad@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
+In-Reply-To: <cce9cba6020c30f0edb15e43fa51208524b59322.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
+	<cce9cba6020c30f0edb15e43fa51208524b59322.1351492562.git.pratyush.anand@st.com>
+Date: Mon, 29 Oct 2012 12:59:01 +0530
+Message-ID: <CAOh2x==1McRP4eNFZa8qH4hjnOr003Ozb6J3XP8B87E9yZB4zw@mail.gmail.com>
+Subject: Re: [PATCH 03/15] SPEAr13xx: Add mach/io.h
+From: viresh kumar <viresh.kumar@linaro.org>
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	olof@lixom.net
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 3, 2012 at 7:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> No .start on any acpi_driver ops anymore.
+On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+> In case of PCIe we need to have a different __io macro, which can write
+> into PCIe address space.
 
-Could you include the git commit number (of the one that removed it)
-and a little description of why it was removed please?
+You may find this interesting:
 
+Do, git log --stat -p dd9bf78040fa0da4cecc228e1682b9682b8cb180
+
+There is a series of commits like:
+
+commit dd9bf78040fa0da4cecc228e1682b9682b8cb180
+Author: Rob Herring <rob.herring@calxeda.com>
+Date:   Wed Jul 4 11:18:40 2012 -0500
+
+    ARM: iop3xx: use fixed PCI i/o mapping
+
+    Move iop33x and iop32x PCI to fixed i/o mapping and remove io.h. This
+    changes the PCI bus addresses from the cpu address to 0 based. It appears
+    that there is translation h/w for this, but its untested.
+
+    Not sure what to do with io_offset. I think it should always be 0.
+    AFAICT, PCI setup is skipped if the ATU is already setup.
+
+    Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+    Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+
+All mach/io.h are removed and you are adding one of those. :)
 
 >
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
 > ---
->  drivers/acpi/scan.c     |   95 ++++++++--------------------------------------
->  include/acpi/acpi_bus.h |    8 ----
->  2 files changed, 17 insertions(+), 86 deletions(-)
+>  arch/arm/mach-spear13xx/include/mach/io.h |   35 +++++++++++++++++++++++++++++
+>  1 files changed, 35 insertions(+), 0 deletions(-)
+>  create mode 100644 arch/arm/mach-spear13xx/include/mach/io.h
 >
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 1bafa2d..5e6d2ad 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -416,7 +416,6 @@ static void acpi_device_remove_notify_handler(struct acpi_device *device)
->  }
->
->  static int acpi_bus_driver_init(struct acpi_device *, struct acpi_driver *);
-> -static int acpi_start_single_object(struct acpi_device *);
->  static int acpi_device_probe(struct device * dev)
->  {
->         struct acpi_device *acpi_dev = to_acpi_device(dev);
-> @@ -425,9 +424,6 @@ static int acpi_device_probe(struct device * dev)
->
->         ret = acpi_bus_driver_init(acpi_dev, acpi_drv);
->         if (!ret) {
-> -               if (acpi_dev->bus_ops.acpi_op_start)
-> -                       acpi_start_single_object(acpi_dev);
-> -
->                 if (acpi_drv->ops.notify) {
->                         ret = acpi_device_install_notify_handler(acpi_dev);
->                         if (ret) {
-> @@ -604,24 +600,6 @@ acpi_bus_driver_init(struct acpi_device *device, struct acpi_driver *driver)
->         return 0;
->  }
->
-> -static int acpi_start_single_object(struct acpi_device *device)
-> -{
-> -       int result = 0;
-> -       struct acpi_driver *driver;
-> -
-> -
-> -       if (!(driver = device->driver))
-> -               return 0;
-> -
-> -       if (driver->ops.start) {
-> -               result = driver->ops.start(device);
-> -               if (result && driver->ops.remove)
-> -                       driver->ops.remove(device, ACPI_BUS_REMOVAL_NORMAL);
-> -       }
-> -
-> -       return result;
-> -}
-> -
->  /**
->   * acpi_bus_register_driver - register a driver with the ACPI bus
->   * @driver: driver being registered
-> @@ -1254,8 +1232,7 @@ static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
->
->  static int acpi_add_single_object(struct acpi_device **child,
->                                   acpi_handle handle, int type,
-> -                                 unsigned long long sta,
-> -                                 struct acpi_bus_ops *ops)
-> +                                 unsigned long long sta)
->  {
->         int result;
->         struct acpi_device *device;
-> @@ -1271,7 +1248,6 @@ static int acpi_add_single_object(struct acpi_device **child,
->         device->device_type = type;
->         device->handle = handle;
->         device->parent = acpi_bus_get_parent(handle);
-> -       device->bus_ops = *ops; /* workround for not call .start */
->         STRUCT_TO_INT(device->status) = sta;
->         device->drivers_autoprobe = true;
->
-> @@ -1354,16 +1330,12 @@ end:
->
->  static void acpi_bus_add_power_resource(acpi_handle handle)
->  {
-> -       struct acpi_bus_ops ops = {
-> -               .acpi_op_add = 1,
-> -               .acpi_op_start = 1,
-> -       };
->         struct acpi_device *device = NULL;
->
->         acpi_bus_get_device(handle, &device);
->         if (!device)
->                 acpi_add_single_object(&device, handle, ACPI_BUS_TYPE_POWER,
-> -                                       ACPI_STA_DEFAULT, &ops);
-> +                                       ACPI_STA_DEFAULT);
->  }
->
->  static int acpi_bus_type_and_status(acpi_handle handle, int *type,
-> @@ -1408,7 +1380,6 @@ static int acpi_bus_type_and_status(acpi_handle handle, int *type,
->  static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
->                                       void *context, void **return_value)
->  {
-> -       struct acpi_bus_ops *ops = context;
->         int type;
->         unsigned long long sta;
->         struct acpi_device *device;
-> @@ -1433,37 +1404,30 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
->
->         /*
->          * We may already have an acpi_device from a previous enumeration.  If
-> -        * so, we needn't add it again, but we may still have to start it.
-> +        * so, we needn't add it again.
->          */
->         device = NULL;
->         acpi_bus_get_device(handle, &device);
-> -       if (ops->acpi_op_add && !device)
-> -               acpi_add_single_object(&device, handle, type, sta, ops);
-> +       if (!device)
-> +               acpi_add_single_object(&device, handle, type, sta);
->
->         if (!device)
->                 return AE_CTRL_DEPTH;
->
-> -       if (ops->acpi_op_start && !(ops->acpi_op_add)) {
-> -               status = acpi_start_single_object(device);
-> -               if (ACPI_FAILURE(status))
-> -                       return AE_CTRL_DEPTH;
-> -       }
-> -
->         if (!*return_value)
->                 *return_value = device;
->         return AE_OK;
->  }
->
-> -static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
-> -                        struct acpi_device **child)
-> +static int acpi_bus_scan(acpi_handle handle, struct acpi_device **child)
->  {
->         acpi_status status;
->         void *device = NULL;
->
-> -       status = acpi_bus_check_add(handle, 0, ops, &device);
-> +       status = acpi_bus_check_add(handle, 0, NULL, &device);
->         if (ACPI_SUCCESS(status))
->                 acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-> -                                   acpi_bus_check_add, NULL, ops, &device);
-> +                                   acpi_bus_check_add, NULL, NULL, &device);
->
->         if (child)
->                 *child = device;
-> @@ -1488,28 +1452,24 @@ static void acpi_bus_attach(struct acpi_device *dev)
->  }
->
->  /*
-> - * acpi_bus_add and acpi_bus_start
-> + * acpi_bus_add
->   *
->   * scan a given ACPI tree and (probably recently hot-plugged)
-> - * create and add or starts found devices.
-> + * create and add found devices.
->   *
->   * If no devices were found -ENODEV is returned which does not
->   * mean that this is a real error, there just have been no suitable
->   * ACPI objects in the table trunk from which the kernel could create
-> - * a device and add/start an appropriate driver.
-> + * a device and add an appropriate driver.
->   */
->
->  int
->  acpi_bus_add(struct acpi_device **child,
->              struct acpi_device *parent, acpi_handle handle, int type)
->  {
-> -       struct acpi_bus_ops ops;
->         int result;
->
-> -       memset(&ops, 0, sizeof(ops));
-> -       ops.acpi_op_add = 1;
-> -
-> -       result = acpi_bus_scan(handle, &ops, child);
-> +       result = acpi_bus_scan(handle, child);
->
->         if (*child)
->                 acpi_bus_attach(*child);
-> @@ -1520,20 +1480,12 @@ EXPORT_SYMBOL(acpi_bus_add);
->
->  int acpi_bus_start(struct acpi_device *device)
->  {
-> -       struct acpi_bus_ops ops;
-> -       int result;
-> -
->         if (!device)
->                 return -EINVAL;
->
-> -       memset(&ops, 0, sizeof(ops));
-> -       ops.acpi_op_start = 1;
-> -
-> -       result = acpi_bus_scan(device->handle, &ops, NULL);
-> -
->         acpi_update_all_gpes();
->
-> -       return result;
-> +       return 0;
->  }
->  EXPORT_SYMBOL(acpi_bus_start);
->
-> @@ -1596,11 +1548,6 @@ static int acpi_bus_scan_fixed(void)
->  {
->         int result = 0;
->         struct acpi_device *device = NULL;
-> -       struct acpi_bus_ops ops;
-> -
-> -       memset(&ops, 0, sizeof(ops));
-> -       ops.acpi_op_add = 1;
-> -       ops.acpi_op_start = 1;
->
->         /*
->          * Enumerate all fixed-feature devices.
-> @@ -1608,17 +1555,14 @@ static int acpi_bus_scan_fixed(void)
->         if ((acpi_gbl_FADT.flags & ACPI_FADT_POWER_BUTTON) == 0) {
->                 result = acpi_add_single_object(&device, NULL,
->                                                 ACPI_BUS_TYPE_POWER_BUTTON,
-> -                                               ACPI_STA_DEFAULT,
-> -                                               &ops);
-> +                                               ACPI_STA_DEFAULT);
->                 device_init_wakeup(&device->dev, true);
->         }
->
-> -       if ((acpi_gbl_FADT.flags & ACPI_FADT_SLEEP_BUTTON) == 0) {
-> +       if ((acpi_gbl_FADT.flags & ACPI_FADT_SLEEP_BUTTON) == 0)
->                 result = acpi_add_single_object(&device, NULL,
->                                                 ACPI_BUS_TYPE_SLEEP_BUTTON,
-> -                                               ACPI_STA_DEFAULT,
-> -                                               &ops);
-> -       }
-> +                                               ACPI_STA_DEFAULT);
->
->         return result;
->  }
-> @@ -1626,11 +1570,6 @@ static int acpi_bus_scan_fixed(void)
->  int __init acpi_scan_init(void)
->  {
->         int result;
-> -       struct acpi_bus_ops ops;
-> -
-> -       memset(&ops, 0, sizeof(ops));
-> -       ops.acpi_op_add = 1;
-> -       ops.acpi_op_start = 1;
->
->         result = bus_register(&acpi_bus_type);
->         if (result) {
-> @@ -1643,7 +1582,7 @@ int __init acpi_scan_init(void)
->         /*
->          * Enumerate devices in the ACPI namespace.
->          */
-> -       result = acpi_bus_scan(ACPI_ROOT_OBJECT, &ops, &acpi_root);
-> +       result = acpi_bus_scan(ACPI_ROOT_OBJECT, &acpi_root);
->
->         if (!result)
->                 result = acpi_bus_scan_fixed();
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 969544e..cc9363b 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -119,20 +119,13 @@ struct acpi_device;
->
->  typedef int (*acpi_op_add) (struct acpi_device * device);
->  typedef int (*acpi_op_remove) (struct acpi_device * device, int type);
-> -typedef int (*acpi_op_start) (struct acpi_device * device);
->  typedef int (*acpi_op_bind) (struct acpi_device * device);
->  typedef int (*acpi_op_unbind) (struct acpi_device * device);
->  typedef void (*acpi_op_notify) (struct acpi_device * device, u32 event);
->
-> -struct acpi_bus_ops {
-> -       u32 acpi_op_add:1;
-> -       u32 acpi_op_start:1;
-> -};
-> -
->  struct acpi_device_ops {
->         acpi_op_add add;
->         acpi_op_remove remove;
-> -       acpi_op_start start;
->         acpi_op_bind bind;
->         acpi_op_unbind unbind;
->         acpi_op_notify notify;
-> @@ -302,7 +295,6 @@ struct acpi_device {
->         struct acpi_driver *driver;
->         void *driver_data;
->         struct device dev;
-> -       struct acpi_bus_ops bus_ops;    /* workaround for different code path for hotplug */
->         enum acpi_bus_removal_type removal_type;        /* indicate for different removal type */
->         bool drivers_autoprobe;
->  };
+> diff --git a/arch/arm/mach-spear13xx/include/mach/io.h b/arch/arm/mach-spear13xx/include/mach/io.h
+> new file mode 100644
+> index 0000000..a0d93ca
+> --- /dev/null
+> +++ b/arch/arm/mach-spear13xx/include/mach/io.h
+> @@ -0,0 +1,35 @@
+> +/*
+> + * arch/arm/mach-spear13xx/include/mach/io.h
+> + *
+> + * spear13xx machine family generic header file
+
+SPEAr
+
+> + *
+> + * Copyright (C) 2012 ST Microelectronics
+> + * Pratyush Anand <pratyush.anand@st.com>
+> + *
+> + * This file is licensed under the terms of the GNU General Public
+> + * License version 2. This program is licensed "as is" without any
+> + * warranty of any kind, whether express or implied.
+> + */
+> +
+> +#ifndef __MACH_IO_H
+> +#define __MACH_IO_H
+> +
+> +#define IO_SPACE_LIMIT 0xFFFF
+> +
+> +#ifdef CONFIG_SPEAR13XX_PCI
+> +extern void __iomem *spear13xx_pcie_io_base(unsigned long addr);
+> +
+> +static inline void __iomem *__io(unsigned long addr)
+> +{
+> +       return spear13xx_pcie_io_base(addr) + (addr & IO_SPACE_LIMIT);
+> +}
+> +#else
+> +static inline void __iomem *__io(unsigned long addr)
+> +{
+> +       return (void __iomem *)addr;
+> +}
+> +#endif
+> +
+> +#define __io(a)                __io(a)
+> +
+> +#endif /* __MACH_IO_H */
 > --
-> 1.7.7
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> 1.7.5.4
 >
