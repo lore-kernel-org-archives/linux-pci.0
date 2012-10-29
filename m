@@ -1,87 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:52221 "EHLO
+	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752432Ab2J2HCW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:22 -0400
+From: Pratyush Anand <pratyush.anand@st.com>
+To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
+Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
+	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
+	Pratyush Anand <pratyush.anand@st.com>
+Subject: [PATCH 07/15] SPEAr1340: Add PCIe auxdata for miphy clock initialization
+Date: Mon, 29 Oct 2012 12:31:21 +0530
+Message-ID: <d35d2da48beb1ca1e476ec861e4f58fe541f4e3c.1351492562.git.pratyush.anand@st.com>
+In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
 MIME-Version: 1.0
-In-Reply-To: <1350045261-7344-2-git-send-email-tangchen@cn.fujitsu.com>
-References: <1350045261-7344-1-git-send-email-tangchen@cn.fujitsu.com>
-	<1350045261-7344-2-git-send-email-tangchen@cn.fujitsu.com>
-Date: Fri, 12 Oct 2012 11:26:26 -0700
-Message-ID: <CAE9FiQWVm-BxyGx5C89v0txn_Wdaf=Wk6oRjSjW8jTQ+3mXoMg@mail.gmail.com>
-Subject: Re: [PATCH 1/3 v2] Introduce a new acpi to determine HID match.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 12, 2012 at 5:34 AM, Tang Chen <tangchen@cn.fujitsu.com> wrote:
-> This introduce a new api to determine if a HID matches a list of IDs.
-> Different from acpi_match_device_ids(), the new api gets HID from
-> acpi_device_info struct.
->
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->  drivers/acpi/scan.c     |   24 ++++++++++++++++++++++++
->  include/acpi/acpi_bus.h |    2 ++
->  2 files changed, 26 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 03c12e6..41fd4c9 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -312,6 +312,30 @@ int acpi_match_device_ids(struct acpi_device *device,
->  }
->  EXPORT_SYMBOL(acpi_match_device_ids);
->
-> +int acpi_match_object_info_ids(struct acpi_device_info *info,
-> +                              const struct acpi_device_id *ids)
-> +{
-> +       char *hardware_id;
-> +       int i, j;
-> +
-> +       for (i = 0; ids[i].id[0]; i++) {
-> +               hardware_id = info->hardware_id.string;
-> +               if (hardware_id &&
-> +                   !strcmp((char *)ids[i].id, hardware_id))
-> +                               return 0;
-> +
-> +               for (j = 0; j < info->compatible_id_list.count; j++) {
-> +                       hardware_id = info->compatible_id_list.ids[j].string;
-> +                       if (hardware_id &&
-> +                           !strcmp((char *)ids[i].id, hardware_id))
-> +                               return 0;
-> +               }
-> +       }
-> +
-> +       return 1;
+Miphy Clock initialization is very specific to controller and its
+instances. Pass this custom function using auxdata.
 
--ENOENT instead of 1?
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+---
+ arch/arm/mach-spear13xx/spear1340.c |   26 ++++++++++++++++++++++++++
+ 1 files changed, 26 insertions(+), 0 deletions(-)
 
-> +}
-> +EXPORT_SYMBOL(acpi_match_object_info_ids);
-> +
->  static void acpi_free_ids(struct acpi_device *device)
->  {
->         struct acpi_hardware_id *id, *tmp;
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index f0b9681..f83d581 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -379,6 +379,8 @@ int acpi_bus_start(struct acpi_device *device);
->  acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
->  int acpi_match_device_ids(struct acpi_device *device,
->                           const struct acpi_device_id *ids);
-> +int acpi_match_object_info_ids(struct acpi_device_info *info,
-> +                              const struct acpi_device_id *ids);
->  int acpi_create_dir(struct acpi_device *);
->  void acpi_remove_dir(struct acpi_device *);
->
-> --
-> 1.7.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/arm/mach-spear13xx/spear1340.c b/arch/arm/mach-spear13xx/spear1340.c
+index 223d9ef..194c3ac 100644
+--- a/arch/arm/mach-spear13xx/spear1340.c
++++ b/arch/arm/mach-spear13xx/spear1340.c
+@@ -29,6 +29,7 @@
+ #include <asm/mach/arch.h>
+ #include <mach/dma.h>
+ #include <mach/generic.h>
++#include <mach/pcie.h>
+ #include <mach/spdif.h>
+ #include <mach/spear.h>
+ #include <sound/designware_i2s.h>
+@@ -42,6 +43,7 @@
+ #define SPEAR1340_CAM2_BASE			UL(0xD0400000)
+ #define SPEAR1340_CAM3_BASE			UL(0xD0500000)
+ #define SPEAR1340_SATA_BASE			UL(0xB1000000)
++#define SPEAR1340_PCIE_BASE			UL(0xB1000000)
+ #define SPEAR1340_UART1_BASE			UL(0xB4100000)
+ #define SPEAR1340_I2S_PLAY_BASE			UL(0xB2400000)
+ #define SPEAR1340_I2S_REC_BASE			UL(0xB2000000)
+@@ -358,6 +360,28 @@ static struct ahci_platform_data sata_pdata = {
+ 	.resume = sata_resume,
+ };
+ 
++static int spear1340_pcie_clk_init(struct pcie_port *pp)
++{
++	writel(SPEAR1340_PCIE_SATA_MIPHY_CFG_PCIE,
++			SPEAR1340_PCIE_MIPHY_CFG);
++	writel(SPEAR1340_PCIE_CFG_VAL, SPEAR1340_PCIE_SATA_CFG);
++
++	return 0;
++}
++
++static int spear1340_pcie_clk_exit(struct pcie_port *pp)
++{
++	writel(0, SPEAR1340_PCIE_SATA_CFG);
++	writel(0, SPEAR1340_PCIE_MIPHY_CFG);
++
++	return 0;
++}
++
++static struct pcie_port_info pcie_pdata = {
++	.clk_init = spear1340_pcie_clk_init,
++	.clk_exit = spear1340_pcie_clk_exit,
++};
++
+ /* camera sensor registeration */
+ static struct i2c_board_info vs6725_camera_sensor_info = {
+ 	I2C_BOARD_INFO("vs6725", 0x10),
+@@ -609,6 +633,8 @@ static struct of_dev_auxdata spear1340_auxdata_lookup[] __initdata = {
+ 
+ 	OF_DEV_AUXDATA("snps,spear-ahci", SPEAR1340_SATA_BASE, NULL,
+ 			&sata_pdata),
++	OF_DEV_AUXDATA("st,pcie-host", SPEAR1340_PCIE_BASE, NULL,
++			&pcie_pdata),
+ 	OF_DEV_AUXDATA("arm,pl011", SPEAR1340_UART1_BASE, NULL, &uart1_data),
+ 	OF_DEV_AUXDATA("st,spear600-gmac", SPEAR13XX_GETH_BASE, NULL,
+ 			&eth_data),
+-- 
+1.7.5.4
+
