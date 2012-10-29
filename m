@@ -1,96 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 3/4] PCI, ACPI: Remove not used acpi_pci_root_start()
-Date: Wed,  3 Oct 2012 16:00:13 -0700
-Message-Id: <1349305214-3241-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349305214-3241-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
- <1349305214-3241-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:60340 "EHLO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752444Ab2J2HWx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:22:53 -0400
+Message-ID: <508E2EBB.6040905@st.com>
+Date: Mon, 29 Oct 2012 12:52:35 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+MIME-Version: 1.0
+To: viresh kumar <viresh.kumar@linaro.org>
+Cc: "arm@kernel.org" <arm@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"olof@lixom.net" <olof@lixom.net>
+Subject: Re: [PATCH 00/15] SPEAr13xx PCIe patches
+References: <cover.1351492562.git.pratyush.anand@st.com> <CAOh2x=mFS7awO7eoD4zA-sEzg0wY8KNjzTCcXMhOrqBhRcodKA@mail.gmail.com>
+In-Reply-To: <CAOh2x=mFS7awO7eoD4zA-sEzg0wY8KNjzTCcXMhOrqBhRcodKA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now with new acpi_bus_add, we could move code in acpi_pci_root_start into
-acpi_pci_root_add.
+Hi Viresh,
 
-After that we could remove acpi_pci_root_start.
+On 10/29/2012 12:46 PM, viresh kumar wrote:
+> On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+>> -- First two patches are common for all platforms on ARM architecture.
+>> -- Remaining patches belongs to SPEAr13xx architecture.
+>> -- SPEAr13xx supports both RC and EP mode of PCIe interface. This patchset
+>>          supports only RC mode.
+>
+> Hi Pratyush,
+>
+> For ARM SoC specific patches, that you want Arnd or Olof to apply, please send
+> them to arm@kernel.org. Arnd and Olof push ARM SoC trees in turns and they
+> pick them from arm@kernel.org.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |   27 +++++++++------------------
- 1 files changed, 9 insertions(+), 18 deletions(-)
+Ok, I will wait for few days if any more comment is received, and V2 is 
+needed then will take care during v2, else I will resend V1 to this id 
+after few days.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index bce469c..8d85287 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -47,7 +47,6 @@ ACPI_MODULE_NAME("pci_root");
- #define ACPI_PCI_ROOT_DEVICE_NAME	"PCI Root Bridge"
- static int acpi_pci_root_add(struct acpi_device *device);
- static int acpi_pci_root_remove(struct acpi_device *device, int type);
--static int acpi_pci_root_start(struct acpi_device *device);
- 
- #define ACPI_PCIE_REQ_SUPPORT (OSC_EXT_PCI_CONFIG_SUPPORT \
- 				| OSC_ACTIVE_STATE_PWR_SUPPORT \
-@@ -67,7 +66,6 @@ static struct acpi_driver acpi_pci_root_driver = {
- 	.ops = {
- 		.add = acpi_pci_root_add,
- 		.remove = acpi_pci_root_remove,
--		.start = acpi_pci_root_start,
- 		},
- };
- 
-@@ -451,6 +449,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	acpi_status status;
- 	int result;
- 	struct acpi_pci_root *root;
-+	struct acpi_pci_driver *driver;
- 	acpi_handle handle;
- 	struct acpi_device *child;
- 	u32 flags, base_flags;
-@@ -628,22 +627,6 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
--	return 0;
--
--out_del_root:
--	mutex_lock(&acpi_pci_root_lock);
--	list_del(&root->node);
--	mutex_unlock(&acpi_pci_root_lock);
--end:
--	kfree(root);
--	return result;
--}
--
--static int acpi_pci_root_start(struct acpi_device *device)
--{
--	struct acpi_pci_root *root = acpi_driver_data(device);
--	struct acpi_pci_driver *driver;
--
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_for_each_entry(driver, &acpi_pci_drivers, node)
- 		if (driver->add)
-@@ -653,6 +636,14 @@ static int acpi_pci_root_start(struct acpi_device *device)
- 	pci_bus_add_devices(root->bus);
- 
- 	return 0;
-+
-+out_del_root:
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_del(&root->node);
-+	mutex_unlock(&acpi_pci_root_lock);
-+end:
-+	kfree(root);
-+	return result;
- }
- 
- static int acpi_pci_root_remove(struct acpi_device *device, int type)
--- 
-1.7.7
+
+>
+> --
+> viresh
+> .
+>
+
 
