@@ -1,58 +1,30 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:60456 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757353Ab2JDUsS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Oct 2012 16:48:18 -0400
-Received: by mail-ie0-f174.google.com with SMTP id k13so2002627iea.19
-        for <linux-pci@vger.kernel.org>; Thu, 04 Oct 2012 13:48:18 -0700 (PDT)
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:37926 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756616Ab2J2NYz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 09:24:55 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fk26so5204217vcb.19
+        for <linux-pci@vger.kernel.org>; Mon, 29 Oct 2012 06:24:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVyx5EL8RCuHF5rOoT5Zj7ksnAFJgg09hGE_sHfRJJXpw@mail.gmail.com>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com>
- <1349305214-3241-1-git-send-email-yinghai@kernel.org> <20121004174746.GA24119@google.com>
- <CAE9FiQWDnrk7VccFLLHucCVSxN5RRS0-8pwYazLy2aw3oqmPLQ@mail.gmail.com>
- <CAErSpo48XLzLvziACEi+0nWuRXurHCLnw+iwgqu8-BRutjNtWw@mail.gmail.com> <CAE9FiQVyx5EL8RCuHF5rOoT5Zj7ksnAFJgg09hGE_sHfRJJXpw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 4 Oct 2012 14:47:56 -0600
-Message-ID: <CAErSpo5tWXS5xmstNhSVzxZfL8LCZ7tPjetADV6vLwQeBbcqLw@mail.gmail.com>
-Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
+In-Reply-To: <91c2505d23f161ce535b220dea497e2c3abfd7f6.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
+	<91c2505d23f161ce535b220dea497e2c3abfd7f6.1351492562.git.pratyush.anand@st.com>
+Date: Mon, 29 Oct 2012 18:54:55 +0530
+Message-ID: <CAOh2x=ndvJF6qFgXOOQOJfAjFh93vosBrYN4FbvnDK0SW0CcXA@mail.gmail.com>
+Subject: Re: [PATCH 10/15] SPEAr13xx: DTS: Add auxiliary data for PCIe host
+From: viresh kumar <viresh.kumar@linaro.org>
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: arnd@arndb.de, shiraz.hashim@st.com, spear-devel@list.st.com,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	olof@lixom.net
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 4, 2012 at 2:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Oct 4, 2012 at 12:44 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> To answer your specific question, yes, I do think drivers that are
->> statically built in probably should be registered before devices are
->> enumerated.  That way, the boot-time case is more similar to the
->> hot-add case.
->>
->> Obviously, for drivers that can be modules, the reverse must work as
->> well (enumerate devices, then load and register the driver).  And then
->> the other order (register driver, then enumerate device) must also
->> work so future hot-adds of the same device type work.
->
-> so you will have to handle two paths instead one.
+On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+> ---
 
-I'm not proposing any additional requirements; I'm just describing the
-way Linux driver modules work.  Any module *already* must support both
-orders (enumerate devices then register driver, as well as register
-driver then enumerate and bind to a hot-added device).  And this
-should not be two paths, it should be one and the same path for both
-orders.
+Please add commit log in each and every message.
 
-> current booting path sequence are tested more than hot add path.
-
-True.  You're proposing fiddling with driver binding order so we can
-use the current boot path ordering at hot-add time.  I'm suggesting
-that the "register driver then enumerate device" order is something we
-have to support for hot-add anyway, and that we should use the same
-ordering at boot-time.  That's more change for the boot-time path, but
-I think it's cleaner and more maintainable in the long term.
+What do you mean by auxiliary data in subject?
