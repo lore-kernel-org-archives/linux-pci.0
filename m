@@ -1,108 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Gong Chen <gong.chen@linux.intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH v3 25/28] ACPIHP/processor: reject online/offline requests when doing processor hotplug
-Date: Sat,  6 Oct 2012 23:27:33 +0800
-Message-Id: <1349537256-21670-26-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog101.obsmtp.com ([207.126.144.111]:43725 "EHLO
+	eu1sys200aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752432Ab2J2HCS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:18 -0400
+From: Pratyush Anand <pratyush.anand@st.com>
+To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
+Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
+	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
+	Pratyush Anand <pratyush.anand@st.com>
+Subject: [PATCH 06/15] clk: SPEAr1310: Fix pcie clock name
+Date: Mon, 29 Oct 2012 12:31:20 +0530
+Message-ID: <adb41404ceb2e4e4baa6adfe7df0bfec6c42813f.1351492562.git.pratyush.anand@st.com>
+In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
+References: <cover.1351492562.git.pratyush.anand@st.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When doing physical processor hotplug, all affected CPUs should be
-handled in atomic, shouldn't be disturbed by online/offline requests
-from CPU device's online sysfs interface. For example, it's fatal
-if a CPU is onlined through CPU device's online sysfs interface
-between the hotplug driver offlines all affected CPUs and powers the
-physical processor off.
-
-So temporarily reject online/offline requests from CPU device's online
-sysfs interface by setting the busy flag when doing physical processor
-hotplug.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
 ---
- drivers/acpi/processor_driver.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/clk/spear/spear1310_clock.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
-index 447bd6d..51e3993 100644
---- a/drivers/acpi/processor_driver.c
-+++ b/drivers/acpi/processor_driver.c
-@@ -702,7 +702,7 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
- 		if (result)
- 			goto out_unlock;
- 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
--		result = arch_register_cpu(pr->id, 0);
-+		result = arch_register_cpu(pr->id, 1);
- 		if (result)
- 			goto out_unmap;
+diff --git a/drivers/clk/spear/spear1310_clock.c b/drivers/clk/spear/spear1310_clock.c
+index 52e418f..97c3981 100644
+--- a/drivers/clk/spear/spear1310_clock.c
++++ b/drivers/clk/spear/spear1310_clock.c
+@@ -733,19 +733,19 @@ void __init spear1310_clk_init(void)
+ 	clk = clk_register_gate(NULL, "pcie_sata_0_clk", "ahb_clk", 0,
+ 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_0_CLK_ENB,
+ 			0, &_lock);
+-	clk_register_clkdev(clk, NULL, "dw_pcie.0");
++	clk_register_clkdev(clk, NULL, "b1000000.pcie0");
+ 	clk_register_clkdev(clk, NULL, "b1000000.ahci");
  
-@@ -755,10 +755,26 @@ static void acpi_processor_post_configure(struct acpi_device *device,
- 		if (!cpu_online(pr->id) && cpu_up(pr->id))
- 			dev_warn(&device->dev,
- 				 "fails to online CPU%d.\n", pr->id);
-+		cpu_set_busy(pr->id, 0);
- 	} else if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
- 		acpi_processor_reset(device, pr);
- }
+ 	clk = clk_register_gate(NULL, "pcie_sata_1_clk", "ahb_clk", 0,
+ 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_1_CLK_ENB,
+ 			0, &_lock);
+-	clk_register_clkdev(clk, NULL, "dw_pcie.1");
++	clk_register_clkdev(clk, NULL, "b1800000.pcie1");
+ 	clk_register_clkdev(clk, NULL, "b1800000.ahci");
  
-+static int acpi_processor_pre_release(struct acpi_device *device,
-+				      struct acpihp_cancel_context *ctx)
-+{
-+	int result;
-+	struct acpi_processor *pr;
-+
-+	if (!device || !acpi_driver_data(device))
-+		return -EINVAL;
-+	pr = acpi_driver_data(device);
-+
-+	result = cpu_set_busy(pr->id, 1);
-+
-+	return result ? -EBUSY : 0;
-+}
-+
- static int acpi_processor_release(struct acpi_device *device,
- 				  struct acpihp_cancel_context *ctx)
- {
-@@ -783,9 +799,11 @@ static void acpi_processor_post_release(struct acpi_device *device,
- 	BUG_ON(!device || !acpi_driver_data(device));
- 	pr = acpi_driver_data(device);
+ 	clk = clk_register_gate(NULL, "pcie_sata_2_clk", "ahb_clk", 0,
+ 			SPEAR1310_PERIP1_CLK_ENB, SPEAR1310_PCIE_SATA_2_CLK_ENB,
+ 			0, &_lock);
+-	clk_register_clkdev(clk, NULL, "dw_pcie.2");
++	clk_register_clkdev(clk, NULL, "b4000000.pcie2");
+ 	clk_register_clkdev(clk, NULL, "b4000000.ahci");
  
--	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
-+	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK) {
- 		if (!cpu_online(pr->id))
- 			cpu_up(pr->id);
-+		cpu_set_busy(pr->id, 0);
-+	}
- }
- 
- static void acpi_processor_unconfigure(struct acpi_device *device)
-@@ -803,6 +821,7 @@ static struct acpihp_dev_ops acpi_processor_hp_ops = {
- 	.pre_configure = &acpi_processor_pre_configure,
- 	.configure = &acpi_processor_configure,
- 	.post_configure = &acpi_processor_post_configure,
-+	.pre_release = &acpi_processor_pre_release,
- 	.release = &acpi_processor_release,
- 	.post_release = &acpi_processor_post_release,
- 	.unconfigure = &acpi_processor_unconfigure,
+ 	clk = clk_register_gate(NULL, "sysram0_clk", "ahb_clk", 0,
 -- 
-1.7.9.5
+1.7.5.4
 
