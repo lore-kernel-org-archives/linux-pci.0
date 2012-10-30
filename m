@@ -1,47 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:41111 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624Ab2JCBCh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 21:02:37 -0400
-Message-ID: <506B8D7B.8090004@jp.fujitsu.com>
-Date: Wed, 03 Oct 2012 09:57:31 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:48808 "EHLO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753769Ab2J3DXs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 23:23:48 -0400
+Message-ID: <508F4832.80907@st.com>
+Date: Tue, 30 Oct 2012 08:53:30 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
 MIME-Version: 1.0
-To: andi@firstfloor.org
-CC: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
-	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de
-Subject: Re: [PATCH v2 0/2] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <20121002074434.204.47750.sendpatchset@indoh> <m2mx04wtpz.fsf@firstfloor.org>
-In-Reply-To: <m2mx04wtpz.fsf@firstfloor.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: viresh kumar <viresh.kumar@linaro.org>
+Cc: "arnd@arndb.de" <arnd@arndb.de>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"olof@lixom.net" <olof@lixom.net>
+Subject: Re: [PATCH 09/15] SPEAr13xx: dts: Fix PCIe core address ranges
+References: <cover.1351492562.git.pratyush.anand@st.com> <6ed9683e3149a640b4333cf3039ae31063b23e3b.1351492562.git.pratyush.anand@st.com> <CAOh2x==TQ=6-9M7p8DD0qZepQzSZAdv-mNPu-pOUynb99ODWDw@mail.gmail.com>
+In-Reply-To: <CAOh2x==TQ=6-9M7p8DD0qZepQzSZAdv-mNPu-pOUynb99ODWDw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/03 4:37), Andi Kleen wrote:
-> Takao Indoh <indou.takao@jp.fujitsu.com> writes:
+On 10/29/2012 6:53 PM, viresh kumar wrote:
+> On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+>> Each PCIe controller has 256 MB of address space whcih is accessible by
+>> AHB and used to communicate with PCIe devices connected with the host
+>> controller.
 >
->> These patches reset PCIe devices at boot time to address DMA problem on
->> kdump with iommu. When "reset_devices" is specified, a hot reset is
->> triggered on each PCIe root port and downstream port to reset its
->> downstream endpoint.
+> you haven't said what you have done here in this patch. i.e. extend AHB range
+> to include pcie space.
 >
-> Great. I've been pondering this for a long time, but you did finally
-> implement it. I hope this will make kdump a lot more reliable at least
-> on the systems that support per port reset.
+>> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+>> ---
+>>   arch/arm/boot/dts/spear13xx.dtsi |    9 +++++----
+>>   1 files changed, 5 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
+>> index 9ff4f5f..b7990754 100644
+>> --- a/arch/arm/boot/dts/spear13xx.dtsi
+>> +++ b/arch/arm/boot/dts/spear13xx.dtsi
+>> @@ -76,7 +76,8 @@
+>>                  #size-cells = <1>;
+>>                  compatible = "simple-bus";
+>>                  ranges = <0x50000000 0x50000000 0x10000000
+>> -                         0xb0000000 0xb0000000 0x10000000
+>> +                         0x80000000 0x80000000 0x20000000
+>> +                         0xb0000000 0xb0000000 0x20000000
+>>                            0xd0000000 0xd0000000 0x02000000
+>>                            0xd8000000 0xd8000000 0x01000000
+>>                            0xe0000000 0xe0000000 0x10000000>;
+>> @@ -194,7 +195,7 @@
+>>                  pcie0@b1000000 {
+>>                          compatible = "st,pcie-gadget", "st,pcie-host" ;
+>>                          reg = < 0xb1000000 0x4000
+>> -                               0x80000000 0x2000
+>> +                               0x80000000 0x10000000
+>>                                  0xeb800000 0x1000 >;
+>>                          interrupts = <0 68 0x4>;
+>>                          status = "disabled";
+>
+> That's a blunder. I am damn sure, you haven't rebased it
+> on any rc. And you have rebased it on your local next.
+>
 
-Actually I got the idea of this patch from your comment below;-)
-http://permalink.gmane.org/gmane.linux.network/162414
+Yes, I re-based it with next of ST's repo.  :(
+
+> There is no pci support in upstream kernel.
+
+I will send a v2 after rebasing with mainline content.
 
 >
-> Now the only question is: why make it a option and not default?
+> --
+> viresh
+> .
+>
 
-Except kdump I don't know the situation where this reset is useful, so I
-introduced it as option so that it works only during kdump.
-
-Thanks,
-Takao Indoh
 
