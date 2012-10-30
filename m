@@ -1,103 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <508790AC.5080001@jp.fujitsu.com>
-Date: Wed, 24 Oct 2012 15:54:36 +0900
-From: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>
-MIME-Version: 1.0
-To: Tang Chen <tangchen@cn.fujitsu.com>
-CC: <yinghai@kernel.org>, <bhelgaas@google.com>, <lenb@kernel.org>,
-	<jiang.liu@huawei.com>, <izumi.taku@jp.fujitsu.com>,
-	<mihailm@parallels.com>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] Use kacpi_hotplug_wq to handle container hotplug
- event.
-References: <1351058750-4275-1-git-send-email-tangchen@cn.fujitsu.com> <1351058750-4275-2-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1351058750-4275-2-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset="ISO-2022-JP"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:33400 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965067Ab2J3RnT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:43:19 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/8] PCI: Add pci_stop/remove_root_bus()
+Date: Tue, 30 Oct 2012 10:42:42 -0700
+Message-Id: <1351618965-16761-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tang,
+It supports both pci root bus and pci bus under pci bridge.
 
-2012/10/24 15:05, Tang Chen wrote:
-> As the comments in __acpi_os_execute() said:
-> 
-> 	We can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-> 	because the hotplug code may call driver .remove() functions,
-> 	which invoke flush_scheduled_work/acpi_os_wait_events_complete
-> 	to flush these workqueues.
-> 
-> we should keep the hotplug code in kacpi_hotplug_wq.
-> 
-> But we have the following call series in kernel now:
-> 	acpi_ev_queue_notify_request()
-> 	|--> acpi_os_execute()
-> 	     |--> __acpi_os_execute(type, function, context, 0)
-> 
-> The last parameter 0 makes the container_notify_cb() executed in
-> kacpi_notify_wq or kacpid_wq. So, we need to put the real hotplug code
-> into kacpi_hotplug_wq.
+-v2: clear pci_bridge's subordinate.
+-v3: only handle root bus. and also put Jiang's get/put pair in
+-v4: fold pci_stop/remove_bus_devices in... reducing confusing.
+-v5: split device_register/unregister to avoid extra get...
+     also remove extra blank line.
 
-I cannot understand the purpose of the patch.
-Is the patch a bug fix patch? If yes, what problem happens?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/remove.c |   36 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 38 insertions(+), 0 deletions(-)
 
-Thanks,
-Yasuaki Ishimatsu
-
-> 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->   drivers/acpi/container.c |   17 ++++++++++++++++-
->   1 files changed, 16 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-> index 69e2d6b..d300e03 100644
-> --- a/drivers/acpi/container.c
-> +++ b/drivers/acpi/container.c
-> @@ -35,6 +35,7 @@
->   #include <acpi/acpi_bus.h>
->   #include <acpi/acpi_drivers.h>
->   #include <acpi/container.h>
-> +#include <acpi/acpiosxf.h>
->   
->   #define PREFIX "ACPI: "
->   
-> @@ -165,14 +166,21 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
->   	return result;
->   }
->   
-> -static void container_notify_cb(acpi_handle handle, u32 type, void *context)
-> +static void __container_notify_cb(struct work_struct *work)
->   {
->   	struct acpi_device *device = NULL;
->   	int result;
->   	int present;
->   	acpi_status status;
-> +	struct acpi_hp_work *hp_work;
-> +	acpi_handle handle;
-> +	u32 type;
->   	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
->   
-> +	hp_work = container_of(work, struct acpi_hp_work, work);
-> +	handle = hp_work->handle;
-> +	type = hp_work->type;
-> +
->   	switch (type) {
->   	case ACPI_NOTIFY_BUS_CHECK:
->   		/* Fall through */
-> @@ -224,6 +232,13 @@ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
->   	return;
->   }
->   
-> +static void container_notify_cb(acpi_handle handle, u32 type,
-> +				void *context)
-> +{
-> +	alloc_acpi_hp_work(handle, type, context,
-> +			   __container_notify_cb);
-> +}
-> +
->   static acpi_status
->   container_walk_namespace_cb(acpi_handle handle,
->   			    u32 lvl, void *context, void **rv)
-> 
-
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 513972f..7c0fd92 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -111,3 +111,39 @@ void pci_stop_and_remove_bus_device(struct pci_dev *dev)
+ 	pci_remove_bus_device(dev);
+ }
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
++
++void pci_stop_root_bus(struct pci_bus *bus)
++{
++	struct pci_dev *child, *tmp;
++	struct pci_host_bridge *host_bridge;
++
++	if (!pci_is_root_bus(bus))
++		return;
++
++	host_bridge = to_pci_host_bridge(bus->bridge);
++	list_for_each_entry_safe_reverse(child, tmp,
++					 &bus->devices, bus_list)
++		pci_stop_bus_device(child);
++
++	/* stop the host bridge */
++	device_del(&host_bridge->dev);
++}
++
++void pci_remove_root_bus(struct pci_bus *bus)
++{
++	struct pci_dev *child, *tmp;
++	struct pci_host_bridge *host_bridge;
++
++	if (!pci_is_root_bus(bus))
++		return;
++
++	host_bridge = to_pci_host_bridge(bus->bridge);
++	list_for_each_entry_safe(child, tmp,
++				 &bus->devices, bus_list)
++		pci_remove_bus_device(child);
++	pci_remove_bus(bus);
++	host_bridge->bus = NULL;
++
++	/* remove the host bridge */
++	put_device(&host_bridge->dev);
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 505c05a..a5cd03b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++void pci_stop_root_bus(struct pci_bus *bus);
++void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+-- 
+1.7.7
 
