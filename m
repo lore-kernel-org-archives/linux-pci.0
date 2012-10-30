@@ -1,95 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:26136 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964822Ab2J3RnP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:43:15 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55899 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab2J3CCG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 22:02:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <200901071430.55580.jbarnes@virtuousgeek.org>
+References: <200901071430.55580.jbarnes@virtuousgeek.org>
+Date: Mon, 29 Oct 2012 19:02:05 -0700
+Message-ID: <CAE9FiQVYZUQULpDkGJFr85o5oZTdYYegdXoQCg6V8xY9S6G2pA@mail.gmail.com>
+Subject: Re: [git pull] PCI pull request for 2.6.29
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/8] PCI: Move pci_rescan_bus() back to probe.c
-Date: Tue, 30 Oct 2012 10:42:39 -0700
-Message-Id: <1351618965-16761-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Ingo Molnar <mingo@elte.hu>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have pci_assign_unassigned_bus_resources() in as global function now.
+On Wed, Jan 7, 2009 at 2:30 PM, Jesse Barnes <jbarnes@virtuousgeek.org> wrote:
+>
+> Arjan van de Ven (1):
+>       resource: allow MMIO exclusivity for device drivers
+>
 
-Move back pci_rescan_bus to probe.c where it should be.
+hi, all
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c     |   21 +++++++++++++++++++++
- drivers/pci/setup-bus.c |   22 ----------------------
- 2 files changed, 21 insertions(+), 22 deletions(-)
+commit e8de1481fd7126ee9e93d6889da6f00c05e1e019
+Author: Arjan van de Ven <arjan@linux.intel.com>
+Date:   Wed Oct 22 19:55:31 2008 -0700
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec909af..65f62e3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1890,6 +1890,27 @@ unsigned int __ref pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
- 	return max;
- }
- 
-+/**
-+ * pci_rescan_bus - scan a PCI bus for devices.
-+ * @bus: PCI bus to scan
-+ *
-+ * Scan a PCI bus and child buses for new devices, adds them,
-+ * and enables them.
-+ *
-+ * Returns the max number of subordinate bus discovered.
-+ */
-+unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
-+{
-+	unsigned int max;
-+
-+	max = pci_scan_child_bus(bus);
-+	pci_assign_unassigned_bus_resources(bus);
-+	pci_bus_add_devices(bus);
-+
-+	return max;
-+}
-+EXPORT_SYMBOL_GPL(pci_rescan_bus);
-+
- EXPORT_SYMBOL(pci_add_new_bus);
- EXPORT_SYMBOL(pci_scan_slot);
- EXPORT_SYMBOL(pci_scan_bridge);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1f34929..59e6c55 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1569,25 +1569,3 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 
- 	pci_enable_bridges(bus);
- }
--#ifdef CONFIG_HOTPLUG
--/**
-- * pci_rescan_bus - scan a PCI bus for devices.
-- * @bus: PCI bus to scan
-- *
-- * Scan a PCI bus and child buses for new devices, adds them,
-- * and enables them.
-- *
-- * Returns the max number of subordinate bus discovered.
-- */
--unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
--{
--	unsigned int max;
--
--	max = pci_scan_child_bus(bus);
--	pci_assign_unassigned_bus_resources(bus);
--	pci_bus_add_devices(bus);
--
--	return max;
--}
--EXPORT_SYMBOL_GPL(pci_rescan_bus);
--#endif
--- 
-1.7.7
+    resource: allow MMIO exclusivity for device drivers
 
+only user is e1000e driver. and real fix
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4a7703582836f55a1cbad0e2c1c6ebbee3f9b3a7
+
+is already in the upsteam for https://bugzilla.redhat.com/show_bug.cgi?id=459202
+
+so wonder if e8de1481fd7126ee9e93d6889da6f00c05e1e019 should be
+reverted from upstream?
+
+Thanks
+
+Yinghai
