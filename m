@@ -1,109 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:50064 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753740Ab2J3GY4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:24:56 -0400
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 7B5CA3EE0C3
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:55 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 61A0445DE5A
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:55 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 47B5A45DE58
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:55 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 3647C1DB8053
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:55 +0900 (JST)
-Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id E6FF11DB8049
-	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:54 +0900 (JST)
-Date: Tue, 30 Oct 2012 15:24:50 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 2/5] PCI,ACPI: Add _PRT interrupt routing info before
- enumerating devices
-Message-Id: <20121030152450.92d4c106.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
-References: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from moutng.kundenserver.de ([212.227.17.10]:63945 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932294Ab2JaH1j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 03:27:39 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Pratyush Anand <pratyush.anand@st.com>
+Subject: Re: [PATCH 04/15] SPEAr13xx: Add PCIe Root Complex driver support
+Date: Tue, 30 Oct 2012 22:20:23 +0000
+Cc: shiraz.hashim@st.com, viresh.linux@gmail.com,
+	spear-devel@list.st.com, linux-pci@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org, olof@lixom.net
+References: <cover.1351492562.git.pratyush.anand@st.com> <b26d316d6822888ccdeecf72346c7dbd618759eb.1351492562.git.pratyush.anand@st.com>
+In-Reply-To: <b26d316d6822888ccdeecf72346c7dbd618759eb.1351492562.git.pratyush.anand@st.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201210302220.23690.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Author: Bjorn Helgaas <bhelgaas@google.com>
+On Monday 29 October 2012, Pratyush Anand wrote:
+> SPEAr13xx has dual mode PCIe controller which can be used as Root
+> Complex as well as Endpoint. This driver supports RC mode of the
+> controller.
+> 
+> If CONFIG_PCI_MSI is defined then support of MSI interrupt for
+> downstream  PCIe devices will be enabled.
+> 
+> If CONFIG_PM is defined then it supports suspend/resume functionality.
 
-PCI/ACPI: Add _PRT interrupt routing info before enumerating devices
-    
-We used to add the _PRT after enumerating devices behind a new host
-bridge.  This moves the _PRT addition *before* the enumeration, since
-it no longer depends on the struct pci_bus existing.  This is one
-step towards consolidating the .add/.start methods.
-    
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-[insert acpi_pci_irq_del_prt() on hostbridge addition failure]
-Signed-off-by: Taku Izumi <izumim.taku@jp.fujitsu.com>
----
- drivers/acpi/pci_root.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+I think I've seen the same hardware before used with another driver.
+IMHO we should really make sure this does not get duplicated again and
+move this stuff to a new subdirectory drivers/pci/host. We don't yet have
+a completely architecture independent way of defining a PCIe root complex,
+but we're getting there and given of how many ARM implementations we have,
+we can just as well start with this one and adapt it to another arch if
+necesary.
 
-Index: Bjorn-next-0925/drivers/acpi/pci_root.c
-===================================================================
---- Bjorn-next-0925.orig/drivers/acpi/pci_root.c
-+++ Bjorn-next-0925/drivers/acpi/pci_root.c
-@@ -467,6 +467,7 @@ static int __devinit acpi_pci_root_add(s
- 		result = -ENODEV;
- 		goto end;
- 	}
-+	root->segment = segment & 0xFFFF;
- 
- 	/* Check _CRS first, then _BBN.  If no _BBN, default to zero. */
- 	root->secondary.flags = IORESOURCE_BUS;
-@@ -494,9 +495,18 @@ static int __devinit acpi_pci_root_add(s
- 		}
- 	}
- 
-+	/*
-+	 * PCI Routing Table
-+	 * -----------------
-+	 * Evaluate and parse _PRT, if exists.
-+	 */
-+	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
-+	if (ACPI_SUCCESS(status))
-+		result = acpi_pci_irq_add_prt(device->handle, root->segment,
-+					      root->secondary.start);
-+
- 	INIT_LIST_HEAD(&root->node);
- 	root->device = device;
--	root->segment = segment & 0xFFFF;
- 	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
- 	strcpy(acpi_device_class(device), ACPI_PCI_ROOT_CLASS);
- 	device->driver_data = root;
-@@ -548,16 +558,6 @@ static int __devinit acpi_pci_root_add(s
- 		goto out_del_root;
- 
- 	/*
--	 * PCI Routing Table
--	 * -----------------
--	 * Evaluate and parse _PRT, if exists.
--	 */
--	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
--	if (ACPI_SUCCESS(status))
--		result = acpi_pci_irq_add_prt(device->handle, root->segment,
--					      root->secondary.start);
--
--	/*
- 	 * Scan and bind all _ADR-Based Devices
- 	 */
- 	list_for_each_entry(child, &device->children, node)
-@@ -635,6 +635,8 @@ out_del_root:
- 	mutex_lock(&acpi_pci_root_lock);
- 	list_del(&root->node);
- 	mutex_unlock(&acpi_pci_root_lock);
-+
-+	acpi_pci_irq_del_prt(root->segment, root->secondary.start);
- end:
- 	kfree(root);
- 	return result;
+> +struct pcie_port {
+> +	u8			controller;
+> +	u8			root_bus_nr;
+> +	void __iomem		*dbi_base;
+> +	void __iomem		*va_dbi_base;
+> +	void __iomem		*app_base;
+> +	void __iomem		*va_app_base;
+> +	void __iomem		*base;
+> +	void __iomem		*phy_base;
+> +	void __iomem		*va_phy_base;
+> +	void __iomem		*cfg0_base;
+> +	void __iomem		*va_cfg0_base;
+> +	void __iomem		*cfg1_base;
+> +	void __iomem		*va_cfg1_base;
+> +	void __iomem		*mem_base;
+> +	void __iomem		*io_base;
+> +	spinlock_t		conf_lock;
+> +	char			mem_space_name[16];
+> +	char			io_space_name[16];
+> +	struct resource		res[2];
+> +	struct pcie_port_info	config;
+> +	struct list_head	next;
+> +	struct clk		*clk;
+> +	int			irq;
+> +	int			virt_irq_base;
+> +	int			susp_state;
+> +};
 
+Can you explain why you need a total of 13 virtual memory areas?
+
+> +
+> +static struct list_head	pcie_port_list;
+
+I'm pretty sure you don't need your own list of ports, since we already enumerate the
+ports in the PCI code.
+
+> +static struct hw_pci pci;
+
+Why is this not statically initialized?
+
+> +	snprintf(pp->io_space_name, sizeof(pp->io_space_name),
+> +			"PCIe %d I/O", nr);
+> +	pp->io_space_name[sizeof(pp->io_space_name) - 1] = 0;
+> +	pp->res[1].name = pp->io_space_name;
+> +	pp->res[1].start = PCIBIOS_MIN_IO + nr * pp->config.io_size;
+> +	pp->res[1].end = pp->res[1].start + (pp->config.io_size - 1);
+> +	pp->res[1].flags = IORESOURCE_IO;
+> +	if (request_resource(&ioport_resource, &pp->res[1]))
+> +		panic("can't allocate PCIe IO space");
+> +	pci_add_resource_offset(&sys->resources, &pp->res[1], sys->io_offset);
+
+Is the io_offset ever nonzero?
+
+> +void __iomem *spear13xx_pcie_io_base(unsigned long addr)
+> +{
+> +	int controller = (addr - PCIBIOS_MIN_IO) / IO_SIZE_PER_PORT;
+> +	struct pcie_port *pp;
+> +
+> +	pp = controller_to_port(controller);
+> +
+> +	return pp->io_base;
+> +}
+
+This function looks completely bogus. Subtracting PCIBIOS_MIN_IO means that
+everything is shifted by 0x1000 ports, since secondary bridges don't
+have this offset. The I/O spaces are just mapped linearly into the virtual
+address space anyway, so looking up the I/O base like this is pointless.
+
+> +static void pcie_host_init(struct pcie_port *pp)
+> +{
+> +	struct pcie_port_info *config = &pp->config;
+> +	void __iomem *dbi_base = pp->va_dbi_base;
+> +	struct pcie_app_reg *app_reg = pp->va_app_base;
+> +	u32 exp_cap_off = PCI_CAP_ID_EXP_OFFSET;
+> +	u32 val;
+> +
+> +	/* Keep first 64K for IO */
+> +	pp->io_base = pp->base;
+> +	pp->mem_base = pp->io_base + config->io_size;
+> +	pp->cfg0_base = pp->mem_base + config->mem_size;
+> +	pp->cfg1_base = pp->cfg0_base + config->cfg0_size;
+
+Why is the memory space part of the virtual bus address range here?
+
+
+> +static int add_pcie_port(struct pcie_port *pp, struct platform_device *pdev)
+> +{
+> +	struct resource *base;
+> +	struct resource *dbi_base;
+> +	struct resource *phy_base;
+> +	int virt_irq_base;
+> +	struct device_node *np = pdev->dev.of_node;
+> +	struct irq_domain *irq_domain;
+> +	int num_virt_irqs = NUM_INTX_IRQS;
+> +
+> +	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	if (!dbi_base) {
+> +		dev_err(&pdev->dev, "couldn't get dbi base resource\n");
+> +		return -EINVAL;
+> +	}
+> +	if (!devm_request_mem_region(&pdev->dev, dbi_base->start,
+> +				resource_size(dbi_base), pdev->name)) {
+> +		dev_err(&pdev->dev, "dbi base resource is busy\n");
+> +		return -EBUSY;
+> +	}
+> +
+> +	pp->dbi_base = (void __iomem *)dbi_base->start;
+
+dbi_base is a resource here, which refers to a physical address. You cannot cast
+that to an __iomem token.
+
+> +	pp->va_dbi_base = devm_ioremap(&pdev->dev, dbi_base->start,
+> +			resource_size(dbi_base));
+
+Here you even pass that address into ioremap, so it certainly isn't a virtual address
+
+> +	pp->phy_base = (void __iomem *)phy_base->start;
+
+same here.
+
+> +	pp->va_phy_base = devm_ioremap(&pdev->dev, phy_base->start,
+> +			resource_size(phy_base));
+> +	if (!pp->va_phy_base) {
+> +		dev_err(&pdev->dev, "error with ioremap\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	base = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> +	if (!base) {
+> +		dev_err(&pdev->dev, "couldn't get base resource\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	pp->base = (void __iomem *)base->start;
+
+and here.
+
+> +	virt_irq_base = irq_alloc_descs(-1, 0, num_virt_irqs, 0);
+> +	if (IS_ERR_VALUE(virt_irq_base)) {
+> +		dev_err(&pdev->dev, "irq desc alloc failed\n");
+> +		return -ENXIO;
+> +	}
+> +
+> +	irq_domain = irq_domain_add_legacy(np, num_virt_irqs, virt_irq_base,
+> +			0, &irq_domain_simple_ops, NULL);
+
+Why not use a linear domain?
+
+> +	pp->virt_irq_base = irq_find_mapping(irq_domain, 0);
+
+Then you can get rid of virt_irq_base and use CONFIG_SPARSE_IRQ.
+
+> +	spin_lock_init(&pp->conf_lock);
+> +	if (pcie_link_up(pp->va_app_base)) {
+> +		dev_info(&pdev->dev, "link up\n");
+> +	} else {
+> +		dev_info(&pdev->dev, "link down\n");
+> +		pcie_host_init(pp);
+> +		pp->va_cfg0_base = devm_ioremap(&pdev->dev,
+> +				(resource_size_t)pp->cfg0_base,
+
+cfg0_base is an __iomem token, you cannot pass that into ioremap,
+which expects a physical address.
+
+> +	pp->config.io_size = IO_SIZE_PER_PORT;
+> +	of_property_read_u32(np, "pcie-host,is_host", &pp->config.is_host);
+> +	of_property_read_u32(np, "pcie-host,is_gen1", &pp->config.is_gen1);
+
+These should probably be derived from the "compatible" value.
+
+> +	of_property_read_u32(np, "pcie-host,cfg0_size", &pp->config.cfg0_size);
+> +	of_property_read_u32(np, "pcie-host,cfg1_size", &pp->config.cfg1_size);
+> +	of_property_read_u32(np, "pcie-host,mem_size", &pp->config.mem_size);
+> +	of_property_read_u32(np, "pcie-host,msg_size", &pp->config.msg_size);
+> +	of_property_read_u32(np, "pcie-host,in_mem_size",
+> +			&pp->config.in_mem_size);
+
+And these should come from the "ranges" property I suppose.
+
+	Arnd
