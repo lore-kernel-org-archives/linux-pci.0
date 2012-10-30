@@ -1,126 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51734 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755993Ab2JIWtJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Oct 2012 18:49:09 -0400
-Message-ID: <5074A9DD.3000800@redhat.com>
-Date: Tue, 09 Oct 2012 18:49:01 -0400
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: "Rose, Gregory V" <gregory.v.rose@intel.com>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
-References: <1349388885-43938-1-git-send-email-ddutile@redhat.com> <5070768C.4030905@gmail.com> <20121008084439.00006e56@unknown> <50746F77.60201@redhat.com> <C5551D9AAB213A418B7FD5E4A6F30A071533B57E@ORSMSX106.amr.corp.intel.com>
-In-Reply-To: <C5551D9AAB213A418B7FD5E4A6F30A071533B57E@ORSMSX106.amr.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:51304 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754442Ab2J3G0Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:26:24 -0400
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id A2FF73EE0BC
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:26:23 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 8993745DE55
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:26:23 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 6E85E45DE53
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:26:23 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 5F8FAE38003
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:26:23 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1A0541DB803C
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:26:23 +0900 (JST)
+Date: Tue, 30 Oct 2012 15:26:18 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/5] PCI: Change the signature of pci_ext_cfg_avail function
+Message-Id: <20121030152618.511c41de.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+References: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/09/2012 04:31 PM, Rose, Gregory V wrote:
->> -----Original Message-----
->> From: Don Dutile [mailto:ddutile@redhat.com]
->> Sent: Tuesday, October 09, 2012 11:40 AM
->> To: Rose, Gregory V
->> Cc: Alexander Duyck; linux-pci@vger.kernel.org; bhelgaas@google.com;
->> yuvalmin@broadcom.com; bhutchings@solarflare.com; davem@davemloft.net
->> Subject: Re: [RFC v2] PCI: sysfs per device SRIOV control and status
->>
->> On 10/08/2012 11:44 AM, Greg Rose wrote:
->>> On Sat, 6 Oct 2012 11:21:00 -0700
->
-> [snip]
->
->>> In my opinion we shouldn't be having the endpoint device driver call
->>> the pci_enable_sriov() and pci_disable_sriov() functions as this
->>> implementation requires.  The pci bus driver should do that itself and
->>> then just notify the endpoint device driver of the action and, in the
->>> case of enabling VFs, tell it how many were enabled, with the num_vfs
->>> parameter.
->>>
->> I want to double-check this logic, but on first glance I agree for this
->> API...
->> But, until the PF driver's, param-based, 'max_vfs' interface is removed,
->> the driver will still have to have a code path that does the
->> enable/disable_sriov().
->
-> True, but those will be somewhat different code paths in our driver and I'm going to insert a message into the driver that lets the user know that using the 'max_vfs' module parameter is deprecated.  Eventually I'd like to get rid of it entirely when this new interface becomes common.
->
-Sounds like plan, i.e., removing stuff that may cause problems.. :)
 
->> Again, I agree it is flawed, as a bad driver not calling disable_sriov()
->> will leak resources and quickly fail other PCI (hotplug) ops (be they VFs
->> or PFs).
->> Q: what did you mean by 'and then just notify the endpoint device driver'
->> ?
->>      -- another/new api for pf drivers w/sriov support/device ??
->
-> No, I was thinking of a sequence like this:
->
-> 1) PCI bus driver notifies endpoint device driver that user requests<num_vfs>
-> 2) The endpoint driver processes the request and configures the HW to be ready for VFs coming on-line.
-> 3) The endpoint device driver returns the number of VFs it is able to create or else a negative value of some error code.
-> 4) The PCI bus driver sees that the notification/request is successful so it goes ahead and calls pci_enable_sriov() to enable the VFs.
->
-> This has the advantage of minimizing the amount of disruption in service to a minimum.  Also, it is how I'm handling it now in my experimental patches.  Everything is checked, configured and gotten ready and then the last thing I do before returning from sriov_enable_vfs() is call pci_enable_sriov().
->
-> That said, I suppose it is six of one and half a dozen of another except I like the approach I mention a little better because it forces the endpoint device driver to configure everything first successfully before enabling the VFs.  In the PCI bus driver if the call to pci_enable_sriov() fails then it can just quickly turn around and call the endpoint device driver to disable SR-IOV so that it will reconfigure itself to non SR-IOV operational mode.
->
-Well, there's all kind of fun that can still occur at pci_sriov_enable() time --
-not enough mmio resources is one of them.
-So, the above sounds like a reasonable change, and IMO, makes more sense
-to have the core code doing enable/disable & appropriate checking.
+PCI: change the signature of pci_ext_cfg_avail function
 
->>
->>> There is a good reason for this too. I asked you to change the return
->>> value of sriov_disable_vfs() to an int so that the driver could check
->>> if VFs are assigned and return an error.  But the more I think of I
->>> feel that is backwards.  This means that the system is at the mercy of
->>> the endpoint device driver to do the check for assigned VFs.  Badly
->>> written drivers might not do that check and then crash the system.
->>> Plus that means every driver has to write the same code to check for
->>> assigned VFs which could easily be put into the pci bus driver.
->>>
->> Isn't this code still needed when user-level unbind done, i.e., echo 1>
->> /sys/bus/pci/drivers/ixgbe/unbind
->
-> Oh yeah.  Since that's the case then the endpoint device drivers will still need to do the check, but it might be a good idea to go ahead and put the check into the PCI bus driver also.  System panics are bad and whatever we can do to avoid them is hence good.
->
-I get your type --- get it out of my driver... put it in the core!
-winner! :)  The issue is that bind/unbind is under pci/drivers/<blah>
-and not pci/devices/D:B:D.F/, so I have to find where to hook into bind/unbind
-so vf->is_assigned check can be done for PCI devices.
+The default implementation of pci_ext_cfg_avail and
+its only overridden function for x86 architecture doesn't
+use passed *pci_dev. This patch ommits the parameter of
+pci_ext_cfg_avail function.
 
->>
->> remove_id is another one, but bind/unbind the common path for
->> virtualization
->>
->>> If the pci bus driver were to check for assigned VFs then it could
->>> take steps to protect the system and not depend on dumb device driver
->>> writers such as yours truly to do it.
->>>
->>
->>
->>> I've pasted in the code below from the ixgbe driver that checks for
->>> assigned VFs.  The pci bus driver has access to all the necessary
->>> information for the check but it would need to get the VF device ID
->>> from the PF SR-IOV capability structure.
->>>
->> easy to do; already done&  in the vid/did of the vf's pci-dev structure.
->
-> OK, good deal.
->
-> I've finished some patches for the ixgbe driver and they are under internal review.  Testing turned out pretty well.  Hopefully they'll be ready for posting tomorrow afternoon since I'm gone Thursday and Friday.  They'll be based on your RFC v2 patch.  I don't expect many changes will be required for the next version of your patch.
->
-> - Greg
->
-Great!
-I'll work on re-doing the patch set to have just the two sysfs files
-as discussed above.
-We can make an incremental change to move the sriov_enable/disable since
-your patch has it ready to do just that.
+
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ arch/x86/pci/common.c   |    2 +-
+ drivers/acpi/pci_root.c |    2 +-
+ drivers/pci/pci.c       |    5 ++---
+ include/linux/pci.h     |    2 +-
+ 4 files changed, 5 insertions(+), 6 deletions(-)
+
+Index: pci/arch/x86/pci/common.c
+===================================================================
+--- pci.orig/arch/x86/pci/common.c
++++ pci/arch/x86/pci/common.c
+@@ -626,7 +626,7 @@ void pcibios_disable_device (struct pci_
+ 		pcibios_disable_irq(dev);
+ }
+ 
+-int pci_ext_cfg_avail(struct pci_dev *dev)
++int pci_ext_cfg_avail(void)
+ {
+ 	if (raw_pci_ext_ops)
+ 		return 1;
+Index: pci/drivers/acpi/pci_root.c
+===================================================================
+--- pci.orig/drivers/acpi/pci_root.c
++++ pci/drivers/acpi/pci_root.c
+@@ -564,7 +564,7 @@ static int __devinit acpi_pci_root_add(s
+ 		acpi_pci_bridge_scan(child);
+ 
+ 	/* Indicate support for various _OSC capabilities. */
+-	if (pci_ext_cfg_avail(root->bus->self))
++	if (pci_ext_cfg_avail())
+ 		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+ 	if (pcie_aspm_support_enabled())
+ 		flags |= OSC_ACTIVE_STATE_PWR_SUPPORT |
+Index: pci/drivers/pci/pci.c
+===================================================================
+--- pci.orig/drivers/pci/pci.c
++++ pci/drivers/pci/pci.c
+@@ -3833,14 +3833,13 @@ static void __devinit pci_no_domains(voi
+ }
+ 
+ /**
+- * pci_ext_cfg_enabled - can we access extended PCI config space?
+- * @dev: The PCI device of the root bridge.
++ * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+  * Returns 1 if we can access PCI extended config space (offsets
+  * greater than 0xff). This is the default implementation. Architecture
+  * implementations can override this.
+  */
+-int __weak pci_ext_cfg_avail(struct pci_dev *dev)
++int __weak pci_ext_cfg_avail(void)
+ {
+ 	return 1;
+ }
+Index: pci/include/linux/pci.h
+===================================================================
+--- pci.orig/include/linux/pci.h
++++ pci/include/linux/pci.h
+@@ -1623,7 +1623,7 @@ static inline void pci_mmcfg_early_init(
+ static inline void pci_mmcfg_late_init(void) { }
+ #endif
+ 
+-int pci_ext_cfg_avail(struct pci_dev *dev);
++int pci_ext_cfg_avail(void);
+ 
+ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
+ 
 
