@@ -1,148 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Gong Chen <gong.chen@linux.intel.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH v3 10/28] ACPIHP: implement utility functions to support system device hotplug
-Date: Sat,  6 Oct 2012 23:27:18 +0800
-Message-Id: <1349537256-21670-11-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-References: <1349537256-21670-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1050.oracle.com ([156.151.31.82]:50995 "EHLO
+	userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965022Ab2J3RpY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:45:24 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 4/8] PCI, ACPI: assign unassigned resource for hot add root bus
+Date: Tue, 30 Oct 2012 10:42:41 -0700
+Message-Id: <1351618965-16761-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements some utility functions to support system device hotplug.
+After we get hot-added ioapic registered.
+pci_enable_bridges will try to enable ioapic irq for pci bridges.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/acpi/hotplug/core.c |   77 +++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_hotplug.h |    9 +++++
- 2 files changed, 86 insertions(+)
+ drivers/acpi/pci_root.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
-index ffd3b54..ffc9e40 100644
---- a/drivers/acpi/hotplug/core.c
-+++ b/drivers/acpi/hotplug/core.c
-@@ -605,6 +605,83 @@ int acpihp_remove_device_list(struct klist *dev_list)
- }
- EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index bce469c..27adbfd 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -644,12 +644,19 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
  
-+bool acpihp_slot_present(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
++	if (system_state != SYSTEM_BOOTING)
++		pci_assign_unassigned_bus_resources(root->bus);
 +
-+	status = acpihp_slot_get_status(slot, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_SLOT_WARN(slot, "fails to get status.\n");
-+		return false;
-+	}
-+
-+	return !!(sta & ACPI_STA_DEVICE_PRESENT);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_present);
-+
-+bool acpihp_slot_powered(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
-+
-+	/* hotplug slot must implement _STA method */
-+	status = acpihp_slot_get_status(slot, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_SLOT_WARN(slot, "fails to get status.\n");
-+		return false;
-+	}
-+
-+	if ((sta & ACPI_STA_DEVICE_PRESENT) &&
-+	    ((sta & ACPI_STA_DEVICE_ENABLED) ||
-+	    (sta & ACPI_STA_DEVICE_FUNCTIONING)))
-+		return true;
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_powered);
-+
-+void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	slot->flags |= flags;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_set_flag);
-+
-+void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	slot->flags &= ~flags;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_clear_flag);
-+
-+u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	flags &= slot->flags;
-+	mutex_unlock(&slot->slot_mutex);
-+
-+	return flags;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_get_flag);
-+
-+void acpihp_slot_change_state(struct acpihp_slot *slot,
-+			      enum acpihp_slot_state state)
-+{
-+	if (state < ACPIHP_SLOT_STATE_UNKNOWN ||
-+	    state > ACPIHP_SLOT_STATE_MAX) {
-+		ACPIHP_SLOT_WARN(slot, "slot state %d is invalid.\n", state);
-+		BUG_ON(state);
-+	}
-+
-+	mutex_lock(&slot->slot_mutex);
-+	slot->state = state;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_change_state);
-+
- /* SYSFS interfaces */
- static ssize_t acpihp_slot_object_show(struct device *d,
- 		struct device_attribute *attr, char *buf)
-diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
-index 97febcb..0506f73 100644
---- a/include/acpi/acpi_hotplug.h
-+++ b/include/acpi/acpi_hotplug.h
-@@ -289,6 +289,15 @@ extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
- 				     struct device *dev);
- extern int acpihp_remove_device_list(struct klist *dev_list);
+ 	mutex_lock(&acpi_pci_root_lock);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->add)
+ 			driver->add(root);
+ 	mutex_unlock(&acpi_pci_root_lock);
  
-+/* Utility Functions */
-+extern bool acpihp_slot_present(struct acpihp_slot *slot);
-+extern bool acpihp_slot_powered(struct acpihp_slot *slot);
-+extern void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags);
-+extern void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags);
-+extern u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags);
-+extern void acpihp_slot_change_state(struct acpihp_slot *slot,
-+				     enum acpihp_slot_state state);
++	/* need to after hot-added ioapic is registered */
++	if (system_state != SYSTEM_BOOTING)
++		pci_enable_bridges(root->bus);
 +
- extern int acpihp_debug;
+ 	pci_bus_add_devices(root->bus);
  
- #define ACPIHP_WARN(fmt, ...) \
+ 	return 0;
 -- 
-1.7.9.5
+1.7.7
 
