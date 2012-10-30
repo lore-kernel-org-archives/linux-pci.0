@@ -1,68 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:35386 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752374Ab2JXU6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Oct 2012 16:58:02 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Huang Ying <ying.huang@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
-Date: Wed, 24 Oct 2012 23:01:55 +0200
-Message-ID: <3990336.eisiEt4Bt9@vostro.rjw.lan>
-In-Reply-To: <1351061654-8339-2-git-send-email-ying.huang@intel.com>
-References: <1351061654-8339-1-git-send-email-ying.huang@intel.com> <1351061654-8339-2-git-send-email-ying.huang@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:50101 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753742Ab2J3GZs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:25:48 -0400
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 988E83EE0C0
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 7E0DC45DE56
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 5772145DE5D
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 44A5B1DB804F
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:47 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id F1BCDE38003
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:25:46 +0900 (JST)
+Date: Tue, 30 Oct 2012 15:25:39 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 3/5] PCI,ACPI: Remove _PRT info when removing a host bridge
+Message-Id: <20121030152539.dad71d2b.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+References: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 24 of October 2012 14:54:14 Huang Ying wrote:
-> Some actions during shutdown need device to be in D0 state, such as
-> MSI shutdown etc, so resume device before shutdown.
-> 
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
+Author: Bjorn Helgaas <bhelgaas@google.com>
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+PCI/ACPI: Remove _PRT info when removing a host bridge
+    
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/acpi/pci_root.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> ---
->  drivers/pci/pci-driver.c |   12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
-> 
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	struct pci_driver *drv = pci_dev->driver;
->  
-> +	pm_runtime_resume(dev);
-> +
->  	if (drv && drv->shutdown)
->  		drv->shutdown(pci_dev);
->  	pci_msi_shutdown(pci_dev);
-> @@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
->  	 * continue to do DMA
->  	 */
->  	pci_disable_device(pci_dev);
-> -
-> -	/*
-> -	 * Devices may be enabled to wake up by runtime PM, but they need not
-> -	 * be supposed to wake up the system from its "power off" state (e.g.
-> -	 * ACPI S5).  Therefore disable wakeup for all devices that aren't
-> -	 * supposed to wake up the system at this point.  The state argument
-> -	 * will be ignored by pci_enable_wake().
-> -	 */
-> -	if (!device_may_wakeup(dev))
-> -		pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
->  }
->  
->  #ifdef CONFIG_PM
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Index: Bjorn-next-0925/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0925.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0925/drivers/acpi/pci_root.c
+@@ -671,6 +671,8 @@ static int acpi_pci_root_remove(struct a
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
++	acpi_pci_irq_del_prt(root->segment, root->secondary.start);
++
+ 	list_del(&root->node);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 	kfree(root);
+
