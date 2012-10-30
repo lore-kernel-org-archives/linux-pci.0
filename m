@@ -1,72 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:49965 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1422640Ab2JDQC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Oct 2012 12:02:26 -0400
-Message-ID: <506DB30F.2000704@sgi.com>
-Date: Thu, 4 Oct 2012 11:02:23 -0500
-From: Nathan Zimmer <nzimmer@sgi.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [PATCH] revert "PCI: log vendor/device ID always"
-References: <1349187780-25692-1-git-send-email-nzimmer@sgi.com> <CAErSpo7ZQEm9==nsGiH2c_ZG8LPP8MAA8M9xSPyWPtCW2EHUUQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7ZQEm9==nsGiH2c_ZG8LPP8MAA8M9xSPyWPtCW2EHUUQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 8/8] PCI, ACPI: remove acpi_root_driver in reserse order
+Date: Tue, 30 Oct 2012 10:42:45 -0700
+Message-Id: <1351618965-16761-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/2012 05:54 PM, Bjorn Helgaas wrote:
-> On Tue, Oct 2, 2012 at 8:23 AM, Nathan Zimmer <nzimmer@sgi.com> wrote:
->> Revert commit id 2c6413aee215a43b1f95e218067abcde50ccbc5e
->> On larger systems (256 cores+) with signifigant IO attached this single message
->> represents over 20% of the messages at boot.
-> Is this causing a problem?  The messages are at KERN_DEBUG, so they
-> shouldn't be going to the console by default anyway.
+aka stop acpi root driver in this sequence: acpiphp, iommu, ioapic.
 
-The problems is that it really does tend to overwhelm dmesg on large 
-systems.
-This causes two issues, one is it makes it harder to notice unexpected 
-messages, second it tends to push out more other messages.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-At many of our customer sites the log level is set to KERN_DEBUG. It 
-helps avoid reboots due to operator impatience.  Machines this large 
-take significantly longer then typical to boot and seeing the extra 
-messages reassures them that the kernel isn't hung.
-
-> I/O devices normally have at least one BAR, as well as some PME
-> messages, so a change like this won't affect them too much.  My guess
-> is that it's really the large number of CPUs, where we find all the
-> uncore/memory controller/etc stuff where this is a problem.  Those
-> devices don't have BARs, so
-> this line is probably the only information about them in dmesg.
-It certainly appears that this is the only line about them in dmesg.
-
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
->>
->> Signed-off-by: Nathan Zimmer <nzimmer@sgi.com>
->> ---
->>   drivers/pci/probe.c |    4 ++--
->>   1 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 9f8a6b7..a1add54 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1002,8 +1002,8 @@ int pci_setup_device(struct pci_dev *dev)
->>          dev->revision = class & 0xff;
->>          dev->class = class >> 8;                    /* upper 3 bytes */
->>
->> -       dev_printk(KERN_DEBUG, &dev->dev, "[%04x:%04x] type %02x class %#08x\n",
->> -                  dev->vendor, dev->device, dev->hdr_type, dev->class);
->> +       dev_dbg(&dev->dev, "[%04x:%04x] type %02x class %#08x\n",
->> +               dev->vendor, dev->device, dev->hdr_type, dev->class);
->>
->>          /* need to have dev->class ready */
->>          dev->cfg_size = pci_cfg_space_size(dev);
->> --
->> 1.6.0.2
->>
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index a27cbb57..012f40d 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -672,7 +672,7 @@ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ 	pci_stop_root_bus(root->bus);
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry(driver, &acpi_pci_drivers, node)
++	list_for_each_entry_reverse(driver, &acpi_pci_drivers, node)
+ 		if (driver->remove)
+ 			driver->remove(root);
+ 	mutex_unlock(&acpi_pci_root_lock);
+-- 
+1.7.7
 
