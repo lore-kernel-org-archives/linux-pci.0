@@ -1,61 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 0/7] PM / QoS: Support for PM QoS device flags
-Date: Mon, 08 Oct 2012 10:02:39 +0200
-Message-ID: <1413438.1MkXj8vjQK@vostro.rjw.lan>
-In-Reply-To: <201209282351.10663.rjw@sisk.pl>
-References: <201209282351.10663.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:54477 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343Ab2J3GV1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:21:27 -0400
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id C6A903EE0AE
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:21:25 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id AD28A45DE62
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:21:25 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 8F65B45DE5F
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:21:25 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 7A6FE1DB8041
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:21:25 +0900 (JST)
+Received: from m003.s.css.fujitsu.com (m003.s.css.fujitsu.com [10.23.4.33])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 279F31DB8040
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:21:25 +0900 (JST)
+Date: Tue, 30 Oct 2012 15:21:14 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Yinghai Lu <yinghai@kernel.org>
+Subject: [RFC PATCH 0/5] acpi,pci: disentangle ACPI-related code and
+ PCI-related code at hostbridge
+Message-Id: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+addition/removal code
+Message-Id: <20121030152114.f342e669.izumi.taku@jp.fujitsu.com>
+X-Mailer: Sylpheed 3.1.1 (GTK+ 2.10.14; i686-pc-mingw32)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Friday 28 of September 2012 23:51:10 Rafael J. Wysocki wrote:
-> 
-> The following patch series extends the existing device PM QoS core code to
-> support PM QoS flags representing binary (on/off) requirements, such as
-> whether or not power may be removed entirely from the device or whether
-> or not remote wakeup (i.e. signalling of external events while suspended)
-> should work for it.
-> 
-> [1/7] Prepare PM QoS device structure for adding more constraint types.
-> [2/7] Introduce request and constraint data types for PM QoS flags.
-> [3/7] Prepare struct dev_pm_qos_request for representing more request types. 
-> [4/7] Introduce device PM QoS flags support.
-> [5/7] Make it possible to expose PM QoS device flags to user space.
-> [6/7] PM / Domains: Check device PM QoS flags in pm_genpd_poweroff().
-> [7/7] PM / ACPI: Take device PM QoS flags into account.
-> 
-> The last two patches make the generic PM domains framework and ACPI / PCI,
-> respectively, take the PM QoS device flags introduced by patch [5/7] into
-> accont when making their decisions.
-> 
-> The changelogs describe the details, but if anything isn't clear, please let
-> me know.
+Hi all,
+ 
+    This patchset is to disentangle ACPI-related code and PCI-related code 
+    at hostbridge addition/removal code.    
+    This is based on the comment Bjorn suggested at
+        http://marc.info/?l=linux-pci&m=134825820111705&w=2
 
-Time for a real submission, it seems. :-)
-
-The changes since the previous iteration are addressed comments and a small
-optimization in patch [5/7] (it won't resume the device if the setting is not
-going to change in dev_pm_qos_update_flags()).
-
-Thanks,
-Rafael
-
-
+  * [PATCH 1/5] ACPI: Pass segment/bus to _PRT add/del so they don't depend on pci_bus  
+  * [PATCH 2/5] PCI,ACPI: Add _PRT interrupt routing info before enumerating devices
+  * [PATCH 3/5] PCI,ACPI: Remove _PRT info when removing a host bridge
+  * [PATCH 4/5] PCI: Change the signature of pci_ext_cfg_avail function
+  * [PATCH 5/5] PCI,ACPI: Requesting _OSC control before scanning pci tree in acpi_pci_root_add()
+  
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Best regards,
+Taku Izumi <izumi.taku@jp.fujitsu.com>
+
