@@ -1,39 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:61730 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754381Ab2JaMXk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 08:23:40 -0400
-Received: by mail-we0-f174.google.com with SMTP id t9so611194wey.19
-        for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 05:23:39 -0700 (PDT)
+Received: from mga02.intel.com ([134.134.136.20]:38334 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756283Ab2J3Ixd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Oct 2012 04:53:33 -0400
+Message-ID: <508F9588.5040105@intel.com>
+Date: Tue, 30 Oct 2012 16:53:28 +0800
+From: Aaron Lu <aaron.lu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <5090F723.3090103@gmail.com>
-References: <5090F723.3090103@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 31 Oct 2012 06:23:18 -0600
-Message-ID: <CAErSpo4sO9qrQdJLD6LxkrAKpzG+dbf9Oekv7PLLdXnZ0QQi2w@mail.gmail.com>
-Subject: Re: Linux and multy domain PCIe.
-To: fpaolo63 <fpaolo63@gmail.com>
-Cc: linux-pci@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>, Jean Pihet <j-pihet@ti.com>,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	mark gross <markgross@thegnar.org>
+Subject: Re: [RFD][PATCH 5/7] PM / QoS: Make it possible to expose PM QoS
+ device flags to user space
+References: <201209282351.10663.rjw@sisk.pl> <201209282355.31823.rjw@sisk.pl>
+In-Reply-To: <201209282355.31823.rjw@sisk.pl>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 31, 2012 at 4:02 AM, fpaolo63 <fpaolo63@gmail.com> wrote:
-> Hi guru,
->
-> I'm working on a multi socket intel xeon platform.
->
-> We have 2 sockets and each socket has a PCIe RootComplex, and we'd to
-> implement hw with 2 separated PCIe tree.
->
-> Can Linux kernel handle the 2 RC assigning a PCIe domain each one?
->
-> Do we need special BIOS in order to configure correctly the 2 sockets, QDPI
-> channel, MMIO and MMU?
->
-> Can some one point me to one example or documents?
+On 09/29/2012 05:55 AM, Rafael J. Wysocki wrote:
+> Define two device PM QoS flags, PM_QOS_FLAG_NO_POWER_OFF
+> and PM_QOS_FLAG_REMOTE_WAKEUP, and introduce routines
+> dev_pm_qos_expose_flags() and dev_pm_qos_hide_flags() allowing the
+> caller to expose those two flags to user space or to hide them
+> from it, respectively.
+> 
+> After the flags have been exposed, user space will see two
+> additional sysfs attributes, pm_qos_no_power_off and
+> pm_qos_remote_wakeup, under the device's /sys/devices/.../power/
+> directory.  Then, writing 1 to one of them will update the
+> PM QoS flags request owned by user space so that the corresponding
+> flag is requested to be set.  In turn, writing 0 to one of them
+> will cause the corresponding flag in the user space's request to
+> be cleared (however, the owners of the other PM QoS flags requests
+> for the same device may still request the flag to be set and it
+> may be effectively set even if user space doesn't request that).
+> 
+> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> ---
+>  Documentation/ABI/testing/sysfs-devices-power |   31 ++++
+>  drivers/base/power/power.h                    |    6 
+>  drivers/base/power/qos.c                      |  169 ++++++++++++++++++++------
+>  drivers/base/power/sysfs.c                    |   95 +++++++++++++-
+>  include/linux/pm.h                            |    1 
+>  include/linux/pm_qos.h                        |   26 ++++
+>  6 files changed, 280 insertions(+), 48 deletions(-)
+> 
+> Index: linux/drivers/base/power/qos.c
+> ===================================================================
+> --- linux.orig/drivers/base/power/qos.c
+> +++ linux/drivers/base/power/qos.c
+> @@ -40,6 +40,7 @@
+>  #include <linux/device.h>
+>  #include <linux/mutex.h>
+>  #include <linux/export.h>
+> +#include <linux/pm_runtime.h>
+>  
+>  #include "power.h"
+>  
+> @@ -322,6 +323,38 @@ int dev_pm_qos_add_request(struct device
+>  EXPORT_SYMBOL_GPL(dev_pm_qos_add_request);
+>  
+>  /**
+> + * __dev_pm_qos_update_request - Modify an existing device PM QoS request.
+> + * @req : PM QoS request to modify.
+> + * @new_value: New value to request.
+> + */
+> +int __dev_pm_qos_update_request(struct dev_pm_qos_request *req, s32 new_value)
+> +{
+> +	s32 curr_value;
+> +	int ret = 0;
+> +
+> +	if (!req->dev->power.qos) {
+> +		ret = -ENODEV;
+> +		goto out;
+> +	}
+> +
+> +	switch(req->type) {
+> +	case DEV_PM_QOS_LATENCY:
+> +		curr_value = req->data.pnode.prio;
+> +		break;
+> +	case DEV_PM_QOS_FLAGS:
+> +		curr_value = req->data.flr.flags;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (curr_value != new_value)
+> +		ret = apply_constraint(req, PM_QOS_UPDATE_REQ, new_value);
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+>   * dev_pm_qos_update_request - modifies an existing qos request
+>   * @req : handle to list element holding a dev_pm_qos request to use
+>   * @new_value: defines the qos request
+> @@ -336,11 +369,9 @@ EXPORT_SYMBOL_GPL(dev_pm_qos_add_request
+>   * -EINVAL in case of wrong parameters, -ENODEV if the device has been
+>   * removed from the system
+>   */
+> -int dev_pm_qos_update_request(struct dev_pm_qos_request *req,
+> -			      s32 new_value)
+> +int dev_pm_qos_update_request(struct dev_pm_qos_request *req, s32 new_value)
+>  {
+> -	s32 curr_value;
+> -	int ret = 0;
+> +	int ret;
+>  
+>  	if (!req) /*guard against callers passing in null */
+>  		return -EINVAL;
+> @@ -350,29 +381,9 @@ int dev_pm_qos_update_request(struct dev
+>  		return -EINVAL;
+>  
+>  	mutex_lock(&dev_pm_qos_mtx);
+> -
+> -	if (!req->dev->power.qos) {
+> -		ret = -ENODEV;
+> -		goto out;
+> -	}
+> -
+> -	switch(req->type) {
+> -	case DEV_PM_QOS_LATENCY:
+> -		curr_value = req->data.pnode.prio;
+> -		break;
+> -	case DEV_PM_QOS_FLAGS:
+> -		curr_value = req->data.flr.flags;
+> -		break;
+> -	default:
+> -		ret = -EINVAL;
+> -		goto out;
+> -	}
+> -
+> -	if (curr_value != new_value)
+> -		ret = apply_constraint(req, PM_QOS_UPDATE_REQ, new_value);
+> -
+> - out:
+> +	__dev_pm_qos_update_request(req, new_value);
 
-Yes, Linux supports multiple PCI domains (also known as PCI segment groups).
+You forgot to assign the return value here.
 
-On x86, the BIOS should provide a ACPI PNP0A08/PNP0A03 device for each
-root complex.  See drivers/acpi/pci_root.c for details.
+Thanks,
+Aaron
+
+>  	mutex_unlock(&dev_pm_qos_mtx);
+> +
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(dev_pm_qos_update_request);
+> @@ -533,10 +544,19 @@ int dev_pm_qos_add_ancestor_request(stru
+>  EXPORT_SYMBOL_GPL(dev_pm_qos_add_ancestor_request);
