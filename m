@@ -1,331 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:33367 "EHLO
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:50027 "EHLO
 	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755659Ab2JPE2v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 00:28:51 -0400
-Message-ID: <507CE14A.2020605@jp.fujitsu.com>
-Date: Tue, 16 Oct 2012 13:23:38 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-MIME-Version: 1.0
-To: yinghai@kernel.org
-CC: martin.wilck@ts.fujitsu.com, linux-pci@vger.kernel.org,
-	x86@kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, hbabu@us.ibm.com,
-	andi@firstfloor.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, mingo@redhat.com, vgoyal@redhat.com,
-	khalid@gonehiking.org
-Subject: Re: [PATCH v4 1/2] x86, pci: Reset PCIe devices at boot time
-References: <20121015065516.2832.42378.sendpatchset@indoh> <20121015065526.2832.90867.sendpatchset@indoh> <CAE9FiQXKjNU4Sasj4LmiFiNNu9quGgKAdW3ciVnXggoWZiYXJA@mail.gmail.com>
-In-Reply-To: <CAE9FiQXKjNU4Sasj4LmiFiNNu9quGgKAdW3ciVnXggoWZiYXJA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	with ESMTP id S1753343Ab2J3GYM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:24:12 -0400
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 2EF593EE0C3
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:10 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1379845DE50
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:10 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id F16F045DD78
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:09 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id E22381DB803E
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:09 +0900 (JST)
+Received: from m0000.s.css.fujitsu.com (m0000.s.css.fujitsu.com [10.23.4.183])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 9C0231DB802C
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:24:09 +0900 (JST)
+Date: Tue, 30 Oct 2012 15:24:06 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/5] ACPI: Pass segment/bus to _PRT add/del so they don't
+ depend on pci_bus
+Message-Id: <20121030152406.3c27d022.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+References: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/16 3:36), Yinghai Lu wrote:
-> On Mon, Oct 15, 2012 at 12:00 AM, Takao Indoh
-> <indou.takao@jp.fujitsu.com> wrote:
->> This patch resets PCIe devices at boot time by hot reset when
->> "reset_devices" is specified.
->
-> how about pci devices that domain_nr is not zero ?
+Author: Bjorn Helgaas <bhelgaas@google.com>
 
-This patch does not support multiple domains yet.
+ACPI: Pass segment/bus to _PRT add/del so they don't depend on pci_bus
+    
+This effectively reverts 859a3f86ca8 ("ACPI: simplify
+acpi_pci_irq_add_prt() API") and d9efae3688a ("ACPI: simplify
+acpi_pci_irq_del_prt() API").
+    
+The reason is to disentangle these routines from the struct pci_bus.
+We want to be able to add the _PRT before the struct pci_bus
+exists, and delete the _PRT after we've removed the pci_bus.
+    
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/acpi/pci_bind.c     |   10 +++++-----
+ drivers/acpi/pci_irq.c      |   17 ++++++++---------
+ drivers/acpi/pci_root.c     |    3 ++-
+ include/acpi/acpi_drivers.h |    4 ++--
+ 4 files changed, 17 insertions(+), 17 deletions(-)
 
->>
->> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->> ---
->>   arch/x86/include/asm/pci-direct.h |    1
->>   arch/x86/kernel/setup.c           |    3
->>   arch/x86/pci/early.c              |  344 ++++++++++++++++++++++++++++
->>   include/linux/pci.h               |    2
->>   init/main.c                       |    4
->>   5 files changed, 352 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
->> index b1e7a45..de30db2 100644
->> --- a/arch/x86/include/asm/pci-direct.h
->> +++ b/arch/x86/include/asm/pci-direct.h
->> @@ -18,4 +18,5 @@ extern int early_pci_allowed(void);
->>   extern unsigned int pci_early_dump_regs;
->>   extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
->>   extern void early_dump_pci_devices(void);
->> +extern void early_reset_pcie_devices(void);
->>   #endif /* _ASM_X86_PCI_DIRECT_H */
->> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
->> index a2bb18e..73d3425 100644
->> --- a/arch/x86/kernel/setup.c
->> +++ b/arch/x86/kernel/setup.c
->> @@ -987,6 +987,9 @@ void __init setup_arch(char **cmdline_p)
->>          generic_apic_probe();
->>
->>          early_quirks();
->> +#ifdef CONFIG_PCI
->> +       early_reset_pcie_devices();
->> +#endif
->>
->>          /*
->>           * Read APIC and some other early information from ACPI tables.
->> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
->> index d1067d5..683b30f 100644
->> --- a/arch/x86/pci/early.c
->> +++ b/arch/x86/pci/early.c
->> @@ -1,5 +1,6 @@
->>   #include <linux/kernel.h>
->>   #include <linux/pci.h>
->> +#include <linux/bootmem.h>
->>   #include <asm/pci-direct.h>
->>   #include <asm/io.h>
->>   #include <asm/pci_x86.h>
->> @@ -109,3 +110,346 @@ void early_dump_pci_devices(void)
->>                  }
->>          }
->>   }
->> +
->> +#define PCI_EXP_SAVE_REGS      7
->> +#define pcie_cap_has_devctl(type, flags)       1
->> +#define pcie_cap_has_lnkctl(type, flags)               \
->> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
->> +                (type == PCI_EXP_TYPE_ROOT_PORT ||     \
->> +                 type == PCI_EXP_TYPE_ENDPOINT ||      \
->> +                 type == PCI_EXP_TYPE_LEG_END))
->> +#define pcie_cap_has_sltctl(type, flags)               \
->> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
->> +                ((type == PCI_EXP_TYPE_ROOT_PORT) ||   \
->> +                 (type == PCI_EXP_TYPE_DOWNSTREAM &&   \
->> +                  (flags & PCI_EXP_FLAGS_SLOT))))
->> +#define pcie_cap_has_rtctl(type, flags)                        \
->> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
->> +                (type == PCI_EXP_TYPE_ROOT_PORT ||     \
->> +                 type == PCI_EXP_TYPE_RC_EC))
->> +
->> +struct save_config {
->> +       u32 pci[16];
->> +       u16 pcie[PCI_EXP_SAVE_REGS];
->> +};
->> +
->> +struct pcie_dev {
->> +       int cap;   /* position of PCI Express capability */
->> +       int flags; /* PCI_EXP_FLAGS */
->> +       struct save_config save; /* saved configration register */
->> +};
->> +
->> +struct pcie_port {
->> +       struct list_head dev;
->> +       u8 secondary;
->> +       struct pcie_dev child[PCI_MAX_FUNCTIONS];
->> +};
->> +
->> +static LIST_HEAD(device_list);
->> +static void __init pci_udelay(int loops)
->> +{
->> +       while (loops--) {
->> +               /* Approximately 1 us */
->> +               native_io_delay();
->> +       }
->> +}
->> +
->> +/* Derived from drivers/pci/pci.c */
->> +#define PCI_FIND_CAP_TTL       48
->> +static int __init __pci_find_next_cap_ttl(u8 bus, u8 slot, u8 func,
->> +                                         u8 pos, int cap, int *ttl)
->> +{
->> +       u8 id;
->> +
->> +       while ((*ttl)--) {
->> +               pos = read_pci_config_byte(bus, slot, func, pos);
->> +               if (pos < 0x40)
->> +                       break;
->> +               pos &= ~3;
->> +               id = read_pci_config_byte(bus, slot, func,
->> +                                       pos + PCI_CAP_LIST_ID);
->> +               if (id == 0xff)
->> +                       break;
->> +               if (id == cap)
->> +                       return pos;
->> +               pos += PCI_CAP_LIST_NEXT;
->> +       }
->> +       return 0;
->> +}
->> +
->> +static int __init __pci_find_next_cap(u8 bus, u8 slot, u8 func, u8 pos, int cap)
->> +{
->> +       int ttl = PCI_FIND_CAP_TTL;
->> +
->> +       return __pci_find_next_cap_ttl(bus, slot, func, pos, cap, &ttl);
->> +}
->> +
->> +static int __init __pci_bus_find_cap_start(u8 bus, u8 slot, u8 func,
->> +                                          u8 hdr_type)
->> +{
->> +       u16 status;
->> +
->> +       status = read_pci_config_16(bus, slot, func, PCI_STATUS);
->> +       if (!(status & PCI_STATUS_CAP_LIST))
->> +               return 0;
->> +
->> +       switch (hdr_type) {
->> +       case PCI_HEADER_TYPE_NORMAL:
->> +       case PCI_HEADER_TYPE_BRIDGE:
->> +               return PCI_CAPABILITY_LIST;
->> +       case PCI_HEADER_TYPE_CARDBUS:
->> +               return PCI_CB_CAPABILITY_LIST;
->> +       default:
->> +               return 0;
->> +       }
->> +
->> +       return 0;
->> +}
->> +
->> +static int __init early_pci_find_capability(u8 bus, u8 slot, u8 func, int cap)
->> +{
->> +       int pos;
->> +       u8 type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
->> +
->> +       pos = __pci_bus_find_cap_start(bus, slot, func, type & 0x7f);
->> +       if (pos)
->> +               pos = __pci_find_next_cap(bus, slot, func, pos, cap);
->> +
->> +       return pos;
->> +}
->> +
->> +static void __init do_reset(u8 bus, u8 slot, u8 func)
->> +{
->> +       u16 ctrl;
->> +
->> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
->> +
->> +       /* Assert Secondary Bus Reset */
->> +       ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
->> +       ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
->> +       write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->> +
->> +       /*
->> +        * PCIe spec requires software to ensure a minimum reset duration
->> +        * (Trst == 1ms). We have here 5ms safety margin because pci_udelay is
->> +        * not precise.
->> +        */
->> +       pci_udelay(5000);
->> +
->> +       /* De-assert Secondary Bus Reset */
->> +       ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
->> +       write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->> +}
->> +
->> +static void __init save_state(unsigned bus, unsigned slot, unsigned func,
->> +               struct pcie_dev *dev)
->> +{
->> +       int i;
->> +       int pcie, flags, pcie_type;
->> +       struct save_config *save;
->> +
->> +       pcie = dev->cap;
->> +       flags = dev->flags;
->> +       pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->> +       save = &dev->save;
->> +
->> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
->> +
->> +       for (i = 0; i < 16; i++)
->> +               save->pci[i] = read_pci_config(bus, slot, func, i * 4);
->> +       i = 0;
->> +       if (pcie_cap_has_devctl(pcie_type, flags))
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_DEVCTL);
->> +       if (pcie_cap_has_lnkctl(pcie_type, flags))
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_LNKCTL);
->> +       if (pcie_cap_has_sltctl(pcie_type, flags))
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_SLTCTL);
->> +       if (pcie_cap_has_rtctl(pcie_type, flags))
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_RTCTL);
->> +
->> +       if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_DEVCTL2);
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_LNKCTL2);
->> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->> +                                                     pcie + PCI_EXP_SLTCTL2);
->> +       }
->> +}
->> +
->> +static void __init restore_state(unsigned bus, unsigned slot, unsigned func,
->> +               struct pcie_dev *dev)
->> +{
->> +       int i = 0;
->> +       int pcie, flags, pcie_type;
->> +       struct save_config *save;
->> +
->> +       pcie = dev->cap;
->> +       flags = dev->flags;
->> +       pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->> +       save = &dev->save;
->> +
->> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
->> +              bus, slot, func);
->> +
->> +       if (pcie_cap_has_devctl(pcie_type, flags))
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_DEVCTL, save->pcie[i++]);
->> +       if (pcie_cap_has_lnkctl(pcie_type, flags))
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_LNKCTL, save->pcie[i++]);
->> +       if (pcie_cap_has_sltctl(pcie_type, flags))
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_SLTCTL, save->pcie[i++]);
->> +       if (pcie_cap_has_rtctl(pcie_type, flags))
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_RTCTL, save->pcie[i++]);
->> +
->> +       if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_DEVCTL2, save->pcie[i++]);
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_LNKCTL2, save->pcie[i++]);
->> +               write_pci_config_16(bus, slot, func,
->> +                                   pcie + PCI_EXP_SLTCTL2, save->pcie[i++]);
->> +       }
->> +
->> +       for (i = 15; i >= 0; i--)
->> +               write_pci_config(bus, slot, func, i * 4, save->pci[i]);
->> +}
->
-> do you have to pass bus/slot/func and use read/pci_config directly ?
->
-> I had one patchset that use dummy pci device and reuse existing late quirk code
-> in early_quirk to do usb handoff early.
->
-> please check
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-x86-early-quirk-usb
->
-> 678a023: x86: usb handoff in early_quirk
-> 2d418d8: pci, usb: Make usb handoff func all take base remapping
-> d9bd1ad: x86, pci: add dummy pci device for early stage
-> de38757: x86: early_quirk check all bus/dev/func in domain 0
-> 325cc7a: make msleep to do mdelay before scheduler is running
-> eec78a4: x86: set percpu cpu_info lpj to default
-> 52ebec4: x86, pci: early dump skip device the same way as later probe code
->
-> if that could help.
-> you may reuse some later functions that take pci_dev as parameters.
-d9bd1ad looks very useful for my patch. Thanks for the information.
-What is the status of this patch? Already got in tip tree or
-somewhere?
-
-> also mdelay should work early...
-mdelay does not work in early.c as far as I tested. Maybe
-it works after calibration.
-
-> and use early_quirk instead add another calling in setup.c
-I think this reset code should not be added to early_quirk.
-In my understanding "quirk" is used to avoid problems of specific
-hardware.
-
-Thanks,
-Takao Indoh
+Index: Bjorn-next-0925/drivers/acpi/pci_bind.c
+===================================================================
+--- Bjorn-next-0925.orig/drivers/acpi/pci_bind.c
++++ Bjorn-next-0925/drivers/acpi/pci_bind.c
+@@ -49,7 +49,7 @@ static int acpi_pci_unbind(struct acpi_d
+ 	if (!dev->subordinate)
+ 		goto out;
+ 
+-	acpi_pci_irq_del_prt(dev->subordinate);
++	acpi_pci_irq_del_prt(pci_domain_nr(dev->bus), dev->subordinate->number);
+ 
+ 	device->ops.bind = NULL;
+ 	device->ops.unbind = NULL;
+@@ -63,7 +63,7 @@ static int acpi_pci_bind(struct acpi_dev
+ {
+ 	acpi_status status;
+ 	acpi_handle handle;
+-	struct pci_bus *bus;
++	unsigned char bus;
+ 	struct pci_dev *dev;
+ 
+ 	dev = acpi_get_pci_dev(device->handle);
+@@ -100,11 +100,11 @@ static int acpi_pci_bind(struct acpi_dev
+ 		goto out;
+ 
+ 	if (dev->subordinate)
+-		bus = dev->subordinate;
++		bus = dev->subordinate->number;
+ 	else
+-		bus = dev->bus;
++		bus = dev->bus->number;
+ 
+-	acpi_pci_irq_add_prt(device->handle, bus);
++	acpi_pci_irq_add_prt(device->handle, pci_domain_nr(dev->bus), bus);
+ 
+ out:
+ 	pci_dev_put(dev);
+Index: Bjorn-next-0925/drivers/acpi/pci_irq.c
+===================================================================
+--- Bjorn-next-0925.orig/drivers/acpi/pci_irq.c
++++ Bjorn-next-0925/drivers/acpi/pci_irq.c
+@@ -184,7 +184,7 @@ static void do_prt_fixups(struct acpi_pr
+ 	}
+ }
+ 
+-static int acpi_pci_irq_add_entry(acpi_handle handle, struct pci_bus *bus,
++static int acpi_pci_irq_add_entry(acpi_handle handle, int segment, int bus,
+ 				  struct acpi_pci_routing_table *prt)
+ {
+ 	struct acpi_prt_entry *entry;
+@@ -198,8 +198,8 @@ static int acpi_pci_irq_add_entry(acpi_h
+ 	 * 1=INTA, 2=INTB.  We use the PCI encoding throughout, so convert
+ 	 * it here.
+ 	 */
+-	entry->id.segment = pci_domain_nr(bus);
+-	entry->id.bus = bus->number;
++	entry->id.segment = segment;
++	entry->id.bus = bus;
+ 	entry->id.device = (prt->address >> 16) & 0xFFFF;
+ 	entry->pin = prt->pin + 1;
+ 
+@@ -244,7 +244,7 @@ static int acpi_pci_irq_add_entry(acpi_h
+ 	return 0;
+ }
+ 
+-int acpi_pci_irq_add_prt(acpi_handle handle, struct pci_bus *bus)
++int acpi_pci_irq_add_prt(acpi_handle handle, int segment, int bus)
+ {
+ 	acpi_status status;
+ 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+@@ -273,7 +273,7 @@ int acpi_pci_irq_add_prt(acpi_handle han
+ 
+ 	entry = buffer.pointer;
+ 	while (entry && (entry->length > 0)) {
+-		acpi_pci_irq_add_entry(handle, bus, entry);
++		acpi_pci_irq_add_entry(handle, segment, bus, entry);
+ 		entry = (struct acpi_pci_routing_table *)
+ 		    ((unsigned long)entry + entry->length);
+ 	}
+@@ -282,17 +282,16 @@ int acpi_pci_irq_add_prt(acpi_handle han
+ 	return 0;
+ }
+ 
+-void acpi_pci_irq_del_prt(struct pci_bus *bus)
++void acpi_pci_irq_del_prt(int segment, int bus)
+ {
+ 	struct acpi_prt_entry *entry, *tmp;
+ 
+ 	printk(KERN_DEBUG
+ 	       "ACPI: Delete PCI Interrupt Routing Table for %04x:%02x\n",
+-	       pci_domain_nr(bus), bus->number);
++	       segment, bus);
+ 	spin_lock(&acpi_prt_lock);
+ 	list_for_each_entry_safe(entry, tmp, &acpi_prt_list, list) {
+-		if (pci_domain_nr(bus) == entry->id.segment
+-			&& bus->number == entry->id.bus) {
++		if (segment == entry->id.segment && bus == entry->id.bus) {
+ 			list_del(&entry->list);
+ 			kfree(entry);
+ 		}
+Index: Bjorn-next-0925/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0925.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0925/drivers/acpi/pci_root.c
+@@ -554,7 +554,8 @@ static int __devinit acpi_pci_root_add(s
+ 	 */
+ 	status = acpi_get_handle(device->handle, METHOD_NAME__PRT, &handle);
+ 	if (ACPI_SUCCESS(status))
+-		result = acpi_pci_irq_add_prt(device->handle, root->bus);
++		result = acpi_pci_irq_add_prt(device->handle, root->segment,
++					      root->secondary.start);
+ 
+ 	/*
+ 	 * Scan and bind all _ADR-Based Devices
+Index: Bjorn-next-0925/include/acpi/acpi_drivers.h
+===================================================================
+--- Bjorn-next-0925.orig/include/acpi/acpi_drivers.h
++++ Bjorn-next-0925/include/acpi/acpi_drivers.h
+@@ -92,8 +92,8 @@ int acpi_pci_link_free_irq(acpi_handle h
+ 
+ /* ACPI PCI Interrupt Routing (pci_irq.c) */
+ 
+-int acpi_pci_irq_add_prt(acpi_handle handle, struct pci_bus *bus);
+-void acpi_pci_irq_del_prt(struct pci_bus *bus);
++int acpi_pci_irq_add_prt(acpi_handle handle, int segment, int bus);
++void acpi_pci_irq_del_prt(int segment, int bus);
+ 
+ /* ACPI PCI Device Binding (pci_bind.c) */
+ 
 
