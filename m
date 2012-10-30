@@ -1,237 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp10.uk.ibm.com ([195.75.94.106]:56886 "EHLO
-	e06smtp10.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742Ab2JaWGH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 18:06:07 -0400
-Received: from /spool/local
-	by e06smtp10.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <arnd@arndb.de>;
-	Wed, 31 Oct 2012 22:06:05 -0000
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by b06cxnps4074.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q9VM5tsu61603946
-	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 22:05:55 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (localhost.localdomain [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q9VM61Tm010174
-	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 16:06:02 -0600
-From: Arnd Bergmann <arnd@arndb.de>
-To: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH 04/15] SPEAr13xx: Add PCIe Root Complex driver support
-Date: Wed, 31 Oct 2012 22:00:59 +0000
-Cc: Shiraz HASHIM <shiraz.hashim@st.com>,
-	"viresh.linux@gmail.com" <viresh.linux@gmail.com>,
-	"spear-devel" <spear-devel@list.st.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"olof@lixom.net" <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <cover.1351492562.git.pratyush.anand@st.com> <201210302220.23690.arnd@arndb.de> <50910A64.7040306@st.com>
-In-Reply-To: <50910A64.7040306@st.com>
+Received: from mail.mev.co.uk ([62.49.15.74]:51472 "EHLO mail.mev.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759202Ab2J3LDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Oct 2012 07:03:39 -0400
+Message-ID: <508FB3FC.4060001@mev.co.uk>
+Date: Tue, 30 Oct 2012 11:03:24 +0000
+From: Ian Abbott <abbotti@mev.co.uk>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201210312200.59324.arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Ian Abbott <ian.abbott@mev.co.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/2] PCI: add workaround for PLX PCI 9050 bug
+References: <1351521618-6818-1-git-send-email-abbotti@mev.co.uk> <CAErSpo7mOxU=5u_-kehBnPU0Hr0thY8uZk6CXvp3kUbaqgKs7g@mail.gmail.com> <508F8969.8030309@mev.co.uk>
+In-Reply-To: <508F8969.8030309@mev.co.uk>
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 31 October 2012, Pratyush Anand wrote:
-> On 10/31/2012 3:50 AM, Arnd Bergmann wrote:
-> > On Monday 29 October 2012, Pratyush Anand wrote:
-> >> SPEAr13xx has dual mode PCIe controller which can be used as Root
-> >> Complex as well as Endpoint. This driver supports RC mode of the
-> >> controller.
-> >>
-> >> If CONFIG_PCI_MSI is defined then support of MSI interrupt for
-> >> downstream  PCIe devices will be enabled.
-> >>
-> >> If CONFIG_PM is defined then it supports suspend/resume functionality.
-> >
-> > I think I've seen the same hardware before used with another driver.
-> > IMHO we should really make sure this does not get duplicated again and
-> > move this stuff to a new subdirectory drivers/pci/host. We don't yet have
-> > a completely architecture independent way of defining a PCIe root complex,
-> > but we're getting there and given of how many ARM implementations we have,
-> > we can just as well start with this one and adapt it to another arch if
-> > necesary.
-> >
-> 
-> Yes, I too wanted to put it into drivers/pci/host. But, still it would 
-> be ARCH (arm) dependent, until we have a common solution for all 
-> architecture. Let me know, if I can put it into drivers/pci/host even if 
-> it works initially for ARM only.
+On 2012-10-30 08:01, Ian Abbott wrote:
+> On 30/10/12 03:13, Bjorn Helgaas wrote:
+>> On Mon, Oct 29, 2012 at 8:40 AM, Ian Abbott <abbotti@mev.co.uk> wrote:
+>>> The PLX PCI 9050 PCI Target bridge controller has a bug that prevents
+>>> its local configuration registers being read through BAR0 (memory) or
+>>> BAR1 (i/o) if the base address lies on an odd 128-byte boundary, i.e. if
+>>> bit 7 of the base address is non-zero.  This bug is described in the PCI
+>>> 9050 errata list, version 1.4, May 2005.  It was fixed in the
+>>> pin-compatible PCI 9052, which can be distinguished from the PCI 9050 by
+>>> checking the revision in the PCI header, which is hard-coded for these
+>>> chips.
+>>>
+>>> Workaround the problem by re-allocating the affected regions to a
+>>> 256-byte boundary.  Note that BAR0 and/or BAR1 may have been disabled
+>>> (size 0) during initialization of the PCI chip when its configuration is
+>>> read from a serial EEPROM.
+>>>
+>>> Currently, the fix-up has only been used for devices with the default
+>>> vendor and device ID of the PLX PCI 9050.  The PCI 9052 shares the same
+>>> default device ID as the PCI 9050 but they have different PCI revision
+>>> codes.
+>>>
+>>> Signed-off-by: Ian Abbott <abbotti@mev.co.uk>
+>>> ---
+>>>    drivers/pci/quirks.c | 25 +++++++++++++++++++++++++
+>>>    1 file changed, 25 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>> index 7a451ff..7e6be56 100644
+>>> --- a/drivers/pci/quirks.c
+>>> +++ b/drivers/pci/quirks.c
+>>> @@ -1790,6 +1790,31 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TOSHIBA_2,
+>>>                            PCI_DEVICE_ID_TOSHIBA_TC86C001_IDE,
+>>>                            quirk_tc86c001_ide);
+>>>
+>>> +/*
+>>> + * PLX PCI 9050 PCI Target bridge controller has an errata that prevents the
+>>> + * local configuration registers accessible via BAR0 (memory) or BAR1 (i/o)
+>>> + * being read correctly if bit 7 of the base address is set.
+>>> + * The BAR0 or BAR1 region may be disabled (size 0) or enabled (size 128).
+>>> + * Re-allocate the regions to a 256-byte boundary if necessary.
+>>> + */
+>>> +static void __devinit quirk_plx_pci9050(struct pci_dev *dev)
+>>> +{
+>>> +       unsigned int bar;
+>>> +
+>>> +       /* Fixed in revision 2 (PCI 9052). */
+>>> +       if (dev->revision >= 2)
+>>> +               return;
+>>> +       for (bar = 0; bar <= 1; bar++)
+>>> +               if (pci_resource_len(dev, bar) == 0x80 &&
+>>> +                   (pci_resource_start(dev, bar) & 0x80)) {
+>>> +                       struct resource *r = &dev->resource[bar];
+>>> +                       r->start = 0;
+>>> +                       r->end = 0xff;
+>>
+>> I assume the intent here is to make these BARs "unassigned" so they
+>> will be reassigned later?  We don't yet have a clean generic way of
+>> indicating "unassigned," so "r->start = 0" is the best we can do for
+>> now.
+>
+> I more-or-less copied the method from quirk_tc86c001_ide().  I don't
+> have any prior experience with writing PCI quirks, so I don't know if
+> this is the best way to do it!  All I really care about is that these
+> BARs don't have bit 7 set.
+>
+>> I think it'd be nice to have a dev_info() here to explain what's going
+>> on.  Otherwise, the dmesg will be a bit mysterious.
+>
+> OK, I'll add that in the next version of this patch.
 
+I've added a dev_info() on my local system that I'll submit in version 2 
+of the patch later but first I thought I'd show the dmesg output I get 
+with this patch:
 
-This is ultimately up to Bjorn Helgaas as the PCI maintainer. I think
-everybody would prefer to have an architecture independent interface between
-PCI hosts and platform specific code, and we are progressing towards that
-goal. I think it would be worthwhile to have this code already in
-drivers/pci while it's still ARM specific, and then remove the ARM bits
-over time by replacing them with generic interfaces as we get there.
+pci 0000:01:08.0: [14dc:0004] type 00 class 0x068000
+pci 0000:01:08.0: reg 14: [io  0xd400-0xd47f]
+pci 0000:01:08.0: reg 18: [io  0xd000-0xd007]
+pci 0000:01:08.0: reg 1c: [io  0xcc00-0xcc07]
+pci 0000:01:08.0: Re-allocating PLX PCI 9050 BAR 1 to avoid 0x80 
+boundary bug
 
-> 
-> >> +struct pcie_port {
-> >> +	u8			controller;
-> >> +	u8			root_bus_nr;
-> >> +	void __iomem		*dbi_base;
-> >> +	void __iomem		*va_dbi_base;
-> >> +	void __iomem		*app_base;
-> >> +	void __iomem		*va_app_base;
-> >> +	void __iomem		*base;
-> >> +	void __iomem		*phy_base;
-> >> +	void __iomem		*va_phy_base;
-> >> +	void __iomem		*cfg0_base;
-> >> +	void __iomem		*va_cfg0_base;
-> >> +	void __iomem		*cfg1_base;
-> >> +	void __iomem		*va_cfg1_base;
-> >> +	void __iomem		*mem_base;
-> >> +	void __iomem		*io_base;
-> >> +	spinlock_t		conf_lock;
-> >> +	char			mem_space_name[16];
-> >> +	char			io_space_name[16];
-> >> +	struct resource		res[2];
-> >> +	struct pcie_port_info	config;
-> >> +	struct list_head	next;
-> >> +	struct clk		*clk;
-> >> +	int			irq;
-> >> +	int			virt_irq_base;
-> >> +	int			susp_state;
-> >> +};
-> >
-> > Can you explain why you need a total of 13 virtual memory areas?
-> >
-> 
-> Ah, its not 13, Its just 5 all va_xxxx.
-> Probably, I have wrongly put __iomem annotation  with physical addresses 
-> too. I will correct. Will keep physical address as normal void *.
+That last message is the one I added locally.  The vendor and device ID 
+in the first message is different than the ones I'm applying in these 
+patches; it's just a local change.  You may also notice that BAR 1 (reg 
+14) doesn't have bit 7 set to 1, so I had to temporarily disable that 
+check in the code to test the re-allocation mechanism.  This particular 
+device has BAR 0 (reg 10) disabled (size 0) but it would normally be a 
+memory region of size 128.
 
-Physical addresses should not be pointers at all, but they should be
-phys_addr_t. If you have a system with LPAE enabled, the physical
-address space may be 64 bit long, so pointers don't work on that.
+Resetting the region's start address to 0 had some knock on effects that 
+I'm a bit concerned about:
 
-> >> +static struct list_head	pcie_port_list;
-> >
-> > I'm pretty sure you don't need your own list of ports, since we already enumerate the
-> > ports in the PCI code.
-> >
-> 
-> This pcie_port_list is list of private data (struct pcie_port). 
-> Callbacks defined in struct hw_pci such as setup, scan etc are called 
-> with first argument as controller number. Now other option could have 
-> been to use a simple array of struct pcie_port[MAX_PORT_NUM], as other 
-> platforms has used. But I thought to keep list as better option, so that 
-> we are not dependent on MAX_PORT_NUM.
+...
+pnp 00:02: [io  0x0010-0x001f]
+pnp 00:02: [io  0x0022-0x003f]
+pnp 00:02: [io  0x0044-0x005f]
+pnp 00:02: [io  0x0062-0x0063]
+pnp 00:02: [io  0x0065-0x006f]
+pnp 00:02: [io  0x0074-0x007f]
+pnp 00:02: [io  0x0091-0x0093]
+pnp 00:02: [io  0x00a2-0x00bf]
+pnp 00:02: [io  0x00e0-0x00ef]
+pnp 00:02: [io  0x04d0-0x04d1]
+pnp 00:02: [io  0x0800-0x087f]
+pnp 00:02: [io  0x0290-0x0297]
+pnp 00:02: disabling [io  0x0010-0x001f] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x0022-0x003f] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x0044-0x005f] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x0062-0x0063] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x0065-0x006f] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x0074-0x007f] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x0091-0x0093] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x00a2-0x00bf] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+pnp 00:02: disabling [io  0x00e0-0x00ef] because it overlaps 
+0000:01:08.0 BAR 1 [io  0x0000-0x00ff]
+system 00:02: [io  0x04d0-0x04d1] has been reserved
+system 00:02: [io  0x0800-0x087f] has been reserved
+system 00:02: [io  0x0290-0x0297] has been reserved
+system 00:02: Plug and Play ACPI device, IDs PNP0c02 (active)
 
-A list is indeed better than a static array. However, the preferred way to
-do kernel code is to not have any such global lists in a device driver at
-all, but keep it inside of the subsystems. I don't remember how this is
-done for PCIe ports, but I would assume that you can iterate over them
-already. If not, it would be nice to add this feature to the PCI subsystem
-so that nobody has to keep arrays or lists like this.
+Eventually, BAR 1 of the PCI device gets re-assigned:
 
-> >> +static struct hw_pci pci;
-> >
-> > Why is this not statically initialized?
-> 
-> Ok, ll take care in next version.
+...
+pci 0000:01:08.0: BAR 1: assigned [io  0xc000-0xc0ff]
 
-I noticed later that it does get statically initialized below, so my comment wasn't
-actually correct. However, you should try to order the symbols so that you don't
-need forward declarations.
-
-> > This function looks completely bogus. Subtracting PCIBIOS_MIN_IO means that
-> > everything is shifted by 0x1000 ports, since secondary bridges don't
-> > have this offset. The I/O spaces are just mapped linearly into the virtual
-> > address space anyway, so looking up the I/O base like this is pointless.
-> >
-> 
-> Frankly speaking, I do not have clear understanding of PCIe IO 
-> transaction. I did not test any PCIe device with my host which might 
-> need IO resource. Since , my host controller does support IO 
-> transaction, I want to support it in driver. Let me explain my 
-> requirement, please correct my understanding where I am wrong.
-> 
-> -- I can program one my viewport to generate IO transaction on PCIe bus, 
-> if CPU writes between AHB address 0x80000000-0x80007FFF.
-> 
-> -- Now, lets say a PCIe device needs 100 io ports, then address range 
-> 0x80000000-0x80000064 will be allocated to this device by pci stack. It 
-> will also write 0x80000000 to IO_BAR register of its configuration 
-> address space. Now, if my CPU writes at ahb address 0x80000010 then 16th 
-> IO port of this device will be written.
-
-The number space for I/O ports is usually 16 bits, which is a hardware
-limitation on x86. Practically all PCI implementations on non-x86
-architecture have the I/O access directly mapped into the physical
-address space, like you have at phys address 0x80000000. However, the
-port number for the first port in there is still "0", not "0x80000000",
-and the I/O window in you PCI host registers should be set up so that
-an access to address 0x80000000 gets translated into a I/O transfer
-at address 0 on the PCI bus. This is different from the memory window,
-which is typically set up so that the physical addresses are the
-same as the bus address in PCI memory space accesses.
-
-> -- Probably, I need something like following and it will remove 
-> mach/io.h , hence spear13xx_pcie_io_base too.
-> 
-> --- a/arch/arm/mach-spear13xx/pcie.c
-> +++ b/arch/arm/mach-spear13xx/pcie.c
-> @@ -414,7 +414,7 @@ static int __init pcie_setup(int nr, struct 
-> pci_sys_data *sys)
->          pp->res[1].flags = IORESOURCE_IO;
->          if (request_resource(&ioport_resource, &pp->res[1]))
->                  panic("can't allocate PCIe IO space");
-> -       pci_add_resource_offset(&sys->resources, &pp->res[1], 
-> sys->io_offset);
-> +       pci_add_resource_offset(&sys->resources, &pp->res[1], 0x80000000);
-
-The io_offset should be zero on all modern implementations, we just have a few
-legacy cases that we carry around mostly because of interactions with older
-PCMCIA drivers that can get fixed over time.
-
-If you have multiple root buses, you can choose to make the offset for the
-second bus 0x10000.
-
-> >> +static void pcie_host_init(struct pcie_port *pp)
-> >> +{
-> >> +	struct pcie_port_info *config = &pp->config;
-> >> +	void __iomem *dbi_base = pp->va_dbi_base;
-> >> +	struct pcie_app_reg *app_reg = pp->va_app_base;
-> >> +	u32 exp_cap_off = PCI_CAP_ID_EXP_OFFSET;
-> >> +	u32 val;
-> >> +
-> >> +	/* Keep first 64K for IO */
-> >> +	pp->io_base = pp->base;
-> >> +	pp->mem_base = pp->io_base + config->io_size;
-> >> +	pp->cfg0_base = pp->mem_base + config->mem_size;
-> >> +	pp->cfg1_base = pp->cfg0_base + config->cfg0_size;
-> >
-> > Why is the memory space part of the virtual bus address range here?
-> 
-> Sorry, its not virtual address. I will remove __iomem from all physical 
-> address pointer.
-
-Ok. I suspect that you don't actually need to store the physicall address
-then, because it's not needed after setting up the devices, and you can easily
-retrieve it from the resources.
-
-> >> +	pp->config.io_size = IO_SIZE_PER_PORT;
-> >> +	of_property_read_u32(np, "pcie-host,is_host", &pp->config.is_host);
-> >> +	of_property_read_u32(np, "pcie-host,is_gen1", &pp->config.is_gen1);
-> >
-> > These should probably be derived from the "compatible" value.
-> 
-> Yes, about is_host I think, I will go with "compatible".
-> 
-> Let me explain why I have provided is_gen1: There are few buggy PCIe 
-> cards which links up only if host is gen1. My host is by default gen2. 
-> It does work with gen1 as well as gen2 devices except some buggy gen1 
-> devices. I provided this flag, to force controller to linkup at gen1 
-> only so that it can work with those buggy cards too.
-
-Ok, makes sense.
-
-Thanks for the quick replies. I hope I managed to explain the I/O space accesses
-now.
-
-	Arnd
-
+-- 
+-=( Ian Abbott @ MEV Ltd.    E-mail: <abbotti@mev.co.uk>        )=-
+-=( Tel: +44 (0)161 477 1898   FAX: +44 (0)161 718 3587         )=-
