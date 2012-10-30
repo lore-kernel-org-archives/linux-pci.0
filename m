@@ -1,298 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47305 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965130Ab2JAX1I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Oct 2012 19:27:08 -0400
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	davem@davemloft.net
-Subject: [RFC] PCI: enable and disable sriov support via sysfs at per device level
-Date: Mon,  1 Oct 2012 19:27:00 -0400
-Message-Id: <1349134020-62152-1-git-send-email-ddutile@redhat.com>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:42537 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754866Ab2J3G1U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 02:27:20 -0400
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 966CD3EE0BC
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:27:19 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 7E7AB45DE50
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:27:19 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 66B4545DE4E
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:27:19 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 5A21D1DB802F
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:27:19 +0900 (JST)
+Received: from m005.s.css.fujitsu.com (m005.s.css.fujitsu.com [10.23.4.35])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 195251DB8037
+	for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 15:27:19 +0900 (JST)
+Date: Tue, 30 Oct 2012 15:27:13 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 5/5] PCI,ACPI: Requesting _OSC control before scanning pci
+ tree in acpi_pci_root_add()
+Message-Id: <20121030152713.d33086da.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+References: <20121030062124.BE34D2E0805@m003.s.css.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide files under sysfs to determine the max number of vfs
-an SRIOV-capable PCIe device supports, and methods to enable and
-disable the vfs on a per device basis.
 
-Currently, VF enablement by SRIOV-capable PCIe devices is done
-in driver-specific module parameters.  If not setup in modprobe files,
-it requires admin to unload & reload PF drivers with number of desired
-VFs to enable.  Additionally, the enablement is system wide: all
-devices controlled by the same driver have the same number of VFs
-enabled.  Although the latter is probably desired, there are PCI
-configurations setup by system BIOS that may not enable that to occur.
+Requesting _OSC control before scanning pci tree in acpi_pci_root_add()
 
-Three files are created if a PCIe device has SRIOV support:
-sriov_max_vfs -- cat-ing this file returns the maximum number
-                 of VFs a PCIe device supports.
-sriov_enable_vfs -- echo'ing a number to this file enables this
-                    number of VFs for this given PCIe device.
-                 -- cat-ing this file will return the number of VFs
-                    currently enabled on this PCIe device.
-sriov_disable_vfs -- echo-ing any number other than 0 disables all
-                     VFs associated with this PCIe device.
+This patch moves up the code block to request _OSC control in order to 
+separate ACPI work and PCI work in acpi_pci_root_add().
 
-VF enable and disablement is invoked much like other PCIe
-configuration functions -- via registered callbacks in the driver,
-i.e., probe, release, etc.
-
-Note: I haven't had a chance to refactor an SRIOV PF driver
-      to test against; hoping to try ixgbe or igb in next couple days.
-      To date, just tested that cat-ing sriov_max_vfs works, and
-      cat-ing sriov_enable_vfs returns the correct number when
-      a PF driver has been loaded with VFs enabled via per-driver param,
-      e.g., modprobe igb max_vfs=4
-
-Send comments and I'll integrate as needed, while modifying
-a PF driver to use this interface.
-
-Signed-off-by: Donald Dutile <ddutile@redhat.com>
-
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
 ---
- drivers/pci/pci-sysfs.c | 186 ++++++++++++++++++++++++++++++++++++++++++++----
- include/linux/pci.h     |   2 +
- 2 files changed, 175 insertions(+), 13 deletions(-)
+ drivers/acpi/pci_root.c |  121 ++++++++++++++++++++++++------------------------
+ 1 file changed, 62 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 6869009..1b5eab7 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -404,6 +404,152 @@ static ssize_t d3cold_allowed_show(struct device *dev,
- }
- #endif
+Index: pci/drivers/acpi/pci_root.c
+===================================================================
+--- pci.orig/drivers/acpi/pci_root.c
++++ pci/drivers/acpi/pci_root.c
+@@ -454,6 +454,7 @@ static int __devinit acpi_pci_root_add(s
+ 	acpi_handle handle;
+ 	struct acpi_device *child;
+ 	u32 flags, base_flags;
++	bool is_osc_granted = false;
  
-+
-+#ifdef CONFIG_PCI_IOV
-+static ssize_t sriov_max_vfs_show(struct device *dev,
-+				  struct device_attribute *attr, 
-+				  char *buf)
-+{
-+	struct pci_dev *pdev;
-+
-+	pdev = to_pci_dev(dev);
-+	return sprintf (buf, "%u\n", pdev->sriov->total);
-+}
-+
-+bool pci_dev_has_sriov(struct pci_dev *pdev)
-+{
-+	int ret = false;
-+	int pos;
-+
-+        if (!pci_is_pcie(pdev))
-+		goto out;
-+
-+	pos =  pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
-+	if (pos)
-+		ret = true;
-+out:
-+	return ret;
-+}
-+
-+static ssize_t sriov_enable_vfs_show(struct device *dev,
-+				     struct device_attribute *attr,
-+				     char *buf)
-+{
-+	struct pci_dev *pdev;
-+	int nr_virtfn = 0;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	if (pci_dev_has_sriov(pdev))
-+		nr_virtfn = pdev->sriov->nr_virtfn;
-+
-+	return sprintf (buf, "%u\n", nr_virtfn);
-+}
-+
-+static ssize_t sriov_enable_vfs_store(struct device *dev,
-+				      struct device_attribute *attr,
-+				      const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev;
-+	int num_vf_enabled = 0;
-+	unsigned long num_vfs;
-+	pdev = to_pci_dev(dev);
-+	
-+	if (!pci_dev_has_sriov(pdev))
-+		goto out;
-+
-+	/* Requested VFs to enable < max_vfs 
-+	 * and none enabled already
-+	 */
-+	if (strict_strtoul(buf, 0, &num_vfs) < 0)
-+			return -EINVAL;
-+
-+	if ((num_vfs > pdev->sriov->total) ||
-+	    (pdev->sriov->nr_virtfn != 0))
-+		return -EINVAL;
-+
-+	/* Ready for lift-off! */
-+	if (pdev->driver && pdev->driver->sriov_enable) {
-+		num_vf_enabled = pdev->driver->sriov_enable(pdev, num_vfs);
+ 	root = kzalloc(sizeof(struct acpi_pci_root), GFP_KERNEL);
+ 	if (!root)
+@@ -520,6 +521,60 @@ static int __devinit acpi_pci_root_add(s
+ 	flags = base_flags = OSC_PCI_SEGMENT_GROUPS_SUPPORT;
+ 	acpi_pci_osc_support(root, flags);
+ 
++	/* Indicate support for various _OSC capabilities. */
++	if (pci_ext_cfg_avail())
++		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
++	if (pcie_aspm_support_enabled()) {
++		flags |= OSC_ACTIVE_STATE_PWR_SUPPORT |
++		OSC_CLOCK_PWR_CAPABILITY_SUPPORT;
 +	}
-+
-+out:
-+	if (num_vf_enabled != num_vfs)
-+		printk(KERN_WARNING 
-+			"%s: %04x:%02x:%02x.%d: Only %d VFs enabled \n",
-+			pci_name(pdev), pci_domain_nr(pdev->bus),
-+			pdev->bus->number, PCI_SLOT(pdev->devfn),
-+			PCI_FUNC(pdev->devfn), num_vf_enabled);
-+
-+	return count;
-+}
-+
-+static ssize_t sriov_disable_vfs_store(struct device *dev,
-+				       struct device_attribute *attr,
-+				       const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	/* make sure sriov device & at least 1 vf enabled */
-+	if (!pci_dev_has_sriov(pdev) ||
-+	   (pdev->sriov->nr_virtfn == 0))
-+		goto out;
-+
-+	/* Ready for landing! */
-+	if (pdev->driver && pdev->driver->sriov_disable) {
-+		pdev->driver->sriov_disable(pdev);
-+	}
-+out:
-+	return count;
-+}
-+
-+struct device_attribute pci_dev_sriov_attrs[] = {
-+	__ATTR_RO(sriov_max_vfs),
-+	__ATTR(sriov_enable_vfs, (S_IRUGO|S_IWUSR|S_IWGRP), 
-+		sriov_enable_vfs_show, sriov_enable_vfs_store),
-+	__ATTR(sriov_disable_vfs, (S_IWUSR|S_IWGRP), 
-+		NULL, sriov_disable_vfs_store),
-+	__ATTR_NULL,
-+};
-+
-+static int pci_sriov_create_sysfs_dev_files(struct pci_dev *dev)
-+{
-+	int pos, i;
-+	int retval=0;
-+
-+	if ((dev->is_physfn) && pci_is_pcie(dev)) {
-+            pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
-+            if (pos) {
-+		for (i = 0; attr_name(pci_dev_sriov_attrs[i]); i++) {
-+		    retval = device_create_file(&dev->dev, &pci_dev_sriov_attrs[i]);
-+		    if (retval) {
-+			while (--i >= 0)
-+			     device_remove_file(&dev->dev, &pci_dev_sriov_attrs[i]);
-+			break;
-+		    }
++	if (pci_msi_enabled())
++		flags |= OSC_MSI_SUPPORT;
++	if (flags != base_flags) {
++		status = acpi_pci_osc_support(root, flags);
++		if (ACPI_FAILURE(status)) {
++			dev_info(&device->dev, "ACPI _OSC support "
++				"notification failed, disabling PCIe ASPM\n");
++			pcie_no_aspm();
++			flags = base_flags;
 +		}
-+	    }
 +	}
-+	return retval;
-+}
++	if (!pcie_ports_disabled
++	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
++		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
++			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
++			| OSC_PCI_EXPRESS_PME_CONTROL;
 +
-+static void pci_sriov_remove_sysfs_dev_files(struct pci_dev *dev)
-+{
-+	int pos;
++		if (pci_aer_available()) {
++			if (aer_acpi_firmware_first())
++				dev_dbg(&device->dev,
++					"PCIe errors handled by BIOS.\n");
++			else
++				flags |= OSC_PCI_EXPRESS_AER_CONTROL;
++		}
 +
-+	if ((dev->is_physfn) && pci_is_pcie(dev)) {
-+            pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
-+            if (pos)
-+		device_remove_file(&dev->dev, pci_dev_sriov_attrs);
++		dev_info(&device->dev,
++			"Requesting ACPI _OSC control (0x%02x)\n", flags);
++
++		status = acpi_pci_osc_control_set(device->handle, &flags,
++				       OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
++		if (ACPI_SUCCESS(status)) {
++			is_osc_granted = true;
++			dev_info(&device->dev,
++				"ACPI _OSC control (0x%02x) granted\n", flags);
++		} else {
++			is_osc_granted = false;
++			dev_info(&device->dev,
++				"ACPI _OSC request failed (%s), "
++				"returned control mask: 0x%02x\n",
++				acpi_format_exception(status), flags);
++		}
++	} else {
++		dev_info(&device->dev,
++			"Unable to request _OSC control "
++			"(_OSC support mask: 0x%02x)\n", flags);
 +	}
-+}
-+#else
-+static int pci_sriov_create_sysfs_dev_files(struct pci_dev *dev) { return 0; }
-+static void pci_sriov_remove_sysfs_dev_files(struct pci_dev *dev) { return; }
-+#endif /* CONFIG_PCI_IOV */
 +
- struct device_attribute pci_dev_attrs[] = {
- 	__ATTR_RO(resource),
- 	__ATTR_RO(vendor),
-@@ -1169,6 +1315,22 @@ static ssize_t reset_store(struct device *dev,
+ 	/*
+ 	 * TBD: Need PCI interface for enumeration/configuration of roots.
+ 	 */
+@@ -563,66 +618,14 @@ static int __devinit acpi_pci_root_add(s
+ 	list_for_each_entry(child, &device->children, node)
+ 		acpi_pci_bridge_scan(child);
  
- static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_store);
- 
-+static void pci_reset_remove_sysfs_dev_file(struct pci_dev *dev)
-+{
-+	if (dev->reset_fn) {
-+		device_remove_file(&dev->dev, &reset_attr);
-+		dev->reset_fn = 0;
-+	}
-+}
-+
-+static void pci_vpd_remove_sysfs_dev_file(struct pci_dev *dev)
-+{
-+	if (dev->vpd && dev->vpd->attr) {
-+		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
-+		kfree(dev->vpd->attr);
-+	}
-+}
-+
- static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- {
- 	int retval;
-@@ -1203,14 +1365,18 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 			goto error;
- 		dev->reset_fn = 1;
- 	}
-+
-+	/* SRIOV */
-+	retval = pci_sriov_create_sysfs_dev_files(dev);
-+	if (retval)
-+		goto error;
-+
- 	return 0;
- 
- error:
-+	pci_reset_remove_sysfs_dev_file(dev);
- 	pcie_aspm_remove_sysfs_dev_files(dev);
--	if (dev->vpd && dev->vpd->attr) {
--		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
--		kfree(dev->vpd->attr);
--	}
-+	pci_vpd_remove_sysfs_dev_file(dev);
- 
- 	return retval;
- }
-@@ -1303,16 +1469,10 @@ err:
- 
- static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
- {
--	if (dev->vpd && dev->vpd->attr) {
--		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
--		kfree(dev->vpd->attr);
+-	/* Indicate support for various _OSC capabilities. */
+-	if (pci_ext_cfg_avail())
+-		flags |= OSC_EXT_PCI_CONFIG_SUPPORT;
+-	if (pcie_aspm_support_enabled())
+-		flags |= OSC_ACTIVE_STATE_PWR_SUPPORT |
+-			OSC_CLOCK_PWR_CAPABILITY_SUPPORT;
+-	if (pci_msi_enabled())
+-		flags |= OSC_MSI_SUPPORT;
+-	if (flags != base_flags) {
+-		status = acpi_pci_osc_support(root, flags);
+-		if (ACPI_FAILURE(status)) {
+-			dev_info(root->bus->bridge, "ACPI _OSC support "
+-				"notification failed, disabling PCIe ASPM\n");
+-			pcie_no_aspm();
+-			flags = base_flags;
+-		}
 -	}
 -
-+	pci_sriov_remove_sysfs_dev_files(dev);
-+	pci_reset_remove_sysfs_dev_file(dev);
- 	pcie_aspm_remove_sysfs_dev_files(dev);
--	if (dev->reset_fn) {
--		device_remove_file(&dev->dev, &reset_attr);
--		dev->reset_fn = 0;
--	}
-+	pci_vpd_remove_sysfs_dev_file(dev);
- }
+-	if (!pcie_ports_disabled
+-	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+-		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+-			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+-			| OSC_PCI_EXPRESS_PME_CONTROL;
+-
+-		if (pci_aer_available()) {
+-			if (aer_acpi_firmware_first())
+-				dev_dbg(root->bus->bridge,
+-					"PCIe errors handled by BIOS.\n");
+-			else
+-				flags |= OSC_PCI_EXPRESS_AER_CONTROL;
+-		}
+-
+-		dev_info(root->bus->bridge,
+-			"Requesting ACPI _OSC control (0x%02x)\n", flags);
+-
+-		status = acpi_pci_osc_control_set(device->handle, &flags,
+-					OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL);
+-		if (ACPI_SUCCESS(status)) {
+-			dev_info(root->bus->bridge,
+-				"ACPI _OSC control (0x%02x) granted\n", flags);
+-			if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+-				/*
+-				 * We have ASPM control, but the FADT indicates
+-				 * that it's unsupported. Clear it.
+-				 */
+-				pcie_clear_aspm(root->bus);
+-			}
+-		} else {
+-			dev_info(root->bus->bridge,
+-				"ACPI _OSC request failed (%s), "
+-				"returned control mask: 0x%02x\n",
+-				acpi_format_exception(status), flags);
+-			pr_info("ACPI _OSC control for PCIe not granted, "
+-				"disabling ASPM\n");
+-			pcie_no_aspm();
+-		}
++	/* ASPM setting */
++	if (is_osc_granted) {
++		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM)
++			pcie_clear_aspm(root->bus);
+ 	} else {
+-		dev_info(root->bus->bridge,
+-			 "Unable to request _OSC control "
+-			 "(_OSC support mask: 0x%02x)\n", flags);
++		pr_info("ACPI _OSC control for PCIe not granted, "
++			"disabling ASPM\n");
++		pcie_no_aspm();
+ 	}
  
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5faa831..29e10aa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -596,6 +596,8 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
-+        int (*sriov_enable) (struct pci_dev *dev, int num_vfs);    /* PF pci dev */
-+        void (*sriov_disable) (struct pci_dev *dev); 
- 	struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
--- 
-1.7.10.2.552.gaa3bb87
+ 	pci_acpi_add_bus_pm_notifier(device, root->bus);
 
