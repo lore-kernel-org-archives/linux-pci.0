@@ -1,43 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:58921 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752944Ab2J2HCa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 03:02:30 -0400
-From: Pratyush Anand <pratyush.anand@st.com>
-To: <arnd@arndb.de>, <shiraz.hashim@st.com>, <viresh.linux@gmail.com>
-Cc: <spear-devel@list.st.com>, <linux-pci@vger.kernel.org>,
-	<devicetree-discuss@lists.ozlabs.org>, <olof@lixom.net>,
-	Pratyush Anand <pratyush.anand@st.com>
-Subject: [PATCH 11/15] SPEAr1340-evb: dts: Enable PCIe0
-Date: Mon, 29 Oct 2012 12:31:25 +0530
-Message-ID: <4b9cf1f95d60f47ed8f50f493e8c779b278c8184.1351492562.git.pratyush.anand@st.com>
-In-Reply-To: <cover.1351492562.git.pratyush.anand@st.com>
-References: <cover.1351492562.git.pratyush.anand@st.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from acsinet15.oracle.com ([141.146.126.227]:26159 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964822Ab2J3RnT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 13:43:19 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 1/8] PCI: Separate out pci_assign_unassigned_bus_resources()
+Date: Tue, 30 Oct 2012 10:42:38 -0700
+Message-Id: <1351618965-16761-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1351618965-16761-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
----
- arch/arm/boot/dts/spear1340-evb.dts |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+It is main portion of pci_rescan_bus().
 
-diff --git a/arch/arm/boot/dts/spear1340-evb.dts b/arch/arm/boot/dts/spear1340-evb.dts
-index fb5ae40..926781c 100644
---- a/arch/arm/boot/dts/spear1340-evb.dts
-+++ b/arch/arm/boot/dts/spear1340-evb.dts
-@@ -228,6 +228,10 @@
- 			};
- 		};
+Separate it out and prepare to use it for pci root bus hot add later.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c |   32 ++++++++++++++++++--------------
+ include/linux/pci.h     |    1 +
+ 2 files changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1e808ca..1f34929 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1550,25 +1550,12 @@ enable_all:
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
  
-+		pcie0@b1000000 {
-+			status = "okay";
-+		};
+-#ifdef CONFIG_HOTPLUG
+-/**
+- * pci_rescan_bus - scan a PCI bus for devices.
+- * @bus: PCI bus to scan
+- *
+- * Scan a PCI bus and child buses for new devices, adds them,
+- * and enables them.
+- *
+- * Returns the max number of subordinate bus discovered.
+- */
+-unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+-	unsigned int max;
+ 	struct pci_dev *dev;
+ 	LIST_HEAD(add_list); /* list of resources that
+ 					want additional resources */
+ 
+-	max = pci_scan_child_bus(bus);
+-
+ 	down_read(&pci_bus_sem);
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+ 		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+@@ -1581,6 +1568,23 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
+ 	BUG_ON(!list_empty(&add_list));
+ 
+ 	pci_enable_bridges(bus);
++}
++#ifdef CONFIG_HOTPLUG
++/**
++ * pci_rescan_bus - scan a PCI bus for devices.
++ * @bus: PCI bus to scan
++ *
++ * Scan a PCI bus and child buses for new devices, adds them,
++ * and enables them.
++ *
++ * Returns the max number of subordinate bus discovered.
++ */
++unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
++{
++	unsigned int max;
 +
- 		ehci@e4800000 {
- 			status = "okay";
- 		};
++	max = pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index be1de01..505c05a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -980,6 +980,7 @@ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
++void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
 -- 
-1.7.5.4
+1.7.7
 
