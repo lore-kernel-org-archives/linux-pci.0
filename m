@@ -1,51 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
-Date: Thu, 04 Oct 2012 23:23:24 +0200
-Message-ID: <16287303.8DVGGcjq5E@vostro.rjw.lan>
-In-Reply-To: <1349305214-3241-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com> <1349305214-3241-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:43645 "EHLO
+	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753769Ab2J3DYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Oct 2012 23:24:32 -0400
+Message-ID: <508F4863.2010605@st.com>
+Date: Tue, 30 Oct 2012 08:54:19 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: viresh kumar <viresh.kumar@linaro.org>
+Cc: "arnd@arndb.de" <arnd@arndb.de>,
+	Shiraz HASHIM <shiraz.hashim@st.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"olof@lixom.net" <olof@lixom.net>
+Subject: Re: [PATCH 10/15] SPEAr13xx: DTS: Add auxiliary data for PCIe host
+References: <cover.1351492562.git.pratyush.anand@st.com> <91c2505d23f161ce535b220dea497e2c3abfd7f6.1351492562.git.pratyush.anand@st.com> <CAOh2x=ndvJF6qFgXOOQOJfAjFh93vosBrYN4FbvnDK0SW0CcXA@mail.gmail.com>
+In-Reply-To: <CAOh2x=ndvJF6qFgXOOQOJfAjFh93vosBrYN4FbvnDK0SW0CcXA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 03 of October 2012 16:00:10 Yinghai Lu wrote:
-> Now acpi_pci_root_driver has two ops: .add and .start, aka acpi_pci_root_add
-> and acpi_pci_root_start.
-> 
-> That is for hotplug handling: .add need to return early to make sure all
-> acpi device could be created and added early. So .start could device_add
-> pci device that are found in acpi_pci_root_add/pci_acpi_scan_root().
-> 
-> That is holding pci devics to be out of devices for while.
-> 
-> We could use bus notifier to handle hotplug case.
-> 	CONFIG_HOTPLUG is enabled always now.
-> Need to add drivers_autoprobe bit in acpi_device to hold attaching drivers
-> for acpi_devices, so could make sure all acpi_devices get created at first.
-> Then acpi_bus_attach() that is called from acpi_bus_add will attach driver
-> for all acpi_devices that are just created.
-> 
-> That make the logic more simple: hotplug path handling just like booting path
-> that drivers are attached after all acpi device get created.
-> 
-> At last we could remove all acpi_bus_start workaround.
+On 10/29/2012 6:54 PM, viresh kumar wrote:
+> On Mon, Oct 29, 2012 at 12:31 PM, Pratyush Anand <pratyush.anand@st.com> wrote:
+>> Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+>> ---
+>
+> Please add commit log in each and every message.
+>
+> What do you mean by auxiliary data in subject?
 
-Do I understand correctly that you just want to prevent acpi_pci_root_driver
-from binding to the host bridge's struct acpi_device created while we're
-walking the ACPI namespace?
+It used to be plat data earlier, which is being passed from DT now.
 
-Rafael
+> .
+>
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
