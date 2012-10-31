@@ -1,88 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:36985 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752846Ab2JHUIi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Oct 2012 16:08:38 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 0/4] ACPI: kill acpi_pci_root_start
-Date: Mon, 08 Oct 2012 22:12:11 +0200
-Message-ID: <1391924.CXAbAIeqJX@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXraKirjQgRad2t87SmxsonDupkpE2BM6Ktx8yUdCPPiQ@mail.gmail.com>
-References: <CAE9FiQWgvVqnTTeYFvxf1GxLcEEeRyN-uSKPdg3o69oCpm43sQ@mail.gmail.com> <1595267.JDdDB2dfnM@vostro.rjw.lan> <CAE9FiQXraKirjQgRad2t87SmxsonDupkpE2BM6Ktx8yUdCPPiQ@mail.gmail.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:46349 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423001Ab2JaPdp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 11:33:45 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so701928wey.19
+        for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 08:33:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CABZ6j6qH5q=txhAv4CntXpT3d4mzTapSdavz-8vsLw4Kism0QQ@mail.gmail.com>
+References: <5090F723.3090103@gmail.com> <CAErSpo4sO9qrQdJLD6LxkrAKpzG+dbf9Oekv7PLLdXnZ0QQi2w@mail.gmail.com>
+ <CABZ6j6qH5q=txhAv4CntXpT3d4mzTapSdavz-8vsLw4Kism0QQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 31 Oct 2012 09:33:24 -0600
+Message-ID: <CAErSpo4D+svCE_JRj0vr3VHqmEjiFwNWjUdzZzwPWCC+VDmJOw@mail.gmail.com>
+Subject: Re: Linux and multy domain PCIe.
+To: paolo faverio <fpaolo63@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 05 of October 2012 16:10:43 Yinghai Lu wrote:
-> On Fri, Oct 5, 2012 at 4:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Thursday 04 of October 2012 15:46:39 Yinghai Lu wrote:
-> >> > Your patches seem to affect all devices in the ACPI namespace added after
-> >> > boot, though, not only host bridges.
-> >>
-> >> yes, but it still should be safe.
-> >
-> > I'm not really sure of that (what about undock/dock, for exmaple?) and it's
-> > damn ugly.
-> 
-> only one acpi_driver has .start , that is acpi_pci_root_driver.
-> 
-> should be clean than with .add/start pair.
-> 
-> >
-> >> > And the problem seems to be that the scanning of the ACPI namespace and
-> >> > configuring the host bridge are kind of independent operations now.  What
-> >> > we should do, actually, seems to be something like this:
-> >> >
-> >> > (1) Configure the host bridge when discovered (i.e. do what the current
-> >> >     acpi_pci_root_add() does.
-> >> > (2) Parse the ACPI namespace under the host bridge (without binding ACPI
-> >> >     drivers to the struct acpi_device objects created in the process,
-> >> >     because they are known to correspond to PCI devices).
-> >> > (3) Run pci_bus_add_devices() for the bridge.
-> >> >
-> >> > in one routine.
-> >>
-> >> problem is still there. if 1 still has acpi_pci_root_add and pci_acpi_scan_root
-> >
-> > OK, so why don't we do (2) in acpi_pci_root_add(), before pci_acpi_scan_root()
-> > is called?
-> >
-> >> that scan pci devices. what is need is we need to bind 1 and 3 together.
-> 
-> some one already walk the acpi space, and during that it create
-> acpi_device for pci_root
-> and then attach driver for that, aka acpi_pci_root_add is executing.
-> 
-> Now you want to walking the acpi acpi space to create children devices
-> before device_add really done for that pci root
-> acpi device. ?
-> 
-> is that some kind of nesting?
+On Wed, Oct 31, 2012 at 8:21 AM, paolo faverio <fpaolo63@gmail.com> wrote:
+> Thanks Bjorn,
+> I'm going to dig on it.
+>
+> one silly question
+> Enabling both the RC, do l have  255  pci bus ids for each PCI segment
+> group?
 
-Yes, basically.  The idea is to do the scan of the host bridge's children in
-the ACPI tree synchronously within acpi_pci_root_add() instead of trying to
-delay the execution of it until the children have been scanned (and using
-notifiers to kind of trigger the driver binding, i.e. the execution of .add()).
+Yes.  256, actually (0x00-0xff).
 
-> > I don't understand now.  You said previously that we need the ACPI namespace
-> > below the bridge to be scanned before (3), so why do you want to do (3) before
-> > (2) now?
-> 
-> purpose is calling pci_bus_add_devices in pci_acpi_scan_root.
-
-OK, but what's the reason?
-
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> On Wed, Oct 31, 2012 at 1:23 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>
+>> On Wed, Oct 31, 2012 at 4:02 AM, fpaolo63 <fpaolo63@gmail.com> wrote:
+>> > Hi guru,
+>> >
+>> > I'm working on a multi socket intel xeon platform.
+>> >
+>> > We have 2 sockets and each socket has a PCIe RootComplex, and we'd to
+>> > implement hw with 2 separated PCIe tree.
+>> >
+>> > Can Linux kernel handle the 2 RC assigning a PCIe domain each one?
+>> >
+>> > Do we need special BIOS in order to configure correctly the 2 sockets,
+>> > QDPI
+>> > channel, MMIO and MMU?
+>> >
+>> > Can some one point me to one example or documents?
+>>
+>> Yes, Linux supports multiple PCI domains (also known as PCI segment
+>> groups).
+>>
+>> On x86, the BIOS should provide a ACPI PNP0A08/PNP0A03 device for each
+>> root complex.  See drivers/acpi/pci_root.c for details.
+>
+>
