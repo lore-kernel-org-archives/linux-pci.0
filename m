@@ -1,59 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61400 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:54365 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932723Ab2JCSzk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Oct 2012 14:55:40 -0400
-Message-ID: <506C8A35.8010100@redhat.com>
-Date: Wed, 03 Oct 2012 14:55:49 -0400
-From: Don Dutile <ddutile@redhat.com>
+	id S1751956Ab2JaRCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Oct 2012 13:02:00 -0400
+From: "Rose, Gregory V" <gregory.v.rose@intel.com>
+To: Don Dutile <ddutile@redhat.com>,
+	Ben Hutchings <bhutchings@solarflare.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: RE: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
+Date: Wed, 31 Oct 2012 17:01:07 +0000
+Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+  <1351190310-5043-4-git-send-email-ddutile@redhat.com>
+ <1351196234.2662.37.camel@bwh-desktop.uk.solarflarecom.com>
+ <508AA719.2060705@redhat.com>
+In-Reply-To: <508AA719.2060705@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net--no-chain-reply-to
-Subject: Re: [PATCH 3/5] PCI: add set_max_vfs in pci_driver ops
-References: <506C3B11.9010009@redhat.com> <1349286695-26713-1-git-send-email-yinghai@kernel.org> <1349286695-26713-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349286695-26713-4-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/2012 01:51 PM, Yinghai Lu wrote:
-> Will use it enable sriov for pci devices.
->
-> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
-> ---
->   include/linux/pci.h |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index be1de01..7d70a5e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -590,6 +590,7 @@ struct pci_driver {
->   	const struct pci_device_id *id_table;	/* must be non-NULL for probe to be called */
->   	int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);	/* New device inserted */
->   	void (*remove) (struct pci_dev *dev);	/* Device removed (NULL if not a hot-plug capable driver) */
-> +	void (*set_max_vfs) (struct pci_dev *dev); /* enable sriov */
->   	int  (*suspend) (struct pci_dev *dev, pm_message_t state);	/* Device suspended */
->   	int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
->   	int  (*resume_early) (struct pci_dev *dev);
-
-I thought I stated the following in your earlier patch set....
-
-(a) don't use 'set_max_vfs' ;  it is not changing the max; the max
-     is whatever the device supports. This kind of terminology confuses
-     what is being done, and not descripting what is being done.
-(b) this is equiv to the sriov_enable_vfs in the RFC set I sent.
-     -- in this set, it prevents the user trying to do more than one enable,
-        and that check should be done, and reject the request, which solves one
-        of the complaints Alexander had.
-
-I'll try to mind-meld your sysfs attr creation patches to mind later today
-and post a new series tonight or tomorrow.  Sorry, stuck in mtgs today (and right now!),
-thus the delay.
-
-- Don
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEb24gRHV0aWxlIFttYWlsdG86
+ZGR1dGlsZUByZWRoYXQuY29tXQ0KPiBTZW50OiBGcmlkYXksIE9jdG9iZXIgMjYsIDIwMTIgODow
+NyBBTQ0KPiBUbzogQmVuIEh1dGNoaW5ncw0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9y
+ZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsgeXV2YWxtaW5AYnJvYWRjb20uY29tOw0KPiBSb3NlLCBH
+cmVnb3J5IFY7IHlpbmdoYWlAa2VybmVsLm9yZzsgZGF2ZW1AZGF2ZW1sb2Z0Lm5ldA0KPiBTdWJq
+ZWN0OiBSZTogW1BBVENIIDMvOF0gUENJOiBzeXNmcyBwZXIgZGV2aWNlIFNSSU9WIGNvbnRyb2wg
+YW5kIHN0YXR1cw0KPiANCiANCj4gDQo+IE9rLCBteSB0dXJuOg0KPiBBbnkgZmVlZGJhY2sgb24g
+aGF2aW5nIHRoZSBzeXNmcyBjb25maWd1cmUgY2FsbA0KPiBwY2lfc3Jpb3ZfW2VuYWJsZS9kaXNh
+YmxlXSgpLCBhcyB3ZWxsIGFzIGRvIHRoZSBkb24ndC1kaXNhYmxlIGlmIFZGcyBhcmUNCj4gYXNz
+aWduZWQgdG8gZ3Vlc3RzPw0KPiANCg0KRG9uLA0KDQpBcyBJJ3ZlIG1lbnRpb25lZCBiZWZvcmUg
+SSBzdGlsbCBwcmVmZXIgdG8gaGF2ZSB0aGUgc3lzZnMgaW50ZXJmYWNlIHlvdSd2ZSB3cml0dGVu
+IHVwIG1ha2UgdGhlIGNhbGxzIHRvIHBjaV9zcmlvdl9lbmFibGUvZGlzYWJsZSgpIGFuZCBoYXZl
+IHRoZSBjaGVja2luZyBmb3Igd2hldGhlciB0aGUgVkZzIGFyZSBhc3NpZ25lZCB0byBndWVzdHMg
+ZG9uZSB0aGVyZSBhbHNvLCBidXQgcmVhbGx5IGl0IGlzbid0IGFueXRoaW5nIHdvcnRoIGdvaW5n
+IHRvIHRoZSBtYXRzIGFib3V0LiAgQXMgaXQgc3RhbmRzIEkgdGhpbmsgaWYgeW91IGFkZHJlc3Mg
+dGhlIGlzc3VlcyBicm91Z2h0IHVwIGJ5IEJlbiB0aGVuIEknbSBmaW5lIHdpdGggd2hhdCB5b3Un
+dmUgd29ya2VkIHVwIHNvIGZhci4gIFNpbmNlIG5vIG9uZSBlbHNlIHNlZW1zIHRvIGhhdmUgYW4g
+b3BpbmlvbiBhYm91dCBpdCAoYXMgZGVtb25zdHJhdGVkIGJ5IGEgbGFjayBvZiByZXNwb25zZSBv
+dmVyIHRoZSBsYXN0IDUgZGF5cykgdGhlbiBJJ2Qgc3VnZ2VzdCB3ZSBnbyBmb3J3YXJkIHdpdGgg
+dGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24uICBJJ2QgcmVhbGx5IGxpa2UgdG8gc2VlIHRoaXMg
+aW4gMy44IGlmIHBvc3NpYmxlLg0KDQpUaGFua3MgZm9yIGFsbCB5b3VyIHdvcmsuDQoNCi0gR3Jl
+Zw0K
