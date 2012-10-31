@@ -1,108 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:31659 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754486Ab2JIDoI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:44:08 -0400
-Message-ID: <50739D40.8040005@huawei.com>
-Date: Tue, 9 Oct 2012 11:42:56 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
- device hot removed
-References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1349751804-7476-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:54846 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935029Ab2JaI1D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 04:27:03 -0400
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 6949C3EE0B5
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:01 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 5253845DE56
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:01 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 3B5D745DE3E
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:01 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 2E46C1DB804B
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:01 +0900 (JST)
+Received: from m0000.s.css.fujitsu.com (m0000.s.css.fujitsu.com [10.23.4.183])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id D6FEEE08001
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:00 +0900 (JST)
+Received: from m0000.css.fujitsu.com (m0000 [127.0.0.1])
+	by m0000.s.css.fujitsu.com (Postfix) with ESMTP id C25B91015CC
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:00 +0900 (JST)
+Received: from DEUCALION (unknown [10.124.101.32])
+	by m0000.s.css.fujitsu.com (Postfix) with SMTP id 9DEFA1015C1
+	for <linux-pci@vger.kernel.org>; Wed, 31 Oct 2012 17:27:00 +0900 (JST)
+Date: Wed, 31 Oct 2012 17:26:45 +0900
+From: Taku Izumi <izumi.taku@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v3,RESEND 7/8] ACPI, PCI: add hostbridge removal function
+Message-Id: <20121031172645.937510c3.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20121030040237.GA10472@google.com>
+References: <20120918151215.59ea763b.izumi.taku@jp.fujitsu.com>
+	<20120918152553.8c8390d8.izumi.taku@jp.fujitsu.com>
+	<CAErSpo7hYHkFAgFy=q6ASV_15r-y_Cp=92nUdRAnBSGLi9ZMrA@mail.gmail.com>
+	<20120928184627.0b039d14.izumi.taku@jp.fujitsu.com>
+	<20121030040237.GA10472@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-How about this patch, which disables ARI when adding new PCI devices?
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5485883..c841aa6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2016,13 +2016,14 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- void pci_enable_ari(struct pci_dev *dev)
- {
-        u32 cap;
-+       bool enable = true;
-        struct pci_dev *bridge;
 
-        if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
-                return;
+Currently there's no PCI-related clean-up code
+in acpi_pci_root_remove() function.
+This patch introduces function for hostbridge removal,
+and brings back pci_stop_bus_devices() function.
 
-        if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
--               return;
-+               enable = false;
+diff: rebased against current next
+      updated according to Bjorn's comment
 
-        bridge = dev->bus->self;
-        if (!bridge)
-@@ -2032,8 +2033,15 @@ void pci_enable_ari(struct pci_dev *dev)
-        if (!(cap & PCI_EXP_DEVCAP2_ARI))
-                return;
+Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+---
+ drivers/acpi/pci_bind.c     |    7 +++++++
+ drivers/acpi/pci_root.c     |    6 ++++++
+ drivers/pci/remove.c        |   28 ++++++++++++++++++++++++++++
+ include/acpi/acpi_drivers.h |    1 +
+ include/linux/pci.h         |    2 ++
+ 5 files changed, 44 insertions(+)
 
--       pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
--       bridge->ari_enabled = 1;
-+       if (enable) {
-+               pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-+                                        PCI_EXP_DEVCTL2_ARI);
-+               bridge->ari_enabled = 1;
-+       } else {
-+               pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
-+                                        PCI_EXP_DEVCTL2_ARI);
-+               bridge->ari_enabled = 0;
-+       }
+Index: Bjorn-next-0925-configchange/drivers/pci/remove.c
+===================================================================
+--- Bjorn-next-0925-configchange.orig/drivers/pci/remove.c
++++ Bjorn-next-0925-configchange/drivers/pci/remove.c
+@@ -111,3 +111,31 @@ void pci_stop_and_remove_bus_device(stru
+ 	pci_remove_bus_device(dev);
  }
-
- /**
-
-On 2012-10-9 11:03, Yijing Wang wrote:
-> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
-> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
-> when an ARI device hot removed.
-> 
-> my steps:
-> 1. Hot add an ARI pci device;
-> 2. Hot remove the ARI pci device;
-> 3. Hot add an non ARI pci device;
-> 
-> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
-> bit set.
-> 
-> As PCIe Spec 2.0(6.13/441) recommends:
-> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
-> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
-> newly added component is in fact an ARI Device"
-> 
-> This series of patches fix this problem.
-> 
-> Yijing Wang (7):
->   PCI: rework pci_enable_ari for support disable ari forwarding
->   PCI, acpiphp: disable ARI forwarding for acpiphp
->   PCI, pciehp: disable ARI forwarding for pciehp
->   PCI, cpqphp: disable ARI forwarding for cpqphp
->   PCI, shpchp: disable ARI forwarding for shpchp
->   PCI, sgi: disable ARI forwarding for sgiphp
->   PCI, ibmphp: disable ARI forwarding for ibmphp
-> 
->  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
->  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
->  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
->  drivers/pci/hotplug/ibmphp_core.c      |    1 +
->  drivers/pci/hotplug/pciehp_pci.c       |    1 +
->  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
->  drivers/pci/hotplug/shpchp_pci.c       |    1 +
->  drivers/pci/pci.c                      |   16 +++++++++++-----
->  drivers/pci/pci.h                      |    2 +-
->  drivers/pci/probe.c                    |    2 +-
->  10 files changed, 20 insertions(+), 7 deletions(-)
-> 
-> 
-> 
-> .
-> 
-
+ EXPORT_SYMBOL(pci_stop_and_remove_bus_device);
++
++void pci_stop_bus_devices(struct pci_bus *bus)
++{
++	struct pci_dev *dev, *tmp;
++
++	list_for_each_entry_safe_reverse(dev, tmp,
++					 &bus->devices, bus_list) {
++		pci_stop_bus_device(dev);
++	}
++
++}
++EXPORT_SYMBOL(pci_stop_bus_devices);
++
++void pci_remove_host_bridge(struct pci_host_bridge *bridge)
++{
++	struct pci_bus *root = bridge->bus;
++	struct pci_dev *dev, *tmp;
++
++	list_for_each_entry_safe_reverse(dev, tmp,
++					 &root->devices, bus_list) {
++		pci_remove_bus_device(dev);
++	}
++
++	pci_remove_bus(root);
++
++	device_unregister(&bridge->dev);
++}
++EXPORT_SYMBOL(pci_remove_host_bridge);
+Index: Bjorn-next-0925-configchange/drivers/acpi/pci_root.c
+===================================================================
+--- Bjorn-next-0925-configchange.orig/drivers/acpi/pci_root.c
++++ Bjorn-next-0925-configchange/drivers/acpi/pci_root.c
+@@ -659,8 +659,10 @@ static int acpi_pci_root_remove(struct a
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+ 	struct acpi_pci_driver *driver;
++	struct pci_host_bridge *bridge = to_pci_host_bridge(root->bus->bridge);
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
++	pci_stop_bus_devices(root->bus);
+ 	list_for_each_entry(driver, &acpi_pci_drivers, node)
+ 		if (driver->remove)
+ 			driver->remove(root);
+@@ -668,6 +670,10 @@ static int acpi_pci_root_remove(struct a
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
++	acpi_pci_unbind_root(device);
++
++	pci_remove_host_bridge(bridge);
++
+ 	list_del(&root->node);
+ 	mutex_unlock(&acpi_pci_root_lock);
+ 	kfree(root);
+Index: Bjorn-next-0925-configchange/include/linux/pci.h
+===================================================================
+--- Bjorn-next-0925-configchange.orig/include/linux/pci.h
++++ Bjorn-next-0925-configchange/include/linux/pci.h
+@@ -734,6 +734,8 @@ extern struct pci_dev *pci_dev_get(struc
+ extern void pci_dev_put(struct pci_dev *dev);
+ extern void pci_remove_bus(struct pci_bus *b);
+ extern void pci_stop_and_remove_bus_device(struct pci_dev *dev);
++extern void pci_stop_bus_devices(struct pci_bus *bus);
++extern void pci_remove_host_bridge(struct pci_host_bridge *bridge);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+Index: Bjorn-next-0925-configchange/drivers/acpi/pci_bind.c
+===================================================================
+--- Bjorn-next-0925-configchange.orig/drivers/acpi/pci_bind.c
++++ Bjorn-next-0925-configchange/drivers/acpi/pci_bind.c
+@@ -118,3 +118,10 @@ int acpi_pci_bind_root(struct acpi_devic
+ 
+ 	return 0;
+ }
++
++void  acpi_pci_unbind_root(struct acpi_device *device)
++{
++	device->ops.bind = NULL;
++	device->ops.unbind = NULL;
++}
++
+Index: Bjorn-next-0925-configchange/include/acpi/acpi_drivers.h
+===================================================================
+--- Bjorn-next-0925-configchange.orig/include/acpi/acpi_drivers.h
++++ Bjorn-next-0925-configchange/include/acpi/acpi_drivers.h
+@@ -101,6 +101,7 @@ struct pci_bus;
+ 
+ struct pci_dev *acpi_get_pci_dev(acpi_handle);
+ int acpi_pci_bind_root(struct acpi_device *device);
++void acpi_pci_unbind_root(struct acpi_device *device);
+ 
+ /* Arch-defined function to add a bus to the system */
+ 
 
