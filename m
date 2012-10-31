@@ -1,49 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 4 Oct 2012 16:35:11 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
-Message-ID: <20121004143511.GE2258@dhcp-26-207.brq.redhat.com>
-References: <cover.1349074231.git.agordeev@redhat.com>
- <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
- <20121002050929.GD7756@gmail.com>
- <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
- <506B1A26.2060609@pobox.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:45495 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185Ab2JaBea (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Oct 2012 21:34:30 -0400
+Received: by mail-bk0-f46.google.com with SMTP id jk13so426204bkc.19
+        for <linux-pci@vger.kernel.org>; Tue, 30 Oct 2012 18:34:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <506B1A26.2060609@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com>
+References: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com>
+Date: Tue, 30 Oct 2012 18:34:29 -0700
+Message-ID: <CAE9FiQVoNm3Wsi4LM1Hhk3RXyLr-UXPggSdJ6Y1Ha7BjjApC5A@mail.gmail.com>
+Subject: Re: [PATCH] PCI/portdrv: Fix regression introduced by commit 2dcfaf85
+From: Yinghai Lu <yinghai@kernel.org>
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jiang Liu <jiang.liu@huawei.com>, wangyijing@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 02, 2012 at 12:45:26PM -0400, Jeff Garzik wrote:
-> >>>+	VPRINTK("ENTER\n");
-> >>
-> >>Is this per IRQ handler execution debugging code still needed?
-> >>Same for the other VPRINTK() lines in this patch.
-> >
-> >These VPRINKs are only to make new handlers look like ahci_interrupt()
-> >which did not change. I believe, if they need to go it is better to
-> >remove them altogether, with a separate followup patch.
-> 
-> Definitely followup patch material + discussion :)
+On Tue, Oct 30, 2012 at 5:51 PM, Taku Izumi <izumi.taku@jp.fujitsu.com> wrote:
+>
+> PCI/portdrv: Fix regression introduced by commit 2dcfaf85
+>
+> After commit 2dcfaf85, hotplug slots for port devices
+> w/o slot implementation come to be created.
+> This patch fixes this problem.
+>
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  drivers/pci/pcie/portdrv_core.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> Index: pci/drivers/pci/pcie/portdrv_core.c
+> ===================================================================
+> --- pci.orig/drivers/pci/pcie/portdrv_core.c
+> +++ pci/drivers/pci/pcie/portdrv_core.c
+> @@ -272,7 +272,8 @@ static int get_port_device_capability(st
+>         }
+>
+>         /* Hot-Plug Capable */
+> -       if (cap_mask & PCIE_PORT_SERVICE_HP) {
+> +       if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
+> +           dev->pcie_flags_reg & PCI_EXP_FLAGS_SLOT) {
+>                 pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
+>                 if (reg32 & PCI_EXP_SLTCAP_HPC) {
+>                         services |= PCIE_PORT_SERVICE_HP;
+>
 
-It appears the discussion comes first :)
-
-As DPRINTKs/VPRINTKs are all over the ATA stack, I do not really realize
-why it should be eliminated in one places (i.e. in hardware handlers) and
-left in anothers. So as long as you would not like to remove them all, I
-would leave it as is for now.
-
-Does it make sense for you?
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Acked-by: Yinghai Lu <yinghai@kernel.org>
