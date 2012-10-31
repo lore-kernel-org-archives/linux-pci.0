@@ -1,328 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 2 Oct 2012 07:09:29 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
-Message-ID: <20121002050929.GD7756@gmail.com>
-References: <cover.1349074231.git.agordeev@redhat.com>
- <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:37944 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161031Ab2JaJEi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 05:04:38 -0400
+Message-ID: <5090E865.1060503@jp.fujitsu.com>
+Date: Wed, 31 Oct 2012 17:59:17 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, martin.wilck@ts.fujitsu.com,
+	andi@firstfloor.org, kexec@lists.infradead.org, hbabu@us.ibm.com,
+	mingo@redhat.com, ddutile@redhat.com, vgoyal@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, khalid@gonehiking.org
+Subject: Re: [PATCH v5 0/2] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121017061757.2944.36671.sendpatchset@indoh>
+In-Reply-To: <20121017061757.2944.36671.sendpatchset@indoh>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+(2012/10/17 15:23), Takao Indoh wrote:
+> These patches reset PCIe devices at boot time to address DMA problem on
+> kdump with iommu. When "reset_devices" is specified, a hot reset is
+> triggered on each PCIe root port and downstream port to reset its
+> downstream endpoint.
+>
+> Background:
+> A kdump problem about DMA has been discussed for a long time. That is,
+> when a kernel is switched to the kdump kernel DMA derived from first
+> kernel affects second kernel. Recently this problem surfaces when iommu
+> is used for PCI passthrough on KVM guest. In the case of the machine I
+> use, when intel_iommu=on is specified, DMAR error is detected in kdump
+> kernel and PCI SERR is also detected. Finally kdump fails because some
+> devices does not work correctly.
+>
+> The root cause is that ongoing DMA from first kernel causes DMAR fault
+> because page table of DMAR is initialized while kdump kernel is booting
+> up. Therefore to address this problem DMA needs to be stopped before
+> DMAR is initialized at kdump kernel boot time. By these patches, PCIe
+> devices are reset by hot reset and its DMA is stopped when reset_devices
+> is specified. One problem of this solution is that the monitor blacks
+> out when VGA controller is reset. So this patch does not reset the port
+> whose child endpoint is VGA device.
+>
+> What I tried:
+> - Clearing bus master bit and INTx disable bit at boot time
+>      This did not solve this problem. I still got DMAR error on devices.
+> - Resetting devices in fixup_final(v1 patch)
+>      DMAR error disappeared, but sometimes PCI SERR was detected. This
+>      is well explained here.
+>      https://lkml.org/lkml/2012/9/9/245
+>      This PCI SERR seems to be related to interrupt remapping.
+> - Clearing bus master in setup_arch() and resetting devices in
+>    fixup_final
+>      Neither DMAR error nor PCI SERR occurred. But on certain machine
+>      kdump kernel hung up when resetting devices. It seems to be a
+>      problem specific to the platform.
+> - Resetting devices in setup_arch() (v2 and later patch)
+>      This solution solves all problems I found so far.
+>
+> v5:
+> Do bus reset after all devices are scanned and its config registers are
+> saved. This fixes a bug that config register is accessed without delay
+> after reset.
+>
+> v4:
+> Reduce waiting time after resetting devices. A previous patch does reset
+> like this:
+>    for (each device) {
+>      save config registers
+>      reset
+>      wait for 500 ms
+>      restore config registers
+>    }
+>
+> If there are N devices to be reset, it takes N*500 ms. On the other
+> hand, the v4 patch does:
+>    for (each device) {
+>      save config registers
+>      reset
+>    }
+>    wait 500 ms
+>    for (each device) {
+>      restore config registers
+>    }
+> Though it needs more memory space to save config registers, the waiting
+> time is always 500ms.
+> https://lkml.org/lkml/2012/10/15/49
+>
+> v3:
+> Move alloc_bootmem and free_bootmem to early_reset_pcie_devices so that
+> they are called only once.
+> https://lkml.org/lkml/2012/10/10/57
+>
+> v2:
+> Reset devices in setup_arch() because reset need to be done before
+> interrupt remapping is initialized.
+> https://lkml.org/lkml/2012/10/2/54
+>
+> v1:
+> Add fixup_final quirk to reset PCIe devices
+> https://lkml.org/lkml/2012/8/3/160
 
-* Alexander Gordeev <agordeev@redhat.com> wrote:
-
-> Take advantage of multiple MSIs implementation on x86 - on systems with
-> IRQ remapping AHCI ports not only get assigned separate MSI vectors -
-> but also separate IRQs. As result, interrupts generated by different
-> ports could be serviced on different CPUs rather than on a single one.
-> 
-> In cases when number of allocated MSIs is less than requested the Sharing
-> Last MSI mode does not get used, no matter implemented in hardware or not.
-> Instead, the driver assumes the advantage of multiple MSIs is negated and
-> falls back to the single MSI mode as if MRSM bit was set (some Intel chips
-> implement this strategy anyway - MRSM bit gets set even if the number of
-> allocated MSIs exceeds the number of implemented ports).
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/ata/ahci.c    |   91 ++++++++++++++++++++++++++++++++++++--
->  drivers/ata/ahci.h    |    6 +++
->  drivers/ata/libahci.c |  118 ++++++++++++++++++++++++++++++++++++++++++++++---
->  3 files changed, 205 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 7862d17..5463fcea 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1057,6 +1057,84 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->  {}
->  #endif
->  
-> +int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
-> +{
-> +	int rc;
-> +	unsigned int maxvec;
-> +
-> +	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
-> +		rc = pci_enable_msi_block_auto(pdev, &maxvec);
-> +		if (rc > 0) {
-> +			if ((rc == maxvec) || (rc == 1))
-> +				return rc;
-> +			/* assume that advantage of multipe MSIs is negated,
-> +			 * so fallback to single MSI mode to save resources */
-
-Please use the customary (multi-line) comment style:
-
-  /*
-   * Comment .....
-   * ...... goes here.
-   */
-
-specified in Documentation/CodingStyle.
-
-> +			pci_disable_msi(pdev);
-> +			if (!pci_enable_msi(pdev))
-> +				return 1;
-> +		}
-> +	}
-> +
-> +	pci_intx(pdev, 1);
-> +	return 0;
-> +}
-> +
-> +/**
-> + *	ahci_host_activate - start AHCI host, request IRQs and register it
-> + *	@host: target ATA host
-> + *	@irq: base IRQ number to request
-> + *	@n_msis: number of MSIs allocated for this host
-> + *	@irq_handler: irq_handler used when requesting IRQs
-> + *	@irq_flags: irq_flags used when requesting IRQs
-> + *
-> + *	Similar to ata_host_activate, but requests IRQs according to AHCI-1.1
-> + *	when multiple MSIs were allocated. That is one MSI per port, starting
-> + *	from @irq.
-> + *
-> + *	LOCKING:
-> + *	Inherited from calling layer (may sleep).
-> + *
-> + *	RETURNS:
-> + *	0 on success, -errno otherwise.
-> + */
-> +int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
-> +{
-> +	int i, rc;
-> +
-> +	/* Sharing Last Message among several ports is not supported */
-> +	if (n_msis < host->n_ports)
-> +		return -EINVAL;
-> +
-> +	rc = ata_host_start(host);
-> +	if (rc)
-> +		return rc;
-> +
-> +	for (i = 0; i < host->n_ports; i++) {
-> +		rc = devm_request_threaded_irq(host->dev,
-> +			irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
-> +			dev_driver_string(host->dev), host->ports[i]);
-> +		if (rc)
-> +			goto out_free_irqs;
-> +	}
-> +
-> +	for (i = 0; i < host->n_ports; i++)
-> +		ata_port_desc(host->ports[i], "irq %d", irq + i);
-> +
-> +	rc = ata_host_register(host, &ahci_sht);
-> +	if (rc)
-> +		goto out_free_all_irqs;
-> +
-> +	return 0;
-> +
-> +out_free_all_irqs:
-> +	i = host->n_ports;
-> +out_free_irqs:
-> +	for (; i; i--)
-> +		devm_free_irq(host->dev, irq + i - 1, host->ports[i]);
-
-Please test the failure path somehow - for example I'm quite 
-sure that the line above is buggy and will crash/hang a real 
-system: it should be host->ports[i-1].
-
-Writing it as:
-
-		devm_free_irq(host->dev, irq + i-1, host->ports[i-1]);
-
-would help readability as well as bit - or just:
-
-	for (i--; i >= 0; i--)
-		devm_free_irq(host->dev, irq + i, host->ports[i]);
-
-(untested)
-
-> +
-> +	return rc;
-> +}
-> +
->  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  {
->  	unsigned int board_id = ent->driver_data;
-> @@ -1065,7 +1143,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	struct device *dev = &pdev->dev;
->  	struct ahci_host_priv *hpriv;
->  	struct ata_host *host;
-> -	int n_ports, i, rc;
-> +	int n_ports, n_msis, i, rc;
->  	int ahci_pci_bar = AHCI_PCI_BAR_STANDARD;
->  
->  	VPRINTK("ENTER\n");
-> @@ -1150,11 +1228,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (ahci_sb600_enable_64bit(pdev))
->  		hpriv->flags &= ~AHCI_HFLAG_32BIT_ONLY;
->  
-> -	if ((hpriv->flags & AHCI_HFLAG_NO_MSI) || pci_enable_msi(pdev))
-> -		pci_intx(pdev, 1);
-> -
->  	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
->  
-> +	n_msis = ahci_init_interrupts(pdev, hpriv);
-> +	if (n_msis > 1)
-> +		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
-> +
->  	/* save initial config */
->  	ahci_pci_save_initial_config(pdev, hpriv);
->  
-> @@ -1250,6 +1329,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	ahci_pci_print_info(host);
->  
->  	pci_set_master(pdev);
-> +
-> +	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
-> +		return ahci_host_activate(host, pdev->irq, n_msis);
-> +
->  	return ata_host_activate(host, pdev->irq, ahci_interrupt, IRQF_SHARED,
->  				 &ahci_sht);
->  }
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 57eb1c2..24251e8 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -216,6 +216,7 @@ enum {
->  	AHCI_HFLAG_DELAY_ENGINE		= (1 << 15), /* do not start engine on
->  						        port start (wait until
->  						        error-handling stage) */
-> +	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
->  
->  	/* ap->flags bits */
->  
-> @@ -282,6 +283,8 @@ struct ahci_port_priv {
->  	unsigned int		ncq_saw_d2h:1;
->  	unsigned int		ncq_saw_dmas:1;
->  	unsigned int		ncq_saw_sdb:1;
-> +	u32			intr_status;	/* interrupts to handle */
-> +	spinlock_t		lock;
-
-In general it's nice to add a small comment that explains what 
-data the lock protects precisely and in what circumstances it's 
-used - especially as it's in the middle of a structure, making 
-it unclear at first sight whether it's for the whole ahci_port 
-descriptor or just part of it.
-
->  	u32 			intr_mask;	/* interrupts to enable */
->  	bool			fbs_supported;	/* set iff FBS is supported */
->  	bool			fbs_enabled;	/* set iff FBS is enabled */
-> @@ -343,7 +346,10 @@ void ahci_set_em_messages(struct ahci_host_priv *hpriv,
->  			  struct ata_port_info *pi);
->  int ahci_reset_em(struct ata_host *host);
->  irqreturn_t ahci_interrupt(int irq, void *dev_instance);
-> +irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance);
-> +irqreturn_t ahci_thread_fn(int irq, void *dev_instance);
->  void ahci_print_info(struct ata_host *host, const char *scc_s);
-> +int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis);
->  
->  static inline void __iomem *__ahci_port_base(struct ata_host *host,
->  					     unsigned int port_no)
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 555c07a..3b54e84 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -1639,19 +1639,16 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
->  		ata_port_abort(ap);
->  }
->  
-> -static void ahci_port_intr(struct ata_port *ap)
-> +static void ahci_handle_port_interrupt(struct ata_port *ap,
-> +				       void __iomem *port_mmio, u32 status)
->  {
-> -	void __iomem *port_mmio = ahci_port_base(ap);
->  	struct ata_eh_info *ehi = &ap->link.eh_info;
->  	struct ahci_port_priv *pp = ap->private_data;
->  	struct ahci_host_priv *hpriv = ap->host->private_data;
->  	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
-> -	u32 status, qc_active = 0;
-> +	u32 qc_active = 0;
->  	int rc;
->  
-> -	status = readl(port_mmio + PORT_IRQ_STAT);
-> -	writel(status, port_mmio + PORT_IRQ_STAT);
-> -
->  	/* ignore BAD_PMP while resetting */
->  	if (unlikely(resetting))
->  		status &= ~PORT_IRQ_BAD_PMP;
-> @@ -1727,6 +1724,107 @@ static void ahci_port_intr(struct ata_port *ap)
->  	}
->  }
->  
-> +void ahci_port_intr(struct ata_port *ap)
-> +{
-> +	void __iomem *port_mmio = ahci_port_base(ap);
-> +	u32 status;
-> +
-> +	status = readl(port_mmio + PORT_IRQ_STAT);
-> +	writel(status, port_mmio + PORT_IRQ_STAT);
-> +
-> +	ahci_handle_port_interrupt(ap, port_mmio, status);
-> +}
-> +
-> +irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
-> +{
-> +	struct ata_port *ap = dev_instance;
-> +	struct ahci_port_priv *pp = ap->private_data;
-> +	void __iomem *port_mmio = ahci_port_base(ap);
-> +	unsigned long flags;
-> +	u32 status;
-> +
-> +	spin_lock_irqsave(&ap->host->lock, flags);
-> +	status = pp->intr_status;
-> +	if (status)
-> +		pp->intr_status = 0;
-> +	spin_unlock_irqrestore(&ap->host->lock, flags);
-> +
-> +	spin_lock_bh(ap->lock);
-> +	ahci_handle_port_interrupt(ap, port_mmio, status);
-> +	spin_unlock_bh(ap->lock);
-> +
-> +	return IRQ_HANDLED;
-> +}
-> +EXPORT_SYMBOL_GPL(ahci_thread_fn);
-> +
-> +void ahci_hw_port_interrupt(struct ata_port *ap)
-> +{
-> +	void __iomem *port_mmio = ahci_port_base(ap);
-> +	struct ahci_port_priv *pp = ap->private_data;
-> +	u32 status;
-> +
-> +	status = readl(port_mmio + PORT_IRQ_STAT);
-> +	writel(status, port_mmio + PORT_IRQ_STAT);
-> +
-> +	pp->intr_status |= status;
-> +}
-> +
-> +irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
-> +{
-> +	struct ata_port *ap_this = dev_instance;
-> +	struct ahci_port_priv *pp = ap_this->private_data;
-> +	struct ata_host *host = ap_this->host;
-> +	struct ahci_host_priv *hpriv = host->private_data;
-> +	void __iomem *mmio = hpriv->mmio;
-> +	unsigned int i;
-> +	u32 irq_stat, irq_masked;
-> +
-> +	VPRINTK("ENTER\n");
-
-Is this per IRQ handler execution debugging code still needed? 
-Same for the other VPRINTK() lines in this patch.
+Any other comments or ack/nack? If this is accepted I'll try multiple
+domain support as next step.
 
 Thanks,
+Takao Indoh
 
-	Ingo
