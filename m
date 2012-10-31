@@ -1,48 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:48479 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756328Ab2JLSeL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2012 14:34:11 -0400
+Received: from webmail.solarflare.com ([12.187.104.25]:37363 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755031Ab2JaXxP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 19:53:15 -0400
+Message-ID: <1351727591.2706.52.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: Re: [PATCH 4/4] PCI,sriov: provide method to reduce the number of
+ total VFs supported
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Donald Dutile <ddutile@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<yuvalmin@broadcom.com>, <gregory.v.rose@intel.com>,
+	<yinghai@kernel.org>, <davem@davemloft.net>
+Date: Wed, 31 Oct 2012 23:53:11 +0000
+In-Reply-To: <1351718353-6124-5-git-send-email-ddutile@redhat.com>
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+	 <1351718353-6124-5-git-send-email-ddutile@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <5077F6E1.7090600@huawei.com>
-References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com>
-	<1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com>
-	<5077F2C2.1010300@huawei.com>
-	<5077F407.3040205@cn.fujitsu.com>
-	<5077F6E1.7090600@huawei.com>
-Date: Fri, 12 Oct 2012 11:34:09 -0700
-Message-ID: <CAE9FiQUDy0Hb60z2E=UnYcF-06-Buoy+JFcNOvT8+3ic13Eokw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] Do not use acpi_device to find pci root bridge in
- _init code.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Tang Chen <tangchen@cn.fujitsu.com>, lenb@kernel.org,
-	bhelgaas@google.com, izumi.taku@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 12, 2012 at 3:54 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> On 2012-10-12 18:42, Tang Chen wrote:
->> On 10/12/2012 06:36 PM, Jiang Liu wrote:
->>> I have sent a similar patch to Yinghai before. For simplicity, we could
->>> use acpi_match_object_info_ids() instead of acpi_match_device_ids()
->>> directly.
->>
->> Hum, I must have missed it. :)
->> Using acpi_match_object_info_ids() directly seems good. I'm just worry
->> about if it could cause any other problem. :)
->>
->> So now, is this bug fixed ? And we don't need these patches, right ?
->>
->> Thanks. :)
-> I think Yinghai has missed my patch too, so just suggest to use
-> acpi_match_object_info_ids() directly.
+On Wed, 2012-10-31 at 17:19 -0400, Donald Dutile wrote:
+> Some implementations of SRIOV provide a capability structure
+> value of TotalVFs that is greater than what the software can support.
+> Provide a method to reduce the capability structure reported value
+> to the value the driver can support.
+> This ensures sysfs reports the current capability of the system,
+> hardware and software.
+> Example for its use: igb & ixgbe -- report 8 & 64 as TotalVFs,
+> but drivers only support 7 & 63 maximum.
+> 
+> Signed-off-by: Donald Dutile <ddutile@redhat.com>
+> ---
+>  drivers/pci/iov.c       | 27 ++++++++++++++++++++++++++-
+>  drivers/pci/pci-sysfs.c | 10 ++++++++--
+>  drivers/pci/pci.h       |  1 +
+>  include/linux/pci.h     |  5 +++++
+>  4 files changed, 40 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index aeccc91..98c3d37 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -682,7 +682,6 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  
+>  	if (!dev->is_physfn)
+>  		return -ENODEV;
+> -
+>  	return sriov_enable(dev, nr_virtfn);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_enable_sriov);
 
-i put that patch from Jiang in my branch for while, and later found it
-cause pci_root_bus notifying
-do not work anymore, so i dropped that.
+This hunk doesn't belong in this patch.
 
-Yinghai
+> @@ -735,3 +734,29 @@ int pci_num_vf(struct pci_dev *dev)
+>  		return dev->sriov->nr_virtfn;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_num_vf);
+> +
+> +/**
+> + * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+> + * @dev: the PCI PF device
+> + * numvfs: number that should be used for TotalVFs supported
+> + *
+> + * Should be called from PF driver's probe routine with
+> + * device's mutex held.
+> + *
+> + * Returns 0 if PF is an SRIOV-capable device and
+> + * value of numvfs valid, otherwise -EINVAL
+
+This says the only possible error is -EINVAL, but it can also return
+-EIO!  And the already-enabled case might be one that some drivers will
+need to handle specially.
+
+> + */
+> +int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+> +{
+> +	if (!dev || !dev->is_physfn || (numvfs > dev->sriov->total))
+> +		return -EINVAL;
+> +
+> +	/* Shouldn't change if VFs already enabled */
+> +	if (dev->sriov->ctrl & PCI_SRIOV_CTRL_VFE)
+> +		return -EIO;
+[...]
+
+EBUSY seems a bit more appropriate.
+
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
