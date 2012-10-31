@@ -1,138 +1,280 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux PM list <linux-pm@vger.kernel.org>
-Cc: ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH 7/7] PM / ACPI: Take device PM QoS flags into account
-Date: Mon, 08 Oct 2012 10:09:26 +0200
-Message-ID: <3734460.X8hLyTaasd@vostro.rjw.lan>
-In-Reply-To: <1413438.1MkXj8vjQK@vostro.rjw.lan>
-References: <201209282351.10663.rjw@sisk.pl> <1413438.1MkXj8vjQK@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Tang Chen <tangchen@cn.fujitsu.com>
+To: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/3] Use acpi_os_hotplug_execute() instead of alloc_acpi_hp_work().
+Date: Wed, 31 Oct 2012 15:27:49 +0800
+Message-Id: <1351668471-31436-2-git-send-email-tangchen@cn.fujitsu.com>
+In-Reply-To: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Yinghai,
 
-Make ACPI power management routines and PCI power management
-routines depending on ACPI take device PM QoS flags into account
-when deciding what power state to put the device into.
+alloc_acpi_hp_work() just puts the hutplug work onto kacpi_hotplug_wq.
+As mentioned by Toshi Kani, this job has been done in acpi_os_hotplug_execute().
+So we should use it instead of alloc_acpi_hp_work().
 
-In particular, after this change acpi_pm_device_sleep_state() will
-not return ACPI_STATE_D3_COLD as the deepest available low-power
-state if PM_QOS_FLAG_NO_POWER_OFF is requested for the device and it
-will not require remote wakeup to work for the device in the returned
-low-power state if there is at least one PM QoS flags request for the
-device, but PM_QOS_FLAG_REMOTE_WAKEUP is not requested for it.
+This patch adds a acpi_hp_cb_data struct, which encapsulates the hotplug
+event notifier's parameters:
+	struct acpi_hp_cb_data {
+		acpi_handle handle;
+		u32 type;
+		void *context;
+	};
 
-Accordingly, acpi_pci_set_power_state() will refuse to put the
-device into D3cold if PM_QOS_FLAG_NO_POWER_OFF is requested for it.
+And also a function alloc_acpi_hp_work(), which calls acpi_os_hotplug_execute()
+to put the hotplug job onto kacpi_hotplug_wq.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Jean Pihet <j-pihet@ti.com>
+This patch is based on Lu Yinghai's tree:
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-split-pci-root-hp-2
+
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
 ---
- drivers/acpi/sleep.c   |   21 +++++++++++++++++----
- drivers/pci/pci-acpi.c |    8 +++++++-
- 2 files changed, 24 insertions(+), 5 deletions(-)
+ drivers/acpi/osl.c                 |   28 ++++++++++++------------
+ drivers/acpi/pci_root_hp.c         |   25 +++++++++++++++-------
+ drivers/pci/hotplug/acpiphp_glue.c |   39 +++++++++++++++++++----------------
+ include/acpi/acpiosxf.h            |    7 ++---
+ 4 files changed, 55 insertions(+), 44 deletions(-)
 
-Index: linux/drivers/pci/pci-acpi.c
-===================================================================
---- linux.orig/drivers/pci/pci-acpi.c
-+++ linux/drivers/pci/pci-acpi.c
-@@ -17,6 +17,7 @@
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 311a921..d441b16 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -52,6 +52,7 @@
+ #include <acpi/acpi.h>
+ #include <acpi/acpi_bus.h>
+ #include <acpi/processor.h>
++#include <acpi/acpiosxf.h>
  
- #include <linux/pci-acpi.h>
- #include <linux/pm_runtime.h>
-+#include <linux/pm_qos.h>
- #include "pci.h"
+ #define _COMPONENT		ACPI_OS_SERVICES
+ ACPI_MODULE_NAME("osl");
+@@ -1592,23 +1593,22 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
+ 	__acpi_os_prepare_sleep = func;
+ }
  
- static DEFINE_MUTEX(pci_acpi_pm_notify_mtx);
-@@ -257,11 +258,16 @@ static int acpi_pci_set_power_state(stru
- 		return -ENODEV;
+-void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+-			void (*func)(struct work_struct *work))
++void acpi_hp_cb_execute(acpi_handle handle, u32 type, void *context,
++			acpi_osd_exec_callback function)
+ {
+-	struct acpi_hp_work *hp_work;
+-	int ret;
++	acpi_status status;
++	struct acpi_hp_cb_data *cb_data;
  
- 	switch (state) {
-+	case PCI_D3cold:
-+		if (dev_pm_qos_flags(&dev->dev, PM_QOS_FLAG_NO_POWER_OFF) ==
-+				PM_QOS_FLAGS_ALL) {
-+			error = -EBUSY;
-+			break;
-+		}
- 	case PCI_D0:
- 	case PCI_D1:
- 	case PCI_D2:
- 	case PCI_D3hot:
--	case PCI_D3cold:
- 		error = acpi_bus_set_power(handle, state_conv[state]);
+-	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+-	if (!hp_work)
++	cb_data = kmalloc(sizeof(struct acpi_hp_cb_data), GFP_KERNEL);
++	if (!cb_data)
+ 		return;
+ 
+-	hp_work->handle = handle;
+-	hp_work->type = type;
+-	hp_work->context = context;
++	cb_data->handle = handle;
++	cb_data->type = type;
++	cb_data->context = context;
+ 
+-	INIT_WORK(&hp_work->work, func);
+-	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+-	if (!ret)
+-		kfree(hp_work);
++	status = acpi_os_hotplug_execute(function, cb_data);
++	if (ACPI_FAILURE(status))
++		kfree(cb_data);
+ }
+-EXPORT_SYMBOL(alloc_acpi_hp_work);
++EXPORT_SYMBOL(acpi_hp_cb_execute);
+diff --git a/drivers/acpi/pci_root_hp.c b/drivers/acpi/pci_root_hp.c
+index 7d427e6..2ff83f4 100644
+--- a/drivers/acpi/pci_root_hp.c
++++ b/drivers/acpi/pci_root_hp.c
+@@ -75,19 +75,20 @@ static void handle_root_bridge_removal(struct acpi_device *device)
+ 	acpi_bus_hot_remove_device(ej_event);
+ }
+ 
+-static void _handle_hotplug_event_root(struct work_struct *work)
++/* This function is of type acpi_osd_exec_callback */
++static void _handle_hotplug_event_root(void *context)
+ {
+ 	struct acpi_pci_root *root;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
++	struct acpi_hp_cb_data *cb_data;
+ 	acpi_handle handle;
+ 	u32 type;
+ 
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
++	cb_data = (struct acpi_hp_cb_data *)context;
++	handle = cb_data->handle;
++	type = cb_data->type;
+ 
+ 	root = acpi_pci_find_root(handle);
+ 
+@@ -124,14 +125,22 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 		break;
  	}
  
-Index: linux/drivers/acpi/sleep.c
-===================================================================
---- linux.orig/drivers/acpi/sleep.c
-+++ linux/drivers/acpi/sleep.c
-@@ -19,6 +19,7 @@
+-	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
++	kfree(context); /* allocated in handle_hotplug_event_bridge */
+ }
+ 
+ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+ 					void *context)
+ {
+-	alloc_acpi_hp_work(handle, type, context,
+-				_handle_hotplug_event_root);
++	/*
++	 * Currently the code adds all hotplug events to the kacpid_wq
++	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
++	 * The proper way to fix this is to reorganize the code so that
++	 * drivers (dock, etc.) do not call acpi_os_execute(), etc.
++	 * For now just re-add this work to the kacpi_hotplug_wq so we
++	 * don't deadlock on hotplug actions.
++	 */
++	acpi_hp_cb_execute(handle, type, context,
++			_handle_hotplug_event_root);
+ }
+ 
+ static bool acpi_is_root_bridge_object(acpi_handle handle)
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 0833d2e..b30fc37 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -50,6 +50,8 @@
+ #include <linux/slab.h>
  #include <linux/acpi.h>
- #include <linux/module.h>
- #include <linux/pm_runtime.h>
-+#include <linux/pm_qos.h>
  
- #include <asm/io.h>
- 
-@@ -711,6 +712,7 @@ int acpi_pm_device_sleep_state(struct de
- 	struct acpi_device *adev;
- 	char acpi_method[] = "_SxD";
- 	unsigned long long d_min, d_max;
-+	bool wakeup = false;
- 
- 	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3)
- 		return -EINVAL;
-@@ -718,6 +720,13 @@ int acpi_pm_device_sleep_state(struct de
- 		printk(KERN_DEBUG "ACPI handle has no context!\n");
- 		return -ENODEV;
- 	}
-+	if (d_max_in > ACPI_STATE_D3_HOT) {
-+		enum pm_qos_flags_status stat;
++#include <acpi/acpiosxf.h>
 +
-+		stat = dev_pm_qos_flags(dev, PM_QOS_FLAG_NO_POWER_OFF);
-+		if (stat == PM_QOS_FLAGS_ALL)
-+			d_max_in = ACPI_STATE_D3_HOT;
-+	}
+ #include "../pci.h"
+ #include "acpiphp.h"
  
- 	acpi_method[2] = '0' + acpi_target_sleep_state;
- 	/*
-@@ -737,8 +746,14 @@ int acpi_pm_device_sleep_state(struct de
- 	 * NOTE: We rely on acpi_evaluate_integer() not clobbering the integer
- 	 * provided -- that's our fault recovery, we ignore retval.
+@@ -1209,7 +1211,8 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK ;
+ }
+ 
+-static void _handle_hotplug_event_bridge(struct work_struct *work)
++/* This function is of type acpi_osd_exec_callback */
++static void _handle_hotplug_event_bridge(void *context)
+ {
+ 	struct acpiphp_bridge *bridge;
+ 	char objname[64];
+@@ -1217,13 +1220,13 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 				      .pointer = objname };
+ 	struct acpi_device *device;
+ 	int num_sub_bridges = 0;
+-	struct acpi_hp_work *hp_work;
++	struct acpi_hp_cb_data *cb_data;
+ 	acpi_handle handle;
+ 	u32 type;
+ 
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
++	cb_data = (struct acpi_hp_cb_data *)context;
++	handle = cb_data->handle;
++	type = cb_data->type;
+ 
+ 	if (acpi_bus_get_device(handle, &device)) {
+ 		/* This bridge must have just been physically inserted */
+@@ -1302,7 +1305,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 	}
+ 
+ out:
+-	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
++	kfree(context); /* allocated in handle_hotplug_event_bridge */
+ }
+ 
+ /**
+@@ -1324,29 +1327,28 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	 * For now just re-add this work to the kacpi_hotplug_wq so we
+ 	 * don't deadlock on hotplug actions.
  	 */
--	if (acpi_target_sleep_state > ACPI_STATE_S0)
-+	if (acpi_target_sleep_state > ACPI_STATE_S0) {
- 		acpi_evaluate_integer(handle, acpi_method, NULL, &d_min);
-+		wakeup = device_may_wakeup(dev) && adev->wakeup.flags.valid
-+			&& adev->wakeup.sleep_state >= acpi_target_sleep_state;
-+	} else if (dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) !=
-+			PM_QOS_FLAGS_NONE) {
-+		wakeup = adev->wakeup.flags.valid;
-+	}
+-	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
++	acpi_hp_cb_execute(handle, type, context,
++				_handle_hotplug_event_bridge);
+ }
  
- 	/*
- 	 * If _PRW says we can wake up the system from the target sleep state,
-@@ -747,9 +762,7 @@ int acpi_pm_device_sleep_state(struct de
- 	 * (ACPI 3.x), it should return the maximum (lowest power) D-state that
- 	 * can wake the system.  _S0W may be valid, too.
+-static void _handle_hotplug_event_func(struct work_struct *work)
++/* This function is of type acpi_osd_exec_callback */
++static void _handle_hotplug_event_func(void *context)
+ {
+ 	struct acpiphp_func *func;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+-	struct acpi_hp_work *hp_work;
++	struct acpi_hp_cb_data *cb_data;
+ 	acpi_handle handle;
+ 	u32 type;
+-	void *context;
+ 
+-	hp_work = container_of(work, struct acpi_hp_work, work);
+-	handle = hp_work->handle;
+-	type = hp_work->type;
+-	context = hp_work->context;
++	cb_data = (struct acpi_hp_cb_data *)context;
++	handle = cb_data->handle;
++	type = cb_data->type;
++	func = (struct acpiphp_func *)cb_data->context;
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+-	func = (struct acpiphp_func *)context;
+-
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		/* bus re-enumerate */
+@@ -1377,7 +1379,7 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 		break;
+ 	}
+ 
+-	kfree(hp_work); /* allocated in handle_hotplug_event_func */
++	kfree(context); /* allocated in handle_hotplug_event_func */
+ }
+ 
+ /**
+@@ -1399,7 +1401,8 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * For now just re-add this work to the kacpi_hotplug_wq so we
+ 	 * don't deadlock on hotplug actions.
  	 */
--	if (acpi_target_sleep_state == ACPI_STATE_S0 ||
--	    (device_may_wakeup(dev) && adev->wakeup.flags.valid &&
--	     adev->wakeup.sleep_state >= acpi_target_sleep_state)) {
-+	if (wakeup) {
- 		acpi_status status;
+-	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
++	acpi_hp_cb_execute(handle, type, context,
++			_handle_hotplug_event_func);
+ }
  
- 		acpi_method[3] = 'W';
+ static struct acpi_pci_driver acpi_pci_hp_driver = {
+diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
+index 9f68f69..8825891 100644
+--- a/include/acpi/acpiosxf.h
++++ b/include/acpi/acpiosxf.h
+@@ -194,14 +194,13 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
+ /*
+  * Threads and Scheduling
+  */
+-struct acpi_hp_work {
+-	struct work_struct work;
++struct acpi_hp_cb_data {
+ 	acpi_handle handle;
+ 	u32 type;
+ 	void *context;
+ };
+-void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+-			void (*func)(struct work_struct *work));
++void acpi_hp_cb_execute(acpi_handle handle, u32 type, void *context,
++			acpi_osd_exec_callback function);
+ 
+ acpi_thread_id acpi_os_get_thread_id(void);
+ 
+-- 
+1.7.1
 
