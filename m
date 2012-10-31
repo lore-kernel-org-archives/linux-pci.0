@@ -1,92 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20310 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:31154 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965239Ab2JYSiq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:38:46 -0400
+	id S965608Ab2JaVT3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Oct 2012 17:19:29 -0400
 From: Donald Dutile <ddutile@redhat.com>
 To: linux-pci@vger.kernel.org
 Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
 	bhutchings@solarflare.com, gregory.v.rose@intel.com,
 	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 5/8] ixgbe: refactor mailbox ops init
-Date: Thu, 25 Oct 2012 14:38:27 -0400
-Message-Id: <1351190310-5043-6-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
-References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+Subject: [PATCH 1/4] PCI: add pci_device_type to pdev's device struct
+Date: Wed, 31 Oct 2012 17:19:06 -0400
+Message-Id: <1351718353-6124-2-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no actual dependency on initialization of the mailbox ops on
-whether SR-IOV is enabled or not and it doesn't hurt to go ahead and
-initialize ops unconditionally.  Move the initialization into the device
-probe so that the mailbox ops are initialized at the time we have the
-board info necessary to do it.
+From: Yinghai Lu <yinghai@kernel.org>
 
-Authored-by: Greg Rose <gregory.v.rose@intel.com>
+Need type filled in device structure so it
+can be used for visible attribute control in
+syfsfs for pci_dev.
+
+Authored-by: Yinghai Lu <yinghai@kernel.org>
 Signed-off-by: Donald Dutile <ddutile@redhat.com>
 ---
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c  | 5 ++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 9 +--------
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h | 3 +--
- 3 files changed, 6 insertions(+), 11 deletions(-)
+ drivers/pci/pci-sysfs.c | 24 ++++++++++++++++++++++++
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/probe.c     |  1 +
+ 3 files changed, 26 insertions(+)
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index 868af69..8d2a507 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -7249,7 +7249,10 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
- 	}
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 02d107b..3d160aa 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1411,3 +1411,27 @@ static int __init pci_sysfs_init(void)
+ }
  
- #ifdef CONFIG_PCI_IOV
--	ixgbe_enable_sriov(adapter, ii);
-+	/* Mailbox */
-+	ixgbe_init_mbx_params_pf(hw);
-+	memcpy(&hw->mbx.ops, ii->mbx_ops, sizeof(hw->mbx.ops));
-+	ixgbe_enable_sriov(adapter);
- 
- #endif
- 	netdev->features = NETIF_F_SG |
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-index dce48bf..9aeb929 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-@@ -44,8 +44,7 @@
- #include "ixgbe_sriov.h"
- 
- #ifdef CONFIG_PCI_IOV
--void ixgbe_enable_sriov(struct ixgbe_adapter *adapter,
--			 const struct ixgbe_info *ii)
-+void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
- {
- 	struct ixgbe_hw *hw = &adapter->hw;
- 	int num_vf_macvlans, i;
-@@ -124,12 +123,6 @@ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter,
- 		kcalloc(adapter->num_vfs,
- 			sizeof(struct vf_data_storage), GFP_KERNEL);
- 	if (adapter->vfinfo) {
--		/* Now that we're sure SR-IOV is enabled
--		 * and memory allocated set up the mailbox parameters
--		 */
--		ixgbe_init_mbx_params_pf(hw);
--		memcpy(&hw->mbx.ops, ii->mbx_ops, sizeof(hw->mbx.ops));
--
- 		/* limit trafffic classes based on VFs enabled */
- 		if ((adapter->hw.mac.type == ixgbe_mac_82599EB) &&
- 		    (adapter->num_vfs < 16)) {
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-index 1be1d30..d96ead2 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-@@ -43,8 +43,7 @@ int ixgbe_ndo_get_vf_config(struct net_device *netdev,
- void ixgbe_check_vf_rate_limit(struct ixgbe_adapter *adapter);
- void ixgbe_disable_sriov(struct ixgbe_adapter *adapter);
- #ifdef CONFIG_PCI_IOV
--void ixgbe_enable_sriov(struct ixgbe_adapter *adapter,
--			const struct ixgbe_info *ii);
-+void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
- #endif
- 
- 
+ late_initcall(pci_sysfs_init);
++
++static struct attribute *pci_dev_dev_attrs[] = {
++	NULL,
++};
++
++static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
++{
++	return a->mode;
++}
++
++static struct attribute_group pci_dev_attr_group = {
++	.attrs = pci_dev_dev_attrs,
++	.is_visible = pci_dev_attrs_are_visible,
++};
++
++static const struct attribute_group *pci_dev_attr_groups[] = {
++	&pci_dev_attr_group,
++	NULL,
++};
++
++struct device_type pci_dev_type = {
++	.groups = pci_dev_attr_groups,
++};
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index bacbcba..6f6cd14 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -157,6 +157,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+ }
+ extern struct device_attribute pci_dev_attrs[];
+ extern struct device_attribute pcibus_dev_attrs[];
++extern struct device_type pci_dev_type;
+ #ifdef CONFIG_HOTPLUG
+ extern struct bus_attribute pci_bus_attrs[];
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec909af..0312f1c48 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -975,6 +975,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->sysdata = dev->bus->sysdata;
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
 -- 
 1.7.10.2.552.gaa3bb87
 
