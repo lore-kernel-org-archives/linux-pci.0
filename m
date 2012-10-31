@@ -1,91 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:58392 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422685Ab2JLKh7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Oct 2012 06:37:59 -0400
-Message-ID: <5077F2C2.1010300@huawei.com>
-Date: Fri, 12 Oct 2012 18:36:50 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-MIME-Version: 1.0
-To: Tang Chen <tangchen@cn.fujitsu.com>
-CC: <yinghai@kernel.org>, <lenb@kernel.org>, <bhelgaas@google.com>,
-	<izumi.taku@jp.fujitsu.com>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/3] Do not use acpi_device to find pci root bridge in
- _init code.
-References: <1350037890-5899-1-git-send-email-tangchen@cn.fujitsu.com> <1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com>
-In-Reply-To: <1350037890-5899-3-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mx1.redhat.com ([209.132.183.28]:40501 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945979Ab2JaVTa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Oct 2012 17:19:30 -0400
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 6/8] ixgbe: refactor SRIOV enable and disable for sysfs interface
+Date: Wed, 31 Oct 2012 17:19:11 -0400
+Message-Id: <1351718353-6124-7-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-10-12 18:31, Tang Chen wrote:
-> When the kernel is being initialized, and some hardwares are not added
-> to system, there won't be acpi_device structs for these devices. But
-> acpi_is_root_bridge() depends on acpi_device struct. As a result, all
-> the not-added root bridge will not be judged as a root bridge in
-> find_root_bridges(). And further more, no handle_hotplug_event_root()
-> notifier will be installed for them.
-> 
-> This patch introduces a new api to find all root bridges in system by
-> getting HID directly from ACPI namespace, not depending on acpi_device
-> struct.
-> 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->  drivers/acpi/pci_root.c |   27 ++++++++++++++++++++++-----
->  1 files changed, 22 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 7d0fb03..3819bee 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -128,9 +128,6 @@ EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
->  /**
->   * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
->   * @handle - the ACPI CA node in question.
-> - *
-> - * Note: we could make this API take a struct acpi_device * instead, but
-> - * for now, it's more convenient to operate on an acpi_handle.
->   */
->  int acpi_is_root_bridge(acpi_handle handle)
->  {
-> @@ -138,8 +135,28 @@ int acpi_is_root_bridge(acpi_handle handle)
->  	struct acpi_device *device;
->  
->  	ret = acpi_bus_get_device(handle, &device);
-> -	if (ret)
-> -		return 0;
-> +	if (ret) {
-> +		/**
-> +		 * If a device is not added to the system yet, there won't be
-> +		 * an acpi_device struct for it. But it doesn't mean it is not
-> +		 * a PCI root bridge. In this case we need to get HID and CID
-> +		 * from ACPI namespace directly.
-> +		 */
-> +		struct acpi_device_info *info;
-> +		acpi_status status;
-> +		status = acpi_get_object_info(handle, &info);
-> +		if (ACPI_FAILURE(status)) {
-> +			printk(KERN_ERR PREFIX "%s: Error reading"
-> +					       "device info\n", __func__);
-> +			return 0;
-> +		}
-> +
-> +		ret = acpi_match_object_info_ids(info, root_device_ids);
-> +		if (ret)
-> +			return 0;
-> +		else
-> +			return 1;
-> +	}
-I have sent a similar patch to Yinghai before. For simplicity, we could
-use acpi_match_object_info_ids() instead of acpi_match_device_ids()
-directly.
-Thanks!
-Gerry
+In preparation for enable/disable of SR-IOV via the pci sysfs interface
+move some core SR-IOV enablement code that would be common to module
+parameter usage or callback from the pci bus driver to a separate
+function so that it can be used by either method.
 
->  
->  	ret = acpi_match_device_ids(device, root_device_ids);
->  	if (ret)
+Authored-by: Greg Rose <gregory.v.rose@intel.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 98 +++++++++++++++-----------
+ 1 file changed, 58 insertions(+), 40 deletions(-)
 
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+index 9aeb929..7c068b4 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+@@ -44,49 +44,11 @@
+ #include "ixgbe_sriov.h"
+ 
+ #ifdef CONFIG_PCI_IOV
+-void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
++static int __ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
+ {
+ 	struct ixgbe_hw *hw = &adapter->hw;
+ 	int num_vf_macvlans, i;
+ 	struct vf_macvlans *mv_list;
+-	int pre_existing_vfs = 0;
+-
+-	pre_existing_vfs = pci_num_vf(adapter->pdev);
+-	if (!pre_existing_vfs && !adapter->num_vfs)
+-		return;
+-
+-	/* If there are pre-existing VFs then we have to force
+-	 * use of that many because they were not deleted the last
+-	 * time someone removed the PF driver.  That would have
+-	 * been because they were allocated to guest VMs and can't
+-	 * be removed.  Go ahead and just re-enable the old amount.
+-	 * If the user wants to change the number of VFs they can
+-	 * use ethtool while making sure no VFs are allocated to
+-	 * guest VMs... i.e. the right way.
+-	 */
+-	if (pre_existing_vfs) {
+-		adapter->num_vfs = pre_existing_vfs;
+-		dev_warn(&adapter->pdev->dev, "Virtual Functions already "
+-			 "enabled for this device - Please reload all "
+-			 "VF drivers to avoid spoofed packet errors\n");
+-	} else {
+-		int err;
+-		/*
+-		 * The 82599 supports up to 64 VFs per physical function
+-		 * but this implementation limits allocation to 63 so that
+-		 * basic networking resources are still available to the
+-		 * physical function.  If the user requests greater thn
+-		 * 63 VFs then it is an error - reset to default of zero.
+-		 */
+-		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, 63);
+-
+-		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
+-		if (err) {
+-			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
+-			adapter->num_vfs = 0;
+-			return;
+-		}
+-	}
+ 
+ 	adapter->flags |= IXGBE_FLAG_SRIOV_ENABLED;
+ 	e_info(probe, "SR-IOV enabled with %d VFs\n", adapter->num_vfs);
+@@ -156,10 +118,66 @@ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
+ 		/* enable spoof checking for all VFs */
+ 		for (i = 0; i < adapter->num_vfs; i++)
+ 			adapter->vfinfo[i].spoofchk_enabled = true;
++		return 0;
++	}
++
++	return -ENOMEM;
++}
++
++/*
++ * Note this function is called when the user wants to enable SR-IOV
++ * VFs using the now deprecated module parameter
++ */
++void ixgbe_enable_sriov(struct ixgbe_adapter *adapter)
++{
++	int pre_existing_vfs = 0;
++
++	pre_existing_vfs = pci_num_vf(adapter->pdev);
++	if (!pre_existing_vfs && !adapter->num_vfs)
+ 		return;
++
++	if (!pre_existing_vfs)
++		dev_warn(&adapter->pdev->dev,
++		 	 "Enabling SR-IOV VFs using the module parameter is deprecated - please use the pci sysfs interface.\n");
++
++	/*
++	 * If there are pre-existing VFs then we have to force
++	 * use of that many - over ride any module parameter value.
++	 * This may result from the user unloading the PF driver
++	 * while VFs were assigned to guest VMs or because the VFs
++	 * have been created via the new PCI SR-IOV sysfs interface.
++	 */
++	if (pre_existing_vfs) {
++		adapter->num_vfs = pre_existing_vfs;
++		dev_warn(&adapter->pdev->dev, "Virtual Functions already "
++			 "enabled for this device - Please reload all "
++			 "VF drivers to avoid spoofed packet errors\n");
++	} else {
++		int err;
++		/*
++		 * The 82599 supports up to 64 VFs per physical function
++		 * but this implementation limits allocation to 63 so that
++		 * basic networking resources are still available to the
++		 * physical function.  If the user requests greater thn
++		 * 63 VFs then it is an error - reset to default of zero.
++		 */
++		adapter->num_vfs = min_t(unsigned int, adapter->num_vfs, 63);
++
++		err = pci_enable_sriov(adapter->pdev, adapter->num_vfs);
++		if (err) {
++			e_err(probe, "Failed to enable PCI sriov: %d\n", err);
++			adapter->num_vfs = 0;
++			return;
++		}
+ 	}
+ 
+-	/* Oh oh */
++	if (!__ixgbe_enable_sriov(adapter))
++		return;
++
++	/*
++	 * If we have gotten to this point then there is no memory available
++	 * to manage the VF devices - print message and bail.
++	 */
+ 	e_err(probe, "Unable to allocate memory for VF Data Storage - "
+ 	      "SRIOV disabled\n");
+ 	ixgbe_disable_sriov(adapter);
+-- 
+1.7.10.2.552.gaa3bb87
 
