@@ -1,325 +1,273 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33016 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965589Ab2JYSit (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Oct 2012 14:38:49 -0400
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
-Date: Thu, 25 Oct 2012 14:38:25 -0400
-Message-Id: <1351190310-5043-4-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
-References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:34282 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753331Ab2JaJfy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 05:35:54 -0400
+Message-ID: <5090F078.8070206@huawei.com>
+Date: Wed, 31 Oct 2012 17:33:44 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
+Subject: Re: [RFC][PATCH] PCI, pciehp: make every slot have its own workqueue
+ to avoid deadlock
+References: <1351667452-9952-1-git-send-email-wangyijing@huawei.com> <4A338DB2991D2A44B9A44B8718AECF650A4F5E56@G01JPEXMBYT03>
+In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A4F5E56@G01JPEXMBYT03>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide files under sysfs to determine the max number of vfs
-an SRIOV-capable PCIe device supports, and methods to enable and
-disable the vfs on a per device basis.
+On 2012/10/31 17:20, Kaneshige, Kenji wrote:
+> Let me confirm the problem. My understanding of the problem is below.
+> Is my understanding correct?
+> 
 
-Currently, VF enablement by SRIOV-capable PCIe devices is done
-in driver-specific module parameters.  If not setup in modprobe files,
-it requires admin to unload & reload PF drivers with number of desired
-VFs to enable.  Additionally, the enablement is system wide: all
-devices controlled by the same driver have the same number of VFs
-enabled.  Although the latter is probably desired, there are PCI
-configurations setup by system BIOS that may not enable that to occur.
+Yes，exactly.
 
-Three files are created if a PCIe device has SRIOV support:
-sriov_totalvfs -- cat-ing this file returns the maximum number
-                  of VFs a PCIe device supports as reported by
-                  the TotalVFs in the SRIOV ext cap structure.
-sriov_numvfs -- echo'ing a positive number to this file enables this
-                number of VFs for this given PCIe device.
-             -- echo'ing a 0 to this file disables
-                any previously enabled VFs for this PCIe device.
-             -- cat-ing this file will return the number of VFs
-                currently enabled on this PCIe device, i.e.,
-                the NumVFs field in SRIOV ext. cap structure.
+> - Your hardware has nested PCIe hotplug slots like below.
+> 
+>     --<slot A>--<Slot B>
+> 
+> - Hot-removal request (attention button event) comes to <slot A>
+> - Pciehp driver queue the hot-removal work
+> - This hot-removal work try to remove <slot B>
+> - To remove <slot B>, pciehp flush the pciehp_wq, but it never finishes
+>   because hot-removal work is in progress. ===> deadlock
+> 
+> Regards,
+> Kenji Kaneshige
+> 
+> 
+> 
+>> -----Original Message-----
+>> From: Yijing Wang [mailto:wangyijing@huawei.com]
+>> Sent: Wednesday, October 31, 2012 4:11 PM
+>> To: Bjorn Helgaas; Yinghai Lu; Kaneshige, Kenji/金重 憲治; Rafael; Rusty
+>> Russell; Mauro Carvalho Chehab; Oliver Neukum
+>> Cc: linux-pci@vger.kernel.org; Hanjun Guo; jiang.liu@huawei.com; Yijing
+>> Wang
+>> Subject: [RFC][PATCH] PCI, pciehp: make every slot have its own workqueue
+>> to avoid deadlock
+>>
+>> Currently, pciehp use global pciehp_wq to handle hotplug event from
+>> hardware.
+>> Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed
+>> of PCIe
+>> Switch and some slots which support hotplug, eg.PLX8696). The hot removed
+>> work was queued
+>> into pciehp_wq. But in the hot-remove path, pciehp driver would flush
+>> pciehp_wq when
+>> the pcie port(support pciehp) was removed. In this case the hot-remove path
+>> blocked.
+>> This patch remove the global pciehp_wq and create a new workqueue for every
+>> slot to
+>> avoid above problem.
+>>
+>> -+-[0000:40]-+-00.0-[0000:41]--
+>>  |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit
+>> Network Connection
+>>  |           |                 \-00.1  Intel Corporation 82576 Gigabit
+>> Network Connection
+>>  |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic
+>> SAS1064ET PCI-Express Fusion-MPT SAS
+>>  |           +-04.0-[0000:44]--
+>>  |           +-05.0-[0000:45]--
+>>  |
+>> +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-
+>> [0000:49]--
+>>  |           |(hotplug slot)
+>> +-08.0-[0000:4a]--
+>>  |           |
+>> +-09.0-[0000:4b]--
+>>  |           |
+>> +-10.0-[0000:4c]--
+>>  |           |
+>> +-11.0-[0000:4d]--
+>>  |           |
+>> +-14.0-[0000:4e]--
+>>  |           |
+>> \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network
+>> Connection
+>>  |           |                                         (hotplug slot)
+>> \-00.1  Intel Corporation 82576 Gigabit Network Connection
+>>
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/hotplug/pciehp.h      |    2 +-
+>>  drivers/pci/hotplug/pciehp_core.c |   11 ++---------
+>>  drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
+>>  drivers/pci/hotplug/pciehp_hpc.c  |   14 ++++++++++++--
+>>  4 files changed, 19 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+>> index 26ffd3e..2c113de 100644
+>> --- a/drivers/pci/hotplug/pciehp.h
+>> +++ b/drivers/pci/hotplug/pciehp.h
+>> @@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
+>>  extern int pciehp_poll_time;
+>>  extern bool pciehp_debug;
+>>  extern bool pciehp_force;
+>> -extern struct workqueue_struct *pciehp_wq;
+>>
+>>  #define dbg(format, arg...)
+>> 	\
+>>  do {
+>> 	\
+>> @@ -78,6 +77,7 @@ struct slot {
+>>  	struct hotplug_slot *hotplug_slot;
+>>  	struct delayed_work work;	/* work for button event */
+>>  	struct mutex lock;
+>> +	struct workqueue_struct *wq;
+>>  };
+>>
+>>  struct event_info {
+>> diff --git a/drivers/pci/hotplug/pciehp_core.c
+>> b/drivers/pci/hotplug/pciehp_core.c
+>> index 916bf4f..0914211 100644
+>> --- a/drivers/pci/hotplug/pciehp_core.c
+>> +++ b/drivers/pci/hotplug/pciehp_core.c
+>> @@ -42,7 +42,6 @@ bool pciehp_debug;
+>>  bool pciehp_poll_mode;
+>>  int pciehp_poll_time;
+>>  bool pciehp_force;
+>> -struct workqueue_struct *pciehp_wq;
+>>
+>>  #define DRIVER_VERSION	"0.4"
+>>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg
+>> Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+>> @@ -340,18 +339,13 @@ static int __init pcied_init(void)
+>>  {
+>>  	int retval = 0;
+>>
+>> -	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
+>> -	if (!pciehp_wq)
+>> -		return -ENOMEM;
+>> -
+>>  	pciehp_firmware_init();
+>>  	retval = pcie_port_service_register(&hpdriver_portdrv);
+>>   	dbg("pcie_port_service_register = %d\n", retval);
+>>    	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+>> - 	if (retval) {
+>> -		destroy_workqueue(pciehp_wq);
+>> +	if (retval)
+>>  		dbg("Failure to register service\n");
+>> -	}
+>> +
+>>  	return retval;
+>>  }
+>>
+>> @@ -359,7 +353,6 @@ static void __exit pcied_cleanup(void)
+>>  {
+>>  	dbg("unload_pciehpd()\n");
+>>  	pcie_port_service_unregister(&hpdriver_portdrv);
+>> -	destroy_workqueue(pciehp_wq);
+>>  	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+>>  }
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c
+>> b/drivers/pci/hotplug/pciehp_ctrl.c
+>> index 27f4429..38f0186 100644
+>> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+>> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+>> @@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot,
+>> u32 event_type)
+>>  	info->p_slot = p_slot;
+>>  	INIT_WORK(&info->work, interrupt_event_handler);
+>>
+>> -	queue_work(pciehp_wq, &info->work);
+>> +	queue_work(p_slot->wq, &info->work);
+>>
+>>  	return 0;
+>>  }
+>> @@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct
+>> *work)
+>>  		kfree(info);
+>>  		goto out;
+>>  	}
+>> -	queue_work(pciehp_wq, &info->work);
+>> +	queue_work(p_slot->wq, &info->work);
+>>   out:
+>>  	mutex_unlock(&p_slot->lock);
+>>  }
+>> @@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot
+>> *p_slot)
+>>  		if (ATTN_LED(ctrl))
+>>  			pciehp_set_attention_status(p_slot, 0);
+>>
+>> -		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
+>> +		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+>>  		break;
+>>  	case BLINKINGOFF_STATE:
+>>  	case BLINKINGON_STATE:
+>> @@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
+>>  	else
+>>  		p_slot->state = POWERON_STATE;
+>>
+>> -	queue_work(pciehp_wq, &info->work);
+>> +	queue_work(p_slot->wq, &info->work);
+>>  }
+>>
+>>  static void interrupt_event_handler(struct work_struct *work)
+>> diff --git a/drivers/pci/hotplug/pciehp_hpc.c
+>> b/drivers/pci/hotplug/pciehp_hpc.c
+>> index 13b2eaf..8e5e571 100644
+>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>> @@ -773,23 +773,33 @@ static void pcie_shutdown_notification(struct
+>> controller *ctrl)
+>>  static int pcie_init_slot(struct controller *ctrl)
+>>  {
+>>  	struct slot *slot;
+>> +	char name[32];
+>>
+>>  	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+>>  	if (!slot)
+>>  		return -ENOMEM;
+>> -
+>> +
+>> +	snprintf(name, sizeof(name), "pciehpd_%s",
+>> +		pci_name(ctrl->pcie->port));
+>> +	slot->wq = create_singlethread_workqueue(name);
+>> +	if (!slot->wq)
+>> +		goto abort;
+>>  	slot->ctrl = ctrl;
+>>  	mutex_init(&slot->lock);
+>>  	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+>>  	ctrl->slot = slot;
+>>  	return 0;
+>> +abort:
+>> +	kfree(slot);
+>> +	return -1;
+>>  }
+>>
+>>  static void pcie_cleanup_slot(struct controller *ctrl)
+>>  {
+>>  	struct slot *slot = ctrl->slot;
+>>  	cancel_delayed_work(&slot->work);
+>> -	flush_workqueue(pciehp_wq);
+>> +	flush_workqueue(slot->wq);
+>> +	destroy_workqueue(slot->wq);
+>>  	kfree(slot);
+>>  }
+>>
+>> --
+>> 1.7.1
+>>
+> 
+> 
+> .
+> 
 
-VF enable and disablement is invoked much like other PCIe
-configuration functions -- via registered callbacks in the driver,
-i.e., probe, release, etc.
 
-Signed-off-by: Donald Dutile <ddutile@redhat.com>
----
- drivers/pci/pci-sysfs.c | 155 ++++++++++++++++++++++++++++++++++++++++++++----
- include/linux/pci.h     |   1 +
- 2 files changed, 146 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index fbbb97f..c2894ca 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -14,6 +14,7 @@
-  *
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt /* has to precede printk.h */
- 
- #include <linux/kernel.h>
- #include <linux/sched.h>
-@@ -66,7 +67,7 @@ static ssize_t broken_parity_status_store(struct device *dev,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	pdev->broken_parity_status = !!val;
-@@ -188,7 +189,7 @@ static ssize_t is_enabled_store(struct device *dev,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
--	ssize_t result = strict_strtoul(buf, 0, &val);
-+	ssize_t result = kstrtoul(buf, 0, &val);
- 
- 	if (result < 0)
- 		return result;
-@@ -259,7 +260,7 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	/* bad things may happen if the no_msi flag is changed
-@@ -292,7 +293,7 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 	unsigned long val;
- 	struct pci_bus *b = NULL;
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	if (val) {
-@@ -316,7 +317,7 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
- 	unsigned long val;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	if (val) {
-@@ -343,7 +344,7 @@ remove_store(struct device *dev, struct device_attribute *dummy,
- 	int ret = 0;
- 	unsigned long val;
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	/* An attribute cannot be unregistered by one of its own methods,
-@@ -363,7 +364,7 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 	unsigned long val;
- 	struct pci_bus *bus = to_pci_bus(dev);
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	if (val) {
-@@ -387,7 +388,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
- 
--	if (strict_strtoul(buf, 0, &val) < 0)
-+	if (kstrtoul(buf, 0, &val) < 0)
- 		return -EINVAL;
- 
- 	pdev->d3cold_allowed = !!val;
-@@ -404,6 +405,114 @@ static ssize_t d3cold_allowed_show(struct device *dev,
- }
- #endif
- 
-+#ifdef CONFIG_PCI_IOV
-+static ssize_t sriov_totalvfs_show(struct device *dev,
-+                                  struct device_attribute *attr,
-+                                  char *buf)
-+{
-+	struct pci_dev *pdev;
-+	u16 total;
-+
-+	pdev = to_pci_dev(dev);
-+	total = pdev->sriov->total;
-+	return sprintf (buf, "%u\n", total);
-+}
-+
-+
-+static ssize_t sriov_numvfs_show(struct device *dev,
-+                                 struct device_attribute *attr,
-+                                 char *buf)
-+{
-+	struct pci_dev *pdev;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	return sprintf (buf, "%u\n", pdev->sriov->nr_virtfn);
-+}
-+
-+/* 
-+ * num_vfs > 0; number of vfs to enable
-+ * num_vfs = 0; disable all vfs
-+ *
-+ * Note: SRIOV spec doesn't allow partial VF
-+ *       disable, so its all or none.
-+ */
-+static ssize_t sriov_numvfs_store(struct device *dev,
-+                                  struct device_attribute *attr,
-+                                  const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev;
-+	int num_vfs_enabled = 0;
-+	int num_vfs;
-+	int ret = 0;
-+	u16 total;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	/* Requested VFs to enable < totalvfs
-+	 * and none enabled already
-+	 */
-+	if (kstrtoint(buf, 0, &num_vfs) < 0)
-+		return -EINVAL;
-+
-+	/* is PF driver loaded w/callback */
-+	if (!pdev->driver || !pdev->driver->sriov_configure) {
-+		pr_info("Driver doesn't support sriov configuration via sysfs \n");
-+		return -ENOSYS;
-+	}
-+
-+	/* if enabling vf's ... */
-+	total = pdev->sriov->total;
-+	if ((num_vfs > 0) && (num_vfs <= total)) {
-+		if (pdev->sriov->nr_virtfn == 0) { /* if not already enabled */
-+		    num_vfs_enabled = pdev->driver->sriov_configure(pdev, num_vfs);
-+        	    if ((num_vfs_enabled >= 0) && (num_vfs_enabled != num_vfs))
-+			pr_warn("%s: %04x:%02x:%02x.%d: Only %d VFs enabled \n",
-+                        	pdev->dev.driver->name, pci_domain_nr(pdev->bus),
-+                        	pdev->bus->number, PCI_SLOT(pdev->devfn),
-+                        	PCI_FUNC(pdev->devfn), num_vfs_enabled);
-+			return count;
-+		} else {
-+			pr_warn("VFs already enabled. Disable before re-enabling\n");
-+			return -EINVAL;
-+		}
-+	} 
-+
-+	/* disable vfs */
-+	if (num_vfs == 0) {
-+		if (pdev->sriov->nr_virtfn != 0) {
-+			ret = pdev->driver->sriov_configure(pdev, 0);
-+			return ret ? ret: count;
-+		} else {
-+			pr_err("Disable failed since no VFs enabled\n");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	pr_err("Invalid value for number of VFs to enable: %d\n", num_vfs);
-+
-+	return -EINVAL;
-+}
-+#else
-+static ssize_t sriov_totalvfs_show(struct device *dev,
-+                                   struct device_attribute *attr,
-+                                   char *buf)
-+{ return 0; }
-+static ssize_t sriov_numvfs_show(struct device *dev,
-+			         struct device_attribute *attr,
-+			         char *buf)
-+{ return 0; }
-+static ssize_t sriov_numvfs_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{ return count; }
-+#endif /* CONFIG_PCI_IOV */
-+
-+static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-+static struct device_attribute sriov_numvfs_attr = 
-+		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-+                	sriov_numvfs_show, sriov_numvfs_store);
-+
- struct device_attribute pci_dev_attrs[] = {
- 	__ATTR_RO(resource),
- 	__ATTR_RO(vendor),
-@@ -1194,7 +1303,7 @@ static ssize_t reset_store(struct device *dev,
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	unsigned long val;
--	ssize_t result = strict_strtoul(buf, 0, &val);
-+	ssize_t result = kstrtoul(buf, 0, &val);
- 
- 	if (result < 0)
- 		return result;
-@@ -1408,8 +1517,14 @@ static struct attribute *pci_dev_dev_attrs[] = {
- 	NULL,
- };
- 
-+static struct attribute *sriov_dev_attrs[] = {
-+        &sriov_totalvfs_attr.attr,
-+        &sriov_numvfs_attr.attr,
-+	NULL,
-+};
-+
- static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
--						struct attribute *a, int n)
-+					 struct attribute *a, int n)
- {
- 	struct device *dev = container_of(kobj, struct device, kobj);
- 	struct pci_dev *pdev = to_pci_dev(dev);
-@@ -1421,13 +1536,33 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- 	return a->mode;
- }
- 
-+static umode_t sriov_attrs_are_visible(struct kobject *kobj,
-+					 struct attribute *a, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+
-+	if ((a == &sriov_totalvfs_attr.attr) ||
-+	    (a == &sriov_numvfs_attr.attr)) {
-+		if (!dev_is_pf(dev))
-+			return 0;
-+	}
-+
-+	return a->mode;
-+}
-+
- static struct attribute_group pci_dev_attr_group = {
- 	.attrs = pci_dev_dev_attrs,
- 	.is_visible = pci_dev_attrs_are_visible,
- };
- 
-+static struct attribute_group sriov_dev_attr_group = {
-+	.attrs = sriov_dev_attrs,
-+	.is_visible = sriov_attrs_are_visible,
-+};
-+
- static const struct attribute_group *pci_dev_attr_groups[] = {
- 	&pci_dev_attr_group,
-+	&sriov_dev_attr_group,
- 	NULL,
- };
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index be1de01..1d60a23 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -595,6 +595,7 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
-+	int (*sriov_configure) (struct pci_dev *dev, int num_vfs);    /* PF pci dev */
- 	const struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
 -- 
-1.7.10.2.552.gaa3bb87
+Thanks!
+Yijing
 
