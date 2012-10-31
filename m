@@ -1,68 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:4672 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751854Ab2JQHni (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Oct 2012 03:43:38 -0400
-Message-ID: <507E6167.6060506@cn.fujitsu.com>
-Date: Wed, 17 Oct 2012 15:42:31 +0800
-From: Tang Chen <tangchen@cn.fujitsu.com>
+Received: from mga14.intel.com ([143.182.124.37]:38867 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945991Ab2JaSZK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Oct 2012 14:25:10 -0400
+From: "Rose, Gregory V" <gregory.v.rose@intel.com>
+To: Don Dutile <ddutile@redhat.com>,
+	Ben Hutchings <bhutchings@solarflare.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: RE: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
+Date: Wed, 31 Oct 2012 18:25:08 +0000
+Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A072D54D17A@ORSMSX106.amr.corp.intel.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+  <1351190310-5043-4-git-send-email-ddutile@redhat.com>
+  <1351196234.2662.37.camel@bwh-desktop.uk.solarflarecom.com>
+  <508AA719.2060705@redhat.com>
+  <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com>
+ <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
+ <50916B93.9060807@redhat.com>
+In-Reply-To: <50916B93.9060807@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: jiang.liu@huawei.com, bhelgaas@google.com, lenb@kernel.org,
-	izumi.taku@jp.fujitsu.com, isimatu.yasuaki@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] Update acpi_root_bridge_list in container hotplug
- path.
-References: <1350444308-27102-1-git-send-email-tangchen@cn.fujitsu.com> <CAE9FiQVFc9VVfWZpEfjPeGvo5pby3BQNzDei3VTXdoR048_SPg@mail.gmail.com> <507E60C2.6010104@cn.fujitsu.com>
-In-Reply-To: <507E60C2.6010104@cn.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/17/2012 03:39 PM, Tang Chen wrote:
-> On 10/17/2012 01:18 PM, Yinghai Lu wrote:
->>
->> no, we don't need that.
->>
->> after closely looking, it seems we can dump acpi_root_bridge.
->>
->> please check if attached patch could work with container path.
->
-> Hi Yinghai,
->
-> Your patch seems working well.
->
-> BTW, I actually found that the two lists, acpi_root_bridge and
-> acpi_pci_roots in drivers/acpi/pci_root.c were similar, except
-> your acpi_root_bridge included PNP0A08.
->
-> In the beginning, I thought you would use it in some other situations,
-> and now it is clear that it can be removed.
-> Thanks. :)
->
-> And also, I have another 2 questions, maybe you can help me.
-> 1) Do we need to put PNP0A08 into acpi_pci_roots ?
-> 2) In container_notify_cb(), when it got a ACPI_NOTIFY_EJECT_REQUEST
-> event, it doesn't do the hot-remove things.
-> I use your sci emulator patch to test it. I did the following thing:
-> echo echo "\_SB_.LSB1" > /sys/kernel/debug/acpi/sci_notify
-	==> echo "\_SB_.LSB1 3" > /sys/kernel/debug/acpi/sci_notify
-
-> where \_SB_.LSB1 is a container, it just did nothing.
-> Do we need to support this operation ?
->
-> Thanks. :)
->
->>
->> Thanks
->>
->> Yinghai
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at http://www.tux.org/lkml/
->
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEb24gRHV0aWxlIFttYWlsdG86
+ZGR1dGlsZUByZWRoYXQuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE9jdG9iZXIgMzEsIDIwMTIg
+MTE6MTkgQU0NCj4gVG86IEJlbiBIdXRjaGluZ3MNCj4gQ2M6IFJvc2UsIEdyZWdvcnkgVjsgbGlu
+dXgtcGNpQHZnZXIua2VybmVsLm9yZzsgYmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4geXV2YWxtaW5A
+YnJvYWRjb20uY29tOyB5aW5naGFpQGtlcm5lbC5vcmc7IGRhdmVtQGRhdmVtbG9mdC5uZXQNCj4g
+U3ViamVjdDogUmU6IFtQQVRDSCAzLzhdIFBDSTogc3lzZnMgcGVyIGRldmljZSBTUklPViBjb250
+cm9sIGFuZCBzdGF0dXMNCj4gDQo+IE9uIDEwLzMxLzIwMTIgMDE6MzYgUE0sIEJlbiBIdXRjaGlu
+Z3Mgd3JvdGU6DQo+ID4gT24gV2VkLCAyMDEyLTEwLTMxIGF0IDE3OjAxICswMDAwLCBSb3NlLCBH
+cmVnb3J5IFYgd3JvdGU6DQo+ID4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+Pj4g
+RnJvbTogRG9uIER1dGlsZSBbbWFpbHRvOmRkdXRpbGVAcmVkaGF0LmNvbV0NCj4gPj4+IFNlbnQ6
+IEZyaWRheSwgT2N0b2JlciAyNiwgMjAxMiA4OjA3IEFNDQo+ID4+PiBUbzogQmVuIEh1dGNoaW5n
+cw0KPiA+Pj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5j
+b207DQo+ID4+PiB5dXZhbG1pbkBicm9hZGNvbS5jb207IFJvc2UsIEdyZWdvcnkgVjsgeWluZ2hh
+aUBrZXJuZWwub3JnOw0KPiA+Pj4gZGF2ZW1AZGF2ZW1sb2Z0Lm5ldA0KPiA+Pj4gU3ViamVjdDog
+UmU6IFtQQVRDSCAzLzhdIFBDSTogc3lzZnMgcGVyIGRldmljZSBTUklPViBjb250cm9sIGFuZA0K
+PiA+Pj4gc3RhdHVzDQo+ID4+Pg0KPiA+Pg0KPiA+Pj4NCj4gPj4+IE9rLCBteSB0dXJuOg0KPiA+
+Pj4gQW55IGZlZWRiYWNrIG9uIGhhdmluZyB0aGUgc3lzZnMgY29uZmlndXJlIGNhbGwNCj4gPj4+
+IHBjaV9zcmlvdl9bZW5hYmxlL2Rpc2FibGVdKCksIGFzIHdlbGwgYXMgZG8gdGhlIGRvbid0LWRp
+c2FibGUgaWYgVkZzDQo+ID4+PiBhcmUgYXNzaWduZWQgdG8gZ3Vlc3RzPw0KPiA+Pj4NCj4gPj4N
+Cj4gPj4gRG9uLA0KPiA+Pg0KPiA+PiBBcyBJJ3ZlIG1lbnRpb25lZCBiZWZvcmUgSSBzdGlsbCBw
+cmVmZXIgdG8gaGF2ZSB0aGUgc3lzZnMgaW50ZXJmYWNlDQo+ID4+IHlvdSd2ZSB3cml0dGVuIHVw
+IG1ha2UgdGhlIGNhbGxzIHRvIHBjaV9zcmlvdl9lbmFibGUvZGlzYWJsZSgpDQo+ID4NCj4gPiBJ
+IHRoaW5rIHRoYXQgd291bGQgd29yayBmb3Igc2ZjLCBhc3N1bWluZyB0aGUgZHJpdmVyIGZ1bmN0
+aW9uIGlzIHRvIGJlDQo+ID4gY2FsbGVkIGJlZm9yZSBlaXRoZXIgb2YgdGhvc2UuICBJIGRvbid0
+IGtub3cgd2hldGhlciBpdCB3b3VsZCB3b3JrIGZvcg0KPiA+IGFueSBvZiB0aGUgb3RoZXIgZHJp
+dmVycyB3aXRoIFNSLUlPViBiYWNrLWVuZHMsIHRob3VnaC4NCj4gPg0KPiA+PiBhbmQgaGF2ZSB0
+aGUgY2hlY2tpbmcgZm9yIHdoZXRoZXIgdGhlIFZGcyBhcmUgYXNzaWduZWQgdG8gZ3Vlc3RzIGRv
+bmUNCj4gPj4gdGhlcmUgYWxzbywNCj4gPg0KPiA+IEkgYWdyZWUgdGhhdCB0aGlzIGlzIHNob3Vs
+ZCBiZSBjZW50cmFsaXNlZCwgdGhvdWdoIEkgdGhpbmsgdGhhdCBjb3VsZA0KPiA+IGJlIGRvbmUg
+YXMgYSBsYXRlciBzdGVwIHdpdGhvdXQgdG9vIG11Y2ggcGFpbi4NCj4gPg0KPiA+PiBidXQgcmVh
+bGx5IGl0IGlzbid0IGFueXRoaW5nIHdvcnRoIGdvaW5nIHRvIHRoZSBtYXRzIGFib3V0LiAgQXMg
+aXQNCj4gPj4gc3RhbmRzIEkgdGhpbmsgaWYgeW91IGFkZHJlc3MgdGhlIGlzc3VlcyBicm91Z2h0
+IHVwIGJ5IEJlbiB0aGVuIEknbQ0KPiA+PiBmaW5lIHdpdGggd2hhdCB5b3UndmUgd29ya2VkIHVw
+IHNvIGZhci4gIFNpbmNlIG5vIG9uZSBlbHNlIHNlZW1zIHRvDQo+ID4+IGhhdmUgYW4gb3Bpbmlv
+biBhYm91dCBpdCAoYXMgZGVtb25zdHJhdGVkIGJ5IGEgbGFjayBvZiByZXNwb25zZSBvdmVyDQo+
+ID4+IHRoZSBsYXN0IDUgZGF5cykgdGhlbiBJJ2Qgc3VnZ2VzdCB3ZSBnbyBmb3J3YXJkIHdpdGgg
+dGhlIGN1cnJlbnQNCj4gPj4gaW1wbGVtZW50YXRpb24uICBJJ2QgcmVhbGx5IGxpa2UgdG8gc2Vl
+IHRoaXMgaW4gMy44IGlmIHBvc3NpYmxlLg0KPiA+Pg0KPiA+PiBUaGFua3MgZm9yIGFsbCB5b3Vy
+IHdvcmsuDQo+ID4NCj4gPiBBZ3JlZWQsIHRoYW5rcyBEb24uDQo+ID4NCj4gPiBCZW4uDQo+ID4N
+Cj4gR3JlZyAmIEJlbiwNCj4gVGhhbmtzIGZvciB5b3VyIGZlZWRiYWNrIG9uIHRoZSBjb3JlIGRv
+aW5nIHRoZSBzcmlvdl9lbmFibGUvZGlzYWJsZS4NCj4gSSBhZ3JlZSB0aGF0IGxldCdzIGdldCBl
+eGlzdGluZyB0aGUgY29yZSBzdHVmZiBpbnRvIDMuOCAmIGRvIHRoZQ0KPiBlbmFibGUvZGlzYWJs
+ZSBhcyBhIGZvbGxvdyB1cC4NCj4gSSdtIGp1c3QgcG9saXNoaW5nIHRoZSBwYXRjaCBzZXQgbm93
+IGJhc2VkIG9uIEJlbidzIGZlZWRiYWNrLi4uLg0KPiBJIHdhcyBkZWxheWVkIHdoZW4gbXkgdGVz
+dCBtYWNoaW5lIHdhcyAoaW1wcm9wZXJseSkgdGFrZW4gZnJvbSBtZSAoYmFkIElULA0KPiBiYWQh
+IDotKCApLg0KPiBKdXN0IGdvdCB0aGUgbWFjaGluZSBiYWNrIHRvZGF5IHRvIHRlc3QgdGhlIHZh
+cmlvdXMgKGVycm9yKSBjYXNlcywgYW5kDQo+IG1ha2UgY2hlY2twYXRjaC5wbCBoYXBweS4gIEkg
+ZXhwZWN0IHRvIHBvc3QgYSBQQVRDSCAobm9uLVJGQykgbGF0ZXIgdG9kYXkuDQo+IC0gRG9uDQo+
+IHBzIC0tIG9mIGNvdXJzZSwgaWYgR3JlZyB3YW50cyB0byBnaXZlIG1lIGEgc2V0IG9mIGlnYiBw
+YXRjaGVzIGxpa2UgdGhlDQo+IG9uZXMgaGUgZGlkDQo+ICAgICAgICBmb3IgaXhnYmUsIGl0J2Qg
+Z2V0IG1lIG91dCBvZiB0aGUgdGVzdCBtYWNoaW5lIGJhdHRsZXMgLS0gSSBoYXZlDQo+IHByaXZh
+dGUNCj4gICAgICAgIHRlc3QgbWFjaGluZSB3L2lnYidzLiA6KSAgaGludCwgaGludC4uLm9rLCBt
+b3JlIGxpa2UgJ2JlZywgYmVnJyAuLi4NCj4gYWdhaW4uLi4gOykNCg0KSSdsbCBzZWUgd2hhdCBJ
+IGNhbiBkby4NCg0KOikNCg0KLSBHcmVnDQo=
