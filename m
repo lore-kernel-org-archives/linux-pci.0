@@ -1,123 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:55377 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754290Ab2JPHMN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Oct 2012 03:12:13 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>,
-	<kernel.openeuler@huawei.com>
-CC: <linux-pci@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v2 1/3] PCI: rework pci_enable_ari for support disable ari forwarding
-Date: Tue, 16 Oct 2012 15:10:18 +0800
-Message-ID: <1350371420-7888-1-git-send-email-wangyijing@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30492 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945973Ab2JaSTH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Oct 2012 14:19:07 -0400
+Message-ID: <50916B93.9060807@redhat.com>
+Date: Wed, 31 Oct 2012 14:18:59 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: Re: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>  <1351190310-5043-4-git-send-email-ddutile@redhat.com>  <1351196234.2662.37.camel@bwh-desktop.uk.solarflarecom.com>  <508AA719.2060705@redhat.com>  <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com> <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
+In-Reply-To: <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_enable_ari will be called if an ARI pci device found, set its bridge ARI Forwarding Enable
-bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
-when an ARI device hot removed.
-1. Hot add an ARI pci device;
-2. Hot remove the ARI pci device;
-3. Hot add an non ARI pci device;
-
-In this case, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
-bit set.
-
-As PCIe Spec 2.0(6.13/441) recommends:
-"Following a hot-plug event below a Downstream Port, it is strongly recommended that software
-Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
-newly added component is in fact an ARI Device"
-
-So, this patch rework pci_enable_ari to support enable/disable ARI when a new device hot add.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/pci/pci.c   |   21 +++++++++++++--------
- drivers/pci/pci.h   |    2 +-
- drivers/pci/probe.c |    2 +-
- 3 files changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5485883..38f1ad6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2010,10 +2010,10 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
- }
- 
- /**
-- * pci_enable_ari - enable ARI forwarding if hardware support it
-+ * pci_configure_ari - enable or disable ARI forwarding if hardware support it
-  * @dev: the PCI device
-  */
--void pci_enable_ari(struct pci_dev *dev)
-+void pci_configure_ari(struct pci_dev *dev)
- {
- 	u32 cap;
- 	struct pci_dev *bridge;
-@@ -2021,9 +2021,6 @@ void pci_enable_ari(struct pci_dev *dev)
- 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
- 		return;
- 
--	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
--		return;
--
- 	bridge = dev->bus->self;
- 	if (!bridge)
- 		return;
-@@ -2031,10 +2028,18 @@ void pci_enable_ari(struct pci_dev *dev)
- 	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
- 	if (!(cap & PCI_EXP_DEVCAP2_ARI))
- 		return;
--
--	pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
--	bridge->ari_enabled = 1;
-+
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
-+		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_ARI);
-+		bridge->ari_enabled = 1;
-+	} else {
-+		pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_ARI);
-+		bridge->ari_enabled = 0;
-+	}
- }
-+EXPORT_SYMBOL(pci_configure_ari);
- 
- /**
-  * pci_enable_ido - enable ID-based Ordering on a device
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index bacbcba..d6eb3d9 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -211,7 +211,7 @@ extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- extern int pci_resource_bar(struct pci_dev *dev, int resno,
- 			    enum pci_bar_type *type);
- extern int pci_bus_add_child(struct pci_bus *bus);
--extern void pci_enable_ari(struct pci_dev *dev);
-+extern void pci_configure_ari(struct pci_dev *dev);
- /**
-  * pci_ari_enabled - query ARI forwarding status
-  * @bus: the PCI bus
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec909af..bb7ecf6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1282,7 +1282,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_vpd_pci22_init(dev);
- 
- 	/* Alternative Routing-ID Forwarding */
--	pci_enable_ari(dev);
-+	pci_configure_ari(dev);
- 
- 	/* Single Root I/O Virtualization */
- 	pci_iov_init(dev);
--- 
-1.7.1
-
+On 10/31/2012 01:36 PM, Ben Hutchings wrote:
+> On Wed, 2012-10-31 at 17:01 +0000, Rose, Gregory V wrote:
+>>> -----Original Message-----
+>>> From: Don Dutile [mailto:ddutile@redhat.com]
+>>> Sent: Friday, October 26, 2012 8:07 AM
+>>> To: Ben Hutchings
+>>> Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; yuvalmin@broadcom.com;
+>>> Rose, Gregory V; yinghai@kernel.org; davem@davemloft.net
+>>> Subject: Re: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
+>>>
+>>
+>>>
+>>> Ok, my turn:
+>>> Any feedback on having the sysfs configure call
+>>> pci_sriov_[enable/disable](), as well as do the don't-disable if VFs are
+>>> assigned to guests?
+>>>
+>>
+>> Don,
+>>
+>> As I've mentioned before I still prefer to have the sysfs interface
+>> you've written up make the calls to pci_sriov_enable/disable()
+>
+> I think that would work for sfc, assuming the driver function is to be
+> called before either of those.  I don't know whether it would work for
+> any of the other drivers with SR-IOV back-ends, though.
+>
+>> and have the checking for whether the VFs are assigned to guests done
+>> there also,
+>
+> I agree that this is should be centralised, though I think that could be
+> done as a later step without too much pain.
+>
+>> but really it isn't anything worth going to the mats about.  As it
+>> stands I think if you address the issues brought up by Ben then I'm
+>> fine with what you've worked up so far.  Since no one else seems to
+>> have an opinion about it (as demonstrated by a lack of response over
+>> the last 5 days) then I'd suggest we go forward with the current
+>> implementation.  I'd really like to see this in 3.8 if possible.
+>>
+>> Thanks for all your work.
+>
+> Agreed, thanks Don.
+>
+> Ben.
+>
+Greg & Ben,
+Thanks for your feedback on the core doing the sriov_enable/disable.
+I agree that let's get existing the core stuff into 3.8 & do the enable/disable as a follow up.
+I'm just polishing the patch set now based on Ben's feedback....
+I was delayed when my test machine was (improperly) taken from me (bad IT, bad! :-( ).
+Just got the machine back today to test the various (error) cases,
+and make checkpatch.pl happy.  I expect to post a PATCH (non-RFC) later today.
+- Don
+ps -- of course, if Greg wants to give me a set of igb patches like the ones he did
+       for ixgbe, it'd get me out of the test machine battles -- I have private
+       test machine w/igb's. :)  hint, hint...ok, more like 'beg, beg' ... again... ;)
 
