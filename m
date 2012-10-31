@@ -1,87 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:46121 "EHLO
+Received: from szxga02-in.huawei.com ([119.145.14.65]:51927 "EHLO
 	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593Ab2JIDQD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Oct 2012 23:16:03 -0400
-Message-ID: <507396D8.8060906@huawei.com>
-Date: Tue, 9 Oct 2012 11:15:36 +0800
+	with ESMTP id S1751638Ab2JaHMQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 03:12:16 -0400
 From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Rafael <rjw@sisk.pl>, Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Oliver Neukum <oneukum@suse.de>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	<jiang.liu@huawei.com>, Yijing Wang <wangyijing@huawei.com>
+Subject: [RFC][PATCH] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
+Date: Wed, 31 Oct 2012 15:10:52 +0800
+Message-ID: <1351667452-9952-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 0/7] disable bridge ari forwarding after connected ari
- device hot removed
-References: <1349751804-7476-1-git-send-email-wangyijing@huawei.com> <5073954A.6090507@huawei.com>
-In-Reply-To: <5073954A.6090507@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/10/9 11:08, Jiang Liu wrote:
-> Seems no need to change cpci/cpqphp/ibmphp/sgi/shpcihp, they all deal with PCI devices,
-> so only need to change acpiphp and pciehp.
-> 
+Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
+Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
+Switch and some slots which support hotplug, eg.PLX8696). The hot removed work was queued 
+into pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
+the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
+This patch remove the global pciehp_wq and create a new workqueue for every slot to
+avoid above problem.
 
-ah, I will drop the patches for cpci/cpqphp/ibmphp/sgi/shpcihp.
-
-Thanks!
-Yijing
-
-> On 2012-10-9 11:03, Yijing Wang wrote:
->> pci_enable_ari will be called if an ARI pci device found, then set its bridge ARI Forwarding Enable
->> bit in Device Control 2 Register. But the bridge ARI Forwarding Enable bit will never be cleared
->> when an ARI device hot removed.
->>
->> my steps:
->> 1. Hot add an ARI pci device;
->> 2. Hot remove the ARI pci device;
->> 3. Hot add an non ARI pci device;
->>
->> In this case, after setp 3, we could only find fun 0 of non ARI pci device because of its bridge ARI Forwarding Enable
->> bit set.
->>
->> As PCIe Spec 2.0(6.13/441) recommends:
->> "Following a hot-plug event below a Downstream Port, it is strongly recommended that software
->> Clear the ARI Forwarding Enable bit in the Downstream Port until software determines that a
->> newly added component is in fact an ARI Device"
->>
->> This series of patches fix this problem.
->>
->> Yijing Wang (7):
->>   PCI: rework pci_enable_ari for support disable ari forwarding
->>   PCI, acpiphp: disable ARI forwarding for acpiphp
->>   PCI, pciehp: disable ARI forwarding for pciehp
->>   PCI, cpqphp: disable ARI forwarding for cpqphp
->>   PCI, shpchp: disable ARI forwarding for shpchp
->>   PCI, sgi: disable ARI forwarding for sgiphp
->>   PCI, ibmphp: disable ARI forwarding for ibmphp
->>
->>  drivers/pci/hotplug/acpiphp_glue.c     |    1 +
->>  drivers/pci/hotplug/cpci_hotplug_pci.c |    1 +
->>  drivers/pci/hotplug/cpqphp_pci.c       |    1 +
->>  drivers/pci/hotplug/ibmphp_core.c      |    1 +
->>  drivers/pci/hotplug/pciehp_pci.c       |    1 +
->>  drivers/pci/hotplug/sgi_hotplug.c      |    1 +
->>  drivers/pci/hotplug/shpchp_pci.c       |    1 +
->>  drivers/pci/pci.c                      |   16 +++++++++++-----
->>  drivers/pci/pci.h                      |    2 +-
->>  drivers/pci/probe.c                    |    2 +-
->>  10 files changed, 20 insertions(+), 7 deletions(-)
->>
->>
->>
->> .
->>
-> 
-> 
-> 
-> .
-> 
+-+-[0000:40]-+-00.0-[0000:41]--
+ |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+ |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
+ |           +-04.0-[0000:44]--
+ |           +-05.0-[0000:45]--
+ |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
+ |           |(hotplug slot)                           +-08.0-[0000:4a]--
+ |           |                                         +-09.0-[0000:4b]--
+ |           |                                         +-10.0-[0000:4c]--
+ |           |                                         +-11.0-[0000:4d]--
+ |           |                                         +-14.0-[0000:4e]--
+ |           |                                         \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                         (hotplug slot)    \-00.1  Intel Corporation 82576 Gigabit Network Connection
 
 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/pciehp.h      |    2 +-
+ drivers/pci/hotplug/pciehp_core.c |   11 ++---------
+ drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
+ drivers/pci/hotplug/pciehp_hpc.c  |   14 ++++++++++++--
+ 4 files changed, 19 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 26ffd3e..2c113de 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
+ extern int pciehp_poll_time;
+ extern bool pciehp_debug;
+ extern bool pciehp_force;
+-extern struct workqueue_struct *pciehp_wq;
+ 
+ #define dbg(format, arg...)						\
+ do {									\
+@@ -78,6 +77,7 @@ struct slot {
+ 	struct hotplug_slot *hotplug_slot;
+ 	struct delayed_work work;	/* work for button event */
+ 	struct mutex lock;
++	struct workqueue_struct *wq;
+ };
+ 
+ struct event_info {
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 916bf4f..0914211 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -42,7 +42,6 @@ bool pciehp_debug;
+ bool pciehp_poll_mode;
+ int pciehp_poll_time;
+ bool pciehp_force;
+-struct workqueue_struct *pciehp_wq;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+@@ -340,18 +339,13 @@ static int __init pcied_init(void)
+ {
+ 	int retval = 0;
+ 
+-	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
+-	if (!pciehp_wq)
+-		return -ENOMEM;
+-
+ 	pciehp_firmware_init();
+ 	retval = pcie_port_service_register(&hpdriver_portdrv);
+  	dbg("pcie_port_service_register = %d\n", retval);
+   	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+- 	if (retval) {
+-		destroy_workqueue(pciehp_wq);
++	if (retval)
+ 		dbg("Failure to register service\n");
+-	}
++
+ 	return retval;
+ }
+ 
+@@ -359,7 +353,6 @@ static void __exit pcied_cleanup(void)
+ {
+ 	dbg("unload_pciehpd()\n");
+ 	pcie_port_service_unregister(&hpdriver_portdrv);
+-	destroy_workqueue(pciehp_wq);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+ }
+ 
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 27f4429..38f0186 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, interrupt_event_handler);
+ 
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+ 
+ 	return 0;
+ }
+@@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ 		kfree(info);
+ 		goto out;
+ 	}
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+  out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+@@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		if (ATTN_LED(ctrl))
+ 			pciehp_set_attention_status(p_slot, 0);
+ 
+-		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+@@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
+ 	else
+ 		p_slot->state = POWERON_STATE;
+ 
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+ }
+ 
+ static void interrupt_event_handler(struct work_struct *work)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 13b2eaf..8e5e571 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -773,23 +773,33 @@ static void pcie_shutdown_notification(struct controller *ctrl)
+ static int pcie_init_slot(struct controller *ctrl)
+ {
+ 	struct slot *slot;
++	char name[32];
+ 
+ 	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+ 	if (!slot)
+ 		return -ENOMEM;
+-
++
++	snprintf(name, sizeof(name), "pciehpd_%s",
++		pci_name(ctrl->pcie->port));
++	slot->wq = create_singlethread_workqueue(name);
++	if (!slot->wq)
++		goto abort;
+ 	slot->ctrl = ctrl;
+ 	mutex_init(&slot->lock);
+ 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+ 	ctrl->slot = slot;
+ 	return 0;
++abort:
++	kfree(slot);
++	return -1;
+ }
+ 
+ static void pcie_cleanup_slot(struct controller *ctrl)
+ {
+ 	struct slot *slot = ctrl->slot;
+ 	cancel_delayed_work(&slot->work);
+-	flush_workqueue(pciehp_wq);
++	flush_workqueue(slot->wq);
++	destroy_workqueue(slot->wq);
+ 	kfree(slot);
+ }
+ 
 -- 
-Thanks!
-Yijing
+1.7.1
+
 
