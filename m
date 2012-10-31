@@ -1,69 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:18107 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756165Ab2JZFIP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Oct 2012 01:08:15 -0400
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: PCI/PM: Add comments for PME poll support for PCIe
-Date: Fri, 26 Oct 2012 13:07:51 +0800
-Message-Id: <1351228071-15161-1-git-send-email-ying.huang@intel.com>
+Received: from webmail.solarflare.com ([12.187.104.25]:6015 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754883Ab2JaXrw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 19:47:52 -0400
+Message-ID: <1351727268.2706.48.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Donald Dutile <ddutile@redhat.com>
+CC: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+	<yuvalmin@broadcom.com>, <gregory.v.rose@intel.com>,
+	<yinghai@kernel.org>, <davem@davemloft.net>
+Date: Wed, 31 Oct 2012 23:47:48 +0000
+In-Reply-To: <1351718353-6124-4-git-send-email-ddutile@redhat.com>
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+	 <1351718353-6124-4-git-send-email-ddutile@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are comments on why PME poll support is necessary for PCI
-devices, but not for PCIe devices.  That may lead to misunderstanding
-that PME poll is only necessary for PCI devices.  So add comments
-related to PCIe PME poll to make it more clear.
+On Wed, 2012-10-31 at 17:19 -0400, Donald Dutile wrote:
+> Provide files under sysfs to determine the max number of vfs
+> an SRIOV-capable PCIe device supports, and methods to enable and
+> disable the vfs on a per device basis.
+> 
+> Currently, VF enablement by SRIOV-capable PCIe devices is done
+> in driver-specific module parameters.  If not setup in modprobe files,
+> it requires admin to unload & reload PF drivers with number of desired
+> VFs to enable.  Additionally, the enablement is system wide: all
+> devices controlled by the same driver have the same number of VFs
+> enabled.  Although the latter is probably desired, there are PCI
+> configurations setup by system BIOS that may not enable that to occur.
+> 
+> Three files are created if a PCIe device has SRIOV support:
+> sriov_totalvfs -- cat-ing this file returns the maximum number
+>                   of VFs a PCIe device supports as reported by
+>                   the TotalVFs in the SRIOV ext cap structure.
+> sriov_numvfs -- echo'ing a positive number to this file enables this
+>                 number of VFs for this given PCIe device.
+>              -- echo'ing a 0 to this file disables
+>                 any previously enabled VFs for this PCIe device.
+>              -- cat-ing this file will return the number of VFs
+>                 currently enabled on this PCIe device, i.e.,
+>                 the NumVFs field in SRIOV ext. cap structure.
+> 
+> VF enable and disablement is invoked much like other PCIe
+> configuration functions -- via registered callbacks in the driver,
+> i.e., probe, release, etc.
+> 
+> Signed-off-by: Donald Dutile <ddutile@redhat.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 137 +++++++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/pci.h     |   1 +
+>  2 files changed, 136 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index fbbb97f..83be8ce 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+[...]
+> +static ssize_t sriov_numvfs_store(struct device *dev,
+> +				  struct device_attribute *attr,
+> +				  const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev;
+> +	int num_vfs_enabled = 0;
+> +	int num_vfs;
+> +	int ret = 0;
+> +	u16 total;
+> +
+> +	pdev = to_pci_dev(dev);
+> +
+> +	if (kstrtoint(buf, 0, &num_vfs) < 0)
+> +		return -EINVAL;
+> +
+> +	/* is PF driver loaded w/callback */
+> +	if (!pdev->driver || !pdev->driver->sriov_configure) {
+> +		dev_info(&pdev->dev,
+> +			 "Driver doesn't support SRIOV configuration via sysfs\n");
+> +		return -ENOSYS;
+> +	}
+> +
+> +	/* if enabling vf's ... */
+> +	total = pdev->sriov->total;
+> +	/* Requested VFs to enable < totalvfs and none enabled already */
+> +	if ((num_vfs > 0) && (num_vfs <= total)) {
+> +		if (pdev->sriov->nr_virtfn == 0) {
+> +			num_vfs_enabled =
+> +				pdev->driver->sriov_configure(pdev, num_vfs);
+> +			if ((num_vfs_enabled >= 0) &&
+> +			    (num_vfs_enabled != num_vfs))
+> +				dev_warn(&pdev->dev,
+> +					 "Only %d VFs enabled\n",
+> +					 num_vfs_enabled);
+> +			return count;
 
-The content of comments comes from the changelog of commit:
+If num_vfs_enabled < 0 then it's an error value which should be returned
+instead of count.
 
-379021d5c0899fcf9410cae4ca7a59a5a94ca769
+[...]
+> @@ -1409,7 +1512,7 @@ static struct attribute *pci_dev_dev_attrs[] = {
+>  };
+>  
+>  static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+> -						struct attribute *a, int n)
+> +					 struct attribute *a, int n)
+>  {
+>  	struct device *dev = container_of(kobj, struct device, kobj);
+>  	struct pci_dev *pdev = to_pci_dev(dev);
 
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci.c |   28 +++++++++++++++++++---------
- 1 file changed, 19 insertions(+), 9 deletions(-)
+This hunk should be folded into patch 1.
 
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1578,15 +1578,25 @@ void pci_pme_active(struct pci_dev *dev,
- 
- 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
- 
--	/* PCI (as opposed to PCIe) PME requires that the device have
--	   its PME# line hooked up correctly. Not all hardware vendors
--	   do this, so the PME never gets delivered and the device
--	   remains asleep. The easiest way around this is to
--	   periodically walk the list of suspended devices and check
--	   whether any have their PME flag set. The assumption is that
--	   we'll wake up often enough anyway that this won't be a huge
--	   hit, and the power savings from the devices will still be a
--	   win. */
-+	/*
-+	 * PCI (as opposed to PCIe) PME requires that the device have
-+	 * its PME# line hooked up correctly. Not all hardware vendors
-+	 * do this, so the PME never gets delivered and the device
-+	 * remains asleep. The easiest way around this is to
-+	 * periodically walk the list of suspended devices and check
-+	 * whether any have their PME flag set. The assumption is that
-+	 * we'll wake up often enough anyway that this won't be a huge
-+	 * hit, and the power savings from the devices will still be a
-+	 * win.
-+	 *
-+	 * Although PCIe uses in-band PME message instead of PME# line
-+	 * to report PME, PME does not work for some PCIe devices in
-+	 * reality.  For example, there are devices that set their PME
-+	 * status bits, but don't really bother to send a PME message;
-+	 * there are PCI Express Root Ports that don't bother to
-+	 * trigger interrupts when they receive PME messages from the
-+	 * devices below.  So PME poll is used for PCIe devices too.
-+	 */
- 
- 	if (dev->pme_poll) {
- 		struct pci_pme_device *pme_dev;
+> @@ -1421,6 +1524,33 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+>  	return a->mode;
+>  }
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static struct attribute *sriov_dev_attrs[] = {
+> +	&sriov_totalvfs_attr.attr,
+> +	&sriov_numvfs_attr.attr,
+> +	NULL,
+> +};
+> +
+> +static umode_t sriov_attrs_are_visible(struct kobject *kobj,
+> +					 struct attribute *a, int n)
+> +{
+> +	struct device *dev = container_of(kobj, struct device, kobj);
+> +
+> +	if ((a == &sriov_totalvfs_attr.attr) ||
+> +	    (a == &sriov_numvfs_attr.attr)) {
+> +		if (!dev_is_pf(dev))
+> +			return 0;
+> +	}
+
+Why do you check the attribute address?  The whole group should be
+visible or invisible depending on dev_is_pf().  Any attributes that need
+another condition belong in another group.
+
+> +	return a->mode;
+> +}
+> +
+> +static struct attribute_group sriov_dev_attr_group = {
+> +	.attrs = sriov_dev_attrs,
+> +	.is_visible = sriov_attrs_are_visible,
+> +};
+> +#endif /* CONFIG_PCI_IOV */
+[...]
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
