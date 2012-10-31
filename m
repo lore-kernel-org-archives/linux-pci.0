@@ -1,157 +1,248 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <506C8837.5070902@intel.com>
-Date: Wed, 03 Oct 2012 11:47:19 -0700
-From: Alexander Duyck <alexander.h.duyck@intel.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Don Dutile <ddutile@redhat.com>, yuvalmin@broadcom.com,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:25063 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945982Ab2JaVTa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 31 Oct 2012 17:19:30 -0400
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
 	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	davem@davemloft.net--no-chain-reply-to,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	John Fastabend <john.r.fastabend@intel.com>,
-	e1000-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: Re: [PATCH 5/5] ixgbe: add driver set_max_vfs support
-References: <506C3B11.9010009@redhat.com> <1349286695-26713-1-git-send-email-yinghai@kernel.org> <1349286695-26713-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349286695-26713-6-git-send-email-yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 7/8] ixgbe: sysfs sriov configuration callback support
+Date: Wed, 31 Oct 2012 17:19:12 -0400
+Message-Id: <1351718353-6124-8-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/2012 10:51 AM, Yinghai Lu wrote:
-> Need ixgbe guys to close the loop to use set_max_vfs instead
-> kernel parameters.
->
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-> Cc: Greg Rose <gregory.v.rose@intel.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: John Fastabend <john.r.fastabend@intel.com>
-> Cc: e1000-devel@lists.sourceforge.net
-> Cc: netdev@vger.kernel.org
-> ---
->  drivers/net/ethernet/intel/ixgbe/ixgbe.h      |    2 +
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c |   44 +++++++++++++++++++-----
->  2 files changed, 37 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe.h b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
-> index b9623e9..d39d975 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe.h
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
-> @@ -558,6 +558,8 @@ struct ixgbe_adapter {
->  	u32 interrupt_event;
->  	u32 led_reg;
->  
-> +	struct ixgbe_info *ixgbe_info;
-> +
->  #ifdef CONFIG_IXGBE_PTP
->  	struct ptp_clock *ptp_clock;
->  	struct ptp_clock_info ptp_caps;
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> index ee61819..1c097c7 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> @@ -129,13 +129,6 @@ static struct notifier_block dca_notifier = {
->  };
->  #endif
->  
-> -#ifdef CONFIG_PCI_IOV
-> -static unsigned int max_vfs;
-> -module_param(max_vfs, uint, 0);
-> -MODULE_PARM_DESC(max_vfs,
-> -		 "Maximum number of virtual functions to allocate per physical function - default is zero and maximum value is 63");
-> -#endif /* CONFIG_PCI_IOV */
-> -
->  static unsigned int allow_unsupported_sfp;
->  module_param(allow_unsupported_sfp, uint, 0);
->  MODULE_PARM_DESC(allow_unsupported_sfp,
-> @@ -4496,7 +4489,7 @@ static int __devinit ixgbe_sw_init(struct ixgbe_adapter *adapter)
->  #ifdef CONFIG_PCI_IOV
->  	/* assign number of SR-IOV VFs */
->  	if (hw->mac.type != ixgbe_mac_82598EB)
-> -		adapter->num_vfs = (max_vfs > 63) ? 0 : max_vfs;
-> +		adapter->num_vfs = min_t(int, pdev->max_vfs, 63);
->  
->  #endif
->  	/* enable itr by default in dynamic mode */
-> @@ -7220,8 +7213,9 @@ static int __devinit ixgbe_probe(struct pci_dev *pdev,
->  
->  #ifdef CONFIG_PCI_IOV
->  	ixgbe_enable_sriov(adapter, ii);
-> -
->  #endif
-> +	adapter->ixgbe_info = ii;
-> +
->  	netdev->features = NETIF_F_SG |
->  			   NETIF_F_IP_CSUM |
->  			   NETIF_F_IPV6_CSUM |
-> @@ -7683,11 +7677,43 @@ static const struct pci_error_handlers ixgbe_err_handler = {
->  	.resume = ixgbe_io_resume,
->  };
->  
-> +static void ixgbe_set_max_vfs(struct pci_dev *pdev)
-> +{
-> +#ifdef CONFIG_PCI_IOV
-> +	struct ixgbe_adapter *adapter = pci_get_drvdata(pdev);
-> +	struct ixgbe_hw *hw = &adapter->hw;
-> +	int num_vfs = 0;
-> +
-> +	/* assign number of SR-IOV VFs */
-> +	if (hw->mac.type != ixgbe_mac_82598EB)
-> +		num_vfs = min_t(int, pdev->max_vfs, 63);
-> +
-> +	/* no change */
-> +	if (adapter->num_vfs == num_vfs)
-> +		return;
-> +
-> +	if (!num_vfs) {
-> +		/* disable sriov */
-> +		ixgbe_disable_sriov(adapter);
-> +		adapter->num_vfs = 0;
-> +	} else if (!adapter->num_vfs && num_vfs) {
-> +		/* enable sriov */
-> +		adapter->num_vfs = num_vfs;
-> +		ixgbe_enable_sriov(adapter, adapter->ixgbe_info);
-> +	} else {
-> +		/* increase or decrease */
-> +	}
-> +
-> +	pdev->max_vfs = adapter->num_vfs;
-> +#endif
-> +}
-> +
->  static struct pci_driver ixgbe_driver = {
->  	.name     = ixgbe_driver_name,
->  	.id_table = ixgbe_pci_tbl,
->  	.probe    = ixgbe_probe,
->  	.remove   = __devexit_p(ixgbe_remove),
-> +	.set_max_vfs = ixgbe_set_max_vfs,
->  #ifdef CONFIG_PM
->  	.suspend  = ixgbe_suspend,
->  	.resume   = ixgbe_resume,
+Implement callbacks in the driver for the new PCI bus driver
+interface that allows the user to enable/disable SR-IOV VFs
+in a device via the sysfs interface.
 
-The ixgbe_set_max_vfs function has several issues.  The two big ones are
-that this function assumes it can just enable/disable SR-IOV without any
-other changes being necessary which is not the case.  I would recommend
-looking at ixgbe_setup_tc for how to do this properly.  Secondly is the
-fact that this code will change the PF network device and as such
-sections of the code should be called with the RTNL lock held.  In
-addition I believe you have to disable SR-IOV before enabling it again
-with a different number of VFs.
+Authored-by: Greg Rose <gregory.v.rose@intel.com>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe.h       |  3 +
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c  | 28 +++++++-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 89 +++++++++++++++++++++++++-
+ drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h |  6 +-
+ 4 files changed, 120 insertions(+), 6 deletions(-)
 
-Below is a link to one of the early patches for igb when we were first
-introducing SR-IOV, and the in-driver sysfs value had been rejected.  I
-figure it might be useful as it was also using sysfs to enable/disable
-VFs.  It however doesn't have the correct locking on changing the queues
-and as such will likely throw an error if you were to implement it the
-same way now:
-http://lists.openwall.net/netdev/2009/04/08/34
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe.h b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+index 5bd2676..89fa3f8 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe.h
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
+@@ -753,5 +753,8 @@ extern int ixgbe_ptp_hwtstamp_ioctl(struct ixgbe_adapter *adapter,
+ extern void ixgbe_ptp_start_cyclecounter(struct ixgbe_adapter *adapter);
+ extern void ixgbe_ptp_check_pps_event(struct ixgbe_adapter *adapter, u32 eicr);
+ #endif /* CONFIG_IXGBE_PTP */
++#ifdef CONFIG_PCI_IOV
++void ixgbe_sriov_reinit(struct ixgbe_adapter *adapter);
++#endif
+ 
+ #endif /* _IXGBE_H_ */
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+index 8d2a507..5d868e4 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+@@ -6784,6 +6784,26 @@ int ixgbe_setup_tc(struct net_device *dev, u8 tc)
+ }
+ 
+ #endif /* CONFIG_IXGBE_DCB */
++#ifdef CONFIG_PCI_IOV
++void ixgbe_sriov_reinit(struct ixgbe_adapter *adapter)
++{
++	struct net_device *netdev = adapter->netdev;
++
++	rtnl_lock();
++#ifdef CONFIG_IXGBE_DCB
++	ixgbe_setup_tc(netdev, netdev_get_num_tc(netdev));
++#else
++	if (netif_running(netdev))
++		ixgbe_close(netdev);
++	ixgbe_clear_interrupt_scheme(adapter);
++	ixgbe_init_interrupt_scheme(adapter);
++	if (netif_running(netdev))
++		ixgbe_open(netdev);
++#endif
++	rtnl_unlock();
++}
++
++#endif
+ void ixgbe_do_reset(struct net_device *netdev)
+ {
+ 	struct ixgbe_adapter *adapter = netdev_priv(netdev);
+@@ -7519,7 +7539,12 @@ static void __devexit ixgbe_remove(struct pci_dev *pdev)
+ 	if (netdev->reg_state == NETREG_REGISTERED)
+ 		unregister_netdev(netdev);
+ 
+-	ixgbe_disable_sriov(adapter);
++	/*
++	 * Only disable SR-IOV on unload if the user specified the now
++	 * deprecated max_vfs module parameter.
++	 */
++	if (max_vfs)
++		ixgbe_disable_sriov(adapter);
+ 
+ 	ixgbe_clear_interrupt_scheme(adapter);
+ 
+@@ -7734,6 +7759,7 @@ static struct pci_driver ixgbe_driver = {
+ 	.resume   = ixgbe_resume,
+ #endif
+ 	.shutdown = ixgbe_shutdown,
++	.sriov_configure = ixgbe_pci_sriov_configure,
+ 	.err_handler = &ixgbe_err_handler
+ };
+ 
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+index 7c068b4..60a2f4f 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
+@@ -217,11 +217,12 @@ static bool ixgbe_vfs_are_assigned(struct ixgbe_adapter *adapter)
+ }
+ 
+ #endif /* #ifdef CONFIG_PCI_IOV */
+-void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
++int ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
+ {
+ 	struct ixgbe_hw *hw = &adapter->hw;
+ 	u32 gpie;
+ 	u32 vmdctl;
++	int rss;
+ 
+ 	/* set num VFs to 0 to prevent access to vfinfo */
+ 	adapter->num_vfs = 0;
+@@ -236,7 +237,7 @@ void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
+ 
+ 	/* if SR-IOV is already disabled then there is nothing to do */
+ 	if (!(adapter->flags & IXGBE_FLAG_SRIOV_ENABLED))
+-		return;
++		return 0;
+ 
+ #ifdef CONFIG_PCI_IOV
+ 	/*
+@@ -246,7 +247,7 @@ void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
+ 	 */
+ 	if (ixgbe_vfs_are_assigned(adapter)) {
+ 		e_dev_warn("Unloading driver while VFs are assigned - VFs will not be deallocated\n");
+-		return;
++		return -EPERM;
+ 	}
+ 	/* disable iov and allow time for transactions to clear */
+ 	pci_disable_sriov(adapter->pdev);
+@@ -269,10 +270,92 @@ void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
+ 		adapter->flags &= ~IXGBE_FLAG_VMDQ_ENABLED;
+ 	adapter->ring_feature[RING_F_VMDQ].offset = 0;
+ 
++	rss = min_t(int, IXGBE_MAX_RSS_INDICES, num_online_cpus());
++	adapter->ring_feature[RING_F_RSS].limit = rss;
++
+ 	/* take a breather then clean up driver data */
+ 	msleep(100);
+ 
+ 	adapter->flags &= ~IXGBE_FLAG_SRIOV_ENABLED;
++	return 0;
++}
++
++int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs)
++{
++#ifdef CONFIG_PCI_IOV
++	struct ixgbe_adapter *adapter = pci_get_drvdata(dev);
++	int err = 0;
++	int i;
++	int pre_existing_vfs = pci_num_vf(dev);
++
++	if (pre_existing_vfs && pre_existing_vfs != num_vfs)
++		err = ixgbe_disable_sriov(adapter);
++	else if (pre_existing_vfs && pre_existing_vfs == num_vfs)
++		goto out;
++
++	if (err)
++		goto err_out; 
++
++	/*
++	 * While the SR-IOV capability structure reports total VFs to be
++	 * 64 we limit the actual number that can be allocated to 63 so
++	 * that some transmit/receive resources can be reserved to the
++	 * PF.  The PCI bus driver already checks for other values out of
++	 * range.
++	 */
++	if (num_vfs > 63) {
++		err = -EPERM;
++		goto err_out;
++	}
++
++	adapter->num_vfs = num_vfs;
++
++	if ((err = __ixgbe_enable_sriov(adapter)))
++		goto err_out;
++
++	for (i = 0; i < adapter->num_vfs; i++)
++		ixgbe_vf_configuration(dev, (i | 0x10000000));
++
++	err = pci_enable_sriov(dev, num_vfs);
++	if (err) {
++		e_dev_warn("Failed to enable PCI sriov: %d\n", err);
++		goto err_out;
++	}
++	ixgbe_sriov_reinit(adapter);
++
++out:
++	return num_vfs;
++
++err_out:
++	return err;
++#endif
++	return 0;
++}
++
++int ixgbe_pci_sriov_disable(struct pci_dev *dev)
++{
++	struct ixgbe_adapter *adapter = pci_get_drvdata(dev);
++	int err;
++	u32 current_flags = adapter->flags;
++
++	err = ixgbe_disable_sriov(adapter);
++
++	/* Only reinit if no error and state changed */
++	if (!err && current_flags != adapter->flags) {
++		/* ixgbe_disable_sriov() doesn't clear VMDQ flag */
++		adapter->flags &= ~IXGBE_FLAG_VMDQ_ENABLED;
++		ixgbe_sriov_reinit(adapter);
++	}
++
++	return err;
++}
++
++int ixgbe_pci_sriov_configure(struct pci_dev *dev, int num_vfs)
++{
++	if (num_vfs == 0)
++		return ixgbe_pci_sriov_disable(dev);
++	else
++		return ixgbe_pci_sriov_enable(dev, num_vfs);
+ }
+ 
+ static int ixgbe_set_vf_multicasts(struct ixgbe_adapter *adapter,
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
+index d96ead2..3d0fb07 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
+@@ -41,11 +41,13 @@ int ixgbe_ndo_set_vf_spoofchk(struct net_device *netdev, int vf, bool setting);
+ int ixgbe_ndo_get_vf_config(struct net_device *netdev,
+ 			    int vf, struct ifla_vf_info *ivi);
+ void ixgbe_check_vf_rate_limit(struct ixgbe_adapter *adapter);
+-void ixgbe_disable_sriov(struct ixgbe_adapter *adapter);
++int ixgbe_disable_sriov(struct ixgbe_adapter *adapter);
+ #ifdef CONFIG_PCI_IOV
+ void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
+ #endif
+-
++int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs);
++int ixgbe_pci_sriov_disable(struct pci_dev *dev);
++int ixgbe_pci_sriov_configure(struct pci_dev *dev, int num_vfs);
+ 
+ #endif /* _IXGBE_SRIOV_H_ */
+ 
+-- 
+1.7.10.2.552.gaa3bb87
 
-Thanks,
-
-Alex
