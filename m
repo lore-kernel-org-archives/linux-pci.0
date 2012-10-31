@@ -1,64 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 4 Oct 2012 11:17:29 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jeff Garzik <jgarzik@pobox.com>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 -tip 1/5] x86, MSI: Support multiple MSIs in presense
- of IRQ remapping
-Message-ID: <20121004091729.GA21613@gmail.com>
-References: <cover.1349074231.git.agordeev@redhat.com>
- <b15a9b5242c7de5770d2315ea8d13f4dcf63c00b.1349074231.git.agordeev@redhat.com>
- <20121002045518.GA7756@gmail.com>
- <20121002110630.GA2258@dhcp-26-207.brq.redhat.com>
- <20121002112524.GA12420@gmail.com>
- <20121004075442.GD2258@dhcp-26-207.brq.redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from webmail.solarflare.com ([12.187.104.25]:55260 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753278Ab2JaRhF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 31 Oct 2012 13:37:05 -0400
+Message-ID: <1351705018.2706.9.camel@bwh-desktop.uk.solarflarecom.com>
+Subject: RE: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: "Rose, Gregory V" <gregory.v.rose@intel.com>
+CC: Don Dutile <ddutile@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Date: Wed, 31 Oct 2012 17:36:58 +0000
+In-Reply-To: <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com>
+References: <1351190310-5043-1-git-send-email-ddutile@redhat.com>
+	 <1351190310-5043-4-git-send-email-ddutile@redhat.com>
+	 <1351196234.2662.37.camel@bwh-desktop.uk.solarflarecom.com>
+	 <508AA719.2060705@redhat.com>
+	 <C5551D9AAB213A418B7FD5E4A6F30A072D54CD4F@ORSMSX106.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121004075442.GD2258@dhcp-26-207.brq.redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-* Alexander Gordeev <agordeev@redhat.com> wrote:
-
-> On Tue, Oct 02, 2012 at 01:25:24PM +0200, Ingo Molnar wrote:
-> > > > > @@ -584,8 +586,12 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-> > > > >  #define irq_alloc_desc_from(from, node)		\
-> > > > >  	irq_alloc_descs(-1, from, 1, node)
-> > > > >  
-> > > > > +#define irq_alloc_descs_from(from, cnt, node)	\
-> > > > > +	irq_alloc_descs(-1, from, cnt, node)
-> > > > > +
-> > > > 
-> > > > Please use inlines instead of macros. Might transform the one 
-> > > > above it as well in the process.
-> > > 
-> > > You mean here do not introduce irq_alloc_descs_from, but rather use
-> > > irq_alloc_descs() directly?
+On Wed, 2012-10-31 at 17:01 +0000, Rose, Gregory V wrote:
+> > -----Original Message-----
+> > From: Don Dutile [mailto:ddutile@redhat.com]
+> > Sent: Friday, October 26, 2012 8:07 AM
+> > To: Ben Hutchings
+> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; yuvalmin@broadcom.com;
+> > Rose, Gregory V; yinghai@kernel.org; davem@davemloft.net
+> > Subject: Re: [PATCH 3/8] PCI: sysfs per device SRIOV control and status
 > > 
-> > My suggestion is to add irq_alloc_descs_from() as a (very 
-> > simple) inline function and change irq_alloc_desc_from() to be 
-> > an inline function as well.
+>  
+> > 
+> > Ok, my turn:
+> > Any feedback on having the sysfs configure call
+> > pci_sriov_[enable/disable](), as well as do the don't-disable if VFs are
+> > assigned to guests?
+> > 
 > 
-> These defines were added on purpose with commit ec53cf2 ("irq: 
-> don't put module.h into irq.h for tracking irqgen modules.") - 
-> the relevant hunk is below. I suppose we do not want to revert 
-> it?
+> Don,
+> 
+> As I've mentioned before I still prefer to have the sysfs interface
+> you've written up make the calls to pci_sriov_enable/disable()
 
-Sigh - that commit is really making a step backwards, but indeed 
-you are probably right that reintroducing the inlines would 
-create header dependency problems - which should be addressed in 
-another patch.
+I think that would work for sfc, assuming the driver function is to be
+called before either of those.  I don't know whether it would work for
+any of the other drivers with SR-IOV back-ends, though.
 
-So I concur with your original approach that added a macro.
+> and have the checking for whether the VFs are assigned to guests done
+> there also,
 
-Thanks,
+I agree that this is should be centralised, though I think that could be
+done as a later step without too much pain.
 
-	Ingo
+> but really it isn't anything worth going to the mats about.  As it
+> stands I think if you address the issues brought up by Ben then I'm
+> fine with what you've worked up so far.  Since no one else seems to
+> have an opinion about it (as demonstrated by a lack of response over
+> the last 5 days) then I'd suggest we go forward with the current
+> implementation.  I'd really like to see this in 3.8 if possible.
+> 
+> Thanks for all your work.
+
+Agreed, thanks Don.
+
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
