@@ -1,220 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60893 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab2KJGr0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Nov 2012 01:47:26 -0500
-Received: by mail-bk0-f46.google.com with SMTP id jk13so1877149bkc.19
-        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2012 22:47:24 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>,
+	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
+Date: Thu, 01 Nov 2012 22:31:01 +0100
+Message-ID: <11976302.Ya3MGGIAsU@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQV0gAJabpcoSHhTYq19m-YmaC0O6HH_dFKXUTuvUMG4Fg@mail.gmail.com>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <1748725.QBg5LLmPOx@vostro.rjw.lan> <CAE9FiQV0gAJabpcoSHhTYq19m-YmaC0O6HH_dFKXUTuvUMG4Fg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1352146841-64458-4-git-send-email-ddutile@redhat.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-	<1352146841-64458-4-git-send-email-ddutile@redhat.com>
-Date: Fri, 9 Nov 2012 22:47:24 -0800
-Message-ID: <CAE9FiQWx64YeLp=3fUCuOvZFQbyKxYd400azFvvi=oLYtQDbcA@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Donald Dutile <ddutile@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 5, 2012 at 12:20 PM, Donald Dutile <ddutile@redhat.com> wrote:
-> Provide files under sysfs to determine the max number of vfs
-> an SRIOV-capable PCIe device supports, and methods to enable and
-> disable the vfs on a per device basis.
->
-> Currently, VF enablement by SRIOV-capable PCIe devices is done
-> in driver-specific module parameters.  If not setup in modprobe files,
-> it requires admin to unload & reload PF drivers with number of desired
-> VFs to enable.  Additionally, the enablement is system wide: all
-> devices controlled by the same driver have the same number of VFs
-> enabled.  Although the latter is probably desired, there are PCI
-> configurations setup by system BIOS that may not enable that to occur.
->
-> Three files are created if a PCIe device has SRIOV support:
-> sriov_totalvfs -- cat-ing this file returns the maximum number
->                   of VFs a PCIe device supports as reported by
->                   the TotalVFs in the SRIOV ext cap structure.
-> sriov_numvfs -- echo'ing a positive number to this file enables this
->                 number of VFs for this given PCIe device.
->              -- echo'ing a 0 to this file disables
->                 any previously enabled VFs for this PCIe device.
->              -- cat-ing this file will return the number of VFs
->                 currently enabled on this PCIe device, i.e.,
->                 the NumVFs field in SRIOV ext. cap structure.
->
-> VF enable and disablement is invoked much like other PCIe
-> configuration functions -- via registered callbacks in the driver,
-> i.e., probe, release, etc.
->
-> Signed-off-by: Donald Dutile <ddutile@redhat.com>
-> ---
->  drivers/pci/pci-sysfs.c | 134 ++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h     |   1 +
->  2 files changed, 135 insertions(+)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index fbbb97f..cbcdd8d 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -404,6 +404,113 @@ static ssize_t d3cold_allowed_show(struct device *dev,
->  }
->  #endif
->
-> +#ifdef CONFIG_PCI_IOV
-> +static ssize_t sriov_totalvfs_show(struct device *dev,
-> +                                  struct device_attribute *attr,
-> +                                  char *buf)
-> +{
-> +       struct pci_dev *pdev;
-> +       u16 total;
-> +
-> +       pdev = to_pci_dev(dev);
-> +       total = pdev->sriov->total;
-> +       return sprintf(buf, "%u\n", total);
-> +}
-> +
-> +
-> +static ssize_t sriov_numvfs_show(struct device *dev,
-> +                                struct device_attribute *attr,
-> +                                char *buf)
-> +{
-> +       struct pci_dev *pdev;
-> +
-> +       pdev = to_pci_dev(dev);
-> +
-> +       return sprintf(buf, "%u\n", pdev->sriov->nr_virtfn);
-> +}
-> +
-> +/*
-> + * num_vfs > 0; number of vfs to enable
-> + * num_vfs = 0; disable all vfs
-> + *
-> + * Note: SRIOV spec doesn't allow partial VF
-> + *       disable, so its all or none.
-> + */
-> +static ssize_t sriov_numvfs_store(struct device *dev,
-> +                                 struct device_attribute *attr,
-> +                                 const char *buf, size_t count)
-> +{
-> +       struct pci_dev *pdev;
-> +       int num_vfs_enabled = 0;
-> +       int num_vfs;
-> +       int ret = 0;
-> +       u16 total;
-> +
-> +       pdev = to_pci_dev(dev);
-> +
-> +       if (kstrtoint(buf, 0, &num_vfs) < 0)
-> +               return -EINVAL;
-> +
-> +       /* is PF driver loaded w/callback */
-> +       if (!pdev->driver || !pdev->driver->sriov_configure) {
-> +               dev_info(&pdev->dev,
-> +                        "Driver doesn't support SRIOV configuration via sysfs\n");
-> +               return -ENOSYS;
-> +       }
-> +
-> +       /* if enabling vf's ... */
-> +       total = pdev->sriov->total;
-> +       /* Requested VFs to enable < totalvfs and none enabled already */
-> +       if ((num_vfs > 0) && (num_vfs <= total)) {
-> +               if (pdev->sriov->nr_virtfn == 0) {
-> +                       num_vfs_enabled =
-> +                               pdev->driver->sriov_configure(pdev, num_vfs);
-> +                       if ((num_vfs_enabled >= 0) &&
-> +                           (num_vfs_enabled != num_vfs)) {
-> +                               dev_warn(&pdev->dev,
-> +                                        "Only %d VFs enabled\n",
-> +                                        num_vfs_enabled);
-> +                               return count;
-> +                       } else if (num_vfs_enabled < 0)
-> +                               /* error code from driver callback */
-> +                               return num_vfs_enabled;
-> +               } else if (num_vfs == pdev->sriov->nr_virtfn) {
-> +                       dev_warn(&pdev->dev,
-> +                                "%d VFs already enabled; no enable action taken\n",
-> +                                num_vfs);
-> +                       return count;
-> +               } else {
-> +                       dev_warn(&pdev->dev,
-> +                                "%d VFs already enabled. Disable before enabling %d VFs\n",
-> +                                pdev->sriov->nr_virtfn, num_vfs);
-> +                       return -EINVAL;
-> +               }
-> +       }
-> +
-> +       /* disable vfs */
-> +       if (num_vfs == 0) {
-> +               if (pdev->sriov->nr_virtfn != 0) {
-> +                       ret = pdev->driver->sriov_configure(pdev, 0);
-> +                       return ret ? ret : count;
-> +               } else {
-> +                       dev_warn(&pdev->dev,
-> +                                "All VFs disabled; no disable action taken\n");
-> +                       return count;
-> +               }
-> +       }
-> +
-> +       dev_err(&pdev->dev,
-> +               "Invalid value for number of VFs to enable: %d\n", num_vfs);
-> +
-> +       return -EINVAL;
-> +}
-> +
-> +static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-> +static struct device_attribute sriov_numvfs_attr =
-> +               __ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-> +                      sriov_numvfs_show, sriov_numvfs_store);
-> +#endif /* CONFIG_PCI_IOV */
-> +
->  struct device_attribute pci_dev_attrs[] = {
->         __ATTR_RO(resource),
->         __ATTR_RO(vendor),
-> @@ -1421,6 +1528,30 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
->         return a->mode;
->  }
->
-> +#ifdef CONFIG_PCI_IOV
-> +static struct attribute *sriov_dev_attrs[] = {
-> +       &sriov_totalvfs_attr.attr,
-> +       &sriov_numvfs_attr.attr,
-> +       NULL,
-> +};
-> +
-> +static umode_t sriov_attrs_are_visible(struct kobject *kobj,
-> +                                        struct attribute *a, int n)
-> +{
-> +       struct device *dev = container_of(kobj, struct device, kobj);
-> +
-> +       if (!dev_is_pf(dev))
-> +               return 0;
-> +
-> +       return a->mode;
-> +}
-> +
-> +static struct attribute_group sriov_dev_attr_group = {
-> +       .attrs = sriov_dev_attrs,
-> +       .is_visible = sriov_attrs_are_visible,
-> +};
-> +#endif /* CONFIG_PCI_IOV */
-> +
->  static struct attribute_group pci_dev_attr_group = {
->         .attrs = pci_dev_dev_attrs,
->         .is_visible = pci_dev_attrs_are_visible,
-> @@ -1428,6 +1559,9 @@ static struct attribute_group pci_dev_attr_group = {
->
->  static const struct attribute_group *pci_dev_attr_groups[] = {
->         &pci_dev_attr_group,
-> +#ifdef CONFIG_PCI_IOV
-> +       &sriov_dev_attr_group,
-> +#endif
+On Thursday, November 01, 2012 01:16:22 PM Yinghai Lu wrote:
+> On Thu, Nov 1, 2012 at 1:17 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Thursday, November 01, 2012 01:17:58 PM Toshi Kani wrote:
+> >> On Thu, 2012-11-01 at 11:28 -0700, Yinghai Lu wrote:
+> >> > On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> >> > >
+> >> > > Rafael pointed out in my CPU hot-remove patch that
+> >> > > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
+> >> > > you have the same problem here.  FYI, I just sent the following patch
+> >> > > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+> >> > >
+> >> > > https://lkml.org/lkml/2012/11/1/225
+> >> >
+> >> > acpi_os_hotplug_execute() does not like having good quality yet.
+> >> >
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
+> >> > can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
+> >> > because the hotplug code may call driver .remove() functions,
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
+> >> > which invoke flush_scheduled_work/acpi_os_wait_events_complete
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
+> >> > flush these workqueues.
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
+> >> > = hp ? kacpi_hotplug_wq :
+> >> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
+> >> >  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+> >> > 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
+> >> > dpc->wait = hp ? 1 : 0;
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
+> >> > (queue == kacpi_hotplug_wq)
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
+> >> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
+> >> > if (queue == kacpi_notify_wq)
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
+> >> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
+> >> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+> >> >
+> >> > really don't know why checking queue and call same code in every branch.
+> >> >
+> >> > from comm:
+> >> >
+> >> > commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
+> >> > Author: Zhang Rui <rui.zhang@intel.com>
+> >> > Date:   Mon Mar 22 15:48:54 2010 +0800
+> >> >
+> >> >     ACPI: fixes a false alarm from lockdep
+> >> >
+> >> >     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
+> >> >     workqueues.
+> >> >     http://bugzilla.kernel.org/show_bug.cgi?id=14553
+> >> >     https://bugzilla.kernel.org/show_bug.cgi?id=15521
+> >> >
+> >> >     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
+> >> >     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> >> >     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+> >> >     Signed-off-by: Len Brown <len.brown@intel.com>
+> >> >
+> >> > diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> >> > index 8e6d866..900da68 100644
+> >> > --- a/drivers/acpi/osl.c
+> >> > +++ b/drivers/acpi/osl.c
+> >> > @@ -758,7 +758,14 @@ static acpi_status
+> >> > __acpi_os_execute(acpi_execute_type type,
+> >> >         queue = hp ? kacpi_hotplug_wq :
+> >> >                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+> >> >         dpc->wait = hp ? 1 : 0;
+> >> > -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > +
+> >> > +       if (queue == kacpi_hotplug_wq)
+> >> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > +       else if (queue == kacpi_notify_wq)
+> >> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > +       else
+> >> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> >> > +
+> >> >         ret = queue_work(queue, &dpc->work);
+> >> >
+> >> >         if (!ret) {
+> >> >
+> >> >
+> >> > Len or Rafael,
+> >> > can you just revert that silly patch?
+> >>
+> >> Hi Yinghai,
+> >>
+> >> Per the following thread, the code seems to be written in this way to
+> >> allocate a separate lock_class_key for each work queue.  It should have
+> >> had some comment to explain this, though.
+> >>
+> >> https://lkml.org/lkml/2009/12/13/304
+> >
+> > The code has evolved since then, however, so that it doesn't make sense
+> > any more.
+> >
+> 
+> oh, no, that commit should not be reverted. instead we should add some
+> comment for it...
+> 
+> that mean : three path, will have three separated static lock dep key
+> from every INIT_WORK.
 
-should move sriov_dev_attr_group related code to
-drivers/pci/iov.c
-or driver/pci/iov_sysfs.c
+I see.
 
-and kill those CONFIG_IOV.
+OK, I'll drop the patch removing it.
+
+What about the following comment:
+
+"To prevent lockdep from complaining unnecessarily, make sure that there
+ is a different static lockdep key created for each workqueue by using
+ INIT_WORK for each of them separately."
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
