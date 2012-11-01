@@ -1,68 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43838 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755752Ab2K3V5K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 16:57:10 -0500
-Date: Fri, 30 Nov 2012 16:57:09 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-cc: linux-usb@vger.kernel.org, <linux-pm@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Runtime PM/PCI D3 issue
-In-Reply-To: <20121130213600.GA5056@xanatos>
-Message-ID: <Pine.LNX.4.44L0.1211301650470.1362-100000@iolanthe.rowland.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1748725.QBg5LLmPOx@vostro.rjw.lan>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
+	<CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+	<1351797478.19172.103.camel@misato.fc.hp.com>
+	<1748725.QBg5LLmPOx@vostro.rjw.lan>
+Date: Thu, 1 Nov 2012 13:16:22 -0700
+Message-ID: <CAE9FiQV0gAJabpcoSHhTYq19m-YmaC0O6HH_dFKXUTuvUMG4Fg@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>,
+	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 30 Nov 2012, Sarah Sharp wrote:
+On Thu, Nov 1, 2012 at 1:17 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, November 01, 2012 01:17:58 PM Toshi Kani wrote:
+>> On Thu, 2012-11-01 at 11:28 -0700, Yinghai Lu wrote:
+>> > On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+>> > >
+>> > > Rafael pointed out in my CPU hot-remove patch that
+>> > > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
+>> > > you have the same problem here.  FYI, I just sent the following patch
+>> > > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+>> > >
+>> > > https://lkml.org/lkml/2012/11/1/225
+>> >
+>> > acpi_os_hotplug_execute() does not like having good quality yet.
+>> >
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
+>> > can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
+>> > because the hotplug code may call driver .remove() functions,
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
+>> > which invoke flush_scheduled_work/acpi_os_wait_events_complete
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
+>> > flush these workqueues.
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
+>> > = hp ? kacpi_hotplug_wq :
+>> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
+>> >  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+>> > 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
+>> > dpc->wait = hp ? 1 : 0;
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
+>> > (queue == kacpi_hotplug_wq)
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
+>> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
+>> > if (queue == kacpi_notify_wq)
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
+>> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
+>> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+>> >
+>> > really don't know why checking queue and call same code in every branch.
+>> >
+>> > from comm:
+>> >
+>> > commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
+>> > Author: Zhang Rui <rui.zhang@intel.com>
+>> > Date:   Mon Mar 22 15:48:54 2010 +0800
+>> >
+>> >     ACPI: fixes a false alarm from lockdep
+>> >
+>> >     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
+>> >     workqueues.
+>> >     http://bugzilla.kernel.org/show_bug.cgi?id=14553
+>> >     https://bugzilla.kernel.org/show_bug.cgi?id=15521
+>> >
+>> >     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
+>> >     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+>> >     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+>> >     Signed-off-by: Len Brown <len.brown@intel.com>
+>> >
+>> > diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+>> > index 8e6d866..900da68 100644
+>> > --- a/drivers/acpi/osl.c
+>> > +++ b/drivers/acpi/osl.c
+>> > @@ -758,7 +758,14 @@ static acpi_status
+>> > __acpi_os_execute(acpi_execute_type type,
+>> >         queue = hp ? kacpi_hotplug_wq :
+>> >                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+>> >         dpc->wait = hp ? 1 : 0;
+>> > -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > +
+>> > +       if (queue == kacpi_hotplug_wq)
+>> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > +       else if (queue == kacpi_notify_wq)
+>> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > +       else
+>> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+>> > +
+>> >         ret = queue_work(queue, &dpc->work);
+>> >
+>> >         if (!ret) {
+>> >
+>> >
+>> > Len or Rafael,
+>> > can you just revert that silly patch?
+>>
+>> Hi Yinghai,
+>>
+>> Per the following thread, the code seems to be written in this way to
+>> allocate a separate lock_class_key for each work queue.  It should have
+>> had some comment to explain this, though.
+>>
+>> https://lkml.org/lkml/2009/12/13/304
+>
+> The code has evolved since then, however, so that it doesn't make sense
+> any more.
+>
 
-> I've been trying to test D3 on the xHCI host controller for my Lenovo
-> x230 laptop.  However, the host controller (and other PCI devices) never
-> seem to go into D3.  This happens on a modified version of 3.7-rc6
-> (Greg KH's usb-next branch plus a couple patches) and on 3.6.6.
+oh, no, that commit should not be reverted. instead we should add some
+comment for it...
 
-Including Tianyu's stuff?
-
-> I enable runtime PM for the PCI device:
-> 
-> root@xanatos:/sys/bus/pci/devices# echo auto > 0000:00:14.0/power/control
-> root@xanatos:/sys/bus/pci/devices# cat 0000:00:14.0/power/control
-> auto
-> 
-> Both the USB 2.0 and USB 3.0 bus children under the xHCI host controller
-> are also set to auto runtime PM:
-> 
-> root@xanatos:/sys/bus/pci/devices# lsusb -t
-> 3-1.6:1.0: No such file or directory
-> 3-1.6:1.1: No such file or directory
-> /:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
->     |__ Port 1: Dev 2, If 0, Class=hub, Driver=hub/8p, 480M
-> /:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/3p, 480M
-> /:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 5000M
-> /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/4p, 480M
-> root@xanatos:/sys/bus/pci/devices# cat /sys/bus/usb/devices/usb1/power/control
-> auto
-> root@xanatos:/sys/bus/pci/devices# cat /sys/bus/usb/devices/usb2/power/control
-> auto
-> 
-> But dmesg never shows the bus or host being suspended.  The
-> runtime_status remains active, and the runtime_suspended_time remains at
-> zero.  There are no USB devices under the xHCI host, so I'm not sure why
-> the host isn't being suspended.  Is there some new runtime PM sysfs file
-> that I'm missing?
-
-No.
-
-The controller can't suspend until the root hub is suspended.  Did you 
-check the various runtime status values for the root hub, its 
-interface, and Tianyu's new port devices?
-
-In Greg's usb-next branch, the port devices are disabled for runtime
-PM.  But if you are testing Tianyu's new patches then they aren't.  
-They could be preventing your root hubs from suspending.
-
-Alan Stern
-
+that mean : three path, will have three separated static lock dep key
+from every INIT_WORK.
