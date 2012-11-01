@@ -1,57 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:42185 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753714Ab2K3U7p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 30 Nov 2012 15:59:45 -0500
-Message-ID: <1354309183.19578.0.camel@joe-AO722>
-Subject: Re: [PATCH v3 2/3] aerdrv: Enhanced AER logging
-From: Joe Perches <joe@perches.com>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1351797478.19172.103.camel@misato.fc.hp.com>
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support
+ container hot-remove.
+From: Toshi Kani <toshi.kani@hp.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 30 Nov 2012 12:59:43 -0800
-In-Reply-To: <20121130203936.31915.39956.stgit@grignak.americas.hpqcorp.net>
-References: <20121130203936.31915.39956.stgit@grignak.americas.hpqcorp.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Date: Thu, 01 Nov 2012 13:17:58 -0600
+In-Reply-To: <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
+	 <1351668471-31436-4-git-send-email-tangchen@cn.fujitsu.com>
+	 <1351788194.19172.98.camel@misato.fc.hp.com>
+	 <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-11-30 at 13:39 -0700, Lance Ortiz wrote:
-> This patch will provide a more reliable and easy way for user-space
-> applications to have access to AER logs rather than reading them from the
-> message buffer. It also provides a way to notify user-space when an AER
-> event occurs.
-
-Please run your patches through checkpatch.
-[]
-> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-[]
-> @@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
->  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->  			    const struct acpi_hest_generic_data *gdata)
->  {
-> +#ifdef CONFIG_ACPI_APEI_PCIEAER
-> +	struct pci_dev *dev;
-> +#endif
+On Thu, 2012-11-01 at 11:28 -0700, Yinghai Lu wrote:
+> On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> >
+> > Rafael pointed out in my CPU hot-remove patch that
+> > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
+> > you have the same problem here.  FYI, I just sent the following patch
+> > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+> >
+> > https://lkml.org/lkml/2012/11/1/225
+> 
+> acpi_os_hotplug_execute() does not like having good quality yet.
+> 
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
+> can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
+> because the hotplug code may call driver .remove() functions,
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
+> which invoke flush_scheduled_work/acpi_os_wait_events_complete
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
+> flush these workqueues.
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
+> = hp ? kacpi_hotplug_wq :
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
+>  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+> 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
+> dpc->wait = hp ? 1 : 0;
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
+> (queue == kacpi_hotplug_wq)
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
+>  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
+> if (queue == kacpi_notify_wq)
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
+>  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
+>  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+> 
+> really don't know why checking queue and call same code in every branch.
+> 
+> from comm:
+> 
+> commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
+> Author: Zhang Rui <rui.zhang@intel.com>
+> Date:   Mon Mar 22 15:48:54 2010 +0800
+> 
+>     ACPI: fixes a false alarm from lockdep
+> 
+>     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
+>     workqueues.
+>     http://bugzilla.kernel.org/show_bug.cgi?id=14553
+>     https://bugzilla.kernel.org/show_bug.cgi?id=15521
+> 
+>     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
+>     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+>     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+>     Signed-off-by: Len Brown <len.brown@intel.com>
+> 
+> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> index 8e6d866..900da68 100644
+> --- a/drivers/acpi/osl.c
+> +++ b/drivers/acpi/osl.c
+> @@ -758,7 +758,14 @@ static acpi_status
+> __acpi_os_execute(acpi_execute_type type,
+>         queue = hp ? kacpi_hotplug_wq :
+>                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+>         dpc->wait = hp ? 1 : 0;
+> -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
 > +
->  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
->  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
->  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-> @@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
->  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
->  #ifdef CONFIG_ACPI_APEI_PCIEAER
-> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
-> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-> +			pcie->device_id.bus, pcie->device_id.function);
-> +	if (!dev)
-> +		printk("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-> +			pcie->device_id.segment, pcie->device_id.bus,
-> +			pcie->device_id.slot, pcie->device_id.function);
+> +       if (queue == kacpi_hotplug_wq)
+> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +       else if (queue == kacpi_notify_wq)
+> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +       else
+> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +
+>         ret = queue_work(queue, &dpc->work);
+> 
+>         if (!ret) {
+> 
+> 
+> Len or Rafael,
+> can you just revert that silly patch?
 
-Please prefix this with an appropriate KERN_<LEVEL>
+Hi Yinghai,
+
+Per the following thread, the code seems to be written in this way to
+allocate a separate lock_class_key for each work queue.  It should have
+had some comment to explain this, though.
+
+https://lkml.org/lkml/2009/12/13/304
+
+Thanks,
+-Toshi
+
+
+
+> 
+> Yinghai
 
 
