@@ -1,109 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23685 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab2KDElp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 00:41:45 -0400
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:57441 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933190Ab2KAWPd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Nov 2012 18:15:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <11976302.Ya3MGGIAsU@vostro.rjw.lan>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
+	<1748725.QBg5LLmPOx@vostro.rjw.lan>
+	<CAE9FiQV0gAJabpcoSHhTYq19m-YmaC0O6HH_dFKXUTuvUMG4Fg@mail.gmail.com>
+	<11976302.Ya3MGGIAsU@vostro.rjw.lan>
+Date: Thu, 1 Nov 2012 15:15:31 -0700
+Message-ID: <CAE9FiQVGPP3+97D2SatH_CBPBpqBZyCe7We=9=x5ZEq8_d0fWQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	x86@kernel.org
-Subject: [PATCH 2/8] PCI, x86: Separate out pcibios_allocate_dev_resources()
-Date: Sat,  3 Nov 2012 21:39:25 -0700
-Message-Id: <1352003971-22278-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>,
+	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thus pcibios_allocate_resources() could more simple and clean.
+On Thu, Nov 1, 2012 at 2:31 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> oh, no, that commit should not be reverted. instead we should add some
+>> comment for it...
+>>
+>> that mean : three path, will have three separated static lock dep key
+>> from every INIT_WORK.
+>
+> I see.
+>
+> OK, I'll drop the patch removing it.
+>
+> What about the following comment:
+>
+> "To prevent lockdep from complaining unnecessarily, make sure that there
+>  is a different static lockdep key created for each workqueue by using
+>  INIT_WORK for each of them separately."
+>
+created ?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
----
- arch/x86/pci/i386.c |   42 +++++++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 19 deletions(-)
+how about "defined" ?
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 9800362..5817cf2 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -232,9 +232,8 @@ struct pci_check_idx_range {
- 	int end;
- };
- 
--static void __init pcibios_allocate_resources(int pass)
-+static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- {
--	struct pci_dev *dev = NULL;
- 	int idx, disabled, i;
- 	u16 command;
- 	struct resource *r;
-@@ -246,14 +245,13 @@ static void __init pcibios_allocate_resources(int pass)
- #endif
- 	};
- 
--	for_each_pci_dev(dev) {
--		pci_read_config_word(dev, PCI_COMMAND, &command);
--		for (i = 0; i < ARRAY_SIZE(idx_range); i++)
-+	pci_read_config_word(dev, PCI_COMMAND, &command);
-+	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
- 		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
- 			r = &dev->resource[idx];
--			if (r->parent)		/* Already allocated */
-+			if (r->parent)	/* Already allocated */
- 				continue;
--			if (!r->start)		/* Address not assigned at all */
-+			if (!r->start)	/* Address not assigned at all */
- 				continue;
- 			if (r->flags & IORESOURCE_IO)
- 				disabled = !(command & PCI_COMMAND_IO);
-@@ -272,23 +270,29 @@ static void __init pcibios_allocate_resources(int pass)
- 				}
- 			}
- 		}
--		if (!pass) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (r->flags & IORESOURCE_ROM_ENABLE) {
--				/* Turn the ROM off, leave the resource region,
--				 * but keep it unregistered. */
--				u32 reg;
--				dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
--				r->flags &= ~IORESOURCE_ROM_ENABLE;
--				pci_read_config_dword(dev,
--						dev->rom_base_reg, &reg);
--				pci_write_config_dword(dev, dev->rom_base_reg,
-+	if (!pass) {
-+		r = &dev->resource[PCI_ROM_RESOURCE];
-+		if (r->flags & IORESOURCE_ROM_ENABLE) {
-+			/* Turn the ROM off, leave the resource region,
-+			 * but keep it unregistered. */
-+			u32 reg;
-+			dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
-+			r->flags &= ~IORESOURCE_ROM_ENABLE;
-+			pci_read_config_dword(dev, dev->rom_base_reg, &reg);
-+			pci_write_config_dword(dev, dev->rom_base_reg,
- 						reg & ~PCI_ROM_ADDRESS_ENABLE);
--			}
- 		}
- 	}
- }
- 
-+static void __init pcibios_allocate_resources(int pass)
-+{
-+	struct pci_dev *dev = NULL;
-+
-+	for_each_pci_dev(dev)
-+		pcibios_allocate_dev_resources(dev, pass);
-+}
-+
- static int __init pcibios_assign_resources(void)
- {
- 	struct pci_dev *dev = NULL;
--- 
-1.7.7
-
+or just remove  "created"
