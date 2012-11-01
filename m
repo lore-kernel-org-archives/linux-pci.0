@@ -1,86 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:31292 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753382Ab2JBGdM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Oct 2012 02:33:12 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: [PATCH 06/10] PCI, ACPI: Move hot add root bus conf code to acpi_pci_root_add
-Date: Mon,  1 Oct 2012 23:33:04 -0700
-Message-Id: <1349159588-15029-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-References: <1349159588-15029-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5091D504.7010607@cn.fujitsu.com>
+Date: Thu, 01 Nov 2012 09:48:52 +0800
+From: Tang Chen <tangchen@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
+	izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/3] ACPI: container hot remove support.
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <509106E2.70008@jp.fujitsu.com> <CAE9FiQVrMj2KunOMDvftnu=MG=t=UpKTA4-t_YTYdgVL-rg_7Q@mail.gmail.com>
+In-Reply-To: <CAE9FiQVrMj2KunOMDvftnu=MG=t=UpKTA4-t_YTYdgVL-rg_7Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is safe before we really put those pci devices in the tree.
+Hi Yinghai,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc:Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root.c |   31 ++++++++++++++++---------------
- 1 files changed, 16 insertions(+), 15 deletions(-)
+How do you think the 1st patch ? Is the idea OK with you ?
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 75643ce..e63a58d 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -506,6 +506,7 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	acpi_status status;
- 	int result;
- 	struct acpi_pci_root *root;
-+	struct acpi_pci_driver *driver;
- 	acpi_handle handle;
- 	u32 flags;
- 
-@@ -607,6 +608,21 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
- 	if (device->wakeup.flags.run_wake)
- 		device_set_run_wake(root->bus->bridge, true);
- 
-+	if (system_state != SYSTEM_BOOTING) {
-+		pcibios_resource_survey_bus(root->bus);
-+		pci_assign_unassigned_bus_resources(root->bus);
-+	}
-+
-+	mutex_lock(&acpi_pci_root_lock);
-+	list_for_each_entry(driver, &acpi_pci_drivers, node)
-+		if (driver->add)
-+			driver->add(root);
-+	mutex_unlock(&acpi_pci_root_lock);
-+
-+	/* need to after hot-added ioapic is registered */
-+	if (system_state != SYSTEM_BOOTING)
-+		pci_enable_bridges(root->bus);
-+
- 	return 0;
- 
- out_del_root:
-@@ -621,22 +637,7 @@ end:
- static int acpi_pci_root_start(struct acpi_device *device)
- {
- 	struct acpi_pci_root *root = acpi_driver_data(device);
--	struct acpi_pci_driver *driver;
--
--	if (system_state != SYSTEM_BOOTING) {
--		pcibios_resource_survey_bus(root->bus);
--		pci_assign_unassigned_bus_resources(root->bus);
--	}
- 
--	mutex_lock(&acpi_pci_root_lock);
--	list_for_each_entry(driver, &acpi_pci_drivers, node)
--		if (driver->add)
--			driver->add(root);
--	mutex_unlock(&acpi_pci_root_lock);
--
--	/* need to after hot-added ioapic is registered */
--	if (system_state != SYSTEM_BOOTING)
--		pci_enable_bridges(root->bus);
- 
- 	pci_bus_add_devices(root->bus);
- 
--- 
-1.7.7
+And about the memory hotplug thing, so far as I know, we are trying to
+limit kernel memory in some nodes, and only support to hot-remove the
+nodes with out kernel memory. This functionality is called
+online_movable. And some of the patches are already in next-tree, most
+of the patches are under review. :)
+
+Thanks. :)
+
+On 11/01/2012 12:48 AM, Yinghai Lu wrote:
+> On Wed, Oct 31, 2012 at 4:09 AM, Yasuaki Ishimatsu
+> <isimatu.yasuaki@jp.fujitsu.com>  wrote:
+>>> patch 2. Introduce a new function container_device_remove() to handle
+>>>            ACPI_NOTIFY_EJECT_REQUEST event for container.
+>>
+>> If container device contains memory device, the function is
+>> very danger. As you know, we are developing a memory hotplug.
+>> If memory has kernel memory, memory hot remove operations fails.
+>> But container_device_remove() cannot realize it. So even if
+>> the memory hot remove operation fails, container_device_remove()
+>> keeps hot remove operation. Finally, the function sends _EJ0
+>> to firmware. In this case, if the memory is accessed, kernel
+>> panic occurs.
+>> The example is as follows:
+>>
+>>   https://lkml.org/lkml/2012/9/26/318
+>
+> so what is the overall status memory hot-remove?
+> how are following memory get processed ?
+> 1. memory for kernel text, module
+> 2. page table
+> 3. vmemmap
+> 4. memory for kmalloc, for dma
+>
 
