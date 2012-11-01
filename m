@@ -1,141 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:29203 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818Ab2KTGdd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 01:33:33 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/4] AER-PCI: Add infrastructure for notification of errors
- to other subsystems
-Date: Tue, 20 Nov 2012 06:32:04 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C90146FCE3@G4W3208.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from ogre.sisk.pl ([193.178.161.156]:51115 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932415Ab2KAUNL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Nov 2012 16:13:11 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>,
+	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
+Date: Thu, 01 Nov 2012 21:17:17 +0100
+Message-ID: <1748725.QBg5LLmPOx@vostro.rjw.lan>
+In-Reply-To: <1351797478.19172.103.camel@misato.fc.hp.com>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com> <1351797478.19172.103.camel@misato.fc.hp.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, November 01, 2012 01:17:58 PM Toshi Kani wrote:
+> On Thu, 2012-11-01 at 11:28 -0700, Yinghai Lu wrote:
+> > On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> > >
+> > > Rafael pointed out in my CPU hot-remove patch that
+> > > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
+> > > you have the same problem here.  FYI, I just sent the following patch
+> > > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+> > >
+> > > https://lkml.org/lkml/2012/11/1/225
+> > 
+> > acpi_os_hotplug_execute() does not like having good quality yet.
+> > 
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
+> > can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
+> > because the hotplug code may call driver .remove() functions,
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
+> > which invoke flush_scheduled_work/acpi_os_wait_events_complete
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
+> > flush these workqueues.
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
+> > = hp ? kacpi_hotplug_wq :
+> > c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
+> >  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+> > 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
+> > dpc->wait = hp ? 1 : 0;
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
+> > (queue == kacpi_hotplug_wq)
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
+> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
+> > if (queue == kacpi_notify_wq)
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
+> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
+> >  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+> > 
+> > really don't know why checking queue and call same code in every branch.
+> > 
+> > from comm:
+> > 
+> > commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
+> > Author: Zhang Rui <rui.zhang@intel.com>
+> > Date:   Mon Mar 22 15:48:54 2010 +0800
+> > 
+> >     ACPI: fixes a false alarm from lockdep
+> > 
+> >     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
+> >     workqueues.
+> >     http://bugzilla.kernel.org/show_bug.cgi?id=14553
+> >     https://bugzilla.kernel.org/show_bug.cgi?id=15521
+> > 
+> >     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
+> >     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> >     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+> >     Signed-off-by: Len Brown <len.brown@intel.com>
+> > 
+> > diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> > index 8e6d866..900da68 100644
+> > --- a/drivers/acpi/osl.c
+> > +++ b/drivers/acpi/osl.c
+> > @@ -758,7 +758,14 @@ static acpi_status
+> > __acpi_os_execute(acpi_execute_type type,
+> >         queue = hp ? kacpi_hotplug_wq :
+> >                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+> >         dpc->wait = hp ? 1 : 0;
+> > -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > +
+> > +       if (queue == kacpi_hotplug_wq)
+> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > +       else if (queue == kacpi_notify_wq)
+> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > +       else
+> > +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> > +
+> >         ret = queue_work(queue, &dpc->work);
+> > 
+> >         if (!ret) {
+> > 
+> > 
+> > Len or Rafael,
+> > can you just revert that silly patch?
+> 
+> Hi Yinghai,
+> 
+> Per the following thread, the code seems to be written in this way to
+> allocate a separate lock_class_key for each work queue.  It should have
+> had some comment to explain this, though.
+> 
+> https://lkml.org/lkml/2009/12/13/304
 
-- Adds infrastructure support for error notifications from AER subsystem
-to other subsystems. The generic notifier_chain functionality is used.
+The code has evolved since then, however, so that it doesn't make sense
+any more.
 
-- When the AER rootport driver detects an uncorrected error, invoke the
-callbacks registered for notifications as well as mark the device as
-tainted.
+Thanks,
+Rafael
 
-- After the recovery is successful, clear the tainted flag on the device.
 
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-
----
- drivers/pci/pcie/aer/aerdrv.c      | 20 ++++++++++++++++++++
- drivers/pci/pcie/aer/aerdrv_core.c |  9 ++++++++-
- include/linux/aer.h                |  4 ++++
- include/linux/pci.h                |  2 ++
- 4 files changed, 34 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 030cf12..92dc54c 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -68,6 +68,26 @@ static struct pcie_port_service_driver aerdriver = {
- 
- static int pcie_aer_disable;
- 
-+ATOMIC_NOTIFIER_HEAD(aer_notifier_list);
-+
-+void aer_notifier_register(struct notifier_block *nb)
-+{
-+	atomic_notifier_chain_register(&aer_notifier_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(aer_notifier_register);
-+
-+void aer_notifier_unregister(struct notifier_block *nb)
-+{
-+	atomic_notifier_chain_unregister(&aer_notifier_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(aer_notifier_unregister);
-+
-+void aer_notify(unsigned long val, void *v)
-+{
-+	atomic_notifier_call_chain(&aer_notifier_list, val, v);
-+}
-+EXPORT_SYMBOL_GPL(aer_notify);
-+
- void pci_no_aer(void)
- {
- 	pcie_aer_disable = 1;	/* has priority over 'forceload' */
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index af4e31c..be6c3ee 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -215,6 +215,8 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 
- 	device_lock(&dev->dev);
- 	dev->error_state = result_data->state;
-+	dev->dev_flags |= PCI_DEV_FLAGS_ERR_DETECTED;
-+	aer_notify(0, NULL);
- 
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -291,6 +293,7 @@ static int report_resume(struct pci_dev *dev, void *data)
- 
- 	device_lock(&dev->dev);
- 	dev->error_state = pci_channel_io_normal;
-+	dev->dev_flags &= ~PCI_DEV_FLAGS_ERR_DETECTED;
- 
- 	if (!dev->driver ||
- 		!dev->driver->err_handler ||
-@@ -521,6 +524,7 @@ static void do_recovery(struct pci_dev *dev, int severity)
- 				"resume",
- 				report_resume);
- 
-+	dev->dev_flags &= ~PCI_DEV_FLAGS_ERR_DETECTED;
- 	dev_info(&dev->dev, "AER: Device recovery successful\n");
- 	return;
- 
-@@ -552,8 +556,11 @@ static void handle_error_source(struct pcie_device *aerdev,
- 		if (pos)
- 			pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS,
- 					info->status);
--	} else
-+	} else {
-+		dev->dev_flags |= PCI_DEV_FLAGS_ERR_DETECTED;
-+		aer_notify(0, NULL);
- 		do_recovery(dev, info->severity);
-+	}
- }
- 
- #ifdef CONFIG_ACPI_APEI_PCIEAER
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 544abdb..f8df468 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -54,5 +54,9 @@ extern void cper_print_aer(const char *prefix, int cper_severity,
- extern int cper_severity_to_aer(int cper_severity);
- extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
- 			      int severity);
-+extern void aer_notifier_register(struct notifier_block *nb);
-+extern void aer_notifier_unregister(struct notifier_block *nb);
-+extern void aer_notify(unsigned long val, void *v);
-+
- #endif //_AER_H_
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee21795..ab17a08 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -155,6 +155,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) 2,
- 	/* Provide indication device is assigned by a Virtual Machine Manager */
- 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) 4,
-+	/* Indicates that hw has reported an uncorrected error for the device */
-+	PCI_DEV_FLAGS_ERR_DETECTED = (__force pci_dev_flags_t) 8,
- };
- 
- enum pci_irq_reroute_variant {
 -- 
-1.7.11.3
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
