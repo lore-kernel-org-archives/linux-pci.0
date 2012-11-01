@@ -1,72 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:22528 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213Ab2K3Vir (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 16:38:47 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v3 3/3] aerdrv: Cleanup log output for CPER based AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 30 Nov 2012 14:33:44 -0700
-Message-ID: <20121130213343.7649.49461.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
-References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
+Received: from mx1.redhat.com ([209.132.183.28]:23487 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752503Ab2KAVKq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Nov 2012 17:10:46 -0400
+Message-ID: <5092E54C.5080105@redhat.com>
+Date: Thu, 01 Nov 2012 17:10:36 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	yuvalmin@broadcom.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net
+Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>  <1351718353-6124-4-git-send-email-ddutile@redhat.com> <1351727268.2706.48.camel@bwh-desktop.uk.solarflarecom.com>
+In-Reply-To: <1351727268.2706.48.camel@bwh-desktop.uk.solarflarecom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These changes make cper_print_aer more consistent with aer_print_error
-which is called in the AER interrupt case. The string in the variable
-'prefix' is printed at the beginning of each print statement in
-cper_print_aer(). The prefix is a string containing the driver name
-and the device's path.  Looking up the call path, the value of prefix
-is never assigned and is NULL, so when cper_print_aer prints data the
-initial string does not get printed.  This string is important because
-it identifies the device that the error is on. This patch adds code to
-create the prefix and print it in the cper_print_aer function. This
-patch also calculates the device's agent id so it can be printed.
+On 10/31/2012 07:47 PM, Ben Hutchings wrote:
+> On Wed, 2012-10-31 at 17:19 -0400, Donald Dutile wrote:
+>> Provide files under sysfs to determine the max number of vfs
+>> an SRIOV-capable PCIe device supports, and methods to enable and
+>> disable the vfs on a per device basis.
+>>
+>> Currently, VF enablement by SRIOV-capable PCIe devices is done
+>> in driver-specific module parameters.  If not setup in modprobe files,
+>> it requires admin to unload&  reload PF drivers with number of desired
+>> VFs to enable.  Additionally, the enablement is system wide: all
+>> devices controlled by the same driver have the same number of VFs
+>> enabled.  Although the latter is probably desired, there are PCI
+>> configurations setup by system BIOS that may not enable that to occur.
+>>
+>> Three files are created if a PCIe device has SRIOV support:
+>> sriov_totalvfs -- cat-ing this file returns the maximum number
+>>                    of VFs a PCIe device supports as reported by
+>>                    the TotalVFs in the SRIOV ext cap structure.
+>> sriov_numvfs -- echo'ing a positive number to this file enables this
+>>                  number of VFs for this given PCIe device.
+>>               -- echo'ing a 0 to this file disables
+>>                  any previously enabled VFs for this PCIe device.
+>>               -- cat-ing this file will return the number of VFs
+>>                  currently enabled on this PCIe device, i.e.,
+>>                  the NumVFs field in SRIOV ext. cap structure.
+>>
+>> VF enable and disablement is invoked much like other PCIe
+>> configuration functions -- via registered callbacks in the driver,
+>> i.e., probe, release, etc.
+>>
+>> Signed-off-by: Donald Dutile<ddutile@redhat.com>
+>> ---
+>>   drivers/pci/pci-sysfs.c | 137 +++++++++++++++++++++++++++++++++++++++++++++++-
+>>   include/linux/pci.h     |   1 +
+>>   2 files changed, 136 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index fbbb97f..83be8ce 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+> [...]
+>> +static ssize_t sriov_numvfs_store(struct device *dev,
+>> +				  struct device_attribute *attr,
+>> +				  const char *buf, size_t count)
+>> +{
+>> +	struct pci_dev *pdev;
+>> +	int num_vfs_enabled = 0;
+>> +	int num_vfs;
+>> +	int ret = 0;
+>> +	u16 total;
+>> +
+>> +	pdev = to_pci_dev(dev);
+>> +
+>> +	if (kstrtoint(buf, 0,&num_vfs)<  0)
+>> +		return -EINVAL;
+>> +
+>> +	/* is PF driver loaded w/callback */
+>> +	if (!pdev->driver || !pdev->driver->sriov_configure) {
+>> +		dev_info(&pdev->dev,
+>> +			 "Driver doesn't support SRIOV configuration via sysfs\n");
+>> +		return -ENOSYS;
+>> +	}
+>> +
+>> +	/* if enabling vf's ... */
+>> +	total = pdev->sriov->total;
+>> +	/* Requested VFs to enable<  totalvfs and none enabled already */
+>> +	if ((num_vfs>  0)&&  (num_vfs<= total)) {
+>> +		if (pdev->sriov->nr_virtfn == 0) {
+>> +			num_vfs_enabled =
+>> +				pdev->driver->sriov_configure(pdev, num_vfs);
+>> +			if ((num_vfs_enabled>= 0)&&
+>> +			    (num_vfs_enabled != num_vfs))
+>> +				dev_warn(&pdev->dev,
+>> +					 "Only %d VFs enabled\n",
+>> +					 num_vfs_enabled);
+>> +			return count;
+>
+> If num_vfs_enabled<  0 then it's an error value which should be returned
+> instead of count.
+>
+> [...]
+agreed. will update.
 
-v1-v2 fix some compile errors withinn the #ifdef
+>> @@ -1409,7 +1512,7 @@ static struct attribute *pci_dev_dev_attrs[] = {
+>>   };
+>>
+>>   static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+>> -						struct attribute *a, int n)
+>> +					 struct attribute *a, int n)
+>>   {
+>>   	struct device *dev = container_of(kobj, struct device, kobj);
+>>   	struct pci_dev *pdev = to_pci_dev(dev);
+>
+> This hunk should be folded into patch 1.
+>
+i removed it.  will do a cleanup of this file in another patch.
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
----
+>> @@ -1421,6 +1524,33 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+>>   	return a->mode;
+>>   }
+>>
+>> +#ifdef CONFIG_PCI_IOV
+>> +static struct attribute *sriov_dev_attrs[] = {
+>> +	&sriov_totalvfs_attr.attr,
+>> +	&sriov_numvfs_attr.attr,
+>> +	NULL,
+>> +};
+>> +
+>> +static umode_t sriov_attrs_are_visible(struct kobject *kobj,
+>> +					 struct attribute *a, int n)
+>> +{
+>> +	struct device *dev = container_of(kobj, struct device, kobj);
+>> +
+>> +	if ((a ==&sriov_totalvfs_attr.attr) ||
+>> +	    (a ==&sriov_numvfs_attr.attr)) {
+>> +		if (!dev_is_pf(dev))
+>> +			return 0;
+>> +	}
+>
+> Why do you check the attribute address?  The whole group should be
+> visible or invisible depending on dev_is_pf().  Any attributes that need
+> another condition belong in another group.
+>
+agreed.  it's a leftover design when it was part of the uber pci-dev attrs,
+but now that it's separate, dev_is_pf() is sufficient.
+good cleanup.
 
- drivers/pci/pcie/aer/aerdrv_errprint.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 34d96e4..5050891 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -228,9 +228,15 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
--	char *prefix = NULL;
-+	int id = ((dev->bus->number << 8) | dev->devfn);
-+	char prefix[44];
- 
- 	aer_severity = cper_severity_to_aer(cper_severity);
-+	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
-+		(aer_severity == AER_CORRECTABLE) ?
-+		KERN_WARNING : KERN_ERR,
-+		dev_driver_string(&dev->dev), dev_name(&dev->dev));
-+
- 	if (aer_severity == AER_CORRECTABLE) {
- 		status = aer->cor_status;
- 		mask = aer->cor_mask;
-@@ -248,8 +254,8 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 	printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
- 	       prefix, status, mask);
- 	cper_print_bits(prefix, status, status_strs, status_strs_size);
--	printk("%s""aer_layer=%s, aer_agent=%s\n", prefix,
--	       aer_error_layer[layer], aer_agent_string[agent]);
-+	printk("%s""aer_layer=%s, id=%04x(%s)\n", prefix,
-+	       aer_error_layer[layer], id, aer_agent_string[agent]);
- 	if (aer_severity != AER_CORRECTABLE)
- 		printk("%s""aer_uncor_severity: 0x%08x\n",
- 		       prefix, aer->uncor_severity);
+>> +	return a->mode;
+>> +}
+>> +
+>> +static struct attribute_group sriov_dev_attr_group = {
+>> +	.attrs = sriov_dev_attrs,
+>> +	.is_visible = sriov_attrs_are_visible,
+>> +};
+>> +#endif /* CONFIG_PCI_IOV */
+> [...]
+>
 
