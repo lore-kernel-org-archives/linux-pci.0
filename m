@@ -1,56 +1,119 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <509698C3.5070700@gmail.com>
-Date: Mon, 05 Nov 2012 00:33:07 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Yinghai Lu <yinghai@kernel.org>
-CC: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>,
 	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	lenb@kernel.org, jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] ACPI: container hot remove support.
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <509106E2.70008@jp.fujitsu.com> <CAE9FiQVrMj2KunOMDvftnu=MG=t=UpKTA4-t_YTYdgVL-rg_7Q@mail.gmail.com>
-In-Reply-To: <CAE9FiQVrMj2KunOMDvftnu=MG=t=UpKTA4-t_YTYdgVL-rg_7Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
+Date: Thu, 01 Nov 2012 21:16:13 +0100
+Message-ID: <2190235.LV034OX9Ij@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <1351788194.19172.98.camel@misato.fc.hp.com> <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/01/2012 12:48 AM, Yinghai Lu wrote:
-> On Wed, Oct 31, 2012 at 4:09 AM, Yasuaki Ishimatsu
-> <isimatu.yasuaki@jp.fujitsu.com> wrote:
->>> patch 2. Introduce a new function container_device_remove() to handle
->>>           ACPI_NOTIFY_EJECT_REQUEST event for container.
->>
->> If container device contains memory device, the function is
->> very danger. As you know, we are developing a memory hotplug.
->> If memory has kernel memory, memory hot remove operations fails.
->> But container_device_remove() cannot realize it. So even if
->> the memory hot remove operation fails, container_device_remove()
->> keeps hot remove operation. Finally, the function sends _EJ0
->> to firmware. In this case, if the memory is accessed, kernel
->> panic occurs.
->> The example is as follows:
->>
->>  https://lkml.org/lkml/2012/9/26/318
+On Thursday, November 01, 2012 11:28:25 AM Yinghai Lu wrote:
+> On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> >
+> > Rafael pointed out in my CPU hot-remove patch that
+> > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
+> > you have the same problem here.  FYI, I just sent the following patch
+> > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+> >
+> > https://lkml.org/lkml/2012/11/1/225
 > 
-> so what is the overall status memory hot-remove?
-> how are following memory get processed ?
-> 1. memory for kernel text, module
-> 2. page table
-> 3. vmemmap
-> 4. memory for kmalloc, for dma
-Hi Yinghai,
-	I have given a talk about the CPU/memory/PCI host bridge hotplug
-current status and next step plan on China Linux Kernel Developer Conference,
-please refer to
-https://github.com/downloads/jiangliu/linux/ACPI%20Based%20System%20Device%20Dynamic%20Reconfiguration.pdf
-	Thanks!
-	Gerry
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> acpi_os_hotplug_execute() does not like having good quality yet.
 > 
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
+> can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
+> because the hotplug code may call driver .remove() functions,
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
+> which invoke flush_scheduled_work/acpi_os_wait_events_complete
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
+> flush these workqueues.
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
+> = hp ? kacpi_hotplug_wq :
+> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
+>  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+> 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
+> dpc->wait = hp ? 1 : 0;
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
+> (queue == kacpi_hotplug_wq)
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
+>  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
+> if (queue == kacpi_notify_wq)
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
+>  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
+>  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+> 
+> really don't know why checking queue and call same code in every branch.
+> 
+> from comm:
+> 
+> commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
+> Author: Zhang Rui <rui.zhang@intel.com>
+> Date:   Mon Mar 22 15:48:54 2010 +0800
+> 
+>     ACPI: fixes a false alarm from lockdep
+> 
+>     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
+>     workqueues.
+>     http://bugzilla.kernel.org/show_bug.cgi?id=14553
+>     https://bugzilla.kernel.org/show_bug.cgi?id=15521
+> 
+>     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
+>     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+>     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+>     Signed-off-by: Len Brown <len.brown@intel.com>
+> 
+> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> index 8e6d866..900da68 100644
+> --- a/drivers/acpi/osl.c
+> +++ b/drivers/acpi/osl.c
+> @@ -758,7 +758,14 @@ static acpi_status
+> __acpi_os_execute(acpi_execute_type type,
+>         queue = hp ? kacpi_hotplug_wq :
+>                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+>         dpc->wait = hp ? 1 : 0;
+> -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +
+> +       if (queue == kacpi_hotplug_wq)
+> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +       else if (queue == kacpi_notify_wq)
+> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +       else
+> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+> +
+>         ret = queue_work(queue, &dpc->work);
+> 
+>         if (!ret) {
+> 
+> 
+> Len or Rafael,
+> can you just revert that silly patch?
 
+We're removing this as per:
+
+http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=commit;h=77f1966ec9763e85e5f1a9202802e90c297b4c21
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
