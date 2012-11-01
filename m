@@ -1,107 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:65052 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367Ab2KLI2U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2012 03:28:20 -0500
-Message-ID: <50A0B2FB.6000901@huawei.com>
-Date: Mon, 12 Nov 2012 16:27:39 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>
-Subject: Re: [PATCH -v2] PCI, pciehp: make every slot have its own workqueue
- to avoid deadlock
-References: <1352450600-1956-1-git-send-email-wangyijing@huawei.com> <4A338DB2991D2A44B9A44B8718AECF650A51E58D@G01JPEXMBYT03>
-In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A51E58D@G01JPEXMBYT03>
-Content-Type: text/plain; charset="ISO-2022-JP"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1351788194.19172.98.camel@misato.fc.hp.com>
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
+	<1351668471-31436-4-git-send-email-tangchen@cn.fujitsu.com>
+	<1351788194.19172.98.camel@misato.fc.hp.com>
+Date: Thu, 1 Nov 2012 11:28:25 -0700
+Message-ID: <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
+From: Yinghai Lu <yinghai@kernel.org>
+To: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
+	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
+	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/11/12 15:17, Kaneshige, Kenji wrote:
->> @@ -94,6 +93,8 @@ static int init_slot(struct controller *ctrl)
->>  	struct hotplug_slot_info *info = NULL;
->>  	struct hotplug_slot_ops *ops = NULL;
->>  	char name[SLOT_NAME_SIZE];
->> +	char *buffer;
->> +	int len;
->>  	int retval = -ENOMEM;
->>
->>  	hotplug = kzalloc(sizeof(*hotplug), GFP_KERNEL);
->> @@ -135,6 +136,19 @@ static int init_slot(struct controller *ctrl)
->>  	if (retval)
->>  		ctrl_err(ctrl,
->>  			 "pci_hp_register failed with error %d\n", retval);
-> 
-> I think it's natural to go to out: here if retval != 0.
-> I guess you intentionally didn't do that because you might want to do
-> workqueue cleanup in pciehp_release_ctrl() code path. But it is confusing
-> and hard to understand.
-
-Hi Kaneshige,
-
-You are right, go to out here is better.
-
-> In the previous patch, you created the work queue in pcie_init_slot().
-> I think it's better. Maybe the reason you moved it from pcie_init_slot()
-> to init_slot() was that you needed the slot name by pci_hp_register().
-> 
-> How about using physical slot number, which is same as pci slot name by
-> pci_hp_register() on the normal platform, for the workqueue name instead?
+On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
 >
+> Rafael pointed out in my CPU hot-remove patch that
+> acpi_bus_hot_remove_device() was not exported for modules.  Looks like
+> you have the same problem here.  FYI, I just sent the following patch
+> that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+>
+> https://lkml.org/lkml/2012/11/1/225
 
-I think use physical slot number is ok, so what about workqueue name like slot(physical slot number) format ?
+acpi_os_hotplug_execute() does not like having good quality yet.
 
-root     45808  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(0)]
-root     45815  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(4)]
-root     45836  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(5)]
-root     45840  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(3)]
-root     45842  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(7)]
-root     45844  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(228)]
-root     45846  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(232)]
-root     45848  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(233)]
-root     45850  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(240)]
-root     45852  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(241)]
-root     45854  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(244)]
-root     45856  0.0  0.0      0     0 ?        S<   16:25   0:00 [slot(245)]
-root     45879  0.0  0.0   4416  2304 pts/0    S+   16:25   0:00 grep slot
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
+can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
+because the hotplug code may call driver .remove() functions,
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
+which invoke flush_scheduled_work/acpi_os_wait_events_complete
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
+flush these workqueues.
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
+= hp ? kacpi_hotplug_wq :
+c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
+ (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
+dpc->wait = hp ? 1 : 0;
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
+(queue == kacpi_hotplug_wq)
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
+ INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
+if (queue == kacpi_notify_wq)
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
+ INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
+ INIT_WORK(&dpc->work, acpi_os_execute_deferred);
+bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+
+really don't know why checking queue and call same code in every branch.
+
+from comm:
+
+commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
+Author: Zhang Rui <rui.zhang@intel.com>
+Date:   Mon Mar 22 15:48:54 2010 +0800
+
+    ACPI: fixes a false alarm from lockdep
+
+    fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
+    workqueues.
+    http://bugzilla.kernel.org/show_bug.cgi?id=14553
+    https://bugzilla.kernel.org/show_bug.cgi?id=15521
+
+    Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+    Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+    Signed-off-by: Len Brown <len.brown@intel.com>
+
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 8e6d866..900da68 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -758,7 +758,14 @@ static acpi_status
+__acpi_os_execute(acpi_execute_type type,
+        queue = hp ? kacpi_hotplug_wq :
+                (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
+        dpc->wait = hp ? 1 : 0;
+-       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
++
++       if (queue == kacpi_hotplug_wq)
++               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
++       else if (queue == kacpi_notify_wq)
++               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
++       else
++               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
++
+        ret = queue_work(queue, &dpc->work);
+
+        if (!ret) {
 
 
-Thanks!
-Yijing
+Len or Rafael,
+can you just revert that silly patch?
 
->> +
->> +	len = strlen(slot_name(slot)) + 16;
->> +	buffer = kzalloc(len, GFP_KERNEL);
->> +	if (!buffer) {
->> +		retval = -ENOMEM;
->> +		goto out;
->> +	}
->> +	snprintf(buffer, len, "pciehp_slot(%s)", slot_name(slot));
->> +	slot->wq = create_singlethread_workqueue(buffer);
->> +	if (!slot->wq)
->> +		retval = -ENOMEM;
->> +
->> +	kfree(buffer);
->>  out:
->>  	if (retval) {
->>  		kfree(ops);
-> 
-> Regards,
-> Kenji Kaneshige
-> 
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Yinghai
