@@ -1,100 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	x86@kernel.org
-Subject: [PATCH 3/8] PCI, x86: Let pcibios_allocate_bus_resources() take bus instead
-Date: Sat,  3 Nov 2012 21:39:26 -0700
-Message-Id: <1352003971-22278-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:39378 "EHLO
+	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753643Ab2KAH0M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Nov 2012 03:26:12 -0400
+Message-ID: <50922400.4090502@st.com>
+Date: Thu, 1 Nov 2012 12:55:52 +0530
+From: Pratyush Anand <pratyush.anand@st.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Shiraz HASHIM <shiraz.hashim@st.com>,
+	"viresh.linux@gmail.com" <viresh.linux@gmail.com>,
+	spear-devel <spear-devel@list.st.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"olof@lixom.net" <olof@lixom.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 04/15] SPEAr13xx: Add PCIe Root Complex driver support
+References: <cover.1351492562.git.pratyush.anand@st.com> <201210302220.23690.arnd@arndb.de> <50910A64.7040306@st.com> <201210312200.59324.arnd@arndb.de>
+In-Reply-To: <201210312200.59324.arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Will need call the same code for one single root bus during hot add.
-So make it take bus instead of bus list.
+On 11/1/2012 3:30 AM, Arnd Bergmann wrote:
+> Thanks for the quick replies. I hope I managed to explain the I/O space accesses
+> now.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
----
- arch/x86/pci/i386.c |   38 +++++++++++++++++++++++++-------------
- 1 files changed, 25 insertions(+), 13 deletions(-)
+Yes, I understood now :)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 5817cf2..84696ed 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -215,16 +215,15 @@ static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 	}
- }
- 
--static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
-+static void __init pcibios_allocate_bus_resources(struct pci_bus *bus)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *child;
- 
- 	/* Depth-First Search on bus tree */
--	list_for_each_entry(bus, bus_list, node) {
--		if (bus->self)
--			pcibios_allocate_bridge_resources(bus->self);
--		pcibios_allocate_bus_resources(&bus->children);
--	}
-+	if (bus->self)
-+		pcibios_allocate_bridge_resources(bus->self);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcibios_allocate_bus_resources(child);
- }
- 
- struct pci_check_idx_range {
-@@ -285,12 +284,18 @@ static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 	}
- }
- 
--static void __init pcibios_allocate_resources(int pass)
-+static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- {
--	struct pci_dev *dev = NULL;
-+	struct pci_dev *dev;
-+	struct pci_bus *child;
- 
--	for_each_pci_dev(dev)
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		pcibios_allocate_dev_resources(dev, pass);
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pcibios_allocate_resources(child, pass);
-+	}
- }
- 
- static int __init pcibios_assign_resources(void)
-@@ -323,10 +328,17 @@ static int __init pcibios_assign_resources(void)
- 
- void __init pcibios_resource_survey(void)
- {
-+	struct pci_bus *bus;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
--	pcibios_allocate_resources(0);
--	pcibios_allocate_resources(1);
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_bus_resources(bus);
-+
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_resources(bus, 0);
-+	list_for_each_entry(bus, &pci_root_buses, node)
-+		pcibios_allocate_resources(bus, 1);
- 
- 	e820_reserve_resources_late();
- 	/*
--- 
-1.7.7
+Also looked into pci_ioremap_io. Things are clear now.
+
+Will send V2 after incorporating all comments.
+
+Regards
+Pratyush
+
 
