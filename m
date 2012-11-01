@@ -1,71 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part4 1/9] ACPI/processor: remove dead code from processor_driver.c
-Date: Sun,  4 Nov 2012 23:23:54 +0800
-Message-Id: <1352042642-7306-2-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
-References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:57236 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755325Ab2KAMzQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Nov 2012 08:55:16 -0400
+Message-ID: <509270D2.7060505@huawei.com>
+Date: Thu, 1 Nov 2012 20:53:38 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Taku Izumi <izumi.taku@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<wangyijing@huawei.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI/portdrv: Fix regression introduced by commit 2dcfaf85
+References: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com>
+In-Reply-To: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is some dead code in processor_driver.c, so clean it up.
+Hi Taku,
+	It's a mistake introduced by that patch, thanks for fix it.
+	Reviewed-by: <jiang.liu@huawei.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/processor_driver.c |    9 ---------
- 1 file changed, 9 deletions(-)
+On 2012-10-31 8:51, Taku Izumi wrote:
+> 
+> PCI/portdrv: Fix regression introduced by commit 2dcfaf85
+> 
+> After commit 2dcfaf85, hotplug slots for port devices 
+> w/o slot implementation come to be created.  
+> This patch fixes this problem.
+> 
+> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> ---
+>  drivers/pci/pcie/portdrv_core.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> Index: pci/drivers/pci/pcie/portdrv_core.c
+> ===================================================================
+> --- pci.orig/drivers/pci/pcie/portdrv_core.c
+> +++ pci/drivers/pci/pcie/portdrv_core.c
+> @@ -272,7 +272,8 @@ static int get_port_device_capability(st
+>  	}
+>  
+>  	/* Hot-Plug Capable */
+> -	if (cap_mask & PCIE_PORT_SERVICE_HP) {
+> +	if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
+> +	    dev->pcie_flags_reg & PCI_EXP_FLAGS_SLOT) {
+>  		pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
+>  		if (reg32 & PCI_EXP_SLTCAP_HPC) {
+>  			services |= PCIE_PORT_SERVICE_HP;
+> 
+> 
+> 
 
-diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
-index e78c2a5..aa9c43a 100644
---- a/drivers/acpi/processor_driver.c
-+++ b/drivers/acpi/processor_driver.c
-@@ -61,17 +61,11 @@
- 
- #define ACPI_PROCESSOR_CLASS		"processor"
- #define ACPI_PROCESSOR_DEVICE_NAME	"Processor"
--#define ACPI_PROCESSOR_FILE_INFO	"info"
--#define ACPI_PROCESSOR_FILE_THROTTLING	"throttling"
--#define ACPI_PROCESSOR_FILE_LIMIT	"limit"
- #define ACPI_PROCESSOR_NOTIFY_PERFORMANCE 0x80
- #define ACPI_PROCESSOR_NOTIFY_POWER	0x81
- #define ACPI_PROCESSOR_NOTIFY_THROTTLING	0x82
- #define ACPI_PROCESSOR_DEVICE_HID	"ACPI0007"
- 
--#define ACPI_PROCESSOR_LIMIT_USER	0
--#define ACPI_PROCESSOR_LIMIT_THERMAL	1
--
- #define _COMPONENT		ACPI_PROCESSOR_COMPONENT
- ACPI_MODULE_NAME("processor_driver");
- 
-@@ -261,9 +255,6 @@ static int acpi_processor_get_info(struct acpi_device *device)
- 	if (!pr)
- 		return -EINVAL;
- 
--	if (num_online_cpus() > 1)
--		errata.smp = TRUE;
--
- 	acpi_processor_errata(pr);
- 
- 	/*
--- 
-1.7.9.5
 
