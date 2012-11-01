@@ -1,157 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:45821 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992516Ab2KOBfX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 20:35:23 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:41147 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751047Ab2KAVMq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 1 Nov 2012 17:12:46 -0400
+Message-ID: <5092E5C7.7030601@redhat.com>
+Date: Thu, 01 Nov 2012 17:12:39 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Reply-To: linasvepstas@gmail.com
-In-Reply-To: <20121115005100.GA6613@google.com>
-References: <F9E001219150CB45BEDC82A650F360C90146794E@G9W0717.americas.hpqcorp.net>
- <20121115005100.GA6613@google.com>
-From: Linas Vepstas <linasvepstas@gmail.com>
-Date: Wed, 14 Nov 2012 19:35:02 -0600
-Message-ID: <CAHrUA36SUdR62f+R+TVbeZqfER036zBqaHNKs-b65PTp_3mW1Q@mail.gmail.com>
-Subject: Re: [ PATCH RESEND ] PCI-AER: Do not report successful error recovery
- for devices with AER-unaware drivers
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Lance Ortiz <lance.ortiz@hp.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-	Andrew Patterson <andrew.patterson@hp.com>,
-	Zhang Yanmin <yanmin.zhang@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	yuvalmin@broadcom.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net
+Subject: Re: [PATCH 4/4] PCI,sriov: provide method to reduce the number of
+ total VFs supported
+References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>  <1351718353-6124-5-git-send-email-ddutile@redhat.com> <1351727591.2706.52.camel@bwh-desktop.uk.solarflarecom.com>
+In-Reply-To: <1351727591.2706.52.camel@bwh-desktop.uk.solarflarecom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes, what you describe appears to be the correct semantics; this would
-then be the more correct patch.
+On 10/31/2012 07:53 PM, Ben Hutchings wrote:
+> On Wed, 2012-10-31 at 17:19 -0400, Donald Dutile wrote:
+>> Some implementations of SRIOV provide a capability structure
+>> value of TotalVFs that is greater than what the software can support.
+>> Provide a method to reduce the capability structure reported value
+>> to the value the driver can support.
+>> This ensures sysfs reports the current capability of the system,
+>> hardware and software.
+>> Example for its use: igb&  ixgbe -- report 8&  64 as TotalVFs,
+>> but drivers only support 7&  63 maximum.
+>>
+>> Signed-off-by: Donald Dutile<ddutile@redhat.com>
+>> ---
+>>   drivers/pci/iov.c       | 27 ++++++++++++++++++++++++++-
+>>   drivers/pci/pci-sysfs.c | 10 ++++++++--
+>>   drivers/pci/pci.h       |  1 +
+>>   include/linux/pci.h     |  5 +++++
+>>   4 files changed, 40 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index aeccc91..98c3d37 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -682,7 +682,6 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>>
+>>   	if (!dev->is_physfn)
+>>   		return -ENODEV;
+>> -
+>>   	return sriov_enable(dev, nr_virtfn);
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_enable_sriov);
+>
+> This hunk doesn't belong in this patch.
+>
+gone in next rev.
 
-Read-the-email-but-didn't-try-to-test-by: Linas Vepstas <linasvepstas
-<at> gmail.com>
+>> @@ -735,3 +734,29 @@ int pci_num_vf(struct pci_dev *dev)
+>>   		return dev->sriov->nr_virtfn;
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_num_vf);
+>> +
+>> +/**
+>> + * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>> + * @dev: the PCI PF device
+>> + * numvfs: number that should be used for TotalVFs supported
+>> + *
+>> + * Should be called from PF driver's probe routine with
+>> + * device's mutex held.
+>> + *
+>> + * Returns 0 if PF is an SRIOV-capable device and
+>> + * value of numvfs valid, otherwise -EINVAL
+>
+> This says the only possible error is -EINVAL, but it can also return
+> -EIO!  And the already-enabled case might be one that some drivers will
+> need to handle specially.
+>
+>> + */
+>> +int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+>> +{
+>> +	if (!dev || !dev->is_physfn || (numvfs>  dev->sriov->total))
+>> +		return -EINVAL;
+>> +
+>> +	/* Shouldn't change if VFs already enabled */
+>> +	if (dev->sriov->ctrl&  PCI_SRIOV_CTRL_VFE)
+>> +		return -EIO;
+> [...]
+>
+> EBUSY seems a bit more appropriate.
+>
+> Ben.
+>
+ok. changed to -EBUSY & comment on return values.
 
--- Linas
+After looking at this area more, I created a pci_sriov_get_totalvfs()
+as well, and now use that in the pci-sysfs.c file as well....
+much cleaner; symmetric to set.  Makes backporting to
+those crazy enterprise releases w/kabi rules easier too! ;-)
 
-On 14 November 2012 18:51, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> [+cc Lance, Huang, Hidetoshi, Andrew, Zhang]
->
-> On Sat, Nov 10, 2012 at 07:41:04AM +0000, Pandarathil, Vijaymohan R wrote:
-> > When an error is detected on a PCIe device which does not have an
-> > AER-aware driver, prevent AER infrastructure from reporting
-> > successful error recovery.
-> >
-> > This is because the report_error_detected() function that gets
-> > called in the first phase of recovery process allows forward
-> > progress even when the driver for the device does not have AER
-> > capabilities. It seems that all callbacks (in pci_error_handlers
-> > structure) registered by drivers that gets called during error
-> > recovery are not mandatory. So the intention of the infrastructure
-> > design seems to be to allow forward progress even when a specific
-> > callback has not been registered by a driver. However, if error
-> > handler structure itself has not been registered, it doesn't make
-> > sense to allow forward progress.
-> >
-> > As a result of the current design, in the case of a single device
-> > having an AER-unaware driver or in the case of any function in a
-> > multi-function card having an AER-unaware driver, a successful
-> > recovery is reported.
-> >
-> > Typical scenario this happens is when a PCI device is detached
-> > from a KVM host and the pci-stub driver on the host claims the
-> > device. The pci-stub driver does not have error handling capabilities
-> > but the AER infrastructure still reports that the device recovered
-> > successfully.
-> >
-> > The changes proposed here leaves the device in an unrecovered state
-> > if the driver for the device or for any function in a multi-function
-> > card does not have error handler structure registered. This reflects
-> > the true state of the device and prevents any partial recovery (or no
-> > recovery at all) reported as successful.
-> >
-> > Please also see comments from Linas Vepstas at the following link
-> > http://www.spinics.net/lists/linux-pci/msg18572.html
-> >
-> > Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
-> > Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
-> > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
-> >
-> > ---
-> >
-> > drivers/pci/pcie/aer/aerdrv_core.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> >
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> > index 06bad96..030b229 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
-> >
-> >       dev->error_state = result_data->state;
-> >
-> > +     if ((!dev->driver || !dev->driver->err_handler) &&
-> > +             !(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
-> > +             dev_info(&dev->dev, "AER: Error detected but no driver has claimed this device or the driver is AER-unaware\n");
-> > +             result_data->result = PCI_ERS_RESULT_NONE;
-> > +             return 1;
->
-> This doesn't seem right because returning 1 here causes pci_walk_bus()
-> to terminate, which means we won't set dev->error_state or notify
-> drivers for any devices we haven't visited yet.
->
-> > +     }
-> >       if (!dev->driver ||
-> >               !dev->driver->err_handler ||
-> >               !dev->driver->err_handler->error_detected) {
->
-> If none of the drivers in the affected hierarchy supports error handling,
-> I think the call tree looks like this:
->
->     do_recovery                                 # uncorrectable only
->         broadcast_error_message(dev, ..., report_error_detected)
->             result_data.result = CAN_RECOVER
->             pci_walk_bus(..., report_error_detected)
->                 report_error_detected           # (each dev in subtree)
->                     return 0                    # no change to result
->             return result_data.result
->         broadcast_error_message(dev, ..., report_mmio_enabled)
->             result_data.result = PCI_ERS_RESULT_RECOVERED
->             pci_walk_bus(..., report_mmio_enabled)
->                 report_mmio_enabled             # (each dev in subtree)
->                     return 0                    # no change to result
->         dev_info("recovery successful")
->
-> Specifically, there are no error_handler functions, so we never change
-> result_data.result, and the default is that we treat the error as
-> "recovered successfully."  That seems broken.  An uncorrectable error
-> is by definition recoverable only by device-specific software, i.e.,
-> the driver.  We didn't call any drivers, so we can't have recovered
-> anything.
->
-> What do you think of the following alternative?  I don't know why you
-> checked for bridge devices in your patch, so I don't know whether
-> that's important here or not.
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 06bad96..a109c68 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -231,11 +231,11 @@ static int report_error_detected(struct pci_dev *dev, void *data)
->                                    dev->driver ?
->                                    "no AER-aware driver" : "no driver");
->                 }
-> -               return 0;
-> +               vote = PCI_ERS_RESULT_DISCONNECT;
-> +       } else {
-> +               err_handler = dev->driver->err_handler;
-> +               vote = err_handler->error_detected(dev, result_data->state);
->         }
-> -
-> -       err_handler = dev->driver->err_handler;
-> -       vote = err_handler->error_detected(dev, result_data->state);
->         result_data->result = merge_result(result_data->result, vote);
->         return 0;
->  }
