@@ -1,62 +1,173 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Taku Izumi" <izumi.taku@jp.fujitsu.com>
-To: "'Yinghai Lu'" <yinghai@kernel.org>
-Cc: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Len Brown'" <lenb@kernel.org>,
-	"'Jiang Liu'" <jiang.liu@huawei.com>
-References: <20121030040237.GA10472@google.com> <1351618965-16761-1-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
-Subject: RE: 
-Date: Tue, 6 Nov 2012 14:03:42 +0900
-Message-ID: <0b3b01cdbbdc$18597ed0$490c7c70$@jp.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:50061 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755788Ab2KBQvM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Nov 2012 12:51:12 -0400
+Received: by mail-we0-f174.google.com with SMTP id t9so1696317wey.19
+        for <linux-pci@vger.kernel.org>; Fri, 02 Nov 2012 09:51:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 2 Nov 2012 10:50:50 -0600
+Message-ID: <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com>
+Subject: Re: [BUGFIX 1/2] PCI/PM: Fix deadlock when unbind device if its
+ parent in D3cold
+To: Huang Ying <ying.huang@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zhang Yanmin <yanmin.zhang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  Reviewed and tested by Taku Izumi <izumi.taku@jp.fujitsu.com>
+On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> If a PCI device and its parents are put into D3cold, unbinding the
+> device will trigger deadlock as follow:
+>
+> - driver_unbind
+>   - device_release_driver
+>     - device_lock(dev)                          <--- previous lock here
+>     - __device_release_driver
+>       - pm_runtime_get_sync
+>         ...
+>           - rpm_resume(dev)
+>             - rpm_resume(dev->parent)
+>               ...
+>                 - pci_pm_runtime_resume
+>                   ...
+>                   - pci_set_power_state
+>                     - __pci_start_power_transition
+>                       - pci_wakeup_bus(dev->parent->subordinate)
+>                         - pci_walk_bus
+>                           - device_lock(dev)    <--- dead lock here
+>
+>
+> If we do not do device_lock in pci_walk_bus, we can avoid dead lock.
+> Device_lock in pci_walk_bus is introduced in commit:
+> d71374dafbba7ec3f67371d3b7e9f6310a588808, corresponding email thread
+> is: https://lkml.org/lkml/2006/5/26/38.  The patch author Zhang Yanmin
+> said device_lock is added to pci_walk_bus because:
+>
+>   Some error handling functions call pci_walk_bus. For example, PCIe
+>   aer. Here we lock the device, so the driver wouldn't detach from the
+>   device, as the cb might call driver's callback function.
+>
+> So I fixed the dead lock as follow:
+>
+> - remove device_lock from pci_walk_bus
+> - add device_lock into callback if callback will call driver's callback
+>
+> I checked pci_walk_bus users one by one, and found only PCIe aer needs
+> device lock.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of Yinghai Lu
-> Sent: Wednesday, October 31, 2012 2:43 AM
-> To: Bjorn Helgaas; Len Brown; Taku Izumi; Jiang Liu
-> Cc: linux-pci@vger.kernel.org; linux-acpi@vger.kernel.org; Yinghai Lu
-> Subject:
-> 
-> Subject: [PATCH resend 0/8] PCI, ACPI, x86: pci root bus hotplug support resources assign and remove path
-> 
-> 1. add support for assign resource for hot add path.
-> 2. stop and remove root bus during acpi root remove.
-> 
-> 
-> could get from
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
-> 
-> Yinghai Lu (8):
->   PCI: Separate out pci_assign_unassigned_bus_resources()
->   PCI: Move pci_rescan_bus() back to probe.c
->   PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
->   PCI, ACPI: assign unassigned resource for hot add root bus
->   PCI: Add pci_stop/remove_root_bus()
->   PCI, ACPI: Make acpi_pci_root_remove stop/remove pci root bus
->   PCI, ACPI: delete root bus prt during hot remove path
->   PCI, ACPI: remove acpi_root_driver in reserse order
-> 
->  drivers/acpi/pci_root.c |   21 ++++++++++++++++++++-
->  drivers/pci/probe.c     |   22 ++++++++++++++++++++++
->  drivers/pci/remove.c    |   36 ++++++++++++++++++++++++++++++++++++
->  drivers/pci/setup-bus.c |   22 +---------------------
->  include/linux/pci.h     |    3 +++
->  5 files changed, 82 insertions(+), 22 deletions(-)
-> 
-> --
-> 1.7.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is there a problem report or bugzilla for this issue?
 
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
+> Cc: Zhang Yanmin <yanmin.zhang@intel.com>
 
+Should this go to stable as well?  The D3cold support appeared in
+v3.6, so my guess is that this fix could go to v3.6.x.
+
+> ---
+>  drivers/pci/bus.c                  |    3 ---
+>  drivers/pci/pcie/aer/aerdrv_core.c |   20 ++++++++++++++++----
+>  2 files changed, 16 insertions(+), 7 deletions(-)
+>
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -320,10 +320,7 @@ void pci_walk_bus(struct pci_bus *top, i
+>                 } else
+>                         next = dev->bus_list.next;
+>
+> -               /* Run device routines with the device locked */
+> -               device_lock(&dev->dev);
+>                 retval = cb(dev, userdata);
+> -               device_unlock(&dev->dev);
+>                 if (retval)
+>                         break;
+>         }
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -213,6 +213,7 @@ static int report_error_detected(struct
+>         struct aer_broadcast_data *result_data;
+>         result_data = (struct aer_broadcast_data *) data;
+>
+> +       device_lock(&dev->dev);
+>         dev->error_state = result_data->state;
+>
+>         if (!dev->driver ||
+> @@ -231,12 +232,14 @@ static int report_error_detected(struct
+>                                    dev->driver ?
+>                                    "no AER-aware driver" : "no driver");
+>                 }
+> -               return 0;
+> +               goto out;
+>         }
+>
+>         err_handler = dev->driver->err_handler;
+>         vote = err_handler->error_detected(dev, result_data->state);
+>         result_data->result = merge_result(result_data->result, vote);
+> +out:
+> +       device_unlock(&dev->dev);
+>         return 0;
+>  }
+>
+> @@ -247,14 +250,17 @@ static int report_mmio_enabled(struct pc
+>         struct aer_broadcast_data *result_data;
+>         result_data = (struct aer_broadcast_data *) data;
+>
+> +       device_lock(&dev->dev);
+>         if (!dev->driver ||
+>                 !dev->driver->err_handler ||
+>                 !dev->driver->err_handler->mmio_enabled)
+> -               return 0;
+> +               goto out;
+>
+>         err_handler = dev->driver->err_handler;
+>         vote = err_handler->mmio_enabled(dev);
+>         result_data->result = merge_result(result_data->result, vote);
+> +out:
+> +       device_unlock(&dev->dev);
+>         return 0;
+>  }
+>
+> @@ -265,14 +271,17 @@ static int report_slot_reset(struct pci_
+>         struct aer_broadcast_data *result_data;
+>         result_data = (struct aer_broadcast_data *) data;
+>
+> +       device_lock(&dev->dev);
+>         if (!dev->driver ||
+>                 !dev->driver->err_handler ||
+>                 !dev->driver->err_handler->slot_reset)
+> -               return 0;
+> +               goto out;
+>
+>         err_handler = dev->driver->err_handler;
+>         vote = err_handler->slot_reset(dev);
+>         result_data->result = merge_result(result_data->result, vote);
+> +out:
+> +       device_unlock(&dev->dev);
+>         return 0;
+>  }
+>
+> @@ -280,15 +289,18 @@ static int report_resume(struct pci_dev
+>  {
+>         const struct pci_error_handlers *err_handler;
+>
+> +       device_lock(&dev->dev);
+>         dev->error_state = pci_channel_io_normal;
+>
+>         if (!dev->driver ||
+>                 !dev->driver->err_handler ||
+>                 !dev->driver->err_handler->resume)
+> -               return 0;
+> +               goto out;
+>
+>         err_handler = dev->driver->err_handler;
+>         err_handler->resume(dev);
+> +out:
+> +       device_unlock(&dev->dev);
+>         return 0;
+>  }
+>
