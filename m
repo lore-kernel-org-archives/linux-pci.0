@@ -1,154 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46858 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839Ab2KDMvH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 07:51:07 -0500
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part2 05/13] ACPIHP: implement utility interfaces to support system device hotplug
-Date: Sun,  4 Nov 2012 20:50:07 +0800
-Message-Id: <1352033415-5606-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
-References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:53002 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754078Ab2KBUWX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 Nov 2012 16:22:23 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
+Date: Fri, 02 Nov 2012 21:26:29 +0100
+Message-ID: <16107326.eE4GfcYGSM@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com> <1351061654-8339-2-git-send-email-ying.huang@intel.com> <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements some utility interfaces to support ACPI based
-system device hotplug.
+On Friday, November 02, 2012 10:52:45 AM Bjorn Helgaas wrote:
+> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> > Some actions during shutdown need device to be in D0 state, such as
+> > MSI shutdown etc, so resume device before shutdown.
+> 
+> Is there a problem report or bugzilla for this issue?  What are the
+> symptoms by which a user could figure out that he needs this fix?
+> 
+> Should this be put in the stable tree as well?  If so, for v3.6 only?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
----
- drivers/acpi/hotplug/core.c |   77 +++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_hotplug.h |    9 +++++
- 2 files changed, 86 insertions(+)
+Yes, it should be -stable for v3.6.y.
 
-diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
-index bad8e99..139b9c2 100644
---- a/drivers/acpi/hotplug/core.c
-+++ b/drivers/acpi/hotplug/core.c
-@@ -591,6 +591,83 @@ int acpihp_remove_device_list(struct klist *dev_list)
- }
- EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
- 
-+bool acpihp_slot_present(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
-+
-+	status = acpihp_slot_get_status(slot, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_SLOT_WARN(slot, "fails to get status.\n");
-+		return false;
-+	}
-+
-+	return !!(sta & ACPI_STA_DEVICE_PRESENT);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_present);
-+
-+bool acpihp_slot_powered(struct acpihp_slot *slot)
-+{
-+	acpi_status status;
-+	unsigned long long sta;
-+
-+	/* hotplug slot must implement _STA method */
-+	status = acpihp_slot_get_status(slot, &sta);
-+	if (ACPI_FAILURE(status)) {
-+		ACPIHP_SLOT_WARN(slot, "fails to get status.\n");
-+		return false;
-+	}
-+
-+	if ((sta & ACPI_STA_DEVICE_PRESENT) &&
-+	    ((sta & ACPI_STA_DEVICE_ENABLED) ||
-+	    (sta & ACPI_STA_DEVICE_FUNCTIONING)))
-+		return true;
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_powered);
-+
-+void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	slot->flags |= flags;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_set_flag);
-+
-+void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	slot->flags &= ~flags;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_clear_flag);
-+
-+u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags)
-+{
-+	mutex_lock(&slot->slot_mutex);
-+	flags &= slot->flags;
-+	mutex_unlock(&slot->slot_mutex);
-+
-+	return flags;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_get_flag);
-+
-+void acpihp_slot_change_state(struct acpihp_slot *slot,
-+			      enum acpihp_slot_state state)
-+{
-+	if (state < ACPIHP_SLOT_STATE_UNKNOWN ||
-+	    state > ACPIHP_SLOT_STATE_MAX) {
-+		ACPIHP_SLOT_WARN(slot, "slot state %d is invalid.\n", state);
-+		BUG_ON(state);
-+	}
-+
-+	mutex_lock(&slot->slot_mutex);
-+	slot->state = state;
-+	mutex_unlock(&slot->slot_mutex);
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_change_state);
-+
- /* SYSFS interfaces */
- static ssize_t acpihp_slot_object_show(struct device *d,
- 		struct device_attribute *attr, char *buf)
-diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
-index 9d466ea..3297f51 100644
---- a/include/acpi/acpi_hotplug.h
-+++ b/include/acpi/acpi_hotplug.h
-@@ -295,6 +295,15 @@ extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
- 				     struct device *dev);
- extern int acpihp_remove_device_list(struct klist *dev_list);
- 
-+/* Utility Interfaces */
-+extern bool acpihp_slot_present(struct acpihp_slot *slot);
-+extern bool acpihp_slot_powered(struct acpihp_slot *slot);
-+extern void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags);
-+extern void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags);
-+extern u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags);
-+extern void acpihp_slot_change_state(struct acpihp_slot *slot,
-+				     enum acpihp_slot_state state);
-+
- extern int acpihp_debug;
- 
- #define ACPIHP_WARN(fmt, ...) \
+Thanks,
+Rafael
+
+
+> > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> > ---
+> >  drivers/pci/pci-driver.c |   12 ++----------
+> >  1 file changed, 2 insertions(+), 10 deletions(-)
+> >
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
+> >         struct pci_dev *pci_dev = to_pci_dev(dev);
+> >         struct pci_driver *drv = pci_dev->driver;
+> >
+> > +       pm_runtime_resume(dev);
+> > +
+> >         if (drv && drv->shutdown)
+> >                 drv->shutdown(pci_dev);
+> >         pci_msi_shutdown(pci_dev);
+> > @@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
+> >          * continue to do DMA
+> >          */
+> >         pci_disable_device(pci_dev);
+> > -
+> > -       /*
+> > -        * Devices may be enabled to wake up by runtime PM, but they need not
+> > -        * be supposed to wake up the system from its "power off" state (e.g.
+> > -        * ACPI S5).  Therefore disable wakeup for all devices that aren't
+> > -        * supposed to wake up the system at this point.  The state argument
+> > -        * will be ignored by pci_enable_wake().
+> > -        */
+> > -       if (!device_may_wakeup(dev))
+> > -               pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
+> >  }
+> >
+> >  #ifdef CONFIG_PM
+> 
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
