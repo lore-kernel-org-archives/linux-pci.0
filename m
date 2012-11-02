@@ -1,87 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:3063 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750745Ab2KAQuy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Nov 2012 12:50:54 -0400
-Message-ID: <1351788194.19172.98.camel@misato.fc.hp.com>
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support
- container hot-remove.
-From: Toshi Kani <toshi.kani@hp.com>
-To: Tang Chen <tangchen@cn.fujitsu.com>
-Cc: yinghai@kernel.org, bhelgaas@google.com, lenb@kernel.org,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 01 Nov 2012 10:43:14 -0600
-In-Reply-To: <1351668471-31436-4-git-send-email-tangchen@cn.fujitsu.com>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
-	 <1351668471-31436-4-git-send-email-tangchen@cn.fujitsu.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([193.178.161.156]:53013 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754127Ab2KBUXC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 2 Nov 2012 16:23:02 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Zhang Yanmin <yanmin.zhang@intel.com>
+Subject: Re: [BUGFIX 1/2] PCI/PM: Fix deadlock when unbind device if its parent in D3cold
+Date: Fri, 02 Nov 2012 21:27:08 +0100
+Message-ID: <3239885.3gHJyAyRVG@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com> <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-10-31 at 15:27 +0800, Tang Chen wrote:
-> This patch introduces a new function container_device_remove() to do
-> the container hot-remove job. It works like the following:
+On Friday, November 02, 2012 10:50:50 AM Bjorn Helgaas wrote:
+> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> > If a PCI device and its parents are put into D3cold, unbinding the
+> > device will trigger deadlock as follow:
+> >
+> > - driver_unbind
+> >   - device_release_driver
+> >     - device_lock(dev)                          <--- previous lock here
+> >     - __device_release_driver
+> >       - pm_runtime_get_sync
+> >         ...
+> >           - rpm_resume(dev)
+> >             - rpm_resume(dev->parent)
+> >               ...
+> >                 - pci_pm_runtime_resume
+> >                   ...
+> >                   - pci_set_power_state
+> >                     - __pci_start_power_transition
+> >                       - pci_wakeup_bus(dev->parent->subordinate)
+> >                         - pci_walk_bus
+> >                           - device_lock(dev)    <--- dead lock here
+> >
+> >
+> > If we do not do device_lock in pci_walk_bus, we can avoid dead lock.
+> > Device_lock in pci_walk_bus is introduced in commit:
+> > d71374dafbba7ec3f67371d3b7e9f6310a588808, corresponding email thread
+> > is: https://lkml.org/lkml/2006/5/26/38.  The patch author Zhang Yanmin
+> > said device_lock is added to pci_walk_bus because:
+> >
+> >   Some error handling functions call pci_walk_bus. For example, PCIe
+> >   aer. Here we lock the device, so the driver wouldn't detach from the
+> >   device, as the cb might call driver's callback function.
+> >
+> > So I fixed the dead lock as follow:
+> >
+> > - remove device_lock from pci_walk_bus
+> > - add device_lock into callback if callback will call driver's callback
+> >
+> > I checked pci_walk_bus users one by one, and found only PCIe aer needs
+> > device lock.
 > 
-> 1. call acpi_bus_trim(device, 0) to stop the container device,
->    which means to unbind ACPI drivers first before remove devices.
->    (This feature is introduced by Lu Yinghai:
->     http://www.spinics.net/lists/linux-pci/msg17667.html)
-> 2. generate the KOBJ_OFFLINE uevent. (Did I do this correct ?)
-> 3. call acpi_bus_hot_remove_device(), which will call acpi_bus_trim(device, 1)
->    to remove the container.
+> Is there a problem report or bugzilla for this issue?
 > 
-> This patch is based on Lu Yinghai's work.
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-split-pci-root-hp-2
+> > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> > Cc: Zhang Yanmin <yanmin.zhang@intel.com>
 > 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> ---
->  drivers/acpi/container.c |   63 ++++++++++++++++++++++++++++++++++++++-------
->  1 files changed, 53 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/acpi/container.c b/drivers/acpi/container.c
-> index a10eee6..4abec98 100644
-> --- a/drivers/acpi/container.c
-> +++ b/drivers/acpi/container.c
-> @@ -166,6 +166,32 @@ static int container_device_add(struct acpi_device **device, acpi_handle handle)
->  	return result;
->  }
->  
-> +static int container_device_remove(struct acpi_device *device)
-> +{
-> +	int ret;
-> +	struct acpi_eject_event *ej_event;
-> +
-> +	/* stop container device at first */
-> +	ret = acpi_bus_trim(device, 0);
-> +	pr_debug("acpi_bus_trim stop return %x\n", ret);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* send the uevent before remove the device */
-> +	kobject_uevent(&device->dev.kobj, KOBJ_OFFLINE);
-> +
-> +	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
-> +	if (!ej_event)
-> +		return -ENOMEM;
-> +
-> +	ej_event->device = device;
-> +	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
-> +
-> +	acpi_bus_hot_remove_device(ej_event);
+> Should this go to stable as well?  The D3cold support appeared in
+> v3.6, so my guess is that this fix could go to v3.6.x.
 
-Hi Tang,
-
-Rafael pointed out in my CPU hot-remove patch that
-acpi_bus_hot_remove_device() was not exported for modules.  Looks like
-you have the same problem here.  FYI, I just sent the following patch
-that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
-
-https://lkml.org/lkml/2012/11/1/225
+That's correct.
 
 Thanks,
--Toshi
+Rafael
 
 
+> > ---
+> >  drivers/pci/bus.c                  |    3 ---
+> >  drivers/pci/pcie/aer/aerdrv_core.c |   20 ++++++++++++++++----
+> >  2 files changed, 16 insertions(+), 7 deletions(-)
+> >
+> > --- a/drivers/pci/bus.c
+> > +++ b/drivers/pci/bus.c
+> > @@ -320,10 +320,7 @@ void pci_walk_bus(struct pci_bus *top, i
+> >                 } else
+> >                         next = dev->bus_list.next;
+> >
+> > -               /* Run device routines with the device locked */
+> > -               device_lock(&dev->dev);
+> >                 retval = cb(dev, userdata);
+> > -               device_unlock(&dev->dev);
+> >                 if (retval)
+> >                         break;
+> >         }
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -213,6 +213,7 @@ static int report_error_detected(struct
+> >         struct aer_broadcast_data *result_data;
+> >         result_data = (struct aer_broadcast_data *) data;
+> >
+> > +       device_lock(&dev->dev);
+> >         dev->error_state = result_data->state;
+> >
+> >         if (!dev->driver ||
+> > @@ -231,12 +232,14 @@ static int report_error_detected(struct
+> >                                    dev->driver ?
+> >                                    "no AER-aware driver" : "no driver");
+> >                 }
+> > -               return 0;
+> > +               goto out;
+> >         }
+> >
+> >         err_handler = dev->driver->err_handler;
+> >         vote = err_handler->error_detected(dev, result_data->state);
+> >         result_data->result = merge_result(result_data->result, vote);
+> > +out:
+> > +       device_unlock(&dev->dev);
+> >         return 0;
+> >  }
+> >
+> > @@ -247,14 +250,17 @@ static int report_mmio_enabled(struct pc
+> >         struct aer_broadcast_data *result_data;
+> >         result_data = (struct aer_broadcast_data *) data;
+> >
+> > +       device_lock(&dev->dev);
+> >         if (!dev->driver ||
+> >                 !dev->driver->err_handler ||
+> >                 !dev->driver->err_handler->mmio_enabled)
+> > -               return 0;
+> > +               goto out;
+> >
+> >         err_handler = dev->driver->err_handler;
+> >         vote = err_handler->mmio_enabled(dev);
+> >         result_data->result = merge_result(result_data->result, vote);
+> > +out:
+> > +       device_unlock(&dev->dev);
+> >         return 0;
+> >  }
+> >
+> > @@ -265,14 +271,17 @@ static int report_slot_reset(struct pci_
+> >         struct aer_broadcast_data *result_data;
+> >         result_data = (struct aer_broadcast_data *) data;
+> >
+> > +       device_lock(&dev->dev);
+> >         if (!dev->driver ||
+> >                 !dev->driver->err_handler ||
+> >                 !dev->driver->err_handler->slot_reset)
+> > -               return 0;
+> > +               goto out;
+> >
+> >         err_handler = dev->driver->err_handler;
+> >         vote = err_handler->slot_reset(dev);
+> >         result_data->result = merge_result(result_data->result, vote);
+> > +out:
+> > +       device_unlock(&dev->dev);
+> >         return 0;
+> >  }
+> >
+> > @@ -280,15 +289,18 @@ static int report_resume(struct pci_dev
+> >  {
+> >         const struct pci_error_handlers *err_handler;
+> >
+> > +       device_lock(&dev->dev);
+> >         dev->error_state = pci_channel_io_normal;
+> >
+> >         if (!dev->driver ||
+> >                 !dev->driver->err_handler ||
+> >                 !dev->driver->err_handler->resume)
+> > -               return 0;
+> > +               goto out;
+> >
+> >         err_handler = dev->driver->err_handler;
+> >         err_handler->resume(dev);
+> > +out:
+> > +       device_unlock(&dev->dev);
+> >         return 0;
+> >  }
+> >
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
