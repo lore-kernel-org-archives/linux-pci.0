@@ -1,147 +1,191 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1354240279.6276.131.camel@gandalf.local.home>
-Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 29 Nov 2012 20:51:19 -0500
-In-Reply-To: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-Content-Type: text/plain; charset="ISO-8859-15"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:49364 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760103Ab2KBQjG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Nov 2012 12:39:06 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so2524232wgb.1
+        for <linux-pci@vger.kernel.org>; Fri, 02 Nov 2012 09:39:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1351128963-10347-1-git-send-email-ying.huang@intel.com>
+References: <1351128963-10347-1-git-send-email-ying.huang@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 2 Nov 2012 10:38:43 -0600
+Message-ID: <CAErSpo6Q9DGwBJNCY5g3gGVPMCngv6pfLXB6TfiFu3gyLiNp7Q@mail.gmail.com>
+Subject: Re: [BUGFIX] PCI/PM: Fix proc config reg access for D3cold and bridge suspending
+To: Huang Ying <ying.huang@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-11-29 at 14:54 -0700, Lance Ortiz wrote:
-> This header file will define a new trace event that will be triggered when
-> a AER event occurs.  The following data will be provided to the trace 
-> event.
-> 
-> char * name -	String containing the device path
-> 
-> u32 status - 	Either the correctable or uncorrectable register 
-> 		indicating what error or errors have been see.
-> 
-> u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-> 
-> The trace event will also provide a trace string that may look like:
-> 
-> "0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-> TLP"
-> 
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+On Wed, Oct 24, 2012 at 7:36 PM, Huang Ying <ying.huang@intel.com> wrote:
+> In
+>
+>   https://bugzilla.kernel.org/show_bug.cgi?id=48981
+>
+> Peter reported that /proc/bus/pci/??/??.? does not works for 3.6.
+> This is This is because the device configuration space registers will
+> be not accessible if the corresponding parent bridge is suspended or
+> the device is put into D3cold state.
+>
+> This is the same as /sys/bus/pci/devices/0000:??:??.?/config access
+> issue.  So the function used to solve sysfs issue is used to solve
+> this issue.
+>
+> Cc: stable@vger.kernel.org
+> Reported-by: Peter <lekensteyn@gmail.com>
+
+Is this bug the same as the one originally reported by Forrest Loomis
+(original reporter of bug 48981)?  And
+https://bugzilla.kernel.org/show_bug.cgi?id=49031, reported by Micael
+Dias (Rafael marked 49031 as a duplicate of 48981)?
+
+If so, I'll mention Forrest and Micael and bug 49031 here as well.
+
+> Signed-off-by: Huang Ying <ying.huang@intel.com>
 > ---
-> 
->  include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
-
-Is there a reason this header is here? Egad, I never noticed the
-ras_event.h that is there. This include/ras directory was created for
-the sole purpose of trace events! This is not the way to do this.
-
-Please look at the sample in samples/trace_events/
-
-The proper way is to keep the header by the driver. Then you can simply
-include the header with "aer_event.h".
-
-But to have the macro magic work, you need to modify the Makefile to
-have something like:
-
-CFLAGS_aerdrv_errprint.o = -I$(src)
-
-and it will be able to find your headers without a problem.
-The ras_event.h needs to be fixed too. I may just send a patch myself.
-
--- Steve
-
-
->  1 files changed, 77 insertions(+), 0 deletions(-)
->  create mode 100644 include/ras/aer_event.h
-> 
-> diff --git a/include/ras/aer_event.h b/include/ras/aer_event.h
-> new file mode 100644
-> index 0000000..735c973
-> --- /dev/null
-> +++ b/include/ras/aer_event.h
-> @@ -0,0 +1,77 @@
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM aer
-> +#define TRACE_INCLUDE_FILE aer_event
+>  drivers/pci/pci-sysfs.c |   34 ----------------------------------
+>  drivers/pci/pci.c       |   32 ++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h       |    2 ++
+>  drivers/pci/proc.c      |    8 ++++++++
+>  4 files changed, 42 insertions(+), 34 deletions(-)
+>
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -458,40 +458,6 @@ boot_vga_show(struct device *dev, struct
+>  }
+>  struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+>
+> -static void
+> -pci_config_pm_runtime_get(struct pci_dev *pdev)
+> -{
+> -       struct device *dev = &pdev->dev;
+> -       struct device *parent = dev->parent;
+> -
+> -       if (parent)
+> -               pm_runtime_get_sync(parent);
+> -       pm_runtime_get_noresume(dev);
+> -       /*
+> -        * pdev->current_state is set to PCI_D3cold during suspending,
+> -        * so wait until suspending completes
+> -        */
+> -       pm_runtime_barrier(dev);
+> -       /*
+> -        * Only need to resume devices in D3cold, because config
+> -        * registers are still accessible for devices suspended but
+> -        * not in D3cold.
+> -        */
+> -       if (pdev->current_state == PCI_D3cold)
+> -               pm_runtime_resume(dev);
+> -}
+> -
+> -static void
+> -pci_config_pm_runtime_put(struct pci_dev *pdev)
+> -{
+> -       struct device *dev = &pdev->dev;
+> -       struct device *parent = dev->parent;
+> -
+> -       pm_runtime_put(dev);
+> -       if (parent)
+> -               pm_runtime_put_sync(parent);
+> -}
+> -
+>  static ssize_t
+>  pci_read_config(struct file *filp, struct kobject *kobj,
+>                 struct bin_attribute *bin_attr,
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1858,6 +1858,38 @@ bool pci_dev_run_wake(struct pci_dev *de
+>  }
+>  EXPORT_SYMBOL_GPL(pci_dev_run_wake);
+>
+> +void pci_config_pm_runtime_get(struct pci_dev *pdev)
+> +{
+> +       struct device *dev = &pdev->dev;
+> +       struct device *parent = dev->parent;
 > +
-> +#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define _TRACE_AER_H
+> +       if (parent)
+> +               pm_runtime_get_sync(parent);
+> +       pm_runtime_get_noresume(dev);
+> +       /*
+> +        * pdev->current_state is set to PCI_D3cold during suspending,
+> +        * so wait until suspending completes
+> +        */
+> +       pm_runtime_barrier(dev);
+> +       /*
+> +        * Only need to resume devices in D3cold, because config
+> +        * registers are still accessible for devices suspended but
+> +        * not in D3cold.
+> +        */
+> +       if (pdev->current_state == PCI_D3cold)
+> +               pm_runtime_resume(dev);
+> +}
 > +
-> +#include <linux/tracepoint.h>
-> +#include <linux/edac.h>
+> +void pci_config_pm_runtime_put(struct pci_dev *pdev)
+> +{
+> +       struct device *dev = &pdev->dev;
+> +       struct device *parent = dev->parent;
 > +
+> +       pm_runtime_put(dev);
+> +       if (parent)
+> +               pm_runtime_put_sync(parent);
+> +}
 > +
-> +/*
-> + * Anhance Error Reporting (AER) PCIE Report Error
-> + *
-> + * These events are generated when hardware detects a corrected or
-> + * uncorrected event on a pci express device and reports
-> + * errors.  The event reports the following data.
-> + *
-> + * char * dev_name -	String containing the device identification
-> + * u32 status -		Either the correctable or uncorrectable register
-> + *			indicating what error or errors have been seen
-> + * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-> + */
+>  /**
+>   * pci_pm_init - Initialize PM functions of given PCI device
+>   * @dev: PCI device to handle.
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -72,6 +72,8 @@ extern void pci_disable_enabled_device(s
+>  extern int pci_finish_runtime_suspend(struct pci_dev *dev);
+>  extern int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
+>  extern void pci_wakeup_bus(struct pci_bus *bus);
+> +extern void pci_config_pm_runtime_get(struct pci_dev *dev);
+> +extern void pci_config_pm_runtime_put(struct pci_dev *dev);
+>  extern void pci_pm_init(struct pci_dev *dev);
+>  extern void platform_pci_wakeup_init(struct pci_dev *dev);
+>  extern void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -76,6 +76,8 @@ proc_bus_pci_read(struct file *file, cha
+>         if (!access_ok(VERIFY_WRITE, buf, cnt))
+>                 return -EINVAL;
+>
+> +       pci_config_pm_runtime_get(dev);
 > +
-> +#define correctable_error_string			\
-> +	{BIT(0),	"Receiver Error"},		\
-> +	{BIT(6),	"Bad TLP"},			\
-> +	{BIT(7),	"Bad DLLP"},			\
-> +	{BIT(8),	"RELAY_NUM Rollover"},		\
-> +	{BIT(12),	"Replay Timer Timeout"},	\
-> +	{BIT(13),	"Advisory Non-Fatal"}
+>         if ((pos & 1) && cnt) {
+>                 unsigned char val;
+>                 pci_user_read_config_byte(dev, pos, &val);
+> @@ -121,6 +123,8 @@ proc_bus_pci_read(struct file *file, cha
+>                 cnt--;
+>         }
+>
+> +       pci_config_pm_runtime_put(dev);
 > +
-> +#define uncorrectable_error_string			\
-> +	{BIT(4),	"Data Link Protocol"},		\
-> +	{BIT(12),	"Poisoned TLP"},		\
-> +	{BIT(13),	"Flow Control Protocol"},	\
-> +	{BIT(14),	"Completion Timeout"},		\
-> +	{BIT(15),	"Completer Abort"},		\
-> +	{BIT(16),	"Unexpected Completion"},	\
-> +	{BIT(17),	"Receiver Overflow"},		\
-> +	{BIT(18),	"Malformed TLP"},		\
-> +	{BIT(19),	"ECRC"},			\
-> +	{BIT(20),	"Unsupported Request"}
+>         *ppos = pos;
+>         return nbytes;
+>  }
+> @@ -146,6 +150,8 @@ proc_bus_pci_write(struct file *file, co
+>         if (!access_ok(VERIFY_READ, buf, cnt))
+>                 return -EINVAL;
+>
+> +       pci_config_pm_runtime_get(dev);
 > +
-> +TRACE_EVENT(aer_event,
-> +	TP_PROTO(const char *dev_name,
-> +		 const u32 status,
-> +		 const u8 severity),
+>         if ((pos & 1) && cnt) {
+>                 unsigned char val;
+>                 __get_user(val, buf);
+> @@ -191,6 +197,8 @@ proc_bus_pci_write(struct file *file, co
+>                 cnt--;
+>         }
+>
+> +       pci_config_pm_runtime_put(dev);
 > +
-> +	TP_ARGS(dev_name, status, severity),
-> +
-> +	TP_STRUCT__entry(
-> +		__string(	dev_name,	dev_name	)
-> +		__field(	u32,		status		)
-> +		__field(	u8,		severity	)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		__assign_str(dev_name, dev_name);
-> +		__entry->status		= status;
-> +		__entry->severity	= severity;
-> +	),
-> +
-> +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-> +		__get_str(dev_name),
-> +		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
-> +			((__entry->severity == HW_EVENT_ERR_FATAL) ?
-> +			"Fatal" : "Uncorrected"),
-> +		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-> +		__print_flags(__entry->status, "|", correctable_error_string) :
-> +		__print_flags(__entry->status, "|", uncorrectable_error_string))
-> +);
-> +
-> +#endif /* _TRACE_AER_H */
-> +
-> +/* This part must be outside protection */
-> +#include <trace/define_trace.h>
-
-
+>         *ppos = pos;
+>         i_size_write(ino, dp->size);
+>         return nbytes;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
