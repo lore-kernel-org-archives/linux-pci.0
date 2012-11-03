@@ -1,128 +1,296 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:7975 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167Ab2K3Vid (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 16:38:33 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v3 1/3] aerdrv: Trace Event for AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 30 Nov 2012 14:33:30 -0700
-Message-ID: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part1 4/4] ACPIHP: implement a fake ACPI system device hotplug slot enumerator
+Date: Sun,  4 Nov 2012 00:07:45 +0800
+Message-Id: <1351958865-24394-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
+References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This header file will define a new trace event that will be triggered when
-a AER event occurs.  The following data will be provided to the trace
-event.
+This patch implements a fake ACPI system device hotplug slot enumerator,
+which could be used to test and verify hotplug logic on platforms with
+hardware hotplug capabilities.
 
-char * name -	String containing the device path
+The fake slot enumerator will be enabled by passing module parameter
+"fake_slot=value". The encoding of "value" is:
+0x1: fake ACPI CONTAINER device as hotplug slot
+0x2: fake ACPI memory device as hotplug slot
+0x4: fake ACPI Processor object or Processor device as hotplug slot
+0x8: fake ACPI PCI host bridge device as hotplug slot.
 
-u32 status - 	Either the correctable or uncorrectable register
-		indicating what error or errors have been see.
-
-u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-
-The trace event will also provide a trace string that may look like:
-
-"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-TLP"
-
-v1-v2 Move header from include/ras/aer_event.h to
-include/trace/events/ras.h
-
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
+ drivers/acpi/Kconfig             |   10 +++
+ drivers/acpi/hotplug/Makefile    |    1 +
+ drivers/acpi/hotplug/acpihp.h    |    3 +
+ drivers/acpi/hotplug/slot.c      |    3 +
+ drivers/acpi/hotplug/slot_fake.c |  180 ++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 197 insertions(+)
+ create mode 100644 drivers/acpi/hotplug/slot_fake.c
 
- include/trace/events/ras.h |   77 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 77 insertions(+), 0 deletions(-)
- create mode 100644 include/trace/events/ras.h
-
-diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+index af0aaf6..4d15b49 100644
+--- a/drivers/acpi/Kconfig
++++ b/drivers/acpi/Kconfig
+@@ -353,6 +353,16 @@ config ACPI_HOTPLUG_SLOT
+ 	  To compile this driver as a module, choose M here:
+ 	  the module will be called acpihp_slot.
+ 
++config ACPI_HOTPLUG_SLOT_FAKE
++	bool "Fake Hotplug Slots"
++	depends on ACPI_HOTPLUG_SLOT
++	default n
++	help
++	  This options enables a method to fake system device hotplug slots
++	  on hardware platforms without dynamic reconfiguration capabilities.
++
++	  Pass parameter "fake_slot=0xf" to enable this function.
++
+ config ACPI_CONTAINER
+ 	tristate "Container and Module Devices (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL
+diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
+index 5420ae7..c19b350 100644
+--- a/drivers/acpi/hotplug/Makefile
++++ b/drivers/acpi/hotplug/Makefile
+@@ -8,3 +8,4 @@ acpihp-y					= core.o
+ obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
+ acpihp_slot-y					= slot.o
+ acpihp_slot-y					+= slot_ej0.o
++acpihp_slot-$(CONFIG_ACPI_HOTPLUG_SLOT_FAKE)	+= slot_fake.o
+diff --git a/drivers/acpi/hotplug/acpihp.h b/drivers/acpi/hotplug/acpihp.h
+index 278c8c2..7c49eab 100644
+--- a/drivers/acpi/hotplug/acpihp.h
++++ b/drivers/acpi/hotplug/acpihp.h
+@@ -29,5 +29,8 @@
+ 
+ extern struct acpi_device *acpi_root;
+ extern struct acpihp_slot_ops acpihp_slot_ej0;
++#ifdef	CONFIG_ACPI_HOTPLUG_SLOT_FAKE
++extern struct acpihp_slot_ops acpihp_slot_fake;
++#endif
+ 
+ #endif
+diff --git a/drivers/acpi/hotplug/slot.c b/drivers/acpi/hotplug/slot.c
+index e5861fc..b72523d 100644
+--- a/drivers/acpi/hotplug/slot.c
++++ b/drivers/acpi/hotplug/slot.c
+@@ -44,6 +44,9 @@ static struct acpihp_slot_ops *slot_ops_curr;
+  */
+ static struct acpihp_slot_ops *slot_ops_array[] = {
+ 	&acpihp_slot_ej0,
++#ifdef	CONFIG_ACPI_HOTPLUG_SLOT_FAKE
++	&acpihp_slot_fake,
++#endif
+ 	NULL
+ };
+ 
+diff --git a/drivers/acpi/hotplug/slot_fake.c b/drivers/acpi/hotplug/slot_fake.c
 new file mode 100644
-index 0000000..f77d009
+index 0000000..e70243a
 --- /dev/null
-+++ b/include/trace/events/ras.h
-@@ -0,0 +1,77 @@
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM aer_event
-+#define TRACE_INCLUDE_FILE ras 
-+
-+#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_AER_H
-+
-+#include <linux/tracepoint.h>
-+#include <linux/edac.h>
-+
-+
++++ b/drivers/acpi/hotplug/slot_fake.c
+@@ -0,0 +1,180 @@
 +/*
-+ * Anhance Error Reporting (AER) PCIE Report Error
++ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
++ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
 + *
-+ * These events are generated when hardware detects a corrected or
-+ * uncorrected event on a pci express device and reports
-+ * errors.  The event reports the following data.
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 + *
-+ * char * dev_name -	String containing the device identification
-+ * u32 status -		Either the correctable or uncorrectable register
-+ *			indicating what error or errors have been seen
-+ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or (at
++ *  your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful, but
++ *  WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License along
++ *  with this program.
++ *
++ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 + */
 +
-+#define correctable_error_string			\
-+	{BIT(0),	"Receiver Error"},		\
-+	{BIT(6),	"Bad TLP"},			\
-+	{BIT(7),	"Bad DLLP"},			\
-+	{BIT(8),	"RELAY_NUM Rollover"},		\
-+	{BIT(12),	"Replay Timer Timeout"},	\
-+	{BIT(13),	"Advisory Non-Fatal"}
++#include <linux/acpi.h>
++#include <acpi/acpi.h>
++#include <acpi/acpi_hotplug.h>
++#include "acpihp.h"
 +
-+#define uncorrectable_error_string			\
-+	{BIT(4),	"Data Link Protocol"},		\
-+	{BIT(12),	"Poisoned TLP"},		\
-+	{BIT(13),	"Flow Control Protocol"},	\
-+	{BIT(14),	"Completion Timeout"},		\
-+	{BIT(15),	"Completer Abort"},		\
-+	{BIT(16),	"Unexpected Completion"},	\
-+	{BIT(17),	"Receiver Overflow"},		\
-+	{BIT(18),	"Malformed TLP"},		\
-+	{BIT(19),	"ECRC"},			\
-+	{BIT(20),	"Unsupported Request"}
++struct acpihp_slot_fake_data {
++	bool enabled;
++};
 +
-+TRACE_EVENT(aer_event,
-+	TP_PROTO(const char *dev_name,
-+		 const u32 status,
-+		 const u8 severity),
++/*
++ * Encoding of the fake_slot parameter:
++ * 0x1: fake ACPI CONTAINER device as hotplug slot
++ * 0x2: fake ACPI memory device as hotplug slot
++ * 0x4: fake ACPI Processor object or Processor device as hotplug slot
++ * 0x8: fake ACPI PCI host bridge device as hotplug slot.
++ * The above encoding must be kept in consistence with definition of
++ * 'enum acpihp_dev_type'.
++ */
++int acpihp_fake_slot;
++module_param_named(fake_slot, acpihp_fake_slot, int, S_IRUGO);
++MODULE_PARM_DESC(fake_slot, "fake ACPI hotplug slots");
 +
-+	TP_ARGS(dev_name, status, severity),
++static acpi_status acpihp_slot_fake_init(void)
++{
++	return acpihp_fake_slot ? AE_OK : AE_ERROR;
++}
 +
-+	TP_STRUCT__entry(
-+		__string(	dev_name,	dev_name	)
-+		__field(	u32,		status		)
-+		__field(	u8,		severity	)
-+	),
++static acpi_status
++acpihp_slot_fake_check(acpi_handle handle, u32 lvl, void *context, void **rv)
++{
++	int *valid = (int *)rv;
++	enum acpihp_dev_type type;
 +
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->status		= status;
-+		__entry->severity	= severity;
-+	),
++	if (!acpihp_dev_get_type(handle, &type)) {
++		switch (type) {
++		case ACPIHP_DEV_TYPE_CPU:
++		case ACPIHP_DEV_TYPE_MEM:
++		case ACPIHP_DEV_TYPE_HOST_BRIDGE:
++			*valid = 1;
++			return AE_CTRL_TERMINATE;
++		default:
++			break;
++		}
++	}
 +
-+	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-+		__get_str(dev_name),
-+		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
-+			((__entry->severity == HW_EVENT_ERR_FATAL) ?
-+			"Fatal" : "Uncorrected"),
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-+		__print_flags(__entry->status, "|", correctable_error_string) :
-+		__print_flags(__entry->status, "|", uncorrectable_error_string))
-+);
++	return AE_OK;
++}
 +
-+#endif /* _TRACE_AER_H */
++static acpi_status acpihp_slot_fake_capable(acpi_handle handle)
++{
++	int valid = 0;
++	acpi_status rc;
++	unsigned long long sta;
++	enum acpihp_dev_type type;
 +
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
++	/* Only care about CPU, memory, PCI host bridge and CONTAINER */
++	if (acpihp_dev_get_type(handle, &type))
++		return AE_ERROR;
++	if (type == ACPIHP_DEV_TYPE_CPU || type == ACPIHP_DEV_TYPE_MEM ||
++	    type == ACPIHP_DEV_TYPE_HOST_BRIDGE) {
++		if (acpihp_fake_slot & (1 << (type - 1)))
++			valid = 1;
++	} else if (type == ACPIHP_DEV_TYPE_CONTAINER &&
++		   acpihp_fake_slot & (1 << (type - 1))) {
++		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
++				ACPI_UINT32_MAX, acpihp_slot_fake_check,
++				NULL, NULL, (void **)&valid);
++		acpi_walk_namespace(ACPI_TYPE_PROCESSOR, handle,
++				ACPI_UINT32_MAX, acpihp_slot_fake_check,
++				NULL, NULL, (void **)&valid);
++	}
++	if (valid == 0)
++		return AE_ERROR;
++
++	/* Check whether device is present and enabled. */
++	rc = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
++	if (rc == AE_NOT_FOUND)
++		sta = ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED;
++	else if (ACPI_FAILURE(rc))
++		sta = 0;
++	else if (sta & ACPI_STA_DEVICE_FUNCTIONING)
++		sta |= ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED;
++	if (!(sta & ACPI_STA_DEVICE_PRESENT) ||
++	    !(sta & ACPI_STA_DEVICE_ENABLED))
++		return AE_ERROR;
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_create(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return AE_ERROR;
++
++	data->enabled = true;
++	slot->slot_data = data;
++	slot->capabilities = ACPIHP_SLOT_CAP_POWERON |
++			     ACPIHP_SLOT_CAP_POWEROFF |
++			     ACPIHP_SLOT_CAP_ONLINE |
++			     ACPIHP_SLOT_CAP_OFFLINE;
++
++	return AE_OK;
++}
++
++static void acpihp_slot_fake_destroy(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	slot->slot_data = NULL;
++	kfree(data);
++}
++
++static acpi_status
++acpihp_slot_fake_get_status(struct acpihp_slot *slot, u64 *status)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	if (data->enabled)
++		*status = ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED |
++			  ACPI_STA_DEVICE_FUNCTIONING;
++	else
++		*status = ACPI_STA_DEVICE_PRESENT;
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_poweron(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	data->enabled = true;
++
++	return AE_OK;
++}
++
++static acpi_status acpihp_slot_fake_poweroff(struct acpihp_slot *slot)
++{
++	struct acpihp_slot_fake_data *data = slot->slot_data;
++
++	data->enabled = false;
++
++	return AE_OK;
++}
++
++struct acpihp_slot_ops acpihp_slot_fake = {
++	.owner = THIS_MODULE,
++	.desc = "Fake Hotplug Slot Enumerator for Testing",
++	.init = acpihp_slot_fake_init,
++	.check = acpihp_slot_fake_capable,
++	.create = acpihp_slot_fake_create,
++	.destroy = acpihp_slot_fake_destroy,
++	.poweron = acpihp_slot_fake_poweron,
++	.poweroff = acpihp_slot_fake_poweroff,
++	.get_status = acpihp_slot_fake_get_status,
++};
+-- 
+1.7.9.5
 
