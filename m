@@ -1,109 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:6829 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497Ab2KJDnc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 22:43:32 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	Myron Stowe <myron.stowe@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [ PATCH ] PCI-AER: Do not report successful error recovery for
- devices with AER-unaware drivers
-Date: Sat, 10 Nov 2012 03:40:23 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C901467910@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C9014674B9@G9W0717.americas.hpqcorp.net>
- <CAL-B5D2ZmtOFQMhF7dG0p8U+ZcrjpQyzcLKvVzwYZ9RF6ckjzA@mail.gmail.com>
- <CAHrUA37b_wd_18e6S7WSSkVG0nLF1sED0hetJq0=8NYdNJkkVw@mail.gmail.com>
-In-Reply-To: <CAHrUA37b_wd_18e6S7WSSkVG0nLF1sED0hetJq0=8NYdNJkkVw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39722 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751491Ab2KCRWc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 3 Nov 2012 13:22:32 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hq12so2101996wib.1
+        for <linux-pci@vger.kernel.org>; Sat, 03 Nov 2012 10:22:31 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1351919165.13106.2.camel@yhuang-mobile.sh.intel.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
+ <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com> <1351919165.13106.2.camel@yhuang-mobile.sh.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 3 Nov 2012 11:22:10 -0600
+Message-ID: <CAErSpo4k+SjqdBt3w3POkg=toCnZufH4gnwJpV8BW8DH5abkqw@mail.gmail.com>
+Subject: Re: [BUGFIX 1/2] PCI/PM: Fix deadlock when unbind device if its
+ parent in D3cold
+To: Huang Ying <ying.huang@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zhang Yanmin <yanmin.zhang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTXlyb24vTGluYXMsDQoNClRoYW5rcyBmb3IgcG9pbnRpbmcgaXQgb3V0LiBJIGFtIHN0aWxs
-IGxlYXJuaW5nIGFsbCB0aGUgY29udmVudGlvbnMuIEkgd2lsbCBzZW5kIG91dCBhIG5ld2VyIHZl
-cnNpb24gd2l0aCB0aGUgY2hhbmdlcy4NCg0KVGhhbmtzDQoNClZpamF5DQoNCj4gLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTGluYXMgVmVwc3RhcyBbbWFpbHRvOmxpbmFzdmVw
-c3Rhc0BnbWFpbC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMDksIDIwMTIgNzoyOCBQ
-TQ0KPiBUbzogTXlyb24gU3Rvd2UNCj4gQ2M6IFBhbmRhcmF0aGlsLCBWaWpheW1vaGFuIFI7IGxp
-bnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFsgUEFUQ0ggXSBQQ0ktQUVS
-OiBEbyBub3QgcmVwb3J0IHN1Y2Nlc3NmdWwgZXJyb3IgcmVjb3ZlcnkgZm9yDQo+IGRldmljZXMg
-d2l0aCBBRVItdW5hd2FyZSBkcml2ZXJzDQo+IA0KPiBZZXMsIHRoYXQgaXMgY29ycmVjdDogUmV2
-aWV3ZWQtYnkvQWNrZWQtYnk6IG1lLiBJIHBsZWFkIGxhdGUtbmlnaHQNCj4gd29vemluZXNzLg0K
-PiANCj4gLS0gTGluYXMNCj4gDQo+IE9uIDkgTm92ZW1iZXIgMjAxMiAxMTowNiwgTXlyb24gU3Rv
-d2UgPG15cm9uLnN0b3dlQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4gQWRkaW5nOiBsaW5hc3ZlcHN0
-YXNAZ21haWwuY29tDQo+ID4NCj4gPiBPbiBUaHUsIE5vdiA4LCAyMDEyIGF0IDk6MjggUE0sIFBh
-bmRhcmF0aGlsLCBWaWpheW1vaGFuIFINCj4gPiA8dmlqYXltb2hhbi5wYW5kYXJhdGhpbEBocC5j
-b20+IHdyb3RlOg0KPiA+PiBXaGVuIGFuIGVycm9yIGlzIGRldGVjdGVkIG9uIGEgUENJZSBkZXZp
-Y2Ugd2hpY2ggZG9lcyBub3QgaGF2ZSBhbg0KPiA+PiBBRVItYXdhcmUgZHJpdmVyLCBwcmV2ZW50
-IEFFUiBpbmZyYXN0cnVjdHVyZSBmcm9tIHJlcG9ydGluZw0KPiA+PiBzdWNjZXNzZnVsIGVycm9y
-IHJlY292ZXJ5Lg0KPiA+Pg0KPiA+PiBUaGlzIGlzIGJlY2F1c2UgdGhlIHJlcG9ydF9lcnJvcl9k
-ZXRlY3RlZCgpIGZ1bmN0aW9uIHRoYXQgZ2V0cw0KPiA+PiBjYWxsZWQgaW4gdGhlIGZpcnN0IHBo
-YXNlIG9mIHJlY292ZXJ5IHByb2Nlc3MgYWxsb3dzIGZvcndhcmQNCj4gPj4gcHJvZ3Jlc3MgZXZl
-biB3aGVuIHRoZSBkcml2ZXIgZm9yIHRoZSBkZXZpY2UgZG9lcyBub3QgaGF2ZSBBRVINCj4gPj4g
-Y2FwYWJpbGl0aWVzLiBJdCBzZWVtcyB0aGF0IGFsbCBjYWxsYmFja3MgKGluIHBjaV9lcnJvcl9o
-YW5kbGVycw0KPiA+PiBzdHJ1Y3R1cmUpIHJlZ2lzdGVyZWQgYnkgZHJpdmVycyB0aGF0IGdldHMg
-Y2FsbGVkIGR1cmluZyBlcnJvcg0KPiA+PiByZWNvdmVyeSBhcmUgbm90IG1hbmRhdG9yeS4gU28g
-dGhlIGludGVudGlvbiBvZiB0aGUgaW5mcmFzdHJ1Y3R1cmUNCj4gPj4gZGVzaWduIHNlZW1zIHRv
-IGJlIHRvIGFsbG93IGZvcndhcmQgcHJvZ3Jlc3MgZXZlbiB3aGVuIGEgc3BlY2lmaWMNCj4gPj4g
-Y2FsbGJhY2sgaGFzIG5vdCBiZWVuIHJlZ2lzdGVyZWQgYnkgYSBkcml2ZXIuIEhvd2V2ZXIsIGlm
-IGVycm9yDQo+ID4+IGhhbmRsZXIgc3RydWN0dXJlIGl0c2VsZiBoYXMgbm90IGJlZW4gcmVnaXN0
-ZXJlZCwgaXQgZG9lc24ndCBtYWtlDQo+ID4+IHNlbnNlIHRvIGFsbG93IGZvcndhcmQgcHJvZ3Jl
-c3MuDQo+ID4+DQo+ID4+IEFzIGEgcmVzdWx0IG9mIHRoZSBjdXJyZW50IGRlc2lnbiwgaW4gdGhl
-IGNhc2Ugb2YgYSBzaW5nbGUgZGV2aWNlDQo+ID4+IGhhdmluZyBhbiBBRVItdW5hd2FyZSBkcml2
-ZXIgb3IgaW4gdGhlIGNhc2Ugb2YgYW55IGZ1bmN0aW9uIGluIGENCj4gPj4gbXVsdGktZnVuY3Rp
-b24gY2FyZCBoYXZpbmcgYW4gQUVSLXVuYXdhcmUgZHJpdmVyLCBhIHN1Y2Nlc3NmdWwNCj4gPj4g
-cmVjb3ZlcnkgaXMgcmVwb3J0ZWQuDQo+ID4+DQo+ID4+IFR5cGljYWwgc2NlbmFyaW8gdGhpcyBo
-YXBwZW5zIGlzIHdoZW4gYSBQQ0kgZGV2aWNlIGlzIGRldGFjaGVkDQo+ID4+IGZyb20gYSBLVk0g
-aG9zdCBhbmQgdGhlIHBjaS1zdHViIGRyaXZlciBvbiB0aGUgaG9zdCBjbGFpbXMgdGhlDQo+ID4+
-IGRldmljZS4gVGhlIHBjaS1zdHViIGRyaXZlciBkb2VzIG5vdCBoYXZlIGVycm9yIGhhbmRsaW5n
-IGNhcGFiaWxpdGllcw0KPiA+PiBidXQgdGhlIEFFUiBpbmZyYXN0cnVjdHVyZSBzdGlsbCByZXBv
-cnRzIHRoYXQgdGhlIGRldmljZSByZWNvdmVyZWQNCj4gPj4gc3VjY2Vzc2Z1bGx5Lg0KPiA+Pg0K
-PiA+PiBUaGUgY2hhbmdlcyBwcm9wb3NlZCBoZXJlIGxlYXZlcyB0aGUgZGV2aWNlIGluIGFuIHVu
-cmVjb3ZlcmVkIHN0YXRlDQo+ID4+IGlmIHRoZSBkcml2ZXIgZm9yIHRoZSBkZXZpY2Ugb3IgZm9y
-IGFueSBmdW5jdGlvbiBpbiBhIG11bHRpLWZ1bmN0aW9uDQo+ID4+IGNhcmQgZG9lcyBub3QgaGF2
-ZSBlcnJvciBoYW5kbGVyIHN0cnVjdHVyZSByZWdpc3RlcmVkLiBUaGlzIHJlZmxlY3RzDQo+ID4+
-IHRoZSB0cnVlIHN0YXRlIG9mIHRoZSBkZXZpY2UgYW5kIHByZXZlbnRzIGFueSBwYXJ0aWFsIHJl
-Y292ZXJ5IChvciBubw0KPiA+PiByZWNvdmVyeSBhdCBhbGwpIHJlcG9ydGVkIGFzIHN1Y2Nlc3Nm
-dWwuDQo+ID4+DQo+ID4+IFBsZWFzZSBhbHNvIHNlZSBjb21tZW50cyBmcm9tIExpbmFzIFZlcHN0
-YXMgYXQgdGhlIGZvbGxvd2luZyBsaW5rDQo+ID4+IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlz
-dHMvbGludXgtcGNpL21zZzE4NTcyLmh0bWwNCj4gPj4NCj4gPj4gU2lnbmVkLW9mZi1ieTogTGlu
-YXMgVmVwc3RhcyA8bGluYXN2ZXBzdGFzIDxhdD4gZ21haWwuY29tPg0KPiA+PiBTaWduZWQtb2Zm
-LWJ5OiBNeXJvbiBTdG93ZSA8bXN0b3dlIDxhdD4gcmVkaGF0LmNvbT4NCj4gPj4gU2lnbmVkLW9m
-Zi1ieTogVmlqYXkgTW9oYW4gUGFuZGFyYXRoaWwgPHZpamF5bW9oYW4ucGFuZGFyYXRoaWwgPGF0
-Pg0KPiBocC5jb20+DQo+ID4NCj4gPiBIYXkgVmlqYXk6DQo+ID4NCj4gPiBJIHRoaW5rIExpbmFz
-IG1heSBoYXZlIHN0ZWVyZWQgeW91IGluY29ycmVjdGx5IHdpdGggaGlzICJGV0lXLCBJIGd1ZXNz
-DQo+ID4gSSBjb3VsZCBhZGQgYQ0KPiA+IFNpZ25lZC1vZmYtYnk6IExpbmFzIFZlcHN0YXMgPC4u
-Lj4iIGNvbW1lbnQuDQo+ID4NCj4gPiBGcm9tIC4vRG9jdW1lbnRhdGlvbi9TdWJtaXR0aW5nUGF0
-Y2hlcywgIlRoZSBTaWduZWQtb2ZmLWJ5OiB0YWcNCj4gPiBpbmRpY2F0ZXMgdGhhdCB0aGUNCj4g
-PiBzaWduZXIgd2FzIGludm9sdmVkIGluIHRoZSBkZXZlbG9wbWVudCBvZiB0aGUgcGF0Y2gsIG9y
-IHRoYXQgaGUvc2hlDQo+ID4gd2FzIGluIHRoZSBwYXRjaCdzDQo+ID4gZGVsaXZlcnkgcGF0aC4i
-DQo+ID4NCj4gPiBJIHRoaXMgY2FzZSBJIHN1c3BlY3QgdGhhdCAicmV2aWV3ZWQtYnkiIG9yICdh
-Y2tlZC1ieSIgd291bGQgYmUgbW9yZQ0KPiA+IGFwcHJvcHJpYXRlIGZvcg0KPiA+IGJvdGggTGlu
-YXMgKHVubGVzcyBvZiBjb3Vyc2UgTGluYXMgd29ya2VkIHdpdGggeW91IGluIGRldmVsb3Bpbmcg
-dGhlDQo+IHBhdGNoKSBhbmQNCj4gPiBteXNsZWYuDQo+ID4NCj4gPiBBbHNvLCB3aGVuIHBvc3Rp
-bmcgdG8gdGhlIGxpc3QgaXQncyBjb25zaWRlcmVkIGdvb2QgZXRpcXVldHRlIHRvDQo+ID4gaW5j
-bHVkZSAoY2MpIGV2ZXJ5b25lDQo+ID4gY2l0ZWQgaW4gdGhlIFNpZ25lZC1vZmYsIHJldmlld2Vk
-LWJ5LCBhY2tlZC1ieSwgLi4uLCBsaW5lcyAoYW5kDQo+ID4gcG9zc2libHkgdGhlIGxpbnV4LWtl
-cm5lbA0KPiA+IGxpc3QgLSBhZ2FpbiBzZWUgLi9Eb2N1bWVudGF0aW9uL1N1Ym1pdHRpbmdQYXRj
-aGVzKS4NCj4gPg0KPiA+IE15cm9uDQo+ID4+DQo+ID4+IC0tLQ0KPiA+Pg0KPiA+PiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9wY2kvcGNpZS9hZXIvYWVyZHJ2X2NvcmUuYw0KPiBiL2RyaXZlcnMvcGNp
-L3BjaWUvYWVyL2FlcmRydl9jb3JlLmMNCj4gPj4gaW5kZXggMDZiYWQ5Ni4uMDMwYjIyOSAxMDA2
-NDQNCj4gPj4gLS0tIGEvZHJpdmVycy9wY2kvcGNpZS9hZXIvYWVyZHJ2X2NvcmUuYw0KPiA+PiAr
-KysgYi9kcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnZfY29yZS5jDQo+ID4+IEBAIC0yMTUsNiAr
-MjE1LDEyIEBAIHN0YXRpYyBpbnQgcmVwb3J0X2Vycm9yX2RldGVjdGVkKHN0cnVjdCBwY2lfZGV2
-DQo+ICpkZXYsIHZvaWQgKmRhdGEpDQo+ID4+DQo+ID4+ICAgICAgICAgZGV2LT5lcnJvcl9zdGF0
-ZSA9IHJlc3VsdF9kYXRhLT5zdGF0ZTsNCj4gPj4NCj4gPj4gKyAgICAgICBpZiAoKCFkZXYtPmRy
-aXZlciB8fCAhZGV2LT5kcml2ZXItPmVycl9oYW5kbGVyKSAmJg0KPiA+PiArICAgICAgICAgICAg
-ICAgIShkZXYtPmhkcl90eXBlICYgUENJX0hFQURFUl9UWVBFX0JSSURHRSkpIHsNCj4gPj4gKyAg
-ICAgICAgICAgICAgIGRldl9pbmZvKCZkZXYtPmRldiwgIkFFUjogRXJyb3IgZGV0ZWN0ZWQgYnV0
-IG5vIGRyaXZlcg0KPiBoYXMgY2xhaW1lZCB0aGlzIGRldmljZSBvciB0aGUgZHJpdmVyIGlzIEFF
-Ui11bmF3YXJlXG4iKTsNCj4gPj4gKyAgICAgICAgICAgICAgIHJlc3VsdF9kYXRhLT5yZXN1bHQg
-PSBQQ0lfRVJTX1JFU1VMVF9OT05FOw0KPiA+PiArICAgICAgICAgICAgICAgcmV0dXJuIDE7DQo+
-ID4+ICsgICAgICAgfQ0KPiA+PiAgICAgICAgIGlmICghZGV2LT5kcml2ZXIgfHwNCj4gPj4gICAg
-ICAgICAgICAgICAgICFkZXYtPmRyaXZlci0+ZXJyX2hhbmRsZXIgfHwNCj4gPj4gICAgICAgICAg
-ICAgICAgICFkZXYtPmRyaXZlci0+ZXJyX2hhbmRsZXItPmVycm9yX2RldGVjdGVkKSB7DQo+ID4+
-IC0tDQo+ID4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
-bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+ID4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0
-dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+On Fri, Nov 2, 2012 at 11:06 PM, Huang Ying <ying.huang@intel.com> wrote:
+> On Fri, 2012-11-02 at 10:50 -0600, Bjorn Helgaas wrote:
+>> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+>> > If a PCI device and its parents are put into D3cold, unbinding the
+>> > device will trigger deadlock as follow:
+>> >
+>> > - driver_unbind
+>> >   - device_release_driver
+>> >     - device_lock(dev)                          <--- previous lock here
+>> >     - __device_release_driver
+>> >       - pm_runtime_get_sync
+>> >         ...
+>> >           - rpm_resume(dev)
+>> >             - rpm_resume(dev->parent)
+>> >               ...
+>> >                 - pci_pm_runtime_resume
+>> >                   ...
+>> >                   - pci_set_power_state
+>> >                     - __pci_start_power_transition
+>> >                       - pci_wakeup_bus(dev->parent->subordinate)
+>> >                         - pci_walk_bus
+>> >                           - device_lock(dev)    <--- dead lock here
+>> >
+>> >
+>> > If we do not do device_lock in pci_walk_bus, we can avoid dead lock.
+>> > Device_lock in pci_walk_bus is introduced in commit:
+>> > d71374dafbba7ec3f67371d3b7e9f6310a588808, corresponding email thread
+>> > is: https://lkml.org/lkml/2006/5/26/38.  The patch author Zhang Yanmin
+>> > said device_lock is added to pci_walk_bus because:
+>> >
+>> >   Some error handling functions call pci_walk_bus. For example, PCIe
+>> >   aer. Here we lock the device, so the driver wouldn't detach from the
+>> >   device, as the cb might call driver's callback function.
+>> >
+>> > So I fixed the dead lock as follow:
+>> >
+>> > - remove device_lock from pci_walk_bus
+>> > - add device_lock into callback if callback will call driver's callback
+>> >
+>> > I checked pci_walk_bus users one by one, and found only PCIe aer needs
+>> > device lock.
+>>
+>> Is there a problem report or bugzilla for this issue?
+>
+> No.  I found this issue when I developed kexec fixing.
+>
+> Best Regards,
+> Huang Ying
+>
+>> > Signed-off-by: Huang Ying <ying.huang@intel.com>
+>> > Cc: Zhang Yanmin <yanmin.zhang@intel.com>
+>>
+>> Should this go to stable as well?  The D3cold support appeared in
+>> v3.6, so my guess is that this fix could go to v3.6.x.
+
+What about the stable tree?
+
+>> > ---
+>> >  drivers/pci/bus.c                  |    3 ---
+>> >  drivers/pci/pcie/aer/aerdrv_core.c |   20 ++++++++++++++++----
+>> >  2 files changed, 16 insertions(+), 7 deletions(-)
+>> >
+>> > --- a/drivers/pci/bus.c
+>> > +++ b/drivers/pci/bus.c
+>> > @@ -320,10 +320,7 @@ void pci_walk_bus(struct pci_bus *top, i
+>> >                 } else
+>> >                         next = dev->bus_list.next;
+>> >
+>> > -               /* Run device routines with the device locked */
+>> > -               device_lock(&dev->dev);
+>> >                 retval = cb(dev, userdata);
+>> > -               device_unlock(&dev->dev);
+>> >                 if (retval)
+>> >                         break;
+>> >         }
+>> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > @@ -213,6 +213,7 @@ static int report_error_detected(struct
+>> >         struct aer_broadcast_data *result_data;
+>> >         result_data = (struct aer_broadcast_data *) data;
+>> >
+>> > +       device_lock(&dev->dev);
+>> >         dev->error_state = result_data->state;
+>> >
+>> >         if (!dev->driver ||
+>> > @@ -231,12 +232,14 @@ static int report_error_detected(struct
+>> >                                    dev->driver ?
+>> >                                    "no AER-aware driver" : "no driver");
+>> >                 }
+>> > -               return 0;
+>> > +               goto out;
+>> >         }
+>> >
+>> >         err_handler = dev->driver->err_handler;
+>> >         vote = err_handler->error_detected(dev, result_data->state);
+>> >         result_data->result = merge_result(result_data->result, vote);
+>> > +out:
+>> > +       device_unlock(&dev->dev);
+>> >         return 0;
+>> >  }
+>> >
+>> > @@ -247,14 +250,17 @@ static int report_mmio_enabled(struct pc
+>> >         struct aer_broadcast_data *result_data;
+>> >         result_data = (struct aer_broadcast_data *) data;
+>> >
+>> > +       device_lock(&dev->dev);
+>> >         if (!dev->driver ||
+>> >                 !dev->driver->err_handler ||
+>> >                 !dev->driver->err_handler->mmio_enabled)
+>> > -               return 0;
+>> > +               goto out;
+>> >
+>> >         err_handler = dev->driver->err_handler;
+>> >         vote = err_handler->mmio_enabled(dev);
+>> >         result_data->result = merge_result(result_data->result, vote);
+>> > +out:
+>> > +       device_unlock(&dev->dev);
+>> >         return 0;
+>> >  }
+>> >
+>> > @@ -265,14 +271,17 @@ static int report_slot_reset(struct pci_
+>> >         struct aer_broadcast_data *result_data;
+>> >         result_data = (struct aer_broadcast_data *) data;
+>> >
+>> > +       device_lock(&dev->dev);
+>> >         if (!dev->driver ||
+>> >                 !dev->driver->err_handler ||
+>> >                 !dev->driver->err_handler->slot_reset)
+>> > -               return 0;
+>> > +               goto out;
+>> >
+>> >         err_handler = dev->driver->err_handler;
+>> >         vote = err_handler->slot_reset(dev);
+>> >         result_data->result = merge_result(result_data->result, vote);
+>> > +out:
+>> > +       device_unlock(&dev->dev);
+>> >         return 0;
+>> >  }
+>> >
+>> > @@ -280,15 +289,18 @@ static int report_resume(struct pci_dev
+>> >  {
+>> >         const struct pci_error_handlers *err_handler;
+>> >
+>> > +       device_lock(&dev->dev);
+>> >         dev->error_state = pci_channel_io_normal;
+>> >
+>> >         if (!dev->driver ||
+>> >                 !dev->driver->err_handler ||
+>> >                 !dev->driver->err_handler->resume)
+>> > -               return 0;
+>> > +               goto out;
+>> >
+>> >         err_handler = dev->driver->err_handler;
+>> >         err_handler->resume(dev);
+>> > +out:
+>> > +       device_unlock(&dev->dev);
+>> >         return 0;
+>> >  }
+>> >
+>
+>
