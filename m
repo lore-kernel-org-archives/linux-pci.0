@@ -1,95 +1,193 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rrcs-24-173-105-85.sw.biz.rr.com ([24.173.105.85]:44223 "EHLO
-	mx1.mthode.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755175Ab2KMSM0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 13 Nov 2012 13:12:26 -0500
-Message-ID: <50A28D99.2000309@gentoo.org>
-Date: Tue, 13 Nov 2012 12:12:41 -0600
-From: Matthew Thode <prometheanfire@gentoo.org>
-Reply-To: prometheanfire@gentoo.org
-MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: iommu@lists.linux-foundation.org, joro@8bytes.org,
-	cardoe@gentoo.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mthode@mthode.org,
-	ddutile@redhat.com, bhelgaas@google.com, dwmw2@infradead.org
-Subject: Re: [PATCH] intel-iommu: Fix lookup in add device
-References: <20121113172144.6783.37724.stgit@bling.home>
-In-Reply-To: <20121113172144.6783.37724.stgit@bling.home>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig30DD44203562B017129ADCC1"
+Received: from mga02.intel.com ([134.134.136.20]:55577 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751689Ab2KDDkl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 3 Nov 2012 23:40:41 -0400
+Message-ID: <1352000325.9881.0.camel@yhuang-mobile.sh.intel.com>
+Subject: Re: [BUGFIX 1/2] PCI/PM: Fix deadlock when unbind device if its
+ parent in D3cold
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Zhang Yanmin <yanmin.zhang@intel.com>
+Date: Sun, 04 Nov 2012 11:38:45 +0800
+In-Reply-To: <CAErSpo4k+SjqdBt3w3POkg=toCnZufH4gnwJpV8BW8DH5abkqw@mail.gmail.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
+	 <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com>
+	 <1351919165.13106.2.camel@yhuang-mobile.sh.intel.com>
+	 <CAErSpo4k+SjqdBt3w3POkg=toCnZufH4gnwJpV8BW8DH5abkqw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig30DD44203562B017129ADCC1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Sat, 2012-11-03 at 11:22 -0600, Bjorn Helgaas wrote:
+> On Fri, Nov 2, 2012 at 11:06 PM, Huang Ying <ying.huang@intel.com> wrote:
+> > On Fri, 2012-11-02 at 10:50 -0600, Bjorn Helgaas wrote:
+> >> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> >> > If a PCI device and its parents are put into D3cold, unbinding the
+> >> > device will trigger deadlock as follow:
+> >> >
+> >> > - driver_unbind
+> >> >   - device_release_driver
+> >> >     - device_lock(dev)                          <--- previous lock here
+> >> >     - __device_release_driver
+> >> >       - pm_runtime_get_sync
+> >> >         ...
+> >> >           - rpm_resume(dev)
+> >> >             - rpm_resume(dev->parent)
+> >> >               ...
+> >> >                 - pci_pm_runtime_resume
+> >> >                   ...
+> >> >                   - pci_set_power_state
+> >> >                     - __pci_start_power_transition
+> >> >                       - pci_wakeup_bus(dev->parent->subordinate)
+> >> >                         - pci_walk_bus
+> >> >                           - device_lock(dev)    <--- dead lock here
+> >> >
+> >> >
+> >> > If we do not do device_lock in pci_walk_bus, we can avoid dead lock.
+> >> > Device_lock in pci_walk_bus is introduced in commit:
+> >> > d71374dafbba7ec3f67371d3b7e9f6310a588808, corresponding email thread
+> >> > is: https://lkml.org/lkml/2006/5/26/38.  The patch author Zhang Yanmin
+> >> > said device_lock is added to pci_walk_bus because:
+> >> >
+> >> >   Some error handling functions call pci_walk_bus. For example, PCIe
+> >> >   aer. Here we lock the device, so the driver wouldn't detach from the
+> >> >   device, as the cb might call driver's callback function.
+> >> >
+> >> > So I fixed the dead lock as follow:
+> >> >
+> >> > - remove device_lock from pci_walk_bus
+> >> > - add device_lock into callback if callback will call driver's callback
+> >> >
+> >> > I checked pci_walk_bus users one by one, and found only PCIe aer needs
+> >> > device lock.
+> >>
+> >> Is there a problem report or bugzilla for this issue?
+> >
+> > No.  I found this issue when I developed kexec fixing.
+> >
+> > Best Regards,
+> > Huang Ying
+> >
+> >> > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> >> > Cc: Zhang Yanmin <yanmin.zhang@intel.com>
+> >>
+> >> Should this go to stable as well?  The D3cold support appeared in
+> >> v3.6, so my guess is that this fix could go to v3.6.x.
+> 
+> What about the stable tree?
 
-On 11/13/2012 11:22 AM, Alex Williamson wrote:
-> We can't assume this device exists, fall back to the bridge itself.
->=20
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Tested-by: Matthew Thode <prometheanfire@gentoo.org>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/iommu/intel-iommu.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index d4a4cd4..0badfa4 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -4108,7 +4108,7 @@ static void swap_pci_ref(struct pci_dev **from, s=
-truct pci_dev *to)
->  static int intel_iommu_add_device(struct device *dev)
->  {
->  	struct pci_dev *pdev =3D to_pci_dev(dev);
-> -	struct pci_dev *bridge, *dma_pdev;
-> +	struct pci_dev *bridge, *dma_pdev =3D NULL;
->  	struct iommu_group *group;
->  	int ret;
-> =20
-> @@ -4122,7 +4122,7 @@ static int intel_iommu_add_device(struct device *=
-dev)
->  			dma_pdev =3D pci_get_domain_bus_and_slot(
->  						pci_domain_nr(pdev->bus),
->  						bridge->subordinate->number, 0);
-> -		else
-> +		if (!dma_pdev)
->  			dma_pdev =3D pci_dev_get(bridge);
->  	} else
->  		dma_pdev =3D pci_dev_get(pdev);
->=20
+You are right.  This fix should go to v3.6.x stable tree.
 
-I've tested this and it works just fine.
+Best Regards,
+Huang Ying
 
---=20
--- Matthew Thode (prometheanfire)
+> >> > ---
+> >> >  drivers/pci/bus.c                  |    3 ---
+> >> >  drivers/pci/pcie/aer/aerdrv_core.c |   20 ++++++++++++++++----
+> >> >  2 files changed, 16 insertions(+), 7 deletions(-)
+> >> >
+> >> > --- a/drivers/pci/bus.c
+> >> > +++ b/drivers/pci/bus.c
+> >> > @@ -320,10 +320,7 @@ void pci_walk_bus(struct pci_bus *top, i
+> >> >                 } else
+> >> >                         next = dev->bus_list.next;
+> >> >
+> >> > -               /* Run device routines with the device locked */
+> >> > -               device_lock(&dev->dev);
+> >> >                 retval = cb(dev, userdata);
+> >> > -               device_unlock(&dev->dev);
+> >> >                 if (retval)
+> >> >                         break;
+> >> >         }
+> >> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> >> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> >> > @@ -213,6 +213,7 @@ static int report_error_detected(struct
+> >> >         struct aer_broadcast_data *result_data;
+> >> >         result_data = (struct aer_broadcast_data *) data;
+> >> >
+> >> > +       device_lock(&dev->dev);
+> >> >         dev->error_state = result_data->state;
+> >> >
+> >> >         if (!dev->driver ||
+> >> > @@ -231,12 +232,14 @@ static int report_error_detected(struct
+> >> >                                    dev->driver ?
+> >> >                                    "no AER-aware driver" : "no driver");
+> >> >                 }
+> >> > -               return 0;
+> >> > +               goto out;
+> >> >         }
+> >> >
+> >> >         err_handler = dev->driver->err_handler;
+> >> >         vote = err_handler->error_detected(dev, result_data->state);
+> >> >         result_data->result = merge_result(result_data->result, vote);
+> >> > +out:
+> >> > +       device_unlock(&dev->dev);
+> >> >         return 0;
+> >> >  }
+> >> >
+> >> > @@ -247,14 +250,17 @@ static int report_mmio_enabled(struct pc
+> >> >         struct aer_broadcast_data *result_data;
+> >> >         result_data = (struct aer_broadcast_data *) data;
+> >> >
+> >> > +       device_lock(&dev->dev);
+> >> >         if (!dev->driver ||
+> >> >                 !dev->driver->err_handler ||
+> >> >                 !dev->driver->err_handler->mmio_enabled)
+> >> > -               return 0;
+> >> > +               goto out;
+> >> >
+> >> >         err_handler = dev->driver->err_handler;
+> >> >         vote = err_handler->mmio_enabled(dev);
+> >> >         result_data->result = merge_result(result_data->result, vote);
+> >> > +out:
+> >> > +       device_unlock(&dev->dev);
+> >> >         return 0;
+> >> >  }
+> >> >
+> >> > @@ -265,14 +271,17 @@ static int report_slot_reset(struct pci_
+> >> >         struct aer_broadcast_data *result_data;
+> >> >         result_data = (struct aer_broadcast_data *) data;
+> >> >
+> >> > +       device_lock(&dev->dev);
+> >> >         if (!dev->driver ||
+> >> >                 !dev->driver->err_handler ||
+> >> >                 !dev->driver->err_handler->slot_reset)
+> >> > -               return 0;
+> >> > +               goto out;
+> >> >
+> >> >         err_handler = dev->driver->err_handler;
+> >> >         vote = err_handler->slot_reset(dev);
+> >> >         result_data->result = merge_result(result_data->result, vote);
+> >> > +out:
+> >> > +       device_unlock(&dev->dev);
+> >> >         return 0;
+> >> >  }
+> >> >
+> >> > @@ -280,15 +289,18 @@ static int report_resume(struct pci_dev
+> >> >  {
+> >> >         const struct pci_error_handlers *err_handler;
+> >> >
+> >> > +       device_lock(&dev->dev);
+> >> >         dev->error_state = pci_channel_io_normal;
+> >> >
+> >> >         if (!dev->driver ||
+> >> >                 !dev->driver->err_handler ||
+> >> >                 !dev->driver->err_handler->resume)
+> >> > -               return 0;
+> >> > +               goto out;
+> >> >
+> >> >         err_handler = dev->driver->err_handler;
+> >> >         err_handler->resume(dev);
+> >> > +out:
+> >> > +       device_unlock(&dev->dev);
+> >> >         return 0;
+> >> >  }
+> >> >
+> >
+> >
 
 
---------------enig30DD44203562B017129ADCC1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQoo2iAAoJECRx6z5ArFrDM/oQANDRznWn1BAsuUMEVRgcgOGM
-Ezru9+I9baZeKxPOTFp+nmL3IWS/BS3nCFl3ALIZI/NMJUzOyYg9GtaHTOgHp4el
-58ZyzTqlS9yF2iadhErVIP7KsREQ42KFosYCr+Y4r00F37MgJztV9ag/c12Xp9gc
-AxeB7E7G9pqITMUKcKkx20qwm/Ygx/qIDD6uN7ZlW9dXOe11ziXQCnMQPs9u6i93
-OyiAp6KWmOn+noPei59aqXBk1jqz6F9T6CgAW4A7VVSfqvivLAV/IvwhDZQoGLEK
-j/fetcQDWDulhzV5YWpWi8G8A9DTlBZRiYAgoduUvwmDWSaXd465+142aWVVZaK0
-tFpzA7gkUHDxph+DmEAuAlQZeqNelRn/FtHtqeDckSlb9s9HlUzdxtIJWqh1QW4S
-dJN+vz3L56Mq6vA+JJHF4juoOI2Gh2oBqdgzaY2xG7/azbUlfkjodB3NWdaR4vAB
-0GE+5+HwPKwapZKdBz9Yee1L4x4F4WBGoP7c+DK8npRa4SqTUqi2vjnYIyV3QnJv
-YJkLU1QeJNY1FjkYh1j/DRNYPLbQ+/PXfDBV+ln9QY6AmCaqfUKjELf1WJ/6hSeQ
-GrUsMYiXFrOhnU/kqYtagZYDbaf8RFBLmHHuE2PMz++fuyWG5VTQvTLZ+h/Wtnxs
-vTKlb1OnyULwQZqCBtq2
-=G/Ba
------END PGP SIGNATURE-----
-
---------------enig30DD44203562B017129ADCC1--
