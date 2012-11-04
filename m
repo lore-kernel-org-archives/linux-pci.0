@@ -1,205 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:49354 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318Ab2KMKut (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 05:50:49 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46858 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753839Ab2KDMvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 07:51:07 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Oliver Neukum <oneukum@suse.de>, <jiang.liu@huawei.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v4] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
-Date: Tue, 13 Nov 2012 18:49:00 +0800
-Message-ID: <1352803740-8076-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part2 05/13] ACPIHP: implement utility interfaces to support system device hotplug
+Date: Sun,  4 Nov 2012 20:50:07 +0800
+Message-Id: <1352033415-5606-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
+References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
-Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
-Switch and some slots which support hotplug). Because The hot removed work was queued
-into pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
-the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
-This patch remove the global pciehp_wq and create a new workqueue for every slot to
-avoid above problem.
-call path:
-1. Hot-removal request comes to slot A(eg. 0000:40:07.0 as bellow)
-2. Pciehp driver queue hot-remove work into global workqueue "pciehp_wq"
-3. Hot-remove work call pci_stop_and_remove_bus_device() to remove child devices.
-4. Unregister and remove Pcie port device slot B(eg. 0000:47:15.0).
-5. To remove pcie port device, flush_workqueue(pciehp_wq) will be called.
-6. Deaklock <== hot-removal work is in progress.
+This patch implements some utility interfaces to support ACPI based
+system device hotplug.
 
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
- |           |(slot A)                                 +-08.0-[0000:4a]--
- |           |                                         +-09.0-[0000:4b]--
- |           |                                         +-10.0-[0000:4c]--
- |           |                                         +-11.0-[0000:4d]--
- |           |                                         +-14.0-[0000:4e]--
- |           |                                         \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         (slot B)          \-00.1  Intel Corporation 82576 Gigabit Network Connection
-
-
-Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
 ---
- drivers/pci/hotplug/pciehp.h      |    2 +-
- drivers/pci/hotplug/pciehp_core.c |   11 ++---------
- drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
- drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++++++-
- 4 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/acpi/hotplug/core.c |   77 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |    9 +++++
+ 2 files changed, 86 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 26ffd3e..2c113de 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
- extern int pciehp_poll_time;
- extern bool pciehp_debug;
- extern bool pciehp_force;
--extern struct workqueue_struct *pciehp_wq;
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index bad8e99..139b9c2 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -591,6 +591,83 @@ int acpihp_remove_device_list(struct klist *dev_list)
+ }
+ EXPORT_SYMBOL_GPL(acpihp_remove_device_list);
  
- #define dbg(format, arg...)						\
- do {									\
-@@ -78,6 +77,7 @@ struct slot {
- 	struct hotplug_slot *hotplug_slot;
- 	struct delayed_work work;	/* work for button event */
- 	struct mutex lock;
-+	struct workqueue_struct *wq;
- };
- 
- struct event_info {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 916bf4f..0914211 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -42,7 +42,6 @@ bool pciehp_debug;
- bool pciehp_poll_mode;
- int pciehp_poll_time;
- bool pciehp_force;
--struct workqueue_struct *pciehp_wq;
- 
- #define DRIVER_VERSION	"0.4"
- #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
-@@ -340,18 +339,13 @@ static int __init pcied_init(void)
- {
- 	int retval = 0;
- 
--	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
--	if (!pciehp_wq)
--		return -ENOMEM;
--
- 	pciehp_firmware_init();
- 	retval = pcie_port_service_register(&hpdriver_portdrv);
-  	dbg("pcie_port_service_register = %d\n", retval);
-   	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
-- 	if (retval) {
--		destroy_workqueue(pciehp_wq);
-+	if (retval)
- 		dbg("Failure to register service\n");
--	}
++bool acpihp_slot_present(struct acpihp_slot *slot)
++{
++	acpi_status status;
++	unsigned long long sta;
 +
- 	return retval;
- }
- 
-@@ -359,7 +353,6 @@ static void __exit pcied_cleanup(void)
- {
- 	dbg("unload_pciehpd()\n");
- 	pcie_port_service_unregister(&hpdriver_portdrv);
--	destroy_workqueue(pciehp_wq);
- 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
- }
- 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 27f4429..38f0186 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
- 	info->p_slot = p_slot;
- 	INIT_WORK(&info->work, interrupt_event_handler);
- 
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
- 
- 	return 0;
- }
-@@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 		kfree(info);
- 		goto out;
- 	}
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
-  out:
- 	mutex_unlock(&p_slot->lock);
- }
-@@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
- 		if (ATTN_LED(ctrl))
- 			pciehp_set_attention_status(p_slot, 0);
- 
--		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
-+		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
- 		break;
- 	case BLINKINGOFF_STATE:
- 	case BLINKINGON_STATE:
-@@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
- 	else
- 		p_slot->state = POWERON_STATE;
- 
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
- }
- 
- static void interrupt_event_handler(struct work_struct *work)
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 13b2eaf..371ec79 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -773,23 +773,32 @@ static void pcie_shutdown_notification(struct controller *ctrl)
- static int pcie_init_slot(struct controller *ctrl)
- {
- 	struct slot *slot;
-+	char name[32];
- 
- 	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
- 	if (!slot)
- 		return -ENOMEM;
++	status = acpihp_slot_get_status(slot, &sta);
++	if (ACPI_FAILURE(status)) {
++		ACPIHP_SLOT_WARN(slot, "fails to get status.\n");
++		return false;
++	}
 +
-+	snprintf(name, sizeof(name), "pciehp-%u", PSN(ctrl));
-+	slot->wq = alloc_workqueue(name, 0, 0);
-+	if (!slot->wq)
-+		goto abort;
++	return !!(sta & ACPI_STA_DEVICE_PRESENT);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_present);
++
++bool acpihp_slot_powered(struct acpihp_slot *slot)
++{
++	acpi_status status;
++	unsigned long long sta;
++
++	/* hotplug slot must implement _STA method */
++	status = acpihp_slot_get_status(slot, &sta);
++	if (ACPI_FAILURE(status)) {
++		ACPIHP_SLOT_WARN(slot, "fails to get status.\n");
++		return false;
++	}
++
++	if ((sta & ACPI_STA_DEVICE_PRESENT) &&
++	    ((sta & ACPI_STA_DEVICE_ENABLED) ||
++	    (sta & ACPI_STA_DEVICE_FUNCTIONING)))
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_powered);
++
++void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags)
++{
++	mutex_lock(&slot->slot_mutex);
++	slot->flags |= flags;
++	mutex_unlock(&slot->slot_mutex);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_set_flag);
++
++void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags)
++{
++	mutex_lock(&slot->slot_mutex);
++	slot->flags &= ~flags;
++	mutex_unlock(&slot->slot_mutex);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_clear_flag);
++
++u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags)
++{
++	mutex_lock(&slot->slot_mutex);
++	flags &= slot->flags;
++	mutex_unlock(&slot->slot_mutex);
++
++	return flags;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_get_flag);
++
++void acpihp_slot_change_state(struct acpihp_slot *slot,
++			      enum acpihp_slot_state state)
++{
++	if (state < ACPIHP_SLOT_STATE_UNKNOWN ||
++	    state > ACPIHP_SLOT_STATE_MAX) {
++		ACPIHP_SLOT_WARN(slot, "slot state %d is invalid.\n", state);
++		BUG_ON(state);
++	}
++
++	mutex_lock(&slot->slot_mutex);
++	slot->state = state;
++	mutex_unlock(&slot->slot_mutex);
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_change_state);
++
+ /* SYSFS interfaces */
+ static ssize_t acpihp_slot_object_show(struct device *d,
+ 		struct device_attribute *attr, char *buf)
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 9d466ea..3297f51 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -295,6 +295,15 @@ extern int acpihp_slot_remove_device(struct acpihp_slot *slot,
+ 				     struct device *dev);
+ extern int acpihp_remove_device_list(struct klist *dev_list);
  
- 	slot->ctrl = ctrl;
- 	mutex_init(&slot->lock);
- 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
- 	ctrl->slot = slot;
- 	return 0;
-+abort:
-+	kfree(slot);
-+	return -ENOMEM;
- }
++/* Utility Interfaces */
++extern bool acpihp_slot_present(struct acpihp_slot *slot);
++extern bool acpihp_slot_powered(struct acpihp_slot *slot);
++extern void acpihp_slot_set_flag(struct acpihp_slot *slot, u32 flags);
++extern void acpihp_slot_clear_flag(struct acpihp_slot *slot, u32 flags);
++extern u32 acpihp_slot_get_flag(struct acpihp_slot *slot, u32 flags);
++extern void acpihp_slot_change_state(struct acpihp_slot *slot,
++				     enum acpihp_slot_state state);
++
+ extern int acpihp_debug;
  
- static void pcie_cleanup_slot(struct controller *ctrl)
- {
- 	struct slot *slot = ctrl->slot;
- 	cancel_delayed_work(&slot->work);
--	flush_workqueue(pciehp_wq);
-+	destroy_workqueue(slot->wq);
- 	kfree(slot);
- }
- 
+ #define ACPIHP_WARN(fmt, ...) \
 -- 
-1.7.1
-
+1.7.9.5
 
