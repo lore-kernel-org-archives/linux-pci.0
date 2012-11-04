@@ -1,201 +1,354 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:29084 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab2KIIo1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 03:44:27 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:52244 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755054Ab2KDPY3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 10:24:29 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Oliver Neukum <oneukum@suse.de>, <jiang.liu@huawei.com>
-CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v2] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
-Date: Fri, 9 Nov 2012 16:43:20 +0800
-Message-ID: <1352450600-1956-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part4 2/9] ACPIHP/processor: reorganize ACPI processor driver for new hotplug framework
+Date: Sun,  4 Nov 2012 23:23:55 +0800
+Message-Id: <1352042642-7306-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
-Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
-Switch and some slots which support hotplug). The hot removed work was queued into
-pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
-the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
-This patch remove the global pciehp_wq and create a new workqueue for every slot to
-avoid above problem.
+This patch reorganizes code in processor_driver.c to parepare for
+integration with the new hotplug framework. Common code could be
+shared among acpi_processor_add(), acpi_processor_remove() and hotplug
+has been reorganized as:
+acpi_processor_start()
+acpi_processor_stop()
+acpi_processor_link()
+acpi_processor_unlink()
 
--+-[0000:40]-+-00.0-[0000:41]--
- |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
- |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
- |           +-04.0-[0000:44]--
- |           +-05.0-[0000:45]--
- |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
- |           |(hotplug slot)                           +-08.0-[0000:4a]--
- |           |                                         +-09.0-[0000:4b]--
- |           |                                         +-10.0-[0000:4c]--
- |           |                                         +-11.0-[0000:4d]--
- |           |                                         +-14.0-[0000:4e]--
- |           |                                         \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
- |           |                                         (hotplug slot)    \-00.1  Intel Corporation 82576 Gigabit Network Connection
-
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/hotplug/pciehp.h      |    2 +-
- drivers/pci/hotplug/pciehp_core.c |   26 +++++++++++++++++---------
- drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
- drivers/pci/hotplug/pciehp_hpc.c  |    2 +-
- 4 files changed, 23 insertions(+), 15 deletions(-)
+ drivers/acpi/processor_driver.c |  179 +++++++++++++++++++++++----------------
+ include/acpi/processor.h        |    2 +
+ 2 files changed, 108 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 26ffd3e..2c113de 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
- extern int pciehp_poll_time;
- extern bool pciehp_debug;
- extern bool pciehp_force;
--extern struct workqueue_struct *pciehp_wq;
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index aa9c43a..28add34 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -105,6 +105,8 @@ static struct acpi_driver acpi_processor_driver = {
+ #define INSTALL_NOTIFY_HANDLER		1
+ #define UNINSTALL_NOTIFY_HANDLER	2
  
- #define dbg(format, arg...)						\
- do {									\
-@@ -78,6 +77,7 @@ struct slot {
- 	struct hotplug_slot *hotplug_slot;
- 	struct delayed_work work;	/* work for button event */
- 	struct mutex lock;
-+	struct workqueue_struct *wq;
- };
- 
- struct event_info {
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 916bf4f..86a7ffb 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -42,7 +42,6 @@ bool pciehp_debug;
- bool pciehp_poll_mode;
- int pciehp_poll_time;
- bool pciehp_force;
--struct workqueue_struct *pciehp_wq;
- 
- #define DRIVER_VERSION	"0.4"
- #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
-@@ -94,6 +93,8 @@ static int init_slot(struct controller *ctrl)
- 	struct hotplug_slot_info *info = NULL;
- 	struct hotplug_slot_ops *ops = NULL;
- 	char name[SLOT_NAME_SIZE];
-+	char *buffer;
-+	int len;
- 	int retval = -ENOMEM;
- 
- 	hotplug = kzalloc(sizeof(*hotplug), GFP_KERNEL);
-@@ -135,6 +136,19 @@ static int init_slot(struct controller *ctrl)
- 	if (retval)
- 		ctrl_err(ctrl,
- 			 "pci_hp_register failed with error %d\n", retval);
++static DEFINE_PER_CPU(void *, processor_device_array);
 +
-+	len = strlen(slot_name(slot)) + 16;
-+	buffer = kzalloc(len, GFP_KERNEL);
-+	if (!buffer) {
-+		retval = -ENOMEM;
-+		goto out;
+ DEFINE_PER_CPU(struct acpi_processor *, processors);
+ EXPORT_PER_CPU_SYMBOL(processors);
+ 
+@@ -327,11 +329,11 @@ static int acpi_processor_get_info(struct acpi_device *device)
+ 	 * \_SB.SCK1.CPU0
+ 	 * Rename the processor device bus id. And the new bus id will be
+ 	 * generated as the following format:
+-	 * CPU+CPU ID.
++	 * CPU+ACPI ID.
+ 	 */
+-	sprintf(acpi_device_bid(device), "CPU%X", pr->id);
+-	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Processor [%d:%d]\n", pr->id,
+-			  pr->acpi_id));
++	sprintf(acpi_device_bid(device), "CPU%X", pr->acpi_id);
++	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Processor [%d:%d]\n", pr->acpi_id,
++			  pr->id));
+ 
+ 	if (!object.processor.pblk_address)
+ 		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "No PBLK (NULL address)\n"));
+@@ -355,19 +357,67 @@ static int acpi_processor_get_info(struct acpi_device *device)
+ 		request_region(pr->throttling.address, 6, "ACPI CPU throttle");
+ 	}
+ 
++	return 0;
++}
++
++static int acpi_processor_link(struct acpi_device *device,
++			       struct acpi_processor *pr)
++{
++	struct device *dev;
++	acpi_status status;
++	unsigned long long value;
++
++	if (pr->flags.device_linked)
++		return 0;
++
+ 	/*
+ 	 * If ACPI describes a slot number for this CPU, we can use it
+ 	 * ensure we get the right value in the "physical id" field
+ 	 * of /proc/cpuinfo
+ 	 */
+-	status = acpi_evaluate_object(pr->handle, "_SUN", NULL, &buffer);
++	status = acpi_evaluate_integer(pr->handle, "_SUN", NULL, &value);
+ 	if (ACPI_SUCCESS(status))
+-		arch_fix_phys_package_id(pr->id, object.integer.value);
++		arch_fix_phys_package_id(pr->id, value);
++
++	/*
++	 * Buggy BIOS check
++	 * ACPI id of processors can be reported wrongly by the BIOS.
++	 * Don't trust it blindly
++	 */
++	if (per_cpu(processor_device_array, pr->id) != NULL &&
++	    per_cpu(processor_device_array, pr->id) != device) {
++		dev_warn(&device->dev,
++			 "BIOS reported wrong ACPI id for the processor\n");
++		return -ENODEV;
 +	}
-+	snprintf(buffer, len, "pciehp_slot(%s)", slot_name(slot));
-+	slot->wq = create_singlethread_workqueue(buffer);
-+	if (!slot->wq)
-+		retval = -ENOMEM;
++	per_cpu(processor_device_array, pr->id) = device;
++	per_cpu(processors, pr->id) = pr;
 +
-+	kfree(buffer);
- out:
- 	if (retval) {
- 		kfree(ops);
-@@ -340,18 +354,13 @@ static int __init pcied_init(void)
- {
- 	int retval = 0;
- 
--	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
--	if (!pciehp_wq)
--		return -ENOMEM;
--
- 	pciehp_firmware_init();
- 	retval = pcie_port_service_register(&hpdriver_portdrv);
-  	dbg("pcie_port_service_register = %d\n", retval);
-   	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
-- 	if (retval) {
--		destroy_workqueue(pciehp_wq);
-+	if (retval)
- 		dbg("Failure to register service\n");
--	}
++	dev = get_cpu_device(pr->id);
++	if (sysfs_create_link(&device->dev.kobj, &dev->kobj, "sysdev")) {
++		/*
++		 * processor_device_array is not cleared to allow checks
++		 * for buggy BIOS
++		 */
++		per_cpu(processors, pr->id) = NULL;
++		return -EFAULT;
++	}
 +
- 	return retval;
- }
- 
-@@ -359,7 +368,6 @@ static void __exit pcied_cleanup(void)
- {
- 	dbg("unload_pciehpd()\n");
- 	pcie_port_service_unregister(&hpdriver_portdrv);
--	destroy_workqueue(pciehp_wq);
- 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
- }
- 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 27f4429..38f0186 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
- 	info->p_slot = p_slot;
- 	INIT_WORK(&info->work, interrupt_event_handler);
- 
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
++	pr->flags.device_linked = 1;
  
  	return 0;
  }
-@@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
- 		kfree(info);
- 		goto out;
- 	}
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
-  out:
- 	mutex_unlock(&p_slot->lock);
- }
-@@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
- 		if (ATTN_LED(ctrl))
- 			pciehp_set_attention_status(p_slot, 0);
  
--		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
-+		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
- 		break;
- 	case BLINKINGOFF_STATE:
- 	case BLINKINGON_STATE:
-@@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
- 	else
- 		p_slot->state = POWERON_STATE;
+-static DEFINE_PER_CPU(void *, processor_device_array);
++static void acpi_processor_unlink(struct acpi_device *device,
++				  struct acpi_processor *pr)
++{
++	if (pr->flags.device_linked) {
++		sysfs_remove_link(&device->dev.kobj, "sysdev");
++		per_cpu(processor_device_array, pr->id) = NULL;
++		per_cpu(processors, pr->id) = NULL;
++		pr->flags.device_linked = 0;
++	}
++}
  
--	queue_work(pciehp_wq, &info->work);
-+	queue_work(p_slot->wq, &info->work);
- }
- 
- static void interrupt_event_handler(struct work_struct *work)
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 13b2eaf..1bbbfd9 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -789,7 +789,7 @@ static void pcie_cleanup_slot(struct controller *ctrl)
+ static void acpi_processor_notify(struct acpi_device *device, u32 event)
  {
- 	struct slot *slot = ctrl->slot;
- 	cancel_delayed_work(&slot->work);
--	flush_workqueue(pciehp_wq);
-+	destroy_workqueue(slot->wq);
- 	kfree(slot);
+@@ -422,11 +472,11 @@ static int acpi_cpu_soft_notify(struct notifier_block *nfb,
+ 		if (pr->flags.need_hotplug_init) {
+ 			printk(KERN_INFO "Will online and init hotplugged "
+ 			       "CPU: %d\n", pr->id);
+-			WARN(acpi_processor_start(pr), "Failed to start CPU:"
+-				" %d\n", pr->id);
++			WARN(acpi_processor_start(pr),
++				"Failed to start CPU: %d\n", pr->id);
+ 			pr->flags.need_hotplug_init = 0;
+ 		/* Normal CPU soft online event */
+-		} else {
++		} else if (pr->flags.device_started) {
+ 			acpi_processor_ppc_has_changed(pr, 0);
+ 			acpi_processor_hotplug(pr);
+ 			acpi_processor_reevaluate_tstate(pr, action);
+@@ -458,6 +508,9 @@ static __ref int acpi_processor_start(struct acpi_processor *pr)
+ 	struct acpi_device *device = per_cpu(processor_device_array, pr->id);
+ 	int result = 0;
+ 
++	if (pr->flags.device_started)
++		return 0;
++
+ #ifdef CONFIG_CPU_FREQ
+ 	acpi_processor_ppc_has_changed(pr, 0);
+ 	acpi_processor_load_module(pr);
+@@ -493,6 +546,8 @@ static __ref int acpi_processor_start(struct acpi_processor *pr)
+ 		goto err_remove_sysfs_thermal;
+ 	}
+ 
++	pr->flags.device_started = 1;
++
+ 	return 0;
+ 
+ err_remove_sysfs_thermal:
+@@ -505,6 +560,21 @@ err_power_exit:
+ 	return result;
  }
  
++static void acpi_processor_stop(struct acpi_device *device,
++				struct acpi_processor *pr)
++{
++	if (pr->flags.device_started) {
++		acpi_processor_power_exit(pr);
++		if (pr->cdev) {
++			sysfs_remove_link(&device->dev.kobj, "thermal_cooling");
++			sysfs_remove_link(&pr->cdev->device.kobj, "device");
++			thermal_cooling_device_unregister(pr->cdev);
++			pr->cdev = NULL;
++		}
++		pr->flags.device_started = 0;
++	}
++}
++
+ /*
+  * Do not put anything in here which needs the core to be online.
+  * For example MSR access or setting up things which check for cpuinfo_x86
+@@ -513,9 +583,8 @@ err_power_exit:
+  */
+ static int __cpuinit acpi_processor_add(struct acpi_device *device)
+ {
+-	struct acpi_processor *pr = NULL;
+-	int result = 0;
+-	struct device *dev;
++	struct acpi_processor *pr;
++	int result;
+ 
+ 	pr = kzalloc(sizeof(struct acpi_processor), GFP_KERNEL);
+ 	if (!pr)
+@@ -532,60 +601,36 @@ static int __cpuinit acpi_processor_add(struct acpi_device *device)
+ 	device->driver_data = pr;
+ 
+ 	result = acpi_processor_get_info(device);
+-	if (result) {
+-		/* Processor is physically not present */
+-		return 0;
+-	}
+-
+-#ifdef CONFIG_SMP
+-	if (pr->id >= setup_max_cpus && pr->id != 0)
+-		return 0;
+-#endif
+-
+-	BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+-
+-	/*
+-	 * Buggy BIOS check
+-	 * ACPI id of processors can be reported wrongly by the BIOS.
+-	 * Don't trust it blindly
+-	 */
+-	if (per_cpu(processor_device_array, pr->id) != NULL &&
+-	    per_cpu(processor_device_array, pr->id) != device) {
+-		printk(KERN_WARNING "BIOS reported wrong ACPI id "
+-			"for the processor\n");
+-		result = -ENODEV;
++	if (result)
+ 		goto err_free_cpumask;
+-	}
+-	per_cpu(processor_device_array, pr->id) = device;
+-
+-	per_cpu(processors, pr->id) = pr;
+-
+-	dev = get_cpu_device(pr->id);
+-	if (sysfs_create_link(&device->dev.kobj, &dev->kobj, "sysdev")) {
+-		result = -EFAULT;
+-		goto err_clear_processor;
+-	}
+ 
+ 	/*
+-	 * Do not start hotplugged CPUs now, but when they
+-	 * are onlined the first time
++	 * Delay linking with logical CPU device if:
++	 * 1) no CPUID assigned yet
++	 * 2) processor won't be boot if CPUID is bigger than setup_max_cpus
++	 * They will be handled by CPU hotplug logical later.
+ 	 */
+-	if (pr->flags.need_hotplug_init)
++	if (pr->id == -1)
+ 		return 0;
++	if (IS_BUILTIN(CONFIG_SMP) && pr->id >= setup_max_cpus && pr->id != 0)
++		return 0;
++	BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+ 
+-	result = acpi_processor_start(pr);
++	result = acpi_processor_link(device, pr);
+ 	if (result)
+-		goto err_remove_sysfs;
++		goto err_unlock;
++	if (cpu_online(pr->id)) {
++		result = acpi_processor_start(pr);
++		if (result)
++			goto err_unlink;
++	}
+ 
+ 	return 0;
+ 
+-err_remove_sysfs:
+-	sysfs_remove_link(&device->dev.kobj, "sysdev");
+-err_clear_processor:
+-	/*
+-	 * processor_device_array is not cleared to allow checks for buggy BIOS
+-	 */ 
+-	per_cpu(processors, pr->id) = NULL;
++err_unlink:
++	acpi_processor_unlink(device, pr);
++err_unlock:
++	put_online_cpus();
+ err_free_cpumask:
+ 	free_cpumask_var(pr->throttling.shared_cpu_map);
+ err_free_pr:
+@@ -595,14 +640,12 @@ err_free_pr:
+ 
+ static int acpi_processor_remove(struct acpi_device *device, int type)
+ {
+-	struct acpi_processor *pr = NULL;
+-
++	struct acpi_processor *pr;
+ 
+ 	if (!device || !acpi_driver_data(device))
+ 		return -EINVAL;
+ 
+ 	pr = acpi_driver_data(device);
+-
+ 	if (pr->id >= nr_cpu_ids)
+ 		goto free;
+ 
+@@ -611,21 +654,11 @@ static int acpi_processor_remove(struct acpi_device *device, int type)
+ 			return -EINVAL;
+ 	}
+ 
+-	acpi_processor_power_exit(pr);
+-
+-	sysfs_remove_link(&device->dev.kobj, "sysdev");
+-
+-	if (pr->cdev) {
+-		sysfs_remove_link(&device->dev.kobj, "thermal_cooling");
+-		sysfs_remove_link(&pr->cdev->device.kobj, "device");
+-		thermal_cooling_device_unregister(pr->cdev);
+-		pr->cdev = NULL;
+-	}
+-
+-	per_cpu(processors, pr->id) = NULL;
+-	per_cpu(processor_device_array, pr->id) = NULL;
++	acpi_processor_stop(device, pr);
++	acpi_processor_unlink(device, pr);
+ 
+ free:
++	device->driver_data = NULL;
+ 	free_cpumask_var(pr->throttling.shared_cpu_map);
+ 	kfree(pr);
+ 
+diff --git a/include/acpi/processor.h b/include/acpi/processor.h
+index 555d033..9e1c980 100644
+--- a/include/acpi/processor.h
++++ b/include/acpi/processor.h
+@@ -190,6 +190,8 @@ struct acpi_processor_flags {
+ 	u8 power_setup_done:1;
+ 	u8 bm_rld_set:1;
+ 	u8 need_hotplug_init:1;
++	u8 device_linked:1;
++	u8 device_started:1;
+ };
+ 
+ struct acpi_processor {
 -- 
-1.7.1
-
+1.7.9.5
 
