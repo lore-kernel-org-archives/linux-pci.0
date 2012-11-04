@@ -1,165 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46303 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756406Ab2KUUfD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:03 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 6/9] PCI: Remove CONFIG_HOTPLUG ifdefs
-Date: Wed, 21 Nov 2012 15:34:57 -0500
-Message-Id: <1353530100-728-7-git-send-email-wfp5p@virginia.edu>
-In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
-References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	x86@kernel.org
+Subject: [PATCH 5/8] PCI, x86: Add pcibios_fw_addr_done
+Date: Sat,  3 Nov 2012 21:39:28 -0700
+Message-Id: <1352003971-22278-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove conditional code based on CONFIG_HOTPLUG being false.  It's
-always on now in preparation of it going away as an option.
+Use it to skip not needed function after pcibios_fw_addr_list_del is called.
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+for pci root bus hot add, we will need to use pcibios_allocate_dev_resources(),
+and don't want to mess up with fw_addr, for hot-add removing path.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: x86@kernel.org
 ---
- drivers/pci/pci-driver.c | 15 ---------------
- drivers/pci/pci-sysfs.c  |  7 -------
- drivers/pci/pci.h        |  4 ----
- drivers/pci/probe.c      |  2 --
- include/linux/pci.h      |  2 --
- 5 files changed, 30 deletions(-)
+ arch/x86/pci/i386.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 11d9c8a..ef54916 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -89,10 +89,6 @@ static void pci_free_dynids(struct pci_driver *drv)
- 	spin_unlock(&drv->dynids.lock);
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 42dd755..edfc376 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -51,6 +51,7 @@ struct pcibios_fwaddrmap {
+ 
+ static LIST_HEAD(pcibios_fwaddrmappings);
+ static DEFINE_SPINLOCK(pcibios_fwaddrmap_lock);
++static bool pcibios_fw_addr_done;
+ 
+ /* Must be called with 'pcibios_fwaddrmap_lock' lock held. */
+ static struct pcibios_fwaddrmap *pcibios_fwaddrmap_lookup(struct pci_dev *dev)
+@@ -72,6 +73,9 @@ pcibios_save_fw_addr(struct pci_dev *dev, int idx, resource_size_t fw_addr)
+ 	unsigned long flags;
+ 	struct pcibios_fwaddrmap *map;
+ 
++	if (pcibios_fw_addr_done)
++		return;
++
+ 	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
+ 	map = pcibios_fwaddrmap_lookup(dev);
+ 	if (!map) {
+@@ -97,6 +101,9 @@ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx)
+ 	struct pcibios_fwaddrmap *map;
+ 	resource_size_t fw_addr = 0;
+ 
++	if (pcibios_fw_addr_done)
++		return fw_addr;
++
+ 	spin_lock_irqsave(&pcibios_fwaddrmap_lock, flags);
+ 	map = pcibios_fwaddrmap_lookup(dev);
+ 	if (map)
+@@ -106,7 +113,7 @@ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx)
+ 	return fw_addr;
  }
  
--/*
-- * Dynamic device ID manipulation via sysfs is disabled for !CONFIG_HOTPLUG
-- */
--#ifdef CONFIG_HOTPLUG
- /**
-  * store_new_id - sysfs frontend to pci_add_dynid()
-  * @driver: target device driver
-@@ -191,10 +187,6 @@ static struct driver_attribute pci_drv_attrs[] = {
- 	__ATTR_NULL,
- };
- 
--#else
--#define pci_drv_attrs	NULL
--#endif /* CONFIG_HOTPLUG */
--
- /**
-  * pci_match_id - See if a pci device matches a given pci_id table
-  * @ids: array of PCI device id structures to search in
-@@ -1231,13 +1223,6 @@ void pci_dev_put(struct pci_dev *dev)
- 		put_device(&dev->dev);
- }
- 
--#ifndef CONFIG_HOTPLUG
--int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
--{
--	return -ENODEV;
--}
--#endif
--
- struct bus_type pci_bus_type = {
- 	.name		= "pci",
- 	.match		= pci_bus_match,
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 2f21991..d12ea86 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -284,7 +284,6 @@ msi_bus_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
--#ifdef CONFIG_HOTPLUG
- static DEFINE_MUTEX(pci_remove_rescan_mutex);
- static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
- 				size_t count)
-@@ -377,8 +376,6 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
--#endif
--
- #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
- static ssize_t d3cold_allowed_store(struct device *dev,
- 				    struct device_attribute *attr,
-@@ -524,10 +521,8 @@ struct device_attribute pci_dev_attrs[] = {
- 	__ATTR(broken_parity_status,(S_IRUGO|S_IWUSR),
- 		broken_parity_status_show,broken_parity_status_store),
- 	__ATTR(msi_bus, 0644, msi_bus_show, msi_bus_store),
--#ifdef CONFIG_HOTPLUG
- 	__ATTR(remove, (S_IWUSR|S_IWGRP), NULL, remove_store),
- 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_rescan_store),
--#endif
- #if defined(CONFIG_PM_RUNTIME) && defined(CONFIG_ACPI)
- 	__ATTR(d3cold_allowed, 0644, d3cold_allowed_show, d3cold_allowed_store),
- #endif
-@@ -535,9 +530,7 @@ struct device_attribute pci_dev_attrs[] = {
- };
- 
- struct device_attribute pcibus_dev_attrs[] = {
--#ifdef CONFIG_HOTPLUG
- 	__ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store),
--#endif
- 	__ATTR(cpuaffinity, S_IRUGO, pci_bus_show_cpumaskaffinity, NULL),
- 	__ATTR(cpulistaffinity, S_IRUGO, pci_bus_show_cpulistaffinity, NULL),
- 	__ATTR_NULL,
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3c9443e..3df6ded 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -158,11 +158,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
- extern struct device_attribute pci_dev_attrs[];
- extern struct device_attribute pcibus_dev_attrs[];
- extern struct device_type pci_dev_type;
--#ifdef CONFIG_HOTPLUG
- extern struct bus_attribute pci_bus_attrs[];
--#else
--#define pci_bus_attrs	NULL
--#endif
- 
- 
- /**
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 293af5a..3d17641 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1865,7 +1865,6 @@ struct pci_bus * __devinit pci_scan_bus(int bus, struct pci_ops *ops,
- }
- EXPORT_SYMBOL(pci_scan_bus);
- 
--#ifdef CONFIG_HOTPLUG
- /**
-  * pci_rescan_bus_bridge_resize - scan a PCI bus for devices.
-  * @bridge: PCI bridge for the bus to scan
-@@ -1917,7 +1916,6 @@ EXPORT_SYMBOL(pci_add_new_bus);
- EXPORT_SYMBOL(pci_scan_slot);
- EXPORT_SYMBOL(pci_scan_bridge);
- EXPORT_SYMBOL_GPL(pci_scan_child_bus);
--#endif
- 
- static int __init pci_sort_bf_cmp(const struct device *d_a, const struct device *d_b)
+-static void pcibios_fw_addr_list_del(void)
++static void __init pcibios_fw_addr_list_del(void)
  {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5b37d64..9f99c59 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -944,10 +944,8 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev);
+ 	unsigned long flags;
+ 	struct pcibios_fwaddrmap *entry, *next;
+@@ -118,6 +125,7 @@ static void pcibios_fw_addr_list_del(void)
+ 		kfree(entry);
+ 	}
+ 	spin_unlock_irqrestore(&pcibios_fwaddrmap_lock, flags);
++	pcibios_fw_addr_done = true;
+ }
  
- /* Functions for PCI Hotplug drivers to use */
- int pci_bus_find_capability(struct pci_bus *bus, unsigned int devfn, int cap);
--#ifdef CONFIG_HOTPLUG
- unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge);
- unsigned int pci_rescan_bus(struct pci_bus *bus);
--#endif
- 
- /* Vital product data routines */
- ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ static int
 -- 
-1.8.0
+1.7.7
 
