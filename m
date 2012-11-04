@@ -1,120 +1,254 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Glauber <jang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, heiko.carstens@de.ibm.com,
-	schwidefsky@de.ibm.com, Jan Glauber <jang@linux.vnet.ibm.com>
-Subject: [RFC PATCH 03/10] s390/bitops: find leftmost bit instruction support
-Date: Wed, 14 Nov 2012 10:41:35 +0100
-Message-Id: <33336ef626db644eb40f0840ad33f4f46010ff6e.1352719878.git.jang@linux.vnet.ibm.com>
-In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part4 5/9] CPU: introduce busy flag to temporarily disable CPU online sysfs interface
+Date: Sun,  4 Nov 2012 23:23:58 +0800
+Message-Id: <1352042642-7306-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The flogr instruction scans a bitmap starting from the leftmost bit.
-Implement support for these bitops. This could be useful to scan
-bitmaps like an interrupt vector set by the hardware starting
-at the leftmost bit.
+When doing physical processor hotplug, all affected CPUs need to be
+handled in atomic and shouldn't be disturbed by online/offline requests
+from CPU device's online sysfs interface. So introduce a busy flag
+into struct cpu to temporariliy reject requests from online sysfs
+interface.
 
-Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- arch/s390/include/asm/bitops.h | 81 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
+ arch/ia64/include/asm/cpu.h     |    2 +-
+ arch/ia64/kernel/topology.c     |   10 ++++++----
+ arch/x86/include/asm/cpu.h      |    2 +-
+ arch/x86/kernel/topology.c      |   10 ++++++----
+ drivers/acpi/processor_driver.c |    3 ++-
+ drivers/base/cpu.c              |   22 ++++++++++++++++++++++
+ drivers/xen/cpu_hotplug.c       |    2 +-
+ include/linux/cpu.h             |    2 ++
+ 8 files changed, 41 insertions(+), 12 deletions(-)
 
-diff --git a/arch/s390/include/asm/bitops.h b/arch/s390/include/asm/bitops.h
-index 6f57389..1542293 100644
---- a/arch/s390/include/asm/bitops.h
-+++ b/arch/s390/include/asm/bitops.h
-@@ -640,6 +640,87 @@ static inline unsigned long find_first_bit(const unsigned long * addr,
- }
- #define find_first_bit find_first_bit
+diff --git a/arch/ia64/include/asm/cpu.h b/arch/ia64/include/asm/cpu.h
+index fcca30b..192fa2f 100644
+--- a/arch/ia64/include/asm/cpu.h
++++ b/arch/ia64/include/asm/cpu.h
+@@ -15,7 +15,7 @@ DECLARE_PER_CPU(struct ia64_cpu, cpu_devices);
+ DECLARE_PER_CPU(int, cpu_state);
  
-+/*
-+ * Big endian variant whichs starts bit counting from left using
-+ * the flogr (find leftmost one) instruction.
-+ */
-+static inline unsigned long __flo_word(unsigned long nr, unsigned long val)
-+{
-+	register unsigned long bit asm("2") = val;
-+	register unsigned long out asm("3");
-+
-+	asm volatile (
-+		"	.insn	rre,0xb9830000,%[bit],%[bit]\n"
-+		: [bit] "+d" (bit), [out] "=d" (out) : : "cc");
-+	return nr + bit;
-+}
-+
-+/*
-+ * 64 bit special left bitops format:
-+ * order in memory:
-+ *    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
-+ *    10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-+ *    20 21 22 23 24 25 26 27 28 29 2a 2b 2c 2d 2e 2f
-+ *    30 31 32 33 34 35 36 37 38 39 3a 3b 3c 3d 3e 3f
-+ * after that follows the next long with bit numbers
-+ *    40 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f
-+ *    50 51 52 53 54 55 56 57 58 59 5a 5b 5c 5d 5e 5f
-+ *    60 61 62 63 64 65 66 67 68 69 6a 6b 6c 6d 6e 6f
-+ *    70 71 72 73 74 75 76 77 78 79 7a 7b 7c 7d 7e 7f
-+ * The reason for this bit ordering is the fact that
-+ * the hardware sets bits in a bitmap starting at bit 0
-+ * and we don't want to scan the bitmap from the 'wrong
-+ * end'.
-+ */
-+static inline unsigned long find_first_bit_left(const unsigned long *addr,
-+						unsigned long size)
-+{
-+	unsigned long bytes, bits;
-+
-+	if (!size)
-+		return 0;
-+	bytes = __ffs_word_loop(addr, size);
-+	bits = __flo_word(bytes * 8, __load_ulong_be(addr, bytes));
-+	return (bits < size) ? bits : size;
-+}
-+
-+static inline int find_next_bit_left(const unsigned long *addr,
-+				     unsigned long size,
-+				     unsigned long offset)
-+{
-+	const unsigned long *p;
-+	unsigned long bit, set;
-+
-+	if (offset >= size)
-+		return size;
-+	bit = offset & (__BITOPS_WORDSIZE - 1);
-+	offset -= bit;
-+	size -= offset;
-+	p = addr + offset / __BITOPS_WORDSIZE;
-+	if (bit) {
-+		set = __flo_word(0, *p & (~0UL << bit));
-+		if (set >= size)
-+			return size + offset;
-+		if (set < __BITOPS_WORDSIZE)
-+			return set + offset;
-+		offset += __BITOPS_WORDSIZE;
-+		size -= __BITOPS_WORDSIZE;
-+		p++;
+ #ifdef CONFIG_HOTPLUG_CPU
+-extern int arch_register_cpu(int num);
++extern int arch_register_cpu(int num, int busy);
+ extern void arch_unregister_cpu(int);
+ #endif
+ 
+diff --git a/arch/ia64/kernel/topology.c b/arch/ia64/kernel/topology.c
+index c64460b..11d47a4 100644
+--- a/arch/ia64/kernel/topology.c
++++ b/arch/ia64/kernel/topology.c
+@@ -40,15 +40,17 @@ EXPORT_SYMBOL_GPL(arch_fix_phys_package_id);
+ 
+ 
+ #ifdef CONFIG_HOTPLUG_CPU
+-int __ref arch_register_cpu(int num)
++int __ref arch_register_cpu(int num, int busy)
+ {
+ #ifdef CONFIG_ACPI
+ 	/*
+ 	 * If CPEI can be re-targeted or if this is not
+ 	 * CPEI target, then it is hotpluggable
+ 	 */
+-	if (can_cpei_retarget() || !is_cpu_cpei_target(num))
++	if (can_cpei_retarget() || !is_cpu_cpei_target(num)) {
+ 		sysfs_cpus[num].cpu.hotpluggable = 1;
++		sysfs_cpus[num].cpu.busy = busy;
 +	}
-+	return offset + find_first_bit_left(p, size);
+ 	map_cpu_to_node(num, node_cpuid[num].nid);
+ #endif
+ 	return register_cpu(&sysfs_cpus[num].cpu, num);
+@@ -64,7 +66,7 @@ void __ref arch_unregister_cpu(int num)
+ }
+ EXPORT_SYMBOL(arch_unregister_cpu);
+ #else
+-static int __init arch_register_cpu(int num)
++static int __init arch_register_cpu(int num, int busy)
+ {
+ 	return register_cpu(&sysfs_cpus[num].cpu, num);
+ }
+@@ -90,7 +92,7 @@ static int __init topology_init(void)
+ 		panic("kzalloc in topology_init failed - NR_CPUS too big?");
+ 
+ 	for_each_present_cpu(i) {
+-		if((err = arch_register_cpu(i)))
++		if((err = arch_register_cpu(i, 0)))
+ 			goto out;
+ 	}
+ out:
+diff --git a/arch/x86/include/asm/cpu.h b/arch/x86/include/asm/cpu.h
+index 4564c8e..724c777 100644
+--- a/arch/x86/include/asm/cpu.h
++++ b/arch/x86/include/asm/cpu.h
+@@ -26,7 +26,7 @@ struct x86_cpu {
+ };
+ 
+ #ifdef CONFIG_HOTPLUG_CPU
+-extern int arch_register_cpu(int num);
++extern int arch_register_cpu(int num, int busy);
+ extern void arch_unregister_cpu(int);
+ #endif
+ 
+diff --git a/arch/x86/kernel/topology.c b/arch/x86/kernel/topology.c
+index 76ee977..c66ef53 100644
+--- a/arch/x86/kernel/topology.c
++++ b/arch/x86/kernel/topology.c
+@@ -35,7 +35,7 @@
+ static DEFINE_PER_CPU(struct x86_cpu, cpu_devices);
+ 
+ #ifdef CONFIG_HOTPLUG_CPU
+-int __ref arch_register_cpu(int num)
++int __ref arch_register_cpu(int num, int busy)
+ {
+ 	/*
+ 	 * CPU0 cannot be offlined due to several
+@@ -46,8 +46,10 @@ int __ref arch_register_cpu(int num)
+ 	 * Also certain PCI quirks require not to enable hotplug control
+ 	 * for all CPU's.
+ 	 */
+-	if (num)
++	if (num) {
+ 		per_cpu(cpu_devices, num).cpu.hotpluggable = 1;
++		per_cpu(cpu_devices, num).cpu.busy = busy;
++	}
+ 
+ 	return register_cpu(&per_cpu(cpu_devices, num).cpu, num);
+ }
+@@ -60,7 +62,7 @@ void arch_unregister_cpu(int num)
+ EXPORT_SYMBOL(arch_unregister_cpu);
+ #else /* CONFIG_HOTPLUG_CPU */
+ 
+-static int __init arch_register_cpu(int num)
++static int __init arch_register_cpu(int num, int busy)
+ {
+ 	return register_cpu(&per_cpu(cpu_devices, num).cpu, num);
+ }
+@@ -76,7 +78,7 @@ static int __init topology_init(void)
+ #endif
+ 
+ 	for_each_present_cpu(i)
+-		arch_register_cpu(i);
++		arch_register_cpu(i, 0);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index b8c3684..53e364d 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -702,7 +702,8 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
+ 		if (result)
+ 			return result;
+ 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+-		result = arch_register_cpu(pr->id);
++
++		result = arch_register_cpu(pr->id, 0);
+ 		if (result) {
+ 			acpi_unmap_lsapic(pr->id);
+ 			pr->id = -1;
+diff --git a/drivers/base/cpu.c b/drivers/base/cpu.c
+index 6345294..dc6246c 100644
+--- a/drivers/base/cpu.c
++++ b/drivers/base/cpu.c
+@@ -42,6 +42,11 @@ static ssize_t __ref store_online(struct device *dev,
+ 	ssize_t ret;
+ 
+ 	cpu_hotplug_driver_lock();
++	if (cpu->busy) {
++		ret = -EBUSY;
++		goto out;
++	}
++
+ 	switch (buf[0]) {
+ 	case '0':
+ 		ret = cpu_down(cpu->dev.id);
+@@ -56,6 +61,8 @@ static ssize_t __ref store_online(struct device *dev,
+ 	default:
+ 		ret = -EINVAL;
+ 	}
++
++out:
+ 	cpu_hotplug_driver_unlock();
+ 
+ 	if (ret >= 0)
+@@ -308,6 +315,21 @@ bool cpu_is_hotpluggable(unsigned cpu)
+ }
+ EXPORT_SYMBOL_GPL(cpu_is_hotpluggable);
+ 
++int cpu_set_busy(unsigned int id, int busy)
++{
++	int old;
++	struct device *device = get_cpu_device(id);
++	struct cpu *cpu = container_of(device, struct cpu, dev);
++
++	cpu_hotplug_driver_lock();
++	old = cpu->busy;
++	cpu->busy = busy;
++	cpu_hotplug_driver_unlock();
++
++	return old;
 +}
++EXPORT_SYMBOL_GPL(cpu_set_busy);
 +
-+#define for_each_set_bit_left(bit, addr, size)				\
-+	for ((bit) = find_first_bit_left((addr), (size));		\
-+	     (bit) < (size);						\
-+	     (bit) = find_next_bit_left((addr), (size), (bit) + 1))
-+
-+/* same as for_each_set_bit() but use bit as value to start with */
-+#define for_each_set_bit_left_cont(bit, addr, size)			\
-+	for ((bit) = find_next_bit_left((addr), (size), (bit));		\
-+	     (bit) < (size);						\
-+	     (bit) = find_next_bit_left((addr), (size), (bit) + 1))
-+
- /**
-  * find_next_zero_bit - find the first zero bit in a memory region
-  * @addr: The address to base the search on
+ #ifdef CONFIG_GENERIC_CPU_DEVICES
+ static DEFINE_PER_CPU(struct cpu, cpu_devices);
+ #endif
+diff --git a/drivers/xen/cpu_hotplug.c b/drivers/xen/cpu_hotplug.c
+index 4dcfced..95bde8a 100644
+--- a/drivers/xen/cpu_hotplug.c
++++ b/drivers/xen/cpu_hotplug.c
+@@ -9,7 +9,7 @@
+ static void enable_hotplug_cpu(int cpu)
+ {
+ 	if (!cpu_present(cpu))
+-		arch_register_cpu(cpu);
++		arch_register_cpu(cpu, 0);
+ 
+ 	set_cpu_present(cpu, true);
+ }
+diff --git a/include/linux/cpu.h b/include/linux/cpu.h
+index ce7a074..557501b 100644
+--- a/include/linux/cpu.h
++++ b/include/linux/cpu.h
+@@ -23,12 +23,14 @@ struct device;
+ struct cpu {
+ 	int node_id;		/* The node which contains the CPU */
+ 	int hotpluggable;	/* creates sysfs control file if hotpluggable */
++	int busy;
+ 	struct device dev;
+ };
+ 
+ extern int register_cpu(struct cpu *cpu, int num);
+ extern struct device *get_cpu_device(unsigned cpu);
+ extern bool cpu_is_hotpluggable(unsigned cpu);
++extern int cpu_set_busy(unsigned int cpu, int busy);
+ 
+ extern int cpu_add_dev_attr(struct device_attribute *attr);
+ extern void cpu_remove_dev_attr(struct device_attribute *attr);
 -- 
-1.7.12.4
+1.7.9.5
 
