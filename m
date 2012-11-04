@@ -1,121 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH 1/3] aerdrv: Trace Event for AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 29 Nov 2012 14:54:43 -0700
-Message-ID: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:23685 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706Ab2KDElp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 00:41:45 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	x86@kernel.org
+Subject: [PATCH 2/8] PCI, x86: Separate out pcibios_allocate_dev_resources()
+Date: Sat,  3 Nov 2012 21:39:25 -0700
+Message-Id: <1352003971-22278-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This header file will define a new trace event that will be triggered when
-a AER event occurs.  The following data will be provided to the trace 
-event.
+Thus pcibios_allocate_resources() could more simple and clean.
 
-char * name -	String containing the device path
-
-u32 status - 	Either the correctable or uncorrectable register 
-		indicating what error or errors have been see.
-
-u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-
-The trace event will also provide a trace string that may look like:
-
-"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-TLP"
-
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: x86@kernel.org
 ---
+ arch/x86/pci/i386.c |   42 +++++++++++++++++++++++-------------------
+ 1 files changed, 23 insertions(+), 19 deletions(-)
 
- include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 77 insertions(+), 0 deletions(-)
- create mode 100644 include/ras/aer_event.h
-
-diff --git a/include/ras/aer_event.h b/include/ras/aer_event.h
-new file mode 100644
-index 0000000..735c973
---- /dev/null
-+++ b/include/ras/aer_event.h
-@@ -0,0 +1,77 @@
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM aer
-+#define TRACE_INCLUDE_FILE aer_event
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 9800362..5817cf2 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -232,9 +232,8 @@ struct pci_check_idx_range {
+ 	int end;
+ };
+ 
+-static void __init pcibios_allocate_resources(int pass)
++static void __init pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ {
+-	struct pci_dev *dev = NULL;
+ 	int idx, disabled, i;
+ 	u16 command;
+ 	struct resource *r;
+@@ -246,14 +245,13 @@ static void __init pcibios_allocate_resources(int pass)
+ #endif
+ 	};
+ 
+-	for_each_pci_dev(dev) {
+-		pci_read_config_word(dev, PCI_COMMAND, &command);
+-		for (i = 0; i < ARRAY_SIZE(idx_range); i++)
++	pci_read_config_word(dev, PCI_COMMAND, &command);
++	for (i = 0; i < ARRAY_SIZE(idx_range); i++)
+ 		for (idx = idx_range[i].start; idx <= idx_range[i].end; idx++) {
+ 			r = &dev->resource[idx];
+-			if (r->parent)		/* Already allocated */
++			if (r->parent)	/* Already allocated */
+ 				continue;
+-			if (!r->start)		/* Address not assigned at all */
++			if (!r->start)	/* Address not assigned at all */
+ 				continue;
+ 			if (r->flags & IORESOURCE_IO)
+ 				disabled = !(command & PCI_COMMAND_IO);
+@@ -272,23 +270,29 @@ static void __init pcibios_allocate_resources(int pass)
+ 				}
+ 			}
+ 		}
+-		if (!pass) {
+-			r = &dev->resource[PCI_ROM_RESOURCE];
+-			if (r->flags & IORESOURCE_ROM_ENABLE) {
+-				/* Turn the ROM off, leave the resource region,
+-				 * but keep it unregistered. */
+-				u32 reg;
+-				dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
+-				r->flags &= ~IORESOURCE_ROM_ENABLE;
+-				pci_read_config_dword(dev,
+-						dev->rom_base_reg, &reg);
+-				pci_write_config_dword(dev, dev->rom_base_reg,
++	if (!pass) {
++		r = &dev->resource[PCI_ROM_RESOURCE];
++		if (r->flags & IORESOURCE_ROM_ENABLE) {
++			/* Turn the ROM off, leave the resource region,
++			 * but keep it unregistered. */
++			u32 reg;
++			dev_dbg(&dev->dev, "disabling ROM %pR\n", r);
++			r->flags &= ~IORESOURCE_ROM_ENABLE;
++			pci_read_config_dword(dev, dev->rom_base_reg, &reg);
++			pci_write_config_dword(dev, dev->rom_base_reg,
+ 						reg & ~PCI_ROM_ADDRESS_ENABLE);
+-			}
+ 		}
+ 	}
+ }
+ 
++static void __init pcibios_allocate_resources(int pass)
++{
++	struct pci_dev *dev = NULL;
 +
-+#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_AER_H
++	for_each_pci_dev(dev)
++		pcibios_allocate_dev_resources(dev, pass);
++}
 +
-+#include <linux/tracepoint.h>
-+#include <linux/edac.h>
-+
-+
-+/*
-+ * Anhance Error Reporting (AER) PCIE Report Error
-+ *
-+ * These events are generated when hardware detects a corrected or
-+ * uncorrected event on a pci express device and reports
-+ * errors.  The event reports the following data.
-+ *
-+ * char * dev_name -	String containing the device identification
-+ * u32 status -		Either the correctable or uncorrectable register
-+ *			indicating what error or errors have been seen
-+ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-+ */
-+
-+#define correctable_error_string			\
-+	{BIT(0),	"Receiver Error"},		\
-+	{BIT(6),	"Bad TLP"},			\
-+	{BIT(7),	"Bad DLLP"},			\
-+	{BIT(8),	"RELAY_NUM Rollover"},		\
-+	{BIT(12),	"Replay Timer Timeout"},	\
-+	{BIT(13),	"Advisory Non-Fatal"}
-+
-+#define uncorrectable_error_string			\
-+	{BIT(4),	"Data Link Protocol"},		\
-+	{BIT(12),	"Poisoned TLP"},		\
-+	{BIT(13),	"Flow Control Protocol"},	\
-+	{BIT(14),	"Completion Timeout"},		\
-+	{BIT(15),	"Completer Abort"},		\
-+	{BIT(16),	"Unexpected Completion"},	\
-+	{BIT(17),	"Receiver Overflow"},		\
-+	{BIT(18),	"Malformed TLP"},		\
-+	{BIT(19),	"ECRC"},			\
-+	{BIT(20),	"Unsupported Request"}
-+
-+TRACE_EVENT(aer_event,
-+	TP_PROTO(const char *dev_name,
-+		 const u32 status,
-+		 const u8 severity),
-+
-+	TP_ARGS(dev_name, status, severity),
-+
-+	TP_STRUCT__entry(
-+		__string(	dev_name,	dev_name	)
-+		__field(	u32,		status		)
-+		__field(	u8,		severity	)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->status		= status;
-+		__entry->severity	= severity;
-+	),
-+
-+	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-+		__get_str(dev_name),
-+		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
-+			((__entry->severity == HW_EVENT_ERR_FATAL) ?
-+			"Fatal" : "Uncorrected"),
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-+		__print_flags(__entry->status, "|", correctable_error_string) :
-+		__print_flags(__entry->status, "|", uncorrectable_error_string))
-+);
-+
-+#endif /* _TRACE_AER_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
+ static int __init pcibios_assign_resources(void)
+ {
+ 	struct pci_dev *dev = NULL;
+-- 
+1.7.7
 
