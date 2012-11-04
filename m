@@ -1,72 +1,185 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30648 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751100Ab2KCFHG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 3 Nov 2012 01:07:06 -0400
-Message-ID: <1351919112.13106.1.camel@yhuang-mobile.sh.intel.com>
-Subject: Re: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Date: Sat, 03 Nov 2012 13:05:12 +0800
-In-Reply-To: <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
-References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
-	 <1351061654-8339-2-git-send-email-ying.huang@intel.com>
-	 <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part4 9/9] x86: simplify _acpi_map_lsapic() implementation
+Date: Sun,  4 Nov 2012 23:24:02 +0800
+Message-Id: <1352042642-7306-10-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-11-02 at 10:52 -0600, Bjorn Helgaas wrote:
-> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
-> > Some actions during shutdown need device to be in D0 state, such as
-> > MSI shutdown etc, so resume device before shutdown.
-> 
-> Is there a problem report or bugzilla for this issue?  What are the
-> symptoms by which a user could figure out that he needs this fix?
+Simplify implementation of function _acpi_map_lsapic().
 
-No bugzilla for this issue.  This issue will cause the corresponding
-device lost in kexeced kernel.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ arch/x86/include/asm/mpspec.h |    2 +-
+ arch/x86/kernel/acpi/boot.c   |   44 +++++++++--------------------------------
+ arch/x86/kernel/apic/apic.c   |    8 +++++---
+ 3 files changed, 15 insertions(+), 39 deletions(-)
 
-Best Regards,
-Huang Ying
-
-> Should this be put in the stable tree as well?  If so, for v3.6 only?
-> 
-> > Signed-off-by: Huang Ying <ying.huang@intel.com>
-> > ---
-> >  drivers/pci/pci-driver.c |   12 ++----------
-> >  1 file changed, 2 insertions(+), 10 deletions(-)
-> >
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
-> >         struct pci_dev *pci_dev = to_pci_dev(dev);
-> >         struct pci_driver *drv = pci_dev->driver;
-> >
-> > +       pm_runtime_resume(dev);
-> > +
-> >         if (drv && drv->shutdown)
-> >                 drv->shutdown(pci_dev);
-> >         pci_msi_shutdown(pci_dev);
-> > @@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
-> >          * continue to do DMA
-> >          */
-> >         pci_disable_device(pci_dev);
-> > -
-> > -       /*
-> > -        * Devices may be enabled to wake up by runtime PM, but they need not
-> > -        * be supposed to wake up the system from its "power off" state (e.g.
-> > -        * ACPI S5).  Therefore disable wakeup for all devices that aren't
-> > -        * supposed to wake up the system at this point.  The state argument
-> > -        * will be ignored by pci_enable_wake().
-> > -        */
-> > -       if (!device_may_wakeup(dev))
-> > -               pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
-> >  }
-> >
-> >  #ifdef CONFIG_PM
-
+diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
+index 3e2f42a..f1d6487 100644
+--- a/arch/x86/include/asm/mpspec.h
++++ b/arch/x86/include/asm/mpspec.h
+@@ -94,7 +94,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
+ #define default_get_smp_config x86_init_uint_noop
+ #endif
+ 
+-void __cpuinit generic_processor_info(int apicid, int version);
++int __cpuinit generic_processor_info(int apicid, int version);
+ #ifdef CONFIG_ACPI
+ extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
+ extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index 5e76952..f354446 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -195,24 +195,24 @@ static int __init acpi_parse_madt(struct acpi_table_header *table)
+ 	return 0;
+ }
+ 
+-static void __cpuinit acpi_register_lapic(int id, u8 enabled)
++static int __cpuinit acpi_register_lapic(int id, u8 enabled)
+ {
+ 	unsigned int ver = 0;
+ 
+ 	if (id >= (MAX_LOCAL_APIC-1)) {
+ 		printk(KERN_INFO PREFIX "skipped apicid that is too big\n");
+-		return;
++		return -1;
+ 	}
+ 
+ 	if (!enabled) {
+ 		++disabled_cpus;
+-		return;
++		return -1;
+ 	}
+ 
+ 	if (boot_cpu_physical_apicid != -1U)
+ 		ver = apic_version[boot_cpu_physical_apicid];
+ 
+-	generic_processor_info(id, ver);
++	return generic_processor_info(id, ver);
+ }
+ 
+ static int __init
+@@ -610,44 +610,19 @@ static void __cpuinit acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
+ 
+ static int __cpuinit _acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu)
+ {
+-	cpumask_var_t tmp_map, new_map;
+ 	int cpu;
+-	int retval = -ENOMEM;
+ 
+-	if (!alloc_cpumask_var(&tmp_map, GFP_KERNEL))
+-		goto out;
+-
+-	if (!alloc_cpumask_var(&new_map, GFP_KERNEL))
+-		goto free_tmp_map;
+-
+-	cpumask_copy(tmp_map, cpu_present_mask);
+-	acpi_register_lapic(physid, ACPI_MADT_ENABLED);
+-
+-	/*
+-	 * If acpi_register_lapic successfully generates a new logical cpu
+-	 * number, then the following will get us exactly what was mapped
+-	 */
+-	cpumask_andnot(new_map, cpu_present_mask, tmp_map);
+-	if (cpumask_empty(new_map)) {
++	cpu = acpi_register_lapic(physid, ACPI_MADT_ENABLED);
++	if (cpu == -1) {
+ 		printk ("Unable to map lapic to logical cpu number\n");
+-		retval = -EINVAL;
+-		goto free_new_map;
++		return -EINVAL;
+ 	}
+ 
+ 	acpi_processor_set_pdc(handle);
+-
+-	cpu = cpumask_first(new_map);
+ 	acpi_map_cpu2node(handle, cpu, physid);
+-
+ 	*pcpu = cpu;
+-	retval = 0;
+-
+-free_new_map:
+-	free_cpumask_var(new_map);
+-free_tmp_map:
+-	free_cpumask_var(tmp_map);
+-out:
+-	return retval;
++
++	return 0;
+ }
+ 
+ /* wrapper to silence section mismatch warning */
+@@ -665,7 +640,6 @@ int acpi_unmap_lsapic(int cpu)
+ 
+ 	return (0);
+ }
+-
+ EXPORT_SYMBOL(acpi_unmap_lsapic);
+ #endif				/* CONFIG_ACPI_HOTPLUG_CPU */
+ 
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index b17416e..9fdc293 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -2030,7 +2030,7 @@ void disconnect_bsp_APIC(int virt_wire_setup)
+ 	apic_write(APIC_LVT1, value);
+ }
+ 
+-void __cpuinit generic_processor_info(int apicid, int version)
++int __cpuinit generic_processor_info(int apicid, int version)
+ {
+ 	int cpu, max = nr_cpu_ids;
+ 	bool boot_cpu_detected = physid_isset(boot_cpu_physical_apicid,
+@@ -2050,7 +2050,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
+ 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
+ 
+ 		disabled_cpus++;
+-		return;
++		return -1;
+ 	}
+ 
+ 	if (num_processors >= nr_cpu_ids) {
+@@ -2061,7 +2061,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
+ 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
+ 
+ 		disabled_cpus++;
+-		return;
++		return -1;
+ 	}
+ 
+ 	num_processors++;
+@@ -2106,6 +2106,8 @@ void __cpuinit generic_processor_info(int apicid, int version)
+ #endif
+ 	set_cpu_possible(cpu, true);
+ 	set_cpu_present(cpu, true);
++
++	return cpu;
+ }
+ 
+ int hard_smp_processor_id(void)
+-- 
+1.7.9.5
 
