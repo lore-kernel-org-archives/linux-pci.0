@@ -1,4 +1,8 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46858 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138Ab2KDMv4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 07:51:56 -0500
 From: Jiang Liu <liuj97@gmail.com>
 To: "Rafael J . Wysocki" <rjw@sisk.pl>,
 	Yinghai Lu <yinghai@kernel.org>,
@@ -19,91 +23,142 @@ Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
 	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part4 6/9] ACPIHP/processor: reject online/offline requests when doing processor hotplug
-Date: Sun,  4 Nov 2012 23:23:59 +0800
-Message-Id: <1352042642-7306-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
-References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [ACPIHP PATCH part2 11/13] ACPIHP: block ACPI device driver from unloading when doing hotplug
+Date: Sun,  4 Nov 2012 20:50:13 +0800
+Message-Id: <1352033415-5606-12-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
+References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When doing physical processor hotplug, all affected CPUs should be
-handled in atomic. In other words, it shouldn't be disturbed by
-online/offline requests from CPU device's online sysfs interface.
-For example, it's fatal if a CPU is onlined through CPU device's
-online sysfs interface between the hotplug driver offlines all affected
-CPUs and powers the physical processor off.
-
-So temporarily reject online/offline requests from CPU device's online
-sysfs interface by setting the busy flag when doing physical processor
-hotplug.
+The ACPI hotplug driver depends on ACPI device drivers to configure or
+unconfigure ACPI devices. The hotplug driver will be confused if ACPI
+device drivers are unloaded when there are ongoing hotplug operations.
+So block ACPI device driver unbinding/unloading by holding the device
+lock when executing hotplug operations.
 
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/acpi/processor_driver.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/acpi/hotplug/configure.c |   18 ++++++++++++++++--
+ drivers/acpi/hotplug/device.c    |    6 ------
+ 2 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
-index 53e364d..22214fc 100644
---- a/drivers/acpi/processor_driver.c
-+++ b/drivers/acpi/processor_driver.c
-@@ -703,7 +703,7 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
- 			return result;
- 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+diff --git a/drivers/acpi/hotplug/configure.c b/drivers/acpi/hotplug/configure.c
+index 3209d14b..9f3ea97 100644
+--- a/drivers/acpi/hotplug/configure.c
++++ b/drivers/acpi/hotplug/configure.c
+@@ -37,7 +37,9 @@ enum config_op_code {
+ 	DRV_OP_POST_RELEASE,
+ 	DRV_OP_PRE_UNCONFIGURE,
+ 	DRV_OP_UNCONFIGURE,
+-	DRV_OP_POST_UNCONFIGURE
++	DRV_OP_POST_UNCONFIGURE,
++	DRV_OP_LOCK_DEVICE,
++	DRV_OP_UNLOCK_DEVICE,
+ };
  
--		result = arch_register_cpu(pr->id, 0);
-+		result = arch_register_cpu(pr->id, 1);
- 		if (result) {
- 			acpi_unmap_lsapic(pr->id);
- 			pr->id = -1;
-@@ -751,10 +751,26 @@ static void acpi_processor_post_configure(struct acpi_device *device,
- 		if (!cpu_online(pr->id) && cpu_up(pr->id))
- 			dev_warn(&device->dev,
- 				 "fails to online CPU%d.\n", pr->id);
-+		cpu_set_busy(pr->id, 0);
- 	} else if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
- 		acpi_processor_reset(device, pr);
- }
+ /* All devices will be configured in following order. */
+@@ -98,6 +100,12 @@ static int acpihp_drv_invoke_method(enum config_op_code  opcode,
+ 		return acpihp_dev_unconfigure(dev);
+ 	case DRV_OP_POST_UNCONFIGURE:
+ 		return acpihp_dev_post_unconfigure(dev);
++	case DRV_OP_LOCK_DEVICE:
++		device_lock(&dev->dev);
++		return 0;
++	case DRV_OP_UNLOCK_DEVICE:
++		device_unlock(&dev->dev);
++		return 0;
+ 	default:
+ 		BUG_ON(opcode);
+ 		return -ENOSYS;
+@@ -122,7 +130,9 @@ static int acpihp_drv_call_method(enum config_op_code opcode,
+ 		result = acpihp_drv_invoke_method(opcode, slot, acpi_dev, 0);
+ 		if (result)
+ 			break;
+-		acpihp_drv_update_dev_state(np, state);
++		if (opcode != DRV_OP_LOCK_DEVICE &&
++		    opcode != DRV_OP_UNLOCK_DEVICE)
++			acpihp_drv_update_dev_state(np, state);
+ 	}
+ 	klist_iter_exit(&iter);
  
-+static int acpi_processor_pre_release(struct acpi_device *device,
-+				      struct acpihp_cancel_context *ctx)
-+{
-+	int result;
-+	struct acpi_processor *pr;
-+
-+	if (!device || !acpi_driver_data(device))
-+		return -EINVAL;
-+	pr = acpi_driver_data(device);
-+
-+	result = cpu_set_busy(pr->id, 1);
-+
-+	return result ? -EBUSY : 0;
-+}
-+
- static int acpi_processor_release(struct acpi_device *device,
- 				  struct acpihp_cancel_context *ctx)
- {
-@@ -779,9 +795,11 @@ static void acpi_processor_post_release(struct acpi_device *device,
- 	BUG_ON(!device || !acpi_driver_data(device));
- 	pr = acpi_driver_data(device);
+@@ -249,6 +259,7 @@ int acpihp_drv_configure(struct list_head *list)
+ 		acpihp_slot_change_state(dep->slot,
+ 					 ACPIHP_SLOT_STATE_CONFIGURING);
  
--	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
-+	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK) {
- 		if (!cpu_online(pr->id))
- 			cpu_up(pr->id);
-+		cpu_set_busy(pr->id, 0);
-+	}
- }
++	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
+ 	result = acpihp_drv_walk_devs(&head, DRV_OP_PRE_CONFIGURE,
+ 				      DEVICE_STATE_PRE_CONFIGURE, false);
+ 	if (!result)
+@@ -258,6 +269,7 @@ int acpihp_drv_configure(struct list_head *list)
+ 		post = ACPIHP_DEV_POST_CMD_ROLLBACK;
+ 	acpihp_drv_walk_devs_post(&head, DRV_OP_POST_CONFIGURE,
+ 				  DEVICE_STATE_CONNECTED, post, false);
++	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
  
- static void acpi_processor_unconfigure(struct acpi_device *device)
-@@ -799,6 +817,7 @@ static struct acpihp_dev_ops acpi_processor_hp_ops = {
- 	.pre_configure = &acpi_processor_pre_configure,
- 	.configure = &acpi_processor_configure,
- 	.post_configure = &acpi_processor_post_configure,
-+	.pre_release = &acpi_processor_pre_release,
- 	.release = &acpi_processor_release,
- 	.post_release = &acpi_processor_post_release,
- 	.unconfigure = &acpi_processor_unconfigure,
+ 	list_for_each_entry(dep, &head, node)
+ 		acpihp_drv_update_slot_state(dep->slot);
+@@ -328,9 +340,11 @@ int acpihp_drv_unconfigure(struct list_head *list)
+ 		acpihp_slot_change_state(dep->slot,
+ 					 ACPIHP_SLOT_STATE_UNCONFIGURING);
+ 
++	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
+ 	result = acpihp_drv_release(&head);
+ 	if (!result)
+ 		__acpihp_drv_unconfigure(&head);
++	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
+ 
+ 	list_for_each_entry(dep, &head, node)
+ 		acpihp_drv_update_slot_state(dep->slot);
+diff --git a/drivers/acpi/hotplug/device.c b/drivers/acpi/hotplug/device.c
+index c9d550f..6d60bb0 100644
+--- a/drivers/acpi/hotplug/device.c
++++ b/drivers/acpi/hotplug/device.c
+@@ -62,14 +62,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
+ { \
+ 	int ret; \
+ 	BUG_ON(device == NULL); \
+-	device_lock(&device->dev); \
+ 	if (!device->driver || !device->driver->ops.hp_ops) \
+ 		ret = (err); \
+ 	else if (!device->driver->ops.hp_ops->method) \
+ 		ret = (def); \
+ 	else \
+ 		ret = device->driver->ops.hp_ops->method(device, val); \
+-	device_unlock(&device->dev); \
+ 	return ret; \
+ } \
+ EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+@@ -79,14 +77,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
+ { \
+ 	int ret = 0; \
+ 	BUG_ON(device == NULL); \
+-	device_lock(&device->dev); \
+ 	if (!device->driver || !device->driver->ops.hp_ops) \
+ 		ret = (err); \
+ 	else if (!device->driver->ops.hp_ops->method) \
+ 		ret = (def); \
+ 	else \
+ 		device->driver->ops.hp_ops->method(device, val); \
+-	device_unlock(&device->dev); \
+ 	return ret; \
+ } \
+ EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+@@ -96,14 +92,12 @@ int acpihp_dev_##method(struct acpi_device *device) \
+ { \
+ 	int ret = 0; \
+ 	BUG_ON(device == NULL); \
+-	device_lock(&device->dev); \
+ 	if (!device->driver || !device->driver->ops.hp_ops) \
+ 		ret = (err); \
+ 	else if (!device->driver->ops.hp_ops->method) \
+ 		ret = (def); \
+ 	else \
+ 		device->driver->ops.hp_ops->method(device);\
+-	device_unlock(&device->dev); \
+ 	return ret; \
+ } \
+ EXPORT_SYMBOL_GPL(acpihp_dev_##method)
 -- 
 1.7.9.5
 
