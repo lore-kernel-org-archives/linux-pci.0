@@ -1,31 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Ortiz, Lance E" <lance.oritz@hp.com>
-To: Borislav Petkov <bp@alien8.de>,
-	Steven Rostedt <rostedt@goodmis.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 1/3] aerdrv: Trace Event for AER
-Date: Fri, 30 Nov 2012 18:18:27 +0000
-Message-ID: <A961433CDFF2F640A2866803152E61F9516EAFDF@G4W3219.americas.hpqcorp.net>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
- <1354240279.6276.131.camel@gandalf.local.home>
- <20121130105311.GA6869@liondog.tnic>
- <1354275551.6276.140.camel@gandalf.local.home>
- <20121130134232.GD6869@liondog.tnic>
- <1354283631.6276.143.camel@gandalf.local.home>
- <20121130173635.GD23034@liondog.tnic>
-In-Reply-To: <20121130173635.GD23034@liondog.tnic>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	x86@kernel.org
+Subject: [PATCH 4/8] PCI, x86: Separate out rom resource claim
+Date: Sat,  3 Nov 2012 21:39:27 -0700
+Message-Id: <1352003971-22278-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+References: <20121030040237.GA10472@google.com>
+ <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IA0KPiBPaywgY29vbC4NCj4gDQo+IExhbmNlLCBjYXJlIHRvIG1vdmUgdGhlIFRQIHRvIGEgbmV3
-IGhlYWRlciBjYWxsZWQNCj4gaW5jbHVkZS90cmFjZS9ldmVudHMvcmFzLmggaW4geW91ciBuZXh0
-IGl0ZXJhdGlvbiBvZiB0aGUgcGF0Y2hlcz8NCg0KV2lsbCBkby4NCg0KTGFuY2UNCg0KDQo=
+So could use it with hot-added root bus later.
+
+-v2: remove extra functions.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: x86@kernel.org
+---
+ arch/x86/pci/i386.c |   52 ++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 35 insertions(+), 17 deletions(-)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 84696ed..42dd755 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -298,27 +298,45 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
+ 	}
+ }
+ 
+-static int __init pcibios_assign_resources(void)
++static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
+ {
+-	struct pci_dev *dev = NULL;
+ 	struct resource *r;
+ 
+-	if (!(pci_probe & PCI_ASSIGN_ROMS)) {
+-		/*
+-		 * Try to use BIOS settings for ROMs, otherwise let
+-		 * pci_assign_unassigned_resources() allocate the new
+-		 * addresses.
+-		 */
+-		for_each_pci_dev(dev) {
+-			r = &dev->resource[PCI_ROM_RESOURCE];
+-			if (!r->flags || !r->start)
+-				continue;
+-			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
+-				r->end -= r->start;
+-				r->start = 0;
+-			}
+-		}
++	/*
++	 * Try to use BIOS settings for ROMs, otherwise let
++	 * pci_assign_unassigned_resources() allocate the new
++	 * addresses.
++	 */
++	r = &dev->resource[PCI_ROM_RESOURCE];
++	if (!r->flags || !r->start)
++		return;
++
++	if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
++		r->end -= r->start;
++		r->start = 0;
+ 	}
++}
++static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++	struct pci_bus *child;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pcibios_allocate_dev_rom_resource(dev);
++
++		child = dev->subordinate;
++		if (child)
++			pcibios_allocate_rom_resources(child);
++	}
++}
++
++static int __init pcibios_assign_resources(void)
++{
++	struct pci_bus *bus;
++
++	if (!(pci_probe & PCI_ASSIGN_ROMS))
++		list_for_each_entry(bus, &pci_root_buses, node)
++			pcibios_allocate_rom_resources(bus);
+ 
+ 	pci_assign_unassigned_resources();
+ 	pcibios_fw_addr_list_del();
+-- 
+1.7.7
+
