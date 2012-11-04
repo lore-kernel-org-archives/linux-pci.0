@@ -1,146 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46305 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756410Ab2KUUfD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:03 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 7/9] PCI: Move pci_uevent into pci-driver.c
-Date: Wed, 21 Nov 2012 15:34:58 -0500
-Message-Id: <1353530100-728-8-git-send-email-wfp5p@virginia.edu>
-In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
-References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part4 8/9] ACPI/processor: serialize call to acpi_map/unmap_lsapic
+Date: Sun,  4 Nov 2012 23:24:01 +0800
+Message-Id: <1352042642-7306-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the demise of CONFIG_HOTPLUG as an option, the pci_uevent
-function located in hotplug.c will now always be used and doesn't need
-special treatment in the Makefile.  Move pci_uevent into pci-driver.c
-and remove hotplug.c
+Function acpi_map_lsapic() is used to allocate CPU id for hot-added
+CPUs and acpi_unmap_lsapic() is used to free CPU id for hot-removed
+CPUs. But currently there's no mechanism to serialze the CPU id
+allocation/free process, which may cause wrong CPU id assignment
+when handling concurrent CPU online/offline operations. So introuce
+a mutex to serialize CPU id allocation/free.
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/Makefile     |  2 --
- drivers/pci/hotplug.c    | 37 -------------------------------------
- drivers/pci/pci-driver.c | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/pci.h        |  1 -
- 4 files changed, 33 insertions(+), 40 deletions(-)
- delete mode 100644 drivers/pci/hotplug.c
+ drivers/acpi/processor_driver.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 8d688b2..36f119d 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -15,8 +15,6 @@ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index 9a02210..6dbce2f 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -108,6 +108,7 @@ static struct acpi_driver acpi_processor_driver = {
+ 	.drv.pm = &acpi_processor_pm,
+ };
  
- obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
++static DEFINE_MUTEX(acpi_processor_mutex);
+ static DEFINE_PER_CPU(void *, processor_device_array);
  
--obj-$(CONFIG_HOTPLUG) += hotplug.o
--
- # Build the PCI Hotplug drivers if we were asked to
- obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
- ifdef CONFIG_HOTPLUG_PCI
-diff --git a/drivers/pci/hotplug.c b/drivers/pci/hotplug.c
-deleted file mode 100644
-index 2b5352a..0000000
---- a/drivers/pci/hotplug.c
-+++ /dev/null
-@@ -1,37 +0,0 @@
--#include <linux/kernel.h>
--#include <linux/pci.h>
--#include <linux/module.h>
--#include "pci.h"
--
--int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
--{
--	struct pci_dev *pdev;
--
--	if (!dev)
--		return -ENODEV;
--
--	pdev = to_pci_dev(dev);
--	if (!pdev)
--		return -ENODEV;
--
--	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
--			   pdev->subsystem_device))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
--			   pdev->vendor, pdev->device,
--			   pdev->subsystem_vendor, pdev->subsystem_device,
--			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
--			   (u8)(pdev->class)))
--		return -ENOMEM;
--	return 0;
--}
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index ef54916..59745c4 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1223,6 +1223,39 @@ void pci_dev_put(struct pci_dev *dev)
- 		put_device(&dev->dev);
+ DEFINE_PER_CPU(struct acpi_processor *, processors);
+@@ -668,7 +669,9 @@ static void acpi_processor_reset(struct acpi_device *device, struct acpi_process
+ 	acpi_processor_unlink(device, pr);
+ 	put_online_cpus();
+ 	arch_unregister_cpu(pr->id);
++	mutex_lock(&acpi_processor_mutex);
+ 	acpi_unmap_lsapic(pr->id);
++	mutex_unlock(&acpi_processor_mutex);
+ 	pr->id = -1;
  }
  
-+static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
-+{
-+	struct pci_dev *pdev;
-+
-+	if (!dev)
-+		return -ENODEV;
-+
-+	pdev = to_pci_dev(dev);
-+	if (!pdev)
-+		return -ENODEV;
-+
-+	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
-+			   pdev->subsystem_device))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
-+			   pdev->vendor, pdev->device,
-+			   pdev->subsystem_vendor, pdev->subsystem_device,
-+			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
-+			   (u8)(pdev->class)))
-+		return -ENOMEM;
-+	return 0;
-+}
-+
- struct bus_type pci_bus_type = {
- 	.name		= "pci",
- 	.match		= pci_bus_match,
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3df6ded..ed63e79 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -8,7 +8,6 @@
+@@ -703,14 +706,18 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
+ 		if (pr->apic_id == -1)
+ 			return result;
  
- /* Functions internal to the PCI core code */
++		mutex_lock(&acpi_processor_mutex);
+ 		result = acpi_map_lsapic(device->handle, pr->apic_id, &pr->id);
++		mutex_unlock(&acpi_processor_mutex);
+ 		if (result)
+ 			return result;
+ 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
  
--extern int pci_uevent(struct device *dev, struct kobj_uevent_env *env);
- extern int pci_create_sysfs_dev_files(struct pci_dev *pdev);
- extern void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
- #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+ 		result = arch_register_cpu(pr->id, 1);
+ 		if (result) {
++			mutex_lock(&acpi_processor_mutex);
+ 			acpi_unmap_lsapic(pr->id);
++			mutex_unlock(&acpi_processor_mutex);
+ 			pr->id = -1;
+ 			return result;
+ 		}
 -- 
-1.8.0
+1.7.9.5
 
