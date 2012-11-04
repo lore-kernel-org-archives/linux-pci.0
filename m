@@ -18,88 +18,70 @@ Cc: Jiang Liu <jiang.liu@huawei.com>,
 	Hanjun Guo <guohanjun@huawei.com>,
 	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
 	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part2 08/13] ACPIHP: provide interface to cancel inprogress hotplug operations
-Date: Sun,  4 Nov 2012 20:50:10 +0800
-Message-Id: <1352033415-5606-9-git-send-email-jiang.liu@huawei.com>
+	linux-mm@kvack.org, Gaohuai Han <hangaohuai@huawei.com>
+Subject: [ACPIHP PATCH part2 01/13] ACPIHP: introduce interfaces to scan and walk ACPI devices attached to a slot
+Date: Sun,  4 Nov 2012 20:50:03 +0800
+Message-Id: <1352033415-5606-2-git-send-email-jiang.liu@huawei.com>
 In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
 References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some hotplug operations, such as hot-removal of memory device, may take
-very long or even infinite time. One possible solution is to time out
-and retry, but it's sub-optimal.
+This patch enhances acpi_bus_scan() to implement acpihp_add_devices(),
+which creates ACPI devices for hot-added system devices attached to
+an ACPI hotplug slot, but don't cross the slot boundary.
 
-This patch implements interfaces to cancel inprogress ACPI system device
-hotplug operations, so user could cancel a long-standing hotplug request
-on demand.
+It also introduces a new interface to walk all ACPI devices attached
+to an ACPI hotplug slot.
 
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
+Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
 ---
- drivers/acpi/hotplug/Makefile     |    1 +
- drivers/acpi/hotplug/acpihp_drv.h |   19 ++++
- drivers/acpi/hotplug/cancel.c     |  174 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 194 insertions(+)
- create mode 100644 drivers/acpi/hotplug/cancel.c
+ drivers/acpi/hotplug/Makefile |    2 +-
+ drivers/acpi/hotplug/acpihp.h |    1 +
+ drivers/acpi/hotplug/device.c |  121 +++++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/internal.h       |    3 +
+ drivers/acpi/scan.c           |   12 +++-
+ include/acpi/acpi_bus.h       |    2 +
+ include/acpi/acpi_hotplug.h   |   15 +++++
+ 7 files changed, 153 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/acpi/hotplug/device.c
 
 diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index bfb677f..f72f2c3 100644
+index c19b350..6e5daf6 100644
 --- a/drivers/acpi/hotplug/Makefile
 +++ b/drivers/acpi/hotplug/Makefile
-@@ -13,3 +13,4 @@ acpihp_slot-$(CONFIG_ACPI_HOTPLUG_SLOT_FAKE)	+= slot_fake.o
- obj-$(CONFIG_ACPI_HOTPLUG_DRIVER)		+= acpihp_drv.o
- acpihp_drv-y					= drv_main.o
- acpihp_drv-y					+= dependency.o
-+acpihp_drv-y					+= cancel.o
-diff --git a/drivers/acpi/hotplug/acpihp_drv.h b/drivers/acpi/hotplug/acpihp_drv.h
-index 32ea054..dd8ea92 100644
---- a/drivers/acpi/hotplug/acpihp_drv.h
-+++ b/drivers/acpi/hotplug/acpihp_drv.h
-@@ -38,8 +38,20 @@ enum acpihp_drv_cmd {
- 	ACPIHP_DRV_CMD_MAX
- };
+@@ -3,7 +3,7 @@
+ #
  
-+enum acpihp_drv_cancel_state {
-+	ACPIHP_DRV_CANCEL_INIT = 0,
-+	ACPIHP_DRV_CANCEL_STARTED,
-+	ACPIHP_DRV_CANCEL_OK,
-+	ACPIHP_DRV_CANCEL_FAILED,
-+	ACPIHP_DRV_CANCEL_MISSED,
-+	ACPIHP_DRV_CANCEL_FINISHED
-+};
-+
- struct acpihp_slot_drv {
- 	struct mutex		op_mutex;
-+	atomic_t		cancel_state;
-+	atomic_t		cancel_users;
-+	struct acpihp_cancel_context	cancel_ctx;
- };
+ obj-$(CONFIG_ACPI_HOTPLUG)			+= acpihp.o
+-acpihp-y					= core.o
++acpihp-y					= core.o device.o
  
- struct acpihp_slot_dependency {
-@@ -62,4 +74,11 @@ int acpihp_drv_filter_dependency_list(struct list_head *old_head,
- int acpihp_drv_generate_dependency_list(struct acpihp_slot *slot,
- 		struct list_head *slot_list, enum acpihp_drv_cmd cmd);
+ obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
+ acpihp_slot-y					= slot.o
+diff --git a/drivers/acpi/hotplug/acpihp.h b/drivers/acpi/hotplug/acpihp.h
+index 7c49eab..54d9d95 100644
+--- a/drivers/acpi/hotplug/acpihp.h
++++ b/drivers/acpi/hotplug/acpihp.h
+@@ -26,6 +26,7 @@
+ #include <acpi/acpi.h>
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_hotplug.h>
++#include "../internal.h"
  
-+void acpihp_drv_cancel_init(struct list_head *list);
-+void acpihp_drv_cancel_notify(struct acpihp_slot *slot,
-+			      enum acpihp_drv_cancel_state state);
-+void acpihp_drv_cancel_fini(struct list_head *list);
-+int acpihp_drv_cancel_start(struct list_head *list);
-+int acpihp_drv_cancel_wait(struct list_head *list);
-+
- #endif	/* __ACPIHP_DRV_H__ */
-diff --git a/drivers/acpi/hotplug/cancel.c b/drivers/acpi/hotplug/cancel.c
+ extern struct acpi_device *acpi_root;
+ extern struct acpihp_slot_ops acpihp_slot_ej0;
+diff --git a/drivers/acpi/hotplug/device.c b/drivers/acpi/hotplug/device.c
 new file mode 100644
-index 0000000..c515c28
+index 0000000..2dcdd83
 --- /dev/null
-+++ b/drivers/acpi/hotplug/cancel.c
-@@ -0,0 +1,174 @@
++++ b/drivers/acpi/hotplug/device.c
+@@ -0,0 +1,121 @@
 +/*
 + * Copyright (C) 2012 Huawei Tech. Co., Ltd.
 + * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
-+ * Copyright (C) 2012 Hanjun Guo <guohanjun@huawei.com>
 + *
 + * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 + *
@@ -119,157 +101,186 @@ index 0000000..c515c28
 + *
 + * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 + */
-+
-+#include <linux/wait.h>
++#include <linux/types.h>
++#include <linux/device.h>
++#include <acpi/acpi.h>
++#include <acpi/acpi_bus.h>
 +#include <acpi/acpi_hotplug.h>
-+#include "acpihp_drv.h"
++#include "acpihp.h"
 +
 +/*
-+ * Implement interfaces to cancel inprogress hotplug operations.
-+ * Currently only CONFIGURE and RELEASE operation stages support cancellation.
-+ * Caller must serialize calls to following functions by holding the
-+ * state_machine_mutex lock:
-+ *	acpihp_drv_cancel_init()
-+ *	acpihp_drv_cancel_start()
-+ *	acpihp_drv_cancel_fini()
++ * When creating ACPI devices for hot-added system devices connecting to
++ * a slot, don't cross the slot boundary. Otherwise it will cause
++ * inconsistence to other hotplug slots.
 + */
-+static DECLARE_WAIT_QUEUE_HEAD(acpihp_drv_cancel_queue);
-+
-+static int acpihp_drv_check_cancel(struct acpihp_cancel_context *ctx)
++static acpi_status acpihp_filter_device(acpi_handle hdl, u32 level, void *arg)
 +{
-+	struct acpihp_slot_drv *drv_data;
++	/* Skip if the handle corresponds to a child hotplug slot. */
++	if (level > 0 && acpihp_is_slot(hdl))
++		return AE_CTRL_DEPTH;
 +
-+	BUG_ON(ctx == NULL);
-+	drv_data = container_of(ctx, struct acpihp_slot_drv, cancel_ctx);
-+
-+	return atomic_read(&drv_data->cancel_state) != ACPIHP_DRV_CANCEL_INIT;
++	return AE_OK;
 +}
 +
-+void acpihp_drv_cancel_init(struct list_head *list)
++/* Create ACPI devices for hot-added system devices connecting to a slot. */
++int acpihp_add_devices(acpi_handle handle, struct acpi_device **child)
 +{
-+	struct acpihp_slot_drv *drv_data;
-+	struct acpihp_slot_dependency *dep;
++	struct acpi_bus_ops ops;
 +
-+	list_for_each_entry(dep, list, node) {
-+		acpihp_drv_get_data(dep->slot, &drv_data);
-+		drv_data->cancel_ctx.check_cancel = acpihp_drv_check_cancel;
-+		atomic_set(&drv_data->cancel_state, ACPIHP_DRV_CANCEL_INIT);
-+		atomic_set(&drv_data->cancel_users, 0);
-+	}
++	memset(&ops, 0, sizeof(ops));
++	ops.acpi_op_add = 1;
++	ops.acpi_op_filter = &acpihp_filter_device;
++	ops.acpi_op_filter_arg = NULL;
++
++	return acpi_bus_scan(handle, &ops, child);
 +}
++EXPORT_SYMBOL_GPL(acpihp_add_devices);
 +
-+/*
-+ * Start cancellation on a list of hotplug slots.
-+ *
-+ * Caller must provide mechanism to avoid currently running
-+ * acpihp_drv_cancel_start() and acpihp_drv_cancel_fini()
-+ * on the same list.
-+ */
-+int acpihp_drv_cancel_start(struct list_head *list)
++struct acpihp_walk_arg {
++	acpihp_walk_device_cb cb;
++	void *arg;
++	acpi_status status;
++};
++
++static int acpihp_walk_cb(struct device *dev, void *data)
 +{
-+	struct acpihp_slot_drv *drv_data;
-+	struct acpihp_slot_dependency *dep;
++	acpi_status status;
++	struct acpihp_walk_arg *argp = (struct acpihp_walk_arg *)data;
++	struct acpi_device *acpi_dev;
 +
-+	if (list_empty(list)) {
-+		ACPIHP_DEBUG("dependency list is empty.\n");
++	if (dev->bus != &acpi_bus_type)
 +		return 0;
-+	}
 +
-+	/* Start cancellation on all slots. */
-+	list_for_each_entry(dep, list, node) {
-+		acpihp_drv_get_data(dep->slot, &drv_data);
-+		atomic_inc(&drv_data->cancel_users);
-+		atomic_cmpxchg(&drv_data->cancel_state,
-+			       ACPIHP_DRV_CANCEL_INIT,
-+			       ACPIHP_DRV_CANCEL_STARTED);
-+	}
++	/* Skip if the handle corresponds to a child hotplug slot. */
++	acpi_dev = container_of(dev, struct acpi_device, dev);
++	if (acpihp_is_slot(acpi_dev->handle))
++		return 0;
 +
-+	return 0;
-+}
-+
-+/* Notify that the slot reaches a stable state */
-+void acpihp_drv_cancel_notify(struct acpihp_slot *slot,
-+			      enum acpihp_drv_cancel_state state)
-+{
-+	int old;
-+	struct acpihp_slot_drv *drv_data;
-+
-+	acpihp_drv_get_data(slot, &drv_data);
-+	old = atomic_cmpxchg(&drv_data->cancel_state, ACPIHP_DRV_CANCEL_INIT,
-+			     ACPIHP_DRV_CANCEL_FINISHED);
-+	if (old != ACPIHP_DRV_CANCEL_INIT) {
-+		atomic_set(&drv_data->cancel_state, state);
-+		wake_up_all(&acpihp_drv_cancel_queue);
++	status = argp->cb(acpi_dev, argp->arg);
++	if (status == AE_OK) {
++		return device_for_each_child(dev, data, &acpihp_walk_cb);
++	} else if (status == AE_CTRL_DEPTH || status == AE_CTRL_SKIP) {
++		return 0;
++	} else {
++		argp->status = status;
++		return -1;
 +	}
 +}
 +
 +/*
-+ * Wait for all slots on the list to reach a stable state and then check
-+ * cancellation result.
++ * Walk all ACPI devices connecting to a hotplug slot, but don't cross the
++ * hotplug slot boundary.
 + */
-+int acpihp_drv_cancel_wait(struct list_head *list)
++int acpihp_walk_devices(acpi_handle handle, acpihp_walk_device_cb cb,
++			void *argp)
 +{
-+	int state, result = 0;
-+	struct acpihp_slot_drv *drv_data;
-+	struct acpihp_slot_dependency *dep;
++	acpi_status status;
++	struct acpi_device *device;
++	struct acpihp_walk_arg arg;
 +
-+	list_for_each_entry(dep, list, node) {
-+		acpihp_drv_get_data(dep->slot, &drv_data);
-+		wait_event(acpihp_drv_cancel_queue,
-+			   atomic_read(&drv_data->cancel_state)
-+				!= ACPIHP_DRV_CANCEL_STARTED);
++	if (acpi_bus_get_device(handle, &device))
++		return -ENODEV;
 +
-+		state = atomic_read(&drv_data->cancel_state);
-+		if (state == ACPIHP_DRV_CANCEL_FAILED) {
-+			ACPIHP_SLOT_DEBUG(dep->slot,
-+					  "fails to cancel operation.\n");
-+			result = result ? : -EBUSY;
-+		} else if (state == ACPIHP_DRV_CANCEL_MISSED) {
-+			ACPIHP_SLOT_DEBUG(dep->slot,
-+					  "misses to cancel operation.\n");
-+			result = result ? : -EBUSY;
-+		}
-+
-+		atomic_set(&drv_data->cancel_state,
-+			   ACPIHP_DRV_CANCEL_FINISHED);
-+		atomic_dec(&drv_data->cancel_users);
-+		wake_up_all(&acpihp_drv_cancel_queue);
++	status = (*cb)(device, argp);
++	if (ACPI_SUCCESS(status)) {
++		arg.cb = cb;
++		arg.arg = argp;
++		arg.status = AE_OK;
++		(void) device_for_each_child(&device->dev, &arg,
++					     &acpihp_walk_cb);
++		status = arg.status;
 +	}
 +
-+	return result;
-+}
++	if (status == AE_CTRL_DEPTH || status == AE_CTRL_TERMINATE ||
++	    status == AE_CTRL_SKIP)
++		status = AE_OK;
++	else if (ACPI_FAILURE(status))
++		ACPIHP_DEBUG("fails to walk devices under %p.\n", handle);
 +
++	return status == AE_OK ? 0 : -ENODEV;
++}
++EXPORT_SYMBOL_GPL(acpihp_walk_devices);
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index ca75b9c..d2c4d83 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -93,4 +93,7 @@ static inline int suspend_nvs_save(void) { return 0; }
+ static inline void suspend_nvs_restore(void) {}
+ #endif
+ 
++int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++		  struct acpi_device **child);
++
+ #endif /* _ACPI_INTERNAL_H_ */
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 1fcb867..f621333 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1477,6 +1477,14 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 		return AE_CTRL_DEPTH;
+ 	}
+ 
++	/* Hooks for ACPI based system device hotplug */
++	if (ops->acpi_op_filter) {
++		result = ops->acpi_op_filter(handle, lvl,
++					     ops->acpi_op_filter_arg);
++		if (ACPI_FAILURE(result))
++			return result;
++	}
++
+ 	/*
+ 	 * We may already have an acpi_device from a previous enumeration.  If
+ 	 * so, we needn't add it again, but we may still have to start it.
+@@ -1500,8 +1508,8 @@ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 	return AE_OK;
+ }
+ 
+-static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
+-			 struct acpi_device **child)
++int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++		  struct acpi_device **child)
+ {
+ 	acpi_status status;
+ 	void *device = NULL;
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 0daa0fb..361a5ea 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -98,6 +98,8 @@ typedef void (*acpi_op_notify) (struct acpi_device * device, u32 event);
+ struct acpi_bus_ops {
+ 	u32 acpi_op_add:1;
+ 	u32 acpi_op_start:1;
++	acpi_status (*acpi_op_filter)(acpi_handle, u32, void *);
++	void *acpi_op_filter_arg;
+ };
+ 
+ struct acpi_device_ops {
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 298f679..d39dece 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -183,6 +183,21 @@ extern acpi_status acpihp_slot_get_status(struct acpihp_slot *slot,
+ extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
+ extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
+ 
 +/*
-+ * Wait for all cancellation threads to give up their reference count.
-+ *
-+ * Caller must provide mechanism to avoid currently running
-+ * acpihp_drv_cancel_start() and acpihp_drv_cancel_fini()
-+ * on the same list.
++ * Scan and create ACPI device objects for devices attached to the handle,
++ * but don't cross the hotplug slot boundary.
 + */
-+void acpihp_drv_cancel_fini(struct list_head *list)
-+{
-+	int state;
-+	struct acpihp_slot_drv *drv_data;
-+	struct acpihp_slot_dependency *dep;
++extern int acpihp_add_devices(acpi_handle handle, struct acpi_device **child);
 +
-+	list_for_each_entry(dep, list, node) {
-+		acpihp_drv_get_data(dep->slot, &drv_data);
++typedef acpi_status (*acpihp_walk_device_cb)(struct acpi_device *acpi_device,
++					     void *argp);
++/*
++ * Walk all ACPI device objects attached to an ACPI hotplug slot,
++ * but don't cross the hotplug slot boundary.
++ */
++extern int acpihp_walk_devices(acpi_handle handle,
++			       acpihp_walk_device_cb cb, void *argp);
 +
-+		/*
-+		 * Wake up all cancellation threads if they are still
-+		 * STARTED state.
-+		 */
-+		state = atomic_cmpxchg(&drv_data->cancel_state,
-+				       ACPIHP_DRV_CANCEL_STARTED,
-+				       ACPIHP_DRV_CANCEL_MISSED);
-+		if (state == ACPIHP_DRV_CANCEL_STARTED)
-+			wake_up_all(&acpihp_drv_cancel_queue);
-+
-+		/* Wait for all cancellation threads to exit */
-+		wait_event(acpihp_drv_cancel_queue,
-+			   !atomic_read(&drv_data->cancel_users));
-+	}
-+}
+ extern int acpihp_debug;
+ 
+ #define ACPIHP_WARN(fmt, ...) \
 -- 
 1.7.9.5
 
