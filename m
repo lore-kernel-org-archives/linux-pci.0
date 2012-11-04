@@ -1,176 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1351919165.13106.2.camel@yhuang-mobile.sh.intel.com>
-Subject: Re: [BUGFIX 1/2] PCI/PM: Fix deadlock when unbind device if its
- parent in D3cold
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Zhang Yanmin <yanmin.zhang@intel.com>
-Date: Sat, 03 Nov 2012 13:06:05 +0800
-In-Reply-To: <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com>
-References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
-	 <CAErSpo7hiFQOC+OPZretkyp5EcL84zEWCAiQgEE5Ewq--gUziQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [ACPIHP PATCH part4 6/9] ACPIHP/processor: reject online/offline requests when doing processor hotplug
+Date: Sun,  4 Nov 2012 23:23:59 +0800
+Message-Id: <1352042642-7306-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-11-02 at 10:50 -0600, Bjorn Helgaas wrote:
-> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
-> > If a PCI device and its parents are put into D3cold, unbinding the
-> > device will trigger deadlock as follow:
-> >
-> > - driver_unbind
-> >   - device_release_driver
-> >     - device_lock(dev)                          <--- previous lock here
-> >     - __device_release_driver
-> >       - pm_runtime_get_sync
-> >         ...
-> >           - rpm_resume(dev)
-> >             - rpm_resume(dev->parent)
-> >               ...
-> >                 - pci_pm_runtime_resume
-> >                   ...
-> >                   - pci_set_power_state
-> >                     - __pci_start_power_transition
-> >                       - pci_wakeup_bus(dev->parent->subordinate)
-> >                         - pci_walk_bus
-> >                           - device_lock(dev)    <--- dead lock here
-> >
-> >
-> > If we do not do device_lock in pci_walk_bus, we can avoid dead lock.
-> > Device_lock in pci_walk_bus is introduced in commit:
-> > d71374dafbba7ec3f67371d3b7e9f6310a588808, corresponding email thread
-> > is: https://lkml.org/lkml/2006/5/26/38.  The patch author Zhang Yanmin
-> > said device_lock is added to pci_walk_bus because:
-> >
-> >   Some error handling functions call pci_walk_bus. For example, PCIe
-> >   aer. Here we lock the device, so the driver wouldn't detach from the
-> >   device, as the cb might call driver's callback function.
-> >
-> > So I fixed the dead lock as follow:
-> >
-> > - remove device_lock from pci_walk_bus
-> > - add device_lock into callback if callback will call driver's callback
-> >
-> > I checked pci_walk_bus users one by one, and found only PCIe aer needs
-> > device lock.
-> 
-> Is there a problem report or bugzilla for this issue?
+When doing physical processor hotplug, all affected CPUs should be
+handled in atomic. In other words, it shouldn't be disturbed by
+online/offline requests from CPU device's online sysfs interface.
+For example, it's fatal if a CPU is onlined through CPU device's
+online sysfs interface between the hotplug driver offlines all affected
+CPUs and powers the physical processor off.
 
-No.  I found this issue when I developed kexec fixing.
+So temporarily reject online/offline requests from CPU device's online
+sysfs interface by setting the busy flag when doing physical processor
+hotplug.
 
-Best Regards,
-Huang Ying
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/processor_driver.c |   23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-> > Signed-off-by: Huang Ying <ying.huang@intel.com>
-> > Cc: Zhang Yanmin <yanmin.zhang@intel.com>
-> 
-> Should this go to stable as well?  The D3cold support appeared in
-> v3.6, so my guess is that this fix could go to v3.6.x.
-> 
-> > ---
-> >  drivers/pci/bus.c                  |    3 ---
-> >  drivers/pci/pcie/aer/aerdrv_core.c |   20 ++++++++++++++++----
-> >  2 files changed, 16 insertions(+), 7 deletions(-)
-> >
-> > --- a/drivers/pci/bus.c
-> > +++ b/drivers/pci/bus.c
-> > @@ -320,10 +320,7 @@ void pci_walk_bus(struct pci_bus *top, i
-> >                 } else
-> >                         next = dev->bus_list.next;
-> >
-> > -               /* Run device routines with the device locked */
-> > -               device_lock(&dev->dev);
-> >                 retval = cb(dev, userdata);
-> > -               device_unlock(&dev->dev);
-> >                 if (retval)
-> >                         break;
-> >         }
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -213,6 +213,7 @@ static int report_error_detected(struct
-> >         struct aer_broadcast_data *result_data;
-> >         result_data = (struct aer_broadcast_data *) data;
-> >
-> > +       device_lock(&dev->dev);
-> >         dev->error_state = result_data->state;
-> >
-> >         if (!dev->driver ||
-> > @@ -231,12 +232,14 @@ static int report_error_detected(struct
-> >                                    dev->driver ?
-> >                                    "no AER-aware driver" : "no driver");
-> >                 }
-> > -               return 0;
-> > +               goto out;
-> >         }
-> >
-> >         err_handler = dev->driver->err_handler;
-> >         vote = err_handler->error_detected(dev, result_data->state);
-> >         result_data->result = merge_result(result_data->result, vote);
-> > +out:
-> > +       device_unlock(&dev->dev);
-> >         return 0;
-> >  }
-> >
-> > @@ -247,14 +250,17 @@ static int report_mmio_enabled(struct pc
-> >         struct aer_broadcast_data *result_data;
-> >         result_data = (struct aer_broadcast_data *) data;
-> >
-> > +       device_lock(&dev->dev);
-> >         if (!dev->driver ||
-> >                 !dev->driver->err_handler ||
-> >                 !dev->driver->err_handler->mmio_enabled)
-> > -               return 0;
-> > +               goto out;
-> >
-> >         err_handler = dev->driver->err_handler;
-> >         vote = err_handler->mmio_enabled(dev);
-> >         result_data->result = merge_result(result_data->result, vote);
-> > +out:
-> > +       device_unlock(&dev->dev);
-> >         return 0;
-> >  }
-> >
-> > @@ -265,14 +271,17 @@ static int report_slot_reset(struct pci_
-> >         struct aer_broadcast_data *result_data;
-> >         result_data = (struct aer_broadcast_data *) data;
-> >
-> > +       device_lock(&dev->dev);
-> >         if (!dev->driver ||
-> >                 !dev->driver->err_handler ||
-> >                 !dev->driver->err_handler->slot_reset)
-> > -               return 0;
-> > +               goto out;
-> >
-> >         err_handler = dev->driver->err_handler;
-> >         vote = err_handler->slot_reset(dev);
-> >         result_data->result = merge_result(result_data->result, vote);
-> > +out:
-> > +       device_unlock(&dev->dev);
-> >         return 0;
-> >  }
-> >
-> > @@ -280,15 +289,18 @@ static int report_resume(struct pci_dev
-> >  {
-> >         const struct pci_error_handlers *err_handler;
-> >
-> > +       device_lock(&dev->dev);
-> >         dev->error_state = pci_channel_io_normal;
-> >
-> >         if (!dev->driver ||
-> >                 !dev->driver->err_handler ||
-> >                 !dev->driver->err_handler->resume)
-> > -               return 0;
-> > +               goto out;
-> >
-> >         err_handler = dev->driver->err_handler;
-> >         err_handler->resume(dev);
-> > +out:
-> > +       device_unlock(&dev->dev);
-> >         return 0;
-> >  }
-> >
-
+diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+index 53e364d..22214fc 100644
+--- a/drivers/acpi/processor_driver.c
++++ b/drivers/acpi/processor_driver.c
+@@ -703,7 +703,7 @@ static int acpi_processor_pre_configure(struct acpi_device *device,
+ 			return result;
+ 		BUG_ON((pr->id >= nr_cpu_ids) || (pr->id < 0));
+ 
+-		result = arch_register_cpu(pr->id, 0);
++		result = arch_register_cpu(pr->id, 1);
+ 		if (result) {
+ 			acpi_unmap_lsapic(pr->id);
+ 			pr->id = -1;
+@@ -751,10 +751,26 @@ static void acpi_processor_post_configure(struct acpi_device *device,
+ 		if (!cpu_online(pr->id) && cpu_up(pr->id))
+ 			dev_warn(&device->dev,
+ 				 "fails to online CPU%d.\n", pr->id);
++		cpu_set_busy(pr->id, 0);
+ 	} else if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
+ 		acpi_processor_reset(device, pr);
+ }
+ 
++static int acpi_processor_pre_release(struct acpi_device *device,
++				      struct acpihp_cancel_context *ctx)
++{
++	int result;
++	struct acpi_processor *pr;
++
++	if (!device || !acpi_driver_data(device))
++		return -EINVAL;
++	pr = acpi_driver_data(device);
++
++	result = cpu_set_busy(pr->id, 1);
++
++	return result ? -EBUSY : 0;
++}
++
+ static int acpi_processor_release(struct acpi_device *device,
+ 				  struct acpihp_cancel_context *ctx)
+ {
+@@ -779,9 +795,11 @@ static void acpi_processor_post_release(struct acpi_device *device,
+ 	BUG_ON(!device || !acpi_driver_data(device));
+ 	pr = acpi_driver_data(device);
+ 
+-	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK)
++	if (cmd == ACPIHP_DEV_POST_CMD_ROLLBACK) {
+ 		if (!cpu_online(pr->id))
+ 			cpu_up(pr->id);
++		cpu_set_busy(pr->id, 0);
++	}
+ }
+ 
+ static void acpi_processor_unconfigure(struct acpi_device *device)
+@@ -799,6 +817,7 @@ static struct acpihp_dev_ops acpi_processor_hp_ops = {
+ 	.pre_configure = &acpi_processor_pre_configure,
+ 	.configure = &acpi_processor_configure,
+ 	.post_configure = &acpi_processor_post_configure,
++	.pre_release = &acpi_processor_pre_release,
+ 	.release = &acpi_processor_release,
+ 	.post_release = &acpi_processor_post_release,
+ 	.unconfigure = &acpi_processor_unconfigure,
+-- 
+1.7.9.5
 
