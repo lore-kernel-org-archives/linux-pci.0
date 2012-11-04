@@ -1,113 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:64553 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755528Ab2KODyw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 22:54:52 -0500
-Received: by mail-fa0-f74.google.com with SMTP id w1so76606fad.1
-        for <linux-pci@vger.kernel.org>; Wed, 14 Nov 2012 19:54:50 -0800 (PST)
-Received: from bhelgaas.mtv.corp.google.com (bhelgaas.mtv.corp.google.com [172.17.131.112])
-	by hpza10.eem.corp.google.com (Postfix) with ESMTP id B034D20004E
-	for <linux-pci@vger.kernel.org>; Wed, 14 Nov 2012 19:54:49 -0800 (PST)
-Date: Wed, 14 Nov 2012 20:54:48 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Subject: Changes for v3.8 merge window
-Message-ID: <20121115035448.GB6613@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:58078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751185Ab2KDDqF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 3 Nov 2012 23:46:05 -0400
+Message-ID: <1352000649.9881.5.camel@yhuang-mobile.sh.intel.com>
+Subject: Re: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Sun, 04 Nov 2012 11:44:09 +0800
+In-Reply-To: <CAErSpo7=6kCG=P-u_MOACD+HVV8cj1JLO-beZYr6tn9bOzfrBg@mail.gmail.com>
+References: <1351061654-8339-1-git-send-email-ying.huang@intel.com>
+	 <1351061654-8339-2-git-send-email-ying.huang@intel.com>
+	 <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
+	 <1351919112.13106.1.camel@yhuang-mobile.sh.intel.com>
+	 <CAErSpo7=6kCG=P-u_MOACD+HVV8cj1JLO-beZYr6tn9bOzfrBg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Below are the patches currently in my "next" branch, planned for release in
-v3.8.  If I'm missing something important, let me know.
+On Sat, 2012-11-03 at 11:21 -0600, Bjorn Helgaas wrote:
+> On Fri, Nov 2, 2012 at 11:05 PM, Huang Ying <ying.huang@intel.com> wrote:
+> > On Fri, 2012-11-02 at 10:52 -0600, Bjorn Helgaas wrote:
+> >> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
+> >> > Some actions during shutdown need device to be in D0 state, such as
+> >> > MSI shutdown etc, so resume device before shutdown.
+> >>
+> >> Is there a problem report or bugzilla for this issue?  What are the
+> >> symptoms by which a user could figure out that he needs this fix?
+> >
+> > No bugzilla for this issue.  This issue will cause the corresponding
+> > device lost in kexeced kernel.
+> 
+> So would the following be accurate changelog text?
+> 
+>     Without this patch, a device may not work correctly after a kexec
+>     because the new kernel expects devices to be in D0.
 
-next-20121115 will be the last linux-next release until next-20121126,
-which will probably be just after -rc7.  That means we won't have much
-chance for integration testing of patches I merge between now and the merge
-window, so I probably won't merge major pieces.
+The issue I encountered is
 
-I've been busy with other work this cycle, so I haven't been able to review
-and merge as much as I'd hoped.  I'll start putting things on branches
-destined for v3.9.  After the v3.8 merge window closes, I will rebase these
-branches and fold them into my "next" branch for v3.9.
+	Without this patch, a device may not be enumerated after a kexec
+	because the corresponding bridge is not in D0, so that
+	configuration space of the device is not accessible.
+
+> >> Should this be put in the stable tree as well?  If so, for v3.6 only?
+> 
+> What about the stable tree?
+
+Yes.  This patch should be for v3.6 stable tree only.
+
+Best Regards,
+Huang Ying
+
+> >> > Signed-off-by: Huang Ying <ying.huang@intel.com>
+> >> > ---
+> >> >  drivers/pci/pci-driver.c |   12 ++----------
+> >> >  1 file changed, 2 insertions(+), 10 deletions(-)
+> >> >
+> >> > --- a/drivers/pci/pci-driver.c
+> >> > +++ b/drivers/pci/pci-driver.c
+> >> > @@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
+> >> >         struct pci_dev *pci_dev = to_pci_dev(dev);
+> >> >         struct pci_driver *drv = pci_dev->driver;
+> >> >
+> >> > +       pm_runtime_resume(dev);
+> >> > +
+> >> >         if (drv && drv->shutdown)
+> >> >                 drv->shutdown(pci_dev);
+> >> >         pci_msi_shutdown(pci_dev);
+> >> > @@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
+> >> >          * continue to do DMA
+> >> >          */
+> >> >         pci_disable_device(pci_dev);
+> >> > -
+> >> > -       /*
+> >> > -        * Devices may be enabled to wake up by runtime PM, but they need not
+> >> > -        * be supposed to wake up the system from its "power off" state (e.g.
+> >> > -        * ACPI S5).  Therefore disable wakeup for all devices that aren't
+> >> > -        * supposed to wake up the system at this point.  The state argument
+> >> > -        * will be ignored by pci_enable_wake().
+> >> > -        */
+> >> > -       if (!device_may_wakeup(dev))
+> >> > -               pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
+> >> >  }
+> >> >
+> >> >  #ifdef CONFIG_PM
+> >
+> >
 
 
-
-Andrew Cooks (1):
-      PCI: Add GPL license for drivers/pci/ioapic module
-
-Bjorn Helgaas (11):
-      ACPI: Pass segment/bus to _PRT add/del so they don't depend on pci_bus
-      PCI/ACPI: Add _PRT interrupt routing info before enumerating devices
-      x86/PCI: Ignore _SEG on HP xw9300
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/yinghai-for-pci-root-bus-hotplug' into next
-      Merge branch 'pci/taku-prt-cleanup' into next
-      Merge branch 'pci/mike-x86-tra' into next
-      PCI: Use spec names for SR-IOV capability fields
-      PCI: Remove useless "!dev" tests
-      Merge branch 'pci/don-sriov' into next
-      Merge branch 'pci/misc' into next
-
-Dave Airlie (1):
-      PCI: Don't touch card regs after runtime suspend D3
-
-Donald Dutile (2):
-      PCI: SRIOV control and status via sysfs
-      PCI: Provide method to reduce the number of total VFs supported
-
-Huang Ying (2):
-      PCI/PM: Add comments for PME poll support for PCIe
-      PCI/ACPI: Notify PCI devices when their power resource is turned on
-
-Ian Abbott (2):
-      PCI: Add workaround for PLX PCI 9050 BAR alignment erratum
-      PCI: Add PLX PCI 9050 workaround for some Meilhaus DAQ cards
-
-Jingoo Han (1):
-      PCI: Fix bit definitions of PCI_EXP_LNKCAP2 register
-
-Joe Perches (1):
-      PCI: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-
-Mike Yoknis (1):
-      x86/PCI: Allow x86 platforms to use translation offsets
-
-Taku Izumi (2):
-      PCI: Don't pass pci_dev to pci_ext_cfg_avail()
-      PCI/ACPI: Request _OSC control before scanning PCI root bus
-
-Yinghai Lu (10):
-      PCI: Separate out pci_assign_unassigned_bus_resources()
-      PCI: Move pci_rescan_bus() back to probe.c
-      PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
-      PCI/ACPI: Assign unassigned resource for hot-added root bus
-      PCI: Add pci_stop_and_remove_root_bus()
-      PCI/ACPI: Make acpi_pci_root_remove() stop/remove pci root bus
-      PCI/ACPI: Delete host bridge _PRT during hot remove path
-      PCI/ACPI: Remove acpi_root_driver in reverse order
-      PCI: Add pci_device_type to pdev's device struct
-      PCI: Use is_visible() with boot_vga attribute for pci_dev
-
- arch/x86/pci/acpi.c           |  46 +++++++++--
- arch/x86/pci/common.c         |   2 +-
- drivers/acpi/pci_bind.c       |  12 +--
- drivers/acpi/pci_irq.c        |  17 ++---
- drivers/acpi/pci_root.c       | 165 +++++++++++++++++++++++-----------------
- drivers/pci/ioapic.c          |   2 +
- drivers/pci/iov.c             |  87 ++++++++++++++++-----
- drivers/pci/irq.c             |  10 +--
- drivers/pci/pci-driver.c      |   6 +-
- drivers/pci/pci-stub.c        |   2 +-
- drivers/pci/pci-sysfs.c       | 172 +++++++++++++++++++++++++++++++++++++++---
- drivers/pci/pci.c             |  33 +++++---
- drivers/pci/pci.h             |   8 +-
- drivers/pci/pcie/aspm.c       |   7 +-
- drivers/pci/probe.c           |  23 ++++++
- drivers/pci/quirks.c          |  39 ++++++++++
- drivers/pci/remove.c          |  36 +++++++++
- drivers/pci/setup-bus.c       |  22 +-----
- include/acpi/acpi_drivers.h   |   4 +-
- include/linux/pci.h           |  16 +++-
- include/uapi/linux/pci_regs.h |   6 +-
- 21 files changed, 538 insertions(+), 177 deletions(-)
