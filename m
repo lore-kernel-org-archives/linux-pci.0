@@ -1,75 +1,169 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50A277E4.7080902@redhat.com>
-Date: Tue, 13 Nov 2012 11:40:04 -0500
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
-To: "Li, Sibai" <sibai.li@intel.com>
-CC: Jason Gao <pkill.2012@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Rose, Gregory V" <gregory.v.rose@intel.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources
- for SR-IOV)
-References: <201211081915083774239@gmail.com>	<509B962C.6070002@gmail.com> <C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com> <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com> <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com> <CANmqhJAjwP8CLEKpgsDbT-7+n=hf30LbYrTAu+qDH09LzETD4g@mail.gmail.com> <A3A921390EAE4044940E99EBF13D97321AE21E15@FMSMSX104.amr.corp.intel.com>
-In-Reply-To: <A3A921390EAE4044940E99EBF13D97321AE21E15@FMSMSX104.amr.corp.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org, Gaohuai Han <hangaohuai@huawei.com>
+Subject: [ACPIHP PATCH part2 04/13] ACPIHP: provide interfaces to manage driver data associated with hotplug slots
+Date: Sun,  4 Nov 2012 20:50:06 +0800
+Message-Id: <1352033415-5606-5-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
+References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/13/2012 11:04 AM, Li, Sibai wrote:
->
->
->> -----Original Message-----
->> From: Jason Gao [mailto:pkill.2012@gmail.com]
->> Sent: Tuesday, November 13, 2012 5:38 AM
->> To: bhelgaas@google.com; Rose, Gregory V; Li, Sibai
->> Cc: ddutile@redhat.com; Kirsher, Jeffrey T; linux-kernel; netdev; kvm; e1000-
->> devel@lists.sourceforge.net; linux-pci@vger.kernel.org; Yinghai Lu
->> Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources
->> for SR-IOV)
->>
->> I'm very sorry for delayed reply.now SR-IOV works for me in Centos 6.3,thank all
->> of you.
->>
->>
->> On Fri, Nov 9, 2012 at 11:26 PM, Bjorn Helgaas<bhelgaas@google.com>  wrote:
->>> Linux normally uses the resource assignments done by the BIOS, but it
->>> is possible for the kernel to reassign those.  We don't have good
->>> automatic support for that yet, but on a recent upstream kernel, you
->>> can try "pci=realloc".  I doubt this option is in CentOS 6.3, though
->>
->> Thank you very much,I try "pci=realloc" in Centos 6.3,and now it works for me.
->>
->>
->>
->> On Sat, Nov 10, 2012 at 2:08 AM, Li, Sibai<sibai.li@intel.com>  wrote:
->>> DellR710 with the latest BIOS should work fine for SR-IOV. My BIOS is
->>> v.6.3.0 and release date is 07/24/2012 Please check if you configured
->> intel_iommu=on in the grub.conf file.
->>> If you did, check your kernel .config file under Device Drivers->  IOMMU
->> Hardware support->enable Support for Intel IOMMU using DMA remapping
->> Devices, enable Intel DMA Remapping Devices by Default, enable Support for
->> Interrupt Remapping.
->>
->> thank you Sibai,Our server "Dell R710",its BIOS version is just
->> v.6.3.0 and release date is 07/24/2012,and I also configured intel_iommu=on in
->> the grub.conf file,but I can't find these IOMMU options in "Device Drivers" in my
-Sibai is referring to kernel config options.  RHEL6.3 has the IOMMU options built into
-the kernel, but not enabled by default -- have to add 'intel_iommu=on' to the kernel
-cmdline to enable IOMMU. SRIOV support (CONFIG_IOV) is built into the RHEL6.3 kernel as well.
+This patch implements interfaces to manage driver data associated with
+ACPI hotplug slots.
 
->> kernel(2.6.32-279) .config file , btw my os is Centos 6.3(RHEL6.3),although the
->> problem solved,I'd like to know what's your os version ,kernel version?
->
-> I am using RHEL6.3 with unstable kernel 3.7.0-rc
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+---
+ drivers/acpi/hotplug/core.c |   88 +++++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_hotplug.h |    7 ++++
+ 2 files changed, 95 insertions(+)
+
+diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
+index 7ef8f9b..bad8e99 100644
+--- a/drivers/acpi/hotplug/core.c
++++ b/drivers/acpi/hotplug/core.c
+@@ -35,9 +35,16 @@
+ #include <acpi/acpi_hotplug.h>
+ #include "acpihp.h"
+ 
++struct acpihp_drv_data {
++	struct list_head		node;
++	struct class_interface		*key;
++	void				*data;
++};
++
+ #define to_acpihp_slot(d) container_of(d, struct acpihp_slot, dev)
+ 
+ static DEFINE_MUTEX(acpihp_mutex);
++static DEFINE_MUTEX(acpihp_drvdata_mutex);
+ static int acpihp_class_count;
+ static struct kset *acpihp_slot_kset;
+ 
+@@ -355,6 +362,87 @@ char *acpihp_get_slot_type_name(enum acpihp_slot_type type)
+ }
+ EXPORT_SYMBOL_GPL(acpihp_get_slot_type_name);
+ 
++int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
++				struct class_interface *drv, void *data)
++{
++	struct acpihp_drv_data *dp, *cp;
++
++	if (slot == NULL || drv == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
++	if (dp == NULL)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&dp->node);
++	dp->key = drv;
++	dp->data = data;
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			mutex_unlock(&acpihp_drvdata_mutex);
++			kfree(dp);
++			return -EEXIST;
++		}
++	list_add(&dp->node, &slot->drvdata_list);
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_attach_drv_data);
++
++int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
++				struct class_interface *drv, void **data)
++{
++	struct acpihp_drv_data *cp;
++
++	if (slot == NULL || drv == NULL || data == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			list_del(&cp->node);
++			*data = cp->data;
++			mutex_unlock(&acpihp_drvdata_mutex);
++			kfree(cp);
++			return 0;
++		}
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return -ENOENT;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_detach_drv_data);
++
++int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
++			     struct class_interface *drv, void **data)
++{
++	int ret = -ENOENT;
++	struct acpihp_drv_data *cp;
++
++	if (slot == NULL || drv == NULL || data == NULL) {
++		ACPIHP_DEBUG("invalid parameters.\n");
++		return -EINVAL;
++	}
++
++	mutex_lock(&acpihp_drvdata_mutex);
++	list_for_each_entry(cp, &slot->drvdata_list, node)
++		if (cp->key == drv) {
++			*data = cp->data;
++			ret = 0;
++			break;
++		}
++	mutex_unlock(&acpihp_drvdata_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(acpihp_slot_get_drv_data);
++
+ acpi_status acpihp_slot_get_status(struct acpihp_slot *slot, u64 *status)
+ {
+ 	acpi_status rc;
+diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
+index 35f15a8..9d466ea 100644
+--- a/include/acpi/acpi_hotplug.h
++++ b/include/acpi/acpi_hotplug.h
+@@ -264,6 +264,13 @@ extern acpi_status acpihp_slot_get_status(struct acpihp_slot *slot,
+ extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
+ extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
+ 
++extern int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void *data);
++extern int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void **data);
++extern int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
++			struct class_interface *drv, void **data);
++
+ /*
+  * Scan and create ACPI device objects for devices attached to the handle,
+  * but don't cross the hotplug slot boundary.
+-- 
+1.7.9.5
 
