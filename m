@@ -1,182 +1,226 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:61488 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756612Ab2KHS3l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2012 13:29:41 -0500
-Received: by mail-bk0-f46.google.com with SMTP id jk13so1346632bkc.19
-        for <linux-pci@vger.kernel.org>; Thu, 08 Nov 2012 10:29:41 -0800 (PST)
-From: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
-To: linux-acpi@vger.kernel.org, isimatu.yasuaki@jp.fujitsu.com
-Cc: rjw@sisk.pl, wency@cn.fujitsu.com, lenb@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org,
-	Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
-Subject: [RFC PATCH 2/3] acpi: Make acpi_bus_trim handle device removal preparation
-Date: Thu,  8 Nov 2012 19:29:30 +0100
-Message-Id: <1352399371-8015-3-git-send-email-vasilis.liaskovitis@profitbricks.com>
-In-Reply-To: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
-References: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12075 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753889Ab2KEUU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Nov 2012 15:20:56 -0500
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
+Date: Mon,  5 Nov 2012 15:20:36 -0500
+Message-Id: <1352146841-64458-4-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A new argument is added to acpi_bus_trim, which indicates if we are preparing
-for removal or performing the actual ACPI removal. This is needed for safe
-removal of memory devices.
+Provide files under sysfs to determine the max number of vfs
+an SRIOV-capable PCIe device supports, and methods to enable and
+disable the vfs on a per device basis.
 
-The argument change would not be needed if the existing argument rmdevice of
-acpi_bus_trim could be used instead. What is the role of rmdevice argument? As
-far as I can tell the rmdevice argument is never used at the moment
-(acpi_bus_trim is called with rmdevice=1 from all its call sites. It is never
-called with rmdevice=0)
+Currently, VF enablement by SRIOV-capable PCIe devices is done
+in driver-specific module parameters.  If not setup in modprobe files,
+it requires admin to unload & reload PF drivers with number of desired
+VFs to enable.  Additionally, the enablement is system wide: all
+devices controlled by the same driver have the same number of VFs
+enabled.  Although the latter is probably desired, there are PCI
+configurations setup by system BIOS that may not enable that to occur.
 
-Signed-off-by: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
+Three files are created if a PCIe device has SRIOV support:
+sriov_totalvfs -- cat-ing this file returns the maximum number
+                  of VFs a PCIe device supports as reported by
+                  the TotalVFs in the SRIOV ext cap structure.
+sriov_numvfs -- echo'ing a positive number to this file enables this
+                number of VFs for this given PCIe device.
+             -- echo'ing a 0 to this file disables
+                any previously enabled VFs for this PCIe device.
+             -- cat-ing this file will return the number of VFs
+                currently enabled on this PCIe device, i.e.,
+                the NumVFs field in SRIOV ext. cap structure.
+
+VF enable and disablement is invoked much like other PCIe
+configuration functions -- via registered callbacks in the driver,
+i.e., probe, release, etc.
+
+Signed-off-by: Donald Dutile <ddutile@redhat.com>
 ---
- drivers/acpi/acpi_memhotplug.c     |    2 +-
- drivers/acpi/dock.c                |    2 +-
- drivers/acpi/scan.c                |   32 +++++++++++++++++++++++++++++---
- drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
- drivers/pci/hotplug/sgi_hotplug.c  |    2 +-
- include/acpi/acpi_bus.h            |    2 +-
- 6 files changed, 35 insertions(+), 9 deletions(-)
+ drivers/pci/pci-sysfs.c | 134 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |   1 +
+ 2 files changed, 135 insertions(+)
 
-diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
-index 92c973a..7fcc844 100644
---- a/drivers/acpi/acpi_memhotplug.c
-+++ b/drivers/acpi/acpi_memhotplug.c
-@@ -427,7 +427,7 @@ static void acpi_memory_device_notify(acpi_handle handle, u32 event, void *data)
- 		/*
- 		 * Invoke acpi_bus_trim() to remove memory device
- 		 */
--		acpi_bus_trim(device, 1);
-+		acpi_bus_trim(device, 1, 0);
- 
- 		/* _EJ0 succeeded; _OST is not necessary */
- 		return;
-diff --git a/drivers/acpi/dock.c b/drivers/acpi/dock.c
-index ae4ebf2..9e37b49 100644
---- a/drivers/acpi/dock.c
-+++ b/drivers/acpi/dock.c
-@@ -345,7 +345,7 @@ static void dock_remove_acpi_device(acpi_handle handle)
- 	int ret;
- 
- 	if (!acpi_bus_get_device(handle, &device)) {
--		ret = acpi_bus_trim(device, 1);
-+		ret = acpi_bus_trim(device, 1, 0);
- 		if (ret)
- 			pr_debug("error removing bus, %x\n", -ret);
- 	}
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 95ff1e8..b1001a4 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -121,7 +121,12 @@ void acpi_bus_hot_remove_device(void *context)
- 	ACPI_DEBUG_PRINT((ACPI_DB_INFO,
- 		"Hot-removing device %s...\n", dev_name(&device->dev)));
- 
--	if (acpi_bus_trim(device, 1)) {
-+	if (acpi_bus_trim(device, 1, 1)) {
-+		pr_err("Preparing to removing device failed\n");
-+		goto err_out;
-+	}
-+
-+	if (acpi_bus_trim(device, 1, 0)) {
- 		printk(KERN_ERR PREFIX
- 				"Removing device failed\n");
- 		goto err_out;
-@@ -1347,6 +1352,19 @@ static int acpi_device_set_context(struct acpi_device *device)
- 	return -ENODEV;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index fbbb97f..cbcdd8d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -404,6 +404,113 @@ static ssize_t d3cold_allowed_show(struct device *dev,
  }
+ #endif
  
-+static int acpi_bus_prepare_remove(struct acpi_device *dev)
++#ifdef CONFIG_PCI_IOV
++static ssize_t sriov_totalvfs_show(struct device *dev,
++				   struct device_attribute *attr,
++				   char *buf)
 +{
-+	int ret = 0;
++	struct pci_dev *pdev;
++	u16 total;
 +
-+	if (!dev)
-+		return -EINVAL;
-+
-+	if (dev->driver && dev->driver->ops.prepare_remove)
-+		ret = dev->driver->ops.prepare_remove(dev);
-+
-+	return ret;
++	pdev = to_pci_dev(dev);
++	total = pdev->sriov->total;
++	return sprintf(buf, "%u\n", total);
 +}
 +
- static int acpi_bus_remove(struct acpi_device *dev, int rmdevice)
- {
- 	if (!dev)
-@@ -1640,7 +1658,11 @@ int acpi_bus_start(struct acpi_device *device)
- }
- EXPORT_SYMBOL(acpi_bus_start);
- 
--int acpi_bus_trim(struct acpi_device *start, int rmdevice)
-+/* acpi_bus_trim: Remove or prepare to remove a device and its children.
-+ * @device: the device to remove or prepare to remove from.
-+ * @prepare: If 1, prepare for removal. If 0, perform actual removal.
++
++static ssize_t sriov_numvfs_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct pci_dev *pdev;
++
++	pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pdev->sriov->nr_virtfn);
++}
++
++/*
++ * num_vfs > 0; number of vfs to enable
++ * num_vfs = 0; disable all vfs
++ *
++ * Note: SRIOV spec doesn't allow partial VF
++ *       disable, so its all or none.
 + */
-+int acpi_bus_trim(struct acpi_device *start, int rmdevice, int prepare)
- {
- 	acpi_status status;
- 	struct acpi_device *parent, *child;
-@@ -1667,7 +1689,11 @@ int acpi_bus_trim(struct acpi_device *start, int rmdevice)
- 			child = parent;
- 			parent = parent->parent;
++static ssize_t sriov_numvfs_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct pci_dev *pdev;
++	int num_vfs_enabled = 0;
++	int num_vfs;
++	int ret = 0;
++	u16 total;
++
++	pdev = to_pci_dev(dev);
++
++	if (kstrtoint(buf, 0, &num_vfs) < 0)
++		return -EINVAL;
++
++	/* is PF driver loaded w/callback */
++	if (!pdev->driver || !pdev->driver->sriov_configure) {
++		dev_info(&pdev->dev,
++			 "Driver doesn't support SRIOV configuration via sysfs\n");
++		return -ENOSYS;
++	}
++
++	/* if enabling vf's ... */
++	total = pdev->sriov->total;
++	/* Requested VFs to enable < totalvfs and none enabled already */
++	if ((num_vfs > 0) && (num_vfs <= total)) {
++		if (pdev->sriov->nr_virtfn == 0) {
++			num_vfs_enabled =
++				pdev->driver->sriov_configure(pdev, num_vfs);
++			if ((num_vfs_enabled >= 0) &&
++			    (num_vfs_enabled != num_vfs)) {
++				dev_warn(&pdev->dev,
++					 "Only %d VFs enabled\n",
++					 num_vfs_enabled);
++				return count;
++			} else if (num_vfs_enabled < 0)
++				/* error code from driver callback */
++				return num_vfs_enabled;
++		} else if (num_vfs == pdev->sriov->nr_virtfn) {
++			dev_warn(&pdev->dev,
++				 "%d VFs already enabled; no enable action taken\n",
++				 num_vfs);
++			return count;
++		} else {
++			dev_warn(&pdev->dev,
++				 "%d VFs already enabled. Disable before enabling %d VFs\n",
++				 pdev->sriov->nr_virtfn, num_vfs);
++			return -EINVAL;
++		}
++	}
++
++	/* disable vfs */
++	if (num_vfs == 0) {
++		if (pdev->sriov->nr_virtfn != 0) {
++			ret = pdev->driver->sriov_configure(pdev, 0);
++			return ret ? ret : count;
++		} else {
++			dev_warn(&pdev->dev,
++				 "All VFs disabled; no disable action taken\n");
++			return count;
++		}
++	}
++
++	dev_err(&pdev->dev,
++		"Invalid value for number of VFs to enable: %d\n", num_vfs);
++
++	return -EINVAL;
++}
++
++static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
++static struct device_attribute sriov_numvfs_attr =
++		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
++		       sriov_numvfs_show, sriov_numvfs_store);
++#endif /* CONFIG_PCI_IOV */
++
+ struct device_attribute pci_dev_attrs[] = {
+ 	__ATTR_RO(resource),
+ 	__ATTR_RO(vendor),
+@@ -1421,6 +1528,30 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
+ 	return a->mode;
+ }
  
--			if (level == 0)
-+			if (prepare) {
-+				err = acpi_bus_prepare_remove(child);
-+				if (err)
-+					return err;
-+			} else if (level == 0)
- 				err = acpi_bus_remove(child, rmdevice);
- 			else
- 				err = acpi_bus_remove(child, 1);
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 3d6d4fd..bc10b61 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -748,7 +748,7 @@ static int acpiphp_bus_add(struct acpiphp_func *func)
- 		/* this shouldn't be in here, so remove
- 		 * the bus then re-add it...
- 		 */
--		ret_val = acpi_bus_trim(device, 1);
-+		ret_val = acpi_bus_trim(device, 1, 0);
- 		dbg("acpi_bus_trim return %x\n", ret_val);
- 	}
++#ifdef CONFIG_PCI_IOV
++static struct attribute *sriov_dev_attrs[] = {
++	&sriov_totalvfs_attr.attr,
++	&sriov_numvfs_attr.attr,
++	NULL,
++};
++
++static umode_t sriov_attrs_are_visible(struct kobject *kobj,
++					 struct attribute *a, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++
++	if (!dev_is_pf(dev))
++		return 0;
++
++	return a->mode;
++}
++
++static struct attribute_group sriov_dev_attr_group = {
++	.attrs = sriov_dev_attrs,
++	.is_visible = sriov_attrs_are_visible,
++};
++#endif /* CONFIG_PCI_IOV */
++
+ static struct attribute_group pci_dev_attr_group = {
+ 	.attrs = pci_dev_dev_attrs,
+ 	.is_visible = pci_dev_attrs_are_visible,
+@@ -1428,6 +1559,9 @@ static struct attribute_group pci_dev_attr_group = {
  
-@@ -781,7 +781,7 @@ static int acpiphp_bus_trim(acpi_handle handle)
- 		return retval;
- 	}
+ static const struct attribute_group *pci_dev_attr_groups[] = {
+ 	&pci_dev_attr_group,
++#ifdef CONFIG_PCI_IOV
++	&sriov_dev_attr_group,
++#endif
+ 	NULL,
+ };
  
--	retval = acpi_bus_trim(device, 1);
-+	retval = acpi_bus_trim(device, 1, 0);
- 	if (retval)
- 		err("cannot remove from acpi list\n");
- 
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index f64ca92..3655de3 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -539,7 +539,7 @@ static int disable_slot(struct hotplug_slot *bss_hotplug_slot)
- 				ret = acpi_bus_get_device(chandle,
- 							  &device);
- 				if (ACPI_SUCCESS(ret))
--					acpi_bus_trim(device, 1);
-+					acpi_bus_trim(device, 1, 0);
- 			}
- 		}
- 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 6ef1692..063c470 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -359,7 +359,7 @@ void acpi_bus_unregister_driver(struct acpi_driver *driver);
- int acpi_bus_add(struct acpi_device **child, struct acpi_device *parent,
- 		 acpi_handle handle, int type);
- void acpi_bus_hot_remove_device(void *context);
--int acpi_bus_trim(struct acpi_device *start, int rmdevice);
-+int acpi_bus_trim(struct acpi_device *start, int rmdevice, int prepare);
- int acpi_bus_start(struct acpi_device *device);
- acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
- int acpi_match_device_ids(struct acpi_device *device,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ee21795..7ef8fba 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -573,6 +573,7 @@ struct pci_driver {
+ 	int  (*resume_early) (struct pci_dev *dev);
+ 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
+ 	void (*shutdown) (struct pci_dev *dev);
++	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
+ 	const struct pci_error_handlers *err_handler;
+ 	struct device_driver	driver;
+ 	struct pci_dynids dynids;
 -- 
-1.7.9
+1.7.10.2.552.gaa3bb87
 
