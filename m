@@ -1,169 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, Gaohuai Han <hangaohuai@huawei.com>
-Subject: [ACPIHP PATCH part2 04/13] ACPIHP: provide interfaces to manage driver data associated with hotplug slots
-Date: Sun,  4 Nov 2012 20:50:06 +0800
-Message-Id: <1352033415-5606-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
-References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:6770 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753786Ab2KEUUy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Nov 2012 15:20:54 -0500
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+Date: Mon,  5 Nov 2012 15:20:33 -0500
+Message-Id: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements interfaces to manage driver data associated with
-ACPI hotplug slots.
+Currently, VF enablement by SRIOV-capable PCIe devices is done
+in driver-specific module parameters.  If not setup in modprobe files,
+it requires admin to unload & reload PF drivers with number of desired
+VFs to enable.  Additionally, the enablement is system wide: all
+devices controlled by the same driver have the same number of VFs
+enabled.  Although the latter is probably desired, there are PCI
+configurations setup by system BIOS that may not enable that to occur.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+Two files are created if a PCIe device has SRIOV support:
+sriov_totalvfs -- cat-ing this file returns the maximum number
+                  of VFs a PCIe device supports.
+sriov_numvfs -- echo'ing a positive number to this file enables 
+                & configures this number of VFs for this given PCIe
+                device.
+	     -- echo'ing 0 to this file disables and deconfigures
+                all VFs for this given PCIe device.
+             -- cat-ing this file will return the number of VFs
+                currently enabled on this PCIe device.
+
+VF enable and disablement is invoked much like other PCIe
+configuration functions -- via a registered callback in the driver,
+i.e., probe, release, etc.  In this case, sriov_configure
+
+PATCH v1->v2:
+-- incorporate more feedback from Ben Hutchings.
+-- (hopefully) correct From & Signed-by for Yinghai Lu's patches (1/8 & 2/8)
+
+RFC V3->PATCH:
+-- incorporate feedback from Ben Hutchings.
+-- clean up poor RFC patches & sanitize through checkpatch.pl
+
+RFC v2->v3:
+-- change the file names to reflect the names used in the SRIOV spec
+-- change to a single file for enable & disable; 
+   change driver interface to a single interface.
+-- add more informative messages on failures
+-- add a core method that a driver can invoke to modify
+   the totalvfs reported & supported by a driver.
+-- a set of patches for ixgbe provided by Greg Rose to use the
+   new interfaces; the last patch modified from the original
+   two file, enable/disable interface to the current single file
+   enable/disable. Greg will eventually post the final version
+   of these patches via Intel's usual process for driver patches.
+   Provided here as an example, and enable other SRIOV drivers
+   to see how adoption of the interface can be added.
+
+RFC v1->v2:
+This patch is based on previous 2 patches by Yinghai Lu
+that cleaned up the vga attributes for PCI devices under sysfs,
+and uses visibility-checking group attributes as recommended by
+Greg K-H.
+
+Signed-off-by: Donald Dutile <ddutile@redhat.com>
 ---
- drivers/acpi/hotplug/core.c |   88 +++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_hotplug.h |    7 ++++
- 2 files changed, 95 insertions(+)
+ drivers/pci/iov.c       |  48 ++++++++++++++++
+ drivers/pci/pci-sysfs.c | 179 ++++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ drivers/pci/pci.h       |   2 +
+ drivers/pci/probe.c     |   1 +
+ include/linux/pci.h     |  11 ++++
+ 5 files changed, 230 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/acpi/hotplug/core.c b/drivers/acpi/hotplug/core.c
-index 7ef8f9b..bad8e99 100644
---- a/drivers/acpi/hotplug/core.c
-+++ b/drivers/acpi/hotplug/core.c
-@@ -35,9 +35,16 @@
- #include <acpi/acpi_hotplug.h>
- #include "acpihp.h"
- 
-+struct acpihp_drv_data {
-+	struct list_head		node;
-+	struct class_interface		*key;
-+	void				*data;
-+};
-+
- #define to_acpihp_slot(d) container_of(d, struct acpihp_slot, dev)
- 
- static DEFINE_MUTEX(acpihp_mutex);
-+static DEFINE_MUTEX(acpihp_drvdata_mutex);
- static int acpihp_class_count;
- static struct kset *acpihp_slot_kset;
- 
-@@ -355,6 +362,87 @@ char *acpihp_get_slot_type_name(enum acpihp_slot_type type)
- }
- EXPORT_SYMBOL_GPL(acpihp_get_slot_type_name);
- 
-+int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
-+				struct class_interface *drv, void *data)
-+{
-+	struct acpihp_drv_data *dp, *cp;
-+
-+	if (slot == NULL || drv == NULL) {
-+		ACPIHP_DEBUG("invalid parameters.\n");
-+		return -EINVAL;
-+	}
-+
-+	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
-+	if (dp == NULL)
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&dp->node);
-+	dp->key = drv;
-+	dp->data = data;
-+
-+	mutex_lock(&acpihp_drvdata_mutex);
-+	list_for_each_entry(cp, &slot->drvdata_list, node)
-+		if (cp->key == drv) {
-+			mutex_unlock(&acpihp_drvdata_mutex);
-+			kfree(dp);
-+			return -EEXIST;
-+		}
-+	list_add(&dp->node, &slot->drvdata_list);
-+	mutex_unlock(&acpihp_drvdata_mutex);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_attach_drv_data);
-+
-+int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
-+				struct class_interface *drv, void **data)
-+{
-+	struct acpihp_drv_data *cp;
-+
-+	if (slot == NULL || drv == NULL || data == NULL) {
-+		ACPIHP_DEBUG("invalid parameters.\n");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&acpihp_drvdata_mutex);
-+	list_for_each_entry(cp, &slot->drvdata_list, node)
-+		if (cp->key == drv) {
-+			list_del(&cp->node);
-+			*data = cp->data;
-+			mutex_unlock(&acpihp_drvdata_mutex);
-+			kfree(cp);
-+			return 0;
-+		}
-+	mutex_unlock(&acpihp_drvdata_mutex);
-+
-+	return -ENOENT;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_detach_drv_data);
-+
-+int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
-+			     struct class_interface *drv, void **data)
-+{
-+	int ret = -ENOENT;
-+	struct acpihp_drv_data *cp;
-+
-+	if (slot == NULL || drv == NULL || data == NULL) {
-+		ACPIHP_DEBUG("invalid parameters.\n");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&acpihp_drvdata_mutex);
-+	list_for_each_entry(cp, &slot->drvdata_list, node)
-+		if (cp->key == drv) {
-+			*data = cp->data;
-+			ret = 0;
-+			break;
-+		}
-+	mutex_unlock(&acpihp_drvdata_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(acpihp_slot_get_drv_data);
-+
- acpi_status acpihp_slot_get_status(struct acpihp_slot *slot, u64 *status)
- {
- 	acpi_status rc;
-diff --git a/include/acpi/acpi_hotplug.h b/include/acpi/acpi_hotplug.h
-index 35f15a8..9d466ea 100644
---- a/include/acpi/acpi_hotplug.h
-+++ b/include/acpi/acpi_hotplug.h
-@@ -264,6 +264,13 @@ extern acpi_status acpihp_slot_get_status(struct acpihp_slot *slot,
- extern acpi_status acpihp_slot_poweron(struct acpihp_slot *slot);
- extern acpi_status acpihp_slot_poweroff(struct acpihp_slot *slot);
- 
-+extern int acpihp_slot_attach_drv_data(struct acpihp_slot *slot,
-+			struct class_interface *drv, void *data);
-+extern int acpihp_slot_detach_drv_data(struct acpihp_slot *slot,
-+			struct class_interface *drv, void **data);
-+extern int acpihp_slot_get_drv_data(struct acpihp_slot *slot,
-+			struct class_interface *drv, void **data);
-+
- /*
-  * Scan and create ACPI device objects for devices attached to the handle,
-  * but don't cross the hotplug slot boundary.
--- 
-1.7.9.5
 
