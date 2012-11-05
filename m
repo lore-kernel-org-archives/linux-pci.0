@@ -1,45 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:64072 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754021Ab2KIP1V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 10:27:21 -0500
-Received: by mail-wi0-f170.google.com with SMTP id hm9so686001wib.1
-        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2012 07:27:20 -0800 (PST)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:47584 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932954Ab2KEW3N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2012 17:29:13 -0500
+Received: by mail-we0-f174.google.com with SMTP id t9so2866906wey.19
+        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2012 14:29:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
-References: <201211081915083774239@gmail.com> <509B962C.6070002@gmail.com>
- <C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com> <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
+In-Reply-To: <1347994314.9011.1.camel@joe2Laptop>
+References: <1347994314.9011.1.camel@joe2Laptop>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 9 Nov 2012 08:26:59 -0700
-Message-ID: <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
-Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources for SR-IOV)
-To: Jason Gao <pkill.2012@gmail.com>
-Cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
+Date: Mon, 5 Nov 2012 15:28:52 -0700
+Message-ID: <CAErSpo6+dnxjCaqE=hiYUfDTKi3SCg0SYfuoHVuCse6_nG1mEA@mail.gmail.com>
+Subject: Re: [PATCH] pci: Convert pci_resource_<foo> macros to static inlines
+To: Joe Perches <joe@perches.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ linux-pci, Yinghai]
-
-On Thu, Nov 8, 2012 at 8:59 PM, Jason Gao <pkill.2012@gmail.com> wrote:
->> The BIOS in your machine doesn't support SR-IOV.  You'll need to ask the manufacturer for a BIOS upgrade, if in fact one is available.  Sometimes they're not.
+On Tue, Sep 18, 2012 at 12:51 PM, Joe Perches <joe@perches.com> wrote:
+> Get the compiler to verify the argument type of struct pci_dev *.
 >
-> very thanks Greg,my server Dell R710 with latest BIOS version and
-> option for SR-IOV(SR-IOV Global Enable->Enabled)  opened,I'm confused
-> that Does R710 provide full support for SR-IOV, kernel or  ixgbe
-> driver's bug? but I'm not sure where the problem lies,anyone has any
-> experience about this?   .
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Linux normally uses the resource assignments done by the BIOS, but it
-is possible for the kernel to reassign those.  We don't have good
-automatic support for that yet, but on a recent upstream kernel, you
-can try "pci=realloc".  I doubt this option is in CentOS 6.3, though.
+I applied this to my pci/misc branch as v3.8 material.  Thanks!
 
-If an upstream kernel with "pci=realloc" still doesn't work, please
-post the entire dmesg log.
+> ---
+>
+> Another possible improvement is to range check index.
+>
+>  include/linux/pci.h |   36 ++++++++++++++++++++++++++----------
+>  1 files changed, 26 insertions(+), 10 deletions(-)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5faa831..971d0e9 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1396,16 +1396,32 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
+>
+>  /* these helpers provide future and backwards compatibility
+>   * for accessing popular PCI BAR info */
+> -#define pci_resource_start(dev, bar)   ((dev)->resource[(bar)].start)
+> -#define pci_resource_end(dev, bar)     ((dev)->resource[(bar)].end)
+> -#define pci_resource_flags(dev, bar)   ((dev)->resource[(bar)].flags)
+> -#define pci_resource_len(dev,bar) \
+> -       ((pci_resource_start((dev), (bar)) == 0 &&      \
+> -         pci_resource_end((dev), (bar)) ==             \
+> -         pci_resource_start((dev), (bar))) ? 0 :       \
+> -                                                       \
+> -        (pci_resource_end((dev), (bar)) -              \
+> -         pci_resource_start((dev), (bar)) + 1))
+> +static inline resource_size_t
+> +pci_resource_start(const struct pci_dev *dev, int index)
+> +{
+> +       return dev->resource[index].start;
+> +}
+> +
+> +static inline resource_size_t
+> +pci_resource_end(const struct pci_dev *dev, int index)
+> +{
+> +       return dev->resource[index].end;
+> +}
+> +
+> +static inline unsigned long
+> +pci_resource_flags(const struct pci_dev *dev, int index)
+> +{
+> +       return dev->resource[index].flags;
+> +}
+> +
+> +static inline resource_size_t
+> +pci_resource_len(const struct pci_dev *dev, int index)
+> +{
+> +       if (pci_resource_start(dev, index) == 0 &&
+> +           pci_resource_end(dev, index) == 0)
+> +               return 0;
+> +       return resource_size(&dev->resource[index]);
+> +}
+>
+>  /* Similar to the helpers above, these manipulate per-pci_dev
+>   * driver-specific data.  They are really just a wrapper around
+>
+>
+>
