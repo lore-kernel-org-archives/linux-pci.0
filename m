@@ -1,80 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:13730 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970Ab2KTOKt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 09:10:49 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: Stefan Hajnoczi <stefanha@gmail.com>
-CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru devices
- assigned to KVM guests
-Date: Tue, 20 Nov 2012 14:09:46 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C90147066B@G4W3208.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
- <20121120134104.GI27378@stefanha-thinkpad.redhat.com>
-In-Reply-To: <20121120134104.GI27378@stefanha-thinkpad.redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:33967 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933233Ab2KEWar (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2012 17:30:47 -0500
+Received: by mail-wg0-f44.google.com with SMTP id dr13so4276393wgb.1
+        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2012 14:30:46 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1348016824-1895-1-git-send-email-airlied@redhat.com>
+References: <1348016824-1895-1-git-send-email-airlied@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 5 Nov 2012 15:30:25 -0700
+Message-ID: <CAErSpo5Kz5fB35_3CJSSQVC2c3RYur_tgM2ULzoDOmJ+s8xwPA@mail.gmail.com>
+Subject: Re: [PATCH] pci: don't touch card regs after runtime suspend D3
+To: Dave Airlie <airlied@redhat.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Sep 18, 2012 at 7:07 PM, Dave Airlie <airlied@redhat.com> wrote:
+> If the driver takes care of state saving, don't touch any registers on it.
+>
+> Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+> unfortunately enter it on normal D3 transitions via the ACPI callback.
+>
+> So when we use runtime PM to transition to D3, the card disappears off
+> the PCI bus, however we then try to access registers on it in the
+> runtime suspend finish, which really doesn't work.
+>
+> This patch check is the pci state is saved and doesn't attempt to hit
+> any registers after that point if it is.
+>
+> (Looks okay to Rafael)
+>
+> Signed-off-by: Dave Airlie <airlied@redhat.com>
 
+I applied this to my pci/misc branch as v3.8 material.
 
-> -----Original Message-----
-> From: Stefan Hajnoczi [mailto:stefanha@gmail.com]
-> Sent: Tuesday, November 20, 2012 5:41 AM
-> To: Pandarathil, Vijaymohan R
-> Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; qemu-devel@nongnu.org;
-> linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru
-> devices assigned to KVM guests
-> 
-> On Tue, Nov 20, 2012 at 06:31:48AM +0000, Pandarathil, Vijaymohan R wrote:
-> > Add support for error containment when a PCI pass-thru device assigned to
-> a KVM
-> > guest encounters an error. This is for PCIe devices/drivers that support
-> AER
-> > functionality. When the OS is notified of an error in a device either
-> > through the firmware first approach or through an interrupt handled by
-> the AER
-> > root port driver, concerned subsystems are notified by invoking callbacks
-> > registered by these subsystems. The device is also marked as tainted till
-> the
-> > corresponding driver recovery routines are successful.
-> >
-> > KVM module registers for a notification of such errors. In the KVM
-> callback
-> > routine, a global counter is incremented to keep track of the error
-> > notification. Before each CPU enters guest mode to execute guest code,
-> > appropriate checks are done to see if the impacted device belongs to the
-> guest
-> > or not. If the device belongs to the guest, qemu hypervisor for the guest
-> is
-> > informed and the guest is immediately brought down, thus preventing or
-> > minimizing chances of any bad data being written out by the guest driver
-> > after the device has encountered an error.
-> 
-> I'm surprised that the hypervisor would shut down the guest when PCIe
-> AER kicks in for a pass-through device.  Shouldn't we pass the AER event
-> into the guest and deal with it there?
+Let me know if this should be v3.7 material or if it needs to be
+backported to -stable (and how far if so).
 
-Agreed. That would be the ideal behavior and is planned in a future patch.
-Lack of control over the capabilities/type of the OS/drivers running in 
-the guest is also a concern in passing along the event to the guest.
-
-My understanding is that in the current implementation of Linux/KVM, these 
-errors are not handled at all and can potentially cause a guest hang or 
-crash or even data corruption depending on the implementation of the guest
-driver for the device. As a first step, these patches make the behavior 
-better by doing error containment with a predictable behavior when such
-errors occur. 
-
-> 
-> The equivalent to this policy on physical hardware would be that the CPU
-> is reset or the machine is powered down on AER.  That doesn't sound
-> right.
-> 
-> Stefan
+> ---
+>  drivers/pci/pci-driver.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 5270f1a..214a40b 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1057,10 +1057,11 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>                 return 0;
+>         }
+>
+> -       if (!pci_dev->state_saved)
+> +       if (!pci_dev->state_saved) {
+>                 pci_save_state(pci_dev);
+>
+> -       pci_finish_runtime_suspend(pci_dev);
+> +               pci_finish_runtime_suspend(pci_dev);
+> +       }
+>
+>         return 0;
+>  }
+> --
+> 1.7.12
+>
