@@ -1,146 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41663 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754510Ab2KSSiG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Nov 2012 13:38:06 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: linux-pci@vger.kernel.org
-Subject: [PATCH 015/493] PCI: move pci_uevent into pci-driver.c
-Date: Mon, 19 Nov 2012 13:19:24 -0500
-Message-Id: <1353349642-3677-15-git-send-email-wfp5p@virginia.edu>
-In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
-References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+Received: from mx1.redhat.com ([209.132.183.28]:54649 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753786Ab2KEUU6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Nov 2012 15:20:58 -0500
+From: Donald Dutile <ddutile@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
+Subject: [PATCH 1/4] PCI: add pci_device_type to pdev's device struct
+Date: Mon,  5 Nov 2012 15:20:34 -0500
+Message-Id: <1352146841-64458-2-git-send-email-ddutile@redhat.com>
+In-Reply-To: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the demise of CONFIG_HOTPLUG as an option, the pci_uevent
-function located in hotplug.c will now always be used and doesn't need
-special treatment in the Makefile.  Move pci_uevent into pci-driver.c
-and remove hotplug.c
+From: Yinghai Lu <yinghai@kernel.org>
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: linux-pci@vger.kernel.org 
+Need type filled in device structure so it
+can be used for visible attribute control in
+syfsfs for pci_dev.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/Makefile     |  2 --
- drivers/pci/hotplug.c    | 37 -------------------------------------
- drivers/pci/pci-driver.c | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/pci.h        |  1 -
- 4 files changed, 33 insertions(+), 40 deletions(-)
- delete mode 100644 drivers/pci/hotplug.c
+ drivers/pci/pci-sysfs.c | 24 ++++++++++++++++++++++++
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/probe.c     |  1 +
+ 3 files changed, 26 insertions(+)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 8d688b2..36f119d 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -15,8 +15,6 @@ obj-$(CONFIG_PCIEPORTBUS) += pcie/
- 
- obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
- 
--obj-$(CONFIG_HOTPLUG) += hotplug.o
--
- # Build the PCI Hotplug drivers if we were asked to
- obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
- ifdef CONFIG_HOTPLUG_PCI
-diff --git a/drivers/pci/hotplug.c b/drivers/pci/hotplug.c
-deleted file mode 100644
-index 2b5352a..0000000
---- a/drivers/pci/hotplug.c
-+++ /dev/null
-@@ -1,37 +0,0 @@
--#include <linux/kernel.h>
--#include <linux/pci.h>
--#include <linux/module.h>
--#include "pci.h"
--
--int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
--{
--	struct pci_dev *pdev;
--
--	if (!dev)
--		return -ENODEV;
--
--	pdev = to_pci_dev(dev);
--	if (!pdev)
--		return -ENODEV;
--
--	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
--			   pdev->subsystem_device))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
--		return -ENOMEM;
--
--	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
--			   pdev->vendor, pdev->device,
--			   pdev->subsystem_vendor, pdev->subsystem_device,
--			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
--			   (u8)(pdev->class)))
--		return -ENOMEM;
--	return 0;
--}
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 498e66a..f7b96cb 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1215,6 +1215,39 @@ void pci_dev_put(struct pci_dev *dev)
- 		put_device(&dev->dev);
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 02d107b..3d160aa 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1411,3 +1411,27 @@ static int __init pci_sysfs_init(void)
  }
  
-+static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+ late_initcall(pci_sysfs_init);
++
++static struct attribute *pci_dev_dev_attrs[] = {
++	NULL,
++};
++
++static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
++						struct attribute *a, int n)
 +{
-+	struct pci_dev *pdev;
-+
-+	if (!dev)
-+		return -ENODEV;
-+
-+	pdev = to_pci_dev(dev);
-+	if (!pdev)
-+		return -ENODEV;
-+
-+	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
-+			   pdev->subsystem_device))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
-+		return -ENOMEM;
-+
-+	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
-+			   pdev->vendor, pdev->device,
-+			   pdev->subsystem_vendor, pdev->subsystem_device,
-+			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
-+			   (u8)(pdev->class)))
-+		return -ENOMEM;
-+	return 0;
++	return a->mode;
 +}
 +
- struct bus_type pci_bus_type = {
- 	.name		= "pci",
- 	.match		= pci_bus_match,
++static struct attribute_group pci_dev_attr_group = {
++	.attrs = pci_dev_dev_attrs,
++	.is_visible = pci_dev_attrs_are_visible,
++};
++
++static const struct attribute_group *pci_dev_attr_groups[] = {
++	&pci_dev_attr_group,
++	NULL,
++};
++
++struct device_type pci_dev_type = {
++	.groups = pci_dev_attr_groups,
++};
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ae06da4..e851829 100644
+index bacbcba..6f6cd14 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -8,7 +8,6 @@
- 
- /* Functions internal to the PCI core code */
- 
--extern int pci_uevent(struct device *dev, struct kobj_uevent_env *env);
- extern int pci_create_sysfs_dev_files(struct pci_dev *pdev);
- extern void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
- #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+@@ -157,6 +157,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
+ }
+ extern struct device_attribute pci_dev_attrs[];
+ extern struct device_attribute pcibus_dev_attrs[];
++extern struct device_type pci_dev_type;
+ #ifdef CONFIG_HOTPLUG
+ extern struct bus_attribute pci_bus_attrs[];
+ #else
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec909af..0312f1c48 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -975,6 +975,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->sysdata = dev->bus->sysdata;
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
++	dev->dev.type = &pci_dev_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+ 	dev->multifunction = !!(hdr_type & 0x80);
+ 	dev->error_state = pci_channel_io_normal;
 -- 
-1.8.0
+1.7.10.2.552.gaa3bb87
 
