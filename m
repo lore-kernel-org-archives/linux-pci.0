@@ -1,63 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:38755 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760634Ab2KBQxH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 2 Nov 2012 12:53:07 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hr7so1466612wib.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 Nov 2012 09:53:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1351061654-8339-2-git-send-email-ying.huang@intel.com>
-References: <1351061654-8339-1-git-send-email-ying.huang@intel.com> <1351061654-8339-2-git-send-email-ying.huang@intel.com>
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:57395 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933301Ab2KEWdJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2012 17:33:09 -0500
+Received: by mail-ee0-f74.google.com with SMTP id b57so410263eek.1
+        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2012 14:33:07 -0800 (PST)
+Subject: [PATCH] x86/PCI: Ignore _SEG on HP xw9300
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 2 Nov 2012 10:52:45 -0600
-Message-ID: <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
-Subject: Re: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
-To: Huang Ying <ying.huang@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "Sean M. Pappalardo" <pegasus@renegadetech.com>
+Date: Mon, 05 Nov 2012 15:33:06 -0700
+Message-ID: <20121105223306.7246.36325.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
-> Some actions during shutdown need device to be in D0 state, such as
-> MSI shutdown etc, so resume device before shutdown.
+The xw9300 BIOS supplies _SEG methods that are incorrect, which results
+in some LSI SCSI devices not being discovered.  This adds a quirk to
+ignore _SEG on this machine and default to zero.
 
-Is there a problem report or bugzilla for this issue?  What are the
-symptoms by which a user could figure out that he needs this fix?
+The xw9300 has three host bridges:
 
-Should this be put in the stable tree as well?  If so, for v3.6 only?
+    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-3f])
+    ACPI: PCI Root Bridge [PCI1] (domain 0001 [bus 40-7f])
+    ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 80-ff])
 
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> ---
->  drivers/pci/pci-driver.c |   12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
->
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
->         struct pci_dev *pci_dev = to_pci_dev(dev);
->         struct pci_driver *drv = pci_dev->driver;
->
-> +       pm_runtime_resume(dev);
-> +
->         if (drv && drv->shutdown)
->                 drv->shutdown(pci_dev);
->         pci_msi_shutdown(pci_dev);
-> @@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
->          * continue to do DMA
->          */
->         pci_disable_device(pci_dev);
-> -
-> -       /*
-> -        * Devices may be enabled to wake up by runtime PM, but they need not
-> -        * be supposed to wake up the system from its "power off" state (e.g.
-> -        * ACPI S5).  Therefore disable wakeup for all devices that aren't
-> -        * supposed to wake up the system at this point.  The state argument
-> -        * will be ignored by pci_enable_wake().
-> -        */
-> -       if (!device_may_wakeup(dev))
-> -               pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
->  }
->
->  #ifdef CONFIG_PM
+When the BIOS "ACPI Bus Segmentation" option is enabled (as it is by
+default), the _SEG methods of the PCI1 and PCI2 bridges return 1 and 2,
+respectively.  However, the BIOS implementation appears to be incomplete,
+and we can't enumerate devices in those domains.
+
+But if we assume PCI1 and PCI2 really lead to buses in domain 0,
+everything works fine.  Windows XP and Vista also seem to ignore
+these _SEG methods.
+
+Reference: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=543308
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=15362
+Reported-and-Tested-by: Sean M. Pappalardo <pegasus@renegadetech.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |   25 +++++++++++++++++++++++--
+ 1 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 192397c..49e5195 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -22,6 +22,7 @@ struct pci_root_info {
+ };
+ 
+ static bool pci_use_crs = true;
++static bool pci_ignore_seg = false;
+ 
+ static int __init set_use_crs(const struct dmi_system_id *id)
+ {
+@@ -35,7 +36,14 @@ static int __init set_nouse_crs(const struct dmi_system_id *id)
+ 	return 0;
+ }
+ 
+-static const struct dmi_system_id pci_use_crs_table[] __initconst = {
++static int __init set_ignore_seg(const struct dmi_system_id *id)
++{
++	printk(KERN_INFO "PCI: %s detected: ignoring ACPI _SEG\n", id->ident);
++	pci_ignore_seg = true;
++	return 0;
++}
++
++static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+ 	/* http://bugzilla.kernel.org/show_bug.cgi?id=14183 */
+ 	{
+ 		.callback = set_use_crs,
+@@ -98,6 +106,16 @@ static const struct dmi_system_id pci_use_crs_table[] __initconst = {
+ 			DMI_MATCH(DMI_BIOS_VERSION, "6JET85WW (1.43 )"),
+ 		},
+ 	},
++
++	/* https://bugzilla.kernel.org/show_bug.cgi?id=15362 */
++	{
++		.callback = set_ignore_seg,
++		.ident = "HP xw9300",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "HP xw9300 Workstation"),
++		},
++	},
+ 	{}
+ };
+ 
+@@ -108,7 +126,7 @@ void __init pci_acpi_crs_quirks(void)
+ 	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008)
+ 		pci_use_crs = false;
+ 
+-	dmi_check_system(pci_use_crs_table);
++	dmi_check_system(pci_crs_quirks);
+ 
+ 	/*
+ 	 * If the user specifies "pci=use_crs" or "pci=nocrs" explicitly, that
+@@ -455,6 +473,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	int pxm;
+ #endif
+ 
++	if (pci_ignore_seg)
++		domain = 0;
++
+ 	if (domain && !pci_domains_supported) {
+ 		printk(KERN_WARNING "pci_bus %04x:%02x: "
+ 		       "ignored (multiple domains not supported)\n",
+
