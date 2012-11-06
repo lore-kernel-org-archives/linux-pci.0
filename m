@@ -1,65 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru devices
- assigned to KVM guests
-Date: Tue, 20 Nov 2012 06:31:48 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+From: Mike Yoknis <mike.yoknis@hp.com>
+To: bhelgaas@google.com
+Cc: Linux-pci@vger.kernel.org, mike.yoknis@hp.com
+Subject: [PATCH v3] x86/pci: Allow x86 platforms to use translation offsets
+Date: Tue,  6 Nov 2012 15:42:04 -0600
+Message-Id: <1352238124-32162-1-git-send-email-mike.yoknis@hp.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for error containment when a PCI pass-thru device assigned to a KVM
-guest encounters an error. This is for PCIe devices/drivers that support AER
-functionality. When the OS is notified of an error in a device either
-through the firmware first approach or through an interrupt handled by the AER
-root port driver, concerned subsystems are notified by invoking callbacks
-registered by these subsystems. The device is also marked as tainted till the
-corresponding driver recovery routines are successful. 
+Patch v3 changes: applies cleanly to 3.7.0-rc3
 
-KVM module registers for a notification of such errors. In the KVM callback
-routine, a global counter is incremented to keep track of the error
-notification. Before each CPU enters guest mode to execute guest code,
-appropriate checks are done to see if the impacted device belongs to the guest
-or not. If the device belongs to the guest, qemu hypervisor for the guest is
-informed and the guest is immediately brought down, thus preventing or
-minimizing chances of any bad data being written out by the guest driver
-after the device has encountered an error.
+The memory range descriptors in the _CRS control method contain an address
+translation offset for host bridges.  This value is used to translate addresses
+across the bridge.  The support to use _TRA values is present for other
+architectures but not for X86 platforms.
 
-Note that the changes here are specific to  PCI pass-thru devices and is
-confined to error containment. Error recovery is not included in these set
-of changes. A future set of patches is planned to address SR-IOV devices and
-VFIO devices assigned to guests as well as recovery without bringing down
-the guest.
+For existing X86 platforms the _TRA value is zero.
+Non-zero _TRA values are expected on future X86 platforms.
+This change will register that value with the resource.
 
+Signed-off-by: Mike Yoknis <mike.yoknis@hp.com>
 ---
-Vijay Mohan Pandarathil(4):
+ arch/x86/pci/acpi.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
- AER-PCI: Add infrastructure for notification of errors to other subsystems
- AER-GHES: Add support for error notification in firmware first approach of AER
- AER-KVM: Integration of KVM with AER for PCI pass-thru devices
- AER-QEMU: Bring down the guest when KVM detects a PCI device error
-
- arch/x86/include/asm/kvm_host.h    |  1 +
- arch/x86/kvm/x86.c                 | 44 ++++++++++++++++++++++++++++++++++++++
- drivers/acpi/apei/ghes.c           | 41 +++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/aer/aerdrv.c      | 20 +++++++++++++++++
- drivers/pci/pcie/aer/aerdrv_core.c |  9 +++++++-
- include/linux/aer.h                |  4 ++++
- include/linux/kvm_host.h           |  4 ++++
- include/linux/pci.h                |  2 ++
- include/uapi/linux/kvm.h           |  1 +
- virt/kvm/assigned-dev.c            | 34 +++++++++++++++++++++++++++++
- virt/kvm/kvm_main.c                | 34 +++++++++++++++++++++++++++++
- 11 files changed, 193 insertions(+), 1 deletion(-)
-
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 192397c..9cecffc 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -12,6 +12,7 @@ struct pci_root_info {
+ 	char name[16];
+ 	unsigned int res_num;
+ 	struct resource *res;
++	resource_size_t *res_offset;
+ 	struct pci_sysdata sd;
+ #ifdef	CONFIG_PCI_MMCONFIG
+ 	bool mcfg_added;
+@@ -305,6 +306,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
+ 	res->flags = flags;
+ 	res->start = start;
+ 	res->end = end;
++	info->res_offset[info->res_num] = addr.translation_offset;
  
-Qemu files changed
+ 	if (!pci_use_crs) {
+ 		dev_printk(KERN_DEBUG, &info->bridge->dev,
+@@ -374,7 +376,8 @@ static void add_resources(struct pci_root_info *info,
+ 				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+ 				 res, conflict->name, conflict);
+ 		else
+-			pci_add_resource(resources, res);
++			pci_add_resource_offset(resources, res,
++					info->res_offset[i]);
+ 	}
+ }
+ 
+@@ -382,6 +385,8 @@ static void free_pci_root_info_res(struct pci_root_info *info)
+ {
+ 	kfree(info->res);
+ 	info->res = NULL;
++	kfree(info->res_offset);
++	info->res_offset = NULL;
+ 	info->res_num = 0;
+ }
+ 
+@@ -432,10 +437,20 @@ probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
+ 		return;
+ 
+ 	size = sizeof(*info->res) * info->res_num;
+-	info->res_num = 0;
+ 	info->res = kzalloc(size, GFP_KERNEL);
+-	if (!info->res)
++	if (!info->res) {
++		info->res_num = 0;
++		return;
++	}
++
++	size = sizeof(*info->res_offset) * info->res_num;
++	info->res_num = 0;
++	info->res_offset = kzalloc(size, GFP_KERNEL);
++	if (!info->res_offset) {
++		kfree(info->res);
++		info->res = NULL;
+ 		return;
++	}
+ 
+ 	acpi_walk_resources(device->handle, METHOD_NAME__CRS, setup_resource,
+ 				info);
+-- 
+1.7.11.3
 
- kvm-all.c                 |    6 ++++++
- linux-headers/linux/kvm.h |    1 +
- 2 files changed, 7 insertions(+)
