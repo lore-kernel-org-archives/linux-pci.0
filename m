@@ -1,35 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46327 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755685Ab2KMS7j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 13:59:39 -0500
-Received: by mail-we0-f174.google.com with SMTP id t9so3438072wey.19
-        for <linux-pci@vger.kernel.org>; Tue, 13 Nov 2012 10:59:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <50A205C902000078000A7ECF@nat28.tlf.novell.com>
-References: <1352781547-9433-1-git-send-email-acooks@gmail.com> <50A205C902000078000A7ECF@nat28.tlf.novell.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 13 Nov 2012 11:59:16 -0700
-Message-ID: <CAErSpo4WtLcMwyCHJ5rkJNhc6g-U9A=uaBzBP6HhtGUsRUn8pQ@mail.gmail.com>
-Subject: Re: [PATCH] Add missing license for ioapic module.
-To: Jan Beulich <JBeulich@suse.com>
-Cc: Andrew Cooks <acooks@gmail.com>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:61483 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750706Ab2KFALU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 5 Nov 2012 19:11:20 -0500
+From: Jon Mason <jon.mason@intel.com>
+To: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	Dave Jiang <dave.jiang@intel.com>,
+	Nicholas Bellinger <nab@linux-iscsi.org>,
+	Greg KH <gregkh@linuxfoundation.org>
+Subject: [PATCH v5 0/2] PCI-Express Non-Transparent Bridge Support 
+Date: Mon,  5 Nov 2012 17:11:07 -0700
+Message-Id: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 13, 2012 at 12:33 AM, Jan Beulich <JBeulich@suse.com> wrote:
->>>> On 13.11.12 at 05:39, Andrew Cooks <acooks@gmail.com> wrote:
->> config PCI_IOAPIC turned into a tristate in commit
->> b95a7bd700466c10fda84acbd33f70cf66ec91ce, but no module license is specified.
->> This adds the missing module license.
->>
->> Signed-off-by: Andrew Cooks <acooks@gmail.com>
->
-> Acked-by: Jan Beulich <jbeulich@suse.com>
+I am submitting version 5 of the PCI-Express Non-Transparent Bridge
+patches for inclusion in 3.8 via Greg KH's char-misc-next tree.  All
+outstanding issues have been addressed.
 
-I applied this to my pci/misc branch as v3.8 material.  Thanks!
+Version 1
+http://thread.gmane.org/gmane.linux.kernel.pci/16443
 
-Bjorn
+Version 2 incorporates numerous clean-ups
+http://thread.gmane.org/gmane.linux.kernel.pci/16696
+
+Version 3 incorporates changes to conform NTB and client devices to the
+Linux device model (per Greg KH's request).
+http://thread.gmane.org/gmane.linux.kernel.pci/17808
+
+Version 4 removes the transport transmit tasklet (per Dave Miller's
+request)
+http://thread.gmane.org/gmane.linux.network/244491
+
+Version 5 corrects a MSI-X bug and cleans up some comments 
+http://thread.gmane.org/gmane.linux.kernel.pci/18030
+
+Thanks,
+Jon
+
