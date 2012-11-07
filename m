@@ -1,57 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 4/4] AER-QEMU: Bring down the guest when KVM detects a PCI
- device error
-Date: Tue, 20 Nov 2012 06:32:38 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C90146FD06@G4W3208.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:1175 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751191Ab2KGG02 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 7 Nov 2012 01:26:28 -0500
+Message-ID: <1352269585.7176.6.camel@yhuang-dev>
+Subject: Re: [PATCH] pci/runtime-pm: respect devices autosuspend timeout on
+ config access
+From: Huang Ying <ying.huang@intel.com>
+To: David Airlie <airlied@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Date: Wed, 07 Nov 2012 14:26:25 +0800
+In-Reply-To: <890104457.2285480.1352268931077.JavaMail.root@redhat.com>
+References: <890104457.2285480.1352268931077.JavaMail.root@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-- When KVM_RUN ioctl returns with an exit reason requesting a shutdown
-of the guest due to a PCI device error detected by AER, shutdown the
-guest immediately.
+On Wed, 2012-11-07 at 01:15 -0500, David Airlie wrote:
+> > > 
+> > > Cc: Huang Ying <ying.huang@intel.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Rafael J. Wysocki <rjw@sisk.pl>
+> > > Signed-off-by: Dave Airlie <airlied@redhat.com>
+> > > ---
+> > >  drivers/pci/pci-sysfs.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > > index 02d107b..12d3d52 100644
+> > > --- a/drivers/pci/pci-sysfs.c
+> > > +++ b/drivers/pci/pci-sysfs.c
+> > > @@ -487,7 +487,7 @@ pci_config_pm_runtime_put(struct pci_dev *pdev)
+> > >  	struct device *dev = &pdev->dev;
+> > >  	struct device *parent = dev->parent;
+> > >  
+> > > -	pm_runtime_put(dev);
+> > > +	pm_runtime_put_autosuspend(dev);
+> > >  	if (parent)
+> > >  		pm_runtime_put_sync(parent);
+> > >  }
+> > 
+> > I think you do not need that.  You can implement timeout
+> > in .runtime_idle callback of the driver.
+> 
+> If I understand what you are suggesting, I should setup some kinda of timer callback to later call suspend, but that seems pointless for me if we have the autosuspend mechanism in place.
+> 
+> Won't I end up racing my timer against other pm stuff? I'm not really runtime pm expert so maybe I'm just missing something.
 
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
----
- kvm-all.c                 | 6 ++++++
- linux-headers/linux/kvm.h | 1 +
- 2 files changed, 7 insertions(+)
+You can call pm_runtime_autosuspend or pm_runtime_schedule_suspend
+in .runtime_idle callback of the driver.
 
-diff --git a/kvm-all.c b/kvm-all.c
-index b6d0483..aaff44c 100644
---- a/kvm-all.c
-+++ b/kvm-all.c
-@@ -1592,6 +1592,12 @@ int kvm_cpu_exec(CPUArchState *env)
-             qemu_system_reset_request();
-             ret = EXCP_INTERRUPT;
-             break;
-+        case KVM_EXIT_AER_SHUTDOWN:
-+            fprintf(stderr, "KVM: PCI device assigned to guest encountered "
-+                               "an uncorrectable error. Stopping guest\n");
-+            qemu_system_shutdown_request();
-+            ret = EXCP_INTERRUPT;
-+            break;
-         case KVM_EXIT_UNKNOWN:
-             fprintf(stderr, "KVM: unknown exit, hardware reason %" PRIx64 "\n",
-                     (uint64_t)run->hw.hardware_exit_reason);
-diff --git a/linux-headers/linux/kvm.h b/linux-headers/linux/kvm.h
-index 81d2feb..64906ef 100644
---- a/linux-headers/linux/kvm.h
-+++ b/linux-headers/linux/kvm.h
-@@ -167,6 +167,7 @@ struct kvm_pit_config {
- #define KVM_EXIT_OSI              18
- #define KVM_EXIT_PAPR_HCALL	  19
- #define KVM_EXIT_S390_UCONTROL	  20
-+#define KVM_EXIT_AER_SHUTDOWN     21
- 
- /* For KVM_EXIT_INTERNAL_ERROR */
- #define KVM_INTERNAL_ERROR_EMULATION 1
--- 
-1.7.11.3
+Best Regards,
+Huang Ying
+
 
