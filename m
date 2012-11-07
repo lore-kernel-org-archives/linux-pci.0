@@ -1,120 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:43401 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365Ab2KJD2l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 22:28:41 -0500
-Received: by mail-da0-f46.google.com with SMTP id n41so1926392dak.19
-        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2012 19:28:41 -0800 (PST)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:61870 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342Ab2KGSUW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Nov 2012 13:20:22 -0500
 MIME-Version: 1.0
-Reply-To: linasvepstas@gmail.com
-In-Reply-To: <CAL-B5D2ZmtOFQMhF7dG0p8U+ZcrjpQyzcLKvVzwYZ9RF6ckjzA@mail.gmail.com>
-References: <F9E001219150CB45BEDC82A650F360C9014674B9@G9W0717.americas.hpqcorp.net>
- <CAL-B5D2ZmtOFQMhF7dG0p8U+ZcrjpQyzcLKvVzwYZ9RF6ckjzA@mail.gmail.com>
-From: Linas Vepstas <linasvepstas@gmail.com>
-Date: Fri, 9 Nov 2012 21:28:20 -0600
-Message-ID: <CAHrUA37b_wd_18e6S7WSSkVG0nLF1sED0hetJq0=8NYdNJkkVw@mail.gmail.com>
-Subject: Re: [ PATCH ] PCI-AER: Do not report successful error recovery for
- devices with AER-unaware drivers
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <509A044D.30100@jp.fujitsu.com>
+References: <20121015065516.2832.42378.sendpatchset@indoh>
+	<20121015065526.2832.90867.sendpatchset@indoh>
+	<CAE9FiQXKjNU4Sasj4LmiFiNNu9quGgKAdW3ciVnXggoWZiYXJA@mail.gmail.com>
+	<507CE14A.2020605@jp.fujitsu.com>
+	<509A044D.30100@jp.fujitsu.com>
+Date: Wed, 7 Nov 2012 10:20:20 -0800
+Message-ID: <CAE9FiQWOfownBsSsw-36Ti-hHeKuVaq8Y5eaMHMHpLK4NXhC0g@mail.gmail.com>
+Subject: Re: [PATCH v4 1/2] x86, pci: Reset PCIe devices at boot time
+From: Yinghai Lu <yinghai@kernel.org>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: martin.wilck@ts.fujitsu.com, linux-pci@vger.kernel.org,
+	x86@kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, hbabu@us.ibm.com,
+	andi@firstfloor.org, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, mingo@redhat.com, vgoyal@redhat.com,
+	khalid@gonehiking.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes, that is correct: Reviewed-by/Acked-by: me. I plead late-night wooziness.
+On Tue, Nov 6, 2012 at 10:48 PM, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+> I'm rewriting my reset code using your dummy pci_dev patch. Do you have
+> a plan to post it or can I post it with my patches?
 
--- Linas
+Yes, you can post it with your patches if you like.
 
-On 9 November 2012 11:06, Myron Stowe <myron.stowe@gmail.com> wrote:
-> Adding: linasvepstas@gmail.com
->
-> On Thu, Nov 8, 2012 at 9:28 PM, Pandarathil, Vijaymohan R
-> <vijaymohan.pandarathil@hp.com> wrote:
->> When an error is detected on a PCIe device which does not have an
->> AER-aware driver, prevent AER infrastructure from reporting
->> successful error recovery.
->>
->> This is because the report_error_detected() function that gets
->> called in the first phase of recovery process allows forward
->> progress even when the driver for the device does not have AER
->> capabilities. It seems that all callbacks (in pci_error_handlers
->> structure) registered by drivers that gets called during error
->> recovery are not mandatory. So the intention of the infrastructure
->> design seems to be to allow forward progress even when a specific
->> callback has not been registered by a driver. However, if error
->> handler structure itself has not been registered, it doesn't make
->> sense to allow forward progress.
->>
->> As a result of the current design, in the case of a single device
->> having an AER-unaware driver or in the case of any function in a
->> multi-function card having an AER-unaware driver, a successful
->> recovery is reported.
->>
->> Typical scenario this happens is when a PCI device is detached
->> from a KVM host and the pci-stub driver on the host claims the
->> device. The pci-stub driver does not have error handling capabilities
->> but the AER infrastructure still reports that the device recovered
->> successfully.
->>
->> The changes proposed here leaves the device in an unrecovered state
->> if the driver for the device or for any function in a multi-function
->> card does not have error handler structure registered. This reflects
->> the true state of the device and prevents any partial recovery (or no
->> recovery at all) reported as successful.
->>
->> Please also see comments from Linas Vepstas at the following link
->> http://www.spinics.net/lists/linux-pci/msg18572.html
->>
->> Signed-off-by: Linas Vepstas <linasvepstas <at> gmail.com>
->> Signed-off-by: Myron Stowe <mstowe <at> redhat.com>
->> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
->
-> Hay Vijay:
->
-> I think Linas may have steered you incorrectly with his "FWIW, I guess
-> I could add a
-> Signed-off-by: Linas Vepstas <...>" comment.
->
-> From ./Documentation/SubmittingPatches, "The Signed-off-by: tag
-> indicates that the
-> signer was involved in the development of the patch, or that he/she
-> was in the patch's
-> delivery path."
->
-> I this case I suspect that "reviewed-by" or 'acked-by" would be more
-> appropriate for
-> both Linas (unless of course Linas worked with you in developing the patch) and
-> myslef.
->
-> Also, when posting to the list it's considered good etiquette to
-> include (cc) everyone
-> cited in the Signed-off, reviewed-by, acked-by, ..., lines (and
-> possibly the linux-kernel
-> list - again see ./Documentation/SubmittingPatches).
->
-> Myron
->>
->> ---
->>
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->> index 06bad96..030b229 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
->>
->>         dev->error_state = result_data->state;
->>
->> +       if ((!dev->driver || !dev->driver->err_handler) &&
->> +               !(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
->> +               dev_info(&dev->dev, "AER: Error detected but no driver has claimed this device or the driver is AER-unaware\n");
->> +               result_data->result = PCI_ERS_RESULT_NONE;
->> +               return 1;
->> +       }
->>         if (!dev->driver ||
->>                 !dev->driver->err_handler ||
->>                 !dev->driver->err_handler->error_detected) {
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yinghai
