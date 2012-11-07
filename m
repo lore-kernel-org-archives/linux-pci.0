@@ -1,69 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 2 Nov 2012 19:02:02 +0900
-From: Taku Izumi <izumi.taku@jp.fujitsu.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 3/8] PCI: Move out pci_enable_bridges out of
- assign_unsigned_bus_res
-Message-Id: <20121102190202.2b09edcd.izumi.taku@jp.fujitsu.com>
-In-Reply-To: <1351618965-16761-4-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
-	<1351618965-16761-1-git-send-email-yinghai@kernel.org>
-	<1351618965-16761-4-git-send-email-yinghai@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:45419 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320Ab2KGKry convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Nov 2012 05:47:54 -0500
+Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 8D22D3EE0BD
+	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
+Received: from smail (m2 [127.0.0.1])
+	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 73C0445DE4D
+	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
+	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 5D82245DD74
+	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
+Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 511E21DB803A
+	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
+Received: from g01jpexchyt04.g01.fujitsu.local (g01jpexchyt04.g01.fujitsu.local [10.128.194.43])
+	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 023D11DB8038
+	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
+From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+To: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	"Oliver Neukum" <oneukum@suse.de>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
+Subject: RE: [RFC][PATCH] PCI, pciehp: make every slot have its own
+ workqueue to avoid deadlock
+Date: Wed, 7 Nov 2012 10:47:50 +0000
+Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A51AFF0@G01JPEXMBYT03>
+References: <1351667452-9952-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1351667452-9952-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="iso-2022-jp"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 30 Oct 2012 10:42:40 -0700
-Yinghai Lu <yinghai@kernel.org> wrote:
+Hi Yijing,
 
-> So could use assign_unassigned_bus_res pci root bus add
+I have some comments. Sorry for the delay.
 
-  This description doesn't match the following patch...
-  This is for 4/8?
+<snip.>
 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/probe.c     |    1 +
->  drivers/pci/setup-bus.c |    2 --
->  2 files changed, 1 insertions(+), 2 deletions(-)
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -773,23 +773,33 @@ static void pcie_shutdown_notification(struct controller *ctrl)
+>  static int pcie_init_slot(struct controller *ctrl)
+>  {
+>  	struct slot *slot;
+> +	char name[32];
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 65f62e3..59cf1ba 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1905,6 +1905,7 @@ unsigned int __ref pci_rescan_bus(struct pci_bus *bus)
->  
->  	max = pci_scan_child_bus(bus);
->  	pci_assign_unassigned_bus_resources(bus);
-> +	pci_enable_bridges(bus);
->  	pci_bus_add_devices(bus);
->  
->  	return max;
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 59e6c55..6d3591d 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1566,6 +1566,4 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  	up_read(&pci_bus_sem);
->  	__pci_bus_assign_resources(bus, &add_list, NULL);
->  	BUG_ON(!list_empty(&add_list));
+>  	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+>  	if (!slot)
+>  		return -ENOMEM;
 > -
-> -	pci_enable_bridges(bus);
+> +
+> +	snprintf(name, sizeof(name), "pciehpd_%s",
+> +		pci_name(ctrl->pcie->port));
+
+The name of the threads seems to be cut off.
+
+$ ps aux | grep pciehp
+root        125  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:00]
+root        126  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:00]
+root        127  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
+root        128  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
+root        129  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
+root        130  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
+root        131  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
+root        132  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
+root        133  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
+root        134  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
+
+How about using slot name for the thread name?
+
+<snip.>
+
+> 
+>  static void pcie_cleanup_slot(struct controller *ctrl)
+>  {
+>  	struct slot *slot = ctrl->slot;
+>  	cancel_delayed_work(&slot->work);
+> -	flush_workqueue(pciehp_wq);
+> +	flush_workqueue(slot->wq);
+> +	destroy_workqueue(slot->wq);
+>  	kfree(slot);
 >  }
-> -- 
-> 1.7.7
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
+I think flush_workqueue() call is no longer required because
+it is done in destroy_workqueue() code path.
 
--- 
-Taku Izumi <izumi.taku@jp.fujitsu.com>
+Regards,
+Kenji Kaneshige
 
