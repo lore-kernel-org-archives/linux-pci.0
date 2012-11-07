@@ -1,64 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from webmail.solarflare.com ([12.187.104.25]:10857 "EHLO
-	webmail.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756264Ab2K0SKo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Nov 2012 13:10:44 -0500
-Message-ID: <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
-Subject: RE: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: "Fujinaka, Todd" <todd.fujinaka@intel.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>
-CC: Joe Jin <joe.jin@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Date: Tue, 27 Nov 2012 18:10:40 +0000
-In-Reply-To: <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com>
-References: <509B5038.8090304@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com>
-	 <50A30656.6090508@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com>
-	 <50A43828.6000702@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com>
-	 <50A9C5CC.1030300@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com>
-	 <50AB8471.7080607@oracle.com>
-	 <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com>
-	 <50B41077.3080009@oracle.com>
-	 <b46b84cf-3688-4fd7-b741-4e96f2663517@default>
-	 <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-we0-f174.google.com ([74.125.82.174]:44827 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751471Ab2KGXAl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Nov 2012 18:00:41 -0500
+Received: by mail-we0-f174.google.com with SMTP id t9so967710wey.19
+        for <linux-pci@vger.kernel.org>; Wed, 07 Nov 2012 15:00:39 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAErSpo6+dnxjCaqE=hiYUfDTKi3SCg0SYfuoHVuCse6_nG1mEA@mail.gmail.com>
+References: <1347994314.9011.1.camel@joe2Laptop> <CAErSpo6+dnxjCaqE=hiYUfDTKi3SCg0SYfuoHVuCse6_nG1mEA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 7 Nov 2012 16:00:19 -0700
+Message-ID: <CAErSpo4ESkfXEEv9USu5kEP+oTWvLV+Ke+g8AUoF6ifJV7cc-g@mail.gmail.com>
+Subject: Re: [PATCH] pci: Convert pci_resource_<foo> macros to static inlines
+To: Joe Perches <joe@perches.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
-> Forgive me if I'm being too repetitious as I think some of this has
-> been mentioned in the past.
-> 
-> We (and by we I mean the Ethernet part and driver) can only change the
-> advertised availability of a larger MaxPayloadSize. The size is
-> negotiated by both sides of the link when the link is established. The
-> driver should not change the size of the link as it would be poking at
-> registers outside of its scope and is controlled by the upstream
-> bridge (not us).
-[...]
+On Mon, Nov 5, 2012 at 3:28 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Sep 18, 2012 at 12:51 PM, Joe Perches <joe@perches.com> wrote:
+>> Get the compiler to verify the argument type of struct pci_dev *.
+>>
+>> Signed-off-by: Joe Perches <joe@perches.com>
+>
+> I applied this to my pci/misc branch as v3.8 material.  Thanks!
 
-MaxPayloadSize (MPS) is not negotiated between devices but is programmed
-by the system firmware (at least for devices present at boot - the
-kernel may be responsible in case of hotplug).  You can use the kernel
-parameter 'pci=pcie_bus_perf' (or one of several others) to set a policy
-that overrides this, but no policy will allow setting MPS above the
-device's MaxPayloadSizeSupported (MPSS).
+I dropped this for now because of these build failures:
 
-(These parameters are not documented in
-Documentation/kernel-parameters.txt!  Someone ought to fix that.)
+drivers/staging/telephony/ixj.c: In function 'ixj_probe_pci':
+drivers/staging/telephony/ixj.c:7732:13: warning: assignment makes
+integer from pointer without a cast [enabled by default]
+drivers/staging/telephony/ixj.c:7732:38: error: expected ';' before
+'pci_resource_start'
+drivers/scsi/gdth.c: In function 'gdth_init_pci':
+drivers/scsi/gdth.c:1111:34: error: lvalue required as left operand of
+assignment
 
-Ben.
+I posted a fix for the gdth.c problem, and ixj.c is apparently being
+deleted.  When those happen, we can try again.
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Bjorn
 
+>> ---
+>>
+>> Another possible improvement is to range check index.
+>>
+>>  include/linux/pci.h |   36 ++++++++++++++++++++++++++----------
+>>  1 files changed, 26 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 5faa831..971d0e9 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1396,16 +1396,32 @@ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
+>>
+>>  /* these helpers provide future and backwards compatibility
+>>   * for accessing popular PCI BAR info */
+>> -#define pci_resource_start(dev, bar)   ((dev)->resource[(bar)].start)
+>> -#define pci_resource_end(dev, bar)     ((dev)->resource[(bar)].end)
+>> -#define pci_resource_flags(dev, bar)   ((dev)->resource[(bar)].flags)
+>> -#define pci_resource_len(dev,bar) \
+>> -       ((pci_resource_start((dev), (bar)) == 0 &&      \
+>> -         pci_resource_end((dev), (bar)) ==             \
+>> -         pci_resource_start((dev), (bar))) ? 0 :       \
+>> -                                                       \
+>> -        (pci_resource_end((dev), (bar)) -              \
+>> -         pci_resource_start((dev), (bar)) + 1))
+>> +static inline resource_size_t
+>> +pci_resource_start(const struct pci_dev *dev, int index)
+>> +{
+>> +       return dev->resource[index].start;
+>> +}
+>> +
+>> +static inline resource_size_t
+>> +pci_resource_end(const struct pci_dev *dev, int index)
+>> +{
+>> +       return dev->resource[index].end;
+>> +}
+>> +
+>> +static inline unsigned long
+>> +pci_resource_flags(const struct pci_dev *dev, int index)
+>> +{
+>> +       return dev->resource[index].flags;
+>> +}
+>> +
+>> +static inline resource_size_t
+>> +pci_resource_len(const struct pci_dev *dev, int index)
+>> +{
+>> +       if (pci_resource_start(dev, index) == 0 &&
+>> +           pci_resource_end(dev, index) == 0)
+>> +               return 0;
+>> +       return resource_size(&dev->resource[index]);
+>> +}
+>>
+>>  /* Similar to the helpers above, these manipulate per-pci_dev
+>>   * driver-specific data.  They are really just a wrapper around
+>>
+>>
+>>
