@@ -1,46 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:33321 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148Ab2KPBSp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2012 20:18:45 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1556426pbc.19
-        for <linux-pci@vger.kernel.org>; Thu, 15 Nov 2012 17:18:44 -0800 (PST)
-Date: Thu, 15 Nov 2012 17:18:41 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@linux-iscsi.org>
-Subject: Re: [PATCH v5 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20121116011841.GB32285@kroah.com>
-References: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
- <1352160669-4330-2-git-send-email-jon.mason@intel.com>
- <20121116002904.GA20876@kroah.com>
- <20121116010621.GI24723@jonmason-lab>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121116010621.GI24723@jonmason-lab>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Huang Ying <ying.huang@intel.com>
+Subject: [PATCH -v2] ACPI/PCI: Make PCI devices notified when its power resource turned on
+Date: Wed,  7 Nov 2012 08:57:59 +0800
+Message-Id: <1352249879-11406-1-git-send-email-ying.huang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 15, 2012 at 06:06:21PM -0700, Jon Mason wrote:
-> > > +static inline unsigned int ntb_query_max_cbs(struct ntb_device *ndev)
-> > > +{
-> > > +	return ndev->max_cbs;
-> > > +}
-> > 
-> > It is shorter, and simpler, to just write the '->variable' version out
-> > for this, than to make the function call here.  Why are these needed?
-> > Especially when I see the driver code not using them.  Please remove.
-> 
-> This is used in ntb_transport.c.  It is used to show how many
-> interrupts, and there-by clients, the transport layer can have.  I can
-> make it a macro and/or put it in a header file, if that suits you
-> better.
+A set of power resources may be shared by multiple devices.  When all
+devices share one set of power resources is put into D3_COLD state,
+the power resources will be turned off.  When one of the device is
+waked, the power resource will be turned on and all devices share it
+will be powered on to D0uninitialized state.  These devices should be
+resumed, so that they can get opportunity to go to low power state
+later.
 
-No, just reference the field of the structure directly, no need for a
-function or a macro.
+v2:
 
-thanks,
+- Fix build error
 
-greg k-h
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/acpi/pci_bind.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/drivers/acpi/pci_bind.c
++++ b/drivers/acpi/pci_bind.c
+@@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
+ 
+ 	device_set_run_wake(&dev->dev, false);
+ 	pci_acpi_remove_pm_notifier(device);
++	acpi_power_resource_unregister_device(&dev->dev, device->handle);
+ 
+ 	if (!dev->subordinate)
+ 		goto out;
+@@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
+ 		return 0;
+ 
+ 	pci_acpi_add_pm_notifier(device, dev);
++	acpi_power_resource_register_device(&dev->dev, device->handle);
+ 	if (device->wakeup.flags.run_wake)
+ 		device_set_run_wake(&dev->dev, true);
+ 
