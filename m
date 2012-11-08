@@ -1,110 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:57395 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933301Ab2KEWdJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2012 17:33:09 -0500
-Received: by mail-ee0-f74.google.com with SMTP id b57so410263eek.1
-        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2012 14:33:07 -0800 (PST)
-Subject: [PATCH] x86/PCI: Ignore _SEG on HP xw9300
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Sean M. Pappalardo" <pegasus@renegadetech.com>
-Date: Mon, 05 Nov 2012 15:33:06 -0700
-Message-ID: <20121105223306.7246.36325.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44469 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756624Ab2KHS3n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2012 13:29:43 -0500
+Received: by mail-bk0-f46.google.com with SMTP id jk13so1346644bkc.19
+        for <linux-pci@vger.kernel.org>; Thu, 08 Nov 2012 10:29:42 -0800 (PST)
+From: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
+To: linux-acpi@vger.kernel.org, isimatu.yasuaki@jp.fujitsu.com
+Cc: rjw@sisk.pl, wency@cn.fujitsu.com, lenb@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org,
+	Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
+Subject: [RFC PATCH 3/3] acpi_memhotplug: Add prepare_remove operation
+Date: Thu,  8 Nov 2012 19:29:31 +0100
+Message-Id: <1352399371-8015-4-git-send-email-vasilis.liaskovitis@profitbricks.com>
+In-Reply-To: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
+References: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The xw9300 BIOS supplies _SEG methods that are incorrect, which results
-in some LSI SCSI devices not being discovered.  This adds a quirk to
-ignore _SEG on this machine and default to zero.
+Offlining and removal of memory is now done in the prepare_remove callback,
+not in the remove callback.
 
-The xw9300 has three host bridges:
-
-    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-3f])
-    ACPI: PCI Root Bridge [PCI1] (domain 0001 [bus 40-7f])
-    ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 80-ff])
-
-When the BIOS "ACPI Bus Segmentation" option is enabled (as it is by
-default), the _SEG methods of the PCI1 and PCI2 bridges return 1 and 2,
-respectively.  However, the BIOS implementation appears to be incomplete,
-and we can't enumerate devices in those domains.
-
-But if we assume PCI1 and PCI2 really lead to buses in domain 0,
-everything works fine.  Windows XP and Vista also seem to ignore
-these _SEG methods.
-
-Reference: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=543308
-Reference: https://bugzilla.kernel.org/show_bug.cgi?id=15362
-Reported-and-Tested-by: Sean M. Pappalardo <pegasus@renegadetech.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
 ---
- arch/x86/pci/acpi.c |   25 +++++++++++++++++++++++--
- 1 files changed, 23 insertions(+), 2 deletions(-)
+ drivers/acpi/acpi_memhotplug.c |   22 ++++++++++++++++++++--
+ 1 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 192397c..49e5195 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -22,6 +22,7 @@ struct pci_root_info {
+diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
+index 7fcc844..9b734a5 100644
+--- a/drivers/acpi/acpi_memhotplug.c
++++ b/drivers/acpi/acpi_memhotplug.c
+@@ -54,6 +54,7 @@ MODULE_LICENSE("GPL");
+ 
+ static int acpi_memory_device_add(struct acpi_device *device);
+ static int acpi_memory_device_remove(struct acpi_device *device, int type);
++static int acpi_memory_device_prepare_remove(struct acpi_device *device);
+ 
+ static const struct acpi_device_id memory_device_ids[] = {
+ 	{ACPI_MEMORY_DEVICE_HID, 0},
+@@ -68,6 +69,7 @@ static struct acpi_driver acpi_memory_device_driver = {
+ 	.ops = {
+ 		.add = acpi_memory_device_add,
+ 		.remove = acpi_memory_device_remove,
++		.prepare_remove = acpi_memory_device_prepare_remove,
+ 		},
  };
  
- static bool pci_use_crs = true;
-+static bool pci_ignore_seg = false;
- 
- static int __init set_use_crs(const struct dmi_system_id *id)
+@@ -499,6 +501,20 @@ static int acpi_memory_device_add(struct acpi_device *device)
+ static int acpi_memory_device_remove(struct acpi_device *device, int type)
  {
-@@ -35,7 +36,14 @@ static int __init set_nouse_crs(const struct dmi_system_id *id)
- 	return 0;
- }
- 
--static const struct dmi_system_id pci_use_crs_table[] __initconst = {
-+static int __init set_ignore_seg(const struct dmi_system_id *id)
-+{
-+	printk(KERN_INFO "PCI: %s detected: ignoring ACPI _SEG\n", id->ident);
-+	pci_ignore_seg = true;
+ 	struct acpi_memory_device *mem_device = NULL;
++
++	if (!device || !acpi_driver_data(device))
++		return -EINVAL;
++
++	mem_device = acpi_driver_data(device);
++
++	kfree(mem_device);
++
 +	return 0;
 +}
 +
-+static const struct dmi_system_id pci_crs_quirks[] __initconst = {
- 	/* http://bugzilla.kernel.org/show_bug.cgi?id=14183 */
- 	{
- 		.callback = set_use_crs,
-@@ -98,6 +106,16 @@ static const struct dmi_system_id pci_use_crs_table[] __initconst = {
- 			DMI_MATCH(DMI_BIOS_VERSION, "6JET85WW (1.43 )"),
- 		},
- 	},
-+
-+	/* https://bugzilla.kernel.org/show_bug.cgi?id=15362 */
-+	{
-+		.callback = set_ignore_seg,
-+		.ident = "HP xw9300",
-+		.matches = {
-+			DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
-+			DMI_MATCH(DMI_PRODUCT_NAME, "HP xw9300 Workstation"),
-+		},
-+	},
- 	{}
- };
++static int acpi_memory_device_prepare_remove(struct acpi_device *device)
++{
++	struct acpi_memory_device *mem_device = NULL;
+ 	int result;
  
-@@ -108,7 +126,7 @@ void __init pci_acpi_crs_quirks(void)
- 	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008)
- 		pci_use_crs = false;
+ 	if (!device || !acpi_driver_data(device))
+@@ -506,12 +522,14 @@ static int acpi_memory_device_remove(struct acpi_device *device, int type)
  
--	dmi_check_system(pci_use_crs_table);
-+	dmi_check_system(pci_crs_quirks);
+ 	mem_device = acpi_driver_data(device);
  
- 	/*
- 	 * If the user specifies "pci=use_crs" or "pci=nocrs" explicitly, that
-@@ -455,6 +473,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
- 	int pxm;
- #endif
++	/*
++	 * offline and remove memory only when the memory device is
++	 * ejected.
++	 */
+ 	result = acpi_memory_remove_memory(mem_device);
+ 	if (result)
+ 		return result;
  
-+	if (pci_ignore_seg)
-+		domain = 0;
-+
- 	if (domain && !pci_domains_supported) {
- 		printk(KERN_WARNING "pci_bus %04x:%02x: "
- 		       "ignored (multiple domains not supported)\n",
+-	kfree(mem_device);
+-
+ 	return 0;
+ }
+ 
+-- 
+1.7.9
 
