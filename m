@@ -1,129 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1351797478.19172.103.camel@misato.fc.hp.com>
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support
- container hot-remove.
-From: Toshi Kani <toshi.kani@hp.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: ZhangRui <rui.zhang@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 01 Nov 2012 13:17:58 -0600
-In-Reply-To: <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
-	 <1351668471-31436-4-git-send-email-tangchen@cn.fujitsu.com>
-	 <1351788194.19172.98.camel@misato.fc.hp.com>
-	 <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:48585 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754363Ab2KIRrm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 12:47:42 -0500
+Received: by mail-we0-f174.google.com with SMTP id t9so1852698wey.19
+        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2012 09:47:41 -0800 (PST)
+MIME-Version: 1.0
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 9 Nov 2012 10:47:20 -0700
+Message-ID: <CAErSpo4Wjh1t68W5z9a0iC0hJcEeGhJ7CKrEL42iZQJksboaOQ@mail.gmail.com>
+Subject: [GIT PULL] PCI updates for v3.7
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Huang Ying <ying.huang@intel.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-11-01 at 11:28 -0700, Yinghai Lu wrote:
-> On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
-> >
-> > Rafael pointed out in my CPU hot-remove patch that
-> > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
-> > you have the same problem here.  FYI, I just sent the following patch
-> > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
-> >
-> > https://lkml.org/lkml/2012/11/1/225
-> 
-> acpi_os_hotplug_execute() does not like having good quality yet.
-> 
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
-> can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
-> because the hotplug code may call driver .remove() functions,
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
-> which invoke flush_scheduled_work/acpi_os_wait_events_complete
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
-> flush these workqueues.
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
-> = hp ? kacpi_hotplug_wq :
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
->  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
-> 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
-> dpc->wait = hp ? 1 : 0;
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
-> (queue == kacpi_hotplug_wq)
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
->  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
-> if (queue == kacpi_notify_wq)
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
->  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
->  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
-> 
-> really don't know why checking queue and call same code in every branch.
-> 
-> from comm:
-> 
-> commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
-> Author: Zhang Rui <rui.zhang@intel.com>
-> Date:   Mon Mar 22 15:48:54 2010 +0800
-> 
->     ACPI: fixes a false alarm from lockdep
-> 
->     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
->     workqueues.
->     http://bugzilla.kernel.org/show_bug.cgi?id=14553
->     https://bugzilla.kernel.org/show_bug.cgi?id=15521
-> 
->     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
->     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
->     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
->     Signed-off-by: Len Brown <len.brown@intel.com>
-> 
-> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-> index 8e6d866..900da68 100644
-> --- a/drivers/acpi/osl.c
-> +++ b/drivers/acpi/osl.c
-> @@ -758,7 +758,14 @@ static acpi_status
-> __acpi_os_execute(acpi_execute_type type,
->         queue = hp ? kacpi_hotplug_wq :
->                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
->         dpc->wait = hp ? 1 : 0;
-> -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +
-> +       if (queue == kacpi_hotplug_wq)
-> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +       else if (queue == kacpi_notify_wq)
-> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +       else
-> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +
->         ret = queue_work(queue, &dpc->work);
-> 
->         if (!ret) {
-> 
-> 
-> Len or Rafael,
-> can you just revert that silly patch?
+Hi Linus,
 
-Hi Yinghai,
+Here are some fixes for v3.7.  Three are related to D3cold support,
+and the last portdrv one is a fix for the PCIe capability accessor
+rework we merged for v3.7-rc1.
 
-Per the following thread, the code seems to be written in this way to
-allocate a separate lock_class_key for each work queue.  It should have
-had some comment to explain this, though.
-
-https://lkml.org/lkml/2009/12/13/304
-
-Thanks,
--Toshi
+Bjorn
 
 
+The following changes since commit 8f0d8163b50e01f398b14bcd4dc039ac5ab18d64:
 
-> 
-> Yinghai
+  Linux 3.7-rc3 (2012-10-28 12:24:48 -0700)
 
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+tags/3.7-pci-fixes
+
+for you to fetch changes up to ff8e59bc4ec3f31789a47dce9b6fe44bd7bc5fcc:
+
+  PCI/portdrv: Don't create hotplug slots unless port supports hotplug
+(2012-11-05 16:59:59 -0700)
+
+----------------------------------------------------------------
+PCI updates for v3.7:
+
+  Power management
+      PCI/PM: Fix proc config reg access for D3cold and bridge suspending
+      PCI/PM: Resume device before shutdown
+      PCI/PM: Fix deadlock when unbinding device if parent in D3cold
+  Hotplug
+      PCI/portdrv: Don't create hotplug slots unless port supports hotplug
+
+----------------------------------------------------------------
+Bjorn Helgaas (1):
+      Merge branch 'pci/huang-d3cold-fixes' into for-linus
+
+Huang Ying (3):
+      PCI/PM: Fix deadlock when unbinding device if parent in D3cold
+      PCI/PM: Resume device before shutdown
+      PCI/PM: Fix proc config reg access for D3cold and bridge suspending
+
+Taku Izumi (1):
+      PCI/portdrv: Don't create hotplug slots unless port supports hotplug
+
+ drivers/pci/bus.c                  |  3 ---
+ drivers/pci/pci-driver.c           | 12 ++----------
+ drivers/pci/pci-sysfs.c            | 34 ----------------------------------
+ drivers/pci/pci.c                  | 32 ++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                  |  2 ++
+ drivers/pci/pcie/aer/aerdrv_core.c | 20 ++++++++++++++++----
+ drivers/pci/pcie/portdrv_core.c    |  3 ++-
+ drivers/pci/proc.c                 |  8 ++++++++
+ 8 files changed, 62 insertions(+), 52 deletions(-)
