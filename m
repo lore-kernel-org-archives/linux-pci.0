@@ -1,318 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, andi@firstfloor.org, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, yinghai@kernel.org,
-	mingo@redhat.com, Takao Indoh <indou.takao@jp.fujitsu.com>,
-	khalid@gonehiking.org
-Message-Id: <20121127004223.3604.78831.sendpatchset@tindoh.g01.fujitsu.local>
-In-Reply-To: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-Subject: [PATCH v7 4/5] x86, pci: Reset PCIe devices at boot time
-Date: Tue, 27 Nov 2012 09:43:13 +0900 (JST)
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:47962 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754520Ab2KIEbM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 8 Nov 2012 23:31:12 -0500
+Received: from G4W3011G.americas.hpqcorp.net (g4w3011g.houston.hp.com [16.234.25.125])
+	(using TLSv1 with cipher AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by g4t0015.houston.hp.com (Postfix) with ESMTPS id 323EE84BC
+	for <linux-pci@vger.kernel.org>; Fri,  9 Nov 2012 04:31:12 +0000 (UTC)
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [ PATCH ] PCI-AER: Do not report successful error recovery for
+ devices with AER-unaware drivers
+Date: Fri, 9 Nov 2012 04:28:31 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C9014674B9@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch resets PCIe devices at boot time when "reset_devices" is
-specified.
+When an error is detected on a PCIe device which does not have an
+AER-aware driver, prevent AER infrastructure from reporting
+successful error recovery.
 
-Kdump with intel_iommu=on fails becasue ongoing DMA from first kernel
-causes DMAR fault when page table of DMAR is initialized while kdump
-kernel is booting up. To solve this problem, this patch resets PCIe
-devices during boot to stop its DMA.
+This is because the report_error_detected() function that gets
+called in the first phase of recovery process allows forward
+progress even when the driver for the device does not have AER
+capabilities. It seems that all callbacks (in pci_error_handlers
+structure) registered by drivers that gets called during error
+recovery are not mandatory. So the intention of the infrastructure
+design seems to be to allow forward progress even when a specific
+callback has not been registered by a driver. However, if error
+handler structure itself has not been registered, it doesn't make
+sense to allow forward progress.
 
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+As a result of the current design, in the case of a single device
+having an AER-unaware driver or in the case of any function in a
+multi-function card having an AER-unaware driver, a successful
+recovery is reported.
+
+Typical scenario this happens is when a PCI device is detached
+from a KVM host and the pci-stub driver on the host claims the
+device. The pci-stub driver does not have error handling capabilities
+but the AER infrastructure still reports that the device recovered
+successfully.
+
+The changes proposed here leaves the device in an unrecovered state
+if the driver for the device or for any function in a multi-function
+card does not have error handler structure registered. This reflects
+the true state of the device and prevents any partial recovery (or no
+recovery at all) reported as successful.
+
+Please also see comments from Linas Vepstas at the following link
+http://www.spinics.net/lists/linux-pci/msg18572.html
+
+Signed-off-by: Linas Vepstas <linasvepstas <at> gmail.com>
+Signed-off-by: Myron Stowe <mstowe <at> redhat.com>
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
+
 ---
- arch/x86/include/asm/pci-direct.h |    1 +
- arch/x86/kernel/setup.c           |    3 +
- arch/x86/pci/early.c              |  241 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 245 insertions(+), 0 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-index b6360d3..5620070 100644
---- a/arch/x86/include/asm/pci-direct.h
-+++ b/arch/x86/include/asm/pci-direct.h
-@@ -18,6 +18,7 @@ extern int early_pci_allowed(void);
- extern unsigned int pci_early_dump_regs;
- extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
- extern void early_dump_pci_devices(void);
-+extern void early_reset_pcie_devices(void);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 06bad96..030b229 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
  
- struct pci_dev *get_early_pci_dev(int num, int slot, int func);
- #endif /* _ASM_X86_PCI_DIRECT_H */
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index ca45696..2e7928e 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -1001,6 +1001,9 @@ void __init setup_arch(char **cmdline_p)
- 	generic_apic_probe();
+ 	dev->error_state = result_data->state;
  
- 	early_quirks();
-+#ifdef CONFIG_PCI
-+	early_reset_pcie_devices();
-+#endif
- 
- 	/*
- 	 * Read APIC and some other early information from ACPI tables.
-diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-index 024def7..ff737f3 100644
---- a/arch/x86/pci/early.c
-+++ b/arch/x86/pci/early.c
-@@ -1,5 +1,6 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/bootmem.h>
- #include <asm/pci-direct.h>
- #include <asm/io.h>
- #include <asm/pci_x86.h>
-@@ -183,3 +184,243 @@ __init struct pci_dev *get_early_pci_dev(int num, int slot, int func)
- 
- 	return pdev;
- }
-+
-+struct pcie_dev {
-+	int cap;	/* position of PCI Express capability */
-+	int flags;	/* PCI_EXP_FLAGS */
-+
-+	/* saved configration register */
-+	u32 pci_cfg[16];
-+	u16 pcie_cfg[7];
-+};
-+
-+struct pcie_port {
-+	struct list_head dev;
-+	u8 bus;
-+	u8 slot;
-+	u8 func;
-+	u8 secondary;
-+	struct pcie_dev child[PCI_MAX_FUNCTIONS];
-+};
-+
-+static __initdata LIST_HEAD(device_list);
-+
-+static void __init early_udelay(int loops)
-+{
-+	while (loops--) {
-+		/* Approximately 1 us */
-+		native_io_delay();
++	if ((!dev->driver || !dev->driver->err_handler) &&
++		!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
++		dev_info(&dev->dev, "AER: Error detected but no driver has claimed this device or the driver is AER-unaware\n");
++		result_data->result = PCI_ERS_RESULT_NONE;
++		return 1;
 +	}
-+}
-+
-+static void __init do_reset(u8 bus, u8 slot, u8 func)
-+{
-+	struct pci_dev *dev;
-+	u16 ctrl;
-+
-+	dev = get_early_pci_dev(bus, slot, func);
-+
-+	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
-+
-+	/* Assert Secondary Bus Reset */
-+	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
-+	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-+
-+	/*
-+	 * PCIe spec requires software to ensure a minimum reset duration
-+	 * (Trst == 1ms). We have here 5ms safety margin because early_udelay
-+	 * is not precise.
-+	 */
-+	early_udelay(5000);
-+
-+	/* De-assert Secondary Bus Reset */
-+	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
-+}
-+
-+static void __init save_state(u8 bus, u8 slot, u8 func, struct pcie_dev *pdev)
-+{
-+	struct pci_dev *dev;
-+	int i;
-+
-+	dev = get_early_pci_dev(bus, slot, func);
-+	dev->is_pcie = 1;
-+	dev->pcie_cap = pdev->cap;
-+	dev->pcie_flags_reg = pdev->flags;
-+
-+	printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
-+
-+	for (i = 0; i < 16; i++)
-+		pci_read_config_dword(dev, i * 4, pdev->pci_cfg + i);
-+	i = 0;
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &pdev->pcie_cfg[i++]);
-+	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &pdev->pcie_cfg[i++]);
-+	pcie_capability_read_word(dev, PCI_EXP_SLTCTL, &pdev->pcie_cfg[i++]);
-+	pcie_capability_read_word(dev, PCI_EXP_RTCTL, &pdev->pcie_cfg[i++]);
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &pdev->pcie_cfg[i++]);
-+	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &pdev->pcie_cfg[i++]);
-+	pcie_capability_read_word(dev, PCI_EXP_SLTCTL2, &pdev->pcie_cfg[i++]);
-+}
-+
-+static void __init restore_state(u8 bus, u8 slot, u8 func,
-+				 struct pcie_dev *pdev)
-+{
-+	struct pci_dev *dev;
-+	int i = 0;
-+
-+	dev = get_early_pci_dev(bus, slot, func);
-+	dev->is_pcie = 1;
-+	dev->pcie_cap = pdev->cap;
-+	dev->pcie_flags_reg = pdev->flags;
-+
-+	printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
-+	       bus, slot, func);
-+
-+	pcie_capability_write_word(dev, PCI_EXP_DEVCTL, pdev->pcie_cfg[i++]);
-+	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, pdev->pcie_cfg[i++]);
-+	pcie_capability_write_word(dev, PCI_EXP_SLTCTL, pdev->pcie_cfg[i++]);
-+	pcie_capability_write_word(dev, PCI_EXP_RTCTL, pdev->pcie_cfg[i++]);
-+	pcie_capability_write_word(dev, PCI_EXP_DEVCTL2, pdev->pcie_cfg[i++]);
-+	pcie_capability_write_word(dev, PCI_EXP_LNKCTL2, pdev->pcie_cfg[i++]);
-+	pcie_capability_write_word(dev, PCI_EXP_SLTCTL2, pdev->pcie_cfg[i++]);
-+
-+	for (i = 15; i >= 0; i--)
-+		pci_write_config_dword(dev, i * 4, pdev->pci_cfg[i]);
-+}
-+
-+static void __init find_pcie_device(unsigned bus, unsigned slot, unsigned func)
-+{
-+	struct pci_dev *dev;
-+	int f, pcie_type, count;
-+	u8 secondary, type;
-+	u16 vendor;
-+	u32 class;
-+	struct pcie_port *port;
-+	int pcie_cap[PCI_MAX_FUNCTIONS];
-+	int pcie_flags[PCI_MAX_FUNCTIONS];
-+
-+	dev = get_early_pci_dev(bus, slot, func);
-+	set_pcie_port_type(dev);
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	pcie_type = pci_pcie_type(dev);
-+	if ((pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
-+	    (pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
-+		return;
-+
-+	pci_read_config_byte(dev, PCI_HEADER_TYPE, &type);
-+	if ((type & 0x7f) != PCI_HEADER_TYPE_BRIDGE)
-+		return;
-+	pci_read_config_byte(dev, PCI_SECONDARY_BUS, &secondary);
-+
-+	memset(pcie_cap, 0, sizeof(pcie_cap));
-+	memset(pcie_flags, 0, sizeof(pcie_flags));
-+	for (count = 0, f = 0; f < PCI_MAX_FUNCTIONS; f++) {
-+		dev = get_early_pci_dev(secondary, 0, f);
-+		pci_read_config_word(dev, PCI_VENDOR_ID, &vendor);
-+		if (vendor == 0xffff)
-+			continue;
-+
-+		set_pcie_port_type(dev);
-+		if (!pci_is_pcie(dev))
-+			continue;
-+
-+		pcie_type = pci_pcie_type(dev);
-+		if ((pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
-+		    (pcie_type == PCI_EXP_TYPE_PCI_BRIDGE))
-+			/* Don't reset switch, bridge */
-+			return;
-+
-+		pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
-+		if ((class >> 24) == PCI_BASE_CLASS_DISPLAY)
-+			/* Don't reset VGA device */
-+			return;
-+
-+		count++;
-+		pcie_cap[f] = dev->pcie_cap;
-+		pcie_flags[f] = dev->pcie_flags_reg;
-+	}
-+
-+	if (!count)
-+		return;
-+
-+	port = (struct pcie_port *)alloc_bootmem(sizeof(struct pcie_port));
-+	if (port == NULL) {
-+		printk(KERN_ERR "pci 0000:%02x:%02x.%d alloc_bootmem failed\n",
-+		       bus, slot, func);
-+		return;
-+	}
-+	memset(port, 0, sizeof(*port));
-+	port->bus = bus;
-+	port->slot = slot;
-+	port->func = func;
-+	port->secondary = secondary;
-+	for (f = 0; f < PCI_MAX_FUNCTIONS; f++)
-+		if (pcie_cap[f]) {
-+			port->child[f].cap = pcie_cap[f];
-+			port->child[f].flags = pcie_flags[f];
-+			save_state(secondary, 0, f, &port->child[f]);
-+		}
-+	list_add_tail(&port->dev, &device_list);
-+}
-+
-+void __init early_reset_pcie_devices(void)
-+{
-+	unsigned bus, slot, func;
-+	struct pcie_port *port, *tmp;
-+	struct pci_dev *dev;
-+
-+	if (!early_pci_allowed() || !reset_devices)
-+		return;
-+
-+	/*
-+	 * Find PCIe port(root port and downstream port) and save config
-+	 * registers of its downstream devices
-+	 */
-+	for (bus = 0; bus < 256; bus++) {
-+		for (slot = 0; slot < 32; slot++) {
-+			for (func = 0; func < PCI_MAX_FUNCTIONS; func++) {
-+				u16 vendor;
-+				u8 type;
-+
-+				dev = get_early_pci_dev(bus, slot, func);
-+				pci_read_config_word(dev, PCI_VENDOR_ID,
-+						     &vendor);
-+				if (vendor == 0xffff)
-+					continue;
-+
-+				pci_read_config_byte(dev, PCI_HEADER_TYPE,
-+						     &type);
-+				find_pcie_device(bus, slot, func);
-+
-+				if ((func == 0) && !(type & 0x80))
-+					break;
-+			}
-+		}
-+	}
-+
-+	if (list_empty(&device_list))
-+		return;
-+
-+	/* Do bus reset */
-+	list_for_each_entry(port, &device_list, dev)
-+		do_reset(port->bus, port->slot, port->func);
-+
-+	/*
-+	 * According to PCIe spec, software must wait a minimum of 100 ms
-+	 * before sending a configuration request. We have 500ms safety margin
-+	 * here.
-+	 */
-+	early_udelay(500000);
-+
-+	/* Restore config registers and free memory */
-+	list_for_each_entry_safe(port, tmp, &device_list, dev) {
-+		for (func = 0; func < PCI_MAX_FUNCTIONS; func++)
-+			if (port->child[func].cap)
-+				restore_state(port->secondary, 0, func,
-+					      &port->child[func]);
-+		free_bootmem(__pa(port), sizeof(*port));
-+	}
-+}
--- 
-1.7.1
-
-
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
