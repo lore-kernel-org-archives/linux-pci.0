@@ -1,35 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:53021 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754702Ab2K1UFM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2012 15:05:12 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so8054935lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 28 Nov 2012 12:05:10 -0800 (PST)
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:64072 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754021Ab2KIP1V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 10:27:21 -0500
+Received: by mail-wi0-f170.google.com with SMTP id hm9so686001wib.1
+        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2012 07:27:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20121128190106.GA30376@kroah.com>
-References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu> <20121128190106.GA30376@kroah.com>
+In-Reply-To: <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
+References: <201211081915083774239@gmail.com> <509B962C.6070002@gmail.com>
+ <C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com> <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Nov 2012 13:04:50 -0700
-Message-ID: <CAErSpo4X5B_CsixjBk=XPzeyhWZ_tSk4Qqxhs4VPd494rQ_6iw@mail.gmail.com>
-Subject: Re: [PATCH 0/9] PCI: Remove use of CONFIG_HOTPLUG
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Bill Pemberton <wfp5p@virginia.edu>, linux-pci@vger.kernel.org
+Date: Fri, 9 Nov 2012 08:26:59 -0700
+Message-ID: <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
+Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources for SR-IOV)
+To: Jason Gao <pkill.2012@gmail.com>
+Cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 28, 2012 at 12:01 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Wed, Nov 21, 2012 at 03:34:51PM -0500, Bill Pemberton wrote:
->> This is a respin of the patches to remove CONFIG_HOTPLUG for the PCI
->> subsystem.  The end result is the same as the patches in the big
->> patchset I sent out earlier this week but the changelog entries have
->> been changed to be consistent with the capitalization of PCI.  The
->> removal of the __dev* entries has also been squashed into a single
->> patch.
+[+ linux-pci, Yinghai]
+
+On Thu, Nov 8, 2012 at 8:59 PM, Jason Gao <pkill.2012@gmail.com> wrote:
+>> The BIOS in your machine doesn't support SR-IOV.  You'll need to ask the manufacturer for a BIOS upgrade, if in fact one is available.  Sometimes they're not.
 >
-> Bjorn, any objection for me taking these patches through my driver-core
-> tree?  If not, can I get your ack?
+> very thanks Greg,my server Dell R710 with latest BIOS version and
+> option for SR-IOV(SR-IOV Global Enable->Enabled)  opened,I'm confused
+> that Does R710 provide full support for SR-IOV, kernel or  ixgbe
+> driver's bug? but I'm not sure where the problem lies,anyone has any
+> experience about this?   .
 
-No objection.
+Linux normally uses the resource assignments done by the BIOS, but it
+is possible for the kernel to reassign those.  We don't have good
+automatic support for that yet, but on a recent upstream kernel, you
+can try "pci=realloc".  I doubt this option is in CentOS 6.3, though.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+If an upstream kernel with "pci=realloc" still doesn't work, please
+post the entire dmesg log.
