@@ -1,163 +1,218 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:56494 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755042Ab2K1UPn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2012 15:15:43 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so8063188lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 28 Nov 2012 12:15:42 -0800 (PST)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:49579 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751289Ab2KJHbW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Nov 2012 02:31:22 -0500
+Received: by mail-bk0-f46.google.com with SMTP id jk13so1881014bkc.19
+        for <linux-pci@vger.kernel.org>; Fri, 09 Nov 2012 23:31:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C90146A2F8@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C90146A2F8@G9W0717.americas.hpqcorp.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Nov 2012 13:15:21 -0700
-Message-ID: <CAErSpo7VvWreoTj7MUE3cMGaM1dVMfZymO=1P-m8E-joRSgE7g@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI-AER: Do not report successful error recovery for
- devices with AER-unaware drivers
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-	"Patterson, Andrew D (LeftHand Networks)" <andrew.patterson@hp.com>,
-	Zhang Yanmin <yanmin.zhang@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAE9FiQWx64YeLp=3fUCuOvZFQbyKxYd400azFvvi=oLYtQDbcA@mail.gmail.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+	<1352146841-64458-4-git-send-email-ddutile@redhat.com>
+	<CAE9FiQWx64YeLp=3fUCuOvZFQbyKxYd400azFvvi=oLYtQDbcA@mail.gmail.com>
+Date: Fri, 9 Nov 2012 23:31:20 -0800
+Message-ID: <CAE9FiQX2tNX25O1pcEzn6nvc7BxFCx0t2UKD11y-=17FhOmC+Q@mail.gmail.com>
+Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
+From: Yinghai Lu <yinghai@kernel.org>
+To: Donald Dutile <ddutile@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, yuvalmin@broadcom.com,
+	bhutchings@solarflare.com, gregory.v.rose@intel.com,
+	davem@davemloft.net
+Content-Type: multipart/mixed; boundary=0015173fe58aff138804ce1f0d6e
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 17, 2012 at 4:47 AM, Pandarathil, Vijaymohan R
-<vijaymohan.pandarathil@hp.com> wrote:
-> When an error is detected on a PCIe device which does not have an
-> AER-aware driver, prevent AER infrastructure from reporting
-> successful error recovery.
->
-> This is because the report_error_detected() function that gets
-> called in the first phase of recovery process allows forward
-> progress even when the driver for the device does not have AER
-> capabilities. It seems that all callbacks (in pci_error_handlers
-> structure) registered by drivers that gets called during error
-> recovery are not mandatory. So the intention of the infrastructure
-> design seems to be to allow forward progress even when a specific
-> callback has not been registered by a driver. However, if error
-> handler structure itself has not been registered, it doesn't make
-> sense to allow forward progress.
->
-> As a result of the current design, in the case of a single device
-> having an AER-unaware driver or in the case of any function in a
-> multi-function card having an AER-unaware driver, a successful
-> recovery is reported.
->
-> Typical scenario this happens is when a PCI device is detached
-> from a KVM host and the pci-stub driver on the host claims the
-> device. The pci-stub driver does not have error handling capabilities
-> but the AER infrastructure still reports that the device recovered
-> successfully.
->
-> The changes proposed here leaves the device(s)in an unrecovered state
-> if the driver for the device or for any device in the subtree
-> does not have error handler structure registered. This reflects
-> the true state of the device and prevents any partial recovery (or no
-> recovery at all) reported as successful.
->
->
-> v3:
->   - Fixed a checkpatch/build issue
->
-> v2:
->   - Made changes so that all devices in the subtree have the error
->     state set correctly.
->
->
-> Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
-> Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
-> Reviewed-by: Bjorn Helgaas <bhelgaas <at> google.com>
-> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+--0015173fe58aff138804ce1f0d6e
+Content-Type: text/plain; charset=ISO-8859-1
 
-I added this to my -next branch, which will be merged for v3.8.
+On Fri, Nov 9, 2012 at 10:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Nov 5, 2012 at 12:20 PM, Donald Dutile <ddutile@redhat.com> wrote:
+>>
+>>  static const struct attribute_group *pci_dev_attr_groups[] = {
+>>         &pci_dev_attr_group,
+>> +#ifdef CONFIG_PCI_IOV
+>> +       &sriov_dev_attr_group,
+>> +#endif
+>
+> should move sriov_dev_attr_group related code to
+> drivers/pci/iov.c
+> or driver/pci/iov_sysfs.c
+>
+> and kill those CONFIG_IOV.
 
-Please double-check that I resolved the merge conflict correctly.  It
-should show up here in the next few minutes:
+Bjorn,
 
-http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=shortlog;h=refs/heads/next
+please check attached patch that separate sriov_dev_attr_group out.
+it is against to your pci/don-sriov branch.
 
->  drivers/pci/pcie/aer/aerdrv.h      |  5 ++++-
->  drivers/pci/pcie/aer/aerdrv_core.c | 21 ++++++++++++++++++---
->  include/linux/pci.h                |  3 +++
->  3 files changed, 25 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index 94a7598..22f840f 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -87,6 +87,9 @@ struct aer_broadcast_data {
->  static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
->                 enum pci_ers_result new)
->  {
-> +       if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
-> +               return PCI_ERS_RESULT_NO_AER_DRIVER;
-> +
->         if (new == PCI_ERS_RESULT_NONE)
->                 return orig;
->
-> @@ -97,7 +100,7 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
->                 break;
->         case PCI_ERS_RESULT_DISCONNECT:
->                 if (new == PCI_ERS_RESULT_NEED_RESET)
-> -                       orig = new;
-> +                       orig = PCI_ERS_RESULT_NEED_RESET;
->                 break;
->         default:
->                 break;
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 9f80cb0..b67f91a 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -232,11 +232,26 @@ static int report_error_detected(struct pci_dev *dev, void *data)
->                                    dev->driver ?
->                                    "no AER-aware driver" : "no driver");
->                 }
-> -               return 0;
-> +
-> +               /*
-> +                * If there's any device in the subtree that does not
-> +                * have an error_detected callback, returning
-> +                * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
-> +                * the subsequent mmio_enabled/slot_reset/resume
-> +                * callbacks of "any" device in the subtree. All the
-> +                * devices in the subtree are left in the error state
-> +                * without recovery.
-> +                */
-> +
-> +               if (!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE))
-> +                       vote = PCI_ERS_RESULT_NO_AER_DRIVER;
-> +               else
-> +                       vote = PCI_ERS_RESULT_NONE;
-> +       } else {
-> +               err_handler = dev->driver->err_handler;
-> +               vote = err_handler->error_detected(dev, result_data->state);
->         }
->
-> -       err_handler = dev->driver->err_handler;
-> -       vote = err_handler->error_detected(dev, result_data->state);
->         result_data->result = merge_result(result_data->result, vote);
->         return 0;
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index ab17a08..c458602 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -540,6 +540,9 @@ enum pci_ers_result {
->
->         /* Device driver is fully recovered and operational */
->         PCI_ERS_RESULT_RECOVERED = (__force pci_ers_result_t) 5,
-> +
-> +       /* No AER capabilities registered for the driver */
-> +       PCI_ERS_RESULT_NO_AER_DRIVER = (__force pci_ers_result_t) 6,
->  };
->
->  /* PCI bus error event callbacks */
-> --
-> 1.7.11.3
->
+Thanks
+
+Yinghai
+
+--0015173fe58aff138804ce1f0d6e
+Content-Type: application/octet-stream; name="iov_sysfs.patch"
+Content-Disposition: attachment; filename="iov_sysfs.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h9cezo6h0
+
+U3ViamVjdDogW1BBVENIXSBQQ0ksIElPVjogTW92ZSBzcmlvdiBkZXYgYXR0ciB0byBpb3Zfc3lz
+ZnMuYwoKdG8gYXZvaWQgQ09ORklHX0lPViBpbiBwY2ktc3lzZnMuYyBhbmQgbWFrZSB0aGF0IHBj
+aS1zeXNmcy5jIHNtYWxsZXIuCgpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtl
+cm5lbC5vcmc+CgotLS0KIGRyaXZlcnMvcGNpL01ha2VmaWxlICAgIHwgICAgMiAKIGRyaXZlcnMv
+cGNpL2lvdl9zeXNmcy5jIHwgIDEyMyArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrCiBkcml2ZXJzL3BjaS9wY2ktc3lzZnMuYyB8ICAxMjggLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL3BjaS9wY2kuaCAg
+ICAgICB8ICAgIDMgKwogNCBmaWxlcyBjaGFuZ2VkLCAxMjggaW5zZXJ0aW9ucygrKSwgMTI4IGRl
+bGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9pb3Zfc3lzZnMuYwo9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09Ci0tLSAvZGV2L251bGwKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9pb3Zfc3lzZnMu
+YwpAQCAtMCwwICsxLDEyMyBAQAorI2luY2x1ZGUgPGxpbnV4L2tlcm5lbC5oPgorI2luY2x1ZGUg
+PGxpbnV4L3BjaS5oPgorI2luY2x1ZGUgPGxpbnV4L2ZzLmg+CisjaW5jbHVkZSAicGNpLmgiCisK
+K3N0YXRpYyBzc2l6ZV90IHNyaW92X3RvdGFsdmZzX3Nob3coc3RydWN0IGRldmljZSAqZGV2LAor
+CQkJCSAgIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRyLAorCQkJCSAgIGNoYXIgKmJ1ZikK
+K3sKKwlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKKworCXJldHVybiBz
+cHJpbnRmKGJ1ZiwgIiV1XG4iLCBwY2lfc3Jpb3ZfZ2V0X3RvdGFsdmZzKHBkZXYpKTsKK30KKwor
+c3RhdGljIHNzaXplX3Qgc3Jpb3ZfbnVtdmZzX3Nob3coc3RydWN0IGRldmljZSAqZGV2LAorCQkJ
+CSBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwKKwkJCQkgY2hhciAqYnVmKQoreworCXN0
+cnVjdCBwY2lfZGV2ICpwZGV2ID0gdG9fcGNpX2RldihkZXYpOworCisJcmV0dXJuIHNwcmludGYo
+YnVmLCAiJXVcbiIsIHBkZXYtPnNyaW92LT5udW1fVkZzKTsKK30KKworLyoKKyAqIG51bV92ZnMg
+PiAwOyBudW1iZXIgb2YgdmZzIHRvIGVuYWJsZQorICogbnVtX3ZmcyA9IDA7IGRpc2FibGUgYWxs
+IHZmcworICoKKyAqIE5vdGU6IFNSSU9WIHNwZWMgZG9lc24ndCBhbGxvdyBwYXJ0aWFsIFZGCisg
+KiAgICAgICBkaXNhYmxlLCBzbyBpdHMgYWxsIG9yIG5vbmUuCisgKi8KK3N0YXRpYyBzc2l6ZV90
+IHNyaW92X251bXZmc19zdG9yZShzdHJ1Y3QgZGV2aWNlICpkZXYsCisJCQkJICBzdHJ1Y3QgZGV2
+aWNlX2F0dHJpYnV0ZSAqYXR0ciwKKwkJCQkgIGNvbnN0IGNoYXIgKmJ1Ziwgc2l6ZV90IGNvdW50
+KQoreworCXN0cnVjdCBwY2lfZGV2ICpwZGV2ID0gdG9fcGNpX2RldihkZXYpOworCWludCBudW1f
+dmZzX2VuYWJsZWQgPSAwOworCWludCBudW1fdmZzOworCWludCByZXQgPSAwOworCXUxNiB0b3Rh
+bDsKKworCWlmIChrc3RydG9pbnQoYnVmLCAwLCAmbnVtX3ZmcykgPCAwKQorCQlyZXR1cm4gLUVJ
+TlZBTDsKKworCS8qIGlzIFBGIGRyaXZlciBsb2FkZWQgdy9jYWxsYmFjayAqLworCWlmICghcGRl
+di0+ZHJpdmVyIHx8ICFwZGV2LT5kcml2ZXItPnNyaW92X2NvbmZpZ3VyZSkgeworCQlkZXZfaW5m
+bygmcGRldi0+ZGV2LAorCQkJICJEcml2ZXIgZG9lc24ndCBzdXBwb3J0IFNSSU9WIGNvbmZpZ3Vy
+YXRpb24gdmlhIHN5c2ZzXG4iKTsKKwkJcmV0dXJuIC1FTk9TWVM7CisJfQorCisJLyogaWYgZW5h
+YmxpbmcgdmYncyAuLi4gKi8KKwl0b3RhbCA9IHBjaV9zcmlvdl9nZXRfdG90YWx2ZnMocGRldik7
+CisJLyogUmVxdWVzdGVkIFZGcyB0byBlbmFibGUgPCB0b3RhbHZmcyBhbmQgbm9uZSBlbmFibGVk
+IGFscmVhZHkgKi8KKwlpZiAoKG51bV92ZnMgPiAwKSAmJiAobnVtX3ZmcyA8PSB0b3RhbCkpIHsK
+KwkJaWYgKHBkZXYtPnNyaW92LT5udW1fVkZzID09IDApIHsKKwkJCW51bV92ZnNfZW5hYmxlZCA9
+CisJCQkJcGRldi0+ZHJpdmVyLT5zcmlvdl9jb25maWd1cmUocGRldiwgbnVtX3Zmcyk7CisJCQlp
+ZiAoKG51bV92ZnNfZW5hYmxlZCA+PSAwKSAmJgorCQkJICAgIChudW1fdmZzX2VuYWJsZWQgIT0g
+bnVtX3ZmcykpIHsKKwkJCQlkZXZfd2FybigmcGRldi0+ZGV2LAorCQkJCQkgIk9ubHkgJWQgVkZz
+IGVuYWJsZWRcbiIsCisJCQkJCSBudW1fdmZzX2VuYWJsZWQpOworCQkJCXJldHVybiBjb3VudDsK
+KwkJCX0gZWxzZSBpZiAobnVtX3Zmc19lbmFibGVkIDwgMCkKKwkJCQkvKiBlcnJvciBjb2RlIGZy
+b20gZHJpdmVyIGNhbGxiYWNrICovCisJCQkJcmV0dXJuIG51bV92ZnNfZW5hYmxlZDsKKwkJfSBl
+bHNlIGlmIChudW1fdmZzID09IHBkZXYtPnNyaW92LT5udW1fVkZzKSB7CisJCQlkZXZfd2Fybigm
+cGRldi0+ZGV2LAorCQkJCSAiJWQgVkZzIGFscmVhZHkgZW5hYmxlZDsgbm8gZW5hYmxlIGFjdGlv
+biB0YWtlblxuIiwKKwkJCQkgbnVtX3Zmcyk7CisJCQlyZXR1cm4gY291bnQ7CisJCX0gZWxzZSB7
+CisJCQlkZXZfd2FybigmcGRldi0+ZGV2LAorCQkJCSAiJWQgVkZzIGFscmVhZHkgZW5hYmxlZC4g
+RGlzYWJsZSBiZWZvcmUgZW5hYmxpbmcgJWQgVkZzXG4iLAorCQkJCSBwZGV2LT5zcmlvdi0+bnVt
+X1ZGcywgbnVtX3Zmcyk7CisJCQlyZXR1cm4gLUVJTlZBTDsKKwkJfQorCX0KKworCS8qIGRpc2Fi
+bGUgdmZzICovCisJaWYgKG51bV92ZnMgPT0gMCkgeworCQlpZiAocGRldi0+c3Jpb3YtPm51bV9W
+RnMgIT0gMCkgeworCQkJcmV0ID0gcGRldi0+ZHJpdmVyLT5zcmlvdl9jb25maWd1cmUocGRldiwg
+MCk7CisJCQlyZXR1cm4gcmV0ID8gcmV0IDogY291bnQ7CisJCX0gZWxzZSB7CisJCQlkZXZfd2Fy
+bigmcGRldi0+ZGV2LAorCQkJCSAiQWxsIFZGcyBkaXNhYmxlZDsgbm8gZGlzYWJsZSBhY3Rpb24g
+dGFrZW5cbiIpOworCQkJcmV0dXJuIGNvdW50OworCQl9CisJfQorCisJZGV2X2VycigmcGRldi0+
+ZGV2LAorCQkiSW52YWxpZCB2YWx1ZSBmb3IgbnVtYmVyIG9mIFZGcyB0byBlbmFibGU6ICVkXG4i
+LCBudW1fdmZzKTsKKworCXJldHVybiAtRUlOVkFMOworfQorCitzdGF0aWMgc3RydWN0IGRldmlj
+ZV9hdHRyaWJ1dGUgc3Jpb3ZfdG90YWx2ZnNfYXR0ciA9IF9fQVRUUl9STyhzcmlvdl90b3RhbHZm
+cyk7CitzdGF0aWMgc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgc3Jpb3ZfbnVtdmZzX2F0dHIgPQor
+CQlfX0FUVFIoc3Jpb3ZfbnVtdmZzLCAoU19JUlVHT3xTX0lXVVNSfFNfSVdHUlApLAorCQkgICAg
+ICAgc3Jpb3ZfbnVtdmZzX3Nob3csIHNyaW92X251bXZmc19zdG9yZSk7CisKK3N0YXRpYyBzdHJ1
+Y3QgYXR0cmlidXRlICpzcmlvdl9kZXZfYXR0cnNbXSA9IHsKKwkmc3Jpb3ZfdG90YWx2ZnNfYXR0
+ci5hdHRyLAorCSZzcmlvdl9udW12ZnNfYXR0ci5hdHRyLAorCU5VTEwsCit9OworCitzdGF0aWMg
+dW1vZGVfdCBzcmlvdl9hdHRyc19hcmVfdmlzaWJsZShzdHJ1Y3Qga29iamVjdCAqa29iaiwKKwkJ
+CQkJIHN0cnVjdCBhdHRyaWJ1dGUgKmEsIGludCBuKQoreworCXN0cnVjdCBkZXZpY2UgKmRldiA9
+IGNvbnRhaW5lcl9vZihrb2JqLCBzdHJ1Y3QgZGV2aWNlLCBrb2JqKTsKKworCWlmICghZGV2X2lz
+X3BmKGRldikpCisJCXJldHVybiAwOworCisJcmV0dXJuIGEtPm1vZGU7Cit9CisKK3N0cnVjdCBh
+dHRyaWJ1dGVfZ3JvdXAgc3Jpb3ZfZGV2X2F0dHJfZ3JvdXAgPSB7CisJLmF0dHJzID0gc3Jpb3Zf
+ZGV2X2F0dHJzLAorCS5pc192aXNpYmxlID0gc3Jpb3ZfYXR0cnNfYXJlX3Zpc2libGUsCit9OwpJ
+bmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3BjaS1zeXNmcy5jCj09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxp
+bnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3BjaS1zeXNmcy5jCisrKyBsaW51eC0yLjYvZHJpdmVy
+cy9wY2kvcGNpLXN5c2ZzLmMKQEAgLTQwNCwxMDYgKzQwNCw2IEBAIHN0YXRpYyBzc2l6ZV90IGQz
+Y29sZF9hbGxvd2VkX3Nob3coc3RydWMKIH0KICNlbmRpZgogCi0jaWZkZWYgQ09ORklHX1BDSV9J
+T1YKLXN0YXRpYyBzc2l6ZV90IHNyaW92X3RvdGFsdmZzX3Nob3coc3RydWN0IGRldmljZSAqZGV2
+LAotCQkJCSAgIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRyLAotCQkJCSAgIGNoYXIgKmJ1
+ZikKLXsKLQlzdHJ1Y3QgcGNpX2RldiAqcGRldiA9IHRvX3BjaV9kZXYoZGV2KTsKLQotCXJldHVy
+biBzcHJpbnRmKGJ1ZiwgIiV1XG4iLCBwY2lfc3Jpb3ZfZ2V0X3RvdGFsdmZzKHBkZXYpKTsKLX0K
+LQotCi1zdGF0aWMgc3NpemVfdCBzcmlvdl9udW12ZnNfc2hvdyhzdHJ1Y3QgZGV2aWNlICpkZXYs
+Ci0JCQkJIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRyLAotCQkJCSBjaGFyICpidWYpCi17
+Ci0Jc3RydWN0IHBjaV9kZXYgKnBkZXYgPSB0b19wY2lfZGV2KGRldik7Ci0KLQlyZXR1cm4gc3By
+aW50ZihidWYsICIldVxuIiwgcGRldi0+c3Jpb3YtPm51bV9WRnMpOwotfQotCi0vKgotICogbnVt
+X3ZmcyA+IDA7IG51bWJlciBvZiB2ZnMgdG8gZW5hYmxlCi0gKiBudW1fdmZzID0gMDsgZGlzYWJs
+ZSBhbGwgdmZzCi0gKgotICogTm90ZTogU1JJT1Ygc3BlYyBkb2Vzbid0IGFsbG93IHBhcnRpYWwg
+VkYKLSAqICAgICAgIGRpc2FibGUsIHNvIGl0cyBhbGwgb3Igbm9uZS4KLSAqLwotc3RhdGljIHNz
+aXplX3Qgc3Jpb3ZfbnVtdmZzX3N0b3JlKHN0cnVjdCBkZXZpY2UgKmRldiwKLQkJCQkgIHN0cnVj
+dCBkZXZpY2VfYXR0cmlidXRlICphdHRyLAotCQkJCSAgY29uc3QgY2hhciAqYnVmLCBzaXplX3Qg
+Y291bnQpCi17Ci0Jc3RydWN0IHBjaV9kZXYgKnBkZXYgPSB0b19wY2lfZGV2KGRldik7Ci0JaW50
+IG51bV92ZnNfZW5hYmxlZCA9IDA7Ci0JaW50IG51bV92ZnM7Ci0JaW50IHJldCA9IDA7Ci0JdTE2
+IHRvdGFsOwotCi0JaWYgKGtzdHJ0b2ludChidWYsIDAsICZudW1fdmZzKSA8IDApCi0JCXJldHVy
+biAtRUlOVkFMOwotCi0JLyogaXMgUEYgZHJpdmVyIGxvYWRlZCB3L2NhbGxiYWNrICovCi0JaWYg
+KCFwZGV2LT5kcml2ZXIgfHwgIXBkZXYtPmRyaXZlci0+c3Jpb3ZfY29uZmlndXJlKSB7Ci0JCWRl
+dl9pbmZvKCZwZGV2LT5kZXYsCi0JCQkgIkRyaXZlciBkb2Vzbid0IHN1cHBvcnQgU1JJT1YgY29u
+ZmlndXJhdGlvbiB2aWEgc3lzZnNcbiIpOwotCQlyZXR1cm4gLUVOT1NZUzsKLQl9Ci0KLQkvKiBp
+ZiBlbmFibGluZyB2ZidzIC4uLiAqLwotCXRvdGFsID0gcGNpX3NyaW92X2dldF90b3RhbHZmcyhw
+ZGV2KTsKLQkvKiBSZXF1ZXN0ZWQgVkZzIHRvIGVuYWJsZSA8IHRvdGFsdmZzIGFuZCBub25lIGVu
+YWJsZWQgYWxyZWFkeSAqLwotCWlmICgobnVtX3ZmcyA+IDApICYmIChudW1fdmZzIDw9IHRvdGFs
+KSkgewotCQlpZiAocGRldi0+c3Jpb3YtPm51bV9WRnMgPT0gMCkgewotCQkJbnVtX3Zmc19lbmFi
+bGVkID0KLQkJCQlwZGV2LT5kcml2ZXItPnNyaW92X2NvbmZpZ3VyZShwZGV2LCBudW1fdmZzKTsK
+LQkJCWlmICgobnVtX3Zmc19lbmFibGVkID49IDApICYmCi0JCQkgICAgKG51bV92ZnNfZW5hYmxl
+ZCAhPSBudW1fdmZzKSkgewotCQkJCWRldl93YXJuKCZwZGV2LT5kZXYsCi0JCQkJCSAiT25seSAl
+ZCBWRnMgZW5hYmxlZFxuIiwKLQkJCQkJIG51bV92ZnNfZW5hYmxlZCk7Ci0JCQkJcmV0dXJuIGNv
+dW50OwotCQkJfSBlbHNlIGlmIChudW1fdmZzX2VuYWJsZWQgPCAwKQotCQkJCS8qIGVycm9yIGNv
+ZGUgZnJvbSBkcml2ZXIgY2FsbGJhY2sgKi8KLQkJCQlyZXR1cm4gbnVtX3Zmc19lbmFibGVkOwot
+CQl9IGVsc2UgaWYgKG51bV92ZnMgPT0gcGRldi0+c3Jpb3YtPm51bV9WRnMpIHsKLQkJCWRldl93
+YXJuKCZwZGV2LT5kZXYsCi0JCQkJICIlZCBWRnMgYWxyZWFkeSBlbmFibGVkOyBubyBlbmFibGUg
+YWN0aW9uIHRha2VuXG4iLAotCQkJCSBudW1fdmZzKTsKLQkJCXJldHVybiBjb3VudDsKLQkJfSBl
+bHNlIHsKLQkJCWRldl93YXJuKCZwZGV2LT5kZXYsCi0JCQkJICIlZCBWRnMgYWxyZWFkeSBlbmFi
+bGVkLiBEaXNhYmxlIGJlZm9yZSBlbmFibGluZyAlZCBWRnNcbiIsCi0JCQkJIHBkZXYtPnNyaW92
+LT5udW1fVkZzLCBudW1fdmZzKTsKLQkJCXJldHVybiAtRUlOVkFMOwotCQl9Ci0JfQotCi0JLyog
+ZGlzYWJsZSB2ZnMgKi8KLQlpZiAobnVtX3ZmcyA9PSAwKSB7Ci0JCWlmIChwZGV2LT5zcmlvdi0+
+bnVtX1ZGcyAhPSAwKSB7Ci0JCQlyZXQgPSBwZGV2LT5kcml2ZXItPnNyaW92X2NvbmZpZ3VyZShw
+ZGV2LCAwKTsKLQkJCXJldHVybiByZXQgPyByZXQgOiBjb3VudDsKLQkJfSBlbHNlIHsKLQkJCWRl
+dl93YXJuKCZwZGV2LT5kZXYsCi0JCQkJICJBbGwgVkZzIGRpc2FibGVkOyBubyBkaXNhYmxlIGFj
+dGlvbiB0YWtlblxuIik7Ci0JCQlyZXR1cm4gY291bnQ7Ci0JCX0KLQl9Ci0KLQlkZXZfZXJyKCZw
+ZGV2LT5kZXYsCi0JCSJJbnZhbGlkIHZhbHVlIGZvciBudW1iZXIgb2YgVkZzIHRvIGVuYWJsZTog
+JWRcbiIsIG51bV92ZnMpOwotCi0JcmV0dXJuIC1FSU5WQUw7Ci19Ci0KLXN0YXRpYyBzdHJ1Y3Qg
+ZGV2aWNlX2F0dHJpYnV0ZSBzcmlvdl90b3RhbHZmc19hdHRyID0gX19BVFRSX1JPKHNyaW92X3Rv
+dGFsdmZzKTsKLXN0YXRpYyBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSBzcmlvdl9udW12ZnNfYXR0
+ciA9Ci0JCV9fQVRUUihzcmlvdl9udW12ZnMsIChTX0lSVUdPfFNfSVdVU1J8U19JV0dSUCksCi0J
+CSAgICAgICBzcmlvdl9udW12ZnNfc2hvdywgc3Jpb3ZfbnVtdmZzX3N0b3JlKTsKLSNlbmRpZiAv
+KiBDT05GSUdfUENJX0lPViAqLwotCiBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSBwY2lfZGV2X2F0
+dHJzW10gPSB7CiAJX19BVFRSX1JPKHJlc291cmNlKSwKIAlfX0FUVFJfUk8odmVuZG9yKSwKQEAg
+LTE0ODcsMzAgKzEzODcsNiBAQCBzdGF0aWMgdW1vZGVfdCBwY2lfZGV2X2F0dHJzX2FyZV92aXNp
+YmxlCiAJcmV0dXJuIGEtPm1vZGU7CiB9CiAKLSNpZmRlZiBDT05GSUdfUENJX0lPVgotc3RhdGlj
+IHN0cnVjdCBhdHRyaWJ1dGUgKnNyaW92X2Rldl9hdHRyc1tdID0gewotCSZzcmlvdl90b3RhbHZm
+c19hdHRyLmF0dHIsCi0JJnNyaW92X251bXZmc19hdHRyLmF0dHIsCi0JTlVMTCwKLX07Ci0KLXN0
+YXRpYyB1bW9kZV90IHNyaW92X2F0dHJzX2FyZV92aXNpYmxlKHN0cnVjdCBrb2JqZWN0ICprb2Jq
+LAotCQkJCQkgc3RydWN0IGF0dHJpYnV0ZSAqYSwgaW50IG4pCi17Ci0Jc3RydWN0IGRldmljZSAq
+ZGV2ID0gY29udGFpbmVyX29mKGtvYmosIHN0cnVjdCBkZXZpY2UsIGtvYmopOwotCi0JaWYgKCFk
+ZXZfaXNfcGYoZGV2KSkKLQkJcmV0dXJuIDA7Ci0KLQlyZXR1cm4gYS0+bW9kZTsKLX0KLQotc3Rh
+dGljIHN0cnVjdCBhdHRyaWJ1dGVfZ3JvdXAgc3Jpb3ZfZGV2X2F0dHJfZ3JvdXAgPSB7Ci0JLmF0
+dHJzID0gc3Jpb3ZfZGV2X2F0dHJzLAotCS5pc192aXNpYmxlID0gc3Jpb3ZfYXR0cnNfYXJlX3Zp
+c2libGUsCi19OwotI2VuZGlmIC8qIENPTkZJR19QQ0lfSU9WICovCi0KIHN0YXRpYyBzdHJ1Y3Qg
+YXR0cmlidXRlX2dyb3VwIHBjaV9kZXZfYXR0cl9ncm91cCA9IHsKIAkuYXR0cnMgPSBwY2lfZGV2
+X2Rldl9hdHRycywKIAkuaXNfdmlzaWJsZSA9IHBjaV9kZXZfYXR0cnNfYXJlX3Zpc2libGUsCkBA
+IC0xNTE4LDkgKzEzOTQsNyBAQCBzdGF0aWMgc3RydWN0IGF0dHJpYnV0ZV9ncm91cCBwY2lfZGV2
+X2F0CiAKIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYXR0cmlidXRlX2dyb3VwICpwY2lfZGV2X2F0dHJf
+Z3JvdXBzW10gPSB7CiAJJnBjaV9kZXZfYXR0cl9ncm91cCwKLSNpZmRlZiBDT05GSUdfUENJX0lP
+VgotCSZzcmlvdl9kZXZfYXR0cl9ncm91cCwKLSNlbmRpZgorCVNSSU9WX0RFVl9BVFRSX0dST1VQ
+LAogCU5VTEwsCiB9OwogCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvcGNpLmgKPT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvcGNpLmgKKysrIGxpbnV4LTIuNi9k
+cml2ZXJzL3BjaS9wY2kuaApAQCAtMjY3LDYgKzI2Nyw4IEBAIGV4dGVybiByZXNvdXJjZV9zaXpl
+X3QgcGNpX3NyaW92X3Jlc291cmMKIAkJCQkJCSAgICBpbnQgcmVzbm8pOwogZXh0ZXJuIHZvaWQg
+cGNpX3Jlc3RvcmVfaW92X3N0YXRlKHN0cnVjdCBwY2lfZGV2ICpkZXYpOwogZXh0ZXJuIGludCBw
+Y2lfaW92X2J1c19yYW5nZShzdHJ1Y3QgcGNpX2J1cyAqYnVzKTsKK2V4dGVybiBzdHJ1Y3QgYXR0
+cmlidXRlX2dyb3VwIHNyaW92X2Rldl9hdHRyX2dyb3VwOworI2RlZmluZSBTUklPVl9ERVZfQVRU
+Ul9HUk9VUAkoJnNyaW92X2Rldl9hdHRyX2dyb3VwKQogCiAjZWxzZQogc3RhdGljIGlubGluZSBp
+bnQgcGNpX2lvdl9pbml0KHN0cnVjdCBwY2lfZGV2ICpkZXYpCkBAIC0yODksNiArMjkxLDcgQEAg
+c3RhdGljIGlubGluZSBpbnQgcGNpX2lvdl9idXNfcmFuZ2Uoc3RydQogewogCXJldHVybiAwOwog
+fQorI2RlZmluZSBTUklPVl9ERVZfQVRUUl9HUk9VUAkoTlVMTCkKIAogI2VuZGlmIC8qIENPTkZJ
+R19QQ0lfSU9WICovCiAKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9NYWtlZmlsZQo9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9NYWtlZmlsZQorKysgbGludXgt
+Mi42L2RyaXZlcnMvcGNpL01ha2VmaWxlCkBAIC0zMCw3ICszMCw3IEBAIG9iai0kKENPTkZJR19Q
+Q0lfTVNJKSArPSBtc2kubwogb2JqLSQoQ09ORklHX0hUX0lSUSkgKz0gaHRpcnEubwogCiBvYmot
+JChDT05GSUdfUENJX0FUUykgKz0gYXRzLm8KLW9iai0kKENPTkZJR19QQ0lfSU9WKSArPSBpb3Yu
+bworb2JqLSQoQ09ORklHX1BDSV9JT1YpICs9IGlvdi5vIGlvdl9zeXNmcy5vCiAKICMKICMgU29t
+ZSBhcmNoaXRlY3R1cmVzIHVzZSB0aGUgZ2VuZXJpYyBQQ0kgc2V0dXAgZnVuY3Rpb25zCg==
+--0015173fe58aff138804ce1f0d6e--
