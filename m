@@ -1,220 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	Gaohuai Han <hangaohuai@huawei.com>
-Subject: Re: [ACPIHP PATCH part1 1/4] ACPIHP: introduce a framework for ACPI based system device hotplug
-Date: Mon, 19 Nov 2012 09:43:46 +0100
-Message-ID: <2078749.XIKHA2TxJn@vostro.rjw.lan>
-In-Reply-To: <5099383F.3010905@gmail.com>
-References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6RQk+sdeOF7c+G2qp5iYgrnQcx+rD0f8eVNRPLRoLpdg@mail.gmail.com> <5099383F.3010905@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:2507 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415Ab2KJHoo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Nov 2012 02:44:44 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+Subject: [ PATCH RESEND ] PCI-AER: Do not report successful error recovery
+ for devices with AER-unaware drivers
+Date: Sat, 10 Nov 2012 07:41:04 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C90146794E@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+When an error is detected on a PCIe device which does not have an
+AER-aware driver, prevent AER infrastructure from reporting
+successful error recovery.
 
-On Wednesday, November 07, 2012 12:18:07 AM Jiang Liu wrote:
-> Hi Bjorn,
-> 	Thanks for your review and please refer to inlined comments below.
-> 
-> On 11/06/2012 05:05 AM, Bjorn Helgaas wrote:
-> > On Sat, Nov 3, 2012 at 10:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> >> Modern high-end servers may support advanced RAS features, such as
-> >> system device dynamic reconfiguration. On x86 and IA64 platforms,
-> >> system device means processor(CPU), memory device, PCI host bridge
-> >> and even computer node.
-> >>
-> >> The ACPI specifications have provided standard interfaces between
-> >> firmware and OS to support device dynamic reconfiguraiton at runtime.
-> >> This patch series introduces a new framework for system device
-> >> dynamic reconfiguration based on ACPI specification, which will
-> >> replace current existing system device hotplug logic embedded in
-> >> ACPI processor/memory/container device drivers.
-> >>
-> >> The new ACPI based hotplug framework is modelled after the PCI hotplug
-> >> architecture and target to achieve following goals:
-> >> 1) Optimize device configuration order to achieve best performance for
-> >>    hot-added system devices. For best perforamnce, system device should
-> >>    be configured in order of memory -> CPU -> IOAPIC/IOMMU -> PCI HB.
-> >> 2) Resolve dependencies among hotplug slots. You need first to remove
-> >>    the memory device before removing a physical processor if a
-> >>    hotpluggable memory device is connected to a hotpluggable physical
-> >>    processor.
-> > 
-> > Doesn't the namespace already have a way to communicate these dependencies?
+This is because the report_error_detected() function that gets
+called in the first phase of recovery process allows forward
+progress even when the driver for the device does not have AER
+capabilities. It seems that all callbacks (in pci_error_handlers
+structure) registered by drivers that gets called during error
+recovery are not mandatory. So the intention of the infrastructure
+design seems to be to allow forward progress even when a specific
+callback has not been registered by a driver. However, if error
+handler structure itself has not been registered, it doesn't make
+sense to allow forward progress.
 
-> The namespace could could resolve most dependency issues, but there are still
-> several corner cases need special care.
-> 1) On a typical Intel Nehalem/Westmere platform, an IOH will be connected to
-> two physical processors through QPI. The IOH depends on the two processors.
-> And the ACPI namespace is something like:
-> /_SB
->     |_SCK0
->     |_SCK1
->     |_PCI1
-> 2) For a large system composed up of multiple computer nodes, nodes may have
-> dependency on neighbors due to interconnect topology constraints.
-> 
-> So we need to resolve dependency by both evaluating _EDL and analyze ACPI
-> namespace topology.
+As a result of the current design, in the case of a single device
+having an AER-unaware driver or in the case of any function in a
+multi-function card having an AER-unaware driver, a successful
+recovery is reported.
 
-Well, this doesn't explain why we need a new framework.
+Typical scenario this happens is when a PCI device is detached
+from a KVM host and the pci-stub driver on the host claims the
+device. The pci-stub driver does not have error handling capabilities
+but the AER infrastructure still reports that the device recovered
+successfully.
 
-> >> 3) Provide interface to cancel ongoing hotplug operations. It may take
-> >>    a very long time to remove a memory device, so provide interface to
-> >>    cancel the inprogress hotplug operations.
-> >> 4) Support new advanced RAS features, such as socket/memory migration.
-> >> 5) Provide better user interfaces to access the hotplug functionalities.
-> >> 6) Provide a mechanism to detect hotplug slots by checking existence
-> >>    of ACPI _EJ0 method or by other hardware platform specific methods.
-> > 
-> > I don't know what "hotplug slot" means for ACPI.  ACPI allows hotplug
-> > of arbitrary devices in the namespace, whether they have EJ0 or not.
+The changes proposed here leaves the device in an unrecovered state
+if the driver for the device or for any function in a multi-function
+card does not have error handler structure registered. This reflects
+the true state of the device and prevents any partial recovery (or no
+recovery at all) reported as successful.
 
-> Here "hotplug" slot is an abstraction of receptacles where a group of
-> system devices could be attached to, or where we could control a group
-> of system devices. It's totally conceptual, may or may not has 
-> corresponding physical slots.
+Please also see comments from Linas Vepstas at the following link
+http://www.spinics.net/lists/linux-pci/msg18572.html
 
-Can that be called something different from "slot", then, to avoid confusion?
+Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
+Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
 
-> For example,
-> 1) a hotplug slot for a hotpluggable memory board has a physical slot.
+---
 
-So let's call that a "slot" and the abstraction above a "hotplug domain" or
-something similar.  Because in fact we're talking about hotplug domains,
-aren't we?
+drivers/pci/pcie/aer/aerdrv_core.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> 2) a hotplug slot for a non-hotpluggable processor with power control
-> capability has no physical slot. (That means you may power on/off a
-> physical processor but can't hotplug it at runtime). This case is useful
-> for hardware partitioning.
-
-People have been working on this particular thing for years, so I wonder
-why you think that your apprach is going to be better here?
-
-> Detecting hotplug slots by checking existence of _EJ0 is the default
-> but unreliable way. For a real high-end server with system device
-> hotplug capabilities should provide some static ACPI table to describe
-> hotplug slots/capabilities. There are some ongoing efforts for that from
-> Intel, but not in the public domain yet. So the hotplug slot enumeration
-> driver is designed to extensible:)
-> 
-> >> 7) Unify the way to enumerate ACPI based hotplug slots. All hotplug
-> >>    slots will be enumerated by the enumeration driver (acpihp_slot),
-> >>    instead of by individual ACPI device drivers.
-> > 
-> > Why do we need to enumerate these "slots" specifically?
-> > 
-> > I think this patch adds things in /sys.  It might help if you
-> > described what they are.
-
-> There's no standard way in ACPI5.0 to describe system device hotplug slots yet.
-> And we want to show user the system device hotplug capabilities even when there
-> is no device attached to a slot. In other word, user could now how much
-> devices they could connect to the system by hotplugging.
-
-Bjorn probably meant "provide documentation describing the user space interfaces
-being introduced".  Which in fact is a requirement.
-
-> >> 8) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
-> >>    for system devices will be handled by a generic ACPI hotplug driver
-> >>    (acpihp_drv) instead of by individual ACPI device drivers.
-> >> 9) Provide better error handling and error recovery.
-> >> 10) Trigger hotplug events/operations by software. This feature is useful
-> >>    for hardware fault management and/or power saving.
-> >>
-> >> The new framework is composed up of three major components:
-> >> 1) A system device hotplug slot enumerator driver, which enumerates
-> >>    hotplug slots in the system and provides platform specific methods
-> >>    to control those slots.
-> >> 2) A system device hotplug driver, which is a platform independent
-> >>    driver to manage all hotplug slots created by the slot enumerator.
-> >>    The hotplug driver implements a state machine for hotplug slots and
-> >>    provides user interfaces to manage hotplug slots.
-> >> 3) Several ACPI device drivers to configure/unconfigure system devices
-> >>    at runtime.
-> >>
-> >> To get rid of inter dependengcy between the slot enumerator and hotplug
-> >> driver, common code shared by them will be built into the kernel. The
-> >> shared code provides some helper routines and a device class named
-> >> acpihp_slot_class with following default sysfs properties:
-> >>         capabilities: RAS capabilities of the hotplug slot
-> >>         state: current state of the hotplug slot state machine
-> >>         status: current health status of the hotplug slot
-> >>         object: ACPI object corresponding to the hotplug slot
-> >>
-> >> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> >> Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
-> > 
-> > ...
-> >> +static char *acpihp_dev_mem_ids[] = {
-> >> +       "PNP0C80",
-> >> +       NULL
-> >> +};
-> >> +
-> >> +static char *acpihp_dev_pcihb_ids[] = {
-> >> +       "PNP0A03",
-> >> +       NULL
-> >> +};
-> > 
-> > Why should this driver need to know about these PNP IDs?  We ought to
-> > be able to support hotplug of any device in the namespace, no matter
-> > what its ID.
-
-> We need PNP IDs for:
-> 1) Give a meaningful name for each slot.
-> lrwxrwxrwx  CPU00 -> ../../../devices/LNXSYSTM:00/acpihp/CPU00
-> lrwxrwxrwx  CPU01 -> ../../../devices/LNXSYSTM:00/acpihp/CPU01
-> lrwxrwxrwx  CPU02 -> ../../../devices/LNXSYSTM:00/acpihp/CPU02
-> lrwxrwxrwx  CPU03 -> ../../../devices/LNXSYSTM:00/acpihp/CPU03
-> lrwxrwxrwx  IOX01 -> ../../../devices/LNXSYSTM:00/acpihp/IOX01
-> lrwxrwxrwx  MEM00 -> ../../../devices/LNXSYSTM:00/acpihp/CPU00/MEM00
-> lrwxrwxrwx  MEM01 -> ../../../devices/LNXSYSTM:00/acpihp/CPU00/MEM01
-> lrwxrwxrwx  MEM02 -> ../../../devices/LNXSYSTM:00/acpihp/CPU01/MEM02
-> lrwxrwxrwx  MEM03 -> ../../../devices/LNXSYSTM:00/acpihp/CPU01/MEM03
-> lrwxrwxrwx  MEM04 -> ../../../devices/LNXSYSTM:00/acpihp/CPU02/MEM04
-> lrwxrwxrwx  MEM05 -> ../../../devices/LNXSYSTM:00/acpihp/CPU02/MEM05
-> lrwxrwxrwx  MEM06 -> ../../../devices/LNXSYSTM:00/acpihp/CPU03/MEM06
-> lrwxrwxrwx  MEM07 -> ../../../devices/LNXSYSTM:00/acpihp/CPU03/MEM07
-> 
-> 2) Classify system device into groups according to device types, so we could
-> configure/unconfigure them in optimal order for performance as:
-> memory -> CPU -> IOAPIC -> PCI host bridge
-> 
-> 3) The new hotplug framework are designed to handle system device hotplug,
-> and it won't hand IO device hotplug such as PCI etc. So it need to stop
-> scanning subtree of PCI host bridges.
-
-Well, we probably need a hotplug domains framework, which the thing you're
-proposing seems to be.  However, the question is: Why should it cover "system
-devices" only?
-
-To me, it looks like such a framework should cover all hotplug devices in the
-system, or at least all ACPI-based hotplug devices.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 06bad96..030b229 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 
+ 	dev->error_state = result_data->state;
+ 
++	if ((!dev->driver || !dev->driver->err_handler) &&
++		!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
++		dev_info(&dev->dev, "AER: Error detected but no driver has claimed this device or the driver is AER-unaware\n");
++		result_data->result = PCI_ERS_RESULT_NONE;
++		return 1;
++	}
+ 	if (!dev->driver ||
+ 		!dev->driver->err_handler ||
+ 		!dev->driver->err_handler->error_detected) {
