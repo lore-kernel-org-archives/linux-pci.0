@@ -1,55 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53453 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751146Ab2KPBNy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Nov 2012 20:13:54 -0500
-Date: Thu, 15 Nov 2012 18:13:53 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@linux-iscsi.org>
-Subject: Re: [PATCH v5 2/2] net: Add support for NTB virtual ethernet device
-Message-ID: <20121116011353.GK24723@jonmason-lab>
-References: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
- <1352160669-4330-3-git-send-email-jon.mason@intel.com>
- <20121116003043.GC20876@kroah.com>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:6829 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752497Ab2KJDnc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 9 Nov 2012 22:43:32 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: "linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	Myron Stowe <myron.stowe@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [ PATCH ] PCI-AER: Do not report successful error recovery for
+ devices with AER-unaware drivers
+Date: Sat, 10 Nov 2012 03:40:23 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C901467910@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C9014674B9@G9W0717.americas.hpqcorp.net>
+ <CAL-B5D2ZmtOFQMhF7dG0p8U+ZcrjpQyzcLKvVzwYZ9RF6ckjzA@mail.gmail.com>
+ <CAHrUA37b_wd_18e6S7WSSkVG0nLF1sED0hetJq0=8NYdNJkkVw@mail.gmail.com>
+In-Reply-To: <CAHrUA37b_wd_18e6S7WSSkVG0nLF1sED0hetJq0=8NYdNJkkVw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121116003043.GC20876@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 15, 2012 at 04:30:43PM -0800, Greg KH wrote:
-> On Mon, Nov 05, 2012 at 05:11:09PM -0700, Jon Mason wrote:
-> > A virtual ethernet device that uses the NTB transport API to
-> > send/receive data.
-> > 
-> > Signed-off-by: Jon Mason <jon.mason@intel.com>
-> > Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  MAINTAINERS              |    1 +
-> >  drivers/net/Kconfig      |    4 +
-> >  drivers/net/Makefile     |    1 +
-> >  drivers/net/ntb_netdev.c |  415 ++++++++++++++++++++++++++++++++++++++++++++++
-> 
-> As I haven't taken the core yet, I can't take this.  But even then, I
-> would need an ack from the network maintainers before I could.
-
-I have been Cc'ing netdev on these patches and gotten many good
-comments, but I can cc Dave Miller explicitly on my next version (as
-there will obviously need to be one based on your comments on the
-previous patch).
-
-> 
-> And are you sure this is in the correct location in the tree?
-
-I assumed that the virtual network client that uses NTB as a transport
-would best fit in the network drivers.  Is this a bad assumption?
-
-Thanks,
-Jon
-> 
-> thanks,
-> 
-> greg k-h
+SGkgTXlyb24vTGluYXMsDQoNClRoYW5rcyBmb3IgcG9pbnRpbmcgaXQgb3V0LiBJIGFtIHN0aWxs
+IGxlYXJuaW5nIGFsbCB0aGUgY29udmVudGlvbnMuIEkgd2lsbCBzZW5kIG91dCBhIG5ld2VyIHZl
+cnNpb24gd2l0aCB0aGUgY2hhbmdlcy4NCg0KVGhhbmtzDQoNClZpamF5DQoNCj4gLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTGluYXMgVmVwc3RhcyBbbWFpbHRvOmxpbmFzdmVw
+c3Rhc0BnbWFpbC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMDksIDIwMTIgNzoyOCBQ
+TQ0KPiBUbzogTXlyb24gU3Rvd2UNCj4gQ2M6IFBhbmRhcmF0aGlsLCBWaWpheW1vaGFuIFI7IGxp
+bnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFsgUEFUQ0ggXSBQQ0ktQUVS
+OiBEbyBub3QgcmVwb3J0IHN1Y2Nlc3NmdWwgZXJyb3IgcmVjb3ZlcnkgZm9yDQo+IGRldmljZXMg
+d2l0aCBBRVItdW5hd2FyZSBkcml2ZXJzDQo+IA0KPiBZZXMsIHRoYXQgaXMgY29ycmVjdDogUmV2
+aWV3ZWQtYnkvQWNrZWQtYnk6IG1lLiBJIHBsZWFkIGxhdGUtbmlnaHQNCj4gd29vemluZXNzLg0K
+PiANCj4gLS0gTGluYXMNCj4gDQo+IE9uIDkgTm92ZW1iZXIgMjAxMiAxMTowNiwgTXlyb24gU3Rv
+d2UgPG15cm9uLnN0b3dlQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4gQWRkaW5nOiBsaW5hc3ZlcHN0
+YXNAZ21haWwuY29tDQo+ID4NCj4gPiBPbiBUaHUsIE5vdiA4LCAyMDEyIGF0IDk6MjggUE0sIFBh
+bmRhcmF0aGlsLCBWaWpheW1vaGFuIFINCj4gPiA8dmlqYXltb2hhbi5wYW5kYXJhdGhpbEBocC5j
+b20+IHdyb3RlOg0KPiA+PiBXaGVuIGFuIGVycm9yIGlzIGRldGVjdGVkIG9uIGEgUENJZSBkZXZp
+Y2Ugd2hpY2ggZG9lcyBub3QgaGF2ZSBhbg0KPiA+PiBBRVItYXdhcmUgZHJpdmVyLCBwcmV2ZW50
+IEFFUiBpbmZyYXN0cnVjdHVyZSBmcm9tIHJlcG9ydGluZw0KPiA+PiBzdWNjZXNzZnVsIGVycm9y
+IHJlY292ZXJ5Lg0KPiA+Pg0KPiA+PiBUaGlzIGlzIGJlY2F1c2UgdGhlIHJlcG9ydF9lcnJvcl9k
+ZXRlY3RlZCgpIGZ1bmN0aW9uIHRoYXQgZ2V0cw0KPiA+PiBjYWxsZWQgaW4gdGhlIGZpcnN0IHBo
+YXNlIG9mIHJlY292ZXJ5IHByb2Nlc3MgYWxsb3dzIGZvcndhcmQNCj4gPj4gcHJvZ3Jlc3MgZXZl
+biB3aGVuIHRoZSBkcml2ZXIgZm9yIHRoZSBkZXZpY2UgZG9lcyBub3QgaGF2ZSBBRVINCj4gPj4g
+Y2FwYWJpbGl0aWVzLiBJdCBzZWVtcyB0aGF0IGFsbCBjYWxsYmFja3MgKGluIHBjaV9lcnJvcl9o
+YW5kbGVycw0KPiA+PiBzdHJ1Y3R1cmUpIHJlZ2lzdGVyZWQgYnkgZHJpdmVycyB0aGF0IGdldHMg
+Y2FsbGVkIGR1cmluZyBlcnJvcg0KPiA+PiByZWNvdmVyeSBhcmUgbm90IG1hbmRhdG9yeS4gU28g
+dGhlIGludGVudGlvbiBvZiB0aGUgaW5mcmFzdHJ1Y3R1cmUNCj4gPj4gZGVzaWduIHNlZW1zIHRv
+IGJlIHRvIGFsbG93IGZvcndhcmQgcHJvZ3Jlc3MgZXZlbiB3aGVuIGEgc3BlY2lmaWMNCj4gPj4g
+Y2FsbGJhY2sgaGFzIG5vdCBiZWVuIHJlZ2lzdGVyZWQgYnkgYSBkcml2ZXIuIEhvd2V2ZXIsIGlm
+IGVycm9yDQo+ID4+IGhhbmRsZXIgc3RydWN0dXJlIGl0c2VsZiBoYXMgbm90IGJlZW4gcmVnaXN0
+ZXJlZCwgaXQgZG9lc24ndCBtYWtlDQo+ID4+IHNlbnNlIHRvIGFsbG93IGZvcndhcmQgcHJvZ3Jl
+c3MuDQo+ID4+DQo+ID4+IEFzIGEgcmVzdWx0IG9mIHRoZSBjdXJyZW50IGRlc2lnbiwgaW4gdGhl
+IGNhc2Ugb2YgYSBzaW5nbGUgZGV2aWNlDQo+ID4+IGhhdmluZyBhbiBBRVItdW5hd2FyZSBkcml2
+ZXIgb3IgaW4gdGhlIGNhc2Ugb2YgYW55IGZ1bmN0aW9uIGluIGENCj4gPj4gbXVsdGktZnVuY3Rp
+b24gY2FyZCBoYXZpbmcgYW4gQUVSLXVuYXdhcmUgZHJpdmVyLCBhIHN1Y2Nlc3NmdWwNCj4gPj4g
+cmVjb3ZlcnkgaXMgcmVwb3J0ZWQuDQo+ID4+DQo+ID4+IFR5cGljYWwgc2NlbmFyaW8gdGhpcyBo
+YXBwZW5zIGlzIHdoZW4gYSBQQ0kgZGV2aWNlIGlzIGRldGFjaGVkDQo+ID4+IGZyb20gYSBLVk0g
+aG9zdCBhbmQgdGhlIHBjaS1zdHViIGRyaXZlciBvbiB0aGUgaG9zdCBjbGFpbXMgdGhlDQo+ID4+
+IGRldmljZS4gVGhlIHBjaS1zdHViIGRyaXZlciBkb2VzIG5vdCBoYXZlIGVycm9yIGhhbmRsaW5n
+IGNhcGFiaWxpdGllcw0KPiA+PiBidXQgdGhlIEFFUiBpbmZyYXN0cnVjdHVyZSBzdGlsbCByZXBv
+cnRzIHRoYXQgdGhlIGRldmljZSByZWNvdmVyZWQNCj4gPj4gc3VjY2Vzc2Z1bGx5Lg0KPiA+Pg0K
+PiA+PiBUaGUgY2hhbmdlcyBwcm9wb3NlZCBoZXJlIGxlYXZlcyB0aGUgZGV2aWNlIGluIGFuIHVu
+cmVjb3ZlcmVkIHN0YXRlDQo+ID4+IGlmIHRoZSBkcml2ZXIgZm9yIHRoZSBkZXZpY2Ugb3IgZm9y
+IGFueSBmdW5jdGlvbiBpbiBhIG11bHRpLWZ1bmN0aW9uDQo+ID4+IGNhcmQgZG9lcyBub3QgaGF2
+ZSBlcnJvciBoYW5kbGVyIHN0cnVjdHVyZSByZWdpc3RlcmVkLiBUaGlzIHJlZmxlY3RzDQo+ID4+
+IHRoZSB0cnVlIHN0YXRlIG9mIHRoZSBkZXZpY2UgYW5kIHByZXZlbnRzIGFueSBwYXJ0aWFsIHJl
+Y292ZXJ5IChvciBubw0KPiA+PiByZWNvdmVyeSBhdCBhbGwpIHJlcG9ydGVkIGFzIHN1Y2Nlc3Nm
+dWwuDQo+ID4+DQo+ID4+IFBsZWFzZSBhbHNvIHNlZSBjb21tZW50cyBmcm9tIExpbmFzIFZlcHN0
+YXMgYXQgdGhlIGZvbGxvd2luZyBsaW5rDQo+ID4+IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlz
+dHMvbGludXgtcGNpL21zZzE4NTcyLmh0bWwNCj4gPj4NCj4gPj4gU2lnbmVkLW9mZi1ieTogTGlu
+YXMgVmVwc3RhcyA8bGluYXN2ZXBzdGFzIDxhdD4gZ21haWwuY29tPg0KPiA+PiBTaWduZWQtb2Zm
+LWJ5OiBNeXJvbiBTdG93ZSA8bXN0b3dlIDxhdD4gcmVkaGF0LmNvbT4NCj4gPj4gU2lnbmVkLW9m
+Zi1ieTogVmlqYXkgTW9oYW4gUGFuZGFyYXRoaWwgPHZpamF5bW9oYW4ucGFuZGFyYXRoaWwgPGF0
+Pg0KPiBocC5jb20+DQo+ID4NCj4gPiBIYXkgVmlqYXk6DQo+ID4NCj4gPiBJIHRoaW5rIExpbmFz
+IG1heSBoYXZlIHN0ZWVyZWQgeW91IGluY29ycmVjdGx5IHdpdGggaGlzICJGV0lXLCBJIGd1ZXNz
+DQo+ID4gSSBjb3VsZCBhZGQgYQ0KPiA+IFNpZ25lZC1vZmYtYnk6IExpbmFzIFZlcHN0YXMgPC4u
+Lj4iIGNvbW1lbnQuDQo+ID4NCj4gPiBGcm9tIC4vRG9jdW1lbnRhdGlvbi9TdWJtaXR0aW5nUGF0
+Y2hlcywgIlRoZSBTaWduZWQtb2ZmLWJ5OiB0YWcNCj4gPiBpbmRpY2F0ZXMgdGhhdCB0aGUNCj4g
+PiBzaWduZXIgd2FzIGludm9sdmVkIGluIHRoZSBkZXZlbG9wbWVudCBvZiB0aGUgcGF0Y2gsIG9y
+IHRoYXQgaGUvc2hlDQo+ID4gd2FzIGluIHRoZSBwYXRjaCdzDQo+ID4gZGVsaXZlcnkgcGF0aC4i
+DQo+ID4NCj4gPiBJIHRoaXMgY2FzZSBJIHN1c3BlY3QgdGhhdCAicmV2aWV3ZWQtYnkiIG9yICdh
+Y2tlZC1ieSIgd291bGQgYmUgbW9yZQ0KPiA+IGFwcHJvcHJpYXRlIGZvcg0KPiA+IGJvdGggTGlu
+YXMgKHVubGVzcyBvZiBjb3Vyc2UgTGluYXMgd29ya2VkIHdpdGggeW91IGluIGRldmVsb3Bpbmcg
+dGhlDQo+IHBhdGNoKSBhbmQNCj4gPiBteXNsZWYuDQo+ID4NCj4gPiBBbHNvLCB3aGVuIHBvc3Rp
+bmcgdG8gdGhlIGxpc3QgaXQncyBjb25zaWRlcmVkIGdvb2QgZXRpcXVldHRlIHRvDQo+ID4gaW5j
+bHVkZSAoY2MpIGV2ZXJ5b25lDQo+ID4gY2l0ZWQgaW4gdGhlIFNpZ25lZC1vZmYsIHJldmlld2Vk
+LWJ5LCBhY2tlZC1ieSwgLi4uLCBsaW5lcyAoYW5kDQo+ID4gcG9zc2libHkgdGhlIGxpbnV4LWtl
+cm5lbA0KPiA+IGxpc3QgLSBhZ2FpbiBzZWUgLi9Eb2N1bWVudGF0aW9uL1N1Ym1pdHRpbmdQYXRj
+aGVzKS4NCj4gPg0KPiA+IE15cm9uDQo+ID4+DQo+ID4+IC0tLQ0KPiA+Pg0KPiA+PiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvcGNpZS9hZXIvYWVyZHJ2X2NvcmUuYw0KPiBiL2RyaXZlcnMvcGNp
+L3BjaWUvYWVyL2FlcmRydl9jb3JlLmMNCj4gPj4gaW5kZXggMDZiYWQ5Ni4uMDMwYjIyOSAxMDA2
+NDQNCj4gPj4gLS0tIGEvZHJpdmVycy9wY2kvcGNpZS9hZXIvYWVyZHJ2X2NvcmUuYw0KPiA+PiAr
+KysgYi9kcml2ZXJzL3BjaS9wY2llL2Flci9hZXJkcnZfY29yZS5jDQo+ID4+IEBAIC0yMTUsNiAr
+MjE1LDEyIEBAIHN0YXRpYyBpbnQgcmVwb3J0X2Vycm9yX2RldGVjdGVkKHN0cnVjdCBwY2lfZGV2
+DQo+ICpkZXYsIHZvaWQgKmRhdGEpDQo+ID4+DQo+ID4+ICAgICAgICAgZGV2LT5lcnJvcl9zdGF0
+ZSA9IHJlc3VsdF9kYXRhLT5zdGF0ZTsNCj4gPj4NCj4gPj4gKyAgICAgICBpZiAoKCFkZXYtPmRy
+aXZlciB8fCAhZGV2LT5kcml2ZXItPmVycl9oYW5kbGVyKSAmJg0KPiA+PiArICAgICAgICAgICAg
+ICAgIShkZXYtPmhkcl90eXBlICYgUENJX0hFQURFUl9UWVBFX0JSSURHRSkpIHsNCj4gPj4gKyAg
+ICAgICAgICAgICAgIGRldl9pbmZvKCZkZXYtPmRldiwgIkFFUjogRXJyb3IgZGV0ZWN0ZWQgYnV0
+IG5vIGRyaXZlcg0KPiBoYXMgY2xhaW1lZCB0aGlzIGRldmljZSBvciB0aGUgZHJpdmVyIGlzIEFF
+Ui11bmF3YXJlXG4iKTsNCj4gPj4gKyAgICAgICAgICAgICAgIHJlc3VsdF9kYXRhLT5yZXN1bHQg
+PSBQQ0lfRVJTX1JFU1VMVF9OT05FOw0KPiA+PiArICAgICAgICAgICAgICAgcmV0dXJuIDE7DQo+
+ID4+ICsgICAgICAgfQ0KPiA+PiAgICAgICAgIGlmICghZGV2LT5kcml2ZXIgfHwNCj4gPj4gICAg
+ICAgICAgICAgICAgICFkZXYtPmRyaXZlci0+ZXJyX2hhbmRsZXIgfHwNCj4gPj4gICAgICAgICAg
+ICAgICAgICFkZXYtPmRyaXZlci0+ZXJyX2hhbmRsZXItPmVycm9yX2RldGVjdGVkKSB7DQo+ID4+
+IC0tDQo+ID4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
+bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+ID4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
+YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0
+dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
