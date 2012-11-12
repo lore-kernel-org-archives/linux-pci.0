@@ -1,144 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:8029 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552Ab2K3Vij (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 16:38:39 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v3 2/3] aerdrv: Enhanced AER logging
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 30 Nov 2012 14:33:37 -0700
-Message-ID: <20121130213337.7649.6709.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
-References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
+Received: from mga01.intel.com ([192.55.52.88]:58402 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753392Ab2KLU57 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Nov 2012 15:57:59 -0500
+Date: Mon, 12 Nov 2012 12:57:54 -0800
+From: Greg Rose <gregory.v.rose@intel.com>
+To: Don Dutile <ddutile@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<yuvalmin@broadcom.com>, <bhutchings@solarflare.com>,
+	<yinghai@kernel.org>, <davem@davemloft.net>,
+	<gregory.v.rose@intel.com>
+Subject: Re: [PATCH 4/4] PCI,sriov: provide method to reduce the number of
+ total VFs supported
+Message-ID: <20121112125754.00002fcb@unknown>
+In-Reply-To: <50A124E3.3050901@redhat.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+	<1352146841-64458-5-git-send-email-ddutile@redhat.com>
+	<CAErSpo7gj7p1=o1GJtaa0_ALO-6M3+AfdMmR1mQc9f6T3T_z3Q@mail.gmail.com>
+	<50A124E3.3050901@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch will provide a more reliable and easy way for user-space
-applications to have access to AER logs rather than reading them from the
-message buffer. It also provides a way to notify user-space when an AER
-event occurs.
+On Mon, 12 Nov 2012 11:33:39 -0500
+Don Dutile <ddutile@redhat.com> wrote:
 
-The aer driver is updated to generate a trace event of function 'aer_event'
-when an AER occurs.  The trace event was added to both the interrupt
-based aer path and the firmware first path
+> On 11/10/2012 04:33 PM, Bjorn Helgaas wrote:
+> > On Mon, Nov 5, 2012 at 1:20 PM, Donald Dutile<ddutile@redhat.com>
+> > wrote:
+> >> Some implementations of SRIOV provide a capability structure
+> >> value of TotalVFs that is greater than what the software can
+> >> support. Provide a method to reduce the capability structure
+> >> reported value to the value the driver can support.
+> >> This ensures sysfs reports the current capability of the system,
+> >> hardware and software.
+> >> Example for its use: igb&  ixgbe -- report 8&  64 as TotalVFs,
+> >> but drivers only support 7&  63 maximum.
+> >>
+> >> Signed-off-by: Donald Dutile<ddutile@redhat.com>
+> >
+> > I don't really understand the purpose of pci_sriov_set_totalvfs().
+> > I think a driver should enforce its limit at the point where it
+> > enables the VFs.  I think the driver should do that to be defensive
+> > regardless of whether we add pci_sriov_set_totalvfs().
+> >
+> I received feedback from the driver folks that putting this check
+> into the core reduces dependencies on drivers doing the right check
+> at the right time.  It's similar to a similar argument made that the
+> core ought to call pci_sriov_enable/disable(), and not the driver(s).
+> 
+> > So is this just to make the driver's limit visible to user-space?
+> > How
+> Yes.
+> > is it better than having the user specify the number he'd like, and
+> > having the driver reduce that if necessary?  The user will be able
+> > to read sriov_numvfs to learn how many the driver enabled, right?
+> >
+> Most drivers don't enable-what-can-be-enabled;  the request succeeds
+> for the number of VFS specified, or it tears all the VFs configured
+> up to the failure, and returns failure, i.e., all or nothing.  I
+> would tend to agree with this logic, since SRIOV resources (BARS,MSI,
+> etc.) are architected as n-resources/VF*num_vfs_enabled.
+> 
+> The primary purpose of the patch set is to drive SRIOV/VF enablement
+> from userspace.  To simplify userspace, it's best to present to it
+> what *can* be enabled.  Right now, that's read totalvfs & check
+> numvfs; Having userspace space do 'trial & error' by 'try this
+> number, nope, ok, try this number'.... vs. totalvfs = numvfs ==
+> num-of-vfs-that-can-be-enabled seems more predictable.
+> 
+> > If we allow sriov_totalvfs to contain a different number than the
+> > SR-IOV capability has (as seen via "lspci"), then we have to explain
+> > to users why they might be different.
+> >
+> The difference already has to be explained, since this state already
+> exists today, and on two of the first SRIOV devices in the market.
+> Now, if we want to quirk this info vs providing a driver interface,
+> we can change that part of the design.  The interface lets the driver
+> (policy) change with the driver vs having to do a driver change & a
+> quirk change. But, we know it exists from day-1, so it should be
+> handled as cleanly as possible wrt userspace tools from day-1.
 
-v1-v2 fix compile errors in ifdefs.
-v2-v3 Update to new location of trace header. Update print to remove
-warning.
+I'm in agreement with Don on this one.  The callback that allows the
+driver to notify the PCI subsystem of the number of usable VFs (vs the
+number advertised through the PCIe SR-IOV capability) makes sense.
+Management SW doesn't have to go through a discovery process to figure
+out what number of VFs it can actually allocate.  And SR-IOV capable
+devices have a number of reasons why they might want to advertise to SW
+fewer VFs than the device might actually support in HW.  Virtual
+functions use resources from the device that are no longer available to
+the physical function.  In order to preserve some level of capability
+that the physical function can reduce the number of VFs advertised and
+reserve those resources to itself.
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
----
+- Greg
 
- drivers/acpi/apei/cper.c               |   17 +++++++++++++++--
- drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
- include/linux/aer.h                    |    2 +-
- 3 files changed, 25 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-index e6defd8..e9d6062 100644
---- a/drivers/acpi/apei/cper.c
-+++ b/drivers/acpi/apei/cper.c
-@@ -29,6 +29,7 @@
- #include <linux/time.h>
- #include <linux/cper.h>
- #include <linux/acpi.h>
-+#include <linux/pci.h>
- #include <linux/aer.h>
- 
- /*
-@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
- static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 			    const struct acpi_hest_generic_data *gdata)
- {
-+#ifdef CONFIG_ACPI_APEI_PCIEAER
-+	struct pci_dev *dev;
-+#endif
-+
- 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
- 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
- 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-@@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
- 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
- #ifdef CONFIG_ACPI_APEI_PCIEAER
--	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
-+	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-+			pcie->device_id.bus, pcie->device_id.function);
-+	if (!dev)
-+		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-+			pcie->device_id.segment, pcie->device_id.bus,
-+			pcie->device_id.slot, pcie->device_id.function);
-+
-+	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
- 		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
--		cper_print_aer(pfx, gdata->error_severity, aer_regs);
-+		cper_print_aer(dev, gdata->error_severity, aer_regs);
-+		pci_dev_put(dev);
- 	}
- #endif
- }
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 3ea5173..34d96e4 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -23,6 +23,9 @@
- 
- #include "aerdrv.h"
- 
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/ras.h>
-+
- #define AER_AGENT_RECEIVER		0
- #define AER_AGENT_REQUESTER		1
- #define AER_AGENT_COMPLETER		2
-@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 	if (info->id && info->error_dev_num > 1 && info->id == id)
- 		printk("%s""  Error of this Agent(%04x) is reported first\n",
- 			prefix, id);
-+	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
-+			info->severity);
- }
- 
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-@@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- 
--void cper_print_aer(const char *prefix, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 		    struct aer_capability_regs *aer)
- {
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
-+	char *prefix = NULL;
- 
- 	aer_severity = cper_severity_to_aer(cper_severity);
- 	if (aer_severity == AER_CORRECTABLE) {
-@@ -259,5 +265,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
- 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
- 			*(tlp + 13), *(tlp + 12));
- 	}
-+	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
-+			aer_severity);
- }
- #endif
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 544abdb..7b86dc6 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- #endif
- 
--extern void cper_print_aer(const char *prefix, int cper_severity,
-+extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 			   struct aer_capability_regs *aer);
- extern int cper_severity_to_aer(int cper_severity);
- extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+> 
+> > I'm playing devil's advocate a bit here because I really don't know
+> > that much about SR-IOV or what the administrative interfaces look
+> > like.
+> >
+> >>   drivers/pci/iov.c       | 48
+> >> ++++++++++++++++++++++++++++++++++++++++++++++++
+> >> drivers/pci/pci-sysfs.c |  4 ++-- drivers/pci/pci.h       |  1 +
+> >>   include/linux/pci.h     | 10 ++++++++++
+> >>   4 files changed, 61 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> >> index aeccc91..3b4a905 100644
+> >> --- a/drivers/pci/iov.c
+> >> +++ b/drivers/pci/iov.c
+> >> @@ -735,3 +735,51 @@ int pci_num_vf(struct pci_dev *dev)
+> >>                  return dev->sriov->nr_virtfn;
+> >>   }
+> >>   EXPORT_SYMBOL_GPL(pci_num_vf);
+> >> +
+> >> +/**
+> >> + * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+> >> + * @dev: the PCI PF device
+> >> + * numvfs: number that should be used for TotalVFs supported
+> >> + *
+> >> + * Should be called from PF driver's probe routine with
+> >> + * device's mutex held.
+> >> + *
+> >> + * Returns 0 if PF is an SRIOV-capable device and
+> >> + * value of numvfs valid. If not a PF with VFS, return -EINVAL;
+> >> + * if VFs already enabled, return -EBUSY.
+> >> + */
+> >> +int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs)
+> >> +{
+> >> +       if (!dev || !dev->is_physfn || (numvfs>
+> >> dev->sriov->total))
+> >> +               return -EINVAL;
+> >> +
+> >> +       /* Shouldn't change if VFs already enabled */
+> >> +       if (dev->sriov->ctrl&  PCI_SRIOV_CTRL_VFE)
+> >> +               return -EBUSY;
+> >> +       else
+> >> +               dev->sriov->drvttl = numvfs;
+> >> +
+> >> +       return 0;
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(pci_sriov_set_totalvfs);
+> >> +
+> >> +/**
+> >> + * pci_sriov_get_totalvfs -- get total VFs supported on this
+> >> devic3
+> >> + * @dev: the PCI PF device
+> >> + *
+> >> + * For a PCIe device with SRIOV support, return the PCIe
+> >> + * SRIOV capability value of TotalVFs or the value of drvttl
+> >> + * if the driver reduced it.  Otherwise, -EINVAL.
+> >> + */
+> >> +int pci_sriov_get_totalvfs(struct pci_dev *dev)
+> >> +{
+> >> +       if (!dev || !dev->is_physfn)
+> >> +               return -EINVAL;
+> >> +
+> >> +       if (dev->sriov->drvttl)
+> >> +               return dev->sriov->drvttl;
+> >> +       else
+> >> +               return dev->sriov->total;
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(pci_sriov_get_totalvfs);
+> >> +
+> >> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> >> index cbcdd8d..e9c967f 100644
+> >> --- a/drivers/pci/pci-sysfs.c
+> >> +++ b/drivers/pci/pci-sysfs.c
+> >> @@ -413,7 +413,7 @@ static ssize_t sriov_totalvfs_show(struct
+> >> device *dev, u16 total;
+> >>
+> >>          pdev = to_pci_dev(dev);
+> >> -       total = pdev->sriov->total;
+> >> +       total = pci_sriov_get_totalvfs(pdev);
+> >>          return sprintf(buf, "%u\n", total);
+> >>   }
+> >>
+> >> @@ -459,7 +459,7 @@ static ssize_t sriov_numvfs_store(struct
+> >> device *dev, }
+> >>
+> >>          /* if enabling vf's ... */
+> >> -       total = pdev->sriov->total;
+> >> +       total = pci_sriov_get_totalvfs(pdev);
+> >>          /* Requested VFs to enable<  totalvfs and none enabled
+> >> already */ if ((num_vfs>  0)&&  (num_vfs<= total)) {
+> >>                  if (pdev->sriov->nr_virtfn == 0) {
+> >> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> >> index 6f6cd14..553bbba 100644
+> >> --- a/drivers/pci/pci.h
+> >> +++ b/drivers/pci/pci.h
+> >> @@ -240,6 +240,7 @@ struct pci_sriov {
+> >>          u16 stride;             /* following VF stride */
+> >>          u32 pgsz;               /* page size for BAR alignment */
+> >>          u8 link;                /* Function Dependency Link */
+> >> +       u16 drvttl;             /* max num VFs driver supports */
+> >>          struct pci_dev *dev;    /* lowest numbered PF */
+> >>          struct pci_dev *self;   /* this PF */
+> >>          struct mutex lock;      /* lock for VF bus */
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index 7ef8fba..1ad8249 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -1611,6 +1611,8 @@ extern int pci_enable_sriov(struct pci_dev
+> >> *dev, int nr_virtfn); extern void pci_disable_sriov(struct pci_dev
+> >> *dev); extern irqreturn_t pci_sriov_migration(struct pci_dev *dev);
+> >>   extern int pci_num_vf(struct pci_dev *dev);
+> >> +extern int pci_sriov_set_totalvfs(struct pci_dev *dev, u16
+> >> numvfs); +extern int pci_sriov_get_totalvfs(struct pci_dev *dev);
+> >>   #else
+> >>   static inline int pci_enable_sriov(struct pci_dev *dev, int
+> >> nr_virtfn) {
+> >> @@ -1627,6 +1629,14 @@ static inline int pci_num_vf(struct pci_dev
+> >> *dev) {
+> >>          return 0;
+> >>   }
+> >> +static inline int pci_sriov_set_totalvfs(struct pci_dev *dev, u16
+> >> numvfs) +{
+> >> +       return 0;
+> >> +}
+> >> +static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+> >> +{
+> >> +       return 0;
+> >> +}
+> >>   #endif
+> >>
+> >>   #if defined(CONFIG_HOTPLUG_PCI) ||
+> >> defined(CONFIG_HOTPLUG_PCI_MODULE) --
+> >> 1.7.10.2.552.gaa3bb87
+> >>
+> 
 
