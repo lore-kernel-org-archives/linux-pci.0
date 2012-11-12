@@ -1,509 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Glauber <jang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, heiko.carstens@de.ibm.com,
-	schwidefsky@de.ibm.com, Jan Glauber <jang@linux.vnet.ibm.com>
-Subject: [RFC PATCH 07/10] s390/pci: PCI hotplug support via SCLP
-Date: Wed, 14 Nov 2012 10:41:39 +0100
-Message-Id: <24140c0677f914bfc51b88259155887c327a7103.1352719878.git.jang@linux.vnet.ibm.com>
-In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:5312 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752679Ab2KLTYw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Nov 2012 14:24:52 -0500
+Message-ID: <50A14CF4.6060701@redhat.com>
+Date: Mon, 12 Nov 2012 14:24:36 -0500
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	yuvalmin@broadcom.com, bhutchings@solarflare.com,
+	gregory.v.rose@intel.com, davem@davemloft.net
+Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com> <1352146841-64458-4-git-send-email-ddutile@redhat.com> <CAE9FiQWx64YeLp=3fUCuOvZFQbyKxYd400azFvvi=oLYtQDbcA@mail.gmail.com> <CAE9FiQX2tNX25O1pcEzn6nvc7BxFCx0t2UKD11y-=17FhOmC+Q@mail.gmail.com>
+In-Reply-To: <CAE9FiQX2tNX25O1pcEzn6nvc7BxFCx0t2UKD11y-=17FhOmC+Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add SCLP PCI configure/deconfigure and implement a PCI hotplug
-controller (s390_pci_hpc). The hotplug controller creates a slot
-for every PCI function in stand-by or configured state. The PCI
-functions are named after the PCI function ID (fid). By writing to
-the power attribute in /sys/bus/pci/slots/<fid>/power the PCI function
-is moved to stand-by or configured state. If moved to the configured
-state the device is automatically scanned by the s390 PCI layer.
+On 11/10/2012 02:31 AM, Yinghai Lu wrote:
+> On Fri, Nov 9, 2012 at 10:47 PM, Yinghai Lu<yinghai@kernel.org>  wrote:
+>> On Mon, Nov 5, 2012 at 12:20 PM, Donald Dutile<ddutile@redhat.com>  wrote:
+>>>
+>>>   static const struct attribute_group *pci_dev_attr_groups[] = {
+>>>          &pci_dev_attr_group,
+>>> +#ifdef CONFIG_PCI_IOV
+>>> +&sriov_dev_attr_group,
+>>> +#endif
+>>
+>> should move sriov_dev_attr_group related code to
+>> drivers/pci/iov.c
+>> or driver/pci/iov_sysfs.c
+>>
+>> and kill those CONFIG_IOV.
+>
+> Bjorn,
+>
+> please check attached patch that separate sriov_dev_attr_group out.
+> it is against to your pci/don-sriov branch.
+>
+> Thanks
+>
+> Yinghai
 
-Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
----
- arch/s390/include/asm/pci.h        |  11 ++
- arch/s390/include/asm/sclp.h       |   2 +
- arch/s390/pci/pci.c                |   9 ++
- drivers/pci/hotplug/Kconfig        |  11 ++
- drivers/pci/hotplug/Makefile       |   1 +
- drivers/pci/hotplug/s390_pci_hpc.c | 252 +++++++++++++++++++++++++++++++++++++
- drivers/s390/char/sclp.h           |   3 +-
- drivers/s390/char/sclp_cmd.c       |  64 +++++++++-
- 8 files changed, 351 insertions(+), 2 deletions(-)
- create mode 100644 drivers/pci/hotplug/s390_pci_hpc.c
+Since the sriov-related files are created at the same time as
+the other <DOMAIN:B:D.F> files, I would prefer to keep their
+generation in the pci-sysfs.c file.
+If it it moved, then put it into iov.c; the 'virtfn[X]' sysfs
+files are created/destroyed in that file already, so if the
+majority want it out of pci-sysfs, then I would favor a move to iov.c.
+iov-sysfs.c creates yet-another file to search for SRIOV-related code,
+and it's fairly centric to iov.c now.
 
-diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-index 3dc2cb6..739d9f1 100644
---- a/arch/s390/include/asm/pci.h
-+++ b/arch/s390/include/asm/pci.h
-@@ -95,6 +95,11 @@ struct zpci_dev {
- 	enum pci_bus_speed max_bus_speed;
- };
- 
-+struct pci_hp_callback_ops {
-+	int (*create_slot)	(struct zpci_dev *zdev);
-+	void (*remove_slot)	(struct zpci_dev *zdev);
-+};
-+
- static inline bool zdev_enabled(struct zpci_dev *zdev)
- {
- 	return (zdev->fh & (1UL << 31)) ? true : false;
-@@ -140,4 +145,10 @@ bool zpci_fid_present(u32);
- int zpci_dma_init(void);
- void zpci_dma_exit(void);
- 
-+/* Hotplug */
-+extern struct mutex zpci_list_lock;
-+extern struct list_head zpci_list;
-+extern struct pci_hp_callback_ops hotplug_ops;
-+extern unsigned int pci_probe;
-+
- #endif
-diff --git a/arch/s390/include/asm/sclp.h b/arch/s390/include/asm/sclp.h
-index e62a555..8337886 100644
---- a/arch/s390/include/asm/sclp.h
-+++ b/arch/s390/include/asm/sclp.h
-@@ -55,5 +55,7 @@ int sclp_chp_read_info(struct sclp_chp_info *info);
- void sclp_get_ipl_info(struct sclp_ipl_info *info);
- bool sclp_has_linemode(void);
- bool sclp_has_vt220(void);
-+int sclp_pci_configure(u32 fid);
-+int sclp_pci_deconfigure(u32 fid);
- 
- #endif /* _ASM_S390_SCLP_H */
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 5a2ef9e..c523594 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -47,7 +47,12 @@
- 
- /* list of all detected zpci devices */
- LIST_HEAD(zpci_list);
-+EXPORT_SYMBOL_GPL(zpci_list);
- DEFINE_MUTEX(zpci_list_lock);
-+EXPORT_SYMBOL_GPL(zpci_list_lock);
-+
-+struct pci_hp_callback_ops hotplug_ops;
-+EXPORT_SYMBOL_GPL(hotplug_ops);
- 
- static DECLARE_BITMAP(zpci_domain, ZPCI_NR_DEVICES);
- static DEFINE_SPINLOCK(zpci_domain_lock);
-@@ -935,6 +940,8 @@ int zpci_create_device(struct zpci_dev *zdev)
- 
- 	mutex_lock(&zpci_list_lock);
- 	list_add_tail(&zdev->entry, &zpci_list);
-+	if (hotplug_ops.create_slot)
-+		hotplug_ops.create_slot(zdev);
- 	mutex_unlock(&zpci_list_lock);
- 
- 	if (zdev->state == ZPCI_FN_STATE_STANDBY)
-@@ -948,6 +955,8 @@ int zpci_create_device(struct zpci_dev *zdev)
- out_start:
- 	mutex_lock(&zpci_list_lock);
- 	list_del(&zdev->entry);
-+	if (hotplug_ops.remove_slot)
-+		hotplug_ops.remove_slot(zdev);
- 	mutex_unlock(&zpci_list_lock);
- out_bus:
- 	zpci_free_domain(zdev);
-diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-index b0e46de..0594c4a 100644
---- a/drivers/pci/hotplug/Kconfig
-+++ b/drivers/pci/hotplug/Kconfig
-@@ -151,4 +151,15 @@ config HOTPLUG_PCI_SGI
- 
- 	  When in doubt, say N.
- 
-+config HOTPLUG_PCI_S390
-+	tristate "System z PCI Hotplug Support"
-+	depends on S390 && 64BIT
-+	help
-+	  Say Y here if you want to use the System z PCI Hotplug
-+	  driver for PCI devices. Without this driver it is not
-+          possible to access stand-by PCI functions nor to deconfigure
-+          PCI functions.
-+
-+	  When in doubt, say Y.
-+
- endif # HOTPLUG_PCI
-diff --git a/drivers/pci/hotplug/Makefile b/drivers/pci/hotplug/Makefile
-index c459cd4..47ec8c8 100644
---- a/drivers/pci/hotplug/Makefile
-+++ b/drivers/pci/hotplug/Makefile
-@@ -18,6 +18,7 @@ obj-$(CONFIG_HOTPLUG_PCI_RPA)		+= rpaphp.o
- obj-$(CONFIG_HOTPLUG_PCI_RPA_DLPAR)	+= rpadlpar_io.o
- obj-$(CONFIG_HOTPLUG_PCI_SGI)		+= sgi_hotplug.o
- obj-$(CONFIG_HOTPLUG_PCI_ACPI)		+= acpiphp.o
-+obj-$(CONFIG_HOTPLUG_PCI_S390)		+= s390_pci_hpc.o
- 
- # acpiphp_ibm extends acpiphp, so should be linked afterwards.
- 
-diff --git a/drivers/pci/hotplug/s390_pci_hpc.c b/drivers/pci/hotplug/s390_pci_hpc.c
-new file mode 100644
-index 0000000..d4de895
---- /dev/null
-+++ b/drivers/pci/hotplug/s390_pci_hpc.c
-@@ -0,0 +1,252 @@
-+/*
-+ * PCI Hot Plug Controller Driver for System z
-+ *
-+ * Copyright 2012 IBM Corp.
-+ *
-+ * Author(s):
-+ *   Jan Glauber <jang@linux.vnet.ibm.com>
-+ */
-+
-+#define COMPONENT "zPCI hpc"
-+#define pr_fmt(fmt) COMPONENT ": " fmt
-+
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <linux/slab.h>
-+#include <linux/pci.h>
-+#include <linux/pci_hotplug.h>
-+#include <linux/init.h>
-+#include <asm/sclp.h>
-+
-+#define SLOT_NAME_SIZE	10
-+static LIST_HEAD(s390_hotplug_slot_list);
-+
-+MODULE_AUTHOR("Jan Glauber <jang@linux.vnet.ibm.com");
-+MODULE_DESCRIPTION("Hot Plug PCI Controller for System z");
-+MODULE_LICENSE("GPL");
-+
-+static int zpci_fn_configured(enum zpci_state state)
-+{
-+	return state == ZPCI_FN_STATE_CONFIGURED ||
-+	       state == ZPCI_FN_STATE_ONLINE;
-+}
-+
-+/*
-+ * struct slot - slot information for each *physical* slot
-+ */
-+struct slot {
-+	struct list_head slot_list;
-+	struct hotplug_slot *hotplug_slot;
-+	struct zpci_dev *zdev;
-+};
-+
-+static int enable_slot(struct hotplug_slot *hotplug_slot)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+	int rc;
-+
-+	if (slot->zdev->state != ZPCI_FN_STATE_STANDBY)
-+		return -EIO;
-+
-+	rc = sclp_pci_configure(slot->zdev->fid);
-+	if (!rc) {
-+		slot->zdev->state = ZPCI_FN_STATE_CONFIGURED;
-+		/* automatically scan the device after is was configured */
-+		zpci_enable_device(slot->zdev);
-+		zpci_scan_device(slot->zdev);
-+	}
-+	return rc;
-+}
-+
-+static int disable_slot(struct hotplug_slot *hotplug_slot)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+	int rc;
-+
-+	if (!zpci_fn_configured(slot->zdev->state))
-+		return -EIO;
-+
-+	/* TODO: we rely on the user to unbind/remove the device, is that plausible
-+	 *       or do we need to trigger that here?
-+	 */
-+	rc = sclp_pci_deconfigure(slot->zdev->fid);
-+	if (!rc) {
-+		/* Fixme: better call List-PCI to find the disabled FH
-+		   for the FID since the FH should be opaque... */
-+		slot->zdev->fh &= 0x7fffffff;
-+		slot->zdev->state = ZPCI_FN_STATE_STANDBY;
-+	}
-+	return rc;
-+}
-+
-+static int get_power_status(struct hotplug_slot *hotplug_slot, u8 *value)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+
-+	switch (slot->zdev->state) {
-+	case ZPCI_FN_STATE_STANDBY:
-+		*value = 0;
-+		break;
-+	default:
-+		*value = 1;
-+		break;
-+	}
-+	return 0;
-+}
-+
-+static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
-+{
-+	/* if the slot exits it always contains a function */
-+	*value = 1;
-+	return 0;
-+}
-+
-+static void release_slot(struct hotplug_slot *hotplug_slot)
-+{
-+	struct slot *slot = hotplug_slot->private;
-+
-+	pr_debug("%s - physical_slot = %s\n", __func__, hotplug_slot_name(hotplug_slot));
-+	kfree(slot->hotplug_slot->info);
-+	kfree(slot->hotplug_slot);
-+	kfree(slot);
-+}
-+
-+static struct hotplug_slot_ops s390_hotplug_slot_ops = {
-+	.enable_slot =		enable_slot,
-+	.disable_slot =		disable_slot,
-+	.get_power_status =	get_power_status,
-+	.get_adapter_status =	get_adapter_status,
-+};
-+
-+static int init_pci_slot(struct zpci_dev *zdev)
-+{
-+	struct hotplug_slot *hotplug_slot;
-+	struct hotplug_slot_info *info;
-+	char name[SLOT_NAME_SIZE];
-+	struct slot *slot;
-+	int rc;
-+
-+	if (!zdev)
-+		return 0;
-+
-+	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
-+	if (!slot)
-+		goto error;
-+
-+	hotplug_slot = kzalloc(sizeof(*hotplug_slot), GFP_KERNEL);
-+	if (!hotplug_slot)
-+		goto error_hp;
-+	hotplug_slot->private = slot;
-+
-+	slot->hotplug_slot = hotplug_slot;
-+	slot->zdev = zdev;
-+
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (!info)
-+		goto error_info;
-+	hotplug_slot->info = info;
-+
-+	hotplug_slot->ops = &s390_hotplug_slot_ops;
-+	hotplug_slot->release = &release_slot;
-+
-+	get_power_status(hotplug_slot, &info->power_status);
-+	get_adapter_status(hotplug_slot, &info->adapter_status);
-+
-+	snprintf(name, SLOT_NAME_SIZE, "%08x", zdev->fid);
-+	rc = pci_hp_register(slot->hotplug_slot, zdev->bus,
-+			     ZPCI_DEVFN, name);
-+	if (rc) {
-+		pr_err("pci_hp_register failed with error %d\n", rc);
-+		goto error_reg;
-+	}
-+	list_add(&slot->slot_list, &s390_hotplug_slot_list);
-+	return 0;
-+
-+error_reg:
-+	kfree(info);
-+error_info:
-+	kfree(hotplug_slot);
-+error_hp:
-+	kfree(slot);
-+error:
-+	return -ENOMEM;
-+}
-+
-+static int __init init_pci_slots(void)
-+{
-+	struct zpci_dev *zdev;
-+	int device = 0;
-+
-+	/*
-+	 * Create a structure for each slot, and register that slot
-+	 * with the pci_hotplug subsystem.
-+	 */
-+	mutex_lock(&zpci_list_lock);
-+	list_for_each_entry(zdev, &zpci_list, entry) {
-+		init_pci_slot(zdev);
-+		device++;
-+	}
-+
-+	mutex_unlock(&zpci_list_lock);
-+	return (device) ? 0 : -ENODEV;
-+}
-+
-+static void exit_pci_slot(struct zpci_dev *zdev)
-+{
-+	struct list_head *tmp, *n;
-+	struct slot *slot;
-+
-+	list_for_each_safe(tmp, n, &s390_hotplug_slot_list) {
-+		slot = list_entry(tmp, struct slot, slot_list);
-+		if (slot->zdev != zdev)
-+			continue;
-+		list_del(&slot->slot_list);
-+		pci_hp_deregister(slot->hotplug_slot);
-+	}
-+}
-+
-+static void __exit exit_pci_slots(void)
-+{
-+	struct list_head *tmp, *n;
-+	struct slot *slot;
-+
-+	/*
-+	 * Unregister all of our slots with the pci_hotplug subsystem.
-+	 * Memory will be freed in release_slot() callback after slot's
-+	 * lifespan is finished.
-+	 */
-+	list_for_each_safe(tmp, n, &s390_hotplug_slot_list) {
-+		slot = list_entry(tmp, struct slot, slot_list);
-+		list_del(&slot->slot_list);
-+		pci_hp_deregister(slot->hotplug_slot);
-+	}
-+}
-+
-+static int __init pci_hotplug_s390_init(void)
-+{
-+	/*
-+	 * Do specific initialization stuff for your driver here
-+	 * like initializing your controller hardware (if any) and
-+	 * determining the number of slots you have in the system
-+	 * right now.
-+	 */
-+
-+	if (!pci_probe)
-+		return -EOPNOTSUPP;
-+
-+	/* register callbacks for slot handling from arch code */
-+	mutex_lock(&zpci_list_lock);
-+	hotplug_ops.create_slot = init_pci_slot;
-+	hotplug_ops.remove_slot = exit_pci_slot;
-+	mutex_unlock(&zpci_list_lock);
-+	pr_info("registered hotplug slot callbacks\n");
-+	return init_pci_slots();
-+}
-+
-+static void __exit pci_hotplug_s390_exit(void)
-+{
-+	exit_pci_slots();
-+}
-+
-+module_init(pci_hotplug_s390_init);
-+module_exit(pci_hotplug_s390_exit);
-diff --git a/drivers/s390/char/sclp.h b/drivers/s390/char/sclp.h
-index d7e97ae..25bcd4c 100644
---- a/drivers/s390/char/sclp.h
-+++ b/drivers/s390/char/sclp.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright IBM Corp. 1999, 2009
-+ * Copyright IBM Corp. 1999,2012
-  *
-  * Author(s): Martin Peschke <mpeschke@de.ibm.com>
-  *	      Martin Schwidefsky <schwidefsky@de.ibm.com>
-@@ -103,6 +103,7 @@ extern u64 sclp_facilities;
- #define SCLP_HAS_CHP_RECONFIG	(sclp_facilities & 0x2000000000000000ULL)
- #define SCLP_HAS_CPU_INFO	(sclp_facilities & 0x0800000000000000ULL)
- #define SCLP_HAS_CPU_RECONFIG	(sclp_facilities & 0x0400000000000000ULL)
-+#define SCLP_HAS_PCI_RECONFIG	(sclp_facilities & 0x0000000040000000ULL)
- 
- 
- struct gds_subvector {
-diff --git a/drivers/s390/char/sclp_cmd.c b/drivers/s390/char/sclp_cmd.c
-index 71ea923c..f308bac 100644
---- a/drivers/s390/char/sclp_cmd.c
-+++ b/drivers/s390/char/sclp_cmd.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright IBM Corp. 2007, 2009
-+ * Copyright IBM Corp. 2007,2012
-  *
-  * Author(s): Heiko Carstens <heiko.carstens@de.ibm.com>,
-  *	      Peter Oberparleiter <peter.oberparleiter@de.ibm.com>
-@@ -12,6 +12,7 @@
- #include <linux/init.h>
- #include <linux/errno.h>
- #include <linux/err.h>
-+#include <linux/export.h>
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/mm.h>
-@@ -702,6 +703,67 @@ __initcall(sclp_detect_standby_memory);
- #endif /* CONFIG_MEMORY_HOTPLUG */
- 
- /*
-+ * PCI I/O adapter configuration related functions.
-+ */
-+#define SCLP_CMDW_CONFIGURE_PCI			0x001a0001
-+#define SCLP_CMDW_DECONFIGURE_PCI		0x001b0001
-+
-+#define SCLP_RECONFIG_PCI_ATPYE			2
-+
-+struct pci_cfg_sccb {
-+	struct sccb_header header;
-+	u8 atype;		/* adapter type */
-+	u8 reserved1;
-+	u16 reserved2;
-+	u32 aid;		/* adapter identifier */
-+} __packed;
-+
-+static int do_pci_configure(sclp_cmdw_t cmd, u32 fid)
-+{
-+	struct pci_cfg_sccb *sccb;
-+	int rc;
-+
-+	if (!SCLP_HAS_PCI_RECONFIG)
-+		return -EOPNOTSUPP;
-+
-+	sccb = (struct pci_cfg_sccb *) get_zeroed_page(GFP_KERNEL | GFP_DMA);
-+	if (!sccb)
-+		return -ENOMEM;
-+
-+	sccb->header.length = PAGE_SIZE;
-+	sccb->atype = SCLP_RECONFIG_PCI_ATPYE;
-+	sccb->aid = fid;
-+	rc = do_sync_request(cmd, sccb);
-+	if (rc)
-+		goto out;
-+	switch (sccb->header.response_code) {
-+	case 0x0020:
-+	case 0x0120:
-+		break;
-+	default:
-+		pr_warn("configure PCI I/O adapter failed: cmd=0x%08x  response=0x%04x\n",
-+			cmd, sccb->header.response_code);
-+		rc = -EIO;
-+		break;
-+	}
-+out:
-+	free_page((unsigned long) sccb);
-+	return rc;
-+}
-+
-+int sclp_pci_configure(u32 fid)
-+{
-+	return do_pci_configure(SCLP_CMDW_CONFIGURE_PCI, fid);
-+}
-+EXPORT_SYMBOL(sclp_pci_configure);
-+
-+int sclp_pci_deconfigure(u32 fid)
-+{
-+	return do_pci_configure(SCLP_CMDW_DECONFIGURE_PCI, fid);
-+}
-+EXPORT_SYMBOL(sclp_pci_deconfigure);
-+
-+/*
-  * Channel path configuration related functions.
-  */
- 
--- 
-1.7.12.4
+If we're going to toss stuff out of pci-sysfs, then toss out the vga-attributes
+crap, as well as other non-pci-specific files like bus-affinity(numa -- which
+should go into PCI-root-bus related core code, e.g., acpi for x86; idk in ppc, arm, s390, etc.).
+I'm not saying that following bad decisions of the past
+is a justification for keeping the sriov related sysfs in pci-sysfs;
+I am saying sriov *is* PCI-specific/architected, so it seems like
+it should reside in pci-sysfs.c .
+
+Other opinions/votes/preferences ???
+
+- Don
 
