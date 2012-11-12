@@ -1,51 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35217 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51117 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751336Ab2K2P4M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 29 Nov 2012 10:56:12 -0500
-Message-ID: <1354204570.14547.14.camel@ul30vt.home>
-Subject: Re: pci_enable_msix() fails with ENOMEM/EINVAL
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Yair Hershko <yair@zadarastorage.com>,
-	Shyam Kaushik <shyam@zadarastorage.com>
-Date: Thu, 29 Nov 2012 08:56:10 -0700
-In-Reply-To: <A5D6C5E3D7774E62AA482C886483DA6D@alyakaslap>
-References: <190FFE9600054603A543CCDA4408AC89@alyakaslap>
-	 <CAOcd+r28ot-060WQhUPkuM1Bt7t-_jOggAZKNSJxurNYVs2b-w@mail.gmail.com>
-	 <1353536723.1809.4.camel@bling.home>
-	 <F764A8A9BBE247FEA862ED33F77A04A1@alyakaslap>
-	 <1353960253.1809.128.camel@bling.home>
-	 <A5D6C5E3D7774E62AA482C886483DA6D@alyakaslap>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751576Ab2KLTrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Nov 2012 14:47:13 -0500
+Message-ID: <50A15233.10007@redhat.com>
+Date: Mon, 12 Nov 2012 14:46:59 -0500
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jason Gao <pkill.2012@gmail.com>,
+	"Rose, Gregory V" <gregory.v.rose@intel.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources
+ for SR-IOV)
+References: <201211081915083774239@gmail.com> <509B962C.6070002@gmail.com> <C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com> <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com> <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
+In-Reply-To: <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-11-29 at 10:42 +0200, Alex Lyakas wrote:
-> Hi Alex,
-> did I understand correctly that "vector" value with which the call to 
-> request_threaded_irq() is made is *not* supposed to be zero? Because in my 
-> case, it is always zero, and still the failure I observe is not happening 
-> always. Usually, 3 unique (non-zero) IRQ numbers are assigned to each 
-> attached PCI device of each KVM VM.
-> I will try to repro this like you suggested and let you know.
+On 11/09/2012 10:26 AM, Bjorn Helgaas wrote:
+> [+ linux-pci, Yinghai]
+>
+> On Thu, Nov 8, 2012 at 8:59 PM, Jason Gao<pkill.2012@gmail.com>  wrote:
+>>> The BIOS in your machine doesn't support SR-IOV.  You'll need to ask the manufacturer for a BIOS upgrade, if in fact one is available.  Sometimes they're not.
+>>
+>> very thanks Greg,my server Dell R710 with latest BIOS version and
+>> option for SR-IOV(SR-IOV Global Enable->Enabled)  opened,I'm confused
+>> that Does R710 provide full support for SR-IOV, kernel or  ixgbe
+>> driver's bug? but I'm not sure where the problem lies,anyone has any
+>> experience about this?   .
+>
+> Linux normally uses the resource assignments done by the BIOS, but it
+> is possible for the kernel to reassign those.  We don't have good
+> automatic support for that yet, but on a recent upstream kernel, you
+> can try "pci=realloc".  I doubt this option is in CentOS 6.3, though.
+>
+Try moving the device into a different slot.
+You may be trying it in a non-ARI slot in the 710; that is a problem
+in RHEL6 (needing to realloc bus &/or mem-space).
+A non-ARI slot will want to use one bus number per VF.... which will
+be problematic.
+I know I've seen ixgbe's (& their vfs's) working on a dell 710;
+but they may also be one of those systems that has a slot off the ich10
+with no ARI support.
 
-pci_enable_msix should be setting vectors for all the host_msix_entries.
-That non-zero vector is the first parameter to request_threaded_irq.  If
-I put a printk in the loop installing the interrupt handler, I get:
-
-assigned_device_enable_host_msix entry 0, vector 44
-assigned_device_enable_host_msix entry 0, vector 44
-assigned_device_enable_host_msix entry 1, vector 45
-assigned_device_enable_host_msix entry 0, vector 44
-assigned_device_enable_host_msix entry 1, vector 45
-assigned_device_enable_host_msix entry 2, vector 103
-
-So we enable MSI-X with only one vector enabled, then a second vector
-gets enabled and we disable and re-enable with two, and so on with
-three.  This is for an assigned e1000e device.  Thanks,
-
-Alex
+> If an upstream kernel with "pci=realloc" still doesn't work, please
+> post the entire dmesg log.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
