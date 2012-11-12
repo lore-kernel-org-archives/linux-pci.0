@@ -1,66 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5312 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752679Ab2KLTYw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Nov 2012 14:24:52 -0500
-Message-ID: <50A14CF4.6060701@redhat.com>
-Date: Mon, 12 Nov 2012 14:24:36 -0500
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50A07477.2050002@cn.fujitsu.com>
+Date: Mon, 12 Nov 2012 12:00:55 +0800
+From: Wen Congyang <wency@cn.fujitsu.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net
-Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com> <1352146841-64458-4-git-send-email-ddutile@redhat.com> <CAE9FiQWx64YeLp=3fUCuOvZFQbyKxYd400azFvvi=oLYtQDbcA@mail.gmail.com> <CAE9FiQX2tNX25O1pcEzn6nvc7BxFCx0t2UKD11y-=17FhOmC+Q@mail.gmail.com>
-In-Reply-To: <CAE9FiQX2tNX25O1pcEzn6nvc7BxFCx0t2UKD11y-=17FhOmC+Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
+CC: linux-acpi@vger.kernel.org, isimatu.yasuaki@jp.fujitsu.com,
+	rjw@sisk.pl, lenb@kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH 0/3] acpi: Introduce prepare_remove device operation
+References: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
+In-Reply-To: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/10/2012 02:31 AM, Yinghai Lu wrote:
-> On Fri, Nov 9, 2012 at 10:47 PM, Yinghai Lu<yinghai@kernel.org>  wrote:
->> On Mon, Nov 5, 2012 at 12:20 PM, Donald Dutile<ddutile@redhat.com>  wrote:
->>>
->>>   static const struct attribute_group *pci_dev_attr_groups[] = {
->>>          &pci_dev_attr_group,
->>> +#ifdef CONFIG_PCI_IOV
->>> +&sriov_dev_attr_group,
->>> +#endif
->>
->> should move sriov_dev_attr_group related code to
->> drivers/pci/iov.c
->> or driver/pci/iov_sysfs.c
->>
->> and kill those CONFIG_IOV.
->
-> Bjorn,
->
-> please check attached patch that separate sriov_dev_attr_group out.
-> it is against to your pci/don-sriov branch.
->
-> Thanks
->
-> Yinghai
+At 11/09/2012 02:29 AM, Vasilis Liaskovitis Wrote:
+> As discussed in
+> https://patchwork.kernel.org/patch/1581581/
+> the driver core remove function needs to always succeed. This means we need
+> to know that the device can be successfully removed before acpi_bus_trim / 
+> acpi_bus_hot_remove_device are called. This can cause panics when OSPM-initiated
+> eject (echo 1 > /sys/bus/acpi/devices/PNP/eject) of memory devices fails, since
+> the ACPI core goes ahead and ejects the device regardless of whether the memory
+> is still in use or not.
+> 
+> For this reason a new acpi_device operation called prepare_remove is introduced.
+> This operation should be registered for acpi devices whose removal (from kernel
+> perspective) can fail.  Memory devices fall in this category.
+> 
+> acpi_bus_hot_remove_device is changed to handle removal in 2 steps:
+> - preparation for removal i.e. perform part of removal that can fail outside of
+>   ACPI core. Should succeed for device and all its children.
+> - if above step was successfull, proceed to actual ACPI removal
 
-Since the sriov-related files are created at the same time as
-the other <DOMAIN:B:D.F> files, I would prefer to keep their
-generation in the pci-sysfs.c file.
-If it it moved, then put it into iov.c; the 'virtfn[X]' sysfs
-files are created/destroyed in that file already, so if the
-majority want it out of pci-sysfs, then I would favor a move to iov.c.
-iov-sysfs.c creates yet-another file to search for SRIOV-related code,
-and it's fairly centric to iov.c now.
+If we unbind the device from the driver, we still need to do preparation. But
+you don't do it in your patch.
 
-If we're going to toss stuff out of pci-sysfs, then toss out the vga-attributes
-crap, as well as other non-pci-specific files like bus-affinity(numa -- which
-should go into PCI-root-bus related core code, e.g., acpi for x86; idk in ppc, arm, s390, etc.).
-I'm not saying that following bad decisions of the past
-is a justification for keeping the sriov related sysfs in pci-sysfs;
-I am saying sriov *is* PCI-specific/architected, so it seems like
-it should reside in pci-sysfs.c .
-
-Other opinions/votes/preferences ???
-
-- Don
+Thanks
+Wen Congyang
+> 
+> acpi_bus_trim is changed accordingly to handle preparation for removal and
+> actual removal.
+> 
+> With this patchset, only acpi memory devices use the new prepare_remove
+> device operation. The actual memory removal (VM-related offline and other memory
+> cleanups) is moved to prepare_remove. The old remove operation just cleans up
+> the acpi structures. Directly ejecting PNP0C80 memory devices works safely. I
+> haven't tested yet with an ACPI container which contains memory devices.
+> 
+> Other ACPI devices (e.g. CPU) do not register prepare_remove callbacks, and
+> their OSPM-side eject should not be affected.
+> 
+> I am not happy with the name prepare_remove. Comments welcome. Let me know if I
+> should work more in this direction (I think Yasuaki might also look into this
+> and might have a simpler idea)
+> 
+> Patches are on top of Rafael's linux-pm/linux-next
+> 
+> Vasilis Liaskovitis (3):
+>   acpi: Introduce prepare_remove operation in acpi_device_ops
+>   acpi: Make acpi_bus_trim handle device removal preparation
+>   acpi_memhotplug: Add prepare_remove operation
+> 
+>  drivers/acpi/acpi_memhotplug.c     |   24 +++++++++++++++++++++---
+>  drivers/acpi/dock.c                |    2 +-
+>  drivers/acpi/scan.c                |   32 +++++++++++++++++++++++++++++---
+>  drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
+>  drivers/pci/hotplug/sgi_hotplug.c  |    2 +-
+>  include/acpi/acpi_bus.h            |    4 +++-
+>  6 files changed, 57 insertions(+), 11 deletions(-)
+> 
 
