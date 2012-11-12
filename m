@@ -1,138 +1,357 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jan Glauber <jang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, heiko.carstens@de.ibm.com,
-	schwidefsky@de.ibm.com, Jan Glauber <jang@linux.vnet.ibm.com>
-Subject: [RFC PATCH 00/10] s390/pci: PCI support on System z
-Date: Wed, 14 Nov 2012 10:41:32 +0100
-Message-Id: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rrcs-24-173-105-85.sw.biz.rr.com ([24.173.105.85]:40622 "EHLO
+	mx1.mthode.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751347Ab2KLVEs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 12 Nov 2012 16:04:48 -0500
+Message-ID: <50A16481.5030309@gentoo.org>
+Date: Mon, 12 Nov 2012 15:05:05 -0600
+From: Matthew Thode <prometheanfire@gentoo.org>
+Reply-To: prometheanfire@gentoo.org
+MIME-Version: 1.0
+To: Don Dutile <ddutile@redhat.com>
+CC: Doug Goldstein <cardoe@gentoo.org>, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org, mthode@mthode.org,
+	iommu@lists.linux-foundation.org,
+	Alex Williamson <Alex.Williamson@redhat.com>
+Subject: Re: [BUG 3.7-rc5] NULL pointer deref when using a pcie-pci bridged
+ pci device and intel-iommu
+References: <50A03281.6040206@gentoo.org> <CAFWqQMQgmsFNqLS02Go3de-OZoxoPRbGuSmcj8ntic52C8AVpw@mail.gmail.com> <50A1549C.7020404@redhat.com>
+In-Reply-To: <50A1549C.7020404@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig5175F2C3E766D733401307B7"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig5175F2C3E766D733401307B7
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-this patchset based on 3.7-rc4 aims at adding PCI(e) support to the
-System z (s390) architecture. PCI is currently not available on s390,
-so this is early prototype code.
+On 11/12/2012 01:57 PM, Don Dutile wrote:
+> On 11/12/2012 04:26 AM, Doug Goldstein wrote:
+>> On Sun, Nov 11, 2012 at 5:19 PM, Matthew Thode
+>> <prometheanfire@gentoo.org>  wrote:
+>>> System boots with vt-d disabled in bios. Otherwise I get the errors i=
+n
+>>> the attached log.  I can do whatever testing you need as this system =
+is
+>>> not in production yet.  gonna paste the important part here.  Let me
+>>> know if you want anything else.
+>>>
+>>> Please CC me directly as I am not subscribed to the LKML.
+>>>
+>>>
+>>> Trying to unpack rootfs image as initramfs...
+>>> Freeing initrd memory: 5124k freed
+>>> IOMMU 0 0xfbffe000: using Queued invalidation
+>>> IOMMU: Setting RMRR:
+>>> IOMMU: Setting identity map for device 0000:00:1d.0 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1d.1 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1d.2 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1d.7 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1a.0 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1a.1 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1a.2 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1a.7 [0xbf7ec000 -
+>>> 0xbf7fffff]
+>>> IOMMU: Setting identity map for device 0000:00:1d.0 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1d.1 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1d.2 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1d.7 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1a.0 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1a.1 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1a.2 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Setting identity map for device 0000:00:1a.7 [0xec000 - 0xefff=
+f]
+>>> IOMMU: Prepare 0-16MiB unity mapping for LPC
+>>> IOMMU: Setting identity map for device 0000:00:1f.0 [0x0 - 0xffffff]
+>>> PCI-DMA: Intel(R) Virtualization Technology for Directed I/O
+>>> BUG: unable to handle kernel NULL pointer dereference at
+>>> 000000000000003c
+>>> IP: [<ffffffff813bd796>] pci_get_dma_source+0xf/0x41
+>>> PGD 0
+>>> Oops: 0000 [#1] SMP
+>>> Modules linked in:
+>>> CPU 7
+>>> Pid: 1, comm: swapper/0 Not tainted 3.7.0-rc5 #1 Penguin Computing
+>>> Relion 1751/X8DTU
+>>> RIP: 0010:[<ffffffff813bd796>]  [<ffffffff813bd796>]
+>>> pci_get_dma_source+0xf/0x41
+>>> RSP: 0000:ffff8806264d1d88  EFLAGS: 00010282
+>>> RAX: ffffffff813bd3a8 RBX: ffff8806261d1000 RCX: 00000000e8221180
+>>> RDX: ffffffff818624f0 RSI: ffff88062635b0c0 RDI: 0000000000000000
+>>> RBP: ffff8806264d1d88 R08: ffff8806263d6000 R09: 00000000ffffffff
+>>> R10: ffff8806264d1ca8 R11: 0000000000000005 R12: 0000000000000000
+>>> R13: ffff8806261d1098 R14: 0000000000000000 R15: 0000000000000000
+>>> FS:  0000000000000000(0000) GS:ffff88063f2e0000(0000)
+>>> knlGS:0000000000000000
+>>> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>>> CR2: 000000000000003c CR3: 0000000001c0b000 CR4: 00000000000007e0
+>>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>>> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>>> Process swapper/0 (pid: 1, threadinfo ffff8806264d0000, task
+>>> ffff8806264cf910)
+>>> Stack:
+>>>   ffff8806264d1dc8 ffffffff815d02c9 0000000000000000 ffff880600000000=
 
-I'm posting in the hope to get some feedback and direction on the more humble
-aspects of it.
+>>>   ffff8806264d1dd8 ffffffff81c64b00 ffff8806261d1098 ffff8806264d1df8=
 
-Patches 01-05 are only split to ease the review, they belong functional
-together and don't make much sense without each other.
+>>>   ffff8806264d1de8 ffffffff815cd5a4 ffffffff81c64b00 ffffffff815cd56a=
 
-PCI on the mainframe differs in some aspects from PCI on other platforms. 
+>>> Call Trace:
+>>>   [<ffffffff815d02c9>] intel_iommu_add_device+0x95/0x167
+>>>   [<ffffffff815cd5a4>] add_iommu_group+0x3a/0x41
+>>>   [<ffffffff815cd56a>] ? bus_set_iommu+0x44/0x44
+>>>   [<ffffffff8145eca1>] bus_for_each_dev+0x54/0x81
+>>>   [<ffffffff815cd563>] bus_set_iommu+0x3d/0x44
+>>>   [<ffffffff81cd3fa3>] intel_iommu_init+0xae5/0xb5e
+>>>   [<ffffffff81ca0277>] ? free_initrd+0x9e/0x9e
+>>>   [<ffffffff81ca4248>] ? memblock_find_dma_reserve+0x13f/0x13f
+>>>   [<ffffffff81ca425e>] pci_iommu_init+0x16/0x41
+>>>   [<ffffffff81cc4140>] ? pci_proc_init+0x6b/0x6b
+>>>   [<ffffffff81000231>] do_one_initcall+0x7a/0x129
+>>>   [<ffffffff816dac14>] kernel_init+0x139/0x2a2
+>>>   [<ffffffff81c9d4c7>] ? loglevel+0x31/0x31
+>>>   [<ffffffff816daadb>] ? rest_init+0x6f/0x6f
+>>>   [<ffffffff816f66ac>] ret_from_fork+0x7c/0xb0
+>>>   [<ffffffff816daadb>] ? rest_init+0x6f/0x6f
+>>> Code: ff c1 75 04 ff d0 eb 12 48 83 c2 10 48 8b 42 08 48 85 c0 75 d3 =
+b8
+>>> e7 ff ff ff c9 c3 55 48 c7 c2 f0 24 86 81 48 89 e5 eb 24 8b 0a<66>  3=
+b
+>>> 4f 3c 74 05 66 ff c1 75 13 66 8b 4a 02 66 3b 4f 3e 74 05
+>>> RIP  [<ffffffff813bd796>] pci_get_dma_source+0xf/0x41
+>>>   RSP<ffff8806264d1d88>
+>>> CR2: 000000000000003c
+>>> ---[ end trace 5c5a2ceca067e0ec ]---
+>>> Kernel panic - not syncing: Attempted to kill init! exitcode=3D0x0000=
+0009
+>>>
+>>> ------------[ cut here ]------------
+>>> WARNING: at arch/x86/kernel/smp.c:123
+>>> native_smp_send_reschedule+0x25/0x51()
+>>> Hardware name: Relion 1751
+>>> Modules linked in:
+>>> Pid: 1, comm: swapper/0 Tainted: G      D      3.7.0-rc5 #1
+>>> Call Trace:
+>>>   <IRQ>   [<ffffffff810968ee>] warn_slowpath_common+0x80/0x98
+>>>   [<ffffffff8109691b>] warn_slowpath_null+0x15/0x17
+>>>   [<ffffffff8104e1a3>] native_smp_send_reschedule+0x25/0x51
+>>>   [<ffffffff810bc81b>] trigger_load_balance+0x1e8/0x214
+>>>   [<ffffffff810b731f>] scheduler_tick+0xd8/0xe1
+>>>   [<ffffffff810a132f>] update_process_times+0x62/0x73
+>>>   [<ffffffff810cb78b>] tick_sched_timer+0x7c/0x9b
+>>>   [<ffffffff810b0f83>] __run_hrtimer.clone.24+0x4e/0xc1
+>>>   [<ffffffff810b15b0>] hrtimer_interrupt+0xc7/0x1ac
+>>>   [<ffffffff8104ef01>] smp_apic_timer_interrupt+0x81/0x94
+>>>   [<ffffffff816f71ca>] apic_timer_interrupt+0x6a/0x70
+>>>   <EOI>   [<ffffffff81097ffc>] ? console_unlock+0x2c2/0x2ed
+>>>   [<ffffffff816f32fc>] ? panic+0x189/0x1c5
+>>>   [<ffffffff816f3261>] ? panic+0xee/0x1c5
+>>>   [<ffffffff8109ab6b>] do_exit+0x357/0x7b2
+>>>   [<ffffffff810371b8>] oops_end+0xb2/0xba
+>>>   [<ffffffff8105841d>] no_context+0x266/0x275
+>>>   [<ffffffff810585e7>] __bad_area_nosemaphore+0x1bb/0x1db
+>>>   [<ffffffff8118de46>] ? sysfs_addrm_finish+0x2f/0xa6
+>>>   [<ffffffff81058615>] bad_area_nosemaphore+0xe/0x10
+>>>   [<ffffffff81058bdb>] __do_page_fault+0x360/0x39f
+>>>   [<ffffffff81394afa>] ? ida_get_new_above+0xf9/0x19e
+>>>   [<ffffffff8112a077>] ? slab_node+0x59/0xa2
+>>>   [<ffffffff816f3ffd>] ? mutex_unlock+0x9/0xb
+>>>   [<ffffffff816da653>] ? klist_put+0x4c/0x70
+>>>   [<ffffffff816da581>] ? klist_next+0x30/0xb6
+>>>   [<ffffffff813b8cf9>] ? pci_do_find_bus+0x49/0x49
+>>>   [<ffffffff81058c42>] do_page_fault+0x9/0xb
+>>>   [<ffffffff816f6232>] page_fault+0x22/0x30
+>>>   [<ffffffff813bd3a8>] ? nv_msi_ht_cap_quirk_all+0x10/0x10
+>>>   [<ffffffff813bd796>] ? pci_get_dma_source+0xf/0x41
+>>>   [<ffffffff815d02c9>] intel_iommu_add_device+0x95/0x167
+>>>   [<ffffffff815cd5a4>] add_iommu_group+0x3a/0x41
+>>>   [<ffffffff815cd56a>] ? bus_set_iommu+0x44/0x44
+>>>   [<ffffffff8145eca1>] bus_for_each_dev+0x54/0x81
+>>>   [<ffffffff815cd563>] bus_set_iommu+0x3d/0x44
+>>>   [<ffffffff81cd3fa3>] intel_iommu_init+0xae5/0xb5e
+>>>   [<ffffffff81ca0277>] ? free_initrd+0x9e/0x9e
+>>>   [<ffffffff81ca4248>] ? memblock_find_dma_reserve+0x13f/0x13f
+>>>   [<ffffffff81ca425e>] pci_iommu_init+0x16/0x41
+>>>   [<ffffffff81cc4140>] ? pci_proc_init+0x6b/0x6b
+>>>   [<ffffffff81000231>] do_one_initcall+0x7a/0x129
+>>>   [<ffffffff816dac14>] kernel_init+0x139/0x2a2
+>>>   [<ffffffff81c9d4c7>] ? loglevel+0x31/0x31
+>>>   [<ffffffff816daadb>] ? rest_init+0x6f/0x6f
+>>>   [<ffffffff816f66ac>] ret_from_fork+0x7c/0xb0
+>>>   [<ffffffff816daadb>] ? rest_init+0x6f/0x6f
+>>> ---[ end trace 5c5a2ceca067e0ed ]---
+>>>
+>>> --=20
+>>> -- Matthew Thode (prometheanfire)
+>>
+>> The root cause of Matt's issue is that intel_iommu_add_device() calls
+>> pci_get_domain_bus_and_slot() which is returning NULL. Which is not an=
 
-The most notable difference is the use of instructions for memory
-mapped IO. So on s390 the BAR spaces cannot be mapped to memory. To access 
-the BAR spaces privileged instructions must be used (how that will be
-addressed for user-space is not part of this patchset). See patch 01 for how
-the read/write pci primitives are mapped to the s390 instructions.
+>> expected value. The reason NULL is being returned is that Matt has a
+>> card with a TI XIO2000A/XIO2200A PCIe-PCI bridge (VID: 104C, DID:
+>> 8231) on it. This device already has a quirk setup for disabling fast
+>> back to back transfers on its secondary bus. If we cause it to use the=
 
-Another difference is that the addresses of BARs from two different PCI
-functions may be identical. That means we can't distinguish from an iomem
-address which PCI device the address belongs to. Therefore s390 needs a
-custom implementation of pci_iomap to remap iomem addresses using the bar
-and device information provided by pci_iomap.
+>> primary bus, that appears to resolve the issue. I'm not sure exactly
+>> how to proceed from here due to relative lack of knowledge of PCI. Do
+>> all PCIe-PCI bridges with secondary buses need their DMA parent to be
+>> the primary bus or is that just something that should be done for the
+>> TI XIO2000A due to the existing quirk?
+>>
+> DMA from a (legacy) PCI device does not have a SRC-ID in the transactio=
+n,
+> so the source of the device generating the DMA is unknown.  When bridgi=
+ng
+> to a PCIe device, the Parent PPB's dev-id is inserted on the PCIe as th=
+e
+> source
+> of a transaction -- in this case, DMA read/write transaction.
+> This (sw) mapping should have happened by default, unless a recent
+> change from VFIO
+> broke this mapping.... or the TI bridge didn't report itself correctly
+> as a PCIe-PCI bridge.
+> Alex ?
+>=20
+>=20
+>> The failing call with arguments was pci_get_domain_bus_and_slot(0, 5,
+>> 0), while pci_get_domain_bus_and_slot(0, 4, 0) resulted in a system
+>> that didn't panic and a device that worked.
+>>
+>> $ lspci -tvn
+>> -+-[0000:ff]-+-00.0  8086:2c40
+>>   |           +-00.1  8086:2c01
+>>   |           +-02.0  8086:2c10
+>>   |           +-02.1  8086:2c11
+>>   |           +-02.4  8086:2c14
+>>   |           +-02.5  8086:2c15
+>>   |           +-03.0  8086:2c18
+>>   |           +-03.1  8086:2c19
+>>   |           +-03.2  8086:2c1a
+>>   |           +-03.4  8086:2c1c
+>>   |           +-04.0  8086:2c20
+>>   |           +-04.1  8086:2c21
+>>   |           +-04.2  8086:2c22
+>>   |           +-04.3  8086:2c23
+>>   |           +-05.0  8086:2c28
+>>   |           +-05.1  8086:2c29
+>>   |           +-05.2  8086:2c2a
+>>   |           +-05.3  8086:2c2b
+>>   |           +-06.0  8086:2c30
+>>   |           +-06.1  8086:2c31
+>>   |           +-06.2  8086:2c32
+>>   |           \-06.3  8086:2c33
+>>   \-[0000:00]-+-00.0  8086:3406
+>>               +-01.0-[01]--+-00.0  8086:10c9
+>>               |            \-00.1  8086:10c9
+>>               +-03.0-[02]--
+>>               +-05.0-[03]--
+>>               +-07.0-[04-05]----00.0-[05]----08.0  d161:8006
+>>               +-09.0-[06]----00.0  8086:10b9
+>>               +-13.0  8086:342d
+>>               +-14.0  8086:342e
+>>               +-14.1  8086:3422
+>>               +-14.2  8086:3423
+>>               +-14.3  8086:3438
+>>               +-16.0  8086:3430
+>>               +-16.1  8086:3431
+>>               +-16.2  8086:3432
+>>               +-16.3  8086:3433
+>>               +-16.4  8086:3429
+>>               +-16.5  8086:342a
+>>               +-16.6  8086:342b
+>>               +-16.7  8086:342c
+>>               +-1a.0  8086:3a37
+>>               +-1a.1  8086:3a38
+>>               +-1a.2  8086:3a39
+>>               +-1a.7  8086:3a3c
+>>               +-1d.0  8086:3a34
+>>               +-1d.1  8086:3a35
+>>               +-1d.2  8086:3a36
+>>               +-1d.7  8086:3a3a
+>>               +-1e.0-[07]----01.0  102b:0532
+>>               +-1f.0  8086:3a16
+>>               +-1f.2  8086:3a22
+>>               \-1f.3  8086:3a30
+>>
+>> If someone can craft the correct patch that'd be great or answer the
+>> above question and I'll gladly craft it.
+>>
+>> Thanks.
+>=20
+because I didn't see it.  Here was the patch that got it working for me
+(ignore the printks), applies against 3.6.6 and 3.7-rc5.
 
-Device naming - the topology on System z is that every PCI function is attached
-directly to a PCI root complex. Therefore we decided to use a domain number per
-function and leave the bus, slot and function 0.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index d4a4cd4..df0d7ef 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -4118,11 +4118,20 @@ static int intel_iommu_add_device(struct device
+*dev)
 
-Next one - IRQs. s390 will use its existing adapter interrupt infrastructure
-to deliver MSI/MSI-X interrupts. Legacy INTs are _not_ supported at all. 
-The only thing that s390 needs is to close the gap between adapter interrupts
-and MSI, in other words to locate a struct msi_desc from an IRQ number.
-For that I've implemented a simple hash, see patch 04.
+ 	bridge =3D pci_find_upstream_pcie_bridge(pdev);
+ 	if (bridge) {
+-		if (pci_is_pcie(bridge))
++		if (pci_is_pcie(bridge)) {
+ 			dma_pdev =3D pci_get_domain_bus_and_slot(
+ 						pci_domain_nr(pdev->bus),
+ 						bridge->subordinate->number, 0);
+-		else
++            if (!dma_pdev) {
++                printk("MTHODE: debugging\n");
++                printk("domain: %d, bus: %d, bridge->sub %d\n",
++                    pci_domain_nr(pdev->bus), pdev->bus,
++                    bridge->subordinate->number);
++                dma_pdev =3D pci_get_domain_bus_and_slot(
++                        pci_domain_nr(pdev->bus),
++                        bridge->subordinate->number - 1, 0);
++            }
++		} else
+ 			dma_pdev =3D pci_dev_get(bridge);
+ 	} else
+ 		dma_pdev =3D pci_dev_get(pdev);
 
-Then there is Kconfig, see patch 09, which gives s390 a bunch of options that
-we would rather avoid. Like VGA support, sound subsystem, etc. I do not have a
-solution how to disable these subsystems. We would like to limit the subsystems
-that become available on s390 because the usable PCI hardware will be limited
-to a small number of hand-picked and supported PCI cards.
-
-There are several options I can imagine:
-
-a) Don't disable anything - that would result in lots of drivers builtable on
-   s390 that are not supported and weird error reports
-
-b) Introduce negative options for whole subsystems like we have already with
-   NO_IOPORT, so maybe NO_USB, NO_SOUND, ...
-
-c) Introduce a special CONFIG_PCI_S390 and add that explicitely to all
-   subsystems that we want to enable on s390
-
-None of the above looks like the obvious winner to me.
+--=20
+-- Matthew Thode (prometheanfire)
 
 
-Hope to get some feedback,
-TIA, Jan
+--------------enig5175F2C3E766D733401307B7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-Jan Glauber (10):
-  s390/pci: base support
-  s390/pci: CLP interface
-  s390/bitops: find leftmost bit instruction support
-  s390/pci: PCI adapter interrupts for MSI/MSI-X
-  s390/pci: DMA support
-  s390/pci: CHSC PCI support for error and availability events
-  s390/pci: PCI hotplug support via SCLP
-  s390/pci: s390 specific PCI sysfs attributes
-  s390/pci: add PCI Kconfig options
-  vga: compile fix, disable vga for s390
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
- arch/s390/Kbuild                    |    1 +
- arch/s390/Kconfig                   |   56 +-
- arch/s390/include/asm/bitops.h      |   81 +++
- arch/s390/include/asm/clp.h         |   28 +
- arch/s390/include/asm/dma-mapping.h |   76 +++
- arch/s390/include/asm/dma.h         |   19 +-
- arch/s390/include/asm/hw_irq.h      |   22 +
- arch/s390/include/asm/io.h          |   55 +-
- arch/s390/include/asm/irq.h         |   12 +
- arch/s390/include/asm/isc.h         |    1 +
- arch/s390/include/asm/pci.h         |  156 ++++-
- arch/s390/include/asm/pci_clp.h     |  182 ++++++
- arch/s390/include/asm/pci_dma.h     |  196 +++++++
- arch/s390/include/asm/pci_insn.h    |  280 +++++++++
- arch/s390/include/asm/pci_io.h      |  194 +++++++
- arch/s390/include/asm/sclp.h        |    2 +
- arch/s390/kernel/dis.c              |   15 +
- arch/s390/kernel/irq.c              |    2 +
- arch/s390/pci/Makefile              |    6 +
- arch/s390/pci/pci.c                 | 1098 +++++++++++++++++++++++++++++++++++
- arch/s390/pci/pci_clp.c             |  324 +++++++++++
- arch/s390/pci/pci_dma.c             |  505 ++++++++++++++++
- arch/s390/pci/pci_event.c           |   93 +++
- arch/s390/pci/pci_msi.c             |  141 +++++
- arch/s390/pci/pci_sysfs.c           |   86 +++
- drivers/gpu/vga/Kconfig             |    2 +-
- drivers/pci/hotplug/Kconfig         |   11 +
- drivers/pci/hotplug/Makefile        |    1 +
- drivers/pci/hotplug/s390_pci_hpc.c  |  252 ++++++++
- drivers/pci/msi.c                   |   10 +-
- drivers/s390/char/sclp.h            |    3 +-
- drivers/s390/char/sclp_cmd.c        |   64 +-
- drivers/s390/cio/chsc.c             |  156 +++--
- include/asm-generic/io.h            |   21 +-
- include/linux/irq.h                 |   10 +-
- include/video/vga.h                 |    2 +
- 36 files changed, 4084 insertions(+), 79 deletions(-)
- create mode 100644 arch/s390/include/asm/clp.h
- create mode 100644 arch/s390/include/asm/dma-mapping.h
- create mode 100644 arch/s390/include/asm/hw_irq.h
- create mode 100644 arch/s390/include/asm/pci_clp.h
- create mode 100644 arch/s390/include/asm/pci_dma.h
- create mode 100644 arch/s390/include/asm/pci_insn.h
- create mode 100644 arch/s390/include/asm/pci_io.h
- create mode 100644 arch/s390/pci/Makefile
- create mode 100644 arch/s390/pci/pci.c
- create mode 100644 arch/s390/pci/pci_clp.c
- create mode 100644 arch/s390/pci/pci_dma.c
- create mode 100644 arch/s390/pci/pci_event.c
- create mode 100644 arch/s390/pci/pci_msi.c
- create mode 100644 arch/s390/pci/pci_sysfs.c
- create mode 100644 drivers/pci/hotplug/s390_pci_hpc.c
+iQIcBAEBAgAGBQJQoWSHAAoJECRx6z5ArFrDUqcP/0BlDhNU2yORbbAbzFb5t13y
+0n3kTReNs6W1U7XCwkn5HwFC6WJH3KaBPngHNrC0sBPLYCodb1sBpfwWxfmxeCrt
+0TIEKzma+rH9PbE0lbuwc7ex7omZbKhOT1h3prGp8nRcV+hf9tF15bvelQJ2auwg
+sLFPpyDAoHyKbtmaKtYe4iGhSxocCFJ7Po9CB9aAo54ets0y00jyETl2ebOlL3yT
+/drx2MCR/+SxQ0CEGHxkPx1btFNn9iCNBLMOdGNyR3PV/Kp7yv3mwV1/1kZNrqCO
+V8JQB2khU2R9rlWyG95T9DK9/nRL0464AYnYT4eML05EWspPFUZx24F1I/cVNOU4
+Eo+TBmTgUl5jEThsDk1qJb28Caww70mWFe0NkyLVmA2QNYCaeRb8Kj1GjmTi1uSG
+ZuzIZabIjiTcxasx92T+LdIPmqkN+mU47rb4XhvcjMC3scTRrEUwsFbeXcGYGxsn
+bZT8ea4oXlUySWzg6D1vGvEAbUFi8oA2LufUGvD5wJe4Vi8tXiSPHegmt2bieP5z
+JiBQp5XEvvY56QPdlAMZsn5homi4MGjT7BHR9gdXzSeQp20cjmOBaWfQSHeMox8f
+GUusO3mwkokH3ofUz5SNjmcIwgitr4sWZuLXL0tSOWmskuEVnnZS/IcoIWlkSHXy
+sYOG9QLAIdZiFB0lfQp+
+=fCbp
+-----END PGP SIGNATURE-----
 
--- 
-1.7.12.4
-
+--------------enig5175F2C3E766D733401307B7--
