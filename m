@@ -1,59 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51117 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576Ab2KLTrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 12 Nov 2012 14:47:13 -0500
-Message-ID: <50A15233.10007@redhat.com>
-Date: Mon, 12 Nov 2012 14:46:59 -0500
-From: Don Dutile <ddutile@redhat.com>
-MIME-Version: 1.0
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jason Gao <pkill.2012@gmail.com>,
-	"Rose, Gregory V" <gregory.v.rose@intel.com>,
-	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
-	"e1000-devel@lists.sourceforge.net"
-	<e1000-devel@lists.sourceforge.net>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources
- for SR-IOV)
-References: <201211081915083774239@gmail.com> <509B962C.6070002@gmail.com> <C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com> <CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com> <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
-In-Reply-To: <CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Cc: Linux PM list <linux-pm@vger.kernel.org>,
+	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Lan Tianyu <tianyu.lan@intel.com>,
+	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	mark gross <markgross@thegnar.org>
+Subject: Re: [RFD][PATCH 7/7] PM / ACPI: Take device PM QoS flags into account
+Date: Tue, 13 Nov 2012 00:42:17 +0100
+Message-ID: <1700137.RQD4zuhDgN@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7kVb1kLbJ0Y4mYLbzEeZM8dSa-YaZE9B2mN5r74ft-Rg@mail.gmail.com>
+References: <201209282351.10663.rjw@sisk.pl> <201209282356.52558.rjw@sisk.pl> <CAErSpo7kVb1kLbJ0Y4mYLbzEeZM8dSa-YaZE9B2mN5r74ft-Rg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/09/2012 10:26 AM, Bjorn Helgaas wrote:
-> [+ linux-pci, Yinghai]
->
-> On Thu, Nov 8, 2012 at 8:59 PM, Jason Gao<pkill.2012@gmail.com>  wrote:
->>> The BIOS in your machine doesn't support SR-IOV.  You'll need to ask the manufacturer for a BIOS upgrade, if in fact one is available.  Sometimes they're not.
->>
->> very thanks Greg,my server Dell R710 with latest BIOS version and
->> option for SR-IOV(SR-IOV Global Enable->Enabled)  opened,I'm confused
->> that Does R710 provide full support for SR-IOV, kernel or  ixgbe
->> driver's bug? but I'm not sure where the problem lies,anyone has any
->> experience about this?   .
->
-> Linux normally uses the resource assignments done by the BIOS, but it
-> is possible for the kernel to reassign those.  We don't have good
-> automatic support for that yet, but on a recent upstream kernel, you
-> can try "pci=realloc".  I doubt this option is in CentOS 6.3, though.
->
-Try moving the device into a different slot.
-You may be trying it in a non-ARI slot in the 710; that is a problem
-in RHEL6 (needing to realloc bus &/or mem-space).
-A non-ARI slot will want to use one bus number per VF.... which will
-be problematic.
-I know I've seen ixgbe's (& their vfs's) working on a dell 710;
-but they may also be one of those systems that has a slot off the ich10
-with no ARI support.
+On Monday, November 12, 2012 02:07:03 PM Bjorn Helgaas wrote:
+> On Fri, Sep 28, 2012 at 3:56 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Make ACPI power management routines and PCI power management
+> > routines depending on ACPI take device PM QoS flags into account
+> > when deciding what power state to put the device into.
+> >
+> > In particular, after this change acpi_pm_device_sleep_state() will
+> > not return ACPI_STATE_D3_COLD as the deepest available low-power
+> > state if PM_QOS_FLAG_NO_POWER_OFF is requested for the device and it
+> > will not require remote wakeup to work for the device in the returned
+> > low-power state if there is at least one PM QoS flags request for the
+> > device, but PM_QOS_FLAG_REMOTE_WAKEUP is not requested for it.
+> >
+> > Accordingly, acpi_pci_set_power_state() will refuse to put the
+> > device into D3cold if PM_QOS_FLAG_NO_POWER_OFF is requested for it.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> > ---
+> >  drivers/acpi/sleep.c   |   16 ++++++++++++----
+> >  drivers/pci/pci-acpi.c |    8 +++++++-
+> 
+> This touches a file in drivers/pci, but I expect it depends on all the
+> previous patches in the series, so if you haven't merged it already,
+> Rafael, it seems like it makes sense for you to merge this instead of
+> me.
 
-> If an upstream kernel with "pci=realloc" still doesn't work, please
-> post the entire dmesg log.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I will, thanks a lot!
 
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
