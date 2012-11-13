@@ -1,146 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:51571 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760019Ab2KBBMK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Nov 2012 21:12:10 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>,
-	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
-Date: Fri, 02 Nov 2012 02:16:16 +0100
-Message-ID: <2818025.UWNJpCeffI@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQW4ONas+m2HWq_xs457xZu3VJ6Nxsq320MD72Khb+sqJg@mail.gmail.com>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <1920067.RxMJtDGai1@vostro.rjw.lan> <CAE9FiQW4ONas+m2HWq_xs457xZu3VJ6Nxsq320MD72Khb+sqJg@mail.gmail.com>
+Received: from rrcs-24-173-105-85.sw.biz.rr.com ([24.173.105.85]:44223 "EHLO
+	mx1.mthode.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755175Ab2KMSM0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 13 Nov 2012 13:12:26 -0500
+Message-ID: <50A28D99.2000309@gentoo.org>
+Date: Tue, 13 Nov 2012 12:12:41 -0600
+From: Matthew Thode <prometheanfire@gentoo.org>
+Reply-To: prometheanfire@gentoo.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: iommu@lists.linux-foundation.org, joro@8bytes.org,
+	cardoe@gentoo.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mthode@mthode.org,
+	ddutile@redhat.com, bhelgaas@google.com, dwmw2@infradead.org
+Subject: Re: [PATCH] intel-iommu: Fix lookup in add device
+References: <20121113172144.6783.37724.stgit@bling.home>
+In-Reply-To: <20121113172144.6783.37724.stgit@bling.home>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig30DD44203562B017129ADCC1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 01, 2012 04:39:50 PM Yinghai Lu wrote:
-> On Thu, Nov 1, 2012 at 4:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Subject: ACPI: Make seemingly useless check in osl.c more understandable
-> >
-> > There is a seemingly useless check in drivers/acpi/osl.c added by
-> > commit bc73675 (ACPI: fixes a false alarm from lockdep), which really
-> > is necessary to avoid false positive lockdep complaints.  Document
-> > this and rearrange the code related to it so that it makes fewer
-> > checks.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >  drivers/acpi/osl.c |   21 ++++++++++++++-------
-> >  1 file changed, 14 insertions(+), 7 deletions(-)
-> >
-> > Index: linux/drivers/acpi/osl.c
-> > ===================================================================
-> > --- linux.orig/drivers/acpi/osl.c
-> > +++ linux/drivers/acpi/osl.c
-> > @@ -944,17 +944,24 @@ static acpi_status __acpi_os_execute(acp
-> >          * because the hotplug code may call driver .remove() functions,
-> >          * which invoke flush_scheduled_work/acpi_os_wait_events_complete
-> >          * to flush these workqueues.
-> > +        *
-> > +        * To prevent lockdep from complaining unnecessarily, make sure that
-> > +        * there is a different static lockdep key for each workqueue by using
-> > +        * INIT_WORK() for each of them separately.
-> >          */
-> > -       queue = hp ? kacpi_hotplug_wq :
-> > -               (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
-> > -       dpc->wait = hp ? 1 : 0;
-> > -
-> > -       if (queue == kacpi_hotplug_wq)
-> > +       if (hp) {
-> > +               queue = kacpi_hotplug_wq;
-> > +               dpc->wait = 1;
-> >                 INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> > -       else if (queue == kacpi_notify_wq)
-> > +       } else if (type == OSL_NOTIFY_HANDLER) {
-> > +               queue = kacpi_notify_wq;
-> > +               dpc->wait = 0;
-> 
-> yes, much clear.
-> 
-> at the same can you changne
-> dpc allocation from kmalloc with kzalloc instead.
-> 
-> then we save two lines for dpc->wait = 0
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig30DD44203562B017129ADCC1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Good idea. :-)
+On 11/13/2012 11:22 AM, Alex Williamson wrote:
+> We can't assume this device exists, fall back to the bridge itself.
+>=20
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Tested-by: Matthew Thode <prometheanfire@gentoo.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/iommu/intel-iommu.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index d4a4cd4..0badfa4 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -4108,7 +4108,7 @@ static void swap_pci_ref(struct pci_dev **from, s=
+truct pci_dev *to)
+>  static int intel_iommu_add_device(struct device *dev)
+>  {
+>  	struct pci_dev *pdev =3D to_pci_dev(dev);
+> -	struct pci_dev *bridge, *dma_pdev;
+> +	struct pci_dev *bridge, *dma_pdev =3D NULL;
+>  	struct iommu_group *group;
+>  	int ret;
+> =20
+> @@ -4122,7 +4122,7 @@ static int intel_iommu_add_device(struct device *=
+dev)
+>  			dma_pdev =3D pci_get_domain_bus_and_slot(
+>  						pci_domain_nr(pdev->bus),
+>  						bridge->subordinate->number, 0);
+> -		else
+> +		if (!dma_pdev)
+>  			dma_pdev =3D pci_dev_get(bridge);
+>  	} else
+>  		dma_pdev =3D pci_dev_get(pdev);
+>=20
 
-> After that
-> 
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
+I've tested this and it works just fine.
 
-For completeness:
-
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI: Make seemingly useless check in osl.c more understandable
-
-There is a seemingly useless check in drivers/acpi/osl.c added by
-commit bc73675 (ACPI: fixes a false alarm from lockdep), which really
-is necessary to avoid false positive lockdep complaints.  Document
-this and rearrange the code related to it so that it makes fewer
-checks.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/osl.c |   21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
-
-Index: linux/drivers/acpi/osl.c
-===================================================================
---- linux.orig/drivers/acpi/osl.c
-+++ linux/drivers/acpi/osl.c
-@@ -932,7 +932,7 @@ static acpi_status __acpi_os_execute(acp
- 	 * having a static work_struct.
- 	 */
- 
--	dpc = kmalloc(sizeof(struct acpi_os_dpc), GFP_ATOMIC);
-+	dpc = kzalloc(sizeof(struct acpi_os_dpc), GFP_ATOMIC);
- 	if (!dpc)
- 		return AE_NO_MEMORY;
- 
-@@ -944,17 +944,22 @@ static acpi_status __acpi_os_execute(acp
- 	 * because the hotplug code may call driver .remove() functions,
- 	 * which invoke flush_scheduled_work/acpi_os_wait_events_complete
- 	 * to flush these workqueues.
-+	 *
-+	 * To prevent lockdep from complaining unnecessarily, make sure that
-+	 * there is a different static lockdep key for each workqueue by using
-+	 * INIT_WORK() for each of them separately.
- 	 */
--	queue = hp ? kacpi_hotplug_wq :
--		(type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
--	dpc->wait = hp ? 1 : 0;
--
--	if (queue == kacpi_hotplug_wq)
-+	if (hp) {
-+		queue = kacpi_hotplug_wq;
-+		dpc->wait = 1;
- 		INIT_WORK(&dpc->work, acpi_os_execute_deferred);
--	else if (queue == kacpi_notify_wq)
-+	} else if (type == OSL_NOTIFY_HANDLER) {
-+		queue = kacpi_notify_wq;
- 		INIT_WORK(&dpc->work, acpi_os_execute_deferred);
--	else
-+	} else {
-+		queue = kacpid_wq;
- 		INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-+	}
- 
- 	/*
- 	 * On some machines, a software-initiated SMI causes corruption unless
+--=20
+-- Matthew Thode (prometheanfire)
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+--------------enig30DD44203562B017129ADCC1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQoo2iAAoJECRx6z5ArFrDM/oQANDRznWn1BAsuUMEVRgcgOGM
+Ezru9+I9baZeKxPOTFp+nmL3IWS/BS3nCFl3ALIZI/NMJUzOyYg9GtaHTOgHp4el
+58ZyzTqlS9yF2iadhErVIP7KsREQ42KFosYCr+Y4r00F37MgJztV9ag/c12Xp9gc
+AxeB7E7G9pqITMUKcKkx20qwm/Ygx/qIDD6uN7ZlW9dXOe11ziXQCnMQPs9u6i93
+OyiAp6KWmOn+noPei59aqXBk1jqz6F9T6CgAW4A7VVSfqvivLAV/IvwhDZQoGLEK
+j/fetcQDWDulhzV5YWpWi8G8A9DTlBZRiYAgoduUvwmDWSaXd465+142aWVVZaK0
+tFpzA7gkUHDxph+DmEAuAlQZeqNelRn/FtHtqeDckSlb9s9HlUzdxtIJWqh1QW4S
+dJN+vz3L56Mq6vA+JJHF4juoOI2Gh2oBqdgzaY2xG7/azbUlfkjodB3NWdaR4vAB
+0GE+5+HwPKwapZKdBz9Yee1L4x4F4WBGoP7c+DK8npRa4SqTUqi2vjnYIyV3QnJv
+YJkLU1QeJNY1FjkYh1j/DRNYPLbQ+/PXfDBV+ln9QY6AmCaqfUKjELf1WJ/6hSeQ
+GrUsMYiXFrOhnU/kqYtagZYDbaf8RFBLmHHuE2PMz++fuyWG5VTQvTLZ+h/Wtnxs
+vTKlb1OnyULwQZqCBtq2
+=G/Ba
+-----END PGP SIGNATURE-----
+
+--------------enig30DD44203562B017129ADCC1--
