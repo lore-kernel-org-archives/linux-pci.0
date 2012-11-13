@@ -1,47 +1,37 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 30 Nov 2012 11:53:11 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
-Message-ID: <20121130105311.GA6869@liondog.tnic>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
- <1354240279.6276.131.camel@gandalf.local.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1354240279.6276.131.camel@gandalf.local.home>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60460 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752481Ab2KMEjf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2012 23:39:35 -0500
+From: Andrew Cooks <acooks@gmail.com>
+To: Jan Beulich <JBeulich@suse.com>
+Cc: Andrew Cooks <acooks@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM),
+	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] Add missing license for ioapic module.
+Date: Tue, 13 Nov 2012 12:39:07 +0800
+Message-Id: <1352781547-9433-1-git-send-email-acooks@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 29, 2012 at 08:51:19PM -0500, Steven Rostedt wrote:
-> >  include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
-> 
-> Is there a reason this header is here? Egad, I never noticed the
-> ras_event.h that is there. This include/ras directory was created for
-> the sole purpose of trace events! This is not the way to do this.
+config PCI_IOAPIC turned into a tristate in commit b95a7bd700466c10fda84acbd33f70cf66ec91ce, but no module license is specified. This adds the missing module license.
 
-Well, the idea for the ras event was to be able to use it in multiple
-places. It is currently used only by EDAC but it could be that memory
-errors could be reported by other agents which would reuse that TP.
+Signed-off-by: Andrew Cooks <acooks@gmail.com>
+---
+ drivers/pci/ioapic.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> Please look at the sample in samples/trace_events/
-> 
-> The proper way is to keep the header by the driver. Then you can simply
-> include the header with "aer_event.h".
-> 
-> But to have the macro magic work, you need to modify the Makefile to
-> have something like:
-> 
-> CFLAGS_aerdrv_errprint.o = -I$(src)
-
-So I'm guessing that every .c file including the TP should also -I
-include the TP definition header wherever it is. Is that agreeable?
-
-Thanks.
-
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 205af8d..22436f7 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -125,3 +125,5 @@ static void __exit ioapic_exit(void)
+ 
+ module_init(ioapic_init);
+ module_exit(ioapic_exit);
++
++MODULE_LICENSE("GPL");
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1
+
