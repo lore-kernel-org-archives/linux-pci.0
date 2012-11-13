@@ -1,84 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:36648 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083Ab2KUNsI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 08:48:08 -0500
-Received: by mail-ea0-f174.google.com with SMTP id e13so2799508eaa.19
-        for <linux-pci@vger.kernel.org>; Wed, 21 Nov 2012 05:48:07 -0800 (PST)
-Message-ID: <104076AA577A456AA79FACBEC7DDA561@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-To: "Don Dutile" <ddutile@redhat.com>
-Cc: <linux-pci@vger.kernel.org>
-References: <0B81514A792D4D9FAB292ED315D48BE2@alyakaslap> <50ABE45C.4080509@redhat.com>
-In-Reply-To: <50ABE45C.4080509@redhat.com>
-Subject: Re: pci_enable_msix()  failure
-Date: Wed, 21 Nov 2012 15:48:10 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=response
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53089 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753979Ab2KMJHf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 04:07:35 -0500
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, andi@firstfloor.org, ddutile@redhat.com,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, yinghai@kernel.org, mingo@redhat.com,
+	vgoyal@redhat.com, khalid@gonehiking.org
+Message-Id: <20121113090222.1180.36111.sendpatchset@indoh>
+In-Reply-To: <20121113090212.1180.12233.sendpatchset@indoh>
+References: <20121113090212.1180.12233.sendpatchset@indoh>
+Subject: [PATCH v6 1/5] x86, pci: add dummy pci device for early stage
+Date: Tue, 13 Nov 2012 18:07:33 +0900 (JST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Don,
+From: Yinghai Lu <yinghai@kernel.org>
 
-I had indeed iqrbalance set on. So I rested without it, and was able to 
-reproduce the issue. However, now the failure happens on call to 
-request_threaded_irq() within assigned_device_enable_host_msix() function of 
-KVM. The problem is that request_threaded_irq() returns -16 (EBUSY).  Will 
-this help somehow to debug the issue further?
+So we can pass pci_dev *dev to reuse some generic pci functions.
 
-Thanks,
-Alex.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ arch/x86/include/asm/pci-direct.h |    2 +
+ arch/x86/pci/early.c              |   75 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 77 insertions(+), 0 deletions(-)
 
+diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+index b1e7a45..b6360d3 100644
+--- a/arch/x86/include/asm/pci-direct.h
++++ b/arch/x86/include/asm/pci-direct.h
+@@ -18,4 +18,6 @@ extern int early_pci_allowed(void);
+ extern unsigned int pci_early_dump_regs;
+ extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+ extern void early_dump_pci_devices(void);
++
++struct pci_dev *get_early_pci_dev(int num, int slot, int func);
+ #endif /* _ASM_X86_PCI_DIRECT_H */
+diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+index d1067d5..aea6b2b 100644
+--- a/arch/x86/pci/early.c
++++ b/arch/x86/pci/early.c
+@@ -109,3 +109,78 @@ void early_dump_pci_devices(void)
+ 		}
+ 	}
+ }
++
++static __init int
++early_pci_read(struct pci_bus *bus, unsigned int devfn, int where,
++			int size, u32 *value)
++{
++	int num, slot, func;
++
++	num = bus->number;
++	slot = devfn >> 3;
++	func = devfn & 7;
++	switch (size) {
++	case 1:
++		*value = read_pci_config_byte(num, slot, func, where);
++		break;
++	case 2:
++		*value = read_pci_config_16(num, slot, func, where);
++		break;
++	case 4:
++		*value = read_pci_config(num, slot, func, where);
++		break;
++	}
++
++	return 0;
++}
++
++static __init int
++early_pci_write(struct pci_bus *bus, unsigned int devfn, int where,
++			int size, u32 value)
++{
++	int num, slot, func;
++
++	num = bus->number;
++	slot = devfn >> 3;
++	func = devfn & 7;
++	switch (size) {
++	case 1:
++		write_pci_config_byte(num, slot, func, where, (u8)value);
++		break;
++	case 2:
++		write_pci_config_16(num, slot, func, where, (u16)value);
++		break;
++	case 4:
++		write_pci_config(num, slot, func, where, (u32)value);
++		break;
++	}
++
++	return 0;
++}
++
++static __initdata struct pci_ops pci_early_ops = {
++	.read  = early_pci_read,
++	.write = early_pci_write,
++};
++static __initdata struct pci_bus pci_early_bus = {
++	.ops = &pci_early_ops,
++};
++static __initdata char pci_early_init_name[8];
++static __initdata struct pci_dev pci_early_dev = {
++	.bus = &pci_early_bus,
++	.dev = {
++		.init_name = pci_early_init_name,
++	},
++};
++
++__init struct pci_dev *get_early_pci_dev(int num, int slot, int func)
++{
++	struct pci_dev *pdev;
++
++	pdev = &pci_early_dev;
++	pdev->devfn = (slot<<3) | (func & 7);
++	pdev->bus->number = num;
++	sprintf((char *)pdev->dev.init_name, "%02x:%02x.%01x", num, slot, func);
++
++	return pdev;
++}
+-- 
+1.7.1
 
------Original Message----- 
-From: Don Dutile
-Sent: 20 November, 2012 10:13 PM
-To: Alex Lyakas
-Subject: Re: pci_enable_msix() failure
-
-On 11/20/2012 01:04 PM, Alex Lyakas wrote:
-> Hello list, I was advised to post this question by Jesse Barnes; I also 
-> posted to KVM list.
->
-> I am running Ubuntu-Precise 3.2.0-29-generic #46, with stock KVM ("QEMU 
-> emulator version 1.0 (qemu-kvm-1.0)") on a Dell R510 server. I have one 
-> dual-port Intel's NIC 82599, of which I spawn 32 VFs from each port. I 
-> spawn
-> virtual machines with KVM, each VM has 4 VFs attached (two from each PF).
->
-> Once in a while, in particular when I spawn multiple VMs in parallel, I 
-> hit an issue that one of the VFs does not have an IRQ assigned to it. I am 
-> checking this in /proc/interrupts, looking for entries like 
-> "kvm:0000:03:14.6". In some cases, an entry is missing for a particular 
-> VF. As a result, the VF within the VM is non-functional.
->
-> I debugged this issue further, by adding prints to kvm.ko code. I see that 
-> the failure happens in kvm_vm_ioctl_assigned_device/KVM_ASSIGN_DEV_IRQ 
-> path, which calls assigned_device_enable_host_msix() function, which calls
-> pci_enable_msix(), which fails with EINVAL or with ENOMEM. This path is 
-> called twice for each VF.
->
-> I see that first pci_enable_msix() returns -12/-22, and when 
-> kvm_vm_ioctl_set_msix_nr() is called again, it sees that adev->entries_nr 
-> != 0 and fails the call with EINVAL. I can repro it only when spawning 
-> like 8 or 10 VMs in parallel, but it doesn't happen every time. So it 
-> seems like this is not a resource shortage problem, but some race 
-> somewhere.
->
-> I tested this with several version of ixgbe drivers, including the in-tree 
-> version that comes with Precise. It reproduces with all the versions.
->
-> Can anybody pls advise on how to debug this issue further?
->
-> Thanks,
-> Alex.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-Is your system running w/irqbalance on?
-if so, can you test with it off? 
 
