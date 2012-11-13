@@ -1,49 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nat28.tlf.novell.com ([130.57.49.28]:51342 "EHLO
-	nat28.tlf.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753069Ab2KMHdQ convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:3:2>);
-	Tue, 13 Nov 2012 02:33:16 -0500
-Message-Id: <50A205C902000078000A7ECF@nat28.tlf.novell.com>
-Date: Tue, 13 Nov 2012 07:33:13 +0000
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Andrew Cooks" <acooks@gmail.com>,
-	"Bjorn Helgaas (supporter:PCI SUBSYSTEM)" <bhelgaas@google.com>
-Cc: "open list" <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] Add missing license for ioapic module.
-References: <1352781547-9433-1-git-send-email-acooks@gmail.com>
-In-Reply-To: <1352781547-9433-1-git-send-email-acooks@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Li, Sibai" <sibai.li@intel.com>
+To: Jason Gao <pkill.2012@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Rose, Gregory V" <gregory.v.rose@intel.com>
+CC: "ddutile@redhat.com" <ddutile@redhat.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: RE: SR-IOV problem with Intel 82599EB (not enough MMIO resources
+ for SR-IOV)
+Date: Tue, 13 Nov 2012 16:04:53 +0000
+Message-ID: <A3A921390EAE4044940E99EBF13D97321AE21E15@FMSMSX104.amr.corp.intel.com>
+References: <201211081915083774239@gmail.com>	<509B962C.6070002@gmail.com>
+	<C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com>
+	<CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
+	<CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
+ <CANmqhJAjwP8CLEKpgsDbT-7+n=hf30LbYrTAu+qDH09LzETD4g@mail.gmail.com>
+In-Reply-To: <CANmqhJAjwP8CLEKpgsDbT-7+n=hf30LbYrTAu+qDH09LzETD4g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 13.11.12 at 05:39, Andrew Cooks <acooks@gmail.com> wrote:
-> config PCI_IOAPIC turned into a tristate in commit 
-> b95a7bd700466c10fda84acbd33f70cf66ec91ce, but no module license is specified. 
-> This adds the missing module license.
+
+
+> -----Original Message-----
+> From: Jason Gao [mailto:pkill.2012@gmail.com]
+> Sent: Tuesday, November 13, 2012 5:38 AM
+> To: bhelgaas@google.com; Rose, Gregory V; Li, Sibai
+> Cc: ddutile@redhat.com; Kirsher, Jeffrey T; linux-kernel; netdev; kvm; e1000-
+> devel@lists.sourceforge.net; linux-pci@vger.kernel.org; Yinghai Lu
+> Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources
+> for SR-IOV)
 > 
-> Signed-off-by: Andrew Cooks <acooks@gmail.com>
-
-Acked-by: Jan Beulich <jbeulich@suse.com>
-
-> ---
->  drivers/pci/ioapic.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
+> I'm very sorry for delayed reply.now SR-IOV works for me in Centos 6.3,thank all
+> of you.
 > 
-> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
-> index 205af8d..22436f7 100644
-> --- a/drivers/pci/ioapic.c
-> +++ b/drivers/pci/ioapic.c
-> @@ -125,3 +125,5 @@ static void __exit ioapic_exit(void)
->  
->  module_init(ioapic_init);
->  module_exit(ioapic_exit);
-> +
-> +MODULE_LICENSE("GPL");
-> -- 
-> 1.7.1
+> 
+> On Fri, Nov 9, 2012 at 11:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > Linux normally uses the resource assignments done by the BIOS, but it
+> > is possible for the kernel to reassign those.  We don't have good
+> > automatic support for that yet, but on a recent upstream kernel, you
+> > can try "pci=realloc".  I doubt this option is in CentOS 6.3, though
+> 
+> Thank you very much,I try "pci=realloc" in Centos 6.3,and now it works for me.
+> 
+> 
+> 
+> On Sat, Nov 10, 2012 at 2:08 AM, Li, Sibai <sibai.li@intel.com> wrote:
+> > DellR710 with the latest BIOS should work fine for SR-IOV. My BIOS is
+> > v.6.3.0 and release date is 07/24/2012 Please check if you configured
+> intel_iommu=on in the grub.conf file.
+> > If you did, check your kernel .config file under Device Drivers-> IOMMU
+> Hardware support->enable Support for Intel IOMMU using DMA remapping
+> Devices, enable Intel DMA Remapping Devices by Default, enable Support for
+> Interrupt Remapping.
+> 
+> thank you Sibai,Our server "Dell R710",its BIOS version is just
+> v.6.3.0 and release date is 07/24/2012,and I also configured intel_iommu=on in
+> the grub.conf file,but I can't find these IOMMU options in "Device Drivers" in my
+> kernel(2.6.32-279) .config file , btw my os is Centos 6.3(RHEL6.3),although the
+> problem solved,I'd like to know what's your os version ,kernel version?
 
-
-
+I am using RHEL6.3 with unstable kernel 3.7.0-rc
