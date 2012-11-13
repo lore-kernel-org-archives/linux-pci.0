@@ -1,146 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:28154 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971Ab2KPITr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2012 03:19:47 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-	"Patterson, Andrew D (LeftHand Networks)" <andrew.patterson@hp.com>,
-	"Zhang Yanmin" <yanmin.zhang@intel.com>
-Subject: [PATCH v2] PCI-AER: Do not report successful error recovery for
- devices with AER-unaware drivers
-Date: Fri, 16 Nov 2012 08:18:53 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C901469EFE@G9W0717.americas.hpqcorp.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from szxga01-in.huawei.com ([119.145.14.64]:26917 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237Ab2KMC4A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2012 21:56:00 -0500
+Message-ID: <50A1B634.8000402@huawei.com>
+Date: Tue, 13 Nov 2012 10:53:40 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH -v3] PCI, pciehp: make every slot have its own workqueue
+ to avoid deadlock
+References: <1352711830-9772-1-git-send-email-wangyijing@huawei.com> <CAErSpo6KSkR+Rg1G4Tte99VpOM-tZxjCfPJzCuT5-iKMN4m=4w@mail.gmail.com> <4A338DB2991D2A44B9A44B8718AECF650A52062A@G01JPEXMBYT03>
+In-Reply-To: <4A338DB2991D2A44B9A44B8718AECF650A52062A@G01JPEXMBYT03>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When an error is detected on a PCIe device which does not have an
-AER-aware driver, prevent AER infrastructure from reporting
-successful error recovery.
+On 2012/11/13 10:35, Kaneshige, Kenji wrote:
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>> Sent: Tuesday, November 13, 2012 9:18 AM
+>> To: Yijing Wang
+>> Cc: Kaneshige, Kenji/金重 憲治; Yinghai Lu; Rafael; Rusty Russell; Mauro Carvalho Chehab; Oliver Neukum;
+>> jiang.liu@huawei.com; linux-pci@vger.kernel.org; Hanjun Guo
+>> Subject: Re: [PATCH -v3] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
+>>
+>> On Mon, Nov 12, 2012 at 2:17 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>> Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
+>>> Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
+>>> Switch and some slots which support hotplug). The hot removed work was queued into
+>>> pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
+>>> the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
+>>> This patch remove the global pciehp_wq and create a new workqueue for every slot to
+>>> avoid above problem.
+>>
+>> Can you include the actual call path that leads to the deadlock?  I
+>> assume it's related to a PCIe device removal that happens at about the
+>> same time as the pcie_port_service_unregister(&hpdriver_portdrv)?
+>>
+>> I just want to make sure that the new per-slot workqueue arrangement
+>> doesn't lead to any case where the slot workqueue item depends on
+>> something removed by the pcied_cleanup() as the module exits.
+> 
+> Just for your information, here is my understanding of the problem.
+> 
+> ====
+> - Your hardware has nested PCIe hotplug slots like below.
+> 
+>     --<slot A>--<Slot B>
+> 
+> - Hot-removal request (attention button event) comes to <slot A>
+> - Pciehp driver queue the hot-removal work
+> - This hot-removal work try to remove <slot B>
+> - To remove <slot B>, pciehp flush the pciehp_wq, but it never finishes
+>   because hot-removal work is in progress. ===> deadlock
+> ====
+> 
 
-This is because the report_error_detected() function that gets
-called in the first phase of recovery process allows forward
-progress even when the driver for the device does not have AER
-capabilities. It seems that all callbacks (in pci_error_handlers
-structure) registered by drivers that gets called during error
-recovery are not mandatory. So the intention of the infrastructure
-design seems to be to allow forward progress even when a specific
-callback has not been registered by a driver. However, if error
-handler structure itself has not been registered, it doesn't make
-sense to allow forward progress.
+Yes, the deadlock situation as Kaneshige's description above, I will add deadlock call path
+description into patch.
 
-As a result of the current design, in the case of a single device
-having an AER-unaware driver or in the case of any function in a
-multi-function card having an AER-unaware driver, a successful
-recovery is reported.
+>>
+>>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>>> @@ -773,23 +773,32 @@ static void pcie_shutdown_notification(struct controller *ctrl)
+>>>  static int pcie_init_slot(struct controller *ctrl)
+>>>  {
+>>>         struct slot *slot;
+>>> +       char name[32];
+>>>
+>>>         slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+>>>         if (!slot)
+>>>                 return -ENOMEM;
+>>> +
+>>> +       snprintf(name, sizeof(name), "pciehp-%u", PSN(ctrl));
+>>> +       slot->wq = create_singlethread_workqueue(name);
+>>
+>> You're using create_singlethread_workqueue() instead of the previous
+>> alloc_workqueue().  This is a slight change in semantics since we
+>> previously called "alloc_workqueue(name, 0, 0)" and
+>> create_singlethread_workqueue() calls "alloc_workqueue(name,
+>> WQ_UNBOUND | WQ_MEM_RECLAIM, 1)."
+>>
+>> I don't know whether this is necessary in order to have per-slot
+>> workqueues or not.  If not, please split it into a separate patch to
+>> make it more visible.
+> 
+> Good catch.
+> I think we should use 0 for max_active.
+> Hot-add/remove operation take a long time. So if we use 1 for max_active,
+> we cannot handle events during hot-add/remove operation. As a result, for
+> example, push button event and cancel event that are issued during
+> hot-add/remove operation might not be handled properly, I think.
+> 
+> Any comments, Yijing?
 
-Typical scenario this happens is when a PCI device is detached
-from a KVM host and the pci-stub driver on the host claims the
-device. The pci-stub driver does not have error handling capabilities
-but the AER infrastructure still reports that the device recovered
-successfully.
+This is an issue, I will test this case in my hot-plug machine and confirm it.
 
-The changes proposed here leaves the device(s)in an unrecovered state
-if the driver for the device or for any device in the subtree
-does not have error handler structure registered. This reflects
-the true state of the device and prevents any partial recovery (or no
-recovery at all) reported as successful.
+Thanks!
+Yijing
 
-v2:
-  - Made changes so that all devices in the subtree have the error
-    state set correctly.
+> 
+> Regards,
+> Kenji Kaneshige
+> 
+> 
+> .
+> 
 
-Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
-Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
-Reviewed-by: Bjorn Helgaas <bhelgaas <at> google.com>
-Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
 
----
- drivers/pci/pcie/aer/aerdrv.h      |  5 ++++-
- drivers/pci/pcie/aer/aerdrv_core.c | 21 ++++++++++++++++++---
- include/linux/pci.h                |  3 +++
- 3 files changed, 25 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 94a7598..22f840f 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -87,6 +87,9 @@ struct aer_broadcast_data {
- static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
- 		enum pci_ers_result new)
- {
-+	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
-+		return PCI_ERS_RESULT_NO_AER_DRIVER;
-+
- 	if (new == PCI_ERS_RESULT_NONE)
- 		return orig;
- 
-@@ -97,7 +100,7 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
- 		break;
- 	case PCI_ERS_RESULT_DISCONNECT:
- 		if (new == PCI_ERS_RESULT_NEED_RESET)
--			orig = new;
-+			orig = PCI_ERS_RESULT_NEED_RESET;
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 06bad96..c1b8fdd 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -231,11 +231,26 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 				   dev->driver ?
- 				   "no AER-aware driver" : "no driver");
- 		}
--		return 0;
-+
-+		/*
-+		 * If there's any device in the subtree that does not
-+		 * have an error_detected callback, returning
-+		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
-+		 * the subsequent mmio_enabled/slot_reset/resume
-+		 * callbacks of "any" device in the subtree. All the
-+		 * devices in the subtree are left in the error state
-+		 * without recovery.
-+		 */
-+
-+		if !(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)
-+			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
-+		else
-+			vote = PCI_ERS_RESULT_NONE;
-+	} else {
-+		err_handler = dev->driver->err_handler;
-+		vote = err_handler->error_detected(dev, result_data->state);
- 	}
- 
--	err_handler = dev->driver->err_handler;
--	vote = err_handler->error_detected(dev, result_data->state);
- 	result_data->result = merge_result(result_data->result, vote);
- 	return 0;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee21795..fb7e869 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -538,6 +538,9 @@ enum pci_ers_result {
- 
- 	/* Device driver is fully recovered and operational */
- 	PCI_ERS_RESULT_RECOVERED = (__force pci_ers_result_t) 5,
-+
-+	/* No AER capabilities registered for the driver */
-+	PCI_ERS_RESULT_NO_AER_DRIVER = (__force pci_ers_result_t) 6,
- };
- 
- /* PCI bus error event callbacks */
 -- 
-1.7.11.3
+Thanks!
+Yijing
 
