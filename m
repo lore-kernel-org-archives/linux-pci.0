@@ -1,130 +1,204 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53089 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979Ab2KMJHf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 04:07:35 -0500
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, andi@firstfloor.org, ddutile@redhat.com,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, yinghai@kernel.org, mingo@redhat.com,
-	vgoyal@redhat.com, khalid@gonehiking.org
-Message-Id: <20121113090222.1180.36111.sendpatchset@indoh>
-In-Reply-To: <20121113090212.1180.12233.sendpatchset@indoh>
-References: <20121113090212.1180.12233.sendpatchset@indoh>
-Subject: [PATCH v6 1/5] x86, pci: add dummy pci device for early stage
-Date: Tue, 13 Nov 2012 18:07:33 +0900 (JST)
+Received: from szxga01-in.huawei.com ([119.145.14.64]:49354 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318Ab2KMKut (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 05:50:49 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Oliver Neukum <oneukum@suse.de>, <jiang.liu@huawei.com>
+CC: <linux-pci@vger.kernel.org>, Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v4] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
+Date: Tue, 13 Nov 2012 18:49:00 +0800
+Message-ID: <1352803740-8076-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
+Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
+Switch and some slots which support hotplug). Because The hot removed work was queued
+into pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
+the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
+This patch remove the global pciehp_wq and create a new workqueue for every slot to
+avoid above problem.
+call path:
+1. Hot-removal request comes to slot A(eg. 0000:40:07.0 as bellow)
+2. Pciehp driver queue hot-remove work into global workqueue "pciehp_wq"
+3. Hot-remove work call pci_stop_and_remove_bus_device() to remove child devices.
+4. Unregister and remove Pcie port device slot B(eg. 0000:47:15.0).
+5. To remove pcie port device, flush_workqueue(pciehp_wq) will be called.
+6. Deaklock <== hot-removal work is in progress.
 
-So we can pass pci_dev *dev to reuse some generic pci functions.
+-+-[0000:40]-+-00.0-[0000:41]--
+ |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+ |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
+ |           +-04.0-[0000:44]--
+ |           +-05.0-[0000:45]--
+ |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
+ |           |(slot A)                                 +-08.0-[0000:4a]--
+ |           |                                         +-09.0-[0000:4b]--
+ |           |                                         +-10.0-[0000:4c]--
+ |           |                                         +-11.0-[0000:4d]--
+ |           |                                         +-14.0-[0000:4e]--
+ |           |                                         \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                         (slot B)          \-00.1  Intel Corporation 82576 Gigabit Network Connection
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+
+Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/x86/include/asm/pci-direct.h |    2 +
- arch/x86/pci/early.c              |   75 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 77 insertions(+), 0 deletions(-)
+ drivers/pci/hotplug/pciehp.h      |    2 +-
+ drivers/pci/hotplug/pciehp_core.c |   11 ++---------
+ drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
+ drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++++++-
+ 4 files changed, 17 insertions(+), 15 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
-index b1e7a45..b6360d3 100644
---- a/arch/x86/include/asm/pci-direct.h
-+++ b/arch/x86/include/asm/pci-direct.h
-@@ -18,4 +18,6 @@ extern int early_pci_allowed(void);
- extern unsigned int pci_early_dump_regs;
- extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
- extern void early_dump_pci_devices(void);
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 26ffd3e..2c113de 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
+ extern int pciehp_poll_time;
+ extern bool pciehp_debug;
+ extern bool pciehp_force;
+-extern struct workqueue_struct *pciehp_wq;
+ 
+ #define dbg(format, arg...)						\
+ do {									\
+@@ -78,6 +77,7 @@ struct slot {
+ 	struct hotplug_slot *hotplug_slot;
+ 	struct delayed_work work;	/* work for button event */
+ 	struct mutex lock;
++	struct workqueue_struct *wq;
+ };
+ 
+ struct event_info {
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 916bf4f..0914211 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -42,7 +42,6 @@ bool pciehp_debug;
+ bool pciehp_poll_mode;
+ int pciehp_poll_time;
+ bool pciehp_force;
+-struct workqueue_struct *pciehp_wq;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+@@ -340,18 +339,13 @@ static int __init pcied_init(void)
+ {
+ 	int retval = 0;
+ 
+-	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
+-	if (!pciehp_wq)
+-		return -ENOMEM;
+-
+ 	pciehp_firmware_init();
+ 	retval = pcie_port_service_register(&hpdriver_portdrv);
+  	dbg("pcie_port_service_register = %d\n", retval);
+   	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+- 	if (retval) {
+-		destroy_workqueue(pciehp_wq);
++	if (retval)
+ 		dbg("Failure to register service\n");
+-	}
 +
-+struct pci_dev *get_early_pci_dev(int num, int slot, int func);
- #endif /* _ASM_X86_PCI_DIRECT_H */
-diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
-index d1067d5..aea6b2b 100644
---- a/arch/x86/pci/early.c
-+++ b/arch/x86/pci/early.c
-@@ -109,3 +109,78 @@ void early_dump_pci_devices(void)
- 		}
- 	}
+ 	return retval;
  }
+ 
+@@ -359,7 +353,6 @@ static void __exit pcied_cleanup(void)
+ {
+ 	dbg("unload_pciehpd()\n");
+ 	pcie_port_service_unregister(&hpdriver_portdrv);
+-	destroy_workqueue(pciehp_wq);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+ }
+ 
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 27f4429..38f0186 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, interrupt_event_handler);
+ 
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+ 
+ 	return 0;
+ }
+@@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+ 		kfree(info);
+ 		goto out;
+ 	}
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+  out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+@@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		if (ATTN_LED(ctrl))
+ 			pciehp_set_attention_status(p_slot, 0);
+ 
+-		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+@@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
+ 	else
+ 		p_slot->state = POWERON_STATE;
+ 
+-	queue_work(pciehp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+ }
+ 
+ static void interrupt_event_handler(struct work_struct *work)
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 13b2eaf..371ec79 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -773,23 +773,32 @@ static void pcie_shutdown_notification(struct controller *ctrl)
+ static int pcie_init_slot(struct controller *ctrl)
+ {
+ 	struct slot *slot;
++	char name[32];
+ 
+ 	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+ 	if (!slot)
+ 		return -ENOMEM;
 +
-+static __init int
-+early_pci_read(struct pci_bus *bus, unsigned int devfn, int where,
-+			int size, u32 *value)
-+{
-+	int num, slot, func;
-+
-+	num = bus->number;
-+	slot = devfn >> 3;
-+	func = devfn & 7;
-+	switch (size) {
-+	case 1:
-+		*value = read_pci_config_byte(num, slot, func, where);
-+		break;
-+	case 2:
-+		*value = read_pci_config_16(num, slot, func, where);
-+		break;
-+	case 4:
-+		*value = read_pci_config(num, slot, func, where);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static __init int
-+early_pci_write(struct pci_bus *bus, unsigned int devfn, int where,
-+			int size, u32 value)
-+{
-+	int num, slot, func;
-+
-+	num = bus->number;
-+	slot = devfn >> 3;
-+	func = devfn & 7;
-+	switch (size) {
-+	case 1:
-+		write_pci_config_byte(num, slot, func, where, (u8)value);
-+		break;
-+	case 2:
-+		write_pci_config_16(num, slot, func, where, (u16)value);
-+		break;
-+	case 4:
-+		write_pci_config(num, slot, func, where, (u32)value);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static __initdata struct pci_ops pci_early_ops = {
-+	.read  = early_pci_read,
-+	.write = early_pci_write,
-+};
-+static __initdata struct pci_bus pci_early_bus = {
-+	.ops = &pci_early_ops,
-+};
-+static __initdata char pci_early_init_name[8];
-+static __initdata struct pci_dev pci_early_dev = {
-+	.bus = &pci_early_bus,
-+	.dev = {
-+		.init_name = pci_early_init_name,
-+	},
-+};
-+
-+__init struct pci_dev *get_early_pci_dev(int num, int slot, int func)
-+{
-+	struct pci_dev *pdev;
-+
-+	pdev = &pci_early_dev;
-+	pdev->devfn = (slot<<3) | (func & 7);
-+	pdev->bus->number = num;
-+	sprintf((char *)pdev->dev.init_name, "%02x:%02x.%01x", num, slot, func);
-+
-+	return pdev;
-+}
++	snprintf(name, sizeof(name), "pciehp-%u", PSN(ctrl));
++	slot->wq = alloc_workqueue(name, 0, 0);
++	if (!slot->wq)
++		goto abort;
+ 
+ 	slot->ctrl = ctrl;
+ 	mutex_init(&slot->lock);
+ 	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+ 	ctrl->slot = slot;
+ 	return 0;
++abort:
++	kfree(slot);
++	return -ENOMEM;
+ }
+ 
+ static void pcie_cleanup_slot(struct controller *ctrl)
+ {
+ 	struct slot *slot = ctrl->slot;
+ 	cancel_delayed_work(&slot->work);
+-	flush_workqueue(pciehp_wq);
++	destroy_workqueue(slot->wq);
+ 	kfree(slot);
+ }
+ 
 -- 
 1.7.1
 
