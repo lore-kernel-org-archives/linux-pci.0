@@ -1,107 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:4357 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497Ab2K2V7u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2012 16:59:50 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH 2/3] aerdrv: Enhanced AER logging
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 29 Nov 2012 14:54:50 -0700
-Message-ID: <20121129215450.5483.26562.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53087 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753330Ab2KMJHf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 04:07:35 -0500
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: andi@firstfloor.org, tokunaga.keiich@jp.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, mingo@redhat.com,
+	ddutile@redhat.com, vgoyal@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, yinghai@kernel.org,
+	Takao Indoh <indou.takao@jp.fujitsu.com>, khalid@gonehiking.org
+Message-Id: <20121113090212.1180.12233.sendpatchset@indoh>
+Subject: [PATCH v6 0/5] Reset PCIe devices to address DMA problem on kdump with iommu
+Date: Tue, 13 Nov 2012 18:07:32 +0900 (JST)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch will provide a more reliable and easy way for user-space
-applications to have access to AER logs rather than reading them from the
-message buffer. It also provides a way to notify user-space when an AER
-event occurs.
+These patches reset PCIe devices at boot time to address DMA problem on
+kdump with iommu. When "reset_devices" is specified, a hot reset is
+triggered on each PCIe root port and downstream port to reset its
+downstream endpoint.
 
-The aer driver is updated to generate a trace event of function 'aer_event'
-when an AER occurs.  The trace event was added to both the interrupt
-based aer path and the firmware first path
+Background:
+A kdump problem about DMA has been discussed for a long time. That is,
+when a kernel is switched to the kdump kernel, DMA derived from first
+kernel affects second kernel. Especially this problem surfaces when
+iommu is used for PCI passthrough on KVM guest. In the case of the
+machine I use, when intel_iommu=on is specified, DMAR error is detected
+in kdump kernel and PCI SERR is also detected. Finally kdump fails
+because some devices does not work correctly.
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
----
+The root cause is that ongoing DMA from first kernel causes DMAR fault
+because page table of DMAR is initialized while kdump kernel is booting
+up. Therefore to solve this problem DMA needs to be stopped before DMAR
+is initialized at kdump kernel boot time. By these patches, PCIe devices
+are reset by hot reset and its DMA is stopped when reset_devices is
+specified. One problem of this solution is that the monitor blacks out
+when VGA controller is reset. So this patch does not reset the port
+whose child endpoint is VGA device.
 
- drivers/acpi/apei/cper.c               |   11 +++++++++--
- drivers/pci/pcie/aer/aerdrv_errprint.c |   11 ++++++++++-
- 2 files changed, 19 insertions(+), 3 deletions(-)
+What I tried:
+- Clearing bus master bit and INTx disable bit at boot time
+    This did not solve this problem. I still got DMAR error on devices.
+- Resetting devices in fixup_final(v1 patch)
+    DMAR error disappeared, but sometimes PCI SERR was detected. This
+    is well explained here.
+    https://lkml.org/lkml/2012/9/9/245
+    This PCI SERR seems to be related to interrupt remapping.
+- Clearing bus master in setup_arch() and resetting devices in
+  fixup_final
+    Neither DMAR error nor PCI SERR occurred. But on certain machine
+    kdump kernel hung up when resetting devices. It seems to be a
+    problem specific to the platform.
+- Resetting devices in setup_arch() (v2 and later patch)
+    This solution solves all problems I found so far.
 
-diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-index e6defd8..ef1e1c0 100644
---- a/drivers/acpi/apei/cper.c
-+++ b/drivers/acpi/apei/cper.c
-@@ -281,9 +281,16 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
- 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
- #ifdef CONFIG_ACPI_APEI_PCIEAER
--	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
-+	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-+			pcie->device_id.bus, pcie->device_id.function);
-+	if (!dev)
-+		pr_info(KERN_INFO, "PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-+			domain, bus, slot, func);
-+
-+	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
- 		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
--		cper_print_aer(pfx, gdata->error_severity, aer_regs);
-+		cper_print_aer(dev, gdata->error_severity, aer_regs);
-+		pci_dev_put(dev);
- 	}
- #endif
- }
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 3ea5173..6354e50 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -23,6 +23,10 @@
- 
- #include "aerdrv.h"
- 
-+#define CREATE_TRACE_POINTS
-+#define TRACE_INCLUDE_PATH ../../../../include/ras
-+#include <ras/aer_event.h>
-+
- #define AER_AGENT_RECEIVER		0
- #define AER_AGENT_REQUESTER		1
- #define AER_AGENT_COMPLETER		2
-@@ -194,6 +198,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 	if (info->id && info->error_dev_num > 1 && info->id == id)
- 		printk("%s""  Error of this Agent(%04x) is reported first\n",
- 			prefix, id);
-+	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
-+			info->severity);
- }
- 
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-@@ -217,12 +223,13 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- 
--void cper_print_aer(const char *prefix, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 		    struct aer_capability_regs *aer)
- {
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
-+	char *prefix = NULL;
- 
- 	aer_severity = cper_severity_to_aer(cper_severity);
- 	if (aer_severity == AER_CORRECTABLE) {
-@@ -259,5 +266,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
- 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
- 			*(tlp + 13), *(tlp + 12));
- 	}
-+	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
-+			aer_severity);
- }
- #endif
+Changelog:
+v6:
+Rewrite using Yinghai's dummy-pci patch
+
+v5:
+Do bus reset after all devices are scanned and its config registers are
+saved. This fixes a bug that config register is accessed without delay
+after reset.
+https://lkml.org/lkml/2012/10/17/47
+
+v4:
+Reduce waiting time after resetting devices. A previous patch does reset
+like this:
+  for (each device) {
+    save config registers
+    reset
+    wait for 500 ms
+    restore config registers
+  }
+
+If there are N devices to be reset, it takes N*500 ms. On the other
+hand, the v4 patch does:
+  for (each device) {
+    save config registers
+    reset
+  }
+  wait 500 ms
+  for (each device) {
+    restore config registers
+  }
+Though it needs more memory space to save config registers, the waiting
+time is always 500ms.
+https://lkml.org/lkml/2012/10/15/49
+
+v3:
+Move alloc_bootmem and free_bootmem to early_reset_pcie_devices so that
+they are called only once.
+https://lkml.org/lkml/2012/10/10/57
+
+v2:
+Reset devices in setup_arch() because reset need to be done before
+interrupt remapping is initialized.
+https://lkml.org/lkml/2012/10/2/54
+
+v1:
+Add fixup_final quirk to reset PCIe devices
+https://lkml.org/lkml/2012/8/3/160
+
+
+Takao Indoh (4):
+  PCI: Define the maximum number of PCI function
+  Make reset_devices available at early stage
+  x86, pci: Reset PCIe devices at boot time
+  x86, pci: Enable PCI INTx when MSI is disabled
+
+Yinghai Lu (1):
+  x86, pci: add dummy pci device for early stage
+
+ arch/x86/include/asm/pci-direct.h |    3 +
+ arch/x86/kernel/setup.c           |    3 +
+ arch/x86/pci/common.c             |    4 +-
+ arch/x86/pci/early.c              |  303 +++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h               |    2 +
+ init/main.c                       |    4 +-
+ 6 files changed, 316 insertions(+), 3 deletions(-)
+
 
