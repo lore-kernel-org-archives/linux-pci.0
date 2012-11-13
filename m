@@ -1,203 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:56450 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752023Ab2KTVeU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Nov 2012 16:34:20 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Huang Ying <ying.huang@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] PCI/PM: Keep runtime PM enabled for unbound PCI devices
-Date: Tue, 20 Nov 2012 22:38:45 +0100
-Message-ID: <2062450.IkHTC109n4@vostro.rjw.lan>
-In-Reply-To: <1353398902-21253-1-git-send-email-ying.huang@intel.com>
-References: <1353398902-21253-1-git-send-email-ying.huang@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20121113090222.1180.36111.sendpatchset@indoh>
+References: <20121113090212.1180.12233.sendpatchset@indoh>
+	<20121113090222.1180.36111.sendpatchset@indoh>
+Date: Tue, 13 Nov 2012 10:01:21 +0000
+Message-ID: <CAPcvp5FCDt5Sy9W7s4gsWuq7z9dATvk37hS_5XfrYepNiJN=nA@mail.gmail.com>
+Subject: Re: [PATCH v6 1/5] x86, pci: add dummy pci device for early stage
+From: Andrew Murray <amurray@embedded-bits.co.uk>
+To: Takao Indoh <indou.takao@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, tokunaga.keiich@jp.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, andi@firstfloor.org,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, yinghai@kernel.org,
+	mingo@redhat.com, vgoyal@redhat.com, khalid@gonehiking.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, November 20, 2012 04:08:22 PM Huang Ying wrote:
-> For unbound PCI devices, what we need is:
-> 
->  - Always in D0 state, because some devices does not work again after
->    being put into D3 by the PCI bus.
-> 
->  - In SUSPENDED state if allowed, so that the parent devices can still
->    be put into low power state.
-> 
-> To satisfy these requirement, the runtime PM for the unbound PCI
-> devices are disabled and set to SUSPENDED state.  One issue of this
-> solution is that the PCI devices will be put into SUSPENDED state even
-> if the SUSPENDED state is forbidden via the sysfs interface
-> (.../power/control) of the device.  This is not an issue for most
-> devices, because most PCI devices are not used at all if unbounded.
-> But there are exceptions.  For example, unbound VGA card can be used
-> for display, but suspend its parents make it stop working.
-> 
-> To fix the issue, we keep the runtime PM enabled when the PCI devices
-> are unbound.  But the runtime PM callbacks will do nothing if the PCI
-> devices are unbound.  This way, we can put the PCI devices into
-> SUSPENDED state without put the PCI devices into D3 state.
-> 
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Alan Stern <stern@rowland.harvard.edu>
-> CC: stable@vger.kernel.org          # v3.6+
+Hello,
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Some comments inline...
 
+On 13 November 2012 09:07, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+> From: Yinghai Lu <yinghai@kernel.org>
+>
+> So we can pass pci_dev *dev to reuse some generic pci functions.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
 > ---
->  drivers/pci/pci-driver.c |   69 +++++++++++++++++++++++++++--------------------
->  drivers/pci/pci.c        |    2 +
->  2 files changed, 43 insertions(+), 28 deletions(-)
-> 
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1900,6 +1900,8 @@ void pci_pm_init(struct pci_dev *dev)
->  	u16 pmc;
->  
->  	pm_runtime_forbid(&dev->dev);
-> +	pm_runtime_set_active(&dev->dev);
-> +	pm_runtime_enable(&dev->dev);
->  	device_enable_async_suspend(&dev->dev);
->  	dev->wakeup_prepared = false;
->  
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -256,31 +256,26 @@ struct drv_dev_and_id {
->  static long local_pci_probe(void *_ddi)
->  {
->  	struct drv_dev_and_id *ddi = _ddi;
-> -	struct device *dev = &ddi->dev->dev;
-> -	struct device *parent = dev->parent;
-> +	struct pci_dev *pci_dev = ddi->dev;
-> +	struct pci_driver *pci_drv = ddi->drv;
-> +	struct device *dev = &pci_dev->dev;
->  	int rc;
->  
-> -	/* The parent bridge must be in active state when probing */
-> -	if (parent)
-> -		pm_runtime_get_sync(parent);
-> -	/* Unbound PCI devices are always set to disabled and suspended.
-> -	 * During probe, the device is set to enabled and active and the
-> -	 * usage count is incremented.  If the driver supports runtime PM,
-> -	 * it should call pm_runtime_put_noidle() in its probe routine and
-> -	 * pm_runtime_get_noresume() in its remove routine.
-> -	 */
-> -	pm_runtime_get_noresume(dev);
-> -	pm_runtime_set_active(dev);
-> -	pm_runtime_enable(dev);
-> -
-> -	rc = ddi->drv->probe(ddi->dev, ddi->id);
-> +	/*
-> +	 * Unbound PCI devices are always put in D0, regardless of
-> +	 * runtime PM status.  During probe, the device is set to
-> +	 * active and the usage count is incremented.  If the driver
-> +	 * supports runtime PM, it should call pm_runtime_put_noidle()
-> +	 * in its probe routine and pm_runtime_get_noresume() in its
-> +	 * remove routine.
-> +	 */
-> +	pm_runtime_get_sync(dev);
-> +	pci_dev->driver = pci_drv;
-> +	rc = pci_drv->probe(pci_dev, ddi->id);
->  	if (rc) {
-> -		pm_runtime_disable(dev);
-> -		pm_runtime_set_suspended(dev);
-> -		pm_runtime_put_noidle(dev);
-> +		pci_dev->driver = NULL;
-> +		pm_runtime_put_sync(dev);
->  	}
-> -	if (parent)
-> -		pm_runtime_put(parent);
->  	return rc;
->  }
->  
-> @@ -330,10 +325,8 @@ __pci_device_probe(struct pci_driver *dr
->  		id = pci_match_device(drv, pci_dev);
->  		if (id)
->  			error = pci_call_probe(drv, pci_dev, id);
-> -		if (error >= 0) {
-> -			pci_dev->driver = drv;
-> +		if (error >= 0)
->  			error = 0;
-> -		}
->  	}
->  	return error;
->  }
-> @@ -369,9 +362,7 @@ static int pci_device_remove(struct devi
->  	}
->  
->  	/* Undo the runtime PM settings in local_pci_probe() */
-> -	pm_runtime_disable(dev);
-> -	pm_runtime_set_suspended(dev);
-> -	pm_runtime_put_noidle(dev);
-> +	pm_runtime_put_sync(dev);
->  
->  	/*
->  	 * If the device is still on, set the power state as "unknown",
-> @@ -994,6 +985,13 @@ static int pci_pm_runtime_suspend(struct
->  	pci_power_t prev = pci_dev->current_state;
->  	int error;
->  
-> +	/*
-> +	 * If pci_dev->driver is not set (unbound), the device should
-> +	 * always remain in D0 regardless of the runtime PM status
-> +	 */
-> +	if (!pci_dev->driver)
-> +		return 0;
+>  arch/x86/include/asm/pci-direct.h |    2 +
+>  arch/x86/pci/early.c              |   75 +++++++++++++++++++++++++++++++++++++
+>  2 files changed, 77 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+> index b1e7a45..b6360d3 100644
+> --- a/arch/x86/include/asm/pci-direct.h
+> +++ b/arch/x86/include/asm/pci-direct.h
+> @@ -18,4 +18,6 @@ extern int early_pci_allowed(void);
+>  extern unsigned int pci_early_dump_regs;
+>  extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+>  extern void early_dump_pci_devices(void);
 > +
->  	if (!pm || !pm->runtime_suspend)
->  		return -ENOSYS;
->  
-> @@ -1029,6 +1027,13 @@ static int pci_pm_runtime_resume(struct
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
-> +	/*
-> +	 * If pci_dev->driver is not set (unbound), the device should
-> +	 * always remain in D0 regardless of the runtime PM status
-> +	 */
-> +	if (!pci_dev->driver)
-> +		return 0;
-> +
->  	if (!pm || !pm->runtime_resume)
->  		return -ENOSYS;
->  
-> @@ -1046,8 +1051,16 @@ static int pci_pm_runtime_resume(struct
->  
->  static int pci_pm_runtime_idle(struct device *dev)
->  {
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
-> +	/*
-> +	 * If pci_dev->driver is not set (unbound), the device should
-> +	 * always remain in D0 regardless of the runtime PM status
-> +	 */
-> +	if (!pci_dev->driver)
-> +		goto out;
-> +
->  	if (!pm)
->  		return -ENOSYS;
->  
-> @@ -1057,8 +1070,8 @@ static int pci_pm_runtime_idle(struct de
->  			return ret;
->  	}
->  
-> +out:
->  	pm_runtime_suspend(dev);
-> -
->  	return 0;
+> +struct pci_dev *get_early_pci_dev(int num, int slot, int func);
+>  #endif /* _ASM_X86_PCI_DIRECT_H */
+> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+> index d1067d5..aea6b2b 100644
+> --- a/arch/x86/pci/early.c
+> +++ b/arch/x86/pci/early.c
+> @@ -109,3 +109,78 @@ void early_dump_pci_devices(void)
+>                 }
+>         }
 >  }
->  
+> +
+> +static __init int
+> +early_pci_read(struct pci_bus *bus, unsigned int devfn, int where,
+> +                       int size, u32 *value)
+> +{
+> +       int num, slot, func;
+> +
+> +       num = bus->number;
+> +       slot = devfn >> 3;
+> +       func = devfn & 7;
+
+You may want to use the PCI_SLOT and PCI_FUNC macros in
+include/linux/pci.h to determine values for slot and func.
+
+> +       switch (size) {
+> +       case 1:
+> +               *value = read_pci_config_byte(num, slot, func, where);
+> +               break;
+> +       case 2:
+> +               *value = read_pci_config_16(num, slot, func, where);
+> +               break;
+> +       case 4:
+> +               *value = read_pci_config(num, slot, func, where);
+> +               break;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static __init int
+> +early_pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+> +                       int size, u32 value)
+> +{
+> +       int num, slot, func;
+> +
+> +       num = bus->number;
+> +       slot = devfn >> 3;
+> +       func = devfn & 7;
+
+As above.
+
+> +       switch (size) {
+> +       case 1:
+> +               write_pci_config_byte(num, slot, func, where, (u8)value);
+> +               break;
+> +       case 2:
+> +               write_pci_config_16(num, slot, func, where, (u16)value);
+> +               break;
+> +       case 4:
+> +               write_pci_config(num, slot, func, where, (u32)value);
+> +               break;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static __initdata struct pci_ops pci_early_ops = {
+> +       .read  = early_pci_read,
+> +       .write = early_pci_write,
+> +};
+> +static __initdata struct pci_bus pci_early_bus = {
+> +       .ops = &pci_early_ops,
+> +};
+> +static __initdata char pci_early_init_name[8];
+> +static __initdata struct pci_dev pci_early_dev = {
+> +       .bus = &pci_early_bus,
+> +       .dev = {
+> +               .init_name = pci_early_init_name,
+> +       },
+> +};
+> +
+> +__init struct pci_dev *get_early_pci_dev(int num, int slot, int func)
+> +{
+> +       struct pci_dev *pdev;
+> +
+> +       pdev = &pci_early_dev;
+> +       pdev->devfn = (slot<<3) | (func & 7);
+
+You can use PCI_DEVFN here.
+
+> +       pdev->bus->number = num;
+> +       sprintf((char *)pdev->dev.init_name, "%02x:%02x.%01x", num, slot, func);
+> +
+> +       return pdev;
+> +}
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
+> 1.7.1
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
+Andrew Murray
