@@ -1,119 +1,66 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+From: "Li, Sibai" <sibai.li@intel.com>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>,
-	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
-Date: Thu, 01 Nov 2012 21:16:13 +0100
-Message-ID: <2190235.LV034OX9Ij@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <1351788194.19172.98.camel@misato.fc.hp.com> <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
+CC: Jason Gao <pkill.2012@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Rose, Gregory V" <gregory.v.rose@intel.com>,
+	"ddutile@redhat.com" <ddutile@redhat.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: SR-IOV problem with Intel 82599EB (not enough MMIO resources
+ for SR-IOV)
+Date: Tue, 13 Nov 2012 18:25:58 +0000
+Message-ID: <A3A921390EAE4044940E99EBF13D97321AE21FBB@FMSMSX104.amr.corp.intel.com>
+References: <201211081915083774239@gmail.com>	<509B962C.6070002@gmail.com>
+	<C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com>
+	<CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
+	<CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
+	<CANmqhJAjwP8CLEKpgsDbT-7+n=hf30LbYrTAu+qDH09LzETD4g@mail.gmail.com>
+	<A3A921390EAE4044940E99EBF13D97321AE21E15@FMSMSX104.amr.corp.intel.com>
+ <CAE9FiQXnP2gpy9z6VNGSpimLkhDYKp6Qr=9nGZ9d-pKdohA4bw@mail.gmail.com>
+In-Reply-To: <CAE9FiQXnP2gpy9z6VNGSpimLkhDYKp6Qr=9nGZ9d-pKdohA4bw@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 01, 2012 11:28:25 AM Yinghai Lu wrote:
-> On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+
+> -----Original Message-----
+> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
+> Yinghai Lu
+> Sent: Tuesday, November 13, 2012 10:17 AM
+> To: Li, Sibai
+> Cc: Jason Gao; bhelgaas@google.com; Rose, Gregory V; ddutile@redhat.com;
+> Kirsher, Jeffrey T; linux-kernel; netdev; kvm; e1000-devel@lists.sourceforge.net;
+> linux-pci@vger.kernel.org
+> Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources
+> for SR-IOV)
+> 
+> On Tue, Nov 13, 2012 at 8:04 AM, Li, Sibai <sibai.li@intel.com> wrote:
 > >
-> > Rafael pointed out in my CPU hot-remove patch that
-> > acpi_bus_hot_remove_device() was not exported for modules.  Looks like
-> > you have the same problem here.  FYI, I just sent the following patch
-> > that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
+> >>
+> >> Thank you very much,I try "pci=realloc" in Centos 6.3,and now it works for
+> me.
+> >>
+> >> thank you Sibai,Our server "Dell R710",its BIOS version is just
+> >> v.6.3.0 and release date is 07/24/2012,and I also configured
+> >> intel_iommu=on in the grub.conf file,but I can't find these IOMMU
+> >> options in "Device Drivers" in my
+> >> kernel(2.6.32-279) .config file , btw my os is Centos
+> >> 6.3(RHEL6.3),although the problem solved,I'd like to know what's your os
+> version ,kernel version?
 > >
-> > https://lkml.org/lkml/2012/11/1/225
+> > I am using RHEL6.3 with unstable kernel 3.7.0-rc
 > 
-> acpi_os_hotplug_execute() does not like having good quality yet.
+> that means that config has
+> CONFIG_PCI_REALLOC_ENABLE_AUTO=y
 > 
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
-> can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
-> because the hotplug code may call driver .remove() functions,
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
-> which invoke flush_scheduled_work/acpi_os_wait_events_complete
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
-> flush these workqueues.
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
-> = hp ? kacpi_hotplug_wq :
-> c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
->  (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
-> 9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
-> dpc->wait = hp ? 1 : 0;
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
-> (queue == kacpi_hotplug_wq)
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
->  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
-> if (queue == kacpi_notify_wq)
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
->  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
->  INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
+> So you don't need to append "pci=realloc"
 > 
-> really don't know why checking queue and call same code in every branch.
-> 
-> from comm:
-> 
-> commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
-> Author: Zhang Rui <rui.zhang@intel.com>
-> Date:   Mon Mar 22 15:48:54 2010 +0800
-> 
->     ACPI: fixes a false alarm from lockdep
-> 
->     fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
->     workqueues.
->     http://bugzilla.kernel.org/show_bug.cgi?id=14553
->     https://bugzilla.kernel.org/show_bug.cgi?id=15521
-> 
->     Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
->     Signed-off-by: Shaohua Li <shaohua.li@intel.com>
->     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
->     Signed-off-by: Len Brown <len.brown@intel.com>
-> 
-> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-> index 8e6d866..900da68 100644
-> --- a/drivers/acpi/osl.c
-> +++ b/drivers/acpi/osl.c
-> @@ -758,7 +758,14 @@ static acpi_status
-> __acpi_os_execute(acpi_execute_type type,
->         queue = hp ? kacpi_hotplug_wq :
->                 (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
->         dpc->wait = hp ? 1 : 0;
-> -       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +
-> +       if (queue == kacpi_hotplug_wq)
-> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +       else if (queue == kacpi_notify_wq)
-> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +       else
-> +               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +
->         ret = queue_work(queue, &dpc->work);
-> 
->         if (!ret) {
-> 
-> 
-> Len or Rafael,
-> can you just revert that silly patch?
+> Yinghai
 
-We're removing this as per:
-
-http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=commit;h=77f1966ec9763e85e5f1a9202802e90c297b4c21
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Never append "pci=realloc" for both kernel 2.6.32.279 and kernel 3.5.0 above.
