@@ -1,253 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13936 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754009Ab2KEUU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Nov 2012 15:20:59 -0500
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 7/8] ixgbe: sysfs sriov configuration callback support
-Date: Mon,  5 Nov 2012 15:20:40 -0500
-Message-Id: <1352146841-64458-8-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30157 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754221Ab2KMIBk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 03:01:40 -0500
+Message-ID: <50A1FE14.5050404@huawei.com>
+Date: Tue, 13 Nov 2012 16:00:20 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Oliver Neukum <oneukum@suse.de>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>
+Subject: Re: [PATCH -v3] PCI, pciehp: make every slot have its own workqueue
+ to avoid deadlock
+References: <1352711830-9772-1-git-send-email-wangyijing@huawei.com> <CAErSpo6KSkR+Rg1G4Tte99VpOM-tZxjCfPJzCuT5-iKMN4m=4w@mail.gmail.com> <4A338DB2991D2A44B9A44B8718AECF650A52062A@G01JPEXMBYT03> <50A1B634.8000402@huawei.com>
+In-Reply-To: <50A1B634.8000402@huawei.com>
+Content-Type: text/plain; charset="ISO-2022-JP"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement callbacks in the driver for the new PCI bus driver
-interface that allows the user to enable/disable SR-IOV VFs
-in a device via the sysfs interface.
+On 2012/11/13 10:53, Yijing Wang wrote:
+> On 2012/11/13 10:35, Kaneshige, Kenji wrote:
+>>> -----Original Message-----
+>>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>>> Sent: Tuesday, November 13, 2012 9:18 AM
+>>> To: Yijing Wang
+>>> Cc: Kaneshige, Kenji/金重 憲治; Yinghai Lu; Rafael; Rusty Russell; Mauro Carvalho Chehab; Oliver Neukum;
+>>> jiang.liu@huawei.com; linux-pci@vger.kernel.org; Hanjun Guo
+>>> Subject: Re: [PATCH -v3] PCI, pciehp: make every slot have its own workqueue to avoid deadlock
+>>>
+>>> On Mon, Nov 12, 2012 at 2:17 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>> Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
+>>>> Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
+>>>> Switch and some slots which support hotplug). The hot removed work was queued into
+>>>> pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
+>>>> the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
+>>>> This patch remove the global pciehp_wq and create a new workqueue for every slot to
+>>>> avoid above problem.
+>>>
+>>> Can you include the actual call path that leads to the deadlock?  I
+>>> assume it's related to a PCIe device removal that happens at about the
+>>> same time as the pcie_port_service_unregister(&hpdriver_portdrv)?
+>>>
+>>> I just want to make sure that the new per-slot workqueue arrangement
+>>> doesn't lead to any case where the slot workqueue item depends on
+>>> something removed by the pcied_cleanup() as the module exits.
+>>
+>> Just for your information, here is my understanding of the problem.
+>>
+>> ====
+>> - Your hardware has nested PCIe hotplug slots like below.
+>>
+>>     --<slot A>--<Slot B>
+>>
+>> - Hot-removal request (attention button event) comes to <slot A>
+>> - Pciehp driver queue the hot-removal work
+>> - This hot-removal work try to remove <slot B>
+>> - To remove <slot B>, pciehp flush the pciehp_wq, but it never finishes
+>>   because hot-removal work is in progress. ===> deadlock
+>> ====
+>>
+> 
+> Yes, the deadlock situation as Kaneshige's description above, I will add deadlock call path
+> description into patch.
+> 
+>>>
+>>>> --- a/drivers/pci/hotplug/pciehp_hpc.c
+>>>> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+>>>> @@ -773,23 +773,32 @@ static void pcie_shutdown_notification(struct controller *ctrl)
+>>>>  static int pcie_init_slot(struct controller *ctrl)
+>>>>  {
+>>>>         struct slot *slot;
+>>>> +       char name[32];
+>>>>
+>>>>         slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+>>>>         if (!slot)
+>>>>                 return -ENOMEM;
+>>>> +
+>>>> +       snprintf(name, sizeof(name), "pciehp-%u", PSN(ctrl));
+>>>> +       slot->wq = create_singlethread_workqueue(name);
+>>>
+>>> You're using create_singlethread_workqueue() instead of the previous
+>>> alloc_workqueue().  This is a slight change in semantics since we
+>>> previously called "alloc_workqueue(name, 0, 0)" and
+>>> create_singlethread_workqueue() calls "alloc_workqueue(name,
+>>> WQ_UNBOUND | WQ_MEM_RECLAIM, 1)."
+>>>
+>>> I don't know whether this is necessary in order to have per-slot
+>>> workqueues or not.  If not, please split it into a separate patch to
+>>> make it more visible.
+>>
+>> Good catch.
+>> I think we should use 0 for max_active.
+>> Hot-add/remove operation take a long time. So if we use 1 for max_active,
+>> we cannot handle events during hot-add/remove operation. As a result, for
+>> example, push button event and cancel event that are issued during
+>> hot-add/remove operation might not be handled properly, I think.
+>>
+>> Any comments, Yijing?
+> 
+> This is an issue, I will test this case in my hot-plug machine and confirm it.
 
-Note: This is part of a 4-part patch set that demonstrates
-      how a PF driver can enable its VF devices via sysfs.
-      The final patch will be submitted by Intel via
-      the linux-net mailing list.
+Hi Kaneshige,
+   I tested this v3 patch in my hot plug machine and confirmed this problem. As you said,
+there were some unexpected problem when push button event and cancel event that are issued during
+hot-add/remove operation.
 
-Signed-off-by: Greg Rose <gregory.v.rose@intel.com>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe.h       |  3 +
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c  | 28 +++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c | 89 +++++++++++++++++++++++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h |  6 +-
- 4 files changed, 120 insertions(+), 6 deletions(-)
+Before applied v3 patch the new push button event will be ignored during hot-add/remove operation
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe.h b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
-index 5bd2676..89fa3f8 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe.h
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe.h
-@@ -753,5 +753,8 @@ extern int ixgbe_ptp_hwtstamp_ioctl(struct ixgbe_adapter *adapter,
- extern void ixgbe_ptp_start_cyclecounter(struct ixgbe_adapter *adapter);
- extern void ixgbe_ptp_check_pps_event(struct ixgbe_adapter *adapter, u32 eicr);
- #endif /* CONFIG_IXGBE_PTP */
-+#ifdef CONFIG_PCI_IOV
-+void ixgbe_sriov_reinit(struct ixgbe_adapter *adapter);
-+#endif
- 
- #endif /* _IXGBE_H_ */
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index 8d2a507..5d868e4 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -6784,6 +6784,26 @@ int ixgbe_setup_tc(struct net_device *dev, u8 tc)
- }
- 
- #endif /* CONFIG_IXGBE_DCB */
-+#ifdef CONFIG_PCI_IOV
-+void ixgbe_sriov_reinit(struct ixgbe_adapter *adapter)
-+{
-+	struct net_device *netdev = adapter->netdev;
-+
-+	rtnl_lock();
-+#ifdef CONFIG_IXGBE_DCB
-+	ixgbe_setup_tc(netdev, netdev_get_num_tc(netdev));
-+#else
-+	if (netif_running(netdev))
-+		ixgbe_close(netdev);
-+	ixgbe_clear_interrupt_scheme(adapter);
-+	ixgbe_init_interrupt_scheme(adapter);
-+	if (netif_running(netdev))
-+		ixgbe_open(netdev);
-+#endif
-+	rtnl_unlock();
-+}
-+
-+#endif
- void ixgbe_do_reset(struct net_device *netdev)
- {
- 	struct ixgbe_adapter *adapter = netdev_priv(netdev);
-@@ -7519,7 +7539,12 @@ static void __devexit ixgbe_remove(struct pci_dev *pdev)
- 	if (netdev->reg_state == NETREG_REGISTERED)
- 		unregister_netdev(netdev);
- 
--	ixgbe_disable_sriov(adapter);
-+	/*
-+	 * Only disable SR-IOV on unload if the user specified the now
-+	 * deprecated max_vfs module parameter.
-+	 */
-+	if (max_vfs)
-+		ixgbe_disable_sriov(adapter);
- 
- 	ixgbe_clear_interrupt_scheme(adapter);
- 
-@@ -7734,6 +7759,7 @@ static struct pci_driver ixgbe_driver = {
- 	.resume   = ixgbe_resume,
- #endif
- 	.shutdown = ixgbe_shutdown,
-+	.sriov_configure = ixgbe_pci_sriov_configure,
- 	.err_handler = &ixgbe_err_handler
- };
- 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-index 7c068b4..60a2f4f 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c
-@@ -217,11 +217,12 @@ static bool ixgbe_vfs_are_assigned(struct ixgbe_adapter *adapter)
- }
- 
- #endif /* #ifdef CONFIG_PCI_IOV */
--void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
-+int ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
- {
- 	struct ixgbe_hw *hw = &adapter->hw;
- 	u32 gpie;
- 	u32 vmdctl;
-+	int rss;
- 
- 	/* set num VFs to 0 to prevent access to vfinfo */
- 	adapter->num_vfs = 0;
-@@ -236,7 +237,7 @@ void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
- 
- 	/* if SR-IOV is already disabled then there is nothing to do */
- 	if (!(adapter->flags & IXGBE_FLAG_SRIOV_ENABLED))
--		return;
-+		return 0;
- 
- #ifdef CONFIG_PCI_IOV
- 	/*
-@@ -246,7 +247,7 @@ void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
- 	 */
- 	if (ixgbe_vfs_are_assigned(adapter)) {
- 		e_dev_warn("Unloading driver while VFs are assigned - VFs will not be deallocated\n");
--		return;
-+		return -EPERM;
- 	}
- 	/* disable iov and allow time for transactions to clear */
- 	pci_disable_sriov(adapter->pdev);
-@@ -269,10 +270,92 @@ void ixgbe_disable_sriov(struct ixgbe_adapter *adapter)
- 		adapter->flags &= ~IXGBE_FLAG_VMDQ_ENABLED;
- 	adapter->ring_feature[RING_F_VMDQ].offset = 0;
- 
-+	rss = min_t(int, IXGBE_MAX_RSS_INDICES, num_online_cpus());
-+	adapter->ring_feature[RING_F_RSS].limit = rss;
-+
- 	/* take a breather then clean up driver data */
- 	msleep(100);
- 
- 	adapter->flags &= ~IXGBE_FLAG_SRIOV_ENABLED;
-+	return 0;
-+}
-+
-+int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	struct ixgbe_adapter *adapter = pci_get_drvdata(dev);
-+	int err = 0;
-+	int i;
-+	int pre_existing_vfs = pci_num_vf(dev);
-+
-+	if (pre_existing_vfs && pre_existing_vfs != num_vfs)
-+		err = ixgbe_disable_sriov(adapter);
-+	else if (pre_existing_vfs && pre_existing_vfs == num_vfs)
-+		goto out;
-+
-+	if (err)
-+		goto err_out; 
-+
-+	/*
-+	 * While the SR-IOV capability structure reports total VFs to be
-+	 * 64 we limit the actual number that can be allocated to 63 so
-+	 * that some transmit/receive resources can be reserved to the
-+	 * PF.  The PCI bus driver already checks for other values out of
-+	 * range.
-+	 */
-+	if (num_vfs > 63) {
-+		err = -EPERM;
-+		goto err_out;
-+	}
-+
-+	adapter->num_vfs = num_vfs;
-+
-+	if ((err = __ixgbe_enable_sriov(adapter)))
-+		goto err_out;
-+
-+	for (i = 0; i < adapter->num_vfs; i++)
-+		ixgbe_vf_configuration(dev, (i | 0x10000000));
-+
-+	err = pci_enable_sriov(dev, num_vfs);
-+	if (err) {
-+		e_dev_warn("Failed to enable PCI sriov: %d\n", err);
-+		goto err_out;
-+	}
-+	ixgbe_sriov_reinit(adapter);
-+
-+out:
-+	return num_vfs;
-+
-+err_out:
-+	return err;
-+#endif
-+	return 0;
-+}
-+
-+int ixgbe_pci_sriov_disable(struct pci_dev *dev)
-+{
-+	struct ixgbe_adapter *adapter = pci_get_drvdata(dev);
-+	int err;
-+	u32 current_flags = adapter->flags;
-+
-+	err = ixgbe_disable_sriov(adapter);
-+
-+	/* Only reinit if no error and state changed */
-+	if (!err && current_flags != adapter->flags) {
-+		/* ixgbe_disable_sriov() doesn't clear VMDQ flag */
-+		adapter->flags &= ~IXGBE_FLAG_VMDQ_ENABLED;
-+		ixgbe_sriov_reinit(adapter);
-+	}
-+
-+	return err;
-+}
-+
-+int ixgbe_pci_sriov_configure(struct pci_dev *dev, int num_vfs)
-+{
-+	if (num_vfs == 0)
-+		return ixgbe_pci_sriov_disable(dev);
-+	else
-+		return ixgbe_pci_sriov_enable(dev, num_vfs);
- }
- 
- static int ixgbe_set_vf_multicasts(struct ixgbe_adapter *adapter,
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-index d96ead2..3d0fb07 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.h
-@@ -41,11 +41,13 @@ int ixgbe_ndo_set_vf_spoofchk(struct net_device *netdev, int vf, bool setting);
- int ixgbe_ndo_get_vf_config(struct net_device *netdev,
- 			    int vf, struct ifla_vf_info *ivi);
- void ixgbe_check_vf_rate_limit(struct ixgbe_adapter *adapter);
--void ixgbe_disable_sriov(struct ixgbe_adapter *adapter);
-+int ixgbe_disable_sriov(struct ixgbe_adapter *adapter);
- #ifdef CONFIG_PCI_IOV
- void ixgbe_enable_sriov(struct ixgbe_adapter *adapter);
- #endif
--
-+int ixgbe_pci_sriov_enable(struct pci_dev *dev, int num_vfs);
-+int ixgbe_pci_sriov_disable(struct pci_dev *dev);
-+int ixgbe_pci_sriov_configure(struct pci_dev *dev, int num_vfs);
- 
- #endif /* _IXGBE_SRIOV_H_ */
- 
+pciehp 0000:47:14.0:pcie24: Button pressed on Slot(244)
+pciehp 0000:47:14.0:pcie24: PCI slot #244 - powering on due to button press.
+pci 0000:4e:00.0: [1077:2432] type 00 class 0x0c0400
+pci 0000:4e:00.0: reg 10: [io  0x0000-0x00ff]
+pci 0000:4e:00.0: reg 14: [mem 0x00000000-0x00003fff 64bit]
+..........................................................
+pcieport 0000:47:14.0:   bridge window [io  0x9000-0x9fff]
+pcieport 0000:47:14.0:   bridge window [mem 0x80000000-0x800fffff]
+qla2xxx 0000:4e:00.0: enabling device (0100 -> 0102)
+qla2xxx [0000:4e:00.0]-001d: : Found an ISP2432 irq 77 iobase 0xc000000080080000.
+scsi22 : qla2xxx
+pciehp 0000:47:14.0:pcie24: Button pressed on Slot(244)
+pciehp 0000:47:14.0:pcie24: Button ignore on Slot(244)
+
+After applied v3 patch the new push button event will not be ignored, and another hot-add/remove operation will start.
+
+pciehp 0000:47:14.0:pcie24: Button pressed on Slot(244)
+pciehp 0000:47:14.0:pcie24: PCI slot #244 - powering on due to button press.
+pci 0000:4e:00.0: [1077:2432] type 00 class 0x0c0400
+............................................................
+qla2xxx [0000:4e:00.0]-001d: : Found an ISP2432 irq 77 iobase 0xc000000080080000.
+scsi24 : qla2xxx
+pciehp 0000:47:14.0:pcie24: Button pressed on Slot(244)
+qla2xxx [0000:4e:00.0]-00fb:24: QLogic QLE2462 - PCI-Express Dual Channel 4Gb Fibre Channel HBA.
+qla2xxx [0000:4e:00.0]-00fc:24: ISP2432: PCIe (2.5GT/s x4) @ 0000:4e:00.0 hdma+ host#=24 fw=5.03.02 (496).
+qla2xxx 0000:4e:00.1: enabling device (0100 -> 0102)
+qla2xxx [0000:4e:00.1]-001d: : Found an ISP2432 irq 82 iobase 0xc000000080084000.
+scsi25 : qla2xxx
+qla2xxx [0000:4e:00.1]-00fb:25: QLogic QLE2462 - PCI-Express Dual Channel 4Gb Fibre Channel HBA.
+qla2xxx [0000:4e:00.1]-00fc:25: ISP2432: PCIe (2.5GT/s x4) @ 0000:4e:00.1 hdma+ host#=25 fw=5.03.02 (496).
+pciehp 0000:47:14.0:pcie24: PCI slot #244 - powering off due to button press.
+qla2xxx [0000:4e:00.0]-8038:24: Cable is unplugged...
+qla2xxx [0000:4e:00.1]-8038:25: Cable is unplugged...
+
+So, I will use alloc_workqueue(name, 0, 0) for every slot like the original.
+
+> 
+> Thanks!
+> Yijing
+> 
+>>
+>> Regards,
+>> Kenji Kaneshige
+>>
+>>
+>> .
+>>
+> 
+> 
+
+
 -- 
-1.7.10.2.552.gaa3bb87
+Thanks!
+Yijing
 
