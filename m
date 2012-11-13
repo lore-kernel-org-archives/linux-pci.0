@@ -1,98 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:45419 "EHLO
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:45044 "EHLO
 	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320Ab2KGKry convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Nov 2012 05:47:54 -0500
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 8D22D3EE0BD
-	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 73C0445DE4D
-	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 5D82245DD74
-	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 511E21DB803A
-	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
-Received: from g01jpexchyt04.g01.fujitsu.local (g01jpexchyt04.g01.fujitsu.local [10.128.194.43])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 023D11DB8038
-	for <linux-pci@vger.kernel.org>; Wed,  7 Nov 2012 19:47:52 +0900 (JST)
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, Rafael <rjw@sisk.pl>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	"Oliver Neukum" <oneukum@suse.de>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
-Subject: RE: [RFC][PATCH] PCI, pciehp: make every slot have its own
- workqueue to avoid deadlock
-Date: Wed, 7 Nov 2012 10:47:50 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A51AFF0@G01JPEXMBYT03>
-References: <1351667452-9952-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1351667452-9952-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset="iso-2022-jp"
+	with ESMTP id S1751625Ab2KMLDM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 06:03:12 -0500
+Message-ID: <50A2279F.60003@jp.fujitsu.com>
+Date: Tue, 13 Nov 2012 19:57:35 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
 MIME-Version: 1.0
+To: amurray@embedded-bits.co.uk
+CC: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, tokunaga.keiich@jp.fujitsu.com,
+	kexec@lists.infradead.org, hbabu@us.ibm.com, andi@firstfloor.org,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, yinghai@kernel.org,
+	mingo@redhat.com, vgoyal@redhat.com, khalid@gonehiking.org
+Subject: Re: [PATCH v6 1/5] x86, pci: add dummy pci device for early stage
+References: <20121113090212.1180.12233.sendpatchset@indoh> <20121113090222.1180.36111.sendpatchset@indoh> <CAPcvp5FCDt5Sy9W7s4gsWuq7z9dATvk37hS_5XfrYepNiJN=nA@mail.gmail.com>
+In-Reply-To: <CAPcvp5FCDt5Sy9W7s4gsWuq7z9dATvk37hS_5XfrYepNiJN=nA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yijing,
+(2012/11/13 19:01), Andrew Murray wrote:
+> Hello,
+>
+> Some comments inline...
+>
+> On 13 November 2012 09:07, Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+>> From: Yinghai Lu <yinghai@kernel.org>
+>>
+>> So we can pass pci_dev *dev to reuse some generic pci functions.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+>> ---
+>>   arch/x86/include/asm/pci-direct.h |    2 +
+>>   arch/x86/pci/early.c              |   75 +++++++++++++++++++++++++++++++++++++
+>>   2 files changed, 77 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+>> index b1e7a45..b6360d3 100644
+>> --- a/arch/x86/include/asm/pci-direct.h
+>> +++ b/arch/x86/include/asm/pci-direct.h
+>> @@ -18,4 +18,6 @@ extern int early_pci_allowed(void);
+>>   extern unsigned int pci_early_dump_regs;
+>>   extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+>>   extern void early_dump_pci_devices(void);
+>> +
+>> +struct pci_dev *get_early_pci_dev(int num, int slot, int func);
+>>   #endif /* _ASM_X86_PCI_DIRECT_H */
+>> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+>> index d1067d5..aea6b2b 100644
+>> --- a/arch/x86/pci/early.c
+>> +++ b/arch/x86/pci/early.c
+>> @@ -109,3 +109,78 @@ void early_dump_pci_devices(void)
+>>                  }
+>>          }
+>>   }
+>> +
+>> +static __init int
+>> +early_pci_read(struct pci_bus *bus, unsigned int devfn, int where,
+>> +                       int size, u32 *value)
+>> +{
+>> +       int num, slot, func;
+>> +
+>> +       num = bus->number;
+>> +       slot = devfn >> 3;
+>> +       func = devfn & 7;
+>
+> You may want to use the PCI_SLOT and PCI_FUNC macros in
+> include/linux/pci.h to determine values for slot and func.
+>
+>> +       switch (size) {
+>> +       case 1:
+>> +               *value = read_pci_config_byte(num, slot, func, where);
+>> +               break;
+>> +       case 2:
+>> +               *value = read_pci_config_16(num, slot, func, where);
+>> +               break;
+>> +       case 4:
+>> +               *value = read_pci_config(num, slot, func, where);
+>> +               break;
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static __init int
+>> +early_pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+>> +                       int size, u32 value)
+>> +{
+>> +       int num, slot, func;
+>> +
+>> +       num = bus->number;
+>> +       slot = devfn >> 3;
+>> +       func = devfn & 7;
+>
+> As above.
+>
+>> +       switch (size) {
+>> +       case 1:
+>> +               write_pci_config_byte(num, slot, func, where, (u8)value);
+>> +               break;
+>> +       case 2:
+>> +               write_pci_config_16(num, slot, func, where, (u16)value);
+>> +               break;
+>> +       case 4:
+>> +               write_pci_config(num, slot, func, where, (u32)value);
+>> +               break;
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static __initdata struct pci_ops pci_early_ops = {
+>> +       .read  = early_pci_read,
+>> +       .write = early_pci_write,
+>> +};
+>> +static __initdata struct pci_bus pci_early_bus = {
+>> +       .ops = &pci_early_ops,
+>> +};
+>> +static __initdata char pci_early_init_name[8];
+>> +static __initdata struct pci_dev pci_early_dev = {
+>> +       .bus = &pci_early_bus,
+>> +       .dev = {
+>> +               .init_name = pci_early_init_name,
+>> +       },
+>> +};
+>> +
+>> +__init struct pci_dev *get_early_pci_dev(int num, int slot, int func)
+>> +{
+>> +       struct pci_dev *pdev;
+>> +
+>> +       pdev = &pci_early_dev;
+>> +       pdev->devfn = (slot<<3) | (func & 7);
+>
+> You can use PCI_DEVFN here.
 
-I have some comments. Sorry for the delay.
+Yeah, I forgot to use these macros. I'll fix them, thanks!
 
-<snip.>
+Thanks,
+Takao Indoh
 
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -773,23 +773,33 @@ static void pcie_shutdown_notification(struct controller *ctrl)
->  static int pcie_init_slot(struct controller *ctrl)
->  {
->  	struct slot *slot;
-> +	char name[32];
-> 
->  	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
->  	if (!slot)
->  		return -ENOMEM;
-> -
-> +
-> +	snprintf(name, sizeof(name), "pciehpd_%s",
-> +		pci_name(ctrl->pcie->port));
-
-The name of the threads seems to be cut off.
-
-$ ps aux | grep pciehp
-root        125  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:00]
-root        126  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:00]
-root        127  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
-root        128  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
-root        129  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
-root        130  0.0  0.0      0     0 ?        S<   18:54   0:00 [pciehpd_0000:0b]
-root        131  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
-root        132  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
-root        133  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
-root        134  0.0  0.0      0     0 ?        S<   18:55   0:00 [pciehpd_0000:1a]
-
-How about using slot name for the thread name?
-
-<snip.>
-
-> 
->  static void pcie_cleanup_slot(struct controller *ctrl)
->  {
->  	struct slot *slot = ctrl->slot;
->  	cancel_delayed_work(&slot->work);
-> -	flush_workqueue(pciehp_wq);
-> +	flush_workqueue(slot->wq);
-> +	destroy_workqueue(slot->wq);
->  	kfree(slot);
->  }
-
-I think flush_workqueue() call is no longer required because
-it is done in destroy_workqueue() code path.
-
-Regards,
-Kenji Kaneshige
+>
+>> +       pdev->bus->number = num;
+>> +       sprintf((char *)pdev->dev.init_name, "%02x:%02x.%01x", num, slot, func);
+>> +
+>> +       return pdev;
+>> +}
+>> --
+>> 1.7.1
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Andrew Murray
+>
+>
 
