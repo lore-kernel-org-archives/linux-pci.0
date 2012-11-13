@@ -1,158 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23487 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752503Ab2KAVKq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 1 Nov 2012 17:10:46 -0400
-Message-ID: <5092E54C.5080105@redhat.com>
-Date: Thu, 01 Nov 2012 17:10:36 -0400
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:35145 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566Ab2KMSQ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 13:16:59 -0500
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	yuvalmin@broadcom.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net
-Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
-References: <1351718353-6124-1-git-send-email-ddutile@redhat.com>  <1351718353-6124-4-git-send-email-ddutile@redhat.com> <1351727268.2706.48.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1351727268.2706.48.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <A3A921390EAE4044940E99EBF13D97321AE21E15@FMSMSX104.amr.corp.intel.com>
+References: <201211081915083774239@gmail.com>
+	<509B962C.6070002@gmail.com>
+	<C5551D9AAB213A418B7FD5E4A6F30A072D565E76@ORSMSX106.amr.corp.intel.com>
+	<CANmqhJDJXcbUxyt6YD6ktxZCDJ=VqiwhGXP+fLMukQr0o-XwxQ@mail.gmail.com>
+	<CAErSpo4xn9t=4yXGLdPQMtUJF=n38tYrMutAoj7NCsLUzQEbcg@mail.gmail.com>
+	<CANmqhJAjwP8CLEKpgsDbT-7+n=hf30LbYrTAu+qDH09LzETD4g@mail.gmail.com>
+	<A3A921390EAE4044940E99EBF13D97321AE21E15@FMSMSX104.amr.corp.intel.com>
+Date: Tue, 13 Nov 2012 10:16:57 -0800
+Message-ID: <CAE9FiQXnP2gpy9z6VNGSpimLkhDYKp6Qr=9nGZ9d-pKdohA4bw@mail.gmail.com>
+Subject: Re: SR-IOV problem with Intel 82599EB (not enough MMIO resources for SR-IOV)
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Li, Sibai" <sibai.li@intel.com>
+Cc: Jason Gao <pkill.2012@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Rose, Gregory V" <gregory.v.rose@intel.com>,
+	"ddutile@redhat.com" <ddutile@redhat.com>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, kvm <kvm@vger.kernel.org>,
+	"e1000-devel@lists.sourceforge.net"
+	<e1000-devel@lists.sourceforge.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/31/2012 07:47 PM, Ben Hutchings wrote:
-> On Wed, 2012-10-31 at 17:19 -0400, Donald Dutile wrote:
->> Provide files under sysfs to determine the max number of vfs
->> an SRIOV-capable PCIe device supports, and methods to enable and
->> disable the vfs on a per device basis.
->>
->> Currently, VF enablement by SRIOV-capable PCIe devices is done
->> in driver-specific module parameters.  If not setup in modprobe files,
->> it requires admin to unload&  reload PF drivers with number of desired
->> VFs to enable.  Additionally, the enablement is system wide: all
->> devices controlled by the same driver have the same number of VFs
->> enabled.  Although the latter is probably desired, there are PCI
->> configurations setup by system BIOS that may not enable that to occur.
->>
->> Three files are created if a PCIe device has SRIOV support:
->> sriov_totalvfs -- cat-ing this file returns the maximum number
->>                    of VFs a PCIe device supports as reported by
->>                    the TotalVFs in the SRIOV ext cap structure.
->> sriov_numvfs -- echo'ing a positive number to this file enables this
->>                  number of VFs for this given PCIe device.
->>               -- echo'ing a 0 to this file disables
->>                  any previously enabled VFs for this PCIe device.
->>               -- cat-ing this file will return the number of VFs
->>                  currently enabled on this PCIe device, i.e.,
->>                  the NumVFs field in SRIOV ext. cap structure.
->>
->> VF enable and disablement is invoked much like other PCIe
->> configuration functions -- via registered callbacks in the driver,
->> i.e., probe, release, etc.
->>
->> Signed-off-by: Donald Dutile<ddutile@redhat.com>
->> ---
->>   drivers/pci/pci-sysfs.c | 137 +++++++++++++++++++++++++++++++++++++++++++++++-
->>   include/linux/pci.h     |   1 +
->>   2 files changed, 136 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->> index fbbb97f..83be8ce 100644
->> --- a/drivers/pci/pci-sysfs.c
->> +++ b/drivers/pci/pci-sysfs.c
-> [...]
->> +static ssize_t sriov_numvfs_store(struct device *dev,
->> +				  struct device_attribute *attr,
->> +				  const char *buf, size_t count)
->> +{
->> +	struct pci_dev *pdev;
->> +	int num_vfs_enabled = 0;
->> +	int num_vfs;
->> +	int ret = 0;
->> +	u16 total;
->> +
->> +	pdev = to_pci_dev(dev);
->> +
->> +	if (kstrtoint(buf, 0,&num_vfs)<  0)
->> +		return -EINVAL;
->> +
->> +	/* is PF driver loaded w/callback */
->> +	if (!pdev->driver || !pdev->driver->sriov_configure) {
->> +		dev_info(&pdev->dev,
->> +			 "Driver doesn't support SRIOV configuration via sysfs\n");
->> +		return -ENOSYS;
->> +	}
->> +
->> +	/* if enabling vf's ... */
->> +	total = pdev->sriov->total;
->> +	/* Requested VFs to enable<  totalvfs and none enabled already */
->> +	if ((num_vfs>  0)&&  (num_vfs<= total)) {
->> +		if (pdev->sriov->nr_virtfn == 0) {
->> +			num_vfs_enabled =
->> +				pdev->driver->sriov_configure(pdev, num_vfs);
->> +			if ((num_vfs_enabled>= 0)&&
->> +			    (num_vfs_enabled != num_vfs))
->> +				dev_warn(&pdev->dev,
->> +					 "Only %d VFs enabled\n",
->> +					 num_vfs_enabled);
->> +			return count;
+On Tue, Nov 13, 2012 at 8:04 AM, Li, Sibai <sibai.li@intel.com> wrote:
 >
-> If num_vfs_enabled<  0 then it's an error value which should be returned
-> instead of count.
+>>
+>> Thank you very much,I try "pci=realloc" in Centos 6.3,and now it works for me.
+>>
+>> thank you Sibai,Our server "Dell R710",its BIOS version is just
+>> v.6.3.0 and release date is 07/24/2012,and I also configured intel_iommu=on in
+>> the grub.conf file,but I can't find these IOMMU options in "Device Drivers" in my
+>> kernel(2.6.32-279) .config file , btw my os is Centos 6.3(RHEL6.3),although the
+>> problem solved,I'd like to know what's your os version ,kernel version?
 >
-> [...]
-agreed. will update.
+> I am using RHEL6.3 with unstable kernel 3.7.0-rc
 
->> @@ -1409,7 +1512,7 @@ static struct attribute *pci_dev_dev_attrs[] = {
->>   };
->>
->>   static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
->> -						struct attribute *a, int n)
->> +					 struct attribute *a, int n)
->>   {
->>   	struct device *dev = container_of(kobj, struct device, kobj);
->>   	struct pci_dev *pdev = to_pci_dev(dev);
->
-> This hunk should be folded into patch 1.
->
-i removed it.  will do a cleanup of this file in another patch.
+that means that config has
+CONFIG_PCI_REALLOC_ENABLE_AUTO=y
 
->> @@ -1421,6 +1524,33 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
->>   	return a->mode;
->>   }
->>
->> +#ifdef CONFIG_PCI_IOV
->> +static struct attribute *sriov_dev_attrs[] = {
->> +	&sriov_totalvfs_attr.attr,
->> +	&sriov_numvfs_attr.attr,
->> +	NULL,
->> +};
->> +
->> +static umode_t sriov_attrs_are_visible(struct kobject *kobj,
->> +					 struct attribute *a, int n)
->> +{
->> +	struct device *dev = container_of(kobj, struct device, kobj);
->> +
->> +	if ((a ==&sriov_totalvfs_attr.attr) ||
->> +	    (a ==&sriov_numvfs_attr.attr)) {
->> +		if (!dev_is_pf(dev))
->> +			return 0;
->> +	}
->
-> Why do you check the attribute address?  The whole group should be
-> visible or invisible depending on dev_is_pf().  Any attributes that need
-> another condition belong in another group.
->
-agreed.  it's a leftover design when it was part of the uber pci-dev attrs,
-but now that it's separate, dev_is_pf() is sufficient.
-good cleanup.
+So you don't need to append "pci=realloc"
 
->> +	return a->mode;
->> +}
->> +
->> +static struct attribute_group sriov_dev_attr_group = {
->> +	.attrs = sriov_dev_attrs,
->> +	.is_visible = sriov_attrs_are_visible,
->> +};
->> +#endif /* CONFIG_PCI_IOV */
-> [...]
->
-
+Yinghai
