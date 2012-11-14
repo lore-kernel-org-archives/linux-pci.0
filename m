@@ -1,226 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12075 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753889Ab2KEUU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Nov 2012 15:20:56 -0500
-From: Donald Dutile <ddutile@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Glauber <jang@linux.vnet.ibm.com>
 To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
-Date: Mon,  5 Nov 2012 15:20:36 -0500
-Message-Id: <1352146841-64458-4-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, heiko.carstens@de.ibm.com,
+	schwidefsky@de.ibm.com, Jan Glauber <jang@linux.vnet.ibm.com>
+Subject: [RFC PATCH 03/10] s390/bitops: find leftmost bit instruction support
+Date: Wed, 14 Nov 2012 10:41:35 +0100
+Message-Id: <33336ef626db644eb40f0840ad33f4f46010ff6e.1352719878.git.jang@linux.vnet.ibm.com>
+In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide files under sysfs to determine the max number of vfs
-an SRIOV-capable PCIe device supports, and methods to enable and
-disable the vfs on a per device basis.
+The flogr instruction scans a bitmap starting from the leftmost bit.
+Implement support for these bitops. This could be useful to scan
+bitmaps like an interrupt vector set by the hardware starting
+at the leftmost bit.
 
-Currently, VF enablement by SRIOV-capable PCIe devices is done
-in driver-specific module parameters.  If not setup in modprobe files,
-it requires admin to unload & reload PF drivers with number of desired
-VFs to enable.  Additionally, the enablement is system wide: all
-devices controlled by the same driver have the same number of VFs
-enabled.  Although the latter is probably desired, there are PCI
-configurations setup by system BIOS that may not enable that to occur.
-
-Three files are created if a PCIe device has SRIOV support:
-sriov_totalvfs -- cat-ing this file returns the maximum number
-                  of VFs a PCIe device supports as reported by
-                  the TotalVFs in the SRIOV ext cap structure.
-sriov_numvfs -- echo'ing a positive number to this file enables this
-                number of VFs for this given PCIe device.
-             -- echo'ing a 0 to this file disables
-                any previously enabled VFs for this PCIe device.
-             -- cat-ing this file will return the number of VFs
-                currently enabled on this PCIe device, i.e.,
-                the NumVFs field in SRIOV ext. cap structure.
-
-VF enable and disablement is invoked much like other PCIe
-configuration functions -- via registered callbacks in the driver,
-i.e., probe, release, etc.
-
-Signed-off-by: Donald Dutile <ddutile@redhat.com>
+Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
 ---
- drivers/pci/pci-sysfs.c | 134 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |   1 +
- 2 files changed, 135 insertions(+)
+ arch/s390/include/asm/bitops.h | 81 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index fbbb97f..cbcdd8d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -404,6 +404,113 @@ static ssize_t d3cold_allowed_show(struct device *dev,
+diff --git a/arch/s390/include/asm/bitops.h b/arch/s390/include/asm/bitops.h
+index 6f57389..1542293 100644
+--- a/arch/s390/include/asm/bitops.h
++++ b/arch/s390/include/asm/bitops.h
+@@ -640,6 +640,87 @@ static inline unsigned long find_first_bit(const unsigned long * addr,
  }
- #endif
+ #define find_first_bit find_first_bit
  
-+#ifdef CONFIG_PCI_IOV
-+static ssize_t sriov_totalvfs_show(struct device *dev,
-+				   struct device_attribute *attr,
-+				   char *buf)
++/*
++ * Big endian variant whichs starts bit counting from left using
++ * the flogr (find leftmost one) instruction.
++ */
++static inline unsigned long __flo_word(unsigned long nr, unsigned long val)
 +{
-+	struct pci_dev *pdev;
-+	u16 total;
++	register unsigned long bit asm("2") = val;
++	register unsigned long out asm("3");
 +
-+	pdev = to_pci_dev(dev);
-+	total = pdev->sriov->total;
-+	return sprintf(buf, "%u\n", total);
-+}
-+
-+
-+static ssize_t sriov_numvfs_show(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct pci_dev *pdev;
-+
-+	pdev = to_pci_dev(dev);
-+
-+	return sprintf(buf, "%u\n", pdev->sriov->nr_virtfn);
++	asm volatile (
++		"	.insn	rre,0xb9830000,%[bit],%[bit]\n"
++		: [bit] "+d" (bit), [out] "=d" (out) : : "cc");
++	return nr + bit;
 +}
 +
 +/*
-+ * num_vfs > 0; number of vfs to enable
-+ * num_vfs = 0; disable all vfs
-+ *
-+ * Note: SRIOV spec doesn't allow partial VF
-+ *       disable, so its all or none.
++ * 64 bit special left bitops format:
++ * order in memory:
++ *    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
++ *    10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
++ *    20 21 22 23 24 25 26 27 28 29 2a 2b 2c 2d 2e 2f
++ *    30 31 32 33 34 35 36 37 38 39 3a 3b 3c 3d 3e 3f
++ * after that follows the next long with bit numbers
++ *    40 41 42 43 44 45 46 47 48 49 4a 4b 4c 4d 4e 4f
++ *    50 51 52 53 54 55 56 57 58 59 5a 5b 5c 5d 5e 5f
++ *    60 61 62 63 64 65 66 67 68 69 6a 6b 6c 6d 6e 6f
++ *    70 71 72 73 74 75 76 77 78 79 7a 7b 7c 7d 7e 7f
++ * The reason for this bit ordering is the fact that
++ * the hardware sets bits in a bitmap starting at bit 0
++ * and we don't want to scan the bitmap from the 'wrong
++ * end'.
 + */
-+static ssize_t sriov_numvfs_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
++static inline unsigned long find_first_bit_left(const unsigned long *addr,
++						unsigned long size)
 +{
-+	struct pci_dev *pdev;
-+	int num_vfs_enabled = 0;
-+	int num_vfs;
-+	int ret = 0;
-+	u16 total;
++	unsigned long bytes, bits;
 +
-+	pdev = to_pci_dev(dev);
-+
-+	if (kstrtoint(buf, 0, &num_vfs) < 0)
-+		return -EINVAL;
-+
-+	/* is PF driver loaded w/callback */
-+	if (!pdev->driver || !pdev->driver->sriov_configure) {
-+		dev_info(&pdev->dev,
-+			 "Driver doesn't support SRIOV configuration via sysfs\n");
-+		return -ENOSYS;
-+	}
-+
-+	/* if enabling vf's ... */
-+	total = pdev->sriov->total;
-+	/* Requested VFs to enable < totalvfs and none enabled already */
-+	if ((num_vfs > 0) && (num_vfs <= total)) {
-+		if (pdev->sriov->nr_virtfn == 0) {
-+			num_vfs_enabled =
-+				pdev->driver->sriov_configure(pdev, num_vfs);
-+			if ((num_vfs_enabled >= 0) &&
-+			    (num_vfs_enabled != num_vfs)) {
-+				dev_warn(&pdev->dev,
-+					 "Only %d VFs enabled\n",
-+					 num_vfs_enabled);
-+				return count;
-+			} else if (num_vfs_enabled < 0)
-+				/* error code from driver callback */
-+				return num_vfs_enabled;
-+		} else if (num_vfs == pdev->sriov->nr_virtfn) {
-+			dev_warn(&pdev->dev,
-+				 "%d VFs already enabled; no enable action taken\n",
-+				 num_vfs);
-+			return count;
-+		} else {
-+			dev_warn(&pdev->dev,
-+				 "%d VFs already enabled. Disable before enabling %d VFs\n",
-+				 pdev->sriov->nr_virtfn, num_vfs);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	/* disable vfs */
-+	if (num_vfs == 0) {
-+		if (pdev->sriov->nr_virtfn != 0) {
-+			ret = pdev->driver->sriov_configure(pdev, 0);
-+			return ret ? ret : count;
-+		} else {
-+			dev_warn(&pdev->dev,
-+				 "All VFs disabled; no disable action taken\n");
-+			return count;
-+		}
-+	}
-+
-+	dev_err(&pdev->dev,
-+		"Invalid value for number of VFs to enable: %d\n", num_vfs);
-+
-+	return -EINVAL;
-+}
-+
-+static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-+static struct device_attribute sriov_numvfs_attr =
-+		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-+		       sriov_numvfs_show, sriov_numvfs_store);
-+#endif /* CONFIG_PCI_IOV */
-+
- struct device_attribute pci_dev_attrs[] = {
- 	__ATTR_RO(resource),
- 	__ATTR_RO(vendor),
-@@ -1421,6 +1528,30 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- 	return a->mode;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+static struct attribute *sriov_dev_attrs[] = {
-+	&sriov_totalvfs_attr.attr,
-+	&sriov_numvfs_attr.attr,
-+	NULL,
-+};
-+
-+static umode_t sriov_attrs_are_visible(struct kobject *kobj,
-+					 struct attribute *a, int n)
-+{
-+	struct device *dev = container_of(kobj, struct device, kobj);
-+
-+	if (!dev_is_pf(dev))
++	if (!size)
 +		return 0;
-+
-+	return a->mode;
++	bytes = __ffs_word_loop(addr, size);
++	bits = __flo_word(bytes * 8, __load_ulong_be(addr, bytes));
++	return (bits < size) ? bits : size;
 +}
 +
-+static struct attribute_group sriov_dev_attr_group = {
-+	.attrs = sriov_dev_attrs,
-+	.is_visible = sriov_attrs_are_visible,
-+};
-+#endif /* CONFIG_PCI_IOV */
++static inline int find_next_bit_left(const unsigned long *addr,
++				     unsigned long size,
++				     unsigned long offset)
++{
++	const unsigned long *p;
++	unsigned long bit, set;
 +
- static struct attribute_group pci_dev_attr_group = {
- 	.attrs = pci_dev_dev_attrs,
- 	.is_visible = pci_dev_attrs_are_visible,
-@@ -1428,6 +1559,9 @@ static struct attribute_group pci_dev_attr_group = {
- 
- static const struct attribute_group *pci_dev_attr_groups[] = {
- 	&pci_dev_attr_group,
-+#ifdef CONFIG_PCI_IOV
-+	&sriov_dev_attr_group,
-+#endif
- 	NULL,
- };
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee21795..7ef8fba 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -573,6 +573,7 @@ struct pci_driver {
- 	int  (*resume_early) (struct pci_dev *dev);
- 	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
- 	void (*shutdown) (struct pci_dev *dev);
-+	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
- 	const struct pci_error_handlers *err_handler;
- 	struct device_driver	driver;
- 	struct pci_dynids dynids;
++	if (offset >= size)
++		return size;
++	bit = offset & (__BITOPS_WORDSIZE - 1);
++	offset -= bit;
++	size -= offset;
++	p = addr + offset / __BITOPS_WORDSIZE;
++	if (bit) {
++		set = __flo_word(0, *p & (~0UL << bit));
++		if (set >= size)
++			return size + offset;
++		if (set < __BITOPS_WORDSIZE)
++			return set + offset;
++		offset += __BITOPS_WORDSIZE;
++		size -= __BITOPS_WORDSIZE;
++		p++;
++	}
++	return offset + find_first_bit_left(p, size);
++}
++
++#define for_each_set_bit_left(bit, addr, size)				\
++	for ((bit) = find_first_bit_left((addr), (size));		\
++	     (bit) < (size);						\
++	     (bit) = find_next_bit_left((addr), (size), (bit) + 1))
++
++/* same as for_each_set_bit() but use bit as value to start with */
++#define for_each_set_bit_left_cont(bit, addr, size)			\
++	for ((bit) = find_next_bit_left((addr), (size), (bit));		\
++	     (bit) < (size);						\
++	     (bit) = find_next_bit_left((addr), (size), (bit) + 1))
++
+ /**
+  * find_next_zero_bit - find the first zero bit in a memory region
+  * @addr: The address to base the search on
 -- 
-1.7.10.2.552.gaa3bb87
+1.7.12.4
 
