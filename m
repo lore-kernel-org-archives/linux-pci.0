@@ -1,141 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <50993AA0.80703@gmail.com>
-Date: Wed, 07 Nov 2012 00:28:16 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:54717 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161191Ab2KNM2W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 07:28:22 -0500
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	Gaohuai Han <hangaohuai@huawei.com>
-Subject: Re: [ACPIHP PATCH part1 2/4] ACPIHP: introduce acpihp_slot driver
- to enumerate hotplug slots
-References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com> <1351958865-24394-3-git-send-email-jiang.liu@huawei.com> <CAErSpo49kJm3x2K_FT6vLpUUD2pk9Hf62uXqzHt2Vod2PriY8Q@mail.gmail.com>
-In-Reply-To: <CAErSpo49kJm3x2K_FT6vLpUUD2pk9Hf62uXqzHt2Vod2PriY8Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+CC: Huang Ying <ying.huang@intel.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 4/5][RESEND] PCI/AER: clean pci_bus_ops when related pci bus was removed
+Date: Wed, 14 Nov 2012 20:27:21 +0800
+Message-ID: <1352896042-11832-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+References: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/06/2012 05:30 AM, Bjorn Helgaas wrote:
-> On Sat, Nov 3, 2012 at 10:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> An ACPI hotplug slot is an abstraction of receptacles, where a group of
->> system devices could be connected to. This patch implements the skeleton
->> of the ACPI system device hotplug slot enumerator. On loading, it scans
->> the whole ACPI namespace for hotplug slots and creates a device node for
->> each hotplug slot found. Every hotplug slot is associated with a device
->> class named acpihp_slot_class. Later hotplug drivers will register onto
->> acpihp_slot_class to manage all hotplug slots.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
->> ---
->>  drivers/acpi/Kconfig          |   19 ++
->>  drivers/acpi/hotplug/Makefile |    3 +
->>  drivers/acpi/hotplug/slot.c   |  417 +++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 439 insertions(+)
->>  create mode 100644 drivers/acpi/hotplug/slot.c
->>
->> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
->> index 9577b23..af0aaf6 100644
->> --- a/drivers/acpi/Kconfig
->> +++ b/drivers/acpi/Kconfig
->> @@ -334,6 +334,25 @@ menuconfig ACPI_HOTPLUG
->>           If your hardware platform does not support system device dynamic
->>           reconfiguration at runtime, you need not to enable this option.
->>
->> +config ACPI_HOTPLUG_SLOT
->> +       tristate "System Device Hotplug Slot Enumerator"
-> 
-> I don't really believe in hotplug drivers being modules.  I think the
-> core should support hotplug directly, and the decision to configure or
-> not should be made at build-time.
-Good suggestion, I will change it in next version.
+When Inject aer errors to the target pci device, a pci_bus_ops will
+be allocated for the pci device's pci bus.When the pci bus was removed,
+we should also release the pci_bus_ops.
 
->> +       depends on ACPI_HOTPLUG
->> +       default m
->> +       help
->> +         ACPI system device hotplug slot is an abstraction of ACPI based
->> +         system device dynamic reconfiguration control points. On load,
->> +         this driver enumerates system device hotplug slots by wakling the
->> +         ACPI namespace and provides platform specific methods to control
->> +         those hotplug slots.
->> +
->> +         By default, this driver detects system device hotplug slots by
->> +         checking avaliability of ACPI _EJ0 method. You may pass a module
->> +         parameter "fake_slot=0xf" to enable faking hotplug slots on
->> +         platforms without hardware dynamic reconfiguration capabilities.
->> +
->> +         To compile this driver as a module, choose M here:
->> +         the module will be called acpihp_slot.
->> +
-> 
->> +static int __init acpihp_slot_generate_name(struct acpihp_slot *slot)
->> +{
->> +       int found = 0;
->> +       u32 child_types = 0;
->> +       unsigned long long uid;
->> +       struct acpihp_slot_id *slot_id;
->> +
->> +       /*
->> +        * Figure out slot type by checking types of ACPI devices which could
->> +        * be attached to the slot.
->> +        */
->> +       slot->type = acpihp_slot_get_type_self(slot);
->> +       if (slot->type == ACPIHP_SLOT_TYPE_UNKNOWN) {
->> +               acpi_walk_namespace(ACPI_TYPE_DEVICE, slot->handle,
->> +                               ACPI_UINT32_MAX, acpihp_slot_get_dev_type,
->> +                               NULL, NULL, (void **)&child_types);
->> +               acpi_walk_namespace(ACPI_TYPE_PROCESSOR, slot->handle,
->> +                               ACPI_UINT32_MAX, acpihp_slot_get_dev_type,
->> +                               NULL, NULL, (void **)&child_types);
->> +               slot->type = acpihp_slot_get_type_child(child_types);
->> +       }
-> 
-> If things can be hot-added below slot->handle, is there an ACPI
-> requirement that there be *anything* in the existing namespace below
-> slot->handle?  I'm not sure you can tell sort of things might be
-> added.
-To be compatible with old Windows, some BIOS will expose such a behavior.
-It put the PCI root bus built in a physical processor directly under /_SB
-instead of the module device for the processor. According to my observation,
-new BIOSes have changed that behavior and build ACPI namespace according to
-physical topology. 
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   49 ++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 48 insertions(+), 1 deletions(-)
 
->> +static int __init acpihp_slot_scan_slots(void)
->> +{
->> +       acpi_status status;
->> +
->> +       status = acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
->> +                                    ACPI_UINT32_MAX, acpihp_slot_scan,
->> +                                    NULL, NULL, NULL);
->> +       if (!ACPI_SUCCESS(status))
->> +               goto out_err;
->> +
->> +       status = acpi_walk_namespace(ACPI_TYPE_PROCESSOR, ACPI_ROOT_OBJECT,
->> +                                    ACPI_UINT32_MAX, acpihp_slot_scan,
->> +                                    NULL, NULL, NULL);
-> 
-> Here's one reason I don't like this as a module: we have to walk the
-> namespace again (twice, even).  What happens when you hot-add a node
-> that itself *contains* another hot-pluggable receptacle?  Do you walk
-> the namespace again, calling acpiphp_slot_scan() as needed?
-Loading of dynamic ACPI table is an issue, it should be handled. But we have
-left that on the TODO list for simplicity at first stage. When supporting 
-that in future, we just need to scan the subtree starting from the slot.
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 4777c44..c5372dd 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -553,9 +553,55 @@ static struct miscdevice aer_inject_device = {
+ 	.fops = &aer_inject_fops,
+ };
+ 
++static void aer_clean_pci_bus_ops(struct pci_dev *dev)
++{
++	unsigned long flags;
++	struct pci_bus_ops *bus_ops, *tmp_ops;
++	struct pci_bus *bus;
++	bus = dev->subordinate;
++	if (!bus)
++		return;
++
++	spin_lock_irqsave(&inject_lock, flags);
++	list_for_each_entry_safe(bus_ops, tmp_ops, &pci_bus_ops_list, list)
++		if (bus_ops->bus == bus) {
++			list_del(&bus_ops->list);
++			kfree(bus_ops);
++			break;
++		}
++	spin_unlock_irqrestore(&inject_lock, flags);
++}
++
++static int aer_hp_notify_fn(struct notifier_block *nb,
++		unsigned long event, void *data)
++{
++	switch (event) {
++	case BUS_NOTIFY_DEL_DEVICE:
++		aer_clean_pci_bus_ops(to_pci_dev(data));
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block aerinj_hp_notifier = {
++	.notifier_call = &aer_hp_notify_fn,
++};
++
+ static int __init aer_inject_init(void)
+ {
+-	return misc_register(&aer_inject_device);
++	int ret;
++	ret = misc_register(&aer_inject_device);
++	if (ret)
++		goto out;
++
++	ret = bus_register_notifier(&pci_bus_type, &aerinj_hp_notifier);
++	if (ret)
++		misc_deregister(&aer_inject_device);
++out:
++	return ret;
+ }
+ 
+ static void __exit aer_inject_exit(void)
+@@ -564,6 +610,7 @@ static void __exit aer_inject_exit(void)
+ 	unsigned long flags;
+ 	struct pci_bus_ops *bus_ops;
+ 
++	bus_unregister_notifier(&pci_bus_type, &aerinj_hp_notifier);
+ 	misc_deregister(&aer_inject_device);
+ 
+ 	list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
+-- 
+1.7.1
 
-Thanks
-Gerry
+
