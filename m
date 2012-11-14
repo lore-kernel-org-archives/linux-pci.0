@@ -1,175 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:38925 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744Ab2K3F3C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 00:29:02 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so182121pbc.19
-        for <linux-pci@vger.kernel.org>; Thu, 29 Nov 2012 21:29:01 -0800 (PST)
-Message-ID: <50B84418.5070804@numascale-asia.com>
-Date: Fri, 30 Nov 2012 13:28:56 +0800
-From: Daniel J Blueman <daniel@numascale-asia.com>
-MIME-Version: 1.0
+Received: from szxga02-in.huawei.com ([119.145.14.65]:7080 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161191Ab2KNM2O (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 07:28:14 -0500
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Subject: Re: [PATCH v2 RESEND] Add NumaChip remote PCI support
-References: <1353487196-10204-1-git-send-email-daniel@numascale-asia.com> <CAErSpo67Brp8H=Jw77NzA4xL52aRNi+YDw+gM++3y8XqfTWyzA@mail.gmail.com>
-In-Reply-To: <CAErSpo67Brp8H=Jw77NzA4xL52aRNi+YDw+gM++3y8XqfTWyzA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+CC: Huang Ying <ying.huang@intel.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 0/5][RESEND] Fix aer_inject bug caused by pci hot-plug
+Date: Wed, 14 Nov 2012 20:27:17 +0800
+Message-ID: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+This series of patch mainly to fix the aer_inject bug described as below:
 
-On 29/11/2012 07:08, Bjorn Helgaas wrote:
-> On Wed, Nov 21, 2012 at 1:39 AM, Daniel J Blueman
-> <daniel@numascale-asia.com> wrote:
->> Add NumaChip-specific PCI access mechanism via MMCONFIG cycles, but
->> preventing access to AMD Northbridges which shouldn't respond.
->>
->> v2: Use PCI_DEVFN in precomputed constant limit; drop unneeded includes
->>
->> Signed-off-by: Daniel J Blueman <daniel@numascale-asia.com>
->> ---
->>   arch/x86/include/asm/numachip/numachip.h |   20 +++++
->>   arch/x86/kernel/apic/apic_numachip.c     |    2 +
->>   arch/x86/pci/Makefile                    |    1 +
->>   arch/x86/pci/numachip.c                  |  134 ++++++++++++++++++++++++++++++
->>   4 files changed, 157 insertions(+)
->>   create mode 100644 arch/x86/include/asm/numachip/numachip.h
->>   create mode 100644 arch/x86/pci/numachip.c
->>
->> diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
->> new file mode 100644
->> index 0000000..d35e71a
->> --- /dev/null
->> +++ b/arch/x86/include/asm/numachip/numachip.h
->> @@ -0,0 +1,20 @@
->> +/*
->> + * This file is subject to the terms and conditions of the GNU General Public
->> + * License.  See the file "COPYING" in the main directory of this archive
->> + * for more details.
->> + *
->> + * Numascale NumaConnect-specific header file
->> + *
->> + * Copyright (C) 2012 Numascale AS. All rights reserved.
->> + *
->> + * Send feedback to <support@numascale.com>
->> + *
->> + */
->> +
->> +#ifndef _ASM_X86_NUMACHIP_NUMACHIP_H
->> +#define _ASM_X86_NUMACHIP_NUMACHIP_H
->> +
->> +extern int __init pci_numachip_init(void);
->> +
->> +#endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
->> +
->> diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
->> index a65829a..9c2aa89 100644
->> --- a/arch/x86/kernel/apic/apic_numachip.c
->> +++ b/arch/x86/kernel/apic/apic_numachip.c
->> @@ -22,6 +22,7 @@
->>   #include <linux/hardirq.h>
->>   #include <linux/delay.h>
->>
->> +#include <asm/numachip/numachip.h>
->>   #include <asm/numachip/numachip_csr.h>
->>   #include <asm/smp.h>
->>   #include <asm/apic.h>
->> @@ -179,6 +180,7 @@ static int __init numachip_system_init(void)
->>                  return 0;
->>
->>          x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
->> +       x86_init.pci.arch_init = pci_numachip_init;
->>
->>          map_csrs();
->>
->> diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
->> index 3af5a1e..ee0af58 100644
->> --- a/arch/x86/pci/Makefile
->> +++ b/arch/x86/pci/Makefile
->> @@ -16,6 +16,7 @@ obj-$(CONFIG_STA2X11)           += sta2x11-fixup.o
->>   obj-$(CONFIG_X86_VISWS)                += visws.o
->>
->>   obj-$(CONFIG_X86_NUMAQ)                += numaq_32.o
->> +obj-$(CONFIG_X86_NUMACHIP)     += numachip.o
->
-> It looks like this depends on CONFIG_PCI_MMCONFIG for
-> pci_mmconfig_lookup().  Are there config constraints that force
-> CONFIG_PCI_MMCONFIG=y when CONFIG_X86_NUMACHIP=y?
+-+-[0000:40]-+-00.0-[0000:41]--
+ |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+ |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
+ |           +-04.0-[0000:44]--
+ |           +-05.0-[0000:45]--
+ |           +-07.0-[0000:46-49]----00.0-[0000:47-49]--+-02.0-[0000:48]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                         |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                         \-04.0-[0000:49]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+ |           |                                                           \-00.1  Intel Corporation 82576 Gigabit Network Connection
 
-I'll revise the patch with this constraint after we work out the best 
-approach for below.
+my steps:
+1)modprobe aer_inject
+2)inject aer errors to pcie device 0000:48:00.0
+3)modprobe pciehp
+4)hot remove Network Card in slot(port 0000:40:07.0)
+5)hot add Network Card in slot(port 0000:40:07.0)
+6)system panic
 
->>   obj-$(CONFIG_X86_INTEL_MID)    += mrst.o
->>
->> diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
->> new file mode 100644
->> index 0000000..3773e05
->> --- /dev/null
->> +++ b/arch/x86/pci/numachip.c
->> @@ -0,0 +1,129 @@
->> +/*
->> + * This file is subject to the terms and conditions of the GNU General Public
->> + * License.  See the file "COPYING" in the main directory of this archive
->> + * for more details.
->> + *
->> + * Numascale NumaConnect-specific PCI code
->> + *
->> + * Copyright (C) 2012 Numascale AS. All rights reserved.
->> + *
->> + * Send feedback to <support@numascale.com>
->> + *
->> + * PCI accessor functions derived from mmconfig_64.c
->> + *
->> + */
->> +
->> +#include <linux/pci.h>
->> +#include <asm/pci_x86.h>
->> +
->> +static u8 limit __read_mostly;
->> +
->> +static inline char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
->> +{
->> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
->> +
->> +       if (cfg && cfg->virt)
->> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
->> +       return NULL;
->> +}
->
-> Most of this file is copied directly from mmconfig_64.c (as you
-> mentioned above).  I wonder if we could avoid the code duplication by
-> making the pci_dev_base() implementation in mmconfig_64.c a weak
-> definition.  Then you could just supply a non-weak pci_dev_base() here
-> that would override that default version.  Your version would look
-> something like:
->
->    char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
-> unsigned int devfn)
->    {
->        struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
->
->        if (cfg && cfg->virt && devfn < limit)
->            return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
->        return NULL;
->    }
->
-> That would be different from what you have in this patch because reads
-> & writes to devices above "limit" would return -EINVAL rather than 0
-> as you do here.  Would that be a problem?
+in step 2) the pci_ops of bus 0000:48 and bus 0000:40 will be assigned to pci_ops_aer
+in step 5) the pci_ops of the newly created bus 0000:46 will be assigned to pci_ops_aer(inherited by parent pci_ops),
+but this pci_ops(0000:46) is not tracked in pci_bus_ops_list in aer_inject module. So every access to pci_config space
+by pci_ops of 0000:46 will cause system panic, Since pci_ops_aer cannot find its original pci_ops, thus , a NULL pci_ops return;
 
-That would work nicely (pointer lookup and inlining etc aside) if there 
-was the runtime ability to override pci_dev_base only if the NumaChip 
-signature was detected.
+The first patch fix this bug by finding parent pci_ops(tracked in pci_ops_list) instead of returning NULL in step 5);
+The second patch fix a small race condition window in aer_inject_exit;
+The Third patch to find and clean all untracked pci_ops_aer in system when aer_inject module exit
+The rest two patch mainly about to clean bus_ops;
 
-We could expose pci_dev_base via struct x86_init_pci; the extra 
-complexity and performance tradeoff may not be worth it for a single 
-case perhaps?
+Yijing Wang (5):
+  PCI/AER: Fix pci_ops return NULL in pci_read/write_aer
+  PCI/AER: use list_for_each_entry to avoid a small race condition
+    window
+  PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
+  PCI/AER: clean pci_bus_ops when related pci bus was removed
+  PCI/AER: free pci_bus_ops_list and remove pci_bus_ops_pop
 
-Thanks,
-   Daniel
--- 
-Daniel J Blueman
-Principal Software Engineer, Numascale Asia
+ drivers/pci/pcie/aer/aer_inject.c |  123 +++++++++++++++++++++++++++++++------
+ 1 files changed, 103 insertions(+), 20 deletions(-)
+
+
