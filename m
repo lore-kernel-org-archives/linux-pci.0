@@ -1,164 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46858 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754138Ab2KDMv4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 4 Nov 2012 07:51:56 -0500
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part2 11/13] ACPIHP: block ACPI device driver from unloading when doing hotplug
-Date: Sun,  4 Nov 2012 20:50:13 +0800
-Message-Id: <1352033415-5606-12-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
-References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:54872 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161191Ab2KNM2c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 07:28:32 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Huang Ying <ying.huang@intel.com>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v5 1/5][RESEND] PCI/AER: Fix pci_ops return NULL in pci_read/write_aer
+Date: Wed, 14 Nov 2012 20:27:18 +0800
+Message-ID: <1352896042-11832-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+References: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI hotplug driver depends on ACPI device drivers to configure or
-unconfigure ACPI devices. The hotplug driver will be confused if ACPI
-device drivers are unloaded when there are ongoing hotplug operations.
-So block ACPI device driver unbinding/unloading by holding the device
-lock when executing hotplug operations.
+When we injected aer errors to the pcie device by aer_inject module, pci_ops of the pci
+bus the device on will be assigned to pci_ops_aer.So if the target pci device
+is a bridge, once we hot-remove and hot-add the bridge, the newly created child bus's pci_ops
+will be assigned to pci_ops_aer too.Now every access to the child bus's device will cause the
+system panic, because it will get a NULL pci_ops in pci_read_aer/pci_write_aer.
 
+Reviewed-by: Huang Ying <ying.huang@intel.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Reviewed-by: Sven Dietrich <Sven.Dietrich@huawei.com>
 ---
- drivers/acpi/hotplug/configure.c |   18 ++++++++++++++++--
- drivers/acpi/hotplug/device.c    |    6 ------
- 2 files changed, 16 insertions(+), 8 deletions(-)
+ drivers/pci/pcie/aer/aer_inject.c |   26 +++++++++++++++++++++++++-
+ 1 files changed, 25 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/acpi/hotplug/configure.c b/drivers/acpi/hotplug/configure.c
-index 3209d14b..9f3ea97 100644
---- a/drivers/acpi/hotplug/configure.c
-+++ b/drivers/acpi/hotplug/configure.c
-@@ -37,7 +37,9 @@ enum config_op_code {
- 	DRV_OP_POST_RELEASE,
- 	DRV_OP_PRE_UNCONFIGURE,
- 	DRV_OP_UNCONFIGURE,
--	DRV_OP_POST_UNCONFIGURE
-+	DRV_OP_POST_UNCONFIGURE,
-+	DRV_OP_LOCK_DEVICE,
-+	DRV_OP_UNLOCK_DEVICE,
- };
+diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
+index 4e24cb8..fdab3bb 100644
+--- a/drivers/pci/pcie/aer/aer_inject.c
++++ b/drivers/pci/pcie/aer/aer_inject.c
+@@ -109,6 +109,26 @@ static struct aer_error *__find_aer_error_by_dev(struct pci_dev *dev)
+ 	return __find_aer_error((u16)domain, dev->bus->number, dev->devfn);
+ }
  
- /* All devices will be configured in following order. */
-@@ -98,6 +100,12 @@ static int acpihp_drv_invoke_method(enum config_op_code  opcode,
- 		return acpihp_dev_unconfigure(dev);
- 	case DRV_OP_POST_UNCONFIGURE:
- 		return acpihp_dev_post_unconfigure(dev);
-+	case DRV_OP_LOCK_DEVICE:
-+		device_lock(&dev->dev);
-+		return 0;
-+	case DRV_OP_UNLOCK_DEVICE:
-+		device_unlock(&dev->dev);
-+		return 0;
- 	default:
- 		BUG_ON(opcode);
- 		return -ENOSYS;
-@@ -122,7 +130,9 @@ static int acpihp_drv_call_method(enum config_op_code opcode,
- 		result = acpihp_drv_invoke_method(opcode, slot, acpi_dev, 0);
- 		if (result)
- 			break;
--		acpihp_drv_update_dev_state(np, state);
-+		if (opcode != DRV_OP_LOCK_DEVICE &&
-+		    opcode != DRV_OP_UNLOCK_DEVICE)
-+			acpihp_drv_update_dev_state(np, state);
++/* find pci_ops of the nearest parent bus */
++static struct pci_ops *__find_pci_bus_ops_parent(struct pci_bus *bus)
++{
++	struct pci_bus_ops *bus_ops;
++	struct pci_bus *pbus = bus->parent;
++
++	if (!pbus)
++		return NULL;
++
++	while (pbus) {
++		list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
++			if (bus_ops->bus == pbus)
++				return bus_ops->ops;
++
++		pbus = pbus->parent;
++	}
++
++	return NULL;
++}
++
+ /* inject_lock must be held before calling */
+ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+ {
+@@ -118,7 +138,9 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
+ 		if (bus_ops->bus == bus)
+ 			return bus_ops->ops;
  	}
- 	klist_iter_exit(&iter);
+-	return NULL;
++
++	/* can't find bus_ops, fall back to get bus_ops of parent bus */
++	return __find_pci_bus_ops_parent(bus);
+ }
  
-@@ -249,6 +259,7 @@ int acpihp_drv_configure(struct list_head *list)
- 		acpihp_slot_change_state(dep->slot,
- 					 ACPIHP_SLOT_STATE_CONFIGURING);
- 
-+	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
- 	result = acpihp_drv_walk_devs(&head, DRV_OP_PRE_CONFIGURE,
- 				      DEVICE_STATE_PRE_CONFIGURE, false);
- 	if (!result)
-@@ -258,6 +269,7 @@ int acpihp_drv_configure(struct list_head *list)
- 		post = ACPIHP_DEV_POST_CMD_ROLLBACK;
- 	acpihp_drv_walk_devs_post(&head, DRV_OP_POST_CONFIGURE,
- 				  DEVICE_STATE_CONNECTED, post, false);
-+	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
- 
- 	list_for_each_entry(dep, &head, node)
- 		acpihp_drv_update_slot_state(dep->slot);
-@@ -328,9 +340,11 @@ int acpihp_drv_unconfigure(struct list_head *list)
- 		acpihp_slot_change_state(dep->slot,
- 					 ACPIHP_SLOT_STATE_UNCONFIGURING);
- 
-+	acpihp_drv_walk_devs(&head, DRV_OP_LOCK_DEVICE, 0, false);
- 	result = acpihp_drv_release(&head);
- 	if (!result)
- 		__acpihp_drv_unconfigure(&head);
-+	acpihp_drv_walk_devs(&head, DRV_OP_UNLOCK_DEVICE, 0, false);
- 
- 	list_for_each_entry(dep, &head, node)
- 		acpihp_drv_update_slot_state(dep->slot);
-diff --git a/drivers/acpi/hotplug/device.c b/drivers/acpi/hotplug/device.c
-index c9d550f..6d60bb0 100644
---- a/drivers/acpi/hotplug/device.c
-+++ b/drivers/acpi/hotplug/device.c
-@@ -62,14 +62,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
- { \
- 	int ret; \
- 	BUG_ON(device == NULL); \
--	device_lock(&device->dev); \
- 	if (!device->driver || !device->driver->ops.hp_ops) \
- 		ret = (err); \
- 	else if (!device->driver->ops.hp_ops->method) \
- 		ret = (def); \
- 	else \
- 		ret = device->driver->ops.hp_ops->method(device, val); \
--	device_unlock(&device->dev); \
- 	return ret; \
- } \
- EXPORT_SYMBOL_GPL(acpihp_dev_##method)
-@@ -79,14 +77,12 @@ int acpihp_dev_##method(struct acpi_device *device, type val) \
- { \
- 	int ret = 0; \
- 	BUG_ON(device == NULL); \
--	device_lock(&device->dev); \
- 	if (!device->driver || !device->driver->ops.hp_ops) \
- 		ret = (err); \
- 	else if (!device->driver->ops.hp_ops->method) \
- 		ret = (def); \
- 	else \
- 		device->driver->ops.hp_ops->method(device, val); \
--	device_unlock(&device->dev); \
- 	return ret; \
- } \
- EXPORT_SYMBOL_GPL(acpihp_dev_##method)
-@@ -96,14 +92,12 @@ int acpihp_dev_##method(struct acpi_device *device) \
- { \
- 	int ret = 0; \
- 	BUG_ON(device == NULL); \
--	device_lock(&device->dev); \
- 	if (!device->driver || !device->driver->ops.hp_ops) \
- 		ret = (err); \
- 	else if (!device->driver->ops.hp_ops->method) \
- 		ret = (def); \
- 	else \
- 		device->driver->ops.hp_ops->method(device);\
--	device_unlock(&device->dev); \
- 	return ret; \
- } \
- EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+ static struct pci_bus_ops *pci_bus_ops_pop(void)
+@@ -208,6 +230,7 @@ static int pci_read_aer(struct pci_bus *bus, unsigned int devfn, int where,
+ 	}
+ out:
+ 	ops = __find_pci_bus_ops(bus);
++	BUG_ON(!ops);
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+ 	return ops->read(bus, devfn, where, size, val);
+ }
+@@ -243,6 +266,7 @@ int pci_write_aer(struct pci_bus *bus, unsigned int devfn, int where, int size,
+ 	}
+ out:
+ 	ops = __find_pci_bus_ops(bus);
++	BUG_ON(!ops);
+ 	spin_unlock_irqrestore(&inject_lock, flags);
+ 	return ops->write(bus, devfn, where, size, val);
+ }
 -- 
-1.7.9.5
+1.7.1
+
 
