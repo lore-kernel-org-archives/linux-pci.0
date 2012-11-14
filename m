@@ -1,52 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24432 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932509Ab2K1WyJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Nov 2012 17:54:09 -0500
-Date: Wed, 28 Nov 2012 14:54:06 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
-Cc: Ulrich Eckhardt <usb@uli-eckhardt.de>,
-	Andrew Lutomirski <luto@mit.edu>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-Message-ID: <20121128225406.GF8557@xanatos>
-References: <20121126191002.GE6504@xanatos>
- <87boekave4.fsf@nemi.mork.no>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <87boekave4.fsf@nemi.mork.no>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jan Glauber <jang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, heiko.carstens@de.ibm.com,
+	schwidefsky@de.ibm.com, Jan Glauber <jang@linux.vnet.ibm.com>
+Subject: [RFC PATCH 08/10] s390/pci: s390 specific PCI sysfs attributes
+Date: Wed, 14 Nov 2012 10:41:40 +0100
+Message-Id: <78e3640d9d30e04c2dc17edc5480ee0938313ff0.1352719878.git.jang@linux.vnet.ibm.com>
+In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+In-Reply-To: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 26, 2012 at 10:48:03PM +0100, Bjørn Mork wrote:
-> Sarah Sharp <sarah.a.sharp@linux.intel.com> writes:
-> 
-> > It looks like both Ulrich and Andrew have the same issue.  I also have a
-> > Lenovo x220, and I confirmed that when I turn on PCI runtime suspend,
-> > the NEC host controller does not report port status changes when a new
-> > USB device is plugged in.
-> >
-> > I'm running 3.6.7, and I'm pretty sure that runtime suspend worked for
-> > the NEC host on some older kernel.  I don't think the NEC host went into
-> > D3cold on that kernel, though.  Is there a way to disable D3cold and
-> > just use D3hot instead?
-> 
-> Yes, you have /sys/bus/pci/devices/.../d3cold_allowed
-> See Documentation/ABI/testing/sysfs-bus-pci
-> 
-> If this really is a problem with the D3cold support that went into 3.6
-> then I guess you should include Huang Ying in the discussions as well
-> (CCed).
+Add some s390 specific sysfs attributes to the PCI device directory.
+The following attributes are introduced:
+- function_id (PCI function ID)
+- function_handle (PCI function handle)
+- pchid (PCI channel ID)
+- pfgid (PCI function group ID aka PCI root complex)
 
-Turning off D3 cold didn't help.  Once the PCI device is suspended,
-connect events do not generate an interrupt.
+Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
+---
+ arch/s390/include/asm/pci.h |  4 +++
+ arch/s390/pci/Makefile      |  2 +-
+ arch/s390/pci/pci.c         |  6 ++++
+ arch/s390/pci/pci_sysfs.c   | 86 +++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 97 insertions(+), 1 deletion(-)
+ create mode 100644 arch/s390/pci/pci_sysfs.c
 
-I'll go see if I can figure out which kernel this worked on and bisect.
+diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+index 739d9f1..39057e4 100644
+--- a/arch/s390/include/asm/pci.h
++++ b/arch/s390/include/asm/pci.h
+@@ -141,6 +141,10 @@ struct zpci_dev *get_zdev(struct pci_dev *);
+ struct zpci_dev *get_zdev_by_fid(u32);
+ bool zpci_fid_present(u32);
+ 
++/* sysfs */
++int zpci_sysfs_add_device(struct device *);
++void zpci_sysfs_remove_device(struct device *);
++
+ /* DMA */
+ int zpci_dma_init(void);
+ void zpci_dma_exit(void);
+diff --git a/arch/s390/pci/Makefile b/arch/s390/pci/Makefile
+index 7e36f42..ab0827b 100644
+--- a/arch/s390/pci/Makefile
++++ b/arch/s390/pci/Makefile
+@@ -3,4 +3,4 @@
+ #
+ 
+ obj-$(CONFIG_PCI)	+= pci.o pci_dma.o pci_clp.o pci_msi.o \
+-			   pci_event.o
++			   pci_sysfs.o pci_event.o
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index c523594..0723b10 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -628,6 +628,7 @@ static void zpci_remove_device(struct pci_dev *pdev)
+ 	dev_info(&pdev->dev, "Removing device %u\n", zdev->domain);
+ 	zdev->state = ZPCI_FN_STATE_CONFIGURED;
+ 	zpci_dma_exit_device(zdev);
++	zpci_sysfs_remove_device(&pdev->dev);
+ 	zpci_unmap_resources(pdev);
+ 	list_del(&zdev->entry);		/* can be called from init */
+ 	zdev->pdev = NULL;
+@@ -676,6 +677,11 @@ void pcibios_disable_device(struct pci_dev *pdev)
+ 	pdev->sysdata = NULL;
+ }
+ 
++int pcibios_add_platform_entries(struct pci_dev *pdev)
++{
++	return zpci_sysfs_add_device(&pdev->dev);
++}
++
+ int zpci_request_irq(unsigned int irq, irq_handler_t handler, void *data)
+ {
+ 	int msi_nr = irq_to_msi_nr(irq);
+diff --git a/arch/s390/pci/pci_sysfs.c b/arch/s390/pci/pci_sysfs.c
+new file mode 100644
+index 0000000..a42cce6
+--- /dev/null
++++ b/arch/s390/pci/pci_sysfs.c
+@@ -0,0 +1,86 @@
++/*
++ * Copyright IBM Corp. 2012
++ *
++ * Author(s):
++ *   Jan Glauber <jang@linux.vnet.ibm.com>
++ */
++
++#define COMPONENT "zPCI"
++#define pr_fmt(fmt) COMPONENT ": " fmt
++
++#include <linux/kernel.h>
++#include <linux/stat.h>
++#include <linux/pci.h>
++
++static ssize_t show_fid(struct device *dev, struct device_attribute *attr,
++			char *buf)
++{
++	struct zpci_dev *zdev = get_zdev(container_of(dev, struct pci_dev, dev));
++
++	sprintf(buf, "0x%08x\n", zdev->fid);
++	return strlen(buf);
++}
++static DEVICE_ATTR(function_id, S_IRUGO, show_fid, NULL);
++
++static ssize_t show_fh(struct device *dev, struct device_attribute *attr,
++		       char *buf)
++{
++	struct zpci_dev *zdev = get_zdev(container_of(dev, struct pci_dev, dev));
++
++	sprintf(buf, "0x%08x\n", zdev->fh);
++	return strlen(buf);
++}
++static DEVICE_ATTR(function_handle, S_IRUGO, show_fh, NULL);
++
++static ssize_t show_pchid(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct zpci_dev *zdev = get_zdev(container_of(dev, struct pci_dev, dev));
++
++	sprintf(buf, "0x%04x\n", zdev->pchid);
++	return strlen(buf);
++}
++static DEVICE_ATTR(pchid, S_IRUGO, show_pchid, NULL);
++
++static ssize_t show_pfgid(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct zpci_dev *zdev = get_zdev(container_of(dev, struct pci_dev, dev));
++
++	sprintf(buf, "0x%02x\n", zdev->pfgid);
++	return strlen(buf);
++}
++static DEVICE_ATTR(pfgid, S_IRUGO, show_pfgid, NULL);
++
++static struct device_attribute *zpci_dev_attrs[] = {
++	&dev_attr_function_id,
++	&dev_attr_function_handle,
++	&dev_attr_pchid,
++	&dev_attr_pfgid,
++	NULL,
++};
++
++int zpci_sysfs_add_device(struct device *dev)
++{
++	int i, rc = 0;
++
++	for (i = 0; zpci_dev_attrs[i]; i++) {
++		rc = device_create_file(dev, zpci_dev_attrs[i]);
++		if (rc)
++			goto error;
++	}
++	return 0;
++
++error:
++	while (--i >= 0)
++		device_remove_file(dev, zpci_dev_attrs[i]);
++	return rc;
++}
++
++void zpci_sysfs_remove_device(struct device *dev)
++{
++	int i;
++
++	for (i = 0; zpci_dev_attrs[i]; i++)
++		device_remove_file(dev, zpci_dev_attrs[i]);
++}
+-- 
+1.7.12.4
 
-Sarah Sharp
