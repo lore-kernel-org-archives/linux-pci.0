@@ -1,296 +1,234 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:42023 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751970Ab2KOHKp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2012 02:10:45 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
 	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part1 4/4] ACPIHP: implement a fake ACPI system device hotplug slot enumerator
-Date: Sun,  4 Nov 2012 00:07:45 +0800
-Message-Id: <1351958865-24394-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
-References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
+	"Patterson, Andrew D (LeftHand Networks)" <andrew.patterson@hp.com>,
+	"Zhang Yanmin" <yanmin.zhang@intel.com>
+Subject: RE: [ PATCH RESEND ] PCI-AER: Do not report successful error
+ recovery for devices with AER-unaware drivers
+Date: Thu, 15 Nov 2012 07:09:01 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C901469A26@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C90146794E@G9W0717.americas.hpqcorp.net>
+ <20121115005100.GA6613@google.com>
+In-Reply-To: <20121115005100.GA6613@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements a fake ACPI system device hotplug slot enumerator,
-which could be used to test and verify hotplug logic on platforms with
-hardware hotplug capabilities.
+Thanks for the comments. See my response below.
 
-The fake slot enumerator will be enabled by passing module parameter
-"fake_slot=value". The encoding of "value" is:
-0x1: fake ACPI CONTAINER device as hotplug slot
-0x2: fake ACPI memory device as hotplug slot
-0x4: fake ACPI Processor object or Processor device as hotplug slot
-0x8: fake ACPI PCI host bridge device as hotplug slot.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Wednesday, November 14, 2012 4:51 PM
+> To: Pandarathil, Vijaymohan R
+> Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
+> linasvepstas@gmail.com; Myron Stowe; Ortiz, Lance E; Huang Ying; Hidetoshi
+> Seto; Patterson, Andrew D (LeftHand Networks); Zhang Yanmin
+> Subject: Re: [ PATCH RESEND ] PCI-AER: Do not report successful error
+> recovery for devices with AER-unaware drivers
+> 
+> [+cc Lance, Huang, Hidetoshi, Andrew, Zhang]
+> 
+> On Sat, Nov 10, 2012 at 07:41:04AM +0000, Pandarathil, Vijaymohan R wrote:
+> > When an error is detected on a PCIe device which does not have an
+> > AER-aware driver, prevent AER infrastructure from reporting
+> > successful error recovery.
+> >
+> > This is because the report_error_detected() function that gets
+> > called in the first phase of recovery process allows forward
+> > progress even when the driver for the device does not have AER
+> > capabilities. It seems that all callbacks (in pci_error_handlers
+> > structure) registered by drivers that gets called during error
+> > recovery are not mandatory. So the intention of the infrastructure
+> > design seems to be to allow forward progress even when a specific
+> > callback has not been registered by a driver. However, if error
+> > handler structure itself has not been registered, it doesn't make
+> > sense to allow forward progress.
+> >
+> > As a result of the current design, in the case of a single device
+> > having an AER-unaware driver or in the case of any function in a
+> > multi-function card having an AER-unaware driver, a successful
+> > recovery is reported.
+> >
+> > Typical scenario this happens is when a PCI device is detached
+> > from a KVM host and the pci-stub driver on the host claims the
+> > device. The pci-stub driver does not have error handling capabilities
+> > but the AER infrastructure still reports that the device recovered
+> > successfully.
+> >
+> > The changes proposed here leaves the device in an unrecovered state
+> > if the driver for the device or for any function in a multi-function
+> > card does not have error handler structure registered. This reflects
+> > the true state of the device and prevents any partial recovery (or no
+> > recovery at all) reported as successful.
+> >
+> > Please also see comments from Linas Vepstas at the following link
+> > http://www.spinics.net/lists/linux-pci/msg18572.html
+> >
+> > Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
+> > Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
+> > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at>
+> hp.com>
+> >
+> > ---
+> >
+> > drivers/pci/pcie/aer/aerdrv_core.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> >
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
+> b/drivers/pci/pcie/aer/aerdrv_core.c
+> > index 06bad96..030b229 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev
+> *dev, void *data)
+> >
+> >  	dev->error_state = result_data->state;
+> >
+> > +	if ((!dev->driver || !dev->driver->err_handler) &&
+> > +		!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
+> > +		dev_info(&dev->dev, "AER: Error detected but no driver has
+> claimed this device or the driver is AER-unaware\n");
+> > +		result_data->result = PCI_ERS_RESULT_NONE;
+> > +		return 1;
+> 
+> This doesn't seem right because returning 1 here causes pci_walk_bus()
+> to terminate, which means we won't set dev->error_state or notify
+> drivers for any devices we haven't visited yet.
+> 
+> > +	}
+> >  	if (!dev->driver ||
+> >  		!dev->driver->err_handler ||
+> >  		!dev->driver->err_handler->error_detected) {
+> 
+> If none of the drivers in the affected hierarchy supports error handling,
+> I think the call tree looks like this:
+> 
+>     do_recovery                                 # uncorrectable only
+>         broadcast_error_message(dev, ..., report_error_detected)
+>             result_data.result = CAN_RECOVER
+>             pci_walk_bus(..., report_error_detected)
+>                 report_error_detected           # (each dev in subtree)
+>                     return 0                    # no change to result
+>             return result_data.result
+>         broadcast_error_message(dev, ..., report_mmio_enabled)
+>             result_data.result = PCI_ERS_RESULT_RECOVERED
+>             pci_walk_bus(..., report_mmio_enabled)
+>                 report_mmio_enabled             # (each dev in subtree)
+>                     return 0                    # no change to result
+>         dev_info("recovery successful")
+> 
+> Specifically, there are no error_handler functions, so we never change
+> result_data.result, and the default is that we treat the error as
+> "recovered successfully."  That seems broken.  An uncorrectable error
+> is by definition recoverable only by device-specific software, i.e.,
+> the driver.  We didn't call any drivers, so we can't have recovered
+> anything.
+> 
+> What do you think of the following alternative?  I don't know why you
+> checked for bridge devices in your patch, so I don't know whether
+> that's important here or not.
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
+> b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 06bad96..a109c68 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -231,11 +231,11 @@ static int report_error_detected(struct pci_dev *dev,
+> void *data)
+>  				   dev->driver ?
+>  				   "no AER-aware driver" : "no driver");
+>  		}
+> -		return 0;
+> +		vote = PCI_ERS_RESULT_DISCONNECT;
+> +	} else {
+> +		err_handler = dev->driver->err_handler;
+> +		vote = err_handler->error_detected(dev, result_data->state);
+>  	}
+> -
+> -	err_handler = dev->driver->err_handler;
+> -	vote = err_handler->error_detected(dev, result_data->state);
+>  	result_data->result = merge_result(result_data->result, vote);
+>  	return 0;
+>  }
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/Kconfig             |   10 +++
- drivers/acpi/hotplug/Makefile    |    1 +
- drivers/acpi/hotplug/acpihp.h    |    3 +
- drivers/acpi/hotplug/slot.c      |    3 +
- drivers/acpi/hotplug/slot_fake.c |  180 ++++++++++++++++++++++++++++++++++++++
- 5 files changed, 197 insertions(+)
- create mode 100644 drivers/acpi/hotplug/slot_fake.c
+This would definitely set the error_state for all devices correctly. However, with the 
+current implementation of merge_result(), won't we still end up reporting successful 
+recovery ? The following case statement in merge_result() can set back the result 
+from PCI_ERS_RESULT_DISCONNECT to PCI_ERS_RESULT_NEED_RESET for a subsequent device 
+on the bus which returned PCI_ERS_RESULT_NEED_RESET from its error_detected callback . 
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index af0aaf6..4d15b49 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -353,6 +353,16 @@ config ACPI_HOTPLUG_SLOT
- 	  To compile this driver as a module, choose M here:
- 	  the module will be called acpihp_slot.
- 
-+config ACPI_HOTPLUG_SLOT_FAKE
-+	bool "Fake Hotplug Slots"
-+	depends on ACPI_HOTPLUG_SLOT
-+	default n
-+	help
-+	  This options enables a method to fake system device hotplug slots
-+	  on hardware platforms without dynamic reconfiguration capabilities.
+merge_result()
+...
+        case PCI_ERS_RESULT_DISCONNECT:
+                if (new == PCI_ERS_RESULT_NEED_RESET)
+                        orig = new;
+                break;
+
+This would mean do_recovery() proceeds along to the next broadcast_message and 
+ultimately report success. Right ? Let me know if I am missing something.
+
+I looked at a few options and the following looked more promising. Thoughts ?
+
+Introduce a new pci_ers_result enum PCI_ERS_RESULT_NO_AER_DRIVER and make changes as follows.
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 94a7598..149ba79 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -87,6 +87,9 @@ struct aer_broadcast_data {
+ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+ 		enum pci_ers_result new)
+ {
++	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
++		return new;
 +
-+	  Pass parameter "fake_slot=0xf" to enable this function.
+ 	if (new == PCI_ERS_RESULT_NONE)
+ 		return orig;
+ 
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 06bad96..729580a 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -231,11 +231,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 				   dev->driver ?
+ 				   "no AER-aware driver" : "no driver");
+ 		}
+-		return 0;
++		vote = PCI_ERS_RESULT_NO_AER_DRIVER;
++	} else {
++		err_handler = dev->driver->err_handler;
++		vote = err_handler->error_detected(dev, result_data->state);
+ 	}
+ 
+-	err_handler = dev->driver->err_handler;
+-	vote = err_handler->error_detected(dev, result_data->state);
+ 	result_data->result = merge_result(result_data->result, vote);
+ 	return 0;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ee21795..fb7e869 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -538,6 +538,9 @@ enum pci_ers_result {
+ 
+ 	/* Device driver is fully recovered and operational */
+ 	PCI_ERS_RESULT_RECOVERED = (__force pci_ers_result_t) 5,
 +
- config ACPI_CONTAINER
- 	tristate "Container and Module Devices (EXPERIMENTAL)"
- 	depends on EXPERIMENTAL
-diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index 5420ae7..c19b350 100644
---- a/drivers/acpi/hotplug/Makefile
-+++ b/drivers/acpi/hotplug/Makefile
-@@ -8,3 +8,4 @@ acpihp-y					= core.o
- obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
- acpihp_slot-y					= slot.o
- acpihp_slot-y					+= slot_ej0.o
-+acpihp_slot-$(CONFIG_ACPI_HOTPLUG_SLOT_FAKE)	+= slot_fake.o
-diff --git a/drivers/acpi/hotplug/acpihp.h b/drivers/acpi/hotplug/acpihp.h
-index 278c8c2..7c49eab 100644
---- a/drivers/acpi/hotplug/acpihp.h
-+++ b/drivers/acpi/hotplug/acpihp.h
-@@ -29,5 +29,8 @@
- 
- extern struct acpi_device *acpi_root;
- extern struct acpihp_slot_ops acpihp_slot_ej0;
-+#ifdef	CONFIG_ACPI_HOTPLUG_SLOT_FAKE
-+extern struct acpihp_slot_ops acpihp_slot_fake;
-+#endif
- 
- #endif
-diff --git a/drivers/acpi/hotplug/slot.c b/drivers/acpi/hotplug/slot.c
-index e5861fc..b72523d 100644
---- a/drivers/acpi/hotplug/slot.c
-+++ b/drivers/acpi/hotplug/slot.c
-@@ -44,6 +44,9 @@ static struct acpihp_slot_ops *slot_ops_curr;
-  */
- static struct acpihp_slot_ops *slot_ops_array[] = {
- 	&acpihp_slot_ej0,
-+#ifdef	CONFIG_ACPI_HOTPLUG_SLOT_FAKE
-+	&acpihp_slot_fake,
-+#endif
- 	NULL
++	/* No AER capabilities registered for the driver */
++	PCI_ERS_RESULT_NO_AER_DRIVER = (__force pci_ers_result_t) 6,
  };
  
-diff --git a/drivers/acpi/hotplug/slot_fake.c b/drivers/acpi/hotplug/slot_fake.c
-new file mode 100644
-index 0000000..e70243a
---- /dev/null
-+++ b/drivers/acpi/hotplug/slot_fake.c
-@@ -0,0 +1,180 @@
-+/*
-+ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
-+ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or (at
-+ *  your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful, but
-+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *  General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License along
-+ *  with this program.
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ */
-+
-+#include <linux/acpi.h>
-+#include <acpi/acpi.h>
-+#include <acpi/acpi_hotplug.h>
-+#include "acpihp.h"
-+
-+struct acpihp_slot_fake_data {
-+	bool enabled;
-+};
-+
-+/*
-+ * Encoding of the fake_slot parameter:
-+ * 0x1: fake ACPI CONTAINER device as hotplug slot
-+ * 0x2: fake ACPI memory device as hotplug slot
-+ * 0x4: fake ACPI Processor object or Processor device as hotplug slot
-+ * 0x8: fake ACPI PCI host bridge device as hotplug slot.
-+ * The above encoding must be kept in consistence with definition of
-+ * 'enum acpihp_dev_type'.
-+ */
-+int acpihp_fake_slot;
-+module_param_named(fake_slot, acpihp_fake_slot, int, S_IRUGO);
-+MODULE_PARM_DESC(fake_slot, "fake ACPI hotplug slots");
-+
-+static acpi_status acpihp_slot_fake_init(void)
-+{
-+	return acpihp_fake_slot ? AE_OK : AE_ERROR;
-+}
-+
-+static acpi_status
-+acpihp_slot_fake_check(acpi_handle handle, u32 lvl, void *context, void **rv)
-+{
-+	int *valid = (int *)rv;
-+	enum acpihp_dev_type type;
-+
-+	if (!acpihp_dev_get_type(handle, &type)) {
-+		switch (type) {
-+		case ACPIHP_DEV_TYPE_CPU:
-+		case ACPIHP_DEV_TYPE_MEM:
-+		case ACPIHP_DEV_TYPE_HOST_BRIDGE:
-+			*valid = 1;
-+			return AE_CTRL_TERMINATE;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status acpihp_slot_fake_capable(acpi_handle handle)
-+{
-+	int valid = 0;
-+	acpi_status rc;
-+	unsigned long long sta;
-+	enum acpihp_dev_type type;
-+
-+	/* Only care about CPU, memory, PCI host bridge and CONTAINER */
-+	if (acpihp_dev_get_type(handle, &type))
-+		return AE_ERROR;
-+	if (type == ACPIHP_DEV_TYPE_CPU || type == ACPIHP_DEV_TYPE_MEM ||
-+	    type == ACPIHP_DEV_TYPE_HOST_BRIDGE) {
-+		if (acpihp_fake_slot & (1 << (type - 1)))
-+			valid = 1;
-+	} else if (type == ACPIHP_DEV_TYPE_CONTAINER &&
-+		   acpihp_fake_slot & (1 << (type - 1))) {
-+		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-+				ACPI_UINT32_MAX, acpihp_slot_fake_check,
-+				NULL, NULL, (void **)&valid);
-+		acpi_walk_namespace(ACPI_TYPE_PROCESSOR, handle,
-+				ACPI_UINT32_MAX, acpihp_slot_fake_check,
-+				NULL, NULL, (void **)&valid);
-+	}
-+	if (valid == 0)
-+		return AE_ERROR;
-+
-+	/* Check whether device is present and enabled. */
-+	rc = acpi_evaluate_integer(handle, "_STA", NULL, &sta);
-+	if (rc == AE_NOT_FOUND)
-+		sta = ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED;
-+	else if (ACPI_FAILURE(rc))
-+		sta = 0;
-+	else if (sta & ACPI_STA_DEVICE_FUNCTIONING)
-+		sta |= ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED;
-+	if (!(sta & ACPI_STA_DEVICE_PRESENT) ||
-+	    !(sta & ACPI_STA_DEVICE_ENABLED))
-+		return AE_ERROR;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status acpihp_slot_fake_create(struct acpihp_slot *slot)
-+{
-+	struct acpihp_slot_fake_data *data;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return AE_ERROR;
-+
-+	data->enabled = true;
-+	slot->slot_data = data;
-+	slot->capabilities = ACPIHP_SLOT_CAP_POWERON |
-+			     ACPIHP_SLOT_CAP_POWEROFF |
-+			     ACPIHP_SLOT_CAP_ONLINE |
-+			     ACPIHP_SLOT_CAP_OFFLINE;
-+
-+	return AE_OK;
-+}
-+
-+static void acpihp_slot_fake_destroy(struct acpihp_slot *slot)
-+{
-+	struct acpihp_slot_fake_data *data = slot->slot_data;
-+
-+	slot->slot_data = NULL;
-+	kfree(data);
-+}
-+
-+static acpi_status
-+acpihp_slot_fake_get_status(struct acpihp_slot *slot, u64 *status)
-+{
-+	struct acpihp_slot_fake_data *data = slot->slot_data;
-+
-+	if (data->enabled)
-+		*status = ACPI_STA_DEVICE_PRESENT | ACPI_STA_DEVICE_ENABLED |
-+			  ACPI_STA_DEVICE_FUNCTIONING;
-+	else
-+		*status = ACPI_STA_DEVICE_PRESENT;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status acpihp_slot_fake_poweron(struct acpihp_slot *slot)
-+{
-+	struct acpihp_slot_fake_data *data = slot->slot_data;
-+
-+	data->enabled = true;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status acpihp_slot_fake_poweroff(struct acpihp_slot *slot)
-+{
-+	struct acpihp_slot_fake_data *data = slot->slot_data;
-+
-+	data->enabled = false;
-+
-+	return AE_OK;
-+}
-+
-+struct acpihp_slot_ops acpihp_slot_fake = {
-+	.owner = THIS_MODULE,
-+	.desc = "Fake Hotplug Slot Enumerator for Testing",
-+	.init = acpihp_slot_fake_init,
-+	.check = acpihp_slot_fake_capable,
-+	.create = acpihp_slot_fake_create,
-+	.destroy = acpihp_slot_fake_destroy,
-+	.poweron = acpihp_slot_fake_poweron,
-+	.poweroff = acpihp_slot_fake_poweroff,
-+	.get_status = acpihp_slot_fake_get_status,
-+};
--- 
-1.7.9.5
+ /* PCI bus error event callbacks */
 
