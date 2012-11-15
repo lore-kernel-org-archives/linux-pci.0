@@ -1,186 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49322 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946Ab2KTHU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 20 Nov 2012 02:20:56 -0500
-Message-ID: <1353396032.17856.7.camel@pasglop>
-Subject: Re: [PATCH] PCI: MSI: Restore read_msi_msg_desc(); add
- get_cached_msi_msg_desc()
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Ben Hutchings <bhutchings@solarflare.com>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	ppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 20 Nov 2012 18:20:32 +1100
-In-Reply-To: <1279893388.2089.9.camel@achroite.uk.solarflarecom.com>
-References: <20100723102202.871a3131.sfr@canb.auug.org.au>
-	 <1279847985.4883.391.camel@localhost> <1279850740.6381.19.camel@concordia>
-	 <1279893388.2089.9.camel@achroite.uk.solarflarecom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 14 Nov 2012 17:51:00 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Lance Ortiz <lance.ortiz@hp.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
+	Andrew Patterson <andrew.patterson@hp.com>,
+	Zhang Yanmin <yanmin.zhang@intel.com>
+Subject: Re: [ PATCH RESEND ] PCI-AER: Do not report successful error
+ recovery for devices with AER-unaware drivers
+Message-ID: <20121115005100.GA6613@google.com>
+References: <F9E001219150CB45BEDC82A650F360C90146794E@G9W0717.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <F9E001219150CB45BEDC82A650F360C90146794E@G9W0717.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2010-07-23 at 14:56 +0100, Ben Hutchings wrote:
-> commit 2ca1af9aa3285c6a5f103ed31ad09f7399fc65d7 "PCI: MSI: Remove
-> unsafe and unnecessary hardware access" changed read_msi_msg_desc() to
-> return the last MSI message written instead of reading it from the
-> device, since it may be called while the device is in a reduced
-> power state.
+[+cc Lance, Huang, Hidetoshi, Andrew, Zhang]
 
-Looks reasonable... Jesse ?
-
-Cheers,
-Ben.
-
-> However, the pSeries platform code really does need to read messages
-> from the device, since they are initially written by firmware.
-> Therefore:
-> - Restore the previous behaviour of read_msi_msg_desc()
-> - Add new functions get_cached_msi_msg{,_desc}() which return the
->   last MSI message written
-> - Use the new functions where appropriate
+On Sat, Nov 10, 2012 at 07:41:04AM +0000, Pandarathil, Vijaymohan R wrote:
+> When an error is detected on a PCIe device which does not have an
+> AER-aware driver, prevent AER infrastructure from reporting
+> successful error recovery.
 > 
-> Signed-off-by: Ben Hutchings <bhutchings@solarflare.com>
+> This is because the report_error_detected() function that gets
+> called in the first phase of recovery process allows forward
+> progress even when the driver for the device does not have AER
+> capabilities. It seems that all callbacks (in pci_error_handlers
+> structure) registered by drivers that gets called during error
+> recovery are not mandatory. So the intention of the infrastructure
+> design seems to be to allow forward progress even when a specific
+> callback has not been registered by a driver. However, if error
+> handler structure itself has not been registered, it doesn't make
+> sense to allow forward progress.
+> 
+> As a result of the current design, in the case of a single device
+> having an AER-unaware driver or in the case of any function in a
+> multi-function card having an AER-unaware driver, a successful
+> recovery is reported.
+> 
+> Typical scenario this happens is when a PCI device is detached
+> from a KVM host and the pci-stub driver on the host claims the
+> device. The pci-stub driver does not have error handling capabilities
+> but the AER infrastructure still reports that the device recovered
+> successfully.
+> 
+> The changes proposed here leaves the device in an unrecovered state
+> if the driver for the device or for any function in a multi-function
+> card does not have error handler structure registered. This reflects
+> the true state of the device and prevents any partial recovery (or no
+> recovery at all) reported as successful.
+> 
+> Please also see comments from Linas Vepstas at the following link
+> http://www.spinics.net/lists/linux-pci/msg18572.html
+> 
+> Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
+> Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
+> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
+> 
 > ---
-> Compile-tested only.
 > 
-> Ben.
+> drivers/pci/pcie/aer/aerdrv_core.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
->  arch/ia64/kernel/msi_ia64.c    |    2 +-
->  arch/ia64/sn/kernel/msi_sn.c   |    2 +-
->  arch/x86/kernel/apic/io_apic.c |    2 +-
->  drivers/pci/msi.c              |   47 +++++++++++++++++++++++++++++++++++----
->  include/linux/msi.h            |    2 +
->  5 files changed, 47 insertions(+), 8 deletions(-)
-> 
-> diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
-> index 6c89228..4a746ea 100644
-> --- a/arch/ia64/kernel/msi_ia64.c
-> +++ b/arch/ia64/kernel/msi_ia64.c
-> @@ -25,7 +25,7 @@ static int ia64_set_msi_irq_affinity(unsigned int irq,
->  	if (irq_prepare_move(irq, cpu))
->  		return -1;
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 06bad96..030b229 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
 >  
-> -	read_msi_msg(irq, &msg);
-> +	get_cached_msi_msg(irq, &msg);
+>  	dev->error_state = result_data->state;
 >  
->  	addr = msg.address_lo;
->  	addr &= MSI_ADDR_DEST_ID_MASK;
-> diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
-> index ebfdd6a..0c72dd4 100644
-> --- a/arch/ia64/sn/kernel/msi_sn.c
-> +++ b/arch/ia64/sn/kernel/msi_sn.c
-> @@ -175,7 +175,7 @@ static int sn_set_msi_irq_affinity(unsigned int irq,
->  	 * Release XIO resources for the old MSI PCI address
->  	 */
->  
-> -	read_msi_msg(irq, &msg);
-> +	get_cached_msi_msg(irq, &msg);
->          sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
->  	pdev = sn_pdev->pdi_linux_pcidev;
->  	provider = SN_PCIDEV_BUSPROVIDER(pdev);
-> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-> index e41ed24..4dc0084 100644
-> --- a/arch/x86/kernel/apic/io_apic.c
-> +++ b/arch/x86/kernel/apic/io_apic.c
-> @@ -3397,7 +3397,7 @@ static int set_msi_irq_affinity(unsigned int irq, const struct cpumask *mask)
->  
->  	cfg = desc->chip_data;
->  
-> -	read_msi_msg_desc(desc, &msg);
-> +	get_cached_msi_msg_desc(desc, &msg);
->  
->  	msg.data &= ~MSI_DATA_VECTOR_MASK;
->  	msg.data |= MSI_DATA_VECTOR(cfg->vector);
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 4c14f31..69b7be3 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -197,9 +197,46 @@ void read_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg)
->  {
->  	struct msi_desc *entry = get_irq_desc_msi(desc);
->  
-> -	/* We do not touch the hardware (which may not even be
-> -	 * accessible at the moment) but return the last message
-> -	 * written.  Assert that this is valid, assuming that
-> +	BUG_ON(entry->dev->current_state != PCI_D0);
-> +
-> +	if (entry->msi_attrib.is_msix) {
-> +		void __iomem *base = entry->mask_base +
-> +			entry->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
-> +
-> +		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
-> +		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
-> +		msg->data = readl(base + PCI_MSIX_ENTRY_DATA);
-> +	} else {
-> +		struct pci_dev *dev = entry->dev;
-> +		int pos = entry->msi_attrib.pos;
-> +		u16 data;
-> +
-> +		pci_read_config_dword(dev, msi_lower_address_reg(pos),
-> +					&msg->address_lo);
-> +		if (entry->msi_attrib.is_64) {
-> +			pci_read_config_dword(dev, msi_upper_address_reg(pos),
-> +						&msg->address_hi);
-> +			pci_read_config_word(dev, msi_data_reg(pos, 1), &data);
-> +		} else {
-> +			msg->address_hi = 0;
-> +			pci_read_config_word(dev, msi_data_reg(pos, 0), &data);
-> +		}
-> +		msg->data = data;
+> +	if ((!dev->driver || !dev->driver->err_handler) &&
+> +		!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
+> +		dev_info(&dev->dev, "AER: Error detected but no driver has claimed this device or the driver is AER-unaware\n");
+> +		result_data->result = PCI_ERS_RESULT_NONE;
+> +		return 1;
+
+This doesn't seem right because returning 1 here causes pci_walk_bus()
+to terminate, which means we won't set dev->error_state or notify
+drivers for any devices we haven't visited yet.
+
 > +	}
-> +}
-> +
-> +void read_msi_msg(unsigned int irq, struct msi_msg *msg)
-> +{
-> +	struct irq_desc *desc = irq_to_desc(irq);
-> +
-> +	read_msi_msg_desc(desc, msg);
-> +}
-> +
-> +void get_cached_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg)
-> +{
-> +	struct msi_desc *entry = get_irq_desc_msi(desc);
-> +
-> +	/* Assert that the cache is valid, assuming that
->  	 * valid messages are not all-zeroes. */
->  	BUG_ON(!(entry->msg.address_hi | entry->msg.address_lo |
->  		 entry->msg.data));
-> @@ -207,11 +244,11 @@ void read_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg)
->  	*msg = entry->msg;
->  }
->  
-> -void read_msi_msg(unsigned int irq, struct msi_msg *msg)
-> +void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg)
->  {
->  	struct irq_desc *desc = irq_to_desc(irq);
->  
-> -	read_msi_msg_desc(desc, msg);
-> +	get_cached_msi_msg_desc(desc, msg);
->  }
->  
->  void write_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg)
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 6991ab5..91b05c1 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -14,8 +14,10 @@ struct irq_desc;
->  extern void mask_msi_irq(unsigned int irq);
->  extern void unmask_msi_irq(unsigned int irq);
->  extern void read_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg);
-> +extern void get_cached_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg);
->  extern void write_msi_msg_desc(struct irq_desc *desc, struct msi_msg *msg);
->  extern void read_msi_msg(unsigned int irq, struct msi_msg *msg);
-> +extern void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
->  extern void write_msi_msg(unsigned int irq, struct msi_msg *msg);
->  
->  struct msi_desc {
-> -- 
-> 1.6.2.5
-> 
+>  	if (!dev->driver ||
+>  		!dev->driver->err_handler ||
+>  		!dev->driver->err_handler->error_detected) {
 
+If none of the drivers in the affected hierarchy supports error handling,
+I think the call tree looks like this:
 
+    do_recovery                                 # uncorrectable only
+        broadcast_error_message(dev, ..., report_error_detected)
+            result_data.result = CAN_RECOVER            
+            pci_walk_bus(..., report_error_detected)
+                report_error_detected           # (each dev in subtree)
+                    return 0                    # no change to result
+            return result_data.result
+        broadcast_error_message(dev, ..., report_mmio_enabled)
+            result_data.result = PCI_ERS_RESULT_RECOVERED       
+            pci_walk_bus(..., report_mmio_enabled)
+                report_mmio_enabled             # (each dev in subtree)
+                    return 0                    # no change to result
+        dev_info("recovery successful")
+
+Specifically, there are no error_handler functions, so we never change
+result_data.result, and the default is that we treat the error as
+"recovered successfully."  That seems broken.  An uncorrectable error
+is by definition recoverable only by device-specific software, i.e.,
+the driver.  We didn't call any drivers, so we can't have recovered
+anything.
+
+What do you think of the following alternative?  I don't know why you
+checked for bridge devices in your patch, so I don't know whether
+that's important here or not.
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 06bad96..a109c68 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -231,11 +231,11 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 				   dev->driver ?
+ 				   "no AER-aware driver" : "no driver");
+ 		}
+-		return 0;
++		vote = PCI_ERS_RESULT_DISCONNECT;
++	} else {
++		err_handler = dev->driver->err_handler;
++		vote = err_handler->error_detected(dev, result_data->state);
+ 	}
+-
+-	err_handler = dev->driver->err_handler;
+-	vote = err_handler->error_detected(dev, result_data->state);
+ 	result_data->result = merge_result(result_data->result, vote);
+ 	return 0;
+ }
