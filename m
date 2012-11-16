@@ -1,82 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40408 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441Ab2K3Wjs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 17:39:48 -0500
-Date: Fri, 30 Nov 2012 17:39:39 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Vrabel <david.vrabel@citrix.com>, xen-devel@lists.xen.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/5] xen-pcifront: handle backend CLOSED without CLOSING
-Message-ID: <20121130223939.GA7749@phenom.dumpdata.com>
-References: <507FD39F.4060601@citrix.com>
- <1350554618-14582-3-git-send-email-david.vrabel@citrix.com>
- <20121019125919.GC26830@phenom.dumpdata.com>
- <CAErSpo6jBTGQYdPK==u7zjDuhV+U5iUfUp_KZnxkhvZCU4difQ@mail.gmail.com>
- <CAErSpo7Vob9CiRxK+E2nV2V7G4FCss6zLCPO93PMSDj9G55ywg@mail.gmail.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:45621 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971Ab2KPAar (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2012 19:30:47 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so1459449pad.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Nov 2012 16:30:47 -0800 (PST)
+Date: Thu, 15 Nov 2012 16:30:43 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+	Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: Re: [PATCH v5 2/2] net: Add support for NTB virtual ethernet device
+Message-ID: <20121116003043.GC20876@kroah.com>
+References: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
+ <1352160669-4330-3-git-send-email-jon.mason@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7Vob9CiRxK+E2nV2V7G4FCss6zLCPO93PMSDj9G55ywg@mail.gmail.com>
+In-Reply-To: <1352160669-4330-3-git-send-email-jon.mason@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 30, 2012 at 02:42:14PM -0700, Bjorn Helgaas wrote:
-> On Fri, Nov 30, 2012 at 11:41 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Fri, Oct 19, 2012 at 6:59 AM, Konrad Rzeszutek Wilk
-> > <konrad.wilk@oracle.com> wrote:
-> >> On Thu, Oct 18, 2012 at 11:03:36AM +0100, David Vrabel wrote:
-> >>> From: David Vrabel <david.vrabel@citrix.com>
-> >>>
-> >>> Backend drivers shouldn't transistion to CLOSED unless the frontend is
-> >>> CLOSED.  If a backend does transition to CLOSED too soon then the
-> >>> frontend may not see the CLOSING state and will not properly shutdown.
-> >>>
-> >>> So, treat an unexpected backend CLOSED state the same as CLOSING.
-> >>>
-> >>> Signed-off-by: David Vrabel <david.vrabel@citrix.com>
-> >>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> >>> ---
-> >>> Cc: linux-pci@vger.kernel.org
-> >>> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >>
-> >> Bjorn, do you want me to prep a git pull with this patch
-> >> or can I have your Ack to put it my tree and have it part of my
-> >> git pull to Linus?
-> >
-> > Sorry, I missed this.  I can put it in my -next branch for the v3.8
-> > merge window.  Would that work for you?
+On Mon, Nov 05, 2012 at 05:11:09PM -0700, Jon Mason wrote:
+> A virtual ethernet device that uses the NTB transport API to
+> send/receive data.
 > 
-> I put this in my -next branch, so we'll at least have a chance of
-> making a linux-next cycle before v3.7 pops.
+> Signed-off-by: Jon Mason <jon.mason@intel.com>
+> Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  MAINTAINERS              |    1 +
+>  drivers/net/Kconfig      |    4 +
+>  drivers/net/Makefile     |    1 +
+>  drivers/net/ntb_netdev.c |  415 ++++++++++++++++++++++++++++++++++++++++++++++
 
-Great. Thx!
-> 
-> >>> ---
-> >>>  drivers/pci/xen-pcifront.c |    5 ++++-
-> >>>  1 files changed, 4 insertions(+), 1 deletions(-)
-> >>>
-> >>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> >>> index 0aab85a..a0c7312 100644
-> >>> --- a/drivers/pci/xen-pcifront.c
-> >>> +++ b/drivers/pci/xen-pcifront.c
-> >>> @@ -1068,13 +1068,16 @@ static void __init_refok pcifront_backend_changed(struct xenbus_device *xdev,
-> >>>       case XenbusStateInitialising:
-> >>>       case XenbusStateInitWait:
-> >>>       case XenbusStateInitialised:
-> >>> -     case XenbusStateClosed:
-> >>>               break;
-> >>>
-> >>>       case XenbusStateConnected:
-> >>>               pcifront_try_connect(pdev);
-> >>>               break;
-> >>>
-> >>> +     case XenbusStateClosed:
-> >>> +             if (xdev->state == XenbusStateClosed)
-> >>> +                     break;
-> >>> +             /* Missed the backend's CLOSING state -- fallthrough */
-> >>>       case XenbusStateClosing:
-> >>>               dev_warn(&xdev->dev, "backend going away!\n");
-> >>>               pcifront_try_disconnect(pdev);
-> >>> --
-> >>> 1.7.2.5
+As I haven't taken the core yet, I can't take this.  But even then, I
+would need an ack from the network maintainers before I could.
+
+And are you sure this is in the correct location in the tree?
+
+thanks,
+
+greg k-h
