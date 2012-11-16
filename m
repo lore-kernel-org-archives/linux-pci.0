@@ -1,77 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:54742 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161191Ab2KNM2X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 07:28:23 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Huang Ying <ying.huang@intel.com>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 3/5][RESEND] PCI/AER: clean all untracked pci_ops_aer when rmmod aer_inject
-Date: Wed, 14 Nov 2012 20:27:20 +0800
-Message-ID: <1352896042-11832-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
-References: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:49283 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751169Ab2KPAaC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2012 19:30:02 -0500
+Received: by mail-da0-f46.google.com with SMTP id n41so895161dak.19
+        for <linux-pci@vger.kernel.org>; Thu, 15 Nov 2012 16:30:02 -0800 (PST)
+Date: Thu, 15 Nov 2012 16:29:59 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+	Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: Re: [PATCH v5 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20121116002959.GB20876@kroah.com>
+References: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
+ <1352160669-4330-2-git-send-email-jon.mason@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1352160669-4330-2-git-send-email-jon.mason@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we do hot plug for pci devices that were injected aer errors, some newly created child buses'
-pci_ops will be assigned to pci_ops_aer. Aer_inject module will not track these pci_ops_aer(not
-list in pci_bus_ops_list),so we should clean all of these when rmmod aer_inject module.
+On Mon, Nov 05, 2012 at 05:11:08PM -0700, Jon Mason wrote:
+> +static int __init ntb_init_module(void)
+> +{
+> +	pr_info("%s: %s, version %s\n", KBUILD_MODNAME, NTB_NAME, NTB_VER);
 
-Reviewed-by: Huang Ying <ying.huang@intel.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+No need to be noisy.
 
----
- drivers/pci/pcie/aer/aer_inject.c |   24 ++++++++++++++++++++++++
- 1 files changed, 24 insertions(+), 0 deletions(-)
+> +
+> +	return pci_register_driver(&ntb_pci_driver);
+> +}
+> +module_init(ntb_init_module);
+> +
+> +static void __exit ntb_exit_module(void)
+> +{
+> +	pci_unregister_driver(&ntb_pci_driver);
+> +
+> +	pr_info("%s: Driver removed\n", KBUILD_MODNAME);
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index f499f01..4777c44 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -285,6 +285,29 @@ static void pci_bus_ops_init(struct pci_bus_ops *bus_ops,
- 	bus_ops->ops = ops;
- }
- 
-+static void pci_clean_child_aer_ops(struct pci_bus *bus)
-+{
-+	struct pci_bus *child;
-+
-+	list_for_each_entry(child, &bus->children, node) {
-+		if (child->ops == &pci_ops_aer)
-+			pci_bus_set_ops(child, bus->ops);
-+		pci_clean_child_aer_ops(child);
-+	}
-+}
-+
-+/* find pci_ops_aer from root bus, and replace it by parent bus's pci_ops.
-+ * pci_ops of root bus won't be pci_ops_aer here*/
-+static void clean_untracked_pci_ops_aer(void)
-+{
-+	struct pci_bus_ops *bus_ops;
-+
-+	list_for_each_entry(bus_ops, &pci_bus_ops_list, list) {
-+		if (pci_is_root_bus(bus_ops->bus))
-+			pci_clean_child_aer_ops(bus_ops->bus);
-+	}
-+}
-+
- static int pci_bus_set_aer_ops(struct pci_bus *bus)
- {
- 	struct pci_ops *ops;
-@@ -546,6 +569,7 @@ static void __exit aer_inject_exit(void)
- 	list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
- 
-+	clean_untracked_pci_ops_aer();
- 	while ((bus_ops = pci_bus_ops_pop()))
- 		kfree(bus_ops);
- 
--- 
-1.7.1
+Same here, don't print out needless things.
 
+> +}
+> +module_exit(ntb_exit_module);
 
+This all can be wrapped up using the pci_module() macro instead.
+
+thanks,
+
+greg k-h
