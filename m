@@ -1,44 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46001 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752464Ab2KTVOr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 16:14:47 -0500
-Subject: Re: [PATCH 016/493] PCI: always build setup-bus when PCI is enabled
-To: bhelgaas@google.com (Bjorn Helgaas)
-Date: Tue, 20 Nov 2012 16:14:46 -0500
-Cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org
-In-Reply-To: <CAErSpo5+wynH3LDPZbdoQVh1w1igzuMNS45hDO-69TNjQ8TLMg@mail.gmail.com>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:28154 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971Ab2KPITr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 16 Nov 2012 03:19:47 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
+	"Patterson, Andrew D (LeftHand Networks)" <andrew.patterson@hp.com>,
+	"Zhang Yanmin" <yanmin.zhang@intel.com>
+Subject: [PATCH v2] PCI-AER: Do not report successful error recovery for
+ devices with AER-unaware drivers
+Date: Fri, 16 Nov 2012 08:18:53 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C901469EFE@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-Id: <20121120211446.480A880133@viridian.itc.virginia.edu>
-From: wfp5p@viridian.itc.virginia.edu (Bill Pemberton)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas writes:
-> 
-> On Mon, Nov 19, 2012 at 11:19 AM, Bill Pemberton <wfp5p@virginia.edu> wrote:
-> > CONFIG_HOTPLUG is being removed so setup-bus always needs to be built
-> > as part of PCI.
-> >
-> > Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-> > Cc: linux-pci@vger.kernel.org
-> 
-> These all look fine to me.  Please make the changelog subjects
-> consistently capitalize the "PCI" acronym and also the first word of
-> the rest, e.g., "PCI: Always ..."
-> 
-> If you want me to take them through my PCI tree, I can, but I assume
-> Greg is going to take them through the driver core tree, and that's
-> fine with me.
-> 
-> FWIW, I agree with Grant Likely's comments about squashing the
-> devinit/devexit/etc patches.  That would be fine with me.
+When an error is detected on a PCIe device which does not have an
+AER-aware driver, prevent AER infrastructure from reporting
+successful error recovery.
 
-The plan was for them to go through Greg's driver core tree.
+This is because the report_error_detected() function that gets
+called in the first phase of recovery process allows forward
+progress even when the driver for the device does not have AER
+capabilities. It seems that all callbacks (in pci_error_handlers
+structure) registered by drivers that gets called during error
+recovery are not mandatory. So the intention of the infrastructure
+design seems to be to allow forward progress even when a specific
+callback has not been registered by a driver. However, if error
+handler structure itself has not been registered, it doesn't make
+sense to allow forward progress.
 
-I'll redo the PCI related ones as you've requested and resend them.
-I probably won't be able to get to it until tomorrow though.
+As a result of the current design, in the case of a single device
+having an AER-unaware driver or in the case of any function in a
+multi-function card having an AER-unaware driver, a successful
+recovery is reported.
 
+Typical scenario this happens is when a PCI device is detached
+from a KVM host and the pci-stub driver on the host claims the
+device. The pci-stub driver does not have error handling capabilities
+but the AER infrastructure still reports that the device recovered
+successfully.
+
+The changes proposed here leaves the device(s)in an unrecovered state
+if the driver for the device or for any device in the subtree
+does not have error handler structure registered. This reflects
+the true state of the device and prevents any partial recovery (or no
+recovery at all) reported as successful.
+
+v2:
+  - Made changes so that all devices in the subtree have the error
+    state set correctly.
+
+Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
+Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
+Reviewed-by: Bjorn Helgaas <bhelgaas <at> google.com>
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at> hp.com>
+
+---
+ drivers/pci/pcie/aer/aerdrv.h      |  5 ++++-
+ drivers/pci/pcie/aer/aerdrv_core.c | 21 ++++++++++++++++++---
+ include/linux/pci.h                |  3 +++
+ 3 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+index 94a7598..22f840f 100644
+--- a/drivers/pci/pcie/aer/aerdrv.h
++++ b/drivers/pci/pcie/aer/aerdrv.h
+@@ -87,6 +87,9 @@ struct aer_broadcast_data {
+ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+ 		enum pci_ers_result new)
+ {
++	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
++		return PCI_ERS_RESULT_NO_AER_DRIVER;
++
+ 	if (new == PCI_ERS_RESULT_NONE)
+ 		return orig;
+ 
+@@ -97,7 +100,7 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+ 		break;
+ 	case PCI_ERS_RESULT_DISCONNECT:
+ 		if (new == PCI_ERS_RESULT_NEED_RESET)
+-			orig = new;
++			orig = PCI_ERS_RESULT_NEED_RESET;
+ 		break;
+ 	default:
+ 		break;
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 06bad96..c1b8fdd 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -231,11 +231,26 @@ static int report_error_detected(struct pci_dev *dev, void *data)
+ 				   dev->driver ?
+ 				   "no AER-aware driver" : "no driver");
+ 		}
+-		return 0;
++
++		/*
++		 * If there's any device in the subtree that does not
++		 * have an error_detected callback, returning
++		 * PCI_ERS_RESULT_NO_AER_DRIVER prevents calling of
++		 * the subsequent mmio_enabled/slot_reset/resume
++		 * callbacks of "any" device in the subtree. All the
++		 * devices in the subtree are left in the error state
++		 * without recovery.
++		 */
++
++		if !(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)
++			vote = PCI_ERS_RESULT_NO_AER_DRIVER;
++		else
++			vote = PCI_ERS_RESULT_NONE;
++	} else {
++		err_handler = dev->driver->err_handler;
++		vote = err_handler->error_detected(dev, result_data->state);
+ 	}
+ 
+-	err_handler = dev->driver->err_handler;
+-	vote = err_handler->error_detected(dev, result_data->state);
+ 	result_data->result = merge_result(result_data->result, vote);
+ 	return 0;
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ee21795..fb7e869 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -538,6 +538,9 @@ enum pci_ers_result {
+ 
+ 	/* Device driver is fully recovered and operational */
+ 	PCI_ERS_RESULT_RECOVERED = (__force pci_ers_result_t) 5,
++
++	/* No AER capabilities registered for the driver */
++	PCI_ERS_RESULT_NO_AER_DRIVER = (__force pci_ers_result_t) 6,
+ };
+ 
+ /* PCI bus error event callbacks */
 -- 
-Bill
+1.7.11.3
+
