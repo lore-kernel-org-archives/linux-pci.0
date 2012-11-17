@@ -1,52 +1,26 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mprc.pku.edu.cn ([162.105.203.9]:37387 "EHLO mprc.pku.edu.cn"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753190Ab2K2Bhw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 28 Nov 2012 20:37:52 -0500
-From: guanxuetao@mprc.pku.edu.cn
-Message-ID: <62357.162.105.80.111.1354154524.squirrel@mprc.pku.edu.cn>
-In-Reply-To: <1353530100-728-6-git-send-email-wfp5p@virginia.edu>
-References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
-    <1353530100-728-6-git-send-email-wfp5p@virginia.edu>
-Date: Thu, 29 Nov 2012 10:02:04 +0800 (CST)
-Subject: Re: [PATCH 5/9] unicore32/PCI: Remove CONFIG_HOTPLUG ifdefs
-To: "Bill Pemberton" <wfp5p@virginia.edu>
-Cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org,
-	"Guan Xuetao" <gxt@mprc.pku.edu.cn>,
-	"Bjorn Helgaas" <bhelgaas@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 17 Nov 2012 13:27:43 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, prometheanfire@gentoo.org,
+	cardoe@gentoo.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, mthode@mthode.org,
+	ddutile@redhat.com, bhelgaas@google.com, dwmw2@infradead.org
+Subject: Re: [PATCH] intel-iommu: Fix lookup in add device
+Message-ID: <20121117122743.GB11220@8bytes.org>
+References: <20121113172144.6783.37724.stgit@bling.home>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=GB2312
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121113172144.6783.37724.stgit@bling.home>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Remove conditional code based on CONFIG_HOTPLUG being false.  It's
-> always on now in preparation of it going away as an option.
->
-> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-> Cc: Guan Xuetao <gxt@mprc.pku.edu.cn>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Nov 13, 2012 at 10:22:03AM -0700, Alex Williamson wrote:
+> We can't assume this device exists, fall back to the bridge itself.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Tested-by: Matthew Thode <prometheanfire@gentoo.org>
+> Cc: stable@vger.kernel.org
 
-Acked-by: Guan Xuetao <gxt@mprc.pku.edu.cn>
-
-> ---
->  arch/unicore32/kernel/pci.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-> index b0056f6..7c43592 100644
-> --- a/arch/unicore32/kernel/pci.c
-> +++ b/arch/unicore32/kernel/pci.c
-> @@ -250,9 +250,7 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
->  	printk(KERN_INFO "PCI: bus%d: Fast back to back transfers %sabled\n",
->  		bus->number, (features & PCI_COMMAND_FAST_BACK) ? "en" : "dis");
->  }
-> -#ifdef CONFIG_HOTPLUG
->  EXPORT_SYMBOL(pcibios_fixup_bus);
-> -#endif
->
->  static int __init pci_common_init(void)
->  {
-> --
-> 1.8.0
->
+Applied to iommu/fixes, thanks.
 
