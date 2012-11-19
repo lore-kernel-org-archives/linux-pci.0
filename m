@@ -1,234 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:42023 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970Ab2KOHKp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 15 Nov 2012 02:10:45 -0500
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Received: from mga02.intel.com ([134.134.136.20]:46645 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752325Ab2KSDO2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 18 Nov 2012 22:14:28 -0500
+From: Huang Ying <ying.huang@intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linasvepstas@gmail.com" <linasvepstas@gmail.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
 	Huang Ying <ying.huang@intel.com>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-	"Patterson, Andrew D (LeftHand Networks)" <andrew.patterson@hp.com>,
-	"Zhang Yanmin" <yanmin.zhang@intel.com>
-Subject: RE: [ PATCH RESEND ] PCI-AER: Do not report successful error
- recovery for devices with AER-unaware drivers
-Date: Thu, 15 Nov 2012 07:09:01 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C901469A26@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C90146794E@G9W0717.americas.hpqcorp.net>
- <20121115005100.GA6613@google.com>
-In-Reply-To: <20121115005100.GA6613@google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: [RFC] PCI/PM: Keep runtime PM enabled for unbound PCI devices
+Date: Mon, 19 Nov 2012 11:14:09 +0800
+Message-Id: <1353294849-22588-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the comments. See my response below.
+For unbound PCI devices, what we need is:
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Wednesday, November 14, 2012 4:51 PM
-> To: Pandarathil, Vijaymohan R
-> Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org;
-> linasvepstas@gmail.com; Myron Stowe; Ortiz, Lance E; Huang Ying; Hidetoshi
-> Seto; Patterson, Andrew D (LeftHand Networks); Zhang Yanmin
-> Subject: Re: [ PATCH RESEND ] PCI-AER: Do not report successful error
-> recovery for devices with AER-unaware drivers
-> 
-> [+cc Lance, Huang, Hidetoshi, Andrew, Zhang]
-> 
-> On Sat, Nov 10, 2012 at 07:41:04AM +0000, Pandarathil, Vijaymohan R wrote:
-> > When an error is detected on a PCIe device which does not have an
-> > AER-aware driver, prevent AER infrastructure from reporting
-> > successful error recovery.
-> >
-> > This is because the report_error_detected() function that gets
-> > called in the first phase of recovery process allows forward
-> > progress even when the driver for the device does not have AER
-> > capabilities. It seems that all callbacks (in pci_error_handlers
-> > structure) registered by drivers that gets called during error
-> > recovery are not mandatory. So the intention of the infrastructure
-> > design seems to be to allow forward progress even when a specific
-> > callback has not been registered by a driver. However, if error
-> > handler structure itself has not been registered, it doesn't make
-> > sense to allow forward progress.
-> >
-> > As a result of the current design, in the case of a single device
-> > having an AER-unaware driver or in the case of any function in a
-> > multi-function card having an AER-unaware driver, a successful
-> > recovery is reported.
-> >
-> > Typical scenario this happens is when a PCI device is detached
-> > from a KVM host and the pci-stub driver on the host claims the
-> > device. The pci-stub driver does not have error handling capabilities
-> > but the AER infrastructure still reports that the device recovered
-> > successfully.
-> >
-> > The changes proposed here leaves the device in an unrecovered state
-> > if the driver for the device or for any function in a multi-function
-> > card does not have error handler structure registered. This reflects
-> > the true state of the device and prevents any partial recovery (or no
-> > recovery at all) reported as successful.
-> >
-> > Please also see comments from Linas Vepstas at the following link
-> > http://www.spinics.net/lists/linux-pci/msg18572.html
-> >
-> > Reviewed-by: Linas Vepstas <linasvepstas <at> gmail.com>
-> > Reviewed-by: Myron Stowe <mstowe <at> redhat.com>
-> > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil <at>
-> hp.com>
-> >
-> > ---
-> >
-> > drivers/pci/pcie/aer/aerdrv_core.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> >
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
-> b/drivers/pci/pcie/aer/aerdrv_core.c
-> > index 06bad96..030b229 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -215,6 +215,12 @@ static int report_error_detected(struct pci_dev
-> *dev, void *data)
-> >
-> >  	dev->error_state = result_data->state;
-> >
-> > +	if ((!dev->driver || !dev->driver->err_handler) &&
-> > +		!(dev->hdr_type & PCI_HEADER_TYPE_BRIDGE)) {
-> > +		dev_info(&dev->dev, "AER: Error detected but no driver has
-> claimed this device or the driver is AER-unaware\n");
-> > +		result_data->result = PCI_ERS_RESULT_NONE;
-> > +		return 1;
-> 
-> This doesn't seem right because returning 1 here causes pci_walk_bus()
-> to terminate, which means we won't set dev->error_state or notify
-> drivers for any devices we haven't visited yet.
-> 
-> > +	}
-> >  	if (!dev->driver ||
-> >  		!dev->driver->err_handler ||
-> >  		!dev->driver->err_handler->error_detected) {
-> 
-> If none of the drivers in the affected hierarchy supports error handling,
-> I think the call tree looks like this:
-> 
->     do_recovery                                 # uncorrectable only
->         broadcast_error_message(dev, ..., report_error_detected)
->             result_data.result = CAN_RECOVER
->             pci_walk_bus(..., report_error_detected)
->                 report_error_detected           # (each dev in subtree)
->                     return 0                    # no change to result
->             return result_data.result
->         broadcast_error_message(dev, ..., report_mmio_enabled)
->             result_data.result = PCI_ERS_RESULT_RECOVERED
->             pci_walk_bus(..., report_mmio_enabled)
->                 report_mmio_enabled             # (each dev in subtree)
->                     return 0                    # no change to result
->         dev_info("recovery successful")
-> 
-> Specifically, there are no error_handler functions, so we never change
-> result_data.result, and the default is that we treat the error as
-> "recovered successfully."  That seems broken.  An uncorrectable error
-> is by definition recoverable only by device-specific software, i.e.,
-> the driver.  We didn't call any drivers, so we can't have recovered
-> anything.
-> 
-> What do you think of the following alternative?  I don't know why you
-> checked for bridge devices in your patch, so I don't know whether
-> that's important here or not.
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
-> b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 06bad96..a109c68 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -231,11 +231,11 @@ static int report_error_detected(struct pci_dev *dev,
-> void *data)
->  				   dev->driver ?
->  				   "no AER-aware driver" : "no driver");
->  		}
-> -		return 0;
-> +		vote = PCI_ERS_RESULT_DISCONNECT;
-> +	} else {
-> +		err_handler = dev->driver->err_handler;
-> +		vote = err_handler->error_detected(dev, result_data->state);
->  	}
-> -
-> -	err_handler = dev->driver->err_handler;
-> -	vote = err_handler->error_detected(dev, result_data->state);
->  	result_data->result = merge_result(result_data->result, vote);
->  	return 0;
->  }
+ - Always in D0 state, because some devices does not work again after
+   being put into D3 by the PCI bus.
 
-This would definitely set the error_state for all devices correctly. However, with the 
-current implementation of merge_result(), won't we still end up reporting successful 
-recovery ? The following case statement in merge_result() can set back the result 
-from PCI_ERS_RESULT_DISCONNECT to PCI_ERS_RESULT_NEED_RESET for a subsequent device 
-on the bus which returned PCI_ERS_RESULT_NEED_RESET from its error_detected callback . 
+ - In SUSPENDED state if allowed, so that the parent devices can still
+   be put into low power state.
 
-merge_result()
-...
-        case PCI_ERS_RESULT_DISCONNECT:
-                if (new == PCI_ERS_RESULT_NEED_RESET)
-                        orig = new;
-                break;
+To satisfy these requirement, the runtime PM for the unbound PCI
+devices are disabled and set to SUSPENDED state.  One issue of this
+solution is that the PCI devices will be put into SUSPENDED state even
+if the SUSPENDED state is forbidden via the sysfs interface
+(.../power/control) of the device.  This is not an issue for most
+devices, because most PCI devices are not used at all if unbounded.
+But there are exceptions.  For example, unbound VGA card can be used
+for display, but suspend its parents make it stop working.
 
-This would mean do_recovery() proceeds along to the next broadcast_message and 
-ultimately report success. Right ? Let me know if I am missing something.
+To fix the issue, we keep the runtime PM enabled when the PCI devices
+are unbound.  But the runtime PM callbacks will do nothing if the PCI
+devices are unbound.  This way, we can put the PCI devices into
+SUSPENDED state without put the PCI devices into D3 state.
 
-I looked at a few options and the following looked more promising. Thoughts ?
+Known issue: after some changing, pci_dev->driver is used to indicate
+whether the PCI devices are bound and whether the runtime PM callbacks
+should do nothing.  Maybe it is better to use a dedicated flag such as
+.skip_rtpm_callbacks.  That may improve code readability.
 
-Introduce a new pci_ers_result enum PCI_ERS_RESULT_NO_AER_DRIVER and make changes as follows.
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+CC: Alan Stern <stern@rowland.harvard.edu>
+CC: stable@vger.kernel.org          # v3.6+
+---
+ drivers/pci/pci-driver.c |   57 +++++++++++++++++++++++------------------------
+ drivers/pci/pci.c        |    2 +
+ 2 files changed, 31 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-index 94a7598..149ba79 100644
---- a/drivers/pci/pcie/aer/aerdrv.h
-+++ b/drivers/pci/pcie/aer/aerdrv.h
-@@ -87,6 +87,9 @@ struct aer_broadcast_data {
- static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
- 		enum pci_ers_result new)
- {
-+	if (new == PCI_ERS_RESULT_NO_AER_DRIVER)
-+		return new;
-+
- 	if (new == PCI_ERS_RESULT_NONE)
- 		return orig;
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1900,6 +1900,8 @@ void pci_pm_init(struct pci_dev *dev)
+ 	u16 pmc;
  
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 06bad96..729580a 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -231,11 +231,12 @@ static int report_error_detected(struct pci_dev *dev, void *data)
- 				   dev->driver ?
- 				   "no AER-aware driver" : "no driver");
- 		}
--		return 0;
-+		vote = PCI_ERS_RESULT_NO_AER_DRIVER;
-+	} else {
-+		err_handler = dev->driver->err_handler;
-+		vote = err_handler->error_detected(dev, result_data->state);
+ 	pm_runtime_forbid(&dev->dev);
++	pm_runtime_set_active(&dev->dev);
++	pm_runtime_enable(&dev->dev);
+ 	device_enable_async_suspend(&dev->dev);
+ 	dev->wakeup_prepared = false;
+ 
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -256,31 +256,26 @@ struct drv_dev_and_id {
+ static long local_pci_probe(void *_ddi)
+ {
+ 	struct drv_dev_and_id *ddi = _ddi;
+-	struct device *dev = &ddi->dev->dev;
+-	struct device *parent = dev->parent;
++	struct pci_dev *pci_dev = ddi->dev;
++	struct pci_driver *pci_drv = ddi->drv;
++	struct device *dev = &pci_dev->dev;
+ 	int rc;
+ 
+-	/* The parent bridge must be in active state when probing */
+-	if (parent)
+-		pm_runtime_get_sync(parent);
+-	/* Unbound PCI devices are always set to disabled and suspended.
+-	 * During probe, the device is set to enabled and active and the
+-	 * usage count is incremented.  If the driver supports runtime PM,
+-	 * it should call pm_runtime_put_noidle() in its probe routine and
+-	 * pm_runtime_get_noresume() in its remove routine.
+-	 */
+-	pm_runtime_get_noresume(dev);
+-	pm_runtime_set_active(dev);
+-	pm_runtime_enable(dev);
+-
+-	rc = ddi->drv->probe(ddi->dev, ddi->id);
++	/*
++	 * Unbound PCI devices are always set to suspended and put in
++	 * D0.  During probe, the device is set to active and the
++	 * usage count is incremented.  If the driver supports runtime
++	 * PM, it should call pm_runtime_put_noidle() in its probe
++	 * routine and pm_runtime_get_noresume() in its remove
++	 * routine.
++	 */
++	pm_runtime_get_sync(dev);
++	pci_dev->driver = pci_drv;
++	rc = pci_drv->probe(pci_dev, ddi->id);
+ 	if (rc) {
+-		pm_runtime_disable(dev);
+-		pm_runtime_set_suspended(dev);
+-		pm_runtime_put_noidle(dev);
++		pci_dev->driver = NULL;
++		pm_runtime_put_sync(dev);
+ 	}
+-	if (parent)
+-		pm_runtime_put(parent);
+ 	return rc;
+ }
+ 
+@@ -330,10 +325,8 @@ __pci_device_probe(struct pci_driver *dr
+ 		id = pci_match_device(drv, pci_dev);
+ 		if (id)
+ 			error = pci_call_probe(drv, pci_dev, id);
+-		if (error >= 0) {
+-			pci_dev->driver = drv;
++		if (error >= 0)
+ 			error = 0;
+-		}
+ 	}
+ 	return error;
+ }
+@@ -369,9 +362,7 @@ static int pci_device_remove(struct devi
  	}
  
--	err_handler = dev->driver->err_handler;
--	vote = err_handler->error_detected(dev, result_data->state);
- 	result_data->result = merge_result(result_data->result, vote);
+ 	/* Undo the runtime PM settings in local_pci_probe() */
+-	pm_runtime_disable(dev);
+-	pm_runtime_set_suspended(dev);
+-	pm_runtime_put_noidle(dev);
++	pm_runtime_put_sync(dev);
+ 
+ 	/*
+ 	 * If the device is still on, set the power state as "unknown",
+@@ -994,6 +985,9 @@ static int pci_pm_runtime_suspend(struct
+ 	pci_power_t prev = pci_dev->current_state;
+ 	int error;
+ 
++	if (!pci_dev->driver)
++		return 0;
++
+ 	if (!pm || !pm->runtime_suspend)
+ 		return -ENOSYS;
+ 
+@@ -1029,6 +1023,9 @@ static int pci_pm_runtime_resume(struct
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
++	if (!pci_dev->driver)
++		return 0;
++
+ 	if (!pm || !pm->runtime_resume)
+ 		return -ENOSYS;
+ 
+@@ -1046,8 +1043,12 @@ static int pci_pm_runtime_resume(struct
+ 
+ static int pci_pm_runtime_idle(struct device *dev)
+ {
++	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
++	if (!pci_dev->driver)
++		goto out;
++
+ 	if (!pm)
+ 		return -ENOSYS;
+ 
+@@ -1057,8 +1058,8 @@ static int pci_pm_runtime_idle(struct de
+ 			return ret;
+ 	}
+ 
++out:
+ 	pm_runtime_suspend(dev);
+-
  	return 0;
  }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee21795..fb7e869 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -538,6 +538,9 @@ enum pci_ers_result {
  
- 	/* Device driver is fully recovered and operational */
- 	PCI_ERS_RESULT_RECOVERED = (__force pci_ers_result_t) 5,
-+
-+	/* No AER capabilities registered for the driver */
-+	PCI_ERS_RESULT_NO_AER_DRIVER = (__force pci_ers_result_t) 6,
- };
- 
- /* PCI bus error event callbacks */
-
