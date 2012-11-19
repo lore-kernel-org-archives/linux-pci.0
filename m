@@ -1,85 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 30 Nov 2012 14:42:32 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
-Message-ID: <20121130134232.GD6869@liondog.tnic>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
- <1354240279.6276.131.camel@gandalf.local.home>
- <20121130105311.GA6869@liondog.tnic>
- <1354275551.6276.140.camel@gandalf.local.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1354275551.6276.140.camel@gandalf.local.home>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41697 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754053Ab2KSSiF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Nov 2012 13:38:05 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH 016/493] PCI: always build setup-bus when PCI is enabled
+Date: Mon, 19 Nov 2012 13:19:25 -0500
+Message-Id: <1353349642-3677-16-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 30, 2012 at 06:39:11AM -0500, Steven Rostedt wrote:
-> On Fri, 2012-11-30 at 11:53 +0100, Borislav Petkov wrote:
-> > On Thu, Nov 29, 2012 at 08:51:19PM -0500, Steven Rostedt wrote:
-> > > >  include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
-> > > 
-> > > Is there a reason this header is here? Egad, I never noticed the
-> > > ras_event.h that is there. This include/ras directory was created for
-> > > the sole purpose of trace events! This is not the way to do this.
-> > 
-> > Well, the idea for the ras event was to be able to use it in multiple
-> > places. It is currently used only by EDAC but it could be that memory
-> > errors could be reported by other agents which would reuse that TP.
-> > 
-> 
-> If it's generic, then place it into the include/trace/events directory,
-> the you don't need to have the TRACE_INCLUDE_PATH as that is the default
-> path the macros will use.
+CONFIG_HOTPLUG is being removed so setup-bus always needs to be built
+as part of PCI.
 
-Hmm, so I'm thinking maybe we should add a ras.h header there which
-contains all RAS TPs.
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: linux-pci@vger.kernel.org 
+---
+ drivers/pci/Makefile | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-> > > Please look at the sample in samples/trace_events/
-> > > 
-> > > The proper way is to keep the header by the driver. Then you can simply
-> > > include the header with "aer_event.h".
-> > > 
-> > > But to have the macro magic work, you need to modify the Makefile to
-> > > have something like:
-> > > 
-> > > CFLAGS_aerdrv_errprint.o = -I$(src)
-> > 
-> > So I'm guessing that every .c file including the TP should also -I
-> > include the TP definition header wherever it is. Is that agreeable?
-> 
-> You only need the -I$(src) for the .c file that uses the
-> CREATE_TRACE_POINTS macro, as the trace point macro magic headers
-> require it to find the TP header.
-
-This is done like this from EDAC's single usage site:
-
-#define CREATE_TRACE_POINTS
-#define TRACE_INCLUDE_PATH ../../include/ras
-#include <ras/ras_event.h>
-
-This is in <drivers/edac/edac_mc.c> and it doesn't to "-I$(src)" in the
-edac Makefile.
-
-> Other files just need "foo.h", or <trace/events/foo.h> if it's in the
-> generic location.
-
-So, it sounds to me like we should we move all RAS-specific tracepoints
-to <trace/events/ras.h> and then in each usage site do:
-
-#define CREATE_TRACE_POINTS
-#include <trace/events/ras.h>
-
-Correct?
-
-FWIW, it looks neat and clean to me that way.
-
-Thanks.
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 36f119d..0c3efcf 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -4,7 +4,7 @@
+ 
+ obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+-			irq.o vpd.o
++			irq.o vpd.o setup-bus.o
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
+ 
+@@ -58,9 +58,6 @@ obj-$(CONFIG_ACPI)    += pci-acpi.o
+ # SMBIOS provided firmware instance and labels
+ obj-$(CONFIG_PCI_LABEL) += pci-label.o
+ 
+-# Cardbus & CompactPCI use setup-bus
+-obj-$(CONFIG_HOTPLUG) += setup-bus.o
+-
+ obj-$(CONFIG_PCI_SYSCALL) += syscall.o
+ 
+ obj-$(CONFIG_PCI_STUB) += pci-stub.o
 -- 
-Regards/Gruss,
-    Boris.
+1.8.0
+
