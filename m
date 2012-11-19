@@ -1,91 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52264 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753770Ab2KSQbC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Nov 2012 11:31:02 -0500
+Date: Mon, 19 Nov 2012 11:31:01 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Huang Ying <ying.huang@intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [RFC] PCI/PM: Keep runtime PM enabled for unbound PCI devices
+In-Reply-To: <1353294849-22588-1-git-send-email-ying.huang@intel.com>
+Message-ID: <Pine.LNX.4.44L0.1211191129060.1598-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <58d59961e0f3287afeda402e123e5d760471b0d9.1351411048.git.joe@perches.com>
-References: <cover.1351411047.git.joe@perches.com> <58d59961e0f3287afeda402e123e5d760471b0d9.1351411048.git.joe@perches.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 5 Nov 2012 15:28:19 -0700
-Message-ID: <CAErSpo4x14+88TNjC2kji35G8TYoJJK0Oz-4oyTa9kVRRem5QQ@mail.gmail.com>
-Subject: Re: [PATCH 11/16] pci: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-To: Joe Perches <joe@perches.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 28, 2012 at 2:05 AM, Joe Perches <joe@perches.com> wrote:
-> dev_<level> calls take less code than dev_printk(KERN_<LEVEL>
-> and reducing object size is good.
-> Coalesce formats for easier grep.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+On Mon, 19 Nov 2012, Huang Ying wrote:
 
-I applied this to my pci/misc branch as v3.8 material.  Thanks!
+> For unbound PCI devices, what we need is:
+> 
+>  - Always in D0 state, because some devices does not work again after
+>    being put into D3 by the PCI bus.
+> 
+>  - In SUSPENDED state if allowed, so that the parent devices can still
+>    be put into low power state.
+> 
+> To satisfy these requirement, the runtime PM for the unbound PCI
+> devices are disabled and set to SUSPENDED state.  One issue of this
+> solution is that the PCI devices will be put into SUSPENDED state even
+> if the SUSPENDED state is forbidden via the sysfs interface
+> (.../power/control) of the device.  This is not an issue for most
+> devices, because most PCI devices are not used at all if unbounded.
+> But there are exceptions.  For example, unbound VGA card can be used
+> for display, but suspend its parents make it stop working.
+> 
+> To fix the issue, we keep the runtime PM enabled when the PCI devices
+> are unbound.  But the runtime PM callbacks will do nothing if the PCI
+> devices are unbound.  This way, we can put the PCI devices into
+> SUSPENDED state without put the PCI devices into D3 state.
+> 
+> Known issue: after some changing, pci_dev->driver is used to indicate
+> whether the PCI devices are bound and whether the runtime PM callbacks
+> should do nothing.  Maybe it is better to use a dedicated flag such as
+> .skip_rtpm_callbacks.  That may improve code readability.
 
-> ---
->  drivers/pci/irq.c       |   10 +++++-----
->  drivers/pci/pci-stub.c  |    2 +-
->  drivers/pci/pcie/aspm.c |    7 ++-----
->  3 files changed, 8 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
-> index e5f69a4..b008cf8 100644
-> --- a/drivers/pci/irq.c
-> +++ b/drivers/pci/irq.c
-> @@ -14,11 +14,11 @@ static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
->  {
->         struct pci_dev *parent = to_pci_dev(pdev->dev.parent);
->
-> -       dev_printk(KERN_ERR, &pdev->dev,
-> -                  "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
-> -                  dev_name(&parent->dev), parent->vendor, parent->device);
-> -       dev_printk(KERN_ERR, &pdev->dev, "%s\n", reason);
-> -       dev_printk(KERN_ERR, &pdev->dev, "Please report to linux-kernel@vger.kernel.org\n");
-> +       dev_err(&pdev->dev,
-> +               "Potentially misrouted IRQ (Bridge %s %04x:%04x)\n",
-> +               dev_name(&parent->dev), parent->vendor, parent->device);
-> +       dev_err(&pdev->dev, "%s\n", reason);
-> +       dev_err(&pdev->dev, "Please report to linux-kernel@vger.kernel.org\n");
->         WARN_ON(1);
->  }
->
-> diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
-> index 775e933..6e47c51 100644
-> --- a/drivers/pci/pci-stub.c
-> +++ b/drivers/pci/pci-stub.c
-> @@ -28,7 +28,7 @@ MODULE_PARM_DESC(ids, "Initial PCI IDs to add to the stub driver, format is "
->
->  static int pci_stub_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  {
-> -       dev_printk(KERN_INFO, &dev->dev, "claimed by stub\n");
-> +       dev_info(&dev->dev, "claimed by stub\n");
->         return 0;
->  }
->
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 213753b..3da9ecc 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -242,8 +242,7 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
->                 return;
->
->         /* Training failed. Restore common clock configurations */
-> -       dev_printk(KERN_ERR, &parent->dev,
-> -                  "ASPM: Could not configure common clock\n");
-> +       dev_err(&parent->dev, "ASPM: Could not configure common clock\n");
->         list_for_each_entry(child, &linkbus->devices, bus_list)
->                 pcie_capability_write_word(child, PCI_EXP_LNKCTL,
->                                            child_reg[PCI_FUNC(child->devfn)]);
-> @@ -507,9 +506,7 @@ static int pcie_aspm_sanity_check(struct pci_dev *pdev)
->                  */
->                 pcie_capability_read_dword(child, PCI_EXP_DEVCAP, &reg32);
->                 if (!(reg32 & PCI_EXP_DEVCAP_RBER) && !aspm_force) {
-> -                       dev_printk(KERN_INFO, &child->dev, "disabling ASPM"
-> -                               " on pre-1.1 PCIe device.  You can enable it"
-> -                               " with 'pcie_aspm=force'\n");
-> +                       dev_info(&child->dev, "disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'\n");
->                         return -EINVAL;
->                 }
->         }
-> --
-> 1.7.8.112.g3fd21
->
+I think it's okay like this, especially if you add a comment in 
+pci_runtime_suspend, pci_runtime_resume, and pci_runtime_idle 
+explaining that when pci_dev->driver isn't set, the device should 
+always remain in D0 regardless of the runtime status.
+
+Alan Stern
+
