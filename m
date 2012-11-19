@@ -1,57 +1,60 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1354275551.6276.140.camel@gandalf.local.home>
-Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 30 Nov 2012 06:39:11 -0500
-In-Reply-To: <20121130105311.GA6869@liondog.tnic>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-	 <1354240279.6276.131.camel@gandalf.local.home>
-	 <20121130105311.GA6869@liondog.tnic>
-Content-Type: text/plain; charset="ISO-8859-15"
+Message-ID: <1353359959.10939.84.camel@misato.fc.hp.com>
+Subject: Re: [ACPIHP PATCH part1 0/4] introduce a framework for ACPI based
+ system device hotplug
+From: Toshi Kani <toshi.kani@hp.com>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	"Wang, Frank" <frank.wang@intel.com>
+Date: Mon, 19 Nov 2012 14:19:19 -0700
+In-Reply-To: <50AA63CE.9080700@gmail.com>
+References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
+	 <6684049.OOiNLWpfRL@vostro.rjw.lan> <50AA63CE.9080700@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2012-11-30 at 11:53 +0100, Borislav Petkov wrote:
-> On Thu, Nov 29, 2012 at 08:51:19PM -0500, Steven Rostedt wrote:
-> > >  include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
-> > 
-> > Is there a reason this header is here? Egad, I never noticed the
-> > ras_event.h that is there. This include/ras directory was created for
-> > the sole purpose of trace events! This is not the way to do this.
-> 
-> Well, the idea for the ras event was to be able to use it in multiple
-> places. It is currently used only by EDAC but it could be that memory
-> errors could be reported by other agents which would reuse that TP.
-> 
+> But for the ACPI part for CPU and memory hotplug enhancements recently posted to
+> the community, I think they are different solutions with the new framework. I feel
+> they are lightweight enhancements to existing code with some limitations, but the
+> new framework is a heavyweight solution with full functionalities and improved
+> usability. So we may need discussions about the different solutions here:)
 
-If it's generic, then place it into the include/trace/events directory,
-the you don't need to have the TRACE_INCLUDE_PATH as that is the default
-path the macros will use.
+Hi Gerry,
 
-> > Please look at the sample in samples/trace_events/
-> > 
-> > The proper way is to keep the header by the driver. Then you can simply
-> > include the header with "aer_event.h".
-> > 
-> > But to have the macro magic work, you need to modify the Makefile to
-> > have something like:
-> > 
-> > CFLAGS_aerdrv_errprint.o = -I$(src)
-> 
-> So I'm guessing that every .c file including the TP should also -I
-> include the TP definition header wherever it is. Is that agreeable?
+Thanks for working on the framework enhancement.  I am still new to
+Linux (and learning :), but have extensive background in hot-plug
+features on other OS for CPU, Memory, Node, RP and PCI hot-plug support.
+So, I basically agree with you that we do need framework enhancement.
+However, I think we need phased approach here.  First, we need to make
+CPU and Memory hot-plug work under the current framework.  Once we
+settle on the basic features, we can then make framework enhancements
+without breaking the features.  For CPU hotplug, I also intentionally
+minimized the code changes so that the changes could be back-ported to
+older kernels being used by distributions.
 
-You only need the -I$(src) for the .c file that uses the
-CREATE_TRACE_POINTS macro, as the trace point macro magic headers
-require it to find the TP header. Other files just need "foo.h", or
-<trace/events/foo.h> if it's in the generic location.
+I will send you more comments after I reviewed your patches (which may
+take some time :).
 
--- Steve
+Thanks,
+-Toshi
+
 
 
