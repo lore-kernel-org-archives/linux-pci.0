@@ -1,64 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH 3/3] aerdrv: Cleanup log output for CPER based AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 29 Nov 2012 14:54:56 -0700
-Message-ID: <20121129215456.5483.27026.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41577 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753836Ab2KSSh7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Nov 2012 13:37:59 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: Scott Murray <scott@spiteful.org>, linux-pci@vger.kernel.org
+Subject: [PATCH 088/493] pci: remove use of __devexit_p
+Date: Mon, 19 Nov 2012 13:20:37 -0500
+Message-Id: <1353349642-3677-88-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These changes make cper_print_aer more consistent with aer_print_error
-which is called in the AER interrupt case. The string in the variable
-'prefix' is printed at the beginning of each print statement in
-cper_print_aer(). The prefix is a string containing the driver name
-and the device's path.  Looking up the call path, the value of prefix
-is never assigned and is NULL, so when cper_print_aer prints data the
-initial string does not get printed.  This string is important because
-it identifies the device that the error is on. This patch adds code to
-create the prefix and print it in the cper_print_aer function. This
-patch also calculates the device's agent id so it can be printed.
+CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
+needed.
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Scott Murray <scott@spiteful.org> 
+Cc: linux-pci@vger.kernel.org 
 ---
+ drivers/pci/hotplug/cpcihp_zt5550.c | 2 +-
+ drivers/pci/ioapic.c                | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/pci/pcie/aer/aerdrv_errprint.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 6354e50..bc0a091 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -229,7 +229,13 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
--	char *prefix = NULL;
-+	int id = ((dev->bus->number << 8) | dev->devfn);
-+	char prefix[44];
-+
-+	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
-+		(info->severity == AER_CORRECTABLE) ?
-+		KERN_WARNING : KERN_ERR,
-+		dev_driver_string(&dev->dev), dev_name(&dev->dev));
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 6bf8d2a..34b2a4a 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -290,7 +290,7 @@ static struct pci_driver zt5550_hc_driver = {
+ 	.name		= "zt5550_hc",
+ 	.id_table	= zt5550_hc_pci_tbl,
+ 	.probe		= zt5550_hc_init_one,
+-	.remove		= __devexit_p(zt5550_hc_remove_one),
++	.remove		= zt5550_hc_remove_one,
+ };
  
- 	aer_severity = cper_severity_to_aer(cper_severity);
- 	if (aer_severity == AER_CORRECTABLE) {
-@@ -249,8 +255,8 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 	printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
- 	       prefix, status, mask);
- 	cper_print_bits(prefix, status, status_strs, status_strs_size);
--	printk("%s""aer_layer=%s, aer_agent=%s\n", prefix,
--	       aer_error_layer[layer], aer_agent_string[agent]);
-+	printk("%s""aer_layer=%s, %d=%04x(%s)\n", prefix,
-+	       aer_error_layer[layer], id, aer_agent_string[agent]);
- 	if (aer_severity != AER_CORRECTABLE)
- 		printk("%s""aer_uncor_severity: 0x%08x\n",
- 		       prefix, aer->uncor_severity);
+ static int __init zt5550_init(void)
+diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+index 22436f7..2b24fb4 100644
+--- a/drivers/pci/ioapic.c
++++ b/drivers/pci/ioapic.c
+@@ -110,7 +110,7 @@ static struct pci_driver ioapic_driver = {
+ 	.name		= "ioapic",
+ 	.id_table	= ioapic_devices,
+ 	.probe		= ioapic_probe,
+-	.remove		= __devexit_p(ioapic_remove),
++	.remove		= ioapic_remove,
+ };
+ 
+ static int __init ioapic_init(void)
+-- 
+1.8.0
 
