@@ -1,328 +1,268 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:55680 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751141Ab2KGGyJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Nov 2012 01:54:09 -0500
-Message-ID: <509A044D.30100@jp.fujitsu.com>
-Date: Wed, 07 Nov 2012 15:48:45 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <50AA56D4.9080307@gmail.com>
+Date: Mon, 19 Nov 2012 23:57:08 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-To: yinghai@kernel.org
-CC: martin.wilck@ts.fujitsu.com, linux-pci@vger.kernel.org,
-	x86@kernel.org, kexec@lists.infradead.org,
-	linux-kernel@vger.kernel.org, hbabu@us.ibm.com,
-	andi@firstfloor.org, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, mingo@redhat.com, vgoyal@redhat.com,
-	khalid@gonehiking.org
-Subject: Re: [PATCH v4 1/2] x86, pci: Reset PCIe devices at boot time
-References: <20121015065516.2832.42378.sendpatchset@indoh> <20121015065526.2832.90867.sendpatchset@indoh> <CAE9FiQXKjNU4Sasj4LmiFiNNu9quGgKAdW3ciVnXggoWZiYXJA@mail.gmail.com> <507CE14A.2020605@jp.fujitsu.com>
-In-Reply-To: <507CE14A.2020605@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Tang Chen <tangchen@cn.fujitsu.com>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Huang Ying <ying.huang@intel.com>,
+	Bob Moore <robert.moore@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	Gaohuai Han <hangaohuai@huawei.com>
+Subject: Re: [ACPIHP PATCH part1 1/4] ACPIHP: introduce a framework for ACPI
+ based system device hotplug
+References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6RQk+sdeOF7c+G2qp5iYgrnQcx+rD0f8eVNRPLRoLpdg@mail.gmail.com> <5099383F.3010905@gmail.com> <2078749.XIKHA2TxJn@vostro.rjw.lan>
+In-Reply-To: <2078749.XIKHA2TxJn@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2012/10/16 13:23), Takao Indoh wrote:
-> (2012/10/16 3:36), Yinghai Lu wrote:
->> On Mon, Oct 15, 2012 at 12:00 AM, Takao Indoh
->> <indou.takao@jp.fujitsu.com> wrote:
->>> This patch resets PCIe devices at boot time by hot reset when
->>> "reset_devices" is specified.
->>
->> how about pci devices that domain_nr is not zero ?
->
-> This patch does not support multiple domains yet.
->
->>>
->>> Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
->>> ---
->>>   arch/x86/include/asm/pci-direct.h |    1
->>>   arch/x86/kernel/setup.c           |    3
->>>   arch/x86/pci/early.c              |  344 ++++++++++++++++++++++++++++
->>>   include/linux/pci.h               |    2
->>>   init/main.c                       |    4
->>>   5 files changed, 352 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
->>> index b1e7a45..de30db2 100644
->>> --- a/arch/x86/include/asm/pci-direct.h
->>> +++ b/arch/x86/include/asm/pci-direct.h
->>> @@ -18,4 +18,5 @@ extern int early_pci_allowed(void);
->>>   extern unsigned int pci_early_dump_regs;
->>>   extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
->>>   extern void early_dump_pci_devices(void);
->>> +extern void early_reset_pcie_devices(void);
->>>   #endif /* _ASM_X86_PCI_DIRECT_H */
->>> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
->>> index a2bb18e..73d3425 100644
->>> --- a/arch/x86/kernel/setup.c
->>> +++ b/arch/x86/kernel/setup.c
->>> @@ -987,6 +987,9 @@ void __init setup_arch(char **cmdline_p)
->>>          generic_apic_probe();
->>>
->>>          early_quirks();
->>> +#ifdef CONFIG_PCI
->>> +       early_reset_pcie_devices();
->>> +#endif
->>>
->>>          /*
->>>           * Read APIC and some other early information from ACPI tables.
->>> diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
->>> index d1067d5..683b30f 100644
->>> --- a/arch/x86/pci/early.c
->>> +++ b/arch/x86/pci/early.c
->>> @@ -1,5 +1,6 @@
->>>   #include <linux/kernel.h>
->>>   #include <linux/pci.h>
->>> +#include <linux/bootmem.h>
->>>   #include <asm/pci-direct.h>
->>>   #include <asm/io.h>
->>>   #include <asm/pci_x86.h>
->>> @@ -109,3 +110,346 @@ void early_dump_pci_devices(void)
->>>                  }
->>>          }
->>>   }
->>> +
->>> +#define PCI_EXP_SAVE_REGS      7
->>> +#define pcie_cap_has_devctl(type, flags)       1
->>> +#define pcie_cap_has_lnkctl(type, flags)               \
->>> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
->>> +                (type == PCI_EXP_TYPE_ROOT_PORT ||     \
->>> +                 type == PCI_EXP_TYPE_ENDPOINT ||      \
->>> +                 type == PCI_EXP_TYPE_LEG_END))
->>> +#define pcie_cap_has_sltctl(type, flags)               \
->>> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
->>> +                ((type == PCI_EXP_TYPE_ROOT_PORT) ||   \
->>> +                 (type == PCI_EXP_TYPE_DOWNSTREAM &&   \
->>> +                  (flags & PCI_EXP_FLAGS_SLOT))))
->>> +#define pcie_cap_has_rtctl(type, flags)                        \
->>> +               ((flags & PCI_EXP_FLAGS_VERS) > 1 ||    \
->>> +                (type == PCI_EXP_TYPE_ROOT_PORT ||     \
->>> +                 type == PCI_EXP_TYPE_RC_EC))
->>> +
->>> +struct save_config {
->>> +       u32 pci[16];
->>> +       u16 pcie[PCI_EXP_SAVE_REGS];
->>> +};
->>> +
->>> +struct pcie_dev {
->>> +       int cap;   /* position of PCI Express capability */
->>> +       int flags; /* PCI_EXP_FLAGS */
->>> +       struct save_config save; /* saved configration register */
->>> +};
->>> +
->>> +struct pcie_port {
->>> +       struct list_head dev;
->>> +       u8 secondary;
->>> +       struct pcie_dev child[PCI_MAX_FUNCTIONS];
->>> +};
->>> +
->>> +static LIST_HEAD(device_list);
->>> +static void __init pci_udelay(int loops)
->>> +{
->>> +       while (loops--) {
->>> +               /* Approximately 1 us */
->>> +               native_io_delay();
->>> +       }
->>> +}
->>> +
->>> +/* Derived from drivers/pci/pci.c */
->>> +#define PCI_FIND_CAP_TTL       48
->>> +static int __init __pci_find_next_cap_ttl(u8 bus, u8 slot, u8 func,
->>> +                                         u8 pos, int cap, int *ttl)
->>> +{
->>> +       u8 id;
->>> +
->>> +       while ((*ttl)--) {
->>> +               pos = read_pci_config_byte(bus, slot, func, pos);
->>> +               if (pos < 0x40)
->>> +                       break;
->>> +               pos &= ~3;
->>> +               id = read_pci_config_byte(bus, slot, func,
->>> +                                       pos + PCI_CAP_LIST_ID);
->>> +               if (id == 0xff)
->>> +                       break;
->>> +               if (id == cap)
->>> +                       return pos;
->>> +               pos += PCI_CAP_LIST_NEXT;
->>> +       }
->>> +       return 0;
->>> +}
->>> +
->>> +static int __init __pci_find_next_cap(u8 bus, u8 slot, u8 func, u8 pos, int cap)
->>> +{
->>> +       int ttl = PCI_FIND_CAP_TTL;
->>> +
->>> +       return __pci_find_next_cap_ttl(bus, slot, func, pos, cap, &ttl);
->>> +}
->>> +
->>> +static int __init __pci_bus_find_cap_start(u8 bus, u8 slot, u8 func,
->>> +                                          u8 hdr_type)
->>> +{
->>> +       u16 status;
->>> +
->>> +       status = read_pci_config_16(bus, slot, func, PCI_STATUS);
->>> +       if (!(status & PCI_STATUS_CAP_LIST))
->>> +               return 0;
->>> +
->>> +       switch (hdr_type) {
->>> +       case PCI_HEADER_TYPE_NORMAL:
->>> +       case PCI_HEADER_TYPE_BRIDGE:
->>> +               return PCI_CAPABILITY_LIST;
->>> +       case PCI_HEADER_TYPE_CARDBUS:
->>> +               return PCI_CB_CAPABILITY_LIST;
->>> +       default:
->>> +               return 0;
->>> +       }
->>> +
->>> +       return 0;
->>> +}
->>> +
->>> +static int __init early_pci_find_capability(u8 bus, u8 slot, u8 func, int cap)
->>> +{
->>> +       int pos;
->>> +       u8 type = read_pci_config_byte(bus, slot, func, PCI_HEADER_TYPE);
->>> +
->>> +       pos = __pci_bus_find_cap_start(bus, slot, func, type & 0x7f);
->>> +       if (pos)
->>> +               pos = __pci_find_next_cap(bus, slot, func, pos, cap);
->>> +
->>> +       return pos;
->>> +}
->>> +
->>> +static void __init do_reset(u8 bus, u8 slot, u8 func)
->>> +{
->>> +       u16 ctrl;
->>> +
->>> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
->>> +
->>> +       /* Assert Secondary Bus Reset */
->>> +       ctrl = read_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL);
->>> +       ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
->>> +       write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->>> +
->>> +       /*
->>> +        * PCIe spec requires software to ensure a minimum reset duration
->>> +        * (Trst == 1ms). We have here 5ms safety margin because pci_udelay is
->>> +        * not precise.
->>> +        */
->>> +       pci_udelay(5000);
->>> +
->>> +       /* De-assert Secondary Bus Reset */
->>> +       ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
->>> +       write_pci_config_16(bus, slot, func, PCI_BRIDGE_CONTROL, ctrl);
->>> +}
->>> +
->>> +static void __init save_state(unsigned bus, unsigned slot, unsigned func,
->>> +               struct pcie_dev *dev)
->>> +{
->>> +       int i;
->>> +       int pcie, flags, pcie_type;
->>> +       struct save_config *save;
->>> +
->>> +       pcie = dev->cap;
->>> +       flags = dev->flags;
->>> +       pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->>> +       save = &dev->save;
->>> +
->>> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
->>> +
->>> +       for (i = 0; i < 16; i++)
->>> +               save->pci[i] = read_pci_config(bus, slot, func, i * 4);
->>> +       i = 0;
->>> +       if (pcie_cap_has_devctl(pcie_type, flags))
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_DEVCTL);
->>> +       if (pcie_cap_has_lnkctl(pcie_type, flags))
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_LNKCTL);
->>> +       if (pcie_cap_has_sltctl(pcie_type, flags))
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_SLTCTL);
->>> +       if (pcie_cap_has_rtctl(pcie_type, flags))
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_RTCTL);
->>> +
->>> +       if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_DEVCTL2);
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_LNKCTL2);
->>> +               save->pcie[i++] = read_pci_config_16(bus, slot, func,
->>> +                                                     pcie + PCI_EXP_SLTCTL2);
->>> +       }
->>> +}
->>> +
->>> +static void __init restore_state(unsigned bus, unsigned slot, unsigned func,
->>> +               struct pcie_dev *dev)
->>> +{
->>> +       int i = 0;
->>> +       int pcie, flags, pcie_type;
->>> +       struct save_config *save;
->>> +
->>> +       pcie = dev->cap;
->>> +       flags = dev->flags;
->>> +       pcie_type = (flags & PCI_EXP_FLAGS_TYPE) >> 4;
->>> +       save = &dev->save;
->>> +
->>> +       printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
->>> +              bus, slot, func);
->>> +
->>> +       if (pcie_cap_has_devctl(pcie_type, flags))
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_DEVCTL, save->pcie[i++]);
->>> +       if (pcie_cap_has_lnkctl(pcie_type, flags))
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_LNKCTL, save->pcie[i++]);
->>> +       if (pcie_cap_has_sltctl(pcie_type, flags))
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_SLTCTL, save->pcie[i++]);
->>> +       if (pcie_cap_has_rtctl(pcie_type, flags))
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_RTCTL, save->pcie[i++]);
->>> +
->>> +       if ((flags & PCI_EXP_FLAGS_VERS) >= 2) {
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_DEVCTL2, save->pcie[i++]);
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_LNKCTL2, save->pcie[i++]);
->>> +               write_pci_config_16(bus, slot, func,
->>> +                                   pcie + PCI_EXP_SLTCTL2, save->pcie[i++]);
->>> +       }
->>> +
->>> +       for (i = 15; i >= 0; i--)
->>> +               write_pci_config(bus, slot, func, i * 4, save->pci[i]);
->>> +}
->>
->> do you have to pass bus/slot/func and use read/pci_config directly ?
->>
->> I had one patchset that use dummy pci device and reuse existing late quirk code
->> in early_quirk to do usb handoff early.
->>
->> please check
->>
->> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
->> for-x86-early-quirk-usb
->>
->> 678a023: x86: usb handoff in early_quirk
->> 2d418d8: pci, usb: Make usb handoff func all take base remapping
->> d9bd1ad: x86, pci: add dummy pci device for early stage
->> de38757: x86: early_quirk check all bus/dev/func in domain 0
->> 325cc7a: make msleep to do mdelay before scheduler is running
->> eec78a4: x86: set percpu cpu_info lpj to default
->> 52ebec4: x86, pci: early dump skip device the same way as later probe code
->>
->> if that could help.
->> you may reuse some later functions that take pci_dev as parameters.
-> d9bd1ad looks very useful for my patch. Thanks for the information.
-> What is the status of this patch? Already got in tip tree or
-> somewhere?
+Hi Rafael,
+	Thanks for your comments! And please refer to inlined comments below.
 
-Hi Yinghai,
+On 11/19/2012 04:43 PM, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> On Wednesday, November 07, 2012 12:18:07 AM Jiang Liu wrote:
+>> Hi Bjorn,
+>> 	Thanks for your review and please refer to inlined comments below.
+>>
+>> On 11/06/2012 05:05 AM, Bjorn Helgaas wrote:
+>>> On Sat, Nov 3, 2012 at 10:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>>> Modern high-end servers may support advanced RAS features, such as
+>>>> system device dynamic reconfiguration. On x86 and IA64 platforms,
+>>>> system device means processor(CPU), memory device, PCI host bridge
+>>>> and even computer node.
+>>>>
+>>>> The ACPI specifications have provided standard interfaces between
+>>>> firmware and OS to support device dynamic reconfiguraiton at runtime.
+>>>> This patch series introduces a new framework for system device
+>>>> dynamic reconfiguration based on ACPI specification, which will
+>>>> replace current existing system device hotplug logic embedded in
+>>>> ACPI processor/memory/container device drivers.
+>>>>
+>>>> The new ACPI based hotplug framework is modelled after the PCI hotplug
+>>>> architecture and target to achieve following goals:
+>>>> 1) Optimize device configuration order to achieve best performance for
+>>>>    hot-added system devices. For best perforamnce, system device should
+>>>>    be configured in order of memory -> CPU -> IOAPIC/IOMMU -> PCI HB.
+>>>> 2) Resolve dependencies among hotplug slots. You need first to remove
+>>>>    the memory device before removing a physical processor if a
+>>>>    hotpluggable memory device is connected to a hotpluggable physical
+>>>>    processor.
+>>>
+>>> Doesn't the namespace already have a way to communicate these dependencies?
+> 
+>> The namespace could could resolve most dependency issues, but there are still
+>> several corner cases need special care.
+>> 1) On a typical Intel Nehalem/Westmere platform, an IOH will be connected to
+>> two physical processors through QPI. The IOH depends on the two processors.
+>> And the ACPI namespace is something like:
+>> /_SB
+>>     |_SCK0
+>>     |_SCK1
+>>     |_PCI1
+>> 2) For a large system composed up of multiple computer nodes, nodes may have
+>> dependency on neighbors due to interconnect topology constraints.
+>>
+>> So we need to resolve dependency by both evaluating _EDL and analyze ACPI
+>> namespace topology.
+> 
+> Well, this doesn't explain why we need a new framework.
+Currently hotplug capable system devices are managed by different ACPI drivers,
+such as processor, container and acpi_memhotplug. And these ACPI drivers only
+know hotplug-capable devices managed by itself and don't know hotplug-capable
+devices managed by other drivers. For example, ACPI processor driver doesn't
+know hotplug memory devices. So existing ACPI system device hotplug drivers
+don't resolve dependencies at all.
 
-I'm rewriting my reset code using your dummy pci_dev patch. Do you have
-a plan to post it or can I post it with my patches?
+With the new framework, it knows all hotplug domains within the system, and
+it will automatically resolves dependencies when changing state of a hotplug
+domain. This is very important because hotplug requests may be triggered
+concurrently through different mechanism, such pressing the hotplug button,
+issued from OS or issued from the OOB system management center. The new
+framework will guarantee that all requests are correctly serialized. 
 
-Thanks,
-Takao Indoh
+>>>> 3) Provide interface to cancel ongoing hotplug operations. It may take
+>>>>    a very long time to remove a memory device, so provide interface to
+>>>>    cancel the inprogress hotplug operations.
+>>>> 4) Support new advanced RAS features, such as socket/memory migration.
+>>>> 5) Provide better user interfaces to access the hotplug functionalities.
+>>>> 6) Provide a mechanism to detect hotplug slots by checking existence
+>>>>    of ACPI _EJ0 method or by other hardware platform specific methods.
+>>>
+>>> I don't know what "hotplug slot" means for ACPI.  ACPI allows hotplug
+>>> of arbitrary devices in the namespace, whether they have EJ0 or not.
+> 
+>> Here "hotplug" slot is an abstraction of receptacles where a group of
+>> system devices could be attached to, or where we could control a group
+>> of system devices. It's totally conceptual, may or may not has 
+>> corresponding physical slots.
+> 
+> Can that be called something different from "slot", then, to avoid confusion?
+On some other OSes, it's called "attachment point" or "AP". I use slot
+because its used by PCI hotplug. If that causes confusion, we may call
+it something else, any suggestion?
 
+>> For example,
+>> 1) a hotplug slot for a hotpluggable memory board has a physical slot.
+> 
+> So let's call that a "slot" and the abstraction above a "hotplug domain" or
+> something similar.  Because in fact we're talking about hotplug domains,
+> aren't we?
+Yeah, maybe "hotplug domain" is a good candidate for "hotplug slot".
+
+>> 2) a hotplug slot for a non-hotpluggable processor with power control
+>> capability has no physical slot. (That means you may power on/off a
+>> physical processor but can't hotplug it at runtime). This case is useful
+>> for hardware partitioning.
+> 
+> People have been working on this particular thing for years, so I wonder
+> why you think that your apprach is going to be better here?
+To support hardware partitioning or power management, OS needs to provide
+interfaces to control those power-control-capable devices. But currently
+we have only interface to power off a device and without interface to
+power on a device.
+
+Another benefit of the new framework is to support memory migration. A memory
+device may support memory migration but don't support memory hotplug. The
+new framework will abstract the migration-capable memory device as a hotplug
+domain, so user can manage the memory device.
+
+>> Detecting hotplug slots by checking existence of _EJ0 is the default
+>> but unreliable way. For a real high-end server with system device
+>> hotplug capabilities should provide some static ACPI table to describe
+>> hotplug slots/capabilities. There are some ongoing efforts for that from
+>> Intel, but not in the public domain yet. So the hotplug slot enumeration
+>> driver is designed to extensible:)
+>>
+>>>> 7) Unify the way to enumerate ACPI based hotplug slots. All hotplug
+>>>>    slots will be enumerated by the enumeration driver (acpihp_slot),
+>>>>    instead of by individual ACPI device drivers.
+>>>
+>>> Why do we need to enumerate these "slots" specifically?
+>>>
+>>> I think this patch adds things in /sys.  It might help if you
+>>> described what they are.
+> 
+>> There's no standard way in ACPI5.0 to describe system device hotplug slots yet.
+>> And we want to show user the system device hotplug capabilities even when there
+>> is no device attached to a slot. In other word, user could now how much
+>> devices they could connect to the system by hotplugging.
+> 
+> Bjorn probably meant "provide documentation describing the user space interfaces
+> being introduced".  Which in fact is a requirement.
+Thanks for reminder. Documentation for sysfs interface is a must, and we have
+plan for that. How about providing sysfs interface docs after we have settled
+down about the overall idea and design?
+
+>>>> 8) Unify the way to handle ACPI hotplug events. All ACPI hotplug events
+>>>>    for system devices will be handled by a generic ACPI hotplug driver
+>>>>    (acpihp_drv) instead of by individual ACPI device drivers.
+>>>> 9) Provide better error handling and error recovery.
+>>>> 10) Trigger hotplug events/operations by software. This feature is useful
+>>>>    for hardware fault management and/or power saving.
+>>>>
+>>>> The new framework is composed up of three major components:
+>>>> 1) A system device hotplug slot enumerator driver, which enumerates
+>>>>    hotplug slots in the system and provides platform specific methods
+>>>>    to control those slots.
+>>>> 2) A system device hotplug driver, which is a platform independent
+>>>>    driver to manage all hotplug slots created by the slot enumerator.
+>>>>    The hotplug driver implements a state machine for hotplug slots and
+>>>>    provides user interfaces to manage hotplug slots.
+>>>> 3) Several ACPI device drivers to configure/unconfigure system devices
+>>>>    at runtime.
+>>>>
+>>>> To get rid of inter dependengcy between the slot enumerator and hotplug
+>>>> driver, common code shared by them will be built into the kernel. The
+>>>> shared code provides some helper routines and a device class named
+>>>> acpihp_slot_class with following default sysfs properties:
+>>>>         capabilities: RAS capabilities of the hotplug slot
+>>>>         state: current state of the hotplug slot state machine
+>>>>         status: current health status of the hotplug slot
+>>>>         object: ACPI object corresponding to the hotplug slot
+>>>>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>>>> Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+>>>
+>>> ...
+>>>> +static char *acpihp_dev_mem_ids[] = {
+>>>> +       "PNP0C80",
+>>>> +       NULL
+>>>> +};
+>>>> +
+>>>> +static char *acpihp_dev_pcihb_ids[] = {
+>>>> +       "PNP0A03",
+>>>> +       NULL
+>>>> +};
+>>>
+>>> Why should this driver need to know about these PNP IDs?  We ought to
+>>> be able to support hotplug of any device in the namespace, no matter
+>>> what its ID.
+> 
+>> We need PNP IDs for:
+>> 1) Give a meaningful name for each slot.
+>> lrwxrwxrwx  CPU00 -> ../../../devices/LNXSYSTM:00/acpihp/CPU00
+>> lrwxrwxrwx  CPU01 -> ../../../devices/LNXSYSTM:00/acpihp/CPU01
+>> lrwxrwxrwx  CPU02 -> ../../../devices/LNXSYSTM:00/acpihp/CPU02
+>> lrwxrwxrwx  CPU03 -> ../../../devices/LNXSYSTM:00/acpihp/CPU03
+>> lrwxrwxrwx  IOX01 -> ../../../devices/LNXSYSTM:00/acpihp/IOX01
+>> lrwxrwxrwx  MEM00 -> ../../../devices/LNXSYSTM:00/acpihp/CPU00/MEM00
+>> lrwxrwxrwx  MEM01 -> ../../../devices/LNXSYSTM:00/acpihp/CPU00/MEM01
+>> lrwxrwxrwx  MEM02 -> ../../../devices/LNXSYSTM:00/acpihp/CPU01/MEM02
+>> lrwxrwxrwx  MEM03 -> ../../../devices/LNXSYSTM:00/acpihp/CPU01/MEM03
+>> lrwxrwxrwx  MEM04 -> ../../../devices/LNXSYSTM:00/acpihp/CPU02/MEM04
+>> lrwxrwxrwx  MEM05 -> ../../../devices/LNXSYSTM:00/acpihp/CPU02/MEM05
+>> lrwxrwxrwx  MEM06 -> ../../../devices/LNXSYSTM:00/acpihp/CPU03/MEM06
+>> lrwxrwxrwx  MEM07 -> ../../../devices/LNXSYSTM:00/acpihp/CPU03/MEM07
+>>
+>> 2) Classify system device into groups according to device types, so we could
+>> configure/unconfigure them in optimal order for performance as:
+>> memory -> CPU -> IOAPIC -> PCI host bridge
+>>
+>> 3) The new hotplug framework are designed to handle system device hotplug,
+>> and it won't hand IO device hotplug such as PCI etc. So it need to stop
+>> scanning subtree of PCI host bridges.
+> 
+> Well, we probably need a hotplug domains framework, which the thing you're
+> proposing seems to be.  However, the question is: Why should it cover "system
+> devices" only?
+> 
+> To me, it looks like such a framework should cover all hotplug devices in the
+> system, or at least all ACPI-based hotplug devices.
+It will be great if we could provide a framework for all types of devices,
+including both system devices and IO devices. But when starting the ACPI
+based system device hotplug project, we found almost all hotplug capable
+IO buses/devices have already provided hotplug support, so we focused
+on system device hotplug because it's still incomplete.
+
+According to my experience, it's really convenient if OS could provide a
+unified tool/interface to support both system device and io device hotplug,
+with consistent commands and outputs. But it's hard to provide a framework
+to support both system device and io device hotplug at kernel level.
+And an example system's hotplug framework is composed up with:
+1) a hotplug driver for each type of devices, such as USB, SCSI, PCI and
+   system device.
+2) a unified userspace application/interface to support all types of hotplug
+   drivers
+
+So with that in mind, we have designed the ACPI based system device hotplug
+framework as a hotplug driver for system devices. And we still lack of a 
+unified userspace application/interface to support all types of device hotplug.
+
+Thanks
+Gerry
