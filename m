@@ -1,54 +1,146 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
-Cc: Wen Congyang <wency@cn.fujitsu.com>, linux-acpi@vger.kernel.org,
-	isimatu.yasuaki@jp.fujitsu.com, lenb@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [RFC PATCH 0/3] acpi: Introduce prepare_remove device operation
-Date: Thu, 15 Nov 2012 00:12:55 +0100
-Message-ID: <1647704.U9gX6ykHyh@vostro.rjw.lan>
-In-Reply-To: <20121112172046.GA4931@dhcp-192-168-178-175.profitbricks.localdomain>
-References: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com> <50A07477.2050002@cn.fujitsu.com> <20121112172046.GA4931@dhcp-192-168-178-175.profitbricks.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41663 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754510Ab2KSSiG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 19 Nov 2012 13:38:06 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH 015/493] PCI: move pci_uevent into pci-driver.c
+Date: Mon, 19 Nov 2012 13:19:24 -0500
+Message-Id: <1353349642-3677-15-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 12, 2012 06:20:47 PM Vasilis Liaskovitis wrote:
-> On Mon, Nov 12, 2012 at 12:00:55PM +0800, Wen Congyang wrote:
-> > At 11/09/2012 02:29 AM, Vasilis Liaskovitis Wrote:
-> > > As discussed in
-> > > https://patchwork.kernel.org/patch/1581581/
-> > > the driver core remove function needs to always succeed. This means we need
-> > > to know that the device can be successfully removed before acpi_bus_trim / 
-> > > acpi_bus_hot_remove_device are called. This can cause panics when OSPM-initiated
-> > > eject (echo 1 > /sys/bus/acpi/devices/PNP/eject) of memory devices fails, since
-> > > the ACPI core goes ahead and ejects the device regardless of whether the memory
-> > > is still in use or not.
-> > > 
-> > > For this reason a new acpi_device operation called prepare_remove is introduced.
-> > > This operation should be registered for acpi devices whose removal (from kernel
-> > > perspective) can fail.  Memory devices fall in this category.
-> > > 
-> > > acpi_bus_hot_remove_device is changed to handle removal in 2 steps:
-> > > - preparation for removal i.e. perform part of removal that can fail outside of
-> > >   ACPI core. Should succeed for device and all its children.
-> > > - if above step was successfull, proceed to actual ACPI removal
-> > 
-> > If we unbind the device from the driver, we still need to do preparation. But
-> > you don't do it in your patch.
-> 
-> yes, driver_unbind breaks with the current patchset. I 'll try to fix and
-> repost. However, I think this will require a new driver-core wide prepare_remove
-> callback (not only acpi-specific). I am not sure that would be acceptable.
+With the demise of CONFIG_HOTPLUG as an option, the pci_uevent
+function located in hotplug.c will now always be used and doesn't need
+special treatment in the Makefile.  Move pci_uevent into pci-driver.c
+and remove hotplug.c
 
-However, you can't break driver_unbind either.
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: linux-pci@vger.kernel.org 
+---
+ drivers/pci/Makefile     |  2 --
+ drivers/pci/hotplug.c    | 37 -------------------------------------
+ drivers/pci/pci-driver.c | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h        |  1 -
+ 4 files changed, 33 insertions(+), 40 deletions(-)
+ delete mode 100644 drivers/pci/hotplug.c
 
-Thanks,
-Rafael
-
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 8d688b2..36f119d 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -15,8 +15,6 @@ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+ obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+ 
+-obj-$(CONFIG_HOTPLUG) += hotplug.o
+-
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+ ifdef CONFIG_HOTPLUG_PCI
+diff --git a/drivers/pci/hotplug.c b/drivers/pci/hotplug.c
+deleted file mode 100644
+index 2b5352a..0000000
+--- a/drivers/pci/hotplug.c
++++ /dev/null
+@@ -1,37 +0,0 @@
+-#include <linux/kernel.h>
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-#include "pci.h"
+-
+-int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+-{
+-	struct pci_dev *pdev;
+-
+-	if (!dev)
+-		return -ENODEV;
+-
+-	pdev = to_pci_dev(dev);
+-	if (!pdev)
+-		return -ENODEV;
+-
+-	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
+-			   pdev->subsystem_device))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
+-			   pdev->vendor, pdev->device,
+-			   pdev->subsystem_vendor, pdev->subsystem_device,
+-			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
+-			   (u8)(pdev->class)))
+-		return -ENOMEM;
+-	return 0;
+-}
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 498e66a..f7b96cb 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1215,6 +1215,39 @@ void pci_dev_put(struct pci_dev *dev)
+ 		put_device(&dev->dev);
+ }
+ 
++static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
++{
++	struct pci_dev *pdev;
++
++	if (!dev)
++		return -ENODEV;
++
++	pdev = to_pci_dev(dev);
++	if (!pdev)
++		return -ENODEV;
++
++	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
++			   pdev->subsystem_device))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
++			   pdev->vendor, pdev->device,
++			   pdev->subsystem_vendor, pdev->subsystem_device,
++			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
++			   (u8)(pdev->class)))
++		return -ENOMEM;
++	return 0;
++}
++
+ struct bus_type pci_bus_type = {
+ 	.name		= "pci",
+ 	.match		= pci_bus_match,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index ae06da4..e851829 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -8,7 +8,6 @@
+ 
+ /* Functions internal to the PCI core code */
+ 
+-extern int pci_uevent(struct device *dev, struct kobj_uevent_env *env);
+ extern int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+ extern void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+ #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.0
+
