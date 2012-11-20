@@ -1,54 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50B5CBD2.5020804@oracle.com>
-Date: Wed, 28 Nov 2012 16:31:14 +0800
-From: Joe Jin <joe.jin@oracle.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46001 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752464Ab2KTVOr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 16:14:47 -0500
+Subject: Re: [PATCH 016/493] PCI: always build setup-bus when PCI is enabled
+To: bhelgaas@google.com (Bjorn Helgaas)
+Date: Tue, 20 Nov 2012 16:14:46 -0500
+Cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org
+In-Reply-To: <CAErSpo5+wynH3LDPZbdoQVh1w1igzuMNS45hDO-69TNjQ8TLMg@mail.gmail.com>
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: "Fujinaka, Todd" <todd.fujinaka@intel.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-References: <509B5038.8090304@oracle.com>  <061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com>  <50A30656.6090508@oracle.com>  <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com>  <50A43828.6000702@oracle.com>  <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com>  <50A9C5CC.1030300@oracle.com>  <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com>  <50AB8471.7080607@oracle.com>  <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com>  <50B41077.3080009@oracle.com>  <b46b84cf-3688-4fd7-b741-4e96f2663517@default>  <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com> <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Message-Id: <20121120211446.480A880133@viridian.itc.virginia.edu>
+From: wfp5p@viridian.itc.virginia.edu (Bill Pemberton)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/28/12 02:10, Ben Hutchings wrote:
-> On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
->> Forgive me if I'm being too repetitious as I think some of this has
->> been mentioned in the past.
->>
->> We (and by we I mean the Ethernet part and driver) can only change the
->> advertised availability of a larger MaxPayloadSize. The size is
->> negotiated by both sides of the link when the link is established. The
->> driver should not change the size of the link as it would be poking at
->> registers outside of its scope and is controlled by the upstream
->> bridge (not us).
-> [...]
+Bjorn Helgaas writes:
 > 
-> MaxPayloadSize (MPS) is not negotiated between devices but is programmed
-> by the system firmware (at least for devices present at boot - the
-> kernel may be responsible in case of hotplug).  You can use the kernel
-> parameter 'pci=pcie_bus_perf' (or one of several others) to set a policy
-> that overrides this, but no policy will allow setting MPS above the
-> device's MaxPayloadSizeSupported (MPSS).
+> On Mon, Nov 19, 2012 at 11:19 AM, Bill Pemberton <wfp5p@virginia.edu> wrote:
+> > CONFIG_HOTPLUG is being removed so setup-bus always needs to be built
+> > as part of PCI.
+> >
+> > Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+> > Cc: linux-pci@vger.kernel.org
 > 
+> These all look fine to me.  Please make the changelog subjects
+> consistently capitalize the "PCI" acronym and also the first word of
+> the rest, e.g., "PCI: Always ..."
+> 
+> If you want me to take them through my PCI tree, I can, but I assume
+> Greg is going to take them through the driver core tree, and that's
+> fine with me.
+> 
+> FWIW, I agree with Grant Likely's comments about squashing the
+> devinit/devexit/etc patches.  That would be fine with me.
 
-Ben,
+The plan was for them to go through Greg's driver core tree.
 
-Unfortunately I'm using 3.0.x kernel and this is not included in the kernel.
-So I'm trying to use ethtool modify it from eeprom to see if help or no.
+I'll redo the PCI related ones as you've requested and resend them.
+I probably won't be able to get to it until tomorrow though.
 
-
-Todd, I'll review all MaxPayload for all devices, but need to say if it mismatch,
-customer could not modify it from BIOS for there was not entry at there, to
-test it, we have to find how to verify if this is the root cause, so still 
-need to find the offset in eeprom.
-
-Thanks in advance,
-Joe
-
+-- 
+Bill
