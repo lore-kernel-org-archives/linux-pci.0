@@ -1,43 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46281 "EHLO
-	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756365Ab2KUUfC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:02 -0500
-From: Bill Pemberton <wfp5p@virginia.edu>
-To: gregkh@linuxfoundation.org
-Cc: linux-pci@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-sh@vger.kernel.org
-Subject: [PATCH 4/9] sh/PCI: Remove CONFIG_HOTPLUG ifdefs
-Date: Wed, 21 Nov 2012 15:34:55 -0500
-Message-Id: <1353530100-728-5-git-send-email-wfp5p@virginia.edu>
-In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
-References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:36136 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895Ab2KTSEc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 13:04:32 -0500
+Received: by mail-ee0-f46.google.com with SMTP id e53so1855361eek.19
+        for <linux-pci@vger.kernel.org>; Tue, 20 Nov 2012 10:04:30 -0800 (PST)
+Message-ID: <0B81514A792D4D9FAB292ED315D48BE2@alyakaslap>
+From: "Alex Lyakas" <alex@zadarastorage.com>
+To: <linux-pci@vger.kernel.org>
+Subject: pci_enable_msix()  failure
+Date: Tue, 20 Nov 2012 20:04:29 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove conditional code based on CONFIG_HOTPLUG being false.  It's
-always on now in preparation of it going away as an option.
+Hello list, I was advised to post this question by Jesse Barnes; I also 
+posted to KVM list.
 
-Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
-Cc: Paul Mundt <lethal@linux-sh.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-sh@vger.kernel.org
----
- arch/sh/drivers/pci/pci.c | 2 --
- 1 file changed, 2 deletions(-)
+I am running Ubuntu-Precise 3.2.0-29-generic #46, with stock KVM ("QEMU 
+emulator version 1.0 (qemu-kvm-1.0)") on a Dell R510 server. I have one 
+dual-port Intel's NIC 82599, of which I spawn 32 VFs from each port. I spawn
+virtual machines with KVM, each VM has 4 VFs attached (two from each PF).
 
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index a7e078f..81e5daf 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -319,7 +319,5 @@ EXPORT_SYMBOL(pci_iounmap);
- 
- #endif /* CONFIG_GENERIC_IOMAP */
- 
--#ifdef CONFIG_HOTPLUG
- EXPORT_SYMBOL(PCIBIOS_MIN_IO);
- EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
--#endif
--- 
-1.8.0
+Once in a while, in particular when I spawn multiple VMs in parallel, I hit 
+an issue that one of the VFs does not have an IRQ assigned to it. I am 
+checking this in /proc/interrupts, looking for entries like 
+"kvm:0000:03:14.6". In some cases, an entry is missing for a particular VF. 
+As a result, the VF within the VM is non-functional.
+
+I debugged this issue further, by adding prints to kvm.ko code. I see that 
+the failure happens in kvm_vm_ioctl_assigned_device/KVM_ASSIGN_DEV_IRQ path, 
+which calls assigned_device_enable_host_msix() function, which calls
+pci_enable_msix(), which fails with EINVAL or with ENOMEM. This path is 
+called twice for each VF.
+
+I see that first pci_enable_msix() returns -12/-22, and when 
+kvm_vm_ioctl_set_msix_nr() is called again, it sees that adev->entries_nr != 
+0 and fails the call with EINVAL. I can repro it only when spawning like 8 
+or 10 VMs in parallel, but it doesn't happen every time. So it seems like 
+this is not a resource shortage problem, but some race somewhere.
+
+I tested this with several version of ixgbe drivers, including the in-tree 
+version that comes with Precise. It reproduces with all the versions.
+
+Can anybody pls advise on how to debug this issue further?
+
+Thanks,
+Alex. 
 
