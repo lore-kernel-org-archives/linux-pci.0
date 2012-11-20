@@ -1,57 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part3 0/2] enhance ACPI container driver to support hotplug framework
-Date: Sun,  4 Nov 2012 23:08:16 +0800
-Message-Id: <1352041698-6243-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:50332 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156Ab2KTNlI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 08:41:08 -0500
+Date: Tue, 20 Nov 2012 14:41:04 +0100
+From: Stefan Hajnoczi <stefanha@gmail.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru devices
+ assigned to KVM guests
+Message-ID: <20121120134104.GI27378@stefanha-thinkpad.redhat.com>
+References: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the third part of the new ACPI based system device hotplug
-framework, which enhances the ACPI container driver to support the
-ACPI system device hotplug framework.
+On Tue, Nov 20, 2012 at 06:31:48AM +0000, Pandarathil, Vijaymohan R wrote:
+> Add support for error containment when a PCI pass-thru device assigned to a KVM
+> guest encounters an error. This is for PCIe devices/drivers that support AER
+> functionality. When the OS is notified of an error in a device either
+> through the firmware first approach or through an interrupt handled by the AER
+> root port driver, concerned subsystems are notified by invoking callbacks
+> registered by these subsystems. The device is also marked as tainted till the
+> corresponding driver recovery routines are successful. 
+> 
+> KVM module registers for a notification of such errors. In the KVM callback
+> routine, a global counter is incremented to keep track of the error
+> notification. Before each CPU enters guest mode to execute guest code,
+> appropriate checks are done to see if the impacted device belongs to the guest
+> or not. If the device belongs to the guest, qemu hypervisor for the guest is
+> informed and the guest is immediately brought down, thus preventing or
+> minimizing chances of any bad data being written out by the guest driver
+> after the device has encountered an error.
 
-For an introduction of the new framework, please refer to:
-https://lkml.org/lkml/2012/11/3/143
-https://github.com/downloads/jiangliu/linux/ACPI%20Based%20System%20Device%20Dynamic%20Reconfiguration.pdf
+I'm surprised that the hypervisor would shut down the guest when PCIe
+AER kicks in for a pass-through device.  Shouldn't we pass the AER event
+into the guest and deal with it there?
 
-And you may pull from:
-https://github.com/jiangliu/linux.git acpihp_container
+The equivalent to this policy on physical hardware would be that the CPU
+is reset or the machine is powered down on AER.  That doesn't sound
+right.
 
-Jiang Liu (2):
-  ACPIHP: enhance ACPI container driver to support new hotplug
-    framework
-  ACPIHP/container: move container.c into drivers/acpi/hotplug
-
- drivers/acpi/Kconfig             |    7 +-
- drivers/acpi/Makefile            |    1 -
- drivers/acpi/container.c         |  296 --------------------------------------
- drivers/acpi/hotplug/Makefile    |    2 +
- drivers/acpi/hotplug/container.c |  124 ++++++++++++++++
- include/acpi/container.h         |   12 --
- 6 files changed, 130 insertions(+), 312 deletions(-)
- delete mode 100644 drivers/acpi/container.c
- create mode 100644 drivers/acpi/hotplug/container.c
- delete mode 100644 include/acpi/container.h
-
--- 
-1.7.9.5
-
+Stefan
