@@ -1,60 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:37079 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933111Ab2KEWJS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2012 17:09:18 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hr7so3568777wib.1
-        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2012 14:09:17 -0800 (PST)
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:38025 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803Ab2KTQEJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 11:04:09 -0500
+From: Betty Dall <betty.dall@hp.com>
+To: bhelgaas@google.com, jbarnes@virtuousgeek.org,
+	alex.williamson@redhat.com, wangyijing@huawei.com,
+	ddutile@redhat.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Betty Dall <betty.dall@hp.com>
+Subject: =?UTF-8?q?=5BPATCH=5D=20PCI=3A=20add=20PCIe=208=2E0=20GT/s=20supported=20link=20speed=20define?=
+Date: Tue, 20 Nov 2012 11:58:59 -0700
+Message-Id: <1353437939-29210-1-git-send-email-betty.dall@hp.com>
 MIME-Version: 1.0
-In-Reply-To: <509270D2.7060505@huawei.com>
-References: <20121031095148.75dbb6e8.izumi.taku@jp.fujitsu.com> <509270D2.7060505@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 5 Nov 2012 15:08:56 -0700
-Message-ID: <CAErSpo47jaFQ78QdHYifUmXFCfRSn45DmL9yvMTiQjmS9+GgFw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/portdrv: Fix regression introduced by commit 2dcfaf85
-To: Jiang Liu <jiang.liu@huawei.com>
-Cc: Taku Izumi <izumi.taku@jp.fujitsu.com>, linux-pci@vger.kernel.org,
-	wangyijing@huawei.com, Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 1, 2012 at 6:53 AM, Jiang Liu <jiang.liu@huawei.com> wrote:
-> Hi Taku,
->         It's a mistake introduced by that patch, thanks for fix it.
->         Reviewed-by: <jiang.liu@huawei.com>
->
-> On 2012-10-31 8:51, Taku Izumi wrote:
->>
->> PCI/portdrv: Fix regression introduced by commit 2dcfaf85
->>
->> After commit 2dcfaf85, hotplug slots for port devices
->> w/o slot implementation come to be created.
->> This patch fixes this problem.
+Add a new define for the 8.0 GT/s supported link speed added in the PCI
+3.0 specification.  This is used to identify a device's current link speed
+(PCI_EXP_CLS).
 
-I applied this to my for-linus branch as v3.7 material.  Thanks!
+Here is the section of the PCI 3.0 specification:
+"Supported Link Speeds Vector – This field indicates the
+supported Link speed(s) of the associated Port. For each bit, a
+value of 1b indicates that the corresponding Link speed is
+supported; otherwise, the Link speed is not supported.
+Bit definitions within this field are:
+Bit 0 2.5 GT/s
+Bit 1 5.0 GT/s
+Bit 2 8.0 GT/s
+Bits 6:3 RsvdP
+Multi-Function devices associated with an Upstream Port must
+report the same value in this field for all Functions."
 
->> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
->> ---
->>  drivers/pci/pcie/portdrv_core.c |    3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> Index: pci/drivers/pci/pcie/portdrv_core.c
->> ===================================================================
->> --- pci.orig/drivers/pci/pcie/portdrv_core.c
->> +++ pci/drivers/pci/pcie/portdrv_core.c
->> @@ -272,7 +272,8 @@ static int get_port_device_capability(st
->>       }
->>
->>       /* Hot-Plug Capable */
->> -     if (cap_mask & PCIE_PORT_SERVICE_HP) {
->> +     if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
->> +         dev->pcie_flags_reg & PCI_EXP_FLAGS_SLOT) {
->>               pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
->>               if (reg32 & PCI_EXP_SLTCAP_HPC) {
->>                       services |= PCIE_PORT_SERVICE_HP;
->>
->>
->>
->
->
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
+ include/uapi/linux/pci_regs.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 20ae747..0cf8abb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -469,6 +469,7 @@
+ #define  PCI_EXP_LNKSTA_CLS	0x000f	/* Current Link Speed */
+ #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x01	/* Current Link Speed 2.5GT/s */
+ #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x02	/* Current Link Speed 5.0GT/s */
++#define  PCI_EXP_LNKSTA_CLS_8_0GB 0x04	/* Current Link Speed 8.0GT/s */
+ #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Nogotiated Link Width */
+ #define  PCI_EXP_LNKSTA_NLW_SHIFT 4	/* start of NLW mask in link status */
+ #define  PCI_EXP_LNKSTA_LT	0x0800	/* Link Training */
+-- 
+1.7.7.6
+
