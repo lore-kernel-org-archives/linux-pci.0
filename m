@@ -1,59 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re:
-Date: Fri, 02 Nov 2012 01:17:47 +0100
-Message-ID: <3954574.77sdfIpds8@vostro.rjw.lan>
-In-Reply-To: <1351618965-16761-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com> <1351618965-16761-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:41047 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752779Ab2KTQEg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 11:04:36 -0500
+Date: Tue, 20 Nov 2012 11:04:35 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Huang Ying <ying.huang@intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] PCI/PM: Keep runtime PM enabled for unbound PCI devices
+In-Reply-To: <1353398902-21253-1-git-send-email-ying.huang@intel.com>
+Message-ID: <Pine.LNX.4.44L0.1211201104100.1692-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, 20 Nov 2012, Huang Ying wrote:
 
-On Tuesday, October 30, 2012 10:42:37 AM Yinghai Lu wrote:
-> Subject: [PATCH resend 0/8] PCI, ACPI, x86: pci root bus hotplug support resources assign and remove path
+> For unbound PCI devices, what we need is:
 > 
-> 1. add support for assign resource for hot add path.
-> 2. stop and remove root bus during acpi root remove.
+>  - Always in D0 state, because some devices does not work again after
+>    being put into D3 by the PCI bus.
 > 
+>  - In SUSPENDED state if allowed, so that the parent devices can still
+>    be put into low power state.
 > 
-> could get from
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+> To satisfy these requirement, the runtime PM for the unbound PCI
+> devices are disabled and set to SUSPENDED state.  One issue of this
+> solution is that the PCI devices will be put into SUSPENDED state even
+> if the SUSPENDED state is forbidden via the sysfs interface
+> (.../power/control) of the device.  This is not an issue for most
+> devices, because most PCI devices are not used at all if unbounded.
+> But there are exceptions.  For example, unbound VGA card can be used
+> for display, but suspend its parents make it stop working.
 > 
-> Yinghai Lu (8):
->   PCI: Separate out pci_assign_unassigned_bus_resources()
->   PCI: Move pci_rescan_bus() back to probe.c
->   PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
->   PCI, ACPI: assign unassigned resource for hot add root bus
->   PCI: Add pci_stop/remove_root_bus()
->   PCI, ACPI: Make acpi_pci_root_remove stop/remove pci root bus
->   PCI, ACPI: delete root bus prt during hot remove path
->   PCI, ACPI: remove acpi_root_driver in reserse order
-> 
->  drivers/acpi/pci_root.c |   21 ++++++++++++++++++++-
->  drivers/pci/probe.c     |   22 ++++++++++++++++++++++
->  drivers/pci/remove.c    |   36 ++++++++++++++++++++++++++++++++++++
->  drivers/pci/setup-bus.c |   22 +---------------------
->  include/linux/pci.h     |    3 +++
->  5 files changed, 82 insertions(+), 22 deletions(-)
+> To fix the issue, we keep the runtime PM enabled when the PCI devices
+> are unbound.  But the runtime PM callbacks will do nothing if the PCI
+> devices are unbound.  This way, we can put the PCI devices into
+> SUSPENDED state without put the PCI devices into D3 state.
 
-Please feel free to add
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-to the ACPI-related patches in this series.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
