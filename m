@@ -1,73 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:49028 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756212Ab2K0SYf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Nov 2012 13:24:35 -0500
-From: "Fujinaka, Todd" <todd.fujinaka@intel.com>
-To: Ben Hutchings <bhutchings@solarflare.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>
-CC: Joe Jin <joe.jin@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: RE: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-Date: Tue, 27 Nov 2012 18:24:33 +0000
-Message-ID: <9B4A1B1917080E46B64F07F2989DADD62F2D8116@ORSMSX102.amr.corp.intel.com>
-References: <509B5038.8090304@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com>
-	 <50A30656.6090508@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com>
-	 <50A43828.6000702@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com>
-	 <50A9C5CC.1030300@oracle.com>
-	 <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com>
-	 <50AB8471.7080607@oracle.com>
-	 <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com>
-	 <50B41077.3080009@oracle.com>
-	 <b46b84cf-3688-4fd7-b741-4e96f2663517@default>
-	 <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com>
- <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from shards.monkeyblade.net ([149.20.54.216]:43604 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751530Ab2KTUK1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 20 Nov 2012 15:10:27 -0500
+Date: Tue, 20 Nov 2012 15:10:25 -0500 (EST)
+Message-Id: <20121120.151025.110295017516927341.davem@davemloft.net>
+To: jon.mason@intel.com
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	dave.jiang@intel.com, nab@linux-iscsi.org
+Subject: Re: [PATCH v6 0/2] PCI-Express Non-Transparent Bridge Support 
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1353119233-32752-1-git-send-email-jon.mason@intel.com>
+References: <1353119233-32752-1-git-send-email-jon.mason@intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhhbmtzIGZvciB0aGUgY2xhcmlmaWNhdGlvbi4gSSB3YXMganVzdCBnb2luZyBieSB0aGUgUENJ
-ZSBzcGVjLCB3aGljaCBzYXlzIHRoZSBsb3dlc3QgdmFsdWUgb2YgYm90aCBlbmRzIGlzIHVzZWQs
-IGFuZCBJIGZpZ3VyZWQgU09NRVRISU5HIGhhZCB0byBiZSBsb29raW5nIGF0IHRoYXQgYW5kIGRv
-aW5nIHNvbWUgc29ydCBvZiBuZWdvdGlhdGlvbi4gSSdtIG5vIEJJT1MgZ3V5LCBzbyBJJ20gbm90
-IHN1cmUgd2hhdCdzIGFjdHVhbGx5IGdvaW5nIG9uLCB3aGV0aGVyIHNvbWV0aGluZyB3YWxrcyB0
-aGUgUENJZSB0cmVlIG9yIGlmIHRoZSBCSU9TIGp1c3Qgc2V0cyBhbGwgdGhlIHZhbHVlcyB0byB0
-aGUgbWluaW11bS4NCg0KVG9kZCBGdWppbmFrYQ0KVGVjaG5pY2FsIE1hcmtldGluZyBFbmdpbmVl
-cg0KTEFOIEFjY2VzcyBEaXZpc2lvbiAoTEFEKQ0KSW50ZWwgQ29ycG9yYXRpb24NCnRvZGQuZnVq
-aW5ha2FAaW50ZWwuY29tDQooNTAzKSA3MTItNDU2NQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2Fn
-ZS0tLS0tDQpGcm9tOiBCZW4gSHV0Y2hpbmdzIFttYWlsdG86Ymh1dGNoaW5nc0Bzb2xhcmZsYXJl
-LmNvbV0gDQpTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAyNywgMjAxMiAxMDoxMSBBTQ0KVG86IEZ1
-amluYWthLCBUb2RkOyBNYXJ5IE1jZ3JhdGgNCkNjOiBKb2UgSmluOyBuZXRkZXZAdmdlci5rZXJu
-ZWwub3JnOyBlMTAwMC1kZXZlbEBsaXN0cy5zZi5uZXQ7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
-bC5vcmc7IGxpbnV4LXBjaQ0KU3ViamVjdDogUkU6IFtFMTAwMC1kZXZlbF0gODI1NzFFQjogRGV0
-ZWN0ZWQgSGFyZHdhcmUgVW5pdCBIYW5nDQoNCk9uIFR1ZSwgMjAxMi0xMS0yNyBhdCAxNzozMiAr
-MDAwMCwgRnVqaW5ha2EsIFRvZGQgd3JvdGU6DQo+IEZvcmdpdmUgbWUgaWYgSSdtIGJlaW5nIHRv
-byByZXBldGl0aW91cyBhcyBJIHRoaW5rIHNvbWUgb2YgdGhpcyBoYXMgDQo+IGJlZW4gbWVudGlv
-bmVkIGluIHRoZSBwYXN0Lg0KPiANCj4gV2UgKGFuZCBieSB3ZSBJIG1lYW4gdGhlIEV0aGVybmV0
-IHBhcnQgYW5kIGRyaXZlcikgY2FuIG9ubHkgY2hhbmdlIHRoZSANCj4gYWR2ZXJ0aXNlZCBhdmFp
-bGFiaWxpdHkgb2YgYSBsYXJnZXIgTWF4UGF5bG9hZFNpemUuIFRoZSBzaXplIGlzIA0KPiBuZWdv
-dGlhdGVkIGJ5IGJvdGggc2lkZXMgb2YgdGhlIGxpbmsgd2hlbiB0aGUgbGluayBpcyBlc3RhYmxp
-c2hlZC4gVGhlIA0KPiBkcml2ZXIgc2hvdWxkIG5vdCBjaGFuZ2UgdGhlIHNpemUgb2YgdGhlIGxp
-bmsgYXMgaXQgd291bGQgYmUgcG9raW5nIGF0IA0KPiByZWdpc3RlcnMgb3V0c2lkZSBvZiBpdHMg
-c2NvcGUgYW5kIGlzIGNvbnRyb2xsZWQgYnkgdGhlIHVwc3RyZWFtIA0KPiBicmlkZ2UgKG5vdCB1
-cykuDQpbLi4uXQ0KDQpNYXhQYXlsb2FkU2l6ZSAoTVBTKSBpcyBub3QgbmVnb3RpYXRlZCBiZXR3
-ZWVuIGRldmljZXMgYnV0IGlzIHByb2dyYW1tZWQgYnkgdGhlIHN5c3RlbSBmaXJtd2FyZSAoYXQg
-bGVhc3QgZm9yIGRldmljZXMgcHJlc2VudCBhdCBib290IC0gdGhlIGtlcm5lbCBtYXkgYmUgcmVz
-cG9uc2libGUgaW4gY2FzZSBvZiBob3RwbHVnKS4gIFlvdSBjYW4gdXNlIHRoZSBrZXJuZWwgcGFy
-YW1ldGVyICdwY2k9cGNpZV9idXNfcGVyZicgKG9yIG9uZSBvZiBzZXZlcmFsIG90aGVycykgdG8g
-c2V0IGEgcG9saWN5IHRoYXQgb3ZlcnJpZGVzIHRoaXMsIGJ1dCBubyBwb2xpY3kgd2lsbCBhbGxv
-dyBzZXR0aW5nIE1QUyBhYm92ZSB0aGUgZGV2aWNlJ3MgTWF4UGF5bG9hZFNpemVTdXBwb3J0ZWQg
-KE1QU1MpLg0KDQooVGhlc2UgcGFyYW1ldGVycyBhcmUgbm90IGRvY3VtZW50ZWQgaW4NCkRvY3Vt
-ZW50YXRpb24va2VybmVsLXBhcmFtZXRlcnMudHh0ISAgU29tZW9uZSBvdWdodCB0byBmaXggdGhh
-dC4pDQoNCkJlbi4NCg0KLS0NCkJlbiBIdXRjaGluZ3MsIFN0YWZmIEVuZ2luZWVyLCBTb2xhcmZs
-YXJlIE5vdCBzcGVha2luZyBmb3IgbXkgZW1wbG95ZXI7IHRoYXQncyB0aGUgbWFya2V0aW5nIGRl
-cGFydG1lbnQncyBqb2IuDQpUaGV5IGFza2VkIHVzIHRvIG5vdGUgdGhhdCBTb2xhcmZsYXJlIHBy
-b2R1Y3QgbmFtZXMgYXJlIHRyYWRlbWFya2VkLg0KDQo=
+From: Jon Mason <jon.mason@intel.com>
+Date: Fri, 16 Nov 2012 19:27:11 -0700
+
+> I am submitting version 6 of the PCI-Express Non-Transparent Bridge
+> patches for inclusion in 3.8 via Greg KH's char-misc-next tree.  All
+> outstanding issues have been addressed.
+> 
+> Version 6 corrects Greg KH's issues, most notably the improper usage of
+> the Linux device model.
+> http://thread.gmane.org/gmane.linux.kernel.pci/18599
+
+For the networking bits:
+
+Acked-by: David S. Miller <davem@davemloft.net>
