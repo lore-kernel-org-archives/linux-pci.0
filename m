@@ -1,80 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:65096 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750846Ab2KFADO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 5 Nov 2012 19:03:14 -0500
-Received: by mail-we0-f174.google.com with SMTP id t9so2897330wey.19
-        for <linux-pci@vger.kernel.org>; Mon, 05 Nov 2012 16:03:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1348667971-30876-1-git-send-email-ying.huang@intel.com>
-References: <1348667971-30876-1-git-send-email-ying.huang@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 5 Nov 2012 17:02:52 -0700
-Message-ID: <CAErSpo5zZdxeUFtsKjfb+FcLvAWD-MBorSwTppge9HQ5GCL7_g@mail.gmail.com>
-Subject: Re: [PATCH RESEND] ACPI/PCI: Make PCI devices notified when its power
- resource turned on
-To: Huang Ying <ying.huang@intel.com>
-Cc: Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46281 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756365Ab2KUUfC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:02 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-sh@vger.kernel.org
+Subject: [PATCH 4/9] sh/PCI: Remove CONFIG_HOTPLUG ifdefs
+Date: Wed, 21 Nov 2012 15:34:55 -0500
+Message-Id: <1353530100-728-5-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 26, 2012 at 7:59 AM, Huang Ying <ying.huang@intel.com> wrote:
-> Sorry for bothering.  It appears that this patch should go through ACPI
-> tree because code changed are under drivers/acpi.
->
-> A set of power resources may be shared by multiple devices.  When all
-> devices share one set of power resources is put into D3_COLD state,
-> the power resources will be turned off.  When one of the device is
-> waked, the power resource will be turned on and all devices share it
-> will be powered on to D0uninitialized state.  These devices should be
-> resumed, so that they can get opportunity to go to low power state
-> later.
->
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
+Remove conditional code based on CONFIG_HOTPLUG being false.  It's
+always on now in preparation of it going away as an option.
 
-I had applied this to my for-linus branch, headed for v3.7, but had to
-drop it because it introduced these warnings:
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Paul Mundt <lethal@linux-sh.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-sh@vger.kernel.org
+---
+ arch/sh/drivers/pci/pci.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-drivers/acpi/pci_bind.c: In function 'acpi_pci_unbind':
-drivers/acpi/pci_bind.c:48:2: warning: passing argument 1 of
-'acpi_power_resource_unregister_device' from incompatible pointer type
-[enabled by default]
-include/acpi/acpi_bus.h:346:6: note: expected 'struct device *' but
-argument is of type 'struct pci_dev *'
-drivers/acpi/pci_bind.c: In function 'acpi_pci_bind':
-drivers/acpi/pci_bind.c:75:2: warning: passing argument 1 of
-'acpi_power_resource_register_device' from incompatible pointer type
-[enabled by default]
-include/acpi/acpi_bus.h:345:5: note: expected 'struct device *' but
-argument is of type 'struct pci_dev *'
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index a7e078f..81e5daf 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -319,7 +319,5 @@ EXPORT_SYMBOL(pci_iounmap);
+ 
+ #endif /* CONFIG_GENERIC_IOMAP */
+ 
+-#ifdef CONFIG_HOTPLUG
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+ EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
+-#endif
+-- 
+1.8.0
 
-Apparently this wasn't tested :-(
-
-
-> ---
->  drivers/acpi/pci_bind.c |    2 ++
->  1 file changed, 2 insertions(+)
->
-> --- a/drivers/acpi/pci_bind.c
-> +++ b/drivers/acpi/pci_bind.c
-> @@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
->
->         device_set_run_wake(&dev->dev, false);
->         pci_acpi_remove_pm_notifier(device);
-> +       acpi_power_resource_unregister_device(dev, device->handle);
->
->         if (!dev->subordinate)
->                 goto out;
-> @@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
->                 return 0;
->
->         pci_acpi_add_pm_notifier(device, dev);
-> +       acpi_power_resource_register_device(dev, device->handle);
->         if (device->wakeup.flags.run_wake)
->                 device_set_run_wake(&dev->dev, true);
->
