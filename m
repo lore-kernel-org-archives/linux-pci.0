@@ -1,73 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50A07477.2050002@cn.fujitsu.com>
-Date: Mon, 12 Nov 2012 12:00:55 +0800
-From: Wen Congyang <wency@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
-CC: linux-acpi@vger.kernel.org, isimatu.yasuaki@jp.fujitsu.com,
-	rjw@sisk.pl, lenb@kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH 0/3] acpi: Introduce prepare_remove device operation
-References: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
-In-Reply-To: <1352399371-8015-1-git-send-email-vasilis.liaskovitis@profitbricks.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46306 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756408Ab2KUUfD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:03 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 8/9] PCI: Always build setup-bus when PCI is enabled
+Date: Wed, 21 Nov 2012 15:34:59 -0500
+Message-Id: <1353530100-728-9-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-At 11/09/2012 02:29 AM, Vasilis Liaskovitis Wrote:
-> As discussed in
-> https://patchwork.kernel.org/patch/1581581/
-> the driver core remove function needs to always succeed. This means we need
-> to know that the device can be successfully removed before acpi_bus_trim / 
-> acpi_bus_hot_remove_device are called. This can cause panics when OSPM-initiated
-> eject (echo 1 > /sys/bus/acpi/devices/PNP/eject) of memory devices fails, since
-> the ACPI core goes ahead and ejects the device regardless of whether the memory
-> is still in use or not.
-> 
-> For this reason a new acpi_device operation called prepare_remove is introduced.
-> This operation should be registered for acpi devices whose removal (from kernel
-> perspective) can fail.  Memory devices fall in this category.
-> 
-> acpi_bus_hot_remove_device is changed to handle removal in 2 steps:
-> - preparation for removal i.e. perform part of removal that can fail outside of
->   ACPI core. Should succeed for device and all its children.
-> - if above step was successfull, proceed to actual ACPI removal
+CONFIG_HOTPLUG is being removed so setup-bus always needs to be built
+as part of PCI.
 
-If we unbind the device from the driver, we still need to do preparation. But
-you don't do it in your patch.
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/Makefile | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Thanks
-Wen Congyang
-> 
-> acpi_bus_trim is changed accordingly to handle preparation for removal and
-> actual removal.
-> 
-> With this patchset, only acpi memory devices use the new prepare_remove
-> device operation. The actual memory removal (VM-related offline and other memory
-> cleanups) is moved to prepare_remove. The old remove operation just cleans up
-> the acpi structures. Directly ejecting PNP0C80 memory devices works safely. I
-> haven't tested yet with an ACPI container which contains memory devices.
-> 
-> Other ACPI devices (e.g. CPU) do not register prepare_remove callbacks, and
-> their OSPM-side eject should not be affected.
-> 
-> I am not happy with the name prepare_remove. Comments welcome. Let me know if I
-> should work more in this direction (I think Yasuaki might also look into this
-> and might have a simpler idea)
-> 
-> Patches are on top of Rafael's linux-pm/linux-next
-> 
-> Vasilis Liaskovitis (3):
->   acpi: Introduce prepare_remove operation in acpi_device_ops
->   acpi: Make acpi_bus_trim handle device removal preparation
->   acpi_memhotplug: Add prepare_remove operation
-> 
->  drivers/acpi/acpi_memhotplug.c     |   24 +++++++++++++++++++++---
->  drivers/acpi/dock.c                |    2 +-
->  drivers/acpi/scan.c                |   32 +++++++++++++++++++++++++++++---
->  drivers/pci/hotplug/acpiphp_glue.c |    4 ++--
->  drivers/pci/hotplug/sgi_hotplug.c  |    2 +-
->  include/acpi/acpi_bus.h            |    4 +++-
->  6 files changed, 57 insertions(+), 11 deletions(-)
-> 
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 36f119d..0c3efcf 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -4,7 +4,7 @@
+ 
+ obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+-			irq.o vpd.o
++			irq.o vpd.o setup-bus.o
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
+ 
+@@ -58,9 +58,6 @@ obj-$(CONFIG_ACPI)    += pci-acpi.o
+ # SMBIOS provided firmware instance and labels
+ obj-$(CONFIG_PCI_LABEL) += pci-label.o
+ 
+-# Cardbus & CompactPCI use setup-bus
+-obj-$(CONFIG_HOTPLUG) += setup-bus.o
+-
+ obj-$(CONFIG_PCI_SYSCALL) += syscall.o
+ 
+ obj-$(CONFIG_PCI_STUB) += pci-stub.o
+-- 
+1.8.0
 
