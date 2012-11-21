@@ -1,83 +1,146 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1352161991.31033.122.camel@yhuang-dev>
-Subject: Re: [PATCH RESEND] ACPI/PCI: Make PCI devices notified when its
- power resource turned on
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-acpi@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org
-Date: Tue, 06 Nov 2012 08:33:11 +0800
-In-Reply-To: <CAErSpo5zZdxeUFtsKjfb+FcLvAWD-MBorSwTppge9HQ5GCL7_g@mail.gmail.com>
-References: <1348667971-30876-1-git-send-email-ying.huang@intel.com>
-	 <CAErSpo5zZdxeUFtsKjfb+FcLvAWD-MBorSwTppge9HQ5GCL7_g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46305 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756410Ab2KUUfD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:03 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 7/9] PCI: Move pci_uevent into pci-driver.c
+Date: Wed, 21 Nov 2012 15:34:58 -0500
+Message-Id: <1353530100-728-8-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-11-05 at 17:02 -0700, Bjorn Helgaas wrote:
-> On Wed, Sep 26, 2012 at 7:59 AM, Huang Ying <ying.huang@intel.com> wrote:
-> > Sorry for bothering.  It appears that this patch should go through ACPI
-> > tree because code changed are under drivers/acpi.
-> >
-> > A set of power resources may be shared by multiple devices.  When all
-> > devices share one set of power resources is put into D3_COLD state,
-> > the power resources will be turned off.  When one of the device is
-> > waked, the power resource will be turned on and all devices share it
-> > will be powered on to D0uninitialized state.  These devices should be
-> > resumed, so that they can get opportunity to go to low power state
-> > later.
-> >
-> > Signed-off-by: Huang Ying <ying.huang@intel.com>
-> > Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> I had applied this to my for-linus branch, headed for v3.7, but had to
-> drop it because it introduced these warnings:
-> 
-> drivers/acpi/pci_bind.c: In function 'acpi_pci_unbind':
-> drivers/acpi/pci_bind.c:48:2: warning: passing argument 1 of
-> 'acpi_power_resource_unregister_device' from incompatible pointer type
-> [enabled by default]
-> include/acpi/acpi_bus.h:346:6: note: expected 'struct device *' but
-> argument is of type 'struct pci_dev *'
-> drivers/acpi/pci_bind.c: In function 'acpi_pci_bind':
-> drivers/acpi/pci_bind.c:75:2: warning: passing argument 1 of
-> 'acpi_power_resource_register_device' from incompatible pointer type
-> [enabled by default]
-> include/acpi/acpi_bus.h:345:5: note: expected 'struct device *' but
-> argument is of type 'struct pci_dev *'
-> 
-> Apparently this wasn't tested :-(
+With the demise of CONFIG_HOTPLUG as an option, the pci_uevent
+function located in hotplug.c will now always be used and doesn't need
+special treatment in the Makefile.  Move pci_uevent into pci-driver.c
+and remove hotplug.c
 
-It's my fault.  I apologize for that.  It appear that I turn a RFC to
-PATCH without testing.  Will be more careful for next time.
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/Makefile     |  2 --
+ drivers/pci/hotplug.c    | 37 -------------------------------------
+ drivers/pci/pci-driver.c | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h        |  1 -
+ 4 files changed, 33 insertions(+), 40 deletions(-)
+ delete mode 100644 drivers/pci/hotplug.c
 
-Best Regards,
-Huang Ying
-
-> > ---
-> >  drivers/acpi/pci_bind.c |    2 ++
-> >  1 file changed, 2 insertions(+)
-> >
-> > --- a/drivers/acpi/pci_bind.c
-> > +++ b/drivers/acpi/pci_bind.c
-> > @@ -45,6 +45,7 @@ static int acpi_pci_unbind(struct acpi_d
-> >
-> >         device_set_run_wake(&dev->dev, false);
-> >         pci_acpi_remove_pm_notifier(device);
-> > +       acpi_power_resource_unregister_device(dev, device->handle);
-> >
-> >         if (!dev->subordinate)
-> >                 goto out;
-> > @@ -71,6 +72,7 @@ static int acpi_pci_bind(struct acpi_dev
-> >                 return 0;
-> >
-> >         pci_acpi_add_pm_notifier(device, dev);
-> > +       acpi_power_resource_register_device(dev, device->handle);
-> >         if (device->wakeup.flags.run_wake)
-> >                 device_set_run_wake(&dev->dev, true);
-> >
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 8d688b2..36f119d 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -15,8 +15,6 @@ obj-$(CONFIG_PCIEPORTBUS) += pcie/
+ 
+ obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+ 
+-obj-$(CONFIG_HOTPLUG) += hotplug.o
+-
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+ ifdef CONFIG_HOTPLUG_PCI
+diff --git a/drivers/pci/hotplug.c b/drivers/pci/hotplug.c
+deleted file mode 100644
+index 2b5352a..0000000
+--- a/drivers/pci/hotplug.c
++++ /dev/null
+@@ -1,37 +0,0 @@
+-#include <linux/kernel.h>
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-#include "pci.h"
+-
+-int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+-{
+-	struct pci_dev *pdev;
+-
+-	if (!dev)
+-		return -ENODEV;
+-
+-	pdev = to_pci_dev(dev);
+-	if (!pdev)
+-		return -ENODEV;
+-
+-	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
+-			   pdev->subsystem_device))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
+-		return -ENOMEM;
+-
+-	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
+-			   pdev->vendor, pdev->device,
+-			   pdev->subsystem_vendor, pdev->subsystem_device,
+-			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
+-			   (u8)(pdev->class)))
+-		return -ENOMEM;
+-	return 0;
+-}
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index ef54916..59745c4 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1223,6 +1223,39 @@ void pci_dev_put(struct pci_dev *dev)
+ 		put_device(&dev->dev);
+ }
+ 
++static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
++{
++	struct pci_dev *pdev;
++
++	if (!dev)
++		return -ENODEV;
++
++	pdev = to_pci_dev(dev);
++	if (!pdev)
++		return -ENODEV;
++
++	if (add_uevent_var(env, "PCI_CLASS=%04X", pdev->class))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "PCI_ID=%04X:%04X", pdev->vendor, pdev->device))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "PCI_SUBSYS_ID=%04X:%04X", pdev->subsystem_vendor,
++			   pdev->subsystem_device))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "PCI_SLOT_NAME=%s", pci_name(pdev)))
++		return -ENOMEM;
++
++	if (add_uevent_var(env, "MODALIAS=pci:v%08Xd%08Xsv%08Xsd%08Xbc%02Xsc%02Xi%02x",
++			   pdev->vendor, pdev->device,
++			   pdev->subsystem_vendor, pdev->subsystem_device,
++			   (u8)(pdev->class >> 16), (u8)(pdev->class >> 8),
++			   (u8)(pdev->class)))
++		return -ENOMEM;
++	return 0;
++}
++
+ struct bus_type pci_bus_type = {
+ 	.name		= "pci",
+ 	.match		= pci_bus_match,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 3df6ded..ed63e79 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -8,7 +8,6 @@
+ 
+ /* Functions internal to the PCI core code */
+ 
+-extern int pci_uevent(struct device *dev, struct kobj_uevent_env *env);
+ extern int pci_create_sysfs_dev_files(struct pci_dev *pdev);
+ extern void pci_remove_sysfs_dev_files(struct pci_dev *pdev);
+ #if !defined(CONFIG_DMI) && !defined(CONFIG_ACPI)
+-- 
+1.8.0
 
