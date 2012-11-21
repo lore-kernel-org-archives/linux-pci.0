@@ -1,107 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>,
-	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
-Date: Fri, 02 Nov 2012 00:15:35 +0100
-Message-ID: <1920067.RxMJtDGai1@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVGPP3+97D2SatH_CBPBpqBZyCe7We=9=x5ZEq8_d0fWQ@mail.gmail.com>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <11976302.Ya3MGGIAsU@vostro.rjw.lan> <CAE9FiQVGPP3+97D2SatH_CBPBpqBZyCe7We=9=x5ZEq8_d0fWQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46269 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756361Ab2KUUfB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:01 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	linux-mips@linux-mips.org, devicetree-discuss@lists.ozlabs.org
+Subject: [PATCH 2/9] mips/PCI: Remove CONFIG_HOTPLUG ifdefs
+Date: Wed, 21 Nov 2012 15:34:53 -0500
+Message-Id: <1353530100-728-3-git-send-email-wfp5p@virginia.edu>
+In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 01, 2012 03:15:31 PM Yinghai Lu wrote:
-> On Thu, Nov 1, 2012 at 2:31 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> oh, no, that commit should not be reverted. instead we should add some
-> >> comment for it...
-> >>
-> >> that mean : three path, will have three separated static lock dep key
-> >> from every INIT_WORK.
-> >
-> > I see.
-> >
-> > OK, I'll drop the patch removing it.
-> >
-> > What about the following comment:
-> >
-> > "To prevent lockdep from complaining unnecessarily, make sure that there
-> >  is a different static lockdep key created for each workqueue by using
-> >  INIT_WORK for each of them separately."
-> >
-> created ?
-> 
-> how about "defined" ?
-> 
-> or just remove  "created"
+Remove conditional code based on CONFIG_HOTPLUG being false.  It's
+always on now in preparation of it going away as an option.
 
-Yes, that's better.
-
-I suppose that the appended patch may be better still, though.
-
-Thanks,
-Rafael
-
-
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: Grant Likely <grant.likely@secretlab.ca>
+Cc: Rob Herring <rob.herring@calxeda.com>
+Cc: linux-mips@linux-mips.org
+Cc: devicetree-discuss@lists.ozlabs.org
 ---
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI: Make seemingly useless check in osl.c more understandable
+ arch/mips/pci/pci.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-There is a seemingly useless check in drivers/acpi/osl.c added by
-commit bc73675 (ACPI: fixes a false alarm from lockdep), which really
-is necessary to avoid false positive lockdep complaints.  Document
-this and rearrange the code related to it so that it makes fewer
-checks.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/osl.c |   21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
-
-Index: linux/drivers/acpi/osl.c
-===================================================================
---- linux.orig/drivers/acpi/osl.c
-+++ linux/drivers/acpi/osl.c
-@@ -944,17 +944,24 @@ static acpi_status __acpi_os_execute(acp
- 	 * because the hotplug code may call driver .remove() functions,
- 	 * which invoke flush_scheduled_work/acpi_os_wait_events_complete
- 	 * to flush these workqueues.
-+	 *
-+	 * To prevent lockdep from complaining unnecessarily, make sure that
-+	 * there is a different static lockdep key for each workqueue by using
-+	 * INIT_WORK() for each of them separately.
- 	 */
--	queue = hp ? kacpi_hotplug_wq :
--		(type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
--	dpc->wait = hp ? 1 : 0;
--
--	if (queue == kacpi_hotplug_wq)
-+	if (hp) {
-+		queue = kacpi_hotplug_wq;
-+		dpc->wait = 1;
- 		INIT_WORK(&dpc->work, acpi_os_execute_deferred);
--	else if (queue == kacpi_notify_wq)
-+	} else if (type == OSL_NOTIFY_HANDLER) {
-+		queue = kacpi_notify_wq;
-+		dpc->wait = 0;
- 		INIT_WORK(&dpc->work, acpi_os_execute_deferred);
--	else
-+	} else {
-+		queue = kacpid_wq;
-+		dpc->wait = 0;
- 		INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-+	}
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index 04e35bc..4040416 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -313,10 +313,8 @@ void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+ 	}
+ }
  
- 	/*
- 	 * On some machines, a software-initiated SMI causes corruption unless
-
+-#ifdef CONFIG_HOTPLUG
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+ EXPORT_SYMBOL(PCIBIOS_MIN_MEM);
+-#endif
+ 
+ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.0
+
