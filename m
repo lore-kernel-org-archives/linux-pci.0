@@ -1,88 +1,67 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:6600 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755106Ab2KUPq1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 10:46:27 -0500
+Date: Wed, 21 Nov 2012 10:42:31 -0500 (EST)
+From: Scott Murray <scott@spiteful.org>
+To: Bill Pemberton <wfp5p@virginia.edu>
+cc: gregkh@linuxfoundation.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 088/493] pci: remove use of __devexit_p
+In-Reply-To: <1353349642-3677-88-git-send-email-wfp5p@virginia.edu>
+Message-ID: <alpine.LFD.2.02.1211211034580.26121@godzilla.spiteful.org>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu> <1353349642-3677-88-git-send-email-wfp5p@virginia.edu>
 MIME-Version: 1.0
-In-Reply-To: <1920067.RxMJtDGai1@vostro.rjw.lan>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
-	<11976302.Ya3MGGIAsU@vostro.rjw.lan>
-	<CAE9FiQVGPP3+97D2SatH_CBPBpqBZyCe7We=9=x5ZEq8_d0fWQ@mail.gmail.com>
-	<1920067.RxMJtDGai1@vostro.rjw.lan>
-Date: Thu, 1 Nov 2012 16:39:50 -0700
-Message-ID: <CAE9FiQW4ONas+m2HWq_xs457xZu3VJ6Nxsq320MD72Khb+sqJg@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>,
-	Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 1, 2012 at 4:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI: Make seemingly useless check in osl.c more understandable
+On Mon, 19 Nov 2012, Bill Pemberton wrote:
+
+> CONFIG_HOTPLUG is going away as an option so __devexit_p is no longer
+> needed.
 >
-> There is a seemingly useless check in drivers/acpi/osl.c added by
-> commit bc73675 (ACPI: fixes a false alarm from lockdep), which really
-> is necessary to avoid false positive lockdep complaints.  Document
-> this and rearrange the code related to it so that it makes fewer
-> checks.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+> Cc: Scott Murray <scott@spiteful.org>
+> Cc: linux-pci@vger.kernel.org
+
+Acked-by: Scott Murray <scott@spiteful.org>
+
 > ---
->  drivers/acpi/osl.c |   21 ++++++++++++++-------
->  1 file changed, 14 insertions(+), 7 deletions(-)
+>  drivers/pci/hotplug/cpcihp_zt5550.c | 2 +-
+>  drivers/pci/ioapic.c                | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 >
-> Index: linux/drivers/acpi/osl.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/osl.c
-> +++ linux/drivers/acpi/osl.c
-> @@ -944,17 +944,24 @@ static acpi_status __acpi_os_execute(acp
->          * because the hotplug code may call driver .remove() functions,
->          * which invoke flush_scheduled_work/acpi_os_wait_events_complete
->          * to flush these workqueues.
-> +        *
-> +        * To prevent lockdep from complaining unnecessarily, make sure that
-> +        * there is a different static lockdep key for each workqueue by using
-> +        * INIT_WORK() for each of them separately.
->          */
-> -       queue = hp ? kacpi_hotplug_wq :
-> -               (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
-> -       dpc->wait = hp ? 1 : 0;
-> -
-> -       if (queue == kacpi_hotplug_wq)
-> +       if (hp) {
-> +               queue = kacpi_hotplug_wq;
-> +               dpc->wait = 1;
->                 INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> -       else if (queue == kacpi_notify_wq)
-> +       } else if (type == OSL_NOTIFY_HANDLER) {
-> +               queue = kacpi_notify_wq;
-> +               dpc->wait = 0;
-
-yes, much clear.
-
-at the same can you changne
-dpc allocation from kmalloc with kzalloc instead.
-
-then we save two lines for dpc->wait = 0
-
-After that
-
-Acked-by: Yinghai Lu <yinghai@kernel.org>
-
->                 INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> -       else
-> +       } else {
-> +               queue = kacpid_wq;
-> +               dpc->wait = 0;
->                 INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-> +       }
+> diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+> index 6bf8d2a..34b2a4a 100644
+> --- a/drivers/pci/hotplug/cpcihp_zt5550.c
+> +++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+> @@ -290,7 +290,7 @@ static struct pci_driver zt5550_hc_driver = {
+>  	.name		= "zt5550_hc",
+>  	.id_table	= zt5550_hc_pci_tbl,
+>  	.probe		= zt5550_hc_init_one,
+> -	.remove		= __devexit_p(zt5550_hc_remove_one),
+> +	.remove		= zt5550_hc_remove_one,
+>  };
 >
->         /*
->          * On some machines, a software-initiated SMI causes corruption unless
+>  static int __init zt5550_init(void)
+> diff --git a/drivers/pci/ioapic.c b/drivers/pci/ioapic.c
+> index 22436f7..2b24fb4 100644
+> --- a/drivers/pci/ioapic.c
+> +++ b/drivers/pci/ioapic.c
+> @@ -110,7 +110,7 @@ static struct pci_driver ioapic_driver = {
+>  	.name		= "ioapic",
+>  	.id_table	= ioapic_devices,
+>  	.probe		= ioapic_probe,
+> -	.remove		= __devexit_p(ioapic_remove),
+> +	.remove		= ioapic_remove,
+>  };
 >
-> --
+>  static int __init ioapic_init(void)
+>
+
+-- 
+==============================================================================
+Scott Murray, scott@spiteful.org
+
+     "Good, bad ... I'm the guy with the gun." - Ash, "Army of Darkness"
