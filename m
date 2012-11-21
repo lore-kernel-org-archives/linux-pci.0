@@ -1,49 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from void.printf.net ([89.145.121.20]:38514 "EHLO void.printf.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753893Ab2KZQ5y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Nov 2012 11:57:54 -0500
-From: Chris Ball <cjb@laptop.org>
-To: Manoj Iyer <manoj.iyer@canonical.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org,
-	jbarnes@virtuousgeek.org, matsumur@nts.ricoh.co.jp,
-	linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org
-Subject: Re: [PATCH] mmc: Added quirks for Ricoh 1180:e823 lower base clock frequency
-References: <1310419715-13254-1-git-send-email-manoj.iyer@canonical.com>
-	<m2sjqa2q93.fsf@bob.laptop.org>
-	<alpine.DEB.2.02.1107131031360.3174@lazy>
-	<201107131835.25217.arnd@arndb.de>
-	<alpine.DEB.2.02.1107131144250.3174@lazy>
-	<m21uxu2k96.fsf@bob.laptop.org>
-	<alpine.DEB.2.02.1107131157440.3174@lazy>
-	<m2wrfm1537.fsf@bob.laptop.org>
-	<alpine.DEB.2.02.1107181535250.1677@lazy>
-	<m2zkkbb9vn.fsf@bob.laptop.org>
-	<alpine.DEB.2.02.1107181546100.1677@lazy>
-	<87obiqa39h.fsf@octavius.laptop.org>
-	<alpine.DEB.2.02.1211261041500.3502@lazy>
-Date: Mon, 26 Nov 2012 11:57:43 -0500
-In-Reply-To: <alpine.DEB.2.02.1211261041500.3502@lazy> (Manoj Iyer's message
-	of "Mon, 26 Nov 2012 10:42:55 -0600 (CST)")
-Message-ID: <87boek9u9k.fsf@octavius.laptop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:46265 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756362Ab2KUUfB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 21 Nov 2012 15:35:01 -0500
+From: Bill Pemberton <wfp5p@virginia.edu>
+To: gregkh@linuxfoundation.org
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 0/9] PCI: Remove use of CONFIG_HOTPLUG
+Date: Wed, 21 Nov 2012 15:34:51 -0500
+Message-Id: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Manoj,
+This is a respin of the patches to remove CONFIG_HOTPLUG for the PCI
+subsystem.  The end result is the same as the patches in the big
+patchset I sent out earlier this week but the changelog entries have
+been changed to be consistent with the capitalization of PCI.  The
+removal of the __dev* entries has also been squashed into a single
+patch.
 
-On Mon, Nov 26 2012, Manoj Iyer wrote:
-> Do you know what systems produce these errors? I can look and see if
-> we have those for testing your patch.
+Bill Pemberton (9):
+  microblaze/PCI: Remove CONFIG_HOTPLUG ifdefs
+  mips/PCI: Remove CONFIG_HOTPLUG ifdefs
+  powerpc/PCI: Remove CONFIG_HOTPLUG ifdefs
+  sh/PCI: Remove CONFIG_HOTPLUG ifdefs
+  unicore32/PCI: Remove CONFIG_HOTPLUG ifdefs
+  PCI: Remove CONFIG_HOTPLUG ifdefs
+  PCI: Move pci_uevent into pci-driver.c
+  PCI: Always build setup-bus when PCI is enabled
+  PCI: Remove __dev* markings
 
-One T430s using the ExpressCard reader¹, and one X220, both with :e823.
+ arch/microblaze/pci/pci-common.c    |   4 --
+ arch/mips/pci/pci.c                 |   2 -
+ arch/powerpc/kernel/pci-common.c    |   4 --
+ arch/powerpc/kernel/pci_64.c        |   4 --
+ arch/sh/drivers/pci/pci.c           |   2 -
+ arch/unicore32/kernel/pci.c         |   2 -
+ drivers/pci/Makefile                |   7 +-
+ drivers/pci/hotplug.c               |  37 ----------
+ drivers/pci/hotplug/cpcihp_zt5550.c |   4 +-
+ drivers/pci/ioapic.c                |   6 +-
+ drivers/pci/pci-driver.c            |  42 +++++++----
+ drivers/pci/pci-sysfs.c             |   7 --
+ drivers/pci/pci.c                   |   4 +-
+ drivers/pci/pci.h                   |   5 --
+ drivers/pci/pcie/aer/aerdrv.c       |   4 +-
+ drivers/pci/pcie/portdrv_pci.c      |   2 +-
+ drivers/pci/probe.c                 |  20 +++---
+ drivers/pci/quirks.c                | 134 ++++++++++++++++++------------------
+ drivers/pci/xen-pcifront.c          |  10 +--
+ include/linux/pci.h                 |   8 +--
+ 20 files changed, 125 insertions(+), 183 deletions(-)
+ delete mode 100644 drivers/pci/hotplug.c
 
-Thanks,
-
-- Chris.
-
-¹: http://support.lenovo.com/en_US/product-and-parts/detail.page?&DocID=PD023556
 -- 
-Chris Ball   <cjb@laptop.org>   <http://printf.net/>
-One Laptop Per Child
+1.8.0
+
