@@ -1,98 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	x86@kernel.org
-Subject: [PATCH 4/8] PCI, x86: Separate out rom resource claim
-Date: Sat,  3 Nov 2012 21:39:27 -0700
-Message-Id: <1352003971-22278-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:51929 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab2KVSag (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 22 Nov 2012 13:30:36 -0500
+Message-ID: <50AD85C0.1010407@huawei.com>
+Date: Thu, 22 Nov 2012 09:54:08 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Betty Dall <betty.dall@hp.com>
+CC: <bhelgaas@google.com>, <jbarnes@virtuousgeek.org>,
+	<alex.williamson@redhat.com>, <ddutile@redhat.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: add PCIe 8.0 GT/s supported link speed define
+References: <1353437939-29210-1-git-send-email-betty.dall@hp.com>
+In-Reply-To: <1353437939-29210-1-git-send-email-betty.dall@hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could use it with hot-added root bus later.
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 20ae747..0cf8abb 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -469,6 +469,7 @@
+>  #define  PCI_EXP_LNKSTA_CLS	0x000f	/* Current Link Speed */
+>  #define  PCI_EXP_LNKSTA_CLS_2_5GB 0x01	/* Current Link Speed 2.5GT/s */
+>  #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x02	/* Current Link Speed 5.0GT/s */
+> +#define  PCI_EXP_LNKSTA_CLS_8_0GB 0x04	/* Current Link Speed 8.0GT/s */
+>  #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Nogotiated Link Width */
+>  #define  PCI_EXP_LNKSTA_NLW_SHIFT 4	/* start of NLW mask in link status */
+>  #define  PCI_EXP_LNKSTA_LT	0x0800	/* Link Training */
+> 
 
--v2: remove extra functions.
+Hi Betty,
+   There is another patch uses this PCI_EXP_LNKSTA_CLS_8_0GB ? I think maybe move this change to
+the patch uses this symbol is better.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
----
- arch/x86/pci/i386.c |   52 ++++++++++++++++++++++++++++++++++----------------
- 1 files changed, 35 insertions(+), 17 deletions(-)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 84696ed..42dd755 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -298,27 +298,45 @@ static void __init pcibios_allocate_resources(struct pci_bus *bus, int pass)
- 	}
- }
- 
--static int __init pcibios_assign_resources(void)
-+static void __init pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- {
--	struct pci_dev *dev = NULL;
- 	struct resource *r;
- 
--	if (!(pci_probe & PCI_ASSIGN_ROMS)) {
--		/*
--		 * Try to use BIOS settings for ROMs, otherwise let
--		 * pci_assign_unassigned_resources() allocate the new
--		 * addresses.
--		 */
--		for_each_pci_dev(dev) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (!r->flags || !r->start)
--				continue;
--			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
--				r->end -= r->start;
--				r->start = 0;
--			}
--		}
-+	/*
-+	 * Try to use BIOS settings for ROMs, otherwise let
-+	 * pci_assign_unassigned_resources() allocate the new
-+	 * addresses.
-+	 */
-+	r = &dev->resource[PCI_ROM_RESOURCE];
-+	if (!r->flags || !r->start)
-+		return;
-+
-+	if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-+		r->end -= r->start;
-+		r->start = 0;
- 	}
-+}
-+static void __init pcibios_allocate_rom_resources(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *child;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		pcibios_allocate_dev_rom_resource(dev);
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pcibios_allocate_rom_resources(child);
-+	}
-+}
-+
-+static int __init pcibios_assign_resources(void)
-+{
-+	struct pci_bus *bus;
-+
-+	if (!(pci_probe & PCI_ASSIGN_ROMS))
-+		list_for_each_entry(bus, &pci_root_buses, node)
-+			pcibios_allocate_rom_resources(bus);
- 
- 	pci_assign_unassigned_resources();
- 	pcibios_fw_addr_list_del();
 -- 
-1.7.7
+Thanks!
+Yijing
 
