@@ -1,47 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37550 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420Ab2KIQUm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 9 Nov 2012 11:20:42 -0500
-Date: Fri, 9 Nov 2012 17:20:12 +0100
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <suresh.b.siddha@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org,
-	linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v4 -tip 3/3] AHCI: Support multiple MSIs
-Message-ID: <20121109162012.GB31918@dhcp-26-207.brq.redhat.com>
-References: <cover.1349517905.git.agordeev@redhat.com>
- <b9a66434759a77b2fa870565ab9708fc286d7368.1349517905.git.agordeev@redhat.com>
- <20121025090957.GA7424@gmail.com>
- <20121025092555.GF16350@dhcp-26-207.brq.redhat.com>
- <20121025093626.GG16350@dhcp-26-207.brq.redhat.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:14758 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753492Ab2KZNGj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 26 Nov 2012 08:06:39 -0500
+Message-ID: <50B368CC.1050907@huawei.com>
+Date: Mon, 26 Nov 2012 21:04:12 +0800
+From: Hanjun Guo <guohanjun@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121025093626.GG16350@dhcp-26-207.brq.redhat.com>
+To: Tang Chen <tangchen@cn.fujitsu.com>
+CC: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, <yinghai@kernel.org>,
+	<bhelgaas@google.com>, <lenb@kernel.org>, <jiang.liu@huawei.com>,
+	<izumi.taku@jp.fujitsu.com>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Vasilis Liaskovitis <vasilis.liaskovitis@profitbricks.com>
+Subject: Re: [PATCH v3 0/3] ACPI: container hot remove support.
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <509106E2.70008@jp.fujitsu.com> <50B3014E.3040107@huawei.com> <50B306E0.3050207@cn.fujitsu.com>
+In-Reply-To: <50B306E0.3050207@cn.fujitsu.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 25, 2012 at 11:36:26AM +0200, Alexander Gordeev wrote:
-> On Thu, Oct 25, 2012 at 11:25:55AM +0200, Alexander Gordeev wrote:
-> > On Thu, Oct 25, 2012 at 11:09:57AM +0200, Ingo Molnar wrote:
-> > > Has Jeff acked this patch?
-> > 
-> > Yep,
-> > http://lkml.indiana.edu/hypermail/linux/kernel/1210.0/00795.html
+On 2012/11/26 14:06, Tang Chen wrote:
+> On 11/26/2012 01:42 PM, Hanjun Guo wrote:
+>>
+>> Hi all,
+>> I think Yasuaki mentioned the key point for the container device remove,
+>> that is dependency.
+>>
+>> Currently, container, processor, and memory hotpulg are managed by different ACPI
+>> hotplug drivers, the driver works when handle device hotplug individually, but they
+>> have no idea for each other.
+>>
+>> This may introduce some issues, such as Yasuaki mentioned above, that is to say, we
+>> should remove its child before remove the device itself, and hot add its parent before
+>> the device itself.
+>>
+>> According to the ACPI namespace, we can resolve most of dependency issues. On a typical
+>> two processor sockets system, the namespace is like this:
+>>
+>> /_SB                   ---container device, with HID ACPI0004
+>>      |_SCK0             ---container device, with HID ACPI0004
+>>       |_CPU0       ---processor device, with HID ACPI0009 or LNXCPU
+>>            |_...
+>>            |_CPUx
+>>            |_MEM0       ---Memory device, with HID PNP0C80
+>>      |_SCK1
+>>       |_CPU0
+>>            |_...
+>>            |_CPUx
+>>            |_MEM1
+>>      |_PCI0            ---Host bridge, with HID PNP0A03 or PNP0A08
+>>
+>> If hot remove the container device, such as SCK0, we can easily know the dependency list
+>> is CPU0~CPUx and MEM0, but I think the ACPI hotplug driver haven't resolve this now.
+>>
+>> And there is another corner case for hotplug devices in the namespace above, that is:
+>> 1) Remove SCK0. yes, we can remove it with no dependency to the host bridge PCI0;
+>>
+>> 2) Remove SCK1 after SCK0. we should remove the host bridge PCI0 first,
+>>     or the system will crash down. yes, dynamic dependency analysis is needed here.
+>>     and the ACPI hotplug driver totally have no idea of this.
+>>
+>> so, should we do something to settle this down ?
 > 
-> Ah.. sorry - Jeff acked v3, not the recent one.
-> Jeff, would you keep your ack for this patch?
+> Hi Guo,
+> 
+> I am trying to do this too. :)
+> 
+> But so far as I know, Vasilis Liaskovitis has provided an approach.
+> Please refer to the following url.
+> https://lkml.org/lkml/2012/11/15/159
+> 
+> I think we can review his patches first. :)
 
-Hi Jeff,
+Yes, I noticed Vasilis Liaskovitis's patch and the discussion from
+Greg and Toshi, Greg suggested that no driver core changes to resolve
+this problem, so we should find another way.
 
-Could you please review this patch?
+> 
+> And by the way, I think the ACPI based hotplug framework provided by
+> Liu Jiang may also settle this problem. But I'm not quit sure yet. :)
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+The ACPI based hotplug framework provided by Jiang Liu has settle this
+problem down, you may refer to:
+https://lkml.org/lkml/2012/11/4/64
+
+Thanks
+Hanjun Guo
+
+
+
