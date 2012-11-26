@@ -1,98 +1,95 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	x86@kernel.org
-Subject: [PATCH 7/8] PCI, x86: Claim FW allocated resources in hot add path.
-Date: Sat,  3 Nov 2012 21:39:30 -0700
-Message-Id: <1352003971-22278-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
- <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+Message-ID: <50B306E0.3050207@cn.fujitsu.com>
+Date: Mon, 26 Nov 2012 14:06:24 +0800
+From: Tang Chen <tangchen@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Hanjun Guo <guohanjun@huawei.com>
+CC: Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, yinghai@kernel.org,
+	bhelgaas@google.com, lenb@kernel.org, jiang.liu@huawei.com,
+	izumi.taku@jp.fujitsu.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Wen Congyang <wency@cn.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Subject: Re: [PATCH v3 0/3] ACPI: container hot remove support.
+References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com> <509106E2.70008@jp.fujitsu.com> <50B3014E.3040107@huawei.com>
+In-Reply-To: <50B3014E.3040107@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During testing remove/rescan root bus 00, found
-[  338.142574] bus: 'pci': really_probe: probing driver ata_piix with device 0000:00:01.1
-[  338.146788] ata_piix 0000:00:01.1: device not available (can't reserve [io  0x01f0-0x01f7])
-[  338.150565] ata_piix: probe of 0000:00:01.1 failed with error -22
+On 11/26/2012 01:42 PM, Hanjun Guo wrote:
+>
+> Hi all,
+> I think Yasuaki mentioned the key point for the container device remove,
+> that is dependency.
+>
+> Currently, container, processor, and memory hotpulg are managed by different ACPI
+> hotplug drivers, the driver works when handle device hotplug individually, but they
+> have no idea for each other.
+>
+> This may introduce some issues, such as Yasuaki mentioned above, that is to say, we
+> should remove its child before remove the device itself, and hot add its parent before
+> the device itself.
+>
+> According to the ACPI namespace, we can resolve most of dependency issues. On a typical
+> two processor sockets system, the namespace is like this:
+>
+> /_SB                   ---container device, with HID ACPI0004
+>      |_SCK0             ---container device, with HID ACPI0004
+> 	  |_CPU0       ---processor device, with HID ACPI0009 or LNXCPU
+>            |_...
+>            |_CPUx
+>            |_MEM0       ---Memory device, with HID PNP0C80
+>      |_SCK1
+> 	  |_CPU0
+>            |_...
+>            |_CPUx
+>            |_MEM1
+>      |_PCI0            ---Host bridge, with HID PNP0A03 or PNP0A08
+>
+> If hot remove the container device, such as SCK0, we can easily know the dependency list
+> is CPU0~CPUx and MEM0, but I think the ACPI hotplug driver haven't resolve this now.
+>
+> And there is another corner case for hotplug devices in the namespace above, that is:
+> 1) Remove SCK0. yes, we can remove it with no dependency to the host bridge PCI0;
+>
+> 2) Remove SCK1 after SCK0. we should remove the host bridge PCI0 first,
+>     or the system will crash down. yes, dynamic dependency analysis is needed here.
+>     and the ACPI hotplug driver totally have no idea of this.
+>
+> so, should we do something to settle this down ?
 
-because that fixed resource is not claimed.
-For bootint path it is claimed in  from
-        arch/x86/pci/i386.c::pcibios_allocate_resources()
+Hi Guo,
 
-Claim those resources, so on the remove/rescan will still use old
-resources.
+I am trying to do this too. :)
 
-It is some kind honoring FW setting in the registers during hot add.
-esp root-bus hot add is through acpi, BIOS has chance to set some registers
-before handing over.
+But so far as I know, Vasilis Liaskovitis has provided an approach.
+Please refer to the following url.
+https://lkml.org/lkml/2012/11/15/159
 
--v2: add rom resource claiming.
--v3: separate __init removing to another patch, also
-   put pci_probe checking with caller from rom resource allocating
+I think we can review his patches first. :)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
----
- arch/x86/pci/i386.c |   13 +++++++++++++
- drivers/pci/bus.c   |    2 ++
- include/linux/pci.h |    1 +
- 3 files changed, 16 insertions(+), 0 deletions(-)
+And by the way, I think the ACPI based hotplug framework provided by
+Liu Jiang may also settle this problem. But I'm not quit sure yet. :)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 1806e91..e0b7f30 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -352,6 +352,19 @@ static int __init pcibios_assign_resources(void)
- 	return 0;
- }
- 
-+void pcibios_resource_survey_bus(struct pci_bus *bus)
-+{
-+	dev_printk(KERN_DEBUG, &bus->dev, "Allocating resources\n");
-+
-+	pcibios_allocate_bus_resources(bus);
-+
-+	pcibios_allocate_resources(bus, 0);
-+	pcibios_allocate_resources(bus, 1);
-+
-+	if (!(pci_probe & PCI_ASSIGN_ROMS))
-+		pcibios_allocate_rom_resources(bus);
-+}
-+
- void __init pcibios_resource_survey(void)
- {
- 	struct pci_bus *bus;
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6241fd0..a85247d 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -158,6 +158,8 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- 	return ret;
- }
- 
-+void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
-+
- /**
-  * pci_bus_add_device - add a single device
-  * @dev: device to add
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 7860942..f30af2f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -654,6 +654,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
- /* Some device drivers need know if pci is initiated */
- extern int no_pci_devices(void);
- 
-+void pcibios_resource_survey_bus(struct pci_bus *bus);
- void pcibios_fixup_bus(struct pci_bus *);
- int __must_check pcibios_enable_device(struct pci_dev *, int mask);
- /* Architecture specific versions may override this (weak) */
--- 
-1.7.7
+Thanks. :)
+
+>
+> Thanks
+> Hanjun Guo
+>
+>
+>> The example is as follows:
+>>
+>>   https://lkml.org/lkml/2012/9/26/318
+>>
+>> Thanks,
+>> Yasuaki Ishimatsu
+>>
+>>>
+>
+>
+>
+>
 
