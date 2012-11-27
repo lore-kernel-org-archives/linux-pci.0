@@ -1,60 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1353359959.10939.84.camel@misato.fc.hp.com>
-Subject: Re: [ACPIHP PATCH part1 0/4] introduce a framework for ACPI based
- system device hotplug
-From: Toshi Kani <toshi.kani@hp.com>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	"Wang, Frank" <frank.wang@intel.com>
-Date: Mon, 19 Nov 2012 14:19:19 -0700
-In-Reply-To: <50AA63CE.9080700@gmail.com>
-References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
-	 <6684049.OOiNLWpfRL@vostro.rjw.lan> <50AA63CE.9080700@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, andi@firstfloor.org, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, yinghai@kernel.org,
+	mingo@redhat.com, Takao Indoh <indou.takao@jp.fujitsu.com>,
+	khalid@gonehiking.org
+Message-Id: <20121127004203.3604.75204.sendpatchset@tindoh.g01.fujitsu.local>
+In-Reply-To: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+Subject: [PATCH v7 2/5] PCI: Define the maximum number of PCI function
+Date: Tue, 27 Nov 2012 09:42:44 +0900 (JST)
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> But for the ACPI part for CPU and memory hotplug enhancements recently posted to
-> the community, I think they are different solutions with the new framework. I feel
-> they are lightweight enhancements to existing code with some limitations, but the
-> new framework is a heavyweight solution with full functionalities and improved
-> usability. So we may need discussions about the different solutions here:)
+Define the maximum number of PCI function so that PCI functions can be
+enumerated without using "8".
 
-Hi Gerry,
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ include/linux/pci.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks for working on the framework enhancement.  I am still new to
-Linux (and learning :), but have extensive background in hot-plug
-features on other OS for CPU, Memory, Node, RP and PCI hot-plug support.
-So, I basically agree with you that we do need framework enhancement.
-However, I think we need phased approach here.  First, we need to make
-CPU and Memory hot-plug work under the current framework.  Once we
-settle on the basic features, we can then make framework enhancements
-without breaking the features.  For CPU hotplug, I also intentionally
-minimized the code changes so that the changes could be back-ported to
-older kernels being used by distributions.
-
-I will send you more comments after I reviewed your patches (which may
-take some time :).
-
-Thanks,
--Toshi
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ee21795..eca3231 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -35,6 +35,8 @@
+ /* Include the ID list */
+ #include <linux/pci_ids.h>
+ 
++#define PCI_MAX_FUNCTIONS 8
++
+ /* pci_slot represents a physical slot */
+ struct pci_slot {
+ 	struct pci_bus *bus;		/* The bus this slot is on */
+-- 
+1.7.1
 
 
