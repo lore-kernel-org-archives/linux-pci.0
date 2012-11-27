@@ -1,67 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:53720 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159Ab2KSV4S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 19 Nov 2012 16:56:18 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [RFC] PCI/PM: Keep runtime PM enabled for unbound PCI devices
-Date: Mon, 19 Nov 2012 23:00:43 +0100
-Message-ID: <1521498.PJusLS7B2o@vostro.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1211191129060.1598-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1211191129060.1598-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from youngberry.canonical.com ([91.189.89.112]:52802 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754886Ab2K0OJl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 27 Nov 2012 09:09:41 -0500
+From: Colin King <colin.king@canonical.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH RESEND] PCI: Allow pcie_aspm=force to work even when FADT indicates it is unsupported
+Date: Tue, 27 Nov 2012 14:09:40 +0000
+Message-Id: <1354025380-19092-1-git-send-email-colin.king@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, November 19, 2012 11:31:01 AM Alan Stern wrote:
-> On Mon, 19 Nov 2012, Huang Ying wrote:
-> 
-> > For unbound PCI devices, what we need is:
-> > 
-> >  - Always in D0 state, because some devices does not work again after
-> >    being put into D3 by the PCI bus.
-> > 
-> >  - In SUSPENDED state if allowed, so that the parent devices can still
-> >    be put into low power state.
-> > 
-> > To satisfy these requirement, the runtime PM for the unbound PCI
-> > devices are disabled and set to SUSPENDED state.  One issue of this
-> > solution is that the PCI devices will be put into SUSPENDED state even
-> > if the SUSPENDED state is forbidden via the sysfs interface
-> > (.../power/control) of the device.  This is not an issue for most
-> > devices, because most PCI devices are not used at all if unbounded.
-> > But there are exceptions.  For example, unbound VGA card can be used
-> > for display, but suspend its parents make it stop working.
-> > 
-> > To fix the issue, we keep the runtime PM enabled when the PCI devices
-> > are unbound.  But the runtime PM callbacks will do nothing if the PCI
-> > devices are unbound.  This way, we can put the PCI devices into
-> > SUSPENDED state without put the PCI devices into D3 state.
-> > 
-> > Known issue: after some changing, pci_dev->driver is used to indicate
-> > whether the PCI devices are bound and whether the runtime PM callbacks
-> > should do nothing.  Maybe it is better to use a dedicated flag such as
-> > .skip_rtpm_callbacks.  That may improve code readability.
-> 
-> I think it's okay like this, especially if you add a comment in 
-> pci_runtime_suspend, pci_runtime_resume, and pci_runtime_idle 
-> explaining that when pci_dev->driver isn't set, the device should 
-> always remain in D0 regardless of the runtime status.
+From: Colin Ian King <colin.king@canonical.com>
 
-Yes, I agree with Alan.  Please add comments as Alan's suggesting and it
-should be fine.
+BugLink: http://bugs.launchpad.net/bugs/962038
 
-Thanks,
-Rafael
+Right now using pcie_aspm=force will not enable ASPM if the FADT indicates
+ASPM is unsupported.  However, the semantics of force should probably allow
+for this, especially as they did before the ASPM disable rework with commit
+3c076351c4027a56d5005a39a0b518a4ba393ce2
 
+This patch just skips the clearing of any ASPM setup that the firmware has
+carried out on this bus if pcie_aspm=force is being used.
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/pci/pcie/aspm.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 213753b..449f257 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -773,6 +773,9 @@ void pcie_clear_aspm(struct pci_bus *bus)
+ {
+ 	struct pci_dev *child;
+ 
++	if (aspm_force)
++		return;
++
+ 	/*
+ 	 * Clear any ASPM setup that the firmware has carried out on this bus
+ 	 */
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.0
+
