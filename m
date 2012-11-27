@@ -1,327 +1,318 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:52932 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751054Ab2KPBGX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Nov 2012 20:06:23 -0500
-Date: Thu, 15 Nov 2012 18:06:21 -0700
-From: Jon Mason <jon.mason@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@linux-iscsi.org>
-Subject: Re: [PATCH v5 1/2] PCI-Express Non-Transparent Bridge Support
-Message-ID: <20121116010621.GI24723@jonmason-lab>
-References: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
- <1352160669-4330-2-git-send-email-jon.mason@intel.com>
- <20121116002904.GA20876@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121116002904.GA20876@kroah.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+To: linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, andi@firstfloor.org, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, yinghai@kernel.org,
+	mingo@redhat.com, Takao Indoh <indou.takao@jp.fujitsu.com>,
+	khalid@gonehiking.org
+Message-Id: <20121127004223.3604.78831.sendpatchset@tindoh.g01.fujitsu.local>
+In-Reply-To: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+Subject: [PATCH v7 4/5] x86, pci: Reset PCIe devices at boot time
+Date: Tue, 27 Nov 2012 09:43:13 +0900 (JST)
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 15, 2012 at 04:29:04PM -0800, Greg KH wrote:
-> On Mon, Nov 05, 2012 at 05:11:08PM -0700, Jon Mason wrote:
-> > --- /dev/null
-> > +++ b/drivers/ntb/ntb_hw.h
-> > @@ -0,0 +1,195 @@
-> > +/*
-> > + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> > + *   redistributing this file, you may do so under either license.
-> > + *
-> > + *   GPL LICENSE SUMMARY
-> > + *
-> > + *   Copyright(c) 2012 Intel Corporation. All rights reserved.
-> > + *
-> > + *   This program is free software; you can redistribute it and/or modify
-> > + *   it under the terms of version 2 of the GNU General Public License as
-> > + *   published by the Free Software Foundation.
-> > + *
-> > + *   BSD LICENSE
-> > + *
-> > + *   Copyright(c) 2012 Intel Corporation. All rights reserved.
-> > + *
-> > + *   Redistribution and use in source and binary forms, with or without
-> > + *   modification, are permitted provided that the following conditions
-> > + *   are met:
-> > + *
-> > + *     * Redistributions of source code must retain the above copyright
-> > + *       notice, this list of conditions and the following disclaimer.
-> > + *     * Redistributions in binary form must reproduce the above copy
-> > + *       notice, this list of conditions and the following disclaimer in
-> > + *       the documentation and/or other materials provided with the
-> > + *       distribution.
-> > + *     * Neither the name of Intel Corporation nor the names of its
-> > + *       contributors may be used to endorse or promote products derived
-> > + *       from this software without specific prior written permission.
-> > + *
-> > + *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> > + *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> > + *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> > + *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> > + *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> > + *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> > + *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> > + *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> > + *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> > + *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> > + *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> > + *
-> > + * Intel PCIe NTB Linux driver
-> > + *
-> > + * Contact Information:
-> > + * Jon Mason <jon.mason@intel.com>
-> > + */
-> > +
-> > +#define PCI_DEVICE_ID_INTEL_NTB_B2B_JSF		0x3725
-> > +#define PCI_DEVICE_ID_INTEL_NTB_CLASSIC_JSF	0x3726
-> > +#define PCI_DEVICE_ID_INTEL_NTB_RP_JSF		0x3727
-> > +#define PCI_DEVICE_ID_INTEL_NTB_RP_SNB		0x3C08
-> > +#define PCI_DEVICE_ID_INTEL_NTB_B2B_SNB		0x3C0D
-> > +#define PCI_DEVICE_ID_INTEL_NTB_CLASSIC_SNB	0x3C0E
-> > +#define PCI_DEVICE_ID_INTEL_NTB_2ND_SNB		0x3C0F
-> > +#define PCI_DEVICE_ID_INTEL_NTB_B2B_BWD		0x0C4E
-> > +
-> > +#define msix_table_size(control)	((control & PCI_MSIX_FLAGS_QSIZE)+1)
-> > +
-> > +#define NTB_BAR_MMIO		0
-> > +#define NTB_BAR_23		2
-> > +#define NTB_BAR_45		4
-> > +#define NTB_BAR_MASK		((1 << NTB_BAR_MMIO) | (1 << NTB_BAR_23) |\
-> > +				 (1 << NTB_BAR_45))
-> > +
-> > +#define NTB_LINK_DOWN		0
-> > +#define NTB_LINK_UP		1
-> > +
-> > +#define NTB_HB_TIMEOUT		msecs_to_jiffies(1000)
-> > +
-> > +#define NTB_NUM_MW		2
-> > +
-> > +enum ntb_hw_event {
-> > +	NTB_EVENT_SW_EVENT0 = 0,
-> > +	NTB_EVENT_SW_EVENT1,
-> > +	NTB_EVENT_SW_EVENT2,
-> > +	NTB_EVENT_HW_ERROR,
-> > +	NTB_EVENT_HW_LINK_UP,
-> > +	NTB_EVENT_HW_LINK_DOWN,
-> > +};
-> > +
-> > +struct ntb_mw {
-> > +	dma_addr_t phys_addr;
-> > +	void __iomem *vbase;
-> > +	resource_size_t bar_sz;
-> > +};
-> > +
-> > +struct ntb_db_cb {
-> > +	void (*callback) (void *data, int db_num);
-> > +	unsigned int db_num;
-> > +	void *data;
-> > +	struct ntb_device *ndev;
-> > +};
-> > +
-> > +struct ntb_device {
-> > +	struct pci_dev *pdev;
-> > +	struct msix_entry *msix_entries;
-> > +	void __iomem *reg_base;
-> > +	struct ntb_mw mw[NTB_NUM_MW];
-> > +	struct {
-> > +		unsigned int max_spads;
-> > +		unsigned int max_db_bits;
-> > +		unsigned int msix_cnt;
-> > +	} limits;
-> > +	struct {
-> > +		void __iomem *pdb;
-> > +		void __iomem *pdb_mask;
-> > +		void __iomem *sdb;
-> > +		void __iomem *sbar2_xlat;
-> > +		void __iomem *sbar4_xlat;
-> > +		void __iomem *spad_write;
-> > +		void __iomem *spad_read;
-> > +		void __iomem *lnk_cntl;
-> > +		void __iomem *lnk_stat;
-> > +		void __iomem *spci_cmd;
-> > +	} reg_ofs;
-> > +	void *ntb_transport;
-> 
-> Use the real type here please.  No void *.
-> 
-> > +	void (*event_cb)(void *handle, enum ntb_hw_event event);
-> > +
-> > +	struct ntb_db_cb *db_cb;
-> > +	unsigned char hw_type;
-> > +	unsigned char conn_type;
-> > +	unsigned char dev_type;
-> > +	unsigned char num_msix;
-> > +	unsigned char bits_per_vector;
-> > +	unsigned char max_cbs;
-> > +	unsigned char link_status;
-> > +	struct delayed_work hb_timer;
-> > +	unsigned long last_ts;
-> > +};
-> 
-> Shouldn't this have a 'struct device' embedded it in somewhere?
-> 
-> 
-> > +/**
-> > + * ntb_hw_link_status() - return the hardware link status
-> > + * @ndev: pointer to ntb_device instance
-> > + *
-> > + * Returns true if the hardware is connected to the remote system
-> > + *
-> > + * RETURNS: true or false based on the hardware link state
-> > + */
-> > +static inline bool ntb_hw_link_status(struct ntb_device *ndev)
-> > +{
-> > +	return ndev->link_status == NTB_LINK_UP;
-> > +}
-> > +
-> > +/**
-> > + * ntb_query_pdev() - return the pci_dev pointer
-> > + * @ndev: pointer to ntb_device instance
-> > + *
-> > + * Given the ntb pointer return the pci_dev pointerfor the NTB hardware device
-> > + *
-> > + * RETURNS: a pointer to the ntb pci_dev
-> > + */
-> > +static inline struct pci_dev *ntb_query_pdev(struct ntb_device *ndev)
-> > +{
-> > +	return ndev->pdev;
-> > +}
-> > +
-> > +/**
-> > + * ntb_query_max_cbs() - return the maximum number of callback tuples
-> > + * @ndev: pointer to ntb_device instance
-> > + *
-> > + * The number of callbacks can vary depending on the platform and MSI-X/MSI
-> > + * enablement
-> > + *
-> > + * RETURNS: the maximum number of callback tuples (3, 15, or 33)
-> > + */
-> > +static inline unsigned int ntb_query_max_cbs(struct ntb_device *ndev)
-> > +{
-> > +	return ndev->max_cbs;
-> > +}
-> 
-> It is shorter, and simpler, to just write the '->variable' version out
-> for this, than to make the function call here.  Why are these needed?
-> Especially when I see the driver code not using them.  Please remove.
+This patch resets PCIe devices at boot time when "reset_devices" is
+specified.
 
-This is used in ntb_transport.c.  It is used to show how many
-interrupts, and there-by clients, the transport layer can have.  I can
-make it a macro and/or put it in a header file, if that suits you
-better.
+Kdump with intel_iommu=on fails becasue ongoing DMA from first kernel
+causes DMAR fault when page table of DMAR is initialized while kdump
+kernel is booting up. To solve this problem, this patch resets PCIe
+devices during boot to stop its DMA.
 
-> > +static void ntb_client_release(struct device *dev)
-> > +{
-> > +}
-> 
-> Ah, how sweet.  Now, according to the in-kernel documentation, I get to
-> publicly mock you for trying to be smarter than the kernel.  Nice try.
+Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
+---
+ arch/x86/include/asm/pci-direct.h |    1 +
+ arch/x86/kernel/setup.c           |    3 +
+ arch/x86/pci/early.c              |  241 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 245 insertions(+), 0 deletions(-)
 
-Consider me sufficiently shamed
+diff --git a/arch/x86/include/asm/pci-direct.h b/arch/x86/include/asm/pci-direct.h
+index b6360d3..5620070 100644
+--- a/arch/x86/include/asm/pci-direct.h
++++ b/arch/x86/include/asm/pci-direct.h
+@@ -18,6 +18,7 @@ extern int early_pci_allowed(void);
+ extern unsigned int pci_early_dump_regs;
+ extern void early_dump_pci_device(u8 bus, u8 slot, u8 func);
+ extern void early_dump_pci_devices(void);
++extern void early_reset_pcie_devices(void);
+ 
+ struct pci_dev *get_early_pci_dev(int num, int slot, int func);
+ #endif /* _ASM_X86_PCI_DIRECT_H */
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index ca45696..2e7928e 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -1001,6 +1001,9 @@ void __init setup_arch(char **cmdline_p)
+ 	generic_apic_probe();
+ 
+ 	early_quirks();
++#ifdef CONFIG_PCI
++	early_reset_pcie_devices();
++#endif
+ 
+ 	/*
+ 	 * Read APIC and some other early information from ACPI tables.
+diff --git a/arch/x86/pci/early.c b/arch/x86/pci/early.c
+index 024def7..ff737f3 100644
+--- a/arch/x86/pci/early.c
++++ b/arch/x86/pci/early.c
+@@ -1,5 +1,6 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/bootmem.h>
+ #include <asm/pci-direct.h>
+ #include <asm/io.h>
+ #include <asm/pci_x86.h>
+@@ -183,3 +184,243 @@ __init struct pci_dev *get_early_pci_dev(int num, int slot, int func)
+ 
+ 	return pdev;
+ }
++
++struct pcie_dev {
++	int cap;	/* position of PCI Express capability */
++	int flags;	/* PCI_EXP_FLAGS */
++
++	/* saved configration register */
++	u32 pci_cfg[16];
++	u16 pcie_cfg[7];
++};
++
++struct pcie_port {
++	struct list_head dev;
++	u8 bus;
++	u8 slot;
++	u8 func;
++	u8 secondary;
++	struct pcie_dev child[PCI_MAX_FUNCTIONS];
++};
++
++static __initdata LIST_HEAD(device_list);
++
++static void __init early_udelay(int loops)
++{
++	while (loops--) {
++		/* Approximately 1 us */
++		native_io_delay();
++	}
++}
++
++static void __init do_reset(u8 bus, u8 slot, u8 func)
++{
++	struct pci_dev *dev;
++	u16 ctrl;
++
++	dev = get_early_pci_dev(bus, slot, func);
++
++	printk(KERN_INFO "pci 0000:%02x:%02x.%d reset\n", bus, slot, func);
++
++	/* Assert Secondary Bus Reset */
++	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &ctrl);
++	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++
++	/*
++	 * PCIe spec requires software to ensure a minimum reset duration
++	 * (Trst == 1ms). We have here 5ms safety margin because early_udelay
++	 * is not precise.
++	 */
++	early_udelay(5000);
++
++	/* De-assert Secondary Bus Reset */
++	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
++	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
++}
++
++static void __init save_state(u8 bus, u8 slot, u8 func, struct pcie_dev *pdev)
++{
++	struct pci_dev *dev;
++	int i;
++
++	dev = get_early_pci_dev(bus, slot, func);
++	dev->is_pcie = 1;
++	dev->pcie_cap = pdev->cap;
++	dev->pcie_flags_reg = pdev->flags;
++
++	printk(KERN_INFO "pci 0000:%02x:%02x.%d save state\n", bus, slot, func);
++
++	for (i = 0; i < 16; i++)
++		pci_read_config_dword(dev, i * 4, pdev->pci_cfg + i);
++	i = 0;
++	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &pdev->pcie_cfg[i++]);
++	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &pdev->pcie_cfg[i++]);
++	pcie_capability_read_word(dev, PCI_EXP_SLTCTL, &pdev->pcie_cfg[i++]);
++	pcie_capability_read_word(dev, PCI_EXP_RTCTL, &pdev->pcie_cfg[i++]);
++	pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &pdev->pcie_cfg[i++]);
++	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &pdev->pcie_cfg[i++]);
++	pcie_capability_read_word(dev, PCI_EXP_SLTCTL2, &pdev->pcie_cfg[i++]);
++}
++
++static void __init restore_state(u8 bus, u8 slot, u8 func,
++				 struct pcie_dev *pdev)
++{
++	struct pci_dev *dev;
++	int i = 0;
++
++	dev = get_early_pci_dev(bus, slot, func);
++	dev->is_pcie = 1;
++	dev->pcie_cap = pdev->cap;
++	dev->pcie_flags_reg = pdev->flags;
++
++	printk(KERN_INFO "pci 0000:%02x:%02x.%d restore state\n",
++	       bus, slot, func);
++
++	pcie_capability_write_word(dev, PCI_EXP_DEVCTL, pdev->pcie_cfg[i++]);
++	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, pdev->pcie_cfg[i++]);
++	pcie_capability_write_word(dev, PCI_EXP_SLTCTL, pdev->pcie_cfg[i++]);
++	pcie_capability_write_word(dev, PCI_EXP_RTCTL, pdev->pcie_cfg[i++]);
++	pcie_capability_write_word(dev, PCI_EXP_DEVCTL2, pdev->pcie_cfg[i++]);
++	pcie_capability_write_word(dev, PCI_EXP_LNKCTL2, pdev->pcie_cfg[i++]);
++	pcie_capability_write_word(dev, PCI_EXP_SLTCTL2, pdev->pcie_cfg[i++]);
++
++	for (i = 15; i >= 0; i--)
++		pci_write_config_dword(dev, i * 4, pdev->pci_cfg[i]);
++}
++
++static void __init find_pcie_device(unsigned bus, unsigned slot, unsigned func)
++{
++	struct pci_dev *dev;
++	int f, pcie_type, count;
++	u8 secondary, type;
++	u16 vendor;
++	u32 class;
++	struct pcie_port *port;
++	int pcie_cap[PCI_MAX_FUNCTIONS];
++	int pcie_flags[PCI_MAX_FUNCTIONS];
++
++	dev = get_early_pci_dev(bus, slot, func);
++	set_pcie_port_type(dev);
++	if (!pci_is_pcie(dev))
++		return;
++
++	pcie_type = pci_pcie_type(dev);
++	if ((pcie_type != PCI_EXP_TYPE_ROOT_PORT) &&
++	    (pcie_type != PCI_EXP_TYPE_DOWNSTREAM))
++		return;
++
++	pci_read_config_byte(dev, PCI_HEADER_TYPE, &type);
++	if ((type & 0x7f) != PCI_HEADER_TYPE_BRIDGE)
++		return;
++	pci_read_config_byte(dev, PCI_SECONDARY_BUS, &secondary);
++
++	memset(pcie_cap, 0, sizeof(pcie_cap));
++	memset(pcie_flags, 0, sizeof(pcie_flags));
++	for (count = 0, f = 0; f < PCI_MAX_FUNCTIONS; f++) {
++		dev = get_early_pci_dev(secondary, 0, f);
++		pci_read_config_word(dev, PCI_VENDOR_ID, &vendor);
++		if (vendor == 0xffff)
++			continue;
++
++		set_pcie_port_type(dev);
++		if (!pci_is_pcie(dev))
++			continue;
++
++		pcie_type = pci_pcie_type(dev);
++		if ((pcie_type == PCI_EXP_TYPE_UPSTREAM) ||
++		    (pcie_type == PCI_EXP_TYPE_PCI_BRIDGE))
++			/* Don't reset switch, bridge */
++			return;
++
++		pci_read_config_dword(dev, PCI_CLASS_REVISION, &class);
++		if ((class >> 24) == PCI_BASE_CLASS_DISPLAY)
++			/* Don't reset VGA device */
++			return;
++
++		count++;
++		pcie_cap[f] = dev->pcie_cap;
++		pcie_flags[f] = dev->pcie_flags_reg;
++	}
++
++	if (!count)
++		return;
++
++	port = (struct pcie_port *)alloc_bootmem(sizeof(struct pcie_port));
++	if (port == NULL) {
++		printk(KERN_ERR "pci 0000:%02x:%02x.%d alloc_bootmem failed\n",
++		       bus, slot, func);
++		return;
++	}
++	memset(port, 0, sizeof(*port));
++	port->bus = bus;
++	port->slot = slot;
++	port->func = func;
++	port->secondary = secondary;
++	for (f = 0; f < PCI_MAX_FUNCTIONS; f++)
++		if (pcie_cap[f]) {
++			port->child[f].cap = pcie_cap[f];
++			port->child[f].flags = pcie_flags[f];
++			save_state(secondary, 0, f, &port->child[f]);
++		}
++	list_add_tail(&port->dev, &device_list);
++}
++
++void __init early_reset_pcie_devices(void)
++{
++	unsigned bus, slot, func;
++	struct pcie_port *port, *tmp;
++	struct pci_dev *dev;
++
++	if (!early_pci_allowed() || !reset_devices)
++		return;
++
++	/*
++	 * Find PCIe port(root port and downstream port) and save config
++	 * registers of its downstream devices
++	 */
++	for (bus = 0; bus < 256; bus++) {
++		for (slot = 0; slot < 32; slot++) {
++			for (func = 0; func < PCI_MAX_FUNCTIONS; func++) {
++				u16 vendor;
++				u8 type;
++
++				dev = get_early_pci_dev(bus, slot, func);
++				pci_read_config_word(dev, PCI_VENDOR_ID,
++						     &vendor);
++				if (vendor == 0xffff)
++					continue;
++
++				pci_read_config_byte(dev, PCI_HEADER_TYPE,
++						     &type);
++				find_pcie_device(bus, slot, func);
++
++				if ((func == 0) && !(type & 0x80))
++					break;
++			}
++		}
++	}
++
++	if (list_empty(&device_list))
++		return;
++
++	/* Do bus reset */
++	list_for_each_entry(port, &device_list, dev)
++		do_reset(port->bus, port->slot, port->func);
++
++	/*
++	 * According to PCIe spec, software must wait a minimum of 100 ms
++	 * before sending a configuration request. We have 500ms safety margin
++	 * here.
++	 */
++	early_udelay(500000);
++
++	/* Restore config registers and free memory */
++	list_for_each_entry_safe(port, tmp, &device_list, dev) {
++		for (func = 0; func < PCI_MAX_FUNCTIONS; func++)
++			if (port->child[func].cap)
++				restore_state(port->secondary, 0, func,
++					      &port->child[func]);
++		free_bootmem(__pa(port), sizeof(*port));
++	}
++}
+-- 
+1.7.1
 
-> 
-> Think back to when you wrote this function.  Did you really think it was
-> the correct thing to do?  If not, why did you do this?
 
-Quick and dirty hack until I had more than one client driver, but I'll
-implement it properly now.
-
-> 
-> 
-> 
-> Sorry, no.
-> 
-> > +struct bus_type ntb_bus_type = {
-> > +	.name = "ntb_bus",
-> > +	.match = ntb_match_bus,
-> > +	.probe = ntb_client_probe,
-> > +	.remove = ntb_client_remove,
-> > +};
-> > +
-> > +static atomic_t ntb_bus_use = ATOMIC_INIT(0);
-> > +
-> > +static int __devinit ntb_bus_init(void)
-> > +{
-> > +	int rc;
-> > +
-> > +	if (atomic_inc_return(&ntb_bus_use) == 1) {
-> 
-> That's the wierdest way of using an atomic variable I have ever seen.
-> How could this ever be anything but 0?  If you need a lock, use a lock.
-
-The driver is calling ntb_bus_init for every NTB device, but the bus
-only needs to be done once.
-
-> 
-> > +static int __devinit ntb_dev_init(struct ntb_transport *nt)
-> > +{
-> > +	struct device *dev = &nt->netdev;
-> 
-> Ah, there's the struct device.  Don't call it a 'netdev', that's just
-> really really confusing to anyone who has looked at a network driver.
-> As this isn't a netdev, it's a 'device'.
-
-There currently is only 1 client, which is a virtual networking
-device.  However, I'll correct it to be more generic (per my comment
-above).
-
-> 
-> > +	int rc;
-> > +
-> > +	rc = ntb_bus_init();
-> > +	if (rc)
-> > +		goto err;
-> > +
-> > +	/* setup and register client devices */
-> > +	dev_set_name(dev, "ntb_netdev");
-> 
-> All devices get the same name?  That's a recipe for confusion.
-> 
-> > +static void ntb_transport_setup_qp_mw(struct ntb_transport *nt,
-> > +				      unsigned int qp_num)
-> > +{
-> > +	struct ntb_transport_qp *qp = &nt->qps[qp_num];
-> > +	u8 mw_num = QP_TO_MW(qp_num);
-> > +	unsigned int size, num_qps_mw;
-> > +
-> > +	WARN_ON(nt->mw[mw_num].virt_addr == 0);
-> > +
-> > +	if (nt->max_qps % NTB_NUM_MW && !mw_num)
-> > +		num_qps_mw = nt->max_qps / NTB_NUM_MW +
-> > +			     (nt->max_qps % NTB_NUM_MW - mw_num);
-> > +	else
-> > +		num_qps_mw = nt->max_qps / NTB_NUM_MW;
-> > +
-> > +	size = nt->mw[mw_num].size / num_qps_mw;
-> > +	pr_debug("orig size = %d, num qps = %d, size = %d\n",
-> > +		 (int) nt->mw[mw_num].size, nt->max_qps, size);
-> > +
-> > +	qp->rx_buff_begin = nt->mw[mw_num].virt_addr +
-> > +			    (qp_num / NTB_NUM_MW * size);
-> > +	qp->rx_buff_end = qp->rx_buff_begin + size;
-> > +	pr_info("QP %d - RX Buff start %p end %p\n", qp->qp_num,
-> > +		qp->rx_buff_begin, qp->rx_buff_end);
-> > +	qp->rx_offset = qp->rx_buff_begin;
-> > +
-> > +	qp->tx_mw_begin = ntb_get_mw_vbase(nt->ndev, mw_num) +
-> > +			  (qp_num / NTB_NUM_MW * size);
-> > +	qp->tx_mw_end = qp->tx_mw_begin + size;
-> > +	pr_info("QP %d - TX MW start %p end %p\n", qp->qp_num, qp->tx_mw_begin,
-> > +		qp->tx_mw_end);
-> 
-> That's some debugging information spamming the kernel log, please
-> remove.
-> 
-> Also, you have a 'struct device', so use dev_dbg() and friends, not pr_*
-> calls.  This should be fixed in lots of places here.
-
-Will do, thanks for taking the time to review.
-
-Thanks,
-Jon
-
-> 
-> thanks,
-> 
-> greg k-h
