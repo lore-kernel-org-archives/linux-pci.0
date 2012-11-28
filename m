@@ -1,98 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49334 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.19.201]:58366 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758019Ab2K0GqX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 27 Nov 2012 01:46:23 -0500
-Date: Tue, 27 Nov 2012 08:46:18 +0200
-From: Gleb Natapov <gleb@redhat.com>
-To: Marcelo Tosatti <mtosatti@redhat.com>
-Cc: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Stefan Hajnoczi <stefanha@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Qemu-devel] [PATCH 0/4] AER-KVM: Error containment of PCI
- pass-thru devices assigned to KVM guests
-Message-ID: <20121127064618.GM25516@redhat.com>
-References: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
- <20121120134104.GI27378@stefanha-thinkpad.redhat.com>
- <F9E001219150CB45BEDC82A650F360C90147066B@G4W3208.americas.hpqcorp.net>
- <20121126234612.GC10634@amt.cnet>
+	id S1754378Ab2K1TBI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Nov 2012 14:01:08 -0500
+Date: Wed, 28 Nov 2012 11:01:06 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Bill Pemberton <wfp5p@virginia.edu>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/9] PCI: Remove use of CONFIG_HOTPLUG
+Message-ID: <20121128190106.GA30376@kroah.com>
+References: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121126234612.GC10634@amt.cnet>
+In-Reply-To: <1353530100-728-1-git-send-email-wfp5p@virginia.edu>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 26, 2012 at 09:46:12PM -0200, Marcelo Tosatti wrote:
-> On Tue, Nov 20, 2012 at 02:09:46PM +0000, Pandarathil, Vijaymohan R wrote:
-> > 
-> > 
-> > > -----Original Message-----
-> > > From: Stefan Hajnoczi [mailto:stefanha@gmail.com]
-> > > Sent: Tuesday, November 20, 2012 5:41 AM
-> > > To: Pandarathil, Vijaymohan R
-> > > Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; qemu-devel@nongnu.org;
-> > > linux-kernel@vger.kernel.org
-> > > Subject: Re: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru
-> > > devices assigned to KVM guests
-> > > 
-> > > On Tue, Nov 20, 2012 at 06:31:48AM +0000, Pandarathil, Vijaymohan R wrote:
-> > > > Add support for error containment when a PCI pass-thru device assigned to
-> > > a KVM
-> > > > guest encounters an error. This is for PCIe devices/drivers that support
-> > > AER
-> > > > functionality. When the OS is notified of an error in a device either
-> > > > through the firmware first approach or through an interrupt handled by
-> > > the AER
-> > > > root port driver, concerned subsystems are notified by invoking callbacks
-> > > > registered by these subsystems. The device is also marked as tainted till
-> > > the
-> > > > corresponding driver recovery routines are successful.
-> > > >
-> > > > KVM module registers for a notification of such errors. In the KVM
-> > > callback
-> > > > routine, a global counter is incremented to keep track of the error
-> > > > notification. Before each CPU enters guest mode to execute guest code,
-> > > > appropriate checks are done to see if the impacted device belongs to the
-> > > guest
-> > > > or not. If the device belongs to the guest, qemu hypervisor for the guest
-> > > is
-> > > > informed and the guest is immediately brought down, thus preventing or
-> > > > minimizing chances of any bad data being written out by the guest driver
-> > > > after the device has encountered an error.
-> > > 
-> > > I'm surprised that the hypervisor would shut down the guest when PCIe
-> > > AER kicks in for a pass-through device.  Shouldn't we pass the AER event
-> > > into the guest and deal with it there?
-> > 
-> > Agreed. That would be the ideal behavior and is planned in a future patch.
-> > Lack of control over the capabilities/type of the OS/drivers running in 
-> > the guest is also a concern in passing along the event to the guest.
-> > 
-> > My understanding is that in the current implementation of Linux/KVM, these 
-> > errors are not handled at all and can potentially cause a guest hang or 
-> > crash or even data corruption depending on the implementation of the guest
-> > driver for the device. As a first step, these patches make the behavior 
-> > better by doing error containment with a predictable behavior when such
-> > errors occur. 
-> 
-> For both ACPI notifications and Linux PCI AER driver there is a way for
-> the PCI driver to receive a notification, correct?
-> 
-> Can just have virt/kvm/assigned-dev.c code register such a notifier (as
-> a "PCI driver") and then perform appropriate action?
-> 
-> Also the semantics of "tainted driver" is not entirely clear.
-> 
-> Is there any reason for not having this feature for VFIO only, as KVM
-> device assigment is being phased out?
-> 
-Exactly. We shouldn't add checks to guest entry code and introduce new
-userspace ABI to add minor feature to deprecated code. New userspace ABI
-means that QEMU changes are needed, so the feature will be fully functional
-only with latest QEMU which is capable of using VFIO anyway.
+On Wed, Nov 21, 2012 at 03:34:51PM -0500, Bill Pemberton wrote:
+> This is a respin of the patches to remove CONFIG_HOTPLUG for the PCI
+> subsystem.  The end result is the same as the patches in the big
+> patchset I sent out earlier this week but the changelog entries have
+> been changed to be consistent with the capitalization of PCI.  The
+> removal of the __dev* entries has also been squashed into a single
+> patch.
 
---
-			Gleb.
+Bjorn, any objection for me taking these patches through my driver-core
+tree?  If not, can I get your ack?
+
+thanks,
+
+greg k-h
