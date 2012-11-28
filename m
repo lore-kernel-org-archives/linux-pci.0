@@ -1,437 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part2 09/13] ACPIHP: configure/unconfigure system devices attached to a hotplug slot
-Date: Sun,  4 Nov 2012 20:50:11 +0800
-Message-Id: <1352033415-5606-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
-References: <1352033415-5606-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:35552 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932312Ab2K1WjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Nov 2012 17:39:12 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] PCI/PM: Keep runtime PM enabled for unbound PCI devices
+Date: Wed, 28 Nov 2012 23:43:56 +0100
+Message-ID: <1962888.rQgbRUetgj@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6CPSMXjq1eSTX41vtwOcd5rQOdC0-9ye5NZhds9U1B8A@mail.gmail.com>
+References: <1353398902-21253-1-git-send-email-ying.huang@intel.com> <CAErSpo6CPSMXjq1eSTX41vtwOcd5rQOdC0-9ye5NZhds9U1B8A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements interfaces to configure/unconfigure system devices
-attached to a hotplug slot. Configuring is to add system devices into
-running system and put then into use, unconfiguring is to remove system
-devices from running system.
+On Wednesday, November 28, 2012 03:25:59 PM Bjorn Helgaas wrote:
+> On Tue, Nov 20, 2012 at 1:08 AM, Huang Ying <ying.huang@intel.com> wrote:
+> > For unbound PCI devices, what we need is:
+> >
+> >  - Always in D0 state, because some devices does not work again after
+> >    being put into D3 by the PCI bus.
+> >
+> >  - In SUSPENDED state if allowed, so that the parent devices can still
+> >    be put into low power state.
+> >
+> > To satisfy these requirement, the runtime PM for the unbound PCI
+> > devices are disabled and set to SUSPENDED state.  One issue of this
+> > solution is that the PCI devices will be put into SUSPENDED state even
+> > if the SUSPENDED state is forbidden via the sysfs interface
+> > (.../power/control) of the device.  This is not an issue for most
+> > devices, because most PCI devices are not used at all if unbounded.
+> > But there are exceptions.  For example, unbound VGA card can be used
+> > for display, but suspend its parents make it stop working.
+> >
+> > To fix the issue, we keep the runtime PM enabled when the PCI devices
+> > are unbound.  But the runtime PM callbacks will do nothing if the PCI
+> > devices are unbound.  This way, we can put the PCI devices into
+> > SUSPENDED state without put the PCI devices into D3 state.
+> 
+> Does this fix a reported problem?  Is there a bug report URL?  What
+> problem would a user notice?
 
-To support better error recover and cancellation, device configuration
-operations are splitted into three steps and unconfiguration operations
-are splitted into six steps as below:
-CONFIGURE
- 1) pre_configure(): optional step to pre-allocate special resources
- 2) configure(): allocate required resources
- 3) pos_configure(): add devices into system or rollback
-UNCONFIGURE
- 1) pre_release(): optional step to mark device going to be removed/busy
- 2) release(): reclaim device from running system
- 3) post_release(): rollback if cancelled by user or error happened
- 4) pre_unconfigure(): optional step to solve possible dependency issue
- 5) unconfigure(): remove devices from running system
- 6) post_unconfigure(): free resources used by devices
+There is a BZ: https://bugzilla.kernel.org/show_bug.cgi?id=48201
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Hanjun Guo <guohanjun@huawei.com>
----
- drivers/acpi/hotplug/Makefile     |    1 +
- drivers/acpi/hotplug/acpihp_drv.h |    4 +
- drivers/acpi/hotplug/configure.c  |  341 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 346 insertions(+)
- create mode 100644 drivers/acpi/hotplug/configure.c
+Unfortunately, the reporter hasn't confirmed that the bug is fixed,
+although we're quite confident that it will be.
 
-diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index f72f2c3..6cb6aa1 100644
---- a/drivers/acpi/hotplug/Makefile
-+++ b/drivers/acpi/hotplug/Makefile
-@@ -14,3 +14,4 @@ obj-$(CONFIG_ACPI_HOTPLUG_DRIVER)		+= acpihp_drv.o
- acpihp_drv-y					= drv_main.o
- acpihp_drv-y					+= dependency.o
- acpihp_drv-y					+= cancel.o
-+acpihp_drv-y					+= configure.o
-diff --git a/drivers/acpi/hotplug/acpihp_drv.h b/drivers/acpi/hotplug/acpihp_drv.h
-index dd8ea92..aa239f6 100644
---- a/drivers/acpi/hotplug/acpihp_drv.h
-+++ b/drivers/acpi/hotplug/acpihp_drv.h
-@@ -58,6 +58,7 @@ struct acpihp_slot_dependency {
- 	struct list_head		node;
- 	struct acpihp_slot		*slot;
- 	u32				opcodes;
-+	u32				execute_stages;
- };
- 
- void acpihp_drv_get_data(struct acpihp_slot *slot,
-@@ -81,4 +82,7 @@ void acpihp_drv_cancel_fini(struct list_head *list);
- int acpihp_drv_cancel_start(struct list_head *list);
- int acpihp_drv_cancel_wait(struct list_head *list);
- 
-+int acpihp_drv_configure(struct list_head *list);
-+int acpihp_drv_unconfigure(struct list_head *list);
-+
- #endif	/* __ACPIHP_DRV_H__ */
-diff --git a/drivers/acpi/hotplug/configure.c b/drivers/acpi/hotplug/configure.c
-new file mode 100644
-index 0000000..3209d14b
---- /dev/null
-+++ b/drivers/acpi/hotplug/configure.c
-@@ -0,0 +1,341 @@
-+/*
-+ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
-+ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
-+ * Copyright (C) 2012 Hanjun Guo <guohanjun@huawei.com>
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/device.h>
-+#include <acpi/acpi_bus.h>
-+#include <acpi/acpi_hotplug.h>
-+#include "acpihp_drv.h"
-+
-+enum config_op_code {
-+	DRV_OP_PRE_CONFIGURE,
-+	DRV_OP_CONFIGURE,
-+	DRV_OP_POST_CONFIGURE,
-+	DRV_OP_PRE_RELEASE,
-+	DRV_OP_RELEASE,
-+	DRV_OP_POST_RELEASE,
-+	DRV_OP_PRE_UNCONFIGURE,
-+	DRV_OP_UNCONFIGURE,
-+	DRV_OP_POST_UNCONFIGURE
-+};
-+
-+/* All devices will be configured in following order. */
-+static enum acpihp_dev_type acpihp_drv_dev_types[] = {
-+	ACPIHP_DEV_TYPE_CONTAINER,
-+	ACPIHP_DEV_TYPE_MEM,
-+	ACPIHP_DEV_TYPE_CPU,
-+	ACPIHP_DEV_TYPE_HOST_BRIDGE,
-+};
-+
-+/* All devices will be unconfigured in following order. */
-+static enum acpihp_dev_type acpihp_drv_dev_types_reverse[] = {
-+	ACPIHP_DEV_TYPE_HOST_BRIDGE,
-+	ACPIHP_DEV_TYPE_CPU,
-+	ACPIHP_DEV_TYPE_MEM,
-+	ACPIHP_DEV_TYPE_CONTAINER,
-+};
-+
-+static void acpihp_drv_update_dev_state(struct acpihp_dev_node *dev,
-+					enum acpihp_dev_state state)
-+{
-+	BUG_ON(state <= DEVICE_STATE_UNKOWN || state >= DEVICE_STATE_MAX);
-+	dev->state = state;
-+}
-+
-+static int acpihp_drv_invoke_method(enum config_op_code  opcode,
-+				    struct acpihp_slot *slot,
-+				    struct acpi_device *dev, int post)
-+{
-+	struct acpihp_slot_drv *drv_data;
-+
-+	acpihp_drv_get_data(slot, &drv_data);
-+
-+	switch (opcode) {
-+	case DRV_OP_PRE_CONFIGURE:
-+		if (drv_data->cancel_ctx.check_cancel(&drv_data->cancel_ctx))
-+			return -ECANCELED;
-+		return acpihp_dev_pre_configure(dev, &drv_data->cancel_ctx);
-+	case DRV_OP_CONFIGURE:
-+		if (drv_data->cancel_ctx.check_cancel(&drv_data->cancel_ctx))
-+			return -ECANCELED;
-+		return acpihp_dev_configure(dev, &drv_data->cancel_ctx);
-+	case DRV_OP_POST_CONFIGURE:
-+		return acpihp_dev_post_configure(dev, post);
-+	case DRV_OP_PRE_RELEASE:
-+		if (drv_data->cancel_ctx.check_cancel(&drv_data->cancel_ctx))
-+			return -ECANCELED;
-+		return acpihp_dev_pre_release(dev, &drv_data->cancel_ctx);
-+	case DRV_OP_RELEASE:
-+		if (drv_data->cancel_ctx.check_cancel(&drv_data->cancel_ctx))
-+			return -ECANCELED;
-+		return acpihp_dev_release(dev, &drv_data->cancel_ctx);
-+	case DRV_OP_POST_RELEASE:
-+		return acpihp_dev_post_release(dev, post);
-+	case DRV_OP_PRE_UNCONFIGURE:
-+		return acpihp_dev_pre_unconfigure(dev);
-+	case DRV_OP_UNCONFIGURE:
-+		return acpihp_dev_unconfigure(dev);
-+	case DRV_OP_POST_UNCONFIGURE:
-+		return acpihp_dev_post_unconfigure(dev);
-+	default:
-+		BUG_ON(opcode);
-+		return -ENOSYS;
-+	}
-+}
-+
-+static int acpihp_drv_call_method(enum config_op_code opcode,
-+				  struct acpihp_slot *slot,
-+				  enum acpihp_dev_type type,
-+				  enum acpihp_dev_state state)
-+{
-+	int result = 0;
-+	struct klist_iter iter;
-+	struct klist_node *ip;
-+	struct acpihp_dev_node *np;
-+	struct acpi_device *acpi_dev;
-+
-+	klist_iter_init(&slot->dev_lists[type], &iter);
-+	while ((ip = klist_next(&iter)) != NULL) {
-+		np = container_of(ip, struct acpihp_dev_node, node);
-+		acpi_dev = container_of(np->dev, struct acpi_device, dev);
-+		result = acpihp_drv_invoke_method(opcode, slot, acpi_dev, 0);
-+		if (result)
-+			break;
-+		acpihp_drv_update_dev_state(np, state);
-+	}
-+	klist_iter_exit(&iter);
-+
-+	return result;
-+}
-+
-+static int acpihp_drv_call_method_post(enum config_op_code opcode,
-+				       struct acpihp_slot *slot,
-+				       enum acpihp_dev_type type,
-+				       enum acpihp_dev_state state,
-+				       enum acpihp_dev_post_cmd post)
-+{
-+	int retval = 0;
-+	int result;
-+	struct klist_iter iter;
-+	struct klist_node *ip;
-+	struct acpihp_dev_node *np;
-+	struct acpi_device *acpi_dev;
-+
-+	klist_iter_init(&slot->dev_lists[type], &iter);
-+	while ((ip = klist_next(&iter)) != NULL) {
-+		np = container_of(ip, struct acpihp_dev_node, node);
-+		acpi_dev = container_of(np->dev, struct acpi_device, dev);
-+		if (np->state == state && post == ACPIHP_DEV_POST_CMD_ROLLBACK)
-+			continue;
-+
-+		result = acpihp_drv_invoke_method(opcode, slot, acpi_dev, post);
-+		if (result)
-+			retval = -EIO;
-+		else if (post == ACPIHP_DEV_POST_CMD_ROLLBACK)
-+			acpihp_drv_update_dev_state(np, state);
-+	}
-+	klist_iter_exit(&iter);
-+
-+	return retval;
-+}
-+
-+static int acpihp_drv_walk_devs(struct list_head *slot_list,
-+				enum config_op_code opcode,
-+				enum acpihp_dev_state state,
-+				bool reverse)
-+{
-+	int i, retval = 0;
-+	enum acpihp_dev_type *tp;
-+	struct acpihp_slot_dependency *dep;
-+	int count = ARRAY_SIZE(acpihp_drv_dev_types);
-+
-+	tp = reverse ? acpihp_drv_dev_types_reverse : acpihp_drv_dev_types;
-+	for (i = 0; i < count; i++)
-+		list_for_each_entry(dep, slot_list, node) {
-+			retval = acpihp_drv_call_method(opcode, dep->slot,
-+							tp[i], state);
-+			if (retval)
-+				return retval;
-+			dep->execute_stages |= 1 << opcode;
-+		}
-+
-+	return 0;
-+}
-+
-+static void acpihp_drv_walk_devs_post(struct list_head *slot_list,
-+				      enum config_op_code opcode,
-+				      enum acpihp_dev_state state,
-+				      enum acpihp_dev_post_cmd post,
-+				      bool reverse)
-+{
-+	int i;
-+	enum acpihp_dev_type *tp;
-+	struct acpihp_slot_dependency *dep;
-+	int count = ARRAY_SIZE(acpihp_drv_dev_types);
-+
-+	tp = reverse ? acpihp_drv_dev_types_reverse : acpihp_drv_dev_types;
-+	for (i = 0; i < count; i++)
-+		list_for_each_entry(dep, slot_list, node) {
-+			if (!dep->execute_stages)
-+				continue;
-+			if (acpihp_drv_call_method_post(opcode, dep->slot,
-+							tp[i], state, post))
-+				ACPIHP_SLOT_WARN(dep->slot,
-+					"fails to commit or rollback.\n");
-+		}
-+}
-+
-+static void acpihp_drv_sync_cancel(struct list_head *list, int result)
-+{
-+	int cancel;
-+	struct acpihp_slot_dependency *dep;
-+
-+	if (!result)
-+		cancel = ACPIHP_DRV_CANCEL_MISSED;
-+	else if (result == -ECANCELED)
-+		cancel = ACPIHP_DRV_CANCEL_OK;
-+	else
-+		cancel = ACPIHP_DRV_CANCEL_FAILED;
-+
-+	list_for_each_entry(dep, list, node) {
-+		acpihp_drv_cancel_notify(dep->slot, cancel);
-+		acpihp_drv_update_slot_state(dep->slot);
-+	}
-+}
-+
-+/*
-+ * To support better error recover and cancellation, configure operations
-+ * are splitted into three steps:
-+ * 1) pre_configure(): optional step to setup special resources
-+ * 2) configure(): allocate required resources and initialize device
-+ * 3) post_configure(): add device into system or rollback
-+ */
-+int acpihp_drv_configure(struct list_head *list)
-+{
-+	int result;
-+	struct list_head head;
-+	struct acpihp_slot_dependency *dep;
-+	enum acpihp_dev_post_cmd post = ACPIHP_DEV_POST_CMD_COMMIT;
-+
-+	result = acpihp_drv_filter_dependency_list(list, &head,
-+						   ACPIHP_DRV_CMD_CONFIGURE);
-+	if (result) {
-+		ACPIHP_DEBUG("fails to filter dependency list.\n");
-+		return -ENOMEM;
-+	}
-+
-+	list_for_each_entry(dep, &head, node)
-+		acpihp_slot_change_state(dep->slot,
-+					 ACPIHP_SLOT_STATE_CONFIGURING);
-+
-+	result = acpihp_drv_walk_devs(&head, DRV_OP_PRE_CONFIGURE,
-+				      DEVICE_STATE_PRE_CONFIGURE, false);
-+	if (!result)
-+		result = acpihp_drv_walk_devs(&head, DRV_OP_CONFIGURE,
-+					      DEVICE_STATE_CONFIGURED, false);
-+	if (result)
-+		post = ACPIHP_DEV_POST_CMD_ROLLBACK;
-+	acpihp_drv_walk_devs_post(&head, DRV_OP_POST_CONFIGURE,
-+				  DEVICE_STATE_CONNECTED, post, false);
-+
-+	list_for_each_entry(dep, &head, node)
-+		acpihp_drv_update_slot_state(dep->slot);
-+	acpihp_drv_sync_cancel(&head, result);
-+	acpihp_drv_destroy_dependency_list(&head);
-+
-+	return result;
-+}
-+
-+static int acpihp_drv_release(struct list_head *list)
-+{
-+	int result;
-+	enum acpihp_dev_post_cmd post = ACPIHP_DEV_POST_CMD_COMMIT;
-+
-+	result = acpihp_drv_walk_devs(list, DRV_OP_PRE_RELEASE,
-+				      DEVICE_STATE_PRE_RELEASE, true);
-+	if (!result)
-+		result = acpihp_drv_walk_devs(list, DRV_OP_RELEASE,
-+					      DEVICE_STATE_RELEASED, true);
-+	if (result)
-+		post = ACPIHP_DEV_POST_CMD_ROLLBACK;
-+	acpihp_drv_walk_devs_post(list, DRV_OP_POST_RELEASE,
-+				  DEVICE_STATE_CONFIGURED, post, true);
-+	acpihp_drv_sync_cancel(list, result);
-+
-+	return result;
-+}
-+
-+static void __acpihp_drv_unconfigure(struct list_head *list)
-+{
-+	int result;
-+
-+	result = acpihp_drv_walk_devs(list, DRV_OP_PRE_UNCONFIGURE,
-+				      DEVICE_STATE_PRE_UNCONFIGURE, true);
-+	BUG_ON(result);
-+	result = acpihp_drv_walk_devs(list, DRV_OP_UNCONFIGURE,
-+				      DEVICE_STATE_CONNECTED, true);
-+	BUG_ON(result);
-+	result = acpihp_drv_walk_devs(list, DRV_OP_POST_UNCONFIGURE,
-+				      DEVICE_STATE_CONNECTED, true);
-+	BUG_ON(result);
-+}
-+
-+/*
-+ * To support better error recover and cancellation, unconfigure operations
-+ * are splitted into three steps:
-+ * 1) pre_release(): optional
-+ * 2) release(): reclaim devices from system
-+ * 3) post_release(): rollback if cancelled or failed to reclaim devices
-+ * 4) pre_unconfigure(): optional
-+ * 5) unconfigure(): remove devices from system
-+ * 6) post_unconfigure(): free resources used by devices
-+ */
-+int acpihp_drv_unconfigure(struct list_head *list)
-+{
-+	int result;
-+	struct list_head head;
-+	struct acpihp_slot_dependency *dep;
-+
-+	result = acpihp_drv_filter_dependency_list(list, &head,
-+						   ACPIHP_DRV_CMD_UNCONFIGURE);
-+	if (result) {
-+		ACPIHP_DEBUG("fails to filter dependency list.\n");
-+		return -ENOMEM;
-+	}
-+
-+	list_for_each_entry(dep, &head, node)
-+		acpihp_slot_change_state(dep->slot,
-+					 ACPIHP_SLOT_STATE_UNCONFIGURING);
-+
-+	result = acpihp_drv_release(&head);
-+	if (!result)
-+		__acpihp_drv_unconfigure(&head);
-+
-+	list_for_each_entry(dep, &head, node)
-+		acpihp_drv_update_slot_state(dep->slot);
-+
-+	acpihp_drv_destroy_dependency_list(&head);
-+
-+	return result;
-+}
+> This doesn't look critical enough to try to put in v3.7 (correct me if
+> I'm wrong).  It's getting pretty late for the v3.8 merge window, but
+> it looks like it qualifies as a bug fix that we would merge even after
+> the merge window, so I'll put it in my -next branch headed for v3.8.
+> Then it can be backported to v3.6 and v3.7.
+
+I think that's OK.
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.9.5
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
