@@ -1,98 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpanel23.proisp.no ([88.87.44.74]:54395 "EHLO
-	cpanel23.proisp.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757281Ab2K3SCj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 13:02:39 -0500
-Message-ID: <50B8EFBF.2050403@numascale.com>
-Date: Fri, 30 Nov 2012 18:41:19 +0100
-From: Steffen Persvold <sp@numascale.com>
+Received: from mga09.intel.com ([134.134.136.24]:39739 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754718Ab2K1PxD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 28 Nov 2012 10:53:03 -0500
+From: "Fujinaka, Todd" <todd.fujinaka@intel.com>
+To: Joe Jin <joe.jin@oracle.com>,
+	Ben Hutchings <bhutchings@solarflare.com>
+CC: Mary Mcgrath <mary.mcgrath@oracle.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [E1000-devel] 82571EB: Detected Hardware Unit Hang
+Date: Wed, 28 Nov 2012 15:53:00 +0000
+Message-ID: <9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com>
+References: <509B5038.8090304@oracle.com>
+  <061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com>
+  <50A30656.6090508@oracle.com>
+  <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com>
+  <50A43828.6000702@oracle.com>
+  <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com>
+  <50A9C5CC.1030300@oracle.com>
+  <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com>
+  <50AB8471.7080607@oracle.com>
+  <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com>
+  <50B41077.3080009@oracle.com>
+  <b46b84cf-3688-4fd7-b741-4e96f2663517@default>
+  <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com>
+ <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
+ <50B5CBD2.5020804@oracle.com>
+In-Reply-To: <50B5CBD2.5020804@oracle.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Daniel J Blueman <daniel@numascale-asia.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 RESEND] Add NumaChip remote PCI support
-References: <1353487196-10204-1-git-send-email-daniel@numascale-asia.com> <CAErSpo67Brp8H=Jw77NzA4xL52aRNi+YDw+gM++3y8XqfTWyzA@mail.gmail.com> <50B84418.5070804@numascale-asia.com> <CAErSpo5veyd4NhayHkoB1bLJhU7pkHBhTDNyk-1vWupEcv6K3A@mail.gmail.com>
-In-Reply-To: <CAErSpo5veyd4NhayHkoB1bLJhU7pkHBhTDNyk-1vWupEcv6K3A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 11/30/2012 17:45, Bjorn Helgaas wrote:
-> On Thu, Nov 29, 2012 at 10:28 PM, Daniel J Blueman
-[]
->> We could expose pci_dev_base via struct x86_init_pci; the extra complexity
->> and performance tradeoff may not be worth it for a single case perhaps?
->
-> Oh, right, I forgot that you can't decide this at build-time.  This is
-> PCI config access, which is not a performance path, so I'm not really
-> concerned about it from that angle, but you make a good point about
-> the complexity.
->
-> The reason I'm interested in this is because MMCONFIG is a generic
-> PCIe feature but is currently done via several arch-specific
-> implementations, so I'm starting to think about how we can make parts
-> of it more generic.  From that perspective, it's nicer to parameterize
-> an existing implementation than to clone it because it makes
-> refactoring opportunities more obvious.
->
-> Backing up a bit, I'm curious about exactly why you need to check for
-> the limit to begin with.  The comment says "Ensure AMD Northbridges
-> don't decode reads to other devices," but that doesn't seem strictly
-> accurate.  You're not changing anything in the hardware to prevent it
-> from *decoding* a read, so it seems like you're actually just
-> preventing the read in the first place.
->
-> What happens without the limit check?  Do you get a response timeout
-> and a machine check?  Read from the wrong device?'
-
-The latter. I'm not sure how familiar you are with how pci config reads 
-are decoded and handled on coherent hypertransport fabrics; The way it 
-works *within* one coherent HT fabric is that the CPU will redirect all 
-config space access above a configured max HT node (a setting in the AMD 
-northbridge) to a specific I/O link (non-coherent link) which usually 
-links up with a "southbridge" device that responds with a target abort 
-(non-existing device).
-
-However, this only works when a CPU core is accessing local HT devices. 
-In our architecture, we "glue" together multiple HT fabrics and when a 
-CPU core sends a pci config space request (mmconfig) to a remote machine 
-(via our hardware) this re-direction is not applied anymore. The result 
-is that when a mmconfig read comes in to a coherent HT device on bus00 
-which is non-existent, one of the other HT nodes on that remote node 
-will respond to the read, leading to "phantom" devices (i.e lspci will 
-show more HT northbridges than what's really physically present) *or* 
-worst case scenario will be that the transaction hangs (alternatively 
-times out, leading to MCE and other bad things).
-
-This is why we're checking accesses to bus0, device24-31 and returning a 
-"fake" target abort scenario if the access was to a non-existing HT 
-device. In other words, we're doing in software what a "normal" HT based 
-platform would do in hardware.
-
->
-> As far as I can tell, you still describe your MMCONFIG area with an
-> MCFG table (since you use pci_mmconfig_lookup() to find the region).
-> That table only includes the starting and ending bus numbers, so the
-> assumption is that the MMCONFIG space is valid for every possible
-> device on those buses.  So it seems like your system is not really
-> compatible with the spec here.
->
-> Because the MCFG table can't describe finer granularity than start/end
-> bus numbers, we manage MMCONFIG regions as (segment, start_bus,
-> end_bus, address) tuples.  Maybe if we tracked it with slightly finer
-> granularity, e.g., (segment, start_bus, end_bus, end_bus_device,
-> address), you could have some sort of MCFG-parsing quirk that reduces
-> the size of the MMCONFIG region you register for bus 0.
->
-> Just brainstorming here; it's not obvious to me yet what the best solution is.
->
-> Bjorn
->
-
-Kind regards,
--- 
-Steffen Persvold, Chief Architect NumaChip
-Numascale AS - www.numascale.com
-Tel: +47 92 49 25 54 Skype: spersvold
+VGhlIG9ubHkgRUVQUk9NIEkga25vdyBhYm91dCBvciBjYW4gc3BlYWsgdG8gaXMgdGhlIG9uZSBh
+dHRhY2hlZCB0byB0aGUgODI1NzEgYW5kIGl0IGRvZXNuJ3Qgc2V0IHRoZSBNYXhQYXlsb2FkU2l6
+ZS4gVGhhdCdzIGRvbmUgYnkgdGhlIEJJT1MuDQoNClRvZGQgRnVqaW5ha2ENClRlY2huaWNhbCBN
+YXJrZXRpbmcgRW5naW5lZXINCkxBTiBBY2Nlc3MgRGl2aXNpb24gKExBRCkNCkludGVsIENvcnBv
+cmF0aW9uDQp0b2RkLmZ1amluYWthQGludGVsLmNvbQ0KKDUwMykgNzEyLTQ1NjUNCg0KDQotLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSm9lIEppbiBbbWFpbHRvOmpvZS5qaW5Ab3Jh
+Y2xlLmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDI4LCAyMDEyIDEyOjMxIEFNDQpU
+bzogQmVuIEh1dGNoaW5ncw0KQ2M6IEZ1amluYWthLCBUb2RkOyBNYXJ5IE1jZ3JhdGg7IG5ldGRl
+dkB2Z2VyLmtlcm5lbC5vcmc7IGUxMDAwLWRldmVsQGxpc3RzLnNmLm5ldDsgbGludXgta2VybmVs
+QHZnZXIua2VybmVsLm9yZzsgbGludXgtcGNpDQpTdWJqZWN0OiBSZTogW0UxMDAwLWRldmVsXSA4
+MjU3MUVCOiBEZXRlY3RlZCBIYXJkd2FyZSBVbml0IEhhbmcNCg0KT24gMTEvMjgvMTIgMDI6MTAs
+IEJlbiBIdXRjaGluZ3Mgd3JvdGU6DQo+IE9uIFR1ZSwgMjAxMi0xMS0yNyBhdCAxNzozMiArMDAw
+MCwgRnVqaW5ha2EsIFRvZGQgd3JvdGU6DQo+PiBGb3JnaXZlIG1lIGlmIEknbSBiZWluZyB0b28g
+cmVwZXRpdGlvdXMgYXMgSSB0aGluayBzb21lIG9mIHRoaXMgaGFzIA0KPj4gYmVlbiBtZW50aW9u
+ZWQgaW4gdGhlIHBhc3QuDQo+Pg0KPj4gV2UgKGFuZCBieSB3ZSBJIG1lYW4gdGhlIEV0aGVybmV0
+IHBhcnQgYW5kIGRyaXZlcikgY2FuIG9ubHkgY2hhbmdlIA0KPj4gdGhlIGFkdmVydGlzZWQgYXZh
+aWxhYmlsaXR5IG9mIGEgbGFyZ2VyIE1heFBheWxvYWRTaXplLiBUaGUgc2l6ZSBpcyANCj4+IG5l
+Z290aWF0ZWQgYnkgYm90aCBzaWRlcyBvZiB0aGUgbGluayB3aGVuIHRoZSBsaW5rIGlzIGVzdGFi
+bGlzaGVkLiANCj4+IFRoZSBkcml2ZXIgc2hvdWxkIG5vdCBjaGFuZ2UgdGhlIHNpemUgb2YgdGhl
+IGxpbmsgYXMgaXQgd291bGQgYmUgDQo+PiBwb2tpbmcgYXQgcmVnaXN0ZXJzIG91dHNpZGUgb2Yg
+aXRzIHNjb3BlIGFuZCBpcyBjb250cm9sbGVkIGJ5IHRoZSANCj4+IHVwc3RyZWFtIGJyaWRnZSAo
+bm90IHVzKS4NCj4gWy4uLl0NCj4gDQo+IE1heFBheWxvYWRTaXplIChNUFMpIGlzIG5vdCBuZWdv
+dGlhdGVkIGJldHdlZW4gZGV2aWNlcyBidXQgaXMgDQo+IHByb2dyYW1tZWQgYnkgdGhlIHN5c3Rl
+bSBmaXJtd2FyZSAoYXQgbGVhc3QgZm9yIGRldmljZXMgcHJlc2VudCBhdCANCj4gYm9vdCAtIHRo
+ZSBrZXJuZWwgbWF5IGJlIHJlc3BvbnNpYmxlIGluIGNhc2Ugb2YgaG90cGx1ZykuICBZb3UgY2Fu
+IHVzZSANCj4gdGhlIGtlcm5lbCBwYXJhbWV0ZXIgJ3BjaT1wY2llX2J1c19wZXJmJyAob3Igb25l
+IG9mIHNldmVyYWwgb3RoZXJzKSB0byANCj4gc2V0IGEgcG9saWN5IHRoYXQgb3ZlcnJpZGVzIHRo
+aXMsIGJ1dCBubyBwb2xpY3kgd2lsbCBhbGxvdyBzZXR0aW5nIE1QUyANCj4gYWJvdmUgdGhlIGRl
+dmljZSdzIE1heFBheWxvYWRTaXplU3VwcG9ydGVkIChNUFNTKS4NCj4gDQoNCkJlbiwNCg0KVW5m
+b3J0dW5hdGVseSBJJ20gdXNpbmcgMy4wLngga2VybmVsIGFuZCB0aGlzIGlzIG5vdCBpbmNsdWRl
+ZCBpbiB0aGUga2VybmVsLg0KU28gSSdtIHRyeWluZyB0byB1c2UgZXRodG9vbCBtb2RpZnkgaXQg
+ZnJvbSBlZXByb20gdG8gc2VlIGlmIGhlbHAgb3Igbm8uDQoNCg0KVG9kZCwgSSdsbCByZXZpZXcg
+YWxsIE1heFBheWxvYWQgZm9yIGFsbCBkZXZpY2VzLCBidXQgbmVlZCB0byBzYXkgaWYgaXQgbWlz
+bWF0Y2gsIGN1c3RvbWVyIGNvdWxkIG5vdCBtb2RpZnkgaXQgZnJvbSBCSU9TIGZvciB0aGVyZSB3
+YXMgbm90IGVudHJ5IGF0IHRoZXJlLCB0byB0ZXN0IGl0LCB3ZSBoYXZlIHRvIGZpbmQgaG93IHRv
+IHZlcmlmeSBpZiB0aGlzIGlzIHRoZSByb290IGNhdXNlLCBzbyBzdGlsbCBuZWVkIHRvIGZpbmQg
+dGhlIG9mZnNldCBpbiBlZXByb20uDQoNClRoYW5rcyBpbiBhZHZhbmNlLA0KSm9lDQoNCg==
