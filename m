@@ -1,90 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54649 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786Ab2KEUU6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 5 Nov 2012 15:20:58 -0500
-From: Donald Dutile <ddutile@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, yuvalmin@broadcom.com,
-	bhutchings@solarflare.com, gregory.v.rose@intel.com,
-	yinghai@kernel.org, davem@davemloft.net, ddutile@redhat.com
-Subject: [PATCH 1/4] PCI: add pci_device_type to pdev's device struct
-Date: Mon,  5 Nov 2012 15:20:34 -0500
-Message-Id: <1352146841-64458-2-git-send-email-ddutile@redhat.com>
-In-Reply-To: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1354227105.1700.15.camel@joe-AO722>
+Subject: Re: [PATCH 2/3] aerdrv: Enhanced AER logging
+From: Joe Perches <joe@perches.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 29 Nov 2012 14:11:45 -0800
+In-Reply-To: <20121129215450.5483.26562.stgit@grignak.americas.hpqcorp.net>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+	 <20121129215450.5483.26562.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yinghai Lu <yinghai@kernel.org>
+On Thu, 2012-11-29 at 14:54 -0700, Lance Ortiz wrote:
+> This patch will provide a more reliable and easy way for user-space
+> applications to have access to AER logs rather than reading them from the
+> message buffer. It also provides a way to notify user-space when an AER
+> event occurs.
+[]
+> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+> index e6defd8..ef1e1c0 100644
+> --- a/drivers/acpi/apei/cper.c
+> +++ b/drivers/acpi/apei/cper.c
+> @@ -281,9 +281,16 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+>  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+> +			pcie->device_id.bus, pcie->device_id.function);
+> +	if (!dev)
+> +		pr_info(KERN_INFO, "PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+> +			domain, bus, slot, func);
 
-Need type filled in device structure so it
-can be used for visible attribute control in
-syfsfs for pci_dev.
+You've not tried this with CONFIG_ACPI_APEI_PCIEAER enabled.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci-sysfs.c | 24 ++++++++++++++++++++++++
- drivers/pci/pci.h       |  1 +
- drivers/pci/probe.c     |  1 +
- 3 files changed, 26 insertions(+)
+		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+			domain, bus, slot, func);
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 02d107b..3d160aa 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1411,3 +1411,27 @@ static int __init pci_sysfs_init(void)
- }
- 
- late_initcall(pci_sysfs_init);
-+
-+static struct attribute *pci_dev_dev_attrs[] = {
-+	NULL,
-+};
-+
-+static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
-+						struct attribute *a, int n)
-+{
-+	return a->mode;
-+}
-+
-+static struct attribute_group pci_dev_attr_group = {
-+	.attrs = pci_dev_dev_attrs,
-+	.is_visible = pci_dev_attrs_are_visible,
-+};
-+
-+static const struct attribute_group *pci_dev_attr_groups[] = {
-+	&pci_dev_attr_group,
-+	NULL,
-+};
-+
-+struct device_type pci_dev_type = {
-+	.groups = pci_dev_attr_groups,
-+};
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index bacbcba..6f6cd14 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -157,6 +157,7 @@ static inline int pci_no_d1d2(struct pci_dev *dev)
- }
- extern struct device_attribute pci_dev_attrs[];
- extern struct device_attribute pcibus_dev_attrs[];
-+extern struct device_type pci_dev_type;
- #ifdef CONFIG_HOTPLUG
- extern struct bus_attribute pci_bus_attrs[];
- #else
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec909af..0312f1c48 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -975,6 +975,7 @@ int pci_setup_device(struct pci_dev *dev)
- 	dev->sysdata = dev->bus->sysdata;
- 	dev->dev.parent = dev->bus->bridge;
- 	dev->dev.bus = &pci_bus_type;
-+	dev->dev.type = &pci_dev_type;
- 	dev->hdr_type = hdr_type & 0x7f;
- 	dev->multifunction = !!(hdr_type & 0x80);
- 	dev->error_state = pci_channel_io_normal;
--- 
-1.7.10.2.552.gaa3bb87
 
