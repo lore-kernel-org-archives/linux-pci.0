@@ -1,72 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:53002 "EHLO ogre.sisk.pl"
+Received: from mga02.intel.com ([134.134.136.20]:47937 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754078Ab2KBUWX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 2 Nov 2012 16:22:23 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [BUGFIX 2/2] PCI/PM: Resume device before shutdown
-Date: Fri, 02 Nov 2012 21:26:29 +0100
-Message-ID: <16107326.eE4GfcYGSM@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
-References: <1351061654-8339-1-git-send-email-ying.huang@intel.com> <1351061654-8339-2-git-send-email-ying.huang@intel.com> <CAErSpo5bKDrfOC86Cxv+0yFiyj1bMgWF=6XuY+DWFjaMBTQC0A@mail.gmail.com>
+	id S1752118Ab2K2PwW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2012 10:52:22 -0500
+From: "Fujinaka, Todd" <todd.fujinaka@intel.com>
+To: Ethan Zhao <ethan.kernel@gmail.com>
+CC: Joe Jin <joe.jin@oracle.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Mary Mcgrath <mary.mcgrath@oracle.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: RE: [E1000-devel] 82571EB: Detected Hardware Unit Hang
+Date: Thu, 29 Nov 2012 15:52:01 +0000
+Message-ID: <9B4A1B1917080E46B64F07F2989DADD638C60A9B@ORSMSX102.amr.corp.intel.com>
+References: <509B5038.8090304@oracle.com>
+	<061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com>
+	<50A30656.6090508@oracle.com>
+	<061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com>
+	<50A43828.6000702@oracle.com>
+	<061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com>
+	<50A9C5CC.1030300@oracle.com>
+	<061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com>
+	<50AB8471.7080607@oracle.com>
+	<9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com>
+	<50B41077.3080009@oracle.com>	<b46b84cf-3688-4fd7-b741-4e96f2663517@default>
+	<9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com>
+	<1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
+	<50B5CBD2.5020804@oracle.com>
+	<9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com>
+ <CABawtvPrz=z_CLCvPeXkky7COyhjPyfBu3QCTbiiPpvr+5bicg@mail.gmail.com>
+In-Reply-To: <CABawtvPrz=z_CLCvPeXkky7COyhjPyfBu3QCTbiiPpvr+5bicg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, November 02, 2012 10:52:45 AM Bjorn Helgaas wrote:
-> On Wed, Oct 24, 2012 at 12:54 AM, Huang Ying <ying.huang@intel.com> wrote:
-> > Some actions during shutdown need device to be in D0 state, such as
-> > MSI shutdown etc, so resume device before shutdown.
-> 
-> Is there a problem report or bugzilla for this issue?  What are the
-> symptoms by which a user could figure out that he needs this fix?
-> 
-> Should this be put in the stable tree as well?  If so, for v3.6 only?
+Someone else pointed this out to me locally. If you have a non-client BIOS, you should be able to set the MaxPayloadSize using setpci. You have to make sure that you're being consistent throughout all the associated links.
 
-Yes, it should be -stable for v3.6.y.
-
-Thanks,
-Rafael
+Todd Fujinaka
+Technical Marketing Engineer
+LAN Access Division (LAD)
+Intel Corporation
+todd.fujinaka@intel.com
+(503) 712-4565
 
 
-> > Signed-off-by: Huang Ying <ying.huang@intel.com>
-> > ---
-> >  drivers/pci/pci-driver.c |   12 ++----------
-> >  1 file changed, 2 insertions(+), 10 deletions(-)
-> >
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -398,6 +398,8 @@ static void pci_device_shutdown(struct d
-> >         struct pci_dev *pci_dev = to_pci_dev(dev);
-> >         struct pci_driver *drv = pci_dev->driver;
-> >
-> > +       pm_runtime_resume(dev);
-> > +
-> >         if (drv && drv->shutdown)
-> >                 drv->shutdown(pci_dev);
-> >         pci_msi_shutdown(pci_dev);
-> > @@ -408,16 +410,6 @@ static void pci_device_shutdown(struct d
-> >          * continue to do DMA
-> >          */
-> >         pci_disable_device(pci_dev);
-> > -
-> > -       /*
-> > -        * Devices may be enabled to wake up by runtime PM, but they need not
-> > -        * be supposed to wake up the system from its "power off" state (e.g.
-> > -        * ACPI S5).  Therefore disable wakeup for all devices that aren't
-> > -        * supposed to wake up the system at this point.  The state argument
-> > -        * will be ignored by pci_enable_wake().
-> > -        */
-> > -       if (!device_may_wakeup(dev))
-> > -               pci_enable_wake(pci_dev, PCI_UNKNOWN, false);
-> >  }
-> >
-> >  #ifdef CONFIG_PM
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+-----Original Message-----
+From: Ethan Zhao [mailto:ethan.kernel@gmail.com] 
+Sent: Wednesday, November 28, 2012 7:10 PM
+To: Fujinaka, Todd
+Cc: Joe Jin; Ben Hutchings; Mary Mcgrath; netdev@vger.kernel.org; e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
+Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
+
+Joe,
+    Possibly your customer is running a kernel without source code on a platform whose vendor wouldn't like to fix BIOS issue( Is that a HP/Dell server ?).
+    Anyway, to see if is a payload issue or,  you could change the payload size with setpci tool to those devices and set the link retrain bit to trigger the link retraining to debug the issue and identity the root cause.  I thinks it is much easier than modify the BIOS or  eeprom of NIC.
+
+    e.g.
+   set device control register to 0f 00   (128 bytes payload size)
+   #   setpci -v -s 00:02.0 98.w=000f
+   set device link control register to 60h (retrain the link)
+   #  setpci -v -s 00:02.0 a0.b=60
+
+  Hope it works,  Just my 2 cents.
+
+Ethan.zhao@oracle.com
+
+On Wed, Nov 28, 2012 at 11:53 PM, Fujinaka, Todd <todd.fujinaka@intel.com> wrote:
+> The only EEPROM I know about or can speak to is the one attached to the 82571 and it doesn't set the MaxPayloadSize. That's done by the BIOS.
+>
+> Todd Fujinaka
+> Technical Marketing Engineer
+> LAN Access Division (LAD)
+> Intel Corporation
+> todd.fujinaka@intel.com
+> (503) 712-4565
+>
+>
+> -----Original Message-----
+> From: Joe Jin [mailto:joe.jin@oracle.com]
+> Sent: Wednesday, November 28, 2012 12:31 AM
+> To: Ben Hutchings
+> Cc: Fujinaka, Todd; Mary Mcgrath; netdev@vger.kernel.org; 
+> e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
+> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
+>
+> On 11/28/12 02:10, Ben Hutchings wrote:
+>> On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
+>>> Forgive me if I'm being too repetitious as I think some of this has 
+>>> been mentioned in the past.
+>>>
+>>> We (and by we I mean the Ethernet part and driver) can only change 
+>>> the advertised availability of a larger MaxPayloadSize. The size is 
+>>> negotiated by both sides of the link when the link is established.
+>>> The driver should not change the size of the link as it would be 
+>>> poking at registers outside of its scope and is controlled by the 
+>>> upstream bridge (not us).
+>> [...]
+>>
+>> MaxPayloadSize (MPS) is not negotiated between devices but is 
+>> programmed by the system firmware (at least for devices present at 
+>> boot - the kernel may be responsible in case of hotplug).  You can 
+>> use the kernel parameter 'pci=pcie_bus_perf' (or one of several 
+>> others) to set a policy that overrides this, but no policy will allow 
+>> setting MPS above the device's MaxPayloadSizeSupported (MPSS).
+>>
+>
+> Ben,
+>
+> Unfortunately I'm using 3.0.x kernel and this is not included in the kernel.
+> So I'm trying to use ethtool modify it from eeprom to see if help or no.
+>
+>
+> Todd, I'll review all MaxPayload for all devices, but need to say if it mismatch, customer could not modify it from BIOS for there was not entry at there, to test it, we have to find how to verify if this is the root cause, so still need to find the offset in eeprom.
+>
+> Thanks in advance,
+> Joe
+>
