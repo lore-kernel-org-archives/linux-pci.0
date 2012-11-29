@@ -1,259 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:34090 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756024Ab2K1XIj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2012 18:08:39 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so8069151lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 28 Nov 2012 15:08:38 -0800 (PST)
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:44300 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753692Ab2K2XDB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2012 18:03:01 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v2 2/3] aerdrv: Enhanced AER logging
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 29 Nov 2012 15:58:00 -0700
+Message-ID: <20121129225800.8405.83305.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-In-Reply-To: <1353487196-10204-1-git-send-email-daniel@numascale-asia.com>
-References: <1353487196-10204-1-git-send-email-daniel@numascale-asia.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 28 Nov 2012 16:08:17 -0700
-Message-ID: <CAErSpo67Brp8H=Jw77NzA4xL52aRNi+YDw+gM++3y8XqfTWyzA@mail.gmail.com>
-Subject: Re: [PATCH v2 RESEND] Add NumaChip remote PCI support
-To: Daniel J Blueman <daniel@numascale-asia.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 21, 2012 at 1:39 AM, Daniel J Blueman
-<daniel@numascale-asia.com> wrote:
-> Add NumaChip-specific PCI access mechanism via MMCONFIG cycles, but
-> preventing access to AMD Northbridges which shouldn't respond.
->
-> v2: Use PCI_DEVFN in precomputed constant limit; drop unneeded includes
->
-> Signed-off-by: Daniel J Blueman <daniel@numascale-asia.com>
-> ---
->  arch/x86/include/asm/numachip/numachip.h |   20 +++++
->  arch/x86/kernel/apic/apic_numachip.c     |    2 +
->  arch/x86/pci/Makefile                    |    1 +
->  arch/x86/pci/numachip.c                  |  134 ++++++++++++++++++++++++++++++
->  4 files changed, 157 insertions(+)
->  create mode 100644 arch/x86/include/asm/numachip/numachip.h
->  create mode 100644 arch/x86/pci/numachip.c
->
-> diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
-> new file mode 100644
-> index 0000000..d35e71a
-> --- /dev/null
-> +++ b/arch/x86/include/asm/numachip/numachip.h
-> @@ -0,0 +1,20 @@
-> +/*
-> + * This file is subject to the terms and conditions of the GNU General Public
-> + * License.  See the file "COPYING" in the main directory of this archive
-> + * for more details.
-> + *
-> + * Numascale NumaConnect-specific header file
-> + *
-> + * Copyright (C) 2012 Numascale AS. All rights reserved.
-> + *
-> + * Send feedback to <support@numascale.com>
-> + *
-> + */
-> +
-> +#ifndef _ASM_X86_NUMACHIP_NUMACHIP_H
-> +#define _ASM_X86_NUMACHIP_NUMACHIP_H
-> +
-> +extern int __init pci_numachip_init(void);
-> +
-> +#endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
-> +
-> diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-> index a65829a..9c2aa89 100644
-> --- a/arch/x86/kernel/apic/apic_numachip.c
-> +++ b/arch/x86/kernel/apic/apic_numachip.c
-> @@ -22,6 +22,7 @@
->  #include <linux/hardirq.h>
->  #include <linux/delay.h>
->
-> +#include <asm/numachip/numachip.h>
->  #include <asm/numachip/numachip_csr.h>
->  #include <asm/smp.h>
->  #include <asm/apic.h>
-> @@ -179,6 +180,7 @@ static int __init numachip_system_init(void)
->                 return 0;
->
->         x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
-> +       x86_init.pci.arch_init = pci_numachip_init;
->
->         map_csrs();
->
-> diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
-> index 3af5a1e..ee0af58 100644
-> --- a/arch/x86/pci/Makefile
-> +++ b/arch/x86/pci/Makefile
-> @@ -16,6 +16,7 @@ obj-$(CONFIG_STA2X11)           += sta2x11-fixup.o
->  obj-$(CONFIG_X86_VISWS)                += visws.o
->
->  obj-$(CONFIG_X86_NUMAQ)                += numaq_32.o
-> +obj-$(CONFIG_X86_NUMACHIP)     += numachip.o
+This patch will provide a more reliable and easy way for user-space
+applications to have access to AER logs rather than reading them from the
+message buffer. It also provides a way to notify user-space when an AER
+event occurs.
 
-It looks like this depends on CONFIG_PCI_MMCONFIG for
-pci_mmconfig_lookup().  Are there config constraints that force
-CONFIG_PCI_MMCONFIG=y when CONFIG_X86_NUMACHIP=y?
+The aer driver is updated to generate a trace event of function 'aer_event'
+when an AER occurs.  The trace event was added to both the interrupt
+based aer path and the firmware first path
 
->  obj-$(CONFIG_X86_INTEL_MID)    += mrst.o
->
-> diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-> new file mode 100644
-> index 0000000..3773e05
-> --- /dev/null
-> +++ b/arch/x86/pci/numachip.c
-> @@ -0,0 +1,129 @@
-> +/*
-> + * This file is subject to the terms and conditions of the GNU General Public
-> + * License.  See the file "COPYING" in the main directory of this archive
-> + * for more details.
-> + *
-> + * Numascale NumaConnect-specific PCI code
-> + *
-> + * Copyright (C) 2012 Numascale AS. All rights reserved.
-> + *
-> + * Send feedback to <support@numascale.com>
-> + *
-> + * PCI accessor functions derived from mmconfig_64.c
-> + *
-> + */
-> +
-> +#include <linux/pci.h>
-> +#include <asm/pci_x86.h>
-> +
-> +static u8 limit __read_mostly;
-> +
-> +static inline char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
-> +{
-> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-> +
-> +       if (cfg && cfg->virt)
-> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-> +       return NULL;
-> +}
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
 
-Most of this file is copied directly from mmconfig_64.c (as you
-mentioned above).  I wonder if we could avoid the code duplication by
-making the pci_dev_base() implementation in mmconfig_64.c a weak
-definition.  Then you could just supply a non-weak pci_dev_base() here
-that would override that default version.  Your version would look
-something like:
+ 0 files changed, 0 insertions(+), 0 deletions(-)
 
-  char __iomem *pci_dev_base(unsigned int seg, unsigned int bus,
-unsigned int devfn)
-  {
-      struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
+diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+index e6defd8..87345d4 100644
+--- a/drivers/acpi/apei/cper.c
++++ b/drivers/acpi/apei/cper.c
+@@ -29,6 +29,7 @@
+ #include <linux/time.h>
+ #include <linux/cper.h>
+ #include <linux/acpi.h>
++#include <linux/pci.h>
+ #include <linux/aer.h>
+ 
+ /*
+@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 			    const struct acpi_hest_generic_data *gdata)
+ {
++#ifdef CONFIG_ACPI_APEI_PCIEAER
++	struct pci_dev *dev;
++#endif
++
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+ 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+ 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+@@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+ 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
++	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
++			pcie->device_id.bus, pcie->device_id.function);
++	if (!dev)
++		printk("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
++			pcie->device_id.segment, pcie->device_id.bus,
++			pcie->device_id.slot, pcie->device_id.function);
++
++	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
+ 		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+-		cper_print_aer(pfx, gdata->error_severity, aer_regs);
++		cper_print_aer(dev, gdata->error_severity, aer_regs);
++		pci_dev_put(dev);
+ 	}
+ #endif
+ }
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 3ea5173..6354e50 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -23,6 +23,10 @@
+ 
+ #include "aerdrv.h"
+ 
++#define CREATE_TRACE_POINTS
++#define TRACE_INCLUDE_PATH ../../../../include/ras
++#include <ras/aer_event.h>
++
+ #define AER_AGENT_RECEIVER		0
+ #define AER_AGENT_REQUESTER		1
+ #define AER_AGENT_COMPLETER		2
+@@ -194,6 +198,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+ 		printk("%s""  Error of this Agent(%04x) is reported first\n",
+ 			prefix, id);
++	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
++			info->severity);
+ }
+ 
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+@@ -217,12 +223,13 @@ int cper_severity_to_aer(int cper_severity)
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ 
+-void cper_print_aer(const char *prefix, int cper_severity,
++void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		    struct aer_capability_regs *aer)
+ {
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
++	char *prefix = NULL;
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+@@ -259,5 +266,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+ 			*(tlp + 13), *(tlp + 12));
+ 	}
++	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
++			aer_severity);
+ }
+ #endif
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 544abdb..7b86dc6 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ }
+ #endif
+ 
+-extern void cper_print_aer(const char *prefix, int cper_severity,
++extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 			   struct aer_capability_regs *aer);
+ extern int cper_severity_to_aer(int cper_severity);
+ extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
 
-      if (cfg && cfg->virt && devfn < limit)
-          return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-      return NULL;
-  }
-
-That would be different from what you have in this patch because reads
-& writes to devices above "limit" would return -EINVAL rather than 0
-as you do here.  Would that be a problem?
-
-> +static int pci_mmcfg_read_numachip(unsigned int seg, unsigned int bus,
-> +                         unsigned int devfn, int reg, int len, u32 *value)
-> +{
-> +       char __iomem *addr;
-> +
-> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
-> +err:           *value = -1;
-> +               return -EINVAL;
-> +       }
-> +
-> +       /* Ensure AMD Northbridges don't decode reads to other devices */
-> +       if (unlikely(bus == 0 && devfn >= limit)) {
-> +               *value = -1;
-> +               return 0;
-> +       }
-> +
-> +       rcu_read_lock();
-> +       addr = pci_dev_base(seg, bus, devfn);
-> +       if (!addr) {
-> +               rcu_read_unlock();
-> +               goto err;
-> +       }
-> +
-> +       switch (len) {
-> +       case 1:
-> +               *value = mmio_config_readb(addr + reg);
-> +               break;
-> +       case 2:
-> +               *value = mmio_config_readw(addr + reg);
-> +               break;
-> +       case 4:
-> +               *value = mmio_config_readl(addr + reg);
-> +               break;
-> +       }
-> +       rcu_read_unlock();
-> +
-> +       return 0;
-> +}
-> +
-> +static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
-> +                          unsigned int devfn, int reg, int len, u32 value)
-> +{
-> +       char __iomem *addr;
-> +
-> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
-> +               return -EINVAL;
-> +
-> +       /* Ensure AMD Northbridges don't decode writes to other devices */
-> +       if (unlikely(bus == 0 && devfn >= limit))
-> +               return 0;
-> +
-> +       rcu_read_lock();
-> +       addr = pci_dev_base(seg, bus, devfn);
-> +       if (!addr) {
-> +               rcu_read_unlock();
-> +               return -EINVAL;
-> +       }
-> +
-> +       switch (len) {
-> +       case 1:
-> +               mmio_config_writeb(addr + reg, value);
-> +               break;
-> +       case 2:
-> +               mmio_config_writew(addr + reg, value);
-> +               break;
-> +       case 4:
-> +               mmio_config_writel(addr + reg, value);
-> +               break;
-> +       }
-> +       rcu_read_unlock();
-> +
-> +       return 0;
-> +}
-> +
-> +const struct pci_raw_ops pci_mmcfg_numachip = {
-> +       .read = pci_mmcfg_read_numachip,
-> +       .write = pci_mmcfg_write_numachip,
-> +};
-> +
-> +int __init pci_numachip_init(void)
-> +{
-> +       int ret = 0;
-> +       u32 val;
-> +
-> +       /* For remote I/O, restrict bus 0 access to the actual number of AMD
-> +          Northbridges, which starts at device number 0x18 */
-> +       ret = raw_pci_read(0, 0, PCI_DEVFN(0x18, 0), 0x60, sizeof(val), &val);
-> +       if (ret)
-> +               goto out;
-> +
-> +       /* HyperTransport fabric size in bits 6:4 */
-> +       limit = PCI_DEVFN(0x18 + ((val >> 4) & 7) + 1, 0);
-> +
-> +       /* Use NumaChip PCI accessors for non-extended and extended access */
-> +       raw_pci_ops = raw_pci_ext_ops = &pci_mmcfg_numachip;
-> +out:
-> +       return ret;
-> +}
-> --
-> 1.7.9.5
->
