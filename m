@@ -1,185 +1,121 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [ACPIHP PATCH part4 9/9] x86: simplify _acpi_map_lsapic() implementation
-Date: Sun,  4 Nov 2012 23:24:02 +0800
-Message-Id: <1352042642-7306-10-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
-References: <1352042642-7306-1-git-send-email-jiang.liu@huawei.com>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH 1/3] aerdrv: Trace Event for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 29 Nov 2012 14:54:43 -0700
+Message-ID: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify implementation of function _acpi_map_lsapic().
+This header file will define a new trace event that will be triggered when
+a AER event occurs.  The following data will be provided to the trace 
+event.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+char * name -	String containing the device path
+
+u32 status - 	Either the correctable or uncorrectable register 
+		indicating what error or errors have been see.
+
+u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+
+The trace event will also provide a trace string that may look like:
+
+"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+TLP"
+
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
 ---
- arch/x86/include/asm/mpspec.h |    2 +-
- arch/x86/kernel/acpi/boot.c   |   44 +++++++++--------------------------------
- arch/x86/kernel/apic/apic.c   |    8 +++++---
- 3 files changed, 15 insertions(+), 39 deletions(-)
 
-diff --git a/arch/x86/include/asm/mpspec.h b/arch/x86/include/asm/mpspec.h
-index 3e2f42a..f1d6487 100644
---- a/arch/x86/include/asm/mpspec.h
-+++ b/arch/x86/include/asm/mpspec.h
-@@ -94,7 +94,7 @@ static inline void early_reserve_e820_mpc_new(void) { }
- #define default_get_smp_config x86_init_uint_noop
- #endif
- 
--void __cpuinit generic_processor_info(int apicid, int version);
-+int __cpuinit generic_processor_info(int apicid, int version);
- #ifdef CONFIG_ACPI
- extern void mp_register_ioapic(int id, u32 address, u32 gsi_base);
- extern void mp_override_legacy_irq(u8 bus_irq, u8 polarity, u8 trigger,
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 5e76952..f354446 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -195,24 +195,24 @@ static int __init acpi_parse_madt(struct acpi_table_header *table)
- 	return 0;
- }
- 
--static void __cpuinit acpi_register_lapic(int id, u8 enabled)
-+static int __cpuinit acpi_register_lapic(int id, u8 enabled)
- {
- 	unsigned int ver = 0;
- 
- 	if (id >= (MAX_LOCAL_APIC-1)) {
- 		printk(KERN_INFO PREFIX "skipped apicid that is too big\n");
--		return;
-+		return -1;
- 	}
- 
- 	if (!enabled) {
- 		++disabled_cpus;
--		return;
-+		return -1;
- 	}
- 
- 	if (boot_cpu_physical_apicid != -1U)
- 		ver = apic_version[boot_cpu_physical_apicid];
- 
--	generic_processor_info(id, ver);
-+	return generic_processor_info(id, ver);
- }
- 
- static int __init
-@@ -610,44 +610,19 @@ static void __cpuinit acpi_map_cpu2node(acpi_handle handle, int cpu, int physid)
- 
- static int __cpuinit _acpi_map_lsapic(acpi_handle handle, int physid, int *pcpu)
- {
--	cpumask_var_t tmp_map, new_map;
- 	int cpu;
--	int retval = -ENOMEM;
- 
--	if (!alloc_cpumask_var(&tmp_map, GFP_KERNEL))
--		goto out;
--
--	if (!alloc_cpumask_var(&new_map, GFP_KERNEL))
--		goto free_tmp_map;
--
--	cpumask_copy(tmp_map, cpu_present_mask);
--	acpi_register_lapic(physid, ACPI_MADT_ENABLED);
--
--	/*
--	 * If acpi_register_lapic successfully generates a new logical cpu
--	 * number, then the following will get us exactly what was mapped
--	 */
--	cpumask_andnot(new_map, cpu_present_mask, tmp_map);
--	if (cpumask_empty(new_map)) {
-+	cpu = acpi_register_lapic(physid, ACPI_MADT_ENABLED);
-+	if (cpu == -1) {
- 		printk ("Unable to map lapic to logical cpu number\n");
--		retval = -EINVAL;
--		goto free_new_map;
-+		return -EINVAL;
- 	}
- 
- 	acpi_processor_set_pdc(handle);
--
--	cpu = cpumask_first(new_map);
- 	acpi_map_cpu2node(handle, cpu, physid);
--
- 	*pcpu = cpu;
--	retval = 0;
--
--free_new_map:
--	free_cpumask_var(new_map);
--free_tmp_map:
--	free_cpumask_var(tmp_map);
--out:
--	return retval;
+ include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 77 insertions(+), 0 deletions(-)
+ create mode 100644 include/ras/aer_event.h
+
+diff --git a/include/ras/aer_event.h b/include/ras/aer_event.h
+new file mode 100644
+index 0000000..735c973
+--- /dev/null
++++ b/include/ras/aer_event.h
+@@ -0,0 +1,77 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM aer
++#define TRACE_INCLUDE_FILE aer_event
 +
-+	return 0;
- }
- 
- /* wrapper to silence section mismatch warning */
-@@ -665,7 +640,6 @@ int acpi_unmap_lsapic(int cpu)
- 
- 	return (0);
- }
--
- EXPORT_SYMBOL(acpi_unmap_lsapic);
- #endif				/* CONFIG_ACPI_HOTPLUG_CPU */
- 
-diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
-index b17416e..9fdc293 100644
---- a/arch/x86/kernel/apic/apic.c
-+++ b/arch/x86/kernel/apic/apic.c
-@@ -2030,7 +2030,7 @@ void disconnect_bsp_APIC(int virt_wire_setup)
- 	apic_write(APIC_LVT1, value);
- }
- 
--void __cpuinit generic_processor_info(int apicid, int version)
-+int __cpuinit generic_processor_info(int apicid, int version)
- {
- 	int cpu, max = nr_cpu_ids;
- 	bool boot_cpu_detected = physid_isset(boot_cpu_physical_apicid,
-@@ -2050,7 +2050,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
- 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
- 
- 		disabled_cpus++;
--		return;
-+		return -1;
- 	}
- 
- 	if (num_processors >= nr_cpu_ids) {
-@@ -2061,7 +2061,7 @@ void __cpuinit generic_processor_info(int apicid, int version)
- 			"  Processor %d/0x%x ignored.\n", max, thiscpu, apicid);
- 
- 		disabled_cpus++;
--		return;
-+		return -1;
- 	}
- 
- 	num_processors++;
-@@ -2106,6 +2106,8 @@ void __cpuinit generic_processor_info(int apicid, int version)
- #endif
- 	set_cpu_possible(cpu, true);
- 	set_cpu_present(cpu, true);
++#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_AER_H
 +
-+	return cpu;
- }
- 
- int hard_smp_processor_id(void)
--- 
-1.7.9.5
++#include <linux/tracepoint.h>
++#include <linux/edac.h>
++
++
++/*
++ * Anhance Error Reporting (AER) PCIE Report Error
++ *
++ * These events are generated when hardware detects a corrected or
++ * uncorrected event on a pci express device and reports
++ * errors.  The event reports the following data.
++ *
++ * char * dev_name -	String containing the device identification
++ * u32 status -		Either the correctable or uncorrectable register
++ *			indicating what error or errors have been seen
++ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
++ */
++
++#define correctable_error_string			\
++	{BIT(0),	"Receiver Error"},		\
++	{BIT(6),	"Bad TLP"},			\
++	{BIT(7),	"Bad DLLP"},			\
++	{BIT(8),	"RELAY_NUM Rollover"},		\
++	{BIT(12),	"Replay Timer Timeout"},	\
++	{BIT(13),	"Advisory Non-Fatal"}
++
++#define uncorrectable_error_string			\
++	{BIT(4),	"Data Link Protocol"},		\
++	{BIT(12),	"Poisoned TLP"},		\
++	{BIT(13),	"Flow Control Protocol"},	\
++	{BIT(14),	"Completion Timeout"},		\
++	{BIT(15),	"Completer Abort"},		\
++	{BIT(16),	"Unexpected Completion"},	\
++	{BIT(17),	"Receiver Overflow"},		\
++	{BIT(18),	"Malformed TLP"},		\
++	{BIT(19),	"ECRC"},			\
++	{BIT(20),	"Unsupported Request"}
++
++TRACE_EVENT(aer_event,
++	TP_PROTO(const char *dev_name,
++		 const u32 status,
++		 const u8 severity),
++
++	TP_ARGS(dev_name, status, severity),
++
++	TP_STRUCT__entry(
++		__string(	dev_name,	dev_name	)
++		__field(	u32,		status		)
++		__field(	u8,		severity	)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__entry->status		= status;
++		__entry->severity	= severity;
++	),
++
++	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
++		__get_str(dev_name),
++		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
++			((__entry->severity == HW_EVENT_ERR_FATAL) ?
++			"Fatal" : "Uncorrected"),
++		__entry->severity == HW_EVENT_ERR_CORRECTED ?
++		__print_flags(__entry->status, "|", correctable_error_string) :
++		__print_flags(__entry->status, "|", uncorrectable_error_string))
++);
++
++#endif /* _TRACE_AER_H */
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 
