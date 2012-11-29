@@ -1,55 +1,64 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 15 Nov 2012 17:26:28 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Jon Mason <jon.mason@intel.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-	Nicholas Bellinger <nab@linux-iscsi.org>
-Subject: Re: [PATCH v5 2/2] net: Add support for NTB virtual ethernet device
-Message-ID: <20121116012628.GA21162@kroah.com>
-References: <1352160669-4330-1-git-send-email-jon.mason@intel.com>
- <1352160669-4330-3-git-send-email-jon.mason@intel.com>
- <20121116003043.GC20876@kroah.com>
- <20121116011353.GK24723@jonmason-lab>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH 3/3] aerdrv: Cleanup log output for CPER based AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 29 Nov 2012 14:54:56 -0700
+Message-ID: <20121129215456.5483.27026.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121116011353.GK24723@jonmason-lab>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 15, 2012 at 06:13:53PM -0700, Jon Mason wrote:
-> On Thu, Nov 15, 2012 at 04:30:43PM -0800, Greg KH wrote:
-> > On Mon, Nov 05, 2012 at 05:11:09PM -0700, Jon Mason wrote:
-> > > A virtual ethernet device that uses the NTB transport API to
-> > > send/receive data.
-> > > 
-> > > Signed-off-by: Jon Mason <jon.mason@intel.com>
-> > > Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > ---
-> > >  MAINTAINERS              |    1 +
-> > >  drivers/net/Kconfig      |    4 +
-> > >  drivers/net/Makefile     |    1 +
-> > >  drivers/net/ntb_netdev.c |  415 ++++++++++++++++++++++++++++++++++++++++++++++
-> > 
-> > As I haven't taken the core yet, I can't take this.  But even then, I
-> > would need an ack from the network maintainers before I could.
-> 
-> I have been Cc'ing netdev on these patches and gotten many good
-> comments, but I can cc Dave Miller explicitly on my next version (as
-> there will obviously need to be one based on your comments on the
-> previous patch).
+These changes make cper_print_aer more consistent with aer_print_error
+which is called in the AER interrupt case. The string in the variable
+'prefix' is printed at the beginning of each print statement in
+cper_print_aer(). The prefix is a string containing the driver name
+and the device's path.  Looking up the call path, the value of prefix
+is never assigned and is NULL, so when cper_print_aer prints data the
+initial string does not get printed.  This string is important because
+it identifies the device that the error is on. This patch adds code to
+create the prefix and print it in the cper_print_aer function. This
+patch also calculates the device's agent id so it can be printed.
 
-Don't cc: David, that's not the way to do it :)
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
 
-> > And are you sure this is in the correct location in the tree?
-> 
-> I assumed that the virtual network client that uses NTB as a transport
-> would best fit in the network drivers.  Is this a bad assumption?
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-No, but if you look, drivers/net/ has been cleaned up a bunch, so
-perhaps a subdirectory under there is best.  I'll leave that up to the
-netdev developers to discuss.
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 6354e50..bc0a091 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -229,7 +229,13 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
+-	char *prefix = NULL;
++	int id = ((dev->bus->number << 8) | dev->devfn);
++	char prefix[44];
++
++	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
++		(info->severity == AER_CORRECTABLE) ?
++		KERN_WARNING : KERN_ERR,
++		dev_driver_string(&dev->dev), dev_name(&dev->dev));
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+@@ -249,8 +255,8 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 	printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
+ 	       prefix, status, mask);
+ 	cper_print_bits(prefix, status, status_strs, status_strs_size);
+-	printk("%s""aer_layer=%s, aer_agent=%s\n", prefix,
+-	       aer_error_layer[layer], aer_agent_string[agent]);
++	printk("%s""aer_layer=%s, %d=%04x(%s)\n", prefix,
++	       aer_error_layer[layer], id, aer_agent_string[agent]);
+ 	if (aer_severity != AER_CORRECTABLE)
+ 		printk("%s""aer_uncor_severity: 0x%08x\n",
+ 		       prefix, aer->uncor_severity);
 
-thanks,
-
-greg k-h
