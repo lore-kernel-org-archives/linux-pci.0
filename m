@@ -1,105 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17766 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1768339Ab2KOQ0D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 15 Nov 2012 11:26:03 -0500
-Subject: [PATCH] vfio-pci: Re-order device reset
-To: alex.williamson@redhat.com, hare@suse.de
-From: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-Date: Thu, 15 Nov 2012 09:26:00 -0700
-Message-ID: <20121115162329.6706.32995.stgit@bling.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1354240427.6276.134.camel@gandalf.local.home>
+Subject: Re: [PATCH 2/3] aerdrv: Enhanced AER logging
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 29 Nov 2012 20:53:47 -0500
+In-Reply-To: <20121129215450.5483.26562.stgit@grignak.americas.hpqcorp.net>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+	 <20121129215450.5483.26562.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-15"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move the device reset to the end of our disable path, the device
-should already be stopped from pci_disable_device().  This also allows
-us to manipulate the save/restore to avoid the save/reset/restore +
-save/restore that we had before.
+On Thu, 2012-11-29 at 14:54 -0700, Lance Ortiz wrote:
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -23,6 +23,10 @@
+>  
+>  #include "aerdrv.h"
+>  
+> +#define CREATE_TRACE_POINTS
+> +#define TRACE_INCLUDE_PATH ../../../../include/ras
+> +#include <ras/aer_event.h>
+> +
 
-Hannes, I think this does the move you're looking for, please let
-me know if it works better for you.  This is also in my next branch:
+Yuck yuck yuck!
 
-git://github.com/awilliam/linux-vfio.git next
+This header should be in the same directory, and you should have in that
+same header:
 
-Thanks,
+#undef TRACE_INCLUDE_PATH
+#define TRACE_INCLUDE_PATH .
 
-Alex
+and remove the definition here.
 
- drivers/vfio/pci/vfio_pci.c |   43 +++++++++++++++++++++++++++++++------------
- 1 file changed, 31 insertions(+), 12 deletions(-)
+-- Steve
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index a4dc21b..b179f5a 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -92,9 +92,10 @@ out:
- 
- static void vfio_pci_disable(struct vfio_pci_device *vdev)
- {
-+	struct pci_dev *pdev = vdev->pdev;
- 	int bar;
- 
--	pci_disable_device(vdev->pdev);
-+	pci_disable_device(pdev);
- 
- 	vfio_pci_set_irqs_ioctl(vdev, VFIO_IRQ_SET_DATA_NONE |
- 				VFIO_IRQ_SET_ACTION_TRIGGER,
-@@ -104,22 +105,40 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 
- 	vfio_config_free(vdev);
- 
--	pci_reset_function(vdev->pdev);
--
--	if (pci_load_and_free_saved_state(vdev->pdev,
--					  &vdev->pci_saved_state) == 0)
--		pci_restore_state(vdev->pdev);
--	else
--		pr_info("%s: Couldn't reload %s saved state\n",
--			__func__, dev_name(&vdev->pdev->dev));
--
- 	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
- 		if (!vdev->barmap[bar])
- 			continue;
--		pci_iounmap(vdev->pdev, vdev->barmap[bar]);
--		pci_release_selected_regions(vdev->pdev, 1 << bar);
-+		pci_iounmap(pdev, vdev->barmap[bar]);
-+		pci_release_selected_regions(pdev, 1 << bar);
- 		vdev->barmap[bar] = NULL;
- 	}
-+
-+	/*
-+	 * If we have saved state, restore it.  If we can reset the device,
-+	 * even better.  Resetting with current state seems better than
-+	 * nothing, but saving and restoring current state without reset
-+	 * is just busy work.
-+	 */
-+	if (pci_load_and_free_saved_state(pdev, &vdev->pci_saved_state)) {
-+		pr_info("%s: Couldn't reload %s saved state\n",
-+			__func__, dev_name(&pdev->dev));
-+
-+		if (!vdev->reset_works)
-+			return;
-+
-+		pci_save_state(pdev);
-+	}
-+
-+	/*
-+	 * Disable INTx and MSI, presumably to avoid spurious interrupts
-+	 * during reset.  Stolen from pci_reset_function()
-+	 */
-+	pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
-+
-+	if (vdev->reset_works)
-+		__pci_reset_function(pdev);
-+
-+	pci_restore_state(pdev);
- }
- 
- static void vfio_pci_release(void *device_data)
+>  #define AER_AGENT_RECEIVER		0
+>  #define AER_AGENT_REQUESTER		1
+>  #define AER_AGENT_COMPLETER		2
+> @@ -194,6 +198,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+>  	if (info->id && info->error_dev_num > 1 && info->id == id)
+>  		printk("%s""  Error of this Agent(%04x) is reported first\n",
+>  			prefix, id);
+> +	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+> +			info->severity);
+>  }
+>  
+
 
