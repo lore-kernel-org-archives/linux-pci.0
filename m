@@ -1,53 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:53137 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753979Ab2KMJId (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 13 Nov 2012 04:08:33 -0500
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
-To: linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, andi@firstfloor.org, ddutile@redhat.com,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
-	tglx@linutronix.de, yinghai@kernel.org, mingo@redhat.com,
-	vgoyal@redhat.com, khalid@gonehiking.org
-Message-Id: <20121113090301.1180.93781.sendpatchset@indoh>
-In-Reply-To: <20121113090212.1180.12233.sendpatchset@indoh>
-References: <20121113090212.1180.12233.sendpatchset@indoh>
-Subject: [PATCH v6 5/5] x86, pci: Enable PCI INTx when MSI is disabled
-Date: Tue, 13 Nov 2012 18:08:32 +0900 (JST)
+Received: from perches-mx.perches.com ([206.117.179.246]:42185 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753714Ab2K3U7p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 Nov 2012 15:59:45 -0500
+Message-ID: <1354309183.19578.0.camel@joe-AO722>
+Subject: Re: [PATCH v3 2/3] aerdrv: Enhanced AER logging
+From: Joe Perches <joe@perches.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 12:59:43 -0800
+In-Reply-To: <20121130203936.31915.39956.stgit@grignak.americas.hpqcorp.net>
+References: <20121130203936.31915.39956.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables INTx if MSI is disabled in pcibios_enable_device().
-In normal case interrupt disable bit in command register is 0b on boot
-time, but in case of kdump, this bit may be 1b. It causes problems of
-some drivers. At leaset I confirmed mptsas driver does not work in such
-a case. This patch fix this problem.
+On Fri, 2012-11-30 at 13:39 -0700, Lance Ortiz wrote:
+> This patch will provide a more reliable and easy way for user-space
+> applications to have access to AER logs rather than reading them from the
+> message buffer. It also provides a way to notify user-space when an AER
+> event occurs.
 
-Signed-off-by: Takao Indoh <indou.takao@jp.fujitsu.com>
----
- arch/x86/pci/common.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Please run your patches through checkpatch.
+[]
+> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+[]
+> @@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+>  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  			    const struct acpi_hest_generic_data *gdata)
+>  {
+> +#ifdef CONFIG_ACPI_APEI_PCIEAER
+> +	struct pci_dev *dev;
+> +#endif
+> +
+>  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+>  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+>  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+> @@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+>  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+> +			pcie->device_id.bus, pcie->device_id.function);
+> +	if (!dev)
+> +		printk("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+> +			pcie->device_id.segment, pcie->device_id.bus,
+> +			pcie->device_id.slot, pcie->device_id.function);
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 720e973..2bb7ecc 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -615,8 +615,10 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	if ((err = pci_enable_resources(dev, mask)) < 0)
- 		return err;
- 
--	if (!pci_dev_msi_enabled(dev))
-+	if (!pci_dev_msi_enabled(dev)) {
-+		pci_intx(dev, true);
- 		return pcibios_enable_irq(dev);
-+	}
- 	return 0;
- }
- 
--- 
-1.7.1
+Please prefix this with an appropriate KERN_<LEVEL>
 
 
