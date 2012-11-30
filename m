@@ -1,110 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:49044 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932299Ab2K2DKY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 28 Nov 2012 22:10:24 -0500
-MIME-Version: 1.0
-In-Reply-To: <9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com>
-References: <509B5038.8090304@oracle.com>
-	<061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com>
-	<50A30656.6090508@oracle.com>
-	<061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com>
-	<50A43828.6000702@oracle.com>
-	<061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com>
-	<50A9C5CC.1030300@oracle.com>
-	<061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com>
-	<50AB8471.7080607@oracle.com>
-	<9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com>
-	<50B41077.3080009@oracle.com>
-	<b46b84cf-3688-4fd7-b741-4e96f2663517@default>
-	<9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com>
-	<1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com>
-	<50B5CBD2.5020804@oracle.com>
-	<9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com>
-Date: Thu, 29 Nov 2012 11:10:23 +0800
-Message-ID: <CABawtvPrz=z_CLCvPeXkky7COyhjPyfBu3QCTbiiPpvr+5bicg@mail.gmail.com>
-Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-From: Ethan Zhao <ethan.kernel@gmail.com>
-To: "Fujinaka, Todd" <todd.fujinaka@intel.com>
-Cc: Joe Jin <joe.jin@oracle.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1354283631.6276.143.camel@gandalf.local.home>
+Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 08:53:51 -0500
+In-Reply-To: <20121130134232.GD6869@liondog.tnic>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+	 <1354240279.6276.131.camel@gandalf.local.home>
+	 <20121130105311.GA6869@liondog.tnic>
+	 <1354275551.6276.140.camel@gandalf.local.home>
+	 <20121130134232.GD6869@liondog.tnic>
+Content-Type: text/plain; charset="ISO-8859-15"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Joe,
-    Possibly your customer is running a kernel without source code on
-a platform whose vendor wouldn't like to fix BIOS issue( Is that a
-HP/Dell server ?).
-    Anyway, to see if is a payload issue or,  you could change the
-payload size with setpci tool to those devices and set the link
-retrain bit to trigger the link retraining to debug the issue and
-identity the root cause.  I thinks it is much easier than modify the
-BIOS or  eeprom of NIC.
+On Fri, 2012-11-30 at 14:42 +0100, Borislav Petkov wrote:
 
-    e.g.
-   set device control register to 0f 00   (128 bytes payload size)
-   #   setpci -v -s 00:02.0 98.w=000f
-   set device link control register to 60h (retrain the link)
-   #  setpci -v -s 00:02.0 a0.b=60
+> So, it sounds to me like we should we move all RAS-specific tracepoints
+> to <trace/events/ras.h> and then in each usage site do:
 
-  Hope it works,  Just my 2 cents.
+Note, the CREATE_TRACE_POINTS must only be done in one location. Not
+every place. It creates the code that does the work to make the
+tracepoints show up in /debug/tracing/events/* as well as the callback
+code and other such things. If you define it in more than one .c file,
+then you will have linker issues due to the functions being created more
+than once.
 
-Ethan.zhao@oracle.com
+> 
+> #define CREATE_TRACE_POINTS
+> #include <trace/events/ras.h>
+> 
+> Correct?
 
-On Wed, Nov 28, 2012 at 11:53 PM, Fujinaka, Todd
-<todd.fujinaka@intel.com> wrote:
-> The only EEPROM I know about or can speak to is the one attached to the 82571 and it doesn't set the MaxPayloadSize. That's done by the BIOS.
->
-> Todd Fujinaka
-> Technical Marketing Engineer
-> LAN Access Division (LAD)
-> Intel Corporation
-> todd.fujinaka@intel.com
-> (503) 712-4565
->
->
-> -----Original Message-----
-> From: Joe Jin [mailto:joe.jin@oracle.com]
-> Sent: Wednesday, November 28, 2012 12:31 AM
-> To: Ben Hutchings
-> Cc: Fujinaka, Todd; Mary Mcgrath; netdev@vger.kernel.org; e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
-> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
->
-> On 11/28/12 02:10, Ben Hutchings wrote:
->> On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
->>> Forgive me if I'm being too repetitious as I think some of this has
->>> been mentioned in the past.
->>>
->>> We (and by we I mean the Ethernet part and driver) can only change
->>> the advertised availability of a larger MaxPayloadSize. The size is
->>> negotiated by both sides of the link when the link is established.
->>> The driver should not change the size of the link as it would be
->>> poking at registers outside of its scope and is controlled by the
->>> upstream bridge (not us).
->> [...]
->>
->> MaxPayloadSize (MPS) is not negotiated between devices but is
->> programmed by the system firmware (at least for devices present at
->> boot - the kernel may be responsible in case of hotplug).  You can use
->> the kernel parameter 'pci=pcie_bus_perf' (or one of several others) to
->> set a policy that overrides this, but no policy will allow setting MPS
->> above the device's MaxPayloadSizeSupported (MPSS).
->>
->
-> Ben,
->
-> Unfortunately I'm using 3.0.x kernel and this is not included in the kernel.
-> So I'm trying to use ethtool modify it from eeprom to see if help or no.
->
->
-> Todd, I'll review all MaxPayload for all devices, but need to say if it mismatch, customer could not modify it from BIOS for there was not entry at there, to test it, we have to find how to verify if this is the root cause, so still need to find the offset in eeprom.
->
-> Thanks in advance,
-> Joe
->
+That's the default way to do things.
+
+> 
+> FWIW, it looks neat and clean to me that way.
+
+Yep, that's why it's default ;-)
+
+-- Steve
+
+
