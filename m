@@ -1,114 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:54167 "EHLO mga03.intel.com"
+Received: from mail.skyhub.de ([78.46.96.112]:36678 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933092Ab2KNWAT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 17:00:19 -0500
-From: "Rose, Gregory V" <gregory.v.rose@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Donald Dutile <ddutile@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: RE: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-Date: Wed, 14 Nov 2012 22:00:16 +0000
-Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A072D588BF2@ORSMSX106.amr.corp.intel.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
- <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
-In-Reply-To: <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1755697Ab2K3Rgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 30 Nov 2012 12:36:37 -0500
+Date: Fri, 30 Nov 2012 18:36:35 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
+Message-ID: <20121130173635.GD23034@liondog.tnic>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+ <1354240279.6276.131.camel@gandalf.local.home>
+ <20121130105311.GA6869@liondog.tnic>
+ <1354275551.6276.140.camel@gandalf.local.home>
+ <20121130134232.GD6869@liondog.tnic>
+ <1354283631.6276.143.camel@gandalf.local.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1354283631.6276.143.camel@gandalf.local.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Wednesday, November 14, 2012 12:47 PM
-> To: Donald Dutile
-> Cc: linux-pci@vger.kernel.org; yuvalmin@broadcom.com;
-> bhutchings@solarflare.com; Rose, Gregory V; yinghai@kernel.org;
-> davem@davemloft.net
-> Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+On Fri, Nov 30, 2012 at 08:53:51AM -0500, Steven Rostedt wrote:
+> On Fri, 2012-11-30 at 14:42 +0100, Borislav Petkov wrote:
 > 
-> On Mon, Nov 5, 2012 at 1:20 PM, Donald Dutile <ddutile@redhat.com> wrote:
-> > Currently, VF enablement by SRIOV-capable PCIe devices is done in
-> > driver-specific module parameters.  If not setup in modprobe files, it
-> > requires admin to unload & reload PF drivers with number of desired
-> > VFs to enable.  Additionally, the enablement is system wide: all
-> > devices controlled by the same driver have the same number of VFs
-> > enabled.  Although the latter is probably desired, there are PCI
-> > configurations setup by system BIOS that may not enable that to occur.
-> >
-> > Two files are created if a PCIe device has SRIOV support:
-> > sriov_totalvfs -- cat-ing this file returns the maximum number
-> >                   of VFs a PCIe device supports.
-> > sriov_numvfs -- echo'ing a positive number to this file enables
-> >                 & configures this number of VFs for this given PCIe
-> >                 device.
-> >              -- echo'ing 0 to this file disables and deconfigures
-> >                 all VFs for this given PCIe device.
-> >              -- cat-ing this file will return the number of VFs
-> >                 currently enabled on this PCIe device.
-> >
-> > VF enable and disablement is invoked much like other PCIe
-> > configuration functions -- via a registered callback in the driver,
-> > i.e., probe, release, etc.  In this case, sriov_configure
-> >
-> > PATCH v1->v2:
-> > -- incorporate more feedback from Ben Hutchings.
-> > -- (hopefully) correct From & Signed-by for Yinghai Lu's patches (1/8
-> > & 2/8)
-> >
-> > RFC V3->PATCH:
-> > -- incorporate feedback from Ben Hutchings.
-> > -- clean up poor RFC patches & sanitize through checkpatch.pl
-> >
-> > RFC v2->v3:
-> > -- change the file names to reflect the names used in the SRIOV spec
-> > -- change to a single file for enable & disable;
-> >    change driver interface to a single interface.
-> > -- add more informative messages on failures
-> > -- add a core method that a driver can invoke to modify
-> >    the totalvfs reported & supported by a driver.
-> > -- a set of patches for ixgbe provided by Greg Rose to use the
-> >    new interfaces; the last patch modified from the original
-> >    two file, enable/disable interface to the current single file
-> >    enable/disable. Greg will eventually post the final version
-> >    of these patches via Intel's usual process for driver patches.
-> >    Provided here as an example, and enable other SRIOV drivers
-> >    to see how adoption of the interface can be added.
-> >
-> > RFC v1->v2:
-> > This patch is based on previous 2 patches by Yinghai Lu that cleaned
-> > up the vga attributes for PCI devices under sysfs, and uses
-> > visibility-checking group attributes as recommended by Greg K-H.
-> >
-> > Signed-off-by: Donald Dutile <ddutile@redhat.com>
-> > ---
-> >  drivers/pci/iov.c       |  48 ++++++++++++++++
-> >  drivers/pci/pci-sysfs.c | 179
-> ++++++++++++++++++++++++++++++++++++++++++++++++++++++----
-> >  drivers/pci/pci.h       |   2 +
-> >  drivers/pci/probe.c     |   1 +
-> >  include/linux/pci.h     |  11 ++++
-> >  5 files changed, 230 insertions(+), 11 deletions(-)
+> > So, it sounds to me like we should we move all RAS-specific tracepoints
+> > to <trace/events/ras.h> and then in each usage site do:
 > 
-> I applied patches 1-4 to my pci/don-sriov patch, and they appeared in
-> next-20121114.
+> Note, the CREATE_TRACE_POINTS must only be done in one location. Not
+> every place. It creates the code that does the work to make the
+> tracepoints show up in /debug/tracing/events/* as well as the callback
+> code and other such things. If you define it in more than one .c file,
+> then you will have linker issues due to the functions being created more
+> than once.
 > 
-> I am still expecting a Documentation/ABI update, but I wanted to get the
-> functional patches merged now because there will only be one more -next
-> release until 11/26, which will probably be after -rc7.
+> > 
+> > #define CREATE_TRACE_POINTS
+> > #include <trace/events/ras.h>
+> > 
+> > Correct?
 > 
-> I'm expecting patches 5-8 to be posted via some other mechanism as
-> mentioned in those patches.
+> That's the default way to do things.
 
-I have patches ready to post to netdev but we'll need to coordinate with Dave because they won't compile with these patches.
+Ok, cool.
 
-- Greg
+Lance, care to move the TP to a new header called
+include/trace/events/ras.h in your next iteration of the patches?
 
-> 
-> Thanks!
-> 
-> Bjorn
+I'll later move the mc_event TP there too and drop the RAS-specific TP
+header.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
