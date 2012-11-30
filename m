@@ -1,109 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40408 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441Ab2K3Wjs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 17:39:48 -0500
+Date: Fri, 30 Nov 2012 17:39:39 -0500
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Vrabel <david.vrabel@citrix.com>, xen-devel@lists.xen.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/5] xen-pcifront: handle backend CLOSED without CLOSING
+Message-ID: <20121130223939.GA7749@phenom.dumpdata.com>
+References: <507FD39F.4060601@citrix.com>
+ <1350554618-14582-3-git-send-email-david.vrabel@citrix.com>
+ <20121019125919.GC26830@phenom.dumpdata.com>
+ <CAErSpo6jBTGQYdPK==u7zjDuhV+U5iUfUp_KZnxkhvZCU4difQ@mail.gmail.com>
+ <CAErSpo7Vob9CiRxK+E2nV2V7G4FCss6zLCPO93PMSDj9G55ywg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1351788194.19172.98.camel@misato.fc.hp.com>
-References: <1351668471-31436-1-git-send-email-tangchen@cn.fujitsu.com>
-	<1351668471-31436-4-git-send-email-tangchen@cn.fujitsu.com>
-	<1351788194.19172.98.camel@misato.fc.hp.com>
-Date: Thu, 1 Nov 2012 11:28:25 -0700
-Message-ID: <CAE9FiQXxHz_RntOc2gxxDscv8+mDQ2XBL0sHSrptj_arwUb8-A@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] Improve container_notify_cb() to support container hot-remove.
-From: Yinghai Lu <yinghai@kernel.org>
-To: Toshi Kani <toshi.kani@hp.com>, ZhangRui <rui.zhang@intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Tang Chen <tangchen@cn.fujitsu.com>, bhelgaas@google.com,
-	jiang.liu@huawei.com, izumi.taku@jp.fujitsu.com,
-	isimatu.yasuaki@jp.fujitsu.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7Vob9CiRxK+E2nV2V7G4FCss6zLCPO93PMSDj9G55ywg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 1, 2012 at 9:43 AM, Toshi Kani <toshi.kani@hp.com> wrote:
->
-> Rafael pointed out in my CPU hot-remove patch that
-> acpi_bus_hot_remove_device() was not exported for modules.  Looks like
-> you have the same problem here.  FYI, I just sent the following patch
-> that exports acpi_bus_hot_remove_device() and acpi_os_hotplug_execute().
->
-> https://lkml.org/lkml/2012/11/1/225
+On Fri, Nov 30, 2012 at 02:42:14PM -0700, Bjorn Helgaas wrote:
+> On Fri, Nov 30, 2012 at 11:41 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Fri, Oct 19, 2012 at 6:59 AM, Konrad Rzeszutek Wilk
+> > <konrad.wilk@oracle.com> wrote:
+> >> On Thu, Oct 18, 2012 at 11:03:36AM +0100, David Vrabel wrote:
+> >>> From: David Vrabel <david.vrabel@citrix.com>
+> >>>
+> >>> Backend drivers shouldn't transistion to CLOSED unless the frontend is
+> >>> CLOSED.  If a backend does transition to CLOSED too soon then the
+> >>> frontend may not see the CLOSING state and will not properly shutdown.
+> >>>
+> >>> So, treat an unexpected backend CLOSED state the same as CLOSING.
+> >>>
+> >>> Signed-off-by: David Vrabel <david.vrabel@citrix.com>
+> >>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> >>> ---
+> >>> Cc: linux-pci@vger.kernel.org
+> >>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >>
+> >> Bjorn, do you want me to prep a git pull with this patch
+> >> or can I have your Ack to put it my tree and have it part of my
+> >> git pull to Linus?
+> >
+> > Sorry, I missed this.  I can put it in my -next branch for the v3.8
+> > merge window.  Would that work for you?
+> 
+> I put this in my -next branch, so we'll at least have a chance of
+> making a linux-next cycle before v3.7 pops.
 
-acpi_os_hotplug_execute() does not like having good quality yet.
-
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  941)   /*
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  942)    * We
-can't run hotplug code in keventd_wq/kacpid_wq/kacpid_notify_wq
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  943)    *
-because the hotplug code may call driver .remove() functions,
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  944)    *
-which invoke flush_scheduled_work/acpi_os_wait_events_complete
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  945)    * to
-flush these workqueues.
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  946)    */
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  947)   queue
-= hp ? kacpi_hotplug_wq :
-c02256be (Zhang Rui           2009-06-23 10:20:29 +0800  948)
- (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
-9ac61856 (Bjorn Helgaas       2009-08-31 22:32:10 +0000  949)
-dpc->wait = hp ? 1 : 0;
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  950)
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  951)   if
-(queue == kacpi_hotplug_wq)
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  952)
- INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  953)   else
-if (queue == kacpi_notify_wq)
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  954)
- INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  955)   else
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  956)
- INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-bc73675b (Zhang Rui           2010-03-22 15:48:54 +0800  957)
-
-really don't know why checking queue and call same code in every branch.
-
-from comm:
-
-commit bc73675b99fd9850dd914be01d71af99c5d2a1ae
-Author: Zhang Rui <rui.zhang@intel.com>
-Date:   Mon Mar 22 15:48:54 2010 +0800
-
-    ACPI: fixes a false alarm from lockdep
-
-    fixes a false alarm from lockdep, as acpi hotplug workqueue waits other
-    workqueues.
-    http://bugzilla.kernel.org/show_bug.cgi?id=14553
-    https://bugzilla.kernel.org/show_bug.cgi?id=15521
-
-    Original-patch-from: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Shaohua Li <shaohua.li@intel.com>
-    Signed-off-by: Zhang Rui <rui.zhang@intel.com>
-    Signed-off-by: Len Brown <len.brown@intel.com>
-
-diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 8e6d866..900da68 100644
---- a/drivers/acpi/osl.c
-+++ b/drivers/acpi/osl.c
-@@ -758,7 +758,14 @@ static acpi_status
-__acpi_os_execute(acpi_execute_type type,
-        queue = hp ? kacpi_hotplug_wq :
-                (type == OSL_NOTIFY_HANDLER ? kacpi_notify_wq : kacpid_wq);
-        dpc->wait = hp ? 1 : 0;
--       INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-+
-+       if (queue == kacpi_hotplug_wq)
-+               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-+       else if (queue == kacpi_notify_wq)
-+               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-+       else
-+               INIT_WORK(&dpc->work, acpi_os_execute_deferred);
-+
-        ret = queue_work(queue, &dpc->work);
-
-        if (!ret) {
-
-
-Len or Rafael,
-can you just revert that silly patch?
-
-Yinghai
+Great. Thx!
+> 
+> >>> ---
+> >>>  drivers/pci/xen-pcifront.c |    5 ++++-
+> >>>  1 files changed, 4 insertions(+), 1 deletions(-)
+> >>>
+> >>> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> >>> index 0aab85a..a0c7312 100644
+> >>> --- a/drivers/pci/xen-pcifront.c
+> >>> +++ b/drivers/pci/xen-pcifront.c
+> >>> @@ -1068,13 +1068,16 @@ static void __init_refok pcifront_backend_changed(struct xenbus_device *xdev,
+> >>>       case XenbusStateInitialising:
+> >>>       case XenbusStateInitWait:
+> >>>       case XenbusStateInitialised:
+> >>> -     case XenbusStateClosed:
+> >>>               break;
+> >>>
+> >>>       case XenbusStateConnected:
+> >>>               pcifront_try_connect(pdev);
+> >>>               break;
+> >>>
+> >>> +     case XenbusStateClosed:
+> >>> +             if (xdev->state == XenbusStateClosed)
+> >>> +                     break;
+> >>> +             /* Missed the backend's CLOSING state -- fallthrough */
+> >>>       case XenbusStateClosing:
+> >>>               dev_warn(&xdev->dev, "backend going away!\n");
+> >>>               pcifront_try_disconnect(pdev);
+> >>> --
+> >>> 1.7.2.5
