@@ -1,81 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:47712 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154Ab2KJXOc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 10 Nov 2012 18:14:32 -0500
-Received: by mail-bk0-f46.google.com with SMTP id jk13so1991231bkc.19
-        for <linux-pci@vger.kernel.org>; Sat, 10 Nov 2012 15:14:30 -0800 (PST)
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:36743 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030302Ab2K3Uoi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 15:44:38 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v3 2/3] aerdrv: Enhanced AER logging
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 13:39:36 -0700
+Message-ID: <20121130203936.31915.39956.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7CBwBs5YhS3+GPew3yufMv4KLs9tW2ogmUKLRrmpL+qA@mail.gmail.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-	<1352146841-64458-4-git-send-email-ddutile@redhat.com>
-	<CAE9FiQWx64YeLp=3fUCuOvZFQbyKxYd400azFvvi=oLYtQDbcA@mail.gmail.com>
-	<CAE9FiQX2tNX25O1pcEzn6nvc7BxFCx0t2UKD11y-=17FhOmC+Q@mail.gmail.com>
-	<CAErSpo7CBwBs5YhS3+GPew3yufMv4KLs9tW2ogmUKLRrmpL+qA@mail.gmail.com>
-Date: Sat, 10 Nov 2012 15:14:30 -0800
-Message-ID: <CAE9FiQWyaezexZwT3AgKD9cSuyD9M_JxNJAqJVFRyOLYOo4VvA@mail.gmail.com>
-Subject: Re: [PATCH 3/4] PCI,sys: SRIOV control and status via sysfs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Donald Dutile <ddutile@redhat.com>, linux-pci@vger.kernel.org,
-	yuvalmin@broadcom.com, bhutchings@solarflare.com,
-	gregory.v.rose@intel.com, davem@davemloft.net
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 10, 2012 at 1:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Nov 10, 2012 at 12:31 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Fri, Nov 9, 2012 at 10:47 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Mon, Nov 5, 2012 at 12:20 PM, Donald Dutile <ddutile@redhat.com> wrote:
->>>>
->>>>  static const struct attribute_group *pci_dev_attr_groups[] = {
->>>>         &pci_dev_attr_group,
->>>> +#ifdef CONFIG_PCI_IOV
->>>> +       &sriov_dev_attr_group,
->>>> +#endif
->>>
->>> should move sriov_dev_attr_group related code to
->>> drivers/pci/iov.c
->>> or driver/pci/iov_sysfs.c
->>>
->>> and kill those CONFIG_IOV.
->>
->> Bjorn,
->>
->> please check attached patch that separate sriov_dev_attr_group out.
->> it is against to your pci/don-sriov branch.
->
-> The convention is to include patches inline, which makes them easier
-> to review.  I know gmail makes that hard.  I use mutt or stacked git
-> to do it.
+This patch will provide a more reliable and easy way for user-space
+applications to have access to AER logs rather than reading them from the
+message buffer. It also provides a way to notify user-space when an AER
+event occurs.
 
-yes, gmail web client should support plain attachment.
+The aer driver is updated to generate a trace event of function 'aer_event'
+when an AER occurs.  The trace event was added to both the interrupt
+based aer path and the firmware first path
 
-so you are using mutt with smtp enabled ?
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
 
->
-> I'm not opposed to moving the SR-IOV sysfs stuff out of pci-sysfs.c.
-> Since these patches haven't been merged yet, you should work it out
-> with Don first, so we can merge it in the right place to begin with,
-> rather than merging them and then immediately moving them.
+ drivers/acpi/apei/cper.c               |   17 +++++++++++++++--
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+ include/linux/aer.h                    |    2 +-
+ 3 files changed, 25 insertions(+), 4 deletions(-)
 
-sure. it should be out of pci-sysfs.c at first place.
+diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+index e6defd8..87345d4 100644
+--- a/drivers/acpi/apei/cper.c
++++ b/drivers/acpi/apei/cper.c
+@@ -29,6 +29,7 @@
+ #include <linux/time.h>
+ #include <linux/cper.h>
+ #include <linux/acpi.h>
++#include <linux/pci.h>
+ #include <linux/aer.h>
+ 
+ /*
+@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 			    const struct acpi_hest_generic_data *gdata)
+ {
++#ifdef CONFIG_ACPI_APEI_PCIEAER
++	struct pci_dev *dev;
++#endif
++
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+ 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+ 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+@@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+ 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
++	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
++			pcie->device_id.bus, pcie->device_id.function);
++	if (!dev)
++		printk("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
++			pcie->device_id.segment, pcie->device_id.bus,
++			pcie->device_id.slot, pcie->device_id.function);
++
++	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
+ 		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+-		cper_print_aer(pfx, gdata->error_severity, aer_regs);
++		cper_print_aer(dev, gdata->error_severity, aer_regs);
++		pci_dev_put(dev);
+ 	}
+ #endif
+ }
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 3ea5173..34d96e4 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -23,6 +23,9 @@
+ 
+ #include "aerdrv.h"
+ 
++#define CREATE_TRACE_POINTS
++#include <trace/events/ras.h>
++
+ #define AER_AGENT_RECEIVER		0
+ #define AER_AGENT_REQUESTER		1
+ #define AER_AGENT_COMPLETER		2
+@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+ 		printk("%s""  Error of this Agent(%04x) is reported first\n",
+ 			prefix, id);
++	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
++			info->severity);
+ }
+ 
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+@@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ 
+-void cper_print_aer(const char *prefix, int cper_severity,
++void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		    struct aer_capability_regs *aer)
+ {
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
++	char *prefix = NULL;
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+@@ -259,5 +265,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+ 			*(tlp + 13), *(tlp + 12));
+ 	}
++	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
++			aer_severity);
+ }
+ #endif
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 544abdb..7b86dc6 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ }
+ #endif
+ 
+-extern void cper_print_aer(const char *prefix, int cper_severity,
++extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 			   struct aer_capability_regs *aer);
+ extern int cper_severity_to_aer(int cper_severity);
+ extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
 
-I thought that you are going to merge your pci/don-sriov.
-
-BTW, when you redo pci/don-sriov, please add acked-by from GregKH for
-first two patches.
-
->
-> Personally, I would put it all in pci/iov.c rather than creating a new
-> file just for this.  That would also avoid the question of whether it
-> should be "iov_sysfs.c" or "iov-sysfs.c".  All the other files in
-> drivers/pci use a hyphen.  All the files in subdirectories of
-> drivers/pci use an underscore.  A minor but annoying difference.
-
-yeah, looks like should be iov-sysfs.c to keep them consistent.
-
-iov.c is already about 800 lines. better not to stuff more code into it anymore.
-
-Yinghai
