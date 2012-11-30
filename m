@@ -1,52 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:54648 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161213Ab2KNM2V (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 14 Nov 2012 07:28:21 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Huang Ying <ying.huang@intel.com>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH v5 2/5][RESEND] PCI/AER: use list_for_each_entry to avoid a small race condition window
-Date: Wed, 14 Nov 2012 20:27:19 +0800
-Message-ID: <1352896042-11832-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
-References: <1352896042-11832-1-git-send-email-wangyijing@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v2 1/3] aerdrv: Trace Event for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 13:39:08 -0700
+Message-ID: <20121130203908.31886.47475.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we rmmod aer_inject module, there is a small race condition window between pci_bus_ops_pop()
-and pci_bus_set_ops() in aer_inject_exit, eg. pci_read_aer/pci_write_aer was called between
-them. So keep pci_bus_ops_list until pci_bus_set_ops complete, use list_for_each_entry() instead of
-pci_bus_ops_pop to get bus_ops.
+This header file will define a new trace event that will be triggered when
+a AER event occurs.  The following data will be provided to the trace
+event.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+char * name -	String containing the device path
+
+u32 status - 	Either the correctable or uncorrectable register
+		indicating what error or errors have been see.
+
+u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+
+The trace event will also provide a trace string that may look like:
+
+"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+TLP"
+
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
 ---
- drivers/pci/pcie/aer/aer_inject.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-index fdab3bb..f499f01 100644
---- a/drivers/pci/pcie/aer/aer_inject.c
-+++ b/drivers/pci/pcie/aer/aer_inject.c
-@@ -543,10 +543,11 @@ static void __exit aer_inject_exit(void)
- 
- 	misc_deregister(&aer_inject_device);
- 
--	while ((bus_ops = pci_bus_ops_pop())) {
-+	list_for_each_entry(bus_ops, &pci_bus_ops_list, list)
- 		pci_bus_set_ops(bus_ops->bus, bus_ops->ops);
+ include/trace/events/ras.h |   77 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 77 insertions(+), 0 deletions(-)
+ create mode 100644 include/trace/events/ras.h
+
+diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+new file mode 100644
+index 0000000..f77d009
+--- /dev/null
++++ b/include/trace/events/ras.h
+@@ -0,0 +1,77 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM aer_event
++#define TRACE_INCLUDE_FILE ras 
 +
-+	while ((bus_ops = pci_bus_ops_pop()))
- 		kfree(bus_ops);
--	}
- 
- 	spin_lock_irqsave(&inject_lock, flags);
- 	list_for_each_entry_safe(err, err_next, &einjected, list) {
--- 
-1.7.1
-
++#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_AER_H
++
++#include <linux/tracepoint.h>
++#include <linux/edac.h>
++
++
++/*
++ * Anhance Error Reporting (AER) PCIE Report Error
++ *
++ * These events are generated when hardware detects a corrected or
++ * uncorrected event on a pci express device and reports
++ * errors.  The event reports the following data.
++ *
++ * char * dev_name -	String containing the device identification
++ * u32 status -		Either the correctable or uncorrectable register
++ *			indicating what error or errors have been seen
++ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
++ */
++
++#define correctable_error_string			\
++	{BIT(0),	"Receiver Error"},		\
++	{BIT(6),	"Bad TLP"},			\
++	{BIT(7),	"Bad DLLP"},			\
++	{BIT(8),	"RELAY_NUM Rollover"},		\
++	{BIT(12),	"Replay Timer Timeout"},	\
++	{BIT(13),	"Advisory Non-Fatal"}
++
++#define uncorrectable_error_string			\
++	{BIT(4),	"Data Link Protocol"},		\
++	{BIT(12),	"Poisoned TLP"},		\
++	{BIT(13),	"Flow Control Protocol"},	\
++	{BIT(14),	"Completion Timeout"},		\
++	{BIT(15),	"Completer Abort"},		\
++	{BIT(16),	"Unexpected Completion"},	\
++	{BIT(17),	"Receiver Overflow"},		\
++	{BIT(18),	"Malformed TLP"},		\
++	{BIT(19),	"ECRC"},			\
++	{BIT(20),	"Unsupported Request"}
++
++TRACE_EVENT(aer_event,
++	TP_PROTO(const char *dev_name,
++		 const u32 status,
++		 const u8 severity),
++
++	TP_ARGS(dev_name, status, severity),
++
++	TP_STRUCT__entry(
++		__string(	dev_name,	dev_name	)
++		__field(	u32,		status		)
++		__field(	u8,		severity	)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__entry->status		= status;
++		__entry->severity	= severity;
++	),
++
++	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
++		__get_str(dev_name),
++		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
++			((__entry->severity == HW_EVENT_ERR_FATAL) ?
++			"Fatal" : "Uncorrected"),
++		__entry->severity == HW_EVENT_ERR_CORRECTED ?
++		__print_flags(__entry->status, "|", correctable_error_string) :
++		__print_flags(__entry->status, "|", uncorrectable_error_string))
++);
++
++#endif /* _TRACE_AER_H */
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 
