@@ -1,52 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:44907 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366Ab2KGGPf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 7 Nov 2012 01:15:35 -0500
-Date: Wed, 7 Nov 2012 01:15:31 -0500 (EST)
-From: David Airlie <airlied@redhat.com>
-To: Huang Ying <ying.huang@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Message-ID: <890104457.2285480.1352268931077.JavaMail.root@redhat.com>
-In-Reply-To: <1352267925.7176.3.camel@yhuang-dev>
-Subject: Re: [PATCH] pci/runtime-pm: respect devices autosuspend timeout on
- config access
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1354275551.6276.140.camel@gandalf.local.home>
+Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 06:39:11 -0500
+In-Reply-To: <20121130105311.GA6869@liondog.tnic>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+	 <1354240279.6276.131.camel@gandalf.local.home>
+	 <20121130105311.GA6869@liondog.tnic>
+Content-Type: text/plain; charset="ISO-8859-15"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
+On Fri, 2012-11-30 at 11:53 +0100, Borislav Petkov wrote:
+> On Thu, Nov 29, 2012 at 08:51:19PM -0500, Steven Rostedt wrote:
+> > >  include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
 > > 
-> > Cc: Huang Ying <ying.huang@intel.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rafael J. Wysocki <rjw@sisk.pl>
-> > Signed-off-by: Dave Airlie <airlied@redhat.com>
-> > ---
-> >  drivers/pci/pci-sysfs.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index 02d107b..12d3d52 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -487,7 +487,7 @@ pci_config_pm_runtime_put(struct pci_dev *pdev)
-> >  	struct device *dev = &pdev->dev;
-> >  	struct device *parent = dev->parent;
-> >  
-> > -	pm_runtime_put(dev);
-> > +	pm_runtime_put_autosuspend(dev);
-> >  	if (parent)
-> >  		pm_runtime_put_sync(parent);
-> >  }
+> > Is there a reason this header is here? Egad, I never noticed the
+> > ras_event.h that is there. This include/ras directory was created for
+> > the sole purpose of trace events! This is not the way to do this.
 > 
-> I think you do not need that.  You can implement timeout
-> in .runtime_idle callback of the driver.
+> Well, the idea for the ras event was to be able to use it in multiple
+> places. It is currently used only by EDAC but it could be that memory
+> errors could be reported by other agents which would reuse that TP.
+> 
 
-If I understand what you are suggesting, I should setup some kinda of timer callback to later call suspend, but that seems pointless for me if we have the autosuspend mechanism in place.
+If it's generic, then place it into the include/trace/events directory,
+the you don't need to have the TRACE_INCLUDE_PATH as that is the default
+path the macros will use.
 
-Won't I end up racing my timer against other pm stuff? I'm not really runtime pm expert so maybe I'm just missing something.
+> > Please look at the sample in samples/trace_events/
+> > 
+> > The proper way is to keep the header by the driver. Then you can simply
+> > include the header with "aer_event.h".
+> > 
+> > But to have the macro magic work, you need to modify the Makefile to
+> > have something like:
+> > 
+> > CFLAGS_aerdrv_errprint.o = -I$(src)
+> 
+> So I'm guessing that every .c file including the TP should also -I
+> include the TP definition header wherever it is. Is that agreeable?
 
-Dave.
+You only need the -I$(src) for the .c file that uses the
+CREATE_TRACE_POINTS macro, as the trace point macro magic headers
+require it to find the TP header. Other files just need "foo.h", or
+<trace/events/foo.h> if it's in the generic location.
+
+-- Steve
+
+
