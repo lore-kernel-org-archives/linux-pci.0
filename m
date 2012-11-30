@@ -1,55 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:54390 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783Ab2KLVHY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 12 Nov 2012 16:07:24 -0500
-Received: by mail-wg0-f44.google.com with SMTP id dr13so4462725wgb.1
-        for <linux-pci@vger.kernel.org>; Mon, 12 Nov 2012 13:07:23 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 30 Nov 2012 14:42:32 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] aerdrv: Trace Event for AER
+Message-ID: <20121130134232.GD6869@liondog.tnic>
+References: <20121129215443.5483.43364.stgit@grignak.americas.hpqcorp.net>
+ <1354240279.6276.131.camel@gandalf.local.home>
+ <20121130105311.GA6869@liondog.tnic>
+ <1354275551.6276.140.camel@gandalf.local.home>
 MIME-Version: 1.0
-In-Reply-To: <201209282356.52558.rjw@sisk.pl>
-References: <201209282351.10663.rjw@sisk.pl> <201209282356.52558.rjw@sisk.pl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 12 Nov 2012 14:07:03 -0700
-Message-ID: <CAErSpo7kVb1kLbJ0Y4mYLbzEeZM8dSa-YaZE9B2mN5r74ft-Rg@mail.gmail.com>
-Subject: Re: [RFD][PATCH 7/7] PM / ACPI: Take device PM QoS flags into account
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux PM list <linux-pm@vger.kernel.org>,
-	ACPI Devel Mailing List <linux-acpi@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Huang Ying <ying.huang@intel.com>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Lan Tianyu <tianyu.lan@intel.com>,
-	Aaron Lu <aaron.lu@intel.com>, Jean Pihet <j-pihet@ti.com>,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	mark gross <markgross@thegnar.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1354275551.6276.140.camel@gandalf.local.home>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 28, 2012 at 3:56 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Make ACPI power management routines and PCI power management
-> routines depending on ACPI take device PM QoS flags into account
-> when deciding what power state to put the device into.
->
-> In particular, after this change acpi_pm_device_sleep_state() will
-> not return ACPI_STATE_D3_COLD as the deepest available low-power
-> state if PM_QOS_FLAG_NO_POWER_OFF is requested for the device and it
-> will not require remote wakeup to work for the device in the returned
-> low-power state if there is at least one PM QoS flags request for the
-> device, but PM_QOS_FLAG_REMOTE_WAKEUP is not requested for it.
->
-> Accordingly, acpi_pci_set_power_state() will refuse to put the
-> device into D3cold if PM_QOS_FLAG_NO_POWER_OFF is requested for it.
->
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
->  drivers/acpi/sleep.c   |   16 ++++++++++++----
->  drivers/pci/pci-acpi.c |    8 +++++++-
+On Fri, Nov 30, 2012 at 06:39:11AM -0500, Steven Rostedt wrote:
+> On Fri, 2012-11-30 at 11:53 +0100, Borislav Petkov wrote:
+> > On Thu, Nov 29, 2012 at 08:51:19PM -0500, Steven Rostedt wrote:
+> > > >  include/ras/aer_event.h |   77 +++++++++++++++++++++++++++++++++++++++++++++++
+> > > 
+> > > Is there a reason this header is here? Egad, I never noticed the
+> > > ras_event.h that is there. This include/ras directory was created for
+> > > the sole purpose of trace events! This is not the way to do this.
+> > 
+> > Well, the idea for the ras event was to be able to use it in multiple
+> > places. It is currently used only by EDAC but it could be that memory
+> > errors could be reported by other agents which would reuse that TP.
+> > 
+> 
+> If it's generic, then place it into the include/trace/events directory,
+> the you don't need to have the TRACE_INCLUDE_PATH as that is the default
+> path the macros will use.
 
-This touches a file in drivers/pci, but I expect it depends on all the
-previous patches in the series, so if you haven't merged it already,
-Rafael, it seems like it makes sense for you to merge this instead of
-me.
+Hmm, so I'm thinking maybe we should add a ras.h header there which
+contains all RAS TPs.
 
-Bjorn
+> > > Please look at the sample in samples/trace_events/
+> > > 
+> > > The proper way is to keep the header by the driver. Then you can simply
+> > > include the header with "aer_event.h".
+> > > 
+> > > But to have the macro magic work, you need to modify the Makefile to
+> > > have something like:
+> > > 
+> > > CFLAGS_aerdrv_errprint.o = -I$(src)
+> > 
+> > So I'm guessing that every .c file including the TP should also -I
+> > include the TP definition header wherever it is. Is that agreeable?
+> 
+> You only need the -I$(src) for the .c file that uses the
+> CREATE_TRACE_POINTS macro, as the trace point macro magic headers
+> require it to find the TP header.
+
+This is done like this from EDAC's single usage site:
+
+#define CREATE_TRACE_POINTS
+#define TRACE_INCLUDE_PATH ../../include/ras
+#include <ras/ras_event.h>
+
+This is in <drivers/edac/edac_mc.c> and it doesn't to "-I$(src)" in the
+edac Makefile.
+
+> Other files just need "foo.h", or <trace/events/foo.h> if it's in the
+> generic location.
+
+So, it sounds to me like we should we move all RAS-specific tracepoints
+to <trace/events/ras.h> and then in each usage site do:
+
+#define CREATE_TRACE_POINTS
+#include <trace/events/ras.h>
+
+Correct?
+
+FWIW, it looks neat and clean to me that way.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
