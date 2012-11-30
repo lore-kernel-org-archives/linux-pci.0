@@ -1,177 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60551 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277Ab2K2ImK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 29 Nov 2012 03:42:10 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so6100429bkw.19
-        for <linux-pci@vger.kernel.org>; Thu, 29 Nov 2012 00:42:09 -0800 (PST)
-Message-ID: <A5D6C5E3D7774E62AA482C886483DA6D@alyakaslap>
-From: "Alex Lyakas" <alex@zadarastorage.com>
-To: "Alex Williamson" <alex.williamson@redhat.com>
-Cc: <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Yair Hershko" <yair@zadarastorage.com>,
-	"Shyam Kaushik" <shyam@zadarastorage.com>
-References: <190FFE9600054603A543CCDA4408AC89@alyakaslap> <CAOcd+r28ot-060WQhUPkuM1Bt7t-_jOggAZKNSJxurNYVs2b-w@mail.gmail.com> <1353536723.1809.4.camel@bling.home> <F764A8A9BBE247FEA862ED33F77A04A1@alyakaslap> <1353960253.1809.128.camel@bling.home>
-In-Reply-To: <1353960253.1809.128.camel@bling.home>
-Subject: Re: pci_enable_msix() fails with ENOMEM/EINVAL
-Date: Thu, 29 Nov 2012 10:42:10 +0200
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:8029 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753552Ab2K3Vij (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 16:38:39 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v3 2/3] aerdrv: Enhanced AER logging
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 14:33:37 -0700
+Message-ID: <20121130213337.7649.6709.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
+References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="UTF-8";
-	reply-type=original
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-did I understand correctly that "vector" value with which the call to 
-request_threaded_irq() is made is *not* supposed to be zero? Because in my 
-case, it is always zero, and still the failure I observe is not happening 
-always. Usually, 3 unique (non-zero) IRQ numbers are assigned to each 
-attached PCI device of each KVM VM.
-I will try to repro this like you suggested and let you know.
+This patch will provide a more reliable and easy way for user-space
+applications to have access to AER logs rather than reading them from the
+message buffer. It also provides a way to notify user-space when an AER
+event occurs.
 
-Thanks for your help,
-Alex.
+The aer driver is updated to generate a trace event of function 'aer_event'
+when an AER occurs.  The trace event was added to both the interrupt
+based aer path and the firmware first path
 
+v1-v2 fix compile errors in ifdefs.
+v2-v3 Update to new location of trace header. Update print to remove
+warning.
 
------Original Message----- 
-From: Alex Williamson
-Sent: 26 November, 2012 10:04 PM
-To: Alex Lyakas
-Cc: kvm@vger.kernel.org
-Subject: Re: pci_enable_msix() fails with ENOMEM/EINVAL
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
 
-On Thu, 2012-11-22 at 10:52 +0200, Alex Lyakas wrote:
-> Hi Alex,
-> thanks for your response.
->
-> I printed out the "vector" and "entry" values of dev->host_msix_entries[i]
-> within assigned_device_enable_host_msix() before call to
-> request_threaded_irq(). I see that they are all 0s:
-> kernel: [ 3332.610980] kvm-8095: KVM_ASSIGN_DEV_IRQ assigned_dev_id=924
-> kernel: [ 3332.610985] kvm-8095: assigned_device_enable_host_msix()
-> assigned_dev_id=924 #0: [v=0 e=0]
-> kernel: [ 3332.610989] kvm-8095: assigned_device_enable_host_msix()
-> assigned_dev_id=924 #1: [v=0 e=1]
-> kernel: [ 3332.610992] kvm-8095: assigned_device_enable_host_msix()
-> assigned_dev_id=924 #2: [v=0 e=2]
->
-> So I don't really understand how they all ask for irq=0; I must be missing
-> something. Is there any other explanation of request_threaded_irq() to
-> return EBUSY? From the code I don't see that there is.
+ drivers/acpi/apei/cper.c               |   17 +++++++++++++++--
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+ include/linux/aer.h                    |    2 +-
+ 3 files changed, 25 insertions(+), 4 deletions(-)
 
-The vectors all being zero sounds like an indication that
-pci_enable_msix() didn't actually work.  Each of those should be a
-unique vector.   Does booting the host with "nointremap" perhaps make a
-difference?  Maybe we can isolate the problem to the interrupt remapper
-code.
-
-> This issue is reproducible and is not going to go away by itself. Working
-> around it is also problematic. We thought to check whether all IRQs are
-> properly attached after QEMU sets the vm state to "running". However, vm
-> state is set to "running" before IRQ attachments are performed; we 
-> debugged
-> this and found out that they are done from a different thread, from a 
-> stack
-> trace like this:
-> kvm_assign_irq()
-> assigned_dev_update_msix()
-> assigned_dev_pci_write_config()
-> pci_host_config_write_common()
-> pci_data_write()
-> pci_host_data_write()
-> memory_region_write_accessor()
-> access_with_adjusted_size()
-> memory_region_iorange_write()
-> ioport_writew_thunk()
-> ioport_write()
-> cpu_outw()
-> kvm_handle_io()
-> kvm_cpu_exec()
-> qemu_kvm_cpu_thread_fn()
->
-> So looks like this is performed on-demand (on first IO), so no reliable
-> point to check that IRQs are attached properly.
-
-Correct, MSI-X is setup when the guest enables MSI-X on the device,
-which is likely a long way into guest boot.  There's no guarantee that
-the guest ever enables MSI-X, so there's no association to whether the
-guest is "running".
-
->  Another issue that in KVM
-> code the return value of pci_host_config_write_common() is not checked, so
-> there is no way to report a failure.
-
-A common problem in qemu, imho
-
-> Is there any way you think you can help me debug this further?
-
-It seems like pci_enable_msix is still failing, but perhaps silently
-without irqbalance.  We need to figure out where and why.  Isolating it
-to the interrupt remapper with "nointremap" might give us some clues
-(this is an Intel VT-d system, right?).  Thanks,
-
-Alex
-
-
-> -----Original Message----- 
-> From: Alex Williamson
-> Sent: 22 November, 2012 12:25 AM
-> To: Alex Lyakas
-> Cc: kvm@vger.kernel.org
-> Subject: Re: pci_enable_msix() fails with ENOMEM/EINVAL
->
-> On Wed, 2012-11-21 at 16:19 +0200, Alex Lyakas wrote:
-> > Hi,
-> > I was advised to turn off irqbalance and reproduced this issue, but
-> > the failure is in a different place now. Now request_threaded_irq()
-> > fails with EBUSY.
-> > According to the code, this can only happen on the path:
-> > request_threaded_irq() -> __setup_irq()
-> > Now in setup irq, the only place where EBUSY can show up for us is here:
-> > ...
-> > raw_spin_lock_irqsave(&desc->lock, flags);
-> > old_ptr = &desc->action;
-> > old = *old_ptr;
-> > if (old) {
-> > /*
-> > * Can't share interrupts unless both agree to and are
-> > * the same type (level, edge, polarity). So both flag
-> > * fields must have IRQF_SHARED set and the bits which
-> > * set the trigger type must match. Also all must
-> > * agree on ONESHOT.
-> > */
-> > if (!((old->flags & new->flags) & IRQF_SHARED) ||
-> >     ((old->flags ^ new->flags) & IRQF_TRIGGER_MASK) ||
-> >     ((old->flags ^ new->flags) & IRQF_ONESHOT)) {
-> > old_name = old->name;
-> > goto mismatch;
-> > }
-> >
-> > /* All handlers must agree on per-cpuness */
-> > if ((old->flags & IRQF_PERCPU) !=
-> >     (new->flags & IRQF_PERCPU))
-> > goto mismatch;
-> >
-> > KVM calls request_threaded_irq() with flags==0, so can it be that
-> > different KVM processes request the same IRQ?
->
-> Shouldn't be possible, irqs are allocated from a bitmap protected by a
-> mutex, see __irq_alloc_descs
->
-> >  How different KVM
-> > processes spawned simultaneously agree between them on IRQ numbers?
->
-> They don't, MSI/X vectors are not currently share-able.  Can you show
-> that you're actually getting duplicate irq vectors?  Thanks,
->
-> Alex
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+index e6defd8..e9d6062 100644
+--- a/drivers/acpi/apei/cper.c
++++ b/drivers/acpi/apei/cper.c
+@@ -29,6 +29,7 @@
+ #include <linux/time.h>
+ #include <linux/cper.h>
+ #include <linux/acpi.h>
++#include <linux/pci.h>
+ #include <linux/aer.h>
+ 
+ /*
+@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 			    const struct acpi_hest_generic_data *gdata)
+ {
++#ifdef CONFIG_ACPI_APEI_PCIEAER
++	struct pci_dev *dev;
++#endif
++
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+ 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+ 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+@@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+ 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
++	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
++			pcie->device_id.bus, pcie->device_id.function);
++	if (!dev)
++		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
++			pcie->device_id.segment, pcie->device_id.bus,
++			pcie->device_id.slot, pcie->device_id.function);
++
++	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
+ 		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+-		cper_print_aer(pfx, gdata->error_severity, aer_regs);
++		cper_print_aer(dev, gdata->error_severity, aer_regs);
++		pci_dev_put(dev);
+ 	}
+ #endif
+ }
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 3ea5173..34d96e4 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -23,6 +23,9 @@
+ 
+ #include "aerdrv.h"
+ 
++#define CREATE_TRACE_POINTS
++#include <trace/events/ras.h>
++
+ #define AER_AGENT_RECEIVER		0
+ #define AER_AGENT_REQUESTER		1
+ #define AER_AGENT_COMPLETER		2
+@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+ 		printk("%s""  Error of this Agent(%04x) is reported first\n",
+ 			prefix, id);
++	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
++			info->severity);
+ }
+ 
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+@@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ 
+-void cper_print_aer(const char *prefix, int cper_severity,
++void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		    struct aer_capability_regs *aer)
+ {
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
++	char *prefix = NULL;
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+@@ -259,5 +265,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+ 			*(tlp + 13), *(tlp + 12));
+ 	}
++	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
++			aer_severity);
+ }
+ #endif
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 544abdb..7b86dc6 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ }
+ #endif
+ 
+-extern void cper_print_aer(const char *prefix, int cper_severity,
++extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 			   struct aer_capability_regs *aer);
+ extern int cper_severity_to_aer(int cper_severity);
+ extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
 
