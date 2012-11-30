@@ -1,513 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Yasuaki Ishimatsu <isimatu.yasuaki@jp.fujitsu.com>,
-	Wen Congyang <wency@cn.fujitsu.com>,
-	Tang Chen <tangchen@cn.fujitsu.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Huang Ying <ying.huang@intel.com>,
-	Bob Moore <robert.moore@intel.com>,
-	Len Brown <lenb@kernel.org>,
-	"Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, Gaohuai Han <hangaohuai@huawei.com>
-Subject: [ACPIHP PATCH part1 2/4] ACPIHP: introduce acpihp_slot driver to enumerate hotplug slots
-Date: Sun,  4 Nov 2012 00:07:43 +0800
-Message-Id: <1351958865-24394-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
-References: <1351958865-24394-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:7975 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167Ab2K3Vid (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 30 Nov 2012 16:38:33 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v3 1/3] aerdrv: Trace Event for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 30 Nov 2012 14:33:30 -0700
+Message-ID: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An ACPI hotplug slot is an abstraction of receptacles, where a group of
-system devices could be connected to. This patch implements the skeleton
-of the ACPI system device hotplug slot enumerator. On loading, it scans
-the whole ACPI namespace for hotplug slots and creates a device node for
-each hotplug slot found. Every hotplug slot is associated with a device
-class named acpihp_slot_class. Later hotplug drivers will register onto
-acpihp_slot_class to manage all hotplug slots.
+This header file will define a new trace event that will be triggered when
+a AER event occurs.  The following data will be provided to the trace
+event.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Gaohuai Han <hangaohuai@huawei.com>
+char * name -	String containing the device path
+
+u32 status - 	Either the correctable or uncorrectable register
+		indicating what error or errors have been see.
+
+u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+
+The trace event will also provide a trace string that may look like:
+
+"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+TLP"
+
+v1-v2 Move header from include/ras/aer_event.h to
+include/trace/events/ras.h
+
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
 ---
- drivers/acpi/Kconfig          |   19 ++
- drivers/acpi/hotplug/Makefile |    3 +
- drivers/acpi/hotplug/slot.c   |  417 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 439 insertions(+)
- create mode 100644 drivers/acpi/hotplug/slot.c
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 9577b23..af0aaf6 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -334,6 +334,25 @@ menuconfig ACPI_HOTPLUG
- 	  If your hardware platform does not support system device dynamic
- 	  reconfiguration at runtime, you need not to enable this option.
- 
-+config ACPI_HOTPLUG_SLOT
-+	tristate "System Device Hotplug Slot Enumerator"
-+	depends on ACPI_HOTPLUG
-+	default m
-+	help
-+	  ACPI system device hotplug slot is an abstraction of ACPI based
-+	  system device dynamic reconfiguration control points. On load,
-+	  this driver enumerates system device hotplug slots by wakling the
-+	  ACPI namespace and provides platform specific methods to control
-+	  those hotplug slots.
-+
-+	  By default, this driver detects system device hotplug slots by
-+	  checking avaliability of ACPI _EJ0 method. You may pass a module
-+	  parameter "fake_slot=0xf" to enable faking hotplug slots on
-+	  platforms without hardware dynamic reconfiguration capabilities.
-+
-+	  To compile this driver as a module, choose M here:
-+	  the module will be called acpihp_slot.
-+
- config ACPI_CONTAINER
- 	tristate "Container and Module Devices (EXPERIMENTAL)"
- 	depends on EXPERIMENTAL
-diff --git a/drivers/acpi/hotplug/Makefile b/drivers/acpi/hotplug/Makefile
-index 5e7790f..2cbb03c 100644
---- a/drivers/acpi/hotplug/Makefile
-+++ b/drivers/acpi/hotplug/Makefile
-@@ -4,3 +4,6 @@
- 
- obj-$(CONFIG_ACPI_HOTPLUG)			+= acpihp.o
- acpihp-y					= core.o
-+
-+obj-$(CONFIG_ACPI_HOTPLUG_SLOT)			+= acpihp_slot.o
-+acpihp_slot-y					= slot.o
-diff --git a/drivers/acpi/hotplug/slot.c b/drivers/acpi/hotplug/slot.c
+ include/trace/events/ras.h |   77 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 77 insertions(+), 0 deletions(-)
+ create mode 100644 include/trace/events/ras.h
+
+diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
 new file mode 100644
-index 0000000..b76cb16
+index 0000000..f77d009
 --- /dev/null
-+++ b/drivers/acpi/hotplug/slot.c
-@@ -0,0 +1,417 @@
-+/*
-+ * Copyright (C) 2012 Huawei Tech. Co., Ltd.
-+ * Copyright (C) 2012 Jiang Liu <jiang.liu@huawei.com>
-+ * Copyright (C) 2012 Gaohuai Han <hangaohuai@huawei.com>
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+ */
++++ b/include/trace/events/ras.h
+@@ -0,0 +1,77 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM aer_event
++#define TRACE_INCLUDE_FILE ras 
 +
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/acpi.h>
-+#include "acpihp.h"
++#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_AER_H
 +
-+struct acpihp_slot_id {
-+	struct list_head node;
-+	enum acpihp_slot_type type;
-+	unsigned long instance_id;
-+};
++#include <linux/tracepoint.h>
++#include <linux/edac.h>
 +
-+static LIST_HEAD(slot_list);
-+static LIST_HEAD(slot_id_list);
-+static struct acpihp_slot_ops *slot_ops_curr;
 +
 +/*
-+ * Platform dependent slot drivers should be sorted in descending order.
-+ * The first entry whose init() method returns success will be used.
++ * Anhance Error Reporting (AER) PCIE Report Error
++ *
++ * These events are generated when hardware detects a corrected or
++ * uncorrected event on a pci express device and reports
++ * errors.  The event reports the following data.
++ *
++ * char * dev_name -	String containing the device identification
++ * u32 status -		Either the correctable or uncorrectable register
++ *			indicating what error or errors have been seen
++ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
 + */
-+static struct acpihp_slot_ops *slot_ops_array[] = {
-+	NULL
-+};
 +
-+static acpi_status __init
-+acpihp_slot_get_dev_type(acpi_handle handle, u32 lvl, void *context, void **rv)
-+{
-+	u32 *tp = (u32 *)rv;
-+	acpi_status status = AE_OK;
-+	enum acpihp_dev_type type;
++#define correctable_error_string			\
++	{BIT(0),	"Receiver Error"},		\
++	{BIT(6),	"Bad TLP"},			\
++	{BIT(7),	"Bad DLLP"},			\
++	{BIT(8),	"RELAY_NUM Rollover"},		\
++	{BIT(12),	"Replay Timer Timeout"},	\
++	{BIT(13),	"Advisory Non-Fatal"}
 +
-+	/* Only care about CPU, memory, PCI host bridge and CONTAINER */
-+	if (!acpihp_dev_get_type(handle, &type)) {
-+		switch (type) {
-+		case ACPIHP_DEV_TYPE_CPU:
-+			*tp |= 0x0001;
-+			status = AE_CTRL_DEPTH;
-+			break;
-+		case ACPIHP_DEV_TYPE_MEM:
-+			*tp |= 0x0002;
-+			status = AE_CTRL_DEPTH;
-+			break;
-+		case ACPIHP_DEV_TYPE_HOST_BRIDGE:
-+			*tp |= 0x0004;
-+			status = AE_CTRL_DEPTH;
-+			break;
-+		case ACPIHP_DEV_TYPE_CONTAINER:
-+			*tp |= 0x0008;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
++#define uncorrectable_error_string			\
++	{BIT(4),	"Data Link Protocol"},		\
++	{BIT(12),	"Poisoned TLP"},		\
++	{BIT(13),	"Flow Control Protocol"},	\
++	{BIT(14),	"Completion Timeout"},		\
++	{BIT(15),	"Completer Abort"},		\
++	{BIT(16),	"Unexpected Completion"},	\
++	{BIT(17),	"Receiver Overflow"},		\
++	{BIT(18),	"Malformed TLP"},		\
++	{BIT(19),	"ECRC"},			\
++	{BIT(20),	"Unsupported Request"}
 +
-+	return status;
-+}
++TRACE_EVENT(aer_event,
++	TP_PROTO(const char *dev_name,
++		 const u32 status,
++		 const u8 severity),
 +
-+static enum acpihp_slot_type __init acpihp_slot_get_type_child(u32 dev_types)
-+{
-+	BUG_ON(dev_types > 15);
++	TP_ARGS(dev_name, status, severity),
 +
-+	switch (dev_types) {
-+	case 0:
-+		/* Generic CONTAINER */
-+		return ACPIHP_SLOT_TYPE_COMMON;
-+	case 1:
-+		/* Physical processor with logical CPUs */
-+		return ACPIHP_SLOT_TYPE_CPU;
-+	case 2:
-+		/* Memory board/box with memory devices */
-+		return ACPIHP_SLOT_TYPE_MEM;
-+	case 3:
-+		/* Physical processor with CPUs and memory controllers */
-+		return ACPIHP_SLOT_TYPE_CPU;
-+	case 4:
-+		/* IO eXtension board/box with IO host bridges */
-+		return ACPIHP_SLOT_TYPE_IOX;
-+	case 7:
-+		/* Physical processor with CPUs, IO host bridges and MCs. */
-+		return ACPIHP_SLOT_TYPE_CPU;
-+	case 8:
-+		/* Generic CONTAINER */
-+		return ACPIHP_SLOT_TYPE_COMMON;
-+	case 9:
-+		/* System board with physical processors */
-+		return ACPIHP_SLOT_TYPE_SYSTEM_BOARD;
-+	case 11:
-+		/* System board with physical processors and memory */
-+		return ACPIHP_SLOT_TYPE_SYSTEM_BOARD;
-+	case 15:
-+		/* Node with processor, memory and IO host bridge */
-+		return ACPIHP_SLOT_TYPE_NODE;
-+	default:
-+		return ACPIHP_SLOT_TYPE_UNKNOWN;
-+	}
-+}
++	TP_STRUCT__entry(
++		__string(	dev_name,	dev_name	)
++		__field(	u32,		status		)
++		__field(	u8,		severity	)
++	),
 +
-+static enum acpihp_slot_type __init
-+acpihp_slot_get_type_self(struct acpihp_slot *slot)
-+{
-+	enum acpihp_dev_type type;
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__entry->status		= status;
++		__entry->severity	= severity;
++	),
 +
-+	if (acpihp_dev_get_type(slot->handle, &type))
-+		return ACPIHP_SLOT_TYPE_UNKNOWN;
++	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
++		__get_str(dev_name),
++		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
++			((__entry->severity == HW_EVENT_ERR_FATAL) ?
++			"Fatal" : "Uncorrected"),
++		__entry->severity == HW_EVENT_ERR_CORRECTED ?
++		__print_flags(__entry->status, "|", correctable_error_string) :
++		__print_flags(__entry->status, "|", uncorrectable_error_string))
++);
 +
-+	switch (type) {
-+	case ACPIHP_DEV_TYPE_CPU:
-+		/* Logical CPU used in virtualization environment */
-+		return ACPIHP_SLOT_TYPE_CPU;
-+	case ACPIHP_DEV_TYPE_MEM:
-+		/* Memory board with single memory device */
-+		return ACPIHP_SLOT_TYPE_MEM;
-+	case ACPIHP_DEV_TYPE_HOST_BRIDGE:
-+		/* IO eXtension board/box with single IO host bridge */
-+		return ACPIHP_SLOT_TYPE_IOX;
-+	default:
-+		return ACPIHP_SLOT_TYPE_UNKNOWN;
-+	}
-+}
++#endif /* _TRACE_AER_H */
 +
-+/*
-+ * Generate a meaningful name for a hotplug slot according to types of ACPI
-+ * devices which could be attached to the slot.
-+ */
-+static int __init acpihp_slot_generate_name(struct acpihp_slot *slot)
-+{
-+	int found = 0;
-+	u32 child_types = 0;
-+	unsigned long long uid;
-+	struct acpihp_slot_id *slot_id;
-+
-+	/*
-+	 * Figure out slot type by checking types of ACPI devices which could
-+	 * be attached to the slot.
-+	 */
-+	slot->type = acpihp_slot_get_type_self(slot);
-+	if (slot->type == ACPIHP_SLOT_TYPE_UNKNOWN) {
-+		acpi_walk_namespace(ACPI_TYPE_DEVICE, slot->handle,
-+				ACPI_UINT32_MAX, acpihp_slot_get_dev_type,
-+				NULL, NULL, (void **)&child_types);
-+		acpi_walk_namespace(ACPI_TYPE_PROCESSOR, slot->handle,
-+				ACPI_UINT32_MAX, acpihp_slot_get_dev_type,
-+				NULL, NULL, (void **)&child_types);
-+		slot->type = acpihp_slot_get_type_child(child_types);
-+	}
-+
-+	/* Respect firmware settings if ACPI _UID returns a valid value. */
-+	if (ACPI_SUCCESS(acpi_evaluate_integer(slot->handle, METHOD_NAME__UID,
-+					       NULL, &uid)))
-+		goto set_name;
-+
-+	/* Generate a unique pseudo instance ID */
-+	list_for_each_entry(slot_id, &slot_id_list, node)
-+		if (slot_id->type == slot->type) {
-+			found = 1;
-+			break;
-+		}
-+	if (!found) {
-+		slot_id = kzalloc(sizeof(struct acpihp_slot_id), GFP_KERNEL);
-+		if (!slot_id) {
-+			ACPIHP_SLOT_WARN(slot,
-+				"fails to allocate slot instance ID.\n");
-+			return -ENOMEM;
-+		}
-+		slot_id->type = slot->type;
-+		list_add_tail(&slot_id->node, &slot_id_list);
-+	}
-+	uid = slot_id->instance_id++;
-+
-+set_name:
-+	snprintf(slot->name, sizeof(slot->name) - 1, "%s%02llx",
-+		 acpihp_get_slot_type_name(slot->type), uid);
-+	dev_set_name(&slot->dev, "%s", slot->name);
-+
-+	return 0;
-+}
-+
-+static int __init acpihp_slot_get_parent(struct acpihp_slot *slot)
-+{
-+	acpi_handle handle, root_handle;
-+	struct acpihp_slot *tmp;
-+
-+	slot->parent = NULL;
-+	handle = slot->handle;
-+	if (ACPI_FAILURE(acpi_get_handle(NULL, ACPI_NS_ROOT_PATH,
-+					 &root_handle))) {
-+		ACPIHP_SLOT_DEBUG(slot, "fails to get ACPI root device.\n");
-+		return -ENODEV;
-+	}
-+
-+	do {
-+		if (ACPI_FAILURE(acpi_get_parent(handle, &handle))) {
-+			ACPIHP_SLOT_DEBUG(slot,
-+					  "fails to get parent device.\n");
-+			return -ENODEV;
-+		}
-+		list_for_each_entry(tmp, &slot_list, slot_list)
-+			if (tmp->handle == handle) {
-+				slot->parent = tmp;
-+				return 0;
-+			}
-+	} while (handle != root_handle);
-+
-+	return 0;
-+}
-+
-+static int __init acpihp_slot_get_state(struct acpihp_slot *slot)
-+{
-+	unsigned long long sta;
-+
-+	/* Hotplug slots must implement ACPI _STA method. */
-+	if (ACPI_FAILURE(acpihp_slot_get_status(slot, &sta))) {
-+		ACPIHP_SLOT_DEBUG(slot, "fails to execute _STA method.\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!(sta & ACPI_STA_DEVICE_PRESENT))
-+		slot->state = ACPIHP_SLOT_STATE_ABSENT;
-+	else if ((sta & ACPI_STA_DEVICE_ENABLED) ||
-+		 (sta & ACPI_STA_DEVICE_FUNCTIONING))
-+		slot->state = ACPIHP_SLOT_STATE_POWERED;
-+	else
-+		slot->state = ACPIHP_SLOT_STATE_PRESENT;
-+
-+	return 0;
-+}
-+
-+static int __init acpihp_slot_create(acpi_handle handle)
-+{
-+	struct acpihp_slot *slot;
-+
-+	slot = acpihp_alloc_slot(handle, NULL);
-+	if (!slot) {
-+		ACPIHP_DEBUG("fails to allocate memory for slot %p.\n", handle);
-+		return -ENOMEM;
-+	}
-+
-+	slot->slot_ops = slot_ops_curr;
-+	if (ACPI_FAILURE(slot_ops_curr->create(slot))) {
-+		ACPIHP_DEBUG("fails to create slot for %p.\n", handle);
-+		goto out_free;
-+	}
-+	if (acpihp_slot_get_parent(slot))
-+		goto out_destroy;
-+	if (acpihp_slot_get_state(slot))
-+		goto out_destroy;
-+	if (acpihp_slot_generate_name(slot))
-+		goto out_destroy;
-+
-+	if (acpihp_register_slot(slot)) {
-+		ACPIHP_SLOT_DEBUG(slot, "fails to register slot.\n");
-+		goto out_destroy;
-+	}
-+	if (ACPI_FAILURE(acpihp_mark_slot(handle, slot))) {
-+		ACPIHP_SLOT_DEBUG(slot,
-+			"fails to attach slot to ACPI device object.\n");
-+		goto out_unregister;
-+	}
-+
-+	list_add_tail(&slot->slot_list, &slot_list);
-+
-+	return 0;
-+
-+out_unregister:
-+	acpihp_unregister_slot(slot);
-+out_destroy:
-+	if (slot_ops_curr->destroy)
-+		slot_ops_curr->destroy(slot);
-+out_free:
-+	acpihp_slot_put(slot);
-+	return -ENODEV;
-+}
-+
-+static acpi_status __init acpihp_slot_scan(acpi_handle handle, u32 lvl,
-+					   void *context, void **rv)
-+{
-+	enum acpihp_dev_type type;
-+
-+	if (acpihp_dev_get_type(handle, &type) ||
-+	    type == ACPIHP_DEV_TYPE_UNKNOWN)
-+		return AE_OK;
-+
-+	if (ACPI_SUCCESS(slot_ops_curr->check(handle)))
-+		acpihp_slot_create(handle);
-+
-+	/*
-+	 * Don't scan hotplug slots under PCI host bridges, they should be
-+	 * handled by acpiphp or pciehp drivers.
-+	 */
-+	if (type == ACPIHP_DEV_TYPE_HOST_BRIDGE)
-+		return AE_CTRL_DEPTH;
-+
-+	return AE_OK;
-+}
-+
-+static int __init acpihp_slot_scan_slots(void)
-+{
-+	acpi_status status;
-+
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-+				     ACPI_UINT32_MAX, acpihp_slot_scan,
-+				     NULL, NULL, NULL);
-+	if (!ACPI_SUCCESS(status))
-+		goto out_err;
-+
-+	status = acpi_walk_namespace(ACPI_TYPE_PROCESSOR, ACPI_ROOT_OBJECT,
-+				     ACPI_UINT32_MAX, acpihp_slot_scan,
-+				     NULL, NULL, NULL);
-+	if (ACPI_SUCCESS(status))
-+		return 0;
-+
-+out_err:
-+	ACPIHP_DEBUG("fails to scan ACPI hotplug slots.\n");
-+
-+	return -ENODEV;
-+}
-+
-+static void acpihp_slot_cleanup(void)
-+{
-+	struct acpihp_slot *slot, *tmp;
-+	struct acpihp_slot_id *slot_id, *tmp_id;
-+
-+	list_for_each_entry_safe(slot, tmp, &slot_list, slot_list) {
-+		acpihp_unmark_slot(slot->handle);
-+		acpihp_unregister_slot(slot);
-+		if (slot->slot_ops && slot->slot_ops->destroy)
-+			slot->slot_ops->destroy(slot);
-+		acpihp_slot_put(slot);
-+	}
-+
-+	list_for_each_entry_safe(slot_id, tmp_id, &slot_id_list, node) {
-+		list_del(&slot_id->node);
-+		kfree(slot_id);
-+	}
-+}
-+
-+static int __init acpihp_slot_init(void)
-+{
-+	int i, retval;
-+
-+	/* probe for available platform specific slot driver. */
-+	for (i = 0; slot_ops_array[i]; i++)
-+		if (ACPI_SUCCESS(slot_ops_array[i]->init())) {
-+			slot_ops_curr = slot_ops_array[i];
-+			break;
-+		}
-+	if (slot_ops_curr == NULL) {
-+		ACPIHP_DEBUG("no platform specific slot driver available.\n");
-+		return -ENODEV;
-+	}
-+
-+	retval = acpihp_core_init();
-+	if (retval != 0) {
-+		ACPIHP_DEBUG("fails to initialize ACPIHP core.\n");
-+		goto out_fini;
-+	}
-+
-+	if (acpihp_slot_scan_slots() != 0)
-+		ACPIHP_DEBUG("fails to enumerate ACPI hotplug slots.\n");
-+
-+	/* Back out if no ACPI hotplug slot found. */
-+	if (list_empty(&slot_list)) {
-+		ACPIHP_DEBUG("no ACPI hotplug slot available.\n");
-+		retval = -ENODEV;
-+		goto out_core_fini;
-+	}
-+
-+	return 0;
-+
-+out_core_fini:
-+	acpihp_core_fini();
-+out_fini:
-+	if (slot_ops_curr && slot_ops_curr->fini)
-+		slot_ops_curr->fini();
-+	ACPIHP_DEBUG("fails to initialize ACPI hotplug slot driver.\n");
-+
-+	return retval;
-+}
-+
-+static void __exit acpihp_slot_exit(void)
-+{
-+	acpihp_slot_cleanup();
-+	acpihp_core_fini();
-+	if (slot_ops_curr && slot_ops_curr->fini)
-+		slot_ops_curr->fini();
-+}
-+
-+module_init(acpihp_slot_init);
-+module_exit(acpihp_slot_exit);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_AUTHOR("Jiang Liu <jiang.liu@huawei.com>");
-+MODULE_AUTHOR("Gaohuai Han <hangaohuai@huawei.com>");
--- 
-1.7.9.5
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 
