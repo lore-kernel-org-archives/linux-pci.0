@@ -1,105 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:53721 "EHLO hydra.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:5222 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902Ab2LKBXE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Dec 2012 20:23:04 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-Date: Tue, 11 Dec 2012 02:28:04 +0100
-Message-ID: <8119513.v7VrlzcaZC@vostro.rjw.lan>
-In-Reply-To: <38722368.Fl8pJoLSRi@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <CAE9FiQWZ8WaAJm8ayU+woVRqNLdSRtPS4=gpsrJovmzrUG6FNw@mail.gmail.com> <38722368.Fl8pJoLSRi@vostro.rjw.lan>
+	id S1751796Ab2LAN3H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 1 Dec 2012 08:29:07 -0500
+Date: Sat, 1 Dec 2012 11:28:25 -0200 (BRST)
+From: Mauro Carvalho Chehab <mchehab@redhat.com>
+To: Borislav Petkov <bp@alien8.de>
+cc: Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	rostedt@goodmis.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/3] aerdrv: Trace Event for AER
+In-Reply-To: <20121201114310.GA7853@liondog.tnic>
+Message-ID: <alpine.LFD.2.02.1212011127560.3172@localhost.localdomain>
+References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net> <20121201093614.720aa96a@redhat.com> <20121201114310.GA7853@liondog.tnic>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 11, 2012 02:02:14 AM Rafael J. Wysocki wrote:
-> On Monday, December 10, 2012 03:14:32 PM Yinghai Lu wrote:
-> > On Mon, Dec 10, 2012 at 3:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > On Monday, December 10, 2012 11:47:27 PM Rafael J. Wysocki wrote:
-> > >> On Monday, December 10, 2012 09:07:06 AM Yinghai Lu wrote:
-> > >> > On Mon, Dec 10, 2012 at 6:46 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > >> > > On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
-> > >> > >>
-> > >> > >> Can we expand the BUS_ADD_* concept to other devices instead of just
-> > >> > >> acpi_device?
-> > >> > >>
-> > >> > >> aka we should let struct device has this add_type field.
-> > >> > >
-> > >> > > Having done that in ACPI to cover our use case here, we can try to move it
-> > >> > > into struct device if there are use cases beyond ACPI that can't be covered
-> > >> > > by using deferred driver probing.
-> > >> >
-> > >> > pci device for hotplug have same problem. need to delay driver attach
-> > >> > for them too.
-> > >>
-> > >> OK, I'll take a look.  Any pointers to speed that up?
-> > >>
-> > >> > also BUS_ADD_MATCH and BUS_ADD_START are duplicated.
-> > >>
-> > >> Not at the moment, they do different things as code goes.
-> > >>
-> > >> > old add are separated to adding all devices to tree and then matching
-> > >> > work to load the drivers.
-> > >> >
-> > >> > so _START is not needed anymore, only user.start in pci_root driver
-> > >> > should be removed.
-> > >> > code in .start could be moved .add without problem.
-> > >>
-> > >> Yes, I'm going to do that as the next step.  I didn't want this particular
-> > >> patchset to grow too big.  I'll post another one on top of it if people
-> > >> don't have problems with this one.
-> > >
-> > > By the way, can you please remind me where you wanted to put the
-> > > pci_bus_add_devices() and why?
-> > >
-> > 
-> > please check my for-pci-next branch at
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-next
-> > 
-> > that includes delay loading acpi driver and pci driver.
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=8c031eabbdc83dd4d93933b82d96b55d038bcb64
-> >  PCI: prepare to use device drivers_autoprobe to delay attach drivers
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=40a12dc8942a8ed02bfbf75ee1ffbfbdf1511b45
-> > PCI: Use device_add for device and bus early
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=8af9b4c250091c30afedeb2e7f14fca06997c811
-> > ACPI: add drivers_autoprobe in struct acpi_device
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=ae498e157e9dc8794932562b2f885ddc3a1a229a
-> >  ACPI: use device drivers_autoprobe to delay loading acpi drivers
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=6bee785b563a0b0e311e188321b1160593d5e6ee
-> >  PCI, ACPI: Remove not used acpi_pci_root_start()
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=f467a1cd18a07a250be8527b94612fd4a654fbd1
-> > ACPI: remove acpi_op_start workaround
-> 
-> OK, thanks for the pointers.  I actually see more differences between our
-> patchsets.  For one example, you seem to have left the parent->ops.bind()
-> stuff in acpi_add_single_object() which calls it even drivers_autoprobe is
-> set.
-
-Sorry, that should have been "which calls it even when drivers_autoprobe is
-not set".  I need to be more careful.
 
 
-> Is that the case, or am I missing anything?
 
-Thanks,
-Rafael
+Cheers,
+Mauro
 
+On Sat, 1 Dec 2012, Borislav Petkov wrote:
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> On Sat, Dec 01, 2012 at 09:36:14AM -0200, Mauro Carvalho Chehab wrote:
+>> Please don't call it as "ras.h". Call it, instead, ras_aer.h
+>> (or something similar) as, if we're moving the tracing back to
+>> include/trace/events/, the same should happen for the memory error
+>> events.
+>
+> As you can see yourself, include/trace/events/ contains one header per
+> topic so having ras_event.h and ras_aer.h or whatever, doesn't fit the
+> scheme. IOW, we want all RAS-specific tracepoints to be collected in a
+> header called ras.h like the rest of the subsystems do it. See rcu.h
+> there for a good example.
+
+Works for me.
+
+Regards,
+Mauro
