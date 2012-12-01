@@ -1,134 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50D15600.6060001@huawei.com>
-Date: Wed, 19 Dec 2012 13:52:00 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 1 Dec 2012 16:51:30 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/3] aerdrv: Enhanced AER logging
+Message-ID: <20121201155130.GA12274@liondog.tnic>
+References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
+ <20121130213337.7649.6709.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-To: Joe Jin <joe.jin@oracle.com>
-CC: "Fujinaka, Todd" <todd.fujinaka@intel.com>,
-	Ethan Zhao <ethan.kernel@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-References: <509B5038.8090304@oracle.com> <50A30656.6090508@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com> <50A43828.6000702@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com> <50A9C5CC.1030300@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com> <50AB8471.7080607@oracle.com> <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com> <50B41077.3080009@oracle.com>	<b46b84cf-3688-4fd7-b741-4e96f2663517@default> <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com> <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com> <50B5CBD2.5020804@oracle.com> <9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com> <CABawtvPrz=z_CLCvPeXkky7COyhjPyfBu3QCTbiiPpvr+5bicg@mail.gmail.com> <9B4A1B1917080E46B64F07F2989DADD638C60A9B@ORSMSX102.amr.corp.intel.com> <50D12EA2.3030907@oracle.com>
-In-Reply-To: <50D12EA2.3030907@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20121130213337.7649.6709.stgit@grignak.americas.hpqcorp.net>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012/12/19 11:04, Joe Jin wrote:
-> Hi all,
+On Fri, Nov 30, 2012 at 02:33:37PM -0700, Lance Ortiz wrote:
+> This patch will provide a more reliable and easy way for user-space
+> applications to have access to AER logs rather than reading them from the
+> message buffer. It also provides a way to notify user-space when an AER
+> event occurs.
 > 
-> I backported mps commits and ask customer pass "pci=pcie_bus_peer2pee" to kernel
-> to limited MPS to 128 and issue disappeared, sound like this is a BIOS bug.
-> 
+> The aer driver is updated to generate a trace event of function 'aer_event'
+> when an AER occurs.
 
-Hi Joe,
-   I found similar problem when I do pci hotplug, discussion is here:http://marc.info/?l=linux-pci&m=134810569924220&w=2.
-We try to improve Linux kernel to debug this problem easily based Bjorn's suggestion. Jon sent out the first version patch http://marc.info/?l=linux-pci&m=135002016005274&w=2.
-I think we can do further here, http://marc.info/?l=linux-pci&m=135115581307869&w=2. I hope this information can help you.
+... when a PCIe error is reported over the AER interface.
 
-Thanks!
-Yijing.
+> The trace event was added to both the interrupt
+> based aer path and the firmware first path
+> 
+> v1-v2 fix compile errors in ifdefs.
+> v2-v3 Update to new location of trace header. Update print to remove
+> warning.
+> 
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> ---
+> 
+>  drivers/acpi/apei/cper.c               |   17 +++++++++++++++--
+>  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+>  include/linux/aer.h                    |    2 +-
+>  3 files changed, 25 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+> index e6defd8..e9d6062 100644
+> --- a/drivers/acpi/apei/cper.c
+> +++ b/drivers/acpi/apei/cper.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/time.h>
+>  #include <linux/cper.h>
+>  #include <linux/acpi.h>
+> +#include <linux/pci.h>
+>  #include <linux/aer.h>
+>  
+>  /*
+> @@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+>  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  			    const struct acpi_hest_generic_data *gdata)
+>  {
+> +#ifdef CONFIG_ACPI_APEI_PCIEAER
+> +	struct pci_dev *dev;
+> +#endif
+> +
+>  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+>  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+>  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+> @@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+>  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+> +			pcie->device_id.bus, pcie->device_id.function);
+> +	if (!dev)
+> +		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+> +			pcie->device_id.segment, pcie->device_id.bus,
+> +			pcie->device_id.slot, pcie->device_id.function);
+> +
+> +	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
 
-> Thanks all of your help.
-> 
-> Best Regards,
-> Joe
-> 
-> On 11/29/12 23:52, Fujinaka, Todd wrote:
->> Someone else pointed this out to me locally. If you have a non-client BIOS, you should be able to set the MaxPayloadSize using setpci. You have to make sure that you're being consistent throughout all the associated links.
->>
->> Todd Fujinaka
->> Technical Marketing Engineer
->> LAN Access Division (LAD)
->> Intel Corporation
->> todd.fujinaka@intel.com
->> (503) 712-4565
->>
->>
->> -----Original Message-----
->> From: Ethan Zhao [mailto:ethan.kernel@gmail.com] 
->> Sent: Wednesday, November 28, 2012 7:10 PM
->> To: Fujinaka, Todd
->> Cc: Joe Jin; Ben Hutchings; Mary Mcgrath; netdev@vger.kernel.org; e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
->> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
->>
->> Joe,
->>     Possibly your customer is running a kernel without source code on a platform whose vendor wouldn't like to fix BIOS issue( Is that a HP/Dell server ?).
->>     Anyway, to see if is a payload issue or,  you could change the payload size with setpci tool to those devices and set the link retrain bit to trigger the link retraining to debug the issue and identity the root cause.  I thinks it is much easier than modify the BIOS or  eeprom of NIC.
->>
->>     e.g.
->>    set device control register to 0f 00   (128 bytes payload size)
->>    #   setpci -v -s 00:02.0 98.w=000f
->>    set device link control register to 60h (retrain the link)
->>    #  setpci -v -s 00:02.0 a0.b=60
->>
->>   Hope it works,  Just my 2 cents.
->>
->> Ethan.zhao@oracle.com
->>
->> On Wed, Nov 28, 2012 at 11:53 PM, Fujinaka, Todd <todd.fujinaka@intel.com> wrote:
->>> The only EEPROM I know about or can speak to is the one attached to the 82571 and it doesn't set the MaxPayloadSize. That's done by the BIOS.
->>>
->>> Todd Fujinaka
->>> Technical Marketing Engineer
->>> LAN Access Division (LAD)
->>> Intel Corporation
->>> todd.fujinaka@intel.com
->>> (503) 712-4565
->>>
->>>
->>> -----Original Message-----
->>> From: Joe Jin [mailto:joe.jin@oracle.com]
->>> Sent: Wednesday, November 28, 2012 12:31 AM
->>> To: Ben Hutchings
->>> Cc: Fujinaka, Todd; Mary Mcgrath; netdev@vger.kernel.org; 
->>> e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
->>> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
->>>
->>> On 11/28/12 02:10, Ben Hutchings wrote:
->>>> On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
->>>>> Forgive me if I'm being too repetitious as I think some of this has 
->>>>> been mentioned in the past.
->>>>>
->>>>> We (and by we I mean the Ethernet part and driver) can only change 
->>>>> the advertised availability of a larger MaxPayloadSize. The size is 
->>>>> negotiated by both sides of the link when the link is established.
->>>>> The driver should not change the size of the link as it would be 
->>>>> poking at registers outside of its scope and is controlled by the 
->>>>> upstream bridge (not us).
->>>> [...]
->>>>
->>>> MaxPayloadSize (MPS) is not negotiated between devices but is 
->>>> programmed by the system firmware (at least for devices present at 
->>>> boot - the kernel may be responsible in case of hotplug).  You can 
->>>> use the kernel parameter 'pci=pcie_bus_perf' (or one of several 
->>>> others) to set a policy that overrides this, but no policy will allow 
->>>> setting MPS above the device's MaxPayloadSizeSupported (MPSS).
->>>>
->>>
->>> Ben,
->>>
->>> Unfortunately I'm using 3.0.x kernel and this is not included in the kernel.
->>> So I'm trying to use ethtool modify it from eeprom to see if help or no.
->>>
->>>
->>> Todd, I'll review all MaxPayload for all devices, but need to say if it mismatch, customer could not modify it from BIOS for there was not entry at there, to test it, we have to find how to verify if this is the root cause, so still need to find the offset in eeprom.
->>>
->>> Thanks in advance,
->>> Joe
->>>
-> 
-> 
+You don't need to test dev here because you've tested for !dev in the
+line above...
 
+>  		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+> -		cper_print_aer(pfx, gdata->error_severity, aer_regs);
+> +		cper_print_aer(dev, gdata->error_severity, aer_regs);
+> +		pci_dev_put(dev);
+
+... and thus this pci_dev_put() has to be unconditional, i.e. after the
+if test.
+
+which means that you can simplify the last 4 lines like this:
+
+	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
+		cper_print_aer(dev, gdata->error_severity,
+			       (struct aer_capability_regs *)pcie->aer_info);
+
+	pci_dev_put(dev);
+
+...
+
+Thanks.
 
 -- 
-Thanks!
-Yijing
-
+Regards/Gruss,
+    Boris.
