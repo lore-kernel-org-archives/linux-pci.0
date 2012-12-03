@@ -1,72 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:37308 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111Ab2LCUCn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 15:02:43 -0500
-From: "Ortiz, Lance E" <lance.oritz@hp.com>
-To: Mauro Carvalho Chehab <mchehab@redhat.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 1/3] aerdrv: Trace Event for AER
-Date: Mon, 3 Dec 2012 20:01:46 +0000
-Message-ID: <A961433CDFF2F640A2866803152E61F9516EE717@G4W3218.americas.hpqcorp.net>
-References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
- <20121201093614.720aa96a@redhat.com>
-In-Reply-To: <20121201093614.720aa96a@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v5 3/3] aerdrv: Cleanup log output for CPER based AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 03 Dec 2012 14:21:00 -0700
+Message-ID: <20121203212059.24373.7804.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121203212047.24373.8646.stgit@grignak.americas.hpqcorp.net>
+References: <20121203212047.24373.8646.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > +#define correctable_error_string			\
-> > +	{BIT(0),	"Receiver Error"},		\
-> > +	{BIT(6),	"Bad TLP"},			\
-> > +	{BIT(7),	"Bad DLLP"},			\
-> > +	{BIT(8),	"RELAY_NUM Rollover"},		\
-> > +	{BIT(12),	"Replay Timer Timeout"},	\
-> > +	{BIT(13),	"Advisory Non-Fatal"}
-> 
-> Hmm... isn't something missing here? I'm seeing more bits defined at
-> the
-> PCIe V3.0 spec for Offset 10h:
-> 
-> bit 14 - Corrected Internal Error
-> bit 15 - Header Log Overflow
-> 
-> > +#define uncorrectable_error_string			\
-> > +	{BIT(4),	"Data Link Protocol"},		\
-> > +	{BIT(12),	"Poisoned TLP"},		\
-> > +	{BIT(13),	"Flow Control Protocol"},	\
-> > +	{BIT(14),	"Completion Timeout"},		\
-> > +	{BIT(15),	"Completer Abort"},		\
-> > +	{BIT(16),	"Unexpected Completion"},	\
-> > +	{BIT(17),	"Receiver Overflow"},		\
-> > +	{BIT(18),	"Malformed TLP"},		\
-> > +	{BIT(19),	"ECRC"},			\
-> > +	{BIT(20),	"Unsupported Request"}
-> 
-> Hmm... isn't something missing here? I'm seeing more bits defined at
-> the
-> PCIe V3.0 spec for Offset 04h:
-> 
-> bit 5 - Surprise Down Error
-> bit 21 - ACS Violation
-> bit 22 - Uncorrectable Internal Error
-> bit 23 - MC Blocked TLP
-> bit 24 - AtomicOp Egress Blocked
-> bit 25 - TLP Prefix Blocked Error
-> 
+These changes make cper_print_aer more consistent with aer_print_error
+which is called in the AER interrupt case. The string in the variable
+'prefix' is printed at the beginning of each print statement in
+cper_print_aer(). The prefix is a string containing the driver name
+and the device's slot location.  From the callers the value of prefix
+is never assigned and is NULL, so when cper_print_aer prints data the
+initial string does not get printed.  This string is important because
+it identifies the device that the error is on.
 
-I used the same errors defined in the string arrays at the top of aerdrv_errprint.c.  I am not sure why they were left out in that file.  I will investigate and probably add them as a later patch and then include them in aerdrv_errprint.c also.
+v1-v2 fix some compile errors withinn the #ifdef
+v3-v4 remove agent id stuff and kept print the same to avoid
+compatibility issues
 
-Sound good?
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
 
-Lance
+ drivers/pci/pcie/aer/aerdrv_errprint.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 34d96e4..58ff4c0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
+-	char *prefix = NULL;
++	char prefix[44];
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
++	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
++		(aer_severity == AER_CORRECTABLE) ?
++		KERN_WARNING : KERN_ERR,
++		dev_driver_string(&dev->dev), dev_name(&dev->dev));
++
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+ 		mask = aer->cor_mask;
 
