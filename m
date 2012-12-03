@@ -1,67 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51483 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754320Ab2LLOfA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 09:35:00 -0500
-Message-ID: <50C89608.7050908@gmail.com>
-Date: Wed, 12 Dec 2012 22:34:48 +0800
-From: Yijing Wang <wangyijing0307@gmail.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com> <50C74C92.1040405@gmail.com> <2093499.q2b9fD3smR@vostro.rjw.lan>
-In-Reply-To: <2093499.q2b9fD3smR@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:4941 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab2LCQhe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 11:37:34 -0500
+From: Betty Dall <betty.dall@hp.com>
+To: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: wangyijing@huawei.com, jiang.liu@huawei.com,
+	Betty Dall <betty.dall@hp.com>
+Subject: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing required pci_dev_put()
+Date: Mon,  3 Dec 2012 09:37:02 -0700
+Message-Id: <1354552622-687-1-git-send-email-betty.dall@hp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-于 2012-12-12 2:30, Rafael J. Wysocki 写道:
-> Hi Gerry,
-> 
-> On Tuesday, December 11, 2012 11:09:06 PM Jiang Liu wrote:
->> Hi Rafael,
->> 	I have worked out a patch set to clean up ACPI/PCI related notifications,
->> please refer to
->> http://www.spinics.net/lists/linux-pci/msg17822.html
->> 	The patchset doesn't apply cleanly to Bjorn's latest pci-next tree. I will
->> help to rebase it if needed.
-> 
-> I have reviewed the patches and I think they make sense overall.  However,
-> the statement that acpi_pci_bind()/acpi_pci_unbind() are used to maintain
-> PCI-ACPI binding relationships is quite inaccurate, because all what these
-> functions do is to (1) add/remove ACPI PM notifiers to/from PCI devices and
-> (2) retrieve the _PRT information for bridges from ACPI tables.  In fact,
-> the *binding* itself is managed by the code in drivers/acpi/glue.c.
-> 
-> Also, please have a look at my suggestion in the last reply to Yinghai:
-> 
-> http://marc.info/?l=linux-pci&m=135522965707752&w=2
-> 
-> In fact, I think we can go even further than that.  Namely, if we populate the
-> ACPI handle of the device in pci_scan_device(), then we can just move the PM
-> notifier and wakeup setup to platform_pci_wakeup_init(), where it should be
-> (we'll also need to add a corresponding _exit() function, then, but that'll be
-> much cleaner anyway).
-> 
-> Then, the remaining thing would be to ensure that _PRT entries are parsed
-> as appropriate somewhere around pci_init_capabilities().
-> 
-> Also, I wonder if you can help test the $subject patchset on a system with
-> hardware PCI hotplug (preferably on top of the linux-pm.git/master branch)?
-> 
-Hi Rafael,
-   We are doing test for this series patches, I will send out the test result as soon.
+The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
+That function is documented to require that the caller decrement the
+reference count by calling pci_dev_put(). This patch adds the missing
+call to pci_dev_put().
 
-Thanks!
-Yijing
+Signed-off-by: Betty Dall <betty.dall@hp.com>
+---
+ drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index af4e31c..43caf53 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 			continue;
+ 		}
+ 		do_recovery(pdev, entry.severity);
++		pci_dev_put(pdev);
+ 	}
+ }
+ #endif
+-- 
+1.7.7.6
 
