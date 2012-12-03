@@ -1,69 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:41085 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755677Ab2LCRk2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 12:40:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <1354552622-687-1-git-send-email-betty.dall@hp.com>
-References: <1354552622-687-1-git-send-email-betty.dall@hp.com>
-Date: Mon, 3 Dec 2012 10:40:27 -0700
-Message-ID: <CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
-Subject: Re: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing
- required pci_dev_put()
-From: Shuah Khan <shuahkhan@gmail.com>
-To: Betty Dall <betty.dall@hp.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, wangyijing@huawei.com,
-	jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from [206.117.179.246] ([206.117.179.246]:49399 "EHLO labridge.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752129Ab2LCTvw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Dec 2012 14:51:52 -0500
+Message-ID: <1354564292.3524.7.camel@joe-AO722>
+Subject: Re: [PATCH v4 1/3] aerdrv: Trace Event for AER
+From: Joe Perches <joe@perches.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 03 Dec 2012 11:51:32 -0800
+In-Reply-To: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 3, 2012 at 9:37 AM, Betty Dall <betty.dall@hp.com> wrote:
-> The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
-> That function is documented to require that the caller decrement the
-> reference count by calling pci_dev_put(). This patch adds the missing
-> call to pci_dev_put().
->
-> Signed-off-by: Betty Dall <betty.dall@hp.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index af4e31c..43caf53 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
->                         continue;
->                 }
->                 do_recovery(pdev, entry.severity);
-> +               pci_dev_put(pdev);
+On Mon, 2012-12-03 at 11:33 -0700, Lance Ortiz wrote:
+> This header file will define a new trace event that will be triggered when
+> a AER event occurs.  The following data will be provided to the trace
+> event.
 
-Are you sure pci_get_domain_bus_and_slot() does indeed increment the
-reference count? I see that in the comments right above the
-definition.
+trivial notes:
 
-pci_dev_get() does that for sure. I see a call trace of
+> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+[]
+> +#define correctable_error_string			\
+> +	{BIT(0),	"Receiver Error"},		\
+> +	{BIT(6),	"Bad TLP"},			\
+> +	{BIT(7),	"Bad DLLP"},			\
+> +	{BIT(8),	"RELAY_NUM Rollover"},		\
+> +	{BIT(12),	"Replay Timer Timeout"},	\
+> +	{BIT(13),	"Advisory Non-Fatal"}
+> +
+> +#define uncorrectable_error_string			\
+> +	{BIT(4),	"Data Link Protocol"},		\
+> +	{BIT(12),	"Poisoned TLP"},		\
+> +	{BIT(13),	"Flow Control Protocol"},	\
+> +	{BIT(14),	"Completion Timeout"},		\
+> +	{BIT(15),	"Completer Abort"},		\
+> +	{BIT(16),	"Unexpected Completion"},	\
+> +	{BIT(17),	"Receiver Overflow"},		\
+> +	{BIT(18),	"Malformed TLP"},		\
+> +	{BIT(19),	"ECRC"},			\
+> +	{BIT(20),	"Unsupported Request"}
 
-pci_dev_get() -> get_device() -> kobj_to_dev(kobject_get(&dev->kobj)  etc.
+probably better to prefix these with aer_
 
-and kref_get() finally incrementing the
+> +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
+> +		__get_str(dev_name),
+> +		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
+> +			((__entry->severity == HW_EVENT_ERR_FATAL) ?
+> +			"Fatal" : "Uncorrected"),
 
-static inline void kref_get(struct kref *kref)
-{
-        WARN_ON(!atomic_read(&kref->refcount));
-        atomic_inc(&kref->refcount);
-}
+unnecessary parentheses
 
-However, I could not find any evidence that
-pci_get_domain_bus_and_slot() does that. I see
-pci_get_domain_bus_and_slot() calling pci_domain_nr() and there are
-several architecture specific defines for pci_domain_nr(). It is not
-clear to me where does refcount get incremented from
-pci_get_domain_bus_and_slot() is called.
+		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
+		__entry->severity == HW_EVENT_ERR_FATAL ? "Fatal" :
+		"Uncorrected"),
 
-What am I missing?
+might be more kernel style conventional
 
-Thanks,
--- Shuah
