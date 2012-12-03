@@ -1,65 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37096 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753Ab2LGHPl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2012 02:15:41 -0500
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:41330 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab2LCUBx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 15:01:53 -0500
 MIME-Version: 1.0
-In-Reply-To: <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-References: <20121030040237.GA10472@google.com>
-	<1352003971-22278-1-git-send-email-yinghai@kernel.org>
-Date: Thu, 6 Dec 2012 23:15:39 -0800
-Message-ID: <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <1354564084.1809.390.camel@bling.home>
+References: <1354552622-687-1-git-send-email-betty.dall@hp.com>
+	<CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
+	<1354564084.1809.390.camel@bling.home>
+Date: Mon, 3 Dec 2012 13:01:52 -0700
+Message-ID: <CAKocOOPcCOPnEBfh=aePjw=2HY-0j5reFZMe=xKT=85YFjwVEQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing
+ required pci_dev_put()
+From: Shuah Khan <shuahkhan@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Betty Dall <betty.dall@hp.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	wangyijing@huawei.com, jiang.liu@huawei.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 3, 2012 at 9:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> For root bus hot add, fw could assign some resource for the devices for
-> that root bus before notifying os via acpi, we should check and use those
-> resources at first just like we do for booting path.
+On Mon, Dec 3, 2012 at 12:48 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Mon, 2012-12-03 at 10:40 -0700, Shuah Khan wrote:
+>> On Mon, Dec 3, 2012 at 9:37 AM, Betty Dall <betty.dall@hp.com> wrote:
+>> > The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
+>> > That function is documented to require that the caller decrement the
+>> > reference count by calling pci_dev_put(). This patch adds the missing
+>> > call to pci_dev_put().
+>> >
+>> > Signed-off-by: Betty Dall <betty.dall@hp.com>
+>> > ---
+>> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+>> >  1 files changed, 1 insertions(+), 0 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > index af4e31c..43caf53 100644
+>> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > @@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
+>> >                         continue;
+>> >                 }
+>> >                 do_recovery(pdev, entry.severity);
+>> > +               pci_dev_put(pdev);
+>>
+>> Are you sure pci_get_domain_bus_and_slot() does indeed increment the
+>> reference count? I see that in the comments right above the
+>> definition.
+>>
+>> pci_dev_get() does that for sure. I see a call trace of
+>>
+>> pci_dev_get() -> get_device() -> kobj_to_dev(kobject_get(&dev->kobj)  etc.
+>>
+>> and kref_get() finally incrementing the
+>>
+>> static inline void kref_get(struct kref *kref)
+>> {
+>>         WARN_ON(!atomic_read(&kref->refcount));
+>>         atomic_inc(&kref->refcount);
+>> }
+>>
+>> However, I could not find any evidence that
+>> pci_get_domain_bus_and_slot() does that. I see
+>> pci_get_domain_bus_and_slot() calling pci_domain_nr() and there are
+>> several architecture specific defines for pci_domain_nr(). It is not
+>> clear to me where does refcount get incremented from
+>> pci_get_domain_bus_and_slot() is called.
+>>
+>> What am I missing?
 >
-> At first, we need to refactor x86 pci pcibios_allocate related functions
-> for booting path to take bus as parameter.
+> Trace back the for_each_pci_dev()
 >
-> After that, we could use the survey function for hot add root bus.
+> for_each_pci_dev
+>  -> pci_get_device
+>   -> pci_get_subsys
+>    -> pci_get_dev_by_id
+>     -> bus_find_device
+>      -> get_device()
+
+Thanks. Didn't trace for_each_pci_dev()
 >
-> based on pci/yinghai-for-pci-root-bus-hotplug
->
-> could get from
->         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-survey-resources
->
-> Yinghai Lu (8):
->   PCI, x86: Separate out pcibios_allocate_bridge_resources()
->   PCI, x86: Separate out pcibios_allocate_dev_resources()
->   PCI, x86: Let pcibios_allocate_bus_resources() take bus instead
->   PCI, x86: Separate out rom resource claim
->   PCI, x86: Add pcibios_fw_addr_done
->   PCI, x86: Remove __init for hw/fw allocated functions
->   PCI, x86: Claim FW allocated resources in hot add path.
->   PCI, ACPI: reserve fw allocated resource for hot added root bus
->
->  arch/x86/pci/i386.c     |  185 +++++++++++++++++++++++++++++++----------------
->  drivers/acpi/pci_root.c |    4 +-
->  drivers/pci/bus.c       |    2 +
->  include/linux/pci.h     |    1 +
->  4 files changed, 127 insertions(+), 65 deletions(-)
+> The real question is how many places do we call for_each_pci_dev()
+> without a put.  It seems like pci_get_domain_bus_and_slot() doesn't even
+> get it right since it should include a put of the non-matched devices.
+> Thanks,
 >
 
-Bjorn,
+Probably several. I have seen only one or two cases pci_dev_put() is
+called after pci_get_domain_bus_and_slot(). Did a quick search for
+for_each_pci_dev() and found several instances that don't do
+pci_dev_put()
 
-Can you queue those 8 patches for v3.9 in pci tree?
-
-So I  could resend out other pci root hotplug patches.
-
-Thanks
-
-Yinghai
+-- Shuah
