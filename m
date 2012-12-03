@@ -1,111 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 3 Dec 2012 19:50:59 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] PCI Hotplug: convert acpiphp_hp_work to use delayed work
-Date: Thu, 13 Dec 2012 17:31:47 +0200
-Message-Id: <1355412708-20046-3-git-send-email-kirill.shutemov@linux.intel.com>
-In-Reply-To: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] aerdrv: Trace Event for AER
+Message-ID: <20121203185059.GA14798@liondog.tnic>
+References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Mon, Dec 03, 2012 at 11:33:05AM -0700, Lance Ortiz wrote:
+> This header file will define a new trace event that will be triggered when
+> a AER event occurs.  The following data will be provided to the trace
+> event.
+> 
+> char * dev_name - The name of the slot where the device resides
+>                   ([domain:]bus:device.function).
+> 
+> u32 status - Either the correctable or uncorrectable register
+>              indicating what error or errors have been see.
+> 
+> u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+> 
+> The trace event will also provide a trace string that may look like:
+> 
+> "0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+> TLP"
+> 
+> v1-v2 Move header from include/ras/aer_event.h to
+> include/trace/events/ras.h
+> v3-v4 Cleaned up comments and commit header
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> ---
+> 
+>  include/trace/events/ras.h |   78 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 78 insertions(+), 0 deletions(-)
+>  create mode 100644 include/trace/events/ras.h
+> 
+> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+> new file mode 100644
+> index 0000000..774303d
+> --- /dev/null
+> +++ b/include/trace/events/ras.h
+> @@ -0,0 +1,78 @@
+> +#undef TRACE_SYSTEM
+> +#define TRACE_SYSTEM aer_event
+> +#define TRACE_INCLUDE_FILE ras
+> +
+> +#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
+> +#define _TRACE_AER_H
+> +
+> +#include <linux/tracepoint.h>
+> +#include <linux/edac.h>
+> +
+> +
+> +/*
+> + * PCIe Advanced Error Reporting (AER) PCIE Report Error
 
-Some broken ACPI PCI Hotplug implementations notify OS about hotplug
-before devices ready to be enumerated.
+Why do you insist on keeping this convoluted compound name? What does
+"PCIe AER PCIe Report Error" even mean?
 
-Let's convert acpiphp_hp_work to delayed work. It will allow to delay
-enumeration on broken hardware to workaround the issue.
+This is not unreadable technical documentation but something people
+should actually understand. And it is simply a PCIe AER tracepoint. So
+why the h*ll not call it by its real name?
 
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+> + *
+> + * These events are generated when hardware detects a corrected or
+> + * uncorrected event on a pci express device. The event report has
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 3d6d4fd..1a2b3ca 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1191,7 +1191,7 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- }
- 
- struct acpiphp_hp_work {
--	struct work_struct work;
-+	struct delayed_work work;
- 	acpi_handle handle;
- 	u32 type;
- 	void *context;
-@@ -1199,7 +1199,8 @@ struct acpiphp_hp_work {
- 
- static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
- 				  void *context,
--				  void (*func)(struct work_struct *work))
-+				  void (*func)(struct work_struct *work),
-+				  unsigned long delay)
- {
- 	struct acpiphp_hp_work *hp_work;
- 	int ret;
-@@ -1212,8 +1213,8 @@ static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
- 	hp_work->type = type;
- 	hp_work->context = context;
- 
--	INIT_WORK(&hp_work->work, func);
--	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-+	INIT_DELAYED_WORK(&hp_work->work, func);
-+	ret = queue_delayed_work(kacpi_hotplug_wq, &hp_work->work, delay);
- 	if (!ret)
- 		kfree(hp_work);
- }
-@@ -1230,7 +1231,8 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
- 	acpi_handle handle;
- 	u32 type;
- 
--	hp_work = container_of(work, struct acpiphp_hp_work, work);
-+	hp_work = container_of(to_delayed_work(work),
-+			struct acpiphp_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 
-@@ -1334,7 +1336,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	alloc_acpiphp_hp_work(handle, type, context,
--			      _handle_hotplug_event_bridge);
-+			      _handle_hotplug_event_bridge, 0);
- }
- 
- static void _handle_hotplug_event_func(struct work_struct *work)
-@@ -1348,7 +1350,8 @@ static void _handle_hotplug_event_func(struct work_struct *work)
- 	u32 type;
- 	void *context;
- 
--	hp_work = container_of(work, struct acpiphp_hp_work, work);
-+	hp_work = container_of(to_delayed_work(work),
-+			struct acpiphp_hp_work, work);
- 	handle = hp_work->handle;
- 	type = hp_work->type;
- 	context = hp_work->context;
-@@ -1410,7 +1413,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	alloc_acpiphp_hp_work(handle, type, context,
--			      _handle_hotplug_event_func);
-+			      _handle_hotplug_event_func, 0);
- }
- 
- static acpi_status
+And you should stick to the same spelling for PCIe throughout the text,
+so choose one and use it everywhere.
+
+> + * the following structure:
+> + *
+> + * char * dev_name -	The name of the slot where the device resides
+> + *			([domain:]bus:device.function).
+> + * u32 status -		Either the correctable or uncorrectable register
+> + *			indicating what error or errors have been seen
+> + * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+> + */
+> +
+> +#define correctable_error_string			\
+> +	{BIT(0),	"Receiver Error"},		\
+> +	{BIT(6),	"Bad TLP"},			\
+> +	{BIT(7),	"Bad DLLP"},			\
+> +	{BIT(8),	"RELAY_NUM Rollover"},		\
+> +	{BIT(12),	"Replay Timer Timeout"},	\
+> +	{BIT(13),	"Advisory Non-Fatal"}
+> +
+> +#define uncorrectable_error_string			\
+> +	{BIT(4),	"Data Link Protocol"},		\
+> +	{BIT(12),	"Poisoned TLP"},		\
+> +	{BIT(13),	"Flow Control Protocol"},	\
+> +	{BIT(14),	"Completion Timeout"},		\
+> +	{BIT(15),	"Completer Abort"},		\
+> +	{BIT(16),	"Unexpected Completion"},	\
+> +	{BIT(17),	"Receiver Overflow"},		\
+> +	{BIT(18),	"Malformed TLP"},		\
+> +	{BIT(19),	"ECRC"},			\
+> +	{BIT(20),	"Unsupported Request"}
+
+Also, you haven't addressed Mauro's comment about other bits in the spec
+which are not here. Why are you skipping them?
+
+Thanks.
+
 -- 
-1.7.10.4
-
+Regards/Gruss,
+    Boris.
