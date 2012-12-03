@@ -1,173 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58537 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756343Ab2LMUIV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Dec 2012 15:08:21 -0500
-Date: Thu, 13 Dec 2012 22:08:57 +0200
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
- DZ77RE-75K motherboard
-Message-ID: <20121213200857.GA24939@otc-wbsnb-06>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
- <20121213184820.GC12105@kroah.com>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:32794 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261Ab2LCVZ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 16:25:56 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v5 1/3] aerdrv: Trace Event for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 03 Dec 2012 14:20:48 -0700
+Message-ID: <20121203212047.24373.8646.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
-In-Reply-To: <20121213184820.GC12105@kroah.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This header file will define a new trace event that will be triggered when
+a AER event occurs.  The following data will be provided to the trace
+event.
 
---x+6KMIRAuhnl3hBn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+char * dev_name - The name of the slot where the device resides
+                  ([domain:]bus:device.function).
 
-On Thu, Dec 13, 2012 at 10:48:20AM -0800, Greg KH wrote:
-> On Thu, Dec 13, 2012 at 05:31:48PM +0200, Kirill A. Shutemov wrote:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> >=20
-> > BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
-> > hotplug before devices behind Thunderbolt are ready to be enumerated.
-> >=20
-> > Let's delay enumeration by 2 seconds.
-> >=20
-> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > ---
-> >  drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++++++-
-> >  1 file changed, 15 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/a=
-cpiphp_glue.c
-> > index 1a2b3ca..165987a 100644
-> > --- a/drivers/pci/hotplug/acpiphp_glue.c
-> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> > @@ -49,6 +49,7 @@
-> >  #include <linux/mutex.h>
-> >  #include <linux/slab.h>
-> >  #include <linux/acpi.h>
-> > +#include <linux/dmi.h>
-> > =20
-> >  #include "../pci.h"
-> >  #include "acpiphp.h"
-> > @@ -1327,6 +1328,19 @@ out:
-> >  static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
-> >  					void *context)
-> >  {
-> > +	unsigned long delay =3D 0;
-> > +	const char *board_name;
-> > +
-> > +	board_name =3D dmi_get_system_info(DMI_BOARD_NAME);
-> > +	/*
-> > +	 * BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
-> > +	 * hotplug before devices behind Thunderbolt are ready to be
-> > +	 * enumerated.
-> > +	 * Let's delay enumeration by 2 seconds.
-> > +	 */
-> > +	if (board_name && !strcmp(board_name, "DZ77RE-75K"))
-> > +		delay =3D 2 * HZ;
->=20
-> Again, no objection to this patch as-is, but should we make it a bit
-> more "general" and provide a quirk table to make this type of fix easier
-> for other motherboards?  Shouldn't we also match on a manufacturer field
-> as well as the board_name?  The kernel provides a very easy to match on
-> any arbritary set of DMI fields for this kind of problem that we could
-> use here.
+u32 status - Either the correctable or uncorrectable register
+             indicating what error or errors have been see.
 
-Something like this (untested):
+u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpip=
-hp_glue.c
-index 1a2b3ca..c4db634 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -49,6 +49,7 @@
- #include <linux/mutex.h>
- #include <linux/slab.h>
- #include <linux/acpi.h>
-+#include <linux/dmi.h>
-=20
- #include "../pci.h"
- #include "acpiphp.h"
-@@ -1327,6 +1328,31 @@ out:
- static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 					void *context)
- {
-+	unsigned long delay =3D 0;
-+	const struct dmi_system_id *match;
-+	static const struct dmi_system_id sysids[] =3D {
-+		/*
-+		 * BIOS on Intel DZ77RE-75K motherboard notifies OS about
-+		 * Thunderbolt hotplug before devices behind Thunderbolt are
-+		 * ready to be enumerated.
-+		 * Let's delay enumeration by 2 seconds.
-+		 */
-+		{
-+			.ident =3D "DZ77RE-75K",
-+			.matches =3D {
-+				DMI_MATCH(DMI_BOARD_VENDOR,
-+						"Intel Corporation"),
-+				DMI_MATCH(DMI_BOARD_NAME,
-+						"DZ77RE-75K"),
-+			},
-+			.driver_data =3D (void *) (2 * HZ), /* delay */
-+		},
-+	};
+The trace event will also provide a trace string that may look like:
+
+"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+TLP"
+
+v1-v2 Move header from include/ras/aer_event.h to
+include/trace/events/ras.h
+v3-v4 Cleaned up comments and commit header
+v4-v5 More cleanup remove () from if statement in print.
+      Renamed string define to be more specific.
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
+
+ include/trace/events/ras.h |   78 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 78 insertions(+), 0 deletions(-)
+ create mode 100644 include/trace/events/ras.h
+
+diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+new file mode 100644
+index 0000000..e6f123e
+--- /dev/null
++++ b/include/trace/events/ras.h
+@@ -0,0 +1,78 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM aer_event
++#define TRACE_INCLUDE_FILE ras
 +
-+	match =3D dmi_first_match(sysids);
-+	if (match)
-+		delay =3D (unsigned long) match->driver_data;
++#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_AER_H
 +
- 	/*
- 	 * Currently the code adds all hotplug events to the kacpid_wq
- 	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
-@@ -1336,7 +1362,7 @@ static void handle_hotplug_event_bridge(acpi_handle h=
-andle, u32 type,
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	alloc_acpiphp_hp_work(handle, type, context,
--			      _handle_hotplug_event_bridge, 0);
-+			      _handle_hotplug_event_bridge, delay);
- }
-=20
- static void _handle_hotplug_event_func(struct work_struct *work)
++#include <linux/tracepoint.h>
++#include <linux/edac.h>
++
++
++/*
++ * PCIe AER Trace event
++ *
++ * These events are generated when hardware detects a corrected or
++ * uncorrected event on a PCIe device. The event report has
++ * the following structure:
++ *
++ * char * dev_name -	The name of the slot where the device resides
++ *			([domain:]bus:device.function).
++ * u32 status -		Either the correctable or uncorrectable register
++ *			indicating what error or errors have been seen
++ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
++ */
++
++#define aer_correctable_errors		\
++	{BIT(0),	"Receiver Error"},		\
++	{BIT(6),	"Bad TLP"},			\
++	{BIT(7),	"Bad DLLP"},			\
++	{BIT(8),	"RELAY_NUM Rollover"},		\
++	{BIT(12),	"Replay Timer Timeout"},	\
++	{BIT(13),	"Advisory Non-Fatal"}
++
++#define aer_uncorrectable_errors		\
++	{BIT(4),	"Data Link Protocol"},		\
++	{BIT(12),	"Poisoned TLP"},		\
++	{BIT(13),	"Flow Control Protocol"},	\
++	{BIT(14),	"Completion Timeout"},		\
++	{BIT(15),	"Completer Abort"},		\
++	{BIT(16),	"Unexpected Completion"},	\
++	{BIT(17),	"Receiver Overflow"},		\
++	{BIT(18),	"Malformed TLP"},		\
++	{BIT(19),	"ECRC"},			\
++	{BIT(20),	"Unsupported Request"}
++
++TRACE_EVENT(aer_event,
++	TP_PROTO(const char *dev_name,
++		 const u32 status,
++		 const u8 severity),
++
++	TP_ARGS(dev_name, status, severity),
++
++	TP_STRUCT__entry(
++		__string(	dev_name,	dev_name	)
++		__field(	u32,		status		)
++		__field(	u8,		severity	)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__entry->status		= status;
++		__entry->severity	= severity;
++	),
++
++	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
++		__get_str(dev_name),
++		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
++			__entry->severity == HW_EVENT_ERR_FATAL ?
++			"Fatal" : "Uncorrected",
++		__entry->severity == HW_EVENT_ERR_CORRECTED ?
++		__print_flags(__entry->status, "|", aer_correctable_errors) :
++		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
++);
++
++#endif /* _TRACE_AER_H */
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 
---=20
- Kirill A. Shutemov
-
---x+6KMIRAuhnl3hBn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQyjXZAAoJEAd+omnVudOMXrQP/jUE6v1K2XcX3oo75OtQob+O
-YOgwL+bS12hXbbF7jwRnC96BRxL5DgL84jyVCmVLhr+Oq/pSY64C9qIm4sjBZtiu
-JLHO7GYfwrnYUYdgH1aJ6q+tj49oqLQA/rIz3OyI/oTifGSRSxp5THyvsuNhZTl4
-uITpx63KMCENcB3afe2z+07aMtiHa4yoBl569VulQ+337oeUt/di3cd7njUeJ/wT
-LsClXnwqZbu18B6Qwqz/sTgWdkVwTHdWzSyAgvLXeqRx+npK65TxmPCRn8IFrf9/
-G13JrU7tZjLP7n86oH2HzO/vrcCVjEEfSXiQltueMeEvdW7FHWbVIqUwowTaBtV1
-Ui6Bl8MHMFs3PJ5hsfmSWPAe5zPj7IWlKZG2Tadc1AdGZXVVH+m+yqmWvphSjuSV
-JDsb+Pk0L5eqFWq3MnIprFt9uGO+DjF8ayLx2qnK+h0OGLH5tR4+lRpwVFHHYPPf
-C8kskwSb07Nn5iJh55krty/8qq8aaQnXLtdDd/E1f3l9BTZm+RIBoyKgbgaBy5gY
-1Qb3GwqBwbou70dh7vN6Eluvg6iZwRLxGR3QslrIXzfNXGrNzJcE9UkkdVm6bYyn
-ehjmdPBrk6Mui/+wb8t6WBo0qMTaZDt3ufmNDB1ZjzaslNAKYdPP81pNO7AaHyai
-7yPdvaDzSM4XIyg0r2oC
-=Bkfr
------END PGP SIGNATURE-----
-
---x+6KMIRAuhnl3hBn--
