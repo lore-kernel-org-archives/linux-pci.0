@@ -1,71 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oa0-f48.google.com ([209.85.219.48]:49877 "EHLO
-	mail-oa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045Ab2LZWr7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 17:47:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo5s8ZEk2Lkdj4J2T4pFvSxqxsou0d5efX+7+ecL_wYYMg@mail.gmail.com>
-References: <50CA5EE2.30206@linux.vnet.ibm.com>
-	<CAErSpo6BfWGYH+=ygS6qWT-YFKPuywooVgLWm+g_eB2dMw3iKQ@mail.gmail.com>
-	<50D60349.7080400@linux.vnet.ibm.com>
-	<50D6039D.4000001@linux.vnet.ibm.com>
-	<CAErSpo5s8ZEk2Lkdj4J2T4pFvSxqxsou0d5efX+7+ecL_wYYMg@mail.gmail.com>
-Date: Thu, 27 Dec 2012 08:47:58 +1000
-Message-ID: <CAPM=9twZHKXLg3p4H0ArrkWa8y8QDVaL9s3jEZPhKbwCat3e7g@mail.gmail.com>
-Subject: Re: [PATCH] drm: fixed access to PCI host bridges
-From: Dave Airlie <airlied@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
-	dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brking@linux.vnet.ibm.com, benh@au1.ibm.com,
-	Betty Dall <betty.dall@hp.com>,
-	Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:39660 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828Ab2LCU0L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Dec 2012 15:26:11 -0500
+Message-ID: <1354564850.1809.391.camel@bling.home>
+Subject: Re: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing
+ required pci_dev_put()
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Shuah Khan <shuahkhan@gmail.com>
+Cc: Betty Dall <betty.dall@hp.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	wangyijing@huawei.com, jiang.liu@huawei.com
+Date: Mon, 03 Dec 2012 13:00:50 -0700
+In-Reply-To: <1354564084.1809.390.camel@bling.home>
+References: <1354552622-687-1-git-send-email-betty.dall@hp.com>
+	 <CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
+	 <1354564084.1809.390.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 27, 2012 at 8:40 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sat, Dec 22, 2012 at 12:01 PM, Lucas Kannebley Tavares
-> <lucaskt@linux.vnet.ibm.com> wrote:
->> During the process of obtaining the speed cap for the device, it
->> attempts go get the PCI Host bus. However on architectures such as PPC
->> or IA64, those do not appear as devices.
->>
->> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
->> ---
->>  drivers/gpu/drm/drm_pci.c |    5 +++++
->>  1 files changed, 5 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
->> index 754bc96..ea41234 100644
->> --- a/drivers/gpu/drm/drm_pci.c
->> +++ b/drivers/gpu/drm/drm_pci.c
->> @@ -479,8 +479,13 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev,
->> u32 *mask)
->>         if (!pci_is_pcie(dev->pdev))
->>                 return -EINVAL;
->>
->> +       // find PCI device for capabilities
->>         root = dev->pdev->bus->self;
->>
->> +       // some architectures might not have host bridges as PCI devices
->> +       if (root == NULL)
->> +               root = dev->pdev;
->
-> You didn't address my question about this.  Obviously this will avoid
-> a null pointer dereference.  But you have to also explain why this
-> change is correct.
->
-> If it's good enough to just look at the capabilities of the DRM device
-> (not the upstream bridge) on PPC and ia64, why not do that everywhere
-> and forget about the bridge completely?
+On Mon, 2012-12-03 at 12:48 -0700, Alex Williamson wrote:
+> On Mon, 2012-12-03 at 10:40 -0700, Shuah Khan wrote:
+> > On Mon, Dec 3, 2012 at 9:37 AM, Betty Dall <betty.dall@hp.com> wrote:
+> > > The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
+> > > That function is documented to require that the caller decrement the
+> > > reference count by calling pci_dev_put(). This patch adds the missing
+> > > call to pci_dev_put().
+> > >
+> > > Signed-off-by: Betty Dall <betty.dall@hp.com>
+> > > ---
+> > >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+> > >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> > > index af4e31c..43caf53 100644
+> > > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > > @@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
+> > >                         continue;
+> > >                 }
+> > >                 do_recovery(pdev, entry.severity);
+> > > +               pci_dev_put(pdev);
+> > 
+> > Are you sure pci_get_domain_bus_and_slot() does indeed increment the
+> > reference count? I see that in the comments right above the
+> > definition.
+> > 
+> > pci_dev_get() does that for sure. I see a call trace of
+> > 
+> > pci_dev_get() -> get_device() -> kobj_to_dev(kobject_get(&dev->kobj)  etc.
+> > 
+> > and kref_get() finally incrementing the
+> > 
+> > static inline void kref_get(struct kref *kref)
+> > {
+> >         WARN_ON(!atomic_read(&kref->refcount));
+> >         atomic_inc(&kref->refcount);
+> > }
+> > 
+> > However, I could not find any evidence that
+> > pci_get_domain_bus_and_slot() does that. I see
+> > pci_get_domain_bus_and_slot() calling pci_domain_nr() and there are
+> > several architecture specific defines for pci_domain_nr(). It is not
+> > clear to me where does refcount get incremented from
+> > pci_get_domain_bus_and_slot() is called.
+> > 
+> > What am I missing?
+> 
+> Trace back the for_each_pci_dev()
+> 
+> for_each_pci_dev
+>  -> pci_get_device
+>   -> pci_get_subsys
+>    -> pci_get_dev_by_id
+>     -> bus_find_device
+>      -> get_device()
+> 
+> The real question is how many places do we call for_each_pci_dev()
+> without a put.  It seems like pci_get_domain_bus_and_slot() doesn't even
+> get it right since it should include a put of the non-matched devices.
 
-Yeah this doesn't make sense, we need to know if the device and the
-bridge are capable of doing PCIE gen2+ speeds.
+My bad, pci_get_dev_by_id() does a put on the previous devices, keeping
+the counts in order.  Thanks,
 
-At least I'm willing to accept spec pointers to why we might not need
-to ask the bridge, but my current understanding is we need to know
-both.
+Alex
 
-Dave.
