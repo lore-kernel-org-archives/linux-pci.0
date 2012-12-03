@@ -1,148 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38313 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752400Ab2LTBzw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Dec 2012 20:55:52 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 3/16] ACPI: Make acpi_bus_add() and acpi_bus_start() visibly different
-Date: Thu, 20 Dec 2012 02:49:23 +0100
-Message-ID: <2142403.Kbj784bOTj@vostro.rjw.lan>
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v4 2/3] aerdrv: Enhanced AER logging
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 03 Dec 2012 11:33:12 -0700
+Message-ID: <20121203183312.26636.61979.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This patch will provide a more reliable and easy way for user-space
+applications to have access to AER logs rather than reading them from the
+message buffer. It also provides a way to notify user-space when an AER
+event occurs.
 
-The current ACPI namespace scanning code suggests that acpi_bus_add()
-and acpi_bus_start() share some code.  In fact, however, they are
-completely different code paths (except for the initial checks), so
-refactor the code to make that distinction visibly clear.
+The aer driver is updated to generate a trace event of function 'aer_event'
+when a PCIe error is reported over the AER interface.  The trace event was
+added to both the interrupt based aer path and the firmware first path.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
+v1-v2 fix compile errors in ifdefs.
+v2-v3 Update to new location of trace header. Update print to remove
+warning.
+v3-v4 Reworked logic when getting ready to call cper_print_aer
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
 ---
- drivers/acpi/scan.c |   63 ++++++++++++++++++++++++++++------------------------
- 1 file changed, 35 insertions(+), 28 deletions(-)
 
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -1623,10 +1623,9 @@ static acpi_status acpi_bus_check_add(ac
- 	return AE_OK;
- }
+ drivers/acpi/apei/cper.c               |   19 ++++++++++++++++---
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+ include/linux/aer.h                    |    2 +-
+ 3 files changed, 26 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+index e6defd8..4a3e945 100644
+--- a/drivers/acpi/apei/cper.c
++++ b/drivers/acpi/apei/cper.c
+@@ -29,6 +29,7 @@
+ #include <linux/time.h>
+ #include <linux/cper.h>
+ #include <linux/acpi.h>
++#include <linux/pci.h>
+ #include <linux/aer.h>
  
--static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
--					void *context, void **not_used)
-+static acpi_status acpi_bus_device_attach(acpi_handle handle, u32 lvl_not_used,
-+					  void *not_used, void **ret_not_used)
+ /*
+@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 			    const struct acpi_hest_generic_data *gdata)
  {
--	struct acpi_bus_ops *ops = context;
- 	acpi_status status = AE_OK;
- 	struct acpi_device *device;
- 	unsigned long long sta_not_used;
-@@ -1642,16 +1641,11 @@ static acpi_status acpi_bus_probe_start(
- 	if (acpi_bus_get_device(handle, &device))
- 		return AE_CTRL_DEPTH;
- 
--	if (ops->acpi_op_add) {
--		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
--			/* This is a known good platform device. */
--			acpi_create_platform_device(device);
--		} else if (device_attach(&device->dev)) {
--			status = AE_CTRL_DEPTH;
--		}
--	} else if (ops->acpi_op_start) {
--		if (ACPI_FAILURE(acpi_start_single_object(device)))
--			status = AE_CTRL_DEPTH;
-+	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
-+		/* This is a known good platform device. */
-+		acpi_create_platform_device(device);
-+	} else if (device_attach(&device->dev)) {
-+		status = AE_CTRL_DEPTH;
++#ifdef CONFIG_ACPI_APEI_PCIEAER
++	struct pci_dev *dev;
++#endif
++
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+ 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+ 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+@@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+ 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+-		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+-		cper_print_aer(pfx, gdata->error_severity, aer_regs);
++	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
++			pcie->device_id.bus, pcie->device_id.function);
++	if (!dev) {
++		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
++			pcie->device_id.segment, pcie->device_id.bus,
++			pcie->device_id.slot, pcie->device_id.function);
++		return;
  	}
- 	return status;
++	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
++		cper_print_aer(dev, gdata->error_severity,
++				(struct aer_capability_regs *) pcie->aer_info);
++	pci_dev_put(dev);
+ #endif
  }
-@@ -1672,10 +1666,10 @@ static int acpi_bus_scan(acpi_handle han
- 		goto out;
  
- 	ret = 0;
--	status = acpi_bus_probe_start(handle, 0, ops, NULL);
-+	status = acpi_bus_device_attach(handle, 0, NULL, NULL);
- 	if (ACPI_SUCCESS(status))
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
--				    acpi_bus_probe_start, NULL, ops, NULL);
-+				    acpi_bus_device_attach, NULL, NULL, NULL);
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 3ea5173..34d96e4 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -23,6 +23,9 @@
  
-  out:
- 	if (child)
-@@ -1700,31 +1694,44 @@ int
- acpi_bus_add(struct acpi_device **child,
- 	     struct acpi_device *parent, acpi_handle handle, int type)
+ #include "aerdrv.h"
+ 
++#define CREATE_TRACE_POINTS
++#include <trace/events/ras.h>
++
+ #define AER_AGENT_RECEIVER		0
+ #define AER_AGENT_REQUESTER		1
+ #define AER_AGENT_COMPLETER		2
+@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+ 		printk("%s""  Error of this Agent(%04x) is reported first\n",
+ 			prefix, id);
++	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
++			info->severity);
+ }
+ 
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+@@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ 
+-void cper_print_aer(const char *prefix, int cper_severity,
++void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		    struct aer_capability_regs *aer)
  {
--	struct acpi_bus_ops ops;
--
--	memset(&ops, 0, sizeof(ops));
--	ops.acpi_op_add = 1;
-+	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
++	char *prefix = NULL;
  
- 	return acpi_bus_scan(handle, &ops, child);
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+@@ -259,5 +265,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+ 			*(tlp + 13), *(tlp + 12));
+ 	}
++	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
++			aer_severity);
  }
- EXPORT_SYMBOL(acpi_bus_add);
- 
--int acpi_bus_start(struct acpi_device *device)
-+static acpi_status acpi_bus_start_device(acpi_handle handle, u32 lvl,
-+					 void *not_used, void **ret_not_used)
- {
--	struct acpi_bus_ops ops;
--	int result;
-+	struct acpi_device *device;
-+	unsigned long long sta_not_used;
-+	int type_not_used;
- 
-+	/*
-+	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
-+	 * namespace walks prematurely.
-+	 */
-+	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
-+		return AE_OK;
-+
-+	if (acpi_bus_get_device(handle, &device))
-+		return AE_CTRL_DEPTH;
-+
-+	return acpi_start_single_object(device);
-+}
-+
-+int acpi_bus_start(struct acpi_device *device)
-+{
- 	if (!device)
- 		return -EINVAL;
- 
--	memset(&ops, 0, sizeof(ops));
--	ops.acpi_op_start = 1;
--
--	result = acpi_bus_scan(device->handle, &ops, NULL);
-+	if (ACPI_SUCCESS(acpi_start_single_object(device)))
-+		acpi_walk_namespace(ACPI_TYPE_ANY, device->handle,
-+				    ACPI_UINT32_MAX, acpi_bus_start_device,
-+				    NULL, NULL, NULL);
- 
- 	acpi_update_all_gpes();
--
--	return result;
-+	return 0;
+ #endif
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 544abdb..7b86dc6 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
  }
- EXPORT_SYMBOL(acpi_bus_start);
+ #endif
  
+-extern void cper_print_aer(const char *prefix, int cper_severity,
++extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 			   struct aer_capability_regs *aer);
+ extern int cper_severity_to_aer(int cper_severity);
+ extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
 
