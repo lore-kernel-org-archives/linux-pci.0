@@ -1,58 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 13/15] PCI/ACPI: Convert "pci_slot" sub-driver's functionality
-	to built-in only
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Dec 2012 23:26:11 -0700
-Message-ID: <20121207062611.11051.39999.stgit@amt.stowe>
-In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
-References: <20121207062454.11051.12739.stgit@amt.stowe>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v4 3/3] aerdrv: Cleanup log output for CPER based AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 03 Dec 2012 11:33:20 -0700
+Message-ID: <20121203183319.26636.16773.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The "ACPI PCI Slot Detection ("pci_slot")" sub-driver may be compiled as a
-module.  Kernel modules are instantiated somewhat randomly - the order in
-which they are linked as the kernel as built - thus if there are any
-dependencies on the ordering of attaching sub-drivers, they can not be
-effectively dealt with.
+These changes make cper_print_aer more consistent with aer_print_error
+which is called in the AER interrupt case. The string in the variable
+'prefix' is printed at the beginning of each print statement in
+cper_print_aer(). The prefix is a string containing the driver name
+and the device's slot location.  From the callers the value of prefix
+is never assigned and is NULL, so when cper_print_aer prints data the
+initial string does not get printed.  This string is important because
+it identifies the device that the error is on.
 
-This patch series resolves any potential sequencing inter-dependencies by
-converting "pci_slot" sub-driver's functionality to being only supported
-as statically built-in to the kernel.  Inter-dependencies can then be
-effectively handled by explicitly sequencing the addition of such
-functionality.
+v1-v2 fix some compile errors withinn the #ifdef
+v3-v4 remove agent id stuff and kept print the same to avoid
+compatibility issues
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
 ---
 
- drivers/acpi/Kconfig |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/aer/aerdrv_errprint.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 119d58d..988bb13 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -293,7 +293,7 @@ config ACPI_DEBUG_FUNC_TRACE
- 	  is about half of the penalty and is rarely useful.
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 34d96e4..58ff4c0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
+-	char *prefix = NULL;
++	char prefix[44];
  
- config ACPI_PCI_SLOT
--	tristate "PCI slot detection driver"
-+	bool "PCI slot detection driver"
- 	depends on SYSFS
- 	default n
- 	help
-@@ -302,9 +302,6 @@ config ACPI_PCI_SLOT
- 	  i.e., segment/bus/device/function tuples, with physical slots in
- 	  the system.  If you are unsure, say N.
- 
--	  To compile this driver as a module, choose M here:
--	  the module will be called pci_slot.
--
- config X86_PM_TIMER
- 	bool "Power Management Timer Support" if EXPERT
- 	depends on X86
+ 	aer_severity = cper_severity_to_aer(cper_severity);
++	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
++		(aer_severity == AER_CORRECTABLE) ?
++		KERN_WARNING : KERN_ERR,
++		dev_driver_string(&dev->dev), dev_name(&dev->dev));
++
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+ 		mask = aer->cor_mask;
 
