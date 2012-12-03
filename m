@@ -1,84 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:39419
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753024Ab2LGIRn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Dec 2012 03:17:43 -0500
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
- register field names
-Date: Fri, 7 Dec 2012 08:17:38 +0000
-Message-ID: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
-In-Reply-To: <20121205205740.13851.43284.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:41085 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755677Ab2LCRk2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 12:40:28 -0500
 MIME-Version: 1.0
+In-Reply-To: <1354552622-687-1-git-send-email-betty.dall@hp.com>
+References: <1354552622-687-1-git-send-email-betty.dall@hp.com>
+Date: Mon, 3 Dec 2012 10:40:27 -0700
+Message-ID: <CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
+Subject: Re: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing
+ required pci_dev_put()
+From: Shuah Khan <shuahkhan@gmail.com>
+To: Betty Dall <betty.dall@hp.com>
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, wangyijing@huawei.com,
+	jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+On Mon, Dec 3, 2012 at 9:37 AM, Betty Dall <betty.dall@hp.com> wrote:
+> The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
+> That function is documented to require that the caller decrement the
+> reference count by calling pci_dev_put(). This patch adds the missing
+> call to pci_dev_put().
+>
+> Signed-off-by: Betty Dall <betty.dall@hp.com>
+> ---
+>  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index af4e31c..43caf53 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
+>                         continue;
+>                 }
+>                 do_recovery(pdev, entry.severity);
+> +               pci_dev_put(pdev);
+
+Are you sure pci_get_domain_bus_and_slot() does indeed increment the
+reference count? I see that in the comments right above the
+definition.
+
+pci_dev_get() does that for sure. I see a call trace of
+
+pci_dev_get() -> get_device() -> kobj_to_dev(kobject_get(&dev->kobj)  etc.
+
+and kref_get() finally incrementing the
+
+static inline void kref_get(struct kref *kref)
+{
+        WARN_ON(!atomic_read(&kref->refcount));
+        atomic_inc(&kref->refcount);
+}
+
+However, I could not find any evidence that
+pci_get_domain_bus_and_slot() does that. I see
+pci_get_domain_bus_and_slot() calling pci_domain_nr() and there are
+several architecture specific defines for pci_domain_nr(). It is not
+clear to me where does refcount get incremented from
+pci_get_domain_bus_and_slot() is called.
+
+What am I missing?
 
 Thanks,
-~Saurav
-
-
-
->Use the standard #defines for PCIe Link Capability register fields
->rather than bare numbers.  This also uses the new PCI Express Capability
->accessor rather than reading the capability directly.
->
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
->CC: linux-driver@qlogic.com
->CC: "James E.J. Bottomley" <JBottomley@parallels.com>
->CC: linux-scsi@vger.kernel.org
->---
-> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
-> 1 files changed, 5 insertions(+), 9 deletions(-)
->
->diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
->index d501bf5..b5d070f 100644
->--- a/drivers/scsi/qla2xxx/qla_os.c
->+++ b/drivers/scsi/qla2xxx/qla_os.c
->@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
->char *str)
->       static char *pci_bus_modes[] = { "33", "66", "100", "133", };
->       struct qla_hw_data *ha = vha->hw;
->       uint32_t pci_bus;
->-      int pcie_reg;
->
->-      pcie_reg = pci_pcie_cap(ha->pdev);
->-      if (pcie_reg) {
->+      if (pci_is_pcie(ha->pdev)) {
->               char lwstr[6];
->-              uint16_t pcie_lstat, lspeed, lwidth;
->+              uint32_t lstat, lspeed, lwidth;
->
->-              pcie_reg += PCI_EXP_LNKCAP;
->-              pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
->-              lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
->-              lwidth = (pcie_lstat &
->-                  (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
->+              pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->+              lspeed = lstat & PCI_EXP_LNKCAP_SLS;
->+              lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
->
->               strcpy(str, "PCIe (");
->               if (lspeed == 1)
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-________________________________
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+-- Shuah
