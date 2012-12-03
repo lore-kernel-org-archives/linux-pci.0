@@ -1,37 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:51991 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549Ab2LFBAj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 20:00:39 -0500
-In-Reply-To: <50BFE50C.8030008@zytor.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: Use PCI ROMs from EFI boot services
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Date: Wed, 05 Dec 2012 20:00:13 -0500
-To: "H. Peter Anvin" <hpa@zytor.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Message-ID: <0e7c1b81-7572-4e4a-81c7-95ec2ce01881@email.android.com>
+Received: from [206.117.179.246] ([206.117.179.246]:59142 "EHLO labridge.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750828Ab2LCU0w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Dec 2012 15:26:52 -0500
+Message-ID: <1354566393.3524.9.camel@joe-AO722>
+Subject: Re: [PATCH v4 1/3] aerdrv: Trace Event for AER
+From: Joe Perches <joe@perches.com>
+To: "Ortiz, Lance E" <lance.oritz@hp.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"tony.luck@intel.com" <tony.luck@intel.com>,
+	"bp@alien8.de" <bp@alien8.de>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"mchehab@redhat.com" <mchehab@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 03 Dec 2012 12:26:33 -0800
+In-Reply-To: <A961433CDFF2F640A2866803152E61F9516EE733@G4W3218.americas.hpqcorp.net>
+References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+	 <1354564292.3524.7.camel@joe-AO722>
+	 <A961433CDFF2F640A2866803152E61F9516EE733@G4W3218.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, 2012-12-03 at 20:20 +0000, Ortiz, Lance E wrote:
+> > > +#define correctable_error_string			\
+> > > +	{BIT(0),	"Receiver Error"},		\
+> > > +	{BIT(6),	"Bad TLP"},			\
+> > > +	{BIT(7),	"Bad DLLP"},			\
+> > > +	{BIT(8),	"RELAY_NUM Rollover"},		\
+> > > +	{BIT(12),	"Replay Timer Timeout"},	\
+> > > +	{BIT(13),	"Advisory Non-Fatal"}
+> > > +
+> > > +#define uncorrectable_error_string			\
+> > > +	{BIT(4),	"Data Link Protocol"},		\
+> > > +	{BIT(12),	"Poisoned TLP"},		\
+> > > +	{BIT(13),	"Flow Control Protocol"},	\
+> > > +	{BIT(14),	"Completion Timeout"},		\
+> > > +	{BIT(15),	"Completer Abort"},		\
+> > > +	{BIT(16),	"Unexpected Completion"},	\
+> > > +	{BIT(17),	"Receiver Overflow"},		\
+> > > +	{BIT(18),	"Malformed TLP"},		\
+> > > +	{BIT(19),	"ECRC"},			\
+> > > +	{BIT(20),	"Unsupported Request"}
+> > 
+> > probably better to prefix these with aer_
+> 
+> If I add aer_ it will conflict with string array in aerdrv_errprint.c
 
+Maybe just not something quite so generic.
+maybe aer_trace_correctable and aer_trace_uncorrectable
 
-"H. Peter Anvin" <hpa@zytor.com> wrote:
+cheers, Joe
 
->Because it also needs to modify it.  Right now kexec userspace
->synthesizes struct boot_params from scratch, and does so incorrectly to
->boot.  I think we have setup_data exported via debugfs but IIRC we
->never
->got a strong enough use case for sysfs.
-
-Kexec userspace needs updating every time we add functionality to setup_data? That really doesn't sound ideal. If we want to be able to pass secrets between kernels then this needs to be done in kernel space, not userland. 
-
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
