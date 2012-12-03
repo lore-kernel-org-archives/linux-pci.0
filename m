@@ -1,82 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:50925 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755359Ab2LMBAt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 20:00:49 -0500
-Received: by mail-vb0-f46.google.com with SMTP id b13so1471288vby.19
-        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 17:00:48 -0800 (PST)
+Received: from youngberry.canonical.com ([91.189.89.112]:52015 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053Ab2LCUCr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 15:02:47 -0500
+Date: Mon, 3 Dec 2012 14:02:41 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org
+Subject: Re: Use PCI ROMs from EFI boot services
+Message-ID: <20121203200241.GG5906@thinkpad-t410>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+ <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <2268672.Pe9OEEVsRc@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <2268672.Pe9OEEVsRc@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Dec 2012 18:00:28 -0700
-Message-ID: <CAErSpo6jnjfJUadZKutpn4CXz0YMKccwSuG7idionFPjF-5VCw@mail.gmail.com>
-Subject: Re: [PATCH 6/6] ACPI: Change the ordering of acpi_bus_check_add()
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 9, 2012 at 4:04 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> If acpi_bus_check_add() is called for a handle already having an
-> existing struct acpi_device object attached, it is not necessary to
-> check the type and status of the device correspondig to it, so
-> change the ordering of acpi_bus_check_add() to avoid that.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/acpi/scan.c |   18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
->
-> Index: linux/drivers/acpi/scan.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/scan.c
-> +++ linux/drivers/acpi/scan.c
-> @@ -1582,6 +1582,10 @@ static acpi_status acpi_bus_check_add(ac
->         acpi_status status;
->         int result;
->
-> +       acpi_bus_get_device(handle, &device);
-> +       if (device)
-> +               goto out;
-> +
->         result = acpi_bus_type_and_status(handle, &type, &sta);
->         if (result)
->                 return AE_OK;
-> @@ -1602,17 +1606,13 @@ static acpi_status acpi_bus_check_add(ac
->          * We may already have an acpi_device from a previous enumeration.  If
->          * so, we needn't add it again, but we may still have to start it.
+On Thu, Oct 25, 2012 at 11:35:57AM -0600, Bjorn Helgaas wrote:
+> On Thu, Aug 23, 2012 at 10:36 AM, Matthew Garrett <mjg@redhat.com> wrote:
+> > V3 just fixes all the casting issues and incorporates David's change in
+> > search ordering.
+> 
+> I think there's still a section mismatch issue with these patches, so
+> I haven't merged them yet.
+> 
+> I rebased my pci/mjg-pci-roms-from-efi branch to v3.7-rc2, and if we
+> get this issue fixed I'll put it in -next as v3.8 material.
 
-It looks like this comment might need updating, since we no longer
-even get here if we already have an acpi_device.  Presumably you take
-care of the "start" it mentions elsewhere now.
+I still don't see this series in -next, so I take it the section
+mismatch was never fixed? How about the following?
 
->          */
-> -       acpi_bus_get_device(handle, &device);
-> -       if (!device) {
-> -               acpi_add_single_object(&device, handle, type, sta,
-> -                                      ACPI_BUS_ADD_BASIC);
-> -               if (!device)
-> -                       return AE_CTRL_DEPTH;
-> +       acpi_add_single_object(&device, handle, type, sta, ACPI_BUS_ADD_BASIC);
-> +       if (!device)
-> +               return AE_CTRL_DEPTH;
->
-> -               device->add_type = context ?
-> -                                       ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
-> -       }
-> +       device->add_type = context ? ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
->
-> + out:
->         if (!*return_value)
->                 *return_value = device;
+Thanks,
+Seth
 
-I think all (both) callers of acpi_bus_check_add() supply a
-return_value pointer, so you could just remove the test.
+
+>From ece31852159a6b2cf9a059031638354e9817a6a6 Mon Sep 17 00:00:00 2001
+From: Seth Forshee <seth.forshee@canonical.com>
+Date: Mon, 3 Dec 2012 13:55:50 -0600
+Subject: [PATCH] x86: Don't discard boot_params
+
+boot_params is now used at runtime on EFI systems to stash option ROMs
+that aren't available after exiting boot services, so it can no longer
+be marked __initdata.
+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ arch/x86/kernel/setup.c |    4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index 468e98d..6e13035 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -143,11 +143,7 @@ int default_check_phys_apicid_present(int phys_apicid)
+ }
+ #endif
+ 
+-#ifndef CONFIG_DEBUG_BOOT_PARAMS
+-struct boot_params __initdata boot_params;
+-#else
+ struct boot_params boot_params;
+-#endif
+ 
+ /*
+  * Machine setup..
+-- 
+1.7.9.5
+
