@@ -1,74 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:35926 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752984Ab2LEU6O (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:14 -0500
-Received: by mail-fa0-f74.google.com with SMTP id t1so391578fae.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:12 -0800 (PST)
-Subject: [PATCH 10/12] iwlwifi: collapse wrapper for
-	pcie_capability_read_word()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date: Wed, 05 Dec 2012 13:58:11 -0700
-Message-ID: <20121205205811.13851.77247.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:34172 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752345Ab2LCU7w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 15:59:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1354564850.1809.391.camel@bling.home>
+References: <1354552622-687-1-git-send-email-betty.dall@hp.com>
+	<CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
+	<1354564084.1809.390.camel@bling.home>
+	<1354564850.1809.391.camel@bling.home>
+Date: Mon, 3 Dec 2012 13:59:52 -0700
+Message-ID: <CAKocOOO2-akrBT9TZU5QdSNk-SyWEMGdNWfk5CXUgEy0rJtHpQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing
+ required pci_dev_put()
+From: Shuah Khan <shuahkhan@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Betty Dall <betty.dall@hp.com>, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	wangyijing@huawei.com, jiang.liu@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-iwl_pciexp_link_ctrl() has only one call site and no longer provides any
-useful abstraction, so collapse it into the caller.
+On Mon, Dec 3, 2012 at 1:00 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Mon, 2012-12-03 at 12:48 -0700, Alex Williamson wrote:
+>> On Mon, 2012-12-03 at 10:40 -0700, Shuah Khan wrote:
+>> > On Mon, Dec 3, 2012 at 9:37 AM, Betty Dall <betty.dall@hp.com> wrote:
+>> > > The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
+>> > > That function is documented to require that the caller decrement the
+>> > > reference count by calling pci_dev_put(). This patch adds the missing
+>> > > call to pci_dev_put().
+>> > >
+>> > > Signed-off-by: Betty Dall <betty.dall@hp.com>
+>> > > ---
+>> > >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
+>> > >  1 files changed, 1 insertions(+), 0 deletions(-)
+>> > >
+>> > > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > > index af4e31c..43caf53 100644
+>> > > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> > > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> > > @@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
+>> > >                         continue;
+>> > >                 }
+>> > >                 do_recovery(pdev, entry.severity);
+>> > > +               pci_dev_put(pdev);
+>> >
+>> > Are you sure pci_get_domain_bus_and_slot() does indeed increment the
+>> > reference count? I see that in the comments right above the
+>> > definition.
+>> >
+>> > pci_dev_get() does that for sure. I see a call trace of
+>> >
+>> > pci_dev_get() -> get_device() -> kobj_to_dev(kobject_get(&dev->kobj)  etc.
+>> >
+>> > and kref_get() finally incrementing the
+>> >
+>> > static inline void kref_get(struct kref *kref)
+>> > {
+>> >         WARN_ON(!atomic_read(&kref->refcount));
+>> >         atomic_inc(&kref->refcount);
+>> > }
+>> >
+>> > However, I could not find any evidence that
+>> > pci_get_domain_bus_and_slot() does that. I see
+>> > pci_get_domain_bus_and_slot() calling pci_domain_nr() and there are
+>> > several architecture specific defines for pci_domain_nr(). It is not
+>> > clear to me where does refcount get incremented from
+>> > pci_get_domain_bus_and_slot() is called.
+>> >
+>> > What am I missing?
+>>
+>> Trace back the for_each_pci_dev()
+>>
+>> for_each_pci_dev
+>>  -> pci_get_device
+>>   -> pci_get_subsys
+>>    -> pci_get_dev_by_id
+>>     -> bus_find_device
+>>      -> get_device()
+>>
+>> The real question is how many places do we call for_each_pci_dev()
+>> without a put.  It seems like pci_get_domain_bus_and_slot() doesn't even
+>> get it right since it should include a put of the non-matched devices.
+>
+> My bad, pci_get_dev_by_id() does a put on the previous devices, keeping
+> the counts in order.  Thanks,
+>
+> Alex
+>
+Thanks Alex.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>
-CC: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/iwlwifi/pcie/trans.c |   13 +++----------
- 1 files changed, 3 insertions(+), 10 deletions(-)
+Betty,
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index fe0fffd..5cd06b3 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -673,18 +673,11 @@ static void iwl_set_pwr_vmain(struct iwl_trans *trans)
- #define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
- #define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
- 
--static u16 iwl_pciexp_link_ctrl(struct iwl_trans *trans)
-+static void iwl_apm_config(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	u16 pci_lnk_ctl;
--
--	pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL,
--				  &pci_lnk_ctl);
--	return pci_lnk_ctl;
--}
-+	u16 lctl;
- 
--static void iwl_apm_config(struct iwl_trans *trans)
--{
- 	/*
- 	 * HW bug W/A for instability in PCIe bus L0S->L1 transition.
- 	 * Check if BIOS (or OS) enabled L1-ASPM on this device.
-@@ -693,8 +686,8 @@ static void iwl_apm_config(struct iwl_trans *trans)
- 	 * If not (unlikely), enable L0S, so there is at least some
- 	 *    power savings, even without L1.
- 	 */
--	u16 lctl = iwl_pciexp_link_ctrl(trans);
- 
-+	pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL, &lctl);
- 	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
- 				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
- 		/* L1-ASPM enabled; disable(!) L0S */
+You have my
 
+Reviewed-by: Shuah Khan <shuah.khan@hp.com>
+
+Also if you think this is applicable to stable as well, could you
+please CC it for stable.
+
+-- Shuah
