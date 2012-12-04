@@ -1,84 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15922 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753597Ab2LMPbQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Dec 2012 10:31:16 -0500
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 4 Dec 2012 10:30:07 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] PCI Hotplug: workaround for Thunderbolt on Acer Aspire S5
-Date: Thu, 13 Dec 2012 17:31:46 +0200
-Message-Id: <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
-In-Reply-To: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v5 2/3] aerdrv: Enhanced AER logging
+Message-ID: <20121204093007.GG4369@liondog.tnic>
+References: <20121203212047.24373.8646.stgit@grignak.americas.hpqcorp.net>
+ <20121203212053.24373.10914.stgit@grignak.americas.hpqcorp.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20121203212053.24373.10914.stgit@grignak.americas.hpqcorp.net>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Mon, Dec 03, 2012 at 02:20:54PM -0700, Lance Ortiz wrote:
+> This patch will provide a more reliable and easy way for user-space
+> applications to have access to AER logs rather than reading them from the
+> message buffer. It also provides a way to notify user-space when an AER
+> event occurs.
+> 
+> The aer driver is updated to generate a trace event of function 'aer_event'
+> when a PCIe error is reported over the AER interface.  The trace event was
+> added to both the interrupt based aer path and the firmware first path.
+> 
+> v1-v2 fix compile errors in ifdefs.
+> v2-v3 Update to new location of trace header. Update print to remove
+> warning.
+> v3-v4 Reworked logic when getting ready to call cper_print_aer
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> ---
+> 
+>  drivers/acpi/apei/cper.c               |   19 ++++++++++++++++---
+>  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+>  include/linux/aer.h                    |    2 +-
+>  3 files changed, 26 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+> index e6defd8..4a3e945 100644
+> --- a/drivers/acpi/apei/cper.c
+> +++ b/drivers/acpi/apei/cper.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/time.h>
+>  #include <linux/cper.h>
+>  #include <linux/acpi.h>
+> +#include <linux/pci.h>
+>  #include <linux/aer.h>
+>  
+>  /*
+> @@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+>  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  			    const struct acpi_hest_generic_data *gdata)
+>  {
+> +#ifdef CONFIG_ACPI_APEI_PCIEAER
+> +	struct pci_dev *dev;
+> +#endif
+> +
+>  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+>  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+>  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+> @@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+>  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+> -		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+> -		cper_print_aer(pfx, gdata->error_severity, aer_regs);
+> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+> +			pcie->device_id.bus, pcie->device_id.function);
+> +	if (!dev) {
+> +		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+> +			pcie->device_id.segment, pcie->device_id.bus,
+> +			pcie->device_id.slot, pcie->device_id.function);
+> +		return;
+>  	}
+> +	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
+> +		cper_print_aer(dev, gdata->error_severity,
+> +				(struct aer_capability_regs *) pcie->aer_info);
+> +	pci_dev_put(dev);
+>  #endif
+>  }
+>  
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 3ea5173..34d96e4 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -23,6 +23,9 @@
+>  
+>  #include "aerdrv.h"
+>  
+> +#define CREATE_TRACE_POINTS
+> +#include <trace/events/ras.h>
 
-Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-deeper in hierarchy:
+Steve,
 
-Device (RP05)
-{
-   // ...
-   Device (HRUP)
-   {
-       // ...
-       Device (HRDN)
-       {
-           // ...
-           Device (EPUP)
-           {
-               // ...
-               Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-               {
-                   Return (One)
-               }
-           }
-       }
-   }
-}
+AFAIU, this will create all tracepoint code from the ras.h header
+in this compilation unit, i.e. aerdrv_errprint.c. It has only one
+tracepoint now but with time, as more RAS TPs are being added, it would
+make sense to have that CREATE_TRACE_POINTS code at a more central place
+in the kernel, right?
 
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
----
- drivers/pci/hotplug/acpi_pcihp.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+And, on configs with PCIEAER disabled, we won't have the TPs available
+so the CREATE_TRACE_POINTS thing should be in a compilation unit which
+gets included unconditionally, correct?
 
-diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-index 2a47e82..d92ebfb 100644
---- a/drivers/pci/hotplug/acpi_pcihp.c
-+++ b/drivers/pci/hotplug/acpi_pcihp.c
-@@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
- 	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
- 	if (ACPI_SUCCESS(status) && removable)
- 		return 1;
-+
-+	/*
-+	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-+	 *
-+	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-+	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-+	 * deeper in hierarchy.
-+	 */
-+	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-+			&removable);
-+	if (ACPI_SUCCESS(status) && removable)
-+		return 1;
-+
- 	return 0;
- }
- 
+Thanks.
+
 -- 
-1.7.10.4
-
+Regards/Gruss,
+    Boris.
