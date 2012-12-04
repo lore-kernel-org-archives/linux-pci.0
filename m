@@ -1,113 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp18.uk.ibm.com ([195.75.94.114]:56339 "EHLO
-	e06smtp18.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753436Ab2LMLv6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 06:51:58 -0500
-Received: from /spool/local
-	by e06smtp18.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <jang@linux.vnet.ibm.com>;
-	Thu, 13 Dec 2012 11:51:37 -0000
-Message-ID: <1355399509.7498.49.camel@hal>
-Subject: Re: [RFC PATCH 01/10] s390/pci: base support
-From: Jan Glauber <jang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	heiko.carstens@de.ibm.com, schwidefsky@de.ibm.com,
-	sebott <sebott@linux.vnet.ibm.com>,
-	Gerald =?ISO-8859-1?Q?Sch=E4fer?= <gerald.schaefer@de.ibm.com>
-Date: Thu, 13 Dec 2012 12:51:49 +0100
-In-Reply-To: <CAErSpo7h_EnqWzx7TN9yr5JnmUjLcZSv=pkc+Cz=8egF+EcyXQ@mail.gmail.com>
-References: <cover.1352719877.git.jang@linux.vnet.ibm.com>
-	 <c6f38a8b22d0bf2980785a2f9a786ba4616a3284.1352719877.git.jang@linux.vnet.ibm.com>
-	 <CAErSpo7h_EnqWzx7TN9yr5JnmUjLcZSv=pkc+Cz=8egF+EcyXQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1354642763.6973.15.camel@joe-AO722>
+Subject: Re: [PATCH v6 3/3] aerdrv: Cleanup log output for CPER based AER
+From: Joe Perches <joe@perches.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 04 Dec 2012 09:39:23 -0800
+In-Reply-To: <20121204170442.31397.21190.stgit@grignak.americas.hpqcorp.net>
+References: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
+	 <20121204170442.31397.21190.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-12-10 at 14:14 -0700, Bjorn Helgaas wrote:
-> On Wed, Nov 14, 2012 at 2:41 AM, Jan Glauber <jang@linux.vnet.ibm.com> wrote:
-> > Add PCI support for s390, (only 64 bit mode is supported by hardware):
-> > - PCI facility tests
-> > - PCI instructions: pcilg, pcistg, pcistb, stpcifc, mpcifc, rpcit
-> > - map readb/w/l/q and writeb/w/l/q to pcilg and pcistg instructions
-> > - pci_iomap implementation
-> > - memcpy_fromio/toio
-> > - pci_root_ops using special pcilg/pcistg
-> > - device, bus and domain allocation
-> >
-> > Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
-> 
-> I think these patches are in -next already, so I just have some
-> general comments & questions.
+On Tue, 2012-12-04 at 10:04 -0700, Lance Ortiz wrote:
+> These changes make cper_print_aer more consistent with aer_print_error
+> which is called in the AER interrupt case. The string in the variable
+> 'prefix' is printed at the beginning of each print statement in
+> cper_print_aer(). The prefix is a string containing the driver name
+> and the device's slot location.  From the callers the value of prefix
+> is never assigned and is NULL, so when cper_print_aer prints data the
+> initial string does not get printed.  This string is important because
+> it identifies the device that the error is on.
 
-Yes, since the feedback was manageable we decided to give the patches
-some exposure in -next and if no one complains we'll just go for the
-next merge window. BTW, Sebastian & Gerald (on CC:) will continue the
-work on the PCI code.
+Hi again Lance.
 
-> My overall impression is that these are exceptionally well done.
-> They're easy to read, well organized, and well documented.  It's a
-> refreshing change from a lot of the stuff that's posted.
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+[]
+> @@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+>  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+>  	u32 status, mask;
+>  	const char **status_strs;
+> -	char *prefix = NULL;
+> +	char prefix[44];
+>  
+>  	aer_severity = cper_severity_to_aer(cper_severity);
+> +	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
+> +		(aer_severity == AER_CORRECTABLE) ?
+> +		KERN_WARNING : KERN_ERR,
+> +		dev_driver_string(&dev->dev), dev_name(&dev->dev));
+> +
+>  	if (aer_severity == AER_CORRECTABLE) {
+>  		status = aer->cor_status;
+>  		mask = aer->cor_mask;
 
-Thanks Björn!
+Perhaps this would be better just using dev_printk
+instead of snprintf into a prefix with printk to
+emulate dev_printk.
 
-> As with other arches that run on top of hypervisors, you have
-> arch-specific code that enumerates PCI devices using hypervisor calls,
-> and you hook into the PCI core at a lower level than
-> pci_scan_root_bus().  That is, you call pci_create_root_bus(),
-> pci_scan_single_device(), pci_bus_add_devices(), etc., directly from
-> the arch code.  This is the typical approach, but it does make more
-> dependencies between the arch code and the PCI core than I'd like.
-> 
-> Did you consider hiding any of the hypervisor details behind the PCI
-> config accessor interface?  If that could be done, the overall
-> structure might be more similar to other architectures.
+Also, perhaps KERN_NOTICE is preferable to KERN_WARNING
+in the CORRECTABLE case.
 
-You mean pci_root_ops? I'm not sure I understand how that can be used
-to hide hipervisor details. One reason why we use the lower level
-functions is that we need to create the root bus (and its resources)
-much earlier then the pci_dev. For instance pci_hp_register wants a
-pci_bus to create the PCI slot and the slot can exist without a pci_dev.
+Maybe something like:
 
-> The current config accessors only work for dev/fn 00.0 (they fail when
-> "devfn != ZPCI_DEVFN").  Why is that?  It looks like it precludes
-> multi-function devices and basically prevents you from building an
-> arbitrary PCI hierarchy.
+	const char *level = KERN_ERR;
+	if (aer_severity == AER_CORRECTABLE)
+		level = KERN_NOTICE;
 
-Our hypervisor does not support multi-function devices. In fact the
-hypervisor will limit the reported PCI devices to a hand-picked
-selection so we can be sure that there will be no unsupported devices.
-The PCI hierarchy is hidden by the hipervisor. We only use the PCI
-domain number, bus and devfn are always zero. So it looks like every
-function is directly attached to a PCI root complex.
+	...
 
-That was the reason for the sanity check, but thinking about it I could
-remove it since although we don't support multi-function devices I
-think the s390 code should be more agnostic to these limitations.
+	dev_printk(level, &dev->dev, etc...);
 
-> zpci_map_resources() is very unusual.  The struct pci_dev resource[]
-> table normally contains CPU physical addresses, but
-> zpci_map_resources() fills it with virtual addresses.  I suspect this
-> has something to do with the "BAR spaces are not disjunctive on s390"
-> comment.  It almost sounds like that's describing host bridges where
-> the PCI bus address is not equal to the CPU physical address -- in
-> that case, device A and device B may have the same values in their
-> BARs, but they can still be distinct if they're under host bridges
-> that apply different CPU-to-bus address translations.
-
-Yeah, you've found it... I've had 3 or 4 tries on different
-implementations but all failed. If we use the resources as they are we
-cannot map them to the instructions (and ioremap does not help because
-there we cannot find out which device the resource belongs to). If we
-change the BARs on the card MMIO stops to work. I don't know about host
-bridges - if we would use a host bridge at which point in the
-translation process would it kick in?
-
-Jan
-
-> Bjorn
-> 
-
-
+Maybe do this after this series of patches is accepted.
+Enough with the revisions for awhile...
 
