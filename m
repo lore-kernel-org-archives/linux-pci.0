@@ -1,83 +1,243 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gh0-f202.google.com ([209.85.160.202]:35002 "EHLO
-	mail-gh0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119Ab2LEU54 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:57:56 -0500
-Received: by mail-gh0-f202.google.com with SMTP id z10so671231ghb.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:57:56 -0800 (PST)
-Subject: [PATCH 07/12] e1000e: Use standard #defines for PCIe Capability ASPM
-	fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Duyck <alexander.h.duyck@intel.com>,
-	e1000-devel@lists.sourceforge.net,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>
-Date: Wed, 05 Dec 2012 13:57:56 -0700
-Message-ID: <20121205205755.13851.77284.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:39229 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751608Ab2LDJ4w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 04:56:52 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so2637236pad.19
+        for <linux-pci@vger.kernel.org>; Tue, 04 Dec 2012 01:56:52 -0800 (PST)
+From: Daniel J Blueman <daniel@numascale-asia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel J Blueman <daniel@numascale-asia.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Steffen Persvold <sp@numascale.com>
+Subject: [PATCH v3] Add NumaChip remote PCI support
+Date: Tue,  4 Dec 2012 17:56:24 +0800
+Message-Id: <1354614984-6094-1-git-send-email-daniel@numascale-asia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the standard #defines for PCIe Capability ASPM fields.
+Add NumaChip-specific PCI access mechanism via MMCONFIG cycles, but
+preventing access to AMD Northbridges which shouldn't respond.
 
-Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1 directly, but
-these are defined for the Linux ASPM interfaces, e.g.,
-pci_disable_link_state(), and only coincidentally match the actual register
-bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not match
-the register bit.
+v2: Use PCI_DEVFN in precomputed constant limit; drop unneeded includes
+v3: Express dependency on MMCONFIG
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-CC: Jesse Brandeburg <jesse.brandeburg@intel.com>
-CC: Bruce Allan <bruce.w.allan@intel.com>
-CC: Carolyn Wyborny <carolyn.wyborny@intel.com>
-CC: Don Skidmore <donald.c.skidmore@intel.com>
-CC: Greg Rose <gregory.v.rose@intel.com>
-CC: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
-CC: Alex Duyck <alexander.h.duyck@intel.com>
-CC: John Ronciak <john.ronciak@intel.com>
-CC: e1000-devel@lists.sourceforge.net
+Signed-off-by: Daniel J Blueman <daniel@numascale-asia.com>
 ---
- drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ arch/x86/Kconfig                         |    2 +
+ arch/x86/include/asm/numachip/numachip.h |   20 +++++
+ arch/x86/kernel/apic/apic_numachip.c     |    2 +
+ arch/x86/pci/Makefile                    |    1 +
+ arch/x86/pci/numachip.c                  |  129 ++++++++++++++++++++++++++++++
+ 5 files changed, 154 insertions(+)
+ create mode 100644 arch/x86/include/asm/numachip/numachip.h
+ create mode 100644 arch/x86/pci/numachip.c
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index f444eb0..b8561ef 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -5613,15 +5613,22 @@ static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
- #else
- static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
- {
-+	u16 aspm_ctl = 0;
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 46c3bff..50e8700 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -374,6 +374,7 @@ config X86_NUMACHIP
+ 	depends on NUMA
+ 	depends on SMP
+ 	depends on X86_X2APIC
++	depends on PCI_MMCONFIG
+ 	---help---
+ 	  Adds support for Numascale NumaChip large-SMP systems. Needed to
+ 	  enable more than ~168 cores.
+diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
+new file mode 100644
+index 0000000..fe7f60c
+--- /dev/null
++++ b/arch/x86/include/asm/numachip/numachip.h
+@@ -0,0 +1,20 @@
++/*
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Numascale NumaConnect-specific header file
++ *
++ * Copyright (C) 2012 Numascale AS. All rights reserved.
++ *
++ * Send feedback to <support@numascale.com>
++ *
++ */
 +
-+	if (state & PCIE_LINK_STATE_L0S)
-+		aspm_ctl |= PCI_EXP_LNKCTL_ASPM_L0S;
-+	if (state & PCIE_LINK_STATE_L1)
-+		aspm_ctl |= PCI_EXP_LNKCTL_ASPM_L1;
++#ifndef _ASM_X86_NUMACHIP_NUMACHIP_H
++#define _ASM_X86_NUMACHIP_NUMACHIP_H
 +
- 	/*
- 	 * Both device and parent should have the same ASPM setting.
- 	 * Disable ASPM in downstream component first and then upstream.
- 	 */
--	pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, state);
-+	pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, aspm_ctl);
++extern int __init pci_numachip_init(void);
++
++#endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
++
+diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
+index a65829a..9c2aa89 100644
+--- a/arch/x86/kernel/apic/apic_numachip.c
++++ b/arch/x86/kernel/apic/apic_numachip.c
+@@ -22,6 +22,7 @@
+ #include <linux/hardirq.h>
+ #include <linux/delay.h>
  
- 	if (pdev->bus->self)
- 		pcie_capability_clear_word(pdev->bus->self, PCI_EXP_LNKCTL,
--					   state);
-+					   aspm_ctl);
- }
- #endif
- static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
++#include <asm/numachip/numachip.h>
+ #include <asm/numachip/numachip_csr.h>
+ #include <asm/smp.h>
+ #include <asm/apic.h>
+@@ -179,6 +180,7 @@ static int __init numachip_system_init(void)
+ 		return 0;
+ 
+ 	x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
++	x86_init.pci.arch_init = pci_numachip_init;
+ 
+ 	map_csrs();
+ 
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 3af5a1e..ee0af58 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -16,6 +16,7 @@ obj-$(CONFIG_STA2X11)           += sta2x11-fixup.o
+ obj-$(CONFIG_X86_VISWS)		+= visws.o
+ 
+ obj-$(CONFIG_X86_NUMAQ)		+= numaq_32.o
++obj-$(CONFIG_X86_NUMACHIP)	+= numachip.o
+ 
+ obj-$(CONFIG_X86_INTEL_MID)	+= mrst.o
+ 
+diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
+new file mode 100644
+index 0000000..7307d9d
+--- /dev/null
++++ b/arch/x86/pci/numachip.c
+@@ -0,0 +1,129 @@
++/*
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Numascale NumaConnect-specific PCI code
++ *
++ * Copyright (C) 2012 Numascale AS. All rights reserved.
++ *
++ * Send feedback to <support@numascale.com>
++ *
++ * PCI accessor functions derived from mmconfig_64.c
++ *
++ */
++
++#include <linux/pci.h>
++#include <asm/pci_x86.h>
++
++static u8 limit __read_mostly;
++
++static inline char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
++{
++	struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
++
++	if (cfg && cfg->virt)
++		return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
++	return NULL;
++}
++
++static int pci_mmcfg_read_numachip(unsigned int seg, unsigned int bus,
++			  unsigned int devfn, int reg, int len, u32 *value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
++err:		*value = -1;
++		return -EINVAL;
++	}
++
++	/* Ensure AMD Northbridges don't decode reads to other devices */
++	if (unlikely(bus == 0 && devfn >= limit)) {
++		*value = -1;
++		return 0;
++	}
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		goto err;
++	}
++
++	switch (len) {
++	case 1:
++		*value = mmio_config_readb(addr + reg);
++		break;
++	case 2:
++		*value = mmio_config_readw(addr + reg);
++		break;
++	case 4:
++		*value = mmio_config_readl(addr + reg);
++		break;
++	}
++	rcu_read_unlock();
++
++	return 0;
++}
++
++static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
++			   unsigned int devfn, int reg, int len, u32 value)
++{
++	char __iomem *addr;
++
++	/* Why do we have this when nobody checks it. How about a BUG()!? -AK */
++	if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
++		return -EINVAL;
++
++	/* Ensure AMD Northbridges don't decode writes to other devices */
++	if (unlikely(bus == 0 && devfn >= limit))
++		return 0;
++
++	rcu_read_lock();
++	addr = pci_dev_base(seg, bus, devfn);
++	if (!addr) {
++		rcu_read_unlock();
++		return -EINVAL;
++	}
++
++	switch (len) {
++	case 1:
++		mmio_config_writeb(addr + reg, value);
++		break;
++	case 2:
++		mmio_config_writew(addr + reg, value);
++		break;
++	case 4:
++		mmio_config_writel(addr + reg, value);
++		break;
++	}
++	rcu_read_unlock();
++
++	return 0;
++}
++
++const struct pci_raw_ops pci_mmcfg_numachip = {
++	.read = pci_mmcfg_read_numachip,
++	.write = pci_mmcfg_write_numachip,
++};
++
++int __init pci_numachip_init(void)
++{
++	int ret = 0;
++	u32 val;
++
++	/* For remote I/O, restrict bus 0 access to the actual number of AMD
++	   Northbridges, which starts at device number 0x18 */
++	ret = raw_pci_read(0, 0, PCI_DEVFN(0x18, 0), 0x60, sizeof(val), &val);
++	if (ret)
++		goto out;
++
++	/* HyperTransport fabric size in bits 6:4 */
++	limit = PCI_DEVFN(0x18 + ((val >> 4) & 7) + 1, 0);
++
++	/* Use NumaChip PCI accessors for non-extended and extended access */
++	raw_pci_ops = raw_pci_ext_ops = &pci_mmcfg_numachip;
++out:
++	return ret;
++}
+-- 
+1.7.10.4
 
