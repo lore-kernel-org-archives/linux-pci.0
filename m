@@ -1,79 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38236 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1945986Ab2LGGZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Dec 2012 01:25:22 -0500
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 04/15] PCI/acpiphp: Change acpiphp_glue_init() to return void
-	instead of 0
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Dec 2012 23:25:19 -0700
-Message-ID: <20121207062519.11051.61163.stgit@amt.stowe>
-In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
-References: <20121207062454.11051.12739.stgit@amt.stowe>
+Received: from usmamail.tilera.com ([12.216.194.151]:48540 "EHLO
+	USMAMAIL.TILERA.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661Ab2LDUFp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 15:05:45 -0500
+Message-ID: <50BE5796.6080009@tilera.com>
+Date: Tue, 4 Dec 2012 15:05:42 -0500
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Wei Yongjun <weiyj.lk@gmail.com>, <yongjun_wei@trendmicro.com.cn>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH -next] tile/PCI: use for_each_pci_dev to simplify the
+ code
+References: <CAPgLHd-GK0ZO97vhaNhFuHBxuHf+s+7YQ1kw_-+7pUVoqNwgdw@mail.gmail.com> <CAErSpo7apCKg0ADSV2w1uGsFFAWi3-E4mbf8HLW8V+Gj9YNdsg@mail.gmail.com>
+In-Reply-To: <CAErSpo7apCKg0ADSV2w1uGsFFAWi3-E4mbf8HLW8V+Gj9YNdsg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpiphp_glue_init() always returns 0.  This patch changes the return
-type from an 'int' to 'void'.
+On 12/4/2012 2:57 PM, Bjorn Helgaas wrote:
+> On Mon, Dec 3, 2012 at 6:28 AM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
+>> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>>
+>> Use for_each_pci_dev to simplify the code.
+>>
+>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>> ---
+>>  arch/tile/kernel/pci.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+>> index 7598226..aac1cd5 100644
+>> --- a/arch/tile/kernel/pci.c
+>> +++ b/arch/tile/kernel/pci.c
+>> @@ -245,7 +245,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
+>>         u16 new_values;
+>>
+>>         /* Scan for the smallest maximum payload size. */
+>> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
+>> +       for_each_pci_dev(dev) {
+>>                 u32 devcap;
+>>                 int max_payload;
+>>
+>> @@ -260,7 +260,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
+>>
+>>         /* Now, set the max_payload_size for all devices to that value. */
+>>         new_values = (max_read_size << 12) | (smallest_max_payload << 5);
+>> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
+>> +       for_each_pci_dev(dev)
+>>                 pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+>>                                 PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ,
+>>                                 new_values);
+>>
+>>
+> This patch looks correct to me, as far as it goes.
+>
+> Of course, any time we use for_each_pci_dev(), it's a good clue that
+> this code won't work for hotplug, so presumably you don't care about
+> hotplug on this system.
 
-No functional change.
+Hotplug development is under way at the moment.
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+> tile/kernel/pci_gx.c has a function of the same name, implemented
+> completely differently, which suggests that some unification or
+> refactoring might be possible.
 
- drivers/pci/hotplug/acpiphp.h      |    2 +-
- drivers/pci/hotplug/acpiphp_core.c |    4 +++-
- drivers/pci/hotplug/acpiphp_glue.c |    4 +---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+Sorry, which function are you referring to?  You mention MPS/MRS so perhaps you're talking about fixup_read_and_payload_sizes()?
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 4b798e9..ecd772c 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -191,7 +191,7 @@ extern int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot);
- extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
- 
- /* acpiphp_glue.c */
--extern int acpiphp_glue_init(void);
-+extern void acpiphp_glue_init(void);
- extern void acpiphp_glue_exit(void);
- typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
- 
-diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-index 3350b09..011a538 100644
---- a/drivers/pci/hotplug/acpiphp_core.c
-+++ b/drivers/pci/hotplug/acpiphp_core.c
-@@ -274,7 +274,9 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- static int __init init_acpi(void)
- {
- 	/* initialize internal data structure etc. */
--	return acpiphp_glue_init();
-+	acpiphp_glue_init();
-+
-+	return 0;
- }
- 
- /**
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index a378a48..50b58cb 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1415,11 +1415,9 @@ static struct acpi_pci_driver acpi_pci_hp_driver = {
- /**
-  * acpiphp_glue_init - initializes all PCI hotplug - ACPI glue data structures
-  */
--int __init acpiphp_glue_init(void)
-+void __init acpiphp_glue_init(void)
- {
- 	acpi_pci_register_driver(&acpi_pci_hp_driver);
--
--	return 0;
- }
- 
- 
+> In general, I think the PCI_EXP_DEVCAP and PCI_EXP_DEVCTL code for MPS
+> and MRRS management belongs in the PCI core, not in drivers or
+> architectures (it's fine if they provide device- or platform-specific
+> constraints), so anything you can do to move in that direction would
+> be good.
+>
+> Bjorn
+
+Thanks!
+
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
 
