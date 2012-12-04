@@ -1,44 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:64599 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828Ab2LEVUh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 16:20:37 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so4723936lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 13:20:36 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 4 Dec 2012 21:36:40 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Mauro Carvalho Chehab <mchehab@redhat.com>
+Cc: "Ortiz, Lance E" <lance.oritz@hp.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"tony.luck@intel.com" <tony.luck@intel.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 2/3] aerdrv: Enhanced AER logging
+Message-ID: <20121204203640.GB6242@liondog.tnic>
+References: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
+ <20121204170436.31397.40857.stgit@grignak.americas.hpqcorp.net>
+ <20121204164151.66b9bb37@redhat.com>
+ <A961433CDFF2F640A2866803152E61F9516EEACD@G4W3218.americas.hpqcorp.net>
+ <20121204183110.3de876de@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1354741486.24513.3.camel@jlt4.sipsolutions.net>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
- <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com> <1354741486.24513.3.camel@jlt4.sipsolutions.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Dec 2012 14:20:15 -0700
-Message-ID: <CAErSpo4UuT=_dXqoaGttFxY05Arvm9AhoTBsZhks16C-ZDctAw@mail.gmail.com>
-Subject: Re: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe Capability
- ASPM fields
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-pci@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20121204183110.3de876de@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 2:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2012-12-05 at 13:58 -0700, Bjorn Helgaas wrote:
->> Use the standard #defines rather than creating local definitions for
->> PCIe Capability ASPM fields.
->
-> I'll pick up the iwlwifi ones if you want, or do you want to merge them
-> somewhere centrally instead?
+On Tue, Dec 04, 2012 at 06:31:10PM -0200, Mauro Carvalho Chehab wrote:
+> However, in this particular case, if PCI AER got an error, but the
+> device is not found when trying to handle it, it can be an indication
+> that the PCI device has a more serious issue. So, I'm in favor
+> of changing it, and likely be more verbose at the error message,
+> saying that the device was not found while trying to report an error
+> condition that happened there. It could make sense to even send a
+> trace for the daemon to be aware of the error, on some pci device that
+> vanished likely due to the error.
 
-They do depend on a previous patch that adds the #defines to
-include/uapi/linux/pci_regs.h
-(http://marc.info/?l=linux-pci&m=135474107109010&w=2).
+Let's leave it at pr_err now and if we actually start seeing errors like
+that and decide that they need more verbose reporting, then to change it
+to whatever's best. IOW, do the empirical approach.
 
-I think I'll merge at least the PCI core parts of this via my PCI tree
-in the v3.8 merge window next week.  If it won't cause conflicts for
-you, I could include the iwlwifi bits there, too.  If it does, at
-least the #define will exist and you can merge it at your leisure.
+Thanks.
 
-Bjorn
+-- 
+Regards/Gruss,
+    Boris.
