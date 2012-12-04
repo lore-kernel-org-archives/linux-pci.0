@@ -1,83 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v7 3/3] aerdrv: Cleanup log output for CPER based AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 04 Dec 2012 14:03:18 -0700
+Message-ID: <20121204210318.4515.10180.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-In-Reply-To: <50BE5796.6080009@tilera.com>
-References: <CAPgLHd-GK0ZO97vhaNhFuHBxuHf+s+7YQ1kw_-+7pUVoqNwgdw@mail.gmail.com>
- <CAErSpo7apCKg0ADSV2w1uGsFFAWi3-E4mbf8HLW8V+Gj9YNdsg@mail.gmail.com> <50BE5796.6080009@tilera.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Dec 2012 13:57:46 -0700
-Message-ID: <CAErSpo4_mUBk+UXHUsRPzqUWENxgUqp27rf5QhFtgOFv-2AacQ@mail.gmail.com>
-Subject: Re: [PATCH -next] tile/PCI: use for_each_pci_dev to simplify the code
-To: Chris Metcalf <cmetcalf@tilera.com>
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, yongjun_wei@trendmicro.com.cn,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 4, 2012 at 1:05 PM, Chris Metcalf <cmetcalf@tilera.com> wrote:
-> On 12/4/2012 2:57 PM, Bjorn Helgaas wrote:
->> On Mon, Dec 3, 2012 at 6:28 AM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
->>> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->>>
->>> Use for_each_pci_dev to simplify the code.
->>>
->>> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->>> ---
->>>  arch/tile/kernel/pci.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
->>> index 7598226..aac1cd5 100644
->>> --- a/arch/tile/kernel/pci.c
->>> +++ b/arch/tile/kernel/pci.c
->>> @@ -245,7 +245,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
->>>         u16 new_values;
->>>
->>>         /* Scan for the smallest maximum payload size. */
->>> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
->>> +       for_each_pci_dev(dev) {
->>>                 u32 devcap;
->>>                 int max_payload;
->>>
->>> @@ -260,7 +260,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
->>>
->>>         /* Now, set the max_payload_size for all devices to that value. */
->>>         new_values = (max_read_size << 12) | (smallest_max_payload << 5);
->>> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
->>> +       for_each_pci_dev(dev)
->>>                 pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
->>>                                 PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ,
->>>                                 new_values);
->>>
->>>
->> This patch looks correct to me, as far as it goes.
->>
->> Of course, any time we use for_each_pci_dev(), it's a good clue that
->> this code won't work for hotplug, so presumably you don't care about
->> hotplug on this system.
->
-> Hotplug development is under way at the moment.
->
->> tile/kernel/pci_gx.c has a function of the same name, implemented
->> completely differently, which suggests that some unification or
->> refactoring might be possible.
->
-> Sorry, which function are you referring to?  You mention MPS/MRS so perhaps you're talking about fixup_read_and_payload_sizes()?
+These changes make cper_print_aer more consistent with aer_print_error
+which is called in the AER interrupt case. The string in the variable
+'prefix' is printed at the beginning of each print statement in
+cper_print_aer(). The prefix is a string containing the driver name
+and the device's slot location.  From the callers the value of prefix
+is never assigned and is NULL, so when cper_print_aer prints data the
+initial string does not get printed.  This string is important because
+it identifies the device that the error is on.
 
-Yes, sorry I didn't make that more clear.  Both tile and tile-gx have
-fixup_read_and_payload_sizes() implementations.
+v1-v2 fix some compile errors withinn the #ifdef
+v3-v4 remove agent id stuff and kept print the same to avoid
+compatibility issues
 
->> In general, I think the PCI_EXP_DEVCAP and PCI_EXP_DEVCTL code for MPS
->> and MRRS management belongs in the PCI core, not in drivers or
->> architectures (it's fine if they provide device- or platform-specific
->> constraints), so anything you can do to move in that direction would
->> be good.
->>
->> Bjorn
->
-> Thanks!
->
-> --
-> Chris Metcalf, Tilera Corp.
-> http://www.tilera.com
->
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
+
+ drivers/pci/pcie/aer/aerdrv_errprint.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 34d96e4..58ff4c0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
+-	char *prefix = NULL;
++	char prefix[44];
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
++	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
++		(aer_severity == AER_CORRECTABLE) ?
++		KERN_WARNING : KERN_ERR,
++		dev_driver_string(&dev->dev), dev_name(&dev->dev));
++
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+ 		mask = aer->cor_mask;
+
