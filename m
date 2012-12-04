@@ -1,81 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61930 "EHLO mx1.redhat.com"
+Received: from mx.treblig.org ([80.68.94.177]:52711 "EHLO mx.treblig.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946003Ab2LGGZ2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Dec 2012 01:25:28 -0500
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 05/15] PCI/acpiphp: Collapse initialization call chain of
-	"acpiphp" sub-driver
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Dec 2012 23:25:25 -0700
-Message-ID: <20121207062524.11051.46916.stgit@amt.stowe>
-In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
-References: <20121207062454.11051.12739.stgit@amt.stowe>
+	id S1753843Ab2LDOzA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Dec 2012 09:55:00 -0500
+Date: Tue, 4 Dec 2012 14:20:08 +0000
+From: "Dr. David Alan Gilbert" <dave@treblig.org>
+To: mj@ucw.cz
+Cc: linux-pci@vger.kernel.org
+Subject: pciutils pci_open seg with invalid arg to -i
+Message-ID: <20121204142008.GB6117@gallifrey>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch collapses the initialization call chain of "acpiphp" by calling
-acpiphp_glue_init() directly within acphphp_init(), removing the
-intervening init_acpi() call.
+Hi Martin,
+  I was looking at a bug reported in the Ubuntu bug database against lspci:
 
-No functional change.
+https://bugs.launchpad.net/ubuntu/+source/pciutils/+bug/690431
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+The reporter had called lspci -vvii    which ends up trying to open the
+file 'i' as the pci-id and seg faults.
 
- drivers/pci/hotplug/acpiphp_core.c |   24 +++++++-----------------
- 1 files changed, 7 insertions(+), 17 deletions(-)
+I can see a fix, but I can't quite see what the code is trying to do;
+lib/names-parse.c:
 
-diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-index 011a538..1f4e228 100644
---- a/drivers/pci/hotplug/acpiphp_core.c
-+++ b/drivers/pci/hotplug/acpiphp_core.c
-@@ -271,14 +271,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	return 0;
- }
- 
--static int __init init_acpi(void)
--{
--	/* initialize internal data structure etc. */
--	acpiphp_glue_init();
--
--	return 0;
--}
--
- /**
-  * release_slot - free up the memory used by a slot
-  * @hotplug_slot: slot to free
-@@ -363,21 +355,19 @@ static int __init acpiphp_init(void)
- {
- 	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
- 
--	if (acpi_pci_disabled)
--		return 0;
-+	if (!acpi_pci_disabled)
-+		/* initialize internal data structure etc. */
-+		acpiphp_glue_init();
- 
--	/* read all the ACPI info from the system */
--	return init_acpi();
-+	return 0;
- }
- 
- 
- static void __exit acpiphp_exit(void)
- {
--	if (acpi_pci_disabled)
--		return;
--
--	/* deallocate internal data structures etc. */
--	acpiphp_glue_exit();
-+	if (!acpi_pci_disabled)
-+		/* deallocate internal data structures etc. */
-+		acpiphp_glue_exit();
- }
- 
- module_init(acpiphp_init);
+ 23 static pci_file pci_open(struct pci_access *a)
+ 24 {
+ 25   pci_file result;
+ 26   size_t len;
+ 27   char *new_name;
+ 28 
+ 29   result = gzopen(a->id_file_name, "rb");
+ 30   if (result)
+ 31     return result;
+ 32   len = strlen(a->id_file_name);
+ 33   if (len >= 3 && memcmp(a->id_file_name + len - 3, ".gz", 3) != 0)
+ 34     return result;
+ 35   new_name = malloc(len - 2);
+ 36   memcpy(new_name, a->id_file_name, len - 3);
+ 37   new_name[len - 3] = 0;
+ 38   pci_set_name_list_path(a, new_name, 1);
+ 39   return gzopen(a->id_file_name, "rb");
+ 40 }
 
+The problem here is for a short filename we drop down to line 35 and
+do an allocate of a -ve length, and then try and memcpy into it.
+
+So I was going to suggest something like:
+
+ 33   if (len < 3 || memcmp(a->id_file_name + len - 3, ".gz", 3) != 0)
+ 34     return result;
+
+which would mean that it would drop out if it was a short filename; but
+then I started to try and understand the code more; it looks to me like:
+
+   try and gzopen it.
+   if that fails
+     check it ended with a .gz (else fail)
+     strip the .gz off the end
+     gzopen it without the .gz
+
+But why bother?  According to the zlib manual for gzopen :
+  ( http://www.zlib.net/manual.html )
+     
+' gzopen can be used to read a file which is not in gzip format; in this case
+gzread will directly read from the file without decompression. When reading,
+this will be detected automatically by looking for the magic two-byte gzip
+header. '
+
+So what are lines 32-39 trying to do?
+
+Dave (not subscribed to linux-pci, so please cc)
+-- 
+ -----Open up your eyes, open up your mind, open up your code -------   
+/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
+\ gro.gilbert @ treblig.org |                               | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
