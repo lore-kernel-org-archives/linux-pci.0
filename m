@@ -1,96 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51946 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756405Ab2LMSoo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 13:44:44 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1751484pbc.19
-        for <linux-pci@vger.kernel.org>; Thu, 13 Dec 2012 10:44:44 -0800 (PST)
-Date: Thu, 13 Dec 2012 10:44:41 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI Hotplug: workaround for Thunderbolt on Acer
- Aspire S5
-Message-ID: <20121213184441.GB12105@kroah.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:44366 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976Ab2LDT5a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 14:57:30 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so3633023lag.19
+        for <linux-pci@vger.kernel.org>; Tue, 04 Dec 2012 11:57:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
+In-Reply-To: <CAPgLHd-GK0ZO97vhaNhFuHBxuHf+s+7YQ1kw_-+7pUVoqNwgdw@mail.gmail.com>
+References: <CAPgLHd-GK0ZO97vhaNhFuHBxuHf+s+7YQ1kw_-+7pUVoqNwgdw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Dec 2012 12:57:07 -0700
+Message-ID: <CAErSpo7apCKg0ADSV2w1uGsFFAWi3-E4mbf8HLW8V+Gj9YNdsg@mail.gmail.com>
+Subject: Re: [PATCH -next] tile/PCI: use for_each_pci_dev to simplify the code
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: cmetcalf@tilera.com, yongjun_wei@trendmicro.com.cn,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 05:31:46PM +0200, Kirill A. Shutemov wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> 
-> Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> deeper in hierarchy:
-> 
-> Device (RP05)
-> {
->    // ...
->    Device (HRUP)
->    {
->        // ...
->        Device (HRDN)
->        {
->            // ...
->            Device (EPUP)
->            {
->                // ...
->                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
->                {
->                    Return (One)
->                }
->            }
->        }
->    }
-> }
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+On Mon, Dec 3, 2012 at 6:28 AM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> Use for_each_pci_dev to simplify the code.
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > ---
->  drivers/pci/hotplug/acpi_pcihp.c |   13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
-> index 2a47e82..d92ebfb 100644
-> --- a/drivers/pci/hotplug/acpi_pcihp.c
-> +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
->  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
->  	if (ACPI_SUCCESS(status) && removable)
->  		return 1;
-> +
-> +	/*
-> +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> +	 *
-> +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> +	 * deeper in hierarchy.
-> +	 */
-> +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> +			&removable);
-> +	if (ACPI_SUCCESS(status) && removable)
-> +		return 1;
+>  arch/tile/kernel/pci.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+> index 7598226..aac1cd5 100644
+> --- a/arch/tile/kernel/pci.c
+> +++ b/arch/tile/kernel/pci.c
+> @@ -245,7 +245,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
+>         u16 new_values;
+>
+>         /* Scan for the smallest maximum payload size. */
+> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
+> +       for_each_pci_dev(dev) {
+>                 u32 devcap;
+>                 int max_payload;
+>
+> @@ -260,7 +260,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
+>
+>         /* Now, set the max_payload_size for all devices to that value. */
+>         new_values = (max_read_size << 12) | (smallest_max_payload << 5);
+> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
+> +       for_each_pci_dev(dev)
+>                 pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+>                                 PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ,
+>                                 new_values);
+>
+>
 
-I have no objection to this patch as-is, but I wonder how will other
-BIOSes implement this "incorrectly" in the future.  Should we always
-just try to walk the whole PCI slot heirachy looking for the _RMV
-attribute?  That should solve the problem where someone else places this
-at another location for the slot, right?
+This patch looks correct to me, as far as it goes.
 
-Is there any test for Windows that ensures that this gets placed in the
-"correct" location that we can rely on?
+Of course, any time we use for_each_pci_dev(), it's a good clue that
+this code won't work for hotplug, so presumably you don't care about
+hotplug on this system.
 
-thanks,
+tile/kernel/pci_gx.c has a function of the same name, implemented
+completely differently, which suggests that some unification or
+refactoring might be possible.
 
-greg k-h
+In general, I think the PCI_EXP_DEVCAP and PCI_EXP_DEVCTL code for MPS
+and MRRS management belongs in the PCI core, not in drivers or
+architectures (it's fine if they provide device- or platform-specific
+constraints), so anything you can do to move in that direction would
+be good.
+
+Bjorn
