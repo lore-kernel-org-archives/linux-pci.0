@@ -1,134 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:39142 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860Ab2LMXcD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 18:32:03 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so2290493lag.19
-        for <linux-pci@vger.kernel.org>; Thu, 13 Dec 2012 15:32:00 -0800 (PST)
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:10254 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751836Ab2LDVIX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 16:08:23 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v7 2/3] aerdrv: Enhanced AER logging
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 04 Dec 2012 14:03:12 -0700
+Message-ID: <20121204210312.4515.13415.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-In-Reply-To: <50CA5EE2.30206@linux.vnet.ibm.com>
-References: <50CA5EE2.30206@linux.vnet.ibm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Dec 2012 16:31:40 -0700
-Message-ID: <CAErSpo6BfWGYH+=ygS6qWT-YFKPuywooVgLWm+g_eB2dMw3iKQ@mail.gmail.com>
-Subject: Re: drm: Added ppc64 root device getter
-To: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
-Cc: dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brking@linux.vnet.ibm.com, benh@au1.ibm.com,
-	Betty Dall <betty.dall@hp.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Betty]
+This patch will provide a more reliable and easy way for user-space
+applications to have access to AER logs rather than reading them from the
+message buffer. It also provides a way to notify user-space when an AER
+event occurs.
 
-On Thu, Dec 13, 2012 at 4:04 PM, Lucas Kannebley Tavares
-<lucaskt@linux.vnet.ibm.com> wrote:
-> On architectures such as ppc64, there is no root bus device (it belongs
-> to the hypervisor). DRM attempted to get one, causing a null-pointer
-> dereference.
+The aer driver is updated to generate a trace event of function 'aer_event'
+when a PCIe error is reported over the AER interface.  The trace event was
+added to both the interrupt based aer path and the firmware first path.
 
-In addition to ppc64, at least ia64 and parisc have the same situation
-of the PCI host bridge not appearing as a  PCI device itself.
+v1-v2 fix compile errors in ifdefs.
+v2-v3 Update to new location of trace header. Update print to remove
+warning.
+v3-v4 Reworked logic when getting ready to call cper_print_aer
+v6-v7 Change print from pr_info to pr_err if !dev
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
 
-> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
->
-> --
-> diff --git a/arch/powerpc/platforms/pseries/Makefile
-> b/arch/powerpc/platforms/pseries/Makefile
-> index 890622b..ddfdda8 100644
-> --- a/arch/powerpc/platforms/pseries/Makefile
-> +++ b/arch/powerpc/platforms/pseries/Makefile
-> @@ -1,6 +1,8 @@
->  ccflags-$(CONFIG_PPC64)                        := -mno-minimal-toc
->  ccflags-$(CONFIG_PPC_PSERIES_DEBUG)    += -DDEBUG
->
-> +drm-y                  += drm_pci.o
-> +
->  obj-y                  := lpar.o hvCall.o nvram.o reconfig.o \
->                            setup.o iommu.o event_sources.o ras.o \
->                            firmware.o power.o dlpar.o mobility.o
-> diff --git a/arch/powerpc/platforms/pseries/drm_pci.c
-> b/arch/powerpc/platforms/pseries/drm_pci.c
-> new file mode 100644
-> index 0000000..da6675e
-> --- /dev/null
-> +++ b/arch/powerpc/platforms/pseries/drm_pci.c
-> @@ -0,0 +1,24 @@
-> +/*
-> + * Copyright (C) 2012 Lucas Kannebley Tavares, IBM Corporation
-> + *
-> + * pSeries specific routines for DRM.
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License, or
-> + * (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write to the Free Software
-> + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-> + */
-> +
-> +inline struct pci_device *drm_get_parent_device(struct drm_device *dev) {
-> +       return (dev->pdev->bus->self == NULL) ? dev->pdev :
-> dev->pdev->bus->self;
+ drivers/acpi/apei/cper.c               |   19 ++++++++++++++++---
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+ include/linux/aer.h                    |    2 +-
+ 3 files changed, 26 insertions(+), 5 deletions(-)
 
-So for DRM devices on a root bus, the parent is the DRM device itself,
-while for DRM devices deeper in the hierarchy, the parent is the
-upstream P2P bridge?  That doesn't really make sense to me.  If the
-caller operates on the DRM device in some cases and on the bridge in
-other cases, it's going to need to know the difference, so hiding the
-difference in this wrapper seems counterproductive.
+diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+index e6defd8..b2f695b 100644
+--- a/drivers/acpi/apei/cper.c
++++ b/drivers/acpi/apei/cper.c
+@@ -29,6 +29,7 @@
+ #include <linux/time.h>
+ #include <linux/cper.h>
+ #include <linux/acpi.h>
++#include <linux/pci.h>
+ #include <linux/aer.h>
+ 
+ /*
+@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 			    const struct acpi_hest_generic_data *gdata)
+ {
++#ifdef CONFIG_ACPI_APEI_PCIEAER
++	struct pci_dev *dev;
++#endif
++
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+ 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+ 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+@@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+ 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+-		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+-		cper_print_aer(pfx, gdata->error_severity, aer_regs);
++	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
++			pcie->device_id.bus, pcie->device_id.function);
++	if (!dev) {
++		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
++			pcie->device_id.segment, pcie->device_id.bus,
++			pcie->device_id.slot, pcie->device_id.function);
++		return;
+ 	}
++	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
++		cper_print_aer(dev, gdata->error_severity,
++				(struct aer_capability_regs *) pcie->aer_info);
++	pci_dev_put(dev);
+ #endif
+ }
+ 
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 3ea5173..34d96e4 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -23,6 +23,9 @@
+ 
+ #include "aerdrv.h"
+ 
++#define CREATE_TRACE_POINTS
++#include <trace/events/ras.h>
++
+ #define AER_AGENT_RECEIVER		0
+ #define AER_AGENT_REQUESTER		1
+ #define AER_AGENT_COMPLETER		2
+@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+ 		printk("%s""  Error of this Agent(%04x) is reported first\n",
+ 			prefix, id);
++	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
++			info->severity);
+ }
+ 
+ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+@@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+ 
+-void cper_print_aer(const char *prefix, int cper_severity,
++void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 		    struct aer_capability_regs *aer)
+ {
+ 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+ 	u32 status, mask;
+ 	const char **status_strs;
++	char *prefix = NULL;
+ 
+ 	aer_severity = cper_severity_to_aer(cper_severity);
+ 	if (aer_severity == AER_CORRECTABLE) {
+@@ -259,5 +265,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+ 			*(tlp + 13), *(tlp + 12));
+ 	}
++	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
++			aer_severity);
+ }
+ #endif
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 544abdb..7b86dc6 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+ }
+ #endif
+ 
+-extern void cper_print_aer(const char *prefix, int cper_severity,
++extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
+ 			   struct aer_capability_regs *aer);
+ extern int cper_severity_to_aer(int cper_severity);
+ extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
 
-> +}
-> +
-> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-> index eb37466..5a8a4f5 100644
-> --- a/drivers/gpu/drm/drm_pci.c
-> +++ b/drivers/gpu/drm/drm_pci.c
-> @@ -466,6 +466,10 @@ void drm_pci_exit(struct drm_driver *driver, struct
-> pci_driver *pdriver)
->  }
->  EXPORT_SYMBOL(drm_pci_exit);
->
-> +inline __weak struct pci_device *drm_get_parent_device(struct drm_device
-> *dev) {
-> +       return dev->pdev->bus->self;
-> +}
-> +
->  int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
->  {
->         struct pci_dev *root;
-> @@ -479,7 +483,7 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev,
-> u32 *mask)
->                 return -EINVAL;
->
->         // find PCI device for capabilities
-> -       root = dev->pdev->bus->self;
-> +       root = drm_get_parent_device(dev);
->
->         // some architectures might not have host bridges as PCI devices
->         if (root == NULL)
-
-What tree does this apply to?  Upstream doesn't have the "if (root ==
-NULL)" check yet.  That check looks like the sort of thing you'd need
-to avoid the null pointer dereference.  So maybe adding that check and
-the associated code is enough to fix the problem, even without adding
-drm_get_parent_device().
-
-With the code in the tree, it looks like you'd dereference a null
-pointer in pci_pcie_cap(root), so I assume that's what you tripped
-over.
-
-I'm not really sure that code outside the PCI core should be looking
-at capabilities of upstream devices like this.  It seems like the sort
-of thing where the core might need to provide better interfaces.
-
-Bjorn
