@@ -1,59 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 5 Dec 2012 17:30:19 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: "Ortiz, Lance E" <lance.oritz@hp.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"tony.luck@intel.com" <tony.luck@intel.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"mchehab@redhat.com" <mchehab@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v7 2/3] aerdrv: Enhanced AER logging
+Message-ID: <20121205163019.GC28556@liondog.tnic>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+ <20121204210312.4515.13415.stgit@grignak.americas.hpqcorp.net>
+ <20121205143202.GD2364@liondog.tnic>
+ <A961433CDFF2F640A2866803152E61F9516F279F@G4W3219.americas.hpqcorp.net>
 MIME-Version: 1.0
-In-Reply-To: <CANmqhJB4=Xuho0BrfhRO1hkL6yp=BxSxQoSAUgL=eNkZgyk8SQ@mail.gmail.com>
-References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
-	<1355415792.2229.7.camel@ul30vt.home>
-	<CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-	<1355460351.2229.20.camel@ul30vt.home>
-	<CANmqhJB4=Xuho0BrfhRO1hkL6yp=BxSxQoSAUgL=eNkZgyk8SQ@mail.gmail.com>
-Date: Fri, 14 Dec 2012 15:00:49 +0800
-Message-ID: <CANmqhJC0hZBSRzcZ3ec6YJF8Z-utTh6xVziy5WMcd3aAP99LVg@mail.gmail.com>
-Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
- not set] Vt-d & intel_iommu
-From: Jason Gao <pkill.2012@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <A961433CDFF2F640A2866803152E61F9516F279F@G4W3219.americas.hpqcorp.net>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 14, 2012 at 2:56 PM, Jason Gao <pkill.2012@gmail.com> wrote:
-> On Fri, Dec 14, 2012 at 12:45 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
->> Is the MegaRAID firmware and system management firmware the same as
->> well?  Thanks.
->
-> I'v updated  all the firmware using Dell's firmware-tools:
->
-> # inventory_firmware
-> Wait while we inventory system:
-> System inventory:
->         BIOS = 6.3.0
->         SAS/SATA Backplane 0:0 Backplane Firmware = 1.07
->         PERC 6/i Integrated Controller 0 Firmware = 6.3.1-0003
->         Dell OS Drivers Pack, v.6.5.3, A00 = 6.5.3
->         Dell Lifecycle Controller = 1.5.5.27
->         NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth1) = 7.2.20
->         NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth0) = 7.2.20
->         ST3600057SS Firmware = es66
->         iDRAC6 = 1.92
->         NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth2) = 7.2.20
->         NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth3) = 7.2.20
->         Dell 32 Bit Diagnostics, v.5154A0, 5154.1 = 5154a0
->         System BIOS for PowerEdge R710 = 6.3.0
->
-> Thanks
+On Wed, Dec 05, 2012 at 04:14:14PM +0000, Ortiz, Lance E wrote:
+> I removed the prefix argument because it was never used by its caller
+> and never set. The reason I added the prefix variable and set it to
+> NULL was to help in breaking up the patch and adding it would help the
+> intermittent patch build without changing too much code. I knew I was
+> actually going to use the variable in patch 3.
 
-#lspci -vvvv -s 03:00.0|grep fail:
-pcilib: sysfs_read_vpd: read failed: Connection timed out
+No, the correct way to do that is to keep all changes that belong
+logically together in a single patch for ease of reviewing and avoid
+breakages. And in your case this should be pretty easy: simply move all
+the 'prefix' touching code to patch #3 and you're done, AFAICT.
 
-#strace lspci -vvvv -s 03:00.0|grep fail:
-....
-open("/sys/bus/pci/devices/0000:03:00.0/vpd", O_RDONLY) = 4
-pread(4, 0x7fff30670b3f, 1, 0)          = -1 ETIMEDOUT (Connection timed out)
-write(2, "pcilib: ", 8pcilib: )                 = 8
-write(2, "sysfs_read_vpd: read failed: Con"..., 49sysfs_read_vpd: read
-failed: Connection timed out) = 49
-write(2, "\n", 1
-....
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
