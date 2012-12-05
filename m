@@ -1,54 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50CB9FF8.2070502@redhat.com>
-Date: Fri, 14 Dec 2012 16:54:00 -0500
-From: Don Dutile <ddutile@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f202.google.com ([209.85.220.202]:46719 "EHLO
+	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644Ab2LEU6C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:02 -0500
+Received: by mail-vc0-f202.google.com with SMTP id m8so583671vcd.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:01 -0800 (PST)
+Subject: [PATCH 08/12] ath9k: Use standard #defines for PCIe Capability ASPM
+	fields
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Date: Wed, 05 Dec 2012 13:58:01 -0700
+Message-ID: <20121205205801.13851.35427.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-To: Jason Gao <pkill.2012@gmail.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
-Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
- not set] Vt-d & intel_iommu
-References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com> <1355415792.2229.7.camel@ul30vt.home> <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-In-Reply-To: <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/13/2012 09:01 PM, Jason Gao wrote:
-> On Fri, Dec 14, 2012 at 12:23 AM, Alex Williamson
-> <alex.williamson@redhat.com>  wrote:
->>
->> Device 03:00.0 is your raid controller:
->>
->> 03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
->>
->> For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
->> ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
->> it's not reading an OS allocated buffer, which probably means it's some
->> kind of side-band communication with a management controller.  I'd guess
->> it's a BIOS bug and there should be an RMRR covering those accesses.
->> Thanks,
->
-> First of all ,I want to known whether I can ignore these errors on the
-> production server,and do these error may affect the system?
->
-> By the way,when I removed the "intel_iommu=on" from /etc/grub.conf,no
-> DMAR related errors occur
->
-well, if you don't enable the IOMMU, then it won't have IOMMU faults! ;-)
+Use the standard #defines for PCIe Capability ASPM fields.
 
-> It's a strange thing,other three Dell R710 servers with the same bios
-> version v. 6.3.0, same kernel 2.6.32-279.14.1 on RHEL6u3(Centos 6u3)
-> ,but these errors don't appear on these tree servers
->
-mptsas or smi fw has to be different....
+Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1 directly, but
+these are defined for the Linux ASPM interfaces, e.g.,
+pci_disable_link_state(), and only coincidentally match the actual register
+bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not match
+the register bit.
 
-> Anyone have any idea for this ?
->
-> thanks
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: "John W. Linville" <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org
+CC: ath9k-devel@lists.ath9k.org
+---
+ drivers/net/wireless/ath/ath9k/pci.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index f088f4b..71d8207 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -125,23 +125,23 @@ static void ath_pci_aspm_init(struct ath_common *common)
+ 
+ 	if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
+ 	    (AR_SREV_9285(ah))) {
+-		/* Bluetooth coexistance requires disabling ASPM. */
++		/* Bluetooth coexistence requires disabling ASPM. */
+ 		pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL,
+-			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
++			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
+ 
+ 		/*
+ 		 * Both upstream and downstream PCIe components should
+ 		 * have the same ASPM settings.
+ 		 */
+ 		pcie_capability_clear_word(parent, PCI_EXP_LNKCTL,
+-			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
++			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
+ 
+ 		ath_info(common, "Disabling ASPM since BTCOEX is enabled\n");
+ 		return;
+ 	}
+ 
+ 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
+-	if (aspm & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
++	if (aspm & (PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1)) {
+ 		ah->aspm_enabled = true;
+ 		/* Initialize PCIe PM and SERDES registers. */
+ 		ath9k_hw_configpcipowersave(ah, false);
 
