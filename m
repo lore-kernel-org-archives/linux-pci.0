@@ -1,82 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:54442 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264Ab2L0AKf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 19:10:35 -0500
-MIME-Version: 1.0
-In-Reply-To: <6257154.ucqGyPHqkg@vostro.rjw.lan>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
-	<CAE9FiQWr6-=kvrCXKEWFvUHHv6xbHKt-oAdt+VPUMphVUW4U4A@mail.gmail.com>
-	<CAE9FiQVOvqqEFXcRbZt5=8e4fQgmzw03WCS=env46eYADFpXLw@mail.gmail.com>
-	<6257154.ucqGyPHqkg@vostro.rjw.lan>
-Date: Wed, 26 Dec 2012 16:10:32 -0800
-Message-ID: <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:49298 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932073Ab2LEWYn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 17:24:43 -0500
+Message-ID: <1354746272.2355.102.camel@jtkirshe-mobl>
+Subject: Re: [PATCH 07/12] e1000e: Use standard #defines for PCIe Capability
+ ASPM fields
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Reply-To: jeffrey.t.kirsher@intel.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	e1000-devel@lists.sourceforge.net,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>
+Date: Wed, 05 Dec 2012 14:24:32 -0800
+In-Reply-To: <CAErSpo5EfAY7BTNFtq3DWggDhBisBPGhevOsZXa19jRLT4+b6Q@mail.gmail.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+	 <20121205205755.13851.77284.stgit@bhelgaas.mtv.corp.google.com>
+	 <1354745132.2355.98.camel@jtkirshe-mobl>
+	 <CAErSpo5EfAY7BTNFtq3DWggDhBisBPGhevOsZXa19jRLT4+b6Q@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-qOD9q+9BgGcMC9bmwAAe"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 26, 2012 at 2:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
->> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >> Do you have a reference for this?  I think this might have been true
->> >> in the past, but I don't think it's true for any version of gcc we
->> >> support for building Linux.
->> >
->> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
->>
->> the problem is already addressed by:
->>
->> | commit f9d14250071eda9972e4c9cea745a11185952114
->> | Author: Linus Torvalds <torvalds@linux-foundation.org>
->> | Date:   Fri Jan 2 09:29:43 2009 -0800
->> |
->> |    Disallow gcc versions 4.1.{0,1}
->> |
->> |    These compiler versions are known to miscompile __weak functions and
->> |    thus generate kernels that don't necessarily work correctly.  If a weak
->> |    function is int he same compilation unit as a caller, gcc may end up
->> |    inlining it, and thus binding the weak function too early.
->> |
->> |    See
->> |
->> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
->> |
->> |    for details.
->>
->> so it is ok to put the __weak in the same file now.
->
-> Cool, thanks for checking and for the ACK!
 
-wait, we have some problem on systems that root bus is not exported via DSDT ...
+--=-qOD9q+9BgGcMC9bmwAAe
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-one of my nehalem system that have uncore cpu devices are not exported via ACPI.
+On Wed, 2012-12-05 at 15:07 -0700, Bjorn Helgaas wrote:
+> On Wed, Dec 5, 2012 at 3:05 PM, Jeff Kirsher
+> <jeffrey.t.kirsher@intel.com> wrote:
+> > On Wed, 2012-12-05 at 13:57 -0700, Bjorn Helgaas wrote:
+> >> Use the standard #defines for PCIe Capability ASPM fields.
+> >>
+> >> Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1
+> >> directly, but
+> >> these are defined for the Linux ASPM interfaces, e.g.,
+> >> pci_disable_link_state(), and only coincidentally match the actual
+> >> register
+> >> bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not
+> >> match
+> >> the register bit.
+> >>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+> >> CC: Jesse Brandeburg <jesse.brandeburg@intel.com>
+> >> CC: Bruce Allan <bruce.w.allan@intel.com>
+> >> CC: Carolyn Wyborny <carolyn.wyborny@intel.com>
+> >> CC: Don Skidmore <donald.c.skidmore@intel.com>
+> >> CC: Greg Rose <gregory.v.rose@intel.com>
+> >> CC: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+> >> CC: Alex Duyck <alexander.h.duyck@intel.com>
+> >> CC: John Ronciak <john.ronciak@intel.com>
+> >> CC: e1000-devel@lists.sourceforge.net
+> >> ---
+> >>  drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++++--
+> >>  1 files changed, 9 insertions(+), 2 deletions(-)
+> >
+> > Thanks I will add this patch to my queue for e1000e.  Since this is
+> > patch 7 of 12, are there PCI dependent patches in the series that need
+> > to be applied before?
+>=20
+> Yes.  It does depend on a previous patch that adds the #defines to
+> include/uapi/linux/pci_regs.h
+> (http://marc.info/?l=3Dlinux-pci&m=3D135474107109010&w=3D2).
+>=20
+> I plan to merge that during the v3.8 merge window, so you can merge it
+> after that.  Or, if it won't cause you conflicts, I can include the
+> e1000e change in my PCI tree.
+>=20
+> Bjorn
 
-also there will be problem that system is booting with acpi=off.
+yeah, it does not apply cleanly (because of patches currently in the
+queue from Bruce).  So I will take care of pushing your e1000e patch
+through Dave's tree.
 
+--=-qOD9q+9BgGcMC9bmwAAe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-+int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+       struct pci_sysdata *sd = bridge->bus->sysdata;
-+       struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
-+
-+       ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
-+       return 0;
-+}
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
 
-will get wrong info...via sd... as their sd is standalone
+iQIcBAABCgAGBQJQv8mgAAoJEOVv75VaS+3Ob2gP/Riculxsp/lioAB9lZbjWpOF
+eXp0ZJesce0z0zvciumAtksGuBoVa5E41ZUoroQ1sYMD5/MU7v892yUGOQ70Y+cD
+wm8q68OrucfsocXx2Ft4y/qdDp5UyFT9+196ZaTHNgZA4ZR8pn/MRmDIpc5JZBPR
+rPRu3b5u4C14DzXV1hsozpqMUuGNii8hrJ2S34g01TQIAs1PjWbwRx0ZGv9K1aox
+4mSy91iY+Ams9dq09tTh0x4JrX2X/rBiRj5EWe40n/pf6nLinS/rSDOccpYH0F+v
+cXzosPAdAJ50nWad2HtKRLiMotCXxOCMuyeE9YlRxyAiGdcT9www+Kc+he13SKuc
+T1A05WhdP4Gv6KpcMKsG6cQUMLgM3/52JTRiFoAEl0Mwa9Uyy4b3+DL+yT8Q2Omx
++O9KfGoakGvtoAG4ONKBbjmnXX2szzrWbOK/kLG7tHfQxtL7o1vFSNVRjrGmMNBL
+zk7oTGHyOzMO5T//5fGKW3JS/kmqf9nelVXH2N8jhwLiry47ha6rUA1KjVFZIlVb
+nrNVrVSZnnk/t7CIHj4wnRUlMzSYZ8wg9E+st68jSE5D0fSrw/k5Te/D6YcViqNG
+mNDhAoge5khMgFgKuZEHarGhfQov0zkkbSwdVsdU851rJBpUUP07g4/ZllwwVbVL
+hY52oXVl0DuIsi1XB/1S
+=Vp9z
+-----END PGP SIGNATURE-----
 
-Thanks
+--=-qOD9q+9BgGcMC9bmwAAe--
 
-Yinghai
