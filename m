@@ -1,143 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:30476 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754063Ab2LDRJr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 12:09:47 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v6 2/3] aerdrv: Enhanced AER logging
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 04 Dec 2012 10:04:36 -0700
-Message-ID: <20121204170436.31397.40857.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
-References: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
+Received: from mail-gh0-f202.google.com ([209.85.160.202]:35002 "EHLO
+	mail-gh0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119Ab2LEU54 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:57:56 -0500
+Received: by mail-gh0-f202.google.com with SMTP id z10so671231ghb.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:57:56 -0800 (PST)
+Subject: [PATCH 07/12] e1000e: Use standard #defines for PCIe Capability ASPM
+	fields
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Duyck <alexander.h.duyck@intel.com>,
+	e1000-devel@lists.sourceforge.net,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>
+Date: Wed, 05 Dec 2012 13:57:56 -0700
+Message-ID: <20121205205755.13851.77284.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch will provide a more reliable and easy way for user-space
-applications to have access to AER logs rather than reading them from the
-message buffer. It also provides a way to notify user-space when an AER
-event occurs.
+Use the standard #defines for PCIe Capability ASPM fields.
 
-The aer driver is updated to generate a trace event of function 'aer_event'
-when a PCIe error is reported over the AER interface.  The trace event was
-added to both the interrupt based aer path and the firmware first path.
+Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1 directly, but
+these are defined for the Linux ASPM interfaces, e.g.,
+pci_disable_link_state(), and only coincidentally match the actual register
+bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not match
+the register bit.
 
-v1-v2 fix compile errors in ifdefs.
-v2-v3 Update to new location of trace header. Update print to remove
-warning.
-v3-v4 Reworked logic when getting ready to call cper_print_aer
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+CC: Jesse Brandeburg <jesse.brandeburg@intel.com>
+CC: Bruce Allan <bruce.w.allan@intel.com>
+CC: Carolyn Wyborny <carolyn.wyborny@intel.com>
+CC: Don Skidmore <donald.c.skidmore@intel.com>
+CC: Greg Rose <gregory.v.rose@intel.com>
+CC: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+CC: Alex Duyck <alexander.h.duyck@intel.com>
+CC: John Ronciak <john.ronciak@intel.com>
+CC: e1000-devel@lists.sourceforge.net
 ---
+ drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
- 0 files changed, 0 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-index e6defd8..4a3e945 100644
---- a/drivers/acpi/apei/cper.c
-+++ b/drivers/acpi/apei/cper.c
-@@ -29,6 +29,7 @@
- #include <linux/time.h>
- #include <linux/cper.h>
- #include <linux/acpi.h>
-+#include <linux/pci.h>
- #include <linux/aer.h>
- 
- /*
-@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
- static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 			    const struct acpi_hest_generic_data *gdata)
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index f444eb0..b8561ef 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -5613,15 +5613,22 @@ static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
+ #else
+ static void __e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
  {
-+#ifdef CONFIG_ACPI_APEI_PCIEAER
-+	struct pci_dev *dev;
-+#endif
++	u16 aspm_ctl = 0;
 +
- 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
- 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
- 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-@@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
- 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
- #ifdef CONFIG_ACPI_APEI_PCIEAER
--	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
--		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
--		cper_print_aer(pfx, gdata->error_severity, aer_regs);
-+	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-+			pcie->device_id.bus, pcie->device_id.function);
-+	if (!dev) {
-+		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-+			pcie->device_id.segment, pcie->device_id.bus,
-+			pcie->device_id.slot, pcie->device_id.function);
-+		return;
- 	}
-+	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
-+		cper_print_aer(dev, gdata->error_severity,
-+				(struct aer_capability_regs *) pcie->aer_info);
-+	pci_dev_put(dev);
- #endif
- }
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 3ea5173..34d96e4 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -23,6 +23,9 @@
- 
- #include "aerdrv.h"
- 
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/ras.h>
++	if (state & PCIE_LINK_STATE_L0S)
++		aspm_ctl |= PCI_EXP_LNKCTL_ASPM_L0S;
++	if (state & PCIE_LINK_STATE_L1)
++		aspm_ctl |= PCI_EXP_LNKCTL_ASPM_L1;
 +
- #define AER_AGENT_RECEIVER		0
- #define AER_AGENT_REQUESTER		1
- #define AER_AGENT_COMPLETER		2
-@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 	if (info->id && info->error_dev_num > 1 && info->id == id)
- 		printk("%s""  Error of this Agent(%04x) is reported first\n",
- 			prefix, id);
-+	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
-+			info->severity);
- }
+ 	/*
+ 	 * Both device and parent should have the same ASPM setting.
+ 	 * Disable ASPM in downstream component first and then upstream.
+ 	 */
+-	pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, state);
++	pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, aspm_ctl);
  
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-@@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- 
--void cper_print_aer(const char *prefix, int cper_severity,
-+void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 		    struct aer_capability_regs *aer)
- {
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
-+	char *prefix = NULL;
- 
- 	aer_severity = cper_severity_to_aer(cper_severity);
- 	if (aer_severity == AER_CORRECTABLE) {
-@@ -259,5 +265,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
- 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
- 			*(tlp + 13), *(tlp + 12));
- 	}
-+	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
-+			aer_severity);
+ 	if (pdev->bus->self)
+ 		pcie_capability_clear_word(pdev->bus->self, PCI_EXP_LNKCTL,
+-					   state);
++					   aspm_ctl);
  }
  #endif
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 544abdb..7b86dc6 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -49,7 +49,7 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- #endif
- 
--extern void cper_print_aer(const char *prefix, int cper_severity,
-+extern void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 			   struct aer_capability_regs *aer);
- extern int cper_severity_to_aer(int cper_severity);
- extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
+ static void e1000e_disable_aspm(struct pci_dev *pdev, u16 state)
 
