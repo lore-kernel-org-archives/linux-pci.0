@@ -1,50 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:41599 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981Ab2LFAgp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Dec 2012 19:36:45 -0500
-Message-ID: <50BFE88D.1000800@zytor.com>
-Date: Wed, 05 Dec 2012 16:36:29 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 5 Dec 2012 15:50:35 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 3/3] aerdrv: Cleanup log output for CPER based AER
+Message-ID: <20121205145035.GE2364@liondog.tnic>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+ <20121204210318.4515.10180.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
-In-Reply-To: <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20121204210318.4515.10180.stgit@grignak.americas.hpqcorp.net>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2012 04:15 PM, Yinghai Lu wrote:
+On Tue, Dec 04, 2012 at 02:03:18PM -0700, Lance Ortiz wrote:
+> These changes make cper_print_aer more consistent with aer_print_error
+> which is called in the AER interrupt case. The string in the variable
+> 'prefix' is printed at the beginning of each print statement in
+> cper_print_aer(). The prefix is a string containing the driver name
+> and the device's slot location.  From the callers the value of prefix
+> is never assigned and is NULL, so when cper_print_aer prints data the
+> initial string does not get printed.  This string is important because
+> it identifies the device that the error is on.
 > 
-> -#ifndef CONFIG_DEBUG_BOOT_PARAMS
-> -struct boot_params __initdata boot_params;
-> -#else
->  struct boot_params boot_params;
-> -#endif
-
+> v1-v2 fix some compile errors withinn the #ifdef
+> v3-v4 remove agent id stuff and kept print the same to avoid
+> compatibility issues
 > 
-> No, that is not a right fix
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> ---
 > 
-> We should only cache pointer to setup_data.
+>  drivers/pci/pcie/aer/aerdrv_errprint.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
 > 
-> at the same time we should export setup_data into /sys, so kexec could
-> append this pointer to command of
-> second kernel, just like kexec append acpi_rsdp.
-> That should address DavidW's concern.
-> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 34d96e4..58ff4c0 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
+>  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+>  	u32 status, mask;
+>  	const char **status_strs;
+> -	char *prefix = NULL;
+> +	char prefix[44];
+>  
+>  	aer_severity = cper_severity_to_aer(cper_severity);
+> +	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
+> +		(aer_severity == AER_CORRECTABLE) ?
+> +		KERN_WARNING : KERN_ERR,
+> +		dev_driver_string(&dev->dev), dev_name(&dev->dev));
 
-I don't see why that isn't the right fix.  We copy the data into
-boot_params early in the boot; that *is* the official copy as far as the
-kernel is concerned.
+Here it is, you're initializing 'prefix' here although it is being
+used in the previous patch. You should concentrate the whole prefix
+initialization and passing in one patch so that there are no breakages.
 
-So this patch very much seems like The Right Thing.
+Also, why is it exactly 44 chars long, is that some magic number
+that always works? At least this is what aer_print_error does
+too. I'm guessing someone chose it because it is large enough for
+dev_driver_string() and dev_name() and a couple more formatting
+characters. Oh well.
 
-	-hpa
+Thanks.
 
-
+-- 
+Regards/Gruss,
+    Boris.
