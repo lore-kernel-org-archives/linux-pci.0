@@ -1,71 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:51509 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139Ab2LLDD5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Dec 2012 22:03:57 -0500
+Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:39491
+	"EHLO am1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751710Ab2LEJ2m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 04:28:42 -0500
+Message-ID: <50BF13E1.1000009@freescale.com>
+Date: Wed, 5 Dec 2012 17:29:05 +0800
+From: Chen Yuanquan-B41889 <B41889@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <1355279525.7216.154.camel@yhuang-dev>
-References: <20121126191002.GE6504@xanatos> <1962497.aG1sFtYjJG@vostro.rjw.lan>
- <20121207002808.GG5324@xanatos> <7766249.mqYLvmhmrJ@vostro.rjw.lan> <1355279525.7216.154.camel@yhuang-dev>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Tue, 11 Dec 2012 18:34:58 -0800
-Message-ID: <CAObL_7Fn7Z_0vhZ+RfC-L=+OKqkRpxo6i0wftKfncSwrmb567w@mail.gmail.com>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-To: Huang Ying <ying.huang@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	Ulrich Eckhardt <usb@uli-eckhardt.de>,
-	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Ming Lei <ming.lei@canonical.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: <linuxppc-dev@lists.ozlabs.org>, <galak@kernel.crashing.org>,
+	<r61911@freescale.com>, <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue
+ of rescanned pci device
+References: <1354674717-14426-1-git-send-email-B41889@freescale.com>  <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com> <1354695989.2351.13.camel@pasglop>
+In-Reply-To: <1354695989.2351.13.camel@pasglop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 11, 2012 at 6:32 PM, Huang Ying <ying.huang@intel.com> wrote:
-> On Fri, 2012-12-07 at 22:00 +0100, Rafael J. Wysocki wrote:
->> On Thursday, December 06, 2012 04:28:08 PM Sarah Sharp wrote:
->> > On Thu, Dec 06, 2012 at 01:43:32AM +0100, Rafael J. Wysocki wrote:
->> > > On Wednesday, December 05, 2012 04:33:44 PM Sarah Sharp wrote:
->> > > > Wakeup from D3 works fine on the 3.5.0 kernel, but fails on 3.6.2.  I
->> > > > haven't fully bisected yet.
->> > > >
->> > > > In debugging, I found that if you only enable runtime suspend for the
->> > > > NEC host controller, the host successfully comes out of D3 when you plug
->> > > > in a USB device.  However, if you enable runtime PM for the parent PCIe root
->> > > > port, it stops working.  Disabling D3cold for both devices did not help.
->> > > >
->> > > > It looks like a PCI issue, so what sort of debugging info do you need
->> > > > from me?
->> > >
->> > > It looks like this is related to one of the following commits:
->> >
->> > > Generally, please try to bisect changes in drivers/pci between v3.5 and v3.6.
->> >
->> > Ok, I ran git bisect with only the drivers/pci directory as a target.
->> >
->> > > ee85f54 ACPI/PM: specify lowest allowed state for device sleep state
->> >
->> > git bisect ended up identifying this as the bad patch, although
->> > reverting just that patch after the bisect finished didn't seem to help.
->> > However, it does make sense that this would be the culprit patch, if
->> > Huang Ying's theory about the PME polling is correct.
+On 12/05/2012 04:26 PM, Benjamin Herrenschmidt wrote:
+> On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
+>> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
+>>> On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
+>>>> On powerpc arch, some fixup work of PCI/PCI-e device is just done during the
+>>>> first scan at booting time. For the PCI/PCI-e device rescanned after linux OS
+>>>> booting up, the fixup work won't be done, which leads to dma_set_mask error or
+>>>> irq related issue in rescanned PCI/PCI-e device's driver. So, it does the same
+>>>> fixup work for the rescanned device to avoid this issue.
+>>> Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
+>>> that way but factored out.
+> Please, at least format your email properly so I can try to undertand
+> without needing aspirin.
+>
+>> There's a judgement "if (!bus->is_added)" before calling of
+>> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
+>> the fixup won't execute, which leads to fatal error in driver of rescanned
+>> device on freescale  powerpc, no this issues on x86 arch.
+> First, none of that invalidates my statement that you shouldn't
+> duplicate a whole block of code like this. Even if your approach is
+> correct (which is debated separately), at the very least you should
+> factor the code out into a common function between the two copies.
+>
+>> Remove the judgement, let it to do the pcibios_fixup_bus
+>> directly, the error won't occur for the rescanned device. But it's
+>> general code, not proper to change here, so copy the pcibios_fixup_bus
+>> work to  pcibios_enable_device.
 >>
->> Well, we surely don't handle this particular case correctly, and it shouldn't
->> be very difficult to fix, so let's hope that this is the culprit. :-)
+>>> I'm surprised also that is_added is false when pcibios_enable_device()
+>>> gets called ... that looks strange to me. At what point is that enable
+>>> happening in the hotplug sequence ?
+>> All devices are rescanned and then call the pci_enable_devices and
+>> pci_bus_add_devices.
+> Where ? How ? What is the sequence happening ? In any case, I think if
+> we need a proper fixup done per-device like that after scan we ought to
+> create a new hook at the generic level rather than that sort of hack.
+>
+
+echo 1 > rescan to trigger dev_rescan_store:
+
+dev_rescan_store->pci_rescan_bus->pci_scan_child_bus, 
+pci_assign_unassigned_bus_resources,
+pci_enable_bridges, pci_bus_add_devices
+
+pci_enable_bridges->pci_enable_device->__pci_enable_device_flags->do_pci_enable_device->
+pcibios_enable_device
+
+pci_bus_add_devices->pci_bus_add_device->"dev->is_added = 1"
+
+Yeah, it's general fixup code for every rescanned PCI/PCI-e device on 
+powerpc at runtime. So if
+we want to call it in a ppc_md member, we need to wrap it as a function 
+and assign it in every ppc_md,
+it isn't proper for the general code.
+
+Regards,
+yuanquan
+
+>> The patch code will be called by pci_enable_devices. The "dev->is_added"
+>> is set in pci_bus_add_device
+>> which is called by pci_bus_add_devices. So "dev->is_added" is false when
+>> checking it in pcibios_enable_device
+>> for the rescanned device.
+> Who calls pci_enable_device() in the rescan case ? Why isn't it left to
+> the driver ? I don't think we can rely on that behaviour not to change.
+>
+>>> How do you trigger the rescan anyway ?
+>> Use the interface under /sys :
+>> echo 1 > /sys/bus/pci/devices/xxx/remove
 >>
+>> then echo 1 to the pci device which is the bus of the removed device
+>> echo 1 > /sys/bus/pci/devices/xxxx/rescan
+>> the removed device will be scanned and it's driver module will be loaded
+>> automatically.
+> Yeah this code path are known to be fishy. I think the problem is at the
+> generic abstraction level and that's where it needs to be fixed.
 >
-> Please try the patch attached.  With it, USB host controller can be
-> waken up with USB card reader plugging in on my test machine.
-
-Potentially silly question: is this better than waking up the PCIe
-port when polling the device (and putting it back to sleep again)?
-
---Andy
-
+> Cheers,
+> Ben.
 >
-> Best Regards,
-> Huang Ying
+>> Regards,
+>> yuanquan
+>>> I think the problem needs to be solve at a higher level, I'm adding
+>>> linux-pci & Bjorn to the CC list.
+>>>
+>>> Cheers,
+>>> Ben.
+>>>
+>>>> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
+>>>> ---
+>>>>    arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
+>>>>    1 file changed, 20 insertions(+)
+>>>>
+>>>> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+>>>> index 7f94f76..f0fb070 100644
+>>>> --- a/arch/powerpc/kernel/pci-common.c
+>>>> +++ b/arch/powerpc/kernel/pci-common.c
+>>>> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>>>>    		if (ppc_md.pcibios_enable_device_hook(dev))
+>>>>    			return -EINVAL;
+>>>>    
+>>>> +	if (!dev->is_added) {
+>>>> +		/*
+>>>> +		 * Fixup NUMA node as it may not be setup yet by the generic
+>>>> +		 * code and is needed by the DMA init
+>>>> +		 */
+>>>> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+>>>> +
+>>>> +		/* Hook up default DMA ops */
+>>>> +		set_dma_ops(&dev->dev, pci_dma_ops);
+>>>> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+>>>> +
+>>>> +		/* Additional platform DMA/iommu setup */
+>>>> +		if (ppc_md.pci_dma_dev_setup)
+>>>> +			ppc_md.pci_dma_dev_setup(dev);
+>>>> +
+>>>> +		/* Read default IRQs and fixup if necessary */
+>>>> +		pci_read_irq_line(dev);
+>>>> +		if (ppc_md.pci_irq_fixup)
+>>>> +			ppc_md.pci_irq_fixup(dev);
+>>>> +	}
+>>>>    	return pci_enable_resources(dev, mask);
+>>>>    }
+>>>>    
+>>>
+>>>
+>>>
 >
+>
+>
+>
+
+
