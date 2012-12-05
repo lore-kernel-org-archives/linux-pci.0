@@ -1,98 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 06/15] PCI/acpiphp: Convert "acpiphp" sub-driver's
- functionality to built-in only
-From: Myron Stowe <mstowe@redhat.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Myron Stowe <myron.stowe@redhat.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <CAE9FiQUh_jcoemFpeiAKHr4FyxSA4itHycNwJk+Dhf45Ap5prA@mail.gmail.com>
-References: <20121207062454.11051.12739.stgit@amt.stowe>
-	 <20121207062530.11051.47869.stgit@amt.stowe>
-	 <CAE9FiQUh_jcoemFpeiAKHr4FyxSA4itHycNwJk+Dhf45Ap5prA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 07 Dec 2012 12:11:04 -0700
-Message-ID: <1354907464.2419.34.camel@zim.stowe>
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64893 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174Ab2LEWIL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 17:08:11 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so4844214lbb.19
+        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 14:08:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1354745132.2355.98.camel@jtkirshe-mobl>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+ <20121205205755.13851.77284.stgit@bhelgaas.mtv.corp.google.com> <1354745132.2355.98.camel@jtkirshe-mobl>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Dec 2012 15:07:48 -0700
+Message-ID: <CAErSpo5EfAY7BTNFtq3DWggDhBisBPGhevOsZXa19jRLT4+b6Q@mail.gmail.com>
+Subject: Re: [PATCH 07/12] e1000e: Use standard #defines for PCIe Capability
+ ASPM fields
+To: jeffrey.t.kirsher@intel.com
+Cc: linux-pci@vger.kernel.org,
+	Alex Duyck <alexander.h.duyck@intel.com>,
+	e1000-devel@lists.sourceforge.net,
+	Don Skidmore <donald.c.skidmore@intel.com>,
+	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Jesse Brandeburg <jesse.brandeburg@intel.com>,
+	Greg Rose <gregory.v.rose@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Carolyn Wyborny <carolyn.wyborny@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-12-06 at 22:48 -0800, Yinghai Lu wrote:
-> On Thu, Dec 6, 2012 at 10:25 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
-> > The "ACPI Hot Plug PCI Controller ("acpiphp")" sub-driver may be compiled
-> > as a module.  Kernel modules are instantiated somewhat randomly - the
-> > order in which they are linked as the kernel as built - thus if there are
-> > any dependencies on the ordering of attaching sub-drivers, they can not be
-> > effectively dealt with.
-> >
-> > This patch series resolves any potential sequencing inter-dependencies by
-> > converting "acpiphp" sub-driver's functionality to being only supported as
-> > statically built-in to the kernel.  Inter-dependencies can then be
-> > effectively handled by explicitly sequencing the addition of such
-> > functionality.
-> 
-> some slots may support both acpiphp and pciehp.
-> 
-> if make acpiphp to be built-in, user do not have choice anymore.
+On Wed, Dec 5, 2012 at 3:05 PM, Jeff Kirsher
+<jeffrey.t.kirsher@intel.com> wrote:
+> On Wed, 2012-12-05 at 13:57 -0700, Bjorn Helgaas wrote:
+>> Use the standard #defines for PCIe Capability ASPM fields.
+>>
+>> Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1
+>> directly, but
+>> these are defined for the Linux ASPM interfaces, e.g.,
+>> pci_disable_link_state(), and only coincidentally match the actual
+>> register
+>> bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not
+>> match
+>> the register bit.
+>>
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+>> CC: Jesse Brandeburg <jesse.brandeburg@intel.com>
+>> CC: Bruce Allan <bruce.w.allan@intel.com>
+>> CC: Carolyn Wyborny <carolyn.wyborny@intel.com>
+>> CC: Don Skidmore <donald.c.skidmore@intel.com>
+>> CC: Greg Rose <gregory.v.rose@intel.com>
+>> CC: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
+>> CC: Alex Duyck <alexander.h.duyck@intel.com>
+>> CC: John Ronciak <john.ronciak@intel.com>
+>> CC: e1000-devel@lists.sourceforge.net
+>> ---
+>>  drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++++--
+>>  1 files changed, 9 insertions(+), 2 deletions(-)
+>
+> Thanks I will add this patch to my queue for e1000e.  Since this is
+> patch 7 of 12, are there PCI dependent patches in the series that need
+> to be applied before?
 
-What area are you worried about and how do we exercise that choice
-today?
+Yes.  It does depend on a previous patch that adds the #defines to
+include/uapi/linux/pci_regs.h
+(http://marc.info/?l=linux-pci&m=135474107109010&w=2).
 
-Here is my current understanding to set a little context -
+I plan to merge that during the v3.8 merge window, so you can merge it
+after that.  Or, if it won't cause you conflicts, I can include the
+e1000e change in my PCI tree.
 
-I see the following call chains with respect to pciehp and acpiphp:
-
-  pcied_init			# pciehp module_init
-    pciehp_firmware_init
-      pciehp_acpi_slot_detection_init
-        parse_detect_mode	#pcie, acpi, auto (default)
-    pcie_port_service_register
-
-
-  acpiphp_init					# module_init
-    init_acpi
-      acpiphp_glue_init
-        acpi_pci_register_driver(&acpi_pci_hp_driver)
-          list_for_each_entry(root, &acpi_pci_roots, node)
-            driver->add				# for \_SB_.PCI0
-              add_bridge
-                add_host_bridge
-                  bridge = kzalloc(struct acpiphp_bridge)
-                  bridge->handle = handle	# \_SB_.PCI0
-                  bridge->pci_bus = root_bus	#pci_bus 0000:00
-                  init_bridge_misc
-                    acpi_walk_namespace(..., register_slot, ...)
-                      register_slot
-                        if (device_is_managed_by_native_pciehp(pdev))
-                          return AE_OK
-
-Does pciehp influence device_is_managed_by_native_pciehp()?  If not, it
-seems that the acpiphp driver will never attach.
-
-Looking at ./drivers/pci/hotplug/Makefile, CONFIG_HOTPLUG_PCI_PCIE comes
-before CONFIG_HOTPLUG_PCI_ACPI so if pciehp and acpiphp are both
-configured as modules then the load order would seem to be:
-  acpiphp, pciehp: acpiphp ignores, pciehp claims
-  pciehp, acpiphp: pciehp claims, acpiphp ignores
-
-To complete the matrix taking built-in vs. module into account -
-  pciehp=y, acpiphp=y
-    pciehp, acpiphp: pciehp claims, acpiphp ignores
-
-  pciehp=y, acpiphp=m
-    pciehp, acpiphp: pciehp claims, acpiphp ignores
-
-  pciehp=m, acpiphp=y
-    acpiphp, pciehp: acpiphp ignores, pciehp claims
-
-The above combinations all seem to end up with pciehp claiming the slot
-which raises the question: How do we get acpiphp to claim a slot today?
-
-Thanks,
- Myron 
-> 
-> Thanks
-> 
-> Yinghai
-
-
+Bjorn
