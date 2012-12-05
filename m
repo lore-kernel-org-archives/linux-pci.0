@@ -1,62 +1,44 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-Date: Tue, 11 Dec 2012 00:09:22 +0100
-Message-ID: <54207850.t6nmM83CdM@vostro.rjw.lan>
-In-Reply-To: <3585743.RAy43NB8MZ@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <CAE9FiQXsBC-CY4KqKkaAXx3sYLVWJOaaKGkg_kChb7ry_7Sq8Q@mail.gmail.com> <3585743.RAy43NB8MZ@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:64599 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751828Ab2LEVUh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 16:20:37 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so4723936lag.19
+        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 13:20:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1354741486.24513.3.camel@jlt4.sipsolutions.net>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+ <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com> <1354741486.24513.3.camel@jlt4.sipsolutions.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Dec 2012 14:20:15 -0700
+Message-ID: <CAErSpo4UuT=_dXqoaGttFxY05Arvm9AhoTBsZhks16C-ZDctAw@mail.gmail.com>
+Subject: Re: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe Capability
+ ASPM fields
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-pci@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 10, 2012 11:47:27 PM Rafael J. Wysocki wrote:
-> On Monday, December 10, 2012 09:07:06 AM Yinghai Lu wrote:
-> > On Mon, Dec 10, 2012 at 6:46 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
-> > >>
-> > >> Can we expand the BUS_ADD_* concept to other devices instead of just
-> > >> acpi_device?
-> > >>
-> > >> aka we should let struct device has this add_type field.
-> > >
-> > > Having done that in ACPI to cover our use case here, we can try to move it
-> > > into struct device if there are use cases beyond ACPI that can't be covered
-> > > by using deferred driver probing.
-> > 
-> > pci device for hotplug have same problem. need to delay driver attach
-> > for them too.
-> 
-> OK, I'll take a look.  Any pointers to speed that up?
-> 
-> > also BUS_ADD_MATCH and BUS_ADD_START are duplicated.
-> 
-> Not at the moment, they do different things as code goes.
-> 
-> > old add are separated to adding all devices to tree and then matching
-> > work to load the drivers.
-> > 
-> > so _START is not needed anymore, only user.start in pci_root driver
-> > should be removed.
-> > code in .start could be moved .add without problem.
-> 
-> Yes, I'm going to do that as the next step.  I didn't want this particular
-> patchset to grow too big.  I'll post another one on top of it if people
-> don't have problems with this one.
+On Wed, Dec 5, 2012 at 2:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2012-12-05 at 13:58 -0700, Bjorn Helgaas wrote:
+>> Use the standard #defines rather than creating local definitions for
+>> PCIe Capability ASPM fields.
+>
+> I'll pick up the iwlwifi ones if you want, or do you want to merge them
+> somewhere centrally instead?
 
-By the way, can you please remind me where you wanted to put the
-pci_bus_add_devices() and why?
+They do depend on a previous patch that adds the #defines to
+include/uapi/linux/pci_regs.h
+(http://marc.info/?l=linux-pci&m=135474107109010&w=2).
 
-Rafael
+I think I'll merge at least the PCI core parts of this via my PCI tree
+in the v3.8 merge window next week.  If it won't cause conflicts for
+you, I could include the iwlwifi bits there, too.  If it does, at
+least the #define will exist and you can merge it at your leisure.
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
