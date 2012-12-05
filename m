@@ -1,134 +1,136 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 13 Dec 2012 21:35:50 +0200
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI Hotplug: workaround for Thunderbolt on Acer
- Aspire S5
-Message-ID: <20121213193550.GB23994@otc-wbsnb-06>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
- <20121213184441.GB12105@kroah.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="FkmkrVfFsRoUs1wW"
-In-Reply-To: <20121213184441.GB12105@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:52388 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751224Ab2LEI0l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 03:26:41 -0500
+Message-ID: <1354695989.2351.13.camel@pasglop>
+Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue
+ of rescanned pci device
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Chen Yuanquan-B41889 <B41889@freescale.com>
+Cc: linuxppc-dev@lists.ozlabs.org, galak@kernel.crashing.org,
+	r61911@freescale.com, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 05 Dec 2012 19:26:29 +1100
+In-Reply-To: <50BF03C1.2070304@freescale.com>
+References: <1354674717-14426-1-git-send-email-B41889@freescale.com>
+	 <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
+> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
+> > On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
+> >> On powerpc arch, some fixup work of PCI/PCI-e device is just done during the
+> >> first scan at booting time. For the PCI/PCI-e device rescanned after linux OS
+> >> booting up, the fixup work won't be done, which leads to dma_set_mask error or
+> >> irq related issue in rescanned PCI/PCI-e device's driver. So, it does the same
+> >> fixup work for the rescanned device to avoid this issue.
+> > Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
+> > that way but factored out.
 
---FkmkrVfFsRoUs1wW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Please, at least format your email properly so I can try to undertand
+without needing aspirin.
 
-On Thu, Dec 13, 2012 at 10:44:41AM -0800, Greg KH wrote:
-> On Thu, Dec 13, 2012 at 05:31:46PM +0200, Kirill A. Shutemov wrote:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> >=20
-> > Correct ACPI PCI hotplug imeplementation should have _RMV method in a
-> > PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > deeper in hierarchy:
-> >=20
-> > Device (RP05)
-> > {
-> >    // ...
-> >    Device (HRUP)
-> >    {
-> >        // ...
-> >        Device (HRDN)
-> >        {
-> >            // ...
-> >            Device (EPUP)
-> >            {
-> >                // ...
-> >                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
-> >                {
-> >                    Return (One)
-> >                }
-> >            }
-> >        }
-> >    }
-> > }
-> >=20
-> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-> > ---
-> >  drivers/pci/hotplug/acpi_pcihp.c |   13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> >=20
-> > diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acp=
-i_pcihp.c
-> > index 2a47e82..d92ebfb 100644
-> > --- a/drivers/pci/hotplug/acpi_pcihp.c
-> > +++ b/drivers/pci/hotplug/acpi_pcihp.c
-> > @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
-> >  	status =3D acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
-> >  	if (ACPI_SUCCESS(status) && removable)
-> >  		return 1;
-> > +
-> > +	/*
-> > +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
-> > +	 *
-> > +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
-> > +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
-> > +	 * deeper in hierarchy.
-> > +	 */
-> > +	status =3D acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
-> > +			&removable);
-> > +	if (ACPI_SUCCESS(status) && removable)
-> > +		return 1;
->=20
-> I have no objection to this patch as-is, but I wonder how will other
-> BIOSes implement this "incorrectly" in the future.  Should we always
-> just try to walk the whole PCI slot heirachy looking for the _RMV
-> attribute?  That should solve the problem where someone else places this
-> at another location for the slot, right?
+> There's a judgement "if (!bus->is_added)" before calling of 
+> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
+> the fixup won't execute, which leads to fatal error in driver of rescanned
+> device on freescale  powerpc, no this issues on x86 arch.
 
-I'm new with PCI and I'm not sure what problems can cause false positive
-here.
-What will heppend if we find yet another PCI-to-PCI bridge in the hierarchy
-and some of slots of that bridge will have _RMV method? Is it possible,
-right?
+First, none of that invalidates my statement that you shouldn't
+duplicate a whole block of code like this. Even if your approach is
+correct (which is debated separately), at the very least you should
+factor the code out into a common function between the two copies.
 
-I prefer postpone any generalization before we will find any similar bug
-on other HW. (I naively hope BIOS developers will not repeat theirs bugs).
+> Remove the judgement, let it to do the pcibios_fixup_bus
+> directly, the error won't occur for the rescanned device. But it's 
+> general code, not proper to change here, so copy the pcibios_fixup_bus
+> work to  pcibios_enable_device.
+>
+> > I'm surprised also that is_added is false when pcibios_enable_device()
+> > gets called ... that looks strange to me. At what point is that enable
+> > happening in the hotplug sequence ?
+> All devices are rescanned and then call the pci_enable_devices and 
+> pci_bus_add_devices.
 
-> Is there any test for Windows that ensures that this gets placed in the
-> "correct" location that we can rely on?
+Where ? How ? What is the sequence happening ? In any case, I think if
+we need a proper fixup done per-device like that after scan we ought to
+create a new hook at the generic level rather than that sort of hack.
 
-No idea. I haven't seen any Windows.
+> The patch code will be called by pci_enable_devices. The "dev->is_added" 
+> is set in pci_bus_add_device
+> which is called by pci_bus_add_devices. So "dev->is_added" is false when 
+> checking it in pcibios_enable_device
+> for the rescanned device.
 
---=20
- Kirill A. Shutemov
+Who calls pci_enable_device() in the rescan case ? Why isn't it left to
+the driver ? I don't think we can rely on that behaviour not to change.
 
---FkmkrVfFsRoUs1wW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> > How do you trigger the rescan anyway ?
+> Use the interface under /sys :
+> echo 1 > /sys/bus/pci/devices/xxx/remove
+> 
+> then echo 1 to the pci device which is the bus of the removed device
+> echo 1 > /sys/bus/pci/devices/xxxx/rescan
+> the removed device will be scanned and it's driver module will be loaded 
+> automatically.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Yeah this code path are known to be fishy. I think the problem is at the
+generic abstraction level and that's where it needs to be fixed.
 
-iQIcBAEBAgAGBQJQyi4WAAoJEAd+omnVudOMlVUP+wfjyOYeVJZBqgHAQwifUX9U
-rc1w4wwfE8w92d5vmesl7k3YOnKL8wGh6YaG0EDLpMSEYWAbj6bdA6fekiFnardL
-8Q3QkHwrgKsycIrQcib2IGqk5/Dd365pjXV8/3BwjSB24Dw/7e5NpmJUbsYcUDYn
-fXIYFV3Ow/GSMRXnJ3nDh2tkVP8BE6Y3OkDA3TU4Y/q1Fxr3IoPxKU3EoG/0iv7x
-xUt/JUyzgzu3Uo7lU02PfDuPJoSfb9uW2wR+ZqtD1hGj0xp4Z/1o1TpJ4FMuXRIA
-J4o3vc3ThixtiGJhmRTRHZvHwGTRqvLPYusv+cPW4jMFlG6WQmHLx/GdrCK5WkSK
-ViCBU4Eqt5K6zTTiAhtbXkXlt//xKbyeRuqglj/GRiWQcsIK0XbRiWHAZB+Tt3or
-9yUyWDTfC1yHrlbrBSz4HgHKlLpdfZWOasLOrCPw6WSJx5aEPH3aRHSGUt14kBNv
-ATjGX/Vwqtmm/uBApfM6vLV91JWpiyaO5czrFXqIBQG7RZZvWH8SxGdr/ikjocja
-7Kfs6j1thoqXoT4S6Bdh0pvYtxxNwrFXrBo3igdfopYwMU3Zm7Vmk+W5LN+xDo09
-VHfFhLLNBOQtF7WsmYB81GW/dp3zPXOu8yKFcjlAxoOoBq4YxSV9S//81tL1eLJU
-PvPSBgZWOfIgxOW5Ycnx
-=OaTg
------END PGP SIGNATURE-----
+Cheers,
+Ben.
 
---FkmkrVfFsRoUs1wW--
+> Regards,
+> yuanquan
+> > I think the problem needs to be solve at a higher level, I'm adding
+> > linux-pci & Bjorn to the CC list.
+> >
+> > Cheers,
+> > Ben.
+> >
+> >> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
+> >> ---
+> >>   arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
+> >>   1 file changed, 20 insertions(+)
+> >>
+> >> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> >> index 7f94f76..f0fb070 100644
+> >> --- a/arch/powerpc/kernel/pci-common.c
+> >> +++ b/arch/powerpc/kernel/pci-common.c
+> >> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+> >>   		if (ppc_md.pcibios_enable_device_hook(dev))
+> >>   			return -EINVAL;
+> >>   
+> >> +	if (!dev->is_added) {
+> >> +		/*
+> >> +		 * Fixup NUMA node as it may not be setup yet by the generic
+> >> +		 * code and is needed by the DMA init
+> >> +		 */
+> >> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+> >> +
+> >> +		/* Hook up default DMA ops */
+> >> +		set_dma_ops(&dev->dev, pci_dma_ops);
+> >> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+> >> +
+> >> +		/* Additional platform DMA/iommu setup */
+> >> +		if (ppc_md.pci_dma_dev_setup)
+> >> +			ppc_md.pci_dma_dev_setup(dev);
+> >> +
+> >> +		/* Read default IRQs and fixup if necessary */
+> >> +		pci_read_irq_line(dev);
+> >> +		if (ppc_md.pci_irq_fixup)
+> >> +			ppc_md.pci_irq_fixup(dev);
+> >> +	}
+> >>   	return pci_enable_resources(dev, mask);
+> >>   }
+> >>   
+> >
+> >
+> >
+> >
+> 
+
+
