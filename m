@@ -1,43 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:6322 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098Ab2LCT7E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 14:59:04 -0500
-From: "Ortiz, Lance E" <lance.oritz@hp.com>
-To: Borislav Petkov <bp@alien8.de>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v4 1/3] aerdrv: Trace Event for AER
-Date: Mon, 3 Dec 2012 19:58:16 +0000
-Message-ID: <A961433CDFF2F640A2866803152E61F9516EE70A@G4W3218.americas.hpqcorp.net>
-References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
- <20121203185059.GA14798@liondog.tnic>
-In-Reply-To: <20121203185059.GA14798@liondog.tnic>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-vc0-f202.google.com ([209.85.220.202]:46719 "EHLO
+	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752984Ab2LEU6W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:22 -0500
+Received: by mail-vc0-f202.google.com with SMTP id m8so583671vcd.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:22 -0800 (PST)
+Subject: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe Capability ASPM
+	fields
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date: Wed, 05 Dec 2012 13:58:21 -0700
+Message-ID: <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiA+ICsvKg0KPiA+ICsgKiBQQ0llIEFkdmFuY2VkIEVycm9yIFJlcG9ydGluZyAoQUVSKSBQQ0lF
-IFJlcG9ydCBFcnJvcg0KPiANCj4gV2h5IGRvIHlvdSBpbnNpc3Qgb24ga2VlcGluZyB0aGlzIGNv
-bnZvbHV0ZWQgY29tcG91bmQgbmFtZT8gV2hhdCBkb2VzDQo+ICJQQ0llIEFFUiBQQ0llIFJlcG9y
-dCBFcnJvciIgZXZlbiBtZWFuPw0KPiANCj4gVGhpcyBpcyBub3QgdW5yZWFkYWJsZSB0ZWNobmlj
-YWwgZG9jdW1lbnRhdGlvbiBidXQgc29tZXRoaW5nIHBlb3BsZQ0KPiBzaG91bGQgYWN0dWFsbHkg
-dW5kZXJzdGFuZC4gQW5kIGl0IGlzIHNpbXBseSBhIFBDSWUgQUVSIHRyYWNlcG9pbnQuIFNvDQo+
-IHdoeSB0aGUgaCpsbCBub3QgY2FsbCBpdCBieSBpdHMgcmVhbCBuYW1lPw0KDQpJIHdpbGwgZml4
-IHRoYXQuDQoNCj4gDQo+ID4gKyAqDQo+ID4gKyAqIFRoZXNlIGV2ZW50cyBhcmUgZ2VuZXJhdGVk
-IHdoZW4gaGFyZHdhcmUgZGV0ZWN0cyBhIGNvcnJlY3RlZCBvcg0KPiA+ICsgKiB1bmNvcnJlY3Rl
-ZCBldmVudCBvbiBhIHBjaSBleHByZXNzIGRldmljZS4gVGhlIGV2ZW50IHJlcG9ydCBoYXMNCj4g
-DQo+IEFuZCB5b3Ugc2hvdWxkIHN0aWNrIHRvIHRoZSBzYW1lIHNwZWxsaW5nIGZvciBQQ0llIHRo
-cm91Z2hvdXQgdGhlIHRleHQsDQo+IHNvIGNob29zZSBvbmUgYW5kIHVzZSBpdCBldmVyeXdoZXJl
-Lg0KPiANCk9rDQoNCj4gDQo+IEFsc28sIHlvdSBoYXZlbid0IGFkZHJlc3NlZCBNYXVybydzIGNv
-bW1lbnQgYWJvdXQgb3RoZXIgYml0cyBpbiB0aGUNCj4gc3BlYw0KPiB3aGljaCBhcmUgbm90IGhl
-cmUuIFdoeSBhcmUgeW91IHNraXBwaW5nIHRoZW0/DQoNCkkgbWlzc2VkIHRoYXQgbWFpbC4gSSB3
-aWxsIGFkZHJlc3MgdGhhdC4NCg0KTGFuY2UNCg==
+Use the standard #defines rather than creating local definitions for
+PCIe Capability ASPM fields.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes.berg@intel.com>
+CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>
+CC: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 5cd06b3..1dfa6be 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -670,8 +670,6 @@ static void iwl_set_pwr_vmain(struct iwl_trans *trans)
+ 
+ /* PCI registers */
+ #define PCI_CFG_RETRY_TIMEOUT	0x041
+-#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
+-#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
+ 
+ static void iwl_apm_config(struct iwl_trans *trans)
+ {
+@@ -688,8 +686,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
+ 	 */
+ 
+ 	pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+-				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
++	if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
+ 		/* L1-ASPM enabled; disable(!) L0S */
+ 		iwl_set_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
+ 		dev_printk(KERN_INFO, trans->dev,
+@@ -700,7 +697,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
+ 		dev_printk(KERN_INFO, trans->dev,
+ 			   "L1 Disabled; Enabling L0S\n");
+ 	}
+-	trans->pm_support = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
++	trans->pm_support = !(lctl & PCI_EXP_LNKCTL_ASPM_L0S);
+ }
+ 
+ /*
+
