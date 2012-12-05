@@ -1,95 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1356037647.18964.384.camel@misato.fc.hp.com>
-Subject: Re: [PATCH 0/16] ACPI: Rework ACPI namespace scanning for devices
-From: Toshi Kani <toshi.kani@hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59005 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752407Ab2LEAG5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 19:06:57 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so3887745lbb.19
+        for <linux-pci@vger.kernel.org>; Tue, 04 Dec 2012 16:06:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1962888.rQgbRUetgj@vostro.rjw.lan>
+References: <1353398902-21253-1-git-send-email-ying.huang@intel.com>
+ <CAErSpo6CPSMXjq1eSTX41vtwOcd5rQOdC0-9ye5NZhds9U1B8A@mail.gmail.com> <1962888.rQgbRUetgj@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Dec 2012 17:06:36 -0700
+Message-ID: <CAErSpo5gLgcLcvWPGPMivYqGKBdyjsFgKtOVreCj4FO1P__Vgg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/PM: Keep runtime PM enabled for unbound PCI devices
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Date: Thu, 20 Dec 2012 14:07:27 -0700
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
-	 <1355789297.18964.334.camel@misato.fc.hp.com>
-	 <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Cc: Huang Ying <ying.huang@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+On Wed, Nov 28, 2012 at 3:43 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, November 28, 2012 03:25:59 PM Bjorn Helgaas wrote:
+>> On Tue, Nov 20, 2012 at 1:08 AM, Huang Ying <ying.huang@intel.com> wrote:
+>> > For unbound PCI devices, what we need is:
+>> >
+>> >  - Always in D0 state, because some devices does not work again after
+>> >    being put into D3 by the PCI bus.
+>> >
+>> >  - In SUSPENDED state if allowed, so that the parent devices can still
+>> >    be put into low power state.
+>> >
+>> > To satisfy these requirement, the runtime PM for the unbound PCI
+>> > devices are disabled and set to SUSPENDED state.  One issue of this
+>> > solution is that the PCI devices will be put into SUSPENDED state even
+>> > if the SUSPENDED state is forbidden via the sysfs interface
+>> > (.../power/control) of the device.  This is not an issue for most
+>> > devices, because most PCI devices are not used at all if unbounded.
+>> > But there are exceptions.  For example, unbound VGA card can be used
+>> > for display, but suspend its parents make it stop working.
+>> >
+>> > To fix the issue, we keep the runtime PM enabled when the PCI devices
+>> > are unbound.  But the runtime PM callbacks will do nothing if the PCI
+>> > devices are unbound.  This way, we can put the PCI devices into
+>> > SUSPENDED state without put the PCI devices into D3 state.
+>>
+>> Does this fix a reported problem?  Is there a bug report URL?  What
+>> problem would a user notice?
+>
+> There is a BZ: https://bugzilla.kernel.org/show_bug.cgi?id=48201
 
-The changes look very good.  It's much cleaner and consistent. :-)  For
-the series:
+I added the BZ link and put this in my -next branch.  Thanks!
 
-Acked-by: Toshi Kani <toshi.kani@hp.com>
-
-Thanks,
--Toshi
-
-
-On Thu, 2012-12-20 at 02:45 +0100, Rafael J. Wysocki wrote:
-> Hi all,
-> 
-> I've finally cut the patches removing acpi_pci_bind() and acpi_pci_unbind(),
-> so I'm kind of ready to post the entire series reworking the ACPI namespace
-> scanning code.
-> 
-> Patches [1-6/16] are essentially these ones:
-> 
-> https://patchwork.kernel.org/patch/1889821/
-> https://patchwork.kernel.org/patch/1876481/
-> https://patchwork.kernel.org/patch/1876531/
-> https://patchwork.kernel.org/patch/1876571/
-> https://patchwork.kernel.org/patch/1876511/
-> https://patchwork.kernel.org/patch/1876401/
-> 
-> but [2-6/16] have been rebased on top of the first one.
-> 
-> Patches [7-12/16] are essentially these:
-> 
-> https://patchwork.kernel.org/patch/1884721/
-> https://patchwork.kernel.org/patch/1884701/
-> https://patchwork.kernel.org/patch/1884761/
-> https://patchwork.kernel.org/patch/1884731/
-> https://patchwork.kernel.org/patch/1884751/
-> https://patchwork.kernel.org/patch/1884661/
-> 
-> but they have been rebased on top of https://patchwork.kernel.org/patch/1889821/.
-> I added Yinghai's ACKs to them tentatively, although they are a bit different
-> from the previous versions.  The difference is not too important, however,
-> because the following patches finally remove the acpi_pci_bind()/acpi_pci_unbind()
-> stuff:
-> 
-> [13/16] Add .setup() and .cleanup() callbacks to struct acpi_bus_type.
-> [14/16] Rework the setup and cleanup of ACPI/PCI device wakeup.
-> [15/16] Move the _PRT setup and cleanup code to pci-acpi.c.
-> [16/16] Drop ACPI device .bind() and .unbind() callbacks.
-> 
-> This is done a bit differently than I thought it would be, mostly because the
-> _PRT-related operations require the "subordinate" pointers of bridges to be
-> populated.  I think it may be possible to simplify this further if that
-> requirement can be removed (I haven't looked into that).
-> 
-> In fact, patches [13-15/16] do not essentially depend on [1-12/16], only the
-> last one does.
-> 
-> The patches are on top of my master branch and I'm going to rebase them when
-> v3.8-rc1 is out.
-> 
-> There is a git tree you can pull them from at:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=summary acpi-scan-temp-new
-> 
-> It's v3.7 with my master branch merged and the new patches on top.
-> 
-> 
-> Thanks,
-> Rafael
-> 
-> 
-
-
+Bjorn
