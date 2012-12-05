@@ -1,306 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38318 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752241Ab2LTBzr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Dec 2012 20:55:47 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 12/16] ACPI: Make acpi_bus_scan() and acpi_bus_add() take only one argument
-Date: Thu, 20 Dec 2012 02:56:11 +0100
-Message-ID: <1450734.GdNQMdHee5@vostro.rjw.lan>
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 5 Dec 2012 15:32:02 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 2/3] aerdrv: Enhanced AER logging
+Message-ID: <20121205143202.GD2364@liondog.tnic>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+ <20121204210312.4515.13415.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20121204210312.4515.13415.stgit@grignak.americas.hpqcorp.net>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Dec 04, 2012 at 02:03:12PM -0700, Lance Ortiz wrote:
+> This patch will provide a more reliable and easy way for user-space
+> applications to have access to AER logs rather than reading them from the
+> message buffer. It also provides a way to notify user-space when an AER
+> event occurs.
+> 
+> The aer driver is updated to generate a trace event of function 'aer_event'
+> when a PCIe error is reported over the AER interface.  The trace event was
+> added to both the interrupt based aer path and the firmware first path.
+> 
+> v1-v2 fix compile errors in ifdefs.
+> v2-v3 Update to new location of trace header. Update print to remove
+> warning.
+> v3-v4 Reworked logic when getting ready to call cper_print_aer
+> v6-v7 Change print from pr_info to pr_err if !dev
+> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> ---
+> 
+>  drivers/acpi/apei/cper.c               |   19 ++++++++++++++++---
+>  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
+>  include/linux/aer.h                    |    2 +-
+>  3 files changed, 26 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
+> index e6defd8..b2f695b 100644
+> --- a/drivers/acpi/apei/cper.c
+> +++ b/drivers/acpi/apei/cper.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/time.h>
+>  #include <linux/cper.h>
+>  #include <linux/acpi.h>
+> +#include <linux/pci.h>
+>  #include <linux/aer.h>
+>  
+>  /*
+> @@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
+>  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  			    const struct acpi_hest_generic_data *gdata)
+>  {
+> +#ifdef CONFIG_ACPI_APEI_PCIEAER
+> +	struct pci_dev *dev;
+> +#endif
+> +
+>  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
+>  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
+>  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
+> @@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+>  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
+>  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+> -		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
+> -		cper_print_aer(pfx, gdata->error_severity, aer_regs);
+> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
+> +			pcie->device_id.bus, pcie->device_id.function);
+> +	if (!dev) {
+> +		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
+> +			pcie->device_id.segment, pcie->device_id.bus,
+> +			pcie->device_id.slot, pcie->device_id.function);
+> +		return;
+>  	}
+> +	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
+> +		cper_print_aer(dev, gdata->error_severity,
+> +				(struct aer_capability_regs *) pcie->aer_info);
+> +	pci_dev_put(dev);
+>  #endif
+>  }
+>  
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> index 3ea5173..34d96e4 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -23,6 +23,9 @@
+>  
+>  #include "aerdrv.h"
+>  
+> +#define CREATE_TRACE_POINTS
+> +#include <trace/events/ras.h>
+> +
+>  #define AER_AGENT_RECEIVER		0
+>  #define AER_AGENT_REQUESTER		1
+>  #define AER_AGENT_COMPLETER		2
+> @@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+>  	if (info->id && info->error_dev_num > 1 && info->id == id)
+>  		printk("%s""  Error of this Agent(%04x) is reported first\n",
+>  			prefix, id);
+> +	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+> +			info->severity);
+>  }
+>  
+>  void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+> @@ -217,12 +222,13 @@ int cper_severity_to_aer(int cper_severity)
+>  }
+>  EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+>  
+> -void cper_print_aer(const char *prefix, int cper_severity,
+> +void cper_print_aer(struct pci_dev *dev, int cper_severity,
+>  		    struct aer_capability_regs *aer)
+>  {
+>  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
+>  	u32 status, mask;
+>  	const char **status_strs;
+> +	char *prefix = NULL;
 
-The callers of acpi_bus_add() usually assume that if it has
-succeeded, then a struct acpi_device object has been attached to
-the handle passed as the first argument.  Unfortunately, however,
-this assumption is wrong, because acpi_bus_scan(), and acpi_bus_add()
-too as a result, may return a pointer to a different struct
-acpi_device object on success (it may be an object corresponding to
-one of the descendant ACPI nodes in the namespace scope below that
-handle).
+What are you doing here? You dropped the 'prefix' argument being passed
+down in this function and are defining a local variable of the same name
+which is used in the function later:
 
-For this reason, the callers of acpi_bus_add() who care about
-whether or not a struct acpi_device object has been created for
-its first argument need to check that using acpi_bus_get_device()
-anyway, so the second argument of acpi_bus_add() is not really
-useful for them.  The same observation applies to acpi_bus_scan()
-executed directly from acpi_scan_init().
+        printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
+               prefix, status, mask);
 
-Therefore modify the relevant callers of acpi_bus_add() to check the
-existence of the struct acpi_device in question with the help of
-acpi_bus_get_device() and drop the no longer necessary second
-argument of acpi_bus_add().  Accordingly, modify acpi_scan_init() to
-use acpi_bus_get_device() to get acpi_root and drop the no longer
-needed second argument of acpi_bus_scan().
+WTF?
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/acpi_memhotplug.c     |    7 +++++-
- drivers/acpi/container.c           |    7 +++++-
- drivers/acpi/dock.c                |    4 ++-
- drivers/acpi/processor_driver.c    |    8 +++++--
- drivers/acpi/scan.c                |   38 ++++++++++---------------------------
- drivers/pci/hotplug/acpiphp_glue.c |   19 ++++++++++--------
- drivers/pci/hotplug/sgi_hotplug.c  |    3 --
- include/acpi/acpi_bus.h            |    2 -
- 8 files changed, 45 insertions(+), 43 deletions(-)
+Also, this function cper_print_aer() is too crammed and could use a
+little spacing out between lines belonging logically together.
 
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -1661,37 +1661,27 @@ static acpi_status acpi_bus_device_attac
- 	return status;
- }
- 
--static int acpi_bus_scan(acpi_handle handle, struct acpi_device **child)
-+static int acpi_bus_scan(acpi_handle handle)
- {
- 	void *device = NULL;
--	acpi_status status;
--	int ret = -ENODEV;
- 
--	status = acpi_bus_check_add(handle, 0, NULL, &device);
--	if (ACPI_SUCCESS(status))
-+	if (ACPI_SUCCESS(acpi_bus_check_add(handle, 0, NULL, &device)))
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
- 				    acpi_bus_check_add, NULL, NULL, &device);
- 
- 	if (!device)
--		goto out;
-+		return -ENODEV;
- 
--	ret = 0;
--	status = acpi_bus_device_attach(handle, 0, NULL, NULL);
--	if (ACPI_SUCCESS(status))
-+	if (ACPI_SUCCESS(acpi_bus_device_attach(handle, 0, NULL, NULL)))
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
- 				    acpi_bus_device_attach, NULL, NULL, NULL);
- 
-- out:
--	if (child)
--		*child = device;
--
--	return ret;
-+	return 0;
- }
- 
- /**
-  * acpi_bus_add - Add ACPI device node objects in a given namespace scope.
-  * @handle: Root of the namespace scope to scan.
-- * @ret: Location to store a return struct acpi_device pointer.
-  *
-  * Scan a given ACPI tree (probably recently hot-plugged) and create and add
-  * found devices.
-@@ -1700,21 +1690,12 @@ static int acpi_bus_scan(acpi_handle han
-  * there has been a real error.  There just have been no suitable ACPI objects
-  * in the table trunk from which the kernel could create a device and add an
-  * appropriate driver.
-- *
-- * If 0 is returned, the memory location pointed to by @ret will be populated
-- * with a pointer to a struct acpi_device created while scanning the namespace.
-- * If @handle corresponds to a device node, that will be a pointer to the struct
-- * acpi_device object corresponding to @handle.  Otherwise, it will be a pointer
-- * to a struct acpi_device corresponding to one of its descendants.
-- *
-- * If an error code is returned, NULL will be stored in the memory location
-- * pointed to by @ret.
-  */
--int acpi_bus_add(acpi_handle handle, struct acpi_device **ret)
-+int acpi_bus_add(acpi_handle handle)
- {
- 	int err;
- 
--	err = acpi_bus_scan(handle, ret);
-+	err = acpi_bus_scan(handle);
- 	if (err)
- 		return err;
- 
-@@ -1818,8 +1799,11 @@ int __init acpi_scan_init(void)
- 	/*
- 	 * Enumerate devices in the ACPI namespace.
- 	 */
--	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &acpi_root);
-+	result = acpi_bus_scan(ACPI_ROOT_OBJECT);
-+	if (result)
-+		return result;
- 
-+	result = acpi_bus_get_device(ACPI_ROOT_OBJECT, &acpi_root);
- 	if (!result)
- 		result = acpi_bus_scan_fixed();
- 
-Index: linux/include/acpi/acpi_bus.h
-===================================================================
---- linux.orig/include/acpi/acpi_bus.h
-+++ linux/include/acpi/acpi_bus.h
-@@ -391,7 +391,7 @@ static inline int acpi_bus_generate_proc
- #endif
- int acpi_bus_register_driver(struct acpi_driver *driver);
- void acpi_bus_unregister_driver(struct acpi_driver *driver);
--int acpi_bus_add(acpi_handle handle, struct acpi_device **ret);
-+int acpi_bus_add(acpi_handle handle);
- void acpi_bus_hot_remove_device(void *context);
- int acpi_bus_trim(struct acpi_device *start, int rmdevice);
- acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
-Index: linux/drivers/pci/hotplug/sgi_hotplug.c
-===================================================================
---- linux.orig/drivers/pci/hotplug/sgi_hotplug.c
-+++ linux/drivers/pci/hotplug/sgi_hotplug.c
-@@ -412,7 +412,6 @@ static int enable_slot(struct hotplug_sl
- 	if (SN_ACPI_BASE_SUPPORT() && ssdt) {
- 		unsigned long long adr;
- 		struct acpi_device *pdevice;
--		struct acpi_device *device;
- 		acpi_handle phandle;
- 		acpi_handle chandle = NULL;
- 		acpi_handle rethandle;
-@@ -448,7 +447,7 @@ static int enable_slot(struct hotplug_sl
- 			if (ACPI_SUCCESS(ret) &&
- 			    (adr>>16) == (slot->device_num + 1)) {
- 
--				ret = acpi_bus_add(chandle, &device);
-+				ret = acpi_bus_add(chandle);
- 				if (ACPI_FAILURE(ret)) {
- 					printk(KERN_ERR "%s: acpi_bus_add "
- 					       "failed (0x%x) for slot %d "
-Index: linux/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux/drivers/pci/hotplug/acpiphp_glue.c
-@@ -746,14 +746,13 @@ static int acpiphp_bus_add(struct acpiph
- 		dbg("acpi_bus_trim return %x\n", ret_val);
- 	}
- 
--	ret_val = acpi_bus_add(func->handle, &device);
--	if (ret_val) {
--		dbg("error adding bus, %x\n",
--			-ret_val);
--		goto acpiphp_bus_add_out;
--	}
-+	ret_val = acpi_bus_add(func->handle);
-+	if (!ret_val)
-+		ret_val = acpi_bus_get_device(func->handle, &device);
-+
-+	if (ret_val)
-+		dbg("error adding bus, %x\n", -ret_val);
- 
--acpiphp_bus_add_out:
- 	return ret_val;
- }
- 
-@@ -1130,10 +1129,14 @@ static void handle_bridge_insertion(acpi
- 		return;
- 	}
- 
--	if (acpi_bus_add(handle, &device)) {
-+	if (acpi_bus_add(handle)) {
- 		err("cannot add bridge to acpi list\n");
- 		return;
- 	}
-+	if (acpi_bus_get_device(handle, &device)) {
-+		err("ACPI device object missing\n");
-+		return;
-+	}
- 	if (!acpiphp_configure_bridge(handle))
- 		add_bridge(handle);
- 	else
-Index: linux/drivers/acpi/processor_driver.c
-===================================================================
---- linux.orig/drivers/acpi/processor_driver.c
-+++ linux/drivers/acpi/processor_driver.c
-@@ -699,12 +699,16 @@ static void acpi_processor_hotplug_notif
- 		if (!acpi_bus_get_device(handle, &device))
- 			break;
- 
--		result = acpi_bus_add(handle, &device);
-+		result = acpi_bus_add(handle);
- 		if (result) {
- 			acpi_handle_err(handle, "Unable to add the device\n");
- 			break;
- 		}
--
-+		result = acpi_bus_get_device(handle, &device);
-+		if (result) {
-+			acpi_handle_err(handle, "Missing device object\n");
-+			break;
-+		}
- 		ost_code = ACPI_OST_SC_SUCCESS;
- 		break;
- 
-Index: linux/drivers/acpi/dock.c
-===================================================================
---- linux.orig/drivers/acpi/dock.c
-+++ linux/drivers/acpi/dock.c
-@@ -317,9 +317,11 @@ static struct acpi_device * dock_create_
- 		 * no device created for this object,
- 		 * so we should create one.
- 		 */
--		ret = acpi_bus_add(handle, &device);
-+		ret = acpi_bus_add(handle);
- 		if (ret)
- 			pr_debug("error adding bus, %x\n", -ret);
-+
-+		acpi_bus_get_device(handle, &device);
- 	}
- 	return device;
- }
-Index: linux/drivers/acpi/container.c
-===================================================================
---- linux.orig/drivers/acpi/container.c
-+++ linux/drivers/acpi/container.c
-@@ -166,11 +166,16 @@ static void container_notify_cb(acpi_han
- 		if (!ACPI_FAILURE(status) || device)
- 			break;
- 
--		result = acpi_bus_add(handle, &device);
-+		result = acpi_bus_add(handle);
- 		if (result) {
- 			acpi_handle_warn(handle, "Failed to add container\n");
- 			break;
- 		}
-+		result = acpi_bus_get_device(handle, &device);
-+		if (result) {
-+			acpi_handle_warn(handle, "Missing device object\n");
-+			break;
-+		}
- 
- 		kobject_uevent(&device->dev.kobj, KOBJ_ONLINE);
- 		ost_code = ACPI_OST_SC_SUCCESS;
-Index: linux/drivers/acpi/acpi_memhotplug.c
-===================================================================
---- linux.orig/drivers/acpi/acpi_memhotplug.c
-+++ linux/drivers/acpi/acpi_memhotplug.c
-@@ -167,11 +167,16 @@ acpi_memory_get_device(acpi_handle handl
- 	 * Now add the notified device.  This creates the acpi_device
- 	 * and invokes .add function
- 	 */
--	result = acpi_bus_add(handle, &device);
-+	result = acpi_bus_add(handle);
- 	if (result) {
- 		acpi_handle_warn(handle, "Cannot add acpi bus\n");
- 		return -EINVAL;
- 	}
-+	result = acpi_bus_get_device(handle, &device);
-+	if (result) {
-+		acpi_handle_warn(handle, "Missing device object\n");
-+		return -EINVAL;
-+	}
- 
-       end:
- 	*mem_device = acpi_driver_data(device);
+Finally, please wait a couple of days before resending the patchset
+so that you can collect *all* feedback and can save yourself needless
+iterations.
 
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
