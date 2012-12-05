@@ -1,79 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <50cdc89b.2788440a.0cfe.ffff8fb7SMTPIN_ADDED_BROKEN@mx.google.com>
-References: <1355453531-23348-1-git-send-email-ying.huang@intel.com>
- <20121214051131.GA31440@richard.> <3929168.xsIhODq3Fi@vostro.rjw.lan> <50cdc89b.2788440a.0cfe.ffff8fb7SMTPIN_ADDED_BROKEN@mx.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:35926 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754200Ab2LEU6S (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:18 -0500
+Received: by mail-fa0-f74.google.com with SMTP id t1so391578fae.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:17 -0800 (PST)
+Subject: [PATCH 11/12] iwlegacy: Use standard #defines for PCIe Capability
+	ASPM fields
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Dec 2012 14:44:42 -0700
-Message-ID: <CAErSpo6xUDEdbtoOvReb+QX4PZ2_wGzUw4t=sJXCUTX-guUjRQ@mail.gmail.com>
-Subject: Re: [PATCH] PCIe/PM: Do not suspend port if any subordinate device
- need PME polling
-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 05 Dec 2012 13:58:16 -0700
+Message-ID: <20121205205816.13851.86504.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 16, 2012 at 6:11 AM, Richard Yang
-<weiyang@linux.vnet.ibm.com> wrote:
-> On Sat, Dec 15, 2012 at 12:03:33AM +0100, Rafael J. Wysocki wrote:
->>On Friday, December 14, 2012 01:11:31 PM Richard Yang wrote:
->>> On Fri, Dec 14, 2012 at 10:52:11AM +0800, Huang Ying wrote:
->>> >In
->>> >
->>> >  http://www.mail-archive.com/linux-usb@vger.kernel.org/msg07976.html
->>> >
->>> >Ulrich reported that his USB3 cardreader does not work reliably when
->>> >connected to the USB3 port.  It turns out that USB3 controller failed
->>> >to be waken up when plugging in the USB3 cardreader.  Further
->>> >experiment found that the USB3 host controller can only be waken up
->>> >via polling, while not via PME interrupt.  But if the PCIe port that
->>> >the USB3 host controller is connected is suspended, we can not poll
->>> >the USB3 host controller because its config space is not accessible if
->>> >the PCIe port is put into low power state.
->>> >
->>> >To solve the issue, the PCIe port will not be suspended if any
->>> >subordinate device need PME polling.
->>> >
->>> >Reported-by: Ulrich Eckhardt <usb@uli-eckhardt.de>
->>> >Signed-off-by: Huang Ying <ying.huang@intel.com>
->>> >Tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
->>> >Cc: stable@vger.kernel.org  # 3.6+
->>> >---
->>> > drivers/pci/pcie/portdrv_pci.c |   18 +++++++++++++++++-
->>> > 1 file changed, 17 insertions(+), 1 deletion(-)
->>> >
->>> >--- a/drivers/pci/pcie/portdrv_pci.c
->>> >+++ b/drivers/pci/pcie/portdrv_pci.c
->>> >@@ -134,10 +134,26 @@ static int pcie_port_runtime_resume(stru
->>> >    return 0;
->>> > }
->>> >
->>> >+static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
->>> >+{
->>> >+   int *pme_poll = data;
->>> >+   *pme_poll = *pme_poll || pdev->pme_poll;
->>> >+   return 0;
->>> >+}
->>> >+
->>> > static int pcie_port_runtime_idle(struct device *dev)
->>> > {
->>> >+   struct pci_dev *pdev = to_pci_dev(dev);
->>> >+   int pme_poll = false;
->>>
->>> You want to use int or bool?
->>>
->>> I think bool is better?
->>
->>Well, bool would be nicer, but it's not a big deal.
->>
->
-> Yep, not a big deal.
+Use the standard #defines rather than creating local definitions for
+PCIe Capability ASPM fields.
 
-I fixed up the int/bool confusion and added this to my pci/for-3.8
-branch.  I'll push it soon after v3.8-rc1.  Thanks!
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: "John W. Linville" <linville@tuxdriver.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/iwlegacy/4965.h   |    4 ----
+ drivers/net/wireless/iwlegacy/common.c |    5 ++---
+ drivers/net/wireless/iwlegacy/common.h |    4 ----
+ 3 files changed, 2 insertions(+), 11 deletions(-)
 
-Bjorn
+diff --git a/drivers/net/wireless/iwlegacy/4965.h b/drivers/net/wireless/iwlegacy/4965.h
+index 2d092f3..1b15b0b 100644
+--- a/drivers/net/wireless/iwlegacy/4965.h
++++ b/drivers/net/wireless/iwlegacy/4965.h
+@@ -917,10 +917,6 @@ struct il4965_scd_bc_tbl {
+ /* PCI registers */
+ #define PCI_CFG_RETRY_TIMEOUT	0x041
+ 
+-/* PCI register values */
+-#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
+-#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
+-
+ #define IL4965_DEFAULT_TX_RETRY  15
+ 
+ /* EEPROM */
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 1811507..7e16d10 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1186,7 +1186,7 @@ il_power_initialize(struct il_priv *il)
+ 	u16 lctl;
+ 
+ 	pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-	il->power_data.pci_pm = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
++	il->power_data.pci_pm = !(lctl & PCI_EXP_LNKCTL_ASPM_L0S);
+ 
+ 	il->power_data.debug_sleep_level_override = -1;
+ 
+@@ -4235,8 +4235,7 @@ il_apm_init(struct il_priv *il)
+ 	 */
+ 	if (il->cfg->set_l0s) {
+ 		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
+-		if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
+-		    PCI_CFG_LINK_CTRL_VAL_L1_EN) {
++		if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
+ 			/* L1-ASPM enabled; disable(!) L0S  */
+ 			il_set_bit(il, CSR_GIO_REG,
+ 				   CSR_GIO_REG_VAL_L0S_ENABLED);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index c9a5022..e181f3b 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -2426,10 +2426,6 @@ struct il_tfd {
+ /* PCI registers */
+ #define PCI_CFG_RETRY_TIMEOUT	0x041
+ 
+-/* PCI register values */
+-#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
+-#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
+-
+ struct il_rate_info {
+ 	u8 plcp;		/* uCode API:  RATE_6M_PLCP, etc. */
+ 	u8 plcp_siso;		/* uCode API:  RATE_SISO_6M_PLCP, etc. */
+
