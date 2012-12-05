@@ -1,82 +1,44 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 0/16] ACPI: Rework ACPI namespace scanning for devices
-Date: Thu, 20 Dec 2012 02:45:31 +0100
-Message-ID: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-In-Reply-To: <4082842.31rfDviYHK@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <1355789297.18964.334.camel@misato.fc.hp.com> <4082842.31rfDviYHK@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cavan.codon.org.uk ([93.93.128.6]:50286 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752711Ab2LEUXG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:23:06 -0500
+Date: Wed, 5 Dec 2012 20:22:54 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+Message-ID: <20121205202254.GA25398@srcf.ucam.org>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+ <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+ <20121203200241.GG5906@thinkpad-t410>
+ <CAErSpo7S2+Vt+9bkGLx_=AY9aSGCvAnkHfqu01gTj=eKs7btNw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7S2+Vt+9bkGLx_=AY9aSGCvAnkHfqu01gTj=eKs7btNw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Wed, Dec 05, 2012 at 01:09:25PM -0700, Bjorn Helgaas wrote:
 
-I've finally cut the patches removing acpi_pci_bind() and acpi_pci_unbind(),
-so I'm kind of ready to post the entire series reworking the ACPI namespace
-scanning code.
+> That's right; nobody stepped up to fix the section mismatch.  I'm
+> happy to fold in your fix, especially if Matthew acks it.
 
-Patches [1-6/16] are essentially these ones:
+Yes, sorry, I've been way behind on pretty much everything for the past 
+few months. Please do add my Ack.
 
-https://patchwork.kernel.org/patch/1889821/
-https://patchwork.kernel.org/patch/1876481/
-https://patchwork.kernel.org/patch/1876531/
-https://patchwork.kernel.org/patch/1876571/
-https://patchwork.kernel.org/patch/1876511/
-https://patchwork.kernel.org/patch/1876401/
+> David, Eric, what about the kexec question?  It looks to me like this
+> wouldn't make things worse than they are today.  If I understand
+> correctly, today we don't use ROM data from EFI on either an initial
+> boot or a kexec.  After this patch, we could use EFI ROM data on the
+> initial boot, but not after a kexec.  So it's worse in the sense that
+> the kexec case doesn't match the initial boot, but at least it's not
+> something that used to work and is now broken.
 
-but [2-6/16] have been rebased on top of the first one.
-
-Patches [7-12/16] are essentially these:
-
-https://patchwork.kernel.org/patch/1884721/
-https://patchwork.kernel.org/patch/1884701/
-https://patchwork.kernel.org/patch/1884761/
-https://patchwork.kernel.org/patch/1884731/
-https://patchwork.kernel.org/patch/1884751/
-https://patchwork.kernel.org/patch/1884661/
-
-but they have been rebased on top of https://patchwork.kernel.org/patch/1889821/.
-I added Yinghai's ACKs to them tentatively, although they are a bit different
-from the previous versions.  The difference is not too important, however,
-because the following patches finally remove the acpi_pci_bind()/acpi_pci_unbind()
-stuff:
-
-[13/16] Add .setup() and .cleanup() callbacks to struct acpi_bus_type.
-[14/16] Rework the setup and cleanup of ACPI/PCI device wakeup.
-[15/16] Move the _PRT setup and cleanup code to pci-acpi.c.
-[16/16] Drop ACPI device .bind() and .unbind() callbacks.
-
-This is done a bit differently than I thought it would be, mostly because the
-_PRT-related operations require the "subordinate" pointers of bridges to be
-populated.  I think it may be possible to simplify this further if that
-requirement can be removed (I haven't looked into that).
-
-In fact, patches [13-15/16] do not essentially depend on [1-12/16], only the
-last one does.
-
-The patches are on top of my master branch and I'm going to rebase them when
-v3.8-rc1 is out.
-
-There is a git tree you can pull them from at:
-
-http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=summary acpi-scan-temp-new
-
-It's v3.7 with my master branch merged and the new patches on top.
-
-
-Thanks,
-Rafael
-
+I think I'd agree here - it's not ideal, but it's no more broken than 
+the current situation.
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Matthew Garrett | mjg59@srcf.ucam.org
