@@ -1,66 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [206.117.179.246] ([206.117.179.246]:49399 "EHLO labridge.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752129Ab2LCTvw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Dec 2012 14:51:52 -0500
-Message-ID: <1354564292.3524.7.camel@joe-AO722>
-Subject: Re: [PATCH v4 1/3] aerdrv: Trace Event for AER
-From: Joe Perches <joe@perches.com>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 03 Dec 2012 11:51:32 -0800
-In-Reply-To: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
-References: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:17730 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752641Ab2LEQRb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 11:17:31 -0500
+From: "Ortiz, Lance E" <lance.oritz@hp.com>
+To: Borislav Petkov <bp@alien8.de>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"tony.luck@intel.com" <tony.luck@intel.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"mchehab@redhat.com" <mchehab@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v7 3/3] aerdrv: Cleanup log output for CPER based AER
+Date: Wed, 5 Dec 2012 16:16:31 +0000
+Message-ID: <A961433CDFF2F640A2866803152E61F9516F37AA@G4W3219.americas.hpqcorp.net>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+ <20121204210318.4515.10180.stgit@grignak.americas.hpqcorp.net>
+ <20121205145035.GE2364@liondog.tnic>
+In-Reply-To: <20121205145035.GE2364@liondog.tnic>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-12-03 at 11:33 -0700, Lance Ortiz wrote:
-> This header file will define a new trace event that will be triggered when
-> a AER event occurs.  The following data will be provided to the trace
-> event.
-
-trivial notes:
-
-> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-[]
-> +#define correctable_error_string			\
-> +	{BIT(0),	"Receiver Error"},		\
-> +	{BIT(6),	"Bad TLP"},			\
-> +	{BIT(7),	"Bad DLLP"},			\
-> +	{BIT(8),	"RELAY_NUM Rollover"},		\
-> +	{BIT(12),	"Replay Timer Timeout"},	\
-> +	{BIT(13),	"Advisory Non-Fatal"}
-> +
-> +#define uncorrectable_error_string			\
-> +	{BIT(4),	"Data Link Protocol"},		\
-> +	{BIT(12),	"Poisoned TLP"},		\
-> +	{BIT(13),	"Flow Control Protocol"},	\
-> +	{BIT(14),	"Completion Timeout"},		\
-> +	{BIT(15),	"Completer Abort"},		\
-> +	{BIT(16),	"Unexpected Completion"},	\
-> +	{BIT(17),	"Receiver Overflow"},		\
-> +	{BIT(18),	"Malformed TLP"},		\
-> +	{BIT(19),	"ECRC"},			\
-> +	{BIT(20),	"Unsupported Request"}
-
-probably better to prefix these with aer_
-
-> +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-> +		__get_str(dev_name),
-> +		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
-> +			((__entry->severity == HW_EVENT_ERR_FATAL) ?
-> +			"Fatal" : "Uncorrected"),
-
-unnecessary parentheses
-
-		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
-		__entry->severity == HW_EVENT_ERR_FATAL ? "Fatal" :
-		"Uncorrected"),
-
-might be more kernel style conventional
-
+PiANCj4gSGVyZSBpdCBpcywgeW91J3JlIGluaXRpYWxpemluZyAncHJlZml4JyBoZXJlIGFsdGhv
+dWdoIGl0IGlzIGJlaW5nDQo+IHVzZWQgaW4gdGhlIHByZXZpb3VzIHBhdGNoLiBZb3Ugc2hvdWxk
+IGNvbmNlbnRyYXRlIHRoZSB3aG9sZSBwcmVmaXgNCj4gaW5pdGlhbGl6YXRpb24gYW5kIHBhc3Np
+bmcgaW4gb25lIHBhdGNoIHNvIHRoYXQgdGhlcmUgYXJlIG5vIGJyZWFrYWdlcy4NCg0KWWVzIEkg
+cHJvYmFibHkgY291bGQgaGF2ZSBicm9rZW4gdXAgdGhlIHBhdGNoZXMgaW4gYSBjbGVhbmVyIHdh
+eS4gIFRoYW5rcy4NCg0KPiANCj4gQWxzbywgd2h5IGlzIGl0IGV4YWN0bHkgNDQgY2hhcnMgbG9u
+ZywgaXMgdGhhdCBzb21lIG1hZ2ljIG51bWJlcg0KPiB0aGF0IGFsd2F5cyB3b3Jrcz8gQXQgbGVh
+c3QgdGhpcyBpcyB3aGF0IGFlcl9wcmludF9lcnJvciBkb2VzDQo+IHRvby4gSSdtIGd1ZXNzaW5n
+IHNvbWVvbmUgY2hvc2UgaXQgYmVjYXVzZSBpdCBpcyBsYXJnZSBlbm91Z2ggZm9yDQo+IGRldl9k
+cml2ZXJfc3RyaW5nKCkgYW5kIGRldl9uYW1lKCkgYW5kIGEgY291cGxlIG1vcmUgZm9ybWF0dGlu
+Zw0KPiBjaGFyYWN0ZXJzLiBPaCB3ZWxsLg0KPiANCg0KWWVzLCBJIHdhcyB1c2luZyB0aGUgc2Ft
+ZSBjb2RlIGFzIGluIGFlcl9wcmludF9lcnJvci4gIFRoaXMgd2FzIGJyb3VnaHQgdXAgaW4gYSBw
+cmV2aW91cyBtYWlsIHdpdGggSm9lIGFuZCB3ZSBkaXNjdXNzZWQgY2xlYW5pbmcgYWxsIG9mIHRo
+aXMgdXAgaW4gYSBsYXRlciBwYXRjaC4NCg0KTGFuY2UNCg0K
