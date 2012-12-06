@@ -1,199 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12515 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933Ab2LSWou (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Dec 2012 17:44:50 -0500
-Message-ID: <50D24355.1050100@redhat.com>
-Date: Wed, 19 Dec 2012 17:44:37 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:38965
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1423191Ab2LFLXj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 06:23:39 -0500
+Message-ID: <50C08048.3050305@freescale.com>
+Date: Thu, 6 Dec 2012 19:23:52 +0800
+From: Chen Yuanquan-B41889 <B41889@freescale.com>
 MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
-	bhutchings@solarflare.com, yinghai@kernel.org, davem@davemloft.net
-Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com> <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com> <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com> <20121217232439.GA9746@google.com>
-In-Reply-To: <20121217232439.GA9746@google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <galak@kernel.crashing.org>,
+	<r61911@freescale.com>, <linux-pci@vger.kernel.org>,
+	=?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
+Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue
+ of rescanned pci device
+References: <1354674717-14426-1-git-send-email-B41889@freescale.com> <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com> <1354695989.2351.13.camel@pasglop> <50BF13E1.1000009@freescale.com> <CAErSpo6mCm79m87MchL=Y1jxxgZ2Mio8d2L+Sg8CLvxRKue8sg@mail.gmail.com>
+In-Reply-To: <CAErSpo6mCm79m87MchL=Y1jxxgZ2Mio8d2L+Sg8CLvxRKue8sg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Overall, yet-another-good-clean-up-by-Bjorn ! :)
-nits below...
-
-oh, you can add
-Tested-by: Donald Dutile <ddutile@redhat.com>
-
-if you'd to the final commit.
-
-On 12/17/2012 06:24 PM, Bjorn Helgaas wrote:
-> On Mon, Dec 17, 2012 at 02:59:15PM -0500, Don Dutile wrote:
->> On 12/14/2012 01:19 PM, Greg Rose wrote:
->>> pci: Fix return code
+On 12/06/2012 05:30 AM, Bjorn Helgaas wrote:
+> On Wed, Dec 5, 2012 at 2:29 AM, Chen Yuanquan-B41889
+> <B41889@freescale.com> wrote:
+>> On 12/05/2012 04:26 PM, Benjamin Herrenschmidt wrote:
+>>> On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
+>>>> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
+>>>>> On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
+>>>>>> On powerpc arch, some fixup work of PCI/PCI-e device is just done
+>>>>>> during the
+>>>>>> first scan at booting time. For the PCI/PCI-e device rescanned after
+>>>>>> linux OS
+>>>>>> booting up, the fixup work won't be done, which leads to dma_set_mask
+>>>>>> error or
+>>>>>> irq related issue in rescanned PCI/PCI-e device's driver. So, it does
+>>>>>> the same
+>>>>>> fixup work for the rescanned device to avoid this issue.
+>>>>> Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
+>>>>> that way but factored out.
+>>> Please, at least format your email properly so I can try to undertand
+>>> without needing aspirin.
 >>>
->>> From: Greg Rose<gregory.v.rose@intel.com>
+>>>> There's a judgement "if (!bus->is_added)" before calling of
+>>>> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
+>>>> the fixup won't execute, which leads to fatal error in driver of
+>>>> rescanned
+>>>> device on freescale  powerpc, no this issues on x86 arch.
+>>> First, none of that invalidates my statement that you shouldn't
+>>> duplicate a whole block of code like this. Even if your approach is
+>>> correct (which is debated separately), at the very least you should
+>>> factor the code out into a common function between the two copies.
 >>>
->>> The return code from the sriov configure function was only returned if it
->>> was less than zero indicating an error.  This caused the code to fall
->>> through to the default return of an error code even though the sriov
->>> configure function has returned the number of VFs it created - a positive
->>> number indicating success.
+>>>> Remove the judgement, let it to do the pcibios_fixup_bus
+>>>> directly, the error won't occur for the rescanned device. But it's
+>>>> general code, not proper to change here, so copy the pcibios_fixup_bus
+>>>> work to  pcibios_enable_device.
+>>>>
+>>>>> I'm surprised also that is_added is false when pcibios_enable_device()
+>>>>> gets called ... that looks strange to me. At what point is that enable
+>>>>> happening in the hotplug sequence ?
+>>>> All devices are rescanned and then call the pci_enable_devices and
+>>>> pci_bus_add_devices.
+>>> Where ? How ? What is the sequence happening ? In any case, I think if
+>>> we need a proper fixup done per-device like that after scan we ought to
+>>> create a new hook at the generic level rather than that sort of hack.
 >>>
->>>
->>> Signed-off-by: Greg Rose<gregory.v.rose@intel.com>
+>> echo 1 > rescan to trigger dev_rescan_store:
 >>
->> Actually, it returned the number of VFs enabled if it exactly equalled
->> the number to be enabled.  Otherwise, the basic testing would have failed.
->> If the number of vf's enabled was positive but not the same
->> as the number requested-to-be-enabled, then it incorrectly returned.
+>> dev_rescan_store->pci_rescan_bus->pci_scan_child_bus,
+>> pci_assign_unassigned_bus_resources,
+>> pci_enable_bridges, pci_bus_add_devices
 >>
->> But, the patch corrects the base problem, so
->> Acked-by: Donald Dutile<ddutile@redhat.com>
->
-> Alternate proposal below.  The patch is ugly; it might be easier to compare
-> the before (http://pastebin.com/zneG8AuD) and after
-> (http://pastebin.com/BEXEE8kc) versions.
->
-> commit fae71e5dc9064dcb3077b8da6e0ed9d800c1f527
-> Author: Bjorn Helgaas<bhelgaas@google.com>
-> Date:   Thu Dec 13 20:22:44 2012 -0700
->
->      PCI: Cleanup sriov_numvfs_show() and handle common case without error
->
->      If we request "num_vfs" and the driver's sriov_configure() method enables
->      exactly that number ("num_vfs_enabled"), we complain "Invalid value for
->      number of VFs to enable" and return an error.  We should silently return
->      success instead.
->
->      Also, use kstrtou16() since numVFs is defined to be a 16-bit field and
->      rework to simplify control flow.
->
->      Reported-by: Greg Rose<gregory.v.rose@intel.com>
->      Link: http://lkml.kernel.org/r/20121214101911.00002f59@unknown
->      Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 05b78b1..5e8af12 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -422,77 +422,60 @@ static ssize_t sriov_numvfs_show(struct device *dev,
->   }
->
->   /*
-> - * num_vfs>  0; number of vfs to enable
-> - * num_vfs = 0; disable all vfs
-> + * num_vfs>  0; number of VFs to enable
-> + * num_vfs = 0; disable all VFs
->    *
->    * Note: SRIOV spec doesn't allow partial VF
-> - *       disable, so its all or none.
-> + *       disable, so it's all or none.
->    */
->   static ssize_t sriov_numvfs_store(struct device *dev,
->   				  struct device_attribute *attr,
->   				  const char *buf, size_t count)
->   {
->   	struct pci_dev *pdev = to_pci_dev(dev);
-> -	int num_vfs_enabled = 0;
-> -	int num_vfs;
-> -	int ret = 0;
-> -	u16 total;
-> +	int ret;
-> +	u16 num_vfs;
->
-> -	if (kstrtoint(buf, 0,&num_vfs)<  0)
-> -		return -EINVAL;
-> +	ret = kstrtou16(buf, 0,&num_vfs);
-> +	if (ret<  0)
-> +		return ret;
-> +
-> +	if (num_vfs>  pci_sriov_get_totalvfs(pdev))
-> +		return -ERANGE;
-> +
-> +	if (num_vfs == pdev->sriov->num_VFs)
-> +		return count;		/* no change */
-maybe worth putting a dev-info print stating num_vfs to <enable,disable> == current state,
-no action taken. ... may point to a user-level programming error.
+>> pci_enable_bridges->pci_enable_device->__pci_enable_device_flags->do_pci_enable_device->
+>> pcibios_enable_device
+>>
+>> pci_bus_add_devices->pci_bus_add_device->"dev->is_added = 1"
+>>
+>> Yeah, it's general fixup code for every rescanned PCI/PCI-e device on
+>> powerpc at runtime. So if
+>> we want to call it in a ppc_md member, we need to wrap it as a function and
+>> assign it in every ppc_md,
+>> it isn't proper for the general code.
+>>
+>> Regards,
+>> yuanquan
+>>
+>>
+>>>> The patch code will be called by pci_enable_devices. The "dev->is_added"
+>>>> is set in pci_bus_add_device
+>>>> which is called by pci_bus_add_devices. So "dev->is_added" is false when
+>>>> checking it in pcibios_enable_device
+>>>> for the rescanned device.
+>>> Who calls pci_enable_device() in the rescan case ? Why isn't it left to
+>>> the driver ? I don't think we can rely on that behaviour not to change.
+>>>
+>>>>> How do you trigger the rescan anyway ?
+>>>> Use the interface under /sys :
+>>>> echo 1 > /sys/bus/pci/devices/xxx/remove
+>>>>
+>>>> then echo 1 to the pci device which is the bus of the removed device
+>>>> echo 1 > /sys/bus/pci/devices/xxxx/rescan
+>>>> the removed device will be scanned and it's driver module will be loaded
+>>>> automatically.
+>>> Yeah this code path are known to be fishy. I think the problem is at the
+>>> generic abstraction level and that's where it needs to be fixed.
+>>>
+>>> Cheers,
+>>> Ben.
+>>>
+>>>> Regards,
+>>>> yuanquan
+>>>>> I think the problem needs to be solve at a higher level, I'm adding
+>>>>> linux-pci & Bjorn to the CC list.
+>>>>>
+>>>>> Cheers,
+>>>>> Ben.
+>>>>>
+>>>>>> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
+>>>>>> ---
+>>>>>>     arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
+>>>>>>     1 file changed, 20 insertions(+)
+>>>>>>
+>>>>>> diff --git a/arch/powerpc/kernel/pci-common.c
+>>>>>> b/arch/powerpc/kernel/pci-common.c
+>>>>>> index 7f94f76..f0fb070 100644
+>>>>>> --- a/arch/powerpc/kernel/pci-common.c
+>>>>>> +++ b/arch/powerpc/kernel/pci-common.c
+>>>>>> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev,
+>>>>>> int mask)
+>>>>>>                  if (ppc_md.pcibios_enable_device_hook(dev))
+>>>>>>                          return -EINVAL;
+>>>>>>     +    if (!dev->is_added) {
+>>>>>> +               /*
+>>>>>> +                * Fixup NUMA node as it may not be setup yet by the
+>>>>>> generic
+>>>>>> +                * code and is needed by the DMA init
+>>>>>> +                */
+>>>>>> +               set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+>>>>>> +
+>>>>>> +               /* Hook up default DMA ops */
+>>>>>> +               set_dma_ops(&dev->dev, pci_dma_ops);
+>>>>>> +               set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+>>>>>> +
+>>>>>> +               /* Additional platform DMA/iommu setup */
+>>>>>> +               if (ppc_md.pci_dma_dev_setup)
+>>>>>> +                       ppc_md.pci_dma_dev_setup(dev);
+>>>>>> +
+>>>>>> +               /* Read default IRQs and fixup if necessary */
+>>>>>> +               pci_read_irq_line(dev);
+>>>>>> +               if (ppc_md.pci_irq_fixup)
+>>>>>> +                       ppc_md.pci_irq_fixup(dev);
+>>>>>> +       }
+>>>>>>          return pci_enable_resources(dev, mask);
+>>>>>>     }
+> Is this the same issue Hiroo MATSUMOTO was working on earlier?
+> (http://comments.gmane.org/gmane.linux.ports.ppc.embedded/50080)
 
->
->   	/* is PF driver loaded w/callback */
->   	if (!pdev->driver || !pdev->driver->sriov_configure) {
-> -		dev_info(&pdev->dev,
-> -			 "Driver doesn't support SRIOV configuration via sysfs\n");
-> +		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
->   		return -ENOSYS;
->   	}
->
-> -	/* if enabling vf's ... */
-> -	total = pci_sriov_get_totalvfs(pdev);
-> -	/* Requested VFs to enable<  totalvfs and none enabled already */
-> -	if ((num_vfs>  0)&&  (num_vfs<= total)) {
-> -		if (pdev->sriov->num_VFs == 0) {
-> -			num_vfs_enabled =
-> -				pdev->driver->sriov_configure(pdev, num_vfs);
-> -			if ((num_vfs_enabled>= 0)&&
-> -			    (num_vfs_enabled != num_vfs)) {
-> -				dev_warn(&pdev->dev,
-> -					 "Only %d VFs enabled\n",
-> -					 num_vfs_enabled);
-> -				return count;
-> -			} else if (num_vfs_enabled<  0)
-> -				/* error code from driver callback */
-> -				return num_vfs_enabled;
-> -		} else if (num_vfs == pdev->sriov->num_VFs) {
-> -			dev_warn(&pdev->dev,
-> -				 "%d VFs already enabled; no enable action taken\n",
-> -				 num_vfs);
-> -			return count;
-> -		} else {
-> -			dev_warn(&pdev->dev,
-> -				 "%d VFs already enabled. Disable before enabling %d VFs\n",
-> -				 pdev->sriov->num_VFs, num_vfs);
-> -			return -EINVAL;
-> -		}
-> +	if (num_vfs == 0) {
-> +		/* disable VFs */
-> +		ret = pdev->driver->sriov_configure(pdev, 0);
-> +		if (ret<  0)
-> +			return ret;
-> +		return count;
-yes, rtn count when non-neg is what I found had to be done
-not to hang the user cmd to sysfs.
+Yeah, that's the exact problem I encountered. Please push it forward.
 
->   	}
->
-> -	/* disable vfs */
-> -	if (num_vfs == 0) {
-> -		if (pdev->sriov->num_VFs != 0) {
-> -			ret = pdev->driver->sriov_configure(pdev, 0);
-> -			return ret ? ret : count;
-> -		} else {
-> -			dev_warn(&pdev->dev,
-> -				 "All VFs disabled; no disable action taken\n");
-> -			return count;
-> -		}
-> +	/* enable VFs */
-> +	if (pdev->sriov->num_VFs) {
-> +		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
-> +			 pdev->sriov->num_VFs, num_vfs);
-> +		return -EINVAL;
->   	}
->
-> -	dev_err(&pdev->dev,
-> -		"Invalid value for number of VFs to enable: %d\n", num_vfs);
-> +	ret = pdev->driver->sriov_configure(pdev, num_vfs);
-> +	if (ret<  0)
-> +		return ret;
->
-> -	return -EINVAL;
-> +	if (ret != num_vfs)
-> +		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
-> +			 num_vfs, ret);
-> +
-> +	return count;
-ditto; need to rtn input count.
+Thanks,
+yuanquan
 
->   }
+> We went round and round on those patches (partly my fault for
+> excessive bike-shedding), and then we stalled out because of an
+> ordering issue with CardBus init and an IRQ quirk.
 >
->   static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+> Here's the last status I remember:
+> http://marc.info/?l=linux-pci&m=135006501620378&w=2
+>
+> Bjorn
+>
+>
+>
+
 
