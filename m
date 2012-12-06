@@ -1,185 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:51380 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932165Ab2LMTfE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 14:35:04 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so2129376lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 13 Dec 2012 11:35:01 -0800 (PST)
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:34818 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105Ab2LFC36 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 21:29:58 -0500
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 500963EE0B5
+	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 37FE045DEB7
+	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 1F53245DEB6
+	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 129731DB803B
+	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
+Received: from g01jpexchyt09.g01.fujitsu.local (g01jpexchyt09.g01.fujitsu.local [10.128.194.48])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id B60D31DB8038
+	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:53 +0900 (JST)
+From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Shaohua Li <shaohua.li@intel.com>
+Subject: RE: [PATCH 05/12] PCI: Add standard PCIe Capability Link ASPM field
+ names
+Date: Thu, 6 Dec 2012 02:29:52 +0000
+Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A53E9B9@G01JPEXMBYT03>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+ <20121205205745.13851.5032.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20121205205745.13851.5032.stgit@bhelgaas.mtv.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1355399509.7498.49.camel@hal>
-References: <cover.1352719877.git.jang@linux.vnet.ibm.com> <c6f38a8b22d0bf2980785a2f9a786ba4616a3284.1352719877.git.jang@linux.vnet.ibm.com>
- <CAErSpo7h_EnqWzx7TN9yr5JnmUjLcZSv=pkc+Cz=8egF+EcyXQ@mail.gmail.com> <1355399509.7498.49.camel@hal>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Dec 2012 12:34:41 -0700
-Message-ID: <CAErSpo6pFLiPtQuBGzAo1B4cQOWzJEur_2THT=xJo9c5otp5hQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 01/10] s390/pci: base support
-To: Jan Glauber <jang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	heiko.carstens@de.ibm.com, schwidefsky@de.ibm.com,
-	sebott <sebott@linux.vnet.ibm.com>,
-	=?ISO-8859-1?Q?Gerald_Sch=E4fer?= <gerald.schaefer@de.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 4:51 AM, Jan Glauber <jang@linux.vnet.ibm.com> wrote:
-> On Mon, 2012-12-10 at 14:14 -0700, Bjorn Helgaas wrote:
->> On Wed, Nov 14, 2012 at 2:41 AM, Jan Glauber <jang@linux.vnet.ibm.com> wrote:
->> > Add PCI support for s390, (only 64 bit mode is supported by hardware):
->> > - PCI facility tests
->> > - PCI instructions: pcilg, pcistg, pcistb, stpcifc, mpcifc, rpcit
->> > - map readb/w/l/q and writeb/w/l/q to pcilg and pcistg instructions
->> > - pci_iomap implementation
->> > - memcpy_fromio/toio
->> > - pci_root_ops using special pcilg/pcistg
->> > - device, bus and domain allocation
->> >
->> > Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
->>
->> I think these patches are in -next already, so I just have some
->> general comments & questions.
->
-> Yes, since the feedback was manageable we decided to give the patches
-> some exposure in -next and if no one complains we'll just go for the
-> next merge window. BTW, Sebastian & Gerald (on CC:) will continue the
-> work on the PCI code.
->
->> My overall impression is that these are exceptionally well done.
->> They're easy to read, well organized, and well documented.  It's a
->> refreshing change from a lot of the stuff that's posted.
->
-> Thanks Björn!
->
->> As with other arches that run on top of hypervisors, you have
->> arch-specific code that enumerates PCI devices using hypervisor calls,
->> and you hook into the PCI core at a lower level than
->> pci_scan_root_bus().  That is, you call pci_create_root_bus(),
->> pci_scan_single_device(), pci_bus_add_devices(), etc., directly from
->> the arch code.  This is the typical approach, but it does make more
->> dependencies between the arch code and the PCI core than I'd like.
->>
->> Did you consider hiding any of the hypervisor details behind the PCI
->> config accessor interface?  If that could be done, the overall
->> structure might be more similar to other architectures.
->
-> You mean pci_root_ops? I'm not sure I understand how that can be used
-> to hide hipervisor details.
-
-The object of doing this would be to let you use pci_scan_root_bus(),
-so you wouldn't have to call pci_scan_single_device() and
-pci_bus_add_resources() directly.  The idea is to make pci_read() and
-pci_write() smart enough that the PCI core can use them as though you
-have a normal PCI implementation.  When pci_scan_root_bus() enumerates
-devices on the root bus using pci_scan_child_bus(), it does config
-reads on the VENDOR_ID of bb:00.0, bb:01.0, ..., bb:1f.0.  Your
-pci_read() would return error or 0xffffffff data for everything except
-bb:00.0 (I guess it actually already does that).
-
-Then some of the other init, e.g., zpci_enable_device(), could be done
-by the standard pcibios hooks such as pcibios_add_device() and
-pcibios_enable_device(), which would remove some of the PCI grunge
-from zpci_scan_devices() and the s390 hotplug driver.
-
-> One reason why we use the lower level
-> functions is that we need to create the root bus (and its resources)
-> much earlier then the pci_dev. For instance pci_hp_register wants a
-> pci_bus to create the PCI slot and the slot can exist without a pci_dev.
-
-There must be something else going on here; a bus is *always* created
-before any of the pci_devs on the bus.
-
-One thing that looks a little strange is that zpci_list seems to be
-sort of a cross between a list of PCI host bridges and a list of PCI
-devices.  Understandable, since you usually have a one-to-one
-correspondence between them, but for your hotplug stuff, you can have
-the host bridge and slot without the pci_dev.
-
-The hotplug slot support is really a function of the host bridge
-support, so it doesn't seem quite right to me to split it into a
-separate module (although that is the way most PCI hotplug drivers are
-currently structured).  One reason is that it makes hot-add of a host
-bridge awkward: you have to have the "if (hotplug_ops.create_slot)"
-test in zpci_create_device().
-
->> The current config accessors only work for dev/fn 00.0 (they fail when
->> "devfn != ZPCI_DEVFN").  Why is that?  It looks like it precludes
->> multi-function devices and basically prevents you from building an
->> arbitrary PCI hierarchy.
->
-> Our hypervisor does not support multi-function devices. In fact the
-> hypervisor will limit the reported PCI devices to a hand-picked
-> selection so we can be sure that there will be no unsupported devices.
-> The PCI hierarchy is hidden by the hipervisor. We only use the PCI
-> domain number, bus and devfn are always zero. So it looks like every
-> function is directly attached to a PCI root complex.
->
-> That was the reason for the sanity check, but thinking about it I could
-> remove it since although we don't support multi-function devices I
-> think the s390 code should be more agnostic to these limitations.
-
-The config accessor interface should be defined so it works for all
-PCI devices that exist, and fails for devices that do not exist.  The
-approach you've taken so far is to prevent the PCI core from even
-attempting access to non-existent devices, which requires you to use
-some lower-level PCI interfaces.  The alternative I'm raising as a
-possibility is to allow the PCI core to attempt accesses to
-non-existent devices, but have the accessor be smart enough to use the
-hypervisor or other arch-specific data to determine whether the device
-exists or not, and act accordingly.
-
-Basically the idea is that if we put more smarts in the config
-accessors, we can make the interface between the PCI core and the
-architecture thinner.
-
->> zpci_map_resources() is very unusual.  The struct pci_dev resource[]
->> table normally contains CPU physical addresses, but
->> zpci_map_resources() fills it with virtual addresses.  I suspect this
->> has something to do with the "BAR spaces are not disjunctive on s390"
->> comment.  It almost sounds like that's describing host bridges where
->> the PCI bus address is not equal to the CPU physical address -- in
->> that case, device A and device B may have the same values in their
->> BARs, but they can still be distinct if they're under host bridges
->> that apply different CPU-to-bus address translations.
->
-> Yeah, you've found it... I've had 3 or 4 tries on different
-> implementations but all failed. If we use the resources as they are we
-> cannot map them to the instructions (and ioremap does not help because
-> there we cannot find out which device the resource belongs to). If we
-> change the BARs on the card MMIO stops to work. I don't know about host
-> bridges - if we would use a host bridge at which point in the
-> translation process would it kick in?
-
-Here's how it works.  The PCI host bridge claims regions of the CPU
-physical address space and forwards transactions in those regions to
-the PCI root bus.  Some host bridges can apply an offset when
-forwarding, so the address on the bus may be different from the
-address from the CPU.  The bus address is what matches a PCI BAR.
-
-You can tell the PCI core about this translation by using
-pci_add_resource_offset() instead of pci_add_resource().  When the PCI
-core reads a BAR, it applies the offset to convert the BAR value into
-a CPU physical address.
-
-For example, let's say you have two host bridges:
-
-PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus
-address [0x00000000-0xffffffff])
-PCI host bridge to bus 0001:00
-pci_bus 0001:00: root bus resource [mem 0x200000000-0x2ffffffff] (bus
-address [0x00000000-0xffffffff])
-
-Both bridges use the same bus address range, and BARs of devices on
-bus 0000:00 can have the same values as those of devices on bus
-0001:00.  But there's no ambiguity because a CPU access to
-0x1_0000_0000 will be claimed by the first bridge and translated to
-bus address 0x0 on bus 0000:00, while a CPU access to 0x2_0000_0000
-will be claimed by the second bridge and translated to bus address 0x0
-on bus 0001:00.
-
-The pci_dev resources will contain CPU physical addresses, not the BAR
-values themselves.  These addresses implicitly identify the host
-bridge (and, in your case, the pci_dev, since you have at most one
-pci_dev per host bridge).
-
-Bjorn
+UmV2aWV3ZWQtYnk6IEtlbmppIEthbmVzaGlnZSA8a2FuZXNoaWdlLmtlbmppQGpwLmZ1aml0c3Uu
+Y29tPg0KQWNrZWQtYnk6IEtlbmppIEthbmVzaGlnZSA8a2FuZXNoaWdlLmtlbmppQGpwLmZ1aml0
+c3UuY29tPg0KDQpSZWdhcmRzLA0KS2VuamkgS2FuZXNoaWdlDQoNCj4gLS0tLS1PcmlnaW5hbCBN
+ZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2ds
+ZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBEZWNlbWJlciAwNiwgMjAxMiA1OjU4IEFNDQo+IFRv
+OiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+IENjOiBTaGFvaHVhIExpOyBLYW5lc2hpZ2Us
+IEtlbmppL+mHkemHjSDmhrLmsrsNCj4gU3ViamVjdDogW1BBVENIIDA1LzEyXSBQQ0k6IEFkZCBz
+dGFuZGFyZCBQQ0llIENhcGFiaWxpdHkgTGluayBBU1BNIGZpZWxkIG5hbWVzDQo+IA0KPiBBZGQg
+c3RhbmRhcmQgI2RlZmluZXMgZm9yIEFTUE0gZmllbGRzIGluIFBDSSBFeHByZXNzIExpbmsgQ2Fw
+YWJpbGl0eSBhbmQNCj4gTGluayBDb250cm9sIHJlZ2lzdGVycy4NCj4gDQo+IFByZXZpb3VzbHkg
+d2UgdXNlZCBQQ0lFX0xJTktfU1RBVEVfTDBTIGFuZCBQQ0lFX0xJTktfU1RBVEVfTDEgZGlyZWN0
+bHksIGJ1dA0KPiB0aGVzZSBhcmUgZGVmaW5lZCBmb3IgdGhlIExpbnV4IEFTUE0gaW50ZXJmYWNl
+cywgZS5nLiwNCj4gcGNpX2Rpc2FibGVfbGlua19zdGF0ZSgpLCBhbmQgb25seSBjb2luY2lkZW50
+YWxseSBtYXRjaCB0aGUgYWN0dWFsIHJlZ2lzdGVyDQo+IGJpdHMuICBQQ0lFX0xJTktfU1RBVEVf
+Q0xLUE0sIGFsc28gcGFydCBvZiB0aGF0IGludGVyZmFjZSwgZG9lcyBub3QgbWF0Y2gNCj4gdGhl
+IHJlZ2lzdGVyIGJpdC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxn
+YWFzQGdvb2dsZS5jb20+DQo+IENDOiBLZW5qaSBLYW5lc2hpZ2UgPGthbmVzaGlnZS5rZW5qaUBq
+cC5mdWppdHN1LmNvbT4NCj4gQ0M6IFNoYW9odWEgTGkgPHNoYW9odWEubGlAaW50ZWwuY29tPg0K
+PiAtLS0NCj4gIGRyaXZlcnMvcGNpL3BjaWUvYXNwbS5jICAgICAgIHwgICAxMSArKysrKystLS0t
+LQ0KPiAgaW5jbHVkZS91YXBpL2xpbnV4L3BjaV9yZWdzLmggfCAgICAyICsrDQo+ICAyIGZpbGVz
+IGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3BjaS9wY2llL2FzcG0uYyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jDQo+
+IGluZGV4IDIxMzc1M2IuLmMyZmFmOWQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNpL3BjaWUv
+YXNwbS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jDQo+IEBAIC00MjcsNyArNDI3
+LDggQEAgc3RhdGljIHZvaWQgcGNpZV9hc3BtX2NhcF9pbml0KHN0cnVjdCBwY2llX2xpbmtfc3Rh
+dGUgKmxpbmssIGludCBibGFja2xpc3QpDQo+IA0KPiAgc3RhdGljIHZvaWQgcGNpZV9jb25maWdf
+YXNwbV9kZXYoc3RydWN0IHBjaV9kZXYgKnBkZXYsIHUzMiB2YWwpDQo+ICB7DQo+IC0JcGNpZV9j
+YXBhYmlsaXR5X2NsZWFyX2FuZF9zZXRfd29yZChwZGV2LCBQQ0lfRVhQX0xOS0NUTCwgMHgzLCB2
+YWwpOw0KPiArCXBjaWVfY2FwYWJpbGl0eV9jbGVhcl9hbmRfc2V0X3dvcmQocGRldiwgUENJX0VY
+UF9MTktDVEwsDQo+ICsJCQkJCSAgIFBDSV9FWFBfTE5LQ1RMX0FTUE1DLCB2YWwpOw0KPiAgfQ0K
+PiANCj4gIHN0YXRpYyB2b2lkIHBjaWVfY29uZmlnX2FzcG1fbGluayhzdHJ1Y3QgcGNpZV9saW5r
+X3N0YXRlICpsaW5rLCB1MzIgc3RhdGUpDQo+IEBAIC00NDIsMTIgKzQ0MywxMiBAQCBzdGF0aWMg
+dm9pZCBwY2llX2NvbmZpZ19hc3BtX2xpbmsoc3RydWN0IHBjaWVfbGlua19zdGF0ZSAqbGluaywg
+dTMyIHN0YXRlKQ0KPiAgCQlyZXR1cm47DQo+ICAJLyogQ29udmVydCBBU1BNIHN0YXRlIHRvIHVw
+c3RyZWFtL2Rvd25zdHJlYW0gQVNQTSByZWdpc3RlciBzdGF0ZSAqLw0KPiAgCWlmIChzdGF0ZSAm
+IEFTUE1fU1RBVEVfTDBTX1VQKQ0KPiAtCQlkd3N0cmVhbSB8PSBQQ0lFX0xJTktfU1RBVEVfTDBT
+Ow0KPiArCQlkd3N0cmVhbSB8PSBQQ0lfRVhQX0xOS0NUTF9BU1BNX0wwUzsNCj4gIAlpZiAoc3Rh
+dGUgJiBBU1BNX1NUQVRFX0wwU19EVykNCj4gLQkJdXBzdHJlYW0gfD0gUENJRV9MSU5LX1NUQVRF
+X0wwUzsNCj4gKwkJdXBzdHJlYW0gfD0gUENJX0VYUF9MTktDVExfQVNQTV9MMFM7DQo+ICAJaWYg
+KHN0YXRlICYgQVNQTV9TVEFURV9MMSkgew0KPiAtCQl1cHN0cmVhbSB8PSBQQ0lFX0xJTktfU1RB
+VEVfTDE7DQo+IC0JCWR3c3RyZWFtIHw9IFBDSUVfTElOS19TVEFURV9MMTsNCj4gKwkJdXBzdHJl
+YW0gfD0gUENJX0VYUF9MTktDVExfQVNQTV9MMTsNCj4gKwkJZHdzdHJlYW0gfD0gUENJX0VYUF9M
+TktDVExfQVNQTV9MMTsNCj4gIAl9DQo+ICAJLyoNCj4gIAkgKiBTcGVjIDIuMCBzdWdnZXN0cyBh
+bGwgZnVuY3Rpb25zIHNob3VsZCBiZSBjb25maWd1cmVkIHRoZQ0KPiBkaWZmIC0tZ2l0IGEvaW5j
+bHVkZS91YXBpL2xpbnV4L3BjaV9yZWdzLmggYi9pbmNsdWRlL3VhcGkvbGludXgvcGNpX3JlZ3Mu
+aA0KPiBpbmRleCA0Y2NhODM0Li4wYjZkYmU0IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL3VhcGkv
+bGludXgvcGNpX3JlZ3MuaA0KPiArKysgYi9pbmNsdWRlL3VhcGkvbGludXgvcGNpX3JlZ3MuaA0K
+PiBAQCAtNDY5LDYgKzQ2OSw4IEBADQo+ICAjZGVmaW5lICBQQ0lfRVhQX0xOS0NBUF9QTgkweGZm
+MDAwMDAwIC8qIFBvcnQgTnVtYmVyICovDQo+ICAjZGVmaW5lIFBDSV9FWFBfTE5LQ1RMCQkxNgkv
+KiBMaW5rIENvbnRyb2wgKi8NCj4gICNkZWZpbmUgIFBDSV9FWFBfTE5LQ1RMX0FTUE1DCTB4MDAw
+MwkvKiBBU1BNIENvbnRyb2wgKi8NCj4gKyNkZWZpbmUgIFBDSV9FWFBfTE5LQ1RMX0FTUE1fTDBT
+ICAweDAxCS8qIEwwcyBFbmFibGUgKi8NCj4gKyNkZWZpbmUgIFBDSV9FWFBfTE5LQ1RMX0FTUE1f
+TDEgICAweDAyCS8qIEwxIEVuYWJsZSAqLw0KPiAgI2RlZmluZSAgUENJX0VYUF9MTktDVExfUkNC
+CTB4MDAwOAkvKiBSZWFkIENvbXBsZXRpb24gQm91bmRhcnkgKi8NCj4gICNkZWZpbmUgIFBDSV9F
+WFBfTE5LQ1RMX0xECTB4MDAxMAkvKiBMaW5rIERpc2FibGUgKi8NCj4gICNkZWZpbmUgIFBDSV9F
+WFBfTE5LQ1RMX1JMCTB4MDAyMAkvKiBSZXRyYWluIExpbmsgKi8NCg0K
