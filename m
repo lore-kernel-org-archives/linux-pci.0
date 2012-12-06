@@ -1,152 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61300 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756751Ab2LNSTf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Dec 2012 13:19:35 -0500
-Date: Fri, 14 Dec 2012 10:19:11 -0800
-From: Greg Rose <gregory.v.rose@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Donald Dutile <ddutile@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-Message-ID: <20121214101911.00002f59@unknown>
-In-Reply-To: <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
-	<CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:61557 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922Ab2LFSTz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 13:19:55 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5506271lag.19
+        for <linux-pci@vger.kernel.org>; Thu, 06 Dec 2012 10:19:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+ <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+ <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+ <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
+ <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 6 Dec 2012 11:19:33 -0700
+Message-ID: <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 14 Nov 2012 12:46:57 -0800
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Wed, Dec 5, 2012 at 5:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Dec 5, 2012 at 4:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Dec 5, 2012 at 4:36 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>>> On 12/05/2012 04:15 PM, Yinghai Lu wrote:
+>>>>
+>>>
+>>> I don't see why that isn't the right fix.  We copy the data into
+>>> boot_params early in the boot; that *is* the official copy as far as the
+>>> kernel is concerned.
+>>>
+>>> So this patch very much seems like The Right Thing.
+>>
+>> it moves boot_params from __initdata  to data.
+>
+>    should be from __initdata to bss
+>
+>> and just for using pointer to setup_data.
+>>
+>> should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
 
-> On Mon, Nov 5, 2012 at 1:20 PM, Donald Dutile <ddutile@redhat.com>
-> wrote:
-> > Currently, VF enablement by SRIOV-capable PCIe devices is done
-> > in driver-specific module parameters.  If not setup in modprobe
-> > files, it requires admin to unload & reload PF drivers with number
-> > of desired VFs to enable.  Additionally, the enablement is system
-> > wide: all devices controlled by the same driver have the same
-> > number of VFs enabled.  Although the latter is probably desired,
-> > there are PCI configurations setup by system BIOS that may not
-> > enable that to occur.
-> >
-> > Two files are created if a PCIe device has SRIOV support:
-> > sriov_totalvfs -- cat-ing this file returns the maximum number
-> >                   of VFs a PCIe device supports.
-> > sriov_numvfs -- echo'ing a positive number to this file enables
-> >                 & configures this number of VFs for this given PCIe
-> >                 device.
-> >              -- echo'ing 0 to this file disables and deconfigures
-> >                 all VFs for this given PCIe device.
-> >              -- cat-ing this file will return the number of VFs
-> >                 currently enabled on this PCIe device.
-> >
-> > VF enable and disablement is invoked much like other PCIe
-> > configuration functions -- via a registered callback in the driver,
-> > i.e., probe, release, etc.  In this case, sriov_configure
-> >
-> > PATCH v1->v2:
-> > -- incorporate more feedback from Ben Hutchings.
-> > -- (hopefully) correct From & Signed-by for Yinghai Lu's patches
-> > (1/8 & 2/8)
-> >
-> > RFC V3->PATCH:
-> > -- incorporate feedback from Ben Hutchings.
-> > -- clean up poor RFC patches & sanitize through checkpatch.pl
-> >
-> > RFC v2->v3:
-> > -- change the file names to reflect the names used in the SRIOV spec
-> > -- change to a single file for enable & disable;
-> >    change driver interface to a single interface.
-> > -- add more informative messages on failures
-> > -- add a core method that a driver can invoke to modify
-> >    the totalvfs reported & supported by a driver.
-> > -- a set of patches for ixgbe provided by Greg Rose to use the
-> >    new interfaces; the last patch modified from the original
-> >    two file, enable/disable interface to the current single file
-> >    enable/disable. Greg will eventually post the final version
-> >    of these patches via Intel's usual process for driver patches.
-> >    Provided here as an example, and enable other SRIOV drivers
-> >    to see how adoption of the interface can be added.
-> >
-> > RFC v1->v2:
-> > This patch is based on previous 2 patches by Yinghai Lu
-> > that cleaned up the vga attributes for PCI devices under sysfs,
-> > and uses visibility-checking group attributes as recommended by
-> > Greg K-H.
-> >
-> > Signed-off-by: Donald Dutile <ddutile@redhat.com>
-> > ---
-> >  drivers/pci/iov.c       |  48 ++++++++++++++++
-> >  drivers/pci/pci-sysfs.c | 179
-> > ++++++++++++++++++++++++++++++++++++++++++++++++++++++----
-> > drivers/pci/pci.h       |   2 + drivers/pci/probe.c     |   1 +
-> >  include/linux/pci.h     |  11 ++++
-> >  5 files changed, 230 insertions(+), 11 deletions(-)
-> 
-> I applied patches 1-4 to my pci/don-sriov patch, and they appeared in
-> next-20121114.
-> 
-> I am still expecting a Documentation/ABI update, but I wanted to get
-> the functional patches merged now because there will only be one more
-> -next release until 11/26, which will probably be after -rc7.
-> 
-> I'm expecting patches 5-8 to be posted via some other mechanism as
-> mentioned in those patches.
-> 
-> Thanks!
-> 
-> Bjorn
+I'm not following the whole discussion here, but my impression is that
+what's in my -next branch is acceptable
+(http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=328949ff10f2e3fcb11472571294beed39488342)
 
-Now that the merge has occurred I find that there is a small bug in
-which a return code with a positive value isn't handled and thus an
-error is generated even though no error occurred.  Please consider this
-patch as a fix.
+If not, please explain further and provide a patch to fix it.
 
-Thanks,
-
-- Greg
-
-pci: Fix return code
-
-From: Greg Rose <gregory.v.rose@intel.com>
-
-The return code from the sriov configure function was only returned if it
-was less than zero indicating an error.  This caused the code to fall
-through to the default return of an error code even though the sriov
-configure function has returned the number of VFs it created - a positive
-number indicating success.
-
-
-Signed-off-by: Greg Rose <gregory.v.rose@intel.com>
----
-
- drivers/pci/pci-sysfs.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 05b78b1..2722a33 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -461,9 +461,10 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 					 "Only %d VFs enabled\n",
- 					 num_vfs_enabled);
- 				return count;
--			} else if (num_vfs_enabled < 0)
--				/* error code from driver callback */
-+			} else {
-+				/* Return error code or number of VFs */
- 				return num_vfs_enabled;
-+			}
- 		} else if (num_vfs == pdev->sriov->num_VFs) {
- 			dev_warn(&pdev->dev,
- 				 "%d VFs already enabled; no enable action taken\n",
-
-
+Bjorn
