@@ -1,105 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:60998 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595Ab2LJWcC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 17:32:02 -0500
-Received: by mail-wg0-f46.google.com with SMTP id dr13so2060417wgb.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 14:32:01 -0800 (PST)
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: pci and pcie device-tree binding - range No cells
-To: Rob Herring <robherring2@gmail.com>, monstr@monstr.eu
-Cc: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-In-Reply-To: <50C5FE0F.3050108@gmail.com>
-References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com>
-Date: Mon, 10 Dec 2012 21:41:27 +0000
-Message-Id: <20121210214127.D51773E0796@localhost>
+Received: from cavan.codon.org.uk ([93.93.128.6]:49013 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752845Ab2LFGTN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 01:19:13 -0500
+Date: Thu, 6 Dec 2012 06:19:03 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+Message-ID: <20121206061903.GA3068@srcf.ucam.org>
+References: <20121203200241.GG5906@thinkpad-t410>
+ <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+ <20121206001819.GA30527@srcf.ucam.org>
+ <50BFE50C.8030008@zytor.com>
+ <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com>
+ <50BFE890.5070109@zytor.com>
+ <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
+ <50BFEF09.9000408@zytor.com>
+ <cd3b2e67-92af-494d-ba2d-4179ead6e06b@email.android.com>
+ <50BFF328.5030406@zytor.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50BFF328.5030406@zytor.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 10 Dec 2012 09:21:51 -0600, Rob Herring <robherring2@gmail.com> wrote:
-> On 12/10/2012 09:05 AM, Michal Simek wrote:
-> > On 12/10/2012 03:26 PM, Rob Herring wrote:
-> >> On 12/10/2012 06:20 AM, Michal Simek wrote:
-> >>> Hi Grant and others,
-> >>>
-> >>> I have a question regarding number of cells in ranges property
-> >>> for pci and pcie nodes.
-> >>>
-> >>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
-> >>> sequoia.dts, etc)
-> >>> but also 6 cells format too (mpc832x_mds.dts)
-> >>>
-> >>> Here is shown 6 cells ranges format and describe
-> >>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
-> >>>
-> >>> And also in documentation in the linux
-> >>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
-> >>>
-> >>> Both format uses:
-> >>> #size-cells = <2>;
-> >>> #address-cells = <3>;
-> >>>
-> >>> What is valid format?
-> >>
-> >> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
-> >> are valid when the host bus is 32-bit. The ranges property is <<child
-> >> address> <parent address> <size>>. The parent address #address-cells is
-> >> taken from the parent node.
-> > 
-> > Ok. Got it.
-> > 
-> > Here is what we use on zynq and microblaze - both 32bit which should be
-> > fine.
-> > 
-> >     ps7_axi_interconnect_0: axi@0 {
-> >         #address-cells = <1>;
-> >         #size-cells = <1>;
-> >         axi_pcie_0: axi-pcie@50000000 {
-> >             #address-cells = <3>;
-> >             #size-cells = <2>;
-> >             compatible = "xlnx,axi-pcie-1.05.a";
-> >             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-> >             ...
-> >         }
-> >     }
-> > 
-> > What I am wondering is pci_process_bridge_OF_ranges() at
-> > arch/powerpc/kernel/pci-common.c
-> > where there are used some hardcoded values which should be probably
-> > loaded from device-tree.
-> > 
-> > For example:
-> > 683         int np = pna + 5;
-> > ...
-> > 702                 pci_addr = of_read_number(ranges + 1, 2);
-> > 703                 cpu_addr = of_translate_address(dev, ranges + 3);
-> > 704                 size = of_read_number(ranges + pna + 3, 2);
+On Wed, Dec 05, 2012 at 05:21:44PM -0800, H. Peter Anvin wrote:
+> On 12/05/2012 05:13 PM, Matthew Garrett wrote:
+> >Yeah, it needs to be hidden from root - but ideally we'd be passing it to the second kernel if we kexec. Alternative would be for it to be capability bounded to a trusted signed kexec binary if we implement Vivek's IMA-based approach.
+> >
 > 
-> These would always be correct whether you have 6 or 7 cells. pna is the
-> parent bus address cells size. The pci address is fixed at 3 cells.
-> 
-> > 
-> > 
-> > Unfortunately we have copied it to microblaze.
-> 
-> I look at the PCI DT code in powerpc and see a whole bunch of code that
-> seems like it should be common. The different per arch pci structs
-> complicates that. No one has really gotten to looking at PCI DT on ARM
-> yet except you and Thierry for Tegra. We definitely don't want to create
-> a 3rd copy. Starting the process of moving it to something like
-> drivers/pci/pci-of.c would be great.
+> Either way a security flag in the type field makes sense.
 
-A lot of it should be common. The microblaze code is a copy of the
-powerpc version. I'll strongly nack any attempt to add a third!  :-)
+I've no objection to that, although I'm not sure there's any real reason 
+to expose an incomplete setup_data to userspace. Any scenario in which 
+kexec can't read the full data is one where kexec won't be able to 
+call sys_kexec() anyway.
 
-drivers/pci/pci-of.c would be good. I'd also accept drivers/of/pci.c
-which might actually be a good idea in the short term so that it gets
-appropriate supervision while being generalized before being moved into
-the pci directory.
-
-g.
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
