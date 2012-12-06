@@ -1,107 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:46697 "EHLO hydra.sisk.pl"
+Received: from terminus.zytor.com ([198.137.202.10]:42139 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161Ab2L0VUT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Dec 2012 16:20:19 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Thu, 27 Dec 2012 22:25:42 +0100
-Message-ID: <4375785.YNzAUSLvur@vostro.rjw.lan>
-In-Reply-To: <2210460.jSt1aAvsCj@vostro.rjw.lan>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1723076.byQgAGE2K7@vostro.rjw.lan> <2210460.jSt1aAvsCj@vostro.rjw.lan>
+	id S1751860Ab2LFBEV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 20:04:21 -0500
+Message-ID: <50BFEF09.9000408@zytor.com>
+Date: Wed, 05 Dec 2012 17:04:09 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com> <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com> <50BFE890.5070109@zytor.com> <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
+In-Reply-To: <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 27, 2012 02:31:09 PM Rafael J. Wysocki wrote:
-> On Thursday, December 27, 2012 01:47:22 PM Rafael J. Wysocki wrote:
-> > On Wednesday, December 26, 2012 04:10:32 PM Yinghai Lu wrote:
-> > > On Wed, Dec 26, 2012 at 2:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > > On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
-> > > >> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > > >> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > > >> >> Do you have a reference for this?  I think this might have been true
-> > > >> >> in the past, but I don't think it's true for any version of gcc we
-> > > >> >> support for building Linux.
-> > > >> >
-> > > >> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
-> > > >>
-> > > >> the problem is already addressed by:
-> > > >>
-> > > >> | commit f9d14250071eda9972e4c9cea745a11185952114
-> > > >> | Author: Linus Torvalds <torvalds@linux-foundation.org>
-> > > >> | Date:   Fri Jan 2 09:29:43 2009 -0800
-> > > >> |
-> > > >> |    Disallow gcc versions 4.1.{0,1}
-> > > >> |
-> > > >> |    These compiler versions are known to miscompile __weak functions and
-> > > >> |    thus generate kernels that don't necessarily work correctly.  If a weak
-> > > >> |    function is int he same compilation unit as a caller, gcc may end up
-> > > >> |    inlining it, and thus binding the weak function too early.
-> > > >> |
-> > > >> |    See
-> > > >> |
-> > > >> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
-> > > >> |
-> > > >> |    for details.
-> > > >>
-> > > >> so it is ok to put the __weak in the same file now.
-> > > >
-> > > > Cool, thanks for checking and for the ACK!
-> > > 
-> > > wait, we have some problem on systems that root bus is not exported via DSDT ...
-> > > 
-> > > one of my nehalem system that have uncore cpu devices are not exported via ACPI.
-> > > 
-> > > also there will be problem that system is booting with acpi=off.
-> > > 
-> > > 
-> > > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> > > +{
-> > > +       struct pci_sysdata *sd = bridge->bus->sysdata;
-> > > +       struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
-> > > +
-> > > +       ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
-> > > +       return 0;
-> > > +}
-> > > 
-> > > will get wrong info...via sd... as their sd is standalone
-> > 
-> > Yes, it will be called in all code paths leading to acpi_create_root_bus(),
-> > not only the ones started by pci_acpi_scan_root().  Well, too bad.
+On 12/05/2012 04:57 PM, Matthew Garrett wrote:
 > 
-> s/acpi_create_root_bus/pci_create_root_bus/
 > 
-> Sorry.
+> "H. Peter Anvin" <hpa@zytor.com> wrote:
 > 
-> > By the way, that illustrates nicely why I generally have concerns about __weak
-> > stuff and similar tricks.
-> > 
-> > Bjorn, I had tried to use the approach you suggested, but it didn't work.
-> > I thought about fixing that, but everything I could come up with turned out to
-> > be too complicated, so I'm inclined to use the previous version after all:
-> > 
-> > https://patchwork.kernel.org/patch/1889221/
-> > 
-> > that has been acked by Yinghai, Greg and Peter already.
+>> I don't think there is anything security-sensitive about that
+>> information, at least not to root.  I could be wrong, of course; I
+>> wouldn't mind security people telling me about that.
+> 
+> I don't think there's anything at present, but we'll want to pass the hibernation encryption key from the bootloader to the kernel in the near future. setup_data seems like the easiest way to do that. 
+> 
 
-I think I know how to avoid the __weak thing without doing what the first
-version did.  I'll post a new version of the patch shortly.
+And that presumably would be something that cannot be exposed to root?
+If so we may want to use one of the bits in the setup_data type field as
+a security flag, perhaps...
 
-Thanks,
-Rafael
+	-hpa
 
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
