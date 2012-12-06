@@ -1,73 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:64893 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174Ab2LEWIL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 17:08:11 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so4844214lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 14:08:09 -0800 (PST)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:53133 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909Ab2LFAvw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:51:52 -0500
 MIME-Version: 1.0
-In-Reply-To: <1354745132.2355.98.camel@jtkirshe-mobl>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
- <20121205205755.13851.77284.stgit@bhelgaas.mtv.corp.google.com> <1354745132.2355.98.camel@jtkirshe-mobl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Dec 2012 15:07:48 -0700
-Message-ID: <CAErSpo5EfAY7BTNFtq3DWggDhBisBPGhevOsZXa19jRLT4+b6Q@mail.gmail.com>
-Subject: Re: [PATCH 07/12] e1000e: Use standard #defines for PCIe Capability
- ASPM fields
-To: jeffrey.t.kirsher@intel.com
-Cc: linux-pci@vger.kernel.org,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	e1000-devel@lists.sourceforge.net,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>
+In-Reply-To: <50BFE88D.1000800@zytor.com>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+	<20121203200241.GG5906@thinkpad-t410>
+	<CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+	<50BFE88D.1000800@zytor.com>
+Date: Wed, 5 Dec 2012 16:51:50 -0800
+Message-ID: <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+From: Yinghai Lu <yinghai@kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 3:05 PM, Jeff Kirsher
-<jeffrey.t.kirsher@intel.com> wrote:
-> On Wed, 2012-12-05 at 13:57 -0700, Bjorn Helgaas wrote:
->> Use the standard #defines for PCIe Capability ASPM fields.
+On Wed, Dec 5, 2012 at 4:36 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 12/05/2012 04:15 PM, Yinghai Lu wrote:
 >>
->> Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1
->> directly, but
->> these are defined for the Linux ASPM interfaces, e.g.,
->> pci_disable_link_state(), and only coincidentally match the actual
->> register
->> bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not
->> match
->> the register bit.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> CC: Jesse Brandeburg <jesse.brandeburg@intel.com>
->> CC: Bruce Allan <bruce.w.allan@intel.com>
->> CC: Carolyn Wyborny <carolyn.wyborny@intel.com>
->> CC: Don Skidmore <donald.c.skidmore@intel.com>
->> CC: Greg Rose <gregory.v.rose@intel.com>
->> CC: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
->> CC: Alex Duyck <alexander.h.duyck@intel.com>
->> CC: John Ronciak <john.ronciak@intel.com>
->> CC: e1000-devel@lists.sourceforge.net
->> ---
->>  drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++++--
->>  1 files changed, 9 insertions(+), 2 deletions(-)
 >
-> Thanks I will add this patch to my queue for e1000e.  Since this is
-> patch 7 of 12, are there PCI dependent patches in the series that need
-> to be applied before?
+> I don't see why that isn't the right fix.  We copy the data into
+> boot_params early in the boot; that *is* the official copy as far as the
+> kernel is concerned.
+>
+> So this patch very much seems like The Right Thing.
 
-Yes.  It does depend on a previous patch that adds the #defines to
-include/uapi/linux/pci_regs.h
-(http://marc.info/?l=linux-pci&m=135474107109010&w=2).
+it moves boot_params from __initdata  to data.
+and just for using pointer to setup_data.
 
-I plan to merge that during the v3.8 merge window, so you can merge it
-after that.  Or, if it won't cause you conflicts, I can include the
-e1000e change in my PCI tree.
+should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
 
-Bjorn
+Yinghai
