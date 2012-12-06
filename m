@@ -1,137 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34578 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753211Ab2LFAP6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:15:58 -0500
 MIME-Version: 1.0
-In-Reply-To: <1772854.QSySvgjB3i@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <1772854.QSySvgjB3i@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 12 Dec 2012 18:00:19 -0700
-Message-ID: <CAErSpo4_2TMjW65w0wwWpYRDMMRvWxJU_+wgyMFXmTzOaQhQAA@mail.gmail.com>
-Subject: Re: [PATCH 2/6] ACPI: Change the ordering of PCI root bridge driver registrarion
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
+In-Reply-To: <20121203200241.GG5906@thinkpad-t410>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+	<20121203200241.GG5906@thinkpad-t410>
+Date: Wed, 5 Dec 2012 16:15:56 -0800
+Message-ID: <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Dec 9, 2012 at 4:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Dec 3, 2012 at 12:02 PM, Seth Forshee
+<seth.forshee@canonical.com> wrote:
+> On Thu, Oct 25, 2012 at 11:35:57AM -0600, Bjorn Helgaas wrote:
+>> On Thu, Aug 23, 2012 at 10:36 AM, Matthew Garrett <mjg@redhat.com> wrote:
+>> > V3 just fixes all the casting issues and incorporates David's change in
+>> > search ordering.
+>>
+>> I think there's still a section mismatch issue with these patches, so
+>> I haven't merged them yet.
+>>
+>> I rebased my pci/mjg-pci-roms-from-efi branch to v3.7-rc2, and if we
+>> get this issue fixed I'll put it in -next as v3.8 material.
 >
-> Devices created by acpi_create_platform_device() sometimes may need
-> to be added to the device hierarchy as children of PCI bridges.
-
-An example of this hierarchy would help to understand it.
-
-> For
-> this purpose, however, the struct pci_dev objects representing those
-> bridges need to exist before the platform devices in question are
-> added, but this is only possible if the PCI root bridge driver is
-> registered before the initial scanning of the ACPI namespace
-> (that driver's .add() routine creates the required struct pci_dev
-> objects).
-
-The previous patch (1/6) registers all acpi_device objects in the
-first pass, then calls driver .add() methods in the second pass.  And
-here you're saying the .add() method has to run before platform
-devices are added.  So I guess the acpi_device objects are added
-first, then the .add() methods called, then the platform devices
-added?
-
-I think the call sequence looks like this:
-
-    acpi_bus_scan
-      acpi_walk_namespace
-        acpi_bus_check_add
-          acpi_add_single_object
-            device = kzalloc(sizeof(struct acpi_device, ...)    # (1)
-acpi_devices created here
-      acpi_walk_namespace
-        acpi_bus_match_device
-          if (acpi_match_device_ids(device, acpi_platform_device_ids))
-            acpi_create_platform_device    # (3) platform device added here
-          else
-            device_attach    # (2) driver .add() called here
-            acpi_hot_add_bind
-
-(1) happens first because it's in the first acpi_walk_namespace().
-(2) happens before (3) because acpi_walk_namespace() calls
-acpi_bus_match_device() in preorder (node visited before its children)
-
-It always seems like a bit of a hack when we have to call out a driver
-specifically like this.  Are these special platform devices unique to
-PCI?  What would happen with these platform devices that are children
-of PCI bridges if we booted a kernel without a PCI host bridge driver?
- You would hope that the PCI host bridge and everything under it would
-just be ignored, and I assume that in that case, these platform
-devices should be ignored, too.
-
-I know we can't build ACPI without PCI today, but AFAIK that's mostly
-to reduce the configuration/testing matrix, not a design restriction.
-So I guess I'm trying to figure out whether the ACPI core should be
-made smart enough to deal with these PCI-related platform devices (as
-you're doing in these patches), or whether there should be something
-in the PCI host bridge driver that deals with them.
-
-> For this reason, call acpi_pci_root_init() from acpi_scan_init()
-> before scanning the ACPI namespace for the first time instead of
-> running it from a separate subsys initcall.  Since the previous patch
-> has changed the ACPI namespace scanning algorithm, this change does
-> not affect the PCI root bridge driver's functionality during boot.
-> It also makes the situation during boot more similar to the situation
-> during hot-plug (in which the PCI root bridge driver is always
-> present) and so it helps to reduce arbitary differences between
-> the hot-plug and boot PCI root bridge code.
+> I still don't see this series in -next, so I take it the section
+> mismatch was never fixed? How about the following?
 >
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+>
+> From ece31852159a6b2cf9a059031638354e9817a6a6 Mon Sep 17 00:00:00 2001
+> From: Seth Forshee <seth.forshee@canonical.com>
+> Date: Mon, 3 Dec 2012 13:55:50 -0600
+> Subject: [PATCH] x86: Don't discard boot_params
+>
+> boot_params is now used at runtime on EFI systems to stash option ROMs
+> that aren't available after exiting boot services, so it can no longer
+> be marked __initdata.
+>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
 > ---
->  drivers/acpi/internal.h |    1 +
->  drivers/acpi/pci_root.c |    4 +---
->  drivers/acpi/scan.c     |    1 +
->  3 files changed, 3 insertions(+), 3 deletions(-)
+>  arch/x86/kernel/setup.c |    4 ----
+>  1 file changed, 4 deletions(-)
 >
-> Index: linux/drivers/acpi/internal.h
-> ===================================================================
-> --- linux.orig/drivers/acpi/internal.h
-> +++ linux/drivers/acpi/internal.h
-> @@ -67,6 +67,7 @@ struct acpi_ec {
->
->  extern struct acpi_ec *first_ec;
->
-> +int acpi_pci_root_init(void);
->  int acpi_ec_init(void);
->  int acpi_ec_ecdt_probe(void);
->  int acpi_boot_ec_enable(void);
-> Index: linux/drivers/acpi/pci_root.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/pci_root.c
-> +++ linux/drivers/acpi/pci_root.c
-> @@ -674,7 +674,7 @@ static int acpi_pci_root_remove(struct a
->         return 0;
+> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+> index 468e98d..6e13035 100644
+> --- a/arch/x86/kernel/setup.c
+> +++ b/arch/x86/kernel/setup.c
+> @@ -143,11 +143,7 @@ int default_check_phys_apicid_present(int phys_apicid)
 >  }
+>  #endif
 >
-> -static int __init acpi_pci_root_init(void)
-> +int __init acpi_pci_root_init(void)
->  {
->         acpi_hest_init();
+> -#ifndef CONFIG_DEBUG_BOOT_PARAMS
+> -struct boot_params __initdata boot_params;
+> -#else
+>  struct boot_params boot_params;
+> -#endif
 >
-> @@ -687,5 +687,3 @@ static int __init acpi_pci_root_init(voi
->
->         return 0;
->  }
-> -
-> -subsys_initcall(acpi_pci_root_init);
-> Index: linux/drivers/acpi/scan.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/scan.c
-> +++ linux/drivers/acpi/scan.c
-> @@ -1828,6 +1828,7 @@ int __init acpi_scan_init(void)
->         }
->
->         acpi_power_init();
-> +       acpi_pci_root_init();
->
->         /*
->          * Enumerate devices in the ACPI namespace.
->
+>  /*
+>   * Machine setup..
+
+No, that is not a right fix
+
+We should only cache pointer to setup_data.
+
+at the same time we should export setup_data into /sys, so kexec could
+append this pointer to command of
+second kernel, just like kexec append acpi_rsdp.
+That should address DavidW's concern.
+
+
+Yinghai
