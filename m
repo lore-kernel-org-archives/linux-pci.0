@@ -1,57 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59947 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932378Ab2LNVzQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Dec 2012 16:55:16 -0500
-Message-ID: <50CBA03D.8050409@redhat.com>
-Date: Fri, 14 Dec 2012 16:55:09 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:43088 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946465Ab2LFS5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 13:57:53 -0500
 MIME-Version: 1.0
-To: Jason Gao <pkill.2012@gmail.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
-Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
- not set] Vt-d & intel_iommu
-References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com> <1355415792.2229.7.camel@ul30vt.home> <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-In-Reply-To: <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20121206185439.GA17381@srcf.ucam.org>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+	<20121203200241.GG5906@thinkpad-t410>
+	<CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+	<50BFE88D.1000800@zytor.com>
+	<CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
+	<CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
+	<CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
+	<50C0E339.4030607@zytor.com>
+	<20121206185439.GA17381@srcf.ucam.org>
+Date: Thu, 6 Dec 2012 10:57:51 -0800
+Message-ID: <CAE9FiQWrfp4ptabLiGTv+tH2Nc9i+opX2O9Kk32MbwhF3vCOqg@mail.gmail.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+From: Yinghai Lu <yinghai@kernel.org>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Content-Type: multipart/mixed; boundary=00151747821603b65004d033adfa
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/13/2012 09:01 PM, Jason Gao wrote:
-> On Fri, Dec 14, 2012 at 12:23 AM, Alex Williamson
-> <alex.williamson@redhat.com>  wrote:
->>
->> Device 03:00.0 is your raid controller:
->>
->> 03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
->>
->> For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
->> ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
->> it's not reading an OS allocated buffer, which probably means it's some
->> kind of side-band communication with a management controller.  I'd guess
->> it's a BIOS bug and there should be an RMRR covering those accesses.
->> Thanks,
->
-> First of all ,I want to known whether I can ignore these errors on the
-> production server,and do these error may affect the system?
->
-> By the way,when I removed the "intel_iommu=on" from /etc/grub.conf,no
-> DMAR related errors occur
->
-> It's a strange thing,other three Dell R710 servers with the same bios
-> version v. 6.3.0, same kernel 2.6.32-279.14.1 on RHEL6u3(Centos 6u3)
-> ,but these errors don't appear on these tree servers
->
-forgot: did you check that all the bios settings are the same btwn
-         the 710 systems?
+--00151747821603b65004d033adfa
+Content-Type: text/plain; charset=ISO-8859-1
 
-> Anyone have any idea for this ?
+On Thu, Dec 6, 2012 at 10:54 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Thu, Dec 06, 2012 at 10:26:01AM -0800, H. Peter Anvin wrote:
 >
-> thanks
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> NAK on this bit:
+>>
+>> +       if (boot_params.hdr.version < 0x0209)
+>> +               return 0;
+>>
+>> This field is kernel->bootloader documentation.  If a nonmaching
+>> value somehow leaks into the kernel, the kernel could either
+>> panic("Bootloader written by moron") or it should clear some fields,
+>> but littering the kernel with these kinds of tests is just plain
+>> braindead.
+>
+> Dropping that should be fine. Bjorn, would you prefer a patch from me to
+> do that?
 
+the one : use pointer for setup_pci instead.
+
+--00151747821603b65004d033adfa
+Content-Type: application/octet-stream; name="pa_data_setup_pci.patch"
+Content-Disposition: attachment; filename="pa_data_setup_pci.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hae8zzxq0
+
+U3ViamVjdDogW1BBVENIXSB4ODYsIHBjaTogbW92ZSBib290X3BhcmFtcyBiYWNrIHRvIF9faW5p
+dGRhdGEKCkRvbid0IHdhc3RlIDRrIGZvciA4IGJ5dGVzLgoKQWxzbyBJIGRvbid0IHNlZSB0aGUg
+cmVhc29uIHdoeSBEVEIgY291bGQgb25seSBoYXZlIG9uZSBlbnRyeQpidXQgU0VUVVBfVVAgZGF0
+YSBoYXZlIG11bHRpcGxlLgoKZGlmZiAtLWdpdCBhL2FyY2gveDg2L2luY2x1ZGUvYXNtL3BjaS5o
+IGIvYXJjaC94ODYvaW5jbHVkZS9hc20vcGNpLmgKaW5kZXggZGJhNzgwNS4uNTQzNThmOCAxMDA2
+NDQKLS0tIGEvYXJjaC94ODYvaW5jbHVkZS9hc20vcGNpLmgKKysrIGIvYXJjaC94ODYvaW5jbHVk
+ZS9hc20vcGNpLmgKQEAgLTE4Myw0ICsxODMsNiBAQCBzdHJ1Y3QgcGNpX3NldHVwX3JvbSB7CiAJ
+dWludDhfdCByb21kYXRhWzBdOwogfTsKIAorZXh0ZXJuIHU2NCBwYV9kYXRhX3NldHVwX3BjaTsK
+KwogI2VuZGlmIC8qIF9BU01fWDg2X1BDSV9IICovCmRpZmYgLS1naXQgYS9hcmNoL3g4Ni9rZXJu
+ZWwvc2V0dXAuYyBiL2FyY2gveDg2L2tlcm5lbC9zZXR1cC5jCmluZGV4IDJiZDQwZmQuLjgwNjJm
+MjUgMTAwNjQ0Ci0tLSBhL2FyY2gveDg2L2tlcm5lbC9zZXR1cC5jCisrKyBiL2FyY2gveDg2L2tl
+cm5lbC9zZXR1cC5jCkBAIC0xNDMsNyArMTQzLDExIEBAIGludCBkZWZhdWx0X2NoZWNrX3BoeXNf
+YXBpY2lkX3ByZXNlbnQoaW50IHBoeXNfYXBpY2lkKQogfQogI2VuZGlmCiAKKyNpZm5kZWYgQ09O
+RklHX0RFQlVHX0JPT1RfUEFSQU1TCitzdHJ1Y3QgYm9vdF9wYXJhbXMgX19pbml0ZGF0YSBib290
+X3BhcmFtczsKKyNlbHNlCiBzdHJ1Y3QgYm9vdF9wYXJhbXMgYm9vdF9wYXJhbXM7CisjZW5kaWYK
+IAogLyoKICAqIE1hY2hpbmUgc2V0dXAuLgpAQCAtNDE0LDYgKzQxOCw4IEBAIHN0YXRpYyB2b2lk
+IF9faW5pdCByZXNlcnZlX2luaXRyZCh2b2lkKQogfQogI2VuZGlmIC8qIENPTkZJR19CTEtfREVW
+X0lOSVRSRCAqLwogCit1NjQgcGFfZGF0YV9zZXR1cF9wY2k7CisKIHN0YXRpYyB2b2lkIF9faW5p
+dCBwYXJzZV9zZXR1cF9kYXRhKHZvaWQpCiB7CiAJc3RydWN0IHNldHVwX2RhdGEgKmRhdGE7CkBA
+IC00NDIsNiArNDQ4LDEwIEBAIHN0YXRpYyB2b2lkIF9faW5pdCBwYXJzZV9zZXR1cF9kYXRhKHZv
+aWQpCiAJCWNhc2UgU0VUVVBfRFRCOgogCQkJYWRkX2R0YihwYV9kYXRhKTsKIAkJCWJyZWFrOwor
+CQljYXNlIFNFVFVQX1BDSToKKwkJCWlmICghc2V0dXBfZGF0YV9wY2kpCisJCQkJcGFfZGF0YV9z
+ZXR1cF9wY2kgPSBwYV9kYXRhOworCQkJYnJlYWs7CiAJCWRlZmF1bHQ6CiAJCQlicmVhazsKIAkJ
+fQpkaWZmIC0tZ2l0IGEvYXJjaC94ODYvcGNpL2NvbW1vbi5jIGIvYXJjaC94ODYvcGNpL2NvbW1v
+bi5jCmluZGV4IDQ3NTg0ZjQuLjRlMTY2NTEgMTAwNjQ0Ci0tLSBhL2FyY2gveDg2L3BjaS9jb21t
+b24uYworKysgYi9hcmNoL3g4Ni9wY2kvY29tbW9uLmMKQEAgLTYxMywxMiArNjEzLDggQEAgaW50
+IHBjaWJpb3NfYWRkX2RldmljZShzdHJ1Y3QgcGNpX2RldiAqZGV2KQogewogCXN0cnVjdCBzZXR1
+cF9kYXRhICpkYXRhOwogCXN0cnVjdCBwY2lfc2V0dXBfcm9tICpyb207Ci0JdTY0IHBhX2RhdGE7
+CisJdTY0IHBhX2RhdGEgPSBwYV9kYXRhX3NldHVwX3BjaTsKIAotCWlmIChib290X3BhcmFtcy5o
+ZHIudmVyc2lvbiA8IDB4MDIwOSkKLQkJcmV0dXJuIDA7Ci0KLQlwYV9kYXRhID0gYm9vdF9wYXJh
+bXMuaGRyLnNldHVwX2RhdGE7CiAJd2hpbGUgKHBhX2RhdGEpIHsKIAkJZGF0YSA9IHBoeXNfdG9f
+dmlydChwYV9kYXRhKTsKIAo=
+--00151747821603b65004d033adfa--
