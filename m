@@ -1,47 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:38594 "EHLO
+Received: from cavan.codon.org.uk ([93.93.128.6]:35883 "EHLO
 	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946816Ab2LFSyu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 13:54:50 -0500
-Date: Thu, 6 Dec 2012 18:54:39 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	dwmw2@infradead.org, "Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-Message-ID: <20121206185439.GA17381@srcf.ucam.org>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
- <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
- <20121203200241.GG5906@thinkpad-t410>
- <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
- <50BFE88D.1000800@zytor.com>
- <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
- <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
- <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
- <50C0E339.4030607@zytor.com>
+	with ESMTP id S1751909Ab2LFA6Y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:58:24 -0500
+In-Reply-To: <50BFE890.5070109@zytor.com>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com> <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com> <50BFE890.5070109@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50C0E339.4030607@zytor.com>
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: Use PCI ROMs from EFI boot services
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Date: Wed, 05 Dec 2012 19:57:55 -0500
+To: "H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
+	mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Message-ID: <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 06, 2012 at 10:26:01AM -0800, H. Peter Anvin wrote:
 
-> NAK on this bit:
-> 
-> +       if (boot_params.hdr.version < 0x0209)
-> +               return 0;
-> 
-> This field is kernel->bootloader documentation.  If a nonmaching
-> value somehow leaks into the kernel, the kernel could either
-> panic("Bootloader written by moron") or it should clear some fields,
-> but littering the kernel with these kinds of tests is just plain
-> braindead.
 
-Dropping that should be fine. Bjorn, would you prefer a patch from me to 
-do that?
+"H. Peter Anvin" <hpa@zytor.com> wrote:
+
+>I don't think there is anything security-sensitive about that
+>information, at least not to root.  I could be wrong, of course; I
+>wouldn't mind security people telling me about that.
+
+I don't think there's anything at present, but we'll want to pass the hibernation encryption key from the bootloader to the kernel in the near future. setup_data seems like the easiest way to do that. 
 
 -- 
 Matthew Garrett | mjg59@srcf.ucam.org
