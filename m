@@ -1,90 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:60270 "EHLO hydra.sisk.pl"
+Received: from terminus.zytor.com ([198.137.202.10]:42284 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753401Ab2LMMPh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Dec 2012 07:15:37 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 6/6] ACPI: Change the ordering of acpi_bus_check_add()
-Date: Thu, 13 Dec 2012 13:20:42 +0100
-Message-ID: <7342480.cnAd5Im6q1@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6jnjfJUadZKutpn4CXz0YMKccwSuG7idionFPjF-5VCw@mail.gmail.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <2268672.Pe9OEEVsRc@vostro.rjw.lan> <CAErSpo6jnjfJUadZKutpn4CXz0YMKccwSuG7idionFPjF-5VCw@mail.gmail.com>
+	id S1752908Ab2LFBVz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 20:21:55 -0500
+Message-ID: <50BFF328.5030406@zytor.com>
+Date: Wed, 05 Dec 2012 17:21:44 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com> <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com> <50BFE890.5070109@zytor.com> <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com> <50BFEF09.9000408@zytor.com> <cd3b2e67-92af-494d-ba2d-4179ead6e06b@email.android.com>
+In-Reply-To: <cd3b2e67-92af-494d-ba2d-4179ead6e06b@email.android.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 12, 2012 06:00:28 PM Bjorn Helgaas wrote:
-> On Sun, Dec 9, 2012 at 4:04 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > If acpi_bus_check_add() is called for a handle already having an
-> > existing struct acpi_device object attached, it is not necessary to
-> > check the type and status of the device correspondig to it, so
-> > change the ordering of acpi_bus_check_add() to avoid that.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >  drivers/acpi/scan.c |   18 +++++++++---------
-> >  1 file changed, 9 insertions(+), 9 deletions(-)
-> >
-> > Index: linux/drivers/acpi/scan.c
-> > ===================================================================
-> > --- linux.orig/drivers/acpi/scan.c
-> > +++ linux/drivers/acpi/scan.c
-> > @@ -1582,6 +1582,10 @@ static acpi_status acpi_bus_check_add(ac
-> >         acpi_status status;
-> >         int result;
-> >
-> > +       acpi_bus_get_device(handle, &device);
-> > +       if (device)
-> > +               goto out;
-> > +
-> >         result = acpi_bus_type_and_status(handle, &type, &sta);
-> >         if (result)
-> >                 return AE_OK;
-> > @@ -1602,17 +1606,13 @@ static acpi_status acpi_bus_check_add(ac
-> >          * We may already have an acpi_device from a previous enumeration.  If
-> >          * so, we needn't add it again, but we may still have to start it.
-> 
-> It looks like this comment might need updating, since we no longer
-> even get here if we already have an acpi_device.  Presumably you take
-> care of the "start" it mentions elsewhere now.
+On 12/05/2012 05:13 PM, Matthew Garrett wrote:
+>
+>
+> "H. Peter Anvin" <hpa@zytor.com> wrote:
+>
+>> And that presumably would be something that cannot be exposed to root?
+>> If so we may want to use one of the bits in the setup_data type field
+>> as
+>> a security flag, perhaps...
+>
+> Yeah, it needs to be hidden from root - but ideally we'd be passing it to the second kernel if we kexec. Alternative would be for it to be capability bounded to a trusted signed kexec binary if we implement Vivek's IMA-based approach.
+>
 
-I think you're right, will update.
+Either way a security flag in the type field makes sense.
 
-Thanks,
-Rafael
+	-hpa
 
-
-> >          */
-> > -       acpi_bus_get_device(handle, &device);
-> > -       if (!device) {
-> > -               acpi_add_single_object(&device, handle, type, sta,
-> > -                                      ACPI_BUS_ADD_BASIC);
-> > -               if (!device)
-> > -                       return AE_CTRL_DEPTH;
-> > +       acpi_add_single_object(&device, handle, type, sta, ACPI_BUS_ADD_BASIC);
-> > +       if (!device)
-> > +               return AE_CTRL_DEPTH;
-> >
-> > -               device->add_type = context ?
-> > -                                       ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
-> > -       }
-> > +       device->add_type = context ? ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
-> >
-> > + out:
-> >         if (!*return_value)
-> >                 *return_value = device;
-> 
-> I think all (both) callers of acpi_bus_check_add() supply a
-> return_value pointer, so you could just remove the test.
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
+
