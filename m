@@ -1,83 +1,37 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:58559 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737Ab2LFAa2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:30:28 -0500
 MIME-Version: 1.0
-In-Reply-To: <20121213200857.GA24939@otc-wbsnb-06>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-	<1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
-	<20121213184820.GC12105@kroah.com>
-	<20121213200857.GA24939@otc-wbsnb-06>
-Date: Thu, 13 Dec 2012 12:25:53 -0800
-Message-ID: <CAE9FiQUMSnCPwgbupZ5cFWLMiVxA4FQ2dNWNk+XYhvtEn+F3Ag@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
- DZ77RE-75K motherboard
+In-Reply-To: <50BFE50C.8030008@zytor.com>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+	<20121203200241.GG5906@thinkpad-t410>
+	<CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+	<20121206001819.GA30527@srcf.ucam.org>
+	<50BFE50C.8030008@zytor.com>
+Date: Wed, 5 Dec 2012 16:30:24 -0800
+Message-ID: <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com>
+Subject: Re: Use PCI ROMs from EFI boot services
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 12:08 PM, Kirill A. Shutemov
-<kirill.shutemov@linux.intel.com> wrote:
-> On Thu, Dec 13, 2012 at 10:48:20AM -0800, Greg KH wrote:
->> On Thu, Dec 13, 2012 at 05:31:48PM +0200, Kirill A. Shutemov wrote:
->> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->> >
->> > BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
->> > hotplug before devices behind Thunderbolt are ready to be enumerated.
->> >
->> > Let's delay enumeration by 2 seconds.
->> >
->> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
->> > ---
->> >  drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++++++-
->> >  1 file changed, 15 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> > index 1a2b3ca..165987a 100644
->> > --- a/drivers/pci/hotplug/acpiphp_glue.c
->> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> > @@ -49,6 +49,7 @@
->> >  #include <linux/mutex.h>
->> >  #include <linux/slab.h>
->> >  #include <linux/acpi.h>
->> > +#include <linux/dmi.h>
->> >
->> >  #include "../pci.h"
->> >  #include "acpiphp.h"
->> > @@ -1327,6 +1328,19 @@ out:
->> >  static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
->> >                                     void *context)
->> >  {
->> > +   unsigned long delay = 0;
->> > +   const char *board_name;
->> > +
->> > +   board_name = dmi_get_system_info(DMI_BOARD_NAME);
->> > +   /*
->> > +    * BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
->> > +    * hotplug before devices behind Thunderbolt are ready to be
->> > +    * enumerated.
->> > +    * Let's delay enumeration by 2 seconds.
->> > +    */
->> > +   if (board_name && !strcmp(board_name, "DZ77RE-75K"))
->> > +           delay = 2 * HZ;
->>
+On Wed, Dec 5, 2012 at 4:21 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 12/05/2012 04:18 PM, Matthew Garrett wrote:
 
-Linus will not be happy with those kind of delay.
+> Because it also needs to modify it.  Right now kexec userspace
+> synthesizes struct boot_params from scratch, and does so incorrectly to
+> boot.  I think we have setup_data exported via debugfs but IIRC we never
+> got a strong enough use case for sysfs.
 
-is there any way for kernel to retry before device is declared not there.
-
-pcie hotplug spec: need to retry several times in 1000ms before
-delcaring the devices is not present.
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=2f5d8e4ff947ad6673397083b48719cd6c59cd61
+maybe we could try  to export setup_data pointer only /sys, and that
+could be safe enough.
