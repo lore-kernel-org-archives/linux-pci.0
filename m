@@ -1,30 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:50399 "EHLO
-	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539Ab2LEUpw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:45:52 -0500
-Date: Wed, 5 Dec 2012 21:36:03 +0100
-From: Martin Mares <mj@ucw.cz>
-To: "Dr. David Alan Gilbert" <dave@treblig.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: pciutils pci_open seg with invalid arg to -i
-Message-ID: <mj+md-20121205.203547.16418.nikam@ucw.cz>
-References: <20121204142008.GB6117@gallifrey>
+Received: from terminus.zytor.com ([198.137.202.10]:52541 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932276Ab2LFS0K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Dec 2012 13:26:10 -0500
+Message-ID: <50C0E339.4030607@zytor.com>
+Date: Thu, 06 Dec 2012 10:26:01 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121204142008.GB6117@gallifrey>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com> <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com> <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
+In-Reply-To: <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On 12/06/2012 10:19 AM, Bjorn Helgaas wrote:
+> On Wed, Dec 5, 2012 at 5:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Wed, Dec 5, 2012 at 4:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>> On Wed, Dec 5, 2012 at 4:36 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>>>> On 12/05/2012 04:15 PM, Yinghai Lu wrote:
+>>>>>
+>>>>
+>>>> I don't see why that isn't the right fix.  We copy the data into
+>>>> boot_params early in the boot; that *is* the official copy as far as the
+>>>> kernel is concerned.
+>>>>
+>>>> So this patch very much seems like The Right Thing.
+>>>
+>>> it moves boot_params from __initdata  to data.
+>>
+>>     should be from __initdata to bss
+>>
+>>> and just for using pointer to setup_data.
+>>>
+>>> should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
+>
+> I'm not following the whole discussion here, but my impression is that
+> what's in my -next branch is acceptable
+> (http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=328949ff10f2e3fcb11472571294beed39488342)
+>
+> If not, please explain further and provide a patch to fix it.
+>
 
-> The reporter had called lspci -vvii    which ends up trying to open the
-> file 'i' as the pci-id and seg faults.
+NAK on this bit:
 
-The function looks wrong, I will fix it soon.
++       if (boot_params.hdr.version < 0x0209)
++               return 0;
 
-				Have a nice fortnight
+This field is kernel->bootloader documentation.  If a nonmaching value 
+somehow leaks into the kernel, the kernel could either panic("Bootloader 
+written by moron") or it should clear some fields, but littering the 
+kernel with these kinds of tests is just plain braindead.
+
+	-hpa
+
+
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Hi! I'm a .signature virus! Copy me into your ~/.signature to help me spread!
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
+
