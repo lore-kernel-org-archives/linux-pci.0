@@ -1,88 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f54.google.com ([209.85.210.54]:53837 "EHLO
-	mail-da0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538Ab2LZP6g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 10:58:36 -0500
-Received: by mail-da0-f54.google.com with SMTP id n2so3927017dad.27
-        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 07:58:36 -0800 (PST)
-Message-ID: <50DB1EA0.1060501@gmail.com>
-Date: Wed, 26 Dec 2012 23:58:24 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:55194 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423570Ab2LFQIa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 11:08:30 -0500
+Date: Thu, 6 Dec 2012 17:08:27 +0100
+From: Martin Mares <mj@ucw.cz>
+To: "Dr. David Alan Gilbert" <dave@treblig.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: pciutils pci_open seg with invalid arg to -i
+Message-ID: <mj+md-20121206.160703.2718.nikam@ucw.cz>
+References: <20121204142008.GB6117@gallifrey>
 MIME-Version: 1.0
-To: lei yang <yanglei.fage@gmail.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: Question: why my 82599 nic doesn't show Virutal function or SR-IOV
-References: <CAHsH0E_WaqDhZ44a8S=E-h8vY=uJXrbBZogwNYB-4e4DoMjJ=Q@mail.gmail.com>
-In-Reply-To: <CAHsH0E_WaqDhZ44a8S=E-h8vY=uJXrbBZogwNYB-4e4DoMjJ=Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20121204142008.GB6117@gallifrey>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lei,
-	Have you passed the module parameter to enable SR-IOV functions
-when loading the ixgbe module?
+Hi!
 
-max_vfs:Maximum number of virtual functions to allocate per physical function (uint)
+> So I was going to suggest something like:
+> 
+>  33   if (len < 3 || memcmp(a->id_file_name + len - 3, ".gz", 3) != 0)
+>  34     return result;
 
-On 12/26/2012 10:26 PM, lei yang wrote:
-> I don't know if I'm wrong to ask this question here,if I'm wrong,
-> please route me to other list.
-> 
-> 
-> Lei
-> 
-> root@intel_5500_server:~# lspci --version
-> lspci version 3.1.9
-> root@intel_5500_server:~# lspci -vv -s "03:00.0"
-> 03:00.0 Ethernet controller: Intel Corporation 82599EB 10-Gigabit
-> SFI/SFP+ Network Connection (rev 01)
-> 	Subsystem: Intel Corporation Ethernet Server Adapter X520-1
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-> Stepping- SERR- FastB2B- DisINTx+
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 64 bytes
-> 	Interrupt: pin A routed to IRQ 26
-> 	Region 0: Memory at b1900000 (64-bit, prefetchable) [size=512K]
-> 	Region 2: I/O ports at 2000 [size=32]
-> 	Region 4: Memory at b1980000 (64-bit, prefetchable) [size=16K]
-> 	Capabilities: [40] Power Management version 3
-> 		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
-> 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-> 	Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-> 		Address: 0000000000000000  Data: 0000
-> 		Masking: 00000000  Pending: 00000000
-> 	Capabilities: [70] MSI-X: Enable+ Count=64 Masked-
-> 		Vector table: BAR=4 offset=00000000
-> 		PBA: BAR=4 offset=00002000
-> 	Capabilities: [a0] Express (v2) Endpoint, MSI 00
-> 		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-> 			MaxPayload 256 bytes, MaxReadReq 512 bytes
-> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-> 		LnkCap:	Port #2, Speed 5GT/s, Width x8, ASPM L0s, Latency L0 <1us, L1 <8us
-> 			ClockPM- Surprise- LLActRep- BwNot-
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> 		LnkSta:	Speed 5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive-
-> BWMgmt- ABWMgmt-
-> 		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+
-> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-> 		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-,
-> Selectable De-emphasis: -6dB
-> 			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance-
-> ComplianceSOS-
-> 			 Compliance De-emphasis: -6dB
-> 		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-,
-> EqualizationPhase1-
-> 			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-> 	Kernel driver in use: ixgbe
-> 	Kernel modules: ixgbe
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Yes, that's right.
 
+Please try the current version in the Git repository, it's fixed there.
+
+> which would mean that it would drop out if it was a short filename; but
+> then I started to try and understand the code more; it looks to me like:
+> 
+>    try and gzopen it.
+>    if that fails
+>      check it ended with a .gz (else fail)
+>      strip the .gz off the end
+>      gzopen it without the .gz
+> 
+> But why bother?  According to the zlib manual for gzopen :
+>   ( http://www.zlib.net/manual.html )
+>      
+> ' gzopen can be used to read a file which is not in gzip format; in this case
+> gzread will directly read from the file without decompression. When reading,
+> this will be detected automatically by looking for the magic two-byte gzip
+> header. '
+> 
+> So what are lines 32-39 trying to do?
+
+When somebody specifies a file name like "pci.ids.gz" (or it's the default name)
+and no such file exists, it tries the same name without ".gz".
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Weather forecast for tonight: dark.
