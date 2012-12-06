@@ -1,72 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52015 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053Ab2LCUCr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Dec 2012 15:02:47 -0500
-Date: Mon, 3 Dec 2012 14:02:41 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org
-Subject: Re: Use PCI ROMs from EFI boot services
-Message-ID: <20121203200241.GG5906@thinkpad-t410>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
- <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:53139 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946776Ab2LFSoa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 13:44:30 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5525175lag.19
+        for <linux-pci@vger.kernel.org>; Thu, 06 Dec 2012 10:44:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+In-Reply-To: <bug-51331-41252@https.bugzilla.kernel.org/>
+References: <bug-51331-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 6 Dec 2012 11:44:08 -0700
+Message-ID: <CAErSpo5uewtXu=UoYDchOON+0S_WnK6i=n9yuz4RnbshMpEvrw@mail.gmail.com>
+Subject: Re: [Bug 51331] New: pci address space collision on Stratus ftServer
+ 4500 (usb and network are not recognized)
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-pci@vger.kernel.org, Prarit Bhargava <prarit@redhat.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 25, 2012 at 11:35:57AM -0600, Bjorn Helgaas wrote:
-> On Thu, Aug 23, 2012 at 10:36 AM, Matthew Garrett <mjg@redhat.com> wrote:
-> > V3 just fixes all the casting issues and incorporates David's change in
-> > search ordering.
-> 
-> I think there's still a section mismatch issue with these patches, so
-> I haven't merged them yet.
-> 
-> I rebased my pci/mjg-pci-roms-from-efi branch to v3.7-rc2, and if we
-> get this issue fixed I'll put it in -next as v3.8 material.
+> https://bugzilla.kernel.org/show_bug.cgi?id=51331
 
-I still don't see this series in -next, so I take it the section
-mismatch was never fixed? How about the following?
+> I've found that with 3.X (vanilla and Fedora 17) kernels network cards and usb
+> devices are not recognized on Stratus ftserver 4500 system.
+>
+> Kernel reports many 'address space collision' that seems to be the reason why
+> the devices are not seen.
+>
+> The problem appears with all 3.X kernels, 2.6.32 kernel boots and works fine on
+> this hardware (do not know about other kernel versions).
 
-Thanks,
-Seth
+Your 2.6.32 kernel detects the 03:01.0 bridge that leads to the igb device:
 
+      pci 0000:03:01.0: PCI bridge to [bus 0e-11]
+      pci 0000:0e:1c.0: PCI bridge to [bus 0f]
+      pci 0000:0f:00.0: reg 10 32bit mmio: [0x8a140000-0x8a15ffff]
+      igb 0000:0f:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
 
->From ece31852159a6b2cf9a059031638354e9817a6a6 Mon Sep 17 00:00:00 2001
-From: Seth Forshee <seth.forshee@canonical.com>
-Date: Mon, 3 Dec 2012 13:55:50 -0600
-Subject: [PATCH] x86: Don't discard boot_params
+but the 3.6.6 kernel doesn't find 03:01.0 or the devices behind it.
 
-boot_params is now used at runtime on EFI systems to stash option ROMs
-that aren't available after exiting boot services, so it can no longer
-be marked __initdata.
+This looks like the problem fixed by this commit:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=284f5f9dbac170b054c1e386ef92cbf654e91bba
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- arch/x86/kernel/setup.c |    4 ----
- 1 file changed, 4 deletions(-)
+That commit appeared in v3.5, so it should be in your 3.6.6 kernel.
+It adds a quirk that scans all devices when the DMI SYS_VENDOR matches
+"ftServer".  That quirk should be turned on automatically on your box,
+but for some reason, your 3.6.6 kernel didn't find the correct DMI
+information.
 
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 468e98d..6e13035 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -143,11 +143,7 @@ int default_check_phys_apicid_present(int phys_apicid)
- }
- #endif
- 
--#ifndef CONFIG_DEBUG_BOOT_PARAMS
--struct boot_params __initdata boot_params;
--#else
- struct boot_params boot_params;
--#endif
- 
- /*
-  * Machine setup..
--- 
-1.7.9.5
+The 2.6.32 kernel found this:
 
+    DMI: Stratus ftServer 4500/G7KRV, BIOS BIOS Version 5.0:17 10/19/2010
+
+which would match the quirk.  But the 3.6.6 kernel didn't print this
+DMI information.  Was that boot on the same BIOS version?
+
+The 3.6.6 log looks like a console capture, and it omits KERN_DEBUG
+messages.  Can you boot 3.6.6 with the "early_ioremap_debug
+pci=pcie_scan_all" flags and attach a dmesg dump (which will include
+KERN_DEBUG messages)?
