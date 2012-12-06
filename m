@@ -1,53 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49914 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753133Ab2LEV0S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 16:26:18 -0500
-Message-ID: <1354742799.24513.4.camel@jlt4.sipsolutions.net>
-Subject: Re: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe
- Capability ASPM fields
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date: Wed, 05 Dec 2012 22:26:39 +0100
-In-Reply-To: <CAErSpo4UuT=_dXqoaGttFxY05Arvm9AhoTBsZhks16C-ZDctAw@mail.gmail.com> (sfid-20121205_222037_899929_816BCEB4)
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-	 <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com>
-	 <1354741486.24513.3.camel@jlt4.sipsolutions.net>
-	 <CAErSpo4UuT=_dXqoaGttFxY05Arvm9AhoTBsZhks16C-ZDctAw@mail.gmail.com>
-	 (sfid-20121205_222037_899929_816BCEB4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from terminus.zytor.com ([198.137.202.10]:42068 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752291Ab2LFA4n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 19:56:43 -0500
+Message-ID: <50BFED3C.1080601@zytor.com>
+Date: Wed, 05 Dec 2012 16:56:28 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
+In-Reply-To: <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-12-05 at 14:20 -0700, Bjorn Helgaas wrote:
-> On Wed, Dec 5, 2012 at 2:04 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Wed, 2012-12-05 at 13:58 -0700, Bjorn Helgaas wrote:
-> >> Use the standard #defines rather than creating local definitions for
-> >> PCIe Capability ASPM fields.
-> >
-> > I'll pick up the iwlwifi ones if you want, or do you want to merge them
-> > somewhere centrally instead?
+On 12/05/2012 04:51 PM, Yinghai Lu wrote:
 > 
-> They do depend on a previous patch that adds the #defines to
-> include/uapi/linux/pci_regs.h
-> (http://marc.info/?l=linux-pci&m=135474107109010&w=2).
+> it moves boot_params from __initdata  to data.
+> and just for using pointer to setup_data.
 > 
-> I think I'll merge at least the PCI core parts of this via my PCI tree
-> in the v3.8 merge window next week.  If it won't cause conflicts for
-> you, I could include the iwlwifi bits there, too.  If it does, at
-> least the #define will exist and you can merge it at your leisure.
+> should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
+> 
 
-Ok, that's fine, feel free to include the iwlwifi bits.
+That is not the only bit.  We already have covered how kexec could use
+the whole structure, and really, how big a deal is a page of cache-cold
+storage?
 
-Acked-by: Johannes Berg <johannes.berg@intel.com>
+	-hpa
 
-:)
-
-johannes
 
