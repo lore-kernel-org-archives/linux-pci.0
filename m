@@ -1,72 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f47.google.com ([209.85.214.47]:54121 "EHLO
-	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495Ab2LZO0F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 09:26:05 -0500
-Received: by mail-bk0-f47.google.com with SMTP id j4so3852797bkw.6
-        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 06:26:03 -0800 (PST)
+Received: from terminus.zytor.com ([198.137.202.10]:41601 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753346Ab2LFAgq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 19:36:46 -0500
+Message-ID: <50BFE890.5070109@zytor.com>
+Date: Wed, 05 Dec 2012 16:36:32 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Date: Wed, 26 Dec 2012 22:26:02 +0800
-Message-ID: <CAHsH0E_WaqDhZ44a8S=E-h8vY=uJXrbBZogwNYB-4e4DoMjJ=Q@mail.gmail.com>
-Subject: Question: why my 82599 nic doesn't show Virutal function or SR-IOV
-From: lei yang <yanglei.fage@gmail.com>
-To: linux-pci@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com> <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com>
+In-Reply-To: <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I don't know if I'm wrong to ask this question here,if I'm wrong,
-please route me to other list.
+On 12/05/2012 04:30 PM, Yinghai Lu wrote:
+> On Wed, Dec 5, 2012 at 4:21 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>> On 12/05/2012 04:18 PM, Matthew Garrett wrote:
+> 
+>> Because it also needs to modify it.  Right now kexec userspace
+>> synthesizes struct boot_params from scratch, and does so incorrectly to
+>> boot.  I think we have setup_data exported via debugfs but IIRC we never
+>> got a strong enough use case for sysfs.
+> 
+> maybe we could try  to export setup_data pointer only /sys, and that
+> could be safe enough.
+> 
 
+I don't think there is anything security-sensitive about that
+information, at least not to root.  I could be wrong, of course; I
+wouldn't mind security people telling me about that.
 
-Lei
+	-hpa
 
-root@intel_5500_server:~# lspci --version
-lspci version 3.1.9
-root@intel_5500_server:~# lspci -vv -s "03:00.0"
-03:00.0 Ethernet controller: Intel Corporation 82599EB 10-Gigabit
-SFI/SFP+ Network Connection (rev 01)
-	Subsystem: Intel Corporation Ethernet Server Adapter X520-1
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-Stepping- SERR- FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 26
-	Region 0: Memory at b1900000 (64-bit, prefetchable) [size=512K]
-	Region 2: I/O ports at 2000 [size=32]
-	Region 4: Memory at b1980000 (64-bit, prefetchable) [size=16K]
-	Capabilities: [40] Power Management version 3
-		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold-)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
-	Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-		Address: 0000000000000000  Data: 0000
-		Masking: 00000000  Pending: 00000000
-	Capabilities: [70] MSI-X: Enable+ Count=64 Masked-
-		Vector table: BAR=4 offset=00000000
-		PBA: BAR=4 offset=00002000
-	Capabilities: [a0] Express (v2) Endpoint, MSI 00
-		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-			MaxPayload 256 bytes, MaxReadReq 512 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-		LnkCap:	Port #2, Speed 5GT/s, Width x8, ASPM L0s, Latency L0 <1us, L1 <8us
-			ClockPM- Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive-
-BWMgmt- ABWMgmt-
-		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+
-		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-,
-Selectable De-emphasis: -6dB
-			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance-
-ComplianceSOS-
-			 Compliance De-emphasis: -6dB
-		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-,
-EqualizationPhase1-
-			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-	Kernel driver in use: ixgbe
-	Kernel modules: ixgbe
