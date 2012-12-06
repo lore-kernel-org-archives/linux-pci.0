@@ -1,53 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:59299 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040Ab2L0AvF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 19:51:05 -0500
-Received: by mail-la0-f41.google.com with SMTP id m15so11517796lah.14
-        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 16:51:03 -0800 (PST)
+Received: from terminus.zytor.com ([198.137.202.10]:41599 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981Ab2LFAgp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Dec 2012 19:36:45 -0500
+Message-ID: <50BFE88D.1000800@zytor.com>
+Date: Wed, 05 Dec 2012 16:36:29 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-In-Reply-To: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Dec 2012 17:50:42 -0700
-Message-ID: <CAErSpo6QWZfZ9YQAXkDOPvqBrwhS4wEzrxiUSAi7myVfoDGaKA@mail.gmail.com>
-Subject: Re: [PATCH 0/3] Thunderbolt workarounds
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+In-Reply-To: <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 12:25 PM, Kirill A. Shutemov
-<kirill.shutemov@linux.intel.com> wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->
-> I had chance to test two PC setups with Thunderbolt: Acer Aspire S5 and
-> Intel DZ77RE-75K motherboard. Unfortunately, both of them are broken in
-> different ways.
->
-> This patchset contains workarounds for the issues.
->
-> Kirill A. Shutemov (3):
->   PCI Hotplug: workaround for Thunderbolt on Acer Aspire S5
->   PCI Hotplug: convert acpiphp_hp_work to use delayed work
->   PCI Hotplug: workaround for Thunderbolt on Intel DZ77RE-75K
->     motherboard
->
->  drivers/pci/hotplug/acpi_pcihp.c   |   13 +++++++++++++
->  drivers/pci/hotplug/acpiphp_glue.c |   33 +++++++++++++++++++++++++--------
->  2 files changed, 38 insertions(+), 8 deletions(-)
+On 12/05/2012 04:15 PM, Yinghai Lu wrote:
+> 
+> -#ifndef CONFIG_DEBUG_BOOT_PARAMS
+> -struct boot_params __initdata boot_params;
+> -#else
+>  struct boot_params boot_params;
+> -#endif
 
-I'm ignoring these for now.  [1/3] has a hardcoded BIOS path that I
-don't think is the right approach and [3/3] has a timeout issue to be
-addressed.  [2/3] might be worthwhile by itself, but I'd rather merge
-a complete solution when it's ready.
+> 
+> No, that is not a right fix
+> 
+> We should only cache pointer to setup_data.
+> 
+> at the same time we should export setup_data into /sys, so kexec could
+> append this pointer to command of
+> second kernel, just like kexec append acpi_rsdp.
+> That should address DavidW's concern.
+> 
 
-Bjorn
+I don't see why that isn't the right fix.  We copy the data into
+boot_params early in the boot; that *is* the official copy as far as the
+kernel is concerned.
+
+So this patch very much seems like The Right Thing.
+
+	-hpa
+
+
