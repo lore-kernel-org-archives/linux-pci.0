@@ -1,81 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:45162 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752030Ab2LEHSS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Dec 2012 02:18:18 -0500
-Message-ID: <1354691878.2351.2.camel@pasglop>
-Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue
- of rescanned pci device
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Yuanquan Chen <B41889@freescale.com>
-Cc: linuxppc-dev@lists.ozlabs.org, galak@kernel.crashing.org,
-	r61911@freescale.com, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 05 Dec 2012 18:17:58 +1100
-In-Reply-To: <1354674717-14426-1-git-send-email-B41889@freescale.com>
-References: <1354674717-14426-1-git-send-email-B41889@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:52287 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754556Ab2LFVoh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 16:44:37 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so5738167lbb.19
+        for <linux-pci@vger.kernel.org>; Thu, 06 Dec 2012 13:44:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20121206185439.GA17381@srcf.ucam.org>
+References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
+ <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
+ <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
+ <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
+ <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
+ <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
+ <50C0E339.4030607@zytor.com> <20121206185439.GA17381@srcf.ucam.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 6 Dec 2012 14:44:15 -0700
+Message-ID: <CAErSpo4_Ob_VVY_t7X8Aczwg=DcQXS9xw-iPT4QX6JRSqwmyoA@mail.gmail.com>
+Subject: Re: Use PCI ROMs from EFI boot services
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-efi@vger.kernel.org, dwmw2@infradead.org,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
-> On powerpc arch, some fixup work of PCI/PCI-e device is just done during the
-> first scan at booting time. For the PCI/PCI-e device rescanned after linux OS
-> booting up, the fixup work won't be done, which leads to dma_set_mask error or
-> irq related issue in rescanned PCI/PCI-e device's driver. So, it does the same
-> fixup work for the rescanned device to avoid this issue.
+On Thu, Dec 6, 2012 at 11:54 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Thu, Dec 06, 2012 at 10:26:01AM -0800, H. Peter Anvin wrote:
+>
+>> NAK on this bit:
+>>
+>> +       if (boot_params.hdr.version < 0x0209)
+>> +               return 0;
+>>
+>> This field is kernel->bootloader documentation.  If a nonmaching
+>> value somehow leaks into the kernel, the kernel could either
+>> panic("Bootloader written by moron") or it should clear some fields,
+>> but littering the kernel with these kinds of tests is just plain
+>> braindead.
+>
+> Dropping that should be fine. Bjorn, would you prefer a patch from me to
+> do that?
 
-Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
-that way but factored out.
+I dropped that check and re-pushed my -next branch.
 
-I'm surprised also that is_added is false when pcibios_enable_device()
-gets called ... that looks strange to me. At what point is that enable
-happening in the hotplug sequence ?
-
-How do you trigger the rescan anyway ?
-
-I think the problem needs to be solve at a higher level, I'm adding
-linux-pci & Bjorn to the CC list.
-
-Cheers,
-Ben.
-
-> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
-> ---
->  arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
-> 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 7f94f76..f0fb070 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  		if (ppc_md.pcibios_enable_device_hook(dev))
->  			return -EINVAL;
->  
-> +	if (!dev->is_added) {
-> +		/* 
-> +		 * Fixup NUMA node as it may not be setup yet by the generic
-> +		 * code and is needed by the DMA init
-> +		 */
-> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-> +
-> +		/* Hook up default DMA ops */
-> +		set_dma_ops(&dev->dev, pci_dma_ops);
-> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
-> +
-> +		/* Additional platform DMA/iommu setup */
-> +		if (ppc_md.pci_dma_dev_setup)
-> +			ppc_md.pci_dma_dev_setup(dev);
-> +
-> +		/* Read default IRQs and fixup if necessary */
-> +		pci_read_irq_line(dev);
-> +		if (ppc_md.pci_irq_fixup)
-> +			ppc_md.pci_irq_fixup(dev);
-> +	}
->  	return pci_enable_resources(dev, mask);
->  }
->  
-
-
+Yinghai, I don't understand your pa_data_setup_pci.patch, but if
+somebody else acks it and we can come up with an intelligible
+changelog, I'll fold that in, too.
