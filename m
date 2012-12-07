@@ -1,74 +1,89 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Ortiz, Lance E" <lance.oritz@hp.com>
-To: Joe Perches <joe@perches.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"bp@alien8.de" <bp@alien8.de>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v6 3/3] aerdrv: Cleanup log output for CPER based AER
-Date: Tue, 4 Dec 2012 20:06:48 +0000
-Message-ID: <A961433CDFF2F640A2866803152E61F9516EEAB4@G4W3218.americas.hpqcorp.net>
-References: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
-	 <20121204170442.31397.21190.stgit@grignak.americas.hpqcorp.net>
- <1354642763.6973.15.camel@joe-AO722>
-In-Reply-To: <1354642763.6973.15.camel@joe-AO722>
-Content-Type: text/plain; charset="us-ascii"
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 00/15] PCI/ACPI: Remove "pci_root" sub-driver support
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:24:54 -0700
+Message-ID: <20121207062454.11051.12739.stgit@amt.stowe>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Hi again Lance.
-> 
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> []
-> > @@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int
-> cper_severity,
-> >  	int aer_severity, layer, agent, status_strs_size,
-> tlp_header_valid = 0;
-> >  	u32 status, mask;
-> >  	const char **status_strs;
-> > -	char *prefix = NULL;
-> > +	char prefix[44];
-> >
-> >  	aer_severity = cper_severity_to_aer(cper_severity);
-> > +	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
-> > +		(aer_severity == AER_CORRECTABLE) ?
-> > +		KERN_WARNING : KERN_ERR,
-> > +		dev_driver_string(&dev->dev), dev_name(&dev->dev));
-> > +
-> >  	if (aer_severity == AER_CORRECTABLE) {
-> >  		status = aer->cor_status;
-> >  		mask = aer->cor_mask;
-> 
-> Perhaps this would be better just using dev_printk
-> instead of snprintf into a prefix with printk to
-> emulate dev_printk.
-> 
-> Also, perhaps KERN_NOTICE is preferable to KERN_WARNING
-> in the CORRECTABLE case.
-> 
-> Maybe something like:
-> 
-> 	const char *level = KERN_ERR;
-> 	if (aer_severity == AER_CORRECTABLE)
-> 		level = KERN_NOTICE;
-> 
-> 	...
-> 
-> 	dev_printk(level, &dev->dev, etc...);
-> 
-> Maybe do this after this series of patches is accepted.
-> Enough with the revisions for awhile...
+The "PCI Root Bridge ("pci_root")" driver includes support for attaching
+sub-drivers.  acpi_pci_register_driver() and acpi_pci_unregister_driver()
+are the interfaces that sub-drivers use to attach themselves.
 
-Hi Joe,
+Currently there are only two callers of acpi_pci_register_driver(): the
+"ACPI Hot Plug PCI Controller Driver ("acpiphp")" and "ACPI PCI Slot
+Detection Driver ("pci_slot")" sub-drivers.
 
-The reason I did it this way was I was trying to be consistent with what was done for the AER interrupt case.  The function aer_print_error()in the same file uses sprintf this way.  I'm not sure why they chose that instead of dev_printk.  I think if we did make the change we should do it in both places to keep them the same.  
+Sub-drivers may be compiled as modules.  Kernel modules are instantiated
+somewhat randomly - the order in which they are linked as the kernel as
+built - thus if there are any dependencies on the ordering of attaching
+sub-drivers, they can not be effectively dealt with.
 
-Lance
+This patch series resolves any potential sequencing inter-dependencies by
+converting sub-driver functionality to being only supported as statically
+built-in to the kernel as part of the "pci_root" driver itself (i.e. no
+longer supported as a module).  Inter-dependencies can then be effectively
+handled by explicitly sequencing the addition of such functionality.
+
+
+The series begins with a patch from Yinghai Lu's "PCI, ACPI, x86: pci root
+bus hotplug support" series that separates host bridge specific hot-plug
+functionality from PCI device hot-plug functionality.  This patch
+significantly simplifies a fairly confusing implementation due to the
+co-mingling that currently exists.
+  Reference: https://lkml.org/lkml/2012/9/19/413
+
+The rest of the patches in this series implement the conversion of the
+"PCI Root Bridge" sub-drivers.  This also simplifies the implementation as
+is revealed by a 'diffstat' of the respective, conversion related,
+patches: 9 files changed, 86 insertions(+), 237 deletions(-)
+
+
+This series is targeting the 3.9 merge window.  I expect that after
+3.8-rc1 is released, a -v2 of this series will be required due to Bill
+Pemberton's "[PATCH 000/493] remove CONFIG_HOTPLUG as an option" series.
+That said, I wanted to go ahead and get this out now in order to solicit
+feedback.
+  Reference: https://lkml.org/lkml/2012/11/16/660
+---
+
+Myron Stowe (14):
+      PCI/ACPI: Remove the "pci_root" driver's sub-driver infrastructure
+      PCI/ACPI: Add "pci_slot" functionality statically within "pci_root"
+      PCI/ACPI: Convert "pci_slot" sub-driver's functionality to built-in only
+      PCI/ACPI: Move where dmi_check_system() is called from
+      PCI/ACPI: Fix latent refcount issue in acpi_pci_root_start()
+      PCI/acpiphp: Change acpiphp_add_bridge() to return void instead of 0
+      PCI/acpiphp: Add "acpiphp" functionality statically within "pci_root"
+      PCI/acpiphp: Collapse the initialization call chain of "acpiphp" further
+      PCI/acpiphp: Declare acpi_{add,remove}_bridge() as external functions
+      PCI/acpiphp: Convert "acpiphp" sub-driver's functionality to built-in only
+      PCI/acpiphp: Collapse initialization call chain of "acpiphp" sub-driver
+      PCI/acpiphp: Change acpiphp_glue_init() to return void instead of 0
+      PCI/acpiphp: Leave the "acpiphp" sub-driver registered and in place
+      PCI/acpiphp: Fix coding style of external declarations in acpiphp.h
+
+Yinghai Lu (1):
+      PCI, acpiphp: Separate out hot-add support of pci host bridge
+
+
+ drivers/acpi/Kconfig               |    5 -
+ drivers/acpi/Makefile              |    1 
+ drivers/acpi/pci_root.c            |   50 +-------
+ drivers/acpi/pci_root_hp.c         |  228 ++++++++++++++++++++++++++++++++++++
+ drivers/acpi/pci_slot.c            |   84 +++++--------
+ drivers/pci/hotplug/Kconfig        |    5 -
+ drivers/pci/hotplug/acpiphp.h      |   17 +--
+ drivers/pci/hotplug/acpiphp_core.c |   45 -------
+ drivers/pci/hotplug/acpiphp_glue.c |  115 +++---------------
+ include/linux/acpi.h               |    9 -
+ include/linux/pci-acpi.h           |   16 +++
+ 11 files changed, 312 insertions(+), 263 deletions(-)
+ create mode 100644 drivers/acpi/pci_root_hp.c
+
+-- 
