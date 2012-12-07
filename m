@@ -1,73 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:44366 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976Ab2LDT5a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 14:57:30 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so3633023lag.19
-        for <linux-pci@vger.kernel.org>; Tue, 04 Dec 2012 11:57:27 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:45846 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946003Ab2LGGZ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:25:56 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 10/15] PCI/acpiphp: Change acpiphp_add_bridge() to return void
+	instead of 0
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:25:54 -0700
+Message-ID: <20121207062554.11051.74801.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <CAPgLHd-GK0ZO97vhaNhFuHBxuHf+s+7YQ1kw_-+7pUVoqNwgdw@mail.gmail.com>
-References: <CAPgLHd-GK0ZO97vhaNhFuHBxuHf+s+7YQ1kw_-+7pUVoqNwgdw@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Dec 2012 12:57:07 -0700
-Message-ID: <CAErSpo7apCKg0ADSV2w1uGsFFAWi3-E4mbf8HLW8V+Gj9YNdsg@mail.gmail.com>
-Subject: Re: [PATCH -next] tile/PCI: use for_each_pci_dev to simplify the code
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: cmetcalf@tilera.com, yongjun_wei@trendmicro.com.cn,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 3, 2012 at 6:28 AM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
->
-> Use for_each_pci_dev to simplify the code.
->
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> ---
->  arch/tile/kernel/pci.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-> index 7598226..aac1cd5 100644
-> --- a/arch/tile/kernel/pci.c
-> +++ b/arch/tile/kernel/pci.c
-> @@ -245,7 +245,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
->         u16 new_values;
->
->         /* Scan for the smallest maximum payload size. */
-> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL) {
-> +       for_each_pci_dev(dev) {
->                 u32 devcap;
->                 int max_payload;
->
-> @@ -260,7 +260,7 @@ static void __devinit fixup_read_and_payload_sizes(void)
->
->         /* Now, set the max_payload_size for all devices to that value. */
->         new_values = (max_read_size << 12) | (smallest_max_payload << 5);
-> -       while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)) != NULL)
-> +       for_each_pci_dev(dev)
->                 pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
->                                 PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ,
->                                 new_values);
->
->
+acpiphp_add_bridge() always returns 0.  This patch changes the return
+type from an 'int' to 'void'.
 
-This patch looks correct to me, as far as it goes.
+No functional change.
 
-Of course, any time we use for_each_pci_dev(), it's a good clue that
-this code won't work for hotplug, so presumably you don't care about
-hotplug on this system.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-tile/kernel/pci_gx.c has a function of the same name, implemented
-completely differently, which suggests that some unification or
-refactoring might be possible.
+ drivers/pci/hotplug/acpiphp_glue.c |    8 +++-----
+ include/linux/pci-acpi.h           |    4 ++--
+ 2 files changed, 5 insertions(+), 7 deletions(-)
 
-In general, I think the PCI_EXP_DEVCAP and PCI_EXP_DEVCTL code for MPS
-and MRRS management belongs in the PCI core, not in drivers or
-architectures (it's fine if they provide device- or platform-specific
-constraints), so anything you can do to move in that direction would
-be good.
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index a4218cb..fe2aac6 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -489,7 +489,7 @@ find_p2p_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+ 
+ /* find hot-pluggable slots, and then find P2P bridge */
+-int acpiphp_add_bridge(struct acpi_pci_root *root)
++void acpiphp_add_bridge(struct acpi_pci_root *root)
+ {
+ 	acpi_status status;
+ 	unsigned long long tmp;
+@@ -502,11 +502,11 @@ int acpiphp_add_bridge(struct acpi_pci_root *root)
+ 		status = acpi_evaluate_integer(handle, "_STA", NULL, &tmp);
+ 		if (ACPI_FAILURE(status)) {
+ 			dbg("%s: _STA evaluation failure\n", __func__);
+-			return 0;
++			return;
+ 		}
+ 		if ((tmp & ACPI_STA_FUNCTIONING) == 0)
+ 			/* don't register this object */
+-			return 0;
++			return;
+ 	}
+ 
+ 	/* check if this bridge has ejectable slots */
+@@ -521,8 +521,6 @@ int acpiphp_add_bridge(struct acpi_pci_root *root)
+ 
+ 	if (ACPI_FAILURE(status))
+ 		warn("find_p2p_bridge failed (error code = 0x%x)\n", status);
+-
+-	return 0;
+ }
+ 
+ static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle)
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 3197070..bc5b763 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -50,10 +50,10 @@ static inline bool aer_acpi_firmware_first(void) { return false; }
+ #endif
+ 
+ #ifdef CONFIG_HOTPLUG_PCI_ACPI
+-extern int acpiphp_add_bridge(struct acpi_pci_root *root);
++extern void acpiphp_add_bridge(struct acpi_pci_root *root);
+ extern void acpiphp_remove_bridge(struct acpi_pci_root *root);
+ #else /* !CONFIG_HOTPLUG_PCI_ACPI */
+-static inline int acpiphp_add_bridge(struct acpi_pci_root *) { return 0; }
++static inline void acpiphp_add_bridge(struct acpi_pci_root *) { }
+ static inline void acpiphp_remove_bridge(struct acpi_pci_root *) { }
+ #endif /* !CONFIG_HOTPLUG_PCI_ACPI */
+ 
 
-Bjorn
