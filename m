@@ -1,73 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:50185 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934578Ab2LIW75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 9 Dec 2012 17:59:57 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 6/6] ACPI: Change the ordering of acpi_bus_check_add()
-Date: Mon, 10 Dec 2012 00:04:36 +0100
-Message-ID: <2268672.Pe9OEEVsRc@vostro.rjw.lan>
-In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 12/15] PCI/ACPI: Move where dmi_check_system() is called from
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:26:05 -0700
+Message-ID: <20121207062605.11051.84910.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This patch moves the call of dmi_check_system() from acpi_pci_slot_init()
+to acpi_pci_slot_add().  This is in preparation for converting the
+"pci_slot" sub-driver to being statically built into the kernel.
 
-If acpi_bus_check_add() is called for a handle already having an
-existing struct acpi_device object attached, it is not necessary to
-check the type and status of the device correspondig to it, so
-change the ordering of acpi_bus_check_add() to avoid that.
+No functional change.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/acpi/scan.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -1582,6 +1582,10 @@ static acpi_status acpi_bus_check_add(ac
- 	acpi_status status;
- 	int result;
+ drivers/acpi/pci_slot.c |   57 ++++++++++++++++++++++++++---------------------
+ 1 files changed, 31 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+index d22585f..efa58af 100644
+--- a/drivers/acpi/pci_slot.c
++++ b/drivers/acpi/pci_slot.c
+@@ -265,6 +265,31 @@ walk_root_bridge(struct acpi_pci_root *root, acpi_walk_callback user_function)
+ 	return status;
+ }
  
-+	acpi_bus_get_device(handle, &device);
-+	if (device)
-+		goto out;
++static int do_sta_before_sun(const struct dmi_system_id *d)
++{
++	info("%s detected: will evaluate _STA before calling _SUN\n", d->ident);
++	check_sta_before_sun = 1;
++	return 0;
++}
 +
- 	result = acpi_bus_type_and_status(handle, &type, &sta);
- 	if (result)
- 		return AE_OK;
-@@ -1602,17 +1606,13 @@ static acpi_status acpi_bus_check_add(ac
- 	 * We may already have an acpi_device from a previous enumeration.  If
- 	 * so, we needn't add it again, but we may still have to start it.
- 	 */
--	acpi_bus_get_device(handle, &device);
--	if (!device) {
--		acpi_add_single_object(&device, handle, type, sta,
--				       ACPI_BUS_ADD_BASIC);
--		if (!device)
--			return AE_CTRL_DEPTH;
-+	acpi_add_single_object(&device, handle, type, sta, ACPI_BUS_ADD_BASIC);
-+	if (!device)
-+		return AE_CTRL_DEPTH;
++static struct dmi_system_id acpi_pci_slot_dmi_table[] = {
++	/*
++	 * Fujitsu Primequest machines will return 1023 to indicate an
++	 * error if the _SUN method is evaluated on SxFy objects that
++	 * are not present (as indicated by _STA), so for those machines,
++	 * we want to check _STA before evaluating _SUN.
++	 */
++	{
++	 .callback = do_sta_before_sun,
++	 .ident = "Fujitsu PRIMEQUEST",
++	 .matches = {
++		DMI_MATCH(DMI_BIOS_VENDOR, "FUJITSU LIMITED"),
++		DMI_MATCH(DMI_BIOS_VERSION, "PRIMEQUEST"),
++		},
++	},
++	{}
++};
++
+ /*
+  * acpi_pci_slot_add
+  * @handle: points to an acpi_pci_root
+@@ -272,8 +297,14 @@ walk_root_bridge(struct acpi_pci_root *root, acpi_walk_callback user_function)
+ static int
+ acpi_pci_slot_add(struct acpi_pci_root *root)
+ {
++	static bool inited = false;
+ 	acpi_status status;
  
--		device->add_type = context ?
--					ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
--	}
-+	device->add_type = context ? ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
++	if (!inited) {
++		dmi_check_system(acpi_pci_slot_dmi_table);
++		inited = true;
++	}
++
+ 	status = walk_root_bridge(root, register_slot);
+ 	if (ACPI_FAILURE(status))
+ 		err("%s: register_slot failure - %d\n", __func__, status);
+@@ -305,35 +336,9 @@ acpi_pci_slot_remove(struct acpi_pci_root *root)
+ 	mutex_unlock(&slot_list_lock);
+ }
  
-+ out:
- 	if (!*return_value)
- 		*return_value = device;
- 
+-static int do_sta_before_sun(const struct dmi_system_id *d)
+-{
+-	info("%s detected: will evaluate _STA before calling _SUN\n", d->ident);
+-	check_sta_before_sun = 1;
+-	return 0;
+-}
+-
+-static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
+-	/*
+-	 * Fujitsu Primequest machines will return 1023 to indicate an
+-	 * error if the _SUN method is evaluated on SxFy objects that
+-	 * are not present (as indicated by _STA), so for those machines,
+-	 * we want to check _STA before evaluating _SUN.
+-	 */
+-	{
+-	 .callback = do_sta_before_sun,
+-	 .ident = "Fujitsu PRIMEQUEST",
+-	 .matches = {
+-		DMI_MATCH(DMI_BIOS_VENDOR, "FUJITSU LIMITED"),
+-		DMI_MATCH(DMI_BIOS_VERSION, "PRIMEQUEST"),
+-		},
+-	},
+-	{}
+-};
+-
+ static int __init
+ acpi_pci_slot_init(void)
+ {
+-	dmi_check_system(acpi_pci_slot_dmi_table);
+ 	acpi_pci_register_driver(&acpi_pci_slot_driver);
+ 	return 0;
+ }
 
