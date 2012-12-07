@@ -1,102 +1,207 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 14 Dec 2012 12:34:33 +0200
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
- DZ77RE-75K motherboard
-Message-ID: <20121214103433.GA15240@otc-wbsnb-06>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
- <20121213184820.GC12105@kroah.com>
- <20121213200857.GA24939@otc-wbsnb-06>
- <CAE9FiQUMSnCPwgbupZ5cFWLMiVxA4FQ2dNWNk+XYhvtEn+F3Ag@mail.gmail.com>
- <CA+55aFwxmhcgORCnDKwcp5EuzvC0iz02O4QR3H_stTXDbprYSA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33447 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab2LGVQI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2012 16:16:08 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so732421lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Dec 2012 13:16:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="vkogqOf2sHV7VnPd"
-In-Reply-To: <CA+55aFwxmhcgORCnDKwcp5EuzvC0iz02O4QR3H_stTXDbprYSA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <50C08048.3050305@freescale.com>
+References: <1354674717-14426-1-git-send-email-B41889@freescale.com>
+ <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com>
+ <1354695989.2351.13.camel@pasglop> <50BF13E1.1000009@freescale.com>
+ <CAErSpo6mCm79m87MchL=Y1jxxgZ2Mio8d2L+Sg8CLvxRKue8sg@mail.gmail.com> <50C08048.3050305@freescale.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Dec 2012 14:15:46 -0700
+Message-ID: <CAErSpo4skBkgOLRMhZQboP5aD+7HPyARmfFhoxEvnjiVb7Qy1Q@mail.gmail.com>
+Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue of
+ rescanned pci device
+To: Chen Yuanquan-B41889 <B41889@freescale.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	linuxppc-dev@lists.ozlabs.org, galak@kernel.crashing.org,
+	r61911@freescale.com, linux-pci@vger.kernel.org,
+	=?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Dec 6, 2012 at 4:23 AM, Chen Yuanquan-B41889
+<B41889@freescale.com> wrote:
+> On 12/06/2012 05:30 AM, Bjorn Helgaas wrote:
+>>
+>> On Wed, Dec 5, 2012 at 2:29 AM, Chen Yuanquan-B41889
+>> <B41889@freescale.com> wrote:
+>>>
+>>> On 12/05/2012 04:26 PM, Benjamin Herrenschmidt wrote:
+>>>>
+>>>> On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
+>>>>>
+>>>>> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
+>>>>>>
+>>>>>> On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
+>>>>>>>
+>>>>>>> On powerpc arch, some fixup work of PCI/PCI-e device is just done
+>>>>>>> during the
+>>>>>>> first scan at booting time. For the PCI/PCI-e device rescanned after
+>>>>>>> linux OS
+>>>>>>> booting up, the fixup work won't be done, which leads to dma_set_mask
+>>>>>>> error or
+>>>>>>> irq related issue in rescanned PCI/PCI-e device's driver. So, it does
+>>>>>>> the same
+>>>>>>> fixup work for the rescanned device to avoid this issue.
+>>>>>>
+>>>>>> Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
+>>>>>> that way but factored out.
+>>>>
+>>>> Please, at least format your email properly so I can try to undertand
+>>>> without needing aspirin.
+>>>>
+>>>>> There's a judgement "if (!bus->is_added)" before calling of
+>>>>> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
+>>>>> the fixup won't execute, which leads to fatal error in driver of
+>>>>> rescanned
+>>>>> device on freescale  powerpc, no this issues on x86 arch.
+>>>>
+>>>> First, none of that invalidates my statement that you shouldn't
+>>>> duplicate a whole block of code like this. Even if your approach is
+>>>> correct (which is debated separately), at the very least you should
+>>>> factor the code out into a common function between the two copies.
+>>>>
+>>>>> Remove the judgement, let it to do the pcibios_fixup_bus
+>>>>> directly, the error won't occur for the rescanned device. But it's
+>>>>> general code, not proper to change here, so copy the pcibios_fixup_bus
+>>>>> work to  pcibios_enable_device.
+>>>>>
+>>>>>> I'm surprised also that is_added is false when pcibios_enable_device()
+>>>>>> gets called ... that looks strange to me. At what point is that enable
+>>>>>> happening in the hotplug sequence ?
+>>>>>
+>>>>> All devices are rescanned and then call the pci_enable_devices and
+>>>>> pci_bus_add_devices.
+>>>>
+>>>> Where ? How ? What is the sequence happening ? In any case, I think if
+>>>> we need a proper fixup done per-device like that after scan we ought to
+>>>> create a new hook at the generic level rather than that sort of hack.
+>>>>
+>>> echo 1 > rescan to trigger dev_rescan_store:
+>>>
+>>> dev_rescan_store->pci_rescan_bus->pci_scan_child_bus,
+>>> pci_assign_unassigned_bus_resources,
+>>> pci_enable_bridges, pci_bus_add_devices
+>>>
+>>>
+>>> pci_enable_bridges->pci_enable_device->__pci_enable_device_flags->do_pci_enable_device->
+>>> pcibios_enable_device
+>>>
+>>> pci_bus_add_devices->pci_bus_add_device->"dev->is_added = 1"
+>>>
+>>> Yeah, it's general fixup code for every rescanned PCI/PCI-e device on
+>>> powerpc at runtime. So if
+>>> we want to call it in a ppc_md member, we need to wrap it as a function
+>>> and
+>>> assign it in every ppc_md,
+>>> it isn't proper for the general code.
+>>>
+>>> Regards,
+>>> yuanquan
+>>>
+>>>
+>>>>> The patch code will be called by pci_enable_devices. The
+>>>>> "dev->is_added"
+>>>>> is set in pci_bus_add_device
+>>>>> which is called by pci_bus_add_devices. So "dev->is_added" is false
+>>>>> when
+>>>>> checking it in pcibios_enable_device
+>>>>> for the rescanned device.
+>>>>
+>>>> Who calls pci_enable_device() in the rescan case ? Why isn't it left to
+>>>> the driver ? I don't think we can rely on that behaviour not to change.
+>>>>
+>>>>>> How do you trigger the rescan anyway ?
+>>>>>
+>>>>> Use the interface under /sys :
+>>>>> echo 1 > /sys/bus/pci/devices/xxx/remove
+>>>>>
+>>>>> then echo 1 to the pci device which is the bus of the removed device
+>>>>> echo 1 > /sys/bus/pci/devices/xxxx/rescan
+>>>>> the removed device will be scanned and it's driver module will be
+>>>>> loaded
+>>>>> automatically.
+>>>>
+>>>> Yeah this code path are known to be fishy. I think the problem is at the
+>>>> generic abstraction level and that's where it needs to be fixed.
+>>>>
+>>>> Cheers,
+>>>> Ben.
+>>>>
+>>>>> Regards,
+>>>>> yuanquan
+>>>>>>
+>>>>>> I think the problem needs to be solve at a higher level, I'm adding
+>>>>>> linux-pci & Bjorn to the CC list.
+>>>>>>
+>>>>>> Cheers,
+>>>>>> Ben.
+>>>>>>
+>>>>>>> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
+>>>>>>> ---
+>>>>>>>     arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
+>>>>>>>     1 file changed, 20 insertions(+)
+>>>>>>>
+>>>>>>> diff --git a/arch/powerpc/kernel/pci-common.c
+>>>>>>> b/arch/powerpc/kernel/pci-common.c
+>>>>>>> index 7f94f76..f0fb070 100644
+>>>>>>> --- a/arch/powerpc/kernel/pci-common.c
+>>>>>>> +++ b/arch/powerpc/kernel/pci-common.c
+>>>>>>> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev,
+>>>>>>> int mask)
+>>>>>>>                  if (ppc_md.pcibios_enable_device_hook(dev))
+>>>>>>>                          return -EINVAL;
+>>>>>>>     +    if (!dev->is_added) {
+>>>>>>> +               /*
+>>>>>>> +                * Fixup NUMA node as it may not be setup yet by the
+>>>>>>> generic
+>>>>>>> +                * code and is needed by the DMA init
+>>>>>>> +                */
+>>>>>>> +               set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
+>>>>>>> +
+>>>>>>> +               /* Hook up default DMA ops */
+>>>>>>> +               set_dma_ops(&dev->dev, pci_dma_ops);
+>>>>>>> +               set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
+>>>>>>> +
+>>>>>>> +               /* Additional platform DMA/iommu setup */
+>>>>>>> +               if (ppc_md.pci_dma_dev_setup)
+>>>>>>> +                       ppc_md.pci_dma_dev_setup(dev);
+>>>>>>> +
+>>>>>>> +               /* Read default IRQs and fixup if necessary */
+>>>>>>> +               pci_read_irq_line(dev);
+>>>>>>> +               if (ppc_md.pci_irq_fixup)
+>>>>>>> +                       ppc_md.pci_irq_fixup(dev);
+>>>>>>> +       }
+>>>>>>>          return pci_enable_resources(dev, mask);
+>>>>>>>     }
+>>
+>> Is this the same issue Hiroo MATSUMOTO was working on earlier?
+>> (http://comments.gmane.org/gmane.linux.ports.ppc.embedded/50080)
+>
+>
+> Yeah, that's the exact problem I encountered. Please push it forward.
 
---vkogqOf2sHV7VnPd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Well, as I mentioned, there are unresolved issues, so it's not just a
+matter of applying the most recent patch.  If you're interested in
+this problem and have some hardware to test, you can help by looking
+into some of the things I mentioned in the message at the URL below.
 
-On Thu, Dec 13, 2012 at 12:30:04PM -0800, Linus Torvalds wrote:
-> On Thu, Dec 13, 2012 at 12:25 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >
-> > Linus will not be happy with those kind of delay.
->=20
-> Indeed. And the DMI check is bogus too, since the "there can be
-> delays" is apparently part of the pcie hotplug spec.
->=20
-> So do the sane thing. Retry a few times, with increasingly long delays
-> (ie something like start with 10ms, then double the delay until you
-> hit 1s, and then just give up: end result, ~2s total wait, but 10ms
-> for any sane device that doesn't suck).
->=20
-> No DMI checks, no hacks, not insane default delays.
-
-I've realized that there's no strong criteria of hotplug success in ACPI
-PCI Hotplug. We can't know when we should stop retrying.
-
-In Thunderbolt case before any devices hotplugged you only see a root
-port. Thunderbolt host controller is powered off and kernel can't see it.
-
-On hotplug BIOS enables the host controller, initialize it and notify OS
-about hotplug.
-
-Normally kernel will enumerate 6 ports on Thunderbolt host controller, 2
-ports on device Thunderbolt controller and target device itself. All this
-for simple non-chained case. With device chaining the hierarchy is even
-more complex.
-
-On DZ77RE-75K motherboard without the workaround kernel will discover only
-ports on host controller, but not device ports or device.
-
-So kernel will find devices on broken implementation, not all of them.
-
-Even worse: there's no way to distinguish between plug and unplug events
-and kernel uses the same code path for both cases.
-
---=20
- Kirill A. Shutemov
-
---vkogqOf2sHV7VnPd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQywC5AAoJEAd+omnVudOMikoP/3CbwzREtxykZ82Rn+MfSYK7
-PklbiRzYWGKlWa9va6o8WKsFHNjlWtCedLkI8o7sl3ThwYU14j+Lu1wJUMe24r6A
-gUGC4IZDM35t8+zAR/BFtZ59B3hgEzuUqN9HLA+IcaeSd5IBkA36g6rlW3iUZGiC
-IPLx0Trx8utRRQgruDjjUA0BJbdtJhgHsAHt4eVSwHh9tNh5Bzi0AfEXOTe2M61E
-zqOwUo9qiOIpbdA7/YtNL0q27AuFgIrVGcJq4F7mvIbxx++CJ6QGxlu7seIX1w5e
-1ASho2vJAs8g3plXoCUkkQpntl/XONfv35wG+yHyaJ0mn/G1twaWeRvSE8/2sPGn
-K0h63rvBh5R4iTXRiiiRZ9QpNnr9MNLcVjnUNVKSG82lareec+o2MolEaITdkILT
-ATaIhgzSVoSYlJ5b++boPQrFvQu0tdX6g2H/haIrK0LHI0LhOiMpuxDLFg8xBhLN
-rkTf/aC8JO0dsn+YNCgOX34qkIgkTAhvwVQZdVmLCCPTBtI1WyrBNHqM+MVylX5A
-wTu1CtODieuC0qCmjr/M85PMQo0xgQ48ZkCLjQEXh2r/Y7txcIRFg1Ld64hdlhdt
-92w5QnGw0WkImm6IxgdCeeoxJ9c/tUoO7TlFEGQS0bpxTLoAKJ4y5kfoh4ct5g0c
-7RFBnsCajEySL/vawBc8
-=T3rD
------END PGP SIGNATURE-----
-
---vkogqOf2sHV7VnPd--
+>> We went round and round on those patches (partly my fault for
+>> excessive bike-shedding), and then we stalled out because of an
+>> ordering issue with CardBus init and an IRQ quirk.
+>>
+>> Here's the last status I remember:
+>> http://marc.info/?l=linux-pci&m=135006501620378&w=2
+>>
+>> Bjorn
+>>
+>>
+>>
+>
+>
