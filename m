@@ -1,78 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH rev.2 0/6] ACPI: Change the ACPI namespace scanning code ordering
-Date: Fri, 14 Dec 2012 23:59:36 +0100
-Message-ID: <2226860.gdCKHUSrjo@vostro.rjw.lan>
-In-Reply-To: <50CAF7DE.8000203@huawei.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <1499423.ez5cZl2uAf@vostro.rjw.lan> <50CAF7DE.8000203@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:42635 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755130Ab2LGSfn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2012 13:35:43 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so628914lbb.19
+        for <linux-pci@vger.kernel.org>; Fri, 07 Dec 2012 10:35:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 7 Dec 2012 11:35:21 -0700
+Message-ID: <CAErSpo5sGb=pZFsr5HwThLAEwE6ZNdmFoSOzqubGFVgZtVMXhw@mail.gmail.com>
+Subject: Re: [PATCH 01/12] PCI: Add and use standard PCI-X Capability register names
+To: linux-pci@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Saurav Kashyap <saurav.kashyap@qlogic.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 14, 2012 05:56:46 PM Yijing Wang wrote:
-> On 2012/12/14 6:15, Rafael J. Wysocki wrote:
-> > Hi All,
-> > 
-> > On Sunday, December 09, 2012 11:58:42 PM Rafael J. Wysocki wrote:
-> >> Hi,
-> >>
-> >> The following patches change the ordering of the ACPI namespace scanning code
-> >> so that all struct acpi_device objects in the given scope are registered before
-> >> ACPI drivers are probed against them.  They also do some simplifications and
-> >> clarifications of the code made possible by this main change.
-> >>
-> >> This is done for three basic reasons.  First, we need the boot ACPI namespace
-> >> scanning code to be as similar as reasonably possible to the hot-plug ACPI
-> >> namespace scanning code.  Second, the ordering of PCI devices enumeration
-> >> versus ACPI-backed platform devices registration needs to be such that the PCI
-> >> devices in the given scope are all registered first.  Finally, when we start to
-> >> actually manage ACPI device resources as appropriate (e.g. resolve resource
-> >> conflicts properly) we'll need all struct acpi_device nodes to be registered
-> >> before any "companion" physical nodes or ACPI drivers are bound to them.
-> >>
-> >> The patches have been tested on Toshiba Portege R500 without breaking stuff
-> >> (I used some additional debug code to verify that the ordering of device
-> >> discovery had not been modified by them), but if you see any problems with
-> >> them regarding hot-plug, please let me know.
-> >>
-> >> [1/6] - Separate adding ACPI device objects from probing ACPI drivers.
-> >> [2/6] - Change the ordering of PCI root bridge driver registration.
-> >> [3/6] - Make acpi_bus_add() and acpi_bus_start() visibly different.
-> >> [4/6] - Reduce the usage of struct acpi_bus_ops
-> >> [5/6] - Replace struct acpi_bus_ops with an enum type
-> >> [6/6] - Change the ordering of acpi_bus_check_add() to avoid unnecessary checks.
-> > 
-> > The second revision is necessary to address problems found by Yijing Wang
-> > during testing and explained by Jiang Liu (thanks guys!).
-> > 
-> > The problem is that acpi_walk_namespace() doesn't execute the pre_order_visit
-> > callback for the starting handle, so the callback routine has the be executed
-> > for it directly, if necessary.
-> > 
-> > I also modified a couple of changelogs to better explain the motivation of the
-> > patches.
-> > 
-> > Boot sequence tested on Toshiba Portege R500, but testing on systems with
-> > hotplug will be appreciated.
-> 
-> Hi rafael,
->    I tested this version patchset in my ia64 hotplug machine, and the result looks ok.
+On Wed, Dec 5, 2012 at 1:57 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Add and use #defines for PCI-X Capability registers and fields.
+> Note that the PCI-X Capability has a different layout for
+> type 0 (endpoint) and type 1 (bridge) devices.
 
-Great, thanks a lot for testing!
+I added the following patches from this series to my -next branch and
+plan to merge them in the v2.8 merge window next week.  The non-PCI
+ones have been acked and the maintainers are OK with merging them
+through the PCI tree.
 
-Rafael
+    * pci/bjorn-pcie-cap:
+      iwlwifi: Use standard #defines for PCIe Capability ASPM fields
+      iwlwifi: collapse wrapper for pcie_capability_read_word()
+      iwlegacy: Use standard #defines for PCIe Capability ASPM fields
+      iwlegacy: collapse wrapper for pcie_capability_read_word()
+      cxgb3: Use standard #defines for PCIe Capability ASPM fields
+      PCI: Add standard PCIe Capability Link ASPM field names
+      PCI/portdrv: Use PCI Express Capability accessors
+      PCI: Use standard PCIe Capability Link register field names
+      PCI: Add and use standard PCI-X Capability register names
 
+I did not merge the following patches.  They depend on one of the
+patches above and the e1000e one conflicts with other patches in the
+queue.  So these can be merged at any time after v3.8-rc1 (or even
+before -rc1 as long as it's after the PCI -next branch is merged).
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+    ath9k: Use standard #defines for PCIe Capability ASPM fields
+    e1000e: Use standard #defines for PCIe Capability ASPM fields
+    [SCSI] qla2xxx: Use standard PCIe Capability Link register field names
+
+Bjorn
