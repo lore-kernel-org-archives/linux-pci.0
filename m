@@ -1,176 +1,129 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <50C9D29F.9040508@gmail.com>
-Date: Thu, 13 Dec 2012 21:05:35 +0800
-From: Jiang Liu <liuj97@gmail.com>
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 15/15] PCI/ACPI: Remove the "pci_root" driver's sub-driver
+	infrastructure
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:26:23 -0700
+Message-ID: <20121207062622.11051.48770.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 1/6] ACPI: Separate adding ACPI device objects from probing
- ACPI drivers
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4002729.BbipMAJtM0@vostro.rjw.lan> <50C8B2E9.5050700@gmail.com> <2789050.ITilpEgQsC@vostro.rjw.lan>
-In-Reply-To: <2789050.ITilpEgQsC@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/13/2012 06:32 AM, Rafael J. Wysocki wrote:
-> On Thursday, December 13, 2012 12:38:01 AM Jiang Liu wrote:
->> On 12/10/2012 07:00 AM, Rafael J. Wysocki wrote:
->>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>
->>> Currently, as soon as an ACPI device node object (struct acpi_device)
->> snip
->>   
->>> @@ -1600,48 +1608,77 @@ static acpi_status acpi_bus_check_add(ac
->>>  	 * We may already have an acpi_device from a previous enumeration.  If
->>>  	 * so, we needn't add it again, but we may still have to start it.
->>>  	 */
->>> -	device = NULL;
->>>  	acpi_bus_get_device(handle, &device);
->>>  	if (ops->acpi_op_add && !device) {
->>> -		acpi_add_single_object(&device, handle, type, sta, ops);
->>> -		/* Is the device a known good platform device? */
->>> -		if (device
->>> -		    && !acpi_match_device_ids(device, acpi_platform_device_ids))
->>> -			acpi_create_platform_device(device);
->>> -	}
->>> +		struct acpi_bus_ops add_ops = *ops;
->>>  
->>> -	if (!device)
->>> -		return AE_CTRL_DEPTH;
->>> -
->>> -	if (ops->acpi_op_start && !(ops->acpi_op_add)) {
->>> -		status = acpi_start_single_object(device);
->>> -		if (ACPI_FAILURE(status))
->>> +		add_ops.acpi_op_match = 0;
->>> +		acpi_add_single_object(&device, handle, type, sta, &add_ops);
->>> +		if (!device)
->>>  			return AE_CTRL_DEPTH;
->>> +
->>> +		device->bus_ops.acpi_op_match = 1;
->>>  	}
->>>  
->>>  	if (!*return_value)
->>>  		*return_value = device;
->>> +
->>>  	return AE_OK;
->>>  }
->>>  
->>> +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
->>> +					void *context, void **not_used)
->>> +{
->>> +	struct acpi_bus_ops *ops = context;
->>> +	struct acpi_device *device;
->>> +	acpi_status status = AE_OK;
->>> +
->>> +	if (acpi_bus_get_device(handle, &device))
->>> +		return AE_CTRL_DEPTH;
->>> +
->>> +	if (ops->acpi_op_add) {
->>> +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
->>> +			/* This is a known good platform device. */
->>> +			acpi_create_platform_device(device);
->>> +		} else {
->>> +			int ret = device_attach(&device->dev);
->>> +			acpi_hot_add_bind(device);
->>> +			if (ret)
->>> +				status = AE_CTRL_DEPTH;
->>> +		}
->>> +	} else if (ops->acpi_op_start) {
->>> +		if (ACPI_FAILURE(acpi_start_single_object(device)))
->>> +			status = AE_CTRL_DEPTH;
->>> +	}
->>> +	return status;
->>> +}
->>> +
->>>  static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
->>>  			 struct acpi_device **child)
->>>  {
->>> -	acpi_status status;
->>>  	void *device = NULL;
->>> +	acpi_status status;
->>> +	int ret = 0;
->>>  
->>>  	status = acpi_bus_check_add(handle, 0, ops, &device);
->>> -	if (ACPI_SUCCESS(status))
->>> +	if (ACPI_FAILURE(status)) {
->>> +		ret = -ENODEV;
->>> +		goto out;
->>> +	}
->>> +
->>> +	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
->>> +			    acpi_bus_check_add, NULL, ops, &device);
->>> +	if (device)
->>>  		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
->>> -				    acpi_bus_check_add, NULL, ops, &device);
->>> +				    acpi_bus_probe_start, NULL, ops, NULL);
->> Hi Rafael,
->> 	Should we call acpi_bus_probe_start for the top device corresponding to 
->> "handle" too here?
-> 
-> Do you mean separately?  I don't think so.  It will be covered by the namespace
-> walking, won't it?
-Hi Rafael,
-	According to test results from Yijing, we do need to call acpi_bus_probe_start
-for the top device corresponding to "handle".
-	Comments for acpi_walk_namespace says:
-/*******************************************************************************
- *
- * FUNCTION:    acpi_walk_namespace
- *
- * DESCRIPTION: Performs a modified depth-first walk of the namespace tree,
- *              starting (and ending) at the object specified by start_handle.
-                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *              The callback function is called whenever an object that matches
- *              the type parameter is found. If the callback function returns
- *              a non-zero value, the search is terminated immediately and this
- *              value is returned to the caller.
- *
- *              The point of this procedure is to provide a generic namespace
- *              a non-zero value, the search is terminated immediately and this
- *              value is returned to the caller.
- *
- *              The point of this procedure is to provide a generic namespace
- *              walk routine that can be called from multiple places to
- *              provide multiple services; the callback function(s) can be
- *              tailored to each task, whether it is a print function,
- *              a compare function, etc.
- *
- ******************************************************************************/
+Both sub-drivers of the "PCI Root Bridge ("pci_bridge")" driver, "acpiphp"
+and "pci_slot", have been converted to statically built-in functionality
+added directly from within "pci_bridge".
 
-But acpi_ns_walk_namespace() doesn't really call the pre_order_visit and post_order_visit
-for the start_handle. That means acpi_walk_namespace won't call the callback for the top
-handle.
-acpi_ns_walk_namespace(acpi_object_type type,
-                       acpi_handle start_node,
-                       u32 max_depth,
-                       u32 flags,
-                       acpi_walk_callback pre_order_visit,
-                       acpi_walk_callback post_order_visit,
-                       void *context, void **return_value)
-{
-.........................................
-        parent_node = start_node;
-        child_node = acpi_ns_get_next_node(parent_node, NULL);
-        child_type = ACPI_TYPE_ANY;
-        level = 1;
+With the conversions there are no remaining usages of the 'struct
+acpi_pci_driver' list based infrastructure.  This patch removes it.
 
-        /*
-         * Traverse the tree of nodes until we bubble back up to where we
-         * started. When Level is zero, the loop is done because we have
-         * bubbled up to (and passed) the original parent handle (start_entry)
-         */
-        while (level > 0 && child_node) {
- ...........................................
-}
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-> 
-> Rafael
-> 
-> 
+ drivers/acpi/pci_root.c |   42 +-----------------------------------------
+ include/linux/acpi.h    |    9 ---------
+ 2 files changed, 1 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 42566e2..7cde9dc 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -71,44 +71,12 @@ static struct acpi_driver acpi_pci_root_driver = {
+ 		},
+ };
+ 
+-/* Lock to protect both acpi_pci_roots and acpi_pci_drivers lists */
++/* Lock to protect acpi_pci_roots list */
+ static DEFINE_MUTEX(acpi_pci_root_lock);
+ static LIST_HEAD(acpi_pci_roots);
+-static LIST_HEAD(acpi_pci_drivers);
+ 
+ static DEFINE_MUTEX(osc_lock);
+ 
+-int acpi_pci_register_driver(struct acpi_pci_driver *driver)
+-{
+-	int n = 0;
+-	struct acpi_pci_root *root;
+-
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_add_tail(&driver->node, &acpi_pci_drivers);
+-	if (driver->add)
+-		list_for_each_entry(root, &acpi_pci_roots, node) {
+-			driver->add(root);
+-			n++;
+-		}
+-	mutex_unlock(&acpi_pci_root_lock);
+-
+-	return n;
+-}
+-EXPORT_SYMBOL(acpi_pci_register_driver);
+-
+-void acpi_pci_unregister_driver(struct acpi_pci_driver *driver)
+-{
+-	struct acpi_pci_root *root;
+-
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_del(&driver->node);
+-	if (driver->remove)
+-		list_for_each_entry(root, &acpi_pci_roots, node)
+-			driver->remove(root);
+-	mutex_unlock(&acpi_pci_root_lock);
+-}
+-EXPORT_SYMBOL(acpi_pci_unregister_driver);
+-
+ acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
+ {
+ 	struct acpi_pci_root *root;
+@@ -642,14 +610,10 @@ end:
+ static int acpi_pci_root_start(struct acpi_device *device)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+-	struct acpi_pci_driver *driver;
+ 
+ 	pci_bus_add_devices(root->bus);
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry(driver, &acpi_pci_drivers, node)
+-		if (driver->add)
+-			driver->add(root);
+ 	acpiphp_add_bridge(root);
+ 	acpi_pci_slot_add(root);
+ 	mutex_unlock(&acpi_pci_root_lock);
+@@ -660,12 +624,8 @@ static int acpi_pci_root_start(struct acpi_device *device)
+ static int acpi_pci_root_remove(struct acpi_device *device, int type)
+ {
+ 	struct acpi_pci_root *root = acpi_driver_data(device);
+-	struct acpi_pci_driver *driver;
+ 
+ 	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry(driver, &acpi_pci_drivers, node)
+-		if (driver->remove)
+-			driver->remove(root);
+ 	acpi_pci_slot_remove(root);
+ 	acpiphp_remove_bridge(root);
+ 
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 90be989..8e2b65f 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -137,15 +137,6 @@ void acpi_penalize_isa_irq(int irq, int active);
+ 
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+-struct acpi_pci_driver {
+-	struct list_head node;
+-	int (*add)(struct acpi_pci_root *root);
+-	void (*remove)(struct acpi_pci_root *root);
+-};
+-
+-int acpi_pci_register_driver(struct acpi_pci_driver *driver);
+-void acpi_pci_unregister_driver(struct acpi_pci_driver *driver);
+-
+ extern int ec_read(u8 addr, u8 *val);
+ extern int ec_write(u8 addr, u8 val);
+ extern int ec_transaction(u8 command,
 
