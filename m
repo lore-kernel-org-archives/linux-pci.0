@@ -1,95 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:45977 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753239Ab2LQTWL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2012 14:22:11 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so5096209lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 17 Dec 2012 11:22:09 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:58677 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753017Ab2LGGZQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:25:16 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 02/15] PCI/acpiphp: Fix coding style of external declarations
+	in acpiphp.h
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:25:06 -0700
+Message-ID: <20121207062505.11051.63536.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
-References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org> <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Dec 2012 12:21:49 -0700
-Message-ID: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
-Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
- register field names
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>,
-	Saurav Kashyap <saurav.kashyap@qlogic.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ping.  I didn't push this through my tree because I didn't want to
-create conflicts with other changes to this file.  But I think this
-can be merged any time.
+The external declarations trigger warnings from ./scripts/checkpatch.pl
+such as:
+  WARNING: space prohibited between function name and open parenthesis '('
+  #32: FILE: drivers/pci/hotplug/acpiphp.h:194:
+  +extern void acpiphp_glue_init (void);
 
-On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
-<giridhar.malavali@qlogic.com> wrote:
-> Acked-by: Giridhar Malavali
->
-> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
->
->>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
->>
->>Thanks,
->>~Saurav
->>
->>
->>
->>>Use the standard #defines for PCIe Link Capability register fields
->>>rather than bare numbers.  This also uses the new PCI Express Capability
->>>accessor rather than reading the capability directly.
->>>
->>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
->>>CC: linux-driver@qlogic.com
->>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
->>>CC: linux-scsi@vger.kernel.org
->>>---
->>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
->>> 1 files changed, 5 insertions(+), 9 deletions(-)
->>>
->>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
->>>b/drivers/scsi/qla2xxx/qla_os.c
->>>index d501bf5..b5d070f 100644
->>>--- a/drivers/scsi/qla2xxx/qla_os.c
->>>+++ b/drivers/scsi/qla2xxx/qla_os.c
->>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
->>>char *str)
->>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
->>>      struct qla_hw_data *ha = vha->hw;
->>>      uint32_t pci_bus;
->>>-     int pcie_reg;
->>>
->>>-     pcie_reg = pci_pcie_cap(ha->pdev);
->>>-     if (pcie_reg) {
->>>+     if (pci_is_pcie(ha->pdev)) {
->>>              char lwstr[6];
->>>-             uint16_t pcie_lstat, lspeed, lwidth;
->>>+             uint32_t lstat, lspeed, lwidth;
->>>
->>>-             pcie_reg += PCI_EXP_LNKCAP;
->>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
->>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
->>>-             lwidth = (pcie_lstat &
->>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
->>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
->>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
->>>
->>>              strcpy(str, "PCIe (");
->>>              if (lspeed == 1)
->>>
->>>--
->>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>>the body of a message to majordomo@vger.kernel.org
->>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->
->
+This patch removes the extraneous spaces between the function names and
+open parenthesis '('.
+
+No functional change.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
+
+ drivers/pci/hotplug/acpiphp.h |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index a1afb5b..014ae78 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -191,18 +191,18 @@ extern int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot);
+ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+ 
+ /* acpiphp_glue.c */
+-extern int acpiphp_glue_init (void);
+-extern void acpiphp_glue_exit (void);
+-extern int acpiphp_get_num_slots (void);
++extern int acpiphp_glue_init(void);
++extern void acpiphp_glue_exit(void);
++extern int acpiphp_get_num_slots(void);
+ typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
+ 
+-extern int acpiphp_enable_slot (struct acpiphp_slot *slot);
+-extern int acpiphp_disable_slot (struct acpiphp_slot *slot);
+-extern int acpiphp_eject_slot (struct acpiphp_slot *slot);
+-extern u8 acpiphp_get_power_status (struct acpiphp_slot *slot);
+-extern u8 acpiphp_get_attention_status (struct acpiphp_slot *slot);
+-extern u8 acpiphp_get_latch_status (struct acpiphp_slot *slot);
+-extern u8 acpiphp_get_adapter_status (struct acpiphp_slot *slot);
++extern int acpiphp_enable_slot(struct acpiphp_slot *slot);
++extern int acpiphp_disable_slot(struct acpiphp_slot *slot);
++extern int acpiphp_eject_slot(struct acpiphp_slot *slot);
++extern u8 acpiphp_get_power_status(struct acpiphp_slot *slot);
++extern u8 acpiphp_get_attention_status(struct acpiphp_slot *slot);
++extern u8 acpiphp_get_latch_status(struct acpiphp_slot *slot);
++extern u8 acpiphp_get_adapter_status(struct acpiphp_slot *slot);
+ 
+ /* variables */
+ extern bool acpiphp_debug;
+
