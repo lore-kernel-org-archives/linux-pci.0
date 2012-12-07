@@ -1,100 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f202.google.com ([209.85.215.202]:34065 "EHLO
-	mail-ea0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446Ab2LEVCa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 16:02:30 -0500
-Received: by mail-ea0-f202.google.com with SMTP id j12so395109eaa.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 13:02:29 -0800 (PST)
-Subject: [PATCH 01/12] PCI: Add and use standard PCI-X Capability register
-	names
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>
-Date: Wed, 05 Dec 2012 13:57:24 -0700
-Message-ID: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 06/15] PCI/acpiphp: Convert "acpiphp" sub-driver's
+ functionality to built-in only
+From: Myron Stowe <mstowe@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Myron Stowe <myron.stowe@redhat.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <CAE9FiQUh_jcoemFpeiAKHr4FyxSA4itHycNwJk+Dhf45Ap5prA@mail.gmail.com>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
+	 <20121207062530.11051.47869.stgit@amt.stowe>
+	 <CAE9FiQUh_jcoemFpeiAKHr4FyxSA4itHycNwJk+Dhf45Ap5prA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 07 Dec 2012 12:11:04 -0700
+Message-ID: <1354907464.2419.34.camel@zim.stowe>
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add and use #defines for PCI-X Capability registers and fields.
-Note that the PCI-X Capability has a different layout for
-type 0 (endpoint) and type 1 (bridge) devices.
+On Thu, 2012-12-06 at 22:48 -0800, Yinghai Lu wrote:
+> On Thu, Dec 6, 2012 at 10:25 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> > The "ACPI Hot Plug PCI Controller ("acpiphp")" sub-driver may be compiled
+> > as a module.  Kernel modules are instantiated somewhat randomly - the
+> > order in which they are linked as the kernel as built - thus if there are
+> > any dependencies on the ordering of attaching sub-drivers, they can not be
+> > effectively dealt with.
+> >
+> > This patch series resolves any potential sequencing inter-dependencies by
+> > converting "acpiphp" sub-driver's functionality to being only supported as
+> > statically built-in to the kernel.  Inter-dependencies can then be
+> > effectively handled by explicitly sequencing the addition of such
+> > functionality.
+> 
+> some slots may support both acpiphp and pciehp.
+> 
+> if make acpiphp to be built-in, user do not have choice anymore.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Matthew Wilcox <willy@linux.intel.com>
----
- drivers/pci/probe.c           |   15 +++++++++------
- include/uapi/linux/pci_regs.h |   15 ++++++++++++++-
- 2 files changed, 23 insertions(+), 7 deletions(-)
+What area are you worried about and how do we exercise that choice
+today?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec909af..81d0667 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -579,14 +579,16 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 	if (pos) {
- 		u16 status;
- 		enum pci_bus_speed max;
--		pci_read_config_word(bridge, pos + 2, &status);
- 
--		if (status & 0x8000) {
-+		pci_read_config_word(bridge, pos + PCI_X_BRIDGE_SSTATUS,
-+				     &status);
-+
-+		if (status & PCI_X_SSTATUS_533MHZ) {
- 			max = PCI_SPEED_133MHz_PCIX_533;
--		} else if (status & 0x4000) {
-+		} else if (status & PCI_X_SSTATUS_266MHZ) {
- 			max = PCI_SPEED_133MHz_PCIX_266;
--		} else if (status & 0x0002) {
--			if (((status >> 12) & 0x3) == 2) {
-+		} else if (status & PCI_X_SSTATUS_133MHZ) {
-+			if ((status & PCI_X_SSTATUS_VERS) == PCI_X_SSTATUS_V2) {
- 				max = PCI_SPEED_133MHz_PCIX_ECC;
- 			} else {
- 				max = PCI_SPEED_133MHz_PCIX;
-@@ -596,7 +598,8 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 		}
- 
- 		bus->max_bus_speed = max;
--		bus->cur_bus_speed = pcix_bus_speed[(status >> 6) & 0xf];
-+		bus->cur_bus_speed = pcix_bus_speed[
-+			(status & PCI_X_SSTATUS_FREQ) >> 6];
- 
- 		return;
- 	}
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 20ae747..4cca834 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -349,7 +349,7 @@
- #define  PCI_AF_STATUS_TP	0x01
- #define PCI_CAP_AF_SIZEOF	6	/* size of AF registers */
- 
--/* PCI-X registers */
-+/* PCI-X registers (Type 0 (non-bridge) devices) */
- 
- #define PCI_X_CMD		2	/* Modes & Features */
- #define  PCI_X_CMD_DPERR_E	0x0001	/* Data Parity Error Recovery Enable */
-@@ -389,6 +389,19 @@
- #define PCI_CAP_PCIX_SIZEOF_V1	24	/* size for Version 1 */
- #define PCI_CAP_PCIX_SIZEOF_V2	PCI_CAP_PCIX_SIZEOF_V1	/* Same for v2 */
- 
-+/* PCI-X registers (Type 1 (bridge) devices) */
-+
-+#define PCI_X_BRIDGE_SSTATUS	2	/* Secondary Status */
-+#define  PCI_X_SSTATUS_64BIT	0x0001	/* Secondary AD interface is 64 bits */
-+#define  PCI_X_SSTATUS_133MHZ	0x0002	/* 133 MHz capable */
-+#define  PCI_X_SSTATUS_FREQ	0x03c0	/* Secondary Bus Mode and Frequency */
-+#define  PCI_X_SSTATUS_VERS	0x3000	/* PCI-X Capability Version */
-+#define  PCI_X_SSTATUS_V1	0x1000	/* Mode 2, not Mode 1 */
-+#define  PCI_X_SSTATUS_V2	0x2000	/* Mode 1 or Modes 1 and 2 */
-+#define  PCI_X_SSTATUS_266MHZ	0x4000	/* 266 MHz capable */
-+#define  PCI_X_SSTATUS_533MHZ	0x8000	/* 533 MHz capable */
-+#define PCI_X_BRIDGE_STATUS	4	/* Bridge Status */
-+
- /* PCI Bridge Subsystem ID registers */
- 
- #define PCI_SSVID_VENDOR_ID     4	/* PCI-Bridge subsystem vendor id register */
+Here is my current understanding to set a little context -
+
+I see the following call chains with respect to pciehp and acpiphp:
+
+  pcied_init			# pciehp module_init
+    pciehp_firmware_init
+      pciehp_acpi_slot_detection_init
+        parse_detect_mode	#pcie, acpi, auto (default)
+    pcie_port_service_register
+
+
+  acpiphp_init					# module_init
+    init_acpi
+      acpiphp_glue_init
+        acpi_pci_register_driver(&acpi_pci_hp_driver)
+          list_for_each_entry(root, &acpi_pci_roots, node)
+            driver->add				# for \_SB_.PCI0
+              add_bridge
+                add_host_bridge
+                  bridge = kzalloc(struct acpiphp_bridge)
+                  bridge->handle = handle	# \_SB_.PCI0
+                  bridge->pci_bus = root_bus	#pci_bus 0000:00
+                  init_bridge_misc
+                    acpi_walk_namespace(..., register_slot, ...)
+                      register_slot
+                        if (device_is_managed_by_native_pciehp(pdev))
+                          return AE_OK
+
+Does pciehp influence device_is_managed_by_native_pciehp()?  If not, it
+seems that the acpiphp driver will never attach.
+
+Looking at ./drivers/pci/hotplug/Makefile, CONFIG_HOTPLUG_PCI_PCIE comes
+before CONFIG_HOTPLUG_PCI_ACPI so if pciehp and acpiphp are both
+configured as modules then the load order would seem to be:
+  acpiphp, pciehp: acpiphp ignores, pciehp claims
+  pciehp, acpiphp: pciehp claims, acpiphp ignores
+
+To complete the matrix taking built-in vs. module into account -
+  pciehp=y, acpiphp=y
+    pciehp, acpiphp: pciehp claims, acpiphp ignores
+
+  pciehp=y, acpiphp=m
+    pciehp, acpiphp: pciehp claims, acpiphp ignores
+
+  pciehp=m, acpiphp=y
+    acpiphp, pciehp: acpiphp ignores, pciehp claims
+
+The above combinations all seem to end up with pciehp claiming the slot
+which raises the question: How do we get acpiphp to claim a slot today?
+
+Thanks,
+ Myron 
+> 
+> Thanks
+> 
+> Yinghai
+
 
