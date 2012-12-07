@@ -1,48 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37784 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485Ab2LNCBT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 21:01:19 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:29178 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965054Ab2LGGZS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:25:18 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 03/15] PCI/acpiphp: Leave the "acpiphp" sub-driver registered
+	and in place
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:25:13 -0700
+Message-ID: <20121207062513.11051.99972.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
 MIME-Version: 1.0
-In-Reply-To: <1355415792.2229.7.camel@ul30vt.home>
-References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
-	<1355415792.2229.7.camel@ul30vt.home>
-Date: Fri, 14 Dec 2012 10:01:16 +0800
-Message-ID: <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
- not set] Vt-d & intel_iommu
-From: Jason Gao <pkill.2012@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 14, 2012 at 12:23 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
->
-> Device 03:00.0 is your raid controller:
->
-> 03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
->
-> For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
-> ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
-> it's not reading an OS allocated buffer, which probably means it's some
-> kind of side-band communication with a management controller.  I'd guess
-> it's a BIOS bug and there should be an RMRR covering those accesses.
-> Thanks,
+The "ACPI Hot Plug PCI Controller Driver ("acpiphp")" can be either
+statically built-in or a kernel module.  If statically built-in, the
+sub-driver needs to remain registered and in place in order to accommodate
+any future hot-plug insertion events of devices it supports.
 
-First of all ,I want to known whether I can ignore these errors on the
-production server,and do these error may affect the system?
+As currently implemented, the sub-driver may unregister itself during its
+initialization.  This patch changes that behavior so that the sub-driver
+remains registered and in place.
 
-By the way,when I removed the "intel_iommu=on" from /etc/grub.conf,no
-DMAR related errors occur
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-It's a strange thing,other three Dell R710 servers with the same bios
-version v. 6.3.0, same kernel 2.6.32-279.14.1 on RHEL6u3(Centos 6u3)
-,but these errors don't appear on these tree servers
+ drivers/pci/hotplug/acpiphp.h      |    1 -
+ drivers/pci/hotplug/acpiphp_core.c |   16 +---------------
+ drivers/pci/hotplug/acpiphp_glue.c |   21 ---------------------
+ 3 files changed, 1 insertions(+), 37 deletions(-)
 
-Anyone have any idea for this ?
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 014ae78..4b798e9 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+ /* acpiphp_glue.c */
+ extern int acpiphp_glue_init(void);
+ extern void acpiphp_glue_exit(void);
+-extern int acpiphp_get_num_slots(void);
+ typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
+ 
+ extern int acpiphp_enable_slot(struct acpiphp_slot *slot);
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index 96316b7..3350b09 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -50,7 +50,6 @@
+ bool acpiphp_debug;
+ 
+ /* local variables */
+-static int num_slots;
+ static struct acpiphp_attention_info *attention_info;
+ 
+ #define DRIVER_VERSION	"0.5"
+@@ -274,21 +273,8 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ 
+ static int __init init_acpi(void)
+ {
+-	int retval;
+-
+ 	/* initialize internal data structure etc. */
+-	retval = acpiphp_glue_init();
+-
+-	/* read initial number of slots */
+-	if (!retval) {
+-		num_slots = acpiphp_get_num_slots();
+-		if (num_slots == 0) {
+-			acpiphp_glue_exit();
+-			retval = -ENODEV;
+-		}
+-	}
+-
+-	return retval;
++	return acpiphp_glue_init();
+ }
+ 
+ /**
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index d0369dc..a378a48 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1435,27 +1435,6 @@ void  acpiphp_glue_exit(void)
+ 
+ 
+ /**
+- * acpiphp_get_num_slots - count number of slots in a system
+- */
+-int __init acpiphp_get_num_slots(void)
+-{
+-	struct acpiphp_bridge *bridge;
+-	int num_slots = 0;
+-
+-	list_for_each_entry(bridge, &bridge_list, list) {
+-		dbg("Bus %04x:%02x has %d slot%s\n",
+-				pci_domain_nr(bridge->pci_bus),
+-				bridge->pci_bus->number, bridge->nr_slots,
+-				bridge->nr_slots == 1 ? "" : "s");
+-		num_slots += bridge->nr_slots;
+-	}
+-
+-	dbg("Total %d slots\n", num_slots);
+-	return num_slots;
+-}
+-
+-
+-/**
+  * acpiphp_enable_slot - power on slot
+  * @slot: ACPI PHP slot
+  */
 
-thanks
