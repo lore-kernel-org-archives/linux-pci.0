@@ -1,51 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-Date: Mon, 10 Dec 2012 15:46:55 +0100
-Message-ID: <2637774.lmuX5P2qQX@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQWxoWubagm4gj81YgMeqyEZgpT47ROAfjmXSmoaTn-Yig@mail.gmail.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <2097693.II1PNyeFLY@vostro.rjw.lan> <CAE9FiQWxoWubagm4gj81YgMeqyEZgpT47ROAfjmXSmoaTn-Yig@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:58113 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932627Ab2LGA2H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Dec 2012 19:28:07 -0500
+Date: Thu, 6 Dec 2012 16:28:08 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	Andrew Lutomirski <luto@mit.edu>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Ming Lei <ming.lei@canonical.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Huang Ying <ying.huang@intel.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+Message-ID: <20121207002808.GG5324@xanatos>
+References: <20121126191002.GE6504@xanatos>
+ <20121128225406.GF8557@xanatos>
+ <20121206003344.GC5324@xanatos>
+ <1962497.aG1sFtYjJG@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1962497.aG1sFtYjJG@vostro.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
-> On Sun, Dec 9, 2012 at 3:03 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Notice that one member of struct acpi_bus_ops, acpi_op_add, is not
-> > used anywhere any more and the relationship between its remaining
-> > members, acpi_op_match and acpi_op_start, is such that it doesn't
-> > make sense to set the latter without setting the former at the same
-> > time.  Therefore, replace struct acpi_bus_ops with new a enum type,
-> > enum acpi_bus_add_type, with three values, ACPI_BUS_ADD_BASIC,
-> > ACPI_BUS_ADD_MATCH, ACPI_BUS_ADD_START, corresponding to
-> > both acpi_op_match and acpi_op_start unset, acpi_op_match set and
-> > acpi_op_start unset, and both acpi_op_match and acpi_op_start set,
-> > respectively.
-> >
+On Thu, Dec 06, 2012 at 01:43:32AM +0100, Rafael J. Wysocki wrote:
+> On Wednesday, December 05, 2012 04:33:44 PM Sarah Sharp wrote:
+> > Wakeup from D3 works fine on the 3.5.0 kernel, but fails on 3.6.2.  I
+> > haven't fully bisected yet.
+> > 
+> > In debugging, I found that if you only enable runtime suspend for the
+> > NEC host controller, the host successfully comes out of D3 when you plug
+> > in a USB device.  However, if you enable runtime PM for the parent PCIe root
+> > port, it stops working.  Disabling D3cold for both devices did not help.
+> > 
+> > It looks like a PCI issue, so what sort of debugging info do you need
+> > from me?
 > 
-> Can we expand the BUS_ADD_* concept to other devices instead of just
-> acpi_device?
-> 
-> aka we should let struct device has this add_type field.
+> It looks like this is related to one of the following commits:
 
-Having done that in ACPI to cover our use case here, we can try to move it
-into struct device if there are use cases beyond ACPI that can't be covered
-by using deferred driver probing.
+> Generally, please try to bisect changes in drivers/pci between v3.5 and v3.6.
 
-Thanks,
-Rafael
+Ok, I ran git bisect with only the drivers/pci directory as a target.
 
+> ee85f54 ACPI/PM: specify lowest allowed state for device sleep state
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+git bisect ended up identifying this as the bad patch, although
+reverting just that patch after the bisect finished didn't seem to help.
+However, it does make sense that this would be the culprit patch, if
+Huang Ying's theory about the PME polling is correct.
+
+Sarah Sharp
