@@ -1,118 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sasha Levin <sasha.levin@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Sasha Levin <sasha.levin@oracle.com>,
-	Alan Cox <alan@linux.intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: cpqphp: minor cleanup and removal of unreachable paths
-Date: Thu, 20 Dec 2012 14:11:23 -0500
-Message-Id: <1356030701-16284-15-git-send-email-sasha.levin@oracle.com>
-In-Reply-To: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
-References: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38236 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945986Ab2LGGZW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:25:22 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 04/15] PCI/acpiphp: Change acpiphp_glue_init() to return void
+	instead of 0
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:25:19 -0700
+Message-ID: <20121207062519.11051.61163.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove cases of redundant checks and remote unreachable paths.
+acpiphp_glue_init() always returns 0.  This patch changes the return
+type from an 'int' to 'void'.
 
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+No functional change.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/pci/hotplug/cpqphp_ctrl.c | 57 ++++++++++++++-------------------------
- 1 file changed, 20 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
-index 36112fe..d282019 100644
---- a/drivers/pci/hotplug/cpqphp_ctrl.c
-+++ b/drivers/pci/hotplug/cpqphp_ctrl.c
-@@ -1900,8 +1900,7 @@ static void interrupt_event_handler(struct controller *ctrl)
- 					dbg("power fault\n");
- 				} else {
- 					/* refresh notification */
--					if (p_slot)
--						update_slot_info(ctrl, p_slot);
-+					update_slot_info(ctrl, p_slot);
- 				}
+ drivers/pci/hotplug/acpiphp.h      |    2 +-
+ drivers/pci/hotplug/acpiphp_core.c |    4 +++-
+ drivers/pci/hotplug/acpiphp_glue.c |    4 +---
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 4b798e9..ecd772c 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -191,7 +191,7 @@ extern int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot);
+ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
  
- 				ctrl->event_queue[loop].event_type = 0;
-@@ -2520,44 +2519,28 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+ /* acpiphp_glue.c */
+-extern int acpiphp_glue_init(void);
++extern void acpiphp_glue_init(void);
+ extern void acpiphp_glue_exit(void);
+ typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
  
- 		/* If we have IO resources copy them and fill in the bridge's
- 		 * IO range registers */
--		if (io_node) {
--			memcpy(hold_IO_node, io_node, sizeof(struct pci_resource));
--			io_node->next = NULL;
-+		memcpy(hold_IO_node, io_node, sizeof(struct pci_resource));
-+		io_node->next = NULL;
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index 3350b09..011a538 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -274,7 +274,9 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ static int __init init_acpi(void)
+ {
+ 	/* initialize internal data structure etc. */
+-	return acpiphp_glue_init();
++	acpiphp_glue_init();
++
++	return 0;
+ }
  
--			/* set IO base and Limit registers */
--			temp_byte = io_node->base >> 8;
--			rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_BASE, temp_byte);
-+		/* set IO base and Limit registers */
-+		temp_byte = io_node->base >> 8;
-+		rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_BASE, temp_byte);
- 
--			temp_byte = (io_node->base + io_node->length - 1) >> 8;
--			rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_LIMIT, temp_byte);
--		} else {
--			kfree(hold_IO_node);
--			hold_IO_node = NULL;
--		}
+ /**
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index a378a48..50b58cb 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1415,11 +1415,9 @@ static struct acpi_pci_driver acpi_pci_hp_driver = {
+ /**
+  * acpiphp_glue_init - initializes all PCI hotplug - ACPI glue data structures
+  */
+-int __init acpiphp_glue_init(void)
++void __init acpiphp_glue_init(void)
+ {
+ 	acpi_pci_register_driver(&acpi_pci_hp_driver);
 -
--		/* If we have memory resources copy them and fill in the
--		 * bridge's memory range registers.  Otherwise, fill in the
--		 * range registers with values that disable them. */
--		if (mem_node) {
--			memcpy(hold_mem_node, mem_node, sizeof(struct pci_resource));
--			mem_node->next = NULL;
--
--			/* set Mem base and Limit registers */
--			temp_word = mem_node->base >> 16;
--			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
-+		temp_byte = (io_node->base + io_node->length - 1) >> 8;
-+		rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_LIMIT, temp_byte);
+-	return 0;
+ }
  
--			temp_word = (mem_node->base + mem_node->length - 1) >> 16;
--			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
--		} else {
--			temp_word = 0xFFFF;
--			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
-+		/* Copy the memory resources and fill in the bridge's memory
-+		 * range registers.
-+		 */
-+		memcpy(hold_mem_node, mem_node, sizeof(struct pci_resource));
-+		mem_node->next = NULL;
  
--			temp_word = 0x0000;
--			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
-+		/* set Mem base and Limit registers */
-+		temp_word = mem_node->base >> 16;
-+		rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
- 
--			kfree(hold_mem_node);
--			hold_mem_node = NULL;
--		}
-+		temp_word = (mem_node->base + mem_node->length - 1) >> 16;
-+		rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
- 
- 		memcpy(hold_p_mem_node, p_mem_node, sizeof(struct pci_resource));
- 		p_mem_node->next = NULL;
-@@ -2627,7 +2610,7 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
- 		/* Return unused bus resources
- 		 * First use the temporary node to store information for
- 		 * the board */
--		if (hold_bus_node && bus_node && temp_resources.bus_head) {
-+		if (bus_node && temp_resources.bus_head) {
- 			hold_bus_node->length = bus_node->base - hold_bus_node->base;
- 
- 			hold_bus_node->next = func->bus_head;
-@@ -2751,7 +2734,7 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
- 		}
- 		/* If we have prefetchable memory space available and there
- 		 * is some left at the end, return the unused portion */
--		if (hold_p_mem_node && temp_resources.p_mem_head) {
-+		if (temp_resources.p_mem_head) {
- 			p_mem_node = do_pre_bridge_resource_split(&(temp_resources.p_mem_head),
- 								  &hold_p_mem_node, 0x100000);
- 
--- 
-1.8.0
 
