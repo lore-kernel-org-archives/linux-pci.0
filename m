@@ -1,52 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43683 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752732Ab2LTW3s convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Dec 2012 17:29:48 -0500
-From: "Rose, Gregory V" <gregory.v.rose@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Don Dutile <ddutile@redhat.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yuval Mintz <yuvalmin@broadcom.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: RE: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-Date: Thu, 20 Dec 2012 22:29:44 +0000
-Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A073ED843FE@ORSMSX106.amr.corp.intel.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
- <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
- <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com>
- <20121217232439.GA9746@google.com> <50D24355.1050100@redhat.com>
- <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com>
+Received: from [213.199.154.209] ([213.199.154.209]:49131 "EHLO
+	am1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751930Ab2LGWaa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Dec 2012 17:30:30 -0500
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: Saurav Kashyap <saurav.kashyap@qlogic.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+Date: Fri, 7 Dec 2012 22:29:11 +0000
+Message-ID: <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
+In-Reply-To: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Thursday, December 20, 2012 1:48 PM
-> To: Don Dutile
-> Cc: Rose, Gregory V; linux-pci@vger.kernel.org; Yuval Mintz;
-> bhutchings@solarflare.com; yinghai@kernel.org; davem@davemloft.net
-> Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-> 
-> On Wed, Dec 19, 2012 at 3:44 PM, Don Dutile <ddutile@redhat.com> wrote:
-> > Overall, yet-another-good-clean-up-by-Bjorn ! :) nits below...
-> >
-> > oh, you can add
-> > Tested-by: Donald Dutile <ddutile@redhat.com>
-> >
-> > if you'd to the final commit.
-> 
-> I made the -EPERM change suggested by Greg and added this to my
-> pci/for-3.8 branch.  I'll ask Linus to pull it soon after v3.8-rc1.
-> 
-> Bjorn
+Acked-by: Giridhar Malavali
 
-Thanks!
+On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
 
-- Greg
+>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>
+>Thanks,
+>~Saurav
+>
+>
+>
+>>Use the standard #defines for PCIe Link Capability register fields
+>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>accessor rather than reading the capability directly.
+>>
+>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>CC: linux-driver@qlogic.com
+>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>CC: linux-scsi@vger.kernel.org
+>>---
+>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>
+>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>b/drivers/scsi/qla2xxx/qla_os.c
+>>index d501bf5..b5d070f 100644
+>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>char *str)
+>> 	static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>> 	struct qla_hw_data *ha = vha->hw;
+>> 	uint32_t pci_bus;
+>>-	int pcie_reg;
+>> 
+>>-	pcie_reg = pci_pcie_cap(ha->pdev);
+>>-	if (pcie_reg) {
+>>+	if (pci_is_pcie(ha->pdev)) {
+>> 		char lwstr[6];
+>>-		uint16_t pcie_lstat, lspeed, lwidth;
+>>+		uint32_t lstat, lspeed, lwidth;
+>> 
+>>-		pcie_reg += PCI_EXP_LNKCAP;
+>>-		pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>-		lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>-		lwidth = (pcie_lstat &
+>>-		    (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>+		pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>+		lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>+		lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>> 
+>> 		strcpy(str, "PCIe (");
+>> 		if (lspeed == 1)
+>>
+>>--
+>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+
 
