@@ -1,136 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:52388 "EHLO gate.crashing.org"
+Received: from mx1.redhat.com ([209.132.183.28]:46482 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751224Ab2LEI0l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Dec 2012 03:26:41 -0500
-Message-ID: <1354695989.2351.13.camel@pasglop>
-Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue
- of rescanned pci device
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Chen Yuanquan-B41889 <B41889@freescale.com>
-Cc: linuxppc-dev@lists.ozlabs.org, galak@kernel.crashing.org,
-	r61911@freescale.com, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 05 Dec 2012 19:26:29 +1100
-In-Reply-To: <50BF03C1.2070304@freescale.com>
-References: <1354674717-14426-1-git-send-email-B41889@freescale.com>
-	 <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1946003Ab2LGGZp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Dec 2012 01:25:45 -0500
+From: Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 08/15] PCI/acpiphp: Collapse the initialization call chain of
+	"acpiphp" further
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 06 Dec 2012 23:25:42 -0700
+Message-ID: <20121207062542.11051.80189.stgit@amt.stowe>
+In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
-> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
-> > On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
-> >> On powerpc arch, some fixup work of PCI/PCI-e device is just done during the
-> >> first scan at booting time. For the PCI/PCI-e device rescanned after linux OS
-> >> booting up, the fixup work won't be done, which leads to dma_set_mask error or
-> >> irq related issue in rescanned PCI/PCI-e device's driver. So, it does the same
-> >> fixup work for the rescanned device to avoid this issue.
-> > Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
-> > that way but factored out.
+This patch collapses the initialization call chain of "acpiphp" by calling
+acpi_pci_[un]register_driver() directly within acpiphp_{init,exit}(),
+removing the intervening acpiphp_glue_{init,exit}() call.
 
-Please, at least format your email properly so I can try to undertand
-without needing aspirin.
+No functional change.
 
-> There's a judgement "if (!bus->is_added)" before calling of 
-> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
-> the fixup won't execute, which leads to fatal error in driver of rescanned
-> device on freescale  powerpc, no this issues on x86 arch.
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+---
 
-First, none of that invalidates my statement that you shouldn't
-duplicate a whole block of code like this. Even if your approach is
-correct (which is debated separately), at the very least you should
-factor the code out into a common function between the two copies.
+ drivers/pci/hotplug/acpiphp.h      |    2 --
+ drivers/pci/hotplug/acpiphp_core.c |    4 ++--
+ drivers/pci/hotplug/acpiphp_glue.c |   20 --------------------
+ 3 files changed, 2 insertions(+), 24 deletions(-)
 
-> Remove the judgement, let it to do the pcibios_fixup_bus
-> directly, the error won't occur for the rescanned device. But it's 
-> general code, not proper to change here, so copy the pcibios_fixup_bus
-> work to  pcibios_enable_device.
->
-> > I'm surprised also that is_added is false when pcibios_enable_device()
-> > gets called ... that looks strange to me. At what point is that enable
-> > happening in the hotplug sequence ?
-> All devices are rescanned and then call the pci_enable_devices and 
-> pci_bus_add_devices.
-
-Where ? How ? What is the sequence happening ? In any case, I think if
-we need a proper fixup done per-device like that after scan we ought to
-create a new hook at the generic level rather than that sort of hack.
-
-> The patch code will be called by pci_enable_devices. The "dev->is_added" 
-> is set in pci_bus_add_device
-> which is called by pci_bus_add_devices. So "dev->is_added" is false when 
-> checking it in pcibios_enable_device
-> for the rescanned device.
-
-Who calls pci_enable_device() in the rescan case ? Why isn't it left to
-the driver ? I don't think we can rely on that behaviour not to change.
-
-> > How do you trigger the rescan anyway ?
-> Use the interface under /sys :
-> echo 1 > /sys/bus/pci/devices/xxx/remove
-> 
-> then echo 1 to the pci device which is the bus of the removed device
-> echo 1 > /sys/bus/pci/devices/xxxx/rescan
-> the removed device will be scanned and it's driver module will be loaded 
-> automatically.
-
-Yeah this code path are known to be fishy. I think the problem is at the
-generic abstraction level and that's where it needs to be fixed.
-
-Cheers,
-Ben.
-
-> Regards,
-> yuanquan
-> > I think the problem needs to be solve at a higher level, I'm adding
-> > linux-pci & Bjorn to the CC list.
-> >
-> > Cheers,
-> > Ben.
-> >
-> >> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
-> >> ---
-> >>   arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
-> >>   1 file changed, 20 insertions(+)
-> >>
-> >> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> >> index 7f94f76..f0fb070 100644
-> >> --- a/arch/powerpc/kernel/pci-common.c
-> >> +++ b/arch/powerpc/kernel/pci-common.c
-> >> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >>   		if (ppc_md.pcibios_enable_device_hook(dev))
-> >>   			return -EINVAL;
-> >>   
-> >> +	if (!dev->is_added) {
-> >> +		/*
-> >> +		 * Fixup NUMA node as it may not be setup yet by the generic
-> >> +		 * code and is needed by the DMA init
-> >> +		 */
-> >> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-> >> +
-> >> +		/* Hook up default DMA ops */
-> >> +		set_dma_ops(&dev->dev, pci_dma_ops);
-> >> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
-> >> +
-> >> +		/* Additional platform DMA/iommu setup */
-> >> +		if (ppc_md.pci_dma_dev_setup)
-> >> +			ppc_md.pci_dma_dev_setup(dev);
-> >> +
-> >> +		/* Read default IRQs and fixup if necessary */
-> >> +		pci_read_irq_line(dev);
-> >> +		if (ppc_md.pci_irq_fixup)
-> >> +			ppc_md.pci_irq_fixup(dev);
-> >> +	}
-> >>   	return pci_enable_resources(dev, mask);
-> >>   }
-> >>   
-> >
-> >
-> >
-> >
-> 
-
+diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+index 37f968e..bf62ac8 100644
+--- a/drivers/pci/hotplug/acpiphp.h
++++ b/drivers/pci/hotplug/acpiphp.h
+@@ -194,8 +194,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+ extern struct acpi_pci_driver acpi_pci_hp_driver;
+ extern int acpiphp_add_bridge(struct acpi_pci_root *root);
+ extern void acpiphp_remove_bridge(struct acpi_pci_root *root);
+-extern void acpiphp_glue_init(void);
+-extern void acpiphp_glue_exit(void);
+ typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
+ 
+ extern int acpiphp_enable_slot(struct acpiphp_slot *slot);
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index 1f4e228..5536b42 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -357,7 +357,7 @@ static int __init acpiphp_init(void)
+ 
+ 	if (!acpi_pci_disabled)
+ 		/* initialize internal data structure etc. */
+-		acpiphp_glue_init();
++		acpi_pci_register_driver(&acpi_pci_hp_driver);
+ 
+ 	return 0;
+ }
+@@ -367,7 +367,7 @@ static void __exit acpiphp_exit(void)
+ {
+ 	if (!acpi_pci_disabled)
+ 		/* deallocate internal data structures etc. */
+-		acpiphp_glue_exit();
++		acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+ }
+ 
+ module_init(acpiphp_init);
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index f96b13c..3d5d7da 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1413,26 +1413,6 @@ struct acpi_pci_driver acpi_pci_hp_driver = {
+ };
+ 
+ /**
+- * acpiphp_glue_init - initializes all PCI hotplug - ACPI glue data structures
+- */
+-void __init acpiphp_glue_init(void)
+-{
+-	acpi_pci_register_driver(&acpi_pci_hp_driver);
+-}
+-
+-
+-/**
+- * acpiphp_glue_exit - terminates all PCI hotplug - ACPI glue data structures
+- *
+- * This function frees all data allocated in acpiphp_glue_init().
+- */
+-void  acpiphp_glue_exit(void)
+-{
+-	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+-}
+-
+-
+-/**
+  * acpiphp_enable_slot - power on slot
+  * @slot: ACPI PHP slot
+  */
 
