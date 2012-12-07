@@ -1,43 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42284 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752908Ab2LFBVz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Dec 2012 20:21:55 -0500
-Message-ID: <50BFF328.5030406@zytor.com>
-Date: Wed, 05 Dec 2012 17:21:44 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com> <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com> <50BFE890.5070109@zytor.com> <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com> <50BFEF09.9000408@zytor.com> <cd3b2e67-92af-494d-ba2d-4179ead6e06b@email.android.com>
-In-Reply-To: <cd3b2e67-92af-494d-ba2d-4179ead6e06b@email.android.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6MEtx6hsYhY=h0+eXqQcnZuG2vq=z_8Oz8tnksKZd7DA@mail.gmail.com>
+References: <20121207062454.11051.12739.stgit@amt.stowe>
+	<20121207062500.11051.44198.stgit@amt.stowe>
+	<CAErSpo6MEtx6hsYhY=h0+eXqQcnZuG2vq=z_8Oz8tnksKZd7DA@mail.gmail.com>
+Date: Fri, 7 Dec 2012 13:30:18 -0800
+Message-ID: <CAE9FiQV6L2ZUEVHM2CCdqZfB9Yij7OGYZ-xsEpzCdXU2hSHnsQ@mail.gmail.com>
+Subject: Re: [PATCH 01/15] PCI, acpiphp: Separate out hot-add support of pci
+ host bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2012 05:13 PM, Matthew Garrett wrote:
->
->
-> "H. Peter Anvin" <hpa@zytor.com> wrote:
->
->> And that presumably would be something that cannot be exposed to root?
->> If so we may want to use one of the bits in the setup_data type field
->> as
->> a security flag, perhaps...
->
-> Yeah, it needs to be hidden from root - but ideally we'd be passing it to the second kernel if we kexec. Alternative would be for it to be capability bounded to a trusted signed kexec binary if we implement Vivek's IMA-based approach.
->
+On Fri, Dec 7, 2012 at 11:32 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Dec 6, 2012 at 11:25 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+>> From: Yinghai Lu <yinghai@kernel.org>
+>>
+>>
+> For example, as soon as you put this code in pci_root.c instead of
+> pci_root_hp.c, it becomes obvious that we're keeping a list of host
+> bridges in both places, and we probably don't need two lists.  And it
+> seems dubious that acpi_pci_root_hp_init() is an initcall that walks
+> the namespace looking for host bridges, when acpi_pci_root_add()
+> already exists and is called for every host bridge.
 
-Either way a security flag in the type field makes sense.
+removed the duplicated interface in following patch.
 
-	-hpa
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-split-pci-root-hp-2
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=a1d1ef3f5e4932bc672d96dedd11c5d58f7f20f5
 
+| [PATCH] PCI, ACPI: remove acpi_root_bridge in pci_root_hp
+|
+| Tang noticed that hotplug through container will not update acpi_root_bridge
+| list.
+|
+| After closely checking, we don't need that for struct for tracking and
+| could use acpi_pci_root directly.
