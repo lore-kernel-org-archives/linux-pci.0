@@ -1,89 +1,94 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 00/15] PCI/ACPI: Remove "pci_root" sub-driver support
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Dec 2012 23:24:54 -0700
-Message-ID: <20121207062454.11051.12739.stgit@amt.stowe>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:50206 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934595Ab2LIW77 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Dec 2012 17:59:59 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 2/6] ACPI: Change the ordering of PCI root bridge driver registrarion
+Date: Mon, 10 Dec 2012 00:00:47 +0100
+Message-ID: <1772854.QSySvgjB3i@vostro.rjw.lan>
+In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The "PCI Root Bridge ("pci_root")" driver includes support for attaching
-sub-drivers.  acpi_pci_register_driver() and acpi_pci_unregister_driver()
-are the interfaces that sub-drivers use to attach themselves.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Currently there are only two callers of acpi_pci_register_driver(): the
-"ACPI Hot Plug PCI Controller Driver ("acpiphp")" and "ACPI PCI Slot
-Detection Driver ("pci_slot")" sub-drivers.
+Devices created by acpi_create_platform_device() sometimes may need
+to be added to the device hierarchy as children of PCI bridges.  For
+this purpose, however, the struct pci_dev objects representing those
+bridges need to exist before the platform devices in question are
+added, but this is only possible if the PCI root bridge driver is
+registered before the initial scanning of the ACPI namespace
+(that driver's .add() routine creates the required struct pci_dev
+objects).
 
-Sub-drivers may be compiled as modules.  Kernel modules are instantiated
-somewhat randomly - the order in which they are linked as the kernel as
-built - thus if there are any dependencies on the ordering of attaching
-sub-drivers, they can not be effectively dealt with.
+For this reason, call acpi_pci_root_init() from acpi_scan_init()
+before scanning the ACPI namespace for the first time instead of
+running it from a separate subsys initcall.  Since the previous patch
+has changed the ACPI namespace scanning algorithm, this change does
+not affect the PCI root bridge driver's functionality during boot.
+It also makes the situation during boot more similar to the situation
+during hot-plug (in which the PCI root bridge driver is always
+present) and so it helps to reduce arbitary differences between
+the hot-plug and boot PCI root bridge code.
 
-This patch series resolves any potential sequencing inter-dependencies by
-converting sub-driver functionality to being only supported as statically
-built-in to the kernel as part of the "pci_root" driver itself (i.e. no
-longer supported as a module).  Inter-dependencies can then be effectively
-handled by explicitly sequencing the addition of such functionality.
-
-
-The series begins with a patch from Yinghai Lu's "PCI, ACPI, x86: pci root
-bus hotplug support" series that separates host bridge specific hot-plug
-functionality from PCI device hot-plug functionality.  This patch
-significantly simplifies a fairly confusing implementation due to the
-co-mingling that currently exists.
-  Reference: https://lkml.org/lkml/2012/9/19/413
-
-The rest of the patches in this series implement the conversion of the
-"PCI Root Bridge" sub-drivers.  This also simplifies the implementation as
-is revealed by a 'diffstat' of the respective, conversion related,
-patches: 9 files changed, 86 insertions(+), 237 deletions(-)
-
-
-This series is targeting the 3.9 merge window.  I expect that after
-3.8-rc1 is released, a -v2 of this series will be required due to Bill
-Pemberton's "[PATCH 000/493] remove CONFIG_HOTPLUG as an option" series.
-That said, I wanted to go ahead and get this out now in order to solicit
-feedback.
-  Reference: https://lkml.org/lkml/2012/11/16/660
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
+ drivers/acpi/internal.h |    1 +
+ drivers/acpi/pci_root.c |    4 +---
+ drivers/acpi/scan.c     |    1 +
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Myron Stowe (14):
-      PCI/ACPI: Remove the "pci_root" driver's sub-driver infrastructure
-      PCI/ACPI: Add "pci_slot" functionality statically within "pci_root"
-      PCI/ACPI: Convert "pci_slot" sub-driver's functionality to built-in only
-      PCI/ACPI: Move where dmi_check_system() is called from
-      PCI/ACPI: Fix latent refcount issue in acpi_pci_root_start()
-      PCI/acpiphp: Change acpiphp_add_bridge() to return void instead of 0
-      PCI/acpiphp: Add "acpiphp" functionality statically within "pci_root"
-      PCI/acpiphp: Collapse the initialization call chain of "acpiphp" further
-      PCI/acpiphp: Declare acpi_{add,remove}_bridge() as external functions
-      PCI/acpiphp: Convert "acpiphp" sub-driver's functionality to built-in only
-      PCI/acpiphp: Collapse initialization call chain of "acpiphp" sub-driver
-      PCI/acpiphp: Change acpiphp_glue_init() to return void instead of 0
-      PCI/acpiphp: Leave the "acpiphp" sub-driver registered and in place
-      PCI/acpiphp: Fix coding style of external declarations in acpiphp.h
+Index: linux/drivers/acpi/internal.h
+===================================================================
+--- linux.orig/drivers/acpi/internal.h
++++ linux/drivers/acpi/internal.h
+@@ -67,6 +67,7 @@ struct acpi_ec {
+ 
+ extern struct acpi_ec *first_ec;
+ 
++int acpi_pci_root_init(void);
+ int acpi_ec_init(void);
+ int acpi_ec_ecdt_probe(void);
+ int acpi_boot_ec_enable(void);
+Index: linux/drivers/acpi/pci_root.c
+===================================================================
+--- linux.orig/drivers/acpi/pci_root.c
++++ linux/drivers/acpi/pci_root.c
+@@ -674,7 +674,7 @@ static int acpi_pci_root_remove(struct a
+ 	return 0;
+ }
+ 
+-static int __init acpi_pci_root_init(void)
++int __init acpi_pci_root_init(void)
+ {
+ 	acpi_hest_init();
+ 
+@@ -687,5 +687,3 @@ static int __init acpi_pci_root_init(voi
+ 
+ 	return 0;
+ }
+-
+-subsys_initcall(acpi_pci_root_init);
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1828,6 +1828,7 @@ int __init acpi_scan_init(void)
+ 	}
+ 
+ 	acpi_power_init();
++	acpi_pci_root_init();
+ 
+ 	/*
+ 	 * Enumerate devices in the ACPI namespace.
 
-Yinghai Lu (1):
-      PCI, acpiphp: Separate out hot-add support of pci host bridge
-
-
- drivers/acpi/Kconfig               |    5 -
- drivers/acpi/Makefile              |    1 
- drivers/acpi/pci_root.c            |   50 +-------
- drivers/acpi/pci_root_hp.c         |  228 ++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_slot.c            |   84 +++++--------
- drivers/pci/hotplug/Kconfig        |    5 -
- drivers/pci/hotplug/acpiphp.h      |   17 +--
- drivers/pci/hotplug/acpiphp_core.c |   45 -------
- drivers/pci/hotplug/acpiphp_glue.c |  115 +++---------------
- include/linux/acpi.h               |    9 -
- include/linux/pci-acpi.h           |   16 +++
- 11 files changed, 312 insertions(+), 263 deletions(-)
- create mode 100644 drivers/acpi/pci_root_hp.c
-
--- 
