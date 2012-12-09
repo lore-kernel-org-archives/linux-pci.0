@@ -1,71 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f202.google.com ([209.85.220.202]:46719 "EHLO
-	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752984Ab2LEU6W (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:22 -0500
-Received: by mail-vc0-f202.google.com with SMTP id m8so583671vcd.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:22 -0800 (PST)
-Subject: [PATCH 12/12] iwlwifi: Use standard #defines for PCIe Capability ASPM
-	fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date: Wed, 05 Dec 2012 13:58:21 -0700
-Message-ID: <20121205205821.13851.59050.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:50185 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934578Ab2LIW75 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Dec 2012 17:59:57 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 6/6] ACPI: Change the ordering of acpi_bus_check_add()
+Date: Mon, 10 Dec 2012 00:04:36 +0100
+Message-ID: <2268672.Pe9OEEVsRc@vostro.rjw.lan>
+In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the standard #defines rather than creating local definitions for
-PCIe Capability ASPM fields.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes.berg@intel.com>
-CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-CC: Intel Linux Wireless <ilw@linux.intel.com>
-CC: linux-wireless@vger.kernel.org
+If acpi_bus_check_add() is called for a handle already having an
+existing struct acpi_device object attached, it is not necessary to
+check the type and status of the device correspondig to it, so
+change the ordering of acpi_bus_check_add() to avoid that.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/net/wireless/iwlwifi/pcie/trans.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/acpi/scan.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 5cd06b3..1dfa6be 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -670,8 +670,6 @@ static void iwl_set_pwr_vmain(struct iwl_trans *trans)
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1582,6 +1582,10 @@ static acpi_status acpi_bus_check_add(ac
+ 	acpi_status status;
+ 	int result;
  
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
--#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
--#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
- 
- static void iwl_apm_config(struct iwl_trans *trans)
- {
-@@ -688,8 +686,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
++	acpi_bus_get_device(handle, &device);
++	if (device)
++		goto out;
++
+ 	result = acpi_bus_type_and_status(handle, &type, &sta);
+ 	if (result)
+ 		return AE_OK;
+@@ -1602,17 +1606,13 @@ static acpi_status acpi_bus_check_add(ac
+ 	 * We may already have an acpi_device from a previous enumeration.  If
+ 	 * so, we needn't add it again, but we may still have to start it.
  	 */
+-	acpi_bus_get_device(handle, &device);
+-	if (!device) {
+-		acpi_add_single_object(&device, handle, type, sta,
+-				       ACPI_BUS_ADD_BASIC);
+-		if (!device)
+-			return AE_CTRL_DEPTH;
++	acpi_add_single_object(&device, handle, type, sta, ACPI_BUS_ADD_BASIC);
++	if (!device)
++		return AE_CTRL_DEPTH;
  
- 	pcie_capability_read_word(trans_pcie->pci_dev, PCI_EXP_LNKCTL, &lctl);
--	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
--				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
-+	if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
- 		/* L1-ASPM enabled; disable(!) L0S */
- 		iwl_set_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
- 		dev_printk(KERN_INFO, trans->dev,
-@@ -700,7 +697,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
- 		dev_printk(KERN_INFO, trans->dev,
- 			   "L1 Disabled; Enabling L0S\n");
- 	}
--	trans->pm_support = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
-+	trans->pm_support = !(lctl & PCI_EXP_LNKCTL_ASPM_L0S);
- }
+-		device->add_type = context ?
+-					ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
+-	}
++	device->add_type = context ? ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
  
- /*
++ out:
+ 	if (!*return_value)
+ 		*return_value = device;
+ 
 
