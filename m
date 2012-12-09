@@ -1,92 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:34818 "EHLO
-	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105Ab2LFC36 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 21:29:58 -0500
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 500963EE0B5
-	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 37FE045DEB7
-	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 1F53245DEB6
-	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 129731DB803B
-	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:54 +0900 (JST)
-Received: from g01jpexchyt09.g01.fujitsu.local (g01jpexchyt09.g01.fujitsu.local [10.128.194.48])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id B60D31DB8038
-	for <linux-pci@vger.kernel.org>; Thu,  6 Dec 2012 11:29:53 +0900 (JST)
-From: "Kaneshige, Kenji" <kaneshige.kenji@jp.fujitsu.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Shaohua Li <shaohua.li@intel.com>
-Subject: RE: [PATCH 05/12] PCI: Add standard PCIe Capability Link ASPM field
- names
-Date: Thu, 6 Dec 2012 02:29:52 +0000
-Message-ID: <4A338DB2991D2A44B9A44B8718AECF650A53E9B9@G01JPEXMBYT03>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
- <20121205205745.13851.5032.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205745.13851.5032.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from hydra.sisk.pl ([212.160.235.94]:50202 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934604Ab2LIXAA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 9 Dec 2012 18:00:00 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 0/6] ACPI: Change the ACPI namespace scanning code ordering
+Date: Sun, 09 Dec 2012 23:58:42 +0100
+Message-ID: <8498184.VilrUmatxI@vostro.rjw.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-UmV2aWV3ZWQtYnk6IEtlbmppIEthbmVzaGlnZSA8a2FuZXNoaWdlLmtlbmppQGpwLmZ1aml0c3Uu
-Y29tPg0KQWNrZWQtYnk6IEtlbmppIEthbmVzaGlnZSA8a2FuZXNoaWdlLmtlbmppQGpwLmZ1aml0
-c3UuY29tPg0KDQpSZWdhcmRzLA0KS2VuamkgS2FuZXNoaWdlDQoNCj4gLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2ds
-ZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBEZWNlbWJlciAwNiwgMjAxMiA1OjU4IEFNDQo+IFRv
-OiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+IENjOiBTaGFvaHVhIExpOyBLYW5lc2hpZ2Us
-IEtlbmppL+mHkemHjSDmhrLmsrsNCj4gU3ViamVjdDogW1BBVENIIDA1LzEyXSBQQ0k6IEFkZCBz
-dGFuZGFyZCBQQ0llIENhcGFiaWxpdHkgTGluayBBU1BNIGZpZWxkIG5hbWVzDQo+IA0KPiBBZGQg
-c3RhbmRhcmQgI2RlZmluZXMgZm9yIEFTUE0gZmllbGRzIGluIFBDSSBFeHByZXNzIExpbmsgQ2Fw
-YWJpbGl0eSBhbmQNCj4gTGluayBDb250cm9sIHJlZ2lzdGVycy4NCj4gDQo+IFByZXZpb3VzbHkg
-d2UgdXNlZCBQQ0lFX0xJTktfU1RBVEVfTDBTIGFuZCBQQ0lFX0xJTktfU1RBVEVfTDEgZGlyZWN0
-bHksIGJ1dA0KPiB0aGVzZSBhcmUgZGVmaW5lZCBmb3IgdGhlIExpbnV4IEFTUE0gaW50ZXJmYWNl
-cywgZS5nLiwNCj4gcGNpX2Rpc2FibGVfbGlua19zdGF0ZSgpLCBhbmQgb25seSBjb2luY2lkZW50
-YWxseSBtYXRjaCB0aGUgYWN0dWFsIHJlZ2lzdGVyDQo+IGJpdHMuICBQQ0lFX0xJTktfU1RBVEVf
-Q0xLUE0sIGFsc28gcGFydCBvZiB0aGF0IGludGVyZmFjZSwgZG9lcyBub3QgbWF0Y2gNCj4gdGhl
-IHJlZ2lzdGVyIGJpdC4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxn
-YWFzQGdvb2dsZS5jb20+DQo+IENDOiBLZW5qaSBLYW5lc2hpZ2UgPGthbmVzaGlnZS5rZW5qaUBq
-cC5mdWppdHN1LmNvbT4NCj4gQ0M6IFNoYW9odWEgTGkgPHNoYW9odWEubGlAaW50ZWwuY29tPg0K
-PiAtLS0NCj4gIGRyaXZlcnMvcGNpL3BjaWUvYXNwbS5jICAgICAgIHwgICAxMSArKysrKystLS0t
-LQ0KPiAgaW5jbHVkZS91YXBpL2xpbnV4L3BjaV9yZWdzLmggfCAgICAyICsrDQo+ICAyIGZpbGVz
-IGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3BjaS9wY2llL2FzcG0uYyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jDQo+
-IGluZGV4IDIxMzc1M2IuLmMyZmFmOWQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNpL3BjaWUv
-YXNwbS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jDQo+IEBAIC00MjcsNyArNDI3
-LDggQEAgc3RhdGljIHZvaWQgcGNpZV9hc3BtX2NhcF9pbml0KHN0cnVjdCBwY2llX2xpbmtfc3Rh
-dGUgKmxpbmssIGludCBibGFja2xpc3QpDQo+IA0KPiAgc3RhdGljIHZvaWQgcGNpZV9jb25maWdf
-YXNwbV9kZXYoc3RydWN0IHBjaV9kZXYgKnBkZXYsIHUzMiB2YWwpDQo+ICB7DQo+IC0JcGNpZV9j
-YXBhYmlsaXR5X2NsZWFyX2FuZF9zZXRfd29yZChwZGV2LCBQQ0lfRVhQX0xOS0NUTCwgMHgzLCB2
-YWwpOw0KPiArCXBjaWVfY2FwYWJpbGl0eV9jbGVhcl9hbmRfc2V0X3dvcmQocGRldiwgUENJX0VY
-UF9MTktDVEwsDQo+ICsJCQkJCSAgIFBDSV9FWFBfTE5LQ1RMX0FTUE1DLCB2YWwpOw0KPiAgfQ0K
-PiANCj4gIHN0YXRpYyB2b2lkIHBjaWVfY29uZmlnX2FzcG1fbGluayhzdHJ1Y3QgcGNpZV9saW5r
-X3N0YXRlICpsaW5rLCB1MzIgc3RhdGUpDQo+IEBAIC00NDIsMTIgKzQ0MywxMiBAQCBzdGF0aWMg
-dm9pZCBwY2llX2NvbmZpZ19hc3BtX2xpbmsoc3RydWN0IHBjaWVfbGlua19zdGF0ZSAqbGluaywg
-dTMyIHN0YXRlKQ0KPiAgCQlyZXR1cm47DQo+ICAJLyogQ29udmVydCBBU1BNIHN0YXRlIHRvIHVw
-c3RyZWFtL2Rvd25zdHJlYW0gQVNQTSByZWdpc3RlciBzdGF0ZSAqLw0KPiAgCWlmIChzdGF0ZSAm
-IEFTUE1fU1RBVEVfTDBTX1VQKQ0KPiAtCQlkd3N0cmVhbSB8PSBQQ0lFX0xJTktfU1RBVEVfTDBT
-Ow0KPiArCQlkd3N0cmVhbSB8PSBQQ0lfRVhQX0xOS0NUTF9BU1BNX0wwUzsNCj4gIAlpZiAoc3Rh
-dGUgJiBBU1BNX1NUQVRFX0wwU19EVykNCj4gLQkJdXBzdHJlYW0gfD0gUENJRV9MSU5LX1NUQVRF
-X0wwUzsNCj4gKwkJdXBzdHJlYW0gfD0gUENJX0VYUF9MTktDVExfQVNQTV9MMFM7DQo+ICAJaWYg
-KHN0YXRlICYgQVNQTV9TVEFURV9MMSkgew0KPiAtCQl1cHN0cmVhbSB8PSBQQ0lFX0xJTktfU1RB
-VEVfTDE7DQo+IC0JCWR3c3RyZWFtIHw9IFBDSUVfTElOS19TVEFURV9MMTsNCj4gKwkJdXBzdHJl
-YW0gfD0gUENJX0VYUF9MTktDVExfQVNQTV9MMTsNCj4gKwkJZHdzdHJlYW0gfD0gUENJX0VYUF9M
-TktDVExfQVNQTV9MMTsNCj4gIAl9DQo+ICAJLyoNCj4gIAkgKiBTcGVjIDIuMCBzdWdnZXN0cyBh
-bGwgZnVuY3Rpb25zIHNob3VsZCBiZSBjb25maWd1cmVkIHRoZQ0KPiBkaWZmIC0tZ2l0IGEvaW5j
-bHVkZS91YXBpL2xpbnV4L3BjaV9yZWdzLmggYi9pbmNsdWRlL3VhcGkvbGludXgvcGNpX3JlZ3Mu
-aA0KPiBpbmRleCA0Y2NhODM0Li4wYjZkYmU0IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL3VhcGkv
-bGludXgvcGNpX3JlZ3MuaA0KPiArKysgYi9pbmNsdWRlL3VhcGkvbGludXgvcGNpX3JlZ3MuaA0K
-PiBAQCAtNDY5LDYgKzQ2OSw4IEBADQo+ICAjZGVmaW5lICBQQ0lfRVhQX0xOS0NBUF9QTgkweGZm
-MDAwMDAwIC8qIFBvcnQgTnVtYmVyICovDQo+ICAjZGVmaW5lIFBDSV9FWFBfTE5LQ1RMCQkxNgkv
-KiBMaW5rIENvbnRyb2wgKi8NCj4gICNkZWZpbmUgIFBDSV9FWFBfTE5LQ1RMX0FTUE1DCTB4MDAw
-MwkvKiBBU1BNIENvbnRyb2wgKi8NCj4gKyNkZWZpbmUgIFBDSV9FWFBfTE5LQ1RMX0FTUE1fTDBT
-ICAweDAxCS8qIEwwcyBFbmFibGUgKi8NCj4gKyNkZWZpbmUgIFBDSV9FWFBfTE5LQ1RMX0FTUE1f
-TDEgICAweDAyCS8qIEwxIEVuYWJsZSAqLw0KPiAgI2RlZmluZSAgUENJX0VYUF9MTktDVExfUkNC
-CTB4MDAwOAkvKiBSZWFkIENvbXBsZXRpb24gQm91bmRhcnkgKi8NCj4gICNkZWZpbmUgIFBDSV9F
-WFBfTE5LQ1RMX0xECTB4MDAxMAkvKiBMaW5rIERpc2FibGUgKi8NCj4gICNkZWZpbmUgIFBDSV9F
-WFBfTE5LQ1RMX1JMCTB4MDAyMAkvKiBSZXRyYWluIExpbmsgKi8NCg0K
+Hi,
+
+The following patches change the ordering of the ACPI namespace scanning code
+so that all struct acpi_device objects in the given scope are registered before
+ACPI drivers are probed against them.  They also do some simplifications and
+clarifications of the code made possible by this main change.
+
+This is done for three basic reasons.  First, we need the boot ACPI namespace
+scanning code to be as similar as reasonably possible to the hot-plug ACPI
+namespace scanning code.  Second, the ordering of PCI devices enumeration
+versus ACPI-backed platform devices registration needs to be such that the PCI
+devices in the given scope are all registered first.  Finally, when we start to
+actually manage ACPI device resources as appropriate (e.g. resolve resource
+conflicts properly) we'll need all struct acpi_device nodes to be registered
+before any "companion" physical nodes or ACPI drivers are bound to them.
+
+The patches have been tested on Toshiba Portege R500 without breaking stuff
+(I used some additional debug code to verify that the ordering of device
+discovery had not been modified by them), but if you see any problems with
+them regarding hot-plug, please let me know.
+
+[1/6] - Separate adding ACPI device objects from probing ACPI drivers.
+[2/6] - Change the ordering of PCI root bridge driver registration.
+[3/6] - Make acpi_bus_add() and acpi_bus_start() visibly different.
+[4/6] - Reduce the usage of struct acpi_bus_ops
+[5/6] - Replace struct acpi_bus_ops with an enum type
+[6/6] - Change the ordering of acpi_bus_check_add() to avoid unnecessary checks.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
