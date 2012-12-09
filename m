@@ -1,71 +1,145 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] ACPI: Remove unused struct acpi_pci_root.id member
-Date: Thu, 20 Dec 2012 22:20:15 +0100
-Message-ID: <4397899.8xnBDh90Bg@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5oFEa5RD1_EYLtwvwF0dZFpkUp9XqO_kJZ+c5bL-1TTw@mail.gmail.com>
-References: <20121219173044.12424.11336.stgit@bhelgaas.mtv.corp.google.com> <6539457.htZABURDoR@vostro.rjw.lan> <CAErSpo5oFEa5RD1_EYLtwvwF0dZFpkUp9XqO_kJZ+c5bL-1TTw@mail.gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 4/6] ACPI: Reduce the usage of struct acpi_bus_ops
+Date: Mon, 10 Dec 2012 00:02:41 +0100
+Message-ID: <1661490.lfKgYmIiUQ@vostro.rjw.lan>
+In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 20, 2012 11:37:24 AM Bjorn Helgaas wrote:
-> On Wed, Dec 19, 2012 at 6:22 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Wednesday, December 19, 2012 10:30:44 AM Bjorn Helgaas wrote:
-> >> This member is never initialized and never referenced, so remove it.
-> >
-> > Sure. :-)
-> >
-> > Do you want me to take this?
-> 
-> I assume you're going to push your namespace scan rework through your
-> tree, since most of the changes are in drivers/acpi.  That series also
-> touches acpi_bus.h, so probably makes the most sense for you to take
-> this as well.  I don't plan any future changes to the file.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Well, I'm not planning to push the scan rework series for v3.8, I'd rather
-prefer it to go into v3.9.  I'll just create a separate branch based on
-v3.8-rc1 with those patches that will wait for the v3.9 merge window and
-can be pulled from if necessary.
+Objects of type struct acpi_bus_ops are currently used to pass
+information between different parts of the ACPI namespace scanning
+code, sometimes in quite convoluted ways.  It turns out that that
+is not necessary in some cases, so simplify the code by reducing
+the utilization of struct acpi_bus_ops objects where clearly
+possible.
 
-I can put the $subject patch into that branch too.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   39 +++++++++++++++------------------------
+ 1 file changed, 15 insertions(+), 24 deletions(-)
 
-Does it sound reasonable?
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1527,7 +1527,6 @@ end:
+ static void acpi_bus_add_power_resource(acpi_handle handle)
+ {
+ 	struct acpi_bus_ops ops = {
+-		.acpi_op_add = 1,
+ 		.acpi_op_start = 1,
+ 		.acpi_op_match = 1,
+ 	};
+@@ -1581,7 +1580,6 @@ static int acpi_bus_type_and_status(acpi
+ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 				      void *context, void **return_value)
+ {
+-	struct acpi_bus_ops *ops = context;
+ 	struct acpi_device *device = NULL;
+ 	int type;
+ 	unsigned long long sta;
+@@ -1609,11 +1607,13 @@ static acpi_status acpi_bus_check_add(ac
+ 	 * so, we needn't add it again, but we may still have to start it.
+ 	 */
+ 	acpi_bus_get_device(handle, &device);
+-	if (ops->acpi_op_add && !device) {
+-		struct acpi_bus_ops add_ops = *ops;
++	if (!device) {
++		struct acpi_bus_ops ops = {
++			.acpi_op_start = !!context,
++			.acpi_op_match = 0,
++		};
+ 
+-		add_ops.acpi_op_match = 0;
+-		acpi_add_single_object(&device, handle, type, sta, &add_ops);
++		acpi_add_single_object(&device, handle, type, sta, &ops);
+ 		if (!device)
+ 			return AE_CTRL_DEPTH;
+ 
+@@ -1647,21 +1647,21 @@ static acpi_status acpi_bus_match_device
+ 	return status;
+ }
+ 
+-static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++static int acpi_bus_scan(acpi_handle handle, bool start,
+ 			 struct acpi_device **child)
+ {
+ 	void *device = NULL;
+ 	acpi_status status;
+ 	int ret = 0;
+ 
+-	status = acpi_bus_check_add(handle, 0, ops, &device);
++	status = acpi_bus_check_add(handle, 0, (void *)start, &device);
+ 	if (ACPI_FAILURE(status)) {
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+ 
+ 	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-			    acpi_bus_check_add, NULL, ops, &device);
++			    acpi_bus_check_add, NULL, (void *)start, &device);
+ 	if (device)
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+ 				    acpi_bus_match_device, NULL, NULL, NULL);
+@@ -1691,9 +1691,7 @@ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+-
+-	return acpi_bus_scan(handle, &ops, child);
++	return acpi_bus_scan(handle, false, child);
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+@@ -1781,12 +1779,10 @@ static int acpi_bus_scan_fixed(void)
+ {
+ 	int result = 0;
+ 	struct acpi_device *device = NULL;
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
+-	ops.acpi_op_start = 1;
+-	ops.acpi_op_match = 1;
++	struct acpi_bus_ops ops = {
++		.acpi_op_start = 1,
++		.acpi_op_match = 1,
++	};
+ 
+ 	/*
+ 	 * Enumerate all fixed-feature devices.
+@@ -1812,11 +1808,6 @@ static int acpi_bus_scan_fixed(void)
+ int __init acpi_scan_init(void)
+ {
+ 	int result;
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
+-	ops.acpi_op_start = 1;
+ 
+ 	result = bus_register(&acpi_bus_type);
+ 	if (result) {
+@@ -1830,7 +1821,7 @@ int __init acpi_scan_init(void)
+ 	/*
+ 	 * Enumerate devices in the ACPI namespace.
+ 	 */
+-	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &ops, &acpi_root);
++	result = acpi_bus_scan(ACPI_ROOT_OBJECT, true, &acpi_root);
+ 
+ 	if (!result)
+ 		result = acpi_bus_scan_fixed();
 
-> There are more PCI-centric pci_root.c changes in the pipe, but we'll
-> have to sort those out later, I think.
-
-Yup.
-
-> Let me know if you think otherwise.
-
-The above is fine by me.
-
-> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >> ---
-> >>  include/acpi/acpi_bus.h |    1 -
-> >>  1 files changed, 0 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> >> index 7ced5dc..4f42c0e 100644
-> >> --- a/include/acpi/acpi_bus.h
-> >> +++ b/include/acpi/acpi_bus.h
-> >> @@ -397,7 +397,6 @@ int unregister_acpi_bus_type(struct acpi_bus_type *);
-> >>  struct acpi_pci_root {
-> >>       struct list_head node;
-> >>       struct acpi_device * device;
-> >> -     struct acpi_pci_id id;
-> >>       struct pci_bus *bus;
-> >>       u16 segment;
-> >>       struct resource secondary;      /* downstream bus range */
-> >>
-> > --
-> > I speak only for myself.
-> > Rafael J. Wysocki, Intel Open Source Technology Center.
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
