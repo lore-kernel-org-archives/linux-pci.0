@@ -1,89 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:30382 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751252Ab2L1I4Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Dec 2012 03:56:25 -0500
-Message-ID: <50DD5E8A.5050205@cn.fujitsu.com>
-Date: Fri, 28 Dec 2012 16:55:38 +0800
-From: Lin Feng <linfeng@cn.fujitsu.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [PATCH 3/6] ACPI: Make acpi_bus_add() and acpi_bus_start() visibly different
+Date: Mon, 10 Dec 2012 00:01:41 +0100
+Message-ID: <1693581.lT8eSoGRfL@vostro.rjw.lan>
+In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com
-Subject: Re: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
-References: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com> <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com>
-In-Reply-To: <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+The current ACPI namespace scanning code suggests that acpi_bus_add()
+and acpi_bus_start() share some code.  In fact, however, they are
+completely different code paths, so refactor the code to make that
+distinction visibly clear.
 
-On 12/28/2012 03:45 PM, Yinghai Lu wrote:
-> On Thu, Dec 27, 2012 at 11:31 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
->> pci_reassigndev_resource_alignment() potentially calls
->> pci_specified_resource_alignment() twice, which is redundant.
->>
->> pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
->> and from sematic/functionality aspects pci_specified_resource_alignment() is
->> sufficient to substitute, so also make some cleanup.
->>
->> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
->> Cc: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/pci.c |   16 ++--------------
->>  1 files changed, 2 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 5cb5820..789f401 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->>         return align;
->>  }
->>
->> -/**
->> - * pci_is_reassigndev - check if specified PCI is target device to reassign
->> - * @dev: the PCI device to check
->> - *
->> - * RETURNS: non-zero for PCI device is a target device to reassign,
->> - *          or zero is not.
->> - */
->> -int pci_is_reassigndev(struct pci_dev *dev)
->> -{
->> -       return (pci_specified_resource_alignment(dev) != 0);
->> -}
->> -
->>  /*
->>   * This function disables memory decoding and releases memory resources
->>   * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
->> @@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>         resource_size_t align, size;
->>         u16 command;
->>
->> -       if (!pci_is_reassigndev(dev))
->> +       align = pci_specified_resource_alignment(dev);
->> +       if (!align)
->>                 return;
->>
->>         if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
->> @@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>         command &= ~PCI_COMMAND_MEMORY;
->>         pci_write_config_word(dev, PCI_COMMAND, command);
->>
->> -       align = pci_specified_resource_alignment(dev);
->>         for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
->>                 r = &dev->resource[i];
->>                 if (!(r->flags & IORESOURCE_MEM))
->> --
->> 1.7.1
->>
-> 
-> looks the same as the one that i posted 6 months ago.
-> 
-> http://copilotco.com/mail-archives/linux-kernel.2012/msg18498.html
-Sorry, I didn't notice your patchset before :)
-Yes, they are the same. But why does nobody care this?
-> 
-> Yinghai
-> 
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   57 ++++++++++++++++++++++++----------------------------
+ 1 file changed, 27 insertions(+), 30 deletions(-)
+
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1626,28 +1626,22 @@ static acpi_status acpi_bus_check_add(ac
+ 	return AE_OK;
+ }
+ 
+-static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+-					void *context, void **not_used)
++static acpi_status acpi_bus_match_device(acpi_handle handle, u32 lvl,
++					 void *not_used, void **ret_not_used)
+ {
+-	struct acpi_bus_ops *ops = context;
+ 	struct acpi_device *device;
+ 	acpi_status status = AE_OK;
+ 
+ 	if (acpi_bus_get_device(handle, &device))
+ 		return AE_CTRL_DEPTH;
+ 
+-	if (ops->acpi_op_add) {
+-		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+-			/* This is a known good platform device. */
+-			acpi_create_platform_device(device);
+-		} else {
+-			int ret = device_attach(&device->dev);
+-			acpi_hot_add_bind(device);
+-			if (ret)
+-				status = AE_CTRL_DEPTH;
+-		}
+-	} else if (ops->acpi_op_start) {
+-		if (ACPI_FAILURE(acpi_start_single_object(device)))
++	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
++		/* This is a known good platform device. */
++		acpi_create_platform_device(device);
++	} else {
++		int ret = device_attach(&device->dev);
++		acpi_hot_add_bind(device);
++		if (ret)
+ 			status = AE_CTRL_DEPTH;
+ 	}
+ 	return status;
+@@ -1670,7 +1664,7 @@ static int acpi_bus_scan(acpi_handle han
+ 			    acpi_bus_check_add, NULL, ops, &device);
+ 	if (device)
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    acpi_bus_probe_start, NULL, ops, NULL);
++				    acpi_bus_match_device, NULL, NULL, NULL);
+ 	else
+ 		ret = -ENODEV;
+ 
+@@ -1697,31 +1691,34 @@ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
++	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+ 
+ 	return acpi_bus_scan(handle, &ops, child);
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+-int acpi_bus_start(struct acpi_device *device)
++static acpi_status acpi_bus_start_device(acpi_handle handle, u32 lvl,
++					 void *not_used, void **ret_not_used)
+ {
+-	struct acpi_bus_ops ops;
+-	int result;
++	struct acpi_device *device;
++	acpi_status status;
+ 
+-	if (!device)
+-		return -EINVAL;
++	if (acpi_bus_get_device(handle, &device))
++		return AE_CTRL_DEPTH;
+ 
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_start = 1;
++	status = acpi_start_single_object(device);
++	return ACPI_SUCCESS(status) ? status : AE_CTRL_DEPTH;
++}
+ 
+-	result = acpi_bus_scan(device->handle, &ops, NULL);
++int acpi_bus_start(struct acpi_device *device)
++{
++	if (!device)
++		return -EINVAL;
+ 
++	acpi_walk_namespace(ACPI_TYPE_ANY, device->handle, ACPI_UINT32_MAX,
++			    acpi_bus_start_device, NULL, NULL, NULL);
+ 	acpi_update_all_gpes();
+-
+-	return result;
++	return 0;
+ }
+ EXPORT_SYMBOL(acpi_bus_start);
+ 
+
