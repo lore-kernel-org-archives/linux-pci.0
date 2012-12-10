@@ -1,47 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
+Date: Mon, 10 Dec 2012 15:46:55 +0100
+Message-ID: <2637774.lmuX5P2qQX@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQWxoWubagm4gj81YgMeqyEZgpT47ROAfjmXSmoaTn-Yig@mail.gmail.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <2097693.II1PNyeFLY@vostro.rjw.lan> <CAE9FiQWxoWubagm4gj81YgMeqyEZgpT47ROAfjmXSmoaTn-Yig@mail.gmail.com>
 MIME-Version: 1.0
-Date: Thu, 13 Dec 2012 17:50:24 +0800
-Message-ID: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
-Subject: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is not
- set] Vt-d & intel_iommu
-From: Jason Gao <pkill.2012@gmail.com>
-To: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear List:
+On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
+> On Sun, Dec 9, 2012 at 3:03 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Notice that one member of struct acpi_bus_ops, acpi_op_add, is not
+> > used anywhere any more and the relationship between its remaining
+> > members, acpi_op_match and acpi_op_start, is such that it doesn't
+> > make sense to set the latter without setting the former at the same
+> > time.  Therefore, replace struct acpi_bus_ops with new a enum type,
+> > enum acpi_bus_add_type, with three values, ACPI_BUS_ADD_BASIC,
+> > ACPI_BUS_ADD_MATCH, ACPI_BUS_ADD_START, corresponding to
+> > both acpi_op_match and acpi_op_start unset, acpi_op_match set and
+> > acpi_op_start unset, and both acpi_op_match and acpi_op_start set,
+> > respectively.
+> >
+> 
+> Can we expand the BUS_ADD_* concept to other devices instead of just
+> acpi_device?
+> 
+> aka we should let struct device has this add_type field.
 
-Description of problem:
-After installed Centos 6.3(RHEL6.3) on my Dell R710(lastest
-bios:Version: 6.3.0,Release Date: 07/24/2012) server,and updated
-lastest kernel "2.6.32-279.14.1.el6.x86_64",I want to use the Intel
-82576 ET Dual Port nic's SR-IOV feature,assigning VFs to kvm guest
+Having done that in ACPI to cover our use case here, we can try to move it
+into struct device if there are use cases beyond ACPI that can't be covered
+by using deferred driver probing.
 
-appended kernel boot parameter: intel_iommu=on,after boot with the
-following messages:
-
-Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 2
-Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
-fault addr ffe65000
-Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
-Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 102
-Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
-fault addr ffe8a000
-Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
-Dec 13 16:58:15 2 kernel: scsi 0:0:32:0: Enclosure         DP
-BACKPLANE        1.07 PQ: 0 ANSI: 5
-Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 202
-Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
-fault addr ffe89000
-Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
-
-full dmesg detail:
-   http://pastebin.com/BzFQV0jU
-lspci -vvv full detail:
-   http://pastebin.com/9rP2d1br
+Thanks,
+Rafael
 
 
-it's a production server,and I'm not sure if this is a critical
-problem,how to fix it,any help would be greatly appreciated.
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
