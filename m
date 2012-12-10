@@ -1,88 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:34213 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932550Ab2LNXip (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Dec 2012 18:38:45 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Huang Ying <ying.huang@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH] PCIe/PM: Do not suspend port if any subordinate device need PME polling
-Date: Sat, 15 Dec 2012 00:43:51 +0100
-Message-ID: <1488189.MmZvkLhUAM@vostro.rjw.lan>
-In-Reply-To: <1355453531-23348-1-git-send-email-ying.huang@intel.com>
-References: <1355453531-23348-1-git-send-email-ying.huang@intel.com>
+Received: from mail-ea0-f174.google.com ([209.85.215.174]:46747 "EHLO
+	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab2LJHgl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 02:36:41 -0500
+Received: by mail-ea0-f174.google.com with SMTP id e13so975299eaa.19
+        for <linux-pci@vger.kernel.org>; Sun, 09 Dec 2012 23:36:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201212071907.38366.arnd@arndb.de>
+References: <CAHTX3dLxbVxn+D+AV7L0VsGYFOjas3AJ_3M_xncVfxp02FCy=Q@mail.gmail.com>
+	<CAErSpo6xRdwzTuPPqnmvmHSp7awnV7=Z85eWFfktb_hm9Aad_A@mail.gmail.com>
+	<50C1BA9D.5010406@monstr.eu>
+	<201212071907.38366.arnd@arndb.de>
+Date: Mon, 10 Dec 2012 08:36:40 +0100
+Message-ID: <CAHTX3dJ-x2ewDWjbSp0kOwJ5N0XtKa98gFOAKD_AiYeyJp4RYA@mail.gmail.com>
+Subject: Re: Sharing PCIE driver between Microblaze and Arm zynq
+From: Michal Simek <monstr@monstr.eu>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Olof Johansson <olof@lixom.net>, linux-arch@vger.kernel.org,
+	devicetree-discuss@lists.ozlabs.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	John Linn <John.Linn@xilinx.com>,
+	John Williams <jwilliams@xilinx.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 14, 2012 10:52:11 AM Huang Ying wrote:
-> In
-> 
->   http://www.mail-archive.com/linux-usb@vger.kernel.org/msg07976.html
-> 
-> Ulrich reported that his USB3 cardreader does not work reliably when
-> connected to the USB3 port.  It turns out that USB3 controller failed
-> to be waken up when plugging in the USB3 cardreader.  Further
-> experiment found that the USB3 host controller can only be waken up
-> via polling, while not via PME interrupt.  But if the PCIe port that
-> the USB3 host controller is connected is suspended, we can not poll
-> the USB3 host controller because its config space is not accessible if
-> the PCIe port is put into low power state.
-> 
-> To solve the issue, the PCIe port will not be suspended if any
-> subordinate device need PME polling.
-> 
-> Reported-by: Ulrich Eckhardt <usb@uli-eckhardt.de>
-> Signed-off-by: Huang Ying <ying.huang@intel.com>
-> Tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-> Cc: stable@vger.kernel.org	# 3.6+
-> ---
->  drivers/pci/pcie/portdrv_pci.c |   18 +++++++++++++++++-
->  1 file changed, 17 insertions(+), 1 deletion(-)
-> 
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -134,10 +134,26 @@ static int pcie_port_runtime_resume(stru
->  	return 0;
->  }
->  
-> +static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
-> +{
-> +	int *pme_poll = data;
-> +	*pme_poll = *pme_poll || pdev->pme_poll;
+2012/12/7 Arnd Bergmann <arnd@arndb.de>:
+> On Friday 07 December 2012, Michal Simek wrote:
+>> On 12/06/2012 10:27 PM, Bjorn Helgaas wrote:
+>> > [+cc linux-pci]
+>> >
+>> > On Thu, Dec 6, 2012 at 7:23 AM, Michal Simek <michal.simek@xilinx.com> wrote:
+>> >> Hi guys,
+>> >>
+>> >> I have a question regarding to sharing generic OF pcie driver between
+>> >> two architectures MB and ARM Zynq.
+>> >> Is drivers/pci/pcie location good for it?
+>> >> Make no sense to have the same driver in two locations.
+>> >
+>> > I think you're talking about a PCI host bridge driver.  It would
+>> > definitely be nice to move toward a generic, shared driver.  Host
+>> > bridge drivers are responsible for enumerating the PCI hierarchy below
+>> > the bridge.  Enumeration is not really PCIe-specific, so I wouldn't
+>> > put it in drivers/pci/pcie.
+>>
+>> Not a PCI expert, just trying to find out the proper location for this shared driver.
+>
+> I'd suggest creating a drivers/pci/host directory. We will have more of
+> these in the future. AFAIK, there is no fully generic (architecture
+> independent) way to interface a PCI host driver to the PCI subsystem,
+> but I think we are getting closer to that. You are probably fairly
+> free to modify the microblaze architecture specific code though if needed.
 
-I would write that as
+yep.
 
-	*pme_poll ||= pdev->pme_poll;
 
-It is not a big deal, though.
+>> >> Is using readl/writel IO functions in this driver the best option
+>> >> which we can have?
+>> >> Or is there any other recommendation?
+>> >
+>> > I'm not really a driver person, but if you're writing a new driver,
+>> > wouldn't you use the iomap interfaces (ioremap(), ioread32(), etc)
+>> > rather than readl()?
+>>
+>> That driver exists but it is not in mainline and it is better to directly
+>> add it to proper location with correct io functions.
+>> The question is if ioread/iowrite functions are correct one.
+>> PowerPC io-defs.h suggests that readl/writel should be used for PCI.
+>
+> ioread32/iowrite32 are defined to behave the same way readl/writel regarding
+> addressing modes and barriers, but also allow operating on __iomem pointers
+> that were returned from ioport_map(). You probably don't need that.
+>
+> Some architectures like powerpc have their own accessors for on-chip MMIO
+> areas, but ARM does not. The PowerPC rule is that you must use either
+> readl/writel or ioread32/iowrite32 to access devices connected to a PCI
+> bus, but you would not necessarily do that for the PCI host controller
+> itself on PowerPC.
 
-> +	return 0;
-> +}
-> +
->  static int pcie_port_runtime_idle(struct device *dev)
->  {
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	int pme_poll = false;
-> +
-> +	/*
-> +	 * If any subordinate device needs pme poll, we should keep
-> +	 * the port in D0, because we need port in D0 to poll it.
-> +	 */
-> +	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
->  	/* Delay for a short while to prevent too frequent suspend/resume */
-> -	pm_schedule_suspend(dev, 10);
-> +	if (!pme_poll)
-> +		pm_schedule_suspend(dev, 10);
->  	return -EBUSY;
->  }
->  #else
+ok.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Thanks,
+Michal
 
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Michal Simek, Ing. (M.Eng)
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
+Microblaze U-BOOT custodian
