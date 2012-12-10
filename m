@@ -1,42 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:56686 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751113Ab2LTVUW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Dec 2012 16:20:22 -0500
-Message-ID: <50D380E2.2000600@zytor.com>
-Date: Thu, 20 Dec 2012 13:19:30 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:53292 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437Ab2LJQLm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 11:11:42 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so2057229lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 08:11:41 -0800 (PST)
+Message-ID: <50C609BA.8020008@monstr.eu>
+Date: Mon, 10 Dec 2012 17:11:38 +0100
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
+To: Rob Herring <robherring2@gmail.com>
+CC: devicetree-discuss@lists.ozlabs.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Miller <davem@davemloft.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, Jiang Liu <liuj97@gmail.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Jan Glauber <jang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org, Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Update 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in
- advance
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <4085861.TBmZVTPOvU@vostro.rjw.lan> <3596215.suSiEFiGH8@vostro.rjw.lan> <CAErSpo7NWHmSEJMuytUTziRTwUmnPHCVcD0zX7pKVmhQyv26sQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7NWHmSEJMuytUTziRTwUmnPHCVcD0zX7pKVmhQyv26sQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu> <50C6078A.8080408@gmail.com>
+In-Reply-To: <50C6078A.8080408@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/20/2012 01:13 PM, Bjorn Helgaas wrote:
-> 
-> - Add "struct acpi_dev_node acpi_node" to struct pci_sysdata (x86) and
-> struct pci_controller (ia64).  These are the only two arches that use
-> ACPI.
-> 
+On 12/10/2012 05:02 PM, Rob Herring wrote:
+> On 12/10/2012 09:37 AM, Michal Simek wrote:
+>> On 12/10/2012 04:21 PM, Rob Herring wrote:
+>>> On 12/10/2012 09:05 AM, Michal Simek wrote:
+>>>> On 12/10/2012 03:26 PM, Rob Herring wrote:
+>>>>> On 12/10/2012 06:20 AM, Michal Simek wrote:
+>>>>>> Hi Grant and others,
+>>>>>>
+>>>>>> I have a question regarding number of cells in ranges property
+>>>>>> for pci and pcie nodes.
+>>>>>>
+>>>>>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
+>>>>>> sequoia.dts, etc)
+>>>>>> but also 6 cells format too (mpc832x_mds.dts)
+>>>>>>
+>>>>>> Here is shown 6 cells ranges format and describe
+>>>>>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>>>>>>
+>>>>>> And also in documentation in the linux
+>>>>>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+>>>>>>
+>>>>>> Both format uses:
+>>>>>> #size-cells = <2>;
+>>>>>> #address-cells = <3>;
+>>>>>>
+>>>>>> What is valid format?
+>>>>>
+>>>>> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6
+>>>>> cells
+>>>>> are valid when the host bus is 32-bit. The ranges property is <<child
+>>>>> address> <parent address> <size>>. The parent address #address-cells is
+>>>>> taken from the parent node.
+>>>>
+>>>> Ok. Got it.
+>>>>
+>>>> Here is what we use on zynq and microblaze - both 32bit which should be
+>>>> fine.
+>>>>
+>>>>       ps7_axi_interconnect_0: axi@0 {
+>>>>           #address-cells = <1>;
+>>>>           #size-cells = <1>;
+>>>>           axi_pcie_0: axi-pcie@50000000 {
+>>>>               #address-cells = <3>;
+>>>>               #size-cells = <2>;
+>>>>               compatible = "xlnx,axi-pcie-1.05.a";
+>>>>               ranges = < 0x02000000 0 0x60000000 0x60000000 0
+>>>> 0x10000000 >;
+>>>>               ...
+>>>>           }
+>>>>       }
+>>>>
+>>>> What I am wondering is pci_process_bridge_OF_ranges() at
+>>>> arch/powerpc/kernel/pci-common.c
+>>>> where there are used some hardcoded values which should be probably
+>>>> loaded from device-tree.
+>>>>
+>>>> For example:
+>>>> 683         int np = pna + 5;
+>>>> ...
+>>>> 702                 pci_addr = of_read_number(ranges + 1, 2);
+>>>> 703                 cpu_addr = of_translate_address(dev, ranges + 3);
+>>>> 704                 size = of_read_number(ranges + pna + 3, 2);
+>>>
+>>> These would always be correct whether you have 6 or 7 cells. pna is the
+>>> parent bus address cells size. The pci address is fixed at 3 cells.
+>>
+>> Sorry for my pci ignorance (have never got hw for mb/zynq)
+>> I just want to get better overview how we should we our drivers to be
+>> compatible.
+>>
+>> Does it mean that pci is supposed be always 64 bit wide?
+>> And there is no option to have just 32bit values.
+>
+> That's what the DT documentation says.
+>
+> BTW, you can use 2 cells even if you only have a 32-bit bus.
 
-Currently.  There will be ARM platforms with ACPI soon, if there aren't
-already.
+ok - no problem with that. Just want to be sure about it.
 
-	-hpa
+>>>> Unfortunately we have copied it to microblaze.
+>>>
+>>> I look at the PCI DT code in powerpc and see a whole bunch of code that
+>>> seems like it should be common. The different per arch pci structs
+>>> complicates that. No one has really gotten to looking at PCI DT on ARM
+>>> yet except you and Thierry for Tegra. We definitely don't want to create
+>>> a 3rd copy. Starting the process of moving it to something like
+>>> drivers/pci/pci-of.c would be great.
+>>
+>> We have done pcie working on zynq and the same pcie host is working on
+>> Microblaze too.
+>> There are just small differences. That's why I have sent another email
+>> ("Sharing PCIE driver between Microblaze and Arm zynq") to find out
+>> proper location.
+>
+> Yes, I've followed the thread. There are lots of areas for consolidation
+> with PCIe hosts both across architectures and within ARM. There are
+> multiple people using DW PCIe IP although not upstream yet that I'm
+> aware of.
 
+Your suggestions are really appreciate.
 
+Thanks,
+Michal
+
+-- 
+Michal Simek, Ing. (M.Eng)
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
+Microblaze U-BOOT custodian
