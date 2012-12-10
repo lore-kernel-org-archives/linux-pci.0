@@ -1,85 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35388 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752071Ab2LCTsK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Dec 2012 14:48:10 -0500
-Message-ID: <1354564084.1809.390.camel@bling.home>
-Subject: Re: [PATCH] PCI AER: pci_get_domain_bus_and_slot() call missing
- required pci_dev_put()
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Shuah Khan <shuahkhan@gmail.com>
-Cc: Betty Dall <betty.dall@hp.com>, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	wangyijing@huawei.com, jiang.liu@huawei.com
-Date: Mon, 03 Dec 2012 12:48:04 -0700
-In-Reply-To: <CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
-References: <1354552622-687-1-git-send-email-betty.dall@hp.com>
-	 <CAKocOOOudEzMx0Zs9CB2zmtCkPHVkx1TCbWeK2+uoV5cb=eiGg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
+Date: Mon, 10 Dec 2012 23:47:27 +0100
+Message-ID: <3585743.RAy43NB8MZ@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXsBC-CY4KqKkaAXx3sYLVWJOaaKGkg_kChb7ry_7Sq8Q@mail.gmail.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <2637774.lmuX5P2qQX@vostro.rjw.lan> <CAE9FiQXsBC-CY4KqKkaAXx3sYLVWJOaaKGkg_kChb7ry_7Sq8Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2012-12-03 at 10:40 -0700, Shuah Khan wrote:
-> On Mon, Dec 3, 2012 at 9:37 AM, Betty Dall <betty.dall@hp.com> wrote:
-> > The function aer_recover_queue() makes a call to pci_get_domain_bus_and_slot().
-> > That function is documented to require that the caller decrement the
-> > reference count by calling pci_dev_put(). This patch adds the missing
-> > call to pci_dev_put().
+On Monday, December 10, 2012 09:07:06 AM Yinghai Lu wrote:
+> On Mon, Dec 10, 2012 at 6:46 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
+> >>
+> >> Can we expand the BUS_ADD_* concept to other devices instead of just
+> >> acpi_device?
+> >>
+> >> aka we should let struct device has this add_type field.
 > >
-> > Signed-off-by: Betty Dall <betty.dall@hp.com>
-> > ---
-> >  drivers/pci/pcie/aer/aerdrv_core.c |    1 +
-> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> > index af4e31c..43caf53 100644
-> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> > @@ -616,6 +616,7 @@ static void aer_recover_work_func(struct work_struct *work)
-> >                         continue;
-> >                 }
-> >                 do_recovery(pdev, entry.severity);
-> > +               pci_dev_put(pdev);
+> > Having done that in ACPI to cover our use case here, we can try to move it
+> > into struct device if there are use cases beyond ACPI that can't be covered
+> > by using deferred driver probing.
 > 
-> Are you sure pci_get_domain_bus_and_slot() does indeed increment the
-> reference count? I see that in the comments right above the
-> definition.
-> 
-> pci_dev_get() does that for sure. I see a call trace of
-> 
-> pci_dev_get() -> get_device() -> kobj_to_dev(kobject_get(&dev->kobj)  etc.
-> 
-> and kref_get() finally incrementing the
-> 
-> static inline void kref_get(struct kref *kref)
-> {
->         WARN_ON(!atomic_read(&kref->refcount));
->         atomic_inc(&kref->refcount);
-> }
-> 
-> However, I could not find any evidence that
-> pci_get_domain_bus_and_slot() does that. I see
-> pci_get_domain_bus_and_slot() calling pci_domain_nr() and there are
-> several architecture specific defines for pci_domain_nr(). It is not
-> clear to me where does refcount get incremented from
-> pci_get_domain_bus_and_slot() is called.
-> 
-> What am I missing?
+> pci device for hotplug have same problem. need to delay driver attach
+> for them too.
 
-Trace back the for_each_pci_dev()
+OK, I'll take a look.  Any pointers to speed that up?
 
-for_each_pci_dev
- -> pci_get_device
-  -> pci_get_subsys
-   -> pci_get_dev_by_id
-    -> bus_find_device
-     -> get_device()
+> also BUS_ADD_MATCH and BUS_ADD_START are duplicated.
 
-The real question is how many places do we call for_each_pci_dev()
-without a put.  It seems like pci_get_domain_bus_and_slot() doesn't even
-get it right since it should include a put of the non-matched devices.
+Not at the moment, they do different things as code goes.
+
+> old add are separated to adding all devices to tree and then matching
+> work to load the drivers.
+> 
+> so _START is not needed anymore, only user.start in pci_root driver
+> should be removed.
+> code in .start could be moved .add without problem.
+
+Yes, I'm going to do that as the next step.  I didn't want this particular
+patchset to grow too big.  I'll post another one on top of it if people
+don't have problems with this one.
+
 Thanks,
+Rafael
 
-Alex
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
