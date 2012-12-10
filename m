@@ -1,200 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 12 Dec 2012 09:28:24 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [GIT PULL] PCI changes for v3.8
-Message-ID: <20121212162824.GA18122@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34782 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750826Ab2LJUp7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Dec 2012 15:45:59 -0500
+Message-ID: <1355172358.3224.157.camel@bling.home>
+Subject: Re: pci_enable_msix() fails with ENOMEM/EINVAL
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alex Lyakas <alex@zadarastorage.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	Yair Hershko <yair@zadarastorage.com>,
+	Shyam Kaushik <shyam@zadarastorage.com>
+Date: Mon, 10 Dec 2012 13:45:58 -0700
+In-Reply-To: <9C253052ADFC40D9A0BC9979549506A6@alyakaslap>
+References: <190FFE9600054603A543CCDA4408AC89@alyakaslap>
+	 <CAOcd+r28ot-060WQhUPkuM1Bt7t-_jOggAZKNSJxurNYVs2b-w@mail.gmail.com>
+	 <1353536723.1809.4.camel@bling.home>
+	 <F764A8A9BBE247FEA862ED33F77A04A1@alyakaslap>
+	 <1353960253.1809.128.camel@bling.home>
+	 <A5D6C5E3D7774E62AA482C886483DA6D@alyakaslap>
+	 <1354204570.14547.14.camel@ul30vt.home>
+	 <9C253052ADFC40D9A0BC9979549506A6@alyakaslap>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following changes since commit ff8e59bc4ec3f31789a47dce9b6fe44bd7bc5fcc:
+On Sat, 2012-12-08 at 14:14 +0200, Alex Lyakas wrote:
+> Hi Alex,
+> first of all, I apologize for not reporting things properly. The "vector" 
+> values that I see passed to request_threaded_irq() are not zeros. They are 
+> unique IRQ values as you mentioned. I do not, however, see the 
+> disabling-and-reenabling sequence as you wrote.
 
-  PCI/portdrv: Don't create hotplug slots unless port supports hotplug (2012-11-05 16:59:59 -0700)
+The disabling-reenabling is an artifact of the new code to handle
+runtime vector updates, which enables CPU affinity of vectors and guests
+that behave slightly different, like FreeBSD.  This is a good reminder
+that you're running an old version of qemu and should probably update to
+the latest release for debugging.
 
-are available in the git repository at:
+>  The usual sequence for me is 
+> calling KVM_ASSIGN_DEV_IRQ twice for the same assigned_dev-id:
+> 
+> [ 2423.990404] kvm-32353: KVM_ASSIGN_DEV_IRQ assigned_dev_id=946
+> [ 2423.991585] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=946 #0: [v=158 e=0]
+> [ 2423.991810] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=946 #1: [v=159 e=1]
+> [ 2423.991869] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=946 #2: [v=160 e=2]
+> [ 2424.054320] kvm-32353: KVM_ASSIGN_DEV_IRQ assigned_dev_id=946
+> [ 2424.055337] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=946 #0: [v=158 e=0]
+> [ 2424.055516] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=946 #1: [v=159 e=1]
+> [ 2424.055673] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=946 #2: [v=160 e=2]
+> 
+> As you requested, I specified the intremap=off option to the kernel (saw 
+> that nointremap is deprecated), and reproduced. I had to set the 
+> allow_unsafe_assigned_interrupts parameter of kvm.ko module.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/for-3.8
+Yep, sorry I forgot to mention that.  What kernel are you trying all of
+this on?  If it's not a recent upstream kernel, please verify on that.
 
-for you to fetch changes up to 1cb73f8c479e66541fefd3f7fa547b1fa56cdc54:
+> With irqbalance running, I saw that pci_enable_msix() does not report 
+> failure, but does not set up the interrupt verctor, and further call to 
+> request_threaded_irq() fails with EBUSY:
+> 
+> [ 2425.292444] kvm-32353: KVM_ASSIGN_DEV_IRQ assigned_dev_id=913
+> [ 2425.292458] kvm-32353: assigned_device_enable_host_msix(): call 
+> request_threaded_irq() assigned_dev_id=913 #0: [v=0 e=0]
+> [ 2425.292753] kvm-32353: assigned_device_enable_host_msix() 
+> request_threaded_irq(vector=0) failed assigned_dev_id=913 
+> irq_name=kvm:0000:03:12.1 err=-16
+> Dec  6 19:36:04 ubuntu-sata-21 kernel: [ 2425.294434] kvm-32353: 
+> KVM_ASSIGN_DEV_IRQ assigned_dev_id=913 r=-16
+> 
+> Then I turned irqbalance off, and reproduced again; this time 
+> pci_enable_msix() returns EINVAL (-22). I printed out the vector numbers 
+> after pci_enable_msix() failure, and they are all zeros:
+> 
+> [151186.446688] kvm-1923: KVM_ASSIGN_DEV_IRQ assigned_dev_id=918
+> [151186.446705] kvm-1923: assigned_device_enable_host_msix() 
+> pci_enable_msix() failed assigned_dev_id=918 irq_name=kvm:0000:03:12.6 
+> err=-22
+> [151186.484409] kvm-1923: assigned_device_enable_host_msix() 
+> assigned_dev_id=918 #0: [v=0 e=0]
+> [151186.484413] kvm-1923: assigned_device_enable_host_msix() 
+> assigned_dev_id=918 #1: [v=0 e=1]
+> [151186.484416] kvm-1923: assigned_device_enable_host_msix() 
+> assigned_dev_id=918 #2: [v=0 e=2]
+> [151186.484419] kvm-1923: KVM_ASSIGN_DEV_IRQ assigned_dev_id=918 r=-22
+> [151186.522328] kvm-1923: kvm_vm_ioctl_set_msix_nr assigned_dev_id=918 
+> already entries_nr=3
+> [151186.561093] kvm-1923: kvm_vm_ioctl_set_msix_nr assigned_dev_id=918 r=-22
+> 
+> I attach the full printouts from these two reproductions (kvm-XXX, XXX being 
+> current->pid).
+> 
+> BTW, these errnos seem pretty random; I think if I try to repro this again, 
+> I might get different errnos.
+> 
+> Please let me know whether you have any suggestions on how to debug this 
+> further.
 
-  Merge branch 'pci/mjg-pci-roms-from-efi' into next (2012-12-10 16:20:12 -0700)
+So you have two failure modes.  In one case pci_enable_msix returns
+success and in the other it returns failure, but in both cases the
+vectors are all zero.  I think the next step is to try to reproduce on
+current upstream kernel and qemu.  If those still generate similar
+failures instrument the pci_enable_msix path to pinpoint where it's
+going wrong.  Thanks,
 
-----------------------------------------------------------------
+Alex
 
-PCI changes for the v3.8 merge window:
-
-  Host bridge hotplug:
-    - Untangle _PRT from struct pci_bus (Bjorn Helgaas)
-    - Request _OSC control before scanning root bus (Taku Izumi)
-    - Assign resources when adding host bridge (Yinghai Lu)
-    - Remove root bus when removing host bridge (Yinghai Lu)
-    - Remove _PRT during hot remove (Yinghai Lu)
-
-  SRIOV
-    - Add sysfs knobs to control numVFs (Don Dutile)
-
-  Power management
-    - Notify devices when power resource turned on (Huang Ying)
-
-  Bug fixes
-    - Work around broken _SEG on HP xw9300 (Bjorn Helgaas)
-    - Keep runtime PM enabled for unbound PCI devices (Huang Ying)
-    - Fix Optimus dual-GPU runtime D3 suspend issue (Dave Airlie)
-    - Fix xen frontend shutdown issue (David Vrabel)
-    - Work around PLX PCI 9050 BAR alignment erratum (Ian Abbott)
-
-  Miscellaneous
-    - Add GPL license for drivers/pci/ioapic (Andrew Cooks)
-    - Add standard PCI-X, PCIe ASPM register #defines (Bjorn Helgaas)
-    - NumaChip remote PCI support (Daniel Blueman)
-    - Fix PCIe Link Capabilities Supported Link Speed definition (Jingoo Han)
-    - Convert dev_printk() to dev_info(), etc (Joe Perches)
-    - Add support for non PCI BAR ROM data (Matthew Garrett)
-    - Add x86 support for host bridge translation offset (Mike Yoknis)
-    - Report success only when every driver supports AER (Vijay Pandarathil)
-
-----------------------------------------------------------------
-Andrew Cooks (1):
-      PCI: Add GPL license for drivers/pci/ioapic module
-
-Bjorn Helgaas (31):
-      ACPI: Pass segment/bus to _PRT add/del so they don't depend on pci_bus
-      PCI/ACPI: Add _PRT interrupt routing info before enumerating devices
-      x86/PCI: Ignore _SEG on HP xw9300
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/yinghai-for-pci-root-bus-hotplug' into next
-      Merge branch 'pci/taku-prt-cleanup' into next
-      Merge branch 'pci/mike-x86-tra' into next
-      PCI: Use spec names for SR-IOV capability fields
-      PCI: Remove useless "!dev" tests
-      Merge branch 'pci/don-sriov' into next
-      Merge branch 'pci/misc' into next
-      Merge branch 'for-linus' into next
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/don-sriov' into next
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/huang-d3cold-fixes' into next
-      PCI: Add and use standard PCI-X Capability register names
-      Merge branch 'pci/mjg-pci-roms-from-efi' into next
-      PCI: Use standard PCIe Capability Link register field names
-      PCI/portdrv: Use PCI Express Capability accessors
-      PCI: Add standard PCIe Capability Link ASPM field names
-      cxgb3: Use standard #defines for PCIe Capability ASPM fields
-      iwlegacy: collapse wrapper for pcie_capability_read_word()
-      iwlegacy: Use standard #defines for PCIe Capability ASPM fields
-      iwlwifi: collapse wrapper for pcie_capability_read_word()
-      iwlwifi: Use standard #defines for PCIe Capability ASPM fields
-      ath9k: Use standard #defines for PCIe Capability ASPM fields
-      Merge branch 'pci/bjorn-pcie-cap' into next
-      Merge branch 'pci/daniel-numachip' into next
-      PCI: Use phys_addr_t for physical ROM address
-      Merge branch 'pci/mjg-pci-roms-from-efi' into next
-
-Daniel J Blueman (1):
-      x86/PCI: Add NumaChip remote PCI support
-
-Dave Airlie (1):
-      PCI: Don't touch card regs after runtime suspend D3
-
-David Vrabel (1):
-      xen-pcifront: Handle backend CLOSED without CLOSING
-
-Donald Dutile (3):
-      PCI: SRIOV control and status via sysfs
-      PCI: Provide method to reduce the number of total VFs supported
-      PCI: SRIOV control and status via sysfs (documentation)
-
-Huang Ying (3):
-      PCI/PM: Add comments for PME poll support for PCIe
-      PCI/ACPI: Notify PCI devices when their power resource is turned on
-      PCI/PM: Keep runtime PM enabled for unbound PCI devices
-
-Ian Abbott (2):
-      PCI: Add workaround for PLX PCI 9050 BAR alignment erratum
-      PCI: Add PLX PCI 9050 workaround for some Meilhaus DAQ cards
-
-Jingoo Han (1):
-      PCI: Fix bit definitions of PCI_EXP_LNKCAP2 register
-
-Joe Perches (1):
-      PCI: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-
-Matthew Garrett (4):
-      EFI: Stash ROMs if they're not in the PCI BAR
-      PCI: Add pcibios_add_device
-      PCI: Add support for non-BAR ROMs
-      x86: Use PCI setup data
-
-Mike Yoknis (1):
-      x86/PCI: Allow x86 platforms to use translation offsets
-
-Taku Izumi (2):
-      PCI: Don't pass pci_dev to pci_ext_cfg_avail()
-      PCI/ACPI: Request _OSC control before scanning PCI root bus
-
-Vijay Mohan Pandarathil (1):
-      PCI/AER: Report success only when every device has AER-aware driver
-
-Yinghai Lu (10):
-      PCI: Separate out pci_assign_unassigned_bus_resources()
-      PCI: Move pci_rescan_bus() back to probe.c
-      PCI: Move out pci_enable_bridges out of assign_unsigned_bus_res
-      PCI/ACPI: Assign unassigned resource for hot-added root bus
-      PCI: Add pci_stop_and_remove_root_bus()
-      PCI/ACPI: Make acpi_pci_root_remove() stop/remove pci root bus
-      PCI/ACPI: Delete host bridge _PRT during hot remove path
-      PCI/ACPI: Remove acpi_root_driver in reverse order
-      PCI: Add pci_device_type to pdev's device struct
-      PCI: Use is_visible() with boot_vga attribute for pci_dev
-
- Documentation/ABI/testing/sysfs-bus-pci    |  34 ++++++
- Documentation/PCI/pci-iov-howto.txt        |  48 +++++++-
- arch/x86/Kconfig                           |   1 +
- arch/x86/boot/compressed/eboot.c           | 118 ++++++++++++++++++++
- arch/x86/include/asm/bootparam.h           |   1 +
- arch/x86/include/asm/numachip/numachip.h   |  19 ++++
- arch/x86/include/asm/pci.h                 |  12 ++
- arch/x86/kernel/apic/apic_numachip.c       |   2 +
- arch/x86/kernel/setup.c                    |   4 -
- arch/x86/pci/Makefile                      |   1 +
- arch/x86/pci/acpi.c                        |  46 +++++++-
- arch/x86/pci/common.c                      |  32 +++++-
- arch/x86/pci/numachip.c                    | 129 ++++++++++++++++++++++
- drivers/acpi/pci_bind.c                    |  12 +-
- drivers/acpi/pci_irq.c                     |  17 ++-
- drivers/acpi/pci_root.c                    | 165 +++++++++++++++------------
- drivers/net/ethernet/chelsio/cxgb3/t3_hw.c |   2 +-
- drivers/net/wireless/ath/ath9k/pci.c       |   8 +-
- drivers/net/wireless/iwlegacy/4965.h       |   4 -
- drivers/net/wireless/iwlegacy/common.c     |  10 +-
- drivers/net/wireless/iwlegacy/common.h     |  12 --
- drivers/net/wireless/iwlwifi/pcie/trans.c  |  20 +---
- drivers/pci/bus.c                          |   5 +
- drivers/pci/ioapic.c                       |   2 +
- drivers/pci/iov.c                          |  87 +++++++++++----
- drivers/pci/irq.c                          |  10 +-
- drivers/pci/pci-driver.c                   |  73 +++++++-----
- drivers/pci/pci-stub.c                     |   2 +-
- drivers/pci/pci-sysfs.c                    | 172 +++++++++++++++++++++++++++--
- drivers/pci/pci.c                          |  48 ++++++--
- drivers/pci/pci.h                          |   8 +-
- drivers/pci/pcie/aer/aerdrv.h              |   5 +-
- drivers/pci/pcie/aer/aerdrv_core.c         |  22 +++-
- drivers/pci/pcie/aspm.c                    |  18 ++-
- drivers/pci/pcie/portdrv_core.c            |   3 +-
- drivers/pci/probe.c                        |  42 +++++--
- drivers/pci/quirks.c                       |  39 +++++++
- drivers/pci/remove.c                       |  36 ++++++
- drivers/pci/rom.c                          |  11 +-
- drivers/pci/setup-bus.c                    |  22 +---
- drivers/pci/xen-pcifront.c                 |   5 +-
- include/acpi/acpi_drivers.h                |   4 +-
- include/linux/efi.h                        |  71 ++++++++++++
- include/linux/pci.h                        |  22 +++-
- include/uapi/linux/pci_regs.h              |  23 +++-
- 45 files changed, 1150 insertions(+), 277 deletions(-)
- create mode 100644 arch/x86/include/asm/numachip/numachip.h
- create mode 100644 arch/x86/pci/numachip.c
