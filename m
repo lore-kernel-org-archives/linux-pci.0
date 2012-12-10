@@ -1,90 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:35926 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754200Ab2LEU6S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:18 -0500
-Received: by mail-fa0-f74.google.com with SMTP id t1so391578fae.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:17 -0800 (PST)
-Subject: [PATCH 11/12] iwlegacy: Use standard #defines for PCIe Capability
-	ASPM fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 05 Dec 2012 13:58:16 -0700
-Message-ID: <20121205205816.13851.86504.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3585743.RAy43NB8MZ@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	<2637774.lmuX5P2qQX@vostro.rjw.lan>
+	<CAE9FiQXsBC-CY4KqKkaAXx3sYLVWJOaaKGkg_kChb7ry_7Sq8Q@mail.gmail.com>
+	<3585743.RAy43NB8MZ@vostro.rjw.lan>
+Date: Mon, 10 Dec 2012 15:22:48 -0800
+Message-ID: <CAE9FiQVgJUzDYRWzW5gCK9WwwAzQthXs++JnfOuxVzo-0KSqxQ@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the standard #defines rather than creating local definitions for
-PCIe Capability ASPM fields.
+On Mon, Dec 10, 2012 at 2:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Monday, December 10, 2012 09:07:06 AM Yinghai Lu wrote:
+>> On Mon, Dec 10, 2012 at 6:46 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
+>> >>
+>> >> Can we expand the BUS_ADD_* concept to other devices instead of just
+>> >> acpi_device?
+>> >>
+>> >> aka we should let struct device has this add_type field.
+>> >
+>> > Having done that in ACPI to cover our use case here, we can try to move it
+>> > into struct device if there are use cases beyond ACPI that can't be covered
+>> > by using deferred driver probing.
+>>
+>> pci device for hotplug have same problem. need to delay driver attach
+>> for them too.
+>
+> OK, I'll take a look.  Any pointers to speed that up?
+>
+>> also BUS_ADD_MATCH and BUS_ADD_START are duplicated.
+>
+> Not at the moment, they do different things as code goes.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/iwlegacy/4965.h   |    4 ----
- drivers/net/wireless/iwlegacy/common.c |    5 ++---
- drivers/net/wireless/iwlegacy/common.h |    4 ----
- 3 files changed, 2 insertions(+), 11 deletions(-)
+I do think that is same problem which is in the driver/base core.
 
-diff --git a/drivers/net/wireless/iwlegacy/4965.h b/drivers/net/wireless/iwlegacy/4965.h
-index 2d092f3..1b15b0b 100644
---- a/drivers/net/wireless/iwlegacy/4965.h
-+++ b/drivers/net/wireless/iwlegacy/4965.h
-@@ -917,10 +917,6 @@ struct il4965_scd_bc_tbl {
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
- 
--/* PCI register values */
--#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
--#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
--
- #define IL4965_DEFAULT_TX_RETRY  15
- 
- /* EEPROM */
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 1811507..7e16d10 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -1186,7 +1186,7 @@ il_power_initialize(struct il_priv *il)
- 	u16 lctl;
- 
- 	pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
--	il->power_data.pci_pm = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
-+	il->power_data.pci_pm = !(lctl & PCI_EXP_LNKCTL_ASPM_L0S);
- 
- 	il->power_data.debug_sleep_level_override = -1;
- 
-@@ -4235,8 +4235,7 @@ il_apm_init(struct il_priv *il)
- 	 */
- 	if (il->cfg->set_l0s) {
- 		pcie_capability_read_word(il->pci_dev, PCI_EXP_LNKCTL, &lctl);
--		if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
--		    PCI_CFG_LINK_CTRL_VAL_L1_EN) {
-+		if (lctl & PCI_EXP_LNKCTL_ASPM_L1) {
- 			/* L1-ASPM enabled; disable(!) L0S  */
- 			il_set_bit(il, CSR_GIO_REG,
- 				   CSR_GIO_REG_VAL_L0S_ENABLED);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index c9a5022..e181f3b 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -2426,10 +2426,6 @@ struct il_tfd {
- /* PCI registers */
- #define PCI_CFG_RETRY_TIMEOUT	0x041
- 
--/* PCI register values */
--#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
--#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
--
- struct il_rate_info {
- 	u8 plcp;		/* uCode API:  RATE_6M_PLCP, etc. */
- 	u8 plcp_siso;		/* uCode API:  RATE_SISO_6M_PLCP, etc. */
+it should support delay loading driver for the hotplug case at the first point.
+that is reason that .start is introduced for acpi driver..to workround
+the problem
+in driver core.
 
+>
+>> old add are separated to adding all devices to tree and then matching
+>> work to load the drivers.
+>>
+>> so _START is not needed anymore, only user.start in pci_root driver
+>> should be removed.
+>> code in .start could be moved .add without problem.
+>
+> Yes, I'm going to do that as the next step.  I didn't want this particular
+
+after you remove that .start, that will the same as my two patches.
+except that you patches toggle that per-device add_type for every device.
+
+and my patches is only toggle that per device drivers_autoprobe for
+hot-add devices.
+
+> patchset to grow too big.  I'll post another one on top of it if people
+> don't have problems with this one.
+
+yesterday, I replace my two acpi driver delay loading patches with your patches.
+
+during pci root bus hot remove/add test, got the panic...
+
+did not have time to look at it yet.
+
+Yinghai
