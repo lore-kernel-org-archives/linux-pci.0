@@ -1,83 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26810 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946003Ab2LGGZj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Dec 2012 01:25:39 -0500
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 07/15] PCI/acpiphp: Declare acpi_{add,
-	remove}_bridge() as external functions
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Dec 2012 23:25:36 -0700
-Message-ID: <20121207062536.11051.78679.stgit@amt.stowe>
-In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
-References: <20121207062454.11051.12739.stgit@amt.stowe>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2097693.II1PNyeFLY@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	<2097693.II1PNyeFLY@vostro.rjw.lan>
+Date: Sun, 9 Dec 2012 21:34:42 -0800
+Message-ID: <CAE9FiQWxoWubagm4gj81YgMeqyEZgpT47ROAfjmXSmoaTn-Yig@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch renames, and changes to external function types, add_bridge()
-and remove_bridge() so that they can used directly as the add and remove
-interfaces of "acpiphp".
+On Sun, Dec 9, 2012 at 3:03 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Notice that one member of struct acpi_bus_ops, acpi_op_add, is not
+> used anywhere any more and the relationship between its remaining
+> members, acpi_op_match and acpi_op_start, is such that it doesn't
+> make sense to set the latter without setting the former at the same
+> time.  Therefore, replace struct acpi_bus_ops with new a enum type,
+> enum acpi_bus_add_type, with three values, ACPI_BUS_ADD_BASIC,
+> ACPI_BUS_ADD_MATCH, ACPI_BUS_ADD_START, corresponding to
+> both acpi_op_match and acpi_op_start unset, acpi_op_match set and
+> acpi_op_start unset, and both acpi_op_match and acpi_op_start set,
+> respectively.
+>
 
-No functional change.
+Can we expand the BUS_ADD_* concept to other devices instead of just
+acpi_device?
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
-
- drivers/pci/hotplug/acpiphp.h      |    3 +++
- drivers/pci/hotplug/acpiphp_glue.c |   10 +++++-----
- 2 files changed, 8 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index ecd772c..37f968e 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -191,6 +191,9 @@ extern int acpiphp_register_hotplug_slot(struct acpiphp_slot *slot);
- extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
- 
- /* acpiphp_glue.c */
-+extern struct acpi_pci_driver acpi_pci_hp_driver;
-+extern int acpiphp_add_bridge(struct acpi_pci_root *root);
-+extern void acpiphp_remove_bridge(struct acpi_pci_root *root);
- extern void acpiphp_glue_init(void);
- extern void acpiphp_glue_exit(void);
- typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 50b58cb..f96b13c 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -489,7 +489,7 @@ find_p2p_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
- 
- 
- /* find hot-pluggable slots, and then find P2P bridge */
--static int add_bridge(struct acpi_pci_root *root)
-+int acpiphp_add_bridge(struct acpi_pci_root *root)
- {
- 	acpi_status status;
- 	unsigned long long tmp;
-@@ -613,7 +613,7 @@ cleanup_p2p_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	return AE_OK;
- }
- 
--static void remove_bridge(struct acpi_pci_root *root)
-+void acpiphp_remove_bridge(struct acpi_pci_root *root)
- {
- 	struct acpiphp_bridge *bridge;
- 	acpi_handle handle = root->device->handle;
-@@ -1407,9 +1407,9 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
- 			      _handle_hotplug_event_func);
- }
- 
--static struct acpi_pci_driver acpi_pci_hp_driver = {
--	.add =		add_bridge,
--	.remove =	remove_bridge,
-+struct acpi_pci_driver acpi_pci_hp_driver = {
-+	.add =		acpiphp_add_bridge,
-+	.remove =	acpiphp_remove_bridge,
- };
- 
- /**
-
+aka we should let struct device has this add_type field.
