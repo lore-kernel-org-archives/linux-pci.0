@@ -1,207 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33447 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753047Ab2LGVQI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2012 16:16:08 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so732421lbb.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Dec 2012 13:16:06 -0800 (PST)
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:48163 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab2LJQCc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 11:02:32 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so1586638qcr.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 08:02:31 -0800 (PST)
+Message-ID: <50C6078A.8080408@gmail.com>
+Date: Mon, 10 Dec 2012 10:02:18 -0600
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <50C08048.3050305@freescale.com>
-References: <1354674717-14426-1-git-send-email-B41889@freescale.com>
- <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com>
- <1354695989.2351.13.camel@pasglop> <50BF13E1.1000009@freescale.com>
- <CAErSpo6mCm79m87MchL=Y1jxxgZ2Mio8d2L+Sg8CLvxRKue8sg@mail.gmail.com> <50C08048.3050305@freescale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Dec 2012 14:15:46 -0700
-Message-ID: <CAErSpo4skBkgOLRMhZQboP5aD+7HPyARmfFhoxEvnjiVb7Qy1Q@mail.gmail.com>
-Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue of
- rescanned pci device
-To: Chen Yuanquan-B41889 <B41889@freescale.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, galak@kernel.crashing.org,
-	r61911@freescale.com, linux-pci@vger.kernel.org,
-	=?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
+To: monstr@monstr.eu
+CC: devicetree-discuss@lists.ozlabs.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu>
+In-Reply-To: <50C601B6.2080107@monstr.eu>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 6, 2012 at 4:23 AM, Chen Yuanquan-B41889
-<B41889@freescale.com> wrote:
-> On 12/06/2012 05:30 AM, Bjorn Helgaas wrote:
+On 12/10/2012 09:37 AM, Michal Simek wrote:
+> On 12/10/2012 04:21 PM, Rob Herring wrote:
+>> On 12/10/2012 09:05 AM, Michal Simek wrote:
+>>> On 12/10/2012 03:26 PM, Rob Herring wrote:
+>>>> On 12/10/2012 06:20 AM, Michal Simek wrote:
+>>>>> Hi Grant and others,
+>>>>>
+>>>>> I have a question regarding number of cells in ranges property
+>>>>> for pci and pcie nodes.
+>>>>>
+>>>>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
+>>>>> sequoia.dts, etc)
+>>>>> but also 6 cells format too (mpc832x_mds.dts)
+>>>>>
+>>>>> Here is shown 6 cells ranges format and describe
+>>>>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>>>>>
+>>>>> And also in documentation in the linux
+>>>>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+>>>>>
+>>>>> Both format uses:
+>>>>> #size-cells = <2>;
+>>>>> #address-cells = <3>;
+>>>>>
+>>>>> What is valid format?
+>>>>
+>>>> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6
+>>>> cells
+>>>> are valid when the host bus is 32-bit. The ranges property is <<child
+>>>> address> <parent address> <size>>. The parent address #address-cells is
+>>>> taken from the parent node.
+>>>
+>>> Ok. Got it.
+>>>
+>>> Here is what we use on zynq and microblaze - both 32bit which should be
+>>> fine.
+>>>
+>>>      ps7_axi_interconnect_0: axi@0 {
+>>>          #address-cells = <1>;
+>>>          #size-cells = <1>;
+>>>          axi_pcie_0: axi-pcie@50000000 {
+>>>              #address-cells = <3>;
+>>>              #size-cells = <2>;
+>>>              compatible = "xlnx,axi-pcie-1.05.a";
+>>>              ranges = < 0x02000000 0 0x60000000 0x60000000 0
+>>> 0x10000000 >;
+>>>              ...
+>>>          }
+>>>      }
+>>>
+>>> What I am wondering is pci_process_bridge_OF_ranges() at
+>>> arch/powerpc/kernel/pci-common.c
+>>> where there are used some hardcoded values which should be probably
+>>> loaded from device-tree.
+>>>
+>>> For example:
+>>> 683         int np = pna + 5;
+>>> ...
+>>> 702                 pci_addr = of_read_number(ranges + 1, 2);
+>>> 703                 cpu_addr = of_translate_address(dev, ranges + 3);
+>>> 704                 size = of_read_number(ranges + pna + 3, 2);
 >>
->> On Wed, Dec 5, 2012 at 2:29 AM, Chen Yuanquan-B41889
->> <B41889@freescale.com> wrote:
->>>
->>> On 12/05/2012 04:26 PM, Benjamin Herrenschmidt wrote:
->>>>
->>>> On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
->>>>>
->>>>> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
->>>>>>
->>>>>> On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
->>>>>>>
->>>>>>> On powerpc arch, some fixup work of PCI/PCI-e device is just done
->>>>>>> during the
->>>>>>> first scan at booting time. For the PCI/PCI-e device rescanned after
->>>>>>> linux OS
->>>>>>> booting up, the fixup work won't be done, which leads to dma_set_mask
->>>>>>> error or
->>>>>>> irq related issue in rescanned PCI/PCI-e device's driver. So, it does
->>>>>>> the same
->>>>>>> fixup work for the rescanned device to avoid this issue.
->>>>>>
->>>>>> Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
->>>>>> that way but factored out.
->>>>
->>>> Please, at least format your email properly so I can try to undertand
->>>> without needing aspirin.
->>>>
->>>>> There's a judgement "if (!bus->is_added)" before calling of
->>>>> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
->>>>> the fixup won't execute, which leads to fatal error in driver of
->>>>> rescanned
->>>>> device on freescale  powerpc, no this issues on x86 arch.
->>>>
->>>> First, none of that invalidates my statement that you shouldn't
->>>> duplicate a whole block of code like this. Even if your approach is
->>>> correct (which is debated separately), at the very least you should
->>>> factor the code out into a common function between the two copies.
->>>>
->>>>> Remove the judgement, let it to do the pcibios_fixup_bus
->>>>> directly, the error won't occur for the rescanned device. But it's
->>>>> general code, not proper to change here, so copy the pcibios_fixup_bus
->>>>> work to  pcibios_enable_device.
->>>>>
->>>>>> I'm surprised also that is_added is false when pcibios_enable_device()
->>>>>> gets called ... that looks strange to me. At what point is that enable
->>>>>> happening in the hotplug sequence ?
->>>>>
->>>>> All devices are rescanned and then call the pci_enable_devices and
->>>>> pci_bus_add_devices.
->>>>
->>>> Where ? How ? What is the sequence happening ? In any case, I think if
->>>> we need a proper fixup done per-device like that after scan we ought to
->>>> create a new hook at the generic level rather than that sort of hack.
->>>>
->>> echo 1 > rescan to trigger dev_rescan_store:
->>>
->>> dev_rescan_store->pci_rescan_bus->pci_scan_child_bus,
->>> pci_assign_unassigned_bus_resources,
->>> pci_enable_bridges, pci_bus_add_devices
->>>
->>>
->>> pci_enable_bridges->pci_enable_device->__pci_enable_device_flags->do_pci_enable_device->
->>> pcibios_enable_device
->>>
->>> pci_bus_add_devices->pci_bus_add_device->"dev->is_added = 1"
->>>
->>> Yeah, it's general fixup code for every rescanned PCI/PCI-e device on
->>> powerpc at runtime. So if
->>> we want to call it in a ppc_md member, we need to wrap it as a function
->>> and
->>> assign it in every ppc_md,
->>> it isn't proper for the general code.
->>>
->>> Regards,
->>> yuanquan
->>>
->>>
->>>>> The patch code will be called by pci_enable_devices. The
->>>>> "dev->is_added"
->>>>> is set in pci_bus_add_device
->>>>> which is called by pci_bus_add_devices. So "dev->is_added" is false
->>>>> when
->>>>> checking it in pcibios_enable_device
->>>>> for the rescanned device.
->>>>
->>>> Who calls pci_enable_device() in the rescan case ? Why isn't it left to
->>>> the driver ? I don't think we can rely on that behaviour not to change.
->>>>
->>>>>> How do you trigger the rescan anyway ?
->>>>>
->>>>> Use the interface under /sys :
->>>>> echo 1 > /sys/bus/pci/devices/xxx/remove
->>>>>
->>>>> then echo 1 to the pci device which is the bus of the removed device
->>>>> echo 1 > /sys/bus/pci/devices/xxxx/rescan
->>>>> the removed device will be scanned and it's driver module will be
->>>>> loaded
->>>>> automatically.
->>>>
->>>> Yeah this code path are known to be fishy. I think the problem is at the
->>>> generic abstraction level and that's where it needs to be fixed.
->>>>
->>>> Cheers,
->>>> Ben.
->>>>
->>>>> Regards,
->>>>> yuanquan
->>>>>>
->>>>>> I think the problem needs to be solve at a higher level, I'm adding
->>>>>> linux-pci & Bjorn to the CC list.
->>>>>>
->>>>>> Cheers,
->>>>>> Ben.
->>>>>>
->>>>>>> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
->>>>>>> ---
->>>>>>>     arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
->>>>>>>     1 file changed, 20 insertions(+)
->>>>>>>
->>>>>>> diff --git a/arch/powerpc/kernel/pci-common.c
->>>>>>> b/arch/powerpc/kernel/pci-common.c
->>>>>>> index 7f94f76..f0fb070 100644
->>>>>>> --- a/arch/powerpc/kernel/pci-common.c
->>>>>>> +++ b/arch/powerpc/kernel/pci-common.c
->>>>>>> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev,
->>>>>>> int mask)
->>>>>>>                  if (ppc_md.pcibios_enable_device_hook(dev))
->>>>>>>                          return -EINVAL;
->>>>>>>     +    if (!dev->is_added) {
->>>>>>> +               /*
->>>>>>> +                * Fixup NUMA node as it may not be setup yet by the
->>>>>>> generic
->>>>>>> +                * code and is needed by the DMA init
->>>>>>> +                */
->>>>>>> +               set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
->>>>>>> +
->>>>>>> +               /* Hook up default DMA ops */
->>>>>>> +               set_dma_ops(&dev->dev, pci_dma_ops);
->>>>>>> +               set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
->>>>>>> +
->>>>>>> +               /* Additional platform DMA/iommu setup */
->>>>>>> +               if (ppc_md.pci_dma_dev_setup)
->>>>>>> +                       ppc_md.pci_dma_dev_setup(dev);
->>>>>>> +
->>>>>>> +               /* Read default IRQs and fixup if necessary */
->>>>>>> +               pci_read_irq_line(dev);
->>>>>>> +               if (ppc_md.pci_irq_fixup)
->>>>>>> +                       ppc_md.pci_irq_fixup(dev);
->>>>>>> +       }
->>>>>>>          return pci_enable_resources(dev, mask);
->>>>>>>     }
->>
->> Is this the same issue Hiroo MATSUMOTO was working on earlier?
->> (http://comments.gmane.org/gmane.linux.ports.ppc.embedded/50080)
->
->
-> Yeah, that's the exact problem I encountered. Please push it forward.
+>> These would always be correct whether you have 6 or 7 cells. pna is the
+>> parent bus address cells size. The pci address is fixed at 3 cells.
+> 
+> Sorry for my pci ignorance (have never got hw for mb/zynq)
+> I just want to get better overview how we should we our drivers to be
+> compatible.
+> 
+> Does it mean that pci is supposed be always 64 bit wide?
+> And there is no option to have just 32bit values.
 
-Well, as I mentioned, there are unresolved issues, so it's not just a
-matter of applying the most recent patch.  If you're interested in
-this problem and have some hardware to test, you can help by looking
-into some of the things I mentioned in the message at the URL below.
+That's what the DT documentation says.
 
->> We went round and round on those patches (partly my fault for
->> excessive bike-shedding), and then we stalled out because of an
->> ordering issue with CardBus init and an IRQ quirk.
+BTW, you can use 2 cells even if you only have a 32-bit bus.
+
+> 
+>>> Unfortunately we have copied it to microblaze.
 >>
->> Here's the last status I remember:
->> http://marc.info/?l=linux-pci&m=135006501620378&w=2
->>
->> Bjorn
->>
->>
->>
->
->
+>> I look at the PCI DT code in powerpc and see a whole bunch of code that
+>> seems like it should be common. The different per arch pci structs
+>> complicates that. No one has really gotten to looking at PCI DT on ARM
+>> yet except you and Thierry for Tegra. We definitely don't want to create
+>> a 3rd copy. Starting the process of moving it to something like
+>> drivers/pci/pci-of.c would be great.
+> 
+> We have done pcie working on zynq and the same pcie host is working on
+> Microblaze too.
+> There are just small differences. That's why I have sent another email
+> ("Sharing PCIE driver between Microblaze and Arm zynq") to find out
+> proper location.
+
+Yes, I've followed the thread. There are lots of areas for consolidation
+with PCIe hosts both across architectures and within ARM. There are
+multiple people using DW PCIe IP although not upstream yet that I'm
+aware of.
+
+Rob
+
+> 
+> PCI: Microblaze shares almost the same code with powerpc that's why I am
+> definitely open
+> to move this code out of architecture.
+> 
+> Thanks,
+> Michal
+> 
+> 
+> 
+
