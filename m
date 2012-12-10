@@ -1,162 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f45.google.com ([209.85.210.45]:61462 "EHLO
-	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818Ab2LSNrP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2012 08:47:15 -0500
-References: <1354533387-4110-1-git-send-email-acooks@gmail.com> <1355914703-28576-1-git-send-email-acooks@gmail.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1355914703-28576-1-git-send-email-acooks@gmail.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <A1185FFE-6B90-4B44-BF8C-082E487AA73D@gmail.com>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-	"xjtuychu@hotmail.com" <xjtuychu@hotmail.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"jpiszcz@lucidpixels.com" <jpiszcz@lucidpixels.com>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-From: Chu Ying <gm.ychu@gmail.com>
-Subject: Re: [RFC PATCH] Fix Intel IOMMU support for Marvell 88SE91xx SATA controllers.
-Date: Wed, 19 Dec 2012 21:41:00 +0800
-To: Andrew Cooks <acooks@gmail.com>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:57995 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab2LJWaB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 17:30:01 -0500
+Received: by mail-wg0-f46.google.com with SMTP id dr13so2059450wgb.1
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 14:29:59 -0800 (PST)
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: pci and pcie device-tree binding - range No cells
+To: monstr@monstr.eu, Rob Herring <robherring2@gmail.com>
+Cc: devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+In-Reply-To: <50C601B6.2080107@monstr.eu>
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu>
+Date: Mon, 10 Dec 2012 21:43:23 +0000
+Message-Id: <20121210214323.6EA733E0921@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2012-12-19, at 18:58, Andrew Cooks <acooks@gmail.com> wrote:
+On Mon, 10 Dec 2012 16:37:26 +0100, Michal Simek <monstr@monstr.eu> wrote:
+> On 12/10/2012 04:21 PM, Rob Herring wrote:
+> > On 12/10/2012 09:05 AM, Michal Simek wrote:
+> >> On 12/10/2012 03:26 PM, Rob Herring wrote:
+> >>> On 12/10/2012 06:20 AM, Michal Simek wrote:
+> >>>> Hi Grant and others,
+> >>>>
+> >>>> I have a question regarding number of cells in ranges property
+> >>>> for pci and pcie nodes.
+> >>>>
+> >>>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
+> >>>> sequoia.dts, etc)
+> >>>> but also 6 cells format too (mpc832x_mds.dts)
+> >>>>
+> >>>> Here is shown 6 cells ranges format and describe
+> >>>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+> >>>>
+> >>>> And also in documentation in the linux
+> >>>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+> >>>>
+> >>>> Both format uses:
+> >>>> #size-cells = <2>;
+> >>>> #address-cells = <3>;
+> >>>>
+> >>>> What is valid format?
+> >>>
+> >>> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
+> >>> are valid when the host bus is 32-bit. The ranges property is <<child
+> >>> address> <parent address> <size>>. The parent address #address-cells is
+> >>> taken from the parent node.
+> >>
+> >> Ok. Got it.
+> >>
+> >> Here is what we use on zynq and microblaze - both 32bit which should be
+> >> fine.
+> >>
+> >>      ps7_axi_interconnect_0: axi@0 {
+> >>          #address-cells = <1>;
+> >>          #size-cells = <1>;
+> >>          axi_pcie_0: axi-pcie@50000000 {
+> >>              #address-cells = <3>;
+> >>              #size-cells = <2>;
+> >>              compatible = "xlnx,axi-pcie-1.05.a";
+> >>              ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+> >>              ...
+> >>          }
+> >>      }
+> >>
+> >> What I am wondering is pci_process_bridge_OF_ranges() at
+> >> arch/powerpc/kernel/pci-common.c
+> >> where there are used some hardcoded values which should be probably
+> >> loaded from device-tree.
+> >>
+> >> For example:
+> >> 683         int np = pna + 5;
+> >> ...
+> >> 702                 pci_addr = of_read_number(ranges + 1, 2);
+> >> 703                 cpu_addr = of_translate_address(dev, ranges + 3);
+> >> 704                 size = of_read_number(ranges + pna + 3, 2);
+> >
+> > These would always be correct whether you have 6 or 7 cells. pna is the
+> > parent bus address cells size. The pci address is fixed at 3 cells.
+> 
+> Sorry for my pci ignorance (have never got hw for mb/zynq)
+> I just want to get better overview how we should we our drivers to be compatible.
+> 
+> Does it mean that pci is supposed be always 64 bit wide?
+> And there is no option to have just 32bit values.
 
-> This is my second attempt to make Marvell 88SE91xx SATA controllers work when IOMMU is enabled.[1][2] 
-> As suggested, it no longer tries to add support for phantom functions.
-> 
-> What's missing:
-> * No AMD support. I need some help with this.
-> * Table of affected chip IDs is incomplete. I think 0x9123, 0x9125, 0x9128 are also affected.
+Yes, PCIe addressing is always 64 bits wide. Even on 32bit PCI systems
+we use 64 bit PCI addressing in the device tree.
 
-That's not that simple, those devices with 2 functions( one for sata and the other for pata) work well under Intel IOMMU, so I need comfirm what devices should be involved the latest patch.
+g.
 
-> Patch is against 3.7.1
-> 
-> Review and feedback would be appreciated.
-> 
-> 1. https://bugzilla.redhat.com/show_bug.cgi?id=757166
-> 2. https://bugzilla.kernel.org/show_bug.cgi?id=42679
-> 
-> Signed-off-by: Andrew Cooks <acooks@gmail.com>
-> ---
-> drivers/iommu/intel-iommu.c |   36 ++++++++++++++++++++++++++++++++++--
-> drivers/pci/quirks.c        |   34 ++++++++++++++++++++++++++++++++++
-> include/linux/pci.h         |    1 +
-> 3 files changed, 66 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 0badfa4..17e64c0 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -1672,6 +1674,31 @@ static int domain_context_mapping_one(struct dmar_domain *domain, int segment,
->    return 0;
-> }
-> 
-> +/* For buggy devices like Marvell 88SE91xx chips that use unclaimed
-> + * functions.
-> + */
-> +static int map_quirky_dma_fn(struct dmar_domain *domain,
-> +        struct pci_dev *pdev,
-> +        int translation)
-> +{
-> +    u8 fn;
-> +    int err = 0;
-> +
-> +    for (fn = 1; fn < 8; fn++) {
-> +        if (pci_func_is_dma_source(pdev, fn)) {
-> +            err = domain_context_mapping_one(domain,
-> +                    pci_domain_nr(pdev->bus),
-> +                    pdev->bus->number,
-> +                    PCI_DEVFN(PCI_SLOT(pdev->devfn), fn),
-> +                    translation);
-> +            if (err)
-> +                return err;
-> +            dev_dbg(&pdev->dev, "func: %d mapped dma quirk", fn);
-> +        }
-> +    }
-> +    return 0;
-> +}
-> +
-> static int
-> domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
->            int translation)
-> @@ -1685,6 +1712,11 @@ domain_context_mapping(struct dmar_domain *domain, struct pci_dev *pdev,
->    if (ret)
->        return ret;
-> 
-> +    /* quirk for undeclared pci functions */
-> +    ret = map_quirky_dma_fn(domain, pdev, translation);
-> +    if (ret)
-> +        return ret;
-> +
->    /* dependent device mapping */
->    tmp = pci_find_upstream_pcie_bridge(pdev);
->    if (!tmp)
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7a451ff..8d02bac 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3227,6 +3227,40 @@ static const struct pci_dev_dma_source {
->    { 0 }
-> };
-> 
-> +static const struct pci_dev_dma_source_funcs {
-> +    u16 vendor;
-> +    u16 device;
-> +    u8 func_map;    /* bit map. lsb is fn 0. */
-> +} pci_dev_dma_source_funcs[] = {
-> +     {0x1b4b, 0x9172, (1<<0)|(1<<1)},
-> +     { 0 },    
-> +};
-
-Can you confirm function 0 should be marked? Per my PCIe trace, I found no function 0 involved in DMA access?
-
-> +static u8 pci_get_dma_source_map(struct pci_dev *dev)
-> +{
-> +    const struct pci_dev_dma_source_funcs *i;
-> +
-> +    for (i = pci_dev_dma_source_funcs; i->func_map; i++) {
-> +        if ((i->vendor == dev->vendor ||
-> +             i->vendor == (u16)PCI_ANY_ID) &&
-> +            (i->device == dev->device ||
-> +             i->device == (u16)PCI_ANY_ID)) {
-> +            return i->func_map;            
-> +        }
-> +    }
-> +    return 0;
-> +}
-> +
-> +int pci_func_is_dma_source(struct pci_dev *dev, int fn)
-> +{
-> +    u8 fn_map = pci_get_dma_source_map(dev);
-> +
-> +    if (fn_map & (1 << fn))
-> +        return 1;
-> +
-> +    return 0;
-> +}
-> +
-> /*
->  * IOMMUs with isolation capabilities need to be programmed with the
->  * correct source ID of a device.  In most cases, the source ID matches
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index ee21795..8f0fa7f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1546,6 +1546,7 @@ enum pci_fixup_pass {
-> #ifdef CONFIG_PCI_QUIRKS
-> void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
-> struct pci_dev *pci_get_dma_source(struct pci_dev *dev);
-> +int pci_func_is_dma_source(struct pci_dev *dev, int fn);
-> int pci_dev_specific_acs_enabled(struct pci_dev *dev, u16 acs_flags);
-> #else
-> static inline void pci_fixup_device(enum pci_fixup_pass pass,
-> -- 
-> 1.7.1
-> 
