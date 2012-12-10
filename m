@@ -1,91 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:34086 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754123Ab2LJPFi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 10:05:38 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so1992293lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 07:05:37 -0800 (PST)
-Message-ID: <50C5FA3E.9030303@monstr.eu>
-Date: Mon, 10 Dec 2012 16:05:34 +0100
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: devicetree-discuss@lists.ozlabs.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: pci and pcie device-tree binding - range No cells
-References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com>
-In-Reply-To: <50C5F11D.9060006@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20121207141115.EFC903E0B87@localhost>
+References: <CAHTX3dLxbVxn+D+AV7L0VsGYFOjas3AJ_3M_xncVfxp02FCy=Q@mail.gmail.com>
+	<CAErSpo6xRdwzTuPPqnmvmHSp7awnV7=Z85eWFfktb_hm9Aad_A@mail.gmail.com>
+	<50C1BA9D.5010406@monstr.eu>
+	<20121207141115.EFC903E0B87@localhost>
+Date: Mon, 10 Dec 2012 08:34:15 +0100
+Message-ID: <CAHTX3dJLa3e_za-wx8VY9FWqc-GMe_hB-hwzOZqyP-u3hD=3Mw@mail.gmail.com>
+Subject: Re: Sharing PCIE driver between Microblaze and Arm zynq
+From: Michal Simek <monstr@monstr.eu>
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+	linux-arch@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	John Linn <John.Linn@xilinx.com>,
+	John Williams <jwilliams@xilinx.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/10/2012 03:26 PM, Rob Herring wrote:
-> On 12/10/2012 06:20 AM, Michal Simek wrote:
->> Hi Grant and others,
+2012/12/7 Grant Likely <grant.likely@secretlab.ca>:
+> On Fri, 07 Dec 2012 10:45:01 +0100, Michal Simek <monstr@monstr.eu> wrote:
+>> On 12/06/2012 10:27 PM, Bjorn Helgaas wrote:
+>> > [+cc linux-pci]
+>> >
+>> > On Thu, Dec 6, 2012 at 7:23 AM, Michal Simek <michal.simek@xilinx.com> wrote:
+>> >> Hi guys,
+>> >>
+>> >> I have a question regarding to sharing generic OF pcie driver between
+>> >> two architectures MB and ARM Zynq.
+>> >> Is drivers/pci/pcie location good for it?
+>> >> Make no sense to have the same driver in two locations.
+>> >
+>> > I think you're talking about a PCI host bridge driver.  It would
+>> > definitely be nice to move toward a generic, shared driver.  Host
+>> > bridge drivers are responsible for enumerating the PCI hierarchy below
+>> > the bridge.  Enumeration is not really PCIe-specific, so I wouldn't
+>> > put it in drivers/pci/pcie.
 >>
->> I have a question regarding number of cells in ranges property
->> for pci and pcie nodes.
+>> Not a PCI expert, just trying to find out the proper location for this shared driver.
 >>
->> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
->> sequoia.dts, etc)
->> but also 6 cells format too (mpc832x_mds.dts)
 >>
->> Here is shown 6 cells ranges format and describe
->> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>> >> Is using readl/writel IO functions in this driver the best option
+>> >> which we can have?
+>> >> Or is there any other recommendation?
+>> >
+>> > I'm not really a driver person, but if you're writing a new driver,
+>> > wouldn't you use the iomap interfaces (ioremap(), ioread32(), etc)
+>> > rather than readl()?
 >>
->> And also in documentation in the linux
->> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+>> That driver exists but it is not in mainline and it is better to directly
+>> add it to proper location with correct io functions.
+>> The question is if ioread/iowrite functions are correct one.
+>> PowerPC io-defs.h suggests that readl/writel should be used for PCI.
 >>
->> Both format uses:
->> #size-cells = <2>;
->> #address-cells = <3>;
 >>
->> What is valid format?
+>> >> Also just want to check if it is correct to use pcie device_type.
+>> >
+>> > I don't know what you're asking here.  Can you elaborate or give a
+>> > specific example?
+>>
+>> If node property device_type pcie should be used.
+>> device_type = "pcie";
+>>
+>> For pci it is device_type = "pci";
+>> For network it is device_type = "network"
+>> the same for serial, watchdogs.
+>>
+>> Do we have any list of device_types which we should use?
 >
-> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
-> are valid when the host bus is 32-bit. The ranges property is <<child
-> address> <parent address> <size>>. The parent address #address-cells is
-> taken from the parent node.
+> Don't use them unless a binding requires it. PCI address lookup code
+> uses it, so we put it in those nodes. Otherwise device_type is
+> deprecated and has been for a long time now. You should not be using it
+> in .dts files.
 
-Ok. Got it.
-
-Here is what we use on zynq and microblaze - both 32bit which should be fine.
-
-	ps7_axi_interconnect_0: axi@0 {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		axi_pcie_0: axi-pcie@50000000 {
-			#address-cells = <3>;
-			#size-cells = <2>;
-			compatible = "xlnx,axi-pcie-1.05.a";
-			ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-			...
-		}
-	}
-
-What I am wondering is pci_process_bridge_OF_ranges() at arch/powerpc/kernel/pci-common.c
-where there are used some hardcoded values which should be probably loaded from device-tree.
-
-For example:
-683         int np = pna + 5;
-...
-702                 pci_addr = of_read_number(ranges + 1, 2);
-703                 cpu_addr = of_translate_address(dev, ranges + 3);
-704                 size = of_read_number(ranges + pna + 3, 2);
-
-
-Unfortunately we have copied it to microblaze.
 
 Thanks,
 Michal
-
-
-
-
 
 
 -- 
