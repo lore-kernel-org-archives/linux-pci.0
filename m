@@ -1,69 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:53602 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753802Ab2LKPJY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Dec 2012 10:09:24 -0500
-Message-ID: <50C74C92.1040405@gmail.com>
-Date: Tue, 11 Dec 2012 23:09:06 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:54912 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774Ab2LJO0k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 09:26:40 -0500
+Received: by mail-qa0-f53.google.com with SMTP id a19so1487864qad.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 06:26:40 -0800 (PST)
+Message-ID: <50C5F11D.9060006@gmail.com>
+Date: Mon, 10 Dec 2012 08:26:37 -0600
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <CAE9FiQWZ8WaAJm8ayU+woVRqNLdSRtPS4=gpsrJovmzrUG6FNw@mail.gmail.com> <38722368.Fl8pJoLSRi@vostro.rjw.lan> <8119513.v7VrlzcaZC@vostro.rjw.lan> <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
-In-Reply-To: <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
+To: monstr@monstr.eu
+CC: devicetree-discuss@lists.ozlabs.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu>
+In-Reply-To: <50C5D387.90908@monstr.eu>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
-	I have worked out a patch set to clean up ACPI/PCI related notifications,
-please refer to
-http://www.spinics.net/lists/linux-pci/msg17822.html
-	The patchset doesn't apply cleanly to Bjorn's latest pci-next tree. I will
-help to rebase it if needed.
-Regards!
-Gerry
+On 12/10/2012 06:20 AM, Michal Simek wrote:
+> Hi Grant and others,
+> 
+> I have a question regarding number of cells in ranges property
+> for pci and pcie nodes.
+> 
+> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
+> sequoia.dts, etc)
+> but also 6 cells format too (mpc832x_mds.dts)
+> 
+> Here is shown 6 cells ranges format and describe
+> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+> 
+> And also in documentation in the linux
+> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+> 
+> Both format uses:
+> #size-cells = <2>;
+> #address-cells = <3>;
+> 
+> What is valid format?
 
-On 12/11/2012 10:26 AM, Yinghai Lu wrote:
-> On Mon, Dec 10, 2012 at 5:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>>
->>> OK, thanks for the pointers.  I actually see more differences between our
->>> patchsets.  For one example, you seem to have left the parent->ops.bind()
->>> stuff in acpi_add_single_object() which calls it even drivers_autoprobe is
->>> set.
->>
->> Sorry, that should have been "which calls it even when drivers_autoprobe is
->> not set".  I need to be more careful.
->>
-> 
-> oh,  Jiang Liu had one patch to remove that workaround.
-> 
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=b40dba80c2b8395570d8357e6b3f417c27c84504
-> 
-> ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
-> 
-> Maybe you can review that patches in my for-pci-next2...
-> those are ACPI related anyway.
-> 
-> those patches have been there for a while, and Bjorn did not have time
-> to digest them.
-> 
-> or you prefer I resend updated version as huge whole patchset?
-> 
-> Thanks
-> 
-> Yinghai
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
+are valid when the host bus is 32-bit. The ranges property is <<child
+address> <parent address> <size>>. The parent address #address-cells is
+taken from the parent node.
 
+Rob
