@@ -1,109 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([88.190.12.23]:39130 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754261Ab2LLQRG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 11:17:06 -0500
-Date: Wed, 12 Dec 2012 17:16:51 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: monstr@monstr.eu, David Laight <David.Laight@ACULAB.COM>,
-	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
+Received: from gate.crashing.org ([63.228.1.57]:46913 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751289Ab2LJWly (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Dec 2012 17:41:54 -0500
+Message-ID: <1355179097.19932.5.camel@pasglop>
+Subject: Re: pci and pcie device-tree binding - range No cells
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: monstr@monstr.eu, Rob Herring <robherring2@gmail.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
 	Rob Herring <rob.herring@calxeda.com>,
 	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: pci and pcie device-tree binding - range No cells
-Message-ID: <20121212171651.346b81ab@skate>
-In-Reply-To: <50C66F3C.3010204@gmail.com>
-References: <50C5D387.90908@monstr.eu>
-	<50C5F11D.9060006@gmail.com>
-	<50C5FA3E.9030303@monstr.eu>
-	<50C5FE0F.3050108@gmail.com>
-	<50C601B6.2080107@monstr.eu>
-	<AE90C24D6B3A694183C094C60CF0A2F6026B70E7@saturn3.aculab.com>
-	<50C60839.70603@monstr.eu>
-	<20121210181525.3ccd87c6@skate>
-	<50C66F3C.3010204@gmail.com>
+	Thierry Reding <thierry.reding@avionic-design.de>
+Date: Tue, 11 Dec 2012 09:38:17 +1100
+In-Reply-To: <20121210214323.6EA733E0921@localhost>
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com>
+	 <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com>
+	 <50C601B6.2080107@monstr.eu> <20121210214323.6EA733E0921@localhost>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Rob Herring,
-
-On Mon, 10 Dec 2012 17:24:44 -0600, Rob Herring wrote:
-
-> > Marvell SoCs have up to 20 configurable address windows, which allow
-> > you, at run time, to say "I would like the range from physical
-> > address 0xYYYYYYYY to 0xZZZZZZZZ to correspond to the PCIe device
-> > in port 1, lane 2, or to the NAND, or to this or that device".
-> > Therefore, in the PCIe driver I proposed for the Armada 370/XP SoCs
-> > [1], there is no need to encode all those ranges statically in the
-> > DT.
+On Mon, 2012-12-10 at 21:43 +0000, Grant Likely wrote:
+> > Sorry for my pci ignorance (have never got hw for mb/zynq)
+> > I just want to get better overview how we should we our drivers to
+> be compatible.
+> > 
+> > Does it mean that pci is supposed be always 64 bit wide?
+> > And there is no option to have just 32bit values.
 > 
-> That's not a unique feature. I'm not sure if any powerpc systems do
-> that though.
+> Yes, PCIe addressing is always 64 bits wide. Even on 32bit PCI systems
+> we use 64 bit PCI addressing in the device tree.
 
-Yes, probably not an unique feature.
+Right. The size & format of an address cell for PCI is specified in the
+OF PCI bindings and we follow that binding. It's always 3 cells.
 
-> > The only "ranges" property I'm using is to allow the DT sub-nodes
-> > describing each PCIe port/lane to access the CPU registers that
-> > allow to see if the PCIe link is up or down, access the PCI
-> > configuration space and so on. So all ranges in my "ranges"
-> > property correspond to normal CPU registers, like the one you would
-> > put in the "reg" property for any device. The fact that those
-> > devices are PCIe is really orthogonal here.
-> 
-> That doesn't really sound right.
+Cheers,
+Ben.
 
-Very likely, but I still don't get what is "the right way".
 
-> I don't think deviating from the normal binding is the right approach.
-> Perhaps the host driver should fill in the ranges property with the
-> addresses it uses. Then any child devices will get the right address
-> translation.
-
-I don't really understand what you mean here. If you look at the host
-driver code (arch/arm/mach-mvebu/pcie.c), for each PCIe interface
-is simply does:
-
- * Create an address decoding window for the memory BAR
- * Create an address decoding window for the I/O BAR
- * Associate the memory BAR window address and the I/O bar window
-   address with the PCIe interface
-
-And that's it. See
-https://github.com/MISL-EBU-System-SW/mainline-public/blob/marvell-pcie-v1/arch/arm/mach-mvebu/pcie.c#L107.
-
-So this driver is both "deciding" of the physical addresses for each
-PCIe interface, and "associating" them with the PCIe interfaces. How is
-it useful to feed some addresses back into the Device Tree?
-
-> Also, while the h/w may support practically any config, there are
-> practical constraints of what Linux will use like there's no reason to
-> support more than 64K i/o space. PCI memory addresses generally start
-> at 0x100000. You probably don't need more than 1 memory window per
-> root complex (although prefetchable memory may also be needed).
-
-I allocate one 64K I/O window and one memory window per PCIe interface
-whose link is up (i.e a PCIe device is connected).
-
-> You could let the DT settings drive the address window configuration.
-
-No, because I don't want to have absolute addresses for the windows: I
-have 10 PCIe interfaces, but often, only a few of them are used. So I
-don't want in the Device Tree to over-allocate hundreds of MB of
-physical address space if it's not useful.
-
-PCIe is dynamic, address window configuration is dynamic. And we should
-hardcode all this configuration statically in the DT? Doesn't seem like
-the right solution.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
