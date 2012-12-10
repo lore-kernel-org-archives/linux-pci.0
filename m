@@ -1,94 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:50206 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934595Ab2LIW77 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 9 Dec 2012 17:59:59 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 2/6] ACPI: Change the ordering of PCI root bridge driver registrarion
-Date: Mon, 10 Dec 2012 00:00:47 +0100
-Message-ID: <1772854.QSySvgjB3i@vostro.rjw.lan>
-In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
+Received: from mail-yh0-f52.google.com ([209.85.213.52]:52979 "EHLO
+	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751280Ab2LJXYs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 18:24:48 -0500
+Received: by mail-yh0-f52.google.com with SMTP id o22so702877yho.11
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 15:24:48 -0800 (PST)
+Message-ID: <50C66F3C.3010204@gmail.com>
+Date: Mon, 10 Dec 2012 17:24:44 -0600
+From: Rob Herring <robherring2@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: monstr@monstr.eu, David Laight <David.Laight@ACULAB.COM>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu> <AE90C24D6B3A694183C094C60CF0A2F6026B70E7@saturn3.aculab.com> <50C60839.70603@monstr.eu> <20121210181525.3ccd87c6@skate>
+In-Reply-To: <20121210181525.3ccd87c6@skate>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 12/10/2012 11:15 AM, Thomas Petazzoni wrote:
+> Dear Michal Simek,
+> 
+> On Mon, 10 Dec 2012 17:05:13 +0100, Michal Simek wrote:
+> 
+>> CC: Thomas: I think it will be interesting to see this discussion
+>> because you are using size-cell/address-cells equal 1.
+>> http://www.spinics.net/lists/arm-kernel/msg211839.html
+> 
+> Thanks for Cc'ing me.
+> 
+> The thing is that on Marvell SoCs, we don't need to describe statically
+> in the Device Tree the translation between CPU addresses and PCI device
+> addresses, because those translations are set up dynamically at run
+> time through address decoding windows.
+> 
+> Marvell SoCs have up to 20 configurable address windows, which allow
+> you, at run time, to say "I would like the range from physical address
+> 0xYYYYYYYY to 0xZZZZZZZZ to correspond to the PCIe device in port 1,
+> lane 2, or to the NAND, or to this or that device". Therefore, in the
+> PCIe driver I proposed for the Armada 370/XP SoCs [1], there is no need
+> to encode all those ranges statically in the DT.
 
-Devices created by acpi_create_platform_device() sometimes may need
-to be added to the device hierarchy as children of PCI bridges.  For
-this purpose, however, the struct pci_dev objects representing those
-bridges need to exist before the platform devices in question are
-added, but this is only possible if the PCI root bridge driver is
-registered before the initial scanning of the ACPI namespace
-(that driver's .add() routine creates the required struct pci_dev
-objects).
+That's not a unique feature. I'm not sure if any powerpc systems do that
+though.
 
-For this reason, call acpi_pci_root_init() from acpi_scan_init()
-before scanning the ACPI namespace for the first time instead of
-running it from a separate subsys initcall.  Since the previous patch
-has changed the ACPI namespace scanning algorithm, this change does
-not affect the PCI root bridge driver's functionality during boot.
-It also makes the situation during boot more similar to the situation
-during hot-plug (in which the PCI root bridge driver is always
-present) and so it helps to reduce arbitary differences between
-the hot-plug and boot PCI root bridge code.
+> The only "ranges" property I'm using is to allow the DT sub-nodes
+> describing each PCIe port/lane to access the CPU registers that allow
+> to see if the PCIe link is up or down, access the PCI configuration
+> space and so on. So all ranges in my "ranges" property correspond to
+> normal CPU registers, like the one you would put in the "reg" property
+> for any device. The fact that those devices are PCIe is really
+> orthogonal here.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/internal.h |    1 +
- drivers/acpi/pci_root.c |    4 +---
- drivers/acpi/scan.c     |    1 +
- 3 files changed, 3 insertions(+), 3 deletions(-)
+That doesn't really sound right.
 
-Index: linux/drivers/acpi/internal.h
-===================================================================
---- linux.orig/drivers/acpi/internal.h
-+++ linux/drivers/acpi/internal.h
-@@ -67,6 +67,7 @@ struct acpi_ec {
- 
- extern struct acpi_ec *first_ec;
- 
-+int acpi_pci_root_init(void);
- int acpi_ec_init(void);
- int acpi_ec_ecdt_probe(void);
- int acpi_boot_ec_enable(void);
-Index: linux/drivers/acpi/pci_root.c
-===================================================================
---- linux.orig/drivers/acpi/pci_root.c
-+++ linux/drivers/acpi/pci_root.c
-@@ -674,7 +674,7 @@ static int acpi_pci_root_remove(struct a
- 	return 0;
- }
- 
--static int __init acpi_pci_root_init(void)
-+int __init acpi_pci_root_init(void)
- {
- 	acpi_hest_init();
- 
-@@ -687,5 +687,3 @@ static int __init acpi_pci_root_init(voi
- 
- 	return 0;
- }
--
--subsys_initcall(acpi_pci_root_init);
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -1828,6 +1828,7 @@ int __init acpi_scan_init(void)
- 	}
- 
- 	acpi_power_init();
-+	acpi_pci_root_init();
- 
- 	/*
- 	 * Enumerate devices in the ACPI namespace.
+> Of course, I have no idea if I'm doing a correct usage of the DT, but I
+> certainly don't need those 6 values ranges with bits to say if it's I/O
+> space, memory space, bus number, device number and so on. The physical
+> addresses at which I'm setting up my address decoding windows are
+> decided dynamically at runtime, depending on the number of PCIe devices
+> that are found in the different PCIe slots (for now, those windows have
+> a statically defined size, but I'd ideally would like to size them to
+> match exactly the size of the PCIe device memory, in order to avoid
+> wasting physical address space, but I haven't found how to get the size
+> needed for each PCIe device during the ARM pcibios initialization
+> sequence).
+
+I don't think deviating from the normal binding is the right approach.
+Perhaps the host driver should fill in the ranges property with the
+addresses it uses. Then any child devices will get the right address
+translation.
+
+Also, while the h/w may support practically any config, there are
+practical constraints of what Linux will use like there's no reason to
+support more than 64K i/o space. PCI memory addresses generally start at
+0x100000. You probably don't need more than 1 memory window per root
+complex (although prefetchable memory may also be needed).
+
+You could let the DT settings drive the address window configuration.
+
+Rob
+
+> For those willing to have a look at the PCIe patch set for Armada
+> 370/XP, see:
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2012-December/136455.html.
+> The core of the PCIe driver and its DT binding documentation is at
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2012-December/136711.html.
+> 
+> Thanks a lot for your comments,
+> 
+> Thomas
+> 
+> [1] that I hope to extend to cover previous Marvell SoCs as well, they
+>     work basically the same way
+> 
 
