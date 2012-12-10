@@ -1,65 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1355868912.18964.381.camel@misato.fc.hp.com>
-Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects
- from probing ACPI drivers
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Date: Tue, 18 Dec 2012 15:15:12 -0700
-In-Reply-To: <3027479.MToB281uxK@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
-	 <4082842.31rfDviYHK@vostro.rjw.lan>
-	 <1355847041.18964.369.camel@misato.fc.hp.com>
-	 <3027479.MToB281uxK@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:34086 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754123Ab2LJPFi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 10:05:38 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so1992293lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 07:05:37 -0800 (PST)
+Message-ID: <50C5FA3E.9030303@monstr.eu>
+Date: Mon, 10 Dec 2012 16:05:34 +0100
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
+MIME-Version: 1.0
+To: Rob Herring <robherring2@gmail.com>
+CC: devicetree-discuss@lists.ozlabs.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com>
+In-Reply-To: <50C5F11D.9060006@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-12-18 at 22:57 +0100, Rafael J. Wysocki wrote:
-> On Tuesday, December 18, 2012 09:10:41 AM Toshi Kani wrote:
-> > On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
- :
-> > We need to decide which module is responsible for calling .bind().  I
-> > think it should be the ACPI scan module, not the ACPI PCI root bridge
-> > driver, because:
-> >  - bind() needs to be called when _ADR device is added.  The ACPI scan
-> > module can scan any devices, while the PCI root driver can only scan
-> > when it is added.
-> >  - acpi_bus_remove() calls unbind() at hot-remove.  The same module
-> > should be responsible for both bind() and unbind() handling.
-> >  - It is cleaner to keep struct acpi_device_ops interface to be called
-> > by the ACPI core.
-> 
-> I agree with that. :-)
-> 
-> Moreover, I don't think we need acpi_pci_bind() and acpi_pci_unbind() at all.
-> 
-> > So, I would propose the following changes.
-> > 
-> >  - Move the acpi_hot_add_bind() call back to the original place after
-> > the device_attach() call.
-> >  - Rename the name of acpi_hot_add_bind() to something like
-> > acpi_bind_adr_device() since it is no longer hot-add only (and is
-> > specific to _ADR devices).
-> >  - Create its pair function, acpi_unbind_adr_device(), which is called
-> > from acpi_bus_remove().  When a constructor interface is introduced, its
-> > destructor should be introduced as well. 
-> >  - Remove the binding procedure from acpi_pci_root_add().  This should
-> > be done in patch [2/6].
-> 
-> Well, what about moving the code from acpi_pci_bind()/acpi_pci_unbind()
-> somewhere else and removing those things altogether?
+On 12/10/2012 03:26 PM, Rob Herring wrote:
+> On 12/10/2012 06:20 AM, Michal Simek wrote:
+>> Hi Grant and others,
+>>
+>> I have a question regarding number of cells in ranges property
+>> for pci and pcie nodes.
+>>
+>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
+>> sequoia.dts, etc)
+>> but also 6 cells format too (mpc832x_mds.dts)
+>>
+>> Here is shown 6 cells ranges format and describe
+>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>>
+>> And also in documentation in the linux
+>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+>>
+>> Both format uses:
+>> #size-cells = <2>;
+>> #address-cells = <3>;
+>>
+>> What is valid format?
+>
+> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
+> are valid when the host bus is 32-bit. The ranges property is <<child
+> address> <parent address> <size>>. The parent address #address-cells is
+> taken from the parent node.
 
-Sounds nice.  It will be bonus point if you can do that. :-)
+Ok. Got it.
+
+Here is what we use on zynq and microblaze - both 32bit which should be fine.
+
+	ps7_axi_interconnect_0: axi@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		axi_pcie_0: axi-pcie@50000000 {
+			#address-cells = <3>;
+			#size-cells = <2>;
+			compatible = "xlnx,axi-pcie-1.05.a";
+			ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+			...
+		}
+	}
+
+What I am wondering is pci_process_bridge_OF_ranges() at arch/powerpc/kernel/pci-common.c
+where there are used some hardcoded values which should be probably loaded from device-tree.
+
+For example:
+683         int np = pna + 5;
+...
+702                 pci_addr = of_read_number(ranges + 1, 2);
+703                 cpu_addr = of_translate_address(dev, ranges + 3);
+704                 size = of_read_number(ranges + pna + 3, 2);
+
+
+Unfortunately we have copied it to microblaze.
 
 Thanks,
--Toshi
+Michal
 
 
+
+
+
+
+-- 
+Michal Simek, Ing. (M.Eng)
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
+Microblaze U-BOOT custodian
