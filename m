@@ -1,47 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:53460 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755884Ab2LMUyy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 15:54:54 -0500
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:49297 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677Ab2LJMU2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 07:20:28 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so1920235lbb.19
+        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 04:20:27 -0800 (PST)
+Message-ID: <50C5D387.90908@monstr.eu>
+Date: Mon, 10 Dec 2012 13:20:23 +0100
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-In-Reply-To: <20121213204953.GA25085@otc-wbsnb-06>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
- <20121213184820.GC12105@kroah.com> <20121213200857.GA24939@otc-wbsnb-06>
- <CAE9FiQUMSnCPwgbupZ5cFWLMiVxA4FQ2dNWNk+XYhvtEn+F3Ag@mail.gmail.com>
- <CA+55aFwxmhcgORCnDKwcp5EuzvC0iz02O4QR3H_stTXDbprYSA@mail.gmail.com> <20121213204953.GA25085@otc-wbsnb-06>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 13 Dec 2012 12:54:33 -0800
-Message-ID: <CA+55aFwpQA9xFOLxayO8sNtjaTug+uGTzXxuthxrbQZwOfvf0A@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
- DZ77RE-75K motherboard
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: devicetree-discuss@lists.ozlabs.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: pci and pcie device-tree binding - range No cells
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 12:49 PM, Kirill A. Shutemov
-<kirill.shutemov@linux.intel.com> wrote:
->
-> PCI rescan is expensive and generate noise in dmesg. We'll end up with
-> tons of useless messages.
+Hi Grant and others,
 
-So?
+I have a question regarding number of cells in ranges property
+for pci and pcie nodes.
 
-That's still better than adding random DMI string checks.
+Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts, sequoia.dts, etc)
+but also 6 cells format too (mpc832x_mds.dts)
 
-And christ, this is at hotplug time only. Nobody cares.
+Here is shown 6 cells ranges format and describe
+http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
 
-            Linus
+And also in documentation in the linux
+Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+
+Both format uses:
+#size-cells = <2>;
+#address-cells = <3>;
+
+What is valid format?
+
+Thanks,
+Michal
+
+-- 
+Michal Simek, Ing. (M.Eng)
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
+Microblaze U-BOOT custodian
