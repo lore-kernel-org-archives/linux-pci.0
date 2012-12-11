@@ -1,57 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:64541 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755602Ab2LFV12 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 16:27:28 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so5725981lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 06 Dec 2012 13:27:27 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAHTX3dLxbVxn+D+AV7L0VsGYFOjas3AJ_3M_xncVfxp02FCy=Q@mail.gmail.com>
-References: <CAHTX3dLxbVxn+D+AV7L0VsGYFOjas3AJ_3M_xncVfxp02FCy=Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 6 Dec 2012 14:27:06 -0700
-Message-ID: <CAErSpo6xRdwzTuPPqnmvmHSp7awnV7=Z85eWFfktb_hm9Aad_A@mail.gmail.com>
-Subject: Re: Sharing PCIE driver between Microblaze and Arm zynq
-To: Michal Simek <michal.simek@xilinx.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-	linux-arch@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	John Linn <John.Linn@xilinx.com>,
-	John Williams <jwilliams@xilinx.com>, linux-pci@vger.kernel.org
+In-Reply-To: <8119513.v7VrlzcaZC@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	<CAE9FiQWZ8WaAJm8ayU+woVRqNLdSRtPS4=gpsrJovmzrUG6FNw@mail.gmail.com>
+	<38722368.Fl8pJoLSRi@vostro.rjw.lan>
+	<8119513.v7VrlzcaZC@vostro.rjw.lan>
+Date: Mon, 10 Dec 2012 18:26:08 -0800
+Message-ID: <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <jiang.liu@huawei.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-On Thu, Dec 6, 2012 at 7:23 AM, Michal Simek <michal.simek@xilinx.com> wrote:
-> Hi guys,
+On Mon, Dec 10, 2012 at 5:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>
+>> OK, thanks for the pointers.  I actually see more differences between our
+>> patchsets.  For one example, you seem to have left the parent->ops.bind()
+>> stuff in acpi_add_single_object() which calls it even drivers_autoprobe is
+>> set.
 >
-> I have a question regarding to sharing generic OF pcie driver between
-> two architectures MB and ARM Zynq.
-> Is drivers/pci/pcie location good for it?
-> Make no sense to have the same driver in two locations.
+> Sorry, that should have been "which calls it even when drivers_autoprobe is
+> not set".  I need to be more careful.
+>
 
-I think you're talking about a PCI host bridge driver.  It would
-definitely be nice to move toward a generic, shared driver.  Host
-bridge drivers are responsible for enumerating the PCI hierarchy below
-the bridge.  Enumeration is not really PCIe-specific, so I wouldn't
-put it in drivers/pci/pcie.
+oh,  Jiang Liu had one patch to remove that workaround.
 
-> Is using readl/writel IO functions in this driver the best option
-> which we can have?
-> Or is there any other recommendation?
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=b40dba80c2b8395570d8357e6b3f417c27c84504
 
-I'm not really a driver person, but if you're writing a new driver,
-wouldn't you use the iomap interfaces (ioremap(), ioread32(), etc)
-rather than readl()?
+ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
 
-> Also just want to check if it is correct to use pcie device_type.
+Maybe you can review that patches in my for-pci-next2...
+those are ACPI related anyway.
 
-I don't know what you're asking here.  Can you elaborate or give a
-specific example?
+those patches have been there for a while, and Bjorn did not have time
+to digest them.
 
-> The rest should be the same with pci description:
-> (http://devicetree.org/MPC5200:PCI#PCI_Address_Translation).
+or you prefer I resend updated version as huge whole patchset?
+
+Thanks
+
+Yinghai
