@@ -1,79 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel DZ77RE-75K motherboard
-Date: Thu, 13 Dec 2012 17:31:48 +0200
-Message-Id: <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
-In-Reply-To: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
+Date: Tue, 11 Dec 2012 13:45:43 +0100
+Message-ID: <1918088.8lbRqmEGMX@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <8119513.v7VrlzcaZC@vostro.rjw.lan> <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Monday, December 10, 2012 06:26:08 PM Yinghai Lu wrote:
+> On Mon, Dec 10, 2012 at 5:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >>
+> >> OK, thanks for the pointers.  I actually see more differences between our
+> >> patchsets.  For one example, you seem to have left the parent->ops.bind()
+> >> stuff in acpi_add_single_object() which calls it even drivers_autoprobe is
+> >> set.
+> >
+> > Sorry, that should have been "which calls it even when drivers_autoprobe is
+> > not set".  I need to be more careful.
+> >
+> 
+> oh,  Jiang Liu had one patch to remove that workaround.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=b40dba80c2b8395570d8357e6b3f417c27c84504
+> 
+> ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
 
-BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
-hotplug before devices behind Thunderbolt are ready to be enumerated.
+OK, so I'm looking at the current code, which for me is the master branch of
+the linux-pm.git tree (the linux-next branch is the same ATM), and I'm not
+seeing acpi_pci_unbind_cb() in there.  So surely this patch applies to
+something different, right?  In which case I wonder what reason there is for
+me to look at it at all?
 
-Let's delay enumeration by 2 seconds.
+Besides, I think it may be done differently and in a more straightforward
+way.  Namely, on top of my current patchset, it is guaranteed that not only
+struct pci_dev objects will always be registered after the companion struct
+acpi_device ones, but also they always will be *created* after those
+companion objects have been registered.  So in principle we can populate
+a new struct pci_dev's ACPI handle as soon as in pci_scan_device(),
+next to pci_set_of_node().  Then, we can do something like acpi_pci_bind(),
+although without the whole acpi_get_pci_dev() nonsense, in pci_setup_device(),
+in which case we won't need to do it anywhere else.
 
-Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+As an added benefit, acpi_platform_notify() would then see a populated ACPI
+handle in that struct pci_dev when finally registering the PCI device, so it
+wouldn't need to do the whole acpi_find_bridge_device() and type->find_device()
+dance.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 1a2b3ca..165987a 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -49,6 +49,7 @@
- #include <linux/mutex.h>
- #include <linux/slab.h>
- #include <linux/acpi.h>
-+#include <linux/dmi.h>
- 
- #include "../pci.h"
- #include "acpiphp.h"
-@@ -1327,6 +1328,19 @@ out:
- static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 					void *context)
- {
-+	unsigned long delay = 0;
-+	const char *board_name;
-+
-+	board_name = dmi_get_system_info(DMI_BOARD_NAME);
-+	/*
-+	 * BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
-+	 * hotplug before devices behind Thunderbolt are ready to be
-+	 * enumerated.
-+	 * Let's delay enumeration by 2 seconds.
-+	 */
-+	if (board_name && !strcmp(board_name, "DZ77RE-75K"))
-+		delay = 2 * HZ;
-+
- 	/*
- 	 * Currently the code adds all hotplug events to the kacpid_wq
- 	 * queue when it should add hotplug events to the kacpi_hotplug_wq.
-@@ -1336,7 +1350,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
- 	 * don't deadlock on hotplug actions.
- 	 */
- 	alloc_acpiphp_hp_work(handle, type, context,
--			      _handle_hotplug_event_bridge, 0);
-+			      _handle_hotplug_event_bridge, delay);
- }
- 
- static void _handle_hotplug_event_func(struct work_struct *work)
+> Maybe you can review that patches in my for-pci-next2...
+> those are ACPI related anyway.
+
+I can, provided that (1) they are based on top of my tree or v3.7 and (2)
+they don't conflict with patches we're currently discussing.
+
+> those patches have been there for a while, and Bjorn did not have time
+> to digest them.
+
+Well, Bjorn's review bandwidth is limited and we need to take that into
+account.
+
+> or you prefer I resend updated version as huge whole patchset?
+
+No, no huge patchsets, please.  Let's take one step at a time, so that
+everyone involved/interested can understand what's going on, OK?
+
+My review capacity also is not unlimited, mind you.  I can't promise I'll
+have the time to review more than a few patches a day (where "a few" is
+rather less than "several").
+
+Thanks,
+Rafael
+
+
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
