@@ -1,164 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63117 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346Ab2LALgp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 1 Dec 2012 06:36:45 -0500
-Date: Sat, 1 Dec 2012 09:36:14 -0200
-From: Mauro Carvalho Chehab <mchehab@redhat.com>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] aerdrv: Trace Event for AER
-Message-ID: <20121201093614.720aa96a@redhat.com>
-In-Reply-To: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
-References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from service87.mimecast.com ([91.220.42.44]:35213 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578Ab2LLQpD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 11:45:03 -0500
+Date: Wed, 12 Dec 2012 16:44:58 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Michal Simek <monstr@monstr.eu>,
+	Rob Herring <robherring2@gmail.com>,
+	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Liviu.Dudau@arm.com
+Subject: Re: pci and pcie device-tree binding - range No cells
+Message-ID: <20121212164458.GA17425@arm.com>
+References: <50C5D387.90908@monstr.eu>
+ <50C5F11D.9060006@gmail.com>
+ <50C5FA3E.9030303@monstr.eu>
+ <50C5FE0F.3050108@gmail.com>
+ <20121210214127.D51773E0796@localhost>
+ <50C85E7D.5080006@monstr.eu>
+ <CACxGe6udeSbEfibC53v0wu8vFRE6K3Fd_P6EX-3JS9F2M=wUeA@mail.gmail.com>
+ <CAPcvp5EJH-Q6wd7my+V+FUVE1=hzwMN-yOfHiukGvDmkcoRcsQ@mail.gmail.com>
+ <20121212121912.GA2776@arm.com>
+ <20121212133424.GA26280@avionic-0098.adnet.avionic-design.de>
+MIME-Version: 1.0
+In-Reply-To: <20121212133424.GA26280@avionic-0098.adnet.avionic-design.de>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Fri, 30 Nov 2012 14:33:30 -0700
-Lance Ortiz <lance.ortiz@hp.com> escreveu:
-
-> This header file will define a new trace event that will be triggered when
-> a AER event occurs.  The following data will be provided to the trace
-> event.
+On Wed, Dec 12, 2012 at 01:34:24PM +0000, Thierry Reding wrote:
+> On Wed, Dec 12, 2012 at 12:19:12PM +0000, Andrew Murray wrote:
+> > I've been working on a relatively architecture agnostic PCI host bridge driver
+> > and also wanted to avoid duplicating more generic DT parsing code for PCI
+> > bindings.
+> > 
+> > I've ended up with a patch which provides an iterator for returning resources
+> > based on the the typical 'ranges' binding. This has ended up living in
+> > drivers/of/address.c. I originally started out in drivers/of/pci.c and
+> > drivers/pci/pci-of.c but found there were good (and static) implementations in
+> > drivers/of/address.c which can be reused (e.g. of_bus_pci_get_flags,
+> > bus->count_cells).
+> > 
+> > I'm not just ready to post it - but can do before early next week if you can
+> > wait.
 > 
-> char * name -	String containing the device path
+> I already posted a similar patch[0] as part of a larger series to bring
+> DT support to Tegra PCIe back in July. I suppose what you have must be
+> something pretty close to that. Most of the stuff that had me occupied
+> since then should be done soon and I was planning on resurrecting the
+> series one of these days.
 
-You renamed it to dev_name. Please fix it at the commit comments.
+Thanks for the reference. I've submitted my patch, it's along the lines of your
+existing patch.
 
-> 
-> u32 status - 	Either the correctable or uncorrectable register
-> 		indicating what error or errors have been see.
-> 
-> u8 severity - 	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-> 
-> The trace event will also provide a trace string that may look like:
-> 
-> "0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-> TLP"
-> 
-> v1-v2 Move header from include/ras/aer_event.h to
-> include/trace/events/ras.h
+I'm happy to take the best bits from both, drop mine, etc.
 
-Please don't call it as "ras.h". Call it, instead, ras_aer.h (or something
-similar) as, if we're moving the tracing back to include/trace/events/,
-the same should happen for the memory error events.
+Andrew Murray
 
-> 
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-> ---
-> 
->  include/trace/events/ras.h |   77 ++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 77 insertions(+), 0 deletions(-)
->  create mode 100644 include/trace/events/ras.h
-> 
-> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-> new file mode 100644
-> index 0000000..f77d009
-> --- /dev/null
-> +++ b/include/trace/events/ras.h
-> @@ -0,0 +1,77 @@
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM aer_event
-> +#define TRACE_INCLUDE_FILE ras 
-> +
-> +#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define _TRACE_AER_H
-> +
-> +#include <linux/tracepoint.h>
-> +#include <linux/edac.h>
-> +
-> +
-> +/*
-> + * Anhance Error Reporting (AER) PCIE Report Error
-> + *
-> + * These events are generated when hardware detects a corrected or
-> + * uncorrected event on a pci express device and reports
-> + * errors.  The event reports the following data.
-> + *
-> + * char * dev_name -	String containing the device identification
-> + * u32 status -		Either the correctable or uncorrectable register
-> + *			indicating what error or errors have been seen
-> + * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-> + */
-> +
-> +#define correctable_error_string			\
-> +	{BIT(0),	"Receiver Error"},		\
-> +	{BIT(6),	"Bad TLP"},			\
-> +	{BIT(7),	"Bad DLLP"},			\
-> +	{BIT(8),	"RELAY_NUM Rollover"},		\
-> +	{BIT(12),	"Replay Timer Timeout"},	\
-> +	{BIT(13),	"Advisory Non-Fatal"}
-
-Hmm... isn't something missing here? I'm seeing more bits defined at the
-PCIe V3.0 spec for Offset 10h:
-
-bit 14 - Corrected Internal Error 
-bit 15 - Header Log Overflow 
-
-> +#define uncorrectable_error_string			\
-> +	{BIT(4),	"Data Link Protocol"},		\
-> +	{BIT(12),	"Poisoned TLP"},		\
-> +	{BIT(13),	"Flow Control Protocol"},	\
-> +	{BIT(14),	"Completion Timeout"},		\
-> +	{BIT(15),	"Completer Abort"},		\
-> +	{BIT(16),	"Unexpected Completion"},	\
-> +	{BIT(17),	"Receiver Overflow"},		\
-> +	{BIT(18),	"Malformed TLP"},		\
-> +	{BIT(19),	"ECRC"},			\
-> +	{BIT(20),	"Unsupported Request"}
-
-Hmm... isn't something missing here? I'm seeing more bits defined at the
-PCIe V3.0 spec for Offset 04h:
-
-bit 5 - Surprise Down Error 
-bit 21 - ACS Violation 
-bit 22 - Uncorrectable Internal Error 
-bit 23 - MC Blocked TLP 
-bit 24 - AtomicOp Egress Blocked 
-bit 25 - TLP Prefix Blocked Error 
-
-> +
-> +TRACE_EVENT(aer_event,
-> +	TP_PROTO(const char *dev_name,
-> +		 const u32 status,
-> +		 const u8 severity),
-> +
-> +	TP_ARGS(dev_name, status, severity),
-> +
-> +	TP_STRUCT__entry(
-> +		__string(	dev_name,	dev_name	)
-> +		__field(	u32,		status		)
-> +		__field(	u8,		severity	)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		__assign_str(dev_name, dev_name);
-> +		__entry->status		= status;
-> +		__entry->severity	= severity;
-> +	),
-> +
-> +	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-> +		__get_str(dev_name),
-> +		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
-> +			((__entry->severity == HW_EVENT_ERR_FATAL) ?
-> +			"Fatal" : "Uncorrected"),
-> +		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-> +		__print_flags(__entry->status, "|", correctable_error_string) :
-> +		__print_flags(__entry->status, "|", uncorrectable_error_string))
-> +);
-> +
-> +#endif /* _TRACE_AER_H */
-> +
-> +/* This part must be outside protection */
-> +#include <trace/define_trace.h>
-> 
-
-
--- 
-Regards,
-Mauro
