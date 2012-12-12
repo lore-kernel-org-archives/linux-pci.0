@@ -1,103 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:40702 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750912Ab2L0Aq2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 19:46:28 -0500
-Received: by mail-la0-f53.google.com with SMTP id w12so11240440lag.26
-        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 16:46:27 -0800 (PST)
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36960 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754053Ab2LLRWp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 12:22:45 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so795391pad.19
+        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 09:22:45 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20121127064618.GM25516@redhat.com>
-References: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
- <20121120134104.GI27378@stefanha-thinkpad.redhat.com> <F9E001219150CB45BEDC82A650F360C90147066B@G4W3208.americas.hpqcorp.net>
- <20121126234612.GC10634@amt.cnet> <20121127064618.GM25516@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Dec 2012 17:46:05 -0700
-Message-ID: <CAErSpo6c-_Wy0doXKhuFvZs=S+_taDAk7b7893vOX3VihuvhRA@mail.gmail.com>
-Subject: Re: [Qemu-devel] [PATCH 0/4] AER-KVM: Error containment of PCI
- pass-thru devices assigned to KVM guests
-To: Gleb Natapov <gleb@redhat.com>
-Cc: Marcelo Tosatti <mtosatti@redhat.com>,
-	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Stefan Hajnoczi <stefanha@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20121212171651.346b81ab@skate>
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com>
+ <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B70E7@saturn3.aculab.com>
+ <50C60839.70603@monstr.eu> <20121210181525.3ccd87c6@skate>
+ <50C66F3C.3010204@gmail.com> <20121212171651.346b81ab@skate>
+From: Grant Likely <grant.likely@secretlab.ca>
+Date: Wed, 12 Dec 2012 17:22:22 +0000
+Message-ID: <CACxGe6tdmFW9Y9Nub5qZMXg5mQHTgapxX3Yz67XpbrE=2PB5bg@mail.gmail.com>
+Subject: Re: pci and pcie device-tree binding - range No cells
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Rob Herring <robherring2@gmail.com>, linux-pci@vger.kernel.org,
+	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	David Laight <David.Laight@aculab.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 26, 2012 at 11:46 PM, Gleb Natapov <gleb@redhat.com> wrote:
-> On Mon, Nov 26, 2012 at 09:46:12PM -0200, Marcelo Tosatti wrote:
->> On Tue, Nov 20, 2012 at 02:09:46PM +0000, Pandarathil, Vijaymohan R wrote:
->> >
->> >
->> > > -----Original Message-----
->> > > From: Stefan Hajnoczi [mailto:stefanha@gmail.com]
->> > > Sent: Tuesday, November 20, 2012 5:41 AM
->> > > To: Pandarathil, Vijaymohan R
->> > > Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; qemu-devel@nongnu.org;
->> > > linux-kernel@vger.kernel.org
->> > > Subject: Re: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru
->> > > devices assigned to KVM guests
->> > >
->> > > On Tue, Nov 20, 2012 at 06:31:48AM +0000, Pandarathil, Vijaymohan R wrote:
->> > > > Add support for error containment when a PCI pass-thru device assigned to
->> > > a KVM
->> > > > guest encounters an error. This is for PCIe devices/drivers that support
->> > > AER
->> > > > functionality. When the OS is notified of an error in a device either
->> > > > through the firmware first approach or through an interrupt handled by
->> > > the AER
->> > > > root port driver, concerned subsystems are notified by invoking callbacks
->> > > > registered by these subsystems. The device is also marked as tainted till
->> > > the
->> > > > corresponding driver recovery routines are successful.
->> > > >
->> > > > KVM module registers for a notification of such errors. In the KVM
->> > > callback
->> > > > routine, a global counter is incremented to keep track of the error
->> > > > notification. Before each CPU enters guest mode to execute guest code,
->> > > > appropriate checks are done to see if the impacted device belongs to the
->> > > guest
->> > > > or not. If the device belongs to the guest, qemu hypervisor for the guest
->> > > is
->> > > > informed and the guest is immediately brought down, thus preventing or
->> > > > minimizing chances of any bad data being written out by the guest driver
->> > > > after the device has encountered an error.
->> > >
->> > > I'm surprised that the hypervisor would shut down the guest when PCIe
->> > > AER kicks in for a pass-through device.  Shouldn't we pass the AER event
->> > > into the guest and deal with it there?
->> >
->> > Agreed. That would be the ideal behavior and is planned in a future patch.
->> > Lack of control over the capabilities/type of the OS/drivers running in
->> > the guest is also a concern in passing along the event to the guest.
->> >
->> > My understanding is that in the current implementation of Linux/KVM, these
->> > errors are not handled at all and can potentially cause a guest hang or
->> > crash or even data corruption depending on the implementation of the guest
->> > driver for the device. As a first step, these patches make the behavior
->> > better by doing error containment with a predictable behavior when such
->> > errors occur.
+On Wed, Dec 12, 2012 at 4:16 PM, Thomas Petazzoni
+<thomas.petazzoni@free-electrons.com> wrote:
+> Dear Rob Herring,
+>
+> On Mon, 10 Dec 2012 17:24:44 -0600, Rob Herring wrote:
+>
+>> > Marvell SoCs have up to 20 configurable address windows, which allow
+>> > you, at run time, to say "I would like the range from physical
+>> > address 0xYYYYYYYY to 0xZZZZZZZZ to correspond to the PCIe device
+>> > in port 1, lane 2, or to the NAND, or to this or that device".
+>> > Therefore, in the PCIe driver I proposed for the Armada 370/XP SoCs
+>> > [1], there is no need to encode all those ranges statically in the
+>> > DT.
 >>
->> For both ACPI notifications and Linux PCI AER driver there is a way for
->> the PCI driver to receive a notification, correct?
+>> That's not a unique feature. I'm not sure if any powerpc systems do
+>> that though.
+>
+> Yes, probably not an unique feature.
+>
+>> > The only "ranges" property I'm using is to allow the DT sub-nodes
+>> > describing each PCIe port/lane to access the CPU registers that
+>> > allow to see if the PCIe link is up or down, access the PCI
+>> > configuration space and so on. So all ranges in my "ranges"
+>> > property correspond to normal CPU registers, like the one you would
+>> > put in the "reg" property for any device. The fact that those
+>> > devices are PCIe is really orthogonal here.
 >>
->> Can just have virt/kvm/assigned-dev.c code register such a notifier (as
->> a "PCI driver") and then perform appropriate action?
->>
->> Also the semantics of "tainted driver" is not entirely clear.
->>
->> Is there any reason for not having this feature for VFIO only, as KVM
->> device assigment is being phased out?
->>
-> Exactly. We shouldn't add checks to guest entry code and introduce new
-> userspace ABI to add minor feature to deprecated code. New userspace ABI
-> means that QEMU changes are needed, so the feature will be fully functional
-> only with latest QEMU which is capable of using VFIO anyway.
+>> That doesn't really sound right.
+>
+> Very likely, but I still don't get what is "the right way".
 
-I'm ignoring these patches for now.  Please address the review
-comments if you think we still need to do something here.
+Hi Thomas,
 
-Bjorn
+I just went and looked at your binding. Here's the snippet I found interesting:
+
+pcie-controller {
++ compatible = "marvell,armada-370-xp-pcie";
++ status = "disabled";
++ #address-cells = <1>;
++ #size-cells = <1>;
++ ranges = <0       0xd0040000 0x2000 /* port0x1_port0 */
++  0x2000  0xd0042000 0x2000 /* port2x1_port0 */
++  0x4000  0xd0044000 0x2000 /* port0x1_port1 */
++  0x8000  0xd0048000 0x2000 /* port0x1_port2 */
++  0xC000  0xd004C000 0x2000 /* port0x1_port3 */
++  0x10000 0xd0080000 0x2000 /* port1x1_port0 */
++  0x12000 0xd0082000 0x2000 /* port3x1_port0 */
++  0x14000 0xd0084000 0x2000 /* port1x1_port1 */
++  0x18000 0xd0088000 0x2000 /* port1x1_port2 */
++  0x1C000 0xd008C000 0x2000 /* port1x1_port3 */>;
++
++ pcie0.0 at 0xd0040000 {
++ reg = <0x0 0x2000>;
++ interrupts = <58>;
++ clocks = <&gateclk 5>;
++ marvell,pcie-port = <0>;
++ marvell,pcie-lane = <0>;
++ status = "disabled";
++ };
++
++ pcie0.1 at 0xd0044000 {
++ reg = <0x4000 0x2000>;
++ interrupts = <59>;
++ clocks = <&gateclk 5>;
++ marvell,pcie-port = <0>;
++ marvell,pcie-lane = <1>;
++ status = "disabled";
++ };
+[... rest trimmed for berevity]
+
+You're right, if you're doing dynamic allocation of windows, then you
+really don't need to have a ranges property. However, the way the PCI
+node is set up definitely looks incorrect.
+
+PCI already has a very specific binding for pci host controller nodes.
+First, #address-cells=<3>; #size-cells=<2>; and device_type="pcie"
+must be there. You don't want to break this. You can find details on
+the pci and pci-express binding here:
+http://www.openfirmware.org/1275/bindings/pci/pci2_1.pdf
+http://www.openfirmware.org/1275/bindings/pci/pci-express.txt
+
+For the child nodes, PCI is a discoverable bus, so normally I wouldn't
+expect to see child nodes at all when using a dtb. The only time nodes
+should be populated is when a device has non-discoverable
+charactersitics. In your example above you do have some additional
+data, but I don't know enough about pci-express to say how best to
+encode them or whether they are needed at all. Ben might have some
+thoughts on this.
+
+When the PCI child nodes are present, it is important to stick with
+the established PCI addressing scheme which uses 3 cells for
+addressing. The first entry in the reg property must represent the
+configuration space so that DT nodes can be matched up with discovered
+devices. There is no requirement to include mappings for the memory
+and io regions if the host controller can assign them dynamically.
+
+I don't think you should need a ranges property at all for what you're
+doing. Access to config space is generally managed by the PCI host
+controller drivers and subsystem, and PCI device drivers don't
+typically use of_ calls directly.
+
+g.
