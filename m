@@ -1,58 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:50724 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069Ab2L0Bd0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 20:33:26 -0500
-Received: by mail-la0-f48.google.com with SMTP id m13so11332178lah.21
-        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 17:33:25 -0800 (PST)
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:51509 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139Ab2LLDD5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Dec 2012 22:03:57 -0500
 MIME-Version: 1.0
-In-Reply-To: <20121205163019.GC28556@liondog.tnic>
-References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
- <20121204210312.4515.13415.stgit@grignak.americas.hpqcorp.net>
- <20121205143202.GD2364@liondog.tnic> <A961433CDFF2F640A2866803152E61F9516F279F@G4W3219.americas.hpqcorp.net>
- <20121205163019.GC28556@liondog.tnic>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Dec 2012 18:33:04 -0700
-Message-ID: <CAErSpo4j5k6uQJHV1sMdOqosVNVygehfXB+y7bB7uH14B6vG8w@mail.gmail.com>
-Subject: Re: [PATCH v7 2/3] aerdrv: Enhanced AER logging
-To: Borislav Petkov <bp@alien8.de>,
-	"Ortiz, Lance E" <lance.oritz@hp.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mchehab@redhat.com" <mchehab@redhat.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1355279525.7216.154.camel@yhuang-dev>
+References: <20121126191002.GE6504@xanatos> <1962497.aG1sFtYjJG@vostro.rjw.lan>
+ <20121207002808.GG5324@xanatos> <7766249.mqYLvmhmrJ@vostro.rjw.lan> <1355279525.7216.154.camel@yhuang-dev>
+From: Andrew Lutomirski <luto@mit.edu>
+Date: Tue, 11 Dec 2012 18:34:58 -0800
+Message-ID: <CAObL_7Fn7Z_0vhZ+RfC-L=+OKqkRpxo6i0wftKfncSwrmb567w@mail.gmail.com>
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+To: Huang Ying <ying.huang@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	=?ISO-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Ming Lei <ming.lei@canonical.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 9:30 AM, Borislav Petkov <bp@alien8.de> wrote:
-> On Wed, Dec 05, 2012 at 04:14:14PM +0000, Ortiz, Lance E wrote:
->> I removed the prefix argument because it was never used by its caller
->> and never set. The reason I added the prefix variable and set it to
->> NULL was to help in breaking up the patch and adding it would help the
->> intermittent patch build without changing too much code. I knew I was
->> actually going to use the variable in patch 3.
+On Tue, Dec 11, 2012 at 6:32 PM, Huang Ying <ying.huang@intel.com> wrote:
+> On Fri, 2012-12-07 at 22:00 +0100, Rafael J. Wysocki wrote:
+>> On Thursday, December 06, 2012 04:28:08 PM Sarah Sharp wrote:
+>> > On Thu, Dec 06, 2012 at 01:43:32AM +0100, Rafael J. Wysocki wrote:
+>> > > On Wednesday, December 05, 2012 04:33:44 PM Sarah Sharp wrote:
+>> > > > Wakeup from D3 works fine on the 3.5.0 kernel, but fails on 3.6.2.  I
+>> > > > haven't fully bisected yet.
+>> > > >
+>> > > > In debugging, I found that if you only enable runtime suspend for the
+>> > > > NEC host controller, the host successfully comes out of D3 when you plug
+>> > > > in a USB device.  However, if you enable runtime PM for the parent PCIe root
+>> > > > port, it stops working.  Disabling D3cold for both devices did not help.
+>> > > >
+>> > > > It looks like a PCI issue, so what sort of debugging info do you need
+>> > > > from me?
+>> > >
+>> > > It looks like this is related to one of the following commits:
+>> >
+>> > > Generally, please try to bisect changes in drivers/pci between v3.5 and v3.6.
+>> >
+>> > Ok, I ran git bisect with only the drivers/pci directory as a target.
+>> >
+>> > > ee85f54 ACPI/PM: specify lowest allowed state for device sleep state
+>> >
+>> > git bisect ended up identifying this as the bad patch, although
+>> > reverting just that patch after the bisect finished didn't seem to help.
+>> > However, it does make sense that this would be the culprit patch, if
+>> > Huang Ying's theory about the PME polling is correct.
+>>
+>> Well, we surely don't handle this particular case correctly, and it shouldn't
+>> be very difficult to fix, so let's hope that this is the culprit. :-)
+>>
 >
-> No, the correct way to do that is to keep all changes that belong
-> logically together in a single patch for ease of reviewing and avoid
-> breakages. And in your case this should be pretty easy: simply move all
-> the 'prefix' touching code to patch #3 and you're done, AFAICT.
+> Please try the patch attached.  With it, USB host controller can be
+> waken up with USB card reader plugging in on my test machine.
 
-Lance, you didn't add all the "prefix" stuff in AER, but since you're
-touching it, I think things will make more sense if you clean it up at
-the same time.  There are a lot of printk() calls there that should be
-converted to dev_printk().
+Potentially silly question: is this better than waking up the PCIe
+port when polling the device (and putting it back to sleep again)?
 
-I think I see why it was done that way -- it sticks either
-KERN_WARNING or KERN_ERR at the beginning of the prefix, then uses
-plain printk() later.  I guess that means you only have to pass around
-the prefix argument, rather than both a "level" and a "struct pci_dev
-*".  But I think it will be simpler overall to pass both and take
-advantage of dev_printk() and stop emulating it.
+--Andy
 
-Bjorn
+>
+> Best Regards,
+> Huang Ying
+>
