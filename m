@@ -1,57 +1,82 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <50C8A7AE.3030500@gmail.com>
+Date: Wed, 12 Dec 2012 23:50:06 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQWr6-=kvrCXKEWFvUHHv6xbHKt-oAdt+VPUMphVUW4U4A@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
-	<150695156.KNRhubloU5@vostro.rjw.lan>
-	<CAErSpo5ZpUaHzYQEpR9Jh0MbcmjHfhKUQ-EpRJH1PNCHR_qnVg@mail.gmail.com>
-	<5457615.T2WjKPXXC4@vostro.rjw.lan>
-	<CAE9FiQUBpu+rUfnvOwDUm8PTYYVfann3SyhhL4k=54EyfRSmLg@mail.gmail.com>
-	<CAErSpo5sGAEO+kcqUsjyrmn_LAzmkWm4ok0c=rBaR_ErwBX23A@mail.gmail.com>
-	<CAE9FiQWr6-=kvrCXKEWFvUHHv6xbHKt-oAdt+VPUMphVUW4U4A@mail.gmail.com>
-Date: Wed, 26 Dec 2012 12:41:05 -0800
-Message-ID: <CAE9FiQVOvqqEFXcRbZt5=8e4fQgmzw03WCS=env46eYADFpXLw@mail.gmail.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
 	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH 1/6] ACPI: Separate adding ACPI device objects from probing
+ ACPI drivers
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4002729.BbipMAJtM0@vostro.rjw.lan>
+In-Reply-To: <4002729.BbipMAJtM0@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> Do you have a reference for this?  I think this might have been true
->> in the past, but I don't think it's true for any version of gcc we
->> support for building Linux.
->
-> http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
+On 12/10/2012 07:00 AM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Currently, as soon as an ACPI device node object (struct acpi_device)
+> is created, the driver core attempts to probe ACPI drivers against
+> it.  That leads to some unpleasant side effects, like the fact that
+> the boot code path for ACPI namespace scanning is different from the
+> analogous hot-plug code path (during boot ACPI drivers are not
+> present when ACPI device node objects are registered, so they are
+> guaranteed not to be probed, which is not the case during hot-plug).
+> That, in turn, leads to unnecessary complications in the PCI
+> enumeration algorithm.
+> 
+> Reduce the differences between the boot and hot-plug cases by
+> splitting the ACPI namespace scanning for devices into two passes,
+> such that struct acpi_device objects are registerd in the first
+> patch without probing ACPI drivers and the drivers are probed
+> against them directly in the second pass.  This way ACPI drivers
+> can assume that all of the ACPI device node objects in the given
+> scope will be registered when their .add() routines run and the
+> hot-plug case becomes the same as the boot case from their
+> perspective.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/scan.c     |   96 +++++++++++++++++++++++++++++++++---------------
+>  include/acpi/acpi_bus.h |    1 
+>  2 files changed, 68 insertions(+), 29 deletions(-)
+> 
+> Index: linux/include/acpi/acpi_bus.h
+> ===================================================================
+> --- linux.orig/include/acpi/acpi_bus.h
+> +++ linux/include/acpi/acpi_bus.h
+> @@ -98,6 +98,7 @@ typedef void (*acpi_op_notify) (struct a
+>  struct acpi_bus_ops {
+>  	u32 acpi_op_add:1;
+>  	u32 acpi_op_start:1;
+> +	u32 acpi_op_match:1;
+>  };
+>  
+>  struct acpi_device_ops {
+> Index: linux/drivers/acpi/scan.c
+> ===================================================================
+> --- linux.orig/drivers/acpi/scan.c
+> +++ linux/drivers/acpi/scan.c
+> @@ -494,7 +494,8 @@ static int acpi_bus_match(struct device
+>  	struct acpi_device *acpi_dev = to_acpi_device(dev);
+>  	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
+>  
+> -	return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
+> +	return acpi_dev->bus_ops.acpi_op_match
+> +		&& !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
+>  }
+Hi Rafael,
+	PCI host bridge hotplug has the same requirement to separate device
+enumeration from device driver binding. And VFIO has a similar requirement too.
+Yinghai and I have implemented two different solutions for PCI host bridge
+hotplug but all rejected by Greg. So it would be great if we could promote
+a common mechanism to the device core to temporarily disable binding drivers
+to devices, which could used to support ACPI hotplug, PCI hotplug and VFIO.
+Regards!
+Gerry
 
-the problem is already addressed by:
-
-| commit f9d14250071eda9972e4c9cea745a11185952114
-| Author: Linus Torvalds <torvalds@linux-foundation.org>
-| Date:   Fri Jan 2 09:29:43 2009 -0800
-|
-|    Disallow gcc versions 4.1.{0,1}
-|
-|    These compiler versions are known to miscompile __weak functions and
-|    thus generate kernels that don't necessarily work correctly.  If a weak
-|    function is int he same compilation unit as a caller, gcc may end up
-|    inlining it, and thus binding the weak function too early.
-|
-|    See
-|
-|        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
-|
-|    for details.
-
-so it is ok to put the __weak in the same file now.
-
-Yinghai
