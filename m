@@ -1,93 +1,125 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-Date: Tue, 11 Dec 2012 01:48:52 +0100
-Message-ID: <1505143.RC4l5yPqAp@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVgJUzDYRWzW5gCK9WwwAzQthXs++JnfOuxVzo-0KSqxQ@mail.gmail.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <3585743.RAy43NB8MZ@vostro.rjw.lan> <CAE9FiQVgJUzDYRWzW5gCK9WwwAzQthXs++JnfOuxVzo-0KSqxQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:48036 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab2LLKhx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 05:37:53 -0500
+Received: by mail-bk0-f46.google.com with SMTP id q16so233236bkw.19
+        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 02:37:52 -0800 (PST)
+Message-ID: <50C85E7D.5080006@monstr.eu>
+Date: Wed, 12 Dec 2012 11:37:49 +0100
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Grant Likely <grant.likely@secretlab.ca>
+CC: Rob Herring <robherring2@gmail.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <20121210214127.D51773E0796@localhost>
+In-Reply-To: <20121210214127.D51773E0796@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 10, 2012 03:22:48 PM Yinghai Lu wrote:
-> On Mon, Dec 10, 2012 at 2:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Monday, December 10, 2012 09:07:06 AM Yinghai Lu wrote:
-> >> On Mon, Dec 10, 2012 at 6:46 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> > On Sunday, December 09, 2012 09:34:42 PM Yinghai Lu wrote:
-> >> >>
-> >> >> Can we expand the BUS_ADD_* concept to other devices instead of just
-> >> >> acpi_device?
-> >> >>
-> >> >> aka we should let struct device has this add_type field.
-> >> >
-> >> > Having done that in ACPI to cover our use case here, we can try to move it
-> >> > into struct device if there are use cases beyond ACPI that can't be covered
-> >> > by using deferred driver probing.
-> >>
-> >> pci device for hotplug have same problem. need to delay driver attach
-> >> for them too.
-> >
-> > OK, I'll take a look.  Any pointers to speed that up?
-> >
-> >> also BUS_ADD_MATCH and BUS_ADD_START are duplicated.
-> >
-> > Not at the moment, they do different things as code goes.
-> 
-> I do think that is same problem which is in the driver/base core.
-> 
-> it should support delay loading driver for the hotplug case at the first point.
-> that is reason that .start is introduced for acpi driver..to workround
-> the problem
-> in driver core.
+On 12/10/2012 10:41 PM, Grant Likely wrote:
+> On Mon, 10 Dec 2012 09:21:51 -0600, Rob Herring <robherring2@gmail.com> wrote:
+>> On 12/10/2012 09:05 AM, Michal Simek wrote:
+>>> On 12/10/2012 03:26 PM, Rob Herring wrote:
+>>>> On 12/10/2012 06:20 AM, Michal Simek wrote:
+>>>>> Hi Grant and others,
+>>>>>
+>>>>> I have a question regarding number of cells in ranges property
+>>>>> for pci and pcie nodes.
+>>>>>
+>>>>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
+>>>>> sequoia.dts, etc)
+>>>>> but also 6 cells format too (mpc832x_mds.dts)
+>>>>>
+>>>>> Here is shown 6 cells ranges format and describe
+>>>>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>>>>>
+>>>>> And also in documentation in the linux
+>>>>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
+>>>>>
+>>>>> Both format uses:
+>>>>> #size-cells = <2>;
+>>>>> #address-cells = <3>;
+>>>>>
+>>>>> What is valid format?
+>>>>
+>>>> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
+>>>> are valid when the host bus is 32-bit. The ranges property is <<child
+>>>> address> <parent address> <size>>. The parent address #address-cells is
+>>>> taken from the parent node.
+>>>
+>>> Ok. Got it.
+>>>
+>>> Here is what we use on zynq and microblaze - both 32bit which should be
+>>> fine.
+>>>
+>>>      ps7_axi_interconnect_0: axi@0 {
+>>>          #address-cells = <1>;
+>>>          #size-cells = <1>;
+>>>          axi_pcie_0: axi-pcie@50000000 {
+>>>              #address-cells = <3>;
+>>>              #size-cells = <2>;
+>>>              compatible = "xlnx,axi-pcie-1.05.a";
+>>>              ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
+>>>              ...
+>>>          }
+>>>      }
+>>>
+>>> What I am wondering is pci_process_bridge_OF_ranges() at
+>>> arch/powerpc/kernel/pci-common.c
+>>> where there are used some hardcoded values which should be probably
+>>> loaded from device-tree.
+>>>
+>>> For example:
+>>> 683         int np = pna + 5;
+>>> ...
+>>> 702                 pci_addr = of_read_number(ranges + 1, 2);
+>>> 703                 cpu_addr = of_translate_address(dev, ranges + 3);
+>>> 704                 size = of_read_number(ranges + pna + 3, 2);
+>>
+>> These would always be correct whether you have 6 or 7 cells. pna is the
+>> parent bus address cells size. The pci address is fixed at 3 cells.
+>>
+>>>
+>>>
+>>> Unfortunately we have copied it to microblaze.
+>>
+>> I look at the PCI DT code in powerpc and see a whole bunch of code that
+>> seems like it should be common. The different per arch pci structs
+>> complicates that. No one has really gotten to looking at PCI DT on ARM
+>> yet except you and Thierry for Tegra. We definitely don't want to create
+>> a 3rd copy. Starting the process of moving it to something like
+>> drivers/pci/pci-of.c would be great.
+>
+> A lot of it should be common. The microblaze code is a copy of the
+> powerpc version. I'll strongly nack any attempt to add a third!  :-)
 
-OK, but let's eliminate .start() first and then go make changes to the
-driver core.  That is, let's take one step at a time. :-)
+Yes it. There are some things which we had fixed because that powerpc
+port is big endian only and we support PCIe on little endian too.
+But changes are really cosmetic.
 
-> >> old add are separated to adding all devices to tree and then matching
-> >> work to load the drivers.
-> >>
-> >> so _START is not needed anymore, only user.start in pci_root driver
-> >> should be removed.
-> >> code in .start could be moved .add without problem.
-> >
-> > Yes, I'm going to do that as the next step.  I didn't want this particular
-> 
-> after you remove that .start, that will the same as my two patches.
-> except that you patches toggle that per-device add_type for every device.
-> 
-> and my patches is only toggle that per device drivers_autoprobe for
-> hot-add devices.
 
-I'm not 100% sure of that, but quite likely that's the case.  I'd like to avoid
-special-casing hotplug in any way, if possible.  Also, I have other reasons to
-do it for all devices (like the resources management for one example).
+> drivers/pci/pci-of.c would be good. I'd also accept drivers/of/pci.c
+> which might actually be a good idea in the short term so that it gets
+> appropriate supervision while being generalized before being moved into
+> the pci directory.
 
-> > patchset to grow too big.  I'll post another one on top of it if people
-> > don't have problems with this one.
-> 
-> yesterday, I replace my two acpi driver delay loading patches with your patches.
-> 
-> during pci root bus hot remove/add test, got the panic...
-
-I don't see what the reason may be at the moment, it would be good to get more
-info (like a screenshot of the panic).
-
-> did not have time to look at it yet.
-
-OK
+Ben: Are you willing to move that ppc code to this location?
+It is probably not good idea that I should do it when I even don't have
+hardware available for testing (Asking someone else).
 
 Thanks,
-Rafael
-
+Michal
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Michal Simek, Ing. (M.Eng)
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
+Microblaze U-BOOT custodian
