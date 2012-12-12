@@ -1,146 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50656 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754669Ab2LLUKo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 12 Dec 2012 15:10:44 -0500
-Message-ID: <1355343043.3224.266.camel@bling.home>
-Subject: Re: pci_enable_msix() fails with ENOMEM/EINVAL
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alex Lyakas <alex@zadarastorage.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Yair Hershko <yair@zadarastorage.com>,
-	Shyam Kaushik <shyam@zadarastorage.com>
-Date: Wed, 12 Dec 2012 13:10:43 -0700
-In-Reply-To: <8AA592B1E5D146039EE6F0A5AA33A8BA@alyakaslap>
-References: <190FFE9600054603A543CCDA4408AC89@alyakaslap>
-	 <CAOcd+r28ot-060WQhUPkuM1Bt7t-_jOggAZKNSJxurNYVs2b-w@mail.gmail.com>
-	 <1353536723.1809.4.camel@bling.home>
-	 <F764A8A9BBE247FEA862ED33F77A04A1@alyakaslap>
-	 <1353960253.1809.128.camel@bling.home>
-	 <A5D6C5E3D7774E62AA482C886483DA6D@alyakaslap>
-	 <1354204570.14547.14.camel@ul30vt.home>
-	 <9C253052ADFC40D9A0BC9979549506A6@alyakaslap>
-	 <1355172358.3224.157.camel@bling.home>
-	 <8AA592B1E5D146039EE6F0A5AA33A8BA@alyakaslap>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:59093 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753775Ab2LLR3Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 12:29:24 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so685491qcr.19
+        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 09:29:24 -0800 (PST)
+Message-ID: <50C8BEF1.7060200@gmail.com>
+Date: Wed, 12 Dec 2012 11:29:21 -0600
+From: Rob Herring <robherring2@gmail.com>
+MIME-Version: 1.0
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: monstr@monstr.eu, David Laight <David.Laight@ACULAB.COM>,
+	linux-pci@vger.kernel.org, devicetree-discuss@lists.ozlabs.org,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu> <AE90C24D6B3A694183C094C60CF0A2F6026B70E7@saturn3.aculab.com> <50C60839.70603@monstr.eu> <20121210181525.3ccd87c6@skate> <50C66F3C.3010204@gmail.com> <20121212171651.346b81ab@skate>
+In-Reply-To: <20121212171651.346b81ab@skate>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2012-12-12 at 15:42 +0200, Alex Lyakas wrote:
-> Hi Alex,
-> The kernel am using is stock Ubuntu-Precise (as I mentioned) 
-> 3.2.0-29-generic #46.
+On 12/12/2012 10:16 AM, Thomas Petazzoni wrote:
+> Dear Rob Herring,
 > 
-> I debugged deeper in pci_enable_msix() path, and I believe I have tracked 
-> down the source of the different errors I am seeing. The issue I see is that 
-> pci_find_capability() *sometimes* fails to find PCI_CAP_ID_MSIX capability. 
-> I tracked this down to __pci_find_next_cap_ttl() not being able to find the 
-> needed cap and returns 0.
-
-Hmm, perhaps a config space access race?  Everything seems properly
-locked on my kernel.
-
-> This leads to three different errors I saw:
+> On Mon, 10 Dec 2012 17:24:44 -0600, Rob Herring wrote:
 > 
-> Case 1: pci_enable_msix() calls pci_msi_check_device(dev, nvec, 
-> PCI_CAP_ID_MSIX), which calls pci_find_capability() and further returns 
-> EINVAL
+>>> Marvell SoCs have up to 20 configurable address windows, which allow
+>>> you, at run time, to say "I would like the range from physical
+>>> address 0xYYYYYYYY to 0xZZZZZZZZ to correspond to the PCIe device
+>>> in port 1, lane 2, or to the NAND, or to this or that device".
+>>> Therefore, in the PCIe driver I proposed for the Armada 370/XP SoCs
+>>> [1], there is no need to encode all those ranges statically in the
+>>> DT.
+>>
+>> That's not a unique feature. I'm not sure if any powerpc systems do
+>> that though.
 > 
-> Case 2: pci_enable_msix() calls pci_msix_table_size(), which calls 
-> pci_find_capability(dev, PCI_CAP_ID_MSIX), which returns 0. As a result, 
-> pci_msix_table_size() returns 0. Then the following code:
-> nr_entries = pci_msix_table_size(dev);
-> if (nvec > nr_entries)
->     return nr_entries;
-> causes pci_enable_msix() to return 0 to the caller, so now the caller thinks 
-> that pci_enable_msix() succeeded! However, IRQs were not assigned, so 
-> further call to request_threaded_irq() fails.
-> (This looks like a kernel bug.)
->
-> Case 3: pci_enable_msix() calls msix_capability_init(), which calls 
-> pci_find_capability(dev, PCI_CAP_ID_MSIX), which fails and returns pos==0.
-> So now msix_capability_init() does not check the return value and proceeds 
-> with setting things up, and eventually fails in call to msix_map_region() => 
-> ioremap_nocache(), which returns NULL. So msix_capability_init() returns 
-> ENOMEM and further pci_enable_msix() returns ENOMEM.
-> (So this is another kernel bug of not checking return value of 
-> pci_find_capability(dev, PCI_CAP_ID_MSIX).)
-
-Case 1 is the one we expect to hit.  Case 2 & 3 only happen on this path
-if pci_find_capability returns non-deterministic results, so their
-behavior may be reasonable.
-
-> So bottom line is that different failures I saw stem from the same issue of 
-> (sometimes) not finding PCI_CAP_ID_MSIX. It always happens on the second 
-> call to KVM_ASSIGN_DEV_IRQ. Why are two calls required? For example, the 
-> below trace shows the first call succeeding and setting up interrupts 
-> properly, and the second call failing:
+> Yes, probably not an unique feature.
 > 
-> kernel: [ 4851.332462] kvm-7636: KVM_ASSIGN_DEV_IRQ assigned_dev_id=918
-> kernel: [ 4851.333553] pci-stub 0000:03:12.6: irq 257 for MSI/MSI-X
-> kernel: [ 4851.333573] pci-stub 0000:03:12.6: irq 258 for MSI/MSI-X
-> kernel: [ 4851.333591] pci-stub 0000:03:12.6: irq 259 for MSI/MSI-X
-> kernel: [ 4851.333600] kvm-7636: assigned_device_enable_host_msix(): call 
-> request_threaded_irq() assigned_dev_id=918 #0: [v=257 e=0]
-> kernel: [ 4851.333845] kvm-7636: assigned_device_enable_host_msix(): call 
-> request_threaded_irq() assigned_dev_id=918 #1: [v=258 e=1]
-> kernel: [ 4851.334055] kvm-7636: assigned_device_enable_host_msix(): call 
-> request_threaded_irq() assigned_dev_id=918 #2: [v=259 e=2]
-> kernel: [ 4851.334241] kvm-7636: KVM_ASSIGN_DEV_IRQ assigned_dev_id=918 OK
-> kernel: [ 4851.396339] kvm-7636: KVM_ASSIGN_DEV_IRQ assigned_dev_id=918
-> kernel: [ 4851.396353] kvm-???: pci_find_capability 
-> __pci_find_next_cap(devfn=150 pos=0) dev=0000:03:12.6 returned 0
-> kernel: [ 4851.412754] kvm-???: msix_map_region ioremap_nocache(0x100000, 
-> nr_entries=2048 PCI_MSIX_ENTRY_SIZE=16 dev=0000:03:12.6 pos=0 NULL
-> kernel: [ 4851.429672] kvm-???: msix_capability_init 
-> msix_map_region(dev=0000:03:12.6, pos=0 control=32767) failed NULL
-> kernel: [ 4851.438726] kvm-???: pci_enable_msix(0000:03:12.6) 
-> msix_capability_init failed, err=-12
-> kernel: [ 4851.465439] kvm-7636: assigned_device_enable_host_msix() 
-> pci_enable_msix() failed assigned_dev_id=918 irq_name=kvm:0000:03:12.6 
-> err=-12
-> kernel: [ 4851.484072] kvm-7636: assigned_device_enable_host_msix() 
-> assigned_dev_id=918 #0: [v=0 e=0]
-> kernel: [ 4851.484076] kvm-7636: assigned_device_enable_host_msix() 
-> assigned_dev_id=918 #1: [v=0 e=1]
-> kernel: [ 4851.484081] kvm-7636: assigned_device_enable_host_msix() 
-> assigned_dev_id=918 #2: [v=0 e=2]
-> kernel: [ 4851.484086] kvm-7636: KVM_ASSIGN_DEV_IRQ assigned_dev_id=918 
-> r=-12
+>>> The only "ranges" property I'm using is to allow the DT sub-nodes
+>>> describing each PCIe port/lane to access the CPU registers that
+>>> allow to see if the PCIe link is up or down, access the PCI
+>>> configuration space and so on. So all ranges in my "ranges"
+>>> property correspond to normal CPU registers, like the one you would
+>>> put in the "reg" property for any device. The fact that those
+>>> devices are PCIe is really orthogonal here.
+>>
+>> That doesn't really sound right.
+> 
+> Very likely, but I still don't get what is "the right way".
+> 
+>> I don't think deviating from the normal binding is the right approach.
+>> Perhaps the host driver should fill in the ranges property with the
+>> addresses it uses. Then any child devices will get the right address
+>> translation.
+> 
+> I don't really understand what you mean here. If you look at the host
+> driver code (arch/arm/mach-mvebu/pcie.c), for each PCIe interface
+> is simply does:
+> 
+>  * Create an address decoding window for the memory BAR
+>  * Create an address decoding window for the I/O BAR
+>  * Associate the memory BAR window address and the I/O bar window
+>    address with the PCIe interface
+> 
+> And that's it. See
+> https://github.com/MISL-EBU-System-SW/mainline-public/blob/marvell-pcie-v1/arch/arm/mach-mvebu/pcie.c#L107.
+> 
+> So this driver is both "deciding" of the physical addresses for each
+> PCIe interface, and "associating" them with the PCIe interfaces. How is
+> it useful to feed some addresses back into the Device Tree?
 
-It's hard to say why it gets setup twice without a trace from qemu.  It
-could be that the guest temporarily disabled MSI-X support and
-re-enabled it, which causes a teardown and re-setup in the host.
+I'm not completely sure for PCI, but the ranges is necessary to
+translate addresses of child nodes.
 
-> Do you think the issue is the second KVM call, or the issue is the HW not 
-> reporting the capability sometimes?
+If you don't need ranges then you could omit it. If you need ranges,
+then you should follow the PCI binding whether it is put in the DTS or
+you dynamically fill it in. This could be filled in by the bootloader as
+well if you have PCI devices you need to boot from.
 
-The issue is not the second KVM call, nor do I expect that the HW is
-actually failing to return the capability.  I suspect it's a race where
-some concurrent access to PCI config space is moving the window register
-while pci_find_capability is walking config space.  dmesg on the host
-would probably tell us which config access mechanism you're using.
+>> Also, while the h/w may support practically any config, there are
+>> practical constraints of what Linux will use like there's no reason to
+>> support more than 64K i/o space. PCI memory addresses generally start
+>> at 0x100000. You probably don't need more than 1 memory window per
+>> root complex (although prefetchable memory may also be needed).
+> 
+> I allocate one 64K I/O window and one memory window per PCIe interface
+> whose link is up (i.e a PCIe device is connected).
+> 
+>> You could let the DT settings drive the address window configuration.
+> 
+> No, because I don't want to have absolute addresses for the windows: I
+> have 10 PCIe interfaces, but often, only a few of them are used. So I
+> don't want in the Device Tree to over-allocate hundreds of MB of
+> physical address space if it's not useful.
 
-> Looking at the latest 3.7 kernel code sources, I see that all relevant 
-> functions (pci_enable_msix, pci_find_capability and msix_capability_init) 
-> would behave the same way WRT to pci_find_capability() call. And anyways, 
-> moving to upstream kernel is not an option for me at this point.
+How many you have is probably board dependent and not probe-able, right?
+So you would at least know the subset of root complexes that you are
+using. I know you want to find the size of all the cards up front and
+size windows based on that, but I don't think that is going to be possible.
 
-You've shown that you're getting a different result out of those
-functions, but not why, so it's a bit premature to ignore the fact that
-the problem may already be fixed in one of the past 5 kernel release.
-If it is fixed, the patch(es) can be identified and backported to your
-distro kernel.  If it's not fixed, at least we're all looking at the
-same source code.
+> 
+> PCIe is dynamic, address window configuration is dynamic. And we should
+> hardcode all this configuration statically in the DT? Doesn't seem like
+> the right solution.
 
-> Please let me know what do you think the next step would be.
+I'm just throwing out ideas. There are many cases of flexibility in h/w
+designs which are never used. H/w is often designed in a vacuum without
+s/w input. Not saying that is the case here, but you do have to consider
+that.
 
-dmesg + try v3.7.  I don't think you need to try upstream qemu-kvm at
-this point since you've identified suspicious behavior that userspace
-shouldn't be able to cause.  Otherwise check locking around the PCI
-config accesses that you're using and make sure that userspace accesses
-through pci-sysfs aren't bypassing anything.  Thanks,
+Rob
 
-Alex
+> 
+> Best regards,
+> 
+> Thomas
+> 
 
