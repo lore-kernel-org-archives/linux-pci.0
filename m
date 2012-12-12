@@ -1,72 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:43130 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751280Ab2L1Hce (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 28 Dec 2012 02:32:34 -0500
-From: Lin Feng <linfeng@cn.fujitsu.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, yinghai@kernel.org,
-	tangchen@cn.fujitsu.com, Lin Feng <linfeng@cn.fujitsu.com>
-Subject: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
-Date: Fri, 28 Dec 2012 15:31:42 +0800
-Message-Id: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com>
+Received: from service87.mimecast.com ([91.220.42.44]:40781 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472Ab2LLQhy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 11:37:54 -0500
+Date: Wed, 12 Dec 2012 16:37:50 +0000
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Michal Simek <monstr@monstr.eu>,
+	Rob Herring <robherring2@gmail.com>,
+	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
+	Rob Herring <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Liviu Dudau <liviu.dudau@arm.com>
+Subject: [PATCH] pci: Provide support for parsing PCI DT ranges property
+Message-ID: <20121212163749.GA17371@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_reassigndev_resource_alignment() potentially calls
-pci_specified_resource_alignment() twice, which is redundant.
+DT bindings for PCI host bridges often use the ranges property to describe
+memory and IO ranges - this binding tends to be the same across architectures
+yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
+arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
+arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
+functionality provided by drivers/of/address.c.
 
-pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
-and from sematic/functionality aspects pci_specified_resource_alignment() is
-sufficient to substitute, so also make some cleanup.
+This patch provides a common iterator-based parser for the ranges property, it
+is hoped this will reduce DT representation differences between architectures
+and that architectures will migrate in part to this new parser.
 
-Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
+It is also hoped (and the motativation for the patch) that this patch will
+reduce duplication of code when writing host bridge drivers that are supported
+by multiple architectures.
+
+This patch provides struct resources from a device tree node, e.g.:
+
+	u32 *last = NULL;
+	struct resource res;
+	while ((last = of_pci_process_ranges(np, res, last))) {
+		//do something with res
+	}
+
+Platforms with quirks can then do what they like with the resource or migrate
+common quirk handling to the parser. In an ideal world drivers can just request
+the obtained resources and pass them on (e.g. pci_add_resource_offset).
+
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
 ---
- drivers/pci/pci.c |   16 ++--------------
- 1 files changed, 2 insertions(+), 14 deletions(-)
+ drivers/of/address.c       |   53 +++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/of_address.h |    7 +++++
+ 2 files changed, 59 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..789f401 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	return align;
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 7e262a6..03bfe61 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -219,6 +219,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
  }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
++
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from)
++{
++	const __be32 *start, *end;
++	int na, ns, np, pna;
++	int rlen;
++	struct of_bus *bus;
++	WARN_ON(!res);
++
++	bus = of_match_bus(node);
++	bus->count_cells(node, &na, &ns);
++	if (!OF_CHECK_COUNTS(na, ns)) {
++		pr_err("Bad cell count for %s\n", node->full_name);
++		return NULL;
++	}
++
++	pna = of_n_addr_cells(node);
++	np = pna + na + ns;
++
++	start = of_get_property(node, "ranges", &rlen);
++	if (start == NULL)
++		return NULL;
++
++	end = start + rlen;
++
++	if (!from)
++		from = start;
++
++	while (from + np <= end) {
++		u64 cpu_addr, size;
++
++		cpu_addr = of_translate_address(node, from + na);
++		size = of_read_number(from + na + pna, ns);
++		res->flags = bus->get_flags(from);
++		from += np;
++
++		if (cpu_addr == OF_BAD_ADDR || size == 0)
++			continue;
++
++		res->name = node->full_name;
++		res->start = cpu_addr;
++		res->end = res->start + size - 1;
++		res->parent = res->child = res->sibling = NULL;
++		return from;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(of_pci_process_ranges);
++
+ #endif /* CONFIG_PCI */
  
--/**
-- * pci_is_reassigndev - check if specified PCI is target device to reassign
-- * @dev: the PCI device to check
-- *
-- * RETURNS: non-zero for PCI device is a target device to reassign,
-- *          or zero is not.
-- */
--int pci_is_reassigndev(struct pci_dev *dev)
--{
--	return (pci_specified_resource_alignment(dev) != 0);
--}
--
  /*
-  * This function disables memory decoding and releases memory resources
-  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-@@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	resource_size_t align, size;
- 	u16 command;
+@@ -421,7 +472,7 @@ u64 __of_translate_address(struct device_node *dev, const __be32 *in_addr,
+ 		goto bail;
+ 	bus = of_match_bus(parent);
  
--	if (!pci_is_reassigndev(dev))
-+	align = pci_specified_resource_alignment(dev);
-+	if (!align)
- 		return;
+-	/* Cound address cells & copy address locally */
++	/* Count address cells & copy address locally */
+ 	bus->count_cells(dev, &na, &ns);
+ 	if (!OF_CHECK_COUNTS(na, ns)) {
+ 		printk(KERN_ERR "prom_parse: Bad cell count for %s\n",
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 01b925a..4582b20 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -26,6 +26,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+ #define pci_address_to_pio pci_address_to_pio
+ #endif
  
- 	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
-@@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	command &= ~PCI_COMMAND_MEMORY;
- 	pci_write_config_word(dev, PCI_COMMAND, command);
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from);
+ #else /* CONFIG_OF_ADDRESS */
+ static inline int of_address_to_resource(struct device_node *dev, int index,
+ 					 struct resource *r)
+@@ -48,6 +50,11 @@ static inline const u32 *of_get_address(struct device_node *dev, int index,
+ {
+ 	return NULL;
+ }
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF_ADDRESS */
  
--	align = pci_specified_resource_alignment(dev);
- 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
- 		r = &dev->resource[i];
- 		if (!(r->flags & IORESOURCE_MEM))
+ 
 -- 
-1.7.1
+1.7.0.4
+
 
