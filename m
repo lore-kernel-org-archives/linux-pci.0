@@ -1,74 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:65027 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214Ab2LTIZe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Dec 2012 03:25:34 -0500
-Date: Thu, 20 Dec 2012 09:25:00 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: linux-pci@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Michal Simek <monstr@monstr.eu>,
-	Rob Herring <robherring2@gmail.com>,
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34498 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab2LLQ4C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 11:56:02 -0500
+Received: by mail-bk0-f46.google.com with SMTP id q16so508802bkw.19
+        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 08:56:00 -0800 (PST)
+Message-ID: <50C8B71E.90704@monstr.eu>
+Date: Wed, 12 Dec 2012 17:55:58 +0100
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
+MIME-Version: 1.0
+To: Grant Likely <grant.likely@secretlab.ca>
+CC: Rob Herring <robherring2@gmail.com>,
 	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
-	Rob Herring <rob.herring@calxeda.com>,
+	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
 	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Subject: Re: [PATCH] pci: Provide support for parsing PCI DT ranges property
-Message-ID: <20121220082500.GA32617@avionic-0098.adnet.avionic-design.de>
-References: <20121212163749.GA17371@arm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
-In-Reply-To: <20121212163749.GA17371@arm.com>
+	Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: pci and pcie device-tree binding - range No cells
+References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <20121210214127.D51773E0796@localhost> <50C85E7D.5080006@monstr.eu> <CACxGe6udeSbEfibC53v0wu8vFRE6K3Fd_P6EX-3JS9F2M=wUeA@mail.gmail.com>
+In-Reply-To: <CACxGe6udeSbEfibC53v0wu8vFRE6K3Fd_P6EX-3JS9F2M=wUeA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 12/12/2012 11:49 AM, Grant Likely wrote:
+> On Wed, Dec 12, 2012 at 10:37 AM, Michal Simek <monstr@monstr.eu> wrote:
+>> On 12/10/2012 10:41 PM, Grant Likely wrote:
+>>> drivers/pci/pci-of.c would be good. I'd also accept drivers/of/pci.c
+>>> which might actually be a good idea in the short term so that it gets
+>>> appropriate supervision while being generalized before being moved into
+>>> the pci directory.
+>>
+>> Ben: Are you willing to move that ppc code to this location?
+>> It is probably not good idea that I should do it when I even don't have
+>> hardware available for testing (Asking someone else).
+>
+> You're a clever guy, you are more than capable of crafting the patch,
+> even if you can't test on hardware. :-)
+>
+> I refactored most of the OF support code without having access to most
+> of the affected hardware. Once I got the changes out there for review
+> I also asked for spot testing before getting it into linux-next for
+> even more testing.
 
---Dxnq1zWXvFF0Q93v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Fair enough. :-)
 
-On Wed, Dec 12, 2012 at 04:37:50PM +0000, Andrew Murray wrote:
-[...]
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-[...]
-> +	start = of_get_property(node, "ranges", &rlen);
-> +	if (start == NULL)
-> +		return NULL;
-> +
-> +	end = start + rlen;
+Good time to start to look for how to work with board farm.
 
-I'm currently rewriting large parts of the Tegra PCIe controller driver
-and I'm trying to use this new API. This seems to work fine, except that
-I think this line needs to be:
+Thanks,
+Michal
 
-	end = start + rlen / sizeof(__be32);
 
-Otherwise we'll try to process 4 times as many ranges as there are.
-
-Thierry
-
---Dxnq1zWXvFF0Q93v
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ0stcAAoJEN0jrNd/PrOhJ3wP/RTl+yPFBH6p5AxEnuzCbT+d
-aB6m7CEG++kw9kkXUAnSw+jIWwRdgmLY5qdcXJaxUyMlx/1qTQESey0mFpSsu0g1
-8u+6ITQ4+q/HzXbfCtRJpERZHxTTJwdY9EijpSTMEC4Whq4sG9m97uTBmfuKs1Gf
-Ot1Hs4z3bUDNCLUje/QqON/emqW/ZqM+bcsHQRGe/O/2Py+0/xuWlRw3+WRE+QuS
-w4uABEyWLLqjWjLqG+oT+xpwwE3SlDVbejH5i9FYEL7OjAsFTpx4h0Kjqr/S4eHD
-8FMBGnX6IlrQOcrpYXlYGKDGd9k6EKIu36P2LxSOfa/JcqNuPacut4MlS7yEJ39z
-Qd8xufL23KkuL+3dzAju9tCaeS7K4EUMWr2uF02PwFeVYsQtSAsVdZtHh9DlnfiG
-ghAtxN/E90ZLNg7uEgM5pFA5eizZ6/yuEY2MPs4NqG9oe24ykR77ZIu4DwJC3p+R
-0rtURMQKVadncw3beSIxRqU/67Ru+xF+J3wiJNL6g9CiSLcOKDAH+gVcPh9qk19/
-0scfxkfTYOE81hG+O58Aw0Ikl6jkwVnCWKvtnAPgDOjRnI+41+7toHlTCsTi6XG1
-hYB0deO3jviEgInQrdO4CUVPdORyvEACrEPgt4rIwVDzk7TZKkbSlHULRgy66yyj
-xqMOHqFgoNTGbyK+s816
-=SKrO
------END PGP SIGNATURE-----
-
---Dxnq1zWXvFF0Q93v--
+-- 
+Michal Simek, Ing. (M.Eng)
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
+Microblaze U-BOOT custodian
