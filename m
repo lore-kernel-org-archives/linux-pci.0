@@ -1,109 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:40894 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751869Ab2LJPVz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 10:21:55 -0500
-Received: by mail-qa0-f46.google.com with SMTP id r4so1615412qaq.19
-        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 07:21:55 -0800 (PST)
-Message-ID: <50C5FE0F.3050108@gmail.com>
-Date: Mon, 10 Dec 2012 09:21:51 -0600
-From: Rob Herring <robherring2@gmail.com>
-MIME-Version: 1.0
-To: monstr@monstr.eu
-CC: devicetree-discuss@lists.ozlabs.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: pci and pcie device-tree binding - range No cells
-References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu>
-In-Reply-To: <50C5FA3E.9030303@monstr.eu>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:14339 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755859Ab2LMTYq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 14:24:46 -0500
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Subject: [PATCH 0/3] Thunderbolt workarounds
+Date: Thu, 13 Dec 2012 21:25:18 +0200
+Message-Id: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/10/2012 09:05 AM, Michal Simek wrote:
-> On 12/10/2012 03:26 PM, Rob Herring wrote:
->> On 12/10/2012 06:20 AM, Michal Simek wrote:
->>> Hi Grant and others,
->>>
->>> I have a question regarding number of cells in ranges property
->>> for pci and pcie nodes.
->>>
->>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
->>> sequoia.dts, etc)
->>> but also 6 cells format too (mpc832x_mds.dts)
->>>
->>> Here is shown 6 cells ranges format and describe
->>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
->>>
->>> And also in documentation in the linux
->>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
->>>
->>> Both format uses:
->>> #size-cells = <2>;
->>> #address-cells = <3>;
->>>
->>> What is valid format?
->>
->> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6 cells
->> are valid when the host bus is 32-bit. The ranges property is <<child
->> address> <parent address> <size>>. The parent address #address-cells is
->> taken from the parent node.
-> 
-> Ok. Got it.
-> 
-> Here is what we use on zynq and microblaze - both 32bit which should be
-> fine.
-> 
->     ps7_axi_interconnect_0: axi@0 {
->         #address-cells = <1>;
->         #size-cells = <1>;
->         axi_pcie_0: axi-pcie@50000000 {
->             #address-cells = <3>;
->             #size-cells = <2>;
->             compatible = "xlnx,axi-pcie-1.05.a";
->             ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
->             ...
->         }
->     }
-> 
-> What I am wondering is pci_process_bridge_OF_ranges() at
-> arch/powerpc/kernel/pci-common.c
-> where there are used some hardcoded values which should be probably
-> loaded from device-tree.
-> 
-> For example:
-> 683         int np = pna + 5;
-> ...
-> 702                 pci_addr = of_read_number(ranges + 1, 2);
-> 703                 cpu_addr = of_translate_address(dev, ranges + 3);
-> 704                 size = of_read_number(ranges + pna + 3, 2);
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-These would always be correct whether you have 6 or 7 cells. pna is the
-parent bus address cells size. The pci address is fixed at 3 cells.
+I had chance to test two PC setups with Thunderbolt: Acer Aspire S5 and
+Intel DZ77RE-75K motherboard. Unfortunately, both of them are broken in
+different ways.
 
-> 
-> 
-> Unfortunately we have copied it to microblaze.
+This patchset contains workarounds for the issues.
 
-I look at the PCI DT code in powerpc and see a whole bunch of code that
-seems like it should be common. The different per arch pci structs
-complicates that. No one has really gotten to looking at PCI DT on ARM
-yet except you and Thierry for Tegra. We definitely don't want to create
-a 3rd copy. Starting the process of moving it to something like
-drivers/pci/pci-of.c would be great.
+Kirill A. Shutemov (3):
+  PCI Hotplug: workaround for Thunderbolt on Acer Aspire S5
+  PCI Hotplug: convert acpiphp_hp_work to use delayed work
+  PCI Hotplug: workaround for Thunderbolt on Intel DZ77RE-75K
+    motherboard
 
-Rob
+ drivers/pci/hotplug/acpi_pcihp.c   |   13 +++++++++++++
+ drivers/pci/hotplug/acpiphp_glue.c |   33 +++++++++++++++++++++++++--------
+ 2 files changed, 38 insertions(+), 8 deletions(-)
 
-> 
-> Thanks,
-> Michal
-> 
-> 
-> 
-> 
-> 
-> 
+-- 
+1.7.10.4
 
