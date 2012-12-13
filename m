@@ -1,50 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:58602 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932151Ab2LOBHD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Dec 2012 20:07:03 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so2803804pad.19
-        for <linux-pci@vger.kernel.org>; Fri, 14 Dec 2012 17:07:02 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:32779 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755824Ab2LMWBl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 17:01:41 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Amos Kong <kongjianjun@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel DZ77RE-75K motherboard
+Date: Thu, 13 Dec 2012 23:06:42 +0100
+Message-ID: <1934147.CrrSRCENPm@vostro.rjw.lan>
+In-Reply-To: <20121213204953.GA25085@otc-wbsnb-06>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com> <CA+55aFwxmhcgORCnDKwcp5EuzvC0iz02O4QR3H_stTXDbprYSA@mail.gmail.com> <20121213204953.GA25085@otc-wbsnb-06>
 MIME-Version: 1.0
-In-Reply-To: <20121212163749.GA17371@arm.com>
-References: <20121212163749.GA17371@arm.com>
-From: Grant Likely <grant.likely@secretlab.ca>
-Date: Sat, 15 Dec 2012 01:06:41 +0000
-Message-ID: <CACxGe6uZATX2uBjuDUsJ489-jmvFbLm-NQ6Q3SGqRVky9XGJYg@mail.gmail.com>
-Subject: Re: [PATCH] pci: Provide support for parsing PCI DT ranges property
-To: Andrew Murray <Andrew.Murray@arm.com>
-Cc: linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Michal Simek <monstr@monstr.eu>,
-	Rob Herring <robherring2@gmail.com>,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 12, 2012 at 4:37 PM, Andrew Murray <Andrew.Murray@arm.com> wrote:
-> DT bindings for PCI host bridges often use the ranges property to describe
-> memory and IO ranges - this binding tends to be the same across architectures
-> yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
-> arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
-> arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
-> functionality provided by drivers/of/address.c.
+On Thursday, December 13, 2012 10:49:53 PM Kirill A. Shutemov wrote:
+> On Thu, Dec 13, 2012 at 12:30:04PM -0800, Linus Torvalds wrote:
+> > On Thu, Dec 13, 2012 at 12:25 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > >
+> > > Linus will not be happy with those kind of delay.
+> > 
+> > Indeed. And the DMI check is bogus too, since the "there can be
+> > delays" is apparently part of the pcie hotplug spec.
+> 
+> It's ACPI PCI hotplug, not PCIe native hotplug. PCIe hotplug spec is not
+> relevant.
+> 
+> IIUC, in ACPI case devices should be ready to be enumerated, before you
+> get notification. Rafael, is it correct?
 
-Hi Andrew,
+Not necessarily.  The ACPI nodes will be, the device themselves are still PCI
+devices. :-)
 
-Thanks for looking into this. This definitely needs to be done.
+Thanks,
+Rafael
 
-However, I cannot merge this patch as-is because it actually makes
-things worse by adding yet another implementation of the parsing code.
-Plus it doesn't actually have any users.  :-)
 
-Instead, move the existing code that you need out of
-arch/powerpc/kernel/pci-common.c into a shared place and add in the
-features you need. Bonus points if you fixup microblaze or others at
-the same time.
-
-g.
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
