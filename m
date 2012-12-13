@@ -1,94 +1,148 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:32822 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750755Ab2LMWSc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 17:18:32 -0500
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Thu, 27 Dec 2012 13:47:22 +0100
-Message-ID: <1723076.byQgAGE2K7@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <6257154.ucqGyPHqkg@vostro.rjw.lan> <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH rev.2 4/6] ACPI: Reduce the usage of struct acpi_bus_ops
+Date: Thu, 13 Dec 2012 23:21:57 +0100
+Message-ID: <1597613.RyAsvSHuB3@vostro.rjw.lan>
+In-Reply-To: <1499423.ez5cZl2uAf@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <1499423.ez5cZl2uAf@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 26, 2012 04:10:32 PM Yinghai Lu wrote:
-> On Wed, Dec 26, 2012 at 2:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
-> >> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> >> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> >> Do you have a reference for this?  I think this might have been true
-> >> >> in the past, but I don't think it's true for any version of gcc we
-> >> >> support for building Linux.
-> >> >
-> >> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
-> >>
-> >> the problem is already addressed by:
-> >>
-> >> | commit f9d14250071eda9972e4c9cea745a11185952114
-> >> | Author: Linus Torvalds <torvalds@linux-foundation.org>
-> >> | Date:   Fri Jan 2 09:29:43 2009 -0800
-> >> |
-> >> |    Disallow gcc versions 4.1.{0,1}
-> >> |
-> >> |    These compiler versions are known to miscompile __weak functions and
-> >> |    thus generate kernels that don't necessarily work correctly.  If a weak
-> >> |    function is int he same compilation unit as a caller, gcc may end up
-> >> |    inlining it, and thus binding the weak function too early.
-> >> |
-> >> |    See
-> >> |
-> >> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
-> >> |
-> >> |    for details.
-> >>
-> >> so it is ok to put the __weak in the same file now.
-> >
-> > Cool, thanks for checking and for the ACK!
-> 
-> wait, we have some problem on systems that root bus is not exported via DSDT ...
-> 
-> one of my nehalem system that have uncore cpu devices are not exported via ACPI.
-> 
-> also there will be problem that system is booting with acpi=off.
-> 
-> 
-> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> +{
-> +       struct pci_sysdata *sd = bridge->bus->sysdata;
-> +       struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
-> +
-> +       ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
-> +       return 0;
-> +}
-> 
-> will get wrong info...via sd... as their sd is standalone
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Yes, it will be called in all code paths leading to acpi_create_root_bus(),
-not only the ones started by pci_acpi_scan_root().  Well, too bad.
+Objects of type struct acpi_bus_ops are currently used to pass
+information between different parts of the ACPI namespace scanning
+code, sometimes in quite convoluted ways.  It turns out that that
+is not necessary in some cases, so simplify the code by reducing
+the utilization of struct acpi_bus_ops objects where clearly
+possible.
 
-By the way, that illustrates nicely why I generally have concerns about __weak
-stuff and similar tricks.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   40 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 24 deletions(-)
 
-Bjorn, I had tried to use the approach you suggested, but it didn't work.
-I thought about fixing that, but everything I could come up with turned out to
-be too complicated, so I'm inclined to use the previous version after all:
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1527,7 +1527,6 @@ end:
+ static void acpi_bus_add_power_resource(acpi_handle handle)
+ {
+ 	struct acpi_bus_ops ops = {
+-		.acpi_op_add = 1,
+ 		.acpi_op_start = 1,
+ 		.acpi_op_match = 1,
+ 	};
+@@ -1581,7 +1580,6 @@ static int acpi_bus_type_and_status(acpi
+ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 				      void *context, void **return_value)
+ {
+-	struct acpi_bus_ops *ops = context;
+ 	struct acpi_device *device = NULL;
+ 	int type;
+ 	unsigned long long sta;
+@@ -1605,11 +1603,13 @@ static acpi_status acpi_bus_check_add(ac
+ 	}
+ 
+ 	acpi_bus_get_device(handle, &device);
+-	if (ops->acpi_op_add && !device) {
+-		struct acpi_bus_ops add_ops = *ops;
++	if (!device) {
++		struct acpi_bus_ops ops = {
++			.acpi_op_start = !!context,
++			.acpi_op_match = 0,
++		};
+ 
+-		add_ops.acpi_op_match = 0;
+-		acpi_add_single_object(&device, handle, type, sta, &add_ops);
++		acpi_add_single_object(&device, handle, type, sta, &ops);
+ 		if (!device)
+ 			return AE_CTRL_DEPTH;
+ 
+@@ -1652,17 +1652,18 @@ static acpi_status acpi_bus_device_attac
+ 	return status;
+ }
+ 
+-static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++static int acpi_bus_scan(acpi_handle handle, bool start,
+ 			 struct acpi_device **child)
+ {
+ 	void *device = NULL;
+ 	acpi_status status;
+ 	int ret = -ENODEV;
+ 
+-	status = acpi_bus_check_add(handle, 0, ops, &device);
++	status = acpi_bus_check_add(handle, 0, (void *)start, &device);
+ 	if (ACPI_SUCCESS(status))
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    acpi_bus_check_add, NULL, ops, &device);
++				    acpi_bus_check_add, NULL, (void *)start,
++				    &device);
+ 
+ 	if (!device)
+ 		goto out;
+@@ -1696,9 +1697,7 @@ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+-
+-	return acpi_bus_scan(handle, &ops, child);
++	return acpi_bus_scan(handle, false, child);
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+@@ -1796,12 +1795,10 @@ static int acpi_bus_scan_fixed(void)
+ {
+ 	int result = 0;
+ 	struct acpi_device *device = NULL;
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
+-	ops.acpi_op_start = 1;
+-	ops.acpi_op_match = 1;
++	struct acpi_bus_ops ops = {
++		.acpi_op_start = 1,
++		.acpi_op_match = 1,
++	};
+ 
+ 	/*
+ 	 * Enumerate all fixed-feature devices.
+@@ -1827,11 +1824,6 @@ static int acpi_bus_scan_fixed(void)
+ int __init acpi_scan_init(void)
+ {
+ 	int result;
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
+-	ops.acpi_op_start = 1;
+ 
+ 	result = bus_register(&acpi_bus_type);
+ 	if (result) {
+@@ -1845,7 +1837,7 @@ int __init acpi_scan_init(void)
+ 	/*
+ 	 * Enumerate devices in the ACPI namespace.
+ 	 */
+-	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &ops, &acpi_root);
++	result = acpi_bus_scan(ACPI_ROOT_OBJECT, true, &acpi_root);
+ 
+ 	if (!result)
+ 		result = acpi_bus_scan_fixed();
 
-https://patchwork.kernel.org/patch/1889221/
-
-that has been acked by Yinghai, Greg and Peter already.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
