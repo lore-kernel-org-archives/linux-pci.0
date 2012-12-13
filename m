@@ -1,92 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:37138 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683Ab2LRX0u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 18:26:50 -0500
-Received: by mail-vc0-f182.google.com with SMTP id fy27so1632972vcb.13
-        for <linux-pci@vger.kernel.org>; Tue, 18 Dec 2012 15:26:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4447450.z46Q2xYLQX@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <3027479.MToB281uxK@vostro.rjw.lan>
- <1355868912.18964.381.camel@misato.fc.hp.com> <4447450.z46Q2xYLQX@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Dec 2012 16:19:55 -0700
-Message-ID: <CAErSpo63cQJskAJKBwai6ipToVHEEwCWXeRfBOzF29Ds29MTbA@mail.gmail.com>
-Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from
- probing ACPI drivers
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing0307@gmail.com>,
 	Jiang Liu <liuj97@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH rev.2 6/6] ACPI: Change the ordering of acpi_bus_check_add()
+Date: Thu, 13 Dec 2012 23:23:18 +0100
+Message-ID: <6413261.mhm3NBAO0r@vostro.rjw.lan>
+In-Reply-To: <1499423.ez5cZl2uAf@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <1499423.ez5cZl2uAf@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 18, 2012 at 4:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Tuesday, December 18, 2012 03:15:12 PM Toshi Kani wrote:
->> On Tue, 2012-12-18 at 22:57 +0100, Rafael J. Wysocki wrote:
->> > On Tuesday, December 18, 2012 09:10:41 AM Toshi Kani wrote:
->> > > On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
->>  :
->> > > We need to decide which module is responsible for calling .bind().  I
->> > > think it should be the ACPI scan module, not the ACPI PCI root bridge
->> > > driver, because:
->> > >  - bind() needs to be called when _ADR device is added.  The ACPI scan
->> > > module can scan any devices, while the PCI root driver can only scan
->> > > when it is added.
->> > >  - acpi_bus_remove() calls unbind() at hot-remove.  The same module
->> > > should be responsible for both bind() and unbind() handling.
->> > >  - It is cleaner to keep struct acpi_device_ops interface to be called
->> > > by the ACPI core.
->> >
->> > I agree with that. :-)
->> >
->> > Moreover, I don't think we need acpi_pci_bind() and acpi_pci_unbind() at all.
->> >
->> > > So, I would propose the following changes.
->> > >
->> > >  - Move the acpi_hot_add_bind() call back to the original place after
->> > > the device_attach() call.
->> > >  - Rename the name of acpi_hot_add_bind() to something like
->> > > acpi_bind_adr_device() since it is no longer hot-add only (and is
->> > > specific to _ADR devices).
->> > >  - Create its pair function, acpi_unbind_adr_device(), which is called
->> > > from acpi_bus_remove().  When a constructor interface is introduced, its
->> > > destructor should be introduced as well.
->> > >  - Remove the binding procedure from acpi_pci_root_add().  This should
->> > > be done in patch [2/6].
->> >
->> > Well, what about moving the code from acpi_pci_bind()/acpi_pci_unbind()
->> > somewhere else and removing those things altogether?
->>
->> Sounds nice.  It will be bonus point if you can do that. :-)
->
-> I think I can, but I need a few more patches on top of what I've already posted
-> to do that.
->
-> I think that https://patchwork.kernel.org/patch/1889821/ and
-> https://patchwork.kernel.org/patch/1884701/ can stay as they are, since there's
-> some material on top of them already and I'll cut the new patches on top of all
-> that.  I'll repost the whole series some time later this week, stay tuned. :-)
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I haven't follow this closely enough to give useful feedback, but I
-trust that what you're doing is going in the right direction.
+If acpi_bus_check_add() is called for a handle already having an
+existing struct acpi_device object attached, it is not necessary to
+check the type and status of the device correspondig to it, so
+change the ordering of acpi_bus_check_add() to avoid that.
 
-The only question I have right now is what I mentioned earlier on IRC,
-namely, the idea of "binding" an ACPI handle or device to a pci_dev,
-and whether there's a way to guarantee that the binding doesn't become
-stale.  For example, if we bind pci_dev A to acpi_device B, I think we
-essentially capture the pointer to B and store that pointer in A.
-Obviously we want to know that the captured pointer in A remains valid
-as long as A exists, but I don't know what assures us of that.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-I don't think this is a new question; I have the same question about
-the current code before your changes.  But it seems like you're
-simplifying this area in a way that might make it easier to answer the
-question.
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1582,6 +1582,10 @@ static acpi_status acpi_bus_check_add(ac
+ 	acpi_status status;
+ 	int result;
+ 
++	acpi_bus_get_device(handle, &device);
++	if (device)
++		goto out;
++
+ 	result = acpi_bus_type_and_status(handle, &type, &sta);
+ 	if (result)
+ 		return AE_OK;
+@@ -1598,17 +1602,13 @@ static acpi_status acpi_bus_check_add(ac
+ 		return AE_CTRL_DEPTH;
+ 	}
+ 
+-	acpi_bus_get_device(handle, &device);
+-	if (!device) {
+-		acpi_add_single_object(&device, handle, type, sta,
+-				       ACPI_BUS_ADD_BASIC);
+-		if (!device)
+-			return AE_CTRL_DEPTH;
++	acpi_add_single_object(&device, handle, type, sta, ACPI_BUS_ADD_BASIC);
++	if (!device)
++		return AE_CTRL_DEPTH;
+ 
+-		device->add_type = context ?
+-					ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
+-	}
++	device->add_type = context ? ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
+ 
++ out:
+ 	if (!*return_value)
+ 		*return_value = device;
+ 
 
-Bjorn
