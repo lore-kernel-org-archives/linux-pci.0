@@ -1,158 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:40781 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472Ab2LLQhy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 11:37:54 -0500
-Date: Wed, 12 Dec 2012 16:37:50 +0000
-From: Andrew Murray <Andrew.Murray@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Michal Simek <monstr@monstr.eu>,
-	Rob Herring <robherring2@gmail.com>,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
-	Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Liviu Dudau <liviu.dudau@arm.com>
-Subject: [PATCH] pci: Provide support for parsing PCI DT ranges property
-Message-ID: <20121212163749.GA17371@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
+Received: from mx1.redhat.com ([209.132.183.28]:14078 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755471Ab2LMQXO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 11:23:14 -0500
+Message-ID: <1355415792.2229.7.camel@ul30vt.home>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jason Gao <pkill.2012@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+Date: Thu, 13 Dec 2012 09:23:12 -0700
+In-Reply-To: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DT bindings for PCI host bridges often use the ranges property to describe
-memory and IO ranges - this binding tends to be the same across architectures
-yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
-arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
-arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
-functionality provided by drivers/of/address.c.
+On Thu, 2012-12-13 at 17:50 +0800, Jason Gao wrote:
+> Dear List:
+> 
+> Description of problem:
+> After installed Centos 6.3(RHEL6.3) on my Dell R710(lastest
+> bios:Version: 6.3.0,Release Date: 07/24/2012) server,and updated
+> lastest kernel "2.6.32-279.14.1.el6.x86_64",I want to use the Intel
+> 82576 ET Dual Port nic's SR-IOV feature,assigning VFs to kvm guest
+> 
+> appended kernel boot parameter: intel_iommu=on,after boot with the
+> following messages:
+> 
+> Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 2
+> Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
+> fault addr ffe65000
+> Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
+> Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 102
+> Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
+> fault addr ffe8a000
+> Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
+> Dec 13 16:58:15 2 kernel: scsi 0:0:32:0: Enclosure         DP
+> BACKPLANE        1.07 PQ: 0 ANSI: 5
+> Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 202
+> Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
+> fault addr ffe89000
+> Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
+> 
+> full dmesg detail:
+>    http://pastebin.com/BzFQV0jU
+> lspci -vvv full detail:
+>    http://pastebin.com/9rP2d1br
+> 
+> 
+> it's a production server,and I'm not sure if this is a critical
+> problem,how to fix it,any help would be greatly appreciated.
 
-This patch provides a common iterator-based parser for the ranges property, it
-is hoped this will reduce DT representation differences between architectures
-and that architectures will migrate in part to this new parser.
+Device 03:00.0 is your raid controller:
 
-It is also hoped (and the motativation for the patch) that this patch will
-reduce duplication of code when writing host bridge drivers that are supported
-by multiple architectures.
+03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
 
-This patch provides struct resources from a device tree node, e.g.:
+For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
+ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
+it's not reading an OS allocated buffer, which probably means it's some
+kind of side-band communication with a management controller.  I'd guess
+it's a BIOS bug and there should be an RMRR covering those accesses.
+Thanks,
 
-	u32 *last = NULL;
-	struct resource res;
-	while ((last = of_pci_process_ranges(np, res, last))) {
-		//do something with res
-	}
-
-Platforms with quirks can then do what they like with the resource or migrate
-common quirk handling to the parser. In an ideal world drivers can just request
-the obtained resources and pass them on (e.g. pci_add_resource_offset).
-
-Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
-Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/of/address.c       |   53 +++++++++++++++++++++++++++++++++++++++++++-
- include/linux/of_address.h |    7 +++++
- 2 files changed, 59 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 7e262a6..03bfe61 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -219,6 +219,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
- 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
- }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
-+
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from)
-+{
-+	const __be32 *start, *end;
-+	int na, ns, np, pna;
-+	int rlen;
-+	struct of_bus *bus;
-+	WARN_ON(!res);
-+
-+	bus = of_match_bus(node);
-+	bus->count_cells(node, &na, &ns);
-+	if (!OF_CHECK_COUNTS(na, ns)) {
-+		pr_err("Bad cell count for %s\n", node->full_name);
-+		return NULL;
-+	}
-+
-+	pna = of_n_addr_cells(node);
-+	np = pna + na + ns;
-+
-+	start = of_get_property(node, "ranges", &rlen);
-+	if (start == NULL)
-+		return NULL;
-+
-+	end = start + rlen;
-+
-+	if (!from)
-+		from = start;
-+
-+	while (from + np <= end) {
-+		u64 cpu_addr, size;
-+
-+		cpu_addr = of_translate_address(node, from + na);
-+		size = of_read_number(from + na + pna, ns);
-+		res->flags = bus->get_flags(from);
-+		from += np;
-+
-+		if (cpu_addr == OF_BAD_ADDR || size == 0)
-+			continue;
-+
-+		res->name = node->full_name;
-+		res->start = cpu_addr;
-+		res->end = res->start + size - 1;
-+		res->parent = res->child = res->sibling = NULL;
-+		return from;
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_process_ranges);
-+
- #endif /* CONFIG_PCI */
- 
- /*
-@@ -421,7 +472,7 @@ u64 __of_translate_address(struct device_node *dev, const __be32 *in_addr,
- 		goto bail;
- 	bus = of_match_bus(parent);
- 
--	/* Cound address cells & copy address locally */
-+	/* Count address cells & copy address locally */
- 	bus->count_cells(dev, &na, &ns);
- 	if (!OF_CHECK_COUNTS(na, ns)) {
- 		printk(KERN_ERR "prom_parse: Bad cell count for %s\n",
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 01b925a..4582b20 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -26,6 +26,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
- #define pci_address_to_pio pci_address_to_pio
- #endif
- 
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from);
- #else /* CONFIG_OF_ADDRESS */
- static inline int of_address_to_resource(struct device_node *dev, int index,
- 					 struct resource *r)
-@@ -48,6 +50,11 @@ static inline const u32 *of_get_address(struct device_node *dev, int index,
- {
- 	return NULL;
- }
-+const __be32 *of_pci_process_ranges(struct device_node *node,
-+				    struct resource *res, const __be32 *from)
-+{
-+	return NULL;
-+}
- #endif /* CONFIG_OF_ADDRESS */
- 
- 
--- 
-1.7.0.4
-
+Alex
 
