@@ -1,67 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 4 Dec 2012 10:22:04 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 1/3] aerdrv: Trace Event for AER
-Message-ID: <20121204092204.GF4369@liondog.tnic>
-References: <20121203212047.24373.8646.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from service87.mimecast.com ([91.220.42.44]:51519 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab2LMJpq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 04:45:46 -0500
+Date: Thu, 13 Dec 2012 09:45:43 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Michal Simek <monstr@monstr.eu>,
+	Rob Herring <robherring2@gmail.com>,
+	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+Subject: Re: [PATCH] pci: Provide support for parsing PCI DT ranges property
+Message-ID: <20121213094543.GA23446@arm.com>
+References: <20121212163749.GA17371@arm.com>
+ <20121213091333.GA14828@avionic-0098.adnet.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20121203212047.24373.8646.stgit@grignak.americas.hpqcorp.net>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20121213091333.GA14828@avionic-0098.adnet.avionic-design.de>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 03, 2012 at 02:20:48PM -0700, Lance Ortiz wrote:
-> This header file will define a new trace event that will be triggered when
-> a AER event occurs.  The following data will be provided to the trace
-> event.
+On Thu, Dec 13, 2012 at 09:13:33AM +0000, Thierry Reding wrote:
+> Hi Andrew,
 > 
-> char * dev_name - The name of the slot where the device resides
->                   ([domain:]bus:device.function).
+> I don't like iterator interfaces too much, but I can live with that.
+> Other than that the patch looks good to me and I'll try to work it into
+> my Tegra PCIe patch series.
 > 
-> u32 status - Either the correctable or uncorrectable register
->              indicating what error or errors have been see.
+> Just two minor comments below.
 > 
-> u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+> > diff --git a/drivers/of/address.c b/drivers/of/address.c
+> [...]
+> > @@ -421,7 +472,7 @@ u64 __of_translate_address(struct device_node *dev, const __be32 *in_addr,
+> >  		goto bail;
+> >  	bus = of_match_bus(parent);
+> >  
+> > -	/* Cound address cells & copy address locally */
+> > +	/* Count address cells & copy address locally */
+> >  	bus->count_cells(dev, &na, &ns);
+> >  	if (!OF_CHECK_COUNTS(na, ns)) {
+> >  		printk(KERN_ERR "prom_parse: Bad cell count for %s\n",
 > 
-> The trace event will also provide a trace string that may look like:
+> This is really minor, but it should still go into a separate patch.
 > 
-> "0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-> TLP"
+> > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> > index 01b925a..4582b20 100644
+> > --- a/include/linux/of_address.h
+> > +++ b/include/linux/of_address.h
+> > @@ -26,6 +26,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+> >  #define pci_address_to_pio pci_address_to_pio
+> >  #endif
+> >  
+> > +const __be32 *of_pci_process_ranges(struct device_node *node,
+> > +				    struct resource *res, const __be32 *from);
+> >  #else /* CONFIG_OF_ADDRESS */
+> >  static inline int of_address_to_resource(struct device_node *dev, int index,
+> >  					 struct resource *r)
+> > @@ -48,6 +50,11 @@ static inline const u32 *of_get_address(struct device_node *dev, int index,
+> >  {
+> >  	return NULL;
+> >  }
+> > +const __be32 *of_pci_process_ranges(struct device_node *node,
 > 
-> v1-v2 Move header from include/ras/aer_event.h to
-> include/trace/events/ras.h
-> v3-v4 Cleaned up comments and commit header
-> v4-v5 More cleanup remove () from if statement in print.
->       Renamed string define to be more specific.
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-> ---
+> There should be a blank line to separate the above two lines.
 > 
->  include/trace/events/ras.h |   78 ++++++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 78 insertions(+), 0 deletions(-)
->  create mode 100644 include/trace/events/ras.h
-> 
-> diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-> new file mode 100644
-> index 0000000..e6f123e
-> --- /dev/null
-> +++ b/include/trace/events/ras.h
-> @@ -0,0 +1,78 @@
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM aer_event
-> +#define TRACE_INCLUDE_FILE ras
 
-Whoops, I somehow missed that the last time:
+Thanks for the feedback.
 
-TRACE_SYSTEM should be "ras" and then you don't need to define
-TRACE_INCLUDE_FILE at all.
+I will send another patch for the typo and leave this patch with you for
+working into your existing series.
 
-Thanks.
+Andrew Murray
 
--- 
-Regards/Gruss,
-    Boris.
