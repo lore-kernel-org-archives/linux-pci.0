@@ -1,156 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:64410 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755867Ab2LMUtS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 15:49:18 -0500
+Date: Thu, 13 Dec 2012 22:49:53 +0200
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 11/16] ACPI: Replace ACPI device add_type field with a match_driver flag
-Date: Thu, 20 Dec 2012 02:55:30 +0100
-Message-ID: <9569462.ymarRRAK6s@vostro.rjw.lan>
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Amos Kong <kongjianjun@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
+ DZ77RE-75K motherboard
+Message-ID: <20121213204953.GA25085@otc-wbsnb-06>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+ <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
+ <20121213184820.GC12105@kroah.com>
+ <20121213200857.GA24939@otc-wbsnb-06>
+ <CAE9FiQUMSnCPwgbupZ5cFWLMiVxA4FQ2dNWNk+XYhvtEn+F3Ag@mail.gmail.com>
+ <CA+55aFwxmhcgORCnDKwcp5EuzvC0iz02O4QR3H_stTXDbprYSA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/04w6evG8XlLl3ft"
+In-Reply-To: <CA+55aFwxmhcgORCnDKwcp5EuzvC0iz02O4QR3H_stTXDbprYSA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-After the removal of the second argument of acpi_bus_scan() there is
-no difference between the ACPI_BUS_ADD_MATCH and ACPI_BUS_ADD_START
-add types, so the add_type field in struct acpi_device may be
-replaced with a single flag.  Do that calling the flag match_driver.
+--/04w6evG8XlLl3ft
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/scan.c     |   21 +++++++++------------
- include/acpi/acpi_bus.h |   11 ++---------
- 2 files changed, 11 insertions(+), 21 deletions(-)
+On Thu, Dec 13, 2012 at 12:30:04PM -0800, Linus Torvalds wrote:
+> On Thu, Dec 13, 2012 at 12:25 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >
+> > Linus will not be happy with those kind of delay.
+>=20
+> Indeed. And the DMI check is bogus too, since the "there can be
+> delays" is apparently part of the pcie hotplug spec.
 
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -535,7 +535,7 @@ static int acpi_bus_match(struct device
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
- 	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
- 
--	return acpi_dev->add_type >= ACPI_BUS_ADD_MATCH
-+	return acpi_dev->flags.match_driver
- 		&& !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
- }
- 
-@@ -1451,8 +1451,7 @@ static void acpi_hot_add_bind(struct acp
- 
- static int acpi_add_single_object(struct acpi_device **child,
- 				  acpi_handle handle, int type,
--				  unsigned long long sta,
--				  enum acpi_bus_add_type add_type)
-+				  unsigned long long sta, bool match_driver)
- {
- 	int result;
- 	struct acpi_device *device;
-@@ -1468,7 +1467,6 @@ static int acpi_add_single_object(struct
- 	device->device_type = type;
- 	device->handle = handle;
- 	device->parent = acpi_bus_get_parent(handle);
--	device->add_type = add_type;
- 	STRUCT_TO_INT(device->status) = sta;
- 
- 	acpi_device_get_busid(device);
-@@ -1519,9 +1517,10 @@ static int acpi_add_single_object(struct
- 	if ((result = acpi_device_set_context(device)))
- 		goto end;
- 
-+	device->flags.match_driver = match_driver;
- 	result = acpi_device_register(device);
- 
--	if (device->add_type >= ACPI_BUS_ADD_MATCH)
-+	if (device->flags.match_driver)
- 		acpi_hot_add_bind(device);
- 
- end:
-@@ -1550,7 +1549,7 @@ static void acpi_bus_add_power_resource(
- 	acpi_bus_get_device(handle, &device);
- 	if (!device)
- 		acpi_add_single_object(&device, handle, ACPI_BUS_TYPE_POWER,
--					ACPI_STA_DEFAULT, ACPI_BUS_ADD_START);
-+					ACPI_STA_DEFAULT, true);
- }
- 
- static int acpi_bus_type_and_status(acpi_handle handle, int *type,
-@@ -1621,11 +1620,11 @@ static acpi_status acpi_bus_check_add(ac
- 		return AE_CTRL_DEPTH;
- 	}
- 
--	acpi_add_single_object(&device, handle, type, sta, ACPI_BUS_ADD_BASIC);
-+	acpi_add_single_object(&device, handle, type, sta, false);
- 	if (!device)
- 		return AE_CTRL_DEPTH;
- 
--	device->add_type = ACPI_BUS_ADD_START;
-+	device->flags.match_driver = true;
- 	acpi_hot_add_bind(device);
- 
-  out:
-@@ -1790,16 +1789,14 @@ static int acpi_bus_scan_fixed(void)
- 	if ((acpi_gbl_FADT.flags & ACPI_FADT_POWER_BUTTON) == 0) {
- 		result = acpi_add_single_object(&device, NULL,
- 						ACPI_BUS_TYPE_POWER_BUTTON,
--						ACPI_STA_DEFAULT,
--						ACPI_BUS_ADD_START);
-+						ACPI_STA_DEFAULT, true);
- 		device_init_wakeup(&device->dev, true);
- 	}
- 
- 	if ((acpi_gbl_FADT.flags & ACPI_FADT_SLEEP_BUTTON) == 0) {
- 		result = acpi_add_single_object(&device, NULL,
- 						ACPI_BUS_TYPE_SLEEP_BUTTON,
--						ACPI_STA_DEFAULT,
--						ACPI_BUS_ADD_START);
-+						ACPI_STA_DEFAULT, true);
- 	}
- 
- 	return result;
-Index: linux/include/acpi/acpi_bus.h
-===================================================================
---- linux.orig/include/acpi/acpi_bus.h
-+++ linux/include/acpi/acpi_bus.h
-@@ -63,13 +63,6 @@ acpi_get_physical_device_location(acpi_h
- #define ACPI_BUS_FILE_ROOT	"acpi"
- extern struct proc_dir_entry *acpi_root_dir;
- 
--enum acpi_bus_add_type {
--	ACPI_BUS_ADD_BASIC = 0,
--	ACPI_BUS_ADD_MATCH,
--	ACPI_BUS_ADD_START,
--	ACPI_BUS_ADD_TYPE_COUNT
--};
--
- enum acpi_bus_removal_type {
- 	ACPI_BUS_REMOVAL_NORMAL = 0,
- 	ACPI_BUS_REMOVAL_EJECT,
-@@ -150,7 +143,8 @@ struct acpi_device_flags {
- 	u32 power_manageable:1;
- 	u32 performance_manageable:1;
- 	u32 eject_pending:1;
--	u32 reserved:24;
-+	u32 match_driver:1;
-+	u32 reserved:23;
- };
- 
- /* File System */
-@@ -285,7 +279,6 @@ struct acpi_device {
- 	struct acpi_driver *driver;
- 	void *driver_data;
- 	struct device dev;
--	enum acpi_bus_add_type add_type;	/* how to handle adding */
- 	enum acpi_bus_removal_type removal_type;	/* indicate for different removal type */
- 	u8 physical_node_count;
- 	struct list_head physical_node_list;
+It's ACPI PCI hotplug, not PCIe native hotplug. PCIe hotplug spec is not
+relevant.
 
+IIUC, in ACPI case devices should be ready to be enumerated, before you
+get notification. Rafael, is it correct?
+
+> So do the sane thing. Retry a few times, with increasingly long delays
+> (ie something like start with 10ms, then double the delay until you
+> hit 1s, and then just give up: end result, ~2s total wait, but 10ms
+> for any sane device that doesn't suck).
+
+PCI rescan is expensive and generate noise in dmesg. We'll end up with
+tons of useless messages.
+
+--=20
+ Kirill A. Shutemov
+
+--/04w6evG8XlLl3ft
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQyj9xAAoJEAd+omnVudOM3D4P/2SYoaZ/PObQ6X5Bsq9j0bZ+
+48Et6ZcuF4KTfJTykS8o4HymRxr1x8lqbIfhK9SPQms7jfVPirQ5t0ayMBwU01qI
+FNkmh5DvbRwliTpfKUSz+ut/FCyGE2CmCdV/H6DTDp+8zMHHEpp3jlmTv+JNBt58
+dcYvpGxspQSlbNFzd75u7hbcPg0LSl6K4IUxhZ8Iv8mP2tYkmmocXLqM/aly3zUE
+9IO9gWy2Vy3w32FWmGr1JQoP8OniATvZLve5L6Pea4Hc9UKLYx1EzTjWXxsJtEcI
+E93ZN+ntAyU0/z9qH5ytMqgR6JOyfdveaw3wY4opIwMhj2V+fyzEBOheJKnYb6Uf
+1+4iqcgEa+6G8gntfLKfCT6jnojfEyVgjGzu4Gt0bcnqRQ22qtKRMnZMxVFWPpf2
+xo11Vn+2yG7FuXs4mOrUMC6mYwuYJZeYz7H+JIuiY4iSbbVVI14LLhnnkR9pyvPH
+YrHYr6I9zqbQJQRjE3DlUCnqK5b/URbEYsB0AeQFrrZP5/L/q1pzd7blogGgCP1M
+96iFeb0XwOsE2D/3xZ3gIbTli+gaEsBxWALCVjpM90Po/VxRXyIKcd/ymok30LrP
+pKknFVA4rdsoiRTWBbJ4gsrE9FUygXtmlNrt067KvzkSBwEE7/Aovx42c1lkVcsM
+KL6fICjVLnDGLzz0DWn/
+=unEd
+-----END PGP SIGNATURE-----
+
+--/04w6evG8XlLl3ft--
