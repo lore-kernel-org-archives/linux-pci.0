@@ -1,53 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:37180 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145Ab2LEWV5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 17:21:57 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so4768040lag.19
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 14:21:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20121205202254.GA25398@srcf.ucam.org>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
- <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
- <20121203200241.GG5906@thinkpad-t410> <CAErSpo7S2+Vt+9bkGLx_=AY9aSGCvAnkHfqu01gTj=eKs7btNw@mail.gmail.com>
- <20121205202254.GA25398@srcf.ucam.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Dec 2012 15:21:35 -0700
-Message-ID: <CAErSpo7c5Ph+GufivPt2XFoTbRnAoLnNdZwcc69QMCFdavNJjA@mail.gmail.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	"Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Amos Kong <kongjianjun@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] PCI Hotplug: convert acpiphp_hp_work to use delayed work
+Date: Thu, 13 Dec 2012 17:31:47 +0200
+Message-Id: <1355412708-20046-3-git-send-email-kirill.shutemov@linux.intel.com>
+In-Reply-To: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 1:22 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Wed, Dec 05, 2012 at 01:09:25PM -0700, Bjorn Helgaas wrote:
->
->> That's right; nobody stepped up to fix the section mismatch.  I'm
->> happy to fold in your fix, especially if Matthew acks it.
->
-> Yes, sorry, I've been way behind on pretty much everything for the past
-> few months. Please do add my Ack.
->
->> David, Eric, what about the kexec question?  It looks to me like this
->> wouldn't make things worse than they are today.  If I understand
->> correctly, today we don't use ROM data from EFI on either an initial
->> boot or a kexec.  After this patch, we could use EFI ROM data on the
->> initial boot, but not after a kexec.  So it's worse in the sense that
->> the kexec case doesn't match the initial boot, but at least it's not
->> something that used to work and is now broken.
->
-> I think I'd agree here - it's not ideal, but it's no more broken than
-> the current situation.
+From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 
-OK, I applied Seth's fix, added his Tested-by, and put this series in
-my -next branch.  I plan to merge it during the v3.8 merge window next
-week.
+Some broken ACPI PCI Hotplug implementations notify OS about hotplug
+before devices ready to be enumerated.
 
-Thanks!
+Let's convert acpiphp_hp_work to delayed work. It will allow to delay
+enumeration on broken hardware to workaround the issue.
 
-Bjorn
+Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 3d6d4fd..1a2b3ca 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -1191,7 +1191,7 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ }
+ 
+ struct acpiphp_hp_work {
+-	struct work_struct work;
++	struct delayed_work work;
+ 	acpi_handle handle;
+ 	u32 type;
+ 	void *context;
+@@ -1199,7 +1199,8 @@ struct acpiphp_hp_work {
+ 
+ static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
+ 				  void *context,
+-				  void (*func)(struct work_struct *work))
++				  void (*func)(struct work_struct *work),
++				  unsigned long delay)
+ {
+ 	struct acpiphp_hp_work *hp_work;
+ 	int ret;
+@@ -1212,8 +1213,8 @@ static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
+ 	hp_work->type = type;
+ 	hp_work->context = context;
+ 
+-	INIT_WORK(&hp_work->work, func);
+-	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
++	INIT_DELAYED_WORK(&hp_work->work, func);
++	ret = queue_delayed_work(kacpi_hotplug_wq, &hp_work->work, delay);
+ 	if (!ret)
+ 		kfree(hp_work);
+ }
+@@ -1230,7 +1231,8 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+ 	acpi_handle handle;
+ 	u32 type;
+ 
+-	hp_work = container_of(work, struct acpiphp_hp_work, work);
++	hp_work = container_of(to_delayed_work(work),
++			struct acpiphp_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 
+@@ -1334,7 +1336,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	alloc_acpiphp_hp_work(handle, type, context,
+-			      _handle_hotplug_event_bridge);
++			      _handle_hotplug_event_bridge, 0);
+ }
+ 
+ static void _handle_hotplug_event_func(struct work_struct *work)
+@@ -1348,7 +1350,8 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+ 	u32 type;
+ 	void *context;
+ 
+-	hp_work = container_of(work, struct acpiphp_hp_work, work);
++	hp_work = container_of(to_delayed_work(work),
++			struct acpiphp_hp_work, work);
+ 	handle = hp_work->handle;
+ 	type = hp_work->type;
+ 	context = hp_work->context;
+@@ -1410,7 +1413,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+ 	 * don't deadlock on hotplug actions.
+ 	 */
+ 	alloc_acpiphp_hp_work(handle, type, context,
+-			      _handle_hotplug_event_func);
++			      _handle_hotplug_event_func, 0);
+ }
+ 
+ static acpi_status
+-- 
+1.7.10.4
+
