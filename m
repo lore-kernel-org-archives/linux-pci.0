@@ -1,135 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:53292 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437Ab2LJQLm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 11:11:42 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so2057229lag.19
-        for <linux-pci@vger.kernel.org>; Mon, 10 Dec 2012 08:11:41 -0800 (PST)
-Message-ID: <50C609BA.8020008@monstr.eu>
-Date: Mon, 10 Dec 2012 17:11:38 +0100
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 13 Dec 2012 10:48:20 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Amos Kong <kongjianjun@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
+ DZ77RE-75K motherboard
+Message-ID: <20121213184820.GC12105@kroah.com>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+ <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
 MIME-Version: 1.0
-To: Rob Herring <robherring2@gmail.com>
-CC: devicetree-discuss@lists.ozlabs.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: pci and pcie device-tree binding - range No cells
-References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <50C601B6.2080107@monstr.eu> <50C6078A.8080408@gmail.com>
-In-Reply-To: <50C6078A.8080408@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/10/2012 05:02 PM, Rob Herring wrote:
-> On 12/10/2012 09:37 AM, Michal Simek wrote:
->> On 12/10/2012 04:21 PM, Rob Herring wrote:
->>> On 12/10/2012 09:05 AM, Michal Simek wrote:
->>>> On 12/10/2012 03:26 PM, Rob Herring wrote:
->>>>> On 12/10/2012 06:20 AM, Michal Simek wrote:
->>>>>> Hi Grant and others,
->>>>>>
->>>>>> I have a question regarding number of cells in ranges property
->>>>>> for pci and pcie nodes.
->>>>>>
->>>>>> Linux pci/pcie powerpc DTSes contain 7 cells (xpedite5370.dts,
->>>>>> sequoia.dts, etc)
->>>>>> but also 6 cells format too (mpc832x_mds.dts)
->>>>>>
->>>>>> Here is shown 6 cells ranges format and describe
->>>>>> http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
->>>>>>
->>>>>> And also in documentation in the linux
->>>>>> Documentation/devicetree/bindings/pci/83xx-512x-pci.txt
->>>>>>
->>>>>> Both format uses:
->>>>>> #size-cells = <2>;
->>>>>> #address-cells = <3>;
->>>>>>
->>>>>> What is valid format?
->>>>>
->>>>> Both. 7 cells are valid when the host (parent) bus is 64-bit and 6
->>>>> cells
->>>>> are valid when the host bus is 32-bit. The ranges property is <<child
->>>>> address> <parent address> <size>>. The parent address #address-cells is
->>>>> taken from the parent node.
->>>>
->>>> Ok. Got it.
->>>>
->>>> Here is what we use on zynq and microblaze - both 32bit which should be
->>>> fine.
->>>>
->>>>       ps7_axi_interconnect_0: axi@0 {
->>>>           #address-cells = <1>;
->>>>           #size-cells = <1>;
->>>>           axi_pcie_0: axi-pcie@50000000 {
->>>>               #address-cells = <3>;
->>>>               #size-cells = <2>;
->>>>               compatible = "xlnx,axi-pcie-1.05.a";
->>>>               ranges = < 0x02000000 0 0x60000000 0x60000000 0
->>>> 0x10000000 >;
->>>>               ...
->>>>           }
->>>>       }
->>>>
->>>> What I am wondering is pci_process_bridge_OF_ranges() at
->>>> arch/powerpc/kernel/pci-common.c
->>>> where there are used some hardcoded values which should be probably
->>>> loaded from device-tree.
->>>>
->>>> For example:
->>>> 683         int np = pna + 5;
->>>> ...
->>>> 702                 pci_addr = of_read_number(ranges + 1, 2);
->>>> 703                 cpu_addr = of_translate_address(dev, ranges + 3);
->>>> 704                 size = of_read_number(ranges + pna + 3, 2);
->>>
->>> These would always be correct whether you have 6 or 7 cells. pna is the
->>> parent bus address cells size. The pci address is fixed at 3 cells.
->>
->> Sorry for my pci ignorance (have never got hw for mb/zynq)
->> I just want to get better overview how we should we our drivers to be
->> compatible.
->>
->> Does it mean that pci is supposed be always 64 bit wide?
->> And there is no option to have just 32bit values.
->
-> That's what the DT documentation says.
->
-> BTW, you can use 2 cells even if you only have a 32-bit bus.
+On Thu, Dec 13, 2012 at 05:31:48PM +0200, Kirill A. Shutemov wrote:
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+> 
+> BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
+> hotplug before devices behind Thunderbolt are ready to be enumerated.
+> 
+> Let's delay enumeration by 2 seconds.
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++++++-
+>  1 file changed, 15 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 1a2b3ca..165987a 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -49,6 +49,7 @@
+>  #include <linux/mutex.h>
+>  #include <linux/slab.h>
+>  #include <linux/acpi.h>
+> +#include <linux/dmi.h>
+>  
+>  #include "../pci.h"
+>  #include "acpiphp.h"
+> @@ -1327,6 +1328,19 @@ out:
+>  static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+>  					void *context)
+>  {
+> +	unsigned long delay = 0;
+> +	const char *board_name;
+> +
+> +	board_name = dmi_get_system_info(DMI_BOARD_NAME);
+> +	/*
+> +	 * BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
+> +	 * hotplug before devices behind Thunderbolt are ready to be
+> +	 * enumerated.
+> +	 * Let's delay enumeration by 2 seconds.
+> +	 */
+> +	if (board_name && !strcmp(board_name, "DZ77RE-75K"))
+> +		delay = 2 * HZ;
 
-ok - no problem with that. Just want to be sure about it.
+Again, no objection to this patch as-is, but should we make it a bit
+more "general" and provide a quirk table to make this type of fix easier
+for other motherboards?  Shouldn't we also match on a manufacturer field
+as well as the board_name?  The kernel provides a very easy to match on
+any arbritary set of DMI fields for this kind of problem that we could
+use here.
 
->>>> Unfortunately we have copied it to microblaze.
->>>
->>> I look at the PCI DT code in powerpc and see a whole bunch of code that
->>> seems like it should be common. The different per arch pci structs
->>> complicates that. No one has really gotten to looking at PCI DT on ARM
->>> yet except you and Thierry for Tegra. We definitely don't want to create
->>> a 3rd copy. Starting the process of moving it to something like
->>> drivers/pci/pci-of.c would be great.
->>
->> We have done pcie working on zynq and the same pcie host is working on
->> Microblaze too.
->> There are just small differences. That's why I have sent another email
->> ("Sharing PCIE driver between Microblaze and Arm zynq") to find out
->> proper location.
->
-> Yes, I've followed the thread. There are lots of areas for consolidation
-> with PCIe hosts both across architectures and within ARM. There are
-> multiple people using DW PCIe IP although not upstream yet that I'm
-> aware of.
+I can make that change if needed.
 
-Your suggestions are really appreciate.
+What are the odds that other boards are going to need a longer delay
+time?  Actually, is there a spec saying how long we need to wait?  The
+ACPI PCI Hotplug had a value somewhere that the hardware was supposed to
+follow, but I don't have access to that ACPI spec anymore to verify
+this...
 
-Thanks,
-Michal
+thanks,
 
--- 
-Michal Simek, Ing. (M.Eng)
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
-Microblaze U-BOOT custodian
+greg k-h
