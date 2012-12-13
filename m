@@ -1,59 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34498 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752650Ab2LLQ4C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 11:56:02 -0500
-Received: by mail-bk0-f46.google.com with SMTP id q16so508802bkw.19
-        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 08:56:00 -0800 (PST)
-Message-ID: <50C8B71E.90704@monstr.eu>
-Date: Wed, 12 Dec 2012 17:55:58 +0100
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Grant Likely <grant.likely@secretlab.ca>
-CC: Rob Herring <robherring2@gmail.com>,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: pci and pcie device-tree binding - range No cells
-References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com> <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <20121210214127.D51773E0796@localhost> <50C85E7D.5080006@monstr.eu> <CACxGe6udeSbEfibC53v0wu8vFRE6K3Fd_P6EX-3JS9F2M=wUeA@mail.gmail.com>
-In-Reply-To: <CACxGe6udeSbEfibC53v0wu8vFRE6K3Fd_P6EX-3JS9F2M=wUeA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20121213200857.GA24939@otc-wbsnb-06>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+	<1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
+	<20121213184820.GC12105@kroah.com>
+	<20121213200857.GA24939@otc-wbsnb-06>
+Date: Thu, 13 Dec 2012 12:25:53 -0800
+Message-ID: <CAE9FiQUMSnCPwgbupZ5cFWLMiVxA4FQ2dNWNk+XYhvtEn+F3Ag@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
+ DZ77RE-75K motherboard
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Amos Kong <kongjianjun@gmail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/12/2012 11:49 AM, Grant Likely wrote:
-> On Wed, Dec 12, 2012 at 10:37 AM, Michal Simek <monstr@monstr.eu> wrote:
->> On 12/10/2012 10:41 PM, Grant Likely wrote:
->>> drivers/pci/pci-of.c would be good. I'd also accept drivers/of/pci.c
->>> which might actually be a good idea in the short term so that it gets
->>> appropriate supervision while being generalized before being moved into
->>> the pci directory.
+On Thu, Dec 13, 2012 at 12:08 PM, Kirill A. Shutemov
+<kirill.shutemov@linux.intel.com> wrote:
+> On Thu, Dec 13, 2012 at 10:48:20AM -0800, Greg KH wrote:
+>> On Thu, Dec 13, 2012 at 05:31:48PM +0200, Kirill A. Shutemov wrote:
+>> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+>> >
+>> > BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
+>> > hotplug before devices behind Thunderbolt are ready to be enumerated.
+>> >
+>> > Let's delay enumeration by 2 seconds.
+>> >
+>> > Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+>> > ---
+>> >  drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++++++-
+>> >  1 file changed, 15 insertions(+), 1 deletion(-)
+>> >
+>> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+>> > index 1a2b3ca..165987a 100644
+>> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+>> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+>> > @@ -49,6 +49,7 @@
+>> >  #include <linux/mutex.h>
+>> >  #include <linux/slab.h>
+>> >  #include <linux/acpi.h>
+>> > +#include <linux/dmi.h>
+>> >
+>> >  #include "../pci.h"
+>> >  #include "acpiphp.h"
+>> > @@ -1327,6 +1328,19 @@ out:
+>> >  static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+>> >                                     void *context)
+>> >  {
+>> > +   unsigned long delay = 0;
+>> > +   const char *board_name;
+>> > +
+>> > +   board_name = dmi_get_system_info(DMI_BOARD_NAME);
+>> > +   /*
+>> > +    * BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
+>> > +    * hotplug before devices behind Thunderbolt are ready to be
+>> > +    * enumerated.
+>> > +    * Let's delay enumeration by 2 seconds.
+>> > +    */
+>> > +   if (board_name && !strcmp(board_name, "DZ77RE-75K"))
+>> > +           delay = 2 * HZ;
 >>
->> Ben: Are you willing to move that ppc code to this location?
->> It is probably not good idea that I should do it when I even don't have
->> hardware available for testing (Asking someone else).
->
-> You're a clever guy, you are more than capable of crafting the patch,
-> even if you can't test on hardware. :-)
->
-> I refactored most of the OF support code without having access to most
-> of the affected hardware. Once I got the changes out there for review
-> I also asked for spot testing before getting it into linux-next for
-> even more testing.
 
-Fair enough. :-)
+Linus will not be happy with those kind of delay.
 
-Good time to start to look for how to work with board farm.
+is there any way for kernel to retry before device is declared not there.
 
-Thanks,
-Michal
+pcie hotplug spec: need to retry several times in 1000ms before
+delcaring the devices is not present.
 
-
--- 
-Michal Simek, Ing. (M.Eng)
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel 2.6 Microblaze Linux - http://www.monstr.eu/fdt/
-Microblaze U-BOOT custodian
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=2f5d8e4ff947ad6673397083b48719cd6c59cd61
