@@ -1,107 +1,161 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 1 Dec 2012 16:51:30 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/3] aerdrv: Enhanced AER logging
-Message-ID: <20121201155130.GA12274@liondog.tnic>
-References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
- <20121130213337.7649.6709.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH 1/6] ACPI: Separate adding ACPI device objects from probing ACPI drivers
+Date: Thu, 13 Dec 2012 20:40:33 +0100
+Message-ID: <3742073.hTjabQ5pdD@vostro.rjw.lan>
+In-Reply-To: <50C9D29F.9040508@gmail.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <2789050.ITilpEgQsC@vostro.rjw.lan> <50C9D29F.9040508@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20121130213337.7649.6709.stgit@grignak.americas.hpqcorp.net>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 30, 2012 at 02:33:37PM -0700, Lance Ortiz wrote:
-> This patch will provide a more reliable and easy way for user-space
-> applications to have access to AER logs rather than reading them from the
-> message buffer. It also provides a way to notify user-space when an AER
-> event occurs.
+On Thursday, December 13, 2012 09:05:35 PM Jiang Liu wrote:
+> On 12/13/2012 06:32 AM, Rafael J. Wysocki wrote:
+> > On Thursday, December 13, 2012 12:38:01 AM Jiang Liu wrote:
+> >> On 12/10/2012 07:00 AM, Rafael J. Wysocki wrote:
+> >>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>>
+> >>> Currently, as soon as an ACPI device node object (struct acpi_device)
+> >> snip
+> >>   
+> >>> @@ -1600,48 +1608,77 @@ static acpi_status acpi_bus_check_add(ac
+> >>>  	 * We may already have an acpi_device from a previous enumeration.  If
+> >>>  	 * so, we needn't add it again, but we may still have to start it.
+> >>>  	 */
+> >>> -	device = NULL;
+> >>>  	acpi_bus_get_device(handle, &device);
+> >>>  	if (ops->acpi_op_add && !device) {
+> >>> -		acpi_add_single_object(&device, handle, type, sta, ops);
+> >>> -		/* Is the device a known good platform device? */
+> >>> -		if (device
+> >>> -		    && !acpi_match_device_ids(device, acpi_platform_device_ids))
+> >>> -			acpi_create_platform_device(device);
+> >>> -	}
+> >>> +		struct acpi_bus_ops add_ops = *ops;
+> >>>  
+> >>> -	if (!device)
+> >>> -		return AE_CTRL_DEPTH;
+> >>> -
+> >>> -	if (ops->acpi_op_start && !(ops->acpi_op_add)) {
+> >>> -		status = acpi_start_single_object(device);
+> >>> -		if (ACPI_FAILURE(status))
+> >>> +		add_ops.acpi_op_match = 0;
+> >>> +		acpi_add_single_object(&device, handle, type, sta, &add_ops);
+> >>> +		if (!device)
+> >>>  			return AE_CTRL_DEPTH;
+> >>> +
+> >>> +		device->bus_ops.acpi_op_match = 1;
+> >>>  	}
+> >>>  
+> >>>  	if (!*return_value)
+> >>>  		*return_value = device;
+> >>> +
+> >>>  	return AE_OK;
+> >>>  }
+> >>>  
+> >>> +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+> >>> +					void *context, void **not_used)
+> >>> +{
+> >>> +	struct acpi_bus_ops *ops = context;
+> >>> +	struct acpi_device *device;
+> >>> +	acpi_status status = AE_OK;
+> >>> +
+> >>> +	if (acpi_bus_get_device(handle, &device))
+> >>> +		return AE_CTRL_DEPTH;
+> >>> +
+> >>> +	if (ops->acpi_op_add) {
+> >>> +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+> >>> +			/* This is a known good platform device. */
+> >>> +			acpi_create_platform_device(device);
+> >>> +		} else {
+> >>> +			int ret = device_attach(&device->dev);
+> >>> +			acpi_hot_add_bind(device);
+> >>> +			if (ret)
+> >>> +				status = AE_CTRL_DEPTH;
+> >>> +		}
+> >>> +	} else if (ops->acpi_op_start) {
+> >>> +		if (ACPI_FAILURE(acpi_start_single_object(device)))
+> >>> +			status = AE_CTRL_DEPTH;
+> >>> +	}
+> >>> +	return status;
+> >>> +}
+> >>> +
+> >>>  static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
+> >>>  			 struct acpi_device **child)
+> >>>  {
+> >>> -	acpi_status status;
+> >>>  	void *device = NULL;
+> >>> +	acpi_status status;
+> >>> +	int ret = 0;
+> >>>  
+> >>>  	status = acpi_bus_check_add(handle, 0, ops, &device);
+> >>> -	if (ACPI_SUCCESS(status))
+> >>> +	if (ACPI_FAILURE(status)) {
+> >>> +		ret = -ENODEV;
+> >>> +		goto out;
+> >>> +	}
+> >>> +
+> >>> +	acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> >>> +			    acpi_bus_check_add, NULL, ops, &device);
+> >>> +	if (device)
+> >>>  		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> >>> -				    acpi_bus_check_add, NULL, ops, &device);
+> >>> +				    acpi_bus_probe_start, NULL, ops, NULL);
+> >> Hi Rafael,
+> >> 	Should we call acpi_bus_probe_start for the top device corresponding to 
+> >> "handle" too here?
+> > 
+> > Do you mean separately?  I don't think so.  It will be covered by the namespace
+> > walking, won't it?
+> Hi Rafael,
+> 	According to test results from Yijing, we do need to call acpi_bus_probe_start
+> for the top device corresponding to "handle".
+> 	Comments for acpi_walk_namespace says:
+> /*******************************************************************************
+>  *
+>  * FUNCTION:    acpi_walk_namespace
+>  *
+>  * DESCRIPTION: Performs a modified depth-first walk of the namespace tree,
+>  *              starting (and ending) at the object specified by start_handle.
+>                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>  *              The callback function is called whenever an object that matches
+>  *              the type parameter is found. If the callback function returns
+>  *              a non-zero value, the search is terminated immediately and this
+>  *              value is returned to the caller.
+>  *
+>  *              The point of this procedure is to provide a generic namespace
+>  *              a non-zero value, the search is terminated immediately and this
+>  *              value is returned to the caller.
+>  *
+>  *              The point of this procedure is to provide a generic namespace
+>  *              walk routine that can be called from multiple places to
+>  *              provide multiple services; the callback function(s) can be
+>  *              tailored to each task, whether it is a print function,
+>  *              a compare function, etc.
+>  *
+>  ******************************************************************************/
 > 
-> The aer driver is updated to generate a trace event of function 'aer_event'
-> when an AER occurs.
+> But acpi_ns_walk_namespace() doesn't really call the pre_order_visit and post_order_visit
+> for the start_handle. That means acpi_walk_namespace won't call the callback for the top
+> handle.
 
-... when a PCIe error is reported over the AER interface.
+You are right.
 
-> The trace event was added to both the interrupt
-> based aer path and the firmware first path
-> 
-> v1-v2 fix compile errors in ifdefs.
-> v2-v3 Update to new location of trace header. Update print to remove
-> warning.
-> 
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-> ---
-> 
->  drivers/acpi/apei/cper.c               |   17 +++++++++++++++--
->  drivers/pci/pcie/aer/aerdrv_errprint.c |   10 +++++++++-
->  include/linux/aer.h                    |    2 +-
->  3 files changed, 25 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-> index e6defd8..e9d6062 100644
-> --- a/drivers/acpi/apei/cper.c
-> +++ b/drivers/acpi/apei/cper.c
-> @@ -29,6 +29,7 @@
->  #include <linux/time.h>
->  #include <linux/cper.h>
->  #include <linux/acpi.h>
-> +#include <linux/pci.h>
->  #include <linux/aer.h>
->  
->  /*
-> @@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
->  static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->  			    const struct acpi_hest_generic_data *gdata)
->  {
-> +#ifdef CONFIG_ACPI_APEI_PCIEAER
-> +	struct pci_dev *dev;
-> +#endif
-> +
->  	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
->  		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
->  		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-> @@ -281,9 +286,17 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
->  	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
->  	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
->  #ifdef CONFIG_ACPI_APEI_PCIEAER
-> -	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
-> +	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-> +			pcie->device_id.bus, pcie->device_id.function);
-> +	if (!dev)
-> +		pr_info("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-> +			pcie->device_id.segment, pcie->device_id.bus,
-> +			pcie->device_id.slot, pcie->device_id.function);
-> +
-> +	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO && dev) {
+I'll fix that and send updated series.  It looks like Bjorn wants me to rework
+the changelogs anyway. :-)
 
-You don't need to test dev here because you've tested for !dev in the
-line above...
+Thanks,
+Rafael
 
->  		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
-> -		cper_print_aer(pfx, gdata->error_severity, aer_regs);
-> +		cper_print_aer(dev, gdata->error_severity, aer_regs);
-> +		pci_dev_put(dev);
-
-... and thus this pci_dev_put() has to be unconditional, i.e. after the
-if test.
-
-which means that you can simplify the last 4 lines like this:
-
-	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
-		cper_print_aer(dev, gdata->error_severity,
-			       (struct aer_capability_regs *)pcie->aer_info);
-
-	pci_dev_put(dev);
-
-...
-
-Thanks.
 
 -- 
-Regards/Gruss,
-    Boris.
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
