@@ -1,70 +1,96 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 5 Dec 2012 15:50:35 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 3/3] aerdrv: Cleanup log output for CPER based AER
-Message-ID: <20121205145035.GE2364@liondog.tnic>
-References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
- <20121204210318.4515.10180.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:51946 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756405Ab2LMSoo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 13:44:44 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so1751484pbc.19
+        for <linux-pci@vger.kernel.org>; Thu, 13 Dec 2012 10:44:44 -0800 (PST)
+Date: Thu, 13 Dec 2012 10:44:41 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI Hotplug: workaround for Thunderbolt on Acer
+ Aspire S5
+Message-ID: <20121213184441.GB12105@kroah.com>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+ <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20121204210318.4515.10180.stgit@grignak.americas.hpqcorp.net>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 04, 2012 at 02:03:18PM -0700, Lance Ortiz wrote:
-> These changes make cper_print_aer more consistent with aer_print_error
-> which is called in the AER interrupt case. The string in the variable
-> 'prefix' is printed at the beginning of each print statement in
-> cper_print_aer(). The prefix is a string containing the driver name
-> and the device's slot location.  From the callers the value of prefix
-> is never assigned and is NULL, so when cper_print_aer prints data the
-> initial string does not get printed.  This string is important because
-> it identifies the device that the error is on.
+On Thu, Dec 13, 2012 at 05:31:46PM +0200, Kirill A. Shutemov wrote:
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 > 
-> v1-v2 fix some compile errors withinn the #ifdef
-> v3-v4 remove agent id stuff and kept print the same to avoid
-> compatibility issues
+> Correct ACPI PCI hotplug imeplementation should have _RMV method in a
+> PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
+> deeper in hierarchy:
 > 
-> Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+> Device (RP05)
+> {
+>    // ...
+>    Device (HRUP)
+>    {
+>        // ...
+>        Device (HRDN)
+>        {
+>            // ...
+>            Device (EPUP)
+>            {
+>                // ...
+>                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
+>                {
+>                    Return (One)
+>                }
+>            }
+>        }
+>    }
+> }
+> 
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 > ---
+>  drivers/pci/hotplug/acpi_pcihp.c |   13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 > 
->  drivers/pci/pcie/aer/aerdrv_errprint.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 34d96e4..58ff4c0 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
->  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
->  	u32 status, mask;
->  	const char **status_strs;
-> -	char *prefix = NULL;
-> +	char prefix[44];
->  
->  	aer_severity = cper_severity_to_aer(cper_severity);
-> +	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
-> +		(aer_severity == AER_CORRECTABLE) ?
-> +		KERN_WARNING : KERN_ERR,
-> +		dev_driver_string(&dev->dev), dev_name(&dev->dev));
+> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> index 2a47e82..d92ebfb 100644
+> --- a/drivers/pci/hotplug/acpi_pcihp.c
+> +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+>  	status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+>  	if (ACPI_SUCCESS(status) && removable)
+>  		return 1;
+> +
+> +	/*
+> +	 * Workaround for Thunderbolt implementation on Acer Aspire S5.
+> +	 *
+> +	 * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
+> +	 * slot (device under pci bridge). In Acer Aspire S5 case we have it
+> +	 * deeper in hierarchy.
+> +	 */
+> +	status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
+> +			&removable);
+> +	if (ACPI_SUCCESS(status) && removable)
+> +		return 1;
 
-Here it is, you're initializing 'prefix' here although it is being
-used in the previous patch. You should concentrate the whole prefix
-initialization and passing in one patch so that there are no breakages.
+I have no objection to this patch as-is, but I wonder how will other
+BIOSes implement this "incorrectly" in the future.  Should we always
+just try to walk the whole PCI slot heirachy looking for the _RMV
+attribute?  That should solve the problem where someone else places this
+at another location for the slot, right?
 
-Also, why is it exactly 44 chars long, is that some magic number
-that always works? At least this is what aer_print_error does
-too. I'm guessing someone chose it because it is large enough for
-dev_driver_string() and dev_name() and a couple more formatting
-characters. Oh well.
+Is there any test for Windows that ensures that this gets placed in the
+"correct" location that we can rely on?
 
-Thanks.
+thanks,
 
--- 
-Regards/Gruss,
-    Boris.
+greg k-h
