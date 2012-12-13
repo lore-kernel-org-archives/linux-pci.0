@@ -1,88 +1,299 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([88.190.12.23]:51178 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960Ab2LJRPj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Dec 2012 12:15:39 -0500
-Date: Mon, 10 Dec 2012 18:15:25 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: monstr@monstr.eu
-Cc: David Laight <David.Laight@ACULAB.COM>,
-	Rob Herring <robherring2@gmail.com>, linux-pci@vger.kernel.org,
-	devicetree-discuss@lists.ozlabs.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: pci and pcie device-tree binding - range No cells
-Message-ID: <20121210181525.3ccd87c6@skate>
-In-Reply-To: <50C60839.70603@monstr.eu>
-References: <50C5D387.90908@monstr.eu>
-	<50C5F11D.9060006@gmail.com>
-	<50C5FA3E.9030303@monstr.eu>
-	<50C5FE0F.3050108@gmail.com>
-	<50C601B6.2080107@monstr.eu>
-	<AE90C24D6B3A694183C094C60CF0A2F6026B70E7@saturn3.aculab.com>
-	<50C60839.70603@monstr.eu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH 1/6] ACPI: Separate adding ACPI device objects from probing ACPI drivers
+Date: Thu, 13 Dec 2012 12:41:38 +0100
+Message-ID: <9837718.ktuaxVB488@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7=2WUbNgtFHT6Sm6h6OKfXkSH99qSoD0n73Tga0=XpTA@mail.gmail.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4002729.BbipMAJtM0@vostro.rjw.lan> <CAErSpo7=2WUbNgtFHT6Sm6h6OKfXkSH99qSoD0n73Tga0=XpTA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Michal Simek,
+On Wednesday, December 12, 2012 06:00:03 PM Bjorn Helgaas wrote:
+> On Sun, Dec 9, 2012 at 4:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Currently, as soon as an ACPI device node object (struct acpi_device)
+> > is created, the driver core attempts to probe ACPI drivers against
+> > it.  That leads to some unpleasant side effects, like the fact that
+> > the boot code path for ACPI namespace scanning is different from the
+> > analogous hot-plug code path (during boot ACPI drivers are not
+> > present when ACPI device node objects are registered, so they are
+> > guaranteed not to be probed, which is not the case during hot-plug).
+> > That, in turn, leads to unnecessary complications in the PCI
+> > enumeration algorithm.
+> 
+> Can you elaborate a bit on the complications in PCI enumeration?
+> Hopefully this will lead to some simplification in PCI enumeration,
+> but these patches don't go that far (yet).
 
-On Mon, 10 Dec 2012 17:05:13 +0100, Michal Simek wrote:
+For example, in the hotplug case it is not guaranteed that companion
+struct acpi_device objects have been created already when struct pci_dev
+objects are created during acpi_pci_root_add().  This forces us to use
+acpi_get_pci_dev() in acpi_pci_bind(), which we could avoid otherwise.
 
-> CC: Thomas: I think it will be interesting to see this discussion
-> because you are using size-cell/address-cells equal 1.
-> http://www.spinics.net/lists/arm-kernel/msg211839.html
+Moreover, if we knew that the companion struct acpi_device objects existed as
+soon as in pci_scan_device(), we could just populate the ACPI handle of the
+struct pci_dev in there and that would allow acpi_platform_notify() later on
+to skip the bus browsing (due to recent changes just merged in).  I suppose
+we could even get rid of acpi_pci_bind()/acpi_pci_unbind() by integrating
+that code directly into the initialization/removal code paths.
 
-Thanks for Cc'ing me.
+> > Reduce the differences between the boot and hot-plug cases by
+> > splitting the ACPI namespace scanning for devices into two passes,
+> > such that struct acpi_device objects are registerd in the first
+> > patch without probing ACPI drivers and the drivers are probed
+> > against them directly in the second pass.  This way ACPI drivers
+> > can assume that all of the ACPI device node objects in the given
+> > scope will be registered when their .add() routines run and the
+> > hot-plug case becomes the same as the boot case from their
+> > perspective.
+> 
+> If I understand correctly, you're talking about a hierarchical
+> topology where a device, e.g., a bridge, can have subordinate devices
+> below it.
+> 
+> In general terms, if a driver claims X, and the driver's add() method
+> can assume that every device below X has already been registered, I
+> guess that means any bridge drivers must be integrated into the core,
+> so the core can enumerate things below the bridge without the driver's
+> help.
 
-The thing is that on Marvell SoCs, we don't need to describe statically
-in the Device Tree the translation between CPU addresses and PCI device
-addresses, because those translations are set up dynamically at run
-time through address decoding windows.
+Well, I don't quite understand.  Do you have an example?
 
-Marvell SoCs have up to 20 configurable address windows, which allow
-you, at run time, to say "I would like the range from physical address
-0xYYYYYYYY to 0xZZZZZZZZ to correspond to the PCIe device in port 1,
-lane 2, or to the NAND, or to this or that device". Therefore, in the
-PCIe driver I proposed for the Armada 370/XP SoCs [1], there is no need
-to encode all those ranges statically in the DT.
+We're registering only struct acpi_device things kind of in advance here.
+I would assume that device drivers would operate on device structures of
+other types (like struct pci_dev) and those struct acpi_device objects
+would only be companions of the "physical" device nodes.
 
-The only "ranges" property I'm using is to allow the DT sub-nodes
-describing each PCIe port/lane to access the CPU registers that allow
-to see if the PCIe link is up or down, access the PCI configuration
-space and so on. So all ranges in my "ranges" property correspond to
-normal CPU registers, like the one you would put in the "reg" property
-for any device. The fact that those devices are PCIe is really
-orthogonal here.
+IOW what we do here is to extract some information from ACPI tables and
+put it into a number of objects in the device hierarchy (the fact that they
+are in the device hierarchy allows us to export some of their properties via
+sysfs easily), but that's about it.  How buses/drivers use that information
+is up to them.
 
-Of course, I have no idea if I'm doing a correct usage of the DT, but I
-certainly don't need those 6 values ranges with bits to say if it's I/O
-space, memory space, bus number, device number and so on. The physical
-addresses at which I'm setting up my address decoding windows are
-decided dynamically at runtime, depending on the number of PCIe devices
-that are found in the different PCIe slots (for now, those windows have
-a statically defined size, but I'd ideally would like to size them to
-match exactly the size of the PCIe device memory, in order to avoid
-wasting physical address space, but I haven't found how to get the size
-needed for each PCIe device during the ARM pcibios initialization
-sequence).
+And by the way, I think that binding drivers to struct acpi_device objects
+directly is too much of a shortcut and it leads to more problems than it
+solves.  I'd like to get rid of that eventually.
 
-For those willing to have a look at the PCIe patch set for Armada
-370/XP, see:
-http://lists.infradead.org/pipermail/linux-arm-kernel/2012-December/136455.html.
-The core of the PCIe driver and its DT binding documentation is at
-http://lists.infradead.org/pipermail/linux-arm-kernel/2012-December/136711.html.
+> The PCI core effectively has the P2P bridge driver integrated
+> into it, so that's the way it is already for PCI.  I can imagine
+> scenarios, e.g., NTBs, where it's not practical to integrate the
+> bridge driver, so I'm not 100% comfortable with this assumption.  But
+> I admit that's a totally hypothetical situation, and there are lots of
+> other obstacles to non-integrated bridge drivers, like the fact that
+> we can't do dynamic resource assignment.
 
-Thanks a lot for your comments,
+Well, precisely. :-)
 
-Thomas
+> s/registerd/registered/ above
 
-[1] that I hope to extend to cover previous Marvell SoCs as well, they
-    work basically the same way
+Yup, thanks!
+
+Thanks a lot for having a look. :-)
+
+Rafael
+
+
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/acpi/scan.c     |   96 +++++++++++++++++++++++++++++++++---------------
+> >  include/acpi/acpi_bus.h |    1
+> >  2 files changed, 68 insertions(+), 29 deletions(-)
+> >
+> > Index: linux/include/acpi/acpi_bus.h
+> > ===================================================================
+> > --- linux.orig/include/acpi/acpi_bus.h
+> > +++ linux/include/acpi/acpi_bus.h
+> > @@ -98,6 +98,7 @@ typedef void (*acpi_op_notify) (struct a
+> >  struct acpi_bus_ops {
+> >         u32 acpi_op_add:1;
+> >         u32 acpi_op_start:1;
+> > +       u32 acpi_op_match:1;
+> >  };
+> >
+> >  struct acpi_device_ops {
+> > Index: linux/drivers/acpi/scan.c
+> > ===================================================================
+> > --- linux.orig/drivers/acpi/scan.c
+> > +++ linux/drivers/acpi/scan.c
+> > @@ -494,7 +494,8 @@ static int acpi_bus_match(struct device
+> >         struct acpi_device *acpi_dev = to_acpi_device(dev);
+> >         struct acpi_driver *acpi_drv = to_acpi_driver(drv);
+> >
+> > -       return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
+> > +       return acpi_dev->bus_ops.acpi_op_match
+> > +               && !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
+> >  }
+> >
+> >  static int acpi_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+> > @@ -1418,6 +1419,17 @@ static int acpi_bus_remove(struct acpi_d
+> >         return 0;
+> >  }
+> >
+> > +/*
+> > + * acpi_hot_add_bind - Bind _ADR-based devices on hot-add.
+> > + * @device: ACPI device node to bind.
+> > + */
+> > +static void acpi_hot_add_bind(struct acpi_device *device)
+> > +{
+> > +       if (device->flags.bus_address
+> > +           && device->parent && device->parent->ops.bind)
+> > +               device->parent->ops.bind(device);
+> > +}
+> > +
+> >  static int acpi_add_single_object(struct acpi_device **child,
+> >                                   acpi_handle handle, int type,
+> >                                   unsigned long long sta,
+> > @@ -1490,13 +1502,8 @@ static int acpi_add_single_object(struct
+> >
+> >         result = acpi_device_register(device);
+> >
+> > -       /*
+> > -        * Bind _ADR-Based Devices when hot add
+> > -        */
+> > -       if (device->flags.bus_address) {
+> > -               if (device->parent && device->parent->ops.bind)
+> > -                       device->parent->ops.bind(device);
+> > -       }
+> > +       if (device->bus_ops.acpi_op_match)
+> > +               acpi_hot_add_bind(device);
+> >
+> >  end:
+> >         if (!result) {
+> > @@ -1522,6 +1529,7 @@ static void acpi_bus_add_power_resource(
+> >         struct acpi_bus_ops ops = {
+> >                 .acpi_op_add = 1,
+> >                 .acpi_op_start = 1,
+> > +               .acpi_op_match = 1,
+> >         };
+> >         struct acpi_device *device = NULL;
+> >
+> > @@ -1574,9 +1582,9 @@ static acpi_status acpi_bus_check_add(ac
+> >                                       void *context, void **return_value)
+> >  {
+> >         struct acpi_bus_ops *ops = context;
+> > +       struct acpi_device *device = NULL;
+> >         int type;
+> >         unsigned long long sta;
+> > -       struct acpi_device *device;
+> >         acpi_status status;
+> >         int result;
+> >
+> > @@ -1600,48 +1608,77 @@ static acpi_status acpi_bus_check_add(ac
+> >          * We may already have an acpi_device from a previous enumeration.  If
+> >          * so, we needn't add it again, but we may still have to start it.
+> >          */
+> > -       device = NULL;
+> >         acpi_bus_get_device(handle, &device);
+> >         if (ops->acpi_op_add && !device) {
+> > -               acpi_add_single_object(&device, handle, type, sta, ops);
+> > -               /* Is the device a known good platform device? */
+> > -               if (device
+> > -                   && !acpi_match_device_ids(device, acpi_platform_device_ids))
+> > -                       acpi_create_platform_device(device);
+> > -       }
+> > +               struct acpi_bus_ops add_ops = *ops;
+> >
+> > -       if (!device)
+> > -               return AE_CTRL_DEPTH;
+> > -
+> > -       if (ops->acpi_op_start && !(ops->acpi_op_add)) {
+> > -               status = acpi_start_single_object(device);
+> > -               if (ACPI_FAILURE(status))
+> > +               add_ops.acpi_op_match = 0;
+> > +               acpi_add_single_object(&device, handle, type, sta, &add_ops);
+> > +               if (!device)
+> >                         return AE_CTRL_DEPTH;
+> > +
+> > +               device->bus_ops.acpi_op_match = 1;
+> >         }
+> >
+> >         if (!*return_value)
+> >                 *return_value = device;
+> > +
+> >         return AE_OK;
+> >  }
+> >
+> > +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+> > +                                       void *context, void **not_used)
+> > +{
+> > +       struct acpi_bus_ops *ops = context;
+> > +       struct acpi_device *device;
+> > +       acpi_status status = AE_OK;
+> > +
+> > +       if (acpi_bus_get_device(handle, &device))
+> > +               return AE_CTRL_DEPTH;
+> > +
+> > +       if (ops->acpi_op_add) {
+> > +               if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+> > +                       /* This is a known good platform device. */
+> > +                       acpi_create_platform_device(device);
+> > +               } else {
+> > +                       int ret = device_attach(&device->dev);
+> > +                       acpi_hot_add_bind(device);
+> > +                       if (ret)
+> > +                               status = AE_CTRL_DEPTH;
+> > +               }
+> > +       } else if (ops->acpi_op_start) {
+> > +               if (ACPI_FAILURE(acpi_start_single_object(device)))
+> > +                       status = AE_CTRL_DEPTH;
+> > +       }
+> > +       return status;
+> > +}
+> > +
+> >  static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
+> >                          struct acpi_device **child)
+> >  {
+> > -       acpi_status status;
+> >         void *device = NULL;
+> > +       acpi_status status;
+> > +       int ret = 0;
+> >
+> >         status = acpi_bus_check_add(handle, 0, ops, &device);
+> > -       if (ACPI_SUCCESS(status))
+> > +       if (ACPI_FAILURE(status)) {
+> > +               ret = -ENODEV;
+> > +               goto out;
+> > +       }
+> > +
+> > +       acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > +                           acpi_bus_check_add, NULL, ops, &device);
+> > +       if (device)
+> >                 acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+> > -                                   acpi_bus_check_add, NULL, ops, &device);
+> > +                                   acpi_bus_probe_start, NULL, ops, NULL);
+> > +       else
+> > +               ret = -ENODEV;
+> >
+> > + out:
+> >         if (child)
+> >                 *child = device;
+> >
+> > -       if (device)
+> > -               return 0;
+> > -       else
+> > -               return -ENODEV;
+> > +       return ret;
+> >  }
+> >
+> >  /*
+> > @@ -1752,6 +1789,7 @@ static int acpi_bus_scan_fixed(void)
+> >         memset(&ops, 0, sizeof(ops));
+> >         ops.acpi_op_add = 1;
+> >         ops.acpi_op_start = 1;
+> > +       ops.acpi_op_match = 1;
+> >
+> >         /*
+> >          * Enumerate all fixed-feature devices.
+> >
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
