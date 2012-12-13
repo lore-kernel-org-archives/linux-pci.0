@@ -1,83 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:57457 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752096Ab2LEUJr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:09:47 -0500
-Received: by mail-vc0-f174.google.com with SMTP id d16so4863538vcd.19
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:09:46 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]:39787 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756216Ab2LMTxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 14:53:52 -0500
+Date: Thu, 13 Dec 2012 11:53:48 -0800
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Huang Ying <ying.huang@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Andrew Lutomirski <luto@mit.edu>,
+	Ulrich Eckhardt <usb@uli-eckhardt.de>,
+	=?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Ming Lei <ming.lei@canonical.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
+Message-ID: <20121213195348.GA23257@xanatos>
+References: <20121126191002.GE6504@xanatos>
+ <1962497.aG1sFtYjJG@vostro.rjw.lan>
+ <20121207002808.GG5324@xanatos>
+ <7766249.mqYLvmhmrJ@vostro.rjw.lan>
+ <1355279525.7216.154.camel@yhuang-dev>
 MIME-Version: 1.0
-In-Reply-To: <20121203200241.GG5906@thinkpad-t410>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
- <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Dec 2012 13:09:25 -0700
-Message-ID: <CAErSpo7S2+Vt+9bkGLx_=AY9aSGCvAnkHfqu01gTj=eKs7btNw@mail.gmail.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1355279525.7216.154.camel@yhuang-dev>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 3, 2012 at 1:02 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
-> On Thu, Oct 25, 2012 at 11:35:57AM -0600, Bjorn Helgaas wrote:
->> On Thu, Aug 23, 2012 at 10:36 AM, Matthew Garrett <mjg@redhat.com> wrote:
->> > V3 just fixes all the casting issues and incorporates David's change in
->> > search ordering.
->>
->> I think there's still a section mismatch issue with these patches, so
->> I haven't merged them yet.
->>
->> I rebased my pci/mjg-pci-roms-from-efi branch to v3.7-rc2, and if we
->> get this issue fixed I'll put it in -next as v3.8 material.
->
-> I still don't see this series in -next, so I take it the section
-> mismatch was never fixed? How about the following?
+On Wed, Dec 12, 2012 at 10:32:05AM +0800, Huang Ying wrote:
+> Please try the patch attached.  With it, USB host controller can be
+> waken up with USB card reader plugging in on my test machine.
 
-That's right; nobody stepped up to fix the section mismatch.  I'm
-happy to fold in your fix, especially if Matthew acks it.
+This patch works for me.  When I enable runtime PM for both the root port
+and the host controller, and I see the xHCI host go into PCI runtime
+suspend, but there's no longer a message about the power state changing
+to D3cold.  USB device connects while the PCI host is suspended work
+now, as well as remote wakeup.
 
-David, Eric, what about the kexec question?  It looks to me like this
-wouldn't make things worse than they are today.  If I understand
-correctly, today we don't use ROM data from EFI on either an initial
-boot or a kexec.  After this patch, we could use EFI ROM data on the
-initial boot, but not after a kexec.  So it's worse in the sense that
-the kexec case doesn't match the initial boot, but at least it's not
-something that used to work and is now broken.
+Tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
 
-> From ece31852159a6b2cf9a059031638354e9817a6a6 Mon Sep 17 00:00:00 2001
-> From: Seth Forshee <seth.forshee@canonical.com>
-> Date: Mon, 3 Dec 2012 13:55:50 -0600
-> Subject: [PATCH] x86: Don't discard boot_params
->
-> boot_params is now used at runtime on EFI systems to stash option ROMs
-> that aren't available after exiting boot services, so it can no longer
-> be marked __initdata.
->
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->  arch/x86/kernel/setup.c |    4 ----
->  1 file changed, 4 deletions(-)
->
-> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-> index 468e98d..6e13035 100644
-> --- a/arch/x86/kernel/setup.c
-> +++ b/arch/x86/kernel/setup.c
-> @@ -143,11 +143,7 @@ int default_check_phys_apicid_present(int phys_apicid)
->  }
->  #endif
->
-> -#ifndef CONFIG_DEBUG_BOOT_PARAMS
-> -struct boot_params __initdata boot_params;
-> -#else
->  struct boot_params boot_params;
-> -#endif
->
->  /*
->   * Machine setup..
-> --
-> 1.7.9.5
->
+Please mark this for stable.
+
+Thanks,
+Sarah Sharp
