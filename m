@@ -1,154 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:61505 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492Ab2LZUKp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 15:10:45 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so10975935lag.5
-        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 12:10:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUBpu+rUfnvOwDUm8PTYYVfann3SyhhL4k=54EyfRSmLg@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <150695156.KNRhubloU5@vostro.rjw.lan>
- <CAErSpo5ZpUaHzYQEpR9Jh0MbcmjHfhKUQ-EpRJH1PNCHR_qnVg@mail.gmail.com>
- <5457615.T2WjKPXXC4@vostro.rjw.lan> <CAE9FiQUBpu+rUfnvOwDUm8PTYYVfann3SyhhL4k=54EyfRSmLg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 26 Dec 2012 13:10:23 -0700
-Message-ID: <CAErSpo5sGAEO+kcqUsjyrmn_LAzmkWm4ok0c=rBaR_ErwBX23A@mail.gmail.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
 	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [Update][PATCH 3/6] ACPI: Make acpi_bus_add() and acpi_bus_start() visibly different
+Date: Thu, 13 Dec 2012 01:11:58 +0100
+Message-ID: <2379293.XqS6hlitES@vostro.rjw.lan>
+In-Reply-To: <1693581.lT8eSoGRfL@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <1693581.lT8eSoGRfL@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 26, 2012 at 1:04 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Dec 25, 2012 at 2:42 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Subject: PCI / ACPI: Set root bridge ACPI handle in advance
->>
->> The ACPI handles of PCI root bridges need to be known to
->> acpi_bind_one(), so that it can create the appropriate
->> "firmware_node" and "physical_node" files for them, but currently
->> the way it gets to know those handles is not exactly straightforward
->> (to put it lightly).
->>
->> This is how it works, roughly:
->>
->>   1. acpi_bus_scan() finds the handle of a PCI root bridge,
->>      creates a struct acpi_device object for it and passes that
->>      object to acpi_pci_root_add().
->>
->>   2. acpi_pci_root_add() creates a struct acpi_pci_root object,
->>      populates its "device" field with its argument's address
->>      (device->handle is the ACPI handle found in step 1).
->>
->>   3. The struct acpi_pci_root object created in step 2 is passed
->>      to pci_acpi_scan_root() and used to get resources that are
->>      passed to pci_create_root_bus().
->>
->>   4. pci_create_root_bus() creates a struct pci_host_bridge object
->>      and passes its "dev" member to device_register().
->>
->>   5. platform_notify(), which for systems with ACPI is set to
->>      acpi_platform_notify(), is called.
->>
->> So far, so good.  Now it starts to be "interesting".
->>
->>   6. acpi_find_bridge_device() is used to find the ACPI handle of
->>      the given device (which is the PCI root bridge) and executes
->>      acpi_pci_find_root_bridge(), among other things, for the
->>      given device object.
->>
->>   7. acpi_pci_find_root_bridge() uses the name (sic!) of the given
->>      device object to extract the segment and bus numbers of the PCI
->>      root bridge and passes them to acpi_get_pci_rootbridge_handle().
->>
->>   8. acpi_get_pci_rootbridge_handle() browses the list of ACPI PCI
->>      root bridges and finds the one that matches the given segment
->>      and bus numbers.  Its handle is then used to initialize the
->>      ACPI handle of the PCI root bridge's device object by
->>      acpi_bind_one().  However, this is *exactly* the ACPI handle we
->>      started with in step 1.
->>
->> Needless to say, this is quite embarassing, but it may be avoided
->> thanks to commit f3fd0c8 (ACPI: Allow ACPI handles of devices to be
->> initialized in advance), which makes it possible to initialize the
->> ACPI handle of a device before passing it to device_register().
->>
->> Accordingly, add a new __weak routine, pcibios_root_bridge_prepare(),
->> defaulting to an empty implementation that can be replaced by the
->> interested architecutres (x86 and ia64 at the moment) with functions
->> that will set the root bridge's ACPI handle before its dev member is
->> passed to device_register().  Make both x86 and ia64 provide such
->> implementations of pcibios_root_bridge_prepare() and remove
->> acpi_pci_find_root_bridge() and acpi_get_pci_rootbridge_handle() that aren't
->> necessary any more.
->>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>
->> Bjorn,
->>
->> Since you didn't like the implementation used in the previous patch, here's
->> an alternative one using a __weak function.
->>
->> I don't really strongly prefer any of them.  The advantage of the present one
->> is that it changes fewer files and directly affects fewer architectures.  The
->> disadvantage of it is the addition of the __weak "callback".
->>
->> I wonder what the maintainers of the architectures in question (Peter, Tony)
->> think.
->>
->> Thanks,
->> Rafael
->>
->> ---
->>  arch/ia64/pci/pci.c     |    8 ++++++++
->>  arch/x86/pci/acpi.c     |    9 +++++++++
->>  drivers/acpi/pci_root.c |   18 ------------------
->>  drivers/pci/pci-acpi.c  |   19 -------------------
->>  drivers/pci/probe.c     |   16 ++++++++++++++++
->>  include/acpi/acpi_bus.h |    1 -
->>  include/linux/pci.h     |    2 ++
->>  7 files changed, 35 insertions(+), 38 deletions(-)
->>
->> Index: linux/drivers/pci/probe.c
->> ===================================================================
->> --- linux.orig/drivers/pci/probe.c
->> +++ linux/drivers/pci/probe.c
->> @@ -1632,6 +1632,18 @@ unsigned int pci_scan_child_bus(struct p
->>         return max;
->>  }
->>
->> +/**
->> + * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
->> + * @bridge: Host bridge to set up.
->> + *
->> + * Default empty implementation.  Replace with an architecture-specific setup
->> + * routine, if necessary.
->> + */
->> +int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->> +{
->> +       return 0;
->> +}
->> +
->
-> You may need to put that weak version to another file.
->
-> some version gcc/ld will inline the weak version directly if it is in same file.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI: Make acpi_bus_add() and acpi_bus_start() visibly different
 
-Do you have a reference for this?  I think this might have been true
-in the past, but I don't think it's true for any version of gcc we
-support for building Linux.
+The current ACPI namespace scanning code suggests that acpi_bus_add()
+and acpi_bus_start() share some code.  In fact, however, they are
+completely different code paths (except for the initial checks), so
+refactor the code to make that distinction visibly clear.
 
-If it's still true, we have many other places that need to be changed,
-e.g., omap_secure_ram_reserve_memblock(), r8a7779_register_twd(),
-sh73a0_register_twd(), rtc_mips_set_time(), ...
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-Bjorn
+Update is needed, because of a potential bug found in [1/6], as described here:
+
+https://lkml.org/lkml/2012/12/12/460
+
+Thanks,
+Rafael
+
+---
+ drivers/acpi/scan.c |   66 ++++++++++++++++++++++++++++------------------------
+ 1 file changed, 36 insertions(+), 30 deletions(-)
+
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1626,10 +1626,9 @@ static acpi_status acpi_bus_check_add(ac
+ 	return AE_OK;
+ }
+ 
+-static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+-					void *context, void **not_used)
++static acpi_status acpi_bus_match_device(acpi_handle handle, u32 lvl,
++					 void *not_used, void **ret_not_used)
+ {
+-	struct acpi_bus_ops *ops = context;
+ 	acpi_status status = AE_OK;
+ 	struct acpi_device *device;
+ 	unsigned long long sta_not_used;
+@@ -1645,18 +1644,13 @@ static acpi_status acpi_bus_probe_start(
+ 	if (acpi_bus_get_device(handle, &device))
+ 		return AE_CTRL_DEPTH;
+ 
+-	if (ops->acpi_op_add) {
+-		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+-			/* This is a known good platform device. */
+-			acpi_create_platform_device(device);
+-		} else {
+-			int ret = device_attach(&device->dev);
+-			acpi_hot_add_bind(device);
+-			if (ret)
+-				status = AE_CTRL_DEPTH;
+-		}
+-	} else if (ops->acpi_op_start) {
+-		if (ACPI_FAILURE(acpi_start_single_object(device)))
++	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
++		/* This is a known good platform device. */
++		acpi_create_platform_device(device);
++	} else {
++		int ret = device_attach(&device->dev);
++		acpi_hot_add_bind(device);
++		if (ret)
+ 			status = AE_CTRL_DEPTH;
+ 	}
+ 	return status;
+@@ -1679,7 +1673,7 @@ static int acpi_bus_scan(acpi_handle han
+ 			    acpi_bus_check_add, NULL, ops, &device);
+ 	if (device)
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    acpi_bus_probe_start, NULL, ops, NULL);
++				    acpi_bus_match_device, NULL, NULL, NULL);
+ 	else
+ 		ret = -ENODEV;
+ 
+@@ -1706,31 +1700,43 @@ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
++	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+ 
+ 	return acpi_bus_scan(handle, &ops, child);
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+-int acpi_bus_start(struct acpi_device *device)
++static acpi_status acpi_bus_start_device(acpi_handle handle, u32 lvl,
++					 void *not_used, void **ret_not_used)
+ {
+-	struct acpi_bus_ops ops;
+-	int result;
++	struct acpi_device *device;
++	unsigned long long sta_not_used;
++	int type_not_used;
++	acpi_status status;
+ 
+-	if (!device)
+-		return -EINVAL;
++	/*
++	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
++	 * namespace walks prematurely.
++	 */
++	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
++		return AE_OK;
+ 
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_start = 1;
++	if (acpi_bus_get_device(handle, &device))
++		return AE_CTRL_DEPTH;
+ 
+-	result = acpi_bus_scan(device->handle, &ops, NULL);
++	status = acpi_start_single_object(device);
++	return ACPI_SUCCESS(status) ? status : AE_CTRL_DEPTH;
++}
+ 
+-	acpi_update_all_gpes();
++int acpi_bus_start(struct acpi_device *device)
++{
++	if (!device)
++		return -EINVAL;
+ 
+-	return result;
++	acpi_walk_namespace(ACPI_TYPE_ANY, device->handle, ACPI_UINT32_MAX,
++			    acpi_bus_start_device, NULL, NULL, NULL);
++	acpi_update_all_gpes();
++	return 0;
+ }
+ EXPORT_SYMBOL(acpi_bus_start);
+ 
+
