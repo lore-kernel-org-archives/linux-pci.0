@@ -1,69 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1354642763.6973.15.camel@joe-AO722>
-Subject: Re: [PATCH v6 3/3] aerdrv: Cleanup log output for CPER based AER
-From: Joe Perches <joe@perches.com>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 04 Dec 2012 09:39:23 -0800
-In-Reply-To: <20121204170442.31397.21190.stgit@grignak.americas.hpqcorp.net>
-References: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
-	 <20121204170442.31397.21190.stgit@grignak.americas.hpqcorp.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:35789 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932241Ab2LNVcO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Dec 2012 16:32:14 -0500
+Message-ID: <50CB9ADC.2020103@redhat.com>
+Date: Fri, 14 Dec 2012 16:32:12 -0500
+From: Don Dutile <ddutile@redhat.com>
+MIME-Version: 1.0
+To: Jason Gao <pkill.2012@gmail.com>
+CC: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+In-Reply-To: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2012-12-04 at 10:04 -0700, Lance Ortiz wrote:
-> These changes make cper_print_aer more consistent with aer_print_error
-> which is called in the AER interrupt case. The string in the variable
-> 'prefix' is printed at the beginning of each print statement in
-> cper_print_aer(). The prefix is a string containing the driver name
-> and the device's slot location.  From the callers the value of prefix
-> is never assigned and is NULL, so when cper_print_aer prints data the
-> initial string does not get printed.  This string is important because
-> it identifies the device that the error is on.
+On 12/13/2012 04:50 AM, Jason Gao wrote:
+> Dear List:
+>
+> Description of problem:
+> After installed Centos 6.3(RHEL6.3) on my Dell R710(lastest
+> bios:Version: 6.3.0,Release Date: 07/24/2012) server,and updated
+> lastest kernel "2.6.32-279.14.1.el6.x86_64",I want to use the Intel
+> 82576 ET Dual Port nic's SR-IOV feature,assigning VFs to kvm guest
+>
+> appended kernel boot parameter: intel_iommu=on,after boot with the
+> following messages:
+>
+> Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 2
+> Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
+> fault addr ffe65000
+> Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
+> Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 102
+> Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
+> fault addr ffe8a000
+> Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
+> Dec 13 16:58:15 2 kernel: scsi 0:0:32:0: Enclosure         DP
+> BACKPLANE        1.07 PQ: 0 ANSI: 5
+> Dec 13 16:58:15 2 kernel: DRHD: handling fault status reg 202
+> Dec 13 16:58:15 2 kernel: DMAR:[DMA Read] Request device [03:00.0]
+> fault addr ffe89000
+> Dec 13 16:58:15 2 kernel: DMAR:[fault reason 06] PTE Read access is not set
+>
+> full dmesg detail:
+>     http://pastebin.com/BzFQV0jU
+> lspci -vvv full detail:
+>     http://pastebin.com/9rP2d1br
+>
+>
+> it's a production server,and I'm not sure if this is a critical
+> problem,how to fix it,any help would be greatly appreciated.
 
-Hi again Lance.
-
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-[]
-> @@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
->  	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
->  	u32 status, mask;
->  	const char **status_strs;
-> -	char *prefix = NULL;
-> +	char prefix[44];
->  
->  	aer_severity = cper_severity_to_aer(cper_severity);
-> +	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
-> +		(aer_severity == AER_CORRECTABLE) ?
-> +		KERN_WARNING : KERN_ERR,
-> +		dev_driver_string(&dev->dev), dev_name(&dev->dev));
-> +
->  	if (aer_severity == AER_CORRECTABLE) {
->  		status = aer->cor_status;
->  		mask = aer->cor_mask;
-
-Perhaps this would be better just using dev_printk
-instead of snprintf into a prefix with printk to
-emulate dev_printk.
-
-Also, perhaps KERN_NOTICE is preferable to KERN_WARNING
-in the CORRECTABLE case.
-
-Maybe something like:
-
-	const char *level = KERN_ERR;
-	if (aer_severity == AER_CORRECTABLE)
-		level = KERN_NOTICE;
-
-	...
-
-	dev_printk(level, &dev->dev, etc...);
-
-Maybe do this after this series of patches is accepted.
-Enough with the revisions for awhile...
+DMAR table does not have an entry for this device to this region.
+Once the driver reconfigs/resets the device to stop polling bios-boot
+cmd rings and use (new) OS (dma-mapped) rings, there's a period of time
+during this transition that the hw is babbling away to an area that is no
+longer mapped.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
