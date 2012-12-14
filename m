@@ -1,184 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:63857 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734Ab2LEVa5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 16:30:57 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so4817082lbb.19
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 13:30:55 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:59947 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932378Ab2LNVzQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Dec 2012 16:55:16 -0500
+Message-ID: <50CBA03D.8050409@redhat.com>
+Date: Fri, 14 Dec 2012 16:55:09 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <50BF13E1.1000009@freescale.com>
-References: <1354674717-14426-1-git-send-email-B41889@freescale.com>
- <1354691878.2351.2.camel@pasglop> <50BF03C1.2070304@freescale.com>
- <1354695989.2351.13.camel@pasglop> <50BF13E1.1000009@freescale.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Dec 2012 14:30:35 -0700
-Message-ID: <CAErSpo6mCm79m87MchL=Y1jxxgZ2Mio8d2L+Sg8CLvxRKue8sg@mail.gmail.com>
-Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue of
- rescanned pci device
-To: Chen Yuanquan-B41889 <B41889@freescale.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	linuxppc-dev@lists.ozlabs.org, galak@kernel.crashing.org,
-	r61911@freescale.com, linux-pci@vger.kernel.org,
-	=?UTF-8?B?5p2+5pys5Y2a6YOO?= <matsumoto.hiroo@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Jason Gao <pkill.2012@gmail.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com> <1355415792.2229.7.camel@ul30vt.home> <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+In-Reply-To: <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 2:29 AM, Chen Yuanquan-B41889
-<B41889@freescale.com> wrote:
-> On 12/05/2012 04:26 PM, Benjamin Herrenschmidt wrote:
+On 12/13/2012 09:01 PM, Jason Gao wrote:
+> On Fri, Dec 14, 2012 at 12:23 AM, Alex Williamson
+> <alex.williamson@redhat.com>  wrote:
 >>
->> On Wed, 2012-12-05 at 16:20 +0800, Chen Yuanquan-B41889 wrote:
->>>
->>> On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
->>>>
->>>> On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
->>>>>
->>>>> On powerpc arch, some fixup work of PCI/PCI-e device is just done
->>>>> during the
->>>>> first scan at booting time. For the PCI/PCI-e device rescanned after
->>>>> linux OS
->>>>> booting up, the fixup work won't be done, which leads to dma_set_mask
->>>>> error or
->>>>> irq related issue in rescanned PCI/PCI-e device's driver. So, it does
->>>>> the same
->>>>> fixup work for the rescanned device to avoid this issue.
->>>>
->>>> Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
->>>> that way but factored out.
+>> Device 03:00.0 is your raid controller:
 >>
->> Please, at least format your email properly so I can try to undertand
->> without needing aspirin.
+>> 03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
 >>
->>> There's a judgement "if (!bus->is_added)" before calling of
->>> pcibios_fixup_bus in pci_scan_child_bus, so for the rescanned device,
->>> the fixup won't execute, which leads to fatal error in driver of
->>> rescanned
->>> device on freescale  powerpc, no this issues on x86 arch.
->>
->> First, none of that invalidates my statement that you shouldn't
->> duplicate a whole block of code like this. Even if your approach is
->> correct (which is debated separately), at the very least you should
->> factor the code out into a common function between the two copies.
->>
->>> Remove the judgement, let it to do the pcibios_fixup_bus
->>> directly, the error won't occur for the rescanned device. But it's
->>> general code, not proper to change here, so copy the pcibios_fixup_bus
->>> work to  pcibios_enable_device.
->>>
->>>> I'm surprised also that is_added is false when pcibios_enable_device()
->>>> gets called ... that looks strange to me. At what point is that enable
->>>> happening in the hotplug sequence ?
->>>
->>> All devices are rescanned and then call the pci_enable_devices and
->>> pci_bus_add_devices.
->>
->> Where ? How ? What is the sequence happening ? In any case, I think if
->> we need a proper fixup done per-device like that after scan we ought to
->> create a new hook at the generic level rather than that sort of hack.
->>
+>> For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
+>> ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
+>> it's not reading an OS allocated buffer, which probably means it's some
+>> kind of side-band communication with a management controller.  I'd guess
+>> it's a BIOS bug and there should be an RMRR covering those accesses.
+>> Thanks,
 >
-> echo 1 > rescan to trigger dev_rescan_store:
+> First of all ,I want to known whether I can ignore these errors on the
+> production server,and do these error may affect the system?
 >
-> dev_rescan_store->pci_rescan_bus->pci_scan_child_bus,
-> pci_assign_unassigned_bus_resources,
-> pci_enable_bridges, pci_bus_add_devices
+> By the way,when I removed the "intel_iommu=on" from /etc/grub.conf,no
+> DMAR related errors occur
 >
-> pci_enable_bridges->pci_enable_device->__pci_enable_device_flags->do_pci_enable_device->
-> pcibios_enable_device
+> It's a strange thing,other three Dell R710 servers with the same bios
+> version v. 6.3.0, same kernel 2.6.32-279.14.1 on RHEL6u3(Centos 6u3)
+> ,but these errors don't appear on these tree servers
 >
-> pci_bus_add_devices->pci_bus_add_device->"dev->is_added = 1"
->
-> Yeah, it's general fixup code for every rescanned PCI/PCI-e device on
-> powerpc at runtime. So if
-> we want to call it in a ppc_md member, we need to wrap it as a function and
-> assign it in every ppc_md,
-> it isn't proper for the general code.
->
-> Regards,
-> yuanquan
->
->
->>> The patch code will be called by pci_enable_devices. The "dev->is_added"
->>> is set in pci_bus_add_device
->>> which is called by pci_bus_add_devices. So "dev->is_added" is false when
->>> checking it in pcibios_enable_device
->>> for the rescanned device.
->>
->> Who calls pci_enable_device() in the rescan case ? Why isn't it left to
->> the driver ? I don't think we can rely on that behaviour not to change.
->>
->>>> How do you trigger the rescan anyway ?
->>>
->>> Use the interface under /sys :
->>> echo 1 > /sys/bus/pci/devices/xxx/remove
->>>
->>> then echo 1 to the pci device which is the bus of the removed device
->>> echo 1 > /sys/bus/pci/devices/xxxx/rescan
->>> the removed device will be scanned and it's driver module will be loaded
->>> automatically.
->>
->> Yeah this code path are known to be fishy. I think the problem is at the
->> generic abstraction level and that's where it needs to be fixed.
->>
->> Cheers,
->> Ben.
->>
->>> Regards,
->>> yuanquan
->>>>
->>>> I think the problem needs to be solve at a higher level, I'm adding
->>>> linux-pci & Bjorn to the CC list.
->>>>
->>>> Cheers,
->>>> Ben.
->>>>
->>>>> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
->>>>> ---
->>>>>    arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
->>>>>    1 file changed, 20 insertions(+)
->>>>>
->>>>> diff --git a/arch/powerpc/kernel/pci-common.c
->>>>> b/arch/powerpc/kernel/pci-common.c
->>>>> index 7f94f76..f0fb070 100644
->>>>> --- a/arch/powerpc/kernel/pci-common.c
->>>>> +++ b/arch/powerpc/kernel/pci-common.c
->>>>> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev,
->>>>> int mask)
->>>>>                 if (ppc_md.pcibios_enable_device_hook(dev))
->>>>>                         return -EINVAL;
->>>>>    +    if (!dev->is_added) {
->>>>> +               /*
->>>>> +                * Fixup NUMA node as it may not be setup yet by the
->>>>> generic
->>>>> +                * code and is needed by the DMA init
->>>>> +                */
->>>>> +               set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
->>>>> +
->>>>> +               /* Hook up default DMA ops */
->>>>> +               set_dma_ops(&dev->dev, pci_dma_ops);
->>>>> +               set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
->>>>> +
->>>>> +               /* Additional platform DMA/iommu setup */
->>>>> +               if (ppc_md.pci_dma_dev_setup)
->>>>> +                       ppc_md.pci_dma_dev_setup(dev);
->>>>> +
->>>>> +               /* Read default IRQs and fixup if necessary */
->>>>> +               pci_read_irq_line(dev);
->>>>> +               if (ppc_md.pci_irq_fixup)
->>>>> +                       ppc_md.pci_irq_fixup(dev);
->>>>> +       }
->>>>>         return pci_enable_resources(dev, mask);
->>>>>    }
+forgot: did you check that all the bios settings are the same btwn
+         the 710 systems?
 
-Is this the same issue Hiroo MATSUMOTO was working on earlier?
-(http://comments.gmane.org/gmane.linux.ports.ppc.embedded/50080)
+> Anyone have any idea for this ?
+>
+> thanks
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-We went round and round on those patches (partly my fault for
-excessive bike-shedding), and then we stalled out because of an
-ordering issue with CardBus init and an IRQ quirk.
-
-Here's the last status I remember:
-http://marc.info/?l=linux-pci&m=135006501620378&w=2
-
-Bjorn
