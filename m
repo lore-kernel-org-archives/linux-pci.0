@@ -1,92 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:47769 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829Ab2LMKel convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Dec 2012 05:34:41 -0500
-Date: Thu, 13 Dec 2012 10:34:12 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Michal Simek <monstr@monstr.eu>,
-	Rob Herring <robherring2@gmail.com>,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-Subject: Re: [PATCH] pci: Provide support for parsing PCI DT ranges property
-Message-ID: <20121213103412.GA24453@arm.com>
-References: <20121212163749.GA17371@arm.com>
- <20121213091333.GA14828@avionic-0098.adnet.avionic-design.de>
- <20121213094543.GA23446@arm.com>
- <20121213100318.GB13055@avionic-0098.adnet.avionic-design.de>
-MIME-Version: 1.0
-In-Reply-To: <20121213100318.GB13055@avionic-0098.adnet.avionic-design.de>
-Content-Type: text/plain; charset=WINDOWS-1252
+Received: from mga09.intel.com ([134.134.136.24]:9111 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755708Ab2LNCwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Dec 2012 21:52:19 -0500
+From: Huang Ying <ying.huang@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Huang Ying <ying.huang@intel.com>
+Subject: [PATCH] PCIe/PM: Do not suspend port if any subordinate device need PME polling
+Date: Fri, 14 Dec 2012 10:52:11 +0800
+Message-Id: <1355453531-23348-1-git-send-email-ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 10:03:18AM +0000, Thierry Reding wrote:
-> On Thu, Dec 13, 2012 at 09:45:43AM +0000, Andrew Murray wrote:
-> > On Thu, Dec 13, 2012 at 09:13:33AM +0000, Thierry Reding wrote:
-> > > Hi Andrew,
-> > > 
-> > > I don't like iterator interfaces too much, but I can live with that.
-> > > Other than that the patch looks good to me and I'll try to work it into
-> > > my Tegra PCIe patch series.
-> > > 
-> > > Just two minor comments below.
-> > > 
-> > > > diff --git a/drivers/of/address.c b/drivers/of/address.c
-> > > [...]
-> > > > @@ -421,7 +472,7 @@ u64 __of_translate_address(struct device_node *dev, const __be32 *in_addr,
-> > > >  		goto bail;
-> > > >  	bus = of_match_bus(parent);
-> > > >  
-> > > > -	/* Cound address cells & copy address locally */
-> > > > +	/* Count address cells & copy address locally */
-> > > >  	bus->count_cells(dev, &na, &ns);
-> > > >  	if (!OF_CHECK_COUNTS(na, ns)) {
-> > > >  		printk(KERN_ERR "prom_parse: Bad cell count for %s\n",
-> > > 
-> > > This is really minor, but it should still go into a separate patch.
-> > > 
-> > > > diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-> > > > index 01b925a..4582b20 100644
-> > > > --- a/include/linux/of_address.h
-> > > > +++ b/include/linux/of_address.h
-> > > > @@ -26,6 +26,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
-> > > >  #define pci_address_to_pio pci_address_to_pio
-> > > >  #endif
-> > > >  
-> > > > +const __be32 *of_pci_process_ranges(struct device_node *node,
-> > > > +				    struct resource *res, const __be32 *from);
-> > > >  #else /* CONFIG_OF_ADDRESS */
-> > > >  static inline int of_address_to_resource(struct device_node *dev, int index,
-> > > >  					 struct resource *r)
-> > > > @@ -48,6 +50,11 @@ static inline const u32 *of_get_address(struct device_node *dev, int index,
-> > > >  {
-> > > >  	return NULL;
-> > > >  }
-> > > > +const __be32 *of_pci_process_ranges(struct device_node *node,
-> > > 
-> > > There should be a blank line to separate the above two lines.
-> > > 
-> > 
-> > Thanks for the feedback.
-> > 
-> > I will send another patch for the typo and leave this patch with you for
-> > working into your existing series.
-> 
-> I suppose you have your own series that uses this patch?
+In
 
-Not yet, it may be some time before I submit my PCI host bridge driver. Though
-I am making changes else where (e.g. this patch) which I'm hoping to submit as
-early as possible. I can rebase my work for these upstream dependencies.
+  http://www.mail-archive.com/linux-usb@vger.kernel.org/msg07976.html
 
-I can re-spin this patch with your suggested changes if you prefer?
+Ulrich reported that his USB3 cardreader does not work reliably when
+connected to the USB3 port.  It turns out that USB3 controller failed
+to be waken up when plugging in the USB3 cardreader.  Further
+experiment found that the USB3 host controller can only be waken up
+via polling, while not via PME interrupt.  But if the PCIe port that
+the USB3 host controller is connected is suspended, we can not poll
+the USB3 host controller because its config space is not accessible if
+the PCIe port is put into low power state.
 
-Andrew Murray
+To solve the issue, the PCIe port will not be suspended if any
+subordinate device need PME polling.
 
+Reported-by: Ulrich Eckhardt <usb@uli-eckhardt.de>
+Signed-off-by: Huang Ying <ying.huang@intel.com>
+Tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: stable@vger.kernel.org	# 3.6+
+---
+ drivers/pci/pcie/portdrv_pci.c |   18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -134,10 +134,26 @@ static int pcie_port_runtime_resume(stru
+ 	return 0;
+ }
+ 
++static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
++{
++	int *pme_poll = data;
++	*pme_poll = *pme_poll || pdev->pme_poll;
++	return 0;
++}
++
+ static int pcie_port_runtime_idle(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
++	int pme_poll = false;
++
++	/*
++	 * If any subordinate device needs pme poll, we should keep
++	 * the port in D0, because we need port in D0 to poll it.
++	 */
++	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
+ 	/* Delay for a short while to prevent too frequent suspend/resume */
+-	pm_schedule_suspend(dev, 10);
++	if (!pme_poll)
++		pm_schedule_suspend(dev, 10);
+ 	return -EBUSY;
+ }
+ #else
