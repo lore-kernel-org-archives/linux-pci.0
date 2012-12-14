@@ -1,37 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42068 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752291Ab2LFA4n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Dec 2012 19:56:43 -0500
-Message-ID: <50BFED3C.1080601@zytor.com>
-Date: Wed, 05 Dec 2012 16:56:28 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50CB9FF8.2070502@redhat.com>
+Date: Fri, 14 Dec 2012 16:54:00 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
-In-Reply-To: <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+To: Jason Gao <pkill.2012@gmail.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com> <1355415792.2229.7.camel@ul30vt.home> <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+In-Reply-To: <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2012 04:51 PM, Yinghai Lu wrote:
-> 
-> it moves boot_params from __initdata  to data.
-> and just for using pointer to setup_data.
-> 
-> should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
-> 
+On 12/13/2012 09:01 PM, Jason Gao wrote:
+> On Fri, Dec 14, 2012 at 12:23 AM, Alex Williamson
+> <alex.williamson@redhat.com>  wrote:
+>>
+>> Device 03:00.0 is your raid controller:
+>>
+>> 03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
+>>
+>> For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
+>> ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
+>> it's not reading an OS allocated buffer, which probably means it's some
+>> kind of side-band communication with a management controller.  I'd guess
+>> it's a BIOS bug and there should be an RMRR covering those accesses.
+>> Thanks,
+>
+> First of all ,I want to known whether I can ignore these errors on the
+> production server,and do these error may affect the system?
+>
+> By the way,when I removed the "intel_iommu=on" from /etc/grub.conf,no
+> DMAR related errors occur
+>
+well, if you don't enable the IOMMU, then it won't have IOMMU faults! ;-)
 
-That is not the only bit.  We already have covered how kexec could use
-the whole structure, and really, how big a deal is a page of cache-cold
-storage?
+> It's a strange thing,other three Dell R710 servers with the same bios
+> version v. 6.3.0, same kernel 2.6.32-279.14.1 on RHEL6u3(Centos 6u3)
+> ,but these errors don't appear on these tree servers
+>
+mptsas or smi fw has to be different....
 
-	-hpa
-
+> Anyone have any idea for this ?
+>
+> thanks
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
