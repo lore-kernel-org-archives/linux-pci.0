@@ -1,53 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45302 "EHLO mga11.intel.com"
+Received: from hydra.sisk.pl ([212.160.235.94]:34165 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751841Ab2L0JaW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Dec 2012 04:30:22 -0500
-Date: Thu, 27 Dec 2012 11:33:51 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: [PATCH 0/3] Thunderbolt workarounds
-Message-ID: <20121227093351.GH20026@intel.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <CAErSpo6QWZfZ9YQAXkDOPvqBrwhS4wEzrxiUSAi7myVfoDGaKA@mail.gmail.com>
+	id S1756766Ab2LNW60 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Dec 2012 17:58:26 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Richard Yang <weiyang@linux.vnet.ibm.com>
+Cc: Huang Ying <ying.huang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH] PCIe/PM: Do not suspend port if any subordinate device need PME polling
+Date: Sat, 15 Dec 2012 00:03:33 +0100
+Message-ID: <3929168.xsIhODq3Fi@vostro.rjw.lan>
+In-Reply-To: <20121214051131.GA31440@richard.>
+References: <1355453531-23348-1-git-send-email-ying.huang@intel.com> <20121214051131.GA31440@richard.>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo6QWZfZ9YQAXkDOPvqBrwhS4wEzrxiUSAi7myVfoDGaKA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 26, 2012 at 05:50:42PM -0700, Bjorn Helgaas wrote:
-> On Thu, Dec 13, 2012 at 12:25 PM, Kirill A. Shutemov
-> <kirill.shutemov@linux.intel.com> wrote:
-> > From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+On Friday, December 14, 2012 01:11:31 PM Richard Yang wrote:
+> On Fri, Dec 14, 2012 at 10:52:11AM +0800, Huang Ying wrote:
+> >In
 > >
-> > I had chance to test two PC setups with Thunderbolt: Acer Aspire S5 and
-> > Intel DZ77RE-75K motherboard. Unfortunately, both of them are broken in
-> > different ways.
+> >  http://www.mail-archive.com/linux-usb@vger.kernel.org/msg07976.html
 > >
-> > This patchset contains workarounds for the issues.
+> >Ulrich reported that his USB3 cardreader does not work reliably when
+> >connected to the USB3 port.  It turns out that USB3 controller failed
+> >to be waken up when plugging in the USB3 cardreader.  Further
+> >experiment found that the USB3 host controller can only be waken up
+> >via polling, while not via PME interrupt.  But if the PCIe port that
+> >the USB3 host controller is connected is suspended, we can not poll
+> >the USB3 host controller because its config space is not accessible if
+> >the PCIe port is put into low power state.
 > >
-> > Kirill A. Shutemov (3):
-> >   PCI Hotplug: workaround for Thunderbolt on Acer Aspire S5
-> >   PCI Hotplug: convert acpiphp_hp_work to use delayed work
-> >   PCI Hotplug: workaround for Thunderbolt on Intel DZ77RE-75K
-> >     motherboard
+> >To solve the issue, the PCIe port will not be suspended if any
+> >subordinate device need PME polling.
 > >
-> >  drivers/pci/hotplug/acpi_pcihp.c   |   13 +++++++++++++
-> >  drivers/pci/hotplug/acpiphp_glue.c |   33 +++++++++++++++++++++++++--------
-> >  2 files changed, 38 insertions(+), 8 deletions(-)
+> >Reported-by: Ulrich Eckhardt <usb@uli-eckhardt.de>
+> >Signed-off-by: Huang Ying <ying.huang@intel.com>
+> >Tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+> >Cc: stable@vger.kernel.org	# 3.6+
+> >---
+> > drivers/pci/pcie/portdrv_pci.c |   18 +++++++++++++++++-
+> > 1 file changed, 17 insertions(+), 1 deletion(-)
+> >
+> >--- a/drivers/pci/pcie/portdrv_pci.c
+> >+++ b/drivers/pci/pcie/portdrv_pci.c
+> >@@ -134,10 +134,26 @@ static int pcie_port_runtime_resume(stru
+> > 	return 0;
+> > }
+> >
+> >+static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
+> >+{
+> >+	int *pme_poll = data;
+> >+	*pme_poll = *pme_poll || pdev->pme_poll;
+> >+	return 0;
+> >+}
+> >+
+> > static int pcie_port_runtime_idle(struct device *dev)
+> > {
+> >+	struct pci_dev *pdev = to_pci_dev(dev);
+> >+	int pme_poll = false;
 > 
-> I'm ignoring these for now.  [1/3] has a hardcoded BIOS path that I
-> don't think is the right approach and [3/3] has a timeout issue to be
-> addressed.  [2/3] might be worthwhile by itself, but I'd rather merge
-> a complete solution when it's ready.
+> You want to use int or bool? 
+> 
+> I think bool is better?
 
-OK. We'll rework the series with Kirill and submit a better solution.
+Well, bool would be nicer, but it's not a big deal.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
