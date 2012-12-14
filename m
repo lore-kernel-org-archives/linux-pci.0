@@ -1,97 +1,78 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing0307@gmail.com>,
 	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 10/16] ACPI: Drop the second argument of acpi_bus_scan()
-Date: Thu, 20 Dec 2012 02:54:47 +0100
-Message-ID: <1376356.7D4mTuYmxW@vostro.rjw.lan>
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+Subject: Re: [PATCH rev.2 0/6] ACPI: Change the ACPI namespace scanning code ordering
+Date: Fri, 14 Dec 2012 23:59:36 +0100
+Message-ID: <2226860.gdCKHUSrjo@vostro.rjw.lan>
+In-Reply-To: <50CAF7DE.8000203@huawei.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <1499423.ez5cZl2uAf@vostro.rjw.lan> <50CAF7DE.8000203@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Friday, December 14, 2012 05:56:46 PM Yijing Wang wrote:
+> On 2012/12/14 6:15, Rafael J. Wysocki wrote:
+> > Hi All,
+> > 
+> > On Sunday, December 09, 2012 11:58:42 PM Rafael J. Wysocki wrote:
+> >> Hi,
+> >>
+> >> The following patches change the ordering of the ACPI namespace scanning code
+> >> so that all struct acpi_device objects in the given scope are registered before
+> >> ACPI drivers are probed against them.  They also do some simplifications and
+> >> clarifications of the code made possible by this main change.
+> >>
+> >> This is done for three basic reasons.  First, we need the boot ACPI namespace
+> >> scanning code to be as similar as reasonably possible to the hot-plug ACPI
+> >> namespace scanning code.  Second, the ordering of PCI devices enumeration
+> >> versus ACPI-backed platform devices registration needs to be such that the PCI
+> >> devices in the given scope are all registered first.  Finally, when we start to
+> >> actually manage ACPI device resources as appropriate (e.g. resolve resource
+> >> conflicts properly) we'll need all struct acpi_device nodes to be registered
+> >> before any "companion" physical nodes or ACPI drivers are bound to them.
+> >>
+> >> The patches have been tested on Toshiba Portege R500 without breaking stuff
+> >> (I used some additional debug code to verify that the ordering of device
+> >> discovery had not been modified by them), but if you see any problems with
+> >> them regarding hot-plug, please let me know.
+> >>
+> >> [1/6] - Separate adding ACPI device objects from probing ACPI drivers.
+> >> [2/6] - Change the ordering of PCI root bridge driver registration.
+> >> [3/6] - Make acpi_bus_add() and acpi_bus_start() visibly different.
+> >> [4/6] - Reduce the usage of struct acpi_bus_ops
+> >> [5/6] - Replace struct acpi_bus_ops with an enum type
+> >> [6/6] - Change the ordering of acpi_bus_check_add() to avoid unnecessary checks.
+> > 
+> > The second revision is necessary to address problems found by Yijing Wang
+> > during testing and explained by Jiang Liu (thanks guys!).
+> > 
+> > The problem is that acpi_walk_namespace() doesn't execute the pre_order_visit
+> > callback for the starting handle, so the callback routine has the be executed
+> > for it directly, if necessary.
+> > 
+> > I also modified a couple of changelogs to better explain the motivation of the
+> > patches.
+> > 
+> > Boot sequence tested on Toshiba Portege R500, but testing on systems with
+> > hotplug will be appreciated.
+> 
+> Hi rafael,
+>    I tested this version patchset in my ia64 hotplug machine, and the result looks ok.
 
-After the removal of acpi_start_single_object() and acpi_bus_start()
-the second argument of acpi_bus_scan() is not necessary any more,
-so drop it and update acpi_bus_check_add() accordingly.
+Great, thanks a lot for testing!
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/scan.c |   18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+Rafael
 
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -1592,8 +1592,8 @@ static int acpi_bus_type_and_status(acpi
- 	return 0;
- }
- 
--static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
--				      void *context, void **return_value)
-+static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl_not_used,
-+				      void *not_used, void **return_value)
- {
- 	struct acpi_device *device = NULL;
- 	int type;
-@@ -1625,7 +1625,7 @@ static acpi_status acpi_bus_check_add(ac
- 	if (!device)
- 		return AE_CTRL_DEPTH;
- 
--	device->add_type = context ? ACPI_BUS_ADD_START : ACPI_BUS_ADD_MATCH;
-+	device->add_type = ACPI_BUS_ADD_START;
- 	acpi_hot_add_bind(device);
- 
-  out:
-@@ -1662,18 +1662,16 @@ static acpi_status acpi_bus_device_attac
- 	return status;
- }
- 
--static int acpi_bus_scan(acpi_handle handle, bool start,
--			 struct acpi_device **child)
-+static int acpi_bus_scan(acpi_handle handle, struct acpi_device **child)
- {
- 	void *device = NULL;
- 	acpi_status status;
- 	int ret = -ENODEV;
- 
--	status = acpi_bus_check_add(handle, 0, (void *)start, &device);
-+	status = acpi_bus_check_add(handle, 0, NULL, &device);
- 	if (ACPI_SUCCESS(status))
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
--				    acpi_bus_check_add, NULL, (void *)start,
--				    &device);
-+				    acpi_bus_check_add, NULL, NULL, &device);
- 
- 	if (!device)
- 		goto out;
-@@ -1717,7 +1715,7 @@ int acpi_bus_add(acpi_handle handle, str
- {
- 	int err;
- 
--	err = acpi_bus_scan(handle, false, ret);
-+	err = acpi_bus_scan(handle, ret);
- 	if (err)
- 		return err;
- 
-@@ -1823,7 +1821,7 @@ int __init acpi_scan_init(void)
- 	/*
- 	 * Enumerate devices in the ACPI namespace.
- 	 */
--	result = acpi_bus_scan(ACPI_ROOT_OBJECT, true, &acpi_root);
-+	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &acpi_root);
- 
- 	if (!result)
- 		result = acpi_bus_scan_fixed();
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
