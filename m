@@ -1,51 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:52287 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754556Ab2LFVoh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 16:44:37 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so5738167lbb.19
-        for <linux-pci@vger.kernel.org>; Thu, 06 Dec 2012 13:44:35 -0800 (PST)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:51576 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751232Ab2LNG43 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Dec 2012 01:56:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <20121206185439.GA17381@srcf.ucam.org>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
- <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
- <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
- <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
- <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
- <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
- <50C0E339.4030607@zytor.com> <20121206185439.GA17381@srcf.ucam.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 6 Dec 2012 14:44:15 -0700
-Message-ID: <CAErSpo4_Ob_VVY_t7X8Aczwg=DcQXS9xw-iPT4QX6JRSqwmyoA@mail.gmail.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
+In-Reply-To: <1355460351.2229.20.camel@ul30vt.home>
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+	<1355415792.2229.7.camel@ul30vt.home>
+	<CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+	<1355460351.2229.20.camel@ul30vt.home>
+Date: Fri, 14 Dec 2012 14:56:27 +0800
+Message-ID: <CANmqhJB4=Xuho0BrfhRO1hkL6yp=BxSxQoSAUgL=eNkZgyk8SQ@mail.gmail.com>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+From: Jason Gao <pkill.2012@gmail.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 6, 2012 at 11:54 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Thu, Dec 06, 2012 at 10:26:01AM -0800, H. Peter Anvin wrote:
->
->> NAK on this bit:
->>
->> +       if (boot_params.hdr.version < 0x0209)
->> +               return 0;
->>
->> This field is kernel->bootloader documentation.  If a nonmaching
->> value somehow leaks into the kernel, the kernel could either
->> panic("Bootloader written by moron") or it should clear some fields,
->> but littering the kernel with these kinds of tests is just plain
->> braindead.
->
-> Dropping that should be fine. Bjorn, would you prefer a patch from me to
-> do that?
+On Fri, Dec 14, 2012 at 12:45 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> Is the MegaRAID firmware and system management firmware the same as
+> well?  Thanks.
 
-I dropped that check and re-pushed my -next branch.
+I'v updated  all the firmware using Dell's firmware-tools:
 
-Yinghai, I don't understand your pa_data_setup_pci.patch, but if
-somebody else acks it and we can come up with an intelligible
-changelog, I'll fold that in, too.
+# inventory_firmware
+Wait while we inventory system:
+System inventory:
+        BIOS = 6.3.0
+        SAS/SATA Backplane 0:0 Backplane Firmware = 1.07
+        PERC 6/i Integrated Controller 0 Firmware = 6.3.1-0003
+        Dell OS Drivers Pack, v.6.5.3, A00 = 6.5.3
+        Dell Lifecycle Controller = 1.5.5.27
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth1) = 7.2.20
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth0) = 7.2.20
+        ST3600057SS Firmware = es66
+        iDRAC6 = 1.92
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth2) = 7.2.20
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth3) = 7.2.20
+        Dell 32 Bit Diagnostics, v.5154A0, 5154.1 = 5154a0
+        System BIOS for PowerEdge R710 = 6.3.0
+
+Thanks
