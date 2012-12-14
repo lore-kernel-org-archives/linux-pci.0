@@ -1,124 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39232 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924Ab2LSDE1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 22:04:27 -0500
-Message-ID: <50D12EA2.3030907@oracle.com>
-Date: Wed, 19 Dec 2012 11:04:02 +0800
-From: Joe Jin <joe.jin@oracle.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: "Fujinaka, Todd" <todd.fujinaka@intel.com>
-CC: Ethan Zhao <ethan.kernel@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-References: <509B5038.8090304@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA89133487884@ORSMSX102.amr.corp.intel.com> <50A30656.6090508@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com> <50A43828.6000702@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com> <50A9C5CC.1030300@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com> <50AB8471.7080607@oracle.com> <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com> <50B41077.3080009@oracle.com>	<b46b84cf-3688-4fd7-b741-4e96f2663517@default> <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com> <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com> <50B5CBD2.5020804@oracle.com> <9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com> <CABawtvPrz=z_CLCvPeXkky7COyhjPyfBu3QCTbiiPpvr+5bicg@mail.gmail.com> <9B4A1B1917080E46B64F07F2989DADD638C60A9B@ORSMSX102.amr.corp.intel.com>
-In-Reply-To: <9B4A1B1917080E46B64F07F2989DADD638C60A9B@ORSMSX102.amr.corp.intel.com>
+In-Reply-To: <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
+References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
+ <1355412708-20046-2-git-send-email-kirill.shutemov@linux.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Dec 2012 17:22:25 -0700
+Message-ID: <CAErSpo5eFhpHwnYZvfXPLJ3hnViFXLtgkGXaGR2xNsVaSg0CKw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI Hotplug: workaround for Thunderbolt on Acer
+ Aspire S5
+To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Miles J Penner <miles.j.penner@intel.com>,
+	John Ronciak <john.ronciak@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Tushar N Dave <tushar.n.dave@intel.com>,
+	"Kirill A. Shutemov" <kirill@shutemov.name>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+[+cc Rafael]
 
-I backported mps commits and ask customer pass "pci=pcie_bus_peer2pee" to kernel
-to limited MPS to 128 and issue disappeared, sound like this is a BIOS bug.
+On Thu, Dec 13, 2012 at 8:31 AM, Kirill A. Shutemov
+<kirill.shutemov@linux.intel.com> wrote:
+> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
+>
+> Correct ACPI PCI hotplug imeplementation should have _RMV method in a
+> PCI slot (device under pci bridge). In Acer Aspire S5 case we have it
+> deeper in hierarchy:
+>
+> Device (RP05)
+> {
+>    // ...
+>    Device (HRUP)
+>    {
+>        // ...
+>        Device (HRDN)
+>        {
+>            // ...
+>            Device (EPUP)
+>            {
+>                // ...
+>                Method (_RMV, 0, NotSerialized)  // _RMV: Removal Status
+>                {
+>                    Return (One)
+>                }
+>            }
+>        }
+>    }
+> }
+>
+> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/acpi_pcihp.c |   13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+>
+> diff --git a/drivers/pci/hotplug/acpi_pcihp.c b/drivers/pci/hotplug/acpi_pcihp.c
+> index 2a47e82..d92ebfb 100644
+> --- a/drivers/pci/hotplug/acpi_pcihp.c
+> +++ b/drivers/pci/hotplug/acpi_pcihp.c
+> @@ -422,6 +422,19 @@ static int pcihp_is_ejectable(acpi_handle handle)
+>         status = acpi_evaluate_integer(handle, "_RMV", NULL, &removable);
+>         if (ACPI_SUCCESS(status) && removable)
+>                 return 1;
+> +
+> +       /*
+> +        * Workaround for Thunderbolt implementation on Acer Aspire S5.
+> +        *
+> +        * Correct ACPI PCI hotplug imeplementation has _RMV method in a PCI
+> +        * slot (device under pci bridge). In Acer Aspire S5 case we have it
+> +        * deeper in hierarchy.
+> +        */
+> +       status = acpi_evaluate_integer(handle, "HRDN.EPUP._RMV", NULL,
+> +                       &removable);
 
-Thanks all of your help.
+I don't think encoding an ACPI path from the BIOS of a random machine
+here is the right approach.  The path components are completely
+implementation-dependent, and we'll end up carrying this test forever,
+long after the last Aspire S5 is in the landfill.
 
-Best Regards,
-Joe
+We need a more generic approach that covers this case.  It would be
+interesting to see the rest of the ACPI namespace details under
+RP05.HRUP.  I guess we have RP05.HRUP._ADR, at least.  I'm not sure
+what the BIOS is trying to tell us by providing
+RP05.HRUP.HRDN.EPUP._RMV, but maybe we could figure it out if we knew
+more about HRDN and EPUP.
 
-On 11/29/12 23:52, Fujinaka, Todd wrote:
-> Someone else pointed this out to me locally. If you have a non-client BIOS, you should be able to set the MaxPayloadSize using setpci. You have to make sure that you're being consistent throughout all the associated links.
-> 
-> Todd Fujinaka
-> Technical Marketing Engineer
-> LAN Access Division (LAD)
-> Intel Corporation
-> todd.fujinaka@intel.com
-> (503) 712-4565
-> 
-> 
-> -----Original Message-----
-> From: Ethan Zhao [mailto:ethan.kernel@gmail.com] 
-> Sent: Wednesday, November 28, 2012 7:10 PM
-> To: Fujinaka, Todd
-> Cc: Joe Jin; Ben Hutchings; Mary Mcgrath; netdev@vger.kernel.org; e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
-> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-> 
-> Joe,
->     Possibly your customer is running a kernel without source code on a platform whose vendor wouldn't like to fix BIOS issue( Is that a HP/Dell server ?).
->     Anyway, to see if is a payload issue or,  you could change the payload size with setpci tool to those devices and set the link retrain bit to trigger the link retraining to debug the issue and identity the root cause.  I thinks it is much easier than modify the BIOS or  eeprom of NIC.
-> 
->     e.g.
->    set device control register to 0f 00   (128 bytes payload size)
->    #   setpci -v -s 00:02.0 98.w=000f
->    set device link control register to 60h (retrain the link)
->    #  setpci -v -s 00:02.0 a0.b=60
-> 
->   Hope it works,  Just my 2 cents.
-> 
-> Ethan.zhao@oracle.com
-> 
-> On Wed, Nov 28, 2012 at 11:53 PM, Fujinaka, Todd <todd.fujinaka@intel.com> wrote:
->> The only EEPROM I know about or can speak to is the one attached to the 82571 and it doesn't set the MaxPayloadSize. That's done by the BIOS.
->>
->> Todd Fujinaka
->> Technical Marketing Engineer
->> LAN Access Division (LAD)
->> Intel Corporation
->> todd.fujinaka@intel.com
->> (503) 712-4565
->>
->>
->> -----Original Message-----
->> From: Joe Jin [mailto:joe.jin@oracle.com]
->> Sent: Wednesday, November 28, 2012 12:31 AM
->> To: Ben Hutchings
->> Cc: Fujinaka, Todd; Mary Mcgrath; netdev@vger.kernel.org; 
->> e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
->> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
->>
->> On 11/28/12 02:10, Ben Hutchings wrote:
->>> On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
->>>> Forgive me if I'm being too repetitious as I think some of this has 
->>>> been mentioned in the past.
->>>>
->>>> We (and by we I mean the Ethernet part and driver) can only change 
->>>> the advertised availability of a larger MaxPayloadSize. The size is 
->>>> negotiated by both sides of the link when the link is established.
->>>> The driver should not change the size of the link as it would be 
->>>> poking at registers outside of its scope and is controlled by the 
->>>> upstream bridge (not us).
->>> [...]
->>>
->>> MaxPayloadSize (MPS) is not negotiated between devices but is 
->>> programmed by the system firmware (at least for devices present at 
->>> boot - the kernel may be responsible in case of hotplug).  You can 
->>> use the kernel parameter 'pci=pcie_bus_perf' (or one of several 
->>> others) to set a policy that overrides this, but no policy will allow 
->>> setting MPS above the device's MaxPayloadSizeSupported (MPSS).
->>>
->>
->> Ben,
->>
->> Unfortunately I'm using 3.0.x kernel and this is not included in the kernel.
->> So I'm trying to use ethtool modify it from eeprom to see if help or no.
->>
->>
->> Todd, I'll review all MaxPayload for all devices, but need to say if it mismatch, customer could not modify it from BIOS for there was not entry at there, to test it, we have to find how to verify if this is the root cause, so still need to find the offset in eeprom.
->>
->> Thanks in advance,
->> Joe
->>
-
-
--- 
-Oracle <http://www.oracle.com>
-Joe Jin | Software Development Senior Manager | +8610.6106.5624
-ORACLE | Linux and Virtualization
-No. 24 Zhongguancun Software Park, Haidian District | 100193 Beijing 
+> +       if (ACPI_SUCCESS(status) && removable)
+> +               return 1;
+> +
+>         return 0;
+>  }
+>
+> --
+> 1.7.10.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
