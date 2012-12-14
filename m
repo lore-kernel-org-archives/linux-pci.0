@@ -1,82 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <50C8A7AE.3030500@gmail.com>
-Date: Wed, 12 Dec 2012 23:50:06 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 1/6] ACPI: Separate adding ACPI device objects from probing
- ACPI drivers
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4002729.BbipMAJtM0@vostro.rjw.lan>
-In-Reply-To: <4002729.BbipMAJtM0@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1355460351.2229.20.camel@ul30vt.home>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jason Gao <pkill.2012@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+Date: Thu, 13 Dec 2012 21:45:51 -0700
+In-Reply-To: <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+	 <1355415792.2229.7.camel@ul30vt.home>
+	 <CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/10/2012 07:00 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, 2012-12-14 at 10:01 +0800, Jason Gao wrote:
+> On Fri, Dec 14, 2012 at 12:23 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> >
+> > Device 03:00.0 is your raid controller:
+> >
+> > 03:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
+> >
+> > For some reason it's trying to read from ffe65000, ffe8a000, ffe89000,
+> > ffe86000, ffe87000, ffe84000.  Those are in reserved memory regions, so
+> > it's not reading an OS allocated buffer, which probably means it's some
+> > kind of side-band communication with a management controller.  I'd guess
+> > it's a BIOS bug and there should be an RMRR covering those accesses.
+> > Thanks,
 > 
-> Currently, as soon as an ACPI device node object (struct acpi_device)
-> is created, the driver core attempts to probe ACPI drivers against
-> it.  That leads to some unpleasant side effects, like the fact that
-> the boot code path for ACPI namespace scanning is different from the
-> analogous hot-plug code path (during boot ACPI drivers are not
-> present when ACPI device node objects are registered, so they are
-> guaranteed not to be probed, which is not the case during hot-plug).
-> That, in turn, leads to unnecessary complications in the PCI
-> enumeration algorithm.
-> 
-> Reduce the differences between the boot and hot-plug cases by
-> splitting the ACPI namespace scanning for devices into two passes,
-> such that struct acpi_device objects are registerd in the first
-> patch without probing ACPI drivers and the drivers are probed
-> against them directly in the second pass.  This way ACPI drivers
-> can assume that all of the ACPI device node objects in the given
-> scope will be registered when their .add() routines run and the
-> hot-plug case becomes the same as the boot case from their
-> perspective.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/acpi/scan.c     |   96 +++++++++++++++++++++++++++++++++---------------
->  include/acpi/acpi_bus.h |    1 
->  2 files changed, 68 insertions(+), 29 deletions(-)
-> 
-> Index: linux/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux.orig/include/acpi/acpi_bus.h
-> +++ linux/include/acpi/acpi_bus.h
-> @@ -98,6 +98,7 @@ typedef void (*acpi_op_notify) (struct a
->  struct acpi_bus_ops {
->  	u32 acpi_op_add:1;
->  	u32 acpi_op_start:1;
-> +	u32 acpi_op_match:1;
->  };
->  
->  struct acpi_device_ops {
-> Index: linux/drivers/acpi/scan.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/scan.c
-> +++ linux/drivers/acpi/scan.c
-> @@ -494,7 +494,8 @@ static int acpi_bus_match(struct device
->  	struct acpi_device *acpi_dev = to_acpi_device(dev);
->  	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
->  
-> -	return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
-> +	return acpi_dev->bus_ops.acpi_op_match
-> +		&& !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
->  }
-Hi Rafael,
-	PCI host bridge hotplug has the same requirement to separate device
-enumeration from device driver binding. And VFIO has a similar requirement too.
-Yinghai and I have implemented two different solutions for PCI host bridge
-hotplug but all rejected by Greg. So it would be great if we could promote
-a common mechanism to the device core to temporarily disable binding drivers
-to devices, which could used to support ACPI hotplug, PCI hotplug and VFIO.
-Regards!
-Gerry
+> First of all ,I want to known whether I can ignore these errors on the
+> production server,and do these error may affect the system?
+
+You'll have to make that call, the device is being blocked from reading
+a memory address, we don't know what it's reading or why.
+
+> By the way,when I removed the "intel_iommu=on" from /etc/grub.conf,no
+> DMAR related errors occur
+
+Of course.  One option you have is to use the iommu in passthrough mode
+which allows host used devices unrestricted, identity mapped access to
+the system while still offering PCI device assignment.  I wouldn't try
+assigning device 3:00.0 though.  Add iommu=pt to enable this.
+
+> It's a strange thing,other three Dell R710 servers with the same bios
+> version v. 6.3.0, same kernel 2.6.32-279.14.1 on RHEL6u3(Centos 6u3)
+> ,but these errors don't appear on these tree servers
+
+Is the MegaRAID firmware and system management firmware the same as
+well?  Thanks,
+
+Alex
 
