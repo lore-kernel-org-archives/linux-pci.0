@@ -1,79 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx.treblig.org ([80.68.94.177]:52711 "EHLO mx.treblig.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753843Ab2LDOzA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Dec 2012 09:55:00 -0500
-Date: Tue, 4 Dec 2012 14:20:08 +0000
-From: "Dr. David Alan Gilbert" <dave@treblig.org>
-To: mj@ucw.cz
-Cc: linux-pci@vger.kernel.org
-Subject: pciutils pci_open seg with invalid arg to -i
-Message-ID: <20121204142008.GB6117@gallifrey>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:64352 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272Ab2LOISc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Dec 2012 03:18:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50CB9FF8.2070502@redhat.com>
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+	<1355415792.2229.7.camel@ul30vt.home>
+	<CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+	<50CB9FF8.2070502@redhat.com>
+Date: Sat, 15 Dec 2012 16:18:30 +0800
+Message-ID: <CANmqhJCg05aQhhupM_Tmnj6rPHP5uwS76HnVL3t6V-Q5X-t2gw@mail.gmail.com>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+From: Jason Gao <pkill.2012@gmail.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
-  I was looking at a bug reported in the Ubuntu bug database against lspci:
+On Sat, Dec 15, 2012 at 5:54 AM, Don Dutile <ddutile@redhat.com> wrote:
+> mptsas or smi fw has to be different....
+this server:
+# inventory_firmware
+Wait while we inventory system:
+System inventory:
+        BIOS = 6.3.0
+        SAS/SATA Backplane 0:0 Backplane Firmware = 1.07
+        PERC 6/i Integrated Controller 0 Firmware = 6.3.1-0003
+        Dell OS Drivers Pack, v.6.5.3, A00 = 6.5.3
+        Dell Lifecycle Controller = 1.5.5.27
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth1) = 7.2.20
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth0) = 7.2.20
+        ST3600057SS Firmware = es66
+        iDRAC6 = 1.92
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth2) = 7.2.20
+        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth3) = 7.2.20
+        Dell 32 Bit Diagnostics, v.5154A0, 5154.1 = 5154a0
+        System BIOS for PowerEdge R710 = 6.3.0
 
-https://bugs.launchpad.net/ubuntu/+source/pciutils/+bug/690431
-
-The reporter had called lspci -vvii    which ends up trying to open the
-file 'i' as the pci-id and seg faults.
-
-I can see a fix, but I can't quite see what the code is trying to do;
-lib/names-parse.c:
-
- 23 static pci_file pci_open(struct pci_access *a)
- 24 {
- 25   pci_file result;
- 26   size_t len;
- 27   char *new_name;
- 28 
- 29   result = gzopen(a->id_file_name, "rb");
- 30   if (result)
- 31     return result;
- 32   len = strlen(a->id_file_name);
- 33   if (len >= 3 && memcmp(a->id_file_name + len - 3, ".gz", 3) != 0)
- 34     return result;
- 35   new_name = malloc(len - 2);
- 36   memcpy(new_name, a->id_file_name, len - 3);
- 37   new_name[len - 3] = 0;
- 38   pci_set_name_list_path(a, new_name, 1);
- 39   return gzopen(a->id_file_name, "rb");
- 40 }
-
-The problem here is for a short filename we drop down to line 35 and
-do an allocate of a -ve length, and then try and memcpy into it.
-
-So I was going to suggest something like:
-
- 33   if (len < 3 || memcmp(a->id_file_name + len - 3, ".gz", 3) != 0)
- 34     return result;
-
-which would mean that it would drop out if it was a short filename; but
-then I started to try and understand the code more; it looks to me like:
-
-   try and gzopen it.
-   if that fails
-     check it ended with a .gz (else fail)
-     strip the .gz off the end
-     gzopen it without the .gz
-
-But why bother?  According to the zlib manual for gzopen :
-  ( http://www.zlib.net/manual.html )
-     
-' gzopen can be used to read a file which is not in gzip format; in this case
-gzread will directly read from the file without decompression. When reading,
-this will be detected automatically by looking for the magic two-byte gzip
-header. '
-
-So what are lines 32-39 trying to do?
-
-Dave (not subscribed to linux-pci, so please cc)
--- 
- -----Open up your eyes, open up your mind, open up your code -------   
-/ Dr. David Alan Gilbert    |       Running GNU/Linux       | Happy  \ 
-\ gro.gilbert @ treblig.org |                               | In Hex /
- \ _________________________|_____ http://www.treblig.org   |_______/
+other servers:
+# inventory_firmware
+Wait while we inventory system:
+System inventory:
+        BIOS = 6.3.0
+        SAS/SATA Backplane 0:0 Backplane Firmware = 1.07
+        PERC H700 Integrated Controller 0 Firmware = 12.10.4-0001
+        Dell OS Drivers Pack, 7.1.0.9, A00 = 7.1.0.9
+        Dell Lifecycle Controller, 1.5.5.27, A00 = 1.5.5.27
+        ST3600057SS Firmware = es65
+        iDRAC6 = 1.90
+        Dell 32 Bit Diagnostics, v.5154A0, 5154.
