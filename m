@@ -1,41 +1,33 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:39602 "EHLO
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34089 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611Ab2LFAWB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:22:01 -0500
+	with ESMTP id S1751618Ab2LOIZo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Dec 2012 03:25:44 -0500
 MIME-Version: 1.0
-In-Reply-To: <20121206001819.GA30527@srcf.ucam.org>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
-	<20121203200241.GG5906@thinkpad-t410>
-	<CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
-	<20121206001819.GA30527@srcf.ucam.org>
-Date: Wed, 5 Dec 2012 16:22:00 -0800
-Message-ID: <CAE9FiQXOLYL8D=-iBzg+SKnAwefP_uTHNh31UCHTSQg24VCQig@mail.gmail.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-From: Yinghai Lu <yinghai@kernel.org>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-efi@vger.kernel.org,
-	mfleming@intel.com, dwmw2@infradead.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
+In-Reply-To: <50CBA03D.8050409@redhat.com>
+References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
+	<1355415792.2229.7.camel@ul30vt.home>
+	<CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
+	<50CBA03D.8050409@redhat.com>
+Date: Sat, 15 Dec 2012 16:25:42 +0800
+Message-ID: <CANmqhJDdf=RhqQBqmVMJW5zn8H8Eb-FtQhOxSeeu+sezK2g8iQ@mail.gmail.com>
+Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
+ not set] Vt-d & intel_iommu
+From: Jason Gao <pkill.2012@gmail.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 4:18 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Wed, Dec 05, 2012 at 04:15:56PM -0800, Yinghai Lu wrote:
->
->> at the same time we should export setup_data into /sys, so kexec could
->> append this pointer to command of
->> second kernel, just like kexec append acpi_rsdp.
->> That should address DavidW's concern.
->
-> Why should the kernel export data to userspace just so that that data
-> can be passed back into the kernel?
+On Sat, Dec 15, 2012 at 5:55 AM, Don Dutile <ddutile@redhat.com> wrote:
+> forgot: did you check that all the bios settings are the same btwn
+>         the 710 systems?
 
-then how the kexeced get those info?
+Bios settings should be the same between servers, I'v ignored these
+errors and run KVM on this server,deployed  non-critical java
+production applications running on kvm guest,
 
-first kernel already reserved those info as E820_RESERVED_KERN.
-and those info are for bootloader's of first kernel.
+thanks
