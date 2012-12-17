@@ -1,143 +1,189 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 13/16] ACPI: Add .setup() and .cleanup() callbacks to struct acpi_bus_type
-Date: Thu, 20 Dec 2012 02:57:35 +0100
-Message-ID: <2494783.CtaoJvSv38@vostro.rjw.lan>
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f74.google.com ([209.85.213.74]:59837 "EHLO
+	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753862Ab2LQXYk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2012 18:24:40 -0500
+Received: by mail-yh0-f74.google.com with SMTP id 10so711963yhl.5
+        for <linux-pci@vger.kernel.org>; Mon, 17 Dec 2012 15:24:39 -0800 (PST)
+Date: Mon, 17 Dec 2012 16:24:39 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Don Dutile <ddutile@redhat.com>
+Cc: Greg Rose <gregory.v.rose@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
+	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+Message-ID: <20121217232439.GA9746@google.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+ <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
+ <20121214101911.00002f59@unknown>
+ <50CF7993.9040606@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <50CF7993.9040606@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Dec 17, 2012 at 02:59:15PM -0500, Don Dutile wrote:
+> On 12/14/2012 01:19 PM, Greg Rose wrote:
+> >pci: Fix return code
+> >
+> >From: Greg Rose<gregory.v.rose@intel.com>
+> >
+> >The return code from the sriov configure function was only returned if it
+> >was less than zero indicating an error.  This caused the code to fall
+> >through to the default return of an error code even though the sriov
+> >configure function has returned the number of VFs it created - a positive
+> >number indicating success.
+> >
+> >
+> >Signed-off-by: Greg Rose<gregory.v.rose@intel.com>
+> 
+> Actually, it returned the number of VFs enabled if it exactly equalled
+> the number to be enabled.  Otherwise, the basic testing would have failed.
+> If the number of vf's enabled was positive but not the same
+> as the number requested-to-be-enabled, then it incorrectly returned.
+> 
+> But, the patch corrects the base problem, so
+> Acked-by: Donald Dutile <ddutile@redhat.com>
 
-Add two new callbacks,.setup() and .cleanup(), struct acpi_bus_type
-and modify acpi_platform_notify() to call .setup() after executing
-acpi_bind_one() successfully and acpi_platform_notify_remove() to
-call .cleanup() before running acpi_unbind_one().  This will allow
-the users of struct acpi_bus_type, PCI in particular, to specify
-operations to be executed right after the given device has been
-associated with a companion struct acpi_device and right before
-it's going to be detached from that companion, respectively.
+Alternate proposal below.  The patch is ugly; it might be easier to compare
+the before (http://pastebin.com/zneG8AuD) and after
+(http://pastebin.com/BEXEE8kc) versions.
 
-The main motivation is to be able to get rid of acpi_pci_bind()
-and acpi_pci_unbind(), which are horrible horrible stuff.  [In short,
-there are three problems with them: The way they populate the .bind()
-and .unbind() callbacks of ACPI devices is rather less than
-straightforward, they require special hotplug-specific paths to be
-present in the ACPI namespace scanning code and by the time
-acpi_pci_unbind() is called the PCI device object in question may
-not exist any more.]
+commit fae71e5dc9064dcb3077b8da6e0ed9d800c1f527
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Dec 13 20:22:44 2012 -0700
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/glue.c     |   52 +++++++++++++++++++++++++++++++++---------------
- include/acpi/acpi_bus.h |    2 +
- 2 files changed, 38 insertions(+), 16 deletions(-)
+    PCI: Cleanup sriov_numvfs_show() and handle common case without error
+    
+    If we request "num_vfs" and the driver's sriov_configure() method enables
+    exactly that number ("num_vfs_enabled"), we complain "Invalid value for
+    number of VFs to enable" and return an error.  We should silently return
+    success instead.
+    
+    Also, use kstrtou16() since numVFs is defined to be a 16-bit field and
+    rework to simplify control flow.
+    
+    Reported-by: Greg Rose <gregory.v.rose@intel.com>
+    Link: http://lkml.kernel.org/r/20121214101911.00002f59@unknown
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Index: linux/include/acpi/acpi_bus.h
-===================================================================
---- linux.orig/include/acpi/acpi_bus.h
-+++ linux/include/acpi/acpi_bus.h
-@@ -423,6 +423,8 @@ struct acpi_bus_type {
- 	int (*find_device) (struct device *, acpi_handle *);
- 	/* For bridges, such as PCI root bridge, IDE controller */
- 	int (*find_bridge) (struct device *, acpi_handle *);
-+	void (*setup)(struct device *);
-+	void (*cleanup)(struct device *);
- };
- int register_acpi_bus_type(struct acpi_bus_type *);
- int unregister_acpi_bus_type(struct acpi_bus_type *);
-Index: linux/drivers/acpi/glue.c
-===================================================================
---- linux.orig/drivers/acpi/glue.c
-+++ linux/drivers/acpi/glue.c
-@@ -63,6 +63,9 @@ static struct acpi_bus_type *acpi_get_bu
- {
- 	struct acpi_bus_type *tmp, *ret = NULL;
- 
-+	if (!type)
-+		return NULL;
-+
- 	down_read(&bus_type_sem);
- 	list_for_each_entry(tmp, &bus_type_list, list) {
- 		if (tmp->bus == type) {
-@@ -264,28 +267,39 @@ static int acpi_platform_notify(struct d
- {
- 	struct acpi_bus_type *type;
- 	acpi_handle handle;
--	int ret = -EINVAL;
-+	int ret;
- 
- 	ret = acpi_bind_one(dev, NULL);
--	if (!ret)
--		goto out;
--
--	if (!dev->bus || !dev->parent) {
-+	if (ret && (!dev->bus || !dev->parent)) {
- 		/* bridge devices genernally haven't bus or parent */
- 		ret = acpi_find_bridge_device(dev, &handle);
--		goto end;
-+		if (!ret) {
-+			ret = acpi_bind_one(dev, handle);
-+			if (ret)
-+				goto out;
-+		}
- 	}
-+
- 	type = acpi_get_bus_type(dev->bus);
--	if (!type) {
--		DBG("No ACPI bus support for %s\n", dev_name(dev));
--		ret = -EINVAL;
--		goto end;
--	}
--	if ((ret = type->find_device(dev, &handle)) != 0)
--		DBG("Can't get handler for %s\n", dev_name(dev));
-- end:
--	if (!ret)
--		acpi_bind_one(dev, handle);
-+	if (ret) {
-+		if (!type || !type->find_device) {
-+			DBG("No ACPI bus support for %s\n", dev_name(dev));
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		ret = type->find_device(dev, &handle);
-+		if (ret) {
-+			DBG("Unable to get handle for %s\n", dev_name(dev));
-+			goto out;
-+		}
-+		ret = acpi_bind_one(dev, handle);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	if (type && type->setup)
-+		type->setup(dev);
- 
-  out:
- #if ACPI_GLUE_DEBUG
-@@ -304,6 +318,12 @@ static int acpi_platform_notify(struct d
- 
- static int acpi_platform_notify_remove(struct device *dev)
- {
-+	struct acpi_bus_type *type;
-+
-+	type = acpi_get_bus_type(dev->bus);
-+	if (type && type->cleanup)
-+		type->cleanup(dev);
-+
- 	acpi_unbind_one(dev);
- 	return 0;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 05b78b1..5e8af12 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -422,77 +422,60 @@ static ssize_t sriov_numvfs_show(struct device *dev,
  }
-
+ 
+ /*
+- * num_vfs > 0; number of vfs to enable
+- * num_vfs = 0; disable all vfs
++ * num_vfs > 0; number of VFs to enable
++ * num_vfs = 0; disable all VFs
+  *
+  * Note: SRIOV spec doesn't allow partial VF
+- *       disable, so its all or none.
++ *       disable, so it's all or none.
+  */
+ static ssize_t sriov_numvfs_store(struct device *dev,
+ 				  struct device_attribute *attr,
+ 				  const char *buf, size_t count)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	int num_vfs_enabled = 0;
+-	int num_vfs;
+-	int ret = 0;
+-	u16 total;
++	int ret;
++	u16 num_vfs;
+ 
+-	if (kstrtoint(buf, 0, &num_vfs) < 0)
+-		return -EINVAL;
++	ret = kstrtou16(buf, 0, &num_vfs);
++	if (ret < 0)
++		return ret;
++
++	if (num_vfs > pci_sriov_get_totalvfs(pdev))
++		return -ERANGE;
++
++	if (num_vfs == pdev->sriov->num_VFs)
++		return count;		/* no change */
+ 
+ 	/* is PF driver loaded w/callback */
+ 	if (!pdev->driver || !pdev->driver->sriov_configure) {
+-		dev_info(&pdev->dev,
+-			 "Driver doesn't support SRIOV configuration via sysfs\n");
++		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
+ 		return -ENOSYS;
+ 	}
+ 
+-	/* if enabling vf's ... */
+-	total = pci_sriov_get_totalvfs(pdev);
+-	/* Requested VFs to enable < totalvfs and none enabled already */
+-	if ((num_vfs > 0) && (num_vfs <= total)) {
+-		if (pdev->sriov->num_VFs == 0) {
+-			num_vfs_enabled =
+-				pdev->driver->sriov_configure(pdev, num_vfs);
+-			if ((num_vfs_enabled >= 0) &&
+-			    (num_vfs_enabled != num_vfs)) {
+-				dev_warn(&pdev->dev,
+-					 "Only %d VFs enabled\n",
+-					 num_vfs_enabled);
+-				return count;
+-			} else if (num_vfs_enabled < 0)
+-				/* error code from driver callback */
+-				return num_vfs_enabled;
+-		} else if (num_vfs == pdev->sriov->num_VFs) {
+-			dev_warn(&pdev->dev,
+-				 "%d VFs already enabled; no enable action taken\n",
+-				 num_vfs);
+-			return count;
+-		} else {
+-			dev_warn(&pdev->dev,
+-				 "%d VFs already enabled. Disable before enabling %d VFs\n",
+-				 pdev->sriov->num_VFs, num_vfs);
+-			return -EINVAL;
+-		}
++	if (num_vfs == 0) {
++		/* disable VFs */
++		ret = pdev->driver->sriov_configure(pdev, 0);
++		if (ret < 0)
++			return ret;
++		return count;
+ 	}
+ 
+-	/* disable vfs */
+-	if (num_vfs == 0) {
+-		if (pdev->sriov->num_VFs != 0) {
+-			ret = pdev->driver->sriov_configure(pdev, 0);
+-			return ret ? ret : count;
+-		} else {
+-			dev_warn(&pdev->dev,
+-				 "All VFs disabled; no disable action taken\n");
+-			return count;
+-		}
++	/* enable VFs */
++	if (pdev->sriov->num_VFs) {
++		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
++			 pdev->sriov->num_VFs, num_vfs);
++		return -EINVAL;
+ 	}
+ 
+-	dev_err(&pdev->dev,
+-		"Invalid value for number of VFs to enable: %d\n", num_vfs);
++	ret = pdev->driver->sriov_configure(pdev, num_vfs);
++	if (ret < 0)
++		return ret;
+ 
+-	return -EINVAL;
++	if (ret != num_vfs)
++		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
++			 num_vfs, ret);
++
++	return count;
+ }
+ 
+ static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
