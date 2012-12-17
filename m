@@ -1,48 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51576 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232Ab2LNG43 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Dec 2012 01:56:29 -0500
+Received: from mail-la0-f46.google.com ([209.85.215.46]:45977 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239Ab2LQTWL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2012 14:22:11 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so5096209lag.19
+        for <linux-pci@vger.kernel.org>; Mon, 17 Dec 2012 11:22:09 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1355460351.2229.20.camel@ul30vt.home>
-References: <CANmqhJAuLoi_Y2Hsz+UnddHXYd9TCW-7qxp3fybDayfh33Y3Zg@mail.gmail.com>
-	<1355415792.2229.7.camel@ul30vt.home>
-	<CANmqhJBAxzVa5Ds0gojnYDDku5UbXGwfCNC=+z3XmVonF-_j2w@mail.gmail.com>
-	<1355460351.2229.20.camel@ul30vt.home>
-Date: Fri, 14 Dec 2012 14:56:27 +0800
-Message-ID: <CANmqhJB4=Xuho0BrfhRO1hkL6yp=BxSxQoSAUgL=eNkZgyk8SQ@mail.gmail.com>
-Subject: Re: DMAR and DRHD errors[DMAR:[fault reason 06] PTE Read access is
- not set] Vt-d & intel_iommu
-From: Jason Gao <pkill.2012@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, kvm <kvm@vger.kernel.org>
+In-Reply-To: <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
+References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org> <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Dec 2012 12:21:49 -0700
+Message-ID: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>,
+	Saurav Kashyap <saurav.kashyap@qlogic.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 14, 2012 at 12:45 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> Is the MegaRAID firmware and system management firmware the same as
-> well?  Thanks.
+Ping.  I didn't push this through my tree because I didn't want to
+create conflicts with other changes to this file.  But I think this
+can be merged any time.
 
-I'v updated  all the firmware using Dell's firmware-tools:
-
-# inventory_firmware
-Wait while we inventory system:
-System inventory:
-        BIOS = 6.3.0
-        SAS/SATA Backplane 0:0 Backplane Firmware = 1.07
-        PERC 6/i Integrated Controller 0 Firmware = 6.3.1-0003
-        Dell OS Drivers Pack, v.6.5.3, A00 = 6.5.3
-        Dell Lifecycle Controller = 1.5.5.27
-        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth1) = 7.2.20
-        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth0) = 7.2.20
-        ST3600057SS Firmware = es66
-        iDRAC6 = 1.92
-        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth2) = 7.2.20
-        NetXtreme II BCM5709 Gigabit Ethernet rev 20 (eth3) = 7.2.20
-        Dell 32 Bit Diagnostics, v.5154A0, 5154.1 = 5154a0
-        System BIOS for PowerEdge R710 = 6.3.0
-
-Thanks
+On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
+<giridhar.malavali@qlogic.com> wrote:
+> Acked-by: Giridhar Malavali
+>
+> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
+>
+>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>>
+>>Thanks,
+>>~Saurav
+>>
+>>
+>>
+>>>Use the standard #defines for PCIe Link Capability register fields
+>>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>>accessor rather than reading the capability directly.
+>>>
+>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>>CC: linux-driver@qlogic.com
+>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>>CC: linux-scsi@vger.kernel.org
+>>>---
+>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>>
+>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>>b/drivers/scsi/qla2xxx/qla_os.c
+>>>index d501bf5..b5d070f 100644
+>>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>>char *str)
+>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>>>      struct qla_hw_data *ha = vha->hw;
+>>>      uint32_t pci_bus;
+>>>-     int pcie_reg;
+>>>
+>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
+>>>-     if (pcie_reg) {
+>>>+     if (pci_is_pcie(ha->pdev)) {
+>>>              char lwstr[6];
+>>>-             uint16_t pcie_lstat, lspeed, lwidth;
+>>>+             uint32_t lstat, lspeed, lwidth;
+>>>
+>>>-             pcie_reg += PCI_EXP_LNKCAP;
+>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>>-             lwidth = (pcie_lstat &
+>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>>>
+>>>              strcpy(str, "PCIe (");
+>>>              if (lspeed == 1)
+>>>
+>>>--
+>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>the body of a message to majordomo@vger.kernel.org
+>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>
+>
