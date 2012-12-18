@@ -1,117 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29178 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965054Ab2LGGZS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Dec 2012 01:25:18 -0500
-From: Myron Stowe <myron.stowe@redhat.com>
-Subject: [PATCH 03/15] PCI/acpiphp: Leave the "acpiphp" sub-driver registered
-	and in place
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, yinghai@kernel.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Dec 2012 23:25:13 -0700
-Message-ID: <20121207062513.11051.99972.stgit@amt.stowe>
-In-Reply-To: <20121207062454.11051.12739.stgit@amt.stowe>
-References: <20121207062454.11051.12739.stgit@amt.stowe>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from probing ACPI drivers
+Date: Tue, 18 Dec 2012 23:05:49 +0100
+Message-ID: <3573149.O0Vu1dNrT9@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQV-GDRd1iapMwy4j4mBChRpEm-9ANHg6BTdyiTd-5Bf8A@mail.gmail.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <1355847041.18964.369.camel@misato.fc.hp.com> <CAE9FiQV-GDRd1iapMwy4j4mBChRpEm-9ANHg6BTdyiTd-5Bf8A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The "ACPI Hot Plug PCI Controller Driver ("acpiphp")" can be either
-statically built-in or a kernel module.  If statically built-in, the
-sub-driver needs to remain registered and in place in order to accommodate
-any future hot-plug insertion events of devices it supports.
+On Tuesday, December 18, 2012 10:59:46 AM Yinghai Lu wrote:
+> On Tue, Dec 18, 2012 at 8:10 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> > On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
+> >
+> > So, I would propose the following changes.
+> >
+> >  - Move the acpi_hot_add_bind() call back to the original place after
+> > the device_attach() call.
+> >  - Rename the name of acpi_hot_add_bind() to something like
+> > acpi_bind_adr_device() since it is no longer hot-add only (and is
+> > specific to _ADR devices).
+> >  - Create its pair function, acpi_unbind_adr_device(), which is called
+> > from acpi_bus_remove().  When a constructor interface is introduced, its
+> > destructor should be introduced as well.
+> >  - Remove the binding procedure from acpi_pci_root_add().  This should
+> > be done in patch [2/6].
+> 
+> i think we should put jiang four patches before Rafael's patches.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-jiang-hotplug
 
-As currently implemented, the sub-driver may unregister itself during its
-initialization.  This patch changes that behavior so that the sub-driver
-remains registered and in place.
+Actually, I have something more radical than that in mind. :-)
 
-Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
----
+Namely, we don't need to call the wakeup-related stuff from acpi_pci_bind() and
+acpi_pci_unbind().  It's only there, because I did't find a better place for it
+when I added it.
 
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_core.c |   16 +---------------
- drivers/pci/hotplug/acpiphp_glue.c |   21 ---------------------
- 3 files changed, 1 insertions(+), 37 deletions(-)
+If we can set the ACPI handles of PCI devices in pci_scan_device(), which isn't
+too difficult to do (I actually have a patch for that and it's not too invasive),
+we can easily move the wakeup enabling stuff to pci_pm_init() and wakeup
+disabling somewhere near pci_release_capabilities().
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index 014ae78..4b798e9 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
- /* acpiphp_glue.c */
- extern int acpiphp_glue_init(void);
- extern void acpiphp_glue_exit(void);
--extern int acpiphp_get_num_slots(void);
- typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
- 
- extern int acpiphp_enable_slot(struct acpiphp_slot *slot);
-diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-index 96316b7..3350b09 100644
---- a/drivers/pci/hotplug/acpiphp_core.c
-+++ b/drivers/pci/hotplug/acpiphp_core.c
-@@ -50,7 +50,6 @@
- bool acpiphp_debug;
- 
- /* local variables */
--static int num_slots;
- static struct acpiphp_attention_info *attention_info;
- 
- #define DRIVER_VERSION	"0.5"
-@@ -274,21 +273,8 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 
- static int __init init_acpi(void)
- {
--	int retval;
--
- 	/* initialize internal data structure etc. */
--	retval = acpiphp_glue_init();
--
--	/* read initial number of slots */
--	if (!retval) {
--		num_slots = acpiphp_get_num_slots();
--		if (num_slots == 0) {
--			acpiphp_glue_exit();
--			retval = -ENODEV;
--		}
--	}
--
--	return retval;
-+	return acpiphp_glue_init();
- }
- 
- /**
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index d0369dc..a378a48 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1435,27 +1435,6 @@ void  acpiphp_glue_exit(void)
- 
- 
- /**
-- * acpiphp_get_num_slots - count number of slots in a system
-- */
--int __init acpiphp_get_num_slots(void)
--{
--	struct acpiphp_bridge *bridge;
--	int num_slots = 0;
--
--	list_for_each_entry(bridge, &bridge_list, list) {
--		dbg("Bus %04x:%02x has %d slot%s\n",
--				pci_domain_nr(bridge->pci_bus),
--				bridge->pci_bus->number, bridge->nr_slots,
--				bridge->nr_slots == 1 ? "" : "s");
--		num_slots += bridge->nr_slots;
--	}
--
--	dbg("Total %d slots\n", num_slots);
--	return num_slots;
--}
--
--
--/**
-  * acpiphp_enable_slot - power on slot
-  * @slot: ACPI PHP slot
-  */
+Then we are only left with the _PRT setup in there, but that could be done
+as soon as in pci_scan_device() too, if I'm not mistaken.
 
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
