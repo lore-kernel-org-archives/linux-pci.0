@@ -1,202 +1,279 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:37935 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750749Ab2LQFob (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2012 00:44:31 -0500
-Message-ID: <50CEB13B.9010100@gmail.com>
-Date: Sun, 16 Dec 2012 23:44:27 -0600
-From: Robert Hancock <hancockrwd@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from probing ACPI drivers
+Date: Tue, 18 Dec 2012 22:57:51 +0100
+Message-ID: <3027479.MToB281uxK@vostro.rjw.lan>
+In-Reply-To: <1355847041.18964.369.camel@misato.fc.hp.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1355847041.18964.369.camel@misato.fc.hp.com>
 MIME-Version: 1.0
-To: bl0 <bl0-052@playker.info>
-CC: linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: sata_sil data corruption, possible workarounds
-References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org>
-In-Reply-To: <kakea2$dh1$1@ger.gmane.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/16/2012 06:21 AM, bl0 wrote:
-> Thanks for your response.
->
-> On Saturday 15 December 2012 22:55, Robert Hancock wrote:
->
->> On 12/15/2012 02:02 AM, bl0 wrote:
->>> I have a PCI card based on Silicon Image 3114 SATA controller. Like many
->>> people in the past I have experienced silent data corruption.
->>> I am lucky to have a hardware configuration where it is easy to reproduce
->>> this behavior with 100% rate by copying a file from a USB stick plugged
->>> into another PCI card. My motherboard has nvidia chipset.
->>>
->>> Going through messages and bug reports about this problem, someone
->>> mentioned that PCI cache line size may be relevant. I did some testing
->>> with different CLS values and found that the problem of data corruption
->>> is solved if either
->>> A). CLS is set to 0, before or after sata_sil kernel driver is loaded
->>>     # setpci -d 1095:3114 CACHE_LINE_SIZE=0
->>> where 1095:3114 is the device id as shown by 'lspci -nn'. The same
->>> command can also be used in grub2 (recent versions) shell or
->>> configuration file before booting linux.
->>> or
->>> B). CLS is set to a sufficiently large value, only after sata_sil is
->>> loaded.
->>>     # setpci -d 1095:3114 CACHE_LINE_SIZE=28
->>> (value is hexadecimal, in 4-byte units, here it's 160 bytes)
->>> What is a sufficiently large value depends on the value that is set
->>> before the driver is loaded. If the value before the driver is loaded is
->>> 32 or 64 bytes, I have to increase it (after the driver is loaded) to 128
->>> or 160 bytes, respectively.
->>>
->>> In sata_sil.c source in sil_init_controller it writes some
->>> hardware-specific value depending on PCI cache line size. By lowering
->>> this value I can get it to work with lower CLS. The lowest value 0 works
->>> with CLS 64 bytes. If the CLS is 32 bytes, I have to increase the CLS.
->>
->> The meaning of that value from the datasheet is: "This bit field is used
->> to specify the system cacheline size in terms of 32-bit words. The upper
->> 2 bits are not used, resulting a maximum size of 64 32-bit words. With
->> the SiI3114 as a master, initiating a read transaction, it issues PCI
->> command Read Multiple in place, when empty space in its FIFO is larger
->> than the value programmed in this register."
->>
->> I think this value is likely the key. The cache line size itself
->> shouldn't make any difference with this controller as it only really
->> affects Memory Write & Invalidate (MWI) and the driver doesn't try to
->> enable that for this device. But it's being used to derive the value
->> written into this register.
->
-> In practice, on my hardware configuration, increasing the CLS after the
-> internal value has already been derived does make a difference.
->
->> Can you add in some output to figure out what values are being written
->> to this register
->
-> If the CLS is 32 or 64 bytes, it writes 2 or 3, respectively.
->
->> and see which values are working or not working?
->
-> That depends on the CLS. If the CLS is 32 bytes, it doesn't work (by work I
-> mean it's safe from data corruption) no matter what value I write to that
-> hardware register. If the CLS is 64 bytes, the only value that works is 0.
->
-> CLS     A       B
-> 32      2       none
-> 64      3       0
-> 96      4       1
-> 128     5       2
-> 160     6       3
->
-> A: value written by default
-> B: maximum value safe from data corruption, based on my testing, probably
-> only applies to similar problematic hardware configurations.
->
-> Looking at this table you can see that increasing the CLS to a large value
-> can be a workaround after the driver has set the default value.
+On Tuesday, December 18, 2012 09:10:41 AM Toshi Kani wrote:
+> On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
+> > On Monday, December 17, 2012 05:08:17 PM Toshi Kani wrote:
+> > > On Thu, 2012-12-13 at 23:17 +0100, Rafael J. Wysocki wrote:
+> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > 
+> > > 
+> > > (snip)
+> > > 
+> > > >  struct acpi_device_ops {
+> > > > Index: linux/drivers/acpi/scan.c
+> > > > ===================================================================
+> > > > --- linux.orig/drivers/acpi/scan.c
+> > > > +++ linux/drivers/acpi/scan.c
+> > > > @@ -494,7 +494,8 @@ static int acpi_bus_match(struct device
+> > > >  	struct acpi_device *acpi_dev = to_acpi_device(dev);
+> > > >  	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
+> > > >  
+> > > > -	return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
+> > > > +	return acpi_dev->bus_ops.acpi_op_match
+> > > > +		&& !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
+> > > >  }
+> > > >  
+> > > >  static int acpi_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+> > > > @@ -1418,6 +1419,17 @@ static int acpi_bus_remove(struct acpi_d
+> > > >  	return 0;
+> > > >  }
+> > > >  
+> > > > +/*
+> > > > + * acpi_hot_add_bind - Bind _ADR-based devices on hot-add.
+> > > > + * @device: ACPI device node to bind.
+> > > > + */
+> > > > +static void acpi_hot_add_bind(struct acpi_device *device)
+> > > > +{
+> > > > +	if (device->flags.bus_address
+> > > > +	    && device->parent && device->parent->ops.bind)
+> > > > +		device->parent->ops.bind(device);
+> > > > +}
+> > > > +
+> > > >  static int acpi_add_single_object(struct acpi_device **child,
+> > > >  				  acpi_handle handle, int type,
+> > > >  				  unsigned long long sta,
+> > > > @@ -1490,13 +1502,8 @@ static int acpi_add_single_object(struct
+> > > >  
+> > > >  	result = acpi_device_register(device);
+> > > >  
+> > > > -	/*
+> > > > -	 * Bind _ADR-Based Devices when hot add
+> > > > -	 */
+> > > > -	if (device->flags.bus_address) {
+> > > > -		if (device->parent && device->parent->ops.bind)
+> > > > -			device->parent->ops.bind(device);
+> > > > -	}
+> > > 
+> > > I think the original code above is hot-add only because ops.bind is not
+> > > set at boot since the acpi_pci driver has not been registered yet.  It
+> > > seems that acpi_pci_bridge_scan() called from acpi_pci_root_add() takes
+> > > care of the binding.
+> > 
+> > Ah, I see the problem.  During boot the PCI root bridge driver is not present
+> > yet when all struct acpi_device "devices" are registered, so their parents'
+> > .bind() callbacks are all empty, so the code above has no effect.
+> > 
+> > But say we're doing a PCI root bridge hotplug, in which case the driver is
+> > present, so acpi_pci_bind() will be executed both from acpi_pci_bridge_scan()
+> > and from here, won't it?
+> 
+> Right.
+> 
+> 
+> > OK, this needs to be addressed.
+> > 
+> > > This brings me a question for acpi_bus_probe_start() below...
+> > > 
+> > > 
+> > > > +	if (device->bus_ops.acpi_op_match)
+> > > > +		acpi_hot_add_bind(device);
+> > > >  
+> > > >  end:
+> > > >  	if (!result) {
+> > > > @@ -1522,6 +1529,7 @@ static void acpi_bus_add_power_resource(
+> > > >  	struct acpi_bus_ops ops = {
+> > > >  		.acpi_op_add = 1,
+> > > >  		.acpi_op_start = 1,
+> > > > +		.acpi_op_match = 1,
+> > > >  	};
+> > > >  	struct acpi_device *device = NULL;
+> > > >  
+> > > > @@ -1574,9 +1582,9 @@ static acpi_status acpi_bus_check_add(ac
+> > > >  				      void *context, void **return_value)
+> > > >  {
+> > > >  	struct acpi_bus_ops *ops = context;
+> > > > +	struct acpi_device *device = NULL;
+> > > >  	int type;
+> > > >  	unsigned long long sta;
+> > > > -	struct acpi_device *device;
+> > > >  	acpi_status status;
+> > > >  	int result;
+> > > >  
+> > > > @@ -1596,52 +1604,86 @@ static acpi_status acpi_bus_check_add(ac
+> > > >  		return AE_CTRL_DEPTH;
+> > > >  	}
+> > > >  
+> > > > -	/*
+> > > > -	 * We may already have an acpi_device from a previous enumeration.  If
+> > > > -	 * so, we needn't add it again, but we may still have to start it.
+> > > > -	 */
+> > > > -	device = NULL;
+> > > >  	acpi_bus_get_device(handle, &device);
+> > > >  	if (ops->acpi_op_add && !device) {
+> > > > -		acpi_add_single_object(&device, handle, type, sta, ops);
+> > > > -		/* Is the device a known good platform device? */
+> > > > -		if (device
+> > > > -		    && !acpi_match_device_ids(device, acpi_platform_device_ids))
+> > > > -			acpi_create_platform_device(device);
+> > > > -	}
+> > > > -
+> > > > -	if (!device)
+> > > > -		return AE_CTRL_DEPTH;
+> > > > +		struct acpi_bus_ops add_ops = *ops;
+> > > >  
+> > > > -	if (ops->acpi_op_start && !(ops->acpi_op_add)) {
+> > > > -		status = acpi_start_single_object(device);
+> > > > -		if (ACPI_FAILURE(status))
+> > > > +		add_ops.acpi_op_match = 0;
+> > > > +		acpi_add_single_object(&device, handle, type, sta, &add_ops);
+> > > > +		if (!device)
+> > > >  			return AE_CTRL_DEPTH;
+> > > > +
+> > > > +		device->bus_ops.acpi_op_match = 1;
+> > > >  	}
+> > > >  
+> > > >  	if (!*return_value)
+> > > >  		*return_value = device;
+> > > > +
+> > > >  	return AE_OK;
+> > > >  }
+> > > >  
+> > > > +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+> > > > +					void *context, void **not_used)
+> > > > +{
+> > > > +	struct acpi_bus_ops *ops = context;
+> > > > +	acpi_status status = AE_OK;
+> > > > +	struct acpi_device *device;
+> > > > +	unsigned long long sta_not_used;
+> > > > +	int type_not_used;
+> > > > +
+> > > > +	/*
+> > > > +	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
+> > > 
+> > > "ignore" seems duplicated. 
+> >  
+> > It is not.  This is supposed to mean that the errors previously ignored by
+> > acpi_bus_check_add() should be ignored here as well.
+> 
+> Oh, I see.  Thanks for the clarification.
+> 
+> 
+> > > > +	 * namespace walks prematurely.
+> > > > +	 */
+> > > > +	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
+> > > > +		return AE_OK;
+> > > > +
+> > > > +	if (acpi_bus_get_device(handle, &device))
+> > > > +		return AE_CTRL_DEPTH;
+> > > > +
+> > > > +	if (ops->acpi_op_add) {
+> > > > +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+> > > > +			/* This is a known good platform device. */
+> > > > +			acpi_create_platform_device(device);
+> > > > +		} else {
+> > > > +			int ret = device_attach(&device->dev);
+> > > > +			acpi_hot_add_bind(device);
+> > > 
+> > > Since acpi_pci_root_add() is called by device_attach(), I think this
+> > > acpi_hot_add_bind() calls .bind() of a device at boot since its .bind()
+> > > may be set.  Is that correct?  If so, how does it coordinate with the
+> > > bind procedure in acpi_pci_bridge_scan()?
+> > 
+> > It actually doesn't.
+> > 
+> > However, the $subject patch doesn't change this particular aspect of the
+> > original behavior, because with it applied the PCI root bridge driver is still
+> > not present when the device_attach() above is executed for all objects in the
+> > given namespace scope, so the .bind() callbacks should all be empty.  In other
+> > words, it doesn't change the boot case.
+> > 
+> > It also reproduces the original behavior in the hotplug case which may not be
+> > correct.  Patch [2/6], however, kind of changes the boot case into the hotplug
+> > case and things start to get ugly.
+> 
+> Yes, I was concerned with the behavior when patch [2/6] applied.  It is
+> actually a good thing that this hotplug issue is now exposed in the boot
+> path.  This means that boot and hot-add paths are consistent.  So, we
+> just need to fix it.
+> 
+> 
+> > Well, what about calling acpi_hot_add_bind() from acpi_bus_check_add(),
+> > right after doing the acpi_add_single_object()?  It would avoid calling
+> > acpi_pci_bind() twice for the same device during root bridge hotplug too,
+> > because in that case acpi_pci_root_add() will be called after all of these
+> > acpi_hot_add_bind() calls.  At the same time if a single device is
+> > hot-added and its parent happens to have .bind() set, it will be run
+> > from acpi_bus_check_add().
+> 
+> I may be missing something here, but in case of root bridge hot-add, I
+> think acpi_pci_root_add() still calls .bind() after acpi_bus_check_add()
+> called it.  So, it's called twice, isn't it? 
 
-Hmm, looks like I was looking at the wrong register. The CLS itself is 
-described by what I posted, so changing that does affect things (i.e. 
-the threshold for Memory Read Multiple). The other value being written 
-into fifo_cfg is the FIFO Write Request Control and FIFO Read Request 
-Control field (that's why it's written to bits 0-2 and 8-10).
+No, it isn't.  The reason is that the .bind pointers of all devices below the
+root bridge are populated from within acpi_pci_root_add() and are NULL before
+it is called.  Therefore they are NULL when acpi_bus_check_add() checks them. 
 
-"The FIFO Write Request Control and FIFO Read Request Control fields in 
-these registers provide threshold settings for establishing when PCI 
-requests are made to the Arbiter. The Arbiter arbitrates among the four
-requests using fixed priority with masking. The fixed priority is, from 
-highest to lowest: channel 0; channel 1; channel 2; and channel 3. If 
-multiple requests are present, the arbiter grants PCI bus access to the 
-highest priority channel that is not masked. That channel’s request is 
-then masked as long as any unmasked requests are present.
+Of course, I'm referring to this patch:
 
-..
+https://patchwork.kernel.org/patch/1889821/
 
-FIFO Read Request Control.  This bit field defines the FIFO threshold to 
-assign priority when requesting a PCI bus read operation. A value of 00H 
-indicates that read request priority is set whenever the FIFO has 
-greater than 32 bytes available space, while a value of 07H indicates 
-that read request priority is set whenever the FIFO has greater than 
-7x32 bytes (=224 bytes) available space. This bit field is useful when 
-multiple DMA channels are competing for accessing the PCI bus.
+After this and [2/6] (https://patchwork.kernel.org/patch/1884701/) have been
+applied, it is quite easy to verify that acpi_pci_bind() is called exactly once
+for each PCI device during boot (just add a debug printk to that function) and
+the same should happen during root bridge hotplug.
+
+> We need to decide which module is responsible for calling .bind().  I
+> think it should be the ACPI scan module, not the ACPI PCI root bridge
+> driver, because:
+>  - bind() needs to be called when _ADR device is added.  The ACPI scan
+> module can scan any devices, while the PCI root driver can only scan
+> when it is added.
+>  - acpi_bus_remove() calls unbind() at hot-remove.  The same module
+> should be responsible for both bind() and unbind() handling.
+>  - It is cleaner to keep struct acpi_device_ops interface to be called
+> by the ACPI core.
+
+I agree with that. :-)
+
+Moreover, I don't think we need acpi_pci_bind() and acpi_pci_unbind() at all.
+
+> So, I would propose the following changes.
+> 
+>  - Move the acpi_hot_add_bind() call back to the original place after
+> the device_attach() call.
+>  - Rename the name of acpi_hot_add_bind() to something like
+> acpi_bind_adr_device() since it is no longer hot-add only (and is
+> specific to _ADR devices).
+>  - Create its pair function, acpi_unbind_adr_device(), which is called
+> from acpi_bus_remove().  When a constructor interface is introduced, its
+> destructor should be introduced as well. 
+>  - Remove the binding procedure from acpi_pci_root_add().  This should
+> be done in patch [2/6].
+
+Well, what about moving the code from acpi_pci_bind()/acpi_pci_unbind()
+somewhere else and removing those things altogether?
+
+Rafael
 
 
-FIFO Write Request Control. This bit field defines the FIFO threshold to 
-assign priority when requesting a PCI bus write operation. A value of 
-00H indicates that write request priority is set whenever the FIFO 
-contains greater than 32 bytes, while a value of 07H indicates that 
-write request priority is set whenever the FIFO contains greater than 
-7x32 bytes (=224 bytes). This bit field is useful when multiple DMA 
-channels are competing for the PCI bus."
-
-The value apparently being written to the register according to the code 
-(and given that the value in the CLS register is in units of 32-bit 
-words) is (cache line size >> 3) + 1.
-
- From looking at the history of this code (which dates from the pre-git 
-days in 2005) it comes from:
-
-https://git.kernel.org/?p=linux/kernel/git/tglx/history.git;a=commit;h=fceff08ed7660f9bbe96ee659acb02841a3f1f39
-
-which refers to an issue with DMA FIFO thresholds which could cause data 
-corruption. The description is pretty much hand-waving and doesn't 
-really describe what is going on. But it seems quite likely that 
-whatever magic numbers this code is picking don't work on your system 
-for some reason. It appears the root cause is likely a bug in the SiI 
-chip. There shouldn't be any region why messing around with these values 
-should cause data corruption other than that.
-
->
-> By default on my system this part of sata_sil code just overwrites the same
-> value (2 for 32 bytes CLS) that is already in place (as retrieved using
-> readw()) because the same value gets set (by the sata controller bios?)
-> after reboot. Changing this logic can work around data corruption problem.
-> There is another problem, sata link becoming inaccessible (I wrote more
-> about it in the first post), not affected by this part of sata_sil code. My
-> guess is that the main cause of the problems is elsewhere.
->
->>> Data corruption is the biggest problem for me and these workarounds help
->>> but another problem remains, sometimes when accessing multiple PCI
->>> devices at the same time sata becomes inaccessible and times out with log
->>> messages similar to:
->>> [  411.351805] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
->>> frozen
->>> [  411.351824] ata3.00: cmd c8/00:00:00:af:00/00:00:00:00:00/e0 tag 0 dma
->>> 131072 in
->>> [  411.351826]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4
->>> (timeout)
->>> [  411.351830] ata3.00: status: { DRDY }
->>> [  411.351843] ata3: hard resetting link
->>> [  411.671775] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->>> [  411.697059] ata3.00: configured for UDMA/100
->>> [  411.697080] ata3: EH complete
->>>
->>> Reboot is needed to access sata drives again. If I had the root
->>> filesystem on a sata drive it would probably crash the system.
->>>
->>> Another thing that may be related. Comparing lspci output reveals that
->>> when accessing multiple PCI devices at the same time, the flag
->>> DiscTmrStat (Discard Timer Status) gets toggled on for device "00:08.0
->>> PCI bridge: nVidia Corporation nForce2 External PCI Bridge". I don't know
->>> if it's normal or not.
->>
->> I'm not an expert on the whole PCI bridge/delayed completion stuff but
->> it appears that this means that a device (either the host bridge/CPU or
->> a device behind that bridge) initiated a delayed transaction for a read,
->> but then didn't retry the request to pick up the read data later. From
->> what I can tell this seems abnormal, at least in most cases.
->>
->> Can you post the full lspci -vv output? Do the problems only occur if
->> there are multiple devices plugged in behind that bridge?
->
-> 'lspci -vvv' output attached. Yes, I've only encountered problems with the
-> sata controller if at least one other external PCI card is in active use.
-> (The built-in devices which appear as PCI under another bridge do not cause
-> problems.)
->
->>> Finally, the same simple test that I use on Linux does not produce data
->>> corruption on FreeBSD. Either this problem doesn't occur there or it's
->>> not trivial to reproduce.
->>>
->>> This bug has been around for so long. I hope someone will find this
->>> information useful.
->
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
