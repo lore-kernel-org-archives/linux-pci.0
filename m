@@ -1,146 +1,205 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50D15AEC.5050306@oracle.com>
-Date: Wed, 19 Dec 2012 14:13:00 +0800
-From: Joe Jin <joe.jin@oracle.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e06smtp18.uk.ibm.com ([195.75.94.114]:59459 "EHLO
+	e06smtp18.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418Ab2LRSH0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 13:07:26 -0500
+Received: from /spool/local
+	by e06smtp18.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Tue, 18 Dec 2012 18:06:56 -0000
+Date: Tue, 18 Dec 2012 19:07:18 +0100 (CET)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Jan Glauber <jang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, heiko.carstens@de.ibm.com,
+	schwidefsky@de.ibm.com,
+	=?ISO-8859-15?Q?Gerald_Sch=E4fer?= <gerald.schaefer@de.ibm.com>
+Subject: Re: [RFC PATCH 01/10] s390/pci: base support
+In-Reply-To: <CAErSpo6pFLiPtQuBGzAo1B4cQOWzJEur_2THT=xJo9c5otp5hQ@mail.gmail.com>
+Message-ID: <alpine.LFD.2.02.1212181905400.3320@c4eb>
+References: <cover.1352719877.git.jang@linux.vnet.ibm.com> <c6f38a8b22d0bf2980785a2f9a786ba4616a3284.1352719877.git.jang@linux.vnet.ibm.com> <CAErSpo7h_EnqWzx7TN9yr5JnmUjLcZSv=pkc+Cz=8egF+EcyXQ@mail.gmail.com> <1355399509.7498.49.camel@hal>
+ <CAErSpo6pFLiPtQuBGzAo1B4cQOWzJEur_2THT=xJo9c5otp5hQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: "Fujinaka, Todd" <todd.fujinaka@intel.com>,
-	Ethan Zhao <ethan.kernel@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Mary Mcgrath <mary.mcgrath@oracle.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"e1000-devel@lists.sf.net" <e1000-devel@lists.sf.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
-References: <509B5038.8090304@oracle.com> <50A30656.6090508@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913348B105@ORSMSX102.amr.corp.intel.com> <50A43828.6000702@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913349A0B4@ORSMSX102.amr.corp.intel.com> <50A9C5CC.1030300@oracle.com> <061C8A8601E8EE4CA8D8FD6990CEA8913349EB41@ORSMSX102.amr.corp.intel.com> <50AB8471.7080607@oracle.com> <9B4A1B1917080E46B64F07F2989DADD62F2D62D6@ORSMSX102.amr.corp.intel.com> <50B41077.3080009@oracle.com>	<b46b84cf-3688-4fd7-b741-4e96f2663517@default> <9B4A1B1917080E46B64F07F2989DADD62F2D8070@ORSMSX102.amr.corp.intel.com> <1354039840.2701.14.camel@bwh-desktop.uk.solarflarecom.com> <50B5CBD2.5020804@oracle.com> <9B4A1B1917080E46B64F07F2989DADD62F2D8AAC@ORSMSX102.amr.corp.intel.com> <CABawtvPrz=z_CLCvPeXkky7COyhjPyfBu3QCTbiiPpvr+5bicg@mail.gmail.com> <9B4A1B1917080E46B64F07F2989DADD638C60A9B@ORSMSX102.amr.corp.intel.com> <50D12EA2.3030907@oracle.com> <50D15600.6060001@huawei.com>
-In-Reply-To: <50D15600.6060001@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1463805262-1886667569-1355854041=:3320"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yijing,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Thanks for your reference, the patch looks good for me, but I have no chance
-to test it on customer's env.
-
-Best Regards,
-Joe
-
-On 12/19/12 13:52, Yijing Wang wrote:
-> On 2012/12/19 11:04, Joe Jin wrote:
->> Hi all,
->>
->> I backported mps commits and ask customer pass "pci=pcie_bus_peer2pee" to kernel
->> to limited MPS to 128 and issue disappeared, sound like this is a BIOS bug.
->>
-> 
-> Hi Joe,
->    I found similar problem when I do pci hotplug, discussion is here:http://marc.info/?l=linux-pci&m=134810569924220&w=2.
-> We try to improve Linux kernel to debug this problem easily based Bjorn's suggestion. Jon sent out the first version patch http://marc.info/?l=linux-pci&m=135002016005274&w=2.
-> I think we can do further here, http://marc.info/?l=linux-pci&m=135115581307869&w=2. I hope this information can help you.
-> 
-> Thanks!
-> Yijing.
-> 
->> Thanks all of your help.
->>
->> Best Regards,
->> Joe
->>
->> On 11/29/12 23:52, Fujinaka, Todd wrote:
->>> Someone else pointed this out to me locally. If you have a non-client BIOS, you should be able to set the MaxPayloadSize using setpci. You have to make sure that you're being consistent throughout all the associated links.
->>>
->>> Todd Fujinaka
->>> Technical Marketing Engineer
->>> LAN Access Division (LAD)
->>> Intel Corporation
->>> todd.fujinaka@intel.com
->>> (503) 712-4565
->>>
->>>
->>> -----Original Message-----
->>> From: Ethan Zhao [mailto:ethan.kernel@gmail.com] 
->>> Sent: Wednesday, November 28, 2012 7:10 PM
->>> To: Fujinaka, Todd
->>> Cc: Joe Jin; Ben Hutchings; Mary Mcgrath; netdev@vger.kernel.org; e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
->>> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
->>>
->>> Joe,
->>>     Possibly your customer is running a kernel without source code on a platform whose vendor wouldn't like to fix BIOS issue( Is that a HP/Dell server ?).
->>>     Anyway, to see if is a payload issue or,  you could change the payload size with setpci tool to those devices and set the link retrain bit to trigger the link retraining to debug the issue and identity the root cause.  I thinks it is much easier than modify the BIOS or  eeprom of NIC.
->>>
->>>     e.g.
->>>    set device control register to 0f 00   (128 bytes payload size)
->>>    #   setpci -v -s 00:02.0 98.w=000f
->>>    set device link control register to 60h (retrain the link)
->>>    #  setpci -v -s 00:02.0 a0.b=60
->>>
->>>   Hope it works,  Just my 2 cents.
->>>
->>> Ethan.zhao@oracle.com
->>>
->>> On Wed, Nov 28, 2012 at 11:53 PM, Fujinaka, Todd <todd.fujinaka@intel.com> wrote:
->>>> The only EEPROM I know about or can speak to is the one attached to the 82571 and it doesn't set the MaxPayloadSize. That's done by the BIOS.
->>>>
->>>> Todd Fujinaka
->>>> Technical Marketing Engineer
->>>> LAN Access Division (LAD)
->>>> Intel Corporation
->>>> todd.fujinaka@intel.com
->>>> (503) 712-4565
->>>>
->>>>
->>>> -----Original Message-----
->>>> From: Joe Jin [mailto:joe.jin@oracle.com]
->>>> Sent: Wednesday, November 28, 2012 12:31 AM
->>>> To: Ben Hutchings
->>>> Cc: Fujinaka, Todd; Mary Mcgrath; netdev@vger.kernel.org; 
->>>> e1000-devel@lists.sf.net; linux-kernel@vger.kernel.org; linux-pci
->>>> Subject: Re: [E1000-devel] 82571EB: Detected Hardware Unit Hang
->>>>
->>>> On 11/28/12 02:10, Ben Hutchings wrote:
->>>>> On Tue, 2012-11-27 at 17:32 +0000, Fujinaka, Todd wrote:
->>>>>> Forgive me if I'm being too repetitious as I think some of this has 
->>>>>> been mentioned in the past.
->>>>>>
->>>>>> We (and by we I mean the Ethernet part and driver) can only change 
->>>>>> the advertised availability of a larger MaxPayloadSize. The size is 
->>>>>> negotiated by both sides of the link when the link is established.
->>>>>> The driver should not change the size of the link as it would be 
->>>>>> poking at registers outside of its scope and is controlled by the 
->>>>>> upstream bridge (not us).
->>>>> [...]
->>>>>
->>>>> MaxPayloadSize (MPS) is not negotiated between devices but is 
->>>>> programmed by the system firmware (at least for devices present at 
->>>>> boot - the kernel may be responsible in case of hotplug).  You can 
->>>>> use the kernel parameter 'pci=pcie_bus_perf' (or one of several 
->>>>> others) to set a policy that overrides this, but no policy will allow 
->>>>> setting MPS above the device's MaxPayloadSizeSupported (MPSS).
->>>>>
->>>>
->>>> Ben,
->>>>
->>>> Unfortunately I'm using 3.0.x kernel and this is not included in the kernel.
->>>> So I'm trying to use ethtool modify it from eeprom to see if help or no.
->>>>
->>>>
->>>> Todd, I'll review all MaxPayload for all devices, but need to say if it mismatch, customer could not modify it from BIOS for there was not entry at there, to test it, we have to find how to verify if this is the root cause, so still need to find the offset in eeprom.
->>>>
->>>> Thanks in advance,
->>>> Joe
->>>>
->>
->>
-> 
-> 
+---1463805262-1886667569-1355854041=:3320
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 
 
--- 
-Oracle <http://www.oracle.com>
-Joe Jin | Software Development Senior Manager | +8610.6106.5624
-ORACLE | Linux and Virtualization
-No. 24 Zhongguancun Software Park, Haidian District | 100193 Beijing 
+
+On Thu, 13 Dec 2012, Bjorn Helgaas wrote:
+
+> On Thu, Dec 13, 2012 at 4:51 AM, Jan Glauber <jang@linux.vnet.ibm.com> wrote:
+> > On Mon, 2012-12-10 at 14:14 -0700, Bjorn Helgaas wrote:
+> >> On Wed, Nov 14, 2012 at 2:41 AM, Jan Glauber <jang@linux.vnet.ibm.com> wrote:
+> >> > Add PCI support for s390, (only 64 bit mode is supported by hardware):
+> >> > - PCI facility tests
+> >> > - PCI instructions: pcilg, pcistg, pcistb, stpcifc, mpcifc, rpcit
+> >> > - map readb/w/l/q and writeb/w/l/q to pcilg and pcistg instructions
+> >> > - pci_iomap implementation
+> >> > - memcpy_fromio/toio
+> >> > - pci_root_ops using special pcilg/pcistg
+> >> > - device, bus and domain allocation
+> >> >
+> >> > Signed-off-by: Jan Glauber <jang@linux.vnet.ibm.com>
+> >>
+> >> I think these patches are in -next already, so I just have some
+> >> general comments & questions.
+> >
+> > Yes, since the feedback was manageable we decided to give the patches
+> > some exposure in -next and if no one complains we'll just go for the
+> > next merge window. BTW, Sebastian & Gerald (on CC:) will continue the
+> > work on the PCI code.
+> >
+> >> My overall impression is that these are exceptionally well done.
+> >> They're easy to read, well organized, and well documented.  It's a
+> >> refreshing change from a lot of the stuff that's posted.
+> >
+> > Thanks Björn!
+> >
+> >> As with other arches that run on top of hypervisors, you have
+> >> arch-specific code that enumerates PCI devices using hypervisor calls,
+> >> and you hook into the PCI core at a lower level than
+> >> pci_scan_root_bus().  That is, you call pci_create_root_bus(),
+> >> pci_scan_single_device(), pci_bus_add_devices(), etc., directly from
+> >> the arch code.  This is the typical approach, but it does make more
+> >> dependencies between the arch code and the PCI core than I'd like.
+> >>
+> >> Did you consider hiding any of the hypervisor details behind the PCI
+> >> config accessor interface?  If that could be done, the overall
+> >> structure might be more similar to other architectures.
+> >
+> > You mean pci_root_ops? I'm not sure I understand how that can be used
+> > to hide hipervisor details.
+> 
+> The object of doing this would be to let you use pci_scan_root_bus(),
+> so you wouldn't have to call pci_scan_single_device() and
+> pci_bus_add_resources() directly.  The idea is to make pci_read() and
+> pci_write() smart enough that the PCI core can use them as though you
+> have a normal PCI implementation.  When pci_scan_root_bus() enumerates
+> devices on the root bus using pci_scan_child_bus(), it does config
+> reads on the VENDOR_ID of bb:00.0, bb:01.0, ..., bb:1f.0.  Your
+> pci_read() would return error or 0xffffffff data for everything except
+> bb:00.0 (I guess it actually already does that).
+> 
+> Then some of the other init, e.g., zpci_enable_device(), could be done
+> by the standard pcibios hooks such as pcibios_add_device() and
+> pcibios_enable_device(), which would remove some of the PCI grunge
+> from zpci_scan_devices() and the s390 hotplug driver.
+> 
+> > One reason why we use the lower level
+> > functions is that we need to create the root bus (and its resources)
+> > much earlier then the pci_dev. For instance pci_hp_register wants a
+> > pci_bus to create the PCI slot and the slot can exist without a pci_dev.
+> 
+> There must be something else going on here; a bus is *always* created
+> before any of the pci_devs on the bus.
+> 
+> One thing that looks a little strange is that zpci_list seems to be
+> sort of a cross between a list of PCI host bridges and a list of PCI
+> devices.  Understandable, since you usually have a one-to-one
+> correspondence between them, but for your hotplug stuff, you can have
+> the host bridge and slot without the pci_dev.
+> 
+> The hotplug slot support is really a function of the host bridge
+> support, so it doesn't seem quite right to me to split it into a
+> separate module (although that is the way most PCI hotplug drivers are
+> currently structured).  One reason is that it makes hot-add of a host
+> bridge awkward: you have to have the "if (hotplug_ops.create_slot)"
+> test in zpci_create_device().
+> 
+> >> The current config accessors only work for dev/fn 00.0 (they fail when
+> >> "devfn != ZPCI_DEVFN").  Why is that?  It looks like it precludes
+> >> multi-function devices and basically prevents you from building an
+> >> arbitrary PCI hierarchy.
+> >
+> > Our hypervisor does not support multi-function devices. In fact the
+> > hypervisor will limit the reported PCI devices to a hand-picked
+> > selection so we can be sure that there will be no unsupported devices.
+> > The PCI hierarchy is hidden by the hipervisor. We only use the PCI
+> > domain number, bus and devfn are always zero. So it looks like every
+> > function is directly attached to a PCI root complex.
+> >
+> > That was the reason for the sanity check, but thinking about it I could
+> > remove it since although we don't support multi-function devices I
+> > think the s390 code should be more agnostic to these limitations.
+> 
+> The config accessor interface should be defined so it works for all
+> PCI devices that exist, and fails for devices that do not exist.  The
+> approach you've taken so far is to prevent the PCI core from even
+> attempting access to non-existent devices, which requires you to use
+> some lower-level PCI interfaces.  The alternative I'm raising as a
+> possibility is to allow the PCI core to attempt accesses to
+> non-existent devices, but have the accessor be smart enough to use the
+> hypervisor or other arch-specific data to determine whether the device
+> exists or not, and act accordingly.
+> 
+> Basically the idea is that if we put more smarts in the config
+> accessors, we can make the interface between the PCI core and the
+> architecture thinner.
+> 
+> >> zpci_map_resources() is very unusual.  The struct pci_dev resource[]
+> >> table normally contains CPU physical addresses, but
+> >> zpci_map_resources() fills it with virtual addresses.  I suspect this
+> >> has something to do with the "BAR spaces are not disjunctive on s390"
+> >> comment.  It almost sounds like that's describing host bridges where
+> >> the PCI bus address is not equal to the CPU physical address -- in
+> >> that case, device A and device B may have the same values in their
+> >> BARs, but they can still be distinct if they're under host bridges
+> >> that apply different CPU-to-bus address translations.
+> >
+> > Yeah, you've found it... I've had 3 or 4 tries on different
+> > implementations but all failed. If we use the resources as they are we
+> > cannot map them to the instructions (and ioremap does not help because
+> > there we cannot find out which device the resource belongs to). If we
+> > change the BARs on the card MMIO stops to work. I don't know about host
+> > bridges - if we would use a host bridge at which point in the
+> > translation process would it kick in?
+> 
+> Here's how it works.  The PCI host bridge claims regions of the CPU
+> physical address space and forwards transactions in those regions to
+> the PCI root bus.  Some host bridges can apply an offset when
+> forwarding, so the address on the bus may be different from the
+> address from the CPU.  The bus address is what matches a PCI BAR.
+> 
+> You can tell the PCI core about this translation by using
+> pci_add_resource_offset() instead of pci_add_resource().  When the PCI
+> core reads a BAR, it applies the offset to convert the BAR value into
+> a CPU physical address.
+> 
+> For example, let's say you have two host bridges:
+> 
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [mem 0x100000000-0x1ffffffff] (bus
+> address [0x00000000-0xffffffff])
+> PCI host bridge to bus 0001:00
+> pci_bus 0001:00: root bus resource [mem 0x200000000-0x2ffffffff] (bus
+> address [0x00000000-0xffffffff])
+> 
+> Both bridges use the same bus address range, and BARs of devices on
+> bus 0000:00 can have the same values as those of devices on bus
+> 0001:00.  But there's no ambiguity because a CPU access to
+> 0x1_0000_0000 will be claimed by the first bridge and translated to
+> bus address 0x0 on bus 0000:00, while a CPU access to 0x2_0000_0000
+> will be claimed by the second bridge and translated to bus address 0x0
+> on bus 0001:00.
+> 
+> The pci_dev resources will contain CPU physical addresses, not the BAR
+> values themselves.  These addresses implicitly identify the host
+> bridge (and, in your case, the pci_dev, since you have at most one
+> pci_dev per host bridge).
+
+Hi Bjorn,
+
+thanks for the explanation. I'll look into it.
+
+Regards,
+Sebastian
+---1463805262-1886667569-1355854041=:3320--
+
