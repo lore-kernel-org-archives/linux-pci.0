@@ -1,59 +1,44 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Wed, 26 Dec 2012 23:36:23 +0100
-Message-ID: <6257154.ucqGyPHqkg@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQVOvqqEFXcRbZt5=8e4fQgmzw03WCS=env46eYADFpXLw@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <CAE9FiQWr6-=kvrCXKEWFvUHHv6xbHKt-oAdt+VPUMphVUW4U4A@mail.gmail.com> <CAE9FiQVOvqqEFXcRbZt5=8e4fQgmzw03WCS=env46eYADFpXLw@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1355847041.18964.369.camel@misato.fc.hp.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	<1525730.exQ7msTINR@vostro.rjw.lan>
+	<1355789297.18964.334.camel@misato.fc.hp.com>
+	<4082842.31rfDviYHK@vostro.rjw.lan>
+	<1355847041.18964.369.camel@misato.fc.hp.com>
+Date: Tue, 18 Dec 2012 10:59:46 -0800
+Message-ID: <CAE9FiQV-GDRd1iapMwy4j4mBChRpEm-9ANHg6BTdyiTd-5Bf8A@mail.gmail.com>
+Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from
+ probing ACPI drivers
+From: Yinghai Lu <yinghai@kernel.org>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
-> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> Do you have a reference for this?  I think this might have been true
-> >> in the past, but I don't think it's true for any version of gcc we
-> >> support for building Linux.
-> >
-> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
-> 
-> the problem is already addressed by:
-> 
-> | commit f9d14250071eda9972e4c9cea745a11185952114
-> | Author: Linus Torvalds <torvalds@linux-foundation.org>
-> | Date:   Fri Jan 2 09:29:43 2009 -0800
-> |
-> |    Disallow gcc versions 4.1.{0,1}
-> |
-> |    These compiler versions are known to miscompile __weak functions and
-> |    thus generate kernels that don't necessarily work correctly.  If a weak
-> |    function is int he same compilation unit as a caller, gcc may end up
-> |    inlining it, and thus binding the weak function too early.
-> |
-> |    See
-> |
-> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
-> |
-> |    for details.
-> 
-> so it is ok to put the __weak in the same file now.
+On Tue, Dec 18, 2012 at 8:10 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
+>
+> So, I would propose the following changes.
+>
+>  - Move the acpi_hot_add_bind() call back to the original place after
+> the device_attach() call.
+>  - Rename the name of acpi_hot_add_bind() to something like
+> acpi_bind_adr_device() since it is no longer hot-add only (and is
+> specific to _ADR devices).
+>  - Create its pair function, acpi_unbind_adr_device(), which is called
+> from acpi_bus_remove().  When a constructor interface is introduced, its
+> destructor should be introduced as well.
+>  - Remove the binding procedure from acpi_pci_root_add().  This should
+> be done in patch [2/6].
 
-Cool, thanks for checking and for the ACK!
+i think we should put jiang four patches before Rafael's patches.
 
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-jiang-hotplug
