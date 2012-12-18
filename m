@@ -1,40 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42139 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751860Ab2LFBEV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Dec 2012 20:04:21 -0500
-Message-ID: <50BFEF09.9000408@zytor.com>
-Date: Wed, 05 Dec 2012 17:04:09 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:56378 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348Ab2LRVLr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 16:11:47 -0500
 MIME-Version: 1.0
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: Yinghai Lu <yinghai@kernel.org>,
+In-Reply-To: <1355863696.18964.378.camel@misato.fc.hp.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	<1525730.exQ7msTINR@vostro.rjw.lan>
+	<1355789297.18964.334.camel@misato.fc.hp.com>
+	<4082842.31rfDviYHK@vostro.rjw.lan>
+	<1355847041.18964.369.camel@misato.fc.hp.com>
+	<CAE9FiQV-GDRd1iapMwy4j4mBChRpEm-9ANHg6BTdyiTd-5Bf8A@mail.gmail.com>
+	<1355863696.18964.378.camel@misato.fc.hp.com>
+Date: Tue, 18 Dec 2012 13:11:45 -0800
+Message-ID: <CAE9FiQV=ByGT7gsTcW1L1wh-+jd6vOe1c5wAnH4kJ9ZaFtOuMg@mail.gmail.com>
+Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from
+ probing ACPI drivers
+From: Yinghai Lu <yinghai@kernel.org>
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <20121206001819.GA30527@srcf.ucam.org> <50BFE50C.8030008@zytor.com> <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com> <50BFE890.5070109@zytor.com> <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
-In-Reply-To: <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
-Content-Type: text/plain; charset=UTF-8
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2012 04:57 PM, Matthew Garrett wrote:
-> 
-> 
-> "H. Peter Anvin" <hpa@zytor.com> wrote:
-> 
->> I don't think there is anything security-sensitive about that
->> information, at least not to root.  I could be wrong, of course; I
->> wouldn't mind security people telling me about that.
-> 
-> I don't think there's anything at present, but we'll want to pass the hibernation encryption key from the bootloader to the kernel in the near future. setup_data seems like the easiest way to do that. 
-> 
+On Tue, Dec 18, 2012 at 12:48 PM, Toshi Kani <toshi.kani@hp.com> wrote:
+> On Tue, 2012-12-18 at 10:59 -0800, Yinghai Lu wrote:
+>> On Tue, Dec 18, 2012 at 8:10 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+>> > On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
+>> >
+>> > So, I would propose the following changes.
+>> >
+>> >  - Move the acpi_hot_add_bind() call back to the original place after
+>> > the device_attach() call.
+>> >  - Rename the name of acpi_hot_add_bind() to something like
+>> > acpi_bind_adr_device() since it is no longer hot-add only (and is
+>> > specific to _ADR devices).
+>> >  - Create its pair function, acpi_unbind_adr_device(), which is called
+>> > from acpi_bus_remove().  When a constructor interface is introduced, its
+>> > destructor should be introduced as well.
+>> >  - Remove the binding procedure from acpi_pci_root_add().  This should
+>> > be done in patch [2/6].
+>>
+>> i think we should put jiang four patches before Rafael's patches.
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-jiang-hotplug
+>
+> Thanks for the pointer!  Oh, I did not know that pci_dev gets removed
+> before acpi_bus_trim() is called...
 
-And that presumably would be something that cannot be exposed to root?
-If so we may want to use one of the bits in the setup_data type field as
-a security flag, perhaps...
+yes. that is
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=8b4b836d8c56c290bc80ffa0b08b91fb3fe38867
 
-	-hpa
-
+> I looked at Jiang's last two
+> patches for the bind update, and they look good to me.
+>
+> Thanks,
+> -Toshi
+>
