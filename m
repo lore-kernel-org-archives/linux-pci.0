@@ -1,126 +1,92 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v4 1/3] aerdrv: Trace Event for AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 03 Dec 2012 11:33:05 -0700
-Message-ID: <20121203183305.26636.22979.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f182.google.com ([209.85.220.182]:37138 "EHLO
+	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683Ab2LRX0u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 18:26:50 -0500
+Received: by mail-vc0-f182.google.com with SMTP id fy27so1632972vcb.13
+        for <linux-pci@vger.kernel.org>; Tue, 18 Dec 2012 15:26:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <4447450.z46Q2xYLQX@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <3027479.MToB281uxK@vostro.rjw.lan>
+ <1355868912.18964.381.camel@misato.fc.hp.com> <4447450.z46Q2xYLQX@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 18 Dec 2012 16:19:55 -0700
+Message-ID: <CAErSpo63cQJskAJKBwai6ipToVHEEwCWXeRfBOzF29Ds29MTbA@mail.gmail.com>
+Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from
+ probing ACPI drivers
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This header file will define a new trace event that will be triggered when
-a AER event occurs.  The following data will be provided to the trace
-event.
+On Tue, Dec 18, 2012 at 4:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Tuesday, December 18, 2012 03:15:12 PM Toshi Kani wrote:
+>> On Tue, 2012-12-18 at 22:57 +0100, Rafael J. Wysocki wrote:
+>> > On Tuesday, December 18, 2012 09:10:41 AM Toshi Kani wrote:
+>> > > On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
+>>  :
+>> > > We need to decide which module is responsible for calling .bind().  I
+>> > > think it should be the ACPI scan module, not the ACPI PCI root bridge
+>> > > driver, because:
+>> > >  - bind() needs to be called when _ADR device is added.  The ACPI scan
+>> > > module can scan any devices, while the PCI root driver can only scan
+>> > > when it is added.
+>> > >  - acpi_bus_remove() calls unbind() at hot-remove.  The same module
+>> > > should be responsible for both bind() and unbind() handling.
+>> > >  - It is cleaner to keep struct acpi_device_ops interface to be called
+>> > > by the ACPI core.
+>> >
+>> > I agree with that. :-)
+>> >
+>> > Moreover, I don't think we need acpi_pci_bind() and acpi_pci_unbind() at all.
+>> >
+>> > > So, I would propose the following changes.
+>> > >
+>> > >  - Move the acpi_hot_add_bind() call back to the original place after
+>> > > the device_attach() call.
+>> > >  - Rename the name of acpi_hot_add_bind() to something like
+>> > > acpi_bind_adr_device() since it is no longer hot-add only (and is
+>> > > specific to _ADR devices).
+>> > >  - Create its pair function, acpi_unbind_adr_device(), which is called
+>> > > from acpi_bus_remove().  When a constructor interface is introduced, its
+>> > > destructor should be introduced as well.
+>> > >  - Remove the binding procedure from acpi_pci_root_add().  This should
+>> > > be done in patch [2/6].
+>> >
+>> > Well, what about moving the code from acpi_pci_bind()/acpi_pci_unbind()
+>> > somewhere else and removing those things altogether?
+>>
+>> Sounds nice.  It will be bonus point if you can do that. :-)
+>
+> I think I can, but I need a few more patches on top of what I've already posted
+> to do that.
+>
+> I think that https://patchwork.kernel.org/patch/1889821/ and
+> https://patchwork.kernel.org/patch/1884701/ can stay as they are, since there's
+> some material on top of them already and I'll cut the new patches on top of all
+> that.  I'll repost the whole series some time later this week, stay tuned. :-)
 
-char * dev_name - The name of the slot where the device resides
-                  ([domain:]bus:device.function).
+I haven't follow this closely enough to give useful feedback, but I
+trust that what you're doing is going in the right direction.
 
-u32 status - Either the correctable or uncorrectable register
-             indicating what error or errors have been see.
+The only question I have right now is what I mentioned earlier on IRC,
+namely, the idea of "binding" an ACPI handle or device to a pci_dev,
+and whether there's a way to guarantee that the binding doesn't become
+stale.  For example, if we bind pci_dev A to acpi_device B, I think we
+essentially capture the pointer to B and store that pointer in A.
+Obviously we want to know that the captured pointer in A remains valid
+as long as A exists, but I don't know what assures us of that.
 
-u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+I don't think this is a new question; I have the same question about
+the current code before your changes.  But it seems like you're
+simplifying this area in a way that might make it easier to answer the
+question.
 
-The trace event will also provide a trace string that may look like:
-
-"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-TLP"
-
-v1-v2 Move header from include/ras/aer_event.h to
-include/trace/events/ras.h
-v3-v4 Cleaned up comments and commit header
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
----
-
- include/trace/events/ras.h |   78 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 78 insertions(+), 0 deletions(-)
- create mode 100644 include/trace/events/ras.h
-
-diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-new file mode 100644
-index 0000000..774303d
---- /dev/null
-+++ b/include/trace/events/ras.h
-@@ -0,0 +1,78 @@
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM aer_event
-+#define TRACE_INCLUDE_FILE ras
-+
-+#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_AER_H
-+
-+#include <linux/tracepoint.h>
-+#include <linux/edac.h>
-+
-+
-+/*
-+ * PCIe Advanced Error Reporting (AER) PCIE Report Error
-+ *
-+ * These events are generated when hardware detects a corrected or
-+ * uncorrected event on a pci express device. The event report has
-+ * the following structure:
-+ *
-+ * char * dev_name -	The name of the slot where the device resides
-+ *			([domain:]bus:device.function).
-+ * u32 status -		Either the correctable or uncorrectable register
-+ *			indicating what error or errors have been seen
-+ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-+ */
-+
-+#define correctable_error_string			\
-+	{BIT(0),	"Receiver Error"},		\
-+	{BIT(6),	"Bad TLP"},			\
-+	{BIT(7),	"Bad DLLP"},			\
-+	{BIT(8),	"RELAY_NUM Rollover"},		\
-+	{BIT(12),	"Replay Timer Timeout"},	\
-+	{BIT(13),	"Advisory Non-Fatal"}
-+
-+#define uncorrectable_error_string			\
-+	{BIT(4),	"Data Link Protocol"},		\
-+	{BIT(12),	"Poisoned TLP"},		\
-+	{BIT(13),	"Flow Control Protocol"},	\
-+	{BIT(14),	"Completion Timeout"},		\
-+	{BIT(15),	"Completer Abort"},		\
-+	{BIT(16),	"Unexpected Completion"},	\
-+	{BIT(17),	"Receiver Overflow"},		\
-+	{BIT(18),	"Malformed TLP"},		\
-+	{BIT(19),	"ECRC"},			\
-+	{BIT(20),	"Unsupported Request"}
-+
-+TRACE_EVENT(aer_event,
-+	TP_PROTO(const char *dev_name,
-+		 const u32 status,
-+		 const u8 severity),
-+
-+	TP_ARGS(dev_name, status, severity),
-+
-+	TP_STRUCT__entry(
-+		__string(	dev_name,	dev_name	)
-+		__field(	u32,		status		)
-+		__field(	u8,		severity	)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->status		= status;
-+		__entry->severity	= severity;
-+	),
-+
-+	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-+		__get_str(dev_name),
-+		(__entry->severity == HW_EVENT_ERR_CORRECTED) ? "Corrected" :
-+			((__entry->severity == HW_EVENT_ERR_FATAL) ?
-+			"Fatal" : "Uncorrected"),
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-+		__print_flags(__entry->status, "|", correctable_error_string) :
-+		__print_flags(__entry->status, "|", uncorrectable_error_string))
-+);
-+
-+#endif /* _TRACE_AER_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-
+Bjorn
