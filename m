@@ -1,267 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:32839 "EHLO hydra.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:12515 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753877Ab2LMWSe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:18:34 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from probing ACPI drivers
-Date: Thu, 13 Dec 2012 23:17:33 +0100
-Message-ID: <1525730.exQ7msTINR@vostro.rjw.lan>
-In-Reply-To: <1499423.ez5cZl2uAf@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <1499423.ez5cZl2uAf@vostro.rjw.lan>
+	id S1750933Ab2LSWou (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Dec 2012 17:44:50 -0500
+Message-ID: <50D24355.1050100@redhat.com>
+Date: Wed, 19 Dec 2012 17:44:37 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
+	bhutchings@solarflare.com, yinghai@kernel.org, davem@davemloft.net
+Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com> <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com> <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com> <20121217232439.GA9746@google.com>
+In-Reply-To: <20121217232439.GA9746@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Overall, yet-another-good-clean-up-by-Bjorn ! :)
+nits below...
 
-Split the ACPI namespace scanning for devices into two passes, such
-that struct acpi_device objects are registerd in the first pass
-without probing ACPI drivers and the drivers are probed against them
-directly in the second pass.
+oh, you can add
+Tested-by: Donald Dutile <ddutile@redhat.com>
 
-There are two main reasons for doing that.
+if you'd to the final commit.
 
-First, the ACPI PCI root bridge driver's .add() routine,
-acpi_pci_root_add(), causes struct pci_dev objects to be created for
-all PCI devices under the given root bridge.  Usually, there are
-corresponding ACPI device nodes in the ACPI namespace for some of
-those devices and therefore there should be "companion" struct
-acpi_device objects to attach those struct pci_dev objects to.  These
-struct acpi_device objects should exist when the corresponding
-struct pci_dev objects are created, but that is only guaranteed
-during boot and not during hotplug.  This leads to a number of
-functional differences between the boot and the hotplug cases which
-are not strictly necessary and make the code more complicated.
+On 12/17/2012 06:24 PM, Bjorn Helgaas wrote:
+> On Mon, Dec 17, 2012 at 02:59:15PM -0500, Don Dutile wrote:
+>> On 12/14/2012 01:19 PM, Greg Rose wrote:
+>>> pci: Fix return code
+>>>
+>>> From: Greg Rose<gregory.v.rose@intel.com>
+>>>
+>>> The return code from the sriov configure function was only returned if it
+>>> was less than zero indicating an error.  This caused the code to fall
+>>> through to the default return of an error code even though the sriov
+>>> configure function has returned the number of VFs it created - a positive
+>>> number indicating success.
+>>>
+>>>
+>>> Signed-off-by: Greg Rose<gregory.v.rose@intel.com>
+>>
+>> Actually, it returned the number of VFs enabled if it exactly equalled
+>> the number to be enabled.  Otherwise, the basic testing would have failed.
+>> If the number of vf's enabled was positive but not the same
+>> as the number requested-to-be-enabled, then it incorrectly returned.
+>>
+>> But, the patch corrects the base problem, so
+>> Acked-by: Donald Dutile<ddutile@redhat.com>
+>
+> Alternate proposal below.  The patch is ugly; it might be easier to compare
+> the before (http://pastebin.com/zneG8AuD) and after
+> (http://pastebin.com/BEXEE8kc) versions.
+>
+> commit fae71e5dc9064dcb3077b8da6e0ed9d800c1f527
+> Author: Bjorn Helgaas<bhelgaas@google.com>
+> Date:   Thu Dec 13 20:22:44 2012 -0700
+>
+>      PCI: Cleanup sriov_numvfs_show() and handle common case without error
+>
+>      If we request "num_vfs" and the driver's sriov_configure() method enables
+>      exactly that number ("num_vfs_enabled"), we complain "Invalid value for
+>      number of VFs to enable" and return an error.  We should silently return
+>      success instead.
+>
+>      Also, use kstrtou16() since numVFs is defined to be a 16-bit field and
+>      rework to simplify control flow.
+>
+>      Reported-by: Greg Rose<gregory.v.rose@intel.com>
+>      Link: http://lkml.kernel.org/r/20121214101911.00002f59@unknown
+>      Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
+>
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 05b78b1..5e8af12 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -422,77 +422,60 @@ static ssize_t sriov_numvfs_show(struct device *dev,
+>   }
+>
+>   /*
+> - * num_vfs>  0; number of vfs to enable
+> - * num_vfs = 0; disable all vfs
+> + * num_vfs>  0; number of VFs to enable
+> + * num_vfs = 0; disable all VFs
+>    *
+>    * Note: SRIOV spec doesn't allow partial VF
+> - *       disable, so its all or none.
+> + *       disable, so it's all or none.
+>    */
+>   static ssize_t sriov_numvfs_store(struct device *dev,
+>   				  struct device_attribute *attr,
+>   				  const char *buf, size_t count)
+>   {
+>   	struct pci_dev *pdev = to_pci_dev(dev);
+> -	int num_vfs_enabled = 0;
+> -	int num_vfs;
+> -	int ret = 0;
+> -	u16 total;
+> +	int ret;
+> +	u16 num_vfs;
+>
+> -	if (kstrtoint(buf, 0,&num_vfs)<  0)
+> -		return -EINVAL;
+> +	ret = kstrtou16(buf, 0,&num_vfs);
+> +	if (ret<  0)
+> +		return ret;
+> +
+> +	if (num_vfs>  pci_sriov_get_totalvfs(pdev))
+> +		return -ERANGE;
+> +
+> +	if (num_vfs == pdev->sriov->num_VFs)
+> +		return count;		/* no change */
+maybe worth putting a dev-info print stating num_vfs to <enable,disable> == current state,
+no action taken. ... may point to a user-level programming error.
 
-For example, this forces the ACPI PCI root bridge driver to defer the
-registration of the just created struct pci_dev objects and to use a
-special .start() callback routine, acpi_pci_root_start(), to make
-sure that all of the "companion" struct acpi_device objects will be
-present at PCI devices registration time during hotplug.
+>
+>   	/* is PF driver loaded w/callback */
+>   	if (!pdev->driver || !pdev->driver->sriov_configure) {
+> -		dev_info(&pdev->dev,
+> -			 "Driver doesn't support SRIOV configuration via sysfs\n");
+> +		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
+>   		return -ENOSYS;
+>   	}
+>
+> -	/* if enabling vf's ... */
+> -	total = pci_sriov_get_totalvfs(pdev);
+> -	/* Requested VFs to enable<  totalvfs and none enabled already */
+> -	if ((num_vfs>  0)&&  (num_vfs<= total)) {
+> -		if (pdev->sriov->num_VFs == 0) {
+> -			num_vfs_enabled =
+> -				pdev->driver->sriov_configure(pdev, num_vfs);
+> -			if ((num_vfs_enabled>= 0)&&
+> -			    (num_vfs_enabled != num_vfs)) {
+> -				dev_warn(&pdev->dev,
+> -					 "Only %d VFs enabled\n",
+> -					 num_vfs_enabled);
+> -				return count;
+> -			} else if (num_vfs_enabled<  0)
+> -				/* error code from driver callback */
+> -				return num_vfs_enabled;
+> -		} else if (num_vfs == pdev->sriov->num_VFs) {
+> -			dev_warn(&pdev->dev,
+> -				 "%d VFs already enabled; no enable action taken\n",
+> -				 num_vfs);
+> -			return count;
+> -		} else {
+> -			dev_warn(&pdev->dev,
+> -				 "%d VFs already enabled. Disable before enabling %d VFs\n",
+> -				 pdev->sriov->num_VFs, num_vfs);
+> -			return -EINVAL;
+> -		}
+> +	if (num_vfs == 0) {
+> +		/* disable VFs */
+> +		ret = pdev->driver->sriov_configure(pdev, 0);
+> +		if (ret<  0)
+> +			return ret;
+> +		return count;
+yes, rtn count when non-neg is what I found had to be done
+not to hang the user cmd to sysfs.
 
-If those differences can be eliminated, we will be able to
-consolidate the boot and hotplug code paths for the enumeration and
-registration of PCI devices and to reduce the complexity of that
-code quite a bit.
+>   	}
+>
+> -	/* disable vfs */
+> -	if (num_vfs == 0) {
+> -		if (pdev->sriov->num_VFs != 0) {
+> -			ret = pdev->driver->sriov_configure(pdev, 0);
+> -			return ret ? ret : count;
+> -		} else {
+> -			dev_warn(&pdev->dev,
+> -				 "All VFs disabled; no disable action taken\n");
+> -			return count;
+> -		}
+> +	/* enable VFs */
+> +	if (pdev->sriov->num_VFs) {
+> +		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
+> +			 pdev->sriov->num_VFs, num_vfs);
+> +		return -EINVAL;
+>   	}
+>
+> -	dev_err(&pdev->dev,
+> -		"Invalid value for number of VFs to enable: %d\n", num_vfs);
+> +	ret = pdev->driver->sriov_configure(pdev, num_vfs);
+> +	if (ret<  0)
+> +		return ret;
+>
+> -	return -EINVAL;
+> +	if (ret != num_vfs)
+> +		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
+> +			 num_vfs, ret);
+> +
+> +	return count;
+ditto; need to rtn input count.
 
-The second reason is that, in general, it should be possible to
-resolve conflicts of resources assigned by the BIOS to different
-devices represented by ACPI namespace nodes before any drivers bind
-to them and before they are attached to "companion" objects
-representing physical devices (such as struct pci_dev).  However, for
-this purpose we first need to enumerate all ACPI device nodes in the
-given namespace scope.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c     |  105 +++++++++++++++++++++++++++++++++---------------
- include/acpi/acpi_bus.h |    1 
- 2 files changed, 75 insertions(+), 31 deletions(-)
-
-Index: linux/include/acpi/acpi_bus.h
-===================================================================
---- linux.orig/include/acpi/acpi_bus.h
-+++ linux/include/acpi/acpi_bus.h
-@@ -98,6 +98,7 @@ typedef void (*acpi_op_notify) (struct a
- struct acpi_bus_ops {
- 	u32 acpi_op_add:1;
- 	u32 acpi_op_start:1;
-+	u32 acpi_op_match:1;
- };
- 
- struct acpi_device_ops {
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -494,7 +494,8 @@ static int acpi_bus_match(struct device
- 	struct acpi_device *acpi_dev = to_acpi_device(dev);
- 	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
- 
--	return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
-+	return acpi_dev->bus_ops.acpi_op_match
-+		&& !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
- }
- 
- static int acpi_device_uevent(struct device *dev, struct kobj_uevent_env *env)
-@@ -1418,6 +1419,17 @@ static int acpi_bus_remove(struct acpi_d
- 	return 0;
- }
- 
-+/*
-+ * acpi_hot_add_bind - Bind _ADR-based devices on hot-add.
-+ * @device: ACPI device node to bind.
-+ */
-+static void acpi_hot_add_bind(struct acpi_device *device)
-+{
-+	if (device->flags.bus_address
-+	    && device->parent && device->parent->ops.bind)
-+		device->parent->ops.bind(device);
-+}
-+
- static int acpi_add_single_object(struct acpi_device **child,
- 				  acpi_handle handle, int type,
- 				  unsigned long long sta,
-@@ -1490,13 +1502,8 @@ static int acpi_add_single_object(struct
- 
- 	result = acpi_device_register(device);
- 
--	/*
--	 * Bind _ADR-Based Devices when hot add
--	 */
--	if (device->flags.bus_address) {
--		if (device->parent && device->parent->ops.bind)
--			device->parent->ops.bind(device);
--	}
-+	if (device->bus_ops.acpi_op_match)
-+		acpi_hot_add_bind(device);
- 
- end:
- 	if (!result) {
-@@ -1522,6 +1529,7 @@ static void acpi_bus_add_power_resource(
- 	struct acpi_bus_ops ops = {
- 		.acpi_op_add = 1,
- 		.acpi_op_start = 1,
-+		.acpi_op_match = 1,
- 	};
- 	struct acpi_device *device = NULL;
- 
-@@ -1574,9 +1582,9 @@ static acpi_status acpi_bus_check_add(ac
- 				      void *context, void **return_value)
- {
- 	struct acpi_bus_ops *ops = context;
-+	struct acpi_device *device = NULL;
- 	int type;
- 	unsigned long long sta;
--	struct acpi_device *device;
- 	acpi_status status;
- 	int result;
- 
-@@ -1596,52 +1604,86 @@ static acpi_status acpi_bus_check_add(ac
- 		return AE_CTRL_DEPTH;
- 	}
- 
--	/*
--	 * We may already have an acpi_device from a previous enumeration.  If
--	 * so, we needn't add it again, but we may still have to start it.
--	 */
--	device = NULL;
- 	acpi_bus_get_device(handle, &device);
- 	if (ops->acpi_op_add && !device) {
--		acpi_add_single_object(&device, handle, type, sta, ops);
--		/* Is the device a known good platform device? */
--		if (device
--		    && !acpi_match_device_ids(device, acpi_platform_device_ids))
--			acpi_create_platform_device(device);
--	}
--
--	if (!device)
--		return AE_CTRL_DEPTH;
-+		struct acpi_bus_ops add_ops = *ops;
- 
--	if (ops->acpi_op_start && !(ops->acpi_op_add)) {
--		status = acpi_start_single_object(device);
--		if (ACPI_FAILURE(status))
-+		add_ops.acpi_op_match = 0;
-+		acpi_add_single_object(&device, handle, type, sta, &add_ops);
-+		if (!device)
- 			return AE_CTRL_DEPTH;
-+
-+		device->bus_ops.acpi_op_match = 1;
- 	}
- 
- 	if (!*return_value)
- 		*return_value = device;
-+
- 	return AE_OK;
- }
- 
-+static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
-+					void *context, void **not_used)
-+{
-+	struct acpi_bus_ops *ops = context;
-+	acpi_status status = AE_OK;
-+	struct acpi_device *device;
-+	unsigned long long sta_not_used;
-+	int type_not_used;
-+
-+	/*
-+	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
-+	 * namespace walks prematurely.
-+	 */
-+	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
-+		return AE_OK;
-+
-+	if (acpi_bus_get_device(handle, &device))
-+		return AE_CTRL_DEPTH;
-+
-+	if (ops->acpi_op_add) {
-+		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
-+			/* This is a known good platform device. */
-+			acpi_create_platform_device(device);
-+		} else {
-+			int ret = device_attach(&device->dev);
-+			acpi_hot_add_bind(device);
-+			if (ret)
-+				status = AE_CTRL_DEPTH;
-+		}
-+	} else if (ops->acpi_op_start) {
-+		if (ACPI_FAILURE(acpi_start_single_object(device)))
-+			status = AE_CTRL_DEPTH;
-+	}
-+	return status;
-+}
-+
- static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
- 			 struct acpi_device **child)
- {
--	acpi_status status;
- 	void *device = NULL;
-+	acpi_status status;
-+	int ret = -ENODEV;
- 
- 	status = acpi_bus_check_add(handle, 0, ops, &device);
- 	if (ACPI_SUCCESS(status))
- 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
- 				    acpi_bus_check_add, NULL, ops, &device);
- 
-+	if (!device)
-+		goto out;
-+
-+	ret = 0;
-+	status = acpi_bus_probe_start(handle, 0, ops, NULL);
-+	if (ACPI_SUCCESS(status))
-+		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
-+				    acpi_bus_probe_start, NULL, ops, NULL);
-+
-+ out:
- 	if (child)
- 		*child = device;
- 
--	if (device)
--		return 0;
--	else
--		return -ENODEV;
-+	return ret;
- }
- 
- /*
-@@ -1752,6 +1794,7 @@ static int acpi_bus_scan_fixed(void)
- 	memset(&ops, 0, sizeof(ops));
- 	ops.acpi_op_add = 1;
- 	ops.acpi_op_start = 1;
-+	ops.acpi_op_match = 1;
- 
- 	/*
- 	 * Enumerate all fixed-feature devices.
+>   }
+>
+>   static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
 
