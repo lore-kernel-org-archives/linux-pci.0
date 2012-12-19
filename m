@@ -1,47 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:65320 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909Ab2LFAw4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:52:56 -0500
+Received: from mail-bk0-f41.google.com ([209.85.214.41]:48266 "EHLO
+	mail-bk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753278Ab2LSB5W (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 20:57:22 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
-	<20121203200241.GG5906@thinkpad-t410>
-	<CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
-	<50BFE88D.1000800@zytor.com>
-	<CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
-Date: Wed, 5 Dec 2012 16:52:54 -0800
-Message-ID: <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com>
-Subject: Re: Use PCI ROMs from EFI boot services
+In-Reply-To: <3573149.O0Vu1dNrT9@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	<1355847041.18964.369.camel@misato.fc.hp.com>
+	<CAE9FiQV-GDRd1iapMwy4j4mBChRpEm-9ANHg6BTdyiTd-5Bf8A@mail.gmail.com>
+	<3573149.O0Vu1dNrT9@vostro.rjw.lan>
+Date: Tue, 18 Dec 2012 17:57:20 -0800
+Message-ID: <CAE9FiQV16BO-gC7Etm93OOG3tVY1Av614jZoZb_8cHeZ3oUq8A@mail.gmail.com>
+Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from
+ probing ACPI drivers
 From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 4:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Dec 5, 2012 at 4:36 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->> On 12/05/2012 04:15 PM, Yinghai Lu wrote:
->>>
+On Tue, Dec 18, 2012 at 2:05 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 >>
->> I don't see why that isn't the right fix.  We copy the data into
->> boot_params early in the boot; that *is* the official copy as far as the
->> kernel is concerned.
+>> i think we should put jiang four patches before Rafael's patches.
 >>
->> So this patch very much seems like The Right Thing.
+>> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-jiang-hotplug
 >
-> it moves boot_params from __initdata  to data.
+> Actually, I have something more radical than that in mind. :-)
+>
+> Namely, we don't need to call the wakeup-related stuff from acpi_pci_bind() and
+> acpi_pci_unbind().  It's only there, because I did't find a better place for it
+> when I added it.
+>
+> If we can set the ACPI handles of PCI devices in pci_scan_device(), which isn't
+> too difficult to do (I actually have a patch for that and it's not too invasive),
+> we can easily move the wakeup enabling stuff to pci_pm_init() and wakeup
+> disabling somewhere near pci_release_capabilities().
 
-   should be from __initdata to bss
+good, let's see how acpi handles could be be passed to pci devices.
 
-> and just for using pointer to setup_data.
->
-> should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
->
-> Yinghai
+Yinghai
