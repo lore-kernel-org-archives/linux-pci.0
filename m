@@ -1,253 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:64246 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925Ab2LGVci (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Dec 2012 16:32:38 -0500
-Received: by mail-la0-f46.google.com with SMTP id p5so681445lag.19
-        for <linux-pci@vger.kernel.org>; Fri, 07 Dec 2012 13:32:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1354614984-6094-1-git-send-email-daniel@numascale-asia.com>
-References: <1354614984-6094-1-git-send-email-daniel@numascale-asia.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 7 Dec 2012 14:32:16 -0700
-Message-ID: <CAErSpo5kMfLz86coDVmyakuuNkFYrb7EQzoN_LEt4MeJXM=BhQ@mail.gmail.com>
-Subject: Re: [PATCH v3] Add NumaChip remote PCI support
-To: Daniel J Blueman <daniel@numascale-asia.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Steffen Persvold <sp@numascale.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sasha Levin <sasha.levin@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Alan Cox <alan@linux.intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: cpqphp: minor cleanup and removal of unreachable paths
+Date: Thu, 20 Dec 2012 14:11:23 -0500
+Message-Id: <1356030701-16284-15-git-send-email-sasha.levin@oracle.com>
+In-Reply-To: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
+References: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 4, 2012 at 2:56 AM, Daniel J Blueman
-<daniel@numascale-asia.com> wrote:
-> Add NumaChip-specific PCI access mechanism via MMCONFIG cycles, but
-> preventing access to AMD Northbridges which shouldn't respond.
->
-> v2: Use PCI_DEVFN in precomputed constant limit; drop unneeded includes
-> v3: Express dependency on MMCONFIG
->
-> Signed-off-by: Daniel J Blueman <daniel@numascale-asia.com>
+Remove cases of redundant checks and remote unreachable paths.
 
-I applied this to my -next branch, headed for v3.8.
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ drivers/pci/hotplug/cpqphp_ctrl.c | 57 ++++++++++++++-------------------------
+ 1 file changed, 20 insertions(+), 37 deletions(-)
 
-Thanks!
+diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
+index 36112fe..d282019 100644
+--- a/drivers/pci/hotplug/cpqphp_ctrl.c
++++ b/drivers/pci/hotplug/cpqphp_ctrl.c
+@@ -1900,8 +1900,7 @@ static void interrupt_event_handler(struct controller *ctrl)
+ 					dbg("power fault\n");
+ 				} else {
+ 					/* refresh notification */
+-					if (p_slot)
+-						update_slot_info(ctrl, p_slot);
++					update_slot_info(ctrl, p_slot);
+ 				}
+ 
+ 				ctrl->event_queue[loop].event_type = 0;
+@@ -2520,44 +2519,28 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+ 
+ 		/* If we have IO resources copy them and fill in the bridge's
+ 		 * IO range registers */
+-		if (io_node) {
+-			memcpy(hold_IO_node, io_node, sizeof(struct pci_resource));
+-			io_node->next = NULL;
++		memcpy(hold_IO_node, io_node, sizeof(struct pci_resource));
++		io_node->next = NULL;
+ 
+-			/* set IO base and Limit registers */
+-			temp_byte = io_node->base >> 8;
+-			rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_BASE, temp_byte);
++		/* set IO base and Limit registers */
++		temp_byte = io_node->base >> 8;
++		rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_BASE, temp_byte);
+ 
+-			temp_byte = (io_node->base + io_node->length - 1) >> 8;
+-			rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_LIMIT, temp_byte);
+-		} else {
+-			kfree(hold_IO_node);
+-			hold_IO_node = NULL;
+-		}
+-
+-		/* If we have memory resources copy them and fill in the
+-		 * bridge's memory range registers.  Otherwise, fill in the
+-		 * range registers with values that disable them. */
+-		if (mem_node) {
+-			memcpy(hold_mem_node, mem_node, sizeof(struct pci_resource));
+-			mem_node->next = NULL;
+-
+-			/* set Mem base and Limit registers */
+-			temp_word = mem_node->base >> 16;
+-			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
++		temp_byte = (io_node->base + io_node->length - 1) >> 8;
++		rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_LIMIT, temp_byte);
+ 
+-			temp_word = (mem_node->base + mem_node->length - 1) >> 16;
+-			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
+-		} else {
+-			temp_word = 0xFFFF;
+-			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
++		/* Copy the memory resources and fill in the bridge's memory
++		 * range registers.
++		 */
++		memcpy(hold_mem_node, mem_node, sizeof(struct pci_resource));
++		mem_node->next = NULL;
+ 
+-			temp_word = 0x0000;
+-			rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
++		/* set Mem base and Limit registers */
++		temp_word = mem_node->base >> 16;
++		rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
+ 
+-			kfree(hold_mem_node);
+-			hold_mem_node = NULL;
+-		}
++		temp_word = (mem_node->base + mem_node->length - 1) >> 16;
++		rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
+ 
+ 		memcpy(hold_p_mem_node, p_mem_node, sizeof(struct pci_resource));
+ 		p_mem_node->next = NULL;
+@@ -2627,7 +2610,7 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+ 		/* Return unused bus resources
+ 		 * First use the temporary node to store information for
+ 		 * the board */
+-		if (hold_bus_node && bus_node && temp_resources.bus_head) {
++		if (bus_node && temp_resources.bus_head) {
+ 			hold_bus_node->length = bus_node->base - hold_bus_node->base;
+ 
+ 			hold_bus_node->next = func->bus_head;
+@@ -2751,7 +2734,7 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+ 		}
+ 		/* If we have prefetchable memory space available and there
+ 		 * is some left at the end, return the unused portion */
+-		if (hold_p_mem_node && temp_resources.p_mem_head) {
++		if (temp_resources.p_mem_head) {
+ 			p_mem_node = do_pre_bridge_resource_split(&(temp_resources.p_mem_head),
+ 								  &hold_p_mem_node, 0x100000);
+ 
+-- 
+1.8.0
 
-> ---
->  arch/x86/Kconfig                         |    2 +
->  arch/x86/include/asm/numachip/numachip.h |   20 +++++
->  arch/x86/kernel/apic/apic_numachip.c     |    2 +
->  arch/x86/pci/Makefile                    |    1 +
->  arch/x86/pci/numachip.c                  |  129 ++++++++++++++++++++++++++++++
->  5 files changed, 154 insertions(+)
->  create mode 100644 arch/x86/include/asm/numachip/numachip.h
->  create mode 100644 arch/x86/pci/numachip.c
->
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index 46c3bff..50e8700 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -374,6 +374,7 @@ config X86_NUMACHIP
->         depends on NUMA
->         depends on SMP
->         depends on X86_X2APIC
-> +       depends on PCI_MMCONFIG
->         ---help---
->           Adds support for Numascale NumaChip large-SMP systems. Needed to
->           enable more than ~168 cores.
-> diff --git a/arch/x86/include/asm/numachip/numachip.h b/arch/x86/include/asm/numachip/numachip.h
-> new file mode 100644
-> index 0000000..fe7f60c
-> --- /dev/null
-> +++ b/arch/x86/include/asm/numachip/numachip.h
-> @@ -0,0 +1,20 @@
-> +/*
-> + * This file is subject to the terms and conditions of the GNU General Public
-> + * License.  See the file "COPYING" in the main directory of this archive
-> + * for more details.
-> + *
-> + * Numascale NumaConnect-specific header file
-> + *
-> + * Copyright (C) 2012 Numascale AS. All rights reserved.
-> + *
-> + * Send feedback to <support@numascale.com>
-> + *
-> + */
-> +
-> +#ifndef _ASM_X86_NUMACHIP_NUMACHIP_H
-> +#define _ASM_X86_NUMACHIP_NUMACHIP_H
-> +
-> +extern int __init pci_numachip_init(void);
-> +
-> +#endif /* _ASM_X86_NUMACHIP_NUMACHIP_H */
-> +
-> diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-> index a65829a..9c2aa89 100644
-> --- a/arch/x86/kernel/apic/apic_numachip.c
-> +++ b/arch/x86/kernel/apic/apic_numachip.c
-> @@ -22,6 +22,7 @@
->  #include <linux/hardirq.h>
->  #include <linux/delay.h>
->
-> +#include <asm/numachip/numachip.h>
->  #include <asm/numachip/numachip_csr.h>
->  #include <asm/smp.h>
->  #include <asm/apic.h>
-> @@ -179,6 +180,7 @@ static int __init numachip_system_init(void)
->                 return 0;
->
->         x86_cpuinit.fixup_cpu_id = fixup_cpu_id;
-> +       x86_init.pci.arch_init = pci_numachip_init;
->
->         map_csrs();
->
-> diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
-> index 3af5a1e..ee0af58 100644
-> --- a/arch/x86/pci/Makefile
-> +++ b/arch/x86/pci/Makefile
-> @@ -16,6 +16,7 @@ obj-$(CONFIG_STA2X11)           += sta2x11-fixup.o
->  obj-$(CONFIG_X86_VISWS)                += visws.o
->
->  obj-$(CONFIG_X86_NUMAQ)                += numaq_32.o
-> +obj-$(CONFIG_X86_NUMACHIP)     += numachip.o
->
->  obj-$(CONFIG_X86_INTEL_MID)    += mrst.o
->
-> diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-> new file mode 100644
-> index 0000000..7307d9d
-> --- /dev/null
-> +++ b/arch/x86/pci/numachip.c
-> @@ -0,0 +1,129 @@
-> +/*
-> + * This file is subject to the terms and conditions of the GNU General Public
-> + * License.  See the file "COPYING" in the main directory of this archive
-> + * for more details.
-> + *
-> + * Numascale NumaConnect-specific PCI code
-> + *
-> + * Copyright (C) 2012 Numascale AS. All rights reserved.
-> + *
-> + * Send feedback to <support@numascale.com>
-> + *
-> + * PCI accessor functions derived from mmconfig_64.c
-> + *
-> + */
-> +
-> +#include <linux/pci.h>
-> +#include <asm/pci_x86.h>
-> +
-> +static u8 limit __read_mostly;
-> +
-> +static inline char __iomem *pci_dev_base(unsigned int seg, unsigned int bus, unsigned int devfn)
-> +{
-> +       struct pci_mmcfg_region *cfg = pci_mmconfig_lookup(seg, bus);
-> +
-> +       if (cfg && cfg->virt)
-> +               return cfg->virt + (PCI_MMCFG_BUS_OFFSET(bus) | (devfn << 12));
-> +       return NULL;
-> +}
-> +
-> +static int pci_mmcfg_read_numachip(unsigned int seg, unsigned int bus,
-> +                         unsigned int devfn, int reg, int len, u32 *value)
-> +{
-> +       char __iomem *addr;
-> +
-> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095))) {
-> +err:           *value = -1;
-> +               return -EINVAL;
-> +       }
-> +
-> +       /* Ensure AMD Northbridges don't decode reads to other devices */
-> +       if (unlikely(bus == 0 && devfn >= limit)) {
-> +               *value = -1;
-> +               return 0;
-> +       }
-> +
-> +       rcu_read_lock();
-> +       addr = pci_dev_base(seg, bus, devfn);
-> +       if (!addr) {
-> +               rcu_read_unlock();
-> +               goto err;
-> +       }
-> +
-> +       switch (len) {
-> +       case 1:
-> +               *value = mmio_config_readb(addr + reg);
-> +               break;
-> +       case 2:
-> +               *value = mmio_config_readw(addr + reg);
-> +               break;
-> +       case 4:
-> +               *value = mmio_config_readl(addr + reg);
-> +               break;
-> +       }
-> +       rcu_read_unlock();
-> +
-> +       return 0;
-> +}
-> +
-> +static int pci_mmcfg_write_numachip(unsigned int seg, unsigned int bus,
-> +                          unsigned int devfn, int reg, int len, u32 value)
-> +{
-> +       char __iomem *addr;
-> +
-> +       /* Why do we have this when nobody checks it. How about a BUG()!? -AK */
-> +       if (unlikely((bus > 255) || (devfn > 255) || (reg > 4095)))
-> +               return -EINVAL;
-> +
-> +       /* Ensure AMD Northbridges don't decode writes to other devices */
-> +       if (unlikely(bus == 0 && devfn >= limit))
-> +               return 0;
-> +
-> +       rcu_read_lock();
-> +       addr = pci_dev_base(seg, bus, devfn);
-> +       if (!addr) {
-> +               rcu_read_unlock();
-> +               return -EINVAL;
-> +       }
-> +
-> +       switch (len) {
-> +       case 1:
-> +               mmio_config_writeb(addr + reg, value);
-> +               break;
-> +       case 2:
-> +               mmio_config_writew(addr + reg, value);
-> +               break;
-> +       case 4:
-> +               mmio_config_writel(addr + reg, value);
-> +               break;
-> +       }
-> +       rcu_read_unlock();
-> +
-> +       return 0;
-> +}
-> +
-> +const struct pci_raw_ops pci_mmcfg_numachip = {
-> +       .read = pci_mmcfg_read_numachip,
-> +       .write = pci_mmcfg_write_numachip,
-> +};
-> +
-> +int __init pci_numachip_init(void)
-> +{
-> +       int ret = 0;
-> +       u32 val;
-> +
-> +       /* For remote I/O, restrict bus 0 access to the actual number of AMD
-> +          Northbridges, which starts at device number 0x18 */
-> +       ret = raw_pci_read(0, 0, PCI_DEVFN(0x18, 0), 0x60, sizeof(val), &val);
-> +       if (ret)
-> +               goto out;
-> +
-> +       /* HyperTransport fabric size in bits 6:4 */
-> +       limit = PCI_DEVFN(0x18 + ((val >> 4) & 7) + 1, 0);
-> +
-> +       /* Use NumaChip PCI accessors for non-extended and extended access */
-> +       raw_pci_ops = raw_pci_ext_ops = &pci_mmcfg_numachip;
-> +out:
-> +       return ret;
-> +}
-> --
-> 1.7.10.4
->
