@@ -1,184 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1355789297.18964.334.camel@misato.fc.hp.com>
-Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects
- from probing ACPI drivers
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing0307@gmail.com>,
 	Jiang Liu <liuj97@gmail.com>
-Date: Mon, 17 Dec 2012 17:08:17 -0700
-In-Reply-To: <1525730.exQ7msTINR@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
-	 <1499423.ez5cZl2uAf@vostro.rjw.lan> <1525730.exQ7msTINR@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [PATCH 4/16] ACPI: Reduce the usage of struct acpi_bus_ops
+Date: Thu, 20 Dec 2012 02:50:04 +0100
+Message-ID: <2689616.Y71xTmNi9t@vostro.rjw.lan>
+In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2012-12-13 at 23:17 +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-(snip)
+Objects of type struct acpi_bus_ops are currently used to pass
+information between different parts of the ACPI namespace scanning
+code, sometimes in quite convoluted ways.  It turns out that that
+is not necessary in some cases, so simplify the code by reducing
+the utilization of struct acpi_bus_ops objects where clearly
+possible.
 
->  struct acpi_device_ops {
-> Index: linux/drivers/acpi/scan.c
-> ===================================================================
-> --- linux.orig/drivers/acpi/scan.c
-> +++ linux/drivers/acpi/scan.c
-> @@ -494,7 +494,8 @@ static int acpi_bus_match(struct device
->  	struct acpi_device *acpi_dev = to_acpi_device(dev);
->  	struct acpi_driver *acpi_drv = to_acpi_driver(drv);
->  
-> -	return !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
-> +	return acpi_dev->bus_ops.acpi_op_match
-> +		&& !acpi_match_device_ids(acpi_dev, acpi_drv->ids);
->  }
->  
->  static int acpi_device_uevent(struct device *dev, struct kobj_uevent_env *env)
-> @@ -1418,6 +1419,17 @@ static int acpi_bus_remove(struct acpi_d
->  	return 0;
->  }
->  
-> +/*
-> + * acpi_hot_add_bind - Bind _ADR-based devices on hot-add.
-> + * @device: ACPI device node to bind.
-> + */
-> +static void acpi_hot_add_bind(struct acpi_device *device)
-> +{
-> +	if (device->flags.bus_address
-> +	    && device->parent && device->parent->ops.bind)
-> +		device->parent->ops.bind(device);
-> +}
-> +
->  static int acpi_add_single_object(struct acpi_device **child,
->  				  acpi_handle handle, int type,
->  				  unsigned long long sta,
-> @@ -1490,13 +1502,8 @@ static int acpi_add_single_object(struct
->  
->  	result = acpi_device_register(device);
->  
-> -	/*
-> -	 * Bind _ADR-Based Devices when hot add
-> -	 */
-> -	if (device->flags.bus_address) {
-> -		if (device->parent && device->parent->ops.bind)
-> -			device->parent->ops.bind(device);
-> -	}
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/scan.c |   40 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 24 deletions(-)
 
-I think the original code above is hot-add only because ops.bind is not
-set at boot since the acpi_pci driver has not been registered yet.  It
-seems that acpi_pci_bridge_scan() called from acpi_pci_root_add() takes
-care of the binding.
-
-This brings me a question for acpi_bus_probe_start() below...
-
-
-> +	if (device->bus_ops.acpi_op_match)
-> +		acpi_hot_add_bind(device);
->  
->  end:
->  	if (!result) {
-> @@ -1522,6 +1529,7 @@ static void acpi_bus_add_power_resource(
->  	struct acpi_bus_ops ops = {
->  		.acpi_op_add = 1,
->  		.acpi_op_start = 1,
-> +		.acpi_op_match = 1,
->  	};
->  	struct acpi_device *device = NULL;
->  
-> @@ -1574,9 +1582,9 @@ static acpi_status acpi_bus_check_add(ac
->  				      void *context, void **return_value)
->  {
->  	struct acpi_bus_ops *ops = context;
-> +	struct acpi_device *device = NULL;
->  	int type;
->  	unsigned long long sta;
-> -	struct acpi_device *device;
->  	acpi_status status;
->  	int result;
->  
-> @@ -1596,52 +1604,86 @@ static acpi_status acpi_bus_check_add(ac
->  		return AE_CTRL_DEPTH;
->  	}
->  
-> -	/*
-> -	 * We may already have an acpi_device from a previous enumeration.  If
-> -	 * so, we needn't add it again, but we may still have to start it.
-> -	 */
-> -	device = NULL;
->  	acpi_bus_get_device(handle, &device);
->  	if (ops->acpi_op_add && !device) {
-> -		acpi_add_single_object(&device, handle, type, sta, ops);
-> -		/* Is the device a known good platform device? */
-> -		if (device
-> -		    && !acpi_match_device_ids(device, acpi_platform_device_ids))
-> -			acpi_create_platform_device(device);
-> -	}
-> -
-> -	if (!device)
-> -		return AE_CTRL_DEPTH;
-> +		struct acpi_bus_ops add_ops = *ops;
->  
-> -	if (ops->acpi_op_start && !(ops->acpi_op_add)) {
-> -		status = acpi_start_single_object(device);
-> -		if (ACPI_FAILURE(status))
-> +		add_ops.acpi_op_match = 0;
-> +		acpi_add_single_object(&device, handle, type, sta, &add_ops);
-> +		if (!device)
->  			return AE_CTRL_DEPTH;
-> +
-> +		device->bus_ops.acpi_op_match = 1;
->  	}
->  
->  	if (!*return_value)
->  		*return_value = device;
-> +
->  	return AE_OK;
->  }
->  
-> +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
-> +					void *context, void **not_used)
-> +{
-> +	struct acpi_bus_ops *ops = context;
-> +	acpi_status status = AE_OK;
-> +	struct acpi_device *device;
-> +	unsigned long long sta_not_used;
-> +	int type_not_used;
-> +
-> +	/*
-> +	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
-
-"ignore" seems duplicated. 
-
-> +	 * namespace walks prematurely.
-> +	 */
-> +	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
-> +		return AE_OK;
-> +
-> +	if (acpi_bus_get_device(handle, &device))
-> +		return AE_CTRL_DEPTH;
-> +
-> +	if (ops->acpi_op_add) {
-> +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
-> +			/* This is a known good platform device. */
-> +			acpi_create_platform_device(device);
-> +		} else {
-> +			int ret = device_attach(&device->dev);
-> +			acpi_hot_add_bind(device);
-
-Since acpi_pci_root_add() is called by device_attach(), I think this
-acpi_hot_add_bind() calls .bind() of a device at boot since its .bind()
-may be set.  Is that correct?  If so, how does it coordinate with the
-bind procedure in acpi_pci_bridge_scan()?
-
-
-Thanks,
--Toshi
-
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1527,7 +1527,6 @@ end:
+ static void acpi_bus_add_power_resource(acpi_handle handle)
+ {
+ 	struct acpi_bus_ops ops = {
+-		.acpi_op_add = 1,
+ 		.acpi_op_start = 1,
+ 		.acpi_op_match = 1,
+ 	};
+@@ -1581,7 +1580,6 @@ static int acpi_bus_type_and_status(acpi
+ static acpi_status acpi_bus_check_add(acpi_handle handle, u32 lvl,
+ 				      void *context, void **return_value)
+ {
+-	struct acpi_bus_ops *ops = context;
+ 	struct acpi_device *device = NULL;
+ 	int type;
+ 	unsigned long long sta;
+@@ -1605,11 +1603,13 @@ static acpi_status acpi_bus_check_add(ac
+ 	}
+ 
+ 	acpi_bus_get_device(handle, &device);
+-	if (ops->acpi_op_add && !device) {
+-		struct acpi_bus_ops add_ops = *ops;
++	if (!device) {
++		struct acpi_bus_ops ops = {
++			.acpi_op_start = !!context,
++			.acpi_op_match = 0,
++		};
+ 
+-		add_ops.acpi_op_match = 0;
+-		acpi_add_single_object(&device, handle, type, sta, &add_ops);
++		acpi_add_single_object(&device, handle, type, sta, &ops);
+ 		if (!device)
+ 			return AE_CTRL_DEPTH;
+ 
+@@ -1650,17 +1650,18 @@ static acpi_status acpi_bus_device_attac
+ 	return status;
+ }
+ 
+-static int acpi_bus_scan(acpi_handle handle, struct acpi_bus_ops *ops,
++static int acpi_bus_scan(acpi_handle handle, bool start,
+ 			 struct acpi_device **child)
+ {
+ 	void *device = NULL;
+ 	acpi_status status;
+ 	int ret = -ENODEV;
+ 
+-	status = acpi_bus_check_add(handle, 0, ops, &device);
++	status = acpi_bus_check_add(handle, 0, (void *)start, &device);
+ 	if (ACPI_SUCCESS(status))
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    acpi_bus_check_add, NULL, ops, &device);
++				    acpi_bus_check_add, NULL, (void *)start,
++				    &device);
+ 
+ 	if (!device)
+ 		goto out;
+@@ -1694,9 +1695,7 @@ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+-
+-	return acpi_bus_scan(handle, &ops, child);
++	return acpi_bus_scan(handle, false, child);
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+@@ -1794,12 +1793,10 @@ static int acpi_bus_scan_fixed(void)
+ {
+ 	int result = 0;
+ 	struct acpi_device *device = NULL;
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
+-	ops.acpi_op_start = 1;
+-	ops.acpi_op_match = 1;
++	struct acpi_bus_ops ops = {
++		.acpi_op_start = 1,
++		.acpi_op_match = 1,
++	};
+ 
+ 	/*
+ 	 * Enumerate all fixed-feature devices.
+@@ -1825,11 +1822,6 @@ static int acpi_bus_scan_fixed(void)
+ int __init acpi_scan_init(void)
+ {
+ 	int result;
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
+-	ops.acpi_op_start = 1;
+ 
+ 	result = bus_register(&acpi_bus_type);
+ 	if (result) {
+@@ -1843,7 +1835,7 @@ int __init acpi_scan_init(void)
+ 	/*
+ 	 * Enumerate devices in the ACPI namespace.
+ 	 */
+-	result = acpi_bus_scan(ACPI_ROOT_OBJECT, &ops, &acpi_root);
++	result = acpi_bus_scan(ACPI_ROOT_OBJECT, true, &acpi_root);
+ 
+ 	if (!result)
+ 		result = acpi_bus_scan_fixed();
 
