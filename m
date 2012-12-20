@@ -1,67 +1,245 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:52541 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932276Ab2LFS0K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Dec 2012 13:26:10 -0500
-Message-ID: <50C0E339.4030607@zytor.com>
-Date: Thu, 06 Dec 2012 10:26:01 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH 8/16] ACPI: Remove acpi_start_single_object() and acpi_bus_start()
+Date: Thu, 20 Dec 2012 02:53:18 +0100
+Message-ID: <5623563.KZFO8lSJrC@vostro.rjw.lan>
+In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com> <CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com> <20121203200241.GG5906@thinkpad-t410> <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com> <50BFE88D.1000800@zytor.com> <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com> <CAE9FiQX+aJi5XEyjfjc=K4eXLbQNqE-vd+coyt1dmuujsi_eoQ@mail.gmail.com> <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
-In-Reply-To: <CAErSpo7-hUbvvCYPSwtSYKMKWqu99A5H5R4004rSj5Bmv0593g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/06/2012 10:19 AM, Bjorn Helgaas wrote:
-> On Wed, Dec 5, 2012 at 5:52 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Wed, Dec 5, 2012 at 4:51 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>> On Wed, Dec 5, 2012 at 4:36 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->>>> On 12/05/2012 04:15 PM, Yinghai Lu wrote:
->>>>>
->>>>
->>>> I don't see why that isn't the right fix.  We copy the data into
->>>> boot_params early in the boot; that *is* the official copy as far as the
->>>> kernel is concerned.
->>>>
->>>> So this patch very much seems like The Right Thing.
->>>
->>> it moves boot_params from __initdata  to data.
->>
->>     should be from __initdata to bss
->>
->>> and just for using pointer to setup_data.
->>>
->>> should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
->
-> I'm not following the whole discussion here, but my impression is that
-> what's in my -next branch is acceptable
-> (http://git.kernel.org/?p=linux/kernel/git/helgaas/pci.git;a=commitdiff;h=328949ff10f2e3fcb11472571294beed39488342)
->
-> If not, please explain further and provide a patch to fix it.
->
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-NAK on this bit:
+The ACPI PCI root bridge driver was the only ACPI driver implementing
+the .start() callback, which isn't used by any ACPI drivers any more
+now.
 
-+       if (boot_params.hdr.version < 0x0209)
-+               return 0;
+For this reason, acpi_start_single_object() has no purpose any more,
+so remove it and all references to it.  Also remove
+acpi_bus_start_device(), whose only purpose was to call
+acpi_start_single_object().
 
-This field is kernel->bootloader documentation.  If a nonmaching value 
-somehow leaks into the kernel, the kernel could either panic("Bootloader 
-written by moron") or it should clear some fields, but littering the 
-kernel with these kinds of tests is just plain braindead.
+Moreover, since after the removal of acpi_bus_start_device() the
+only purpose of acpi_bus_start() remains to call
+acpi_update_all_gpes(), move that into acpi_bus_add() and drop
+acpi_bus_start() too, remove its header from acpi_bus.h and
+update all of its former users accordingly.
 
-	-hpa
+This change was previously proposed in a different from by
+Yinghai Lu.
 
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/container.c           |   16 +-------
+ drivers/acpi/scan.c                |   66 ++++---------------------------------
+ drivers/pci/hotplug/acpiphp_glue.c |    4 --
+ drivers/pci/hotplug/sgi_hotplug.c  |    2 -
+ include/acpi/acpi_bus.h            |    1 
+ 5 files changed, 12 insertions(+), 77 deletions(-)
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -612,7 +612,6 @@ static void acpi_device_remove_notify_ha
+ }
+ 
+ static int acpi_bus_driver_init(struct acpi_device *, struct acpi_driver *);
+-static int acpi_start_single_object(struct acpi_device *);
+ static int acpi_device_probe(struct device * dev)
+ {
+ 	struct acpi_device *acpi_dev = to_acpi_device(dev);
+@@ -621,9 +620,6 @@ static int acpi_device_probe(struct devi
+ 
+ 	ret = acpi_bus_driver_init(acpi_dev, acpi_drv);
+ 	if (!ret) {
+-		if (acpi_dev->add_type == ACPI_BUS_ADD_START)
+-			acpi_start_single_object(acpi_dev);
+-
+ 		if (acpi_drv->ops.notify) {
+ 			ret = acpi_device_install_notify_handler(acpi_dev);
+ 			if (ret) {
+@@ -802,24 +798,6 @@ acpi_bus_driver_init(struct acpi_device
+ 	return 0;
+ }
+ 
+-static int acpi_start_single_object(struct acpi_device *device)
+-{
+-	int result = 0;
+-	struct acpi_driver *driver;
+-
+-
+-	if (!(driver = device->driver))
+-		return 0;
+-
+-	if (driver->ops.start) {
+-		result = driver->ops.start(device);
+-		if (result && driver->ops.remove)
+-			driver->ops.remove(device, ACPI_BUS_REMOVAL_NORMAL);
+-	}
+-
+-	return result;
+-}
+-
+ /**
+  * acpi_bus_register_driver - register a driver with the ACPI bus
+  * @driver: driver being registered
+@@ -1714,59 +1692,31 @@ static int acpi_bus_scan(acpi_handle han
+ }
+ 
+ /*
+- * acpi_bus_add and acpi_bus_start
++ * acpi_bus_add
+  *
+  * scan a given ACPI tree and (probably recently hot-plugged)
+- * create and add or starts found devices.
++ * create and add found devices.
+  *
+  * If no devices were found -ENODEV is returned which does not
+  * mean that this is a real error, there just have been no suitable
+  * ACPI objects in the table trunk from which the kernel could create
+- * a device and add/start an appropriate driver.
++ * a device and add an appropriate driver.
+  */
+ 
+ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	return acpi_bus_scan(handle, false, child);
+-}
+-EXPORT_SYMBOL(acpi_bus_add);
+-
+-static acpi_status acpi_bus_start_device(acpi_handle handle, u32 lvl,
+-					 void *not_used, void **ret_not_used)
+-{
+-	struct acpi_device *device;
+-	unsigned long long sta_not_used;
+-	int type_not_used;
+-
+-	/*
+-	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
+-	 * namespace walks prematurely.
+-	 */
+-	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
+-		return AE_OK;
+-
+-	if (acpi_bus_get_device(handle, &device))
+-		return AE_CTRL_DEPTH;
+-
+-	return acpi_start_single_object(device);
+-}
+-
+-int acpi_bus_start(struct acpi_device *device)
+-{
+-	if (!device)
+-		return -EINVAL;
++	int err;
+ 
+-	if (ACPI_SUCCESS(acpi_start_single_object(device)))
+-		acpi_walk_namespace(ACPI_TYPE_ANY, device->handle,
+-				    ACPI_UINT32_MAX, acpi_bus_start_device,
+-				    NULL, NULL, NULL);
++	err = acpi_bus_scan(handle, false, child);
++	if (err)
++		return err;
+ 
+ 	acpi_update_all_gpes();
+ 	return 0;
+ }
+-EXPORT_SYMBOL(acpi_bus_start);
++EXPORT_SYMBOL(acpi_bus_add);
+ 
+ int acpi_bus_trim(struct acpi_device *start, int rmdevice)
+ {
+Index: linux/include/acpi/acpi_bus.h
+===================================================================
+--- linux.orig/include/acpi/acpi_bus.h
++++ linux/include/acpi/acpi_bus.h
+@@ -402,7 +402,6 @@ int acpi_bus_add(struct acpi_device **ch
+ 		 acpi_handle handle, int type);
+ void acpi_bus_hot_remove_device(void *context);
+ int acpi_bus_trim(struct acpi_device *start, int rmdevice);
+-int acpi_bus_start(struct acpi_device *device);
+ acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
+ int acpi_match_device_ids(struct acpi_device *device,
+ 			  const struct acpi_device_id *ids);
+Index: linux/drivers/pci/hotplug/sgi_hotplug.c
+===================================================================
+--- linux.orig/drivers/pci/hotplug/sgi_hotplug.c
++++ linux/drivers/pci/hotplug/sgi_hotplug.c
+@@ -457,8 +457,6 @@ static int enable_slot(struct hotplug_sl
+ 					       ret, (int)(adr>>16),
+ 					       (int)(adr&0xffff));
+ 					/* try to continue on */
+-				} else {
+-					acpi_bus_start(device);
+ 				}
+ 			}
+ 		}
+Index: linux/drivers/pci/hotplug/acpiphp_glue.c
+===================================================================
+--- linux.orig/drivers/pci/hotplug/acpiphp_glue.c
++++ linux/drivers/pci/hotplug/acpiphp_glue.c
+@@ -759,7 +759,6 @@ static int acpiphp_bus_add(struct acpiph
+ 			-ret_val);
+ 		goto acpiphp_bus_add_out;
+ 	}
+-	ret_val = acpi_bus_start(device);
+ 
+ acpiphp_bus_add_out:
+ 	return ret_val;
+@@ -1148,8 +1147,7 @@ static void handle_bridge_insertion(acpi
+ 		err("cannot add bridge to acpi list\n");
+ 		return;
+ 	}
+-	if (!acpiphp_configure_bridge(handle) &&
+-		!acpi_bus_start(device))
++	if (!acpiphp_configure_bridge(handle))
+ 		add_bridge(handle);
+ 	else
+ 		err("cannot configure and start bridge\n");
+Index: linux/drivers/acpi/container.c
+===================================================================
+--- linux.orig/drivers/acpi/container.c
++++ linux/drivers/acpi/container.c
+@@ -139,24 +139,14 @@ static int container_device_add(struct a
+ {
+ 	acpi_handle phandle;
+ 	struct acpi_device *pdev;
+-	int result;
+ 
+-
+-	if (acpi_get_parent(handle, &phandle)) {
+-		return -ENODEV;
+-	}
+-
+-	if (acpi_bus_get_device(phandle, &pdev)) {
++	if (acpi_get_parent(handle, &phandle))
+ 		return -ENODEV;
+-	}
+ 
+-	if (acpi_bus_add(device, pdev, handle, ACPI_BUS_TYPE_DEVICE)) {
++	if (acpi_bus_get_device(phandle, &pdev))
+ 		return -ENODEV;
+-	}
+-
+-	result = acpi_bus_start(*device);
+ 
+-	return result;
++	return acpi_bus_add(device, pdev, handle, ACPI_BUS_TYPE_DEVICE);
+ }
+ 
+ static void container_notify_cb(acpi_handle handle, u32 type, void *context)
 
