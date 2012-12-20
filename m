@@ -1,86 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60916 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898Ab2LAUhk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Dec 2012 15:37:40 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so1179893pbc.19
-        for <linux-pci@vger.kernel.org>; Sat, 01 Dec 2012 12:37:40 -0800 (PST)
-From: Andy Lutomirski <luto@amacapital.net>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chris Ball <cjb@laptop.org>, Andy Lutomirski <luto@amacapital.net>,
-	linux-mmc@vger.kernel.org, Manoj Iyer <manoj.iyer@canonical.com>,
-	<stable@kernel.org>
-Subject: [PATCH] pci: Add a quirk for the Ricoh 0xe22 SD card reader
-Date: Sat,  1 Dec 2012 12:37:20 -0800
-Message-Id: <33c411da9bb44eae8a5f9e0609f8eb0aa4eda601.1354385950.git.luto@amacapital.net>
-In-Reply-To: <33c411da9bb44eae8a5f9e0609f8eb0aa4eda600.1354385950.git.luto@amacapital.net>
-References: <33c411da9bb44eae8a5f9e0609f8eb0aa4eda600.1354385950.git.luto@amacapital.net>
+Received: from hydra.sisk.pl ([212.160.235.94]:38313 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752400Ab2LTBzw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Dec 2012 20:55:52 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH 3/16] ACPI: Make acpi_bus_add() and acpi_bus_start() visibly different
+Date: Thu, 20 Dec 2012 02:49:23 +0100
+Message-ID: <2142403.Kbj784bOTj@vostro.rjw.lan>
+In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Otherwise it fails like this on cards like the Transcend 16GB SDHC card:
-mmc0: new SDHC card at address b368
-mmcblk0: mmc0:b368 SDC   15.0 GiB
-mmcblk0: error -110 sending status command, retrying
-mmcblk0: error -84 transferring data, sector 0, nr 8, cmd respons
-e 0x900, card status 0xb0
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Tested on my Lenovo x200 laptop.
+The current ACPI namespace scanning code suggests that acpi_bus_add()
+and acpi_bus_start() share some code.  In fact, however, they are
+completely different code paths (except for the initial checks), so
+refactor the code to make that distinction visibly clear.
 
-Signed-off-by: Andy Lutomirski <luto@amacapital.net>
-Acked-by: Chris Ball <cjb@laptop.org>
-Cc: linux-mmc@vger.kernel.org
-Cc: Manoj Iyer <manoj.iyer@canonical.com>
-Cc: <stable@kernel.org>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/quirks.c    | 7 +++++--
- include/linux/pci_ids.h | 1 +
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/acpi/scan.c |   63 ++++++++++++++++++++++++++++------------------------
+ 1 file changed, 35 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7a451ff..7165f2a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2686,7 +2686,7 @@ static void ricoh_mmc_fixup_r5c832(struct pci_dev *dev)
- 	if (PCI_FUNC(dev->devfn))
- 		return;
- 	/*
--	 * RICOH 0xe823 SD/MMC card reader fails to recognize
-+	 * RICOH 0xe822 and 0xe823 SD/MMC card readers fails to recognize
- 	 * certain types of SD/MMC cards. Lowering the SD base
- 	 * clock frequency from 200Mhz to 50Mhz fixes this issue.
- 	 *
-@@ -2697,7 +2697,8 @@ static void ricoh_mmc_fixup_r5c832(struct pci_dev *dev)
- 	 * 0xf9  - Key register for 0x150
- 	 * 0xfc  - key register for 0xe1
- 	 */
--	if (dev->device == PCI_DEVICE_ID_RICOH_R5CE823) {
-+	if (dev->device == PCI_DEVICE_ID_RICOH_R5CE822 ||
-+	    dev->device == PCI_DEVICE_ID_RICOH_R5CE823) {
- 		pci_write_config_byte(dev, 0xf9, 0xfc);
- 		pci_write_config_byte(dev, 0x150, 0x10);
- 		pci_write_config_byte(dev, 0xf9, 0x00);
-@@ -2724,6 +2725,8 @@ static void ricoh_mmc_fixup_r5c832(struct pci_dev *dev)
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1623,10 +1623,9 @@ static acpi_status acpi_bus_check_add(ac
+ 	return AE_OK;
  }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_RICOH, PCI_DEVICE_ID_RICOH_R5C832, ricoh_mmc_fixup_r5c832);
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_RICOH, PCI_DEVICE_ID_RICOH_R5C832, ricoh_mmc_fixup_r5c832);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_RICOH, PCI_DEVICE_ID_RICOH_R5CE822, ricoh_mmc_fixup_r5c832);
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_RICOH, PCI_DEVICE_ID_RICOH_R5CE822, ricoh_mmc_fixup_r5c832);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_RICOH, PCI_DEVICE_ID_RICOH_R5CE823, ricoh_mmc_fixup_r5c832);
- DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_RICOH, PCI_DEVICE_ID_RICOH_R5CE823, ricoh_mmc_fixup_r5c832);
- #endif /*CONFIG_MMC_RICOH_MMC*/
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 9d36b82..d16ad56 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1568,6 +1568,7 @@
- #define PCI_DEVICE_ID_RICOH_RL5C476	0x0476
- #define PCI_DEVICE_ID_RICOH_RL5C478	0x0478
- #define PCI_DEVICE_ID_RICOH_R5C822	0x0822
-+#define PCI_DEVICE_ID_RICOH_R5CE822	0xe822
- #define PCI_DEVICE_ID_RICOH_R5CE823	0xe823
- #define PCI_DEVICE_ID_RICOH_R5C832	0x0832
- #define PCI_DEVICE_ID_RICOH_R5C843	0x0843
--- 
-1.7.11.7
+ 
+-static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+-					void *context, void **not_used)
++static acpi_status acpi_bus_device_attach(acpi_handle handle, u32 lvl_not_used,
++					  void *not_used, void **ret_not_used)
+ {
+-	struct acpi_bus_ops *ops = context;
+ 	acpi_status status = AE_OK;
+ 	struct acpi_device *device;
+ 	unsigned long long sta_not_used;
+@@ -1642,16 +1641,11 @@ static acpi_status acpi_bus_probe_start(
+ 	if (acpi_bus_get_device(handle, &device))
+ 		return AE_CTRL_DEPTH;
+ 
+-	if (ops->acpi_op_add) {
+-		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+-			/* This is a known good platform device. */
+-			acpi_create_platform_device(device);
+-		} else if (device_attach(&device->dev)) {
+-			status = AE_CTRL_DEPTH;
+-		}
+-	} else if (ops->acpi_op_start) {
+-		if (ACPI_FAILURE(acpi_start_single_object(device)))
+-			status = AE_CTRL_DEPTH;
++	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
++		/* This is a known good platform device. */
++		acpi_create_platform_device(device);
++	} else if (device_attach(&device->dev)) {
++		status = AE_CTRL_DEPTH;
+ 	}
+ 	return status;
+ }
+@@ -1672,10 +1666,10 @@ static int acpi_bus_scan(acpi_handle han
+ 		goto out;
+ 
+ 	ret = 0;
+-	status = acpi_bus_probe_start(handle, 0, ops, NULL);
++	status = acpi_bus_device_attach(handle, 0, NULL, NULL);
+ 	if (ACPI_SUCCESS(status))
+ 		acpi_walk_namespace(ACPI_TYPE_ANY, handle, ACPI_UINT32_MAX,
+-				    acpi_bus_probe_start, NULL, ops, NULL);
++				    acpi_bus_device_attach, NULL, NULL, NULL);
+ 
+  out:
+ 	if (child)
+@@ -1700,31 +1694,44 @@ int
+ acpi_bus_add(struct acpi_device **child,
+ 	     struct acpi_device *parent, acpi_handle handle, int type)
+ {
+-	struct acpi_bus_ops ops;
+-
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_add = 1;
++	struct acpi_bus_ops ops = { .acpi_op_add = 1, };
+ 
+ 	return acpi_bus_scan(handle, &ops, child);
+ }
+ EXPORT_SYMBOL(acpi_bus_add);
+ 
+-int acpi_bus_start(struct acpi_device *device)
++static acpi_status acpi_bus_start_device(acpi_handle handle, u32 lvl,
++					 void *not_used, void **ret_not_used)
+ {
+-	struct acpi_bus_ops ops;
+-	int result;
++	struct acpi_device *device;
++	unsigned long long sta_not_used;
++	int type_not_used;
+ 
++	/*
++	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
++	 * namespace walks prematurely.
++	 */
++	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
++		return AE_OK;
++
++	if (acpi_bus_get_device(handle, &device))
++		return AE_CTRL_DEPTH;
++
++	return acpi_start_single_object(device);
++}
++
++int acpi_bus_start(struct acpi_device *device)
++{
+ 	if (!device)
+ 		return -EINVAL;
+ 
+-	memset(&ops, 0, sizeof(ops));
+-	ops.acpi_op_start = 1;
+-
+-	result = acpi_bus_scan(device->handle, &ops, NULL);
++	if (ACPI_SUCCESS(acpi_start_single_object(device)))
++		acpi_walk_namespace(ACPI_TYPE_ANY, device->handle,
++				    ACPI_UINT32_MAX, acpi_bus_start_device,
++				    NULL, NULL, NULL);
+ 
+ 	acpi_update_all_gpes();
+-
+-	return result;
++	return 0;
+ }
+ EXPORT_SYMBOL(acpi_bus_start);
+ 
 
