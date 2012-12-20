@@ -1,51 +1,243 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Ortiz, Lance E" <lance.oritz@hp.com>
-To: Borislav Petkov <bp@alien8.de>
-CC: Mauro Carvalho Chehab <mchehab@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
-	"tony.luck@intel.com" <tony.luck@intel.com>,
-	"rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Zhang Yanmin <yanmin.zhang@intel.com>
-Subject: RE: [PATCH v3 1/3] aerdrv: Trace Event for AER
-Date: Mon, 3 Dec 2012 21:13:49 +0000
-Message-ID: <A961433CDFF2F640A2866803152E61F9516EE7B0@G4W3218.americas.hpqcorp.net>
-References: <20121130213330.7649.51101.stgit@grignak.americas.hpqcorp.net>
- <20121201093614.720aa96a@redhat.com>
- <A961433CDFF2F640A2866803152E61F9516EE717@G4W3218.americas.hpqcorp.net>
- <20121203202756.GB14798@liondog.tnic>
-In-Reply-To: <20121203202756.GB14798@liondog.tnic>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vc0-f172.google.com ([209.85.220.172]:45100 "EHLO
+	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094Ab2LTVr5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Dec 2012 16:47:57 -0500
+Received: by mail-vc0-f172.google.com with SMTP id fw7so4372098vcb.17
+        for <linux-pci@vger.kernel.org>; Thu, 20 Dec 2012 13:47:56 -0800 (PST)
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <50D24355.1050100@redhat.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+ <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
+ <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com>
+ <20121217232439.GA9746@google.com> <50D24355.1050100@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Dec 2012 14:47:36 -0700
+Message-ID: <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+To: Don Dutile <ddutile@redhat.com>
+Cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
+	bhutchings@solarflare.com, yinghai@kernel.org, davem@davemloft.net
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiANCj4gTWF5YmUgd2Ugc2hvdWxkIGFzayBZYW5taW4gd2hvIGFkZGVkIHRob3NlIHN0cmluZ3Mg
-aW4NCj4gNmMyYjM3NGQ3NDg1N2U4OTIwODBlZTcyNjE4NGVjMWQxNWU3ZDRlNDsgQ0NlZC4NCj4g
-DQo+IEFsc28sIGl0IHdvdWxkIG1ha2UgYSBsb3Qgb2Ygc2Vuc2UgdG8gaGF2ZSB0aG9zZSBzdHJp
-bmcgZGVmaW5pdGlvbnMNCj4gYXQgb25lIHBsYWNlIGFuZCB0aGVuIHJldXNlIHRoZW0gaW5zdGVh
-ZCBvZiBkZWZpbmUgdGhlbSBhZ2FpbiBpbiB0aGUNCj4gdHJhY2Vwb2ludCBoZWFkZXIgYW5kIHRo
-ZXkgZ2V0IG91dCBvZiBzeW5jIGFuZCBoYXZlIG5lZWRsZXNzDQo+IGR1cGxpY2F0aW9uDQo+IGlu
-IHRoZSBrZXJuZWwsIGV0YywgZXRjLg0KPiANCj4gU28sIGluc3RlYWQsIHlvdSBjb3VsZCBkZWZp
-bmUgc29tZSBtYWNyb3Mgd2hpY2ggY2FuIGdlbmVyYXRlIHlvdXINCj4gc3RyaW5ncyBhYm92ZSBs
-aWtlIHRoaXM6DQo+IA0KPiAjZGVmaW5lIGFlcl91bmNvcl9lcnJfc3RyKGJpdG51bSkJXA0KPiAJ
-eyBCSVQoYml0bnVtKSwgYWVyX3VuY29ycmVjdGFibGVfZXJyb3Jfc3RyaW5nKGJpdG51bSkgfQ0K
-PiANCj4gYW5kIHVzZSB0aGF0IG1hY3JvIGZvciB0aGUgX19wcmludF9mbGFncyBmbGFnX2FycmF5
-IGFyZ3VtZW50Lg0KPiANCj4gT3Igc29tZXRoaW5nIHRvIHRoYXQgZWZmZWN0Lg0KPiANCj4gRXZl
-biBiZXR0ZXIgd291bGQgaXQgYmUgaWYgdGhlIGVycm9yIHN0cmluZ3MgaW4NCj4gPGRyaXZlcnMv
-cGNpL3BjaWUvYWVyL2FlcmRydl9lcnJwcmludC5jPiBjb3VsZCBiZSBzaGFyZWQgd2l0aCB0aGUN
-Cj4gdHJhY2Vwb2ludCBvbmVzLiBUaGF0IHdvdWxkIHJlcXVpcmUgYSBiaXQgbW9yZSBjaGFuZ2Vz
-IHRob3VnaCBidXQNCj4gc29tZXRoaW5nIGxpa2UgdXNpbmcgYW4gYXJyYXkgb2YgdHJhY2VfcHJp
-bnRfZmxhZ3MgaW5zdGVhZCBhbiBhcnJheSBvZg0KPiBzdHJpbmdzIGNvdWxkIGJlIGRvYWJsZS4N
-Cj4gDQo+IFRoZW4sIHdoZW4geW91IG5lZWQgdGhlIHN0cmluZywgeW91IGRvIHVuY29yX2Vycl9h
-cnJheVtpXS5uYW1lIGFuZCBzbw0KPiBvbi4NCg0KVGhpcyBhIGZpbmUgaWRlYS4gIEknbSB0aGlu
-a2luZyB3ZSBtaWdodCB3YW50IHRvIGltcGxlbWVudCB0aGF0IGluIGEgbGF0ZXIgcGF0Y2ggc2lu
-Y2UgaXQgaXMgYSBiaWdnZXIgY2hhbmdlIGFuZCB3ZSBzdGlsbCBuZWVkIHRvIHNlZSBhYm91dCBh
-ZGRpbmcgYWRkaXRpb25hbCBzdHJpbmdzLiAgSSBjYW4gc2VuZCBvdXQgb25lIG1vcmUgdmVyc2lv
-biBvZiB0aGUgcGF0Y2ggd2l0aCB0aGUgY29tbWVudCBoZWFkZXIgY2hhbmdlcyB5b3Ugc3VnZ2Vz
-dGVkLCBhbmQgdGhlIGNvbW1lbnRzIEpvZSBoYWQgYW5kIG1heWJlIHdlIGNhbiBtb3ZlIGZvcndh
-cmQgd2l0aCB0aGF0Lg0KDQpMYW5jZSANCg0K
+On Wed, Dec 19, 2012 at 3:44 PM, Don Dutile <ddutile@redhat.com> wrote:
+> Overall, yet-another-good-clean-up-by-Bjorn ! :)
+> nits below...
+>
+> oh, you can add
+> Tested-by: Donald Dutile <ddutile@redhat.com>
+>
+> if you'd to the final commit.
+
+I made the -EPERM change suggested by Greg and added this to my
+pci/for-3.8 branch.  I'll ask Linus to pull it soon after v3.8-rc1.
+
+Bjorn
+
+>
+> On 12/17/2012 06:24 PM, Bjorn Helgaas wrote:
+>>
+>> On Mon, Dec 17, 2012 at 02:59:15PM -0500, Don Dutile wrote:
+>>>
+>>> On 12/14/2012 01:19 PM, Greg Rose wrote:
+>>>>
+>>>> pci: Fix return code
+>>>>
+>>>> From: Greg Rose<gregory.v.rose@intel.com>
+>>>>
+>>>> The return code from the sriov configure function was only returned if
+>>>> it
+>>>> was less than zero indicating an error.  This caused the code to fall
+>>>> through to the default return of an error code even though the sriov
+>>>> configure function has returned the number of VFs it created - a
+>>>> positive
+>>>> number indicating success.
+>>>>
+>>>>
+>>>> Signed-off-by: Greg Rose<gregory.v.rose@intel.com>
+>>>
+>>>
+>>> Actually, it returned the number of VFs enabled if it exactly equalled
+>>> the number to be enabled.  Otherwise, the basic testing would have
+>>> failed.
+>>> If the number of vf's enabled was positive but not the same
+>>> as the number requested-to-be-enabled, then it incorrectly returned.
+>>>
+>>> But, the patch corrects the base problem, so
+>>> Acked-by: Donald Dutile<ddutile@redhat.com>
+>>
+>>
+>> Alternate proposal below.  The patch is ugly; it might be easier to
+>> compare
+>> the before (http://pastebin.com/zneG8AuD) and after
+>> (http://pastebin.com/BEXEE8kc) versions.
+>>
+>> commit fae71e5dc9064dcb3077b8da6e0ed9d800c1f527
+>> Author: Bjorn Helgaas<bhelgaas@google.com>
+>> Date:   Thu Dec 13 20:22:44 2012 -0700
+>>
+>>      PCI: Cleanup sriov_numvfs_show() and handle common case without error
+>>
+>>      If we request "num_vfs" and the driver's sriov_configure() method
+>> enables
+>>      exactly that number ("num_vfs_enabled"), we complain "Invalid value
+>> for
+>>      number of VFs to enable" and return an error.  We should silently
+>> return
+>>      success instead.
+>>
+>>      Also, use kstrtou16() since numVFs is defined to be a 16-bit field
+>> and
+>>      rework to simplify control flow.
+>>
+>>      Reported-by: Greg Rose<gregory.v.rose@intel.com>
+>>      Link: http://lkml.kernel.org/r/20121214101911.00002f59@unknown
+>>      Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
+>>
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 05b78b1..5e8af12 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -422,77 +422,60 @@ static ssize_t sriov_numvfs_show(struct device *dev,
+>>   }
+>>
+>>   /*
+>> - * num_vfs>  0; number of vfs to enable
+>> - * num_vfs = 0; disable all vfs
+>> + * num_vfs>  0; number of VFs to enable
+>> + * num_vfs = 0; disable all VFs
+>>    *
+>>    * Note: SRIOV spec doesn't allow partial VF
+>> - *       disable, so its all or none.
+>> + *       disable, so it's all or none.
+>>    */
+>>   static ssize_t sriov_numvfs_store(struct device *dev,
+>>                                   struct device_attribute *attr,
+>>                                   const char *buf, size_t count)
+>>   {
+>>         struct pci_dev *pdev = to_pci_dev(dev);
+>> -       int num_vfs_enabled = 0;
+>> -       int num_vfs;
+>> -       int ret = 0;
+>> -       u16 total;
+>> +       int ret;
+>> +       u16 num_vfs;
+>>
+>> -       if (kstrtoint(buf, 0,&num_vfs)<  0)
+>>
+>> -               return -EINVAL;
+>> +       ret = kstrtou16(buf, 0,&num_vfs);
+>> +       if (ret<  0)
+>> +               return ret;
+>> +
+>> +       if (num_vfs>  pci_sriov_get_totalvfs(pdev))
+>> +               return -ERANGE;
+>> +
+>> +       if (num_vfs == pdev->sriov->num_VFs)
+>> +               return count;           /* no change */
+>
+> maybe worth putting a dev-info print stating num_vfs to <enable,disable> ==
+> current state,
+> no action taken. ... may point to a user-level programming error.
+>
+>>
+>>         /* is PF driver loaded w/callback */
+>>         if (!pdev->driver || !pdev->driver->sriov_configure) {
+>> -               dev_info(&pdev->dev,
+>> -                        "Driver doesn't support SRIOV configuration via
+>> sysfs\n");
+>> +               dev_info(&pdev->dev, "Driver doesn't support SRIOV
+>> configuration via sysfs\n");
+>>                 return -ENOSYS;
+>>         }
+>>
+>> -       /* if enabling vf's ... */
+>> -       total = pci_sriov_get_totalvfs(pdev);
+>> -       /* Requested VFs to enable<  totalvfs and none enabled already */
+>> -       if ((num_vfs>  0)&&  (num_vfs<= total)) {
+>>
+>> -               if (pdev->sriov->num_VFs == 0) {
+>> -                       num_vfs_enabled =
+>> -                               pdev->driver->sriov_configure(pdev,
+>> num_vfs);
+>> -                       if ((num_vfs_enabled>= 0)&&
+>> -                           (num_vfs_enabled != num_vfs)) {
+>> -                               dev_warn(&pdev->dev,
+>> -                                        "Only %d VFs enabled\n",
+>> -                                        num_vfs_enabled);
+>> -                               return count;
+>> -                       } else if (num_vfs_enabled<  0)
+>> -                               /* error code from driver callback */
+>> -                               return num_vfs_enabled;
+>> -               } else if (num_vfs == pdev->sriov->num_VFs) {
+>> -                       dev_warn(&pdev->dev,
+>> -                                "%d VFs already enabled; no enable action
+>> taken\n",
+>> -                                num_vfs);
+>> -                       return count;
+>> -               } else {
+>> -                       dev_warn(&pdev->dev,
+>> -                                "%d VFs already enabled. Disable before
+>> enabling %d VFs\n",
+>> -                                pdev->sriov->num_VFs, num_vfs);
+>> -                       return -EINVAL;
+>> -               }
+>> +       if (num_vfs == 0) {
+>> +               /* disable VFs */
+>> +               ret = pdev->driver->sriov_configure(pdev, 0);
+>> +               if (ret<  0)
+>> +                       return ret;
+>> +               return count;
+>
+> yes, rtn count when non-neg is what I found had to be done
+> not to hang the user cmd to sysfs.
+>
+>
+>>         }
+>>
+>> -       /* disable vfs */
+>> -       if (num_vfs == 0) {
+>> -               if (pdev->sriov->num_VFs != 0) {
+>> -                       ret = pdev->driver->sriov_configure(pdev, 0);
+>> -                       return ret ? ret : count;
+>> -               } else {
+>> -                       dev_warn(&pdev->dev,
+>> -                                "All VFs disabled; no disable action
+>> taken\n");
+>> -                       return count;
+>> -               }
+>> +       /* enable VFs */
+>> +       if (pdev->sriov->num_VFs) {
+>> +               dev_warn(&pdev->dev, "%d VFs already enabled. Disable
+>> before enabling %d VFs\n",
+>> +                        pdev->sriov->num_VFs, num_vfs);
+>> +               return -EINVAL;
+>>         }
+>>
+>> -       dev_err(&pdev->dev,
+>> -               "Invalid value for number of VFs to enable: %d\n",
+>> num_vfs);
+>> +       ret = pdev->driver->sriov_configure(pdev, num_vfs);
+>> +       if (ret<  0)
+>> +               return ret;
+>>
+>> -       return -EINVAL;
+>> +       if (ret != num_vfs)
+>> +               dev_warn(&pdev->dev, "%d VFs requested; only %d
+>> enabled\n",
+>> +                        num_vfs, ret);
+>> +
+>> +       return count;
+>
+> ditto; need to rtn input count.
+>
+>
+>>   }
+>>
+>>   static struct device_attribute sriov_totalvfs_attr =
+>> __ATTR_RO(sriov_totalvfs);
+>
+>
