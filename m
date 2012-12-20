@@ -1,80 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f202.google.com ([209.85.220.202]:46719 "EHLO
-	mail-vc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644Ab2LEU6C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:58:02 -0500
-Received: by mail-vc0-f202.google.com with SMTP id m8so583671vcd.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:58:01 -0800 (PST)
-Subject: [PATCH 08/12] ath9k: Use standard #defines for PCIe Capability ASPM
-	fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Date: Wed, 05 Dec 2012 13:58:01 -0700
-Message-ID: <20121205205801.13851.35427.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-vc0-f176.google.com ([209.85.220.176]:60217 "EHLO
+	mail-vc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750838Ab2LTVq1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Dec 2012 16:46:27 -0500
+Received: by mail-vc0-f176.google.com with SMTP id fo13so4352857vcb.35
+        for <linux-pci@vger.kernel.org>; Thu, 20 Dec 2012 13:46:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20121219215005.17785.47831.stgit@amt.stowe>
+References: <20121219215005.17785.47831.stgit@amt.stowe>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Dec 2012 14:46:06 -0700
+Message-ID: <CAErSpo4nf0K0w0xZ+m--iUjmW91Mv4y+9PHWY5Uo9=mt4ZOQuw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Work around Stratus ftServer broken PCIe hierarchy
+To: Myron Stowe <myron.stowe@redhat.com>
+Cc: linux-pci@vger.kernel.org, astarta@rat.ru, ddutile@redhat.com,
+	james.paradis@stratus.com, matthew.r.wilcox@intel.com,
+	prarit@redhat.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the standard #defines for PCIe Capability ASPM fields.
+On Wed, Dec 19, 2012 at 2:50 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> Recently, another report surfaced indicating Stratus ftServer platforms
+> were exhibiting similar failures as has occurred in the past [1].
+>
+>   In late 2011 we started seeing issues with Stratus ftServer systems.
+>   The typical failure was that USB and network devices were not being
+>   seen.  Research uncovered that the failure was due to the platform's PCI
+>   Express hierarchy  not conforming to the PCI Express specification [2]
+>   which commit f07852d exposed.
+>
+>   The following are known Stratus ftServer platforms whose PCI hierarchies
+>   are broken:
+>
+>   Stratus ftServer ????
+>   +-07.0-[01-76]--+-00.0-[02-76]--+-00.0-[03-3c]--+-00.0-[04-09]..
+>                                                   \-01.0-[0a-0d]--+-[USB]
+>                                                                   +-[NIC]
+>                                                                   +-..
+>
+>   Stratus ftServer 6400
+>   [0000:00]-+-...-00.0-[03]-00.0-[04]-+-00.0-[05]---00.0-[06]..
+>             |  |                      |
+>             |  |                      \-01.0-[2c]-+-00.0 [USB]
+>             |  |                                  +-00.1 [USB]
+>             |  |                                  \-1f.0 [ISA]
+>
+>   Stratus ftServer 4500
+>   Stratus ftServer 6310
+>
+>   As a solution, commit 284f5f9 was introduced.
+>
+> Looking into this again it looks as if the quirk introduced in 284f5f9 is
+> not making the correct DMI based check.  This patch fixes the DMI 'vendor'
+> based check to match "Stratus", not "ftServer".  It also augments the
+> checking to include matching the DMI based 'product name' to "ftServer".
+> This quirk should now trigger for all Stratus ftServer platforms which I
+> was able to confirm by testing on a Stratus ftServer 6400 system with the
+> following 'dmidecode' output:
+>   System Information
+>         Manufacturer: Stratus
+>         Product Name: ftServer 6400
+>
+> [1] https://bugzilla.kernel.org/show_bug.cgi?id=51331
+> [2] PCI Express specification, r3.0, Section 7.3.1
+>
+> Reported-by: Fadeeva Marina <astarta@rat.ru>
+> Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> ---
+>
+>  arch/x86/pci/common.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 720e973..487d9f3 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -433,7 +433,8 @@ static const struct dmi_system_id __devinitconst pciprobe_dmi_table[] = {
+>                 .callback = set_scan_all,
+>                 .ident = "Stratus/NEC ftServer",
+>                 .matches = {
+> -                       DMI_MATCH(DMI_SYS_VENDOR, "ftServer"),
+> +                       DMI_MATCH(DMI_SYS_VENDOR, "Stratus"),
+> +                       DMI_MATCH(DMI_PRODUCT_NAME, "ftServer"),
+>                 },
+>         },
+>         {}
+>
 
-Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1 directly, but
-these are defined for the Linux ASPM interfaces, e.g.,
-pci_disable_link_state(), and only coincidentally match the actual register
-bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not match
-the register bit.
+I added this to my pci/for-3.8 branch, which I'll ask Linus to pull
+soon after v3.8-rc1.  Thanks!
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: "John W. Linville" <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org
-CC: ath9k-devel@lists.ath9k.org
----
- drivers/net/wireless/ath/ath9k/pci.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index f088f4b..71d8207 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -125,23 +125,23 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 
- 	if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
- 	    (AR_SREV_9285(ah))) {
--		/* Bluetooth coexistance requires disabling ASPM. */
-+		/* Bluetooth coexistence requires disabling ASPM. */
- 		pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL,
--			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
-+			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
- 
- 		/*
- 		 * Both upstream and downstream PCIe components should
- 		 * have the same ASPM settings.
- 		 */
- 		pcie_capability_clear_word(parent, PCI_EXP_LNKCTL,
--			PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
-+			PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1);
- 
- 		ath_info(common, "Disabling ASPM since BTCOEX is enabled\n");
- 		return;
- 	}
- 
- 	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &aspm);
--	if (aspm & (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1)) {
-+	if (aspm & (PCI_EXP_LNKCTL_ASPM_L0S | PCI_EXP_LNKCTL_ASPM_L1)) {
- 		ah->aspm_enabled = true;
- 		/* Initialize PCIe PM and SERDES registers. */
- 		ath9k_hw_configpcipowersave(ah, false);
-
+Bjorn
