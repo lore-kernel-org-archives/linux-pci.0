@@ -1,86 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 13 Dec 2012 10:48:20 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: Miles J Penner <miles.j.penner@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Tushar N Dave <tushar.n.dave@intel.com>,
-	"Kirill A. Shutemov" <kirill@shutemov.name>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Amos Kong <kongjianjun@gmail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI Hotplug: workaround for Thunderbolt on Intel
- DZ77RE-75K motherboard
-Message-ID: <20121213184820.GC12105@kroah.com>
-References: <1355412708-20046-1-git-send-email-kirill.shutemov@linux.intel.com>
- <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:38252 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752222Ab2LTBRU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Dec 2012 20:17:20 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] ACPI: Remove unused struct acpi_pci_root.id member
+Date: Thu, 20 Dec 2012 02:22:34 +0100
+Message-ID: <6539457.htZABURDoR@vostro.rjw.lan>
+In-Reply-To: <20121219173044.12424.11336.stgit@bhelgaas.mtv.corp.google.com>
+References: <20121219173044.12424.11336.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1355412708-20046-4-git-send-email-kirill.shutemov@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 13, 2012 at 05:31:48PM +0200, Kirill A. Shutemov wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-> 
-> BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
-> hotplug before devices behind Thunderbolt are ready to be enumerated.
-> 
-> Let's delay enumeration by 2 seconds.
-> 
-> Signed-off-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+On Wednesday, December 19, 2012 10:30:44 AM Bjorn Helgaas wrote:
+> This member is never initialized and never referenced, so remove it.
+
+Sure. :-)
+
+Do you want me to take this?
+
+Rafael
+
+
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > ---
->  drivers/pci/hotplug/acpiphp_glue.c |   16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
+>  include/acpi/acpi_bus.h |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
 > 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 1a2b3ca..165987a 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -49,6 +49,7 @@
->  #include <linux/mutex.h>
->  #include <linux/slab.h>
->  #include <linux/acpi.h>
-> +#include <linux/dmi.h>
->  
->  #include "../pci.h"
->  #include "acpiphp.h"
-> @@ -1327,6 +1328,19 @@ out:
->  static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
->  					void *context)
->  {
-> +	unsigned long delay = 0;
-> +	const char *board_name;
-> +
-> +	board_name = dmi_get_system_info(DMI_BOARD_NAME);
-> +	/*
-> +	 * BIOS on Intel DZ77RE-75K motherboard notifies OS about Thunderbolt
-> +	 * hotplug before devices behind Thunderbolt are ready to be
-> +	 * enumerated.
-> +	 * Let's delay enumeration by 2 seconds.
-> +	 */
-> +	if (board_name && !strcmp(board_name, "DZ77RE-75K"))
-> +		delay = 2 * HZ;
-
-Again, no objection to this patch as-is, but should we make it a bit
-more "general" and provide a quirk table to make this type of fix easier
-for other motherboards?  Shouldn't we also match on a manufacturer field
-as well as the board_name?  The kernel provides a very easy to match on
-any arbritary set of DMI fields for this kind of problem that we could
-use here.
-
-I can make that change if needed.
-
-What are the odds that other boards are going to need a longer delay
-time?  Actually, is there a spec saying how long we need to wait?  The
-ACPI PCI Hotplug had a value somewhere that the hardware was supposed to
-follow, but I don't have access to that ACPI spec anymore to verify
-this...
-
-thanks,
-
-greg k-h
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 7ced5dc..4f42c0e 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -397,7 +397,6 @@ int unregister_acpi_bus_type(struct acpi_bus_type *);
+>  struct acpi_pci_root {
+>  	struct list_head node;
+>  	struct acpi_device * device;
+> -	struct acpi_pci_id id;
+>  	struct pci_bus *bus;
+>  	u16 segment;
+>  	struct resource secondary;	/* downstream bus range */
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
