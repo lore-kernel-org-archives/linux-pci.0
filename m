@@ -1,66 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-we0-f202.google.com ([74.125.82.202]:57412 "EHLO
-	mail-we0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964810Ab2LEU5m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:57:42 -0500
-Received: by mail-we0-f202.google.com with SMTP id t57so395514wey.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:57:41 -0800 (PST)
-Subject: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
-	register field names
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-driver@qlogic.com,
-	Andrew Vasquez <andrew.vasquez@qlogic.com>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	linux-scsi@vger.kernel.org
-Date: Wed, 05 Dec 2012 13:57:40 -0700
-Message-ID: <20121205205740.13851.43284.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1356037647.18964.384.camel@misato.fc.hp.com>
+Subject: Re: [PATCH 0/16] ACPI: Rework ACPI namespace scanning for devices
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Date: Thu, 20 Dec 2012 14:07:27 -0700
+In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+	 <1355789297.18964.334.camel@misato.fc.hp.com>
+	 <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the standard #defines for PCIe Link Capability register fields
-rather than bare numbers.  This also uses the new PCI Express Capability
-accessor rather than reading the capability directly.
+Hi Rafael,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
-CC: linux-driver@qlogic.com
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: linux-scsi@vger.kernel.org
----
- drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+The changes look very good.  It's much cleaner and consistent. :-)  For
+the series:
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d501bf5..b5d070f 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha, char *str)
- 	static char *pci_bus_modes[] = { "33", "66", "100", "133", };
- 	struct qla_hw_data *ha = vha->hw;
- 	uint32_t pci_bus;
--	int pcie_reg;
- 
--	pcie_reg = pci_pcie_cap(ha->pdev);
--	if (pcie_reg) {
-+	if (pci_is_pcie(ha->pdev)) {
- 		char lwstr[6];
--		uint16_t pcie_lstat, lspeed, lwidth;
-+		uint32_t lstat, lspeed, lwidth;
- 
--		pcie_reg += PCI_EXP_LNKCAP;
--		pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
--		lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
--		lwidth = (pcie_lstat &
--		    (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
-+		pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
-+		lspeed = lstat & PCI_EXP_LNKCAP_SLS;
-+		lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
- 
- 		strcpy(str, "PCIe (");
- 		if (lspeed == 1)
+Acked-by: Toshi Kani <toshi.kani@hp.com>
+
+Thanks,
+-Toshi
+
+
+On Thu, 2012-12-20 at 02:45 +0100, Rafael J. Wysocki wrote:
+> Hi all,
+> 
+> I've finally cut the patches removing acpi_pci_bind() and acpi_pci_unbind(),
+> so I'm kind of ready to post the entire series reworking the ACPI namespace
+> scanning code.
+> 
+> Patches [1-6/16] are essentially these ones:
+> 
+> https://patchwork.kernel.org/patch/1889821/
+> https://patchwork.kernel.org/patch/1876481/
+> https://patchwork.kernel.org/patch/1876531/
+> https://patchwork.kernel.org/patch/1876571/
+> https://patchwork.kernel.org/patch/1876511/
+> https://patchwork.kernel.org/patch/1876401/
+> 
+> but [2-6/16] have been rebased on top of the first one.
+> 
+> Patches [7-12/16] are essentially these:
+> 
+> https://patchwork.kernel.org/patch/1884721/
+> https://patchwork.kernel.org/patch/1884701/
+> https://patchwork.kernel.org/patch/1884761/
+> https://patchwork.kernel.org/patch/1884731/
+> https://patchwork.kernel.org/patch/1884751/
+> https://patchwork.kernel.org/patch/1884661/
+> 
+> but they have been rebased on top of https://patchwork.kernel.org/patch/1889821/.
+> I added Yinghai's ACKs to them tentatively, although they are a bit different
+> from the previous versions.  The difference is not too important, however,
+> because the following patches finally remove the acpi_pci_bind()/acpi_pci_unbind()
+> stuff:
+> 
+> [13/16] Add .setup() and .cleanup() callbacks to struct acpi_bus_type.
+> [14/16] Rework the setup and cleanup of ACPI/PCI device wakeup.
+> [15/16] Move the _PRT setup and cleanup code to pci-acpi.c.
+> [16/16] Drop ACPI device .bind() and .unbind() callbacks.
+> 
+> This is done a bit differently than I thought it would be, mostly because the
+> _PRT-related operations require the "subordinate" pointers of bridges to be
+> populated.  I think it may be possible to simplify this further if that
+> requirement can be removed (I haven't looked into that).
+> 
+> In fact, patches [13-15/16] do not essentially depend on [1-12/16], only the
+> last one does.
+> 
+> The patches are on top of my master branch and I'm going to rebase them when
+> v3.8-rc1 is out.
+> 
+> There is a git tree you can pull them from at:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=summary acpi-scan-temp-new
+> 
+> It's v3.7 with my master branch merged and the new patches on top.
+> 
+> 
+> Thanks,
+> Rafael
+> 
+> 
+
 
