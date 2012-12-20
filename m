@@ -1,189 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f74.google.com ([209.85.213.74]:59837 "EHLO
-	mail-yh0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753862Ab2LQXYk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Dec 2012 18:24:40 -0500
-Received: by mail-yh0-f74.google.com with SMTP id 10so711963yhl.5
-        for <linux-pci@vger.kernel.org>; Mon, 17 Dec 2012 15:24:39 -0800 (PST)
-Date: Mon, 17 Dec 2012 16:24:39 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: Greg Rose <gregory.v.rose@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"yuvalmin@broadcom.com" <yuvalmin@broadcom.com>,
-	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-Message-ID: <20121217232439.GA9746@google.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
- <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
- <20121214101911.00002f59@unknown>
- <50CF7993.9040606@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: [PATCH 2/16] ACPI: Change the ordering of PCI root bridge driver registrarion
+Date: Thu, 20 Dec 2012 02:48:35 +0100
+Message-ID: <1355988503.fTzxlRPKzq@vostro.rjw.lan>
+In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50CF7993.9040606@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 17, 2012 at 02:59:15PM -0500, Don Dutile wrote:
-> On 12/14/2012 01:19 PM, Greg Rose wrote:
-> >pci: Fix return code
-> >
-> >From: Greg Rose<gregory.v.rose@intel.com>
-> >
-> >The return code from the sriov configure function was only returned if it
-> >was less than zero indicating an error.  This caused the code to fall
-> >through to the default return of an error code even though the sriov
-> >configure function has returned the number of VFs it created - a positive
-> >number indicating success.
-> >
-> >
-> >Signed-off-by: Greg Rose<gregory.v.rose@intel.com>
-> 
-> Actually, it returned the number of VFs enabled if it exactly equalled
-> the number to be enabled.  Otherwise, the basic testing would have failed.
-> If the number of vf's enabled was positive but not the same
-> as the number requested-to-be-enabled, then it incorrectly returned.
-> 
-> But, the patch corrects the base problem, so
-> Acked-by: Donald Dutile <ddutile@redhat.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Alternate proposal below.  The patch is ugly; it might be easier to compare
-the before (http://pastebin.com/zneG8AuD) and after
-(http://pastebin.com/BEXEE8kc) versions.
+Instead of running acpi_pci_root_init() from a separate subsys
+initcall, call it directly from acpi_scan_init() before scanning the
+ACPI namespace for the first time, so that the PCI root bridge
+driver's .add() routine, acpi_pci_root_start(), is always run
+before binding ACPI drivers or attaching "companion" device objects
+to struct acpi_device objects below the root bridge's device node in
+the ACPI namespace.
 
-commit fae71e5dc9064dcb3077b8da6e0ed9d800c1f527
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Dec 13 20:22:44 2012 -0700
+The first, simpler reason for doing this is that it makes the
+situation during boot more similar to the situation during hotplug,
+in which the ACPI PCI root bridge driver is always present.
 
-    PCI: Cleanup sriov_numvfs_show() and handle common case without error
-    
-    If we request "num_vfs" and the driver's sriov_configure() method enables
-    exactly that number ("num_vfs_enabled"), we complain "Invalid value for
-    number of VFs to enable" and return an error.  We should silently return
-    success instead.
-    
-    Also, use kstrtou16() since numVFs is defined to be a 16-bit field and
-    rework to simplify control flow.
-    
-    Reported-by: Greg Rose <gregory.v.rose@intel.com>
-    Link: http://lkml.kernel.org/r/20121214101911.00002f59@unknown
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The second reason is that acpi_pci_root_init() causes struct pci_dev
+objects to be created for all PCI devices below the bridge and
+these objects may be necessary for whatever is done with the other
+ACPI device nodes in that namespace scope.  For example, devices
+created by acpi_create_platform_device() sometimes may need to be
+added to the device hierarchy as children of PCI bridges.  For this
+purpose, however, the struct pci_dev objects representing those
+bridges need to exist before the platform devices in question are
+registered.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 05b78b1..5e8af12 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -422,77 +422,60 @@ static ssize_t sriov_numvfs_show(struct device *dev,
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/internal.h |    1 +
+ drivers/acpi/pci_root.c |    4 +---
+ drivers/acpi/scan.c     |    1 +
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+Index: linux/drivers/acpi/internal.h
+===================================================================
+--- linux.orig/drivers/acpi/internal.h
++++ linux/drivers/acpi/internal.h
+@@ -67,6 +67,7 @@ struct acpi_ec {
+ 
+ extern struct acpi_ec *first_ec;
+ 
++int acpi_pci_root_init(void);
+ int acpi_ec_init(void);
+ int acpi_ec_ecdt_probe(void);
+ int acpi_boot_ec_enable(void);
+Index: linux/drivers/acpi/pci_root.c
+===================================================================
+--- linux.orig/drivers/acpi/pci_root.c
++++ linux/drivers/acpi/pci_root.c
+@@ -674,7 +674,7 @@ static int acpi_pci_root_remove(struct a
+ 	return 0;
  }
  
- /*
-- * num_vfs > 0; number of vfs to enable
-- * num_vfs = 0; disable all vfs
-+ * num_vfs > 0; number of VFs to enable
-+ * num_vfs = 0; disable all VFs
-  *
-  * Note: SRIOV spec doesn't allow partial VF
-- *       disable, so its all or none.
-+ *       disable, so it's all or none.
-  */
- static ssize_t sriov_numvfs_store(struct device *dev,
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
+-static int __init acpi_pci_root_init(void)
++int __init acpi_pci_root_init(void)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	int num_vfs_enabled = 0;
--	int num_vfs;
--	int ret = 0;
--	u16 total;
-+	int ret;
-+	u16 num_vfs;
+ 	acpi_hest_init();
  
--	if (kstrtoint(buf, 0, &num_vfs) < 0)
--		return -EINVAL;
-+	ret = kstrtou16(buf, 0, &num_vfs);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (num_vfs > pci_sriov_get_totalvfs(pdev))
-+		return -ERANGE;
-+
-+	if (num_vfs == pdev->sriov->num_VFs)
-+		return count;		/* no change */
+@@ -687,5 +687,3 @@ static int __init acpi_pci_root_init(voi
  
- 	/* is PF driver loaded w/callback */
- 	if (!pdev->driver || !pdev->driver->sriov_configure) {
--		dev_info(&pdev->dev,
--			 "Driver doesn't support SRIOV configuration via sysfs\n");
-+		dev_info(&pdev->dev, "Driver doesn't support SRIOV configuration via sysfs\n");
- 		return -ENOSYS;
- 	}
- 
--	/* if enabling vf's ... */
--	total = pci_sriov_get_totalvfs(pdev);
--	/* Requested VFs to enable < totalvfs and none enabled already */
--	if ((num_vfs > 0) && (num_vfs <= total)) {
--		if (pdev->sriov->num_VFs == 0) {
--			num_vfs_enabled =
--				pdev->driver->sriov_configure(pdev, num_vfs);
--			if ((num_vfs_enabled >= 0) &&
--			    (num_vfs_enabled != num_vfs)) {
--				dev_warn(&pdev->dev,
--					 "Only %d VFs enabled\n",
--					 num_vfs_enabled);
--				return count;
--			} else if (num_vfs_enabled < 0)
--				/* error code from driver callback */
--				return num_vfs_enabled;
--		} else if (num_vfs == pdev->sriov->num_VFs) {
--			dev_warn(&pdev->dev,
--				 "%d VFs already enabled; no enable action taken\n",
--				 num_vfs);
--			return count;
--		} else {
--			dev_warn(&pdev->dev,
--				 "%d VFs already enabled. Disable before enabling %d VFs\n",
--				 pdev->sriov->num_VFs, num_vfs);
--			return -EINVAL;
--		}
-+	if (num_vfs == 0) {
-+		/* disable VFs */
-+		ret = pdev->driver->sriov_configure(pdev, 0);
-+		if (ret < 0)
-+			return ret;
-+		return count;
- 	}
- 
--	/* disable vfs */
--	if (num_vfs == 0) {
--		if (pdev->sriov->num_VFs != 0) {
--			ret = pdev->driver->sriov_configure(pdev, 0);
--			return ret ? ret : count;
--		} else {
--			dev_warn(&pdev->dev,
--				 "All VFs disabled; no disable action taken\n");
--			return count;
--		}
-+	/* enable VFs */
-+	if (pdev->sriov->num_VFs) {
-+		dev_warn(&pdev->dev, "%d VFs already enabled. Disable before enabling %d VFs\n",
-+			 pdev->sriov->num_VFs, num_vfs);
-+		return -EINVAL;
- 	}
- 
--	dev_err(&pdev->dev,
--		"Invalid value for number of VFs to enable: %d\n", num_vfs);
-+	ret = pdev->driver->sriov_configure(pdev, num_vfs);
-+	if (ret < 0)
-+		return ret;
- 
--	return -EINVAL;
-+	if (ret != num_vfs)
-+		dev_warn(&pdev->dev, "%d VFs requested; only %d enabled\n",
-+			 num_vfs, ret);
-+
-+	return count;
+ 	return 0;
  }
+-
+-subsys_initcall(acpi_pci_root_init);
+Index: linux/drivers/acpi/scan.c
+===================================================================
+--- linux.orig/drivers/acpi/scan.c
++++ linux/drivers/acpi/scan.c
+@@ -1831,6 +1831,7 @@ int __init acpi_scan_init(void)
+ 	}
  
- static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+ 	acpi_power_init();
++	acpi_pci_root_init();
+ 
+ 	/*
+ 	 * Enumerate devices in the ACPI namespace.
+
