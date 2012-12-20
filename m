@@ -1,71 +1,77 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Toshi Kani <toshi.kani@hp.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing0307@gmail.com>,
 	Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH 0/16] ACPI: Rework ACPI namespace scanning for devices
-Date: Fri, 21 Dec 2012 23:23:31 +0100
-Message-ID: <3550843.LLuPaOBdqu@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQUO16M+_HG7=adYN1B8GpMgL3_rEzCtp5MjGcw2enMw_Q@mail.gmail.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <12351296.YKgNhoGAuR@vostro.rjw.lan> <CAE9FiQUO16M+_HG7=adYN1B8GpMgL3_rEzCtp5MjGcw2enMw_Q@mail.gmail.com>
+Subject: [PATCH 0/16] ACPI: Rework ACPI namespace scanning for devices
+Date: Thu, 20 Dec 2012 02:45:31 +0100
+Message-ID: <1855256.SyhOJGYMIh@vostro.rjw.lan>
+In-Reply-To: <4082842.31rfDviYHK@vostro.rjw.lan>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <1355789297.18964.334.camel@misato.fc.hp.com> <4082842.31rfDviYHK@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 20, 2012 07:59:15 PM Yinghai Lu wrote:
-> On Thu, Dec 20, 2012 at 4:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Wednesday, December 19, 2012 06:06:57 PM Yinghai Lu wrote:
-> >> On Wed, Dec 19, 2012 at 5:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >>
-> >> great!, the .bind and .unbind go away.
-> >>
-> >> >
-> >> > The patches are on top of my master branch and I'm going to rebase them when
-> >> > v3.8-rc1 is out.
-> >>
-> >> >
-> >> > There is a git tree you can pull them from at:
-> >> >
-> >> > http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=summary acpi-scan-temp-new
-> >> >
-> >> > It's v3.7 with my master branch merged and the new patches on top.
-> >>
-> >>
-> >> can you make it base to today's Linus tree ?
-> >
-> > Sure.  Rebased and pushed out:
-> >
-> > git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git acpi-scan-next
-> >
-> 
-> Thanks.
-> 
-> I rebased pci-root-bus-hotplug patchset on top it, and it works well.
+Hi all,
 
-Great, thanks for testing!
+I've finally cut the patches removing acpi_pci_bind() and acpi_pci_unbind(),
+so I'm kind of ready to post the entire series reworking the ACPI namespace
+scanning code.
 
-> So
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
-> for the four new ones in your acpi_scan_next branch.
+Patches [1-6/16] are essentially these ones:
 
-Thanks!
+https://patchwork.kernel.org/patch/1889821/
+https://patchwork.kernel.org/patch/1876481/
+https://patchwork.kernel.org/patch/1876531/
+https://patchwork.kernel.org/patch/1876571/
+https://patchwork.kernel.org/patch/1876511/
+https://patchwork.kernel.org/patch/1876401/
 
-I'll rebase the whole series on top of v3.8-rc1 when it's out.
+but [2-6/16] have been rebased on top of the first one.
 
-> i put the updated patches in
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-root-bus-3.9
+Patches [7-12/16] are essentially these:
 
-OK, thanks.
+https://patchwork.kernel.org/patch/1884721/
+https://patchwork.kernel.org/patch/1884701/
+https://patchwork.kernel.org/patch/1884761/
+https://patchwork.kernel.org/patch/1884731/
+https://patchwork.kernel.org/patch/1884751/
+https://patchwork.kernel.org/patch/1884661/
 
-I'll have a look at that series next week.
+but they have been rebased on top of https://patchwork.kernel.org/patch/1889821/.
+I added Yinghai's ACKs to them tentatively, although they are a bit different
+from the previous versions.  The difference is not too important, however,
+because the following patches finally remove the acpi_pci_bind()/acpi_pci_unbind()
+stuff:
+
+[13/16] Add .setup() and .cleanup() callbacks to struct acpi_bus_type.
+[14/16] Rework the setup and cleanup of ACPI/PCI device wakeup.
+[15/16] Move the _PRT setup and cleanup code to pci-acpi.c.
+[16/16] Drop ACPI device .bind() and .unbind() callbacks.
+
+This is done a bit differently than I thought it would be, mostly because the
+_PRT-related operations require the "subordinate" pointers of bridges to be
+populated.  I think it may be possible to simplify this further if that
+requirement can be removed (I haven't looked into that).
+
+In fact, patches [13-15/16] do not essentially depend on [1-12/16], only the
+last one does.
+
+The patches are on top of my master branch and I'm going to rebase them when
+v3.8-rc1 is out.
+
+There is a git tree you can pull them from at:
+
+http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=summary acpi-scan-temp-new
+
+It's v3.7 with my master branch merged and the new patches on top.
+
 
 Thanks,
 Rafael
