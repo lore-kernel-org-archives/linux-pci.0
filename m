@@ -1,65 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56378 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348Ab2LRVLr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Dec 2012 16:11:47 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1355863696.18964.378.camel@misato.fc.hp.com>
+In-Reply-To: <12351296.YKgNhoGAuR@vostro.rjw.lan>
 References: <8498184.VilrUmatxI@vostro.rjw.lan>
-	<1525730.exQ7msTINR@vostro.rjw.lan>
-	<1355789297.18964.334.camel@misato.fc.hp.com>
-	<4082842.31rfDviYHK@vostro.rjw.lan>
-	<1355847041.18964.369.camel@misato.fc.hp.com>
-	<CAE9FiQV-GDRd1iapMwy4j4mBChRpEm-9ANHg6BTdyiTd-5Bf8A@mail.gmail.com>
-	<1355863696.18964.378.camel@misato.fc.hp.com>
-Date: Tue, 18 Dec 2012 13:11:45 -0800
-Message-ID: <CAE9FiQV=ByGT7gsTcW1L1wh-+jd6vOe1c5wAnH4kJ9ZaFtOuMg@mail.gmail.com>
-Subject: Re: [PATCH rev.2 1/6] ACPI: Separate adding ACPI device objects from
- probing ACPI drivers
+	<1855256.SyhOJGYMIh@vostro.rjw.lan>
+	<CAE9FiQXn9C4_eYUdSew-5H0fpHE7C0wCqsXORfrPvGFf2sK98A@mail.gmail.com>
+	<12351296.YKgNhoGAuR@vostro.rjw.lan>
+Date: Thu, 20 Dec 2012 19:59:15 -0800
+Message-ID: <CAE9FiQUO16M+_HG7=adYN1B8GpMgL3_rEzCtp5MjGcw2enMw_Q@mail.gmail.com>
+Subject: Re: [PATCH 0/16] ACPI: Rework ACPI namespace scanning for devices
 From: Yinghai Lu <yinghai@kernel.org>
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
 	Myron Stowe <myron.stowe@redhat.com>,
 	Yijing Wang <wangyijing0307@gmail.com>,
 	Jiang Liu <liuj97@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 18, 2012 at 12:48 PM, Toshi Kani <toshi.kani@hp.com> wrote:
-> On Tue, 2012-12-18 at 10:59 -0800, Yinghai Lu wrote:
->> On Tue, Dec 18, 2012 at 8:10 AM, Toshi Kani <toshi.kani@hp.com> wrote:
->> > On Tue, 2012-12-18 at 02:48 +0100, Rafael J. Wysocki wrote:
->> >
->> > So, I would propose the following changes.
->> >
->> >  - Move the acpi_hot_add_bind() call back to the original place after
->> > the device_attach() call.
->> >  - Rename the name of acpi_hot_add_bind() to something like
->> > acpi_bind_adr_device() since it is no longer hot-add only (and is
->> > specific to _ADR devices).
->> >  - Create its pair function, acpi_unbind_adr_device(), which is called
->> > from acpi_bus_remove().  When a constructor interface is introduced, its
->> > destructor should be introduced as well.
->> >  - Remove the binding procedure from acpi_pci_root_add().  This should
->> > be done in patch [2/6].
+On Thu, Dec 20, 2012 at 4:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, December 19, 2012 06:06:57 PM Yinghai Lu wrote:
+>> On Wed, Dec 19, 2012 at 5:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 >>
->> i think we should put jiang four patches before Rafael's patches.
+>> great!, the .bind and .unbind go away.
 >>
->> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-jiang-hotplug
+>> >
+>> > The patches are on top of my master branch and I'm going to rebase them when
+>> > v3.8-rc1 is out.
+>>
+>> >
+>> > There is a git tree you can pull them from at:
+>> >
+>> > http://git.kernel.org/?p=linux/kernel/git/rafael/linux-pm.git;a=summary acpi-scan-temp-new
+>> >
+>> > It's v3.7 with my master branch merged and the new patches on top.
+>>
+>>
+>> can you make it base to today's Linus tree ?
 >
-> Thanks for the pointer!  Oh, I did not know that pci_dev gets removed
-> before acpi_bus_trim() is called...
+> Sure.  Rebased and pushed out:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git acpi-scan-next
+>
 
-yes. that is
-http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=8b4b836d8c56c290bc80ffa0b08b91fb3fe38867
+Thanks.
 
-> I looked at Jiang's last two
-> patches for the bind update, and they look good to me.
->
-> Thanks,
-> -Toshi
->
+I rebased pci-root-bus-hotplug patchset on top it, and it works well.
+
+So
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+for the four new ones in your acpi_scan_next branch.
+
+i put the updated patches in
+
+git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
+for-pci-root-bus-3.9
