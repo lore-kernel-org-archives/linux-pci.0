@@ -1,47 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:48542 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab2LLKtf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 05:49:35 -0500
-Received: by mail-pb0-f46.google.com with SMTP id wy7so456008pbc.19
-        for <linux-pci@vger.kernel.org>; Wed, 12 Dec 2012 02:49:35 -0800 (PST)
+Received: from mga03.intel.com ([143.182.124.21]:16985 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751512Ab2LUTxc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2012 14:53:32 -0500
+From: "Rose, Gregory V" <gregory.v.rose@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Don Dutile <ddutile@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yuval Mintz <yuvalmin@broadcom.com>,
+	"bhutchings@solarflare.com" <bhutchings@solarflare.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: RE: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+Date: Fri, 21 Dec 2012 19:53:28 +0000
+Message-ID: <C5551D9AAB213A418B7FD5E4A6F30A073ED86DA6@ORSMSX106.amr.corp.intel.com>
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
+ <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
+ <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com>
+ <20121217232439.GA9746@google.com> <50D24355.1050100@redhat.com>
+ <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com>
+ <CAErSpo7cj4hdk+PznobkmxoM5pqpSzhoM0_RKSbGo4xq2imHaQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7cj4hdk+PznobkmxoM5pqpSzhoM0_RKSbGo4xq2imHaQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <50C85E7D.5080006@monstr.eu>
-References: <50C5D387.90908@monstr.eu> <50C5F11D.9060006@gmail.com>
- <50C5FA3E.9030303@monstr.eu> <50C5FE0F.3050108@gmail.com> <20121210214127.D51773E0796@localhost>
- <50C85E7D.5080006@monstr.eu>
-From: Grant Likely <grant.likely@secretlab.ca>
-Date: Wed, 12 Dec 2012 10:49:14 +0000
-Message-ID: <CACxGe6udeSbEfibC53v0wu8vFRE6K3Fd_P6EX-3JS9F2M=wUeA@mail.gmail.com>
-Subject: Re: pci and pcie device-tree binding - range No cells
-To: Michal Simek <monstr@monstr.eu>
-Cc: Rob Herring <robherring2@gmail.com>,
-	devicetree-discuss <devicetree-discuss@lists.ozlabs.org>,
-	linux-pci@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 12, 2012 at 10:37 AM, Michal Simek <monstr@monstr.eu> wrote:
-> On 12/10/2012 10:41 PM, Grant Likely wrote:
->> drivers/pci/pci-of.c would be good. I'd also accept drivers/of/pci.c
->> which might actually be a good idea in the short term so that it gets
->> appropriate supervision while being generalized before being moved into
->> the pci directory.
->
-> Ben: Are you willing to move that ppc code to this location?
-> It is probably not good idea that I should do it when I even don't have
-> hardware available for testing (Asking someone else).
 
-You're a clever guy, you are more than capable of crafting the patch,
-even if you can't test on hardware. :-)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> Sent: Friday, December 21, 2012 11:49 AM
+> To: Don Dutile
+> Cc: Rose, Gregory V; linux-pci@vger.kernel.org; Yuval Mintz;
+> bhutchings@solarflare.com; yinghai@kernel.org; davem@davemloft.net
+> Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+> 
+> On Thu, Dec 20, 2012 at 2:47 PM, Bjorn Helgaas <bhelgaas@google.com>
+> wrote:
+> 
+> > I made the -EPERM change suggested by Greg and added this to my
+> > pci/for-3.8 branch.  I'll ask Linus to pull it soon after v3.8-rc1.
+> 
+> After a little off-list discussion about the merits of EINVAL, EPERM,
+> EBUSY, etc., I adopted Ben's suggestion of EBUSY for this case:
+> 
+> +       if (pdev->sriov->num_VFs) {
+> +               dev_warn(&pdev->dev, "%d VFs already enabled. Disable
+> before enabling %d VFs\n",
+> +                        pdev->sriov->num_VFs, num_vfs);
+> +               return -EBUSY;
+> 
+> where the idea is "the device is already busy providing N VFs, so you
+> can't configure it to serve M VFs"
+> 
+> Does that sound agreeable to everybody?
 
-I refactored most of the OF support code without having access to most
-of the affected hardware. Once I got the changes out there for review
-I also asked for spot testing before getting it into linux-next for
-even more testing.
+That makes sense, I'm fine with it.
 
-g.
+- Greg
+
+> 
+> Bjorn
