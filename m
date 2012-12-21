@@ -1,87 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-Date: Tue, 11 Dec 2012 13:45:43 +0100
-Message-ID: <1918088.8lbRqmEGMX@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <8119513.v7VrlzcaZC@vostro.rjw.lan> <CAE9FiQXYPPcRZZBFGrqcV--0-UixMH1f+q4WdovErthsLhxn7A@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f45.google.com ([209.85.214.45]:61903 "EHLO
+	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582Ab2LUQTH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2012 11:19:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <50B8D571.3000000@jp.fujitsu.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<50B8D571.3000000@jp.fujitsu.com>
+Date: Fri, 21 Dec 2012 08:19:05 -0800
+Message-ID: <CAE9FiQVaqXMfju5j7qBsk+g=RpES-adBBdrDcnkW=YQTQOfugQ@mail.gmail.com>
+Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+From: Yinghai Lu <yinghai@kernel.org>
+To: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Thomas Renninger <trenn@suse.de>
+Cc: Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 10, 2012 06:26:08 PM Yinghai Lu wrote:
-> On Mon, Dec 10, 2012 at 5:28 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >>
-> >> OK, thanks for the pointers.  I actually see more differences between our
-> >> patchsets.  For one example, you seem to have left the parent->ops.bind()
-> >> stuff in acpi_add_single_object() which calls it even drivers_autoprobe is
-> >> set.
-> >
-> > Sorry, that should have been "which calls it even when drivers_autoprobe is
-> > not set".  I need to be more careful.
-> >
-> 
-> oh,  Jiang Liu had one patch to remove that workaround.
-> 
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=b40dba80c2b8395570d8357e6b3f417c27c84504
-> 
-> ACPI/pci-bind: remove bind/unbind callbacks from acpi_device_ops
+On Fri, Nov 30, 2012 at 7:49 AM, MUNEDA Takahiro
+<muneda.takahiro@jp.fujitsu.com> wrote:
+> On Tue, 27 Nov 2012 09:42:20 +0900 (JST),
+> Takao Indoh <indou.takao@jp.fujitsu.com> wrote:
+>
+>> These patches reset PCIe devices at boot time to address DMA problem on
+>> kdump with iommu. When "reset_devices" is specified, a hot reset is
+>> triggered on each PCIe root port and downstream port to reset its
+>> downstream endpoint.
 
-OK, so I'm looking at the current code, which for me is the master branch of
-the linux-pm.git tree (the linux-next branch is the same ATM), and I'm not
-seeing acpi_pci_unbind_cb() in there.  So surely this patch applies to
-something different, right?  In which case I wonder what reason there is for
-me to look at it at all?
+ThomasR, Can you check if this one help your test case about interrupt ?
 
-Besides, I think it may be done differently and in a more straightforward
-way.  Namely, on top of my current patchset, it is guaranteed that not only
-struct pci_dev objects will always be registered after the companion struct
-acpi_device ones, but also they always will be *created* after those
-companion objects have been registered.  So in principle we can populate
-a new struct pci_dev's ACPI handle as soon as in pci_scan_device(),
-next to pci_set_of_node().  Then, we can do something like acpi_pci_bind(),
-although without the whole acpi_get_pci_dev() nonsense, in pci_setup_device(),
-in which case we won't need to do it anywhere else.
-
-As an added benefit, acpi_platform_notify() would then see a populated ACPI
-handle in that struct pci_dev when finally registering the PCI device, so it
-wouldn't need to do the whole acpi_find_bridge_device() and type->find_device()
-dance.
-
-> Maybe you can review that patches in my for-pci-next2...
-> those are ACPI related anyway.
-
-I can, provided that (1) they are based on top of my tree or v3.7 and (2)
-they don't conflict with patches we're currently discussing.
-
-> those patches have been there for a while, and Bjorn did not have time
-> to digest them.
-
-Well, Bjorn's review bandwidth is limited and we need to take that into
-account.
-
-> or you prefer I resend updated version as huge whole patchset?
-
-No, no huge patchsets, please.  Let's take one step at a time, so that
-everyone involved/interested can understand what's going on, OK?
-
-My review capacity also is not unlimited, mind you.  I can't promise I'll
-have the time to review more than a few patches a day (where "a few" is
-rather less than "several").
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Yinghai
