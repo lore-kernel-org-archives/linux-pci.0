@@ -1,243 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f172.google.com ([209.85.220.172]:45100 "EHLO
-	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094Ab2LTVr5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Dec 2012 16:47:57 -0500
-Received: by mail-vc0-f172.google.com with SMTP id fw7so4372098vcb.17
-        for <linux-pci@vger.kernel.org>; Thu, 20 Dec 2012 13:47:56 -0800 (PST)
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:40406 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab2LVTAq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 22 Dec 2012 14:00:46 -0500
+Received: from /spool/local
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <lucaskt@linux.vnet.ibm.com>;
+	Sat, 22 Dec 2012 17:00:44 -0200
+Message-ID: <50D60349.7080400@linux.vnet.ibm.com>
+Date: Sat, 22 Dec 2012 17:00:25 -0200
+From: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <50D24355.1050100@redhat.com>
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com>
- <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com>
- <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com>
- <20121217232439.GA9746@google.com> <50D24355.1050100@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Dec 2012 14:47:36 -0700
-Message-ID: <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-To: Don Dutile <ddutile@redhat.com>
-Cc: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
-	bhutchings@solarflare.com, yinghai@kernel.org, davem@davemloft.net
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	brking@linux.vnet.ibm.com, benh@au1.ibm.com,
+	Betty Dall <betty.dall@hp.com>,
+	Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Subject: Re: drm: Added ppc64 root device getter
+References: <50CA5EE2.30206@linux.vnet.ibm.com> <CAErSpo6BfWGYH+=ygS6qWT-YFKPuywooVgLWm+g_eB2dMw3iKQ@mail.gmail.com>
+In-Reply-To: <CAErSpo6BfWGYH+=ygS6qWT-YFKPuywooVgLWm+g_eB2dMw3iKQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 19, 2012 at 3:44 PM, Don Dutile <ddutile@redhat.com> wrote:
-> Overall, yet-another-good-clean-up-by-Bjorn ! :)
-> nits below...
+On 12/13/2012 09:31 PM, Bjorn Helgaas wrote:
+> [+cc Betty]
 >
-> oh, you can add
-> Tested-by: Donald Dutile <ddutile@redhat.com>
+> On Thu, Dec 13, 2012 at 4:04 PM, Lucas Kannebley Tavares
+> <lucaskt@linux.vnet.ibm.com>  wrote:
+>> On architectures such as ppc64, there is no root bus device (it belongs
+>> to the hypervisor). DRM attempted to get one, causing a null-pointer
+>> dereference.
 >
-> if you'd to the final commit.
-
-I made the -EPERM change suggested by Greg and added this to my
-pci/for-3.8 branch.  I'll ask Linus to pull it soon after v3.8-rc1.
-
-Bjorn
-
+> In addition to ppc64, at least ia64 and parisc have the same situation
+> of the PCI host bridge not appearing as a  PCI device itself.
 >
-> On 12/17/2012 06:24 PM, Bjorn Helgaas wrote:
+>> Signed-off-by: Lucas Kannebley Tavares<lucaskt@linux.vnet.ibm.com>
 >>
->> On Mon, Dec 17, 2012 at 02:59:15PM -0500, Don Dutile wrote:
->>>
->>> On 12/14/2012 01:19 PM, Greg Rose wrote:
->>>>
->>>> pci: Fix return code
->>>>
->>>> From: Greg Rose<gregory.v.rose@intel.com>
->>>>
->>>> The return code from the sriov configure function was only returned if
->>>> it
->>>> was less than zero indicating an error.  This caused the code to fall
->>>> through to the default return of an error code even though the sriov
->>>> configure function has returned the number of VFs it created - a
->>>> positive
->>>> number indicating success.
->>>>
->>>>
->>>> Signed-off-by: Greg Rose<gregory.v.rose@intel.com>
->>>
->>>
->>> Actually, it returned the number of VFs enabled if it exactly equalled
->>> the number to be enabled.  Otherwise, the basic testing would have
->>> failed.
->>> If the number of vf's enabled was positive but not the same
->>> as the number requested-to-be-enabled, then it incorrectly returned.
->>>
->>> But, the patch corrects the base problem, so
->>> Acked-by: Donald Dutile<ddutile@redhat.com>
+>> --
+>> diff --git a/arch/powerpc/platforms/pseries/Makefile
+>> b/arch/powerpc/platforms/pseries/Makefile
+>> index 890622b..ddfdda8 100644
+>> --- a/arch/powerpc/platforms/pseries/Makefile
+>> +++ b/arch/powerpc/platforms/pseries/Makefile
+>> @@ -1,6 +1,8 @@
+>>   ccflags-$(CONFIG_PPC64)                        := -mno-minimal-toc
+>>   ccflags-$(CONFIG_PPC_PSERIES_DEBUG)    += -DDEBUG
 >>
->>
->> Alternate proposal below.  The patch is ugly; it might be easier to
->> compare
->> the before (http://pastebin.com/zneG8AuD) and after
->> (http://pastebin.com/BEXEE8kc) versions.
->>
->> commit fae71e5dc9064dcb3077b8da6e0ed9d800c1f527
->> Author: Bjorn Helgaas<bhelgaas@google.com>
->> Date:   Thu Dec 13 20:22:44 2012 -0700
->>
->>      PCI: Cleanup sriov_numvfs_show() and handle common case without error
->>
->>      If we request "num_vfs" and the driver's sriov_configure() method
->> enables
->>      exactly that number ("num_vfs_enabled"), we complain "Invalid value
->> for
->>      number of VFs to enable" and return an error.  We should silently
->> return
->>      success instead.
->>
->>      Also, use kstrtou16() since numVFs is defined to be a 16-bit field
->> and
->>      rework to simplify control flow.
->>
->>      Reported-by: Greg Rose<gregory.v.rose@intel.com>
->>      Link: http://lkml.kernel.org/r/20121214101911.00002f59@unknown
->>      Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
->>
->> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->> index 05b78b1..5e8af12 100644
->> --- a/drivers/pci/pci-sysfs.c
->> +++ b/drivers/pci/pci-sysfs.c
->> @@ -422,77 +422,60 @@ static ssize_t sriov_numvfs_show(struct device *dev,
+>> +drm-y                  += drm_pci.o
+>> +
+>>   obj-y                  := lpar.o hvCall.o nvram.o reconfig.o \
+>>                             setup.o iommu.o event_sources.o ras.o \
+>>                             firmware.o power.o dlpar.o mobility.o
+>> diff --git a/arch/powerpc/platforms/pseries/drm_pci.c
+>> b/arch/powerpc/platforms/pseries/drm_pci.c
+>> new file mode 100644
+>> index 0000000..da6675e
+>> --- /dev/null
+>> +++ b/arch/powerpc/platforms/pseries/drm_pci.c
+>> @@ -0,0 +1,24 @@
+>> +/*
+>> + * Copyright (C) 2012 Lucas Kannebley Tavares, IBM Corporation
+>> + *
+>> + * pSeries specific routines for DRM.
+>> + *
+>> + * This program is free software; you can redistribute it and/or modify
+>> + * it under the terms of the GNU General Public License as published by
+>> + * the Free Software Foundation; either version 2 of the License, or
+>> + * (at your option) any later version.
+>> + *
+>> + * This program is distributed in the hope that it will be useful,
+>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
+>> + *
+>> + * You should have received a copy of the GNU General Public License
+>> + * along with this program; if not, write to the Free Software
+>> + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+>> + */
+>> +
+>> +inline struct pci_device *drm_get_parent_device(struct drm_device *dev) {
+>> +       return (dev->pdev->bus->self == NULL) ? dev->pdev :
+>> dev->pdev->bus->self;
+>
+> So for DRM devices on a root bus, the parent is the DRM device itself,
+> while for DRM devices deeper in the hierarchy, the parent is the
+> upstream P2P bridge?  That doesn't really make sense to me.  If the
+> caller operates on the DRM device in some cases and on the bridge in
+> other cases, it's going to need to know the difference, so hiding the
+> difference in this wrapper seems counterproductive.
+>
+>> +}
+>> +
+>> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+>> index eb37466..5a8a4f5 100644
+>> --- a/drivers/gpu/drm/drm_pci.c
+>> +++ b/drivers/gpu/drm/drm_pci.c
+>> @@ -466,6 +466,10 @@ void drm_pci_exit(struct drm_driver *driver, struct
+>> pci_driver *pdriver)
 >>   }
+>>   EXPORT_SYMBOL(drm_pci_exit);
 >>
->>   /*
->> - * num_vfs>  0; number of vfs to enable
->> - * num_vfs = 0; disable all vfs
->> + * num_vfs>  0; number of VFs to enable
->> + * num_vfs = 0; disable all VFs
->>    *
->>    * Note: SRIOV spec doesn't allow partial VF
->> - *       disable, so its all or none.
->> + *       disable, so it's all or none.
->>    */
->>   static ssize_t sriov_numvfs_store(struct device *dev,
->>                                   struct device_attribute *attr,
->>                                   const char *buf, size_t count)
+>> +inline __weak struct pci_device *drm_get_parent_device(struct drm_device
+>> *dev) {
+>> +       return dev->pdev->bus->self;
+>> +}
+>> +
+>>   int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
 >>   {
->>         struct pci_dev *pdev = to_pci_dev(dev);
->> -       int num_vfs_enabled = 0;
->> -       int num_vfs;
->> -       int ret = 0;
->> -       u16 total;
->> +       int ret;
->> +       u16 num_vfs;
+>>          struct pci_dev *root;
+>> @@ -479,7 +483,7 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev,
+>> u32 *mask)
+>>                  return -EINVAL;
 >>
->> -       if (kstrtoint(buf, 0,&num_vfs)<  0)
+>>          // find PCI device for capabilities
+>> -       root = dev->pdev->bus->self;
+>> +       root = drm_get_parent_device(dev);
 >>
->> -               return -EINVAL;
->> +       ret = kstrtou16(buf, 0,&num_vfs);
->> +       if (ret<  0)
->> +               return ret;
->> +
->> +       if (num_vfs>  pci_sriov_get_totalvfs(pdev))
->> +               return -ERANGE;
->> +
->> +       if (num_vfs == pdev->sriov->num_VFs)
->> +               return count;           /* no change */
+>>          // some architectures might not have host bridges as PCI devices
+>>          if (root == NULL)
 >
-> maybe worth putting a dev-info print stating num_vfs to <enable,disable> ==
-> current state,
-> no action taken. ... may point to a user-level programming error.
+> What tree does this apply to?  Upstream doesn't have the "if (root ==
+> NULL)" check yet.  That check looks like the sort of thing you'd need
+> to avoid the null pointer dereference.  So maybe adding that check and
+> the associated code is enough to fix the problem, even without adding
+> drm_get_parent_device().
 >
->>
->>         /* is PF driver loaded w/callback */
->>         if (!pdev->driver || !pdev->driver->sriov_configure) {
->> -               dev_info(&pdev->dev,
->> -                        "Driver doesn't support SRIOV configuration via
->> sysfs\n");
->> +               dev_info(&pdev->dev, "Driver doesn't support SRIOV
->> configuration via sysfs\n");
->>                 return -ENOSYS;
->>         }
->>
->> -       /* if enabling vf's ... */
->> -       total = pci_sriov_get_totalvfs(pdev);
->> -       /* Requested VFs to enable<  totalvfs and none enabled already */
->> -       if ((num_vfs>  0)&&  (num_vfs<= total)) {
->>
->> -               if (pdev->sriov->num_VFs == 0) {
->> -                       num_vfs_enabled =
->> -                               pdev->driver->sriov_configure(pdev,
->> num_vfs);
->> -                       if ((num_vfs_enabled>= 0)&&
->> -                           (num_vfs_enabled != num_vfs)) {
->> -                               dev_warn(&pdev->dev,
->> -                                        "Only %d VFs enabled\n",
->> -                                        num_vfs_enabled);
->> -                               return count;
->> -                       } else if (num_vfs_enabled<  0)
->> -                               /* error code from driver callback */
->> -                               return num_vfs_enabled;
->> -               } else if (num_vfs == pdev->sriov->num_VFs) {
->> -                       dev_warn(&pdev->dev,
->> -                                "%d VFs already enabled; no enable action
->> taken\n",
->> -                                num_vfs);
->> -                       return count;
->> -               } else {
->> -                       dev_warn(&pdev->dev,
->> -                                "%d VFs already enabled. Disable before
->> enabling %d VFs\n",
->> -                                pdev->sriov->num_VFs, num_vfs);
->> -                       return -EINVAL;
->> -               }
->> +       if (num_vfs == 0) {
->> +               /* disable VFs */
->> +               ret = pdev->driver->sriov_configure(pdev, 0);
->> +               if (ret<  0)
->> +                       return ret;
->> +               return count;
+> With the code in the tree, it looks like you'd dereference a null
+> pointer in pci_pcie_cap(root), so I assume that's what you tripped
+> over.
 >
-> yes, rtn count when non-neg is what I found had to be done
-> not to hang the user cmd to sysfs.
+> I'm not really sure that code outside the PCI core should be looking
+> at capabilities of upstream devices like this.  It seems like the sort
+> of thing where the core might need to provide better interfaces.
 >
+> Bjorn
 >
->>         }
->>
->> -       /* disable vfs */
->> -       if (num_vfs == 0) {
->> -               if (pdev->sriov->num_VFs != 0) {
->> -                       ret = pdev->driver->sriov_configure(pdev, 0);
->> -                       return ret ? ret : count;
->> -               } else {
->> -                       dev_warn(&pdev->dev,
->> -                                "All VFs disabled; no disable action
->> taken\n");
->> -                       return count;
->> -               }
->> +       /* enable VFs */
->> +       if (pdev->sriov->num_VFs) {
->> +               dev_warn(&pdev->dev, "%d VFs already enabled. Disable
->> before enabling %d VFs\n",
->> +                        pdev->sriov->num_VFs, num_vfs);
->> +               return -EINVAL;
->>         }
->>
->> -       dev_err(&pdev->dev,
->> -               "Invalid value for number of VFs to enable: %d\n",
->> num_vfs);
->> +       ret = pdev->driver->sriov_configure(pdev, num_vfs);
->> +       if (ret<  0)
->> +               return ret;
->>
->> -       return -EINVAL;
->> +       if (ret != num_vfs)
->> +               dev_warn(&pdev->dev, "%d VFs requested; only %d
->> enabled\n",
->> +                        num_vfs, ret);
->> +
->> +       return count;
->
-> ditto; need to rtn input count.
->
->
->>   }
->>
->>   static struct device_attribute sriov_totalvfs_attr =
->> __ATTR_RO(sriov_totalvfs);
->
->
+
+Ok Bjorn, thanks for the comments, indeed I had a dirty tree here and 
+didn't realize it, sorry. Either way I'm then sending the "if (root == 
+NULL)" patch as a reply to this. I'm sending it along with another 
+independent patch (they are NOT a series) that changes 
+pci_read_config_dword calls to pci_capability_read_dword ones on the drm 
+driver. There were only a couple of those to start with.
+
+-- 
+Lucas Kannebley Tavares
+Software Engineer
+IBM Linux Technology Center
+
