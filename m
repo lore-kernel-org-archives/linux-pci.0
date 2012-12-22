@@ -1,70 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9111 "EHLO mga09.intel.com"
+Received: from void.printf.net ([89.145.121.20]:59771 "EHLO void.printf.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755708Ab2LNCwT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Dec 2012 21:52:19 -0500
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [PATCH] PCIe/PM: Do not suspend port if any subordinate device need PME polling
-Date: Fri, 14 Dec 2012 10:52:11 +0800
-Message-Id: <1355453531-23348-1-git-send-email-ying.huang@intel.com>
+	id S1751034Ab2LVCF3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 21 Dec 2012 21:05:29 -0500
+From: Chris Ball <cjb@laptop.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-mmc@vger.kernel.org, Manoj Iyer <manoj.iyer@canonical.com>,
+	<stable@kernel.org>
+Subject: Re: [PATCH] pci: Add a quirk for the Ricoh 0xe22 SD card reader
+References: <33c411da9bb44eae8a5f9e0609f8eb0aa4eda600.1354385950.git.luto@amacapital.net>
+	<33c411da9bb44eae8a5f9e0609f8eb0aa4eda601.1354385950.git.luto@amacapital.net>
+Date: Fri, 21 Dec 2012 21:05:03 -0500
+In-Reply-To: <33c411da9bb44eae8a5f9e0609f8eb0aa4eda601.1354385950.git.luto@amacapital.net>
+	(Andy Lutomirski's message of "Sat, 1 Dec 2012 12:37:20 -0800")
+Message-ID: <87ehii6dv4.fsf@laptop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In
+Hi Bjorn,
 
-  http://www.mail-archive.com/linux-usb@vger.kernel.org/msg07976.html
+On Sat, Dec 01 2012, Andy Lutomirski wrote:
+> Otherwise it fails like this on cards like the Transcend 16GB SDHC card:
+> mmc0: new SDHC card at address b368
+> mmcblk0: mmc0:b368 SDC   15.0 GiB
+> mmcblk0: error -110 sending status command, retrying
+> mmcblk0: error -84 transferring data, sector 0, nr 8, cmd respons
+> e 0x900, card status 0xb0
+>
+> Tested on my Lenovo x200 laptop.
+>
+> Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+> Acked-by: Chris Ball <cjb@laptop.org>
 
-Ulrich reported that his USB3 cardreader does not work reliably when
-connected to the USB3 port.  It turns out that USB3 controller failed
-to be waken up when plugging in the USB3 cardreader.  Further
-experiment found that the USB3 host controller can only be waken up
-via polling, while not via PME interrupt.  But if the PCIe port that
-the USB3 host controller is connected is suspended, we can not poll
-the USB3 host controller because its config space is not accessible if
-the PCIe port is put into low power state.
+Ping -- this is an important patch for getting SD cards working on
+Thinkpads, please can you pick it up?
 
-To solve the issue, the PCIe port will not be suspended if any
-subordinate device need PME polling.
-
-Reported-by: Ulrich Eckhardt <usb@uli-eckhardt.de>
-Signed-off-by: Huang Ying <ying.huang@intel.com>
-Tested-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: stable@vger.kernel.org	# 3.6+
----
- drivers/pci/pcie/portdrv_pci.c |   18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -134,10 +134,26 @@ static int pcie_port_runtime_resume(stru
- 	return 0;
- }
- 
-+static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
-+{
-+	int *pme_poll = data;
-+	*pme_poll = *pme_poll || pdev->pme_poll;
-+	return 0;
-+}
-+
- static int pcie_port_runtime_idle(struct device *dev)
- {
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	int pme_poll = false;
-+
-+	/*
-+	 * If any subordinate device needs pme poll, we should keep
-+	 * the port in D0, because we need port in D0 to poll it.
-+	 */
-+	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
- 	/* Delay for a short while to prevent too frequent suspend/resume */
--	pm_schedule_suspend(dev, 10);
-+	if (!pme_poll)
-+		pm_schedule_suspend(dev, 10);
- 	return -EBUSY;
- }
- #else
+- Chris.
+-- 
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
