@@ -1,75 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:32828 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754006Ab2LMWSe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Dec 2012 17:18:34 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH rev.2 0/6] ACPI: Change the ACPI namespace scanning code ordering
-Date: Thu, 13 Dec 2012 23:15:34 +0100
-Message-ID: <1499423.ez5cZl2uAf@vostro.rjw.lan>
-In-Reply-To: <8498184.VilrUmatxI@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:58641 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab2LZWk0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 17:40:26 -0500
+Received: by mail-la0-f54.google.com with SMTP id j13so11442515lah.13
+        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 14:40:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <50D6039D.4000001@linux.vnet.ibm.com>
+References: <50CA5EE2.30206@linux.vnet.ibm.com> <CAErSpo6BfWGYH+=ygS6qWT-YFKPuywooVgLWm+g_eB2dMw3iKQ@mail.gmail.com>
+ <50D60349.7080400@linux.vnet.ibm.com> <50D6039D.4000001@linux.vnet.ibm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 26 Dec 2012 15:40:04 -0700
+Message-ID: <CAErSpo5s8ZEk2Lkdj4J2T4pFvSxqxsou0d5efX+7+ecL_wYYMg@mail.gmail.com>
+Subject: Re: [PATCH] drm: fixed access to PCI host bridges
+To: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+Cc: dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	brking@linux.vnet.ibm.com, benh@au1.ibm.com,
+	Betty Dall <betty.dall@hp.com>,
+	Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On Sat, Dec 22, 2012 at 12:01 PM, Lucas Kannebley Tavares
+<lucaskt@linux.vnet.ibm.com> wrote:
+> During the process of obtaining the speed cap for the device, it
+> attempts go get the PCI Host bus. However on architectures such as PPC
+> or IA64, those do not appear as devices.
+>
+> Signed-off-by: Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>
+> ---
+>  drivers/gpu/drm/drm_pci.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+> index 754bc96..ea41234 100644
+> --- a/drivers/gpu/drm/drm_pci.c
+> +++ b/drivers/gpu/drm/drm_pci.c
+> @@ -479,8 +479,13 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev,
+> u32 *mask)
+>         if (!pci_is_pcie(dev->pdev))
+>                 return -EINVAL;
+>
+> +       // find PCI device for capabilities
+>         root = dev->pdev->bus->self;
+>
+> +       // some architectures might not have host bridges as PCI devices
+> +       if (root == NULL)
+> +               root = dev->pdev;
 
-On Sunday, December 09, 2012 11:58:42 PM Rafael J. Wysocki wrote:
-> Hi,
-> 
-> The following patches change the ordering of the ACPI namespace scanning code
-> so that all struct acpi_device objects in the given scope are registered before
-> ACPI drivers are probed against them.  They also do some simplifications and
-> clarifications of the code made possible by this main change.
-> 
-> This is done for three basic reasons.  First, we need the boot ACPI namespace
-> scanning code to be as similar as reasonably possible to the hot-plug ACPI
-> namespace scanning code.  Second, the ordering of PCI devices enumeration
-> versus ACPI-backed platform devices registration needs to be such that the PCI
-> devices in the given scope are all registered first.  Finally, when we start to
-> actually manage ACPI device resources as appropriate (e.g. resolve resource
-> conflicts properly) we'll need all struct acpi_device nodes to be registered
-> before any "companion" physical nodes or ACPI drivers are bound to them.
-> 
-> The patches have been tested on Toshiba Portege R500 without breaking stuff
-> (I used some additional debug code to verify that the ordering of device
-> discovery had not been modified by them), but if you see any problems with
-> them regarding hot-plug, please let me know.
-> 
-> [1/6] - Separate adding ACPI device objects from probing ACPI drivers.
-> [2/6] - Change the ordering of PCI root bridge driver registration.
-> [3/6] - Make acpi_bus_add() and acpi_bus_start() visibly different.
-> [4/6] - Reduce the usage of struct acpi_bus_ops
-> [5/6] - Replace struct acpi_bus_ops with an enum type
-> [6/6] - Change the ordering of acpi_bus_check_add() to avoid unnecessary checks.
+You didn't address my question about this.  Obviously this will avoid
+a null pointer dereference.  But you have to also explain why this
+change is correct.
 
-The second revision is necessary to address problems found by Yijing Wang
-during testing and explained by Jiang Liu (thanks guys!).
+If it's good enough to just look at the capabilities of the DRM device
+(not the upstream bridge) on PPC and ia64, why not do that everywhere
+and forget about the bridge completely?
 
-The problem is that acpi_walk_namespace() doesn't execute the pre_order_visit
-callback for the starting handle, so the callback routine has the be executed
-for it directly, if necessary.
-
-I also modified a couple of changelogs to better explain the motivation of the
-patches.
-
-Boot sequence tested on Toshiba Portege R500, but testing on systems with
-hotplug will be appreciated.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>         pos = pci_pcie_cap(root);
+>         if (!pos)
+>                 return -EINVAL;
+>
+> --
+> Lucas Kannebley Tavares
+> Software Engineer
+> IBM Linux Technology Center
+>
