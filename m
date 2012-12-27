@@ -1,96 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH 2/16] ACPI: Change the ordering of PCI root bridge driver registrarion
-Date: Thu, 20 Dec 2012 02:48:35 +0100
-Message-ID: <1355988503.fTzxlRPKzq@vostro.rjw.lan>
-In-Reply-To: <1855256.SyhOJGYMIh@vostro.rjw.lan>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <4082842.31rfDviYHK@vostro.rjw.lan> <1855256.SyhOJGYMIh@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:54442 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751264Ab2L0AKf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 19:10:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <6257154.ucqGyPHqkg@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
+	<CAE9FiQWr6-=kvrCXKEWFvUHHv6xbHKt-oAdt+VPUMphVUW4U4A@mail.gmail.com>
+	<CAE9FiQVOvqqEFXcRbZt5=8e4fQgmzw03WCS=env46eYADFpXLw@mail.gmail.com>
+	<6257154.ucqGyPHqkg@vostro.rjw.lan>
+Date: Wed, 26 Dec 2012 16:10:32 -0800
+Message-ID: <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Dec 26, 2012 at 2:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
+>> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >> Do you have a reference for this?  I think this might have been true
+>> >> in the past, but I don't think it's true for any version of gcc we
+>> >> support for building Linux.
+>> >
+>> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
+>>
+>> the problem is already addressed by:
+>>
+>> | commit f9d14250071eda9972e4c9cea745a11185952114
+>> | Author: Linus Torvalds <torvalds@linux-foundation.org>
+>> | Date:   Fri Jan 2 09:29:43 2009 -0800
+>> |
+>> |    Disallow gcc versions 4.1.{0,1}
+>> |
+>> |    These compiler versions are known to miscompile __weak functions and
+>> |    thus generate kernels that don't necessarily work correctly.  If a weak
+>> |    function is int he same compilation unit as a caller, gcc may end up
+>> |    inlining it, and thus binding the weak function too early.
+>> |
+>> |    See
+>> |
+>> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
+>> |
+>> |    for details.
+>>
+>> so it is ok to put the __weak in the same file now.
+>
+> Cool, thanks for checking and for the ACK!
 
-Instead of running acpi_pci_root_init() from a separate subsys
-initcall, call it directly from acpi_scan_init() before scanning the
-ACPI namespace for the first time, so that the PCI root bridge
-driver's .add() routine, acpi_pci_root_start(), is always run
-before binding ACPI drivers or attaching "companion" device objects
-to struct acpi_device objects below the root bridge's device node in
-the ACPI namespace.
+wait, we have some problem on systems that root bus is not exported via DSDT ...
 
-The first, simpler reason for doing this is that it makes the
-situation during boot more similar to the situation during hotplug,
-in which the ACPI PCI root bridge driver is always present.
+one of my nehalem system that have uncore cpu devices are not exported via ACPI.
 
-The second reason is that acpi_pci_root_init() causes struct pci_dev
-objects to be created for all PCI devices below the bridge and
-these objects may be necessary for whatever is done with the other
-ACPI device nodes in that namespace scope.  For example, devices
-created by acpi_create_platform_device() sometimes may need to be
-added to the device hierarchy as children of PCI bridges.  For this
-purpose, however, the struct pci_dev objects representing those
-bridges need to exist before the platform devices in question are
-registered.
+also there will be problem that system is booting with acpi=off.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/internal.h |    1 +
- drivers/acpi/pci_root.c |    4 +---
- drivers/acpi/scan.c     |    1 +
- 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Index: linux/drivers/acpi/internal.h
-===================================================================
---- linux.orig/drivers/acpi/internal.h
-+++ linux/drivers/acpi/internal.h
-@@ -67,6 +67,7 @@ struct acpi_ec {
- 
- extern struct acpi_ec *first_ec;
- 
-+int acpi_pci_root_init(void);
- int acpi_ec_init(void);
- int acpi_ec_ecdt_probe(void);
- int acpi_boot_ec_enable(void);
-Index: linux/drivers/acpi/pci_root.c
-===================================================================
---- linux.orig/drivers/acpi/pci_root.c
-+++ linux/drivers/acpi/pci_root.c
-@@ -674,7 +674,7 @@ static int acpi_pci_root_remove(struct a
- 	return 0;
- }
- 
--static int __init acpi_pci_root_init(void)
-+int __init acpi_pci_root_init(void)
- {
- 	acpi_hest_init();
- 
-@@ -687,5 +687,3 @@ static int __init acpi_pci_root_init(voi
- 
- 	return 0;
- }
--
--subsys_initcall(acpi_pci_root_init);
-Index: linux/drivers/acpi/scan.c
-===================================================================
---- linux.orig/drivers/acpi/scan.c
-+++ linux/drivers/acpi/scan.c
-@@ -1831,6 +1831,7 @@ int __init acpi_scan_init(void)
- 	}
- 
- 	acpi_power_init();
-+	acpi_pci_root_init();
- 
- 	/*
- 	 * Enumerate devices in the ACPI namespace.
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++       struct pci_sysdata *sd = bridge->bus->sysdata;
++       struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
++
++       ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
++       return 0;
++}
 
+will get wrong info...via sd... as their sd is standalone
+
+Thanks
+
+Yinghai
