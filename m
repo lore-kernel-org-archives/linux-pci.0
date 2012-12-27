@@ -1,42 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:53133 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909Ab2LFAvw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 19:51:52 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+Date: Thu, 27 Dec 2012 13:47:22 +0100
+Message-ID: <1723076.byQgAGE2K7@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <6257154.ucqGyPHqkg@vostro.rjw.lan> <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <50BFE88D.1000800@zytor.com>
-References: <1345739803-21017-1-git-send-email-mjg@redhat.com>
-	<CAErSpo6dn_0b8Ngx9VT=ARs_UXQftEx=2Kczeqemtmo0XyKzuQ@mail.gmail.com>
-	<20121203200241.GG5906@thinkpad-t410>
-	<CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
-	<50BFE88D.1000800@zytor.com>
-Date: Wed, 5 Dec 2012 16:51:50 -0800
-Message-ID: <CAE9FiQXwZAAMkWYT8EjsewpuZ-OWqoaFscyzGS_pSuO9C3bf9A@mail.gmail.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 4:36 PM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 12/05/2012 04:15 PM, Yinghai Lu wrote:
->>
->
-> I don't see why that isn't the right fix.  We copy the data into
-> boot_params early in the boot; that *is* the official copy as far as the
-> kernel is concerned.
->
-> So this patch very much seems like The Right Thing.
+On Wednesday, December 26, 2012 04:10:32 PM Yinghai Lu wrote:
+> On Wed, Dec 26, 2012 at 2:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
+> >> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> >> Do you have a reference for this?  I think this might have been true
+> >> >> in the past, but I don't think it's true for any version of gcc we
+> >> >> support for building Linux.
+> >> >
+> >> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
+> >>
+> >> the problem is already addressed by:
+> >>
+> >> | commit f9d14250071eda9972e4c9cea745a11185952114
+> >> | Author: Linus Torvalds <torvalds@linux-foundation.org>
+> >> | Date:   Fri Jan 2 09:29:43 2009 -0800
+> >> |
+> >> |    Disallow gcc versions 4.1.{0,1}
+> >> |
+> >> |    These compiler versions are known to miscompile __weak functions and
+> >> |    thus generate kernels that don't necessarily work correctly.  If a weak
+> >> |    function is int he same compilation unit as a caller, gcc may end up
+> >> |    inlining it, and thus binding the weak function too early.
+> >> |
+> >> |    See
+> >> |
+> >> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
+> >> |
+> >> |    for details.
+> >>
+> >> so it is ok to put the __weak in the same file now.
+> >
+> > Cool, thanks for checking and for the ACK!
+> 
+> wait, we have some problem on systems that root bus is not exported via DSDT ...
+> 
+> one of my nehalem system that have uncore cpu devices are not exported via ACPI.
+> 
+> also there will be problem that system is booting with acpi=off.
+> 
+> 
+> +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> +{
+> +       struct pci_sysdata *sd = bridge->bus->sysdata;
+> +       struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
+> +
+> +       ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
+> +       return 0;
+> +}
+> 
+> will get wrong info...via sd... as their sd is standalone
 
-it moves boot_params from __initdata  to data.
-and just for using pointer to setup_data.
+Yes, it will be called in all code paths leading to acpi_create_root_bus(),
+not only the ones started by pci_acpi_scan_root().  Well, too bad.
 
-should add setup_data pointer instead. so will not waste (4096 - 8) bytes.
+By the way, that illustrates nicely why I generally have concerns about __weak
+stuff and similar tricks.
 
-Yinghai
+Bjorn, I had tried to use the approach you suggested, but it didn't work.
+I thought about fixing that, but everything I could come up with turned out to
+be too complicated, so I'm inclined to use the previous version after all:
+
+https://patchwork.kernel.org/patch/1889221/
+
+that has been acked by Yinghai, Greg and Peter already.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
