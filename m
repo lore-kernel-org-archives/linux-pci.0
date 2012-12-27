@@ -1,56 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:55194 "EHLO
-	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423570Ab2LFQIa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 11:08:30 -0500
-Date: Thu, 6 Dec 2012 17:08:27 +0100
-From: Martin Mares <mj@ucw.cz>
-To: "Dr. David Alan Gilbert" <dave@treblig.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: pciutils pci_open seg with invalid arg to -i
-Message-ID: <mj+md-20121206.160703.2718.nikam@ucw.cz>
-References: <20121204142008.GB6117@gallifrey>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:50724 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069Ab2L0Bd0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 20:33:26 -0500
+Received: by mail-la0-f48.google.com with SMTP id m13so11332178lah.21
+        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 17:33:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20121204142008.GB6117@gallifrey>
+In-Reply-To: <20121205163019.GC28556@liondog.tnic>
+References: <20121204210305.4515.91100.stgit@grignak.americas.hpqcorp.net>
+ <20121204210312.4515.13415.stgit@grignak.americas.hpqcorp.net>
+ <20121205143202.GD2364@liondog.tnic> <A961433CDFF2F640A2866803152E61F9516F279F@G4W3219.americas.hpqcorp.net>
+ <20121205163019.GC28556@liondog.tnic>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 26 Dec 2012 18:33:04 -0700
+Message-ID: <CAErSpo4j5k6uQJHV1sMdOqosVNVygehfXB+y7bB7uH14B6vG8w@mail.gmail.com>
+Subject: Re: [PATCH v7 2/3] aerdrv: Enhanced AER logging
+To: Borislav Petkov <bp@alien8.de>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"lance_ortiz@hotmail.com" <lance_ortiz@hotmail.com>,
+	"jiang.liu@huawei.com" <jiang.liu@huawei.com>,
+	"tony.luck@intel.com" <tony.luck@intel.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"mchehab@redhat.com" <mchehab@redhat.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+On Wed, Dec 5, 2012 at 9:30 AM, Borislav Petkov <bp@alien8.de> wrote:
+> On Wed, Dec 05, 2012 at 04:14:14PM +0000, Ortiz, Lance E wrote:
+>> I removed the prefix argument because it was never used by its caller
+>> and never set. The reason I added the prefix variable and set it to
+>> NULL was to help in breaking up the patch and adding it would help the
+>> intermittent patch build without changing too much code. I knew I was
+>> actually going to use the variable in patch 3.
+>
+> No, the correct way to do that is to keep all changes that belong
+> logically together in a single patch for ease of reviewing and avoid
+> breakages. And in your case this should be pretty easy: simply move all
+> the 'prefix' touching code to patch #3 and you're done, AFAICT.
 
-> So I was going to suggest something like:
-> 
->  33   if (len < 3 || memcmp(a->id_file_name + len - 3, ".gz", 3) != 0)
->  34     return result;
+Lance, you didn't add all the "prefix" stuff in AER, but since you're
+touching it, I think things will make more sense if you clean it up at
+the same time.  There are a lot of printk() calls there that should be
+converted to dev_printk().
 
-Yes, that's right.
+I think I see why it was done that way -- it sticks either
+KERN_WARNING or KERN_ERR at the beginning of the prefix, then uses
+plain printk() later.  I guess that means you only have to pass around
+the prefix argument, rather than both a "level" and a "struct pci_dev
+*".  But I think it will be simpler overall to pass both and take
+advantage of dev_printk() and stop emulating it.
 
-Please try the current version in the Git repository, it's fixed there.
-
-> which would mean that it would drop out if it was a short filename; but
-> then I started to try and understand the code more; it looks to me like:
-> 
->    try and gzopen it.
->    if that fails
->      check it ended with a .gz (else fail)
->      strip the .gz off the end
->      gzopen it without the .gz
-> 
-> But why bother?  According to the zlib manual for gzopen :
->   ( http://www.zlib.net/manual.html )
->      
-> ' gzopen can be used to read a file which is not in gzip format; in this case
-> gzread will directly read from the file without decompression. When reading,
-> this will be detected automatically by looking for the magic two-byte gzip
-> header. '
-> 
-> So what are lines 32-39 trying to do?
-
-When somebody specifies a file name like "pci.ids.gz" (or it's the default name)
-and no such file exists, it tries the same name without ".gz".
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Weather forecast for tonight: dark.
+Bjorn
