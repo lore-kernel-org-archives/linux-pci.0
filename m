@@ -1,59 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g6t0184.atlanta.hp.com ([15.193.32.61]:35468 "EHLO
-	g6t0184.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754626Ab2LDRJx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Dec 2012 12:09:53 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v6 3/3] aerdrv: Cleanup log output for CPER based AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 04 Dec 2012 10:04:42 -0700
-Message-ID: <20121204170442.31397.21190.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
-References: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+Date: Thu, 27 Dec 2012 14:31:09 +0100
+Message-ID: <2210460.jSt1aAvsCj@vostro.rjw.lan>
+In-Reply-To: <1723076.byQgAGE2K7@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <CAE9FiQWpAvgam3t7isFcZOz+OEe4D4QJxBbqcbiqMJVwJz=-8A@mail.gmail.com> <1723076.byQgAGE2K7@vostro.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These changes make cper_print_aer more consistent with aer_print_error
-which is called in the AER interrupt case. The string in the variable
-'prefix' is printed at the beginning of each print statement in
-cper_print_aer(). The prefix is a string containing the driver name
-and the device's slot location.  From the callers the value of prefix
-is never assigned and is NULL, so when cper_print_aer prints data the
-initial string does not get printed.  This string is important because
-it identifies the device that the error is on.
+On Thursday, December 27, 2012 01:47:22 PM Rafael J. Wysocki wrote:
+> On Wednesday, December 26, 2012 04:10:32 PM Yinghai Lu wrote:
+> > On Wed, Dec 26, 2012 at 2:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Wednesday, December 26, 2012 12:41:05 PM Yinghai Lu wrote:
+> > >> On Wed, Dec 26, 2012 at 12:16 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > >> > On Wed, Dec 26, 2012 at 12:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > >> >> Do you have a reference for this?  I think this might have been true
+> > >> >> in the past, but I don't think it's true for any version of gcc we
+> > >> >> support for building Linux.
+> > >> >
+> > >> > http://lkml.indiana.edu/hypermail/linux/kernel/0804.3/3600.html
+> > >>
+> > >> the problem is already addressed by:
+> > >>
+> > >> | commit f9d14250071eda9972e4c9cea745a11185952114
+> > >> | Author: Linus Torvalds <torvalds@linux-foundation.org>
+> > >> | Date:   Fri Jan 2 09:29:43 2009 -0800
+> > >> |
+> > >> |    Disallow gcc versions 4.1.{0,1}
+> > >> |
+> > >> |    These compiler versions are known to miscompile __weak functions and
+> > >> |    thus generate kernels that don't necessarily work correctly.  If a weak
+> > >> |    function is int he same compilation unit as a caller, gcc may end up
+> > >> |    inlining it, and thus binding the weak function too early.
+> > >> |
+> > >> |    See
+> > >> |
+> > >> |        http://gcc.gnu.org/bugzilla/show_bug.cgi?id=27781
+> > >> |
+> > >> |    for details.
+> > >>
+> > >> so it is ok to put the __weak in the same file now.
+> > >
+> > > Cool, thanks for checking and for the ACK!
+> > 
+> > wait, we have some problem on systems that root bus is not exported via DSDT ...
+> > 
+> > one of my nehalem system that have uncore cpu devices are not exported via ACPI.
+> > 
+> > also there will be problem that system is booting with acpi=off.
+> > 
+> > 
+> > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> > +{
+> > +       struct pci_sysdata *sd = bridge->bus->sysdata;
+> > +       struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
+> > +
+> > +       ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
+> > +       return 0;
+> > +}
+> > 
+> > will get wrong info...via sd... as their sd is standalone
+> 
+> Yes, it will be called in all code paths leading to acpi_create_root_bus(),
+> not only the ones started by pci_acpi_scan_root().  Well, too bad.
 
-v1-v2 fix some compile errors withinn the #ifdef
-v3-v4 remove agent id stuff and kept print the same to avoid
-compatibility issues
+s/acpi_create_root_bus/pci_create_root_bus/
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
----
+Sorry.
 
- 0 files changed, 0 insertions(+), 0 deletions(-)
+> By the way, that illustrates nicely why I generally have concerns about __weak
+> stuff and similar tricks.
+> 
+> Bjorn, I had tried to use the approach you suggested, but it didn't work.
+> I thought about fixing that, but everything I could come up with turned out to
+> be too complicated, so I'm inclined to use the previous version after all:
+> 
+> https://patchwork.kernel.org/patch/1889221/
+> 
+> that has been acked by Yinghai, Greg and Peter already.
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 34d96e4..58ff4c0 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -228,9 +228,14 @@ void cper_print_aer(struct pci_dev *dev, int cper_severity,
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
- 	u32 status, mask;
- 	const char **status_strs;
--	char *prefix = NULL;
-+	char prefix[44];
- 
- 	aer_severity = cper_severity_to_aer(cper_severity);
-+	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
-+		(aer_severity == AER_CORRECTABLE) ?
-+		KERN_WARNING : KERN_ERR,
-+		dev_driver_string(&dev->dev), dev_name(&dev->dev));
-+
- 	if (aer_severity == AER_CORRECTABLE) {
- 		status = aer->cor_status;
- 		mask = aer->cor_mask;
+Thanks,
+Rafael
 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
