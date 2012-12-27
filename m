@@ -1,55 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58113 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932627Ab2LGA2H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Dec 2012 19:28:07 -0500
-Date: Thu, 6 Dec 2012 16:28:08 -0800
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>,
-	Ulrich Eckhardt <usb@uli-eckhardt.de>,
-	Andrew Lutomirski <luto@mit.edu>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Ming Lei <ming.lei@canonical.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Huang Ying <ying.huang@intel.com>
-Subject: Re: Unreliable USB3 with NEC uPD720200 and Delock Cardreader
-Message-ID: <20121207002808.GG5324@xanatos>
-References: <20121126191002.GE6504@xanatos>
- <20121128225406.GF8557@xanatos>
- <20121206003344.GC5324@xanatos>
- <1962497.aG1sFtYjJG@vostro.rjw.lan>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:40702 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab2L0Aq2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Dec 2012 19:46:28 -0500
+Received: by mail-la0-f53.google.com with SMTP id w12so11240440lag.26
+        for <linux-pci@vger.kernel.org>; Wed, 26 Dec 2012 16:46:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1962497.aG1sFtYjJG@vostro.rjw.lan>
+In-Reply-To: <20121127064618.GM25516@redhat.com>
+References: <F9E001219150CB45BEDC82A650F360C90146F4DA@G4W3208.americas.hpqcorp.net>
+ <20121120134104.GI27378@stefanha-thinkpad.redhat.com> <F9E001219150CB45BEDC82A650F360C90147066B@G4W3208.americas.hpqcorp.net>
+ <20121126234612.GC10634@amt.cnet> <20121127064618.GM25516@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 26 Dec 2012 17:46:05 -0700
+Message-ID: <CAErSpo6c-_Wy0doXKhuFvZs=S+_taDAk7b7893vOX3VihuvhRA@mail.gmail.com>
+Subject: Re: [Qemu-devel] [PATCH 0/4] AER-KVM: Error containment of PCI
+ pass-thru devices assigned to KVM guests
+To: Gleb Natapov <gleb@redhat.com>
+Cc: Marcelo Tosatti <mtosatti@redhat.com>,
+	"Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
+	Stefan Hajnoczi <stefanha@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 06, 2012 at 01:43:32AM +0100, Rafael J. Wysocki wrote:
-> On Wednesday, December 05, 2012 04:33:44 PM Sarah Sharp wrote:
-> > Wakeup from D3 works fine on the 3.5.0 kernel, but fails on 3.6.2.  I
-> > haven't fully bisected yet.
-> > 
-> > In debugging, I found that if you only enable runtime suspend for the
-> > NEC host controller, the host successfully comes out of D3 when you plug
-> > in a USB device.  However, if you enable runtime PM for the parent PCIe root
-> > port, it stops working.  Disabling D3cold for both devices did not help.
-> > 
-> > It looks like a PCI issue, so what sort of debugging info do you need
-> > from me?
-> 
-> It looks like this is related to one of the following commits:
+On Mon, Nov 26, 2012 at 11:46 PM, Gleb Natapov <gleb@redhat.com> wrote:
+> On Mon, Nov 26, 2012 at 09:46:12PM -0200, Marcelo Tosatti wrote:
+>> On Tue, Nov 20, 2012 at 02:09:46PM +0000, Pandarathil, Vijaymohan R wrote:
+>> >
+>> >
+>> > > -----Original Message-----
+>> > > From: Stefan Hajnoczi [mailto:stefanha@gmail.com]
+>> > > Sent: Tuesday, November 20, 2012 5:41 AM
+>> > > To: Pandarathil, Vijaymohan R
+>> > > Cc: kvm@vger.kernel.org; linux-pci@vger.kernel.org; qemu-devel@nongnu.org;
+>> > > linux-kernel@vger.kernel.org
+>> > > Subject: Re: [PATCH 0/4] AER-KVM: Error containment of PCI pass-thru
+>> > > devices assigned to KVM guests
+>> > >
+>> > > On Tue, Nov 20, 2012 at 06:31:48AM +0000, Pandarathil, Vijaymohan R wrote:
+>> > > > Add support for error containment when a PCI pass-thru device assigned to
+>> > > a KVM
+>> > > > guest encounters an error. This is for PCIe devices/drivers that support
+>> > > AER
+>> > > > functionality. When the OS is notified of an error in a device either
+>> > > > through the firmware first approach or through an interrupt handled by
+>> > > the AER
+>> > > > root port driver, concerned subsystems are notified by invoking callbacks
+>> > > > registered by these subsystems. The device is also marked as tainted till
+>> > > the
+>> > > > corresponding driver recovery routines are successful.
+>> > > >
+>> > > > KVM module registers for a notification of such errors. In the KVM
+>> > > callback
+>> > > > routine, a global counter is incremented to keep track of the error
+>> > > > notification. Before each CPU enters guest mode to execute guest code,
+>> > > > appropriate checks are done to see if the impacted device belongs to the
+>> > > guest
+>> > > > or not. If the device belongs to the guest, qemu hypervisor for the guest
+>> > > is
+>> > > > informed and the guest is immediately brought down, thus preventing or
+>> > > > minimizing chances of any bad data being written out by the guest driver
+>> > > > after the device has encountered an error.
+>> > >
+>> > > I'm surprised that the hypervisor would shut down the guest when PCIe
+>> > > AER kicks in for a pass-through device.  Shouldn't we pass the AER event
+>> > > into the guest and deal with it there?
+>> >
+>> > Agreed. That would be the ideal behavior and is planned in a future patch.
+>> > Lack of control over the capabilities/type of the OS/drivers running in
+>> > the guest is also a concern in passing along the event to the guest.
+>> >
+>> > My understanding is that in the current implementation of Linux/KVM, these
+>> > errors are not handled at all and can potentially cause a guest hang or
+>> > crash or even data corruption depending on the implementation of the guest
+>> > driver for the device. As a first step, these patches make the behavior
+>> > better by doing error containment with a predictable behavior when such
+>> > errors occur.
+>>
+>> For both ACPI notifications and Linux PCI AER driver there is a way for
+>> the PCI driver to receive a notification, correct?
+>>
+>> Can just have virt/kvm/assigned-dev.c code register such a notifier (as
+>> a "PCI driver") and then perform appropriate action?
+>>
+>> Also the semantics of "tainted driver" is not entirely clear.
+>>
+>> Is there any reason for not having this feature for VFIO only, as KVM
+>> device assigment is being phased out?
+>>
+> Exactly. We shouldn't add checks to guest entry code and introduce new
+> userspace ABI to add minor feature to deprecated code. New userspace ABI
+> means that QEMU changes are needed, so the feature will be fully functional
+> only with latest QEMU which is capable of using VFIO anyway.
 
-> Generally, please try to bisect changes in drivers/pci between v3.5 and v3.6.
+I'm ignoring these patches for now.  Please address the review
+comments if you think we still need to do something here.
 
-Ok, I ran git bisect with only the drivers/pci directory as a target.
-
-> ee85f54 ACPI/PM: specify lowest allowed state for device sleep state
-
-git bisect ended up identifying this as the bad patch, although
-reverting just that patch after the bisect finished didn't seem to help.
-However, it does make sense that this would be the culprit patch, if
-Huang Ying's theory about the PME polling is correct.
-
-Sarah Sharp
+Bjorn
