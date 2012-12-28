@@ -1,126 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v6 1/3] aerdrv: Trace Event for AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 04 Dec 2012 10:04:30 -0700
-Message-ID: <20121204170429.31397.50068.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:30382 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751252Ab2L1I4Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Dec 2012 03:56:25 -0500
+Message-ID: <50DD5E8A.5050205@cn.fujitsu.com>
+Date: Fri, 28 Dec 2012 16:55:38 +0800
+From: Lin Feng <linfeng@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com
+Subject: Re: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
+References: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com> <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com>
+In-Reply-To: <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This header file will define a new trace event that will be triggered when
-a AER event occurs.  The following data will be provided to the trace
-event.
 
-char * dev_name - The name of the slot where the device resides
-                  ([domain:]bus:device.function).
 
-u32 status - Either the correctable or uncorrectable register
-             indicating what error or errors have been see.
-
-u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-
-The trace event will also provide a trace string that may look like:
-
-"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-TLP"
-
-v1-v2 Move header from include/ras/aer_event.h to
-include/trace/events/ras.h
-v3-v4 Cleaned up comments and commit header
-v4-v5 More cleanup remove () from if statement in print.
-      Renamed string define to be more specific.
-v5-v6 change TRACE_SYSTEM define to be ras and not aer.
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
----
-
- 0 files changed, 0 insertions(+), 0 deletions(-)
-
-diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-new file mode 100644
-index 0000000..88b8783
---- /dev/null
-+++ b/include/trace/events/ras.h
-@@ -0,0 +1,77 @@
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM ras
-+
-+#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_AER_H
-+
-+#include <linux/tracepoint.h>
-+#include <linux/edac.h>
-+
-+
-+/*
-+ * PCIe AER Trace event
-+ *
-+ * These events are generated when hardware detects a corrected or
-+ * uncorrected event on a PCIe device. The event report has
-+ * the following structure:
-+ *
-+ * char * dev_name -	The name of the slot where the device resides
-+ *			([domain:]bus:device.function).
-+ * u32 status -		Either the correctable or uncorrectable register
-+ *			indicating what error or errors have been seen
-+ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-+ */
-+
-+#define aer_correctable_errors		\
-+	{BIT(0),	"Receiver Error"},		\
-+	{BIT(6),	"Bad TLP"},			\
-+	{BIT(7),	"Bad DLLP"},			\
-+	{BIT(8),	"RELAY_NUM Rollover"},		\
-+	{BIT(12),	"Replay Timer Timeout"},	\
-+	{BIT(13),	"Advisory Non-Fatal"}
-+
-+#define aer_uncorrectable_errors		\
-+	{BIT(4),	"Data Link Protocol"},		\
-+	{BIT(12),	"Poisoned TLP"},		\
-+	{BIT(13),	"Flow Control Protocol"},	\
-+	{BIT(14),	"Completion Timeout"},		\
-+	{BIT(15),	"Completer Abort"},		\
-+	{BIT(16),	"Unexpected Completion"},	\
-+	{BIT(17),	"Receiver Overflow"},		\
-+	{BIT(18),	"Malformed TLP"},		\
-+	{BIT(19),	"ECRC"},			\
-+	{BIT(20),	"Unsupported Request"}
-+
-+TRACE_EVENT(aer_event,
-+	TP_PROTO(const char *dev_name,
-+		 const u32 status,
-+		 const u8 severity),
-+
-+	TP_ARGS(dev_name, status, severity),
-+
-+	TP_STRUCT__entry(
-+		__string(	dev_name,	dev_name	)
-+		__field(	u32,		status		)
-+		__field(	u8,		severity	)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->status		= status;
-+		__entry->severity	= severity;
-+	),
-+
-+	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-+		__get_str(dev_name),
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
-+			__entry->severity == HW_EVENT_ERR_FATAL ?
-+			"Fatal" : "Uncorrected",
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-+		__print_flags(__entry->status, "|", aer_correctable_errors) :
-+		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
-+);
-+
-+#endif /* _TRACE_AER_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-
+On 12/28/2012 03:45 PM, Yinghai Lu wrote:
+> On Thu, Dec 27, 2012 at 11:31 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+>> pci_reassigndev_resource_alignment() potentially calls
+>> pci_specified_resource_alignment() twice, which is redundant.
+>>
+>> pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
+>> and from sematic/functionality aspects pci_specified_resource_alignment() is
+>> sufficient to substitute, so also make some cleanup.
+>>
+>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+>> Cc: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/pci.c |   16 ++--------------
+>>  1 files changed, 2 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 5cb5820..789f401 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>>         return align;
+>>  }
+>>
+>> -/**
+>> - * pci_is_reassigndev - check if specified PCI is target device to reassign
+>> - * @dev: the PCI device to check
+>> - *
+>> - * RETURNS: non-zero for PCI device is a target device to reassign,
+>> - *          or zero is not.
+>> - */
+>> -int pci_is_reassigndev(struct pci_dev *dev)
+>> -{
+>> -       return (pci_specified_resource_alignment(dev) != 0);
+>> -}
+>> -
+>>  /*
+>>   * This function disables memory decoding and releases memory resources
+>>   * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+>> @@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>         resource_size_t align, size;
+>>         u16 command;
+>>
+>> -       if (!pci_is_reassigndev(dev))
+>> +       align = pci_specified_resource_alignment(dev);
+>> +       if (!align)
+>>                 return;
+>>
+>>         if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+>> @@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>         command &= ~PCI_COMMAND_MEMORY;
+>>         pci_write_config_word(dev, PCI_COMMAND, command);
+>>
+>> -       align = pci_specified_resource_alignment(dev);
+>>         for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+>>                 r = &dev->resource[i];
+>>                 if (!(r->flags & IORESOURCE_MEM))
+>> --
+>> 1.7.1
+>>
+> 
+> looks the same as the one that i posted 6 months ago.
+> 
+> http://copilotco.com/mail-archives/linux-kernel.2012/msg18498.html
+Sorry, I didn't notice your patchset before :)
+Yes, they are the same. But why does nobody care this?
+> 
+> Yinghai
+> 
