@@ -1,110 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:15120
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750948Ab2LEITy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 03:19:54 -0500
-Message-ID: <50BF03C1.2070304@freescale.com>
-Date: Wed, 5 Dec 2012 16:20:17 +0800
-From: Chen Yuanquan-B41889 <B41889@freescale.com>
-MIME-Version: 1.0
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-CC: <linuxppc-dev@lists.ozlabs.org>, <galak@kernel.crashing.org>,
-	<r61911@freescale.com>, <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [linuxppc-release][PATCH] powerpc/pci-hotplug: fix init issue
- of rescanned pci device
-References: <1354674717-14426-1-git-send-email-B41889@freescale.com> <1354691878.2351.2.camel@pasglop>
-In-Reply-To: <1354691878.2351.2.camel@pasglop>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from cn.fujitsu.com ([222.73.24.84]:43130 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751280Ab2L1Hce (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Dec 2012 02:32:34 -0500
+From: Lin Feng <linfeng@cn.fujitsu.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, yinghai@kernel.org,
+	tangchen@cn.fujitsu.com, Lin Feng <linfeng@cn.fujitsu.com>
+Subject: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
+Date: Fri, 28 Dec 2012 15:31:42 +0800
+Message-Id: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/05/2012 03:17 PM, Benjamin Herrenschmidt wrote:
-> On Wed, 2012-12-05 at 10:31 +0800, Yuanquan Chen wrote:
->> On powerpc arch, some fixup work of PCI/PCI-e device is just done during the
->> first scan at booting time. For the PCI/PCI-e device rescanned after linux OS
->> booting up, the fixup work won't be done, which leads to dma_set_mask error or
->> irq related issue in rescanned PCI/PCI-e device's driver. So, it does the same
->> fixup work for the rescanned device to avoid this issue.
-> Hrm, the patch is a bit gross. First the code shouldn't be copy/pasted
-> that way but factored out.
-There's a judgement "if (!bus->is_added)" before calling of 
-pcibios_fixup_bus
-in pci_scan_child_bus, so for the rescanned device, the fixup won't execute,
-which leads to fatal error in driver of rescanned device on freescale 
-powerpc, no
-this issues on x86 arch. Remove the judgement, let it to do the 
-pcibios_fixup_bus
-directly, the error won't occur for the rescanned device. But it's 
-general code, not
-proper to change here, so copy the pcibios_fixup_bus work to 
-pcibios_enable_device.
-> I'm surprised also that is_added is false when pcibios_enable_device()
-> gets called ... that looks strange to me. At what point is that enable
-> happening in the hotplug sequence ?
-All devices are rescanned and then call the pci_enable_devices and 
-pci_bus_add_devices.
-The patch code will be called by pci_enable_devices. The "dev->is_added" 
-is set in pci_bus_add_device
-which is called by pci_bus_add_devices. So "dev->is_added" is false when 
-checking it in pcibios_enable_device
-for the rescanned device.
-> How do you trigger the rescan anyway ?
-Use the interface under /sys :
-echo 1 > /sys/bus/pci/devices/xxx/remove
+pci_reassigndev_resource_alignment() potentially calls
+pci_specified_resource_alignment() twice, which is redundant.
 
-then echo 1 to the pci device which is the bus of the removed device
-echo 1 > /sys/bus/pci/devices/xxxx/rescan
-the removed device will be scanned and it's driver module will be loaded 
-automatically.
+pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
+and from sematic/functionality aspects pci_specified_resource_alignment() is
+sufficient to substitute, so also make some cleanup.
 
-Regards,
-yuanquan
-> I think the problem needs to be solve at a higher level, I'm adding
-> linux-pci & Bjorn to the CC list.
->
-> Cheers,
-> Ben.
->
->> Signed-off-by: Yuanquan Chen <B41889@freescale.com>
->> ---
->>   arch/powerpc/kernel/pci-common.c |   20 ++++++++++++++++++++
->>   1 file changed, 20 insertions(+)
->>
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index 7f94f76..f0fb070 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -1496,6 +1496,26 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->>   		if (ppc_md.pcibios_enable_device_hook(dev))
->>   			return -EINVAL;
->>   
->> +	if (!dev->is_added) {
->> +		/*
->> +		 * Fixup NUMA node as it may not be setup yet by the generic
->> +		 * code and is needed by the DMA init
->> +		 */
->> +		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
->> +
->> +		/* Hook up default DMA ops */
->> +		set_dma_ops(&dev->dev, pci_dma_ops);
->> +		set_dma_offset(&dev->dev, PCI_DRAM_OFFSET);
->> +
->> +		/* Additional platform DMA/iommu setup */
->> +		if (ppc_md.pci_dma_dev_setup)
->> +			ppc_md.pci_dma_dev_setup(dev);
->> +
->> +		/* Read default IRQs and fixup if necessary */
->> +		pci_read_irq_line(dev);
->> +		if (ppc_md.pci_irq_fixup)
->> +			ppc_md.pci_irq_fixup(dev);
->> +	}
->>   	return pci_enable_resources(dev, mask);
->>   }
->>   
->
->
->
->
+Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci.c |   16 ++--------------
+ 1 files changed, 2 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5cb5820..789f401 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	return align;
+ }
+ 
+-/**
+- * pci_is_reassigndev - check if specified PCI is target device to reassign
+- * @dev: the PCI device to check
+- *
+- * RETURNS: non-zero for PCI device is a target device to reassign,
+- *          or zero is not.
+- */
+-int pci_is_reassigndev(struct pci_dev *dev)
+-{
+-	return (pci_specified_resource_alignment(dev) != 0);
+-}
+-
+ /*
+  * This function disables memory decoding and releases memory resources
+  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+@@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align, size;
+ 	u16 command;
+ 
+-	if (!pci_is_reassigndev(dev))
++	align = pci_specified_resource_alignment(dev);
++	if (!align)
+ 		return;
+ 
+ 	if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+@@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+-	align = pci_specified_resource_alignment(dev);
+ 	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+-- 
+1.7.1
 
