@@ -1,45 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gg0-f202.google.com ([209.85.161.202]:44426 "EHLO
-	mail-gg0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964818Ab2LEU5w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Dec 2012 15:57:52 -0500
-Received: by mail-gg0-f202.google.com with SMTP id k1so671972ggn.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Dec 2012 12:57:51 -0800 (PST)
-Subject: [PATCH 06/12] cxgb3: Use standard #defines for PCIe Capability ASPM
-	fields
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: netdev@vger.kernel.org, Divy Le Ray <divy@chelsio.com>
-Date: Wed, 05 Dec 2012 13:57:50 -0700
-Message-ID: <20121205205750.13851.10893.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:65036 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381Ab2L1Hp1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Dec 2012 02:45:27 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com>
+References: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com>
+Date: Thu, 27 Dec 2012 23:45:24 -0800
+Message-ID: <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com>
+Subject: Re: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lin Feng <linfeng@cn.fujitsu.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the standard #defines rather than bare numbers for PCIe Capability
-ASPM fields.
+On Thu, Dec 27, 2012 at 11:31 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+> pci_reassigndev_resource_alignment() potentially calls
+> pci_specified_resource_alignment() twice, which is redundant.
+>
+> pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
+> and from sematic/functionality aspects pci_specified_resource_alignment() is
+> sufficient to substitute, so also make some cleanup.
+>
+> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/pci.c |   16 ++--------------
+>  1 files changed, 2 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 5cb5820..789f401 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>         return align;
+>  }
+>
+> -/**
+> - * pci_is_reassigndev - check if specified PCI is target device to reassign
+> - * @dev: the PCI device to check
+> - *
+> - * RETURNS: non-zero for PCI device is a target device to reassign,
+> - *          or zero is not.
+> - */
+> -int pci_is_reassigndev(struct pci_dev *dev)
+> -{
+> -       return (pci_specified_resource_alignment(dev) != 0);
+> -}
+> -
+>  /*
+>   * This function disables memory decoding and releases memory resources
+>   * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+> @@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>         resource_size_t align, size;
+>         u16 command;
+>
+> -       if (!pci_is_reassigndev(dev))
+> +       align = pci_specified_resource_alignment(dev);
+> +       if (!align)
+>                 return;
+>
+>         if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+> @@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>         command &= ~PCI_COMMAND_MEMORY;
+>         pci_write_config_word(dev, PCI_COMMAND, command);
+>
+> -       align = pci_specified_resource_alignment(dev);
+>         for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+>                 r = &dev->resource[i];
+>                 if (!(r->flags & IORESOURCE_MEM))
+> --
+> 1.7.1
+>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Divy Le Ray <divy@chelsio.com>
-CC: netdev@vger.kernel.org
----
- drivers/net/ethernet/chelsio/cxgb3/t3_hw.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+looks the same as the one that i posted 6 months ago.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c b/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
-index aef45d3..3dee686 100644
---- a/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb3/t3_hw.c
-@@ -3307,7 +3307,7 @@ static void config_pcie(struct adapter *adap)
- 	    G_NUMFSTTRNSEQRX(t3_read_reg(adap, A_PCIE_MODE));
- 	log2_width = fls(adap->params.pci.width) - 1;
- 	acklat = ack_lat[log2_width][pldsize];
--	if (val & 1)		/* check LOsEnable */
-+	if (val & PCI_EXP_LNKCTL_ASPM_L0S)	/* check LOsEnable */
- 		acklat += fst_trn_tx * 4;
- 	rpllmt = rpl_tmr[log2_width][pldsize] + fst_trn_rx * 4;
- 
+http://copilotco.com/mail-archives/linux-kernel.2012/msg18498.html
 
+Yinghai
