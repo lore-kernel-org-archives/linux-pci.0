@@ -1,77 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:59077 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755628Ab2LLWeJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Dec 2012 17:34:09 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Yijing Wang <wangyijing0307@gmail.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	linux-pci@vger.kernel.org, Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH 5/6] ACPI: Replace struct acpi_bus_ops with enum type
-Date: Wed, 12 Dec 2012 23:39:12 +0100
-Message-ID: <20863259.Bu9Is6dGkB@vostro.rjw.lan>
-In-Reply-To: <50C89D2B.4060206@gmail.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <50C89608.7050908@gmail.com> <50C89D2B.4060206@gmail.com>
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:38427 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673Ab2L1OZm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Dec 2012 09:25:42 -0500
+Received: from smtp29.msg.oleane.net (smtp29.mail.priv [172.17.20.151])
+	by smtp-out06.msg.oleane.net with ESMTP id qBS9ujXJ029696
+	for <linux-pci@vger.kernel.org>; Fri, 28 Dec 2012 10:56:45 +0100
+Received: from ic.fr (LDijon-156-65-26-47.w80-15.abo.wanadoo.fr [80.15.105.47])
+	by smtp29.msg.oleane.net (MTA) with ESMTP id qBS9aHbB003660
+	for <linux-pci@vger.kernel.org>; Fri, 28 Dec 2012 10:36:17 +0100
+Received: from [192.168.4.56] (unknown [192.168.4.56])
+	by ic.fr (Postfix) with ESMTPA id 9A67C2222A
+	for <linux-pci@vger.kernel.org>; Fri, 28 Dec 2012 10:36:17 +0100 (CET)
+Message-ID: <50DD6811.7020301@ic.fr>
+Date: Fri, 28 Dec 2012 10:36:17 +0100
+From: =?ISO-8859-1?Q?C=E9dric_Cano?= <ccano@interfaceconcept.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: linux-pci@vger.kernel.org
+Subject: Question: how can I get the real PCI address of a BAR?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 12, 2012 11:05:15 PM Jiang Liu wrote:
-> On 12/12/2012 10:34 PM, Yijing Wang wrote:
-> > 于 2012-12-12 2:30, Rafael J. Wysocki 写道:
-> >> Hi Gerry,
-> >>
-> >> On Tuesday, December 11, 2012 11:09:06 PM Jiang Liu wrote:
-> >>> Hi Rafael,
-> >>> 	I have worked out a patch set to clean up ACPI/PCI related notifications,
-> >>> please refer to
-> >>> http://www.spinics.net/lists/linux-pci/msg17822.html
-> >>> 	The patchset doesn't apply cleanly to Bjorn's latest pci-next tree. I will
-> >>> help to rebase it if needed.
-> >>
-> >> I have reviewed the patches and I think they make sense overall.  However,
-> >> the statement that acpi_pci_bind()/acpi_pci_unbind() are used to maintain
-> >> PCI-ACPI binding relationships is quite inaccurate, because all what these
-> >> functions do is to (1) add/remove ACPI PM notifiers to/from PCI devices and
-> >> (2) retrieve the _PRT information for bridges from ACPI tables.  In fact,
-> >> the *binding* itself is managed by the code in drivers/acpi/glue.c.
-> >>
-> >> Also, please have a look at my suggestion in the last reply to Yinghai:
-> >>
-> >> http://marc.info/?l=linux-pci&m=135522965707752&w=2
-> >>
-> >> In fact, I think we can go even further than that.  Namely, if we populate the
-> >> ACPI handle of the device in pci_scan_device(), then we can just move the PM
-> >> notifier and wakeup setup to platform_pci_wakeup_init(), where it should be
-> >> (we'll also need to add a corresponding _exit() function, then, but that'll be
-> >> much cleaner anyway).
-> >>
-> >> Then, the remaining thing would be to ensure that _PRT entries are parsed
-> >> as appropriate somewhere around pci_init_capabilities().
-> >>
-> >> Also, I wonder if you can help test the $subject patchset on a system with
-> >> hardware PCI hotplug (preferably on top of the linux-pm.git/master branch)?
-> >>
-> > Hi Rafael,
-> >    We are doing test for this series patches, I will send out the test result as soon.
-> Hi Rafael,
-> 	We have tried to merge your patchset with IOH hotplug patchsets from Yinghai,
-> and obviously it's not a ease task and we have run into panics. We will try to find
-> some ways to test your patchset only next step.
+Hi,
 
-Thanks a lot for doing this, really appreciated!
+I'm writing a driver for a DMA engine on the PCI bus. My architecture is 
+a 36-bit PowerPC (MPC85xx).
 
-Rafael
+In my DMA driver, I want to configure the DMA to transfer data to/from a 
+PCI device.
+I get the PCI address of the device BAR with the command pci_resource_start.
+This address is 36-bit but the PCI BAR of the device is 32-bit: I can't 
+use the 36-bit address to run the DMA.
+
+In kernel documentations, it's advised not to directly read the BAR.
+
+Is there a function which provides the real PCI address i.e. the one 
+stored in the BAR?
+
+Thanks.
+
+C. Cano
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
