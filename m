@@ -1,97 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 5/6] PCI/acpiphp: serialize access to the bridge_list list
-Date: Wed,  9 Jan 2013 00:52:24 +0800
-Message-Id: <1357663945-16054-6-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
-References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1357169259.25181.9.camel@joe-AO722>
+Subject: Re: [PATCH v8 3/3] aerdrv: Cleanup log output for AER
+From: Joe Perches <joe@perches.com>
+To: Lance Ortiz <lance.ortiz@hp.com>
+Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 02 Jan 2013 15:27:39 -0800
+In-Reply-To: <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Serialize access to the bridge_list in the acpiphp driver.
+On Wed, 2013-01-02 at 16:27 -0700, Lance Ortiz wrote:
+> These changes make cper_print_aer more consistent with aer_print_error
+> and clean things up by elimiating the use of the prefix variable and
+> replacing it with dev_printk.
+[]
+> v7-v8 Updated to use dev_printk instated of prefix. Changed
+> log levels to KERN_ERR as per Mauro's suggestion
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/hotplug/acpiphp_glue.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+Just use dev_err( instead of dev_printk(KERN_ERR,
+It's a function and it makes the object code smaller.
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 16fe692..884cbf4 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -53,6 +53,7 @@
- #include "../pci.h"
- #include "acpiphp.h"
- 
-+static DEFINE_MUTEX(bridge_mutex);
- static LIST_HEAD(bridge_list);
- 
- #define MY_NAME "acpiphp_glue"
-@@ -519,8 +520,10 @@ static int add_bridge(struct acpi_pci_root *root)
- 	}
- 
- 	/* search P2P bridges under this host bridge */
-+	mutex_lock(&bridge_mutex);
- 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
- 				     find_p2p_bridge, NULL, NULL, NULL);
-+	mutex_unlock(&bridge_mutex);
- 
- 	if (ACPI_FAILURE(status))
- 		warn("find_p2p_bridge failed (error code = 0x%x)\n", status);
-@@ -618,6 +621,8 @@ static void remove_bridge(struct acpi_pci_root *root)
- 	struct acpiphp_bridge *bridge;
- 	acpi_handle handle = root->device->handle;
- 
-+	mutex_lock(&bridge_mutex);
-+
- 	/* cleanup p2p bridges under this host bridge
- 	   in a depth-first manner */
- 	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
-@@ -636,6 +641,8 @@ static void remove_bridge(struct acpi_pci_root *root)
- 	else
- 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
- 					   handle_hotplug_event_bridge);
-+
-+	mutex_unlock(&bridge_mutex);
- }
- 
- static int power_on_slot(struct acpiphp_slot *slot)
-@@ -1438,11 +1445,13 @@ static void acpiphp_hp_notify_add(struct pci_dev *dev)
- 	if (!dev->subordinate || !handle)
- 		return;
- 
-+	mutex_lock(&bridge_mutex);
- 	/* check if this bridge has ejectable slots */
- 	if (detect_ejectable_slots(handle) > 0) {
- 		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
- 		add_p2p_bridge(handle);
- 	}
-+	mutex_unlock(&bridge_mutex);
- }
- 
- static void acpiphp_hp_notify_del(struct pci_dev *dev)
-@@ -1453,11 +1462,13 @@ static void acpiphp_hp_notify_del(struct pci_dev *dev)
- 	if (!bus)
- 		return;
- 
-+	mutex_lock(&bridge_mutex);
- 	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
- 		if (bridge->pci_bus == bus) {
- 			cleanup_bridge(bridge);
- 			break;
- 		}
-+	mutex_unlock(&bridge_mutex);
- }
- 
- static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
--- 
-1.7.9.5
+> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+[]
+> @@ -144,26 +143,24 @@ static void __aer_print_error(const char *prefix,
+>  				aer_uncorrectable_error_string[i] : NULL;
+>  
+>  		if (errmsg)
+> -			printk("%s""   [%2d] %-22s%s\n", prefix, i, errmsg,
+> +			dev_printk(KERN_ERR, &dev->dev,
+> +				"   [%2d] %-22s%s\n", i, errmsg,
+>  				info->first_error == i ? " (First)" : "");
+>  		else
+> -			printk("%s""   [%2d] Unknown Error Bit%s\n", prefix, i,
+> -				info->first_error == i ? " (First)" : "");
+> +			dev_printk(KERN_ERR, &dev->dev,
+> +				"   [%2d] Unknown Error Bit%s\n",
+> +				i, info->first_error == i ? " (First)" : "");
+>  	}
+[]
+>  	if (info->status == 0) {
+> -		printk("%s""PCIe Bus Error: severity=%s, type=Unaccessible, "
+> -			"id=%04x(Unregistered Agent ID)\n", prefix,
+> +		dev_printk(KERN_ERR, &dev->dev,
+> +			"PCIe Bus Error: severity=%s, type=Unaccessible, "
+> +			"id=%04x(Unregistered Agent ID)\n",
+[]
+> @@ -171,22 +168,24 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+[]
+> +		dev_printk(KERN_ERR, &dev->dev,
+> +			"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
+> +			aer_error_severity_string[info->severity],
+[]
+> +		dev_printk(KERN_ERR, &dev->dev,
+> +			"  device [%04x:%04x] error status/mask=%08x/%08x\n",
+> +			dev->vendor, dev->device,
+>  			info->status, info->mask);
+[]
+> +			dev_printk(KERN_ERR, &dev->dev, "  TLP Header:"
+>  				" %02x%02x%02x%02x %02x%02x%02x%02x"
+>  				" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+[]
+> @@ -195,8 +194,9 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+[]
+> +		dev_printk(KERN_ERR, &dev->dev,
+> +			   "  Error of this Agent(%04x) is reported first\n",
+> +			id);
+[]
+> @@ -244,21 +244,21 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
+[]
+> +	dev_printk(KERN_ERR, &dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
+> +	       status, mask);
+[]
+> +	dev_printk(KERN_ERR, &dev->dev, "aer_layer=%s, aer_agent=%s\n",
+>  	       aer_error_layer[layer], aer_agent_string[agent]);
+[]
+> +		dev_printk(KERN_ERR, &dev->dev, "aer_tlp_header:"
+
 
