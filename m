@@ -1,57 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:43194 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933436Ab3AIVah (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 16:30:37 -0500
-Date: Wed, 9 Jan 2013 21:28:47 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130109212847.GT3931@n2100.arm.linux.org.uk>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-6-git-send-email-thierry.reding@avionic-design.de>
+Received: from mx1.redhat.com ([209.132.183.28]:46166 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752132Ab3ABRI0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Jan 2013 12:08:26 -0500
+Message-ID: <50E4697F.70408@redhat.com>
+Date: Wed, 02 Jan 2013 12:08:15 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357764194-12677-6-git-send-email-thierry.reding@avionic-design.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
+	linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
+	bhutchings@solarflare.com, yinghai@kernel.org, davem@davemloft.net
+Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
+References: <1352146841-64458-1-git-send-email-ddutile@redhat.com> <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com> <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com> <20121217232439.GA9746@google.com> <50D24355.1050100@redhat.com> <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com> <CAErSpo7cj4hdk+PznobkmxoM5pqpSzhoM0_RKSbGo4xq2imHaQ@mail.gmail.com>
+In-Reply-To: <CAErSpo7cj4hdk+PznobkmxoM5pqpSzhoM0_RKSbGo4xq2imHaQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 09, 2013 at 09:43:05PM +0100, Thierry Reding wrote:
-> The I/O map cache is used to map large regions of physical memory in
-> smaller chunks to avoid running out of vmalloc()/ioremap() space.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+On 12/21/2012 02:49 PM, Bjorn Helgaas wrote:
+> On Thu, Dec 20, 2012 at 2:47 PM, Bjorn Helgaas<bhelgaas@google.com>  wrote:
+>
+>> I made the -EPERM change suggested by Greg and added this to my
+>> pci/for-3.8 branch.  I'll ask Linus to pull it soon after v3.8-rc1.
+>
+> After a little off-list discussion about the merits of EINVAL, EPERM,
+> EBUSY, etc., I adopted Ben's suggestion of EBUSY for this case:
+>
+> +       if (pdev->sriov->num_VFs) {
+> +               dev_warn(&pdev->dev, "%d VFs already enabled. Disable
+> before enabling %d VFs\n",
+> +                        pdev->sriov->num_VFs, num_vfs);
+> +               return -EBUSY;
+>
+> where the idea is "the device is already busy providing N VFs, so you
+> can't configure it to serve M VFs"
+>
+> Does that sound agreeable to everybody?
+>
+> Bjorn
+Ack!
 
-We already have a means where we record the mappings which ioremap()
-creates.  If you look at /proc/vmallocinfo, you'll notice lines such
-as:
-
-0xf7b72000-0xf7b74000    8192 e1000_probe+0x291/0xa68 [e1000e] phys=fc025000 ioremap
-
-which gives you the virtual address range, physical address and type
-of the mapping.  Why do we need a duplicated data structure?
-
-Moreover, you seem to suggest that you want to break up a large
-ioremap() mapping into several smaller mappings.  Why?  The idea
-behind ioremap() is that this relationship holds true:
-
-	ptr = ioremap(cookie + n, size);
-
-For any 'n' in the range 0 .. size, the location shall be accessible
-via ptr + n when using the IO space accessors.  If you're going to
-break up a mapping into several smaller ones, this no longer holds
-true.
-
-If the problem is that you're ioremapping huge address ranges because
-you're passing larger-than-required resources to devices, then that's
-part of the problem too.
