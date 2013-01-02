@@ -1,110 +1,129 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Fri, 04 Jan 2013 12:38:35 +0100
-Message-ID: <1832392.tD5dEjQMy4@vostro.rjw.lan>
-In-Reply-To: <20130104010038.GA11155@google.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <113112384.JZ1gZKlJRa@vostro.rjw.lan> <20130104010038.GA11155@google.com>
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v8 1/3] aerdrv: Trace Event for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 02 Jan 2013 16:27:30 -0700
+Message-ID: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 03, 2013 06:00:38 PM Bjorn Helgaas wrote:
-> On Thu, Jan 03, 2013 at 11:56:55PM +0100, Rafael J. Wysocki wrote:
-> 
-> > OK, I now have sent no less than three working version of the patch that fixes
-> > the current code which _is_ insane.  You haven't even responded to the last
-> > one, but for the first two the reason why you didn't like them was something
-> > similar to "it may conflict with some future changes I'm planning".  Well,
-> > that might be used to reject prety much any change and I'm not considering it
-> > as a good enough reason for blocking a fix.  Sorry about that.
-> 
-> I think your memory is faulty.  My response to the first
-> (https://lkml.org/lkml/2012/12/20/407) was "Thanks for cleaning this up, I
-> have an interface concern, here's an outline of a possible alternative."
-> 
-> My response to the second (https://lkml.org/lkml/2012/12/26/72) was "I like
-> this much better, Acked-by: Bjorn Helgaas."  Then Yinghai noticed the issue
-> with non-ACPI host bridges, and you abandoned that approach.
+This header file will define a new trace event that will be triggered when
+a AER event occurs.  The following data will be provided to the trace
+event.
 
-I thought it was helpelss, but I was clearly wrong.  I should have spent more
-time on figuring out why it failed, so thank for taking the time to do that.
+char * dev_name - The name of the slot where the device resides
+                  ([domain:]bus:device.function).
 
-> I took a few days of vacation, then spent the better part of yesterday
-> exploring the reasons why x86 and ia64 don't use the "parent" argument when
-> several other arches do, and worked up a patch
-> (https://lkml.org/lkml/2013/1/2/285).  It turned out to have a fatal flaw,
-> but was done in good faith.
+u32 status - Either the correctable or uncorrectable register
+             indicating what error or errors have been see.
 
-I know.
+u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
 
-> It's true I haven't responded to the third one, posted about 12 hours ago.
+The trace event will also provide a trace string that may look like:
 
-Oh, that's a simple patch. ;-)
+"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
+TLP"
 
-But you're right, I should be more patient.  Sorry about that.
+v1-v2 Move header from include/ras/aer_event.h to
+include/trace/events/ras.h
+v3-v4 Cleaned up comments and commit header
+v4-v5 More cleanup remove () from if statement in print.
+      Renamed string define to be more specific.
+v5-v6 change TRACE_SYSTEM define to be ras and not aer.
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+---
 
-> I still like the approach of the second patch.  What would you think
-> of the following incremental change to it?
+ include/trace/events/ras.h |   77 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 77 insertions(+), 0 deletions(-)
+ create mode 100644 include/trace/events/ras.h
 
-I'm fine with it.
+diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
+new file mode 100644
+index 0000000..88b8783
+--- /dev/null
++++ b/include/trace/events/ras.h
+@@ -0,0 +1,77 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM ras
++
++#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_AER_H
++
++#include <linux/tracepoint.h>
++#include <linux/edac.h>
++
++
++/*
++ * PCIe AER Trace event
++ *
++ * These events are generated when hardware detects a corrected or
++ * uncorrected event on a PCIe device. The event report has
++ * the following structure:
++ *
++ * char * dev_name -	The name of the slot where the device resides
++ *			([domain:]bus:device.function).
++ * u32 status -		Either the correctable or uncorrectable register
++ *			indicating what error or errors have been seen
++ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
++ */
++
++#define aer_correctable_errors		\
++	{BIT(0),	"Receiver Error"},		\
++	{BIT(6),	"Bad TLP"},			\
++	{BIT(7),	"Bad DLLP"},			\
++	{BIT(8),	"RELAY_NUM Rollover"},		\
++	{BIT(12),	"Replay Timer Timeout"},	\
++	{BIT(13),	"Advisory Non-Fatal"}
++
++#define aer_uncorrectable_errors		\
++	{BIT(4),	"Data Link Protocol"},		\
++	{BIT(12),	"Poisoned TLP"},		\
++	{BIT(13),	"Flow Control Protocol"},	\
++	{BIT(14),	"Completion Timeout"},		\
++	{BIT(15),	"Completer Abort"},		\
++	{BIT(16),	"Unexpected Completion"},	\
++	{BIT(17),	"Receiver Overflow"},		\
++	{BIT(18),	"Malformed TLP"},		\
++	{BIT(19),	"ECRC"},			\
++	{BIT(20),	"Unsupported Request"}
++
++TRACE_EVENT(aer_event,
++	TP_PROTO(const char *dev_name,
++		 const u32 status,
++		 const u8 severity),
++
++	TP_ARGS(dev_name, status, severity),
++
++	TP_STRUCT__entry(
++		__string(	dev_name,	dev_name	)
++		__field(	u32,		status		)
++		__field(	u8,		severity	)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__entry->status		= status;
++		__entry->severity	= severity;
++	),
++
++	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
++		__get_str(dev_name),
++		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
++			__entry->severity == HW_EVENT_ERR_FATAL ?
++			"Fatal" : "Uncorrected",
++		__entry->severity == HW_EVENT_ERR_CORRECTED ?
++		__print_flags(__entry->status, "|", aer_correctable_errors) :
++		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
++);
++
++#endif /* _TRACE_AER_H */
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 
-> I did reproduce Yinghai's
-> issue with non-ACPI host bridges, and this change resolves it for me.
-
-If you don't mind, I'll fold the patch below into
-
-https://patchwork.kernel.org/patch/1910181/
-
-and post the complete patch.
-
-Thanks,
-Rafael
-
-
-> diff -u b/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> --- b/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -522,6 +522,7 @@
->  	sd = &info->sd;
->  	sd->domain = domain;
->  	sd->node = node;
-> +	sd->acpi_handle = device->handle;
->  	/*
->  	 * Maybe the desired pci bus has been already scanned. In such case
->  	 * it is unnecessary to scan the pci bus with the given domain,busnum.
-> @@ -596,9 +597,8 @@
->  int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
->  {
->  	struct pci_sysdata *sd = bridge->bus->sysdata;
-> -	struct pci_root_info *info = container_of(sd, struct pci_root_info, sd);
->  
-> -	ACPI_HANDLE_SET(&bridge->dev, info->bridge->handle);
-> +	ACPI_HANDLE_SET(&bridge->dev, sd->acpi_handle);
->  	return 0;
->  }
->  
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -14,6 +14,7 @@
->  struct pci_sysdata {
->  	int		domain;		/* PCI domain */
->  	int		node;		/* NUMA node */
-> +	void		*acpi_handle;
->  #ifdef CONFIG_X86_64
->  	void		*iommu;		/* IOMMU private data */
->  #endif
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
