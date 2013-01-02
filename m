@@ -1,102 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47481 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816Ab3A0Fhj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:37:39 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 05/22] PCI: Add for_each_pci_host_bridge() and pci_get_next_host_bridge
-Date: Sat, 26 Jan 2013 21:36:26 -0800
-Message-Id: <1359265003-16166-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 2 Jan 2013 16:07:32 -0700
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle
+ in advance
+Message-ID: <20130102230732.GB31813@google.com>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
+ <CAErSpo5ZpUaHzYQEpR9Jh0MbcmjHfhKUQ-EpRJH1PNCHR_qnVg@mail.gmail.com>
+ <5457615.T2WjKPXXC4@vostro.rjw.lan>
+ <2816571.07LqOj3EJg@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2816571.07LqOj3EJg@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-use bus_find_device to loop host_bridges.
+On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
+> To that end, split pci_create_root_bus() into two functions,
+> pci_alloc_root() and pci_add_root(), that will allocate memory for
+> the new PCI bus and bridge representations and register them with
+> the driver core, respectively, and that may be called directly by
+> the architectures that need to set the root bridge's ACPI handle
+> before registering it.
 
--v2: fixes compiling error when CONFIG_PCI is not defined that Fengguang Wu found.
+I'm trying to *reduce* the interfaces for creating and scanning PCI
+host bridges, and this is a step in the opposite direction.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/search.c |   24 ++++++++++++++++++++++++
- include/linux/pci.h  |    9 +++++++++
- 2 files changed, 33 insertions(+)
+> Next, Make both x86 and ia64 (the only architectures using ACPI at
+> the moment) call pci_alloc_root(), set the root bridge's ACPI handle
+> and then call pci_add_root() in their pci_acpi_scan_root() routines
+> instead of calling pci_create_root_bus().  For the other code paths
+> adding PCI root bridges define a new pci_create_root_bus() as a
+> simple combination of pci_alloc_root() and pci_add_root().
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index d0627fa..db0c3a9 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -178,6 +178,30 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
- }
- EXPORT_SYMBOL(pci_get_domain_bus_and_slot);
+pci_create_root_bus() takes a "struct device *parent" argument.  That
+seems like a logical place to tell the PCI core about the host bridge
+device, but x86 and ia64 currently pass NULL there.
+
+The patch below shows what I'm thinking.  It does have the side-effect
+of changing the sysfs topology from this:
+
+    /sys/devices/pci0000:00
+    /sys/devices/pci0000:00/0000:00:00.0
+
+to this:
+
+    /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
+    /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
+
+because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
+rather than at the top level.  That seems like an improvement to me,
+but it *is* different.
+
+Bjorn
+
+commit 5dee5f2f4fefbe4888939871c2252299067123bf
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Jan 2 13:47:02 2013 -0700
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 0c01261..1cfde12 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -552,8 +552,9 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
  
-+static int match_pci_host_bridge(struct device *dev, void *data)
+ 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+ 				    (u8)root->secondary.end, root->mcfg_addr))
+-			bus = pci_create_root_bus(NULL, busnum, &pci_root_ops,
+-						  sd, &resources);
++			bus = pci_create_root_bus(&device->dev, busnum,
++						  &pci_root_ops, sd,
++						  &resources);
+ 
+ 		if (bus) {
+ 			pci_scan_child_bus(bus);
+@@ -593,6 +594,15 @@ struct pci_bus * __devinit pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 +{
-+	return 1;
++	struct device *parent = bridge->dev.parent;
++
++	if (parent)
++		ACPI_HANDLE_SET(&bridge->dev, to_acpi_device(parent)->handle);
++	return 0;
 +}
 +
-+struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from)
-+{
-+	struct device *dev;
-+	struct device *dev_start = NULL;
-+	struct pci_host_bridge *bridge = NULL;
-+
-+	WARN_ON(in_interrupt());
-+	if (from)
-+		dev_start = &from->dev;
-+	dev = bus_find_device(&pci_host_bridge_bus_type, dev_start, NULL,
-+			      match_pci_host_bridge);
-+	if (dev)
-+		bridge = to_pci_host_bridge(dev);
-+	if (from)
-+		put_device(&from->dev);
-+	return bridge;
-+}
-+EXPORT_SYMBOL_GPL(pci_get_next_host_bridge);
-+
- static int match_pci_dev_by_id(struct device *dev, void *data)
+ int __init pci_acpi_init(void)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9da06ec..67879cb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -375,6 +375,8 @@ struct pci_host_bridge {
+ 	struct pci_dev *dev = NULL;
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 1af4008..d4516c4 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -303,28 +303,9 @@ static int acpi_pci_find_device(struct device *dev, acpi_handle *handle)
+ 	return 0;
+ }
+ 
+-static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
+-{
+-	int num;
+-	unsigned int seg, bus;
+-
+-	/*
+-	 * The string should be the same as root bridge's name
+-	 * Please look at 'pci_scan_bus_parented'
+-	 */
+-	num = sscanf(dev_name(dev), "pci%04x:%02x", &seg, &bus);
+-	if (num != 2)
+-		return -ENODEV;
+-	*handle = acpi_get_pci_rootbridge_handle(seg, bus);
+-	if (!*handle)
+-		return -ENODEV;
+-	return 0;
+-}
+-
+ static struct acpi_bus_type acpi_pci_bus = {
+ 	.bus = &pci_bus_type,
+ 	.find_device = acpi_pci_find_device,
+-	.find_bridge = acpi_pci_find_root_bridge,
  };
  
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
-+#define for_each_pci_host_bridge(d) while ((d = pci_get_next_host_bridge(d)) != NULL)
-+
- void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
- 		     void (*release_fn)(struct pci_host_bridge *),
- 		     void *release_data);
-@@ -763,6 +765,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
- int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
- struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ static int __init acpi_pci_init(void)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6186f03..3575b2b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1633,6 +1633,11 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ 	return max;
+ }
  
-+struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
- struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
- 				struct pci_dev *from);
- struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
-@@ -1418,6 +1421,12 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- static inline struct pci_dev *pci_dev_get(struct pci_dev *dev)
- { return NULL; }
- 
-+static inline struct pci_host_bridge *pci_get_next_host_bridge(
-+			struct pci_host_bridge *host_bridge)
++int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
 +{
-+	return NULL;
++	return 0;
 +}
 +
- #define dev_is_pci(d) (false)
- #define dev_is_pf(d) (false)
- #define dev_num_vf(d) (0)
--- 
-1.7.10.4
-
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+ {
+@@ -1645,7 +1650,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	char bus_addr[64];
+ 	char *fmt;
+ 
+-
+ 	b = pci_alloc_bus();
+ 	if (!b)
+ 		return NULL;
+@@ -1666,6 +1670,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_bus_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	error = pcibios_root_bridge_prepare(bridge);
++	if (error)
++		goto bridge_dev_reg_err;
+ 	error = device_register(&bridge->dev);
+ 	if (error)
+ 		goto bridge_dev_reg_err;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 15472d6..238438c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -674,6 +674,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
+ /* Some device drivers need know if pci is initiated */
+ extern int no_pci_devices(void);
+ 
++int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+ void pcibios_fixup_bus(struct pci_bus *);
+ int __must_check pcibios_enable_device(struct pci_dev *, int mask);
+ /* Architecture specific versions may override this (weak) */
