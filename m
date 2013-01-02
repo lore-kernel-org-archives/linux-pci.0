@@ -1,48 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:54076 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293Ab3AKAPM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 19:15:12 -0500
-Message-ID: <50EF598B.2030307@wwwdotorg.org>
-Date: Thu, 10 Jan 2013 17:15:07 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:3961 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707Ab3ABWcl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jan 2013 17:32:41 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v8 3/3] aerdrv: Cleanup log output for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 02 Jan 2013 16:27:43 -0700
+Message-ID: <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 09/14] ARM: tegra: Move pmc.h to include/mach
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-10-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1357764194-12677-10-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/09/2013 01:43 PM, Thierry Reding wrote:
-> In preparation for moving the PCIe driver into the drivers/pci/host
-> directory, this header, which contains prototypes that are required by
-> the PCIe driver, needs to be moved to a globally visible location.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> ---
-> Note that eventually the code in pmc.c and powergate.c should probably
-> be split out into a separate driver. The PMC registers are also directly
-> accessed from tegra20_clocks.c and tegra30_clocks.c, so that it might be
-> required to provide that functionality through the new driver as well.
-> ---
->  arch/arm/mach-tegra/common.c           |  2 +-
->  arch/arm/mach-tegra/include/mach/pmc.h | 24 ++++++++++++++++++++++++
->  arch/arm/mach-tegra/pmc.h              | 24 ------------------------
+These changes make cper_print_aer more consistent with aer_print_error
+and clean things up by elimiating the use of the prefix variable and
+replacing it with dev_printk.
 
-On IRC, we'd talked about putting the public functionality in
-include/linux/tegra-pmc.h so that we wouldn't add to include/mach, which
-would make it harder to make Tegra support ARM multi-platform. Perhaps
-that IRC discussion happened after you posted this series?
+v1-v2 fix some compile errors withinn the #ifdef
+v3-v4 remove agent id stuff and kept print the same to avoid
+compatibility issues
+v7-v8 Updated to use dev_printk instated of prefix. Changed
+log levels to KERN_ERR as per Mauro's suggestion.
+
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+---
+
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   56 ++++++++++++++++----------------
+ 1 files changed, 28 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index d3e5fc5..dfd9641 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -124,12 +124,11 @@ static const char *aer_agent_string[] = {
+ 	"Transmitter ID"
+ };
+ 
+-static void __aer_print_error(const char *prefix,
++static void __aer_print_error(struct pci_dev *dev,
+ 			      struct aer_err_info *info)
+ {
+ 	int i, status;
+ 	const char *errmsg = NULL;
+-
+ 	status = (info->status & ~info->mask);
+ 
+ 	for (i = 0; i < 32; i++) {
+@@ -144,26 +143,24 @@ static void __aer_print_error(const char *prefix,
+ 				aer_uncorrectable_error_string[i] : NULL;
+ 
+ 		if (errmsg)
+-			printk("%s""   [%2d] %-22s%s\n", prefix, i, errmsg,
++			dev_printk(KERN_ERR, &dev->dev,
++				"   [%2d] %-22s%s\n", i, errmsg,
+ 				info->first_error == i ? " (First)" : "");
+ 		else
+-			printk("%s""   [%2d] Unknown Error Bit%s\n", prefix, i,
+-				info->first_error == i ? " (First)" : "");
++			dev_printk(KERN_ERR, &dev->dev,
++				"   [%2d] Unknown Error Bit%s\n",
++				i, info->first_error == i ? " (First)" : "");
+ 	}
+ }
+ 
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int id = ((dev->bus->number << 8) | dev->devfn);
+-	char prefix[44];
+-
+-	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
+-		 (info->severity == AER_CORRECTABLE) ? KERN_WARNING : KERN_ERR,
+-		 dev_driver_string(&dev->dev), dev_name(&dev->dev));
+ 
+ 	if (info->status == 0) {
+-		printk("%s""PCIe Bus Error: severity=%s, type=Unaccessible, "
+-			"id=%04x(Unregistered Agent ID)\n", prefix,
++		dev_printk(KERN_ERR, &dev->dev,
++			"PCIe Bus Error: severity=%s, type=Unaccessible, "
++			"id=%04x(Unregistered Agent ID)\n",
+ 			aer_error_severity_string[info->severity], id);
+ 	} else {
+ 		int layer, agent;
+@@ -171,22 +168,24 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 		layer = AER_GET_LAYER_ERROR(info->severity, info->status);
+ 		agent = AER_GET_AGENT(info->severity, info->status);
+ 
+-		printk("%s""PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
+-			prefix, aer_error_severity_string[info->severity],
++		dev_printk(KERN_ERR, &dev->dev,
++			"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
++			aer_error_severity_string[info->severity],
+ 			aer_error_layer[layer], id, aer_agent_string[agent]);
+ 
+-		printk("%s""  device [%04x:%04x] error status/mask=%08x/%08x\n",
+-			prefix, dev->vendor, dev->device,
++		dev_printk(KERN_ERR, &dev->dev,
++			"  device [%04x:%04x] error status/mask=%08x/%08x\n",
++			dev->vendor, dev->device,
+ 			info->status, info->mask);
+ 
+-		__aer_print_error(prefix, info);
++		__aer_print_error(dev, info);
+ 
+ 		if (info->tlp_header_valid) {
+ 			unsigned char *tlp = (unsigned char *) &info->tlp;
+-			printk("%s""  TLP Header:"
++			dev_printk(KERN_ERR, &dev->dev, "  TLP Header:"
+ 				" %02x%02x%02x%02x %02x%02x%02x%02x"
+ 				" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+-				prefix, *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
++				*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
+ 				*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
+ 				*(tlp + 11), *(tlp + 10), *(tlp + 9),
+ 				*(tlp + 8), *(tlp + 15), *(tlp + 14),
+@@ -195,8 +194,9 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	}
+ 
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+-		printk("%s""  Error of this Agent(%04x) is reported first\n",
+-			prefix, id);
++		dev_printk(KERN_ERR, &dev->dev,
++			   "  Error of this Agent(%04x) is reported first\n",
++			id);
+ 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+ 			info->severity);
+ }
+@@ -244,21 +244,21 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
+ 	}
+ 	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+ 	agent = AER_GET_AGENT(aer_severity, status);
+-	printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
+-	       prefix, status, mask);
++	dev_printk(KERN_ERR, &dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
++	       status, mask);
+ 	cper_print_bits(prefix, status, status_strs, status_strs_size);
+-	printk("%s""aer_layer=%s, aer_agent=%s\n", prefix,
++	dev_printk(KERN_ERR, &dev->dev, "aer_layer=%s, aer_agent=%s\n",
+ 	       aer_error_layer[layer], aer_agent_string[agent]);
+ 	if (aer_severity != AER_CORRECTABLE)
+-		printk("%s""aer_uncor_severity: 0x%08x\n",
+-		       prefix, aer->uncor_severity);
++		dev_printk(KERN_ERR, &dev->dev, "aer_uncor_severity: 0x%08x\n",
++		       aer->uncor_severity);
+ 	if (tlp_header_valid) {
+ 		const unsigned char *tlp;
+ 		tlp = (const unsigned char *)&aer->header_log;
+-		printk("%s""aer_tlp_header:"
++		dev_printk(KERN_ERR, &dev->dev, "aer_tlp_header:"
+ 			" %02x%02x%02x%02x %02x%02x%02x%02x"
+ 			" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+-			prefix, *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
++			*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
+ 			*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
+ 			*(tlp + 11), *(tlp + 10), *(tlp + 9),
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+
