@@ -1,60 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:41541 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758469Ab3APAQn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Jan 2013 19:16:43 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 14/22] ACPI: update ej_event interface to take acpi_device
-Date: Wed, 16 Jan 2013 01:22:35 +0100
-Message-ID: <3905799.Wx2ixLIOL7@vostro.rjw.lan>
-In-Reply-To: <2102023.Itn3WlmlaN@vostro.rjw.lan>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <CAE9FiQW-efB2s1gdmVTy8k9NLSayAxfkTFvtzQhzL6MFBFSoWQ@mail.gmail.com> <2102023.Itn3WlmlaN@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.32.191]:60622 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059Ab3ACPKF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 10:10:05 -0500
+Date: Thu, 3 Jan 2013 16:09:58 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Lior Amsalem <alior@marvell.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robherring2@gmail.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [RFC v1] PCIe support for the Armada 370 and Armada XP SoCs
+Message-ID: <20130103160958.3edf3005@skate>
+In-Reply-To: <20130103143931.GA28451@avionic-0098.adnet.avionic-design.de>
+References: <1354917879-32073-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20130103143931.GA28451@avionic-0098.adnet.avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 16, 2013 12:55:20 AM Rafael J. Wysocki wrote:
-> On Tuesday, January 15, 2013 03:43:17 PM Yinghai Lu wrote:
-> > On Tue, Jan 15, 2013 at 3:26 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > On Monday, January 14, 2013 10:55:49 PM Yinghai Lu wrote:
-[...]
-> > 
-> > 
-> > looks like:
-> > 
-> > acpi_device_release+0x30
-> > 0xffffffff81536e2f is in acpi_device_release (drivers/acpi/scan.c:524).
-> > 519	static void acpi_free_power_resources_lists(struct acpi_device *device)
-> > 520	{
-> > 521		int i;
-> > 522	
-> > 523		acpi_power_resources_list_free(&device->wakeup.resources);
-> > 524		if (!device->flags.power_manageable)
-> > 525			return;
-> > 526	
-> > 527		for (i = ACPI_STATE_D0; i <= ACPI_STATE_D3_HOT; i++) {
-> > 528			struct acpi_device_power_state *ps = &device->power.states[i];
-> > 
-> > wakeup.resources has problem?
+Dear Thierry Reding,
+
+On Thu, 3 Jan 2013 15:39:31 +0100, Thierry Reding wrote:
+
+> Thomas' RFC series incited me to put in some more work on the Tegra
+> PCIe controller driver. This in turn brought up an old issue: should
+> we move PCIe controller drivers to some central location rather than
+> keeping them in machine-specific directories? Last time I brought
+> this up there was no consensus but I really think there's some value
+> in keeping these drivers in a common location, especially now that a
+> few people are starting to work on similar problems. It may also
+> provide some more momentum to get the various DT implementations
+> factored out of various architectures.
 > 
-> Yes, it seems to.
-> 
-> Thanks for the report, looking into it.
+> Stephen proposed drivers/pci/host on IRC and I second that.
 
-Found a bug, fixed it and updated the tree (device->flags.wakeup.valid should
-be checked before the acpi_power_resources_list_free(&device->wakeup.resources),
-otherwise the list may not be initialized).
+I for sure would be interested in a direction such as this one being
+taken for PCI support. Having drivers in a common directory will help
+comparing them, extracting common patterns, etc.
 
-Thanks,
-Rafael
+Best regards,
 
-
+Thomas
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
