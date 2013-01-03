@@ -1,67 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:35055 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756391Ab3A2PXn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 10:23:43 -0500
-Date: Tue, 29 Jan 2013 16:23:37 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130129162337.0121cbab@skate>
-In-Reply-To: <20130129151501.GY23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-6-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129161211.7bb8cada@skate>
-	<20130129151501.GY23505@n2100.arm.linux.org.uk>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1357231792.25181.62.camel@joe-AO722>
+Subject: [PATCH V2] checkpatch: prefer dev_<level>( to
+ dev_printk(KERN_<LEVEL>
+From: Joe Perches <joe@perches.com>
+To: Andy Whitcroft <apw@canonical.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	bp@alien8.de, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 03 Jan 2013 08:49:52 -0800
+In-Reply-To: <1357230494.25181.55.camel@joe-AO722>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+	 <1357171594.25181.19.camel@joe-AO722> <20130103100808.GG2649@dm>
+	 <1357230494.25181.55.camel@joe-AO722>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Russell,
+Add YA check to printk style.
 
-Thanks for your quick feedback!
+dev_<level> uses are functions and generate smaller
+object code than dev_printk(KERN_<LEVEL>.
 
-On Tue, 29 Jan 2013 15:15:01 +0000, Russell King - ARM Linux wrote:
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+V2: Remove unnecessary copy/paste logic from pr_<level>
+    conversion above it.
 
-> Given the description, I'd feel much happier with this if we specified
-> the alignment numerically rather than allowing "some random code" to do
-> something with the passed values.
+ scripts/checkpatch.pl | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-So, you'd prefer to have two new members added in the hw_pci structure
-to give the alignment requirements for I/O regions and memory regions?
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index 9de3a69..9a1ae72 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -2425,6 +2425,15 @@ sub process {
+ 			     "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
+ 		}
+ 
++		if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
++			my $orig = $1;
++			my $level = lc($orig);
++			$level = "warn" if ($level eq "warning");
++			$level = "dbg" if ($level eq "debug");
++			WARN("PREFER_DEV_LEVEL",
++			     "Prefer dev_$level(... to dev_printk(KERN_$orig, ...\n" . $herecurr);
++		}
++
+ # function brace can't be on same line, except for #defines of do while,
+ # or if closed on same line
+ 		if (($line=~/$Type\s*$Ident\(.*\).*\s{/) and
 
-Something like:
 
-struct hw_pci {
-	[...]
-	unsigned long io_align;
-	unsigned long mem_align;
-};
 
-If that's fine with you, I'll go ahead and change the implementation in
-this direction. As long as I can express my special 64 KB alignment
-requirement for I/O regions, I'm just fine :-)
-
-Thanks again,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
