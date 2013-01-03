@@ -1,60 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:57375 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237Ab3AKK2t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 05:28:49 -0500
-Received: by mail-bk0-f44.google.com with SMTP id w11so814898bku.3
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2013 02:28:47 -0800 (PST)
-From: bl0 <bl0-052@playker.info>
-To: linux-ide@vger.kernel.org
-Subject: Re: sata_sil data corruption, possible workarounds
-Date: Fri, 11 Jan 2013 11:28:35 +0100
-Cc: linux-pci@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>,
-	Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
-References: <kahap3$mur$1@ger.gmane.org> <50ECF6AB.30007@gmail.com> <20130109191753.GQ3926@htj.dyndns.org>
-In-Reply-To: <20130109191753.GQ3926@htj.dyndns.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:58940 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753197Ab3ACVRa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Jan 2013 16:17:30 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+Date: Thu, 03 Jan 2013 22:23:05 +0100
+Message-ID: <1635295.TkbrarASZn@vostro.rjw.lan>
+In-Reply-To: <2695660.jbNleTYArh@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1626213.gpPY5etSgn@vostro.rjw.lan> <2695660.jbNleTYArh@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201301111128.35957.bl0-052@playker.info>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 09 January 2013 20:17:53 Tejun Heo wrote:
-> Hello, Robert, bl0 (would be cool if this were your real name :)
->
-> On Tue, Jan 08, 2013 at 10:48:43PM -0600, Robert Hancock wrote:
-> > I wouldn't mind something like this as an option, anyway. Jeff,
-> > Tejun, thoughts?
->
-> I don't know.  This thread makes me want to eat obsessivly, cry in
-> fetal position and then puke and wet my pants.
->
-> The issue has been there from the beginning.  The current code seems
-> to cope with, I hope, majority of configurations; unfortunately, for
-> the problematic ones, there hasn't been any sensible explanation or
-> reliable way to detect what is causing the problem.  I don't even know
-> how we should blacklist them.  Is it chipset-specific or
-> system-specific?  ie. Should we blacklist north/south bridges or DMI
-> system identifiers?
->
-> Having a module option is easy and can be helpful for the very rare
-> cases where the admin is aware of the issue, but, in general, it
-> doesn't really help that much.
->
-> So, let's throw in a module option.  Other than that, no idea.
->
-> \pukes
+On Thursday, January 03, 2013 01:11:30 PM Rafael J. Wysocki wrote:
+> On Thursday, January 03, 2013 01:40:52 AM Rafael J. Wysocki wrote:
+> > On Wednesday, January 02, 2013 04:07:32 PM Bjorn Helgaas wrote:
+> > > On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
+> > > > To that end, split pci_create_root_bus() into two functions,
+> > > > pci_alloc_root() and pci_add_root(), that will allocate memory for
+> > > > the new PCI bus and bridge representations and register them with
+> > > > the driver core, respectively, and that may be called directly by
+> > > > the architectures that need to set the root bridge's ACPI handle
+> > > > before registering it.
+> > > 
+> > > I'm trying to *reduce* the interfaces for creating and scanning PCI
+> > > host bridges, and this is a step in the opposite direction.
+> > 
+> > Yes it is.
+> > 
+> > The alternative is to make the root bridge initialization code more complex.
+> 
+> Well, maybe not so much.
+> 
+> What about adding an extra arg to pci_create_root_bus(), ie. the patch below
+> (changelog skipped for now)?
+> 
+> I admit that having two void * args there is a little awkward, but at least
+> it's totally generic.
+> 
+> > > > Next, Make both x86 and ia64 (the only architectures using ACPI at
+> > > > the moment) call pci_alloc_root(), set the root bridge's ACPI handle
+> > > > and then call pci_add_root() in their pci_acpi_scan_root() routines
+> > > > instead of calling pci_create_root_bus().  For the other code paths
+> > > > adding PCI root bridges define a new pci_create_root_bus() as a
+> > > > simple combination of pci_alloc_root() and pci_add_root().
+> > > 
+> > > pci_create_root_bus() takes a "struct device *parent" argument.  That
+> > > seems like a logical place to tell the PCI core about the host bridge
+> > > device, but x86 and ia64 currently pass NULL there.
+> > 
+> > And there's a reason for that.  Namely, on these architectures PCI host
+> > bridges have no physical parents (well, at least in current practice).
+> > 
+> > > The patch below shows what I'm thinking.  It does have the side-effect
+> > > of changing the sysfs topology from this:
+> > > 
+> > >     /sys/devices/pci0000:00
+> > >     /sys/devices/pci0000:00/0000:00:00.0
+> > > 
+> > > to this:
+> > > 
+> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
+> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
+> > > 
+> > > because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
+> > > rather than at the top level.
+> > 
+> > Which is wrong.
+> > 
+> > PNP0A08 is not a parent of the host bridge, but its ACPI "companion" (ie. ACPI
+> > namespace node representing the host bridge itself).
+> > 
+> > > That seems like an improvement to me, but it *is* different.
+> > 
+> > Well, then we should make every ACPI device node corresponding to a PCI device
+> > be a parent of that device's struct pci_dev and so on for other bus types.  It
+> > doesn't sound like an attractive idea. :-)  Moreover, it is impossible, because
+> > those things generally already have parents (struct pci_dev objects have them
+> > at least).
+> > 
+> > That said the idea to pass something meaningful in the parent argument
+> > of pci_create_root_bus() can be implemented if we create a "physical" device
+> > object corresponding to "device:00" (which is an ACPI namespace node) in your
+> > example.
+> > 
+> > From what I can tell, "device:00" always corresponds to the ACPI _SB scope
+> > (which is mandatory), so in principle we can create an abstract "physical"
+> > device object for it and call it something like "system_root".  Then, if we
+> > use it as the parent of pci0000:00 (the host bridge), then we'll have
+> > 
+> >      /sys/devices/system_root/pci0000:00
+> >      /sys/devices/system_root/pci0000:00/0000:00:00.0
+> 
+> Having considered that a little more I don't really think it's a good idea.
+> It still would be going a little backwards, because we'd need to use the parent
+> to get an ACPI handle known already beforehand.
 
-Thanks for bringing much needed enthusiasm into this thread. I too would 
-like to know the root cause of this problem. Since the chances of finding 
-it are very low, the only thing that remains is to deal with data corruption 
-problem using the means available.
+One more thing.
 
-Some people asked for help and posted relevant entries from their logs. Now 
-they would be able to find a hint about the module option in the logs. Some 
-people have set the slow_down option. The code i posted enables the 
-workaround for them too.
+The sysfs locations of PCI devices shouldn't change if acpi=off is passed to
+the kernel, so the above is not a good idea at all, I'm afraid.
 
-As for blacklisting, I was thinking about maybe looking at the vendor and 
-device ID of the PCI bridge under which the sata_sil device is found.
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
