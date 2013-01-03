@@ -1,66 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:34970 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753733Ab3AaBRP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Jan 2013 20:17:15 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
-Date: Thu, 31 Jan 2013 02:23:27 +0100
-Message-ID: <4689665.USakedKCym@vostro.rjw.lan>
-In-Reply-To: <20130118114214.6698.24975.stgit@zurg>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114214.6698.24975.stgit@zurg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1357173594.25181.27.camel@joe-AO722>
+Subject: Re: [PATCH] checkpatch: prefer dev_<level>( to
+ dev_printk(KERN_<LEVEL>
+From: Joe Perches <joe@perches.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Andy Whitcroft <apw@canonical.com>,
+	Lance Ortiz <lance.ortiz@hp.com>, lance_ortiz@hotmail.com,
+	jiang.liu@huawei.com, tony.luck@intel.com, bp@alien8.de,
+	rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 02 Jan 2013 16:39:54 -0800
+In-Reply-To: <CAErSpo51SUYBOj89RM7SSBPEEGW6dddjWUX53u0srZS_eqkbSA@mail.gmail.com>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+	 <1357171594.25181.19.camel@joe-AO722>
+	 <CAErSpo51SUYBOj89RM7SSBPEEGW6dddjWUX53u0srZS_eqkbSA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 18, 2013 03:42:14 PM Konstantin Khlebnikov wrote:
-> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
-> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+On Wed, 2013-01-02 at 18:34 -0600, Bjorn Helgaas wrote:
+> On Wed, Jan 2, 2013 at 6:06 PM, Joe Perches <joe@perches.com> wrote:
+> > Add YA check to printk style.
+> >
+> > dev_<level> uses are functions and generate smaller
+> > object code than dev_printk(KERN_<LEVEL>.
+[]
+> > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+[]
+> > @@ -2430,6 +2430,16 @@ sub process {
+> >                              "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
+> >                 }
+> >
+> > +               if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
+> > +                       my $orig = $1;
+> > +                       my $level = lc($orig);
+> > +                       $level = "warn" if ($level eq "warning");
+> > +                       my $level2 = $level;
+> > +                       $level2 = "dbg" if ($level eq "debug");
+> > +                       WARN("PREFER_DEV_LEVEL",
+> > +                            "Prefer dev_$level2(... to dev_printk(KERN_$orig, ...\n" . $herecurr);
 > 
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-> Cc: e1000-devel@lists.sourceforge.net
-> Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> Cc: Bruce Allan <bruce.w.allan@intel.com>
-> ---
->  drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-> index fbf75fd..2853c11 100644
-> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
-> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-> @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  	struct net_device *netdev = pci_get_drvdata(pdev);
->  	struct e1000_adapter *adapter = netdev_priv(netdev);
-> +	int retval;
-> +	bool wake;
->  
-> -	if (e1000e_pm_ready(adapter)) {
-> -		bool wake;
-> +	if (!e1000e_pm_ready(adapter))
-> +		return 0;
->  
-> -		__e1000_shutdown(pdev, &wake, true);
-> -	}
-> +	retval = __e1000_shutdown(pdev, &wake, true);
-> +	if (!retval)
-> +		e1000_power_off(pdev, true, wake);
+> This suggests dev_dbg() instead of dev_printk(KERN_DEBUG), doesn't it?
+>  Those aren't equivalent (dev_printk() always does the printk, but in
+> many cases dev_dbg() does not, depending on CONFIG_DEBUG,
+> CONFIG_DYNAMIC_DEBUG, etc.)
 
-That needs to be pci_finish_runtime_suspend() (which needs to be exported
-for this purpose) or remove the pci_save_state() from __e1000_shutdown().
+True, I think the suggested change is appropriate though.
 
-If the latter works, I'd very much prefer it.
+If people really want debug output in a specific file,
+then they should #define DEBUG and/or enable dynamic debug.
 
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
