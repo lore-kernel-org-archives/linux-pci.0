@@ -1,37 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <50EF54B6.6010100@wwwdotorg.org>
-Date: Thu, 10 Jan 2013 16:54:30 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
-MIME-Version: 1.0
-To: Thierry Reding <thierry.reding@avionic-design.de>
-CC: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1357230494.25181.55.camel@joe-AO722>
+Subject: Re: [PATCH] checkpatch: prefer dev_<level>( to
+ dev_printk(KERN_<LEVEL>
+From: Joe Perches <joe@perches.com>
+To: Andy Whitcroft <apw@canonical.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	bp@alien8.de, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 03 Jan 2013 08:28:14 -0800
+In-Reply-To: <20130103100808.GG2649@dm>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+	 <1357171594.25181.19.camel@joe-AO722> <20130103100808.GG2649@dm>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/09/2013 01:43 PM, Thierry Reding wrote:
-> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
-> directory. The motivation is to collect various host controller drivers
-> in the same location in order to facilitate refactoring.
+On Thu, 2013-01-03 at 10:08 +0000, Andy Whitcroft wrote:
+> On Wed, Jan 02, 2013 at 04:06:34PM -0800, Joe Perches wrote:
+> > Add YA check to printk style.
+> > 
+> > dev_<level> uses are functions and generate smaller
+> > object code than dev_printk(KERN_<LEVEL>.
+[]
+> > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+[]
+> > +		if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
+> > +			my $orig = $1;
+> > +			my $level = lc($orig);
+> > +			$level = "warn" if ($level eq "warning");
+> > +			my $level2 = $level;
+> > +			$level2 = "dbg" if ($level eq "debug");
 > 
-> The Tegra PCIe driver has been largely rewritten, both in order to turn
-> it into a proper platform driver and to add MSI (based on code by
-> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
+> Is there some sublty I am not seeing here such that level2 is necessary?
 
-This driver doesn't compile unless CONFIG_PCI_MSI is also enabled.
-Should it select that, or contain a few ifdefs?
+No, your vision is 20/20, it's not necessary.
 
-drivers/pci/host/pci-tegra.c:900: undefined reference to `write_msi_msg'
+It was a copy/paste from the pr_<level> conversion above it
+where 2 styles to convert to (dev_dbg and pr_debug) are used.
+
+Here there is just one form and your review is appreciated.
+I'll submit a V2 later.
+
+
