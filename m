@@ -1,98 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:42309 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773Ab3A1LCB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 06:02:01 -0500
-Message-ID: <51065AA4.6000700@googlemail.com>
-Date: Mon, 28 Jan 2013 11:01:56 +0000
-From: Chris Clayton <chris2553@googlemail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065965.9010806@fold.natur.cuni.cz>
-In-Reply-To: <51065965.9010806@fold.natur.cuni.cz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1635295.TkbrarASZn@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1626213.gpPY5etSgn@vostro.rjw.lan>
+ <2695660.jbNleTYArh@vostro.rjw.lan> <1635295.TkbrarASZn@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Jan 2013 15:13:31 -0700
+Message-ID: <CAErSpo7QFKm=teLDBqCUueZwVHZKbA+pfNhrVc-_hK8PmwK2JQ@mail.gmail.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[no one screamed, so linux-media ml dropped]
-
-Hi Martin,
-
-On 01/28/13 10:56, Martin Mokrejs wrote:
+On Thu, Jan 3, 2013 at 2:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, January 03, 2013 01:11:30 PM Rafael J. Wysocki wrote:
+>> On Thursday, January 03, 2013 01:40:52 AM Rafael J. Wysocki wrote:
+>> > On Wednesday, January 02, 2013 04:07:32 PM Bjorn Helgaas wrote:
+>> > > On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
+>> > > > To that end, split pci_create_root_bus() into two functions,
+>> > > > pci_alloc_root() and pci_add_root(), that will allocate memory for
+>> > > > the new PCI bus and bridge representations and register them with
+>> > > > the driver core, respectively, and that may be called directly by
+>> > > > the architectures that need to set the root bridge's ACPI handle
+>> > > > before registering it.
+>> > >
+>> > > I'm trying to *reduce* the interfaces for creating and scanning PCI
+>> > > host bridges, and this is a step in the opposite direction.
+>> >
+>> > Yes it is.
+>> >
+>> > The alternative is to make the root bridge initialization code more complex.
+>>
+>> Well, maybe not so much.
+>>
+>> What about adding an extra arg to pci_create_root_bus(), ie. the patch below
+>> (changelog skipped for now)?
+>>
+>> I admit that having two void * args there is a little awkward, but at least
+>> it's totally generic.
+>>
+>> > > > Next, Make both x86 and ia64 (the only architectures using ACPI at
+>> > > > the moment) call pci_alloc_root(), set the root bridge's ACPI handle
+>> > > > and then call pci_add_root() in their pci_acpi_scan_root() routines
+>> > > > instead of calling pci_create_root_bus().  For the other code paths
+>> > > > adding PCI root bridges define a new pci_create_root_bus() as a
+>> > > > simple combination of pci_alloc_root() and pci_add_root().
+>> > >
+>> > > pci_create_root_bus() takes a "struct device *parent" argument.  That
+>> > > seems like a logical place to tell the PCI core about the host bridge
+>> > > device, but x86 and ia64 currently pass NULL there.
+>> >
+>> > And there's a reason for that.  Namely, on these architectures PCI host
+>> > bridges have no physical parents (well, at least in current practice).
+>> >
+>> > > The patch below shows what I'm thinking.  It does have the side-effect
+>> > > of changing the sysfs topology from this:
+>> > >
+>> > >     /sys/devices/pci0000:00
+>> > >     /sys/devices/pci0000:00/0000:00:00.0
+>> > >
+>> > > to this:
+>> > >
+>> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
+>> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
+>> > >
+>> > > because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
+>> > > rather than at the top level.
+>> >
+>> > Which is wrong.
+>> >
+>> > PNP0A08 is not a parent of the host bridge, but its ACPI "companion" (ie. ACPI
+>> > namespace node representing the host bridge itself).
+>> >
+>> > > That seems like an improvement to me, but it *is* different.
+>> >
+>> > Well, then we should make every ACPI device node corresponding to a PCI device
+>> > be a parent of that device's struct pci_dev and so on for other bus types.  It
+>> > doesn't sound like an attractive idea. :-)  Moreover, it is impossible, because
+>> > those things generally already have parents (struct pci_dev objects have them
+>> > at least).
+>> >
+>> > That said the idea to pass something meaningful in the parent argument
+>> > of pci_create_root_bus() can be implemented if we create a "physical" device
+>> > object corresponding to "device:00" (which is an ACPI namespace node) in your
+>> > example.
+>> >
+>> > From what I can tell, "device:00" always corresponds to the ACPI _SB scope
+>> > (which is mandatory), so in principle we can create an abstract "physical"
+>> > device object for it and call it something like "system_root".  Then, if we
+>> > use it as the parent of pci0000:00 (the host bridge), then we'll have
+>> >
+>> >      /sys/devices/system_root/pci0000:00
+>> >      /sys/devices/system_root/pci0000:00/0000:00:00.0
+>>
+>> Having considered that a little more I don't really think it's a good idea.
+>> It still would be going a little backwards, because we'd need to use the parent
+>> to get an ACPI handle known already beforehand.
 >
+> One more thing.
 >
-> Chris Clayton wrote:
->> Hi Yijing,
->>
->> On 01/28/13 02:40, Yijing Wang wrote:
->>> Hi Chris,
->>>      Sorry for the delay reply. It seems like my reply last night was missed.
->>>
->>>   From the sysinfo you provide, there are no pcie port devices under /sys/bus/pci_express/devices.
->>> Maybe because there are some problems with _OSC in your laptop, so pcie port driver won't create pcie port device
->>> for hotplug, aer and so on.
->>>
->>> Maybe you can add boot parameter "pcie_ports=native" and reboot your laptop.
->>> Then use #modprobe pciehp pciehp_force=1 pciehp_debug=1 to load pciehp modules.
->>> After above actions, enter /sys/bus/pci_express/devices/ directory and /sys/bus/pci/slots/
->>> Some slots and pcie port devices should be there now.
->>>
->> Sorry, I've tried your suggestion, but the two directories are still empty.
->>
->> I verified the test environment as follows:
->>
->> [chris:~]$ uname -a
->> Linux laptop 3.7.4 #15 SMP PREEMPT Mon Jan 28 09:43:57 GMT 2013 i686 GNU/Linux
->> [chris:~]$ grep acpiphp /boot/System.map-3.7.4
->> [chris:~]$ modinfo acpiphp
->> modinfo: ERROR: Module acpiphp not found.
->> [chris:~]$ modinfo pciehp
->> filename:       /lib/modules/3.7.4/kernel/drivers/pci/hotplug/pciehp.ko
->> license:        GPL
->> description:    PCI Express Hot Plug Controller Driver
->> author:         Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>
->> depends:
->> intree:         Y
->> vermagic:       3.7.4 SMP preempt mod_unload CORE2
->> parm:           pciehp_detect_mode:Slot detection mode: pcie, acpi, auto
->>    pcie          - Use PCIe based slot detection
->>    acpi          - Use ACPI for slot detection
->>    auto(default) - Auto select mode. Use acpi option if duplicate
->>                    slot ids are found. Otherwise, use pcie option
->>   (charp)
->> parm:           pciehp_debug:Debugging mode enabled or not (bool)
->> parm:           pciehp_poll_mode:Using polling mechanism for hot-plug events or not (bool)
->> parm:           pciehp_poll_time:Polling mechanism frequency, in seconds (int)
->> parm:           pciehp_force:Force pciehp, even if OSHP is missing (bool)
->> [chris:~]$ cat /proc/cmdline
->> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
->> [chris:~]$ sudo modprobe pciehp pciehp_force=1 pciehp_debug=1
->> [chris:~]$ lsmod
->> Module                  Size  Used by
->> pciehp                 19907  0
->> [...]
->>
->> You will notice that the kernel I have used is 3.7.4. I hope that's a suitable kernel for your tests. I've moved away from the 3.8 development kernel onto one that's stable and on which Martin has identified a solution. I see Greg KH released 3.7.5 yesterday and it includes a pciehp change. I'll upgrade to that, run the tests again and report back.
->>
->> One question - should I include the (acpi) pci_slot driver in the kernel build or does pciehp populate the directories without pci_slot?
->
-> Hi Chris,
->    I am not a kernel developer but from the other threads at linux-pci I gathered there are in some
-> scenarios problems with improper loading of the hotplug modules. Therefore, the patches floating
-> now around are to disable hotplug module availability. Therefore, I suggested you to try only
-> only static kernel support for hotplug. That way you don't hit the issue. That is for sure not
-> addressed in 3.7.5, seems that it is probably in -next.
-> Martin
->
-In a few minutes I'll be sending out another reply to Yijing's 
-suggestions because I noticed a typo in the parameter I added to the 
-kernel command line. I'm now going back through email to remember why we 
-were trying to get those /sys/bus/pci... directories populated.
+> The sysfs locations of PCI devices shouldn't change if acpi=off is passed to
+> the kernel, so the above is not a good idea at all, I'm afraid.
 
-Watch this space! :-)
-Chris
+I don't think there's a requirement that sysfs with acpi=off be the
+same as with it on.  acpi=off is only a debugging tool.  With acpi=off
+we ignore all the topology information we get from ACPI, and the
+location of PCI host bridges is part of that topology.  We shouldn't
+cripple sysfs when we're using ACPI just so it matches the acpi=off
+case.
 
+Of course, we might not want to change this in sysfs anyway; I just
+don't think acpi=off is a valid reason to avoid a change.
+
+Bjorn
