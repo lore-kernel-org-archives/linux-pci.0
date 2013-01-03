@@ -1,230 +1,386 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:34364 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756793Ab3A0XVz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 18:21:55 -0500
-Message-ID: <5105B68F.4060103@fold.natur.cuni.cz>
-Date: Mon, 28 Jan 2013 00:21:51 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+Date: Thu, 03 Jan 2013 13:11:30 +0100
+Message-ID: <2695660.jbNleTYArh@vostro.rjw.lan>
+In-Reply-To: <1626213.gpPY5etSgn@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <20130102230732.GB31813@google.com> <1626213.gpPY5etSgn@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: Yijing Wang <wangyijing0307@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com>
-In-Reply-To: <5105AFDB.9000200@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chris,
+On Thursday, January 03, 2013 01:40:52 AM Rafael J. Wysocki wrote:
+> On Wednesday, January 02, 2013 04:07:32 PM Bjorn Helgaas wrote:
+> > On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
+> > > To that end, split pci_create_root_bus() into two functions,
+> > > pci_alloc_root() and pci_add_root(), that will allocate memory for
+> > > the new PCI bus and bridge representations and register them with
+> > > the driver core, respectively, and that may be called directly by
+> > > the architectures that need to set the root bridge's ACPI handle
+> > > before registering it.
+> > 
+> > I'm trying to *reduce* the interfaces for creating and scanning PCI
+> > host bridges, and this is a step in the opposite direction.
+> 
+> Yes it is.
+> 
+> The alternative is to make the root bridge initialization code more complex.
 
-Chris Clayton wrote:
-> Thanks again, Martin.
-> 
-> Firstly, maybe we should remove the linux-media list from the copy list. I imagine this hotplug stuff is just noise to them.
-> 
-> [snip]
->> Do you have any other express card around to try if it works at all? Try that always after a cold boot.
->>
-> Not at the moment, but I ordered at USB3 expresscard yesterday, so I will have one soon.
-> 
->> Posting a diff result of the below procedure might help:
->>
->> # lspci -vvvxxx > lspci.before_insertion.txt
->>
->> [plug your card into the slot]
->>
->> # lspci -vvvxxx > lspci.after_insertion.txt
->>
->> [ unplug your card]
->>
->> # lspci -vvvxxx > lspci.after_1st_removal.txt
->>
->> [re-plug your card into the slot]
->>
->> # lspci -vvvxxx > lspci.after_1st_re-insertion.txt
->>
->> [ unplug your card]
->>
->> # lspci -vvvxxx > lspci.after_2nd_removal.txt
->>
-> 
-> OK, I've been using kernel 3.8.0-rc kernels so far, but given that is still under development, I've switched to 3.7.4, mainly because you are having success with 3.7.x, acpiphp and pcie_aspm=off. I verified the environment as follows:
-> 
-> [chris:~]$ cat /proc/cmdline
-> root=/dev/sda5 pcie_aspm=off ro resume=/dev/sda6
-> [chris:~]$ dmesg | grep ASPM
-> [    0.000000] PCIe ASPM is disabled
-> [    0.348959]  pci0000:00: ACPI _OSC support notification failed, disabling PCIe ASPM
-> [chris:~]$ dmesg | grep acpiphp
-> [    0.400846] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
-> [chris:~]$ dmesg | grep pciehp
-> [chris:~]$ uname -a
-> Linux laptop 3.7.4 #13 SMP PREEMPT Sun Jan 27 18:39:39 GMT 2013 i686 GNU/Linux
-> 
+Well, maybe not so much.
 
-vostro ~ # cat /proc/cmdline
-root=/dev/sda5 pciehp.pciehp_debug=1 slub_debug=AFPZ pcie_aspm=off
-vostro ~ # dmesg | grep ASPM
-[    0.000000] PCIe ASPM is disabled
-vostro ~ # dmesg | grep acpiphp
-[    2.449038] acpiphp: ACPI Hot Plug PCI Controller Driver version: 0.5
-[    2.453757] acpiphp: Slot [1] registered
-vostro ~ # uname -a
-Linux vostro 3.7.4-default #2 SMP Mon Jan 21 22:45:22 MET 2013 x86_64 Intel(R) Core(TM) i7-2640M CPU @ 2.80GHz GenuineIntel GNU/Linux
-vostro ~ # 
+What about adding an extra arg to pci_create_root_bus(), ie. the patch below
+(changelog skipped for now)?
 
-> 
->> Then compare them using diff. These should have no difference:
->>
->> diff lspci.after_insertion.txt lspci.after_1st_re-insertion.txt
->> diff lspci.after_1st_removal.txt lspci.after_2nd_removal.txt
->>
-> Correct, there were no differences.
-> 
->>
->> These may have only little difference, or none:
->>
->> diff lspci.before_insertion.txt lspci.after_1st_removal.txt
-> 
-> 263c263
-> <               LnkCap: Port #4, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
-> ---
->  >               LnkCap: Port #4, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
-> 265c265
-> <               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
-> ---
->  >               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-> 267c267
-> <               LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> ---
->  >               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
-> 273c273
-> <                       Changed: MRL- PresDet- LinkState-
-> ---
->  >                       Changed: MRL- PresDet- LinkState+
-> 295,296c295,296
-> < 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 4c 12 04
-> < 50: 03 00 01 10 60 b2 1c 00 08 00 00 00 00 00 00 00
-> ---
->  > 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 04
->  > 50: 40 00 11 50 60 b2 1c 00 08 00 00 01 00 00 00 00
-> 
->> diff lspci.after_1st_removal.txt lspci.after_2nd_removal.txt
->>
-> No difference.
->>
->>
->> Finally, these should confirm whether the PresDet works for you (for me NOT with pciehp but does work with acpiphp).
->> You should see PresDet- to PresDet+ changes in:
->>
-> Yes, I do see the PresDet- to PresDet+ changes
-> 
->> diff lspci.before_insertion.txt lspci.after_insertion.txt
-> 
-> 263c263
-> <               LnkCap: Port #4, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <1us, L1 <16us
-> ---
->  >               LnkCap: Port #4, Speed 5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <16us
-> 265c265
-> <               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk-
-> ---
->  >               LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-> 267c267
-> <               LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-> ---
->  >               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-> 272,273c272,273
-> <               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> <                       Changed: MRL- PresDet- LinkState-
-> ---
->  >               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
->  >                       Changed: MRL- PresDet- LinkState+
-> 295,296c295,296
-> < 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 4c 12 04
-> < 50: 03 00 01 10 60 b2 1c 00 08 00 00 00 00 00 00 00
-> ---
->  > 40: 10 80 42 01 00 80 00 00 00 00 10 00 12 3c 12 04
->  > 50: 40 00 11 70 60 b2 1c 00 08 00 40 01 00 00 00 00
-> 
->> diff lspci.after_1st_removal.txt lspci.after_1st_re-insertion.txt
-> 267c267
-> <               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
-> ---
->  >               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-> 272c272
-> <               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> ---
->  >               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-> 296c296
-> < 50: 40 00 11 50 60 b2 1c 00 08 00 00 01 00 00 00 00
-> ---
->  > 50: 40 00 11 70 60 b2 1c 00 08 00 40 01 00 00 00 00
-> 
->>
->> You should see PresDet+ to PresDet- changes in:
-> Yes, I see those changes too.
->> diff lspci.after_insertion.txt lspci.after_1st_removal.txt
-> 267c267
-> <               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-> ---
->  >               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
-> 272c272
-> <               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-> ---
->  >               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> 296c296
-> < 50: 40 00 11 70 60 b2 1c 00 08 00 40 01 00 00 00 00
-> ---
->  > 50: 40 00 11 50 60 b2 1c 00 08 00 00 01 00 00 00 00
-> 
->> diff lspci.after_1st_re-insertion.txt lspci.after_2nd_removal.txt
-> 267c267
-> <               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-> ---
->  >               LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
-> 272c272
-> <               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-> ---
->  >               SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> 296c296
-> < 50: 40 00 11 70 60 b2 1c 00 08 00 40 01 00 00 00 00
-> ---
->  > 50: 40 00 11 50 60 b2 1c 00 08 00 00 01 00 00 00 00
->>
->> I did plenty of these with my laptop using 3.3.x and 3.7.1 and the conclusion was
->> that pciehp got broken since some 3.6? (commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a)
->> but I can live on 3.7.x with acpiphp and pcie_aspm=off.
-> 
-> I could live with that too, but despite my findings being in line with your predictions, hotplug does not work for me.
+I admit that having two void * args there is a little awkward, but at least
+it's totally generic.
 
-Would be nice if you could the the diffs for pciehp, just to see if PresDet works for you or not.
-But that is my pain, not yours. ;)
+> > > Next, Make both x86 and ia64 (the only architectures using ACPI at
+> > > the moment) call pci_alloc_root(), set the root bridge's ACPI handle
+> > > and then call pci_add_root() in their pci_acpi_scan_root() routines
+> > > instead of calling pci_create_root_bus().  For the other code paths
+> > > adding PCI root bridges define a new pci_create_root_bus() as a
+> > > simple combination of pci_alloc_root() and pci_add_root().
+> > 
+> > pci_create_root_bus() takes a "struct device *parent" argument.  That
+> > seems like a logical place to tell the PCI core about the host bridge
+> > device, but x86 and ia64 currently pass NULL there.
+> 
+> And there's a reason for that.  Namely, on these architectures PCI host
+> bridges have no physical parents (well, at least in current practice).
+> 
+> > The patch below shows what I'm thinking.  It does have the side-effect
+> > of changing the sysfs topology from this:
+> > 
+> >     /sys/devices/pci0000:00
+> >     /sys/devices/pci0000:00/0000:00:00.0
+> > 
+> > to this:
+> > 
+> >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
+> >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
+> > 
+> > because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
+> > rather than at the top level.
+> 
+> Which is wrong.
+> 
+> PNP0A08 is not a parent of the host bridge, but its ACPI "companion" (ie. ACPI
+> namespace node representing the host bridge itself).
+> 
+> > That seems like an improvement to me, but it *is* different.
+> 
+> Well, then we should make every ACPI device node corresponding to a PCI device
+> be a parent of that device's struct pci_dev and so on for other bus types.  It
+> doesn't sound like an attractive idea. :-)  Moreover, it is impossible, because
+> those things generally already have parents (struct pci_dev objects have them
+> at least).
+> 
+> That said the idea to pass something meaningful in the parent argument
+> of pci_create_root_bus() can be implemented if we create a "physical" device
+> object corresponding to "device:00" (which is an ACPI namespace node) in your
+> example.
+> 
+> From what I can tell, "device:00" always corresponds to the ACPI _SB scope
+> (which is mandatory), so in principle we can create an abstract "physical"
+> device object for it and call it something like "system_root".  Then, if we
+> use it as the parent of pci0000:00 (the host bridge), then we'll have
+> 
+>      /sys/devices/system_root/pci0000:00
+>      /sys/devices/system_root/pci0000:00/0000:00:00.0
+
+Having considered that a little more I don't really think it's a good idea.
+It still would be going a little backwards, because we'd need to use the parent
+to get an ACPI handle known already beforehand.
+
+Please tell me what you think of the one below.
+
+Thanks,
+Rafael
 
 
-You do have pci_hotplug in kernel, right?
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ arch/ia64/pci/pci.c              |    8 +++++++-
+ arch/powerpc/kernel/pci-common.c |    2 +-
+ arch/s390/pci/pci.c              |    2 +-
+ arch/sparc/kernel/pci.c          |    2 +-
+ arch/x86/pci/acpi.c              |    9 ++++++++-
+ drivers/acpi/pci_root.c          |   18 ------------------
+ drivers/pci/pci-acpi.c           |   19 -------------------
+ drivers/pci/probe.c              |   23 +++++++++++++++++++----
+ include/acpi/acpi_bus.h          |    1 -
+ include/linux/pci.h              |    6 ++++--
+ 10 files changed, 41 insertions(+), 49 deletions(-)
+
+Index: linux/drivers/pci/probe.c
+===================================================================
+--- linux.orig/drivers/pci/probe.c
++++ linux/drivers/pci/probe.c
+@@ -1632,8 +1632,22 @@ unsigned int pci_scan_child_bus(struct p
+ 	return max;
+ }
+ 
++/**
++ * pcibios_root_bridge_setup - Platform-specific host bridge setup.
++ * @bridge: Host bridge to set up.
++ * @rootdata: Additional data to use for the host bridge setup.
++ *
++ * Default empty implementation.  Replace with an architecture-specific setup
++ * routine, if necessary.
++ */
++void __weak pcibios_root_bridge_setup(struct pci_host_bridge *bridge,
++				      void *rootdata)
++{
++}
++
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++				    struct pci_ops *ops, void *sysdata,
++				    struct list_head *resources, void *rootdata)
+ {
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+@@ -1665,6 +1679,7 @@ struct pci_bus *pci_create_root_bus(stru
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_bus_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	pcibios_root_bridge_setup(bridge, rootdata);
+ 	error = device_register(&bridge->dev);
+ 	if (error)
+ 		goto bridge_dev_reg_err;
+@@ -1807,7 +1822,7 @@ struct pci_bus *pci_scan_root_bus(struct
+ 			break;
+ 		}
+ 
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
++	b = pci_create_root_bus(parent, bus, ops, sysdata, resources, NULL);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -1838,7 +1853,7 @@ struct pci_bus *pci_scan_bus_parented(st
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources);
++	b = pci_create_root_bus(parent, bus, ops, sysdata, &resources, NULL);
+ 	if (b)
+ 		pci_scan_child_bus(b);
+ 	else
+@@ -1856,7 +1871,7 @@ struct pci_bus *pci_scan_bus(int bus, st
+ 	pci_add_resource(&resources, &ioport_resource);
+ 	pci_add_resource(&resources, &iomem_resource);
+ 	pci_add_resource(&resources, &busn_resource);
+-	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources);
++	b = pci_create_root_bus(NULL, bus, ops, sysdata, &resources, NULL);
+ 	if (b) {
+ 		pci_scan_child_bus(b);
+ 		pci_bus_add_devices(b);
+Index: linux/include/linux/pci.h
+===================================================================
+--- linux.orig/include/linux/pci.h
++++ linux/include/linux/pci.h
+@@ -378,6 +378,8 @@ void pci_set_host_bridge_release(struct
+ 		     void (*release_fn)(struct pci_host_bridge *),
+ 		     void *release_data);
+ 
++void pcibios_root_bridge_setup(struct pci_host_bridge *bridge, void *rootdata);
++
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+@@ -701,8 +703,8 @@ struct pci_bus *pci_scan_bus_parented(st
+ 				      struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops, void *sysdata);
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-				    struct pci_ops *ops, void *sysdata,
+-				    struct list_head *resources);
++				struct pci_ops *ops, void *sysdata,
++				struct list_head *resources, void *rootdata);
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+Index: linux/arch/x86/pci/acpi.c
+===================================================================
+--- linux.orig/arch/x86/pci/acpi.c
++++ linux/arch/x86/pci/acpi.c
+@@ -553,7 +553,8 @@ struct pci_bus * __devinit pci_acpi_scan
+ 		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
+ 				    (u8)root->secondary.end, root->mcfg_addr))
+ 			bus = pci_create_root_bus(NULL, busnum, &pci_root_ops,
+-						  sd, &resources);
++						  sd, &resources,
++						  device->handle);
+ 
+ 		if (bus) {
+ 			pci_scan_child_bus(bus);
+@@ -593,6 +594,12 @@ struct pci_bus * __devinit pci_acpi_scan
+ 	return bus;
+ }
+ 
++void pcibios_root_bridge_setup(struct pci_host_bridge *bridge, void *rootdata)
++{
++	if (rootdata)
++		ACPI_HANDLE_SET(&bridge->dev, (acpi_handle)rootdata);
++}
++
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
+Index: linux/arch/ia64/pci/pci.c
+===================================================================
+--- linux.orig/arch/ia64/pci/pci.c
++++ linux/arch/ia64/pci/pci.c
+@@ -379,7 +379,7 @@ pci_acpi_scan_root(struct acpi_pci_root
+ 	 * such quirk. So we just ignore the case now.
+ 	 */
+ 	pbus = pci_create_root_bus(NULL, bus, &pci_root_ops, controller,
+-				   &info.resources);
++				   &info.resources, controller->acpi_handle);
+ 	if (!pbus) {
+ 		pci_free_resource_list(&info.resources);
+ 		return NULL;
+@@ -396,6 +396,12 @@ out1:
+ 	return NULL;
+ }
+ 
++void pcibios_root_bridge_setup(struct pci_host_bridge *bridge, void *rootdata)
++{
++	if (rootdata)
++		ACPI_HANDLE_SET(&bridge->dev, (acpi_handle)rootdata);
++}
++
+ static int __devinit is_valid_resource(struct pci_dev *dev, int idx)
+ {
+ 	unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
+Index: linux/drivers/pci/pci-acpi.c
+===================================================================
+--- linux.orig/drivers/pci/pci-acpi.c
++++ linux/drivers/pci/pci-acpi.c
+@@ -302,24 +302,6 @@ static int acpi_pci_find_device(struct d
+ 	return 0;
+ }
+ 
+-static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
+-{
+-	int num;
+-	unsigned int seg, bus;
+-
+-	/*
+-	 * The string should be the same as root bridge's name
+-	 * Please look at 'pci_scan_bus_parented'
+-	 */
+-	num = sscanf(dev_name(dev), "pci%04x:%02x", &seg, &bus);
+-	if (num != 2)
+-		return -ENODEV;
+-	*handle = acpi_get_pci_rootbridge_handle(seg, bus);
+-	if (!*handle)
+-		return -ENODEV;
+-	return 0;
+-}
+-
+ static void pci_acpi_setup(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -378,7 +360,6 @@ static void pci_acpi_cleanup(struct devi
+ static struct acpi_bus_type acpi_pci_bus = {
+ 	.bus = &pci_bus_type,
+ 	.find_device = acpi_pci_find_device,
+-	.find_bridge = acpi_pci_find_root_bridge,
+ 	.setup = pci_acpi_setup,
+ 	.cleanup = pci_acpi_cleanup,
+ };
+Index: linux/drivers/acpi/pci_root.c
+===================================================================
+--- linux.orig/drivers/acpi/pci_root.c
++++ linux/drivers/acpi/pci_root.c
+@@ -107,24 +107,6 @@ void acpi_pci_unregister_driver(struct a
+ }
+ EXPORT_SYMBOL(acpi_pci_unregister_driver);
+ 
+-acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
+-{
+-	struct acpi_pci_root *root;
+-	acpi_handle handle = NULL;
+-	
+-	mutex_lock(&acpi_pci_root_lock);
+-	list_for_each_entry(root, &acpi_pci_roots, node)
+-		if ((root->segment == (u16) seg) &&
+-		    (root->secondary.start == (u16) bus)) {
+-			handle = root->device->handle;
+-			break;
+-		}
+-	mutex_unlock(&acpi_pci_root_lock);
+-	return handle;
+-}
+-
+-EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
+-
+ /**
+  * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
+  * @handle - the ACPI CA node in question.
+Index: linux/include/acpi/acpi_bus.h
+===================================================================
+--- linux.orig/include/acpi/acpi_bus.h
++++ linux/include/acpi/acpi_bus.h
+@@ -402,7 +402,6 @@ struct acpi_pci_root {
+ /* helper */
+ acpi_handle acpi_get_child(acpi_handle, u64);
+ int acpi_is_root_bridge(acpi_handle);
+-acpi_handle acpi_get_pci_rootbridge_handle(unsigned int, unsigned int);
+ struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle);
+ #define DEVICE_ACPI_HANDLE(dev) ((acpi_handle)ACPI_HANDLE(dev))
+ 
+Index: linux/arch/powerpc/kernel/pci-common.c
+===================================================================
+--- linux.orig/arch/powerpc/kernel/pci-common.c
++++ linux/arch/powerpc/kernel/pci-common.c
+@@ -1661,7 +1661,7 @@ void __devinit pcibios_scan_phb(struct p
+ 
+ 	/* Create an empty bus for the toplevel */
+ 	bus = pci_create_root_bus(hose->parent, hose->first_busno,
+-				  hose->ops, hose, &resources);
++				  hose->ops, hose, &resources, NULL);
+ 	if (bus == NULL) {
+ 		pr_err("Failed to create bus for PCI domain %04x\n",
+ 			hose->global_number);
+Index: linux/arch/s390/pci/pci.c
+===================================================================
+--- linux.orig/arch/s390/pci/pci.c
++++ linux/arch/s390/pci/pci.c
+@@ -940,7 +940,7 @@ static int zpci_create_device_bus(struct
+ 	}
+ 
+ 	zdev->bus = pci_create_root_bus(NULL, ZPCI_BUS_NR, &pci_root_ops,
+-					zdev, &resources);
++					zdev, &resources, NULL);
+ 	if (!zdev->bus)
+ 		return -EIO;
+ 
+Index: linux/arch/sparc/kernel/pci.c
+===================================================================
+--- linux.orig/arch/sparc/kernel/pci.c
++++ linux/arch/sparc/kernel/pci.c
+@@ -603,7 +603,7 @@ struct pci_bus * __devinit pci_scan_one_
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+ 	pci_add_resource(&resources, &pbm->busn);
+ 	bus = pci_create_root_bus(parent, pbm->pci_first_busno, pbm->pci_ops,
+-				  pbm, &resources);
++				  pbm, &resources, NULL);
+ 	if (!bus) {
+ 		printk(KERN_ERR "Failed to create bus for %s\n",
+ 		       node->full_name);
 
 
-> 
->> The above test could tell you what
->> works in your case. Of course, you can try separately pciehp and acpiphp. With 3.4
->> series I lived with pciehp and pcie_aspm=force.
-> Need sleep now, but tomorrow, I'll build a 3.4 kernel and try pciehp and pcie_aspm=force.
->>
->> Martin
->> BTW: Re-post your dmesg output so that we can see if you those OSC errors
->> (for details see "Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force' on kernel command-line for hotplug to work" thread).
->>
-> I've attached a file containing the output from dmesg. I does contain errors related to OSC.
-
-Yes, you suffer from the same. We have both SandyBridge so that's not surprising to me.
-
-BTW, you may try newer BIOS hidden under files for Win8 64bit at
-
-http://www.fujitsu.com/downloads/COMP/fpcap/drivers/Driver/FUJ02E3/FJ/v1.30.0-DR12-0803_W8-64/FUJ02E3_FJ_v1.30.0-DR12-0803_W8-64.exe:
-
-FUJ02E3	Fujitsu	-	v1.30	409 KB	
-
-
-Martin
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
