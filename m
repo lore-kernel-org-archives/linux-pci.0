@@ -1,61 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:1050 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755387Ab3AWM2x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 07:28:53 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [Update][PATCH] PCI: Document PCIE BUS MPS parameters
-Date: Wed, 23 Jan 2013 20:28:12 +0800
-Message-ID: <1358944092-28884-1-git-send-email-wangyijing@huawei.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:59610 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093Ab3ACKIX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 05:08:23 -0500
+Date: Thu, 3 Jan 2013 10:08:08 +0000
+From: Andy Whitcroft <apw@canonical.com>
+To: Joe Perches <joe@perches.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	bp@alien8.de, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] checkpatch: prefer dev_<level>( to
+ dev_printk(KERN_<LEVEL>
+Message-ID: <20130103100808.GG2649@dm>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+ <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+ <1357171594.25181.19.camel@joe-AO722>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1357171594.25181.19.camel@joe-AO722>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
-pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
-These parameters were introduced by Jon Mason <mason@myri.com> at
-commit 5f39e6705 and commit b03e7495a8. Document these into
-kernel-parameters.txt can help users to understand and use the parameters.
+On Wed, Jan 02, 2013 at 04:06:34PM -0800, Joe Perches wrote:
+> Add YA check to printk style.
+> 
+> dev_<level> uses are functions and generate smaller
+> object code than dev_printk(KERN_<LEVEL>.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  scripts/checkpatch.pl | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+> index 4d2c7df..f50b32d 100755
+> --- a/scripts/checkpatch.pl
+> +++ b/scripts/checkpatch.pl
+> @@ -2430,6 +2430,16 @@ sub process {
+>  			     "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
+>  		}
+>  
+> +		if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
+> +			my $orig = $1;
+> +			my $level = lc($orig);
+> +			$level = "warn" if ($level eq "warning");
+> +			my $level2 = $level;
+> +			$level2 = "dbg" if ($level eq "debug");
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- Documentation/kernel-parameters.txt |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+Is there some sublty I am not seeing here such that level2 is necessary?
+As far as I can see the two above could be the below to the same effect?
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 363e348..1fb269b 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2227,6 +2227,21 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				This sorting is done to get a device
- 				order compatible with older (<= 2.4) kernels.
- 		nobfsort	Don't sort PCI devices into breadth-first order.
-+		pcie_bus_tune_off	Disable PCI-E MPS turning and using
-+				the BIOS configured MPS defaults.
-+		pcie_bus_safe	Use the smallest common denominator MPS
-+				of the entire tree below a root complex for every device
-+				on that fabric. Can avoid inconsistent mps problem caused
-+				by hotplug.
-+		pcie_bus_perf	Configure pcie device MPS to the largest allowable
-+				MPS based on its parent bus. And also set MRRS to the
-+				largest supported value but cannot be configured larger
-+				than the MPS the device or the bus can support for Max
-+				performance.
-+		pcie_bus_peer2peer	Make the system wide MPS the smallest
-+				possible value (128B).This configuration could prevent it
-+				from working by having the MPS on one root port different
-+				than the MPS on another.
- 		cbiosize=nn[KMG]	The fixed amount of bus space which is
- 				reserved for the CardBus bridge's IO window.
- 				The default value is 256 bytes.
--- 
-1.7.1
+			$level2= "dbg" if ($level eq "debug");
 
+(With the obvious change to the print of course)
 
+-apw
