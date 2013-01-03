@@ -1,66 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:59208 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753309Ab3AaSfQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 13:35:16 -0500
-Message-ID: <1359657310.6022.4.camel@x61.thuisdomein>
-Subject: [PATCH v2] PCI: pciehp: drop ENTRY messages
-From: Paul Bolle <pebolle@tiscali.nl>
+Received: from smtp-out03.msg.oleane.net ([62.161.7.1]:33050 "EHLO
+	smtp-out03.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422Ab3ACJS3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 04:18:29 -0500
+Received: from smtp07.msg.oleane.net (smtp07.mail.priv [172.17.20.116])
+	by smtp-out03.msg.oleane.net with ESMTP id r039IQCW013811
+	for <linux-pci@vger.kernel.org>; Thu, 3 Jan 2013 10:18:26 +0100
+Message-ID: <50E54818.9030401@interfaceconcept.com>
+Date: Thu, 03 Jan 2013 09:58:00 +0100
+From: =?ISO-8859-1?Q?C=E9dric_Cano?= <ccano@interfaceconcept.com>
+MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 31 Jan 2013 19:35:10 +0100
-In-Reply-To: <1450113.teKM2dvJbO@vostro.rjw.lan>
-References: <1359367251.883.13.camel@x61.thuisdomein>
-	 <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
-	 <1450113.teKM2dvJbO@vostro.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: linux-pci@vger.kernel.org
+Subject: Re: Question: how can I get the real PCI address of a BAR?
+References: <50DD6811.7020301@ic.fr> <CAErSpo4nkWwwY5qtsAzgsPYAvUWAKPkML99u+2oiuuzdq4VPKw@mail.gmail.com>
+In-Reply-To: <CAErSpo4nkWwwY5qtsAzgsPYAvUWAKPkML99u+2oiuuzdq4VPKw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In each suspend and resume cycle my laptop prints these messages at
-KERN_INFO level:
-    pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
-    pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
+Hi,
 
-and
-    pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
-    pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
+pcibios_resource_to_bus() does  what I need.
 
-Drop these messages, that were probably used to debug the suspend and
-resume code, but now serve no purpose.
+Thanks.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-0) v1 was called "PCI: pciehp: hide ENTRY messages behind ctrl_dbg()".
-But Bjorn and Rafael prefer to drop these messages completely.
-
-1) Not even compile tested!
-
- drivers/pci/hotplug/pciehp_core.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 939bd1d..7d72c5e 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -293,7 +293,6 @@ static void pciehp_remove(struct pcie_device *dev)
- #ifdef CONFIG_PM
- static int pciehp_suspend (struct pcie_device *dev)
- {
--	dev_info(&dev->device, "%s ENTRY\n", __func__);
- 	return 0;
- }
- 
-@@ -303,7 +302,6 @@ static int pciehp_resume (struct pcie_device *dev)
- 	struct slot *slot;
- 	u8 status;
- 
--	dev_info(&dev->device, "%s ENTRY\n", __func__);
- 	ctrl = get_service_data(dev);
- 
- 	/* reinitialize the chipset's event detection logic */
--- 
-1.7.11.7
+Le 30/12/2012 20:46, Bjorn Helgaas a écrit :
+> On Fri, Dec 28, 2012 at 2:36 AM, Cédric Cano <ccano@interfaceconcept.com> wrote:
+>> Hi,
+>>
+>> I'm writing a driver for a DMA engine on the PCI bus. My architecture is a
+>> 36-bit PowerPC (MPC85xx).
+>>
+>> In my DMA driver, I want to configure the DMA to transfer data to/from a PCI
+>> device.
+>> I get the PCI address of the device BAR with the command pci_resource_start.
+> pci_resource_start() doesn't give you a PCI bus address; it gives you
+> a CPU physical address.  You ioremap() that address if you want a CPU
+> to access the BAR MMIO space.
+>
+>> This address is 36-bit but the PCI BAR of the device is 32-bit: I can't use
+>> the 36-bit address to run the DMA.
+>>
+>> In kernel documentations, it's advised not to directly read the BAR.
+>>
+>> Is there a function which provides the real PCI address i.e. the one stored
+>> in the BAR?
+> You can use pcibios_resource_to_bus() to convert the CPU physical
+> address from the pci_dev.resource[] back to a PCI bus address.
+> sym_iomap_device() does something similar to what you're asking about.
+>
+> Bjorn
+>
 
