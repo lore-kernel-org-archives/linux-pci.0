@@ -1,94 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:60596 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755551Ab3AYEXh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2013 23:23:37 -0500
-Received: by mail-vc0-f179.google.com with SMTP id gb23so2027250vcb.10
-        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2013 20:23:36 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 3 Jan 2013 16:51:04 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Tony Luck <tony.luck@intel.com>
+Cc: Joe Perches <joe@perches.com>, Lance Ortiz <lance.ortiz@hp.com>,
+	bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v8 3/3] aerdrv: Cleanup log output for AER
+Message-ID: <20130103155103.GE10243@x1.alien8.de>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+ <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+ <1357169259.25181.9.camel@joe-AO722>
+ <CA+8MBbK3Ah81TCDRTqM-XV9vEtKCC1m7YCAr75NiUwPRM4OfsQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <50DD5E8A.5050205@cn.fujitsu.com>
-References: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com>
- <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com> <50DD5E8A.5050205@cn.fujitsu.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 24 Jan 2013 21:23:16 -0700
-Message-ID: <CAErSpo5VofkxRDvDc3q5xF5nq4Wy+5RAYwkQ6BdSftRXPPF3kw@mail.gmail.com>
-Subject: Re: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
-To: Lin Feng <linfeng@cn.fujitsu.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+8MBbK3Ah81TCDRTqM-XV9vEtKCC1m7YCAr75NiUwPRM4OfsQ@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 28, 2012 at 1:55 AM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
->
->
-> On 12/28/2012 03:45 PM, Yinghai Lu wrote:
->> On Thu, Dec 27, 2012 at 11:31 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
->>> pci_reassigndev_resource_alignment() potentially calls
->>> pci_specified_resource_alignment() twice, which is redundant.
->>>
->>> pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
->>> and from sematic/functionality aspects pci_specified_resource_alignment() is
->>> sufficient to substitute, so also make some cleanup.
->>>
->>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
->>> Cc: Yinghai Lu <yinghai@kernel.org>
->>> ---
->>>  drivers/pci/pci.c |   16 ++--------------
->>>  1 files changed, 2 insertions(+), 14 deletions(-)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index 5cb5820..789f401 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->>>         return align;
->>>  }
->>>
->>> -/**
->>> - * pci_is_reassigndev - check if specified PCI is target device to reassign
->>> - * @dev: the PCI device to check
->>> - *
->>> - * RETURNS: non-zero for PCI device is a target device to reassign,
->>> - *          or zero is not.
->>> - */
->>> -int pci_is_reassigndev(struct pci_dev *dev)
->>> -{
->>> -       return (pci_specified_resource_alignment(dev) != 0);
->>> -}
->>> -
->>>  /*
->>>   * This function disables memory decoding and releases memory resources
->>>   * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
->>> @@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>>         resource_size_t align, size;
->>>         u16 command;
->>>
->>> -       if (!pci_is_reassigndev(dev))
->>> +       align = pci_specified_resource_alignment(dev);
->>> +       if (!align)
->>>                 return;
->>>
->>>         if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
->>> @@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->>>         command &= ~PCI_COMMAND_MEMORY;
->>>         pci_write_config_word(dev, PCI_COMMAND, command);
->>>
->>> -       align = pci_specified_resource_alignment(dev);
->>>         for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
->>>                 r = &dev->resource[i];
->>>                 if (!(r->flags & IORESOURCE_MEM))
->>> --
->>> 1.7.1
->>>
->>
->> looks the same as the one that i posted 6 months ago.
->>
->> http://copilotco.com/mail-archives/linux-kernel.2012/msg18498.html
-> Sorry, I didn't notice your patchset before :)
-> Yes, they are the same. But why does nobody care this?
+On Wed, Jan 02, 2013 at 03:41:19PM -0800, Tony Luck wrote:
+> On Wed, Jan 2, 2013 at 3:27 PM, Joe Perches <joe@perches.com> wrote:
+> > Just use dev_err( instead of dev_printk(KERN_ERR,
+> > It's a function and it makes the object code smaller.
+> 
+> Looks like we are almost converged on a solution (Lance: thanks for
+> your patience and diligence in making changes).
+> 
+> Anyone on the "To:" list want to claim this for their tree to commit?
+> The series touches pci, acpi, RAS, and tracing ... so there are
+> several possible owners.
+> 
+> If someone else wants it, then add an:
+> Acked-by: Tony Luck <tony.luck@intel.com>
+> to all three parts.
 
-I applied Yinghai's patch to my pci/misc branch, headed for v3.9.
+Ditto.
 
-Bjorn
+Acked-by: Borislav Petkov <bp@alien8.de>
+
+Thanks.
+
+-- 
+Regards/Gruss,
+Boris.
