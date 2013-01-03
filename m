@@ -1,129 +1,107 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 09/22] PCI, ACPI: Add pci_root_hp hot removal notification support.
-Date: Fri, 11 Jan 2013 14:40:36 -0800
-Message-Id: <1357944049-29620-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:58132 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753133Ab3ACPLS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 10:11:18 -0500
+Received: by mail-ob0-f176.google.com with SMTP id un3so13792107obb.21
+        for <linux-pci@vger.kernel.org>; Thu, 03 Jan 2013 07:11:18 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 3 Jan 2013 23:11:17 +0800
+Message-ID: <CAMVG2ssiRgcTD1bej2tkUUfsWmpL5eNtPcNif9va2-Gzb2u8nQ@mail.gmail.com>
+Subject: 3.8-rc2: pciehp waitqueue hang...
+From: Daniel J Blueman <daniel@quora.org>
+To: Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add missing hot_remove support for root device.
+When the Apple thunderbolt ethernet adapter comes loose on my Macbook
+Pro Retina (Intel DSL3510), we see pci_slot_name return
+non-deterministic data (ie varying each boot), and we see pciehp_wp
+remain armed with events causing the kthread to get stuck:
 
-How to test it?
-Find out root bus number to acpi root name mapping from dmesg or /sys
-
-  echo "\_SB.PCIB 3" > /sys/kernel/debug/acpi/sci_notify
-to remove root bus
-
--v2: separate stop and remove, so it will be safe for comingi
-	acpi_pci_bind_notify() changes.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/pci_root.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 5c1f462c..5ae36d8 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -740,6 +740,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
- 	list_add(&bridge->list, &acpi_root_bridge_list);
- }
- 
-+static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
-+{
-+	list_del(&bridge->list);
-+	kfree(bridge);
-+}
-+
- struct acpi_root_hp_work {
- 	struct work_struct work;
- 	acpi_handle handle;
-@@ -800,6 +806,61 @@ static void handle_root_bridge_insertion(acpi_handle handle)
- 		printk(KERN_ERR "cannot add bridge to acpi list\n");
- }
- 
-+static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
-+{
-+	acpi_status status;
-+	struct acpi_object_list arg_list;
-+	union acpi_object arg;
-+
-+	arg_list.count = 1;
-+	arg_list.pointer = &arg;
-+	arg.type = ACPI_TYPE_INTEGER;
-+	arg.integer.value = val;
-+
-+	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
-+	if (ACPI_FAILURE(status)) {
-+		pr_warn("%s: %s to %d failed\n",
-+				 __func__, cmd, val);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static void handle_root_bridge_removal(acpi_handle handle,
-+		 struct acpi_root_bridge *bridge)
-+{
-+	u32 flags = 0;
-+	struct acpi_device *device;
-+
-+	if (bridge) {
-+		flags = bridge->flags;
-+		remove_acpi_root_bridge(bridge);
-+	}
-+
-+	if (!acpi_bus_get_device(handle, &device)) {
-+		int ret_val;
-+
-+		/* remove pci devices at first */
-+		ret_val = acpi_bus_trim(device, 0);
-+		printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
-+
-+		/* remove acpi devices */
-+		ret_val = acpi_bus_trim(device, 1);
-+		printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
-+	}
-+
-+	if (flags & ROOT_BRIDGE_HAS_PS3) {
-+		acpi_status status;
-+
-+		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
-+		if (ACPI_FAILURE(status))
-+			pr_warn("%s: _PS3 failed\n", __func__);
-+	}
-+	if (flags & ROOT_BRIDGE_HAS_EJ0)
-+		acpi_root_evaluate_object(handle, "_EJ0", 1);
-+}
-+
- static void _handle_hotplug_event_root(struct work_struct *work)
- {
- 	struct acpi_root_bridge *bridge;
-@@ -840,6 +901,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
- 		}
- 		break;
- 
-+	case ACPI_NOTIFY_EJECT_REQUEST:
-+		/* request device eject */
-+		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-+				 objname);
-+		handle_root_bridge_removal(handle, bridge);
-+		break;
- 	default:
- 		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
- 				 type, objname);
+tg3 0000:0a:00.0 eth0: Link is up at 1000 Mbps, full duplex
+tg3 0000:0a:00.0 eth0: Flow control is on for TX and on for RX
+<thunderbold adapter comes loose>
+pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+clear MAC_TX_MODE=ffffffff
+tg3 0000:0a:00.0 eth0: No firmware running
+tg3 0000:0a:00.0 eth0: Link is down
+pcieport 0000:00:01.1: System wakeup enabled by ACPI
+pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+pciehp 0000:09:00.0:pcie24: Latch open on
+Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+pciehp 0000:09:00.0:pcie24: Button pressed on
+Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+pciehp 0000:09:00.0:pcie24: Card present on
+Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+pciehp 0000:09:00.0:pcie24: Power fault on slot
+\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
+pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
+pciehp 0000:09:00.0:pcie24: PCI slot
+#\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
+- powering on due to button press.
+pciehp 0000:09:00.0:pcie24: Link Training Error occurs
+pciehp 0000:09:00.0:pcie24: Failed to check link status
+INFO: task kworker/0:1:52 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kworker/0:1   D ffff880265893090   0  52   2 0x00000000
+ ffff8802655456f8 0000000000000046 ffffffff81a21a60 ffff880265545fd8
+ 0000000000004000 ffff880265545fd8 ffff880265892bb0 ffff880265adc8d0
+ 000000000000059e 0000000000000082 ffff880265545668 ffffffff810415aa
+Call Trace:
+ [<ffffffff810415aa>] ? console_unlock+0x1fa/0x4a0
+ [<ffffffff8108d16d>] ? trace_hardirqs_off+0xd/0x10
+ [<ffffffff81041b19>] ? vprintk_emit+0x1c9/0x510
+ [<ffffffff81558db4>] schedule+0x24/0x70
+ [<ffffffff8155653c>] schedule_timeout+0x19c/0x1e0
+ [<ffffffff81558c43>] wait_for_common+0xe3/0x180
+ [<ffffffff8105adc1>] ? flush_workqueue+0x111/0x4d0
+ [<ffffffff81071140>] ? try_to_wake_up+0x2d0/0x2d0
+ [<ffffffff81558d88>] wait_for_completion+0x18/0x20
+ [<ffffffff8105ae86>] flush_workqueue+0x1d6/0x4d0
+ [<ffffffff8105acb0>] ? flush_workqueue_prep_cwqs+0x200/0x200
+ [<ffffffff8125e909>] pciehp_release_ctrl+0x39/0x90
+ [<ffffffff8125b945>] pciehp_remove+0x25/0x30
+ [<ffffffff81255bf2>] pcie_port_remove_service+0x52/0x70
+ [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
+ [<ffffffff81306ab9>] device_release_driver+0x29/0x40
+ [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
+ [<ffffffff81303fe7>] device_del+0x127/0x1c0
+ [<ffffffff81255d70>] ? resume_iter+0x40/0x40
+ [<ffffffff81304091>] device_unregister+0x11/0x20
+ [<ffffffff81255da5>] remove_iter+0x35/0x40
+ [<ffffffff81302eb6>] device_for_each_child+0x36/0x70
+ [<ffffffff81256341>] pcie_port_device_remove+0x21/0x40
+ [<ffffffff81256588>] pcie_portdrv_remove+0x28/0x50
+ [<ffffffff8124a821>] pci_device_remove+0x41/0xc0
+ [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
+ [<ffffffff81306ab9>] device_release_driver+0x29/0x40
+ [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
+ [<ffffffff81303fe7>] device_del+0x127/0x1c0
+ [<ffffffff81304091>] device_unregister+0x11/0x20
+ [<ffffffff8124566c>] pci_stop_bus_device+0x8c/0xa0
+ [<ffffffff81245615>] pci_stop_bus_device+0x35/0xa0
+ [<ffffffff81245811>] pci_stop_and_remove_bus_device+0x11/0x20
+ [<ffffffff8125cc91>] pciehp_unconfigure_device+0x91/0x190
+ [<ffffffff8125c76d>] ? pciehp_power_thread+0x2d/0x110
+ [<ffffffff8125c591>] pciehp_disable_slot+0x71/0x220
+ [<ffffffff8125c826>] pciehp_power_thread+0xe6/0x110
+ [<ffffffff8105d203>] process_one_work+0x193/0x550
+ [<ffffffff8105d1a1>] ? process_one_work+0x131/0x550
+ [<ffffffff8125c740>] ? pciehp_disable_slot+0x220/0x220
+ [<ffffffff8105d96d>] worker_thread+0x15d/0x400
+ [<ffffffff8109213d>] ? trace_hardirqs_on+0xd/0x10
+ [<ffffffff8105d810>] ? rescuer_thread+0x210/0x210
+ [<ffffffff81062bd6>] kthread+0xd6/0xe0
+ [<ffffffff8155a18b>] ? _raw_spin_unlock_irq+0x2b/0x50
+ [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
+ [<ffffffff8155ae6c>] ret_from_fork+0x7c/0xb0
+ [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
 -- 
-1.7.10.4
-
+Daniel J Blueman
