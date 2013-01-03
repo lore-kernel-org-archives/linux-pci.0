@@ -1,57 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:35374 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157Ab3AISju (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 13:39:50 -0500
-Received: by mail-lb0-f180.google.com with SMTP id gj3so1320999lbb.11
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 10:39:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUxxjZmd3C33_ujSeL1EjcKHHSoGusQwfBD+Zd=cwCDZA@mail.gmail.com>
-References: <20121030040237.GA10472@google.com> <1352003971-22278-1-git-send-email-yinghai@kernel.org>
- <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
- <CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
- <CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com>
- <CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
- <CAErSpo5vEb=63jGsqfau1G=f54oqq17pc3ZzcpzhL7hQrtYhng@mail.gmail.com> <CAE9FiQUxxjZmd3C33_ujSeL1EjcKHHSoGusQwfBD+Zd=cwCDZA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Jan 2013 11:39:28 -0700
-Message-ID: <CAErSpo6qX3ih9DXLqxqJw141OAeTFu0YfSih6LyD0sd2gS-Vyg@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1357171594.25181.19.camel@joe-AO722>
+Subject: [PATCH] checkpatch: prefer dev_<level>( to dev_printk(KERN_<LEVEL>
+From: Joe Perches <joe@perches.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Andy Whitcroft <apw@canonical.com>
+Cc: Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
+	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
+	bp@alien8.de, rostedt@goodmis.org, mchehab@redhat.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 02 Jan 2013 16:06:34 -0800
+In-Reply-To: <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Wed, Jan 9, 2013 at 9:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> I don't know, that could be separated patcheset after we conclude
->>> pci root bus hotplug support.
->>
->> The main reason I review patches before merging them is to identify
->> issues that we can fix before they affect everybody.  It makes my life
->> a lot easier if I don't have to keep track of pending unaddressed
->> review comments.  Is there an advantage to waiting and doing this work
->> later?
->>
->>>>> In general these look good.  My main concern is that they only touch
->>>>> x86, without touching the similar code in frv, microblaze, mn10300,
->>>>> and powerpc.
->
-> the reason why we need to change those codes for x86, we want to make it support
-> pci root bus hotplug. So it would be reasonable for us to align other
-> platform to x86
-> changes after pci root bus hotplug change is completely done.
+Add YA check to printk style.
 
-OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
-way to keep track of this consistency issue and merged
-pci/yinghai-survey-resources to my -next branch.
+dev_<level> uses are functions and generate smaller
+object code than dev_printk(KERN_<LEVEL>.
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ scripts/checkpatch.pl | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index 4d2c7df..f50b32d 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -2430,6 +2430,16 @@ sub process {
+ 			     "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
+ 		}
+ 
++		if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
++			my $orig = $1;
++			my $level = lc($orig);
++			$level = "warn" if ($level eq "warning");
++			my $level2 = $level;
++			$level2 = "dbg" if ($level eq "debug");
++			WARN("PREFER_DEV_LEVEL",
++			     "Prefer dev_$level2(... to dev_printk(KERN_$orig, ...\n" . $herecurr);
++		}
++
+ # function brace can't be on same line, except for #defines of do while,
+ # or if closed on same line
+ 		if (($line=~/$Type\s*$Ident\(.*\).*\s{/) and
+
+
