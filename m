@@ -1,95 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32312 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755388Ab3A0TYW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:22 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 12/22] PCI: Kill pci_root_buses in setup-bus
-Date: Sun, 27 Jan 2013 11:23:39 -0800
-Message-Id: <1359314629-18651-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+Received: from mail-vb0-f49.google.com ([209.85.212.49]:54745 "EHLO
+	mail-vb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755254Ab3ADVu5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 16:50:57 -0500
+Received: by mail-vb0-f49.google.com with SMTP id r6so16777442vbi.22
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 13:50:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6KJvEkiqkU--sF_vySk2YUgL_9t1OEYAAGBp9Ebom26w@mail.gmail.com>
+References: <CAMVG2ssiRgcTD1bej2tkUUfsWmpL5eNtPcNif9va2-Gzb2u8nQ@mail.gmail.com>
+ <50E5A6A1.5040508@gmail.com> <CAErSpo6KJvEkiqkU--sF_vySk2YUgL_9t1OEYAAGBp9Ebom26w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Jan 2013 14:50:36 -0700
+Message-ID: <CAErSpo6vTS6MnWoHJgXgmVtq=jqrudOHW47+8hVpc8GfiY100A@mail.gmail.com>
+Subject: Re: 3.8-rc2: pciehp waitqueue hang...
+To: Jiang Liu <liuj97@gmail.com>, Yijing Wang <wangyijing@huawei.com>
+Cc: Daniel J Blueman <daniel@quora.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace that with hotplug-safe version iteration.
+[+to Yijing, +cc Kenji]
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+On Fri, Jan 4, 2013 at 1:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jan 3, 2013 at 8:41 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Hi Daniel,
+>>         It seems like an issue caused by recursive PCIe HPC.
+>> Could you please help to try the patch from:
+>> http://www.spinics.net/lists/linux-pci/msg18625.html
+>
+> Hi Gerry,
+>
+> I'm working on merging this patch.  Seems like something that might be
+> appropriate for stable as well.
+>
+> Did you look for similar problems in other hotplug drivers?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7e8739e..8c0870b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1318,12 +1318,12 @@ static int __init pci_bus_get_depth(struct pci_bus *bus)
- static int __init pci_get_max_depth(void)
- {
- 	int depth = 0;
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host_bridge = NULL;
- 
--	list_for_each_entry(bus, &pci_root_buses, node) {
-+	for_each_pci_host_bridge(host_bridge) {
- 		int ret;
- 
--		ret = pci_bus_get_depth(bus);
-+		ret = pci_bus_get_depth(host_bridge->bus);
- 		if (ret > depth)
- 			depth = ret;
- 	}
-@@ -1393,6 +1393,7 @@ void __init
- pci_assign_unassigned_resources(void)
- {
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *host_bridge = NULL;
- 	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
- 	struct list_head *add_list = NULL;
-@@ -1423,12 +1424,13 @@ again:
- 		add_list = &realloc_head;
- 	/* Depth first, calculate sizes and alignments of all
- 	   subordinate buses. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_size_bridges(bus, add_list);
-+	for_each_pci_host_bridge(host_bridge)
-+		__pci_bus_size_bridges(host_bridge->bus, add_list);
- 
- 	/* Depth last, allocate resources and update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		__pci_bus_assign_resources(bus, add_list, &fail_head);
-+	for_each_pci_host_bridge(host_bridge)
-+		__pci_bus_assign_resources(host_bridge->bus, add_list,
-+						 &fail_head);
- 	if (add_list)
- 		BUG_ON(!list_empty(add_list));
- 	tried_times++;
-@@ -1480,12 +1482,12 @@ again:
- 
- enable_and_dump:
- 	/* Depth last, update the hardware. */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_enable_bridges(bus);
-+	for_each_pci_host_bridge(host_bridge)
-+		pci_enable_bridges(host_bridge->bus);
- 
- 	/* dump the resource on buses */
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pci_bus_dump_resources(bus);
-+	for_each_pci_host_bridge(host_bridge)
-+		pci_bus_dump_resources(host_bridge->bus);
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
--- 
-1.7.10.4
+Oops, sorry, I forgot that Yijing is the author of the patch in question.
 
+Yijing, please check for the same problem in other hotplug drivers.
+Questions I have after a quick look:
+
+  - shpchp_wq looks like it might have the same deadlock issue.
+
+  - pciehp_wq (and your per-slot replacement) are allocated with
+alloc_workqueue().  shpchp_wq is allocated with
+alloc_ordered_workqueue().  Why the difference?
+
+  - The alloc/alloc_ordered difference might be related to 486b10b9f4,
+where Kenji removed alloc_ordered from pciehp.  Should a similar
+change be made to shpchp?
+
+  - acpiphp uses the global kacpi_hotplug_wq.  We never flush or drain
+kacpi_hotplug_wq, so I doubt there's a deadlock issue, but I wonder if
+there are any ordering issues there because we *don't* ever wait for
+things in that queue to be completed.
+
+>> Thanks!
+>> Gerry
+>> On 01/03/2013 11:11 PM, Daniel J Blueman wrote:
+>>> When the Apple thunderbolt ethernet adapter comes loose on my Macbook
+>>> Pro Retina (Intel DSL3510), we see pci_slot_name return
+>>> non-deterministic data (ie varying each boot), and we see pciehp_wp
+>>> remain armed with events causing the kthread to get stuck:
+>>>
+>>> tg3 0000:0a:00.0 eth0: Link is up at 1000 Mbps, full duplex
+>>> tg3 0000:0a:00.0 eth0: Flow control is on for TX and on for RX
+>>> <thunderbold adapter comes loose>
+>>> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+>>> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+>>> clear MAC_TX_MODE=ffffffff
+>>> tg3 0000:0a:00.0 eth0: No firmware running
+>>> tg3 0000:0a:00.0 eth0: Link is down
+>>> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+>>> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+>>> pciehp 0000:09:00.0:pcie24: Latch open on
+>>> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+>>> pciehp 0000:09:00.0:pcie24: Button pressed on
+>>> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+>>> pciehp 0000:09:00.0:pcie24: Card present on
+>>> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+>>> pciehp 0000:09:00.0:pcie24: Power fault on slot
+>>> \xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
+>>> pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
+>>> pciehp 0000:09:00.0:pcie24: PCI slot
+>>> #\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
+>>> - powering on due to button press.
+>>> pciehp 0000:09:00.0:pcie24: Link Training Error occurs
+>>> pciehp 0000:09:00.0:pcie24: Failed to check link status
+>>> INFO: task kworker/0:1:52 blocked for more than 120 seconds.
+>>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>> kworker/0:1   D ffff880265893090   0  52   2 0x00000000
+>>>  ffff8802655456f8 0000000000000046 ffffffff81a21a60 ffff880265545fd8
+>>>  0000000000004000 ffff880265545fd8 ffff880265892bb0 ffff880265adc8d0
+>>>  000000000000059e 0000000000000082 ffff880265545668 ffffffff810415aa
+>>> Call Trace:
+>>>  [<ffffffff810415aa>] ? console_unlock+0x1fa/0x4a0
+>>>  [<ffffffff8108d16d>] ? trace_hardirqs_off+0xd/0x10
+>>>  [<ffffffff81041b19>] ? vprintk_emit+0x1c9/0x510
+>>>  [<ffffffff81558db4>] schedule+0x24/0x70
+>>>  [<ffffffff8155653c>] schedule_timeout+0x19c/0x1e0
+>>>  [<ffffffff81558c43>] wait_for_common+0xe3/0x180
+>>>  [<ffffffff8105adc1>] ? flush_workqueue+0x111/0x4d0
+>>>  [<ffffffff81071140>] ? try_to_wake_up+0x2d0/0x2d0
+>>>  [<ffffffff81558d88>] wait_for_completion+0x18/0x20
+>>>  [<ffffffff8105ae86>] flush_workqueue+0x1d6/0x4d0
+>>>  [<ffffffff8105acb0>] ? flush_workqueue_prep_cwqs+0x200/0x200
+>>>  [<ffffffff8125e909>] pciehp_release_ctrl+0x39/0x90
+>>>  [<ffffffff8125b945>] pciehp_remove+0x25/0x30
+>>>  [<ffffffff81255bf2>] pcie_port_remove_service+0x52/0x70
+>>>  [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
+>>>  [<ffffffff81306ab9>] device_release_driver+0x29/0x40
+>>>  [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
+>>>  [<ffffffff81303fe7>] device_del+0x127/0x1c0
+>>>  [<ffffffff81255d70>] ? resume_iter+0x40/0x40
+>>>  [<ffffffff81304091>] device_unregister+0x11/0x20
+>>>  [<ffffffff81255da5>] remove_iter+0x35/0x40
+>>>  [<ffffffff81302eb6>] device_for_each_child+0x36/0x70
+>>>  [<ffffffff81256341>] pcie_port_device_remove+0x21/0x40
+>>>  [<ffffffff81256588>] pcie_portdrv_remove+0x28/0x50
+>>>  [<ffffffff8124a821>] pci_device_remove+0x41/0xc0
+>>>  [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
+>>>  [<ffffffff81306ab9>] device_release_driver+0x29/0x40
+>>>  [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
+>>>  [<ffffffff81303fe7>] device_del+0x127/0x1c0
+>>>  [<ffffffff81304091>] device_unregister+0x11/0x20
+>>>  [<ffffffff8124566c>] pci_stop_bus_device+0x8c/0xa0
+>>>  [<ffffffff81245615>] pci_stop_bus_device+0x35/0xa0
+>>>  [<ffffffff81245811>] pci_stop_and_remove_bus_device+0x11/0x20
+>>>  [<ffffffff8125cc91>] pciehp_unconfigure_device+0x91/0x190
+>>>  [<ffffffff8125c76d>] ? pciehp_power_thread+0x2d/0x110
+>>>  [<ffffffff8125c591>] pciehp_disable_slot+0x71/0x220
+>>>  [<ffffffff8125c826>] pciehp_power_thread+0xe6/0x110
+>>>  [<ffffffff8105d203>] process_one_work+0x193/0x550
+>>>  [<ffffffff8105d1a1>] ? process_one_work+0x131/0x550
+>>>  [<ffffffff8125c740>] ? pciehp_disable_slot+0x220/0x220
+>>>  [<ffffffff8105d96d>] worker_thread+0x15d/0x400
+>>>  [<ffffffff8109213d>] ? trace_hardirqs_on+0xd/0x10
+>>>  [<ffffffff8105d810>] ? rescuer_thread+0x210/0x210
+>>>  [<ffffffff81062bd6>] kthread+0xd6/0xe0
+>>>  [<ffffffff8155a18b>] ? _raw_spin_unlock_irq+0x2b/0x50
+>>>  [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
+>>>  [<ffffffff8155ae6c>] ret_from_fork+0x7c/0xb0
+>>>  [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
+>>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
