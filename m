@@ -1,39 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f54.google.com ([209.85.214.54]:58010 "EHLO
-	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346Ab3AHR14 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 12:27:56 -0500
+Received: from mail-vb0-f50.google.com ([209.85.212.50]:55896 "EHLO
+	mail-vb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754655Ab3ADTbe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:31:34 -0500
+Received: by mail-vb0-f50.google.com with SMTP id ft2so5195718vbb.37
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:31:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201301081750.07296.trenn@suse.de>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<1593084.QhbTkmoq3N@hammer82.arch.suse.de>
-	<CAE9FiQWTiFu0+ymVroK84L-LCc7FBU1trdZAcaXqMGM2My6LzQ@mail.gmail.com>
-	<201301081750.07296.trenn@suse.de>
-Date: Tue, 8 Jan 2013 09:27:55 -0800
-Message-ID: <CAE9FiQXUCtfeKuZVb1=13SL-UUu5hkNE3Q3K8MTZA2ap1qDCAg@mail.gmail.com>
-Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
- with iommu
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
+In-Reply-To: <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+References: <F5D084D6342F9B479C34599BB0A03E4D020128@AVMB1.qlogic.org>
+ <D63B9804CB63AD4FAAD966037695664603A72C@avmb2.qlogic.org> <CAErSpo6rs2+Sp3WrqsH7DXb+uZ=c7z8YnT1-GpCd96kKNW1_-w@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Jan 2013 12:31:11 -0700
+Message-ID: <CAErSpo6-BFtr=HH_5zLUrVK6goiVsNTq5pwmn+_wj4_z9kY-3A@mail.gmail.com>
+Subject: Re: [PATCH 04/12] [SCSI] qla2xxx: Use standard PCIe Capability Link
+ register field names
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>,
+	Saurav Kashyap <saurav.kashyap@qlogic.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dept-Eng Linux Driver <Linux-Driver@qlogic.com>,
+	Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 8, 2013 at 8:50 AM, Thomas Renninger <trenn@suse.de> wrote:
-> megaraid_sas
+I haven't heard anything, so I'm going to push this through the PCI
+tree.  Let me know if anybody objects or would like to handle it
+differently.
 
-can you check if your initrd for kdump kernel has that driver and
-module that it depends on like
-scsi sas transport etc ?
-
-Thanks
-
-Yinghai
+On Mon, Dec 17, 2012 at 12:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Ping.  I didn't push this through my tree because I didn't want to
+> create conflicts with other changes to this file.  But I think this
+> can be merged any time.
+>
+> On Fri, Dec 7, 2012 at 3:29 PM, Giridhar Malavali
+> <giridhar.malavali@qlogic.com> wrote:
+>> Acked-by: Giridhar Malavali
+>>
+>> On 12/7/12 12:17 AM, "Saurav Kashyap" <saurav.kashyap@qlogic.com> wrote:
+>>
+>>>Acked-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+>>>
+>>>Thanks,
+>>>~Saurav
+>>>
+>>>
+>>>
+>>>>Use the standard #defines for PCIe Link Capability register fields
+>>>>rather than bare numbers.  This also uses the new PCI Express Capability
+>>>>accessor rather than reading the capability directly.
+>>>>
+>>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>>CC: Andrew Vasquez <andrew.vasquez@qlogic.com>
+>>>>CC: linux-driver@qlogic.com
+>>>>CC: "James E.J. Bottomley" <JBottomley@parallels.com>
+>>>>CC: linux-scsi@vger.kernel.org
+>>>>---
+>>>> drivers/scsi/qla2xxx/qla_os.c |   14 +++++---------
+>>>> 1 files changed, 5 insertions(+), 9 deletions(-)
+>>>>
+>>>>diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>>>b/drivers/scsi/qla2xxx/qla_os.c
+>>>>index d501bf5..b5d070f 100644
+>>>>--- a/drivers/scsi/qla2xxx/qla_os.c
+>>>>+++ b/drivers/scsi/qla2xxx/qla_os.c
+>>>>@@ -480,18 +480,14 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha,
+>>>>char *str)
+>>>>      static char *pci_bus_modes[] = { "33", "66", "100", "133", };
+>>>>      struct qla_hw_data *ha = vha->hw;
+>>>>      uint32_t pci_bus;
+>>>>-     int pcie_reg;
+>>>>
+>>>>-     pcie_reg = pci_pcie_cap(ha->pdev);
+>>>>-     if (pcie_reg) {
+>>>>+     if (pci_is_pcie(ha->pdev)) {
+>>>>              char lwstr[6];
+>>>>-             uint16_t pcie_lstat, lspeed, lwidth;
+>>>>+             uint32_t lstat, lspeed, lwidth;
+>>>>
+>>>>-             pcie_reg += PCI_EXP_LNKCAP;
+>>>>-             pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+>>>>-             lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+>>>>-             lwidth = (pcie_lstat &
+>>>>-                 (BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9)) >> 4;
+>>>>+             pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
+>>>>+             lspeed = lstat & PCI_EXP_LNKCAP_SLS;
+>>>>+             lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
+>>>>
+>>>>              strcpy(str, "PCIe (");
+>>>>              if (lspeed == 1)
+>>>>
+>>>>--
+>>>>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>>the body of a message to majordomo@vger.kernel.org
+>>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>>
+>>
+>>
