@@ -1,131 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-To: Blue Swirl <blauwirbel@gmail.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gleb Natapov <gleb@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [Qemu-devel] [PATCH 2/2] QEMU-AER: Qemu changes to support AER
- for VFIO-PCI devices
-Date: Fri, 11 Jan 2013 08:55:13 +0000
-Message-ID: <F9E001219150CB45BEDC82A650F360C9014976AA@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
- <CAAu8pHt63J4h_c2HbwSDRxJCg4675WT7m_xmYwE69MTp_E=igg@mail.gmail.com>
-In-Reply-To: <CAAu8pHt63J4h_c2HbwSDRxJCg4675WT7m_xmYwE69MTp_E=igg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f74.google.com ([209.85.212.74]:40869 "EHLO
+	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754013Ab3ADTSw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:18:52 -0500
+Received: by mail-vb0-f74.google.com with SMTP id s24so1786732vbi.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:18:52 -0800 (PST)
+Subject: [PATCH 2/3] drm/pci: Set all supported speeds in speed cap mask for
+	pre-3.0 devices
+To: David Airlie <airlied@linux.ie>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Betty Dall <betty.dall@hp.com>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date: Fri, 04 Jan 2013 12:10:37 -0700
+Message-ID: <20130104191037.4586.96280.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmx1ZSBTd2lybCBbbWFp
-bHRvOmJsYXV3aXJiZWxAZ21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIEphbnVhcnkgMDks
-IDIwMTMgMToyMyBQTQ0KPiBUbzogUGFuZGFyYXRoaWwsIFZpamF5bW9oYW4gUg0KPiBDYzogQWxl
-eCBXaWxsaWFtc29uOyBCam9ybiBIZWxnYWFzOyBHbGViIE5hdGFwb3Y7IGxpbnV4LQ0KPiBwY2lA
-dmdlci5rZXJuZWwub3JnOyBxZW11LWRldmVsQG5vbmdudS5vcmc7IGt2bUB2Z2VyLmtlcm5lbC5v
-cmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUWVt
-dS1kZXZlbF0gW1BBVENIIDIvMl0gUUVNVS1BRVI6IFFlbXUgY2hhbmdlcyB0byBzdXBwb3J0IEFF
-Ug0KPiBmb3IgVkZJTy1QQ0kgZGV2aWNlcw0KPiANCj4gT24gV2VkLCBKYW4gOSwgMjAxMyBhdCA2
-OjI2IEFNLCBQYW5kYXJhdGhpbCwgVmlqYXltb2hhbiBSDQo+IDx2aWpheW1vaGFuLnBhbmRhcmF0
-aGlsQGhwLmNvbT4gd3JvdGU6DQo+ID4gICAgICAgICAtIENyZWF0ZSBldmVudGZkIHBlciB2Zmlv
-IGRldmljZSBhc3NpZ25lZCB0byBhIGd1ZXN0IGFuZCByZWdpc3Rlcg0KPiBhbg0KPiA+ICAgICAg
-ICAgICBldmVudCBoYW5kbGVyDQo+ID4NCj4gPiAgICAgICAgIC0gVGhpcyBmZCBpcyBwYXNzZWQg
-dG8gdGhlIHZmaW9fcGNpIGRyaXZlciB0aHJvdWdoIGEgbmV3IGlvY3RsDQo+ID4NCj4gPiAgICAg
-ICAgIC0gV2hlbiB0aGUgZGV2aWNlIGVuY291bnRlcnMgYW4gZXJyb3IsIHRoZSBldmVudGZkIGlz
-IHNpZ25hbGVkDQo+ID4gICAgICAgICAgIGFuZCB0aGUgcWVtdSBldmVudGZkIGhhbmRsZXIgZ2V0
-cyBpbnZva2VkLg0KPiA+DQo+ID4gICAgICAgICAtIEluIHRoZSBoYW5kbGVyIGRlY2lkZSB3aGF0
-IGFjdGlvbiB0byB0YWtlLiBDdXJyZW50IGFjdGlvbiB0YWtlbg0KPiA+ICAgICAgICAgICBpcyB0
-byB0ZXJtaW5hdGUgdGhlIGd1ZXN0Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogVmlqYXkgTW9o
-YW4gUGFuZGFyYXRoaWwgPHZpamF5bW9oYW4ucGFuZGFyYXRoaWxAaHAuY29tPg0KPiA+IC0tLQ0K
-PiA+ICBody92ZmlvX3BjaS5jICAgICAgICAgICAgICB8IDU2DQo+ICsrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgbGludXgtaGVhZGVycy9saW51eC92
-ZmlvLmggfCAgOSArKysrKysrKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDY1IGluc2VydGlvbnMo
-KykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9ody92ZmlvX3BjaS5jIGIvaHcvdmZpb19wY2kuYw0K
-PiA+IGluZGV4IDI4YzgzMDMuLjljM2MyOGIgMTAwNjQ0DQo+ID4gLS0tIGEvaHcvdmZpb19wY2ku
-Yw0KPiA+ICsrKyBiL2h3L3ZmaW9fcGNpLmMNCj4gPiBAQCAtMzgsNiArMzgsNyBAQA0KPiA+ICAj
-aW5jbHVkZSAicWVtdS9lcnJvci1yZXBvcnQuaCINCj4gPiAgI2luY2x1ZGUgInFlbXUvcXVldWUu
-aCINCj4gPiAgI2luY2x1ZGUgInFlbXUvcmFuZ2UuaCINCj4gPiArI2luY2x1ZGUgInN5c2VtdS9z
-eXNlbXUuaCINCj4gPg0KPiA+ICAvKiAjZGVmaW5lIERFQlVHX1ZGSU8gKi8NCj4gPiAgI2lmZGVm
-IERFQlVHX1ZGSU8NCj4gPiBAQCAtMTMwLDYgKzEzMSw4IEBAIHR5cGVkZWYgc3RydWN0IFZGSU9E
-ZXZpY2Ugew0KPiA+ICAgICAgUUxJU1RfRU5UUlkoVkZJT0RldmljZSkgbmV4dDsNCj4gPiAgICAg
-IHN0cnVjdCBWRklPR3JvdXAgKmdyb3VwOw0KPiA+ICAgICAgYm9vbCByZXNldF93b3JrczsNCj4g
-PiArICAgIEV2ZW50Tm90aWZpZXIgZXJyZmQ7DQo+ID4gKyAgICBfX3UzMiBkZXZfaW5mb19mbGFn
-czsNCj4gDQo+IFFFTVUgaXMgbm90IGtlcm5lbCBjb2RlLCBwbGVhc2UgdXNlIHVpbnQzMl90Lg0K
-DQpBcyB5b3Ugc2F3IGxhdGVyIGluIHRoZSBjb2RlLCBJIHdhcyB1c2luZyB0aGUgc2FtZSB0eXBl
-IGluIHRoZSBzdHJ1Y3R1cmUgDQpjb3BpZWQgZnJvbSB0aGUga2VybmVsLiBXaWxsIGNoYW5nZSB0
-aGlzIHRvIHVpbnQzMl90Lg0KDQpUaGFua3MNCg0KVmlqYXkNCg0KPiANCj4gPiAgfSBWRklPRGV2
-aWNlOw0KPiA+DQo+ID4gIHR5cGVkZWYgc3RydWN0IFZGSU9Hcm91cCB7DQo+ID4gQEAgLTE4MDUs
-NiArMTgwOCw4IEBAIHN0YXRpYyBpbnQgdmZpb19nZXRfZGV2aWNlKFZGSU9Hcm91cCAqZ3JvdXAs
-IGNvbnN0DQo+IGNoYXIgKm5hbWUsIFZGSU9EZXZpY2UgKnZkZXYpDQo+ID4gICAgICBEUFJJTlRG
-KCJEZXZpY2UgJXMgZmxhZ3M6ICV1LCByZWdpb25zOiAldSwgaXJnczogJXVcbiIsIG5hbWUsDQo+
-ID4gICAgICAgICAgICAgIGRldl9pbmZvLmZsYWdzLCBkZXZfaW5mby5udW1fcmVnaW9ucywgZGV2
-X2luZm8ubnVtX2lycXMpOw0KPiA+DQo+ID4gKyAgICB2ZGV2LT5kZXZfaW5mb19mbGFncyA9IGRl
-dl9pbmZvLmZsYWdzOw0KPiA+ICsNCj4gPiAgICAgIGlmICghKGRldl9pbmZvLmZsYWdzICYgVkZJ
-T19ERVZJQ0VfRkxBR1NfUENJKSkgew0KPiA+ICAgICAgICAgIGVycm9yX3JlcG9ydCgidmZpbzog
-VW0sIHRoaXMgaXNuJ3QgYSBQQ0kgZGV2aWNlXG4iKTsNCj4gPiAgICAgICAgICBnb3RvIGVycm9y
-Ow0KPiA+IEBAIC0xOTAwLDYgKzE5MDUsNTUgQEAgc3RhdGljIHZvaWQgdmZpb19wdXRfZGV2aWNl
-KFZGSU9EZXZpY2UgKnZkZXYpDQo+ID4gICAgICB9DQo+ID4gIH0NCj4gPg0KPiA+ICtzdGF0aWMg
-dm9pZCB2ZmlvX2VycmZkX2hhbmRsZXIodm9pZCAqb3BhcXVlKQ0KPiA+ICt7DQo+ID4gKyAgICBW
-RklPRGV2aWNlICp2ZGV2ID0gb3BhcXVlOw0KPiA+ICsNCj4gPiArICAgIGlmICghZXZlbnRfbm90
-aWZpZXJfdGVzdF9hbmRfY2xlYXIoJnZkZXYtPmVycmZkKSkgew0KPiA+ICsgICAgICAgIHJldHVy
-bjsNCj4gPiArICAgIH0NCj4gPiArDQo+ID4gKyAgICAvKg0KPiA+ICsgICAgICogVEJELiBSZXRy
-aWV2ZSB0aGUgZXJyb3IgZGV0YWlscyBhbmQgZGVjaWRlIHdoYXQgYWN0aW9uDQo+ID4gKyAgICAg
-KiBuZWVkcyB0byBiZSB0YWtlbi4gT25lIG9mIHRoZSBhY3Rpb25zIGNvdWxkIGJlIHRvIHBhc3MN
-Cj4gPiArICAgICAqIHRoZSBlcnJvciB0byB0aGUgZ3Vlc3QgYW5kIGhhdmUgdGhlIGd1ZXN0IGRy
-aXZlciByZWNvdmVyDQo+ID4gKyAgICAgKiB0aGUgZXJyb3IuIFRoaXMgcmVxdWlyZXMgdGhhdCBQ
-Q0llIGNhcGFiaWxpdGllcyBiZQ0KPiA+ICsgICAgICogZXhwb3NlZCB0byB0aGUgZ3Vlc3QuIEF0
-IHByZXNlbnQsIHdlIGp1c3QgdGVybWluYXRlIHRoZQ0KPiA+ICsgICAgICogZ3Vlc3QgdG8gY29u
-dGFpbiB0aGUgZXJyb3IuDQo+ID4gKyAgICAgKi8NCj4gPiArICAgIGVycm9yX3JlcG9ydCgiJXMo
-JTA0eDolMDJ4OiUwMnguJXgpICINCj4gPiArICAgICAgICAiVW5yZWNvdmVyYWJsZSBlcnJvciBk
-ZXRlY3RlZC4uLiBUZXJtaW5hdGluZyBndWVzdFxuIiwNCj4gPiArICAgICAgICBfX2Z1bmNfXywg
-dmRldi0+aG9zdC5kb21haW4sIHZkZXYtPmhvc3QuYnVzLCB2ZGV2LT5ob3N0LnNsb3QsDQo+ID4g
-KyAgICAgICAgdmRldi0+aG9zdC5mdW5jdGlvbik7DQo+ID4gKw0KPiA+ICsgICAgcWVtdV9zeXN0
-ZW1fc2h1dGRvd25fcmVxdWVzdCgpOw0KPiA+ICsgICAgcmV0dXJuOw0KPiA+ICt9DQo+ID4gKw0K
-PiA+ICtzdGF0aWMgdm9pZCB2ZmlvX3JlZ2lzdGVyX2VycmZkKFZGSU9EZXZpY2UgKnZkZXYpDQo+
-ID4gK3sNCj4gPiArICAgIGludDMyX3QgcGZkOw0KPiA+ICsgICAgaW50IHJldDsNCj4gPiArDQo+
-ID4gKyAgICBpZiAoISh2ZGV2LT5kZXZfaW5mb19mbGFncyAmIFZGSU9fREVWSUNFX0ZMQUdTX0FF
-Ul9OT1RJRlkpKSB7DQo+ID4gKyAgICAgICAgZXJyb3JfcmVwb3J0KCJ2ZmlvOiBXYXJuaW5nOiBF
-cnJvciBub3RpZmljYXRpb24gbm90IHN1cHBvcnRlZA0KPiBmb3IgdGhlIGRldmljZVxuIik7DQo+
-ID4gKyAgICAgICAgcmV0dXJuOw0KPiA+ICsgICAgfQ0KPiA+ICsgICAgaWYgKGV2ZW50X25vdGlm
-aWVyX2luaXQoJnZkZXYtPmVycmZkLCAwKSkgew0KPiA+ICsgICAgICAgIGVycm9yX3JlcG9ydCgi
-dmZpbzogV2FybmluZzogVW5hYmxlIHRvIGluaXQgZXZlbnQgbm90aWZpZXIgZm9yDQo+IGVycm9y
-IGRldGVjdGlvblxuIik7DQo+ID4gKyAgICAgICAgcmV0dXJuOw0KPiA+ICsgICAgfQ0KPiA+ICsg
-ICAgcGZkID0gZXZlbnRfbm90aWZpZXJfZ2V0X2ZkKCZ2ZGV2LT5lcnJmZCk7DQo+ID4gKyAgICBx
-ZW11X3NldF9mZF9oYW5kbGVyKHBmZCwgdmZpb19lcnJmZF9oYW5kbGVyLCBOVUxMLCB2ZGV2KTsN
-Cj4gPiArDQo+ID4gKyAgICByZXQgPSBpb2N0bCh2ZGV2LT5mZCwgVkZJT19ERVZJQ0VfU0VUX0VS
-UkZELCBwZmQpOw0KPiA+ICsgICAgaWYgKHJldCkgew0KPiA+ICsgICAgICAgIGVycm9yX3JlcG9y
-dCgidmZpbzogV2FybmluZzogRmFpbGVkIHRvIHNldHVwIGVycm9yIGZkOiAlZFxuIiwNCj4gcmV0
-KTsNCj4gPiArICAgICAgICBxZW11X3NldF9mZF9oYW5kbGVyKHBmZCwgTlVMTCwgTlVMTCwgdmRl
-dik7DQo+ID4gKyAgICAgICAgZXZlbnRfbm90aWZpZXJfY2xlYW51cCgmdmRldi0+ZXJyZmQpOw0K
-PiA+ICsgICAgfQ0KPiA+ICsgICAgcmV0dXJuOw0KPiA+ICt9DQo+ID4gIHN0YXRpYyBpbnQgdmZp
-b19pbml0Zm4oUENJRGV2aWNlICpwZGV2KQ0KPiA+ICB7DQo+ID4gICAgICBWRklPRGV2aWNlICpw
-dmRldiwgKnZkZXYgPSBET19VUENBU1QoVkZJT0RldmljZSwgcGRldiwgcGRldik7DQo+ID4gQEAg
-LTIwMTAsNiArMjA2NCw4IEBAIHN0YXRpYyBpbnQgdmZpb19pbml0Zm4oUENJRGV2aWNlICpwZGV2
-KQ0KPiA+ICAgICAgICAgIH0NCj4gPiAgICAgIH0NCj4gPg0KPiA+ICsgICAgdmZpb19yZWdpc3Rl
-cl9lcnJmZCh2ZGV2KTsNCj4gPiArDQo+ID4gICAgICByZXR1cm4gMDsNCj4gPg0KPiA+ICBvdXRf
-dGVhcmRvd246DQo+ID4gZGlmZiAtLWdpdCBhL2xpbnV4LWhlYWRlcnMvbGludXgvdmZpby5oIGIv
-bGludXgtaGVhZGVycy9saW51eC92ZmlvLmgNCj4gPiBpbmRleCA0NzU4ZDFiLi4wY2E0ZWViIDEw
-MDY0NA0KPiA+IC0tLSBhL2xpbnV4LWhlYWRlcnMvbGludXgvdmZpby5oDQo+ID4gKysrIGIvbGlu
-dXgtaGVhZGVycy9saW51eC92ZmlvLmgNCj4gPiBAQCAtMTQ3LDYgKzE0Nyw3IEBAIHN0cnVjdCB2
-ZmlvX2RldmljZV9pbmZvIHsNCj4gPiAgICAgICAgIF9fdTMyICAgZmxhZ3M7DQo+ID4gICNkZWZp
-bmUgVkZJT19ERVZJQ0VfRkxBR1NfUkVTRVQgICAgICAgICgxIDw8IDApICAgICAgICAvKiBEZXZp
-Y2UNCj4gc3VwcG9ydHMgcmVzZXQgKi8NCj4gPiAgI2RlZmluZSBWRklPX0RFVklDRV9GTEFHU19Q
-Q0kgICgxIDw8IDEpICAgICAgICAvKiB2ZmlvLXBjaSBkZXZpY2UgKi8NCj4gPiArI2RlZmluZSBW
-RklPX0RFVklDRV9GTEFHU19BRVJfTk9USUZZICgxIDw8IDIpICAgLyogU3VwcG9ydHMgYWVyDQo+
-IG5vdGlmaWNhdGlvbiAqLw0KPiA+ICAgICAgICAgX191MzIgICBudW1fcmVnaW9uczsgICAgLyog
-TWF4IHJlZ2lvbiBpbmRleCArIDEgKi8NCj4gPiAgICAgICAgIF9fdTMyICAgbnVtX2lycXM7ICAg
-ICAgIC8qIE1heCBJUlEgaW5kZXggKyAxICovDQo+IA0KPiBUaGVzZSBhcmUgdmVyYmF0aW0gY29w
-aWVzIG9mIGtlcm5lbCBoZWFkZXJzIHNvIGl0J3MgT0sgaGVyZS4NCj4gDQo+ID4gIH07DQo+ID4g
-QEAgLTI4OCw2ICsyODksMTQgQEAgc3RydWN0IHZmaW9faXJxX3NldCB7DQo+ID4gICAqLw0KPiA+
-ICAjZGVmaW5lIFZGSU9fREVWSUNFX1JFU0VUICAgICAgICAgICAgICBfSU8oVkZJT19UWVBFLCBW
-RklPX0JBU0UgKyAxMSkNCj4gPg0KPiA+ICsvKioNCj4gPiArICogVkZJT19ERVZJQ0VfU0VUX0VS
-UkZEIC0gX0lPKFZGSU9fVFlQRSwgVkZJT19CQVNFICsgMTIpDQo+ID4gKyAqDQo+ID4gKyAqIFBh
-c3MgdGhlIGV2ZW50ZmQgdG8gdGhlIHZmaW8tcGNpIGRyaXZlciBmb3Igc2lnbmFsbGluZyBhbnkg
-ZGV2aWNlDQo+ID4gKyAqIGVycm9yIG5vdGlmaWNhdGlvbnMNCj4gPiArICovDQo+ID4gKyNkZWZp
-bmUgVkZJT19ERVZJQ0VfU0VUX0VSUkZEICAgICAgICAgICBfSU8oVkZJT19UWVBFLCBWRklPX0JB
-U0UgKyAxMikNCj4gPiArDQo+ID4gIC8qDQo+ID4gICAqIFRoZSBWRklPLVBDSSBidXMgZHJpdmVy
-IG1ha2VzIHVzZSBvZiB0aGUgZm9sbG93aW5nIGZpeGVkIHJlZ2lvbiBhbmQNCj4gPiAgICogSVJR
-IGluZGV4IG1hcHBpbmcuICBVbmltcGxlbWVudGVkIHJlZ2lvbnMgcmV0dXJuIGEgc2l6ZSBvZiB6
-ZXJvLg0KPiA+IC0tDQo+ID4gMS43LjExLjMNCj4gPg0KPiA+DQo=
+For devices that conform to PCIe r3.0 and have a Link Capabilities 2
+register, we test and report every bit in the Supported Link Speeds Vector
+field.  For a device that supports both 2.5GT/s and 5.0GT/s, we set both
+DRM_PCIE_SPEED_25 and DRM_PCIE_SPEED_50 in the returned mask.
+
+For pre-r3.0 devices, the Link Capabilities 0010b encoding
+(PCI_EXP_LNKCAP_SLS_5_0GB) means that both 5.0GT/s and 2.5GT/s are
+supported, so set both DRM_PCIE_SPEED_25 and DRM_PCIE_SPEED_50 in this
+case as well.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/gpu/drm/drm_pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+index 11c8add..50e26f2 100644
+--- a/drivers/gpu/drm/drm_pci.c
++++ b/drivers/gpu/drm/drm_pci.c
+@@ -507,7 +507,7 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+ 		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+ 			*mask |= DRM_PCIE_SPEED_25;
+ 		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+-			*mask |= DRM_PCIE_SPEED_50;
++			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
+ 	}
+ 
+ 	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
+
