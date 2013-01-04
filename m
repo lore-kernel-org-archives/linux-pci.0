@@ -1,158 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:53096 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934121Ab3AIUor (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:44:47 -0500
-Received: by mail-lb0-f177.google.com with SMTP id n10so1379488lbo.22
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 12:44:45 -0800 (PST)
+Received: from mail-vc0-f180.google.com ([209.85.220.180]:52099 "EHLO
+	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754060Ab3ADTTW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:19:22 -0500
+Received: by mail-vc0-f180.google.com with SMTP id p16so17010287vcq.11
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:19:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <16794957.TmlpVGsGIb@vostro.rjw.lan>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
- <9523101.J0n0M0VJmQ@vostro.rjw.lan> <50EDA1B1.3050501@gmail.com> <16794957.TmlpVGsGIb@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Jan 2013 13:44:23 -0700
-Message-ID: <CAErSpo5UD9362JVKzG4rcLJ6kKMLvMzdJ3kLRvRTSRdSqHOH9w@mail.gmail.com>
-Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when
- PCI hotplug event happens
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
+In-Reply-To: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
+Date: Fri, 4 Jan 2013 14:19:21 -0500
+Message-ID: <CADnq5_MYtqg=JHs+-cXCigRCba4g59a7zwpQmswSGgMPWDocLQ@mail.gmail.com>
+Subject: Re: [PATCH 0/3] drm_pcie_get_speed_cap_mask() cleanups
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, Betty Dall <betty.dall@hp.com>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	Alex Deucher <alexander.deucher@amd.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Myron]
-
-On Wed, Jan 9, 2013 at 1:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, January 10, 2013 12:58:25 AM Jiang Liu wrote:
->> Hi Rafael,
->>       Thanks for your great efforts to review the patch.
->>
->> On 01/09/2013 08:01 AM, Rafael J. Wysocki wrote:
->> > Hi,
->> >
->> > On Wednesday, January 09, 2013 12:52:22 AM Jiang Liu wrote:
->> snip
->> >>
->> >> +static void acpi_pci_slot_notify_add(struct pci_dev *dev)
->> >> +{
->> >> +  acpi_handle handle;
->> >> +  struct callback_args context;
->> >> +
->> >> +  if (!dev->subordinate)
->> >> +          return;
->> >> +
->> >> +  mutex_lock(&slot_list_lock);
->> >> +  handle = DEVICE_ACPI_HANDLE(&dev->dev);
->> >> +  context.root_handle = acpi_find_root_bridge_handle(dev);
->> >
->> > There's a patch under discussion that removes this function.
->> >
->> > Isn't there any other way to do this?
->>       I will try to find a way to get rid of calling acpi_find_root_bridge_handle,
->> and it seems doable.
->>
->> >
->> >> +  if (handle && context.root_handle) {
->> >> +          context.pci_bus = dev->subordinate;
->> >> +          context.user_function = register_slot;
->> >> +          acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
->> >
->> > You can just pass 1 here I think.  Does the compiler complain?
->> Thanks for reminder, the (u32) is unnecessary.
->>
->> >
->> >> +                              register_slot, NULL, &context, NULL);
->> >> +  }
->> >> +  mutex_unlock(&slot_list_lock);
->> >> +}
->> >> +
->> >> +static void acpi_pci_slot_notify_del(struct pci_dev *dev)
->> >> +{
->> >> +  struct acpi_pci_slot *slot, *tmp;
->> >> +  struct pci_bus *bus = dev->subordinate;
->> >> +
->> >> +  if (!bus)
->> >> +          return;
->> >> +
->> >> +  mutex_lock(&slot_list_lock);
->> >> +  list_for_each_entry_safe(slot, tmp, &slot_list, list)
->> >> +          if (slot->pci_slot && slot->pci_slot->bus == bus) {
->> >> +                  list_del(&slot->list);
->> >> +                  pci_destroy_slot(slot->pci_slot);
->> >> +                  put_device(&bus->dev);
->> >> +                  kfree(slot);
->> >> +          }
->> >> +  mutex_unlock(&slot_list_lock);
->> >> +}
->> >> +
->> >> +static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
->> >> +                             unsigned long event, void *data)
->> >> +{
->> >> +  struct device *dev = data;
->> >> +
->> >> +  switch (event) {
->> >> +  case BUS_NOTIFY_ADD_DEVICE:
->> >> +          acpi_pci_slot_notify_add(to_pci_dev(dev));
->> >> +          break;
->> >
->> > Do I think correctly that this is going to be called for every PCI device
->> > added to the system, even if it's not a bridge?
->> You are right. Function acpi_pci_slot_notify_add() and acpi_pci_slot_notify_del()
->> will check whether it's a bridge. If preferred, I will move the check up into
->> acpi_pci_slot_notify_fn().
->>
->> >
->> >> +  case BUS_NOTIFY_DEL_DEVICE:
->> >> +          acpi_pci_slot_notify_del(to_pci_dev(dev));
->> >> +          break;
->> >> +  default:
->> >> +          return NOTIFY_DONE;
->> >> +  }
->> >> +
->> >> +  return NOTIFY_OK;
->> >> +}
->> >> +
->> >> +static struct notifier_block acpi_pci_slot_notifier = {
->> >> +  .notifier_call = &acpi_pci_slot_notify_fn,
->> >> +};
->> >> +
->> >>  static int __init
->> >>  acpi_pci_slot_init(void)
->> >>  {
->> >>    dmi_check_system(acpi_pci_slot_dmi_table);
->> >>    acpi_pci_register_driver(&acpi_pci_slot_driver);
->> >> +  bus_register_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
->> >
->> > I wonder if/why this has to be so convoluted?
->> >
->> > We have found a PCI bridge in the ACPI namespace, so we've created a struct
->> > acpi_device for it and we've walked the namespace below it already.
->> >
->> > Now we're creating a struct pci_dev for it and while registering it we're
->> > going to walk the namespace below the bridge again to find and register its
->> > slots and that is done indirectly from a bus type notifier.
->> >
->> > Why can't we enumerate the slots directly upfront?
->> Do you mean to create the PCI slot devices when creating the ACPI devices?
->> I think there are two factors prevent us from doing that.
->> The first is that the ACPI pci_slot driver could be built as a module, so
->> we can't call into it from the ACPI core.
+On Fri, Jan 4, 2013 at 2:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> These are minor cleanups for drm_pcie_get_speed_cap_mask() to use
+> standard #defines and PCIe capability accessors.  They depend on
+> a pci_regs.h change (130f1b8f35) that appeared in v3.8-rc2.
 >
-> I didn't say about calling the pci_slot driver from the ACPI core, but about
-> enumerating slots in a way suitable for consumption by the pci_slot driver
-> when it's ready.
+> They don't address the issue of DRM devices directly below a host
+> bridge that doesn't appear as a PCI device (the issue Lucas has
+> been working on).
 >
-> That said I really don't see a value in having a modular pci_slot driver.  It
-> is part of the hotplug infrastructure and should always be presend for this
-> reason, so we don't need to worry about the "pci_slot driver not present" case.
+> I'm a little skeptical about the premise of drm_pcie_get_speed_cap_mask()
+> to begin with.  Link speed seems like something fairly generic that should
+> be handled in the core, not in individual drivers.  Sec 6.11, "Link Speed
+> Management", in the PCIe 3.0 spec seems relevant and suggests that the
+> hardware should automatically use the highest speed supported by both ends
+> of the link unless software sets a lower maximum via Target Link Speed.
+>
+> But I can't match up the code, e.g., evergreen_pcie_gen2_enable(), to
+> anything in the generic PCIe specs, so maybe this driver code is
+> essentially quirks for misbehaving hardware?
 
-I agree that there's no value in supporting CONFIG_ACPI_PCI_SLOT=m.  I
-think Myron has some patches that remove that case.
+At least for radeon, there is an asic specific sequence required to
+change the PCIE gen link speed at runtime.  Depending on the bios, the
+board may come up in the highest mode supported by either side or
+something lower.  If it comes up at a lower speed than the hardware is
+capable of, we can increase it in the driver to improve performance.
+Additionally, you can select a lower link speed to save power.  I
+don't know if there is a generic non-asic specific way to change the
+link speed of a device at runtime, but I'm not really a PCI expert.
 
-I'm not sure what the best way to merge them is.  We have a bunch of
-stuff this cycle that touches both ACPI and PCI.
-
-Bjorn
+Alex
