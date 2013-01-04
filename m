@@ -1,153 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 09/22] PCI, ACPI: Add pci_root_hp hot removal notification support.
-Date: Sun, 13 Jan 2013 00:26:08 +0100
-Message-ID: <2032314.LPbgrOarU3@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-10-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-10-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gh0-f202.google.com ([209.85.160.202]:48884 "EHLO
+	mail-gh0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528Ab3ADTKd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:10:33 -0500
+Received: by mail-gh0-f202.google.com with SMTP id z10so1474000ghb.3
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:10:32 -0800 (PST)
+Subject: [PATCH 1/3] drm/pci: Use the standard #defines for PCIe Link
+	Capability bits
+To: David Airlie <airlied@linux.ie>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Betty Dall <betty.dall@hp.com>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date: Fri, 04 Jan 2013 12:10:32 -0700
+Message-ID: <20130104191031.4586.63513.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:36 PM Yinghai Lu wrote:
-> Add missing hot_remove support for root device.
-> 
-> How to test it?
-> Find out root bus number to acpi root name mapping from dmesg or /sys
-> 
->   echo "\_SB.PCIB 3" > /sys/kernel/debug/acpi/sci_notify
-> to remove root bus
-> 
-> -v2: separate stop and remove, so it will be safe for comingi
-> 	acpi_pci_bind_notify() changes.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/acpi/pci_root.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 67 insertions(+)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 5c1f462c..5ae36d8 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -740,6 +740,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
->  	list_add(&bridge->list, &acpi_root_bridge_list);
->  }
->  
-> +static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
-> +{
-> +	list_del(&bridge->list);
-> +	kfree(bridge);
-> +}
-> +
->  struct acpi_root_hp_work {
->  	struct work_struct work;
->  	acpi_handle handle;
-> @@ -800,6 +806,61 @@ static void handle_root_bridge_insertion(acpi_handle handle)
->  		printk(KERN_ERR "cannot add bridge to acpi list\n");
->  }
->  
-> +static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
-> +{
-> +	acpi_status status;
-> +	struct acpi_object_list arg_list;
-> +	union acpi_object arg;
-> +
-> +	arg_list.count = 1;
-> +	arg_list.pointer = &arg;
-> +	arg.type = ACPI_TYPE_INTEGER;
-> +	arg.integer.value = val;
-> +
-> +	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
-> +	if (ACPI_FAILURE(status)) {
-> +		pr_warn("%s: %s to %d failed\n",
-> +				 __func__, cmd, val);
-> +		return -1;
+Use the standard #defines rather than bare numbers for the PCIe Link
+Capabilities speed bits.
 
-Please use a meaningful error code.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/gpu/drm/drm_pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void handle_root_bridge_removal(acpi_handle handle,
-> +		 struct acpi_root_bridge *bridge)
-> +{
-> +	u32 flags = 0;
-> +	struct acpi_device *device;
-> +
-> +	if (bridge) {
-> +		flags = bridge->flags;
-> +		remove_acpi_root_bridge(bridge);
-> +	}
-> +
-> +	if (!acpi_bus_get_device(handle, &device)) {
-> +		int ret_val;
-> +
-> +		/* remove pci devices at first */
-> +		ret_val = acpi_bus_trim(device, 0);
-> +		printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
-> +
-> +		/* remove acpi devices */
-> +		ret_val = acpi_bus_trim(device, 1);
-> +		printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
+diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+index 754bc96..11c8add 100644
+--- a/drivers/gpu/drm/drm_pci.c
++++ b/drivers/gpu/drm/drm_pci.c
+@@ -504,9 +504,9 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+ 		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+ 			*mask |= DRM_PCIE_SPEED_80;
+ 	} else {
+-		if (lnkcap & 1)
++		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+ 			*mask |= DRM_PCIE_SPEED_25;
+-		if (lnkcap & 2)
++		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
+ 			*mask |= DRM_PCIE_SPEED_50;
+ 	}
+ 
 
-First of all, I don't agree with the way acpi_bus_trim() is used here, as
-I said in the previous message.
-
-Second, this code duplicates the code you're adding on [08/22] almost exactly.
-Please put it into a one separate function instead of duplicating it like this.
-
-> +	}
-> +
-> +	if (flags & ROOT_BRIDGE_HAS_PS3) {
-> +		acpi_status status;
-> +
-> +		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
-> +		if (ACPI_FAILURE(status))
-> +			pr_warn("%s: _PS3 failed\n", __func__);
-
-No, please.  acpi_device_set_power() is for that.
-
-> +	}
-> +	if (flags & ROOT_BRIDGE_HAS_EJ0)
-> +		acpi_root_evaluate_object(handle, "_EJ0", 1);
-
-That seems to duplicate some code from scan.c.
-
-> +}
-> +
->  static void _handle_hotplug_event_root(struct work_struct *work)
->  {
->  	struct acpi_root_bridge *bridge;
-> @@ -840,6 +901,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  		}
->  		break;
->  
-> +	case ACPI_NOTIFY_EJECT_REQUEST:
-> +		/* request device eject */
-> +		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-> +				 objname);
-> +		handle_root_bridge_removal(handle, bridge);
-> +		break;
->  	default:
->  		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
->  				 type, objname);
-> 
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
