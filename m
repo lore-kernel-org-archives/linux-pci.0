@@ -1,38 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Jan 2013 22:37:59 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH 1/16] ACPI: Separate adding ACPI device objects from
- probing ACPI drivers
-Message-ID: <20130111203759.GC13897@intel.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan>
- <23002897.6xbQGtPaGy@vostro.rjw.lan>
- <20130111200046.GB13897@intel.com>
- <2859994.arbXorpfaz@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vb0-f74.google.com ([209.85.212.74]:43915 "EHLO
+	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528Ab3ADTK2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:10:28 -0500
+Received: by mail-vb0-f74.google.com with SMTP id s24so1785825vbi.5
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:10:28 -0800 (PST)
+Subject: [PATCH 0/3] drm_pcie_get_speed_cap_mask() cleanups
+To: David Airlie <airlied@linux.ie>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Betty Dall <betty.dall@hp.com>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date: Fri, 04 Jan 2013 12:10:26 -0700
+Message-ID: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2859994.arbXorpfaz@vostro.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 11, 2013 at 09:31:43PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Subject: ACPI / scan: Fix check of device_attach() return value.
-> 
-> Since device_attach() returns 1 on success and 0 on failure,
-> the check against its return value in acpi_bus_device_attach()
-> should be reveresed.  Make it so.
+These are minor cleanups for drm_pcie_get_speed_cap_mask() to use
+standard #defines and PCIe capability accessors.  They depend on
+a pci_regs.h change (130f1b8f35) that appeared in v3.8-rc2.
 
-Not sure if it matters but it returns 0 if no device was bound to a driver
-and -ENODEV in case of error. If we only want to terminate in case of
-error, following might be better.
+They don't address the issue of DRM devices directly below a host
+bridge that doesn't appear as a PCI device (the issue Lucas has
+been working on).
 
-	} else if (device_attach(&device->dev) < 0) {
+I'm a little skeptical about the premise of drm_pcie_get_speed_cap_mask()
+to begin with.  Link speed seems like something fairly generic that should
+be handled in the core, not in individual drivers.  Sec 6.11, "Link Speed
+Management", in the PCIe 3.0 spec seems relevant and suggests that the
+hardware should automatically use the highest speed supported by both ends
+of the link unless software sets a lower maximum via Target Link Speed.
+
+But I can't match up the code, e.g., evergreen_pcie_gen2_enable(), to
+anything in the generic PCIe specs, so maybe this driver code is
+essentially quirks for misbehaving hardware?
+
+---
+
+Bjorn Helgaas (3):
+      drm/pci: Use the standard #defines for PCIe Link Capability bits
+      drm/pci: Set all supported speeds in speed cap mask for pre-3.0 devices
+      drm/pci: Use PCI Express Capability accessors
+
+
+ drivers/gpu/drm/drm_pci.c |   27 ++++++++-------------------
+ 1 files changed, 8 insertions(+), 19 deletions(-)
