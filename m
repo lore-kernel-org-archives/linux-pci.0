@@ -1,64 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:37455 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754552Ab3A1WAr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:00:47 -0500
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:44929 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528Ab3ADTKo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:10:44 -0500
+Received: by mail-ee0-f74.google.com with SMTP id t10so1049343eei.1
+        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:10:43 -0800 (PST)
+Subject: [PATCH 3/3] drm/pci: Use PCI Express Capability accessors
+To: David Airlie <airlied@linux.ie>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Betty Dall <betty.dall@hp.com>,
+	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
+	Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date: Fri, 04 Jan 2013 12:10:42 -0700
+Message-ID: <20130104191042.4586.39304.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-	<1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
-	<3500982.MUDp6kKU3R@vostro.rjw.lan>
-	<CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-	<CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com>
-	<CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com>
-Date: Mon, 28 Jan 2013 14:00:46 -0800
-Message-ID: <CAE9FiQXkrYubkgbbOXmrEXvGZBZXMZ6sh8kGTpF1_=tD3OMPJw@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 1:52 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jan 28, 2013 at 2:29 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-...
->> If bios have messed up slot name or idx, we will get strange 1-1....
->> other crazy name.
->>
->> if you really need to put it as built-in, may need to some command
->> line that user could switch it off.
->
-> It would save us all a lot of time if you gave an example and worked
-> through the scenario where this is a problem.
->
-> We already have the choice of having pci_slot built-in, so if there's
-> a bug in that config, we already have the bug.  This patch merely
-> removes a config where the bug might be covered up.
+Use PCI Express Capability access functions to simplify this code a bit.
+For non-PCIe devices or pre-PCIe 3.0 devices that don't implement the Link
+Capabilities 2 register, pcie_capability_read_dword() reads a zero.
 
+Since we're only testing whether the bits we care about are set, there's no
+need to mask out the other bits we *don't* care about.
 
-for distribution, current it is with module, so user could blacklist
-in module.conf
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/gpu/drm/drm_pci.c |   21 +++++----------------
+ 1 files changed, 5 insertions(+), 16 deletions(-)
 
-Now with built-in or not, distribution will have it built-in, and user
-have no chance to
-disable it.
+diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
+index 50e26f2..86102a0 100644
+--- a/drivers/gpu/drm/drm_pci.c
++++ b/drivers/gpu/drm/drm_pci.c
+@@ -469,41 +469,30 @@ EXPORT_SYMBOL(drm_pci_exit);
+ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
+ {
+ 	struct pci_dev *root;
+-	int pos;
+-	u32 lnkcap = 0, lnkcap2 = 0;
++	u32 lnkcap, lnkcap2;
+ 
+ 	*mask = 0;
+ 	if (!dev->pdev)
+ 		return -EINVAL;
+ 
+-	if (!pci_is_pcie(dev->pdev))
+-		return -EINVAL;
+-
+ 	root = dev->pdev->bus->self;
+ 
+-	pos = pci_pcie_cap(root);
+-	if (!pos)
+-		return -EINVAL;
+-
+ 	/* we've been informed via and serverworks don't make the cut */
+ 	if (root->vendor == PCI_VENDOR_ID_VIA ||
+ 	    root->vendor == PCI_VENDOR_ID_SERVERWORKS)
+ 		return -EINVAL;
+ 
+-	pci_read_config_dword(root, pos + PCI_EXP_LNKCAP, &lnkcap);
+-	pci_read_config_dword(root, pos + PCI_EXP_LNKCAP2, &lnkcap2);
+-
+-	lnkcap &= PCI_EXP_LNKCAP_SLS;
+-	lnkcap2 &= 0xfe;
++	pcie_capability_read_dword(root, PCI_EXP_LNKCAP, &lnkcap);
++	pcie_capability_read_dword(root, PCI_EXP_LNKCAP2, &lnkcap2);
+ 
+-	if (lnkcap2) { /* PCIE GEN 3.0 */
++	if (lnkcap2) {	/* PCIe r3.0-compliant */
+ 		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_2_5GB)
+ 			*mask |= DRM_PCIE_SPEED_25;
+ 		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_5_0GB)
+ 			*mask |= DRM_PCIE_SPEED_50;
+ 		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
+ 			*mask |= DRM_PCIE_SPEED_80;
+-	} else {
++	} else {	/* pre-r3.0 */
+ 		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
+ 			*mask |= DRM_PCIE_SPEED_25;
+ 		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
 
-> I don't know why "adding a command line switch" appeals to you as the
-> solution to every problem.  As far as I'm concerned that's not a
-> solution to ANY problem.  It might be a band-aid to enable users to
-> limp along while we figure out a correct solution, but it's certainly
-> not a resolution.
-
-Looks like you want to remove command line support, right ?
-
-Yinghai
