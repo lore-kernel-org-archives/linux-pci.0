@@ -1,71 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:39885 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756509Ab3AHSQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 13:16:51 -0500
-Date: Tue, 8 Jan 2013 10:16:46 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org,
-	Stefani Seibold <stefani@seibold.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-mm@kvack.org, dccp@vger.kernel.org,
-	linux-sctp@vger.kernel.org
-Subject: Re: [PATCH 5/5] kfifo: log based kfifo API
-Message-ID: <20130108181645.GA7972@core.coreip.homeip.net>
-References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com>
- <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com>
+Received: from hydra.sisk.pl ([212.160.235.94]:60570 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754963Ab3AEAJQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Jan 2013 19:09:16 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
+Date: Sat, 05 Jan 2013 01:14:52 +0100
+Message-ID: <2913597.xNs4ttWDNI@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1832392.tD5dEjQMy4@vostro.rjw.lan> <CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yuanhan,
+On Friday, January 04, 2013 04:03:01 PM Yinghai Lu wrote:
+> On Fri, Jan 4, 2013 at 3:38 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> --- a/arch/x86/include/asm/pci.h
+> >> +++ b/arch/x86/include/asm/pci.h
+> >> @@ -14,6 +14,7 @@
+> >>  struct pci_sysdata {
+> >>       int             domain;         /* PCI domain */
+> >>       int             node;           /* NUMA node */
+> >> +     void            *acpi_handle;
+> >>  #ifdef CONFIG_X86_64
+> >>       void            *iommu;         /* IOMMU private data */
+> >>  #endif
+> >>
+> 
+> acpi_handle is not good name and it is confusing.
 
-On Tue, Jan 08, 2013 at 10:57:53PM +0800, Yuanhan Liu wrote:
-> The current kfifo API take the kfifo size as input, while it rounds
->  _down_ the size to power of 2 at __kfifo_alloc. This may introduce
-> potential issue.
-> 
-> Take the code at drivers/hid/hid-logitech-dj.c as example:
-> 
-> 	if (kfifo_alloc(&djrcv_dev->notif_fifo,
->                        DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct dj_report),
->                        GFP_KERNEL)) {
-> 
-> Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct dj_report)
-> is 15.
-> 
-> Which means it wants to allocate a kfifo buffer which can store 8
-> dj_report entries at once. The expected kfifo buffer size would be
-> 8 * 15 = 120 then. While, in the end, __kfifo_alloc will turn the
-> size to rounddown_power_of_2(120) =  64, and then allocate a buf
-> with 64 bytes, which I don't think this is the original author want.
-> 
-> With the new log API, we can do like following:
-> 
-> 	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
-> 					    sizeof(struct dj_report));
-> 
-> 	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order, GFP_KERNEL)) {
-> 
-> This make sure we will allocate enough kfifo buffer for holding
-> DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
+Well, what would be a better name in your opinion?
 
-Why don't you simply change __kfifo_alloc to round the allocation up
-instead of down?
+I was going to put that into a #ifdef CONFIG_ACPI / #endif, so what about
+calling it acpi_data?
 
-Thanks.
+Rafael
+
 
 -- 
-Dmitry
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
