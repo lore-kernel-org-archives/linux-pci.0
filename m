@@ -1,53 +1,58 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWzc+tYTnJx96po+dY-3k-Bbv_Sg943jvGJcbGPDLfMmA@mail.gmail.com>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1832392.tD5dEjQMy4@vostro.rjw.lan>
+ <CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
+ <2913597.xNs4ttWDNI@vostro.rjw.lan> <CAE9FiQWzc+tYTnJx96po+dY-3k-Bbv_Sg943jvGJcbGPDLfMmA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Jan 2013 17:36:55 -0700
+Message-ID: <CAErSpo6y6TmoGA6FXSoV2TZ5ihvC6d-j_EWqvzL1m84dhBYoJQ@mail.gmail.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	LKML <linux-kernel@vger.kernel.org>,
 	Tony Luck <tony.luck@intel.com>,
 	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
 	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
-Date: Fri, 11 Jan 2013 00:40:30 +0100
-Message-ID: <3595317.Eh4AyqPa3o@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1910593.f2RrgAtJJO@vostro.rjw.lan> <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 10, 2013 02:54:00 PM Yinghai Lu wrote:
-> On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> 
->  > arch/ia64/pci/pci.c        |    8 ++++++++
->  > arch/x86/include/asm/pci.h |    3 +++
->  >  arch/x86/pci/acpi.c        |    9 +++++++++
->  > drivers/acpi/pci_root.c    |   18 ------------------
->  > drivers/pci/pci-acpi.c     |   19 -------------------
->  >  drivers/pci/probe.c        |   16 ++++++++++++++++
->  >  include/acpi/acpi_bus.h    |    1 -
->  >  include/linux/pci.h        |    2 ++
->  >  8 files changed, 38 insertions(+), 38 deletions
-> ...
-> > I'll wait for comments from the others, if any, and put it into my acpi-scan
-> > branch after a couple of days.  It doesn't need to be there technically, but
-> > it's kind of related.
-> 
-> looks like you put it into acpi-scan-next instead.
-> 
-> and it does touch pci code.
-> 
-> can you put it in to acpi-scan ? so Bjorn could pull it again to pci/next.
+On Fri, Jan 4, 2013 at 5:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Fri, Jan 4, 2013 at 4:14 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> On Friday, January 04, 2013 04:03:01 PM Yinghai Lu wrote:
+>>> On Fri, Jan 4, 2013 at 3:38 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>> >> --- a/arch/x86/include/asm/pci.h
+>>> >> +++ b/arch/x86/include/asm/pci.h
+>>> >> @@ -14,6 +14,7 @@
+>>> >>  struct pci_sysdata {
+>>> >>       int             domain;         /* PCI domain */
+>>> >>       int             node;           /* NUMA node */
+>>> >> +     void            *acpi_handle;
+>>> >>  #ifdef CONFIG_X86_64
+>>> >>       void            *iommu;         /* IOMMU private data */
+>>> >>  #endif
+>>> >>
+>>>
+>>> acpi_handle is not good name and it is confusing.
+>>
+>> Well, what would be a better name in your opinion?
+>>
+>> I was going to put that into a #ifdef CONFIG_ACPI / #endif, so what about
+>> calling it acpi_data?
+>
+> yes, with #ifdef, you can use acpi_handle type directly.
+>
+> it is acpi handle for pci_root.
+>
+> so would call int pci_root_acpi_handle ?
 
-I will tomorrow.
+I just copied the name from the corresponding ia64 code.  I don't care
+if you want to change it, but I think there is *some* value in keeping
+the x86 and ia64 code as similar as possible because it would be nice
+to converge it some day.
 
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
