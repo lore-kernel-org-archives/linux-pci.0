@@ -1,37 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 17/22] PCI, ACPI: Add alloc_acpi_hp_work()
-Date: Tue, 15 Jan 2013 12:27:04 +0100
-Message-ID: <5134894.kiC8yZAa7S@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQU_jokR9b2+G7P77aUfxsE6H1HFtO3k5XjqxyD2JZPpFQ@mail.gmail.com>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <3988288.MTBNr2Bzqb@vostro.rjw.lan> <CAE9FiQU_jokR9b2+G7P77aUfxsE6H1HFtO3k5XjqxyD2JZPpFQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50E81FD2.1010008@openvz.org>
+Date: Sat, 05 Jan 2013 16:42:58 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	e1000-devel@lists.sourceforge.net
+Subject: Re: [REGRESSION 3.8-r1] broken pci irq/pm state for e1000e device
+References: <50E32C52.4000008@openvz.org> <50E32E71.7080000@openvz.org>
+In-Reply-To: <50E32E71.7080000@openvz.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 14, 2013 10:59:28 PM Yinghai Lu wrote:
-> On Sat, Jan 12, 2013 at 3:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Friday, January 11, 2013 02:40:44 PM Yinghai Lu wrote:
-> >> Will use it with acpiphp and pci_root_hp events handling
-> >
-> > I think it would be better if you folded patches [17-20/22] together.
-> 
-> just want to make move/split more simple. so could separate out old
-> code in acpiphp is
-> moved at first, then apply change etc.
+Konstantin Khlebnikov wrote:
+> Konstantin Khlebnikov wrote:
+>> Seems like it's unrelated to e1000e driver itself, because I tried to
+>> revert all it's changes down to 3.6 one by one and it does not help.
 
-Well, OK.
+Ouch, 3.6 also affected, seems like I was more lucky at that time and
+bug never showed up.
 
-Thanks,
-Rafael
+root@zurg:/sys/bus/pci/devices# uname -a
+Linux zurg 3.6.0-zurg #571 SMP Mon Oct 1 14:24:25 MSK 2012 x86_64 GNU/Linux
 
+root@zurg:/sys/bus/pci/devices# cat 0000\:00\:19.0/enable ; modprobe e1000e ; sleep 2 ; rmmod e1000e ; cat 0000\:00\:19.0/enable
+4294967293
+4294967292
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+So, this bug actually in e1000e driver. Add their mail-list into CC.
+
+But core code should at least print some warnings...
+
+>>
+>> Looks like regression somewhere in pci-bus irq or power-management.
+>> because I see underflow of counter pci_dev->enable_cnt:
+>>
+>> root@zurg:/sys/bus/pci/devices# cat 0000\:00\:19.0/enable ; modprobe e1000e ; sleep 2 ; rmmod e1000e ; cat 0000\:00\:19.0/enable
+>> 4294967288
+>> 4294967287
+>>
+>> without sleep in the middle it does not work
+>
+> Hmm, 3.7 also affected. This is not good.
+>
+> root@zurg:/sys/bus/pci/devices# cat 0000\:00\:19.0/enable
+> 4294967293
+> root@zurg:/sys/bus/pci/devices# uname -a
+> Linux zurg 3.7.1-zurg #631 SMP Sat Dec 29 11:54:15 MSK 2012 x86_64 GNU/Linux
+>
+>>
+>> my kernel config in attachment
+>> hardware: lenovo thinkpad x220
+>>
+>> root@zurg:/sys/bus/pci/devices# uname -a
+>> Linux zurg 3.8.0-rc1-zurg-00091-g4a490b7 #632 SMP Tue Jan 1 20:02:31 MSK 2013 x86_64 GNU/Linux
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at http://www.tux.org/lkml/
+
