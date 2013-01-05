@@ -1,75 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49594 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756103Ab3A1Bya (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 20:54:30 -0500
+Received: from mail-bk0-f49.google.com ([209.85.214.49]:54553 "EHLO
+	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754963Ab3AEATy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 19:19:54 -0500
+MIME-Version: 1.0
+In-Reply-To: <2913597.xNs4ttWDNI@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
+	<1832392.tD5dEjQMy4@vostro.rjw.lan>
+	<CAE9FiQVSaC=D-KzSPJaP0=HGRnNgxBYv+S6=PqF_3Li+ihTnEQ@mail.gmail.com>
+	<2913597.xNs4ttWDNI@vostro.rjw.lan>
+Date: Fri, 4 Jan 2013 16:19:52 -0800
+Message-ID: <CAE9FiQWzc+tYTnJx96po+dY-3k-Bbv_Sg943jvGJcbGPDLfMmA@mail.gmail.com>
+Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 22/22] PCI: Kill pci_root_buses
-Date: Sun, 27 Jan 2013 17:54:10 -0800
-Message-Id: <1359338050-22735-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359338050-22735-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359338050-22735-1-git-send-email-yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No user now, remove it.
+On Fri, Jan 4, 2013 at 4:14 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Friday, January 04, 2013 04:03:01 PM Yinghai Lu wrote:
+>> On Fri, Jan 4, 2013 at 3:38 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> --- a/arch/x86/include/asm/pci.h
+>> >> +++ b/arch/x86/include/asm/pci.h
+>> >> @@ -14,6 +14,7 @@
+>> >>  struct pci_sysdata {
+>> >>       int             domain;         /* PCI domain */
+>> >>       int             node;           /* NUMA node */
+>> >> +     void            *acpi_handle;
+>> >>  #ifdef CONFIG_X86_64
+>> >>       void            *iommu;         /* IOMMU private data */
+>> >>  #endif
+>> >>
+>>
+>> acpi_handle is not good name and it is confusing.
+>
+> Well, what would be a better name in your opinion?
+>
+> I was going to put that into a #ifdef CONFIG_ACPI / #endif, so what about
+> calling it acpi_data?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+yes, with #ifdef, you can use acpi_handle type directly.
 
----
- drivers/pci/probe.c |    8 --------
- include/linux/pci.h |    3 ---
- 2 files changed, 11 deletions(-)
+it is acpi handle for pci_root.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 04ecf0d..8420b9d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -23,10 +23,6 @@ struct resource busn_resource = {
- 	.flags	= IORESOURCE_BUS,
- };
- 
--/* Ugh.  Need to stop exporting this to modules. */
--LIST_HEAD(pci_root_buses);
--EXPORT_SYMBOL(pci_root_buses);
--
- static LIST_HEAD(pci_domain_busn_res_list);
- 
- struct pci_domain_busn_res {
-@@ -1746,10 +1742,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
- 
--	down_write(&pci_bus_sem);
--	list_add_tail(&b->node, &pci_root_buses);
--	up_write(&pci_bus_sem);
--
- 	return b;
- 
- class_dev_reg_err:
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index bb07db2..b42721b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -674,9 +674,6 @@ extern enum pcie_bus_config_types pcie_bus_config;
- extern struct bus_type pci_host_bridge_bus_type;
- extern struct bus_type pci_bus_type;
- 
--/* Do NOT directly access these two variables, unless you are arch specific pci
-- * code, or pci core code. */
--extern struct list_head pci_root_buses;	/* list of all known PCI buses */
- /* Some device drivers need know if pci is initiated */
- extern int no_pci_devices(void);
- 
--- 
-1.7.10.4
+so would call int pci_root_acpi_handle ?
 
+Thanks
+
+Yinghai
