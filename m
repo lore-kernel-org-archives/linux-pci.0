@@ -1,139 +1,218 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57576 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752877Ab3BADvX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jan 2013 22:51:23 -0500
-Date: Thu, 31 Jan 2013 20:51:15 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130201035115.GA23649@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <510B0D9C.1000101@wwwdotorg.org>
- <20130201014138.GA16234@obsidianresearch.com>
- <510B268E.2040104@wwwdotorg.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:19445 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997Ab3AFMOP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Jan 2013 07:14:15 -0500
+Message-ID: <50E96A59.1080602@huawei.com>
+Date: Sun, 6 Jan 2013 20:13:13 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <510B268E.2040104@wwwdotorg.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <liuj97@gmail.com>, Daniel J Blueman <daniel@quora.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: 3.8-rc2: pciehp waitqueue hang...
+References: <CAMVG2ssiRgcTD1bej2tkUUfsWmpL5eNtPcNif9va2-Gzb2u8nQ@mail.gmail.com> <50E5A6A1.5040508@gmail.com> <CAErSpo6KJvEkiqkU--sF_vySk2YUgL_9t1OEYAAGBp9Ebom26w@mail.gmail.com> <CAErSpo6vTS6MnWoHJgXgmVtq=jqrudOHW47+8hVpc8GfiY100A@mail.gmail.com>
+In-Reply-To: <CAErSpo6vTS6MnWoHJgXgmVtq=jqrudOHW47+8hVpc8GfiY100A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 07:21:02PM -0700, Stephen Warren wrote:
-
-> I originally thought the issue was that the windows were between CPU
-> physical address space and the PCIe host controller itself. But in fact,
-> the windows are between PCIe bus 0 and the root ports, so they're
-> the
-
-Donno what exactly is inside tegra, but on Marvell the docs describe
-an an internal bus cross bar/whatever and each PCI-E link gets a port
-on that structure. There is no such physical thing as a 'PCI bus 0',
-and they didn't arrange the hardware in a way that makes it easy for
-the host driver to create one like tegra did :(
-
-> equivalent of the standard PCIe root port (or PCIe/PCIe bridge) BAR
-> registers. And related, these BAR/window registers are usually part of
-> each PCIe root port itself, and hence there's a whole number dedicated
-> to each root port, but on Marvell there's a *global* pool of these
-> BARs/windows instead.
-
-Right, that is all following the PCI-E spec, and is reasonable and
-sane. What Marvell did is take an *end port core* and jam'd it on
-their internal bus without adjusting things to follow the PCI-E spec
-regarding config space and what not.
-
-> > That more or less means you need to know what is going to be on the
-> > other side of every link when you write the DT.
+On 2013/1/5 5:50, Bjorn Helgaas wrote:
+> [+to Yijing, +cc Kenji]
 > 
-> So, the dynamic programming of the windows on Marvell HW is the exact
-> logical equivalent of programming a standard PCIe root port's BAR
-> registers. It makes perfect sense that should be dynamic. Presumably
-> this is something you can make work inside your emulated PCIe/PCIe
-> bridge module, simply by capturing writes to the BAR registers, and
-> translating them into writes to the Marvell window registers.
+> On Fri, Jan 4, 2013 at 1:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Thu, Jan 3, 2013 at 8:41 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>>> Hi Daniel,
+>>>         It seems like an issue caused by recursive PCIe HPC.
+>>> Could you please help to try the patch from:
+>>> http://www.spinics.net/lists/linux-pci/msg18625.html
+>>
+>> Hi Gerry,
+>>
+>> I'm working on merging this patch.  Seems like something that might be
+>> appropriate for stable as well.
+>>
+>> Did you look for similar problems in other hotplug drivers?
+> 
+> Oops, sorry, I forgot that Yijing is the author of the patch in question.
+> 
+> Yijing, please check for the same problem in other hotplug drivers.
+> Questions I have after a quick look:
+> 
 
-Yes, that is exactly the idea.
- 
-> Now, I do have one follow-on question: You said you don't have 30
-> windows, but how many do you have free after allocating windows to any
-> other peripherals that need them, relative to (3 *
-> number-of-root-ports-in-the-SoC)? (3 being IO+Mem+PrefetchableMem.)
+Hi Bjorn,
+   Sorry for delay reply. There are some busy work these days.
 
-Thomas will have to answer this, it varies depending on the SOC, and
-what other on chip peripherals are in use. For instance Kirkwood has
-the same design but there are plenty of windows for the two PCI-E
-links.
+>   - shpchp_wq looks like it might have the same deadlock issue.
 
-Still how would you even connect a limited number of regions on a link
-by link basis to the common PCI code?
+shpchp driver uses two workqueues shpchp_wq and shpchp_ordered_wq, they are created by alloc_ordered_workqueue
+which set the "max_active" parameter to 1. So only one pci hotplug slot can do hotplug at the same time.
+shpchp introduced these workqueue to remove the use of flush_scheduled_work() which is deprecated and scheduled for removal.
 
-> The thing here is that when the PCIe core writes to a root port BAR
-> window to configure/enable it the first time, you'll need to capture
-> that transaction and dynamically allocate a window and program it in a
-> way equivalent to what the BAR register write would have achieved on
-> standard HW. Later, the window might need resizing, or even to be
-> completely disabled, if the PCIe core were to change the standard
-> BAR
+hot remove path is:
+ button press
+       shpc_isr(interrupt handler)
+	    shpchp_handle_attention_button
+                queue_interrupt_event
+                   queue_work "interrupt_event_handler" into "shpchp_wq"
+                       interrupt_event_handler
+			     handle_button_press_event
+		      		   queue_delayed_work "shpchp_queue_pushbutton_work" into "shpchp_wq"
+					 queue_work "shpchp_pushbutton_thread" into "shpchp_ordered_wq"
+                                               shpchp_pushbutton_thread
+                                                      shpchp_disable_slot
+                                                            pci_stop_and_remove_bus_device
+                                                                ......
+                                                               shpc_remove()   if the hotplug slot connected a iobox which contains some hotplug pcieport, shpc_remove will be called when remove pcie port device.
+                                                                   hpc_release_ctlr
+                                                                       flush_workqueue(shpchp_wq);
+                                                                       flush_workqueue(shpchp_ordered_wq);
+                                                                       So hotplug task hang.
+shpchp driver has the same deadlock issue like pciehp driver, I think we should fix the issue, I will send out the patch if you agree this, but I have no machine support shpchp hotplug,
+so I can't test this patch in real machine.
 
-Right. This is pretty straightforward except for the need to hook the
-alignment fixup..
 
-> register. Dynamically allocating a window when the BAR is written seems
-> a little heavy-weight.
+>   - pciehp_wq (and your per-slot replacement) are allocated with
+> alloc_workqueue().  shpchp_wq is allocated with
+> alloc_ordered_workqueue().  Why the difference?
 
-I think what Thomas had here was pretty small, and the windows need to
-be shared with other on chip periphals beyond PCI-E..
- 
-> needed, e.g. if there's no IO space behind a root port, you could get
-> away with two windows per root port, and hence be able to run 3 root
-> ports rather than just 2?
+alloc_workqueue(name, 0, 0) set max_active to 0(0 is default value used and support 256 work items of the wq can be executing at the same time per CPU).
+So pciehp driver can handle push button event asynchronously.
 
-Right, this is the main point. If you plug in 3 devices and they all
-only use MMIO regions then you only need to grab 3 windows. The kernel
-disables the unused windows on the bridge so it is easy to tell when
-they are disused.
+alloc_ordered_workqueue can only one handle push button event at the same time.
 
-> Still, I supose doing it dynamically in the driver does end up being a
-> lot less to think about for someone creating the DT for a new board.
+> 
+>   - The alloc/alloc_ordered difference might be related to 486b10b9f4,
+> where Kenji removed alloc_ordered from pciehp.  Should a similar
+> change be made to shpchp?
 
-Agreed, these restrictions are all so HW specific, subtle and have
-nothing to do with the PCI-E spec. Codifying them once in the driver
-seems like the way to keep this crazyness out of the PCI core and away
-from users of the SOC.
- 
-> Having to translate standard root port BAR register writes to Marvell
-> window register allocation/writes would imply that the emulated root
-> port code has to be very closely tied into the Marvell PCIe driver, and
-> not something that could be at all generic in the most part.
+Yes, I agree, we can use per-slot workqueue to fix this issue.
 
-Agreed.. At the very least generic code would need call back
-functions to the driver... It has a fair bit to do for Marvell:
- - Translate MMIO, prefetch and IO ranges to mbus windows
- - Keep track of the secondary/subordinate bus numbers and fiddle
-   with other hardware registers to set those up
- - Copy the link state/control regsiters from the end port config
-   space into the bridge express root port capability
- - Probably ditto for AER as well..
+> 
+>   - acpiphp uses the global kacpi_hotplug_wq.  We never flush or drain
+> kacpi_hotplug_wq, so I doubt there's a deadlock issue, but I wonder if
+> there are any ordering issues there because we *don't* ever wait for
+> things in that queue to be completed.
 
-Probably simpler just to make one for marvell then mess excessively
-with callbacks..
+acpiphp driver is not attach to a pci device, so when hot remove pci device, driver will not to flush or drain kacpi_hotplug_wq.
+But if we do acpiphp hot remove in sequence like this, there maybe cause some unexpected errors, I think.
+slot(A)------pcie port----slot(B)
+slot A and slot B both support acpiphp hotplug.
+1、press attention button on slot A;
+2、press attention button on slot B quickly after step 1;
+Because kacpi_hotplug_wq is a ordered workqueue, slot B hot remove won't run unless slot A hot remove action completed.
+After Slot B hot remove completed, some resources of slot A also has been destroyed. So slot B hot remove will cause some unexpected errors.
+Because my hotplug machine's bios don't support iobox hotplug(slot-connected-slot), I can't verify this situation.
 
-Cheers,
-Jason
+
+Thanks!
+Yijing.
+
+
+> 
+>>> Thanks!
+>>> Gerry
+>>> On 01/03/2013 11:11 PM, Daniel J Blueman wrote:
+>>>> When the Apple thunderbolt ethernet adapter comes loose on my Macbook
+>>>> Pro Retina (Intel DSL3510), we see pci_slot_name return
+>>>> non-deterministic data (ie varying each boot), and we see pciehp_wp
+>>>> remain armed with events causing the kthread to get stuck:
+>>>>
+>>>> tg3 0000:0a:00.0 eth0: Link is up at 1000 Mbps, full duplex
+>>>> tg3 0000:0a:00.0 eth0: Flow control is on for TX and on for RX
+>>>> <thunderbold adapter comes loose>
+>>>> pciehp 0000:06:03.0:pcie24: Card not present on Slot(3)
+>>>> tg3 0000:0a:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE will not
+>>>> clear MAC_TX_MODE=ffffffff
+>>>> tg3 0000:0a:00.0 eth0: No firmware running
+>>>> tg3 0000:0a:00.0 eth0: Link is down
+>>>> pcieport 0000:00:01.1: System wakeup enabled by ACPI
+>>>> pciehp 0000:09:00.0:pcie24: unloading service driver pciehp
+>>>> pciehp 0000:09:00.0:pcie24: Latch open on
+>>>> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+>>>> pciehp 0000:09:00.0:pcie24: Button pressed on
+>>>> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+>>>> pciehp 0000:09:00.0:pcie24: Card present on
+>>>> Slot(\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon)
+>>>> pciehp 0000:09:00.0:pcie24: Power fault on slot
+>>>> \xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
+>>>> pciehp 0000:09:00.0:pcie24: Power fault bit 0 set
+>>>> pciehp 0000:09:00.0:pcie24: PCI slot
+>>>> #\xfffffff89\xffffffbbe\x02\xffffff88\xffffffff\xffffffff\xffffffe09\xffffffbbe\x02\xffffff88\xffffffff\xfffffffffbcon
+>>>> - powering on due to button press.
+>>>> pciehp 0000:09:00.0:pcie24: Link Training Error occurs
+>>>> pciehp 0000:09:00.0:pcie24: Failed to check link status
+>>>> INFO: task kworker/0:1:52 blocked for more than 120 seconds.
+>>>> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>>> kworker/0:1   D ffff880265893090   0  52   2 0x00000000
+>>>>  ffff8802655456f8 0000000000000046 ffffffff81a21a60 ffff880265545fd8
+>>>>  0000000000004000 ffff880265545fd8 ffff880265892bb0 ffff880265adc8d0
+>>>>  000000000000059e 0000000000000082 ffff880265545668 ffffffff810415aa
+>>>> Call Trace:
+>>>>  [<ffffffff810415aa>] ? console_unlock+0x1fa/0x4a0
+>>>>  [<ffffffff8108d16d>] ? trace_hardirqs_off+0xd/0x10
+>>>>  [<ffffffff81041b19>] ? vprintk_emit+0x1c9/0x510
+>>>>  [<ffffffff81558db4>] schedule+0x24/0x70
+>>>>  [<ffffffff8155653c>] schedule_timeout+0x19c/0x1e0
+>>>>  [<ffffffff81558c43>] wait_for_common+0xe3/0x180
+>>>>  [<ffffffff8105adc1>] ? flush_workqueue+0x111/0x4d0
+>>>>  [<ffffffff81071140>] ? try_to_wake_up+0x2d0/0x2d0
+>>>>  [<ffffffff81558d88>] wait_for_completion+0x18/0x20
+>>>>  [<ffffffff8105ae86>] flush_workqueue+0x1d6/0x4d0
+>>>>  [<ffffffff8105acb0>] ? flush_workqueue_prep_cwqs+0x200/0x200
+>>>>  [<ffffffff8125e909>] pciehp_release_ctrl+0x39/0x90
+>>>>  [<ffffffff8125b945>] pciehp_remove+0x25/0x30
+>>>>  [<ffffffff81255bf2>] pcie_port_remove_service+0x52/0x70
+>>>>  [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
+>>>>  [<ffffffff81306ab9>] device_release_driver+0x29/0x40
+>>>>  [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
+>>>>  [<ffffffff81303fe7>] device_del+0x127/0x1c0
+>>>>  [<ffffffff81255d70>] ? resume_iter+0x40/0x40
+>>>>  [<ffffffff81304091>] device_unregister+0x11/0x20
+>>>>  [<ffffffff81255da5>] remove_iter+0x35/0x40
+>>>>  [<ffffffff81302eb6>] device_for_each_child+0x36/0x70
+>>>>  [<ffffffff81256341>] pcie_port_device_remove+0x21/0x40
+>>>>  [<ffffffff81256588>] pcie_portdrv_remove+0x28/0x50
+>>>>  [<ffffffff8124a821>] pci_device_remove+0x41/0xc0
+>>>>  [<ffffffff81306a27>] __device_release_driver+0x77/0xe0
+>>>>  [<ffffffff81306ab9>] device_release_driver+0x29/0x40
+>>>>  [<ffffffff813064b1>] bus_remove_device+0xf1/0x140
+>>>>  [<ffffffff81303fe7>] device_del+0x127/0x1c0
+>>>>  [<ffffffff81304091>] device_unregister+0x11/0x20
+>>>>  [<ffffffff8124566c>] pci_stop_bus_device+0x8c/0xa0
+>>>>  [<ffffffff81245615>] pci_stop_bus_device+0x35/0xa0
+>>>>  [<ffffffff81245811>] pci_stop_and_remove_bus_device+0x11/0x20
+>>>>  [<ffffffff8125cc91>] pciehp_unconfigure_device+0x91/0x190
+>>>>  [<ffffffff8125c76d>] ? pciehp_power_thread+0x2d/0x110
+>>>>  [<ffffffff8125c591>] pciehp_disable_slot+0x71/0x220
+>>>>  [<ffffffff8125c826>] pciehp_power_thread+0xe6/0x110
+>>>>  [<ffffffff8105d203>] process_one_work+0x193/0x550
+>>>>  [<ffffffff8105d1a1>] ? process_one_work+0x131/0x550
+>>>>  [<ffffffff8125c740>] ? pciehp_disable_slot+0x220/0x220
+>>>>  [<ffffffff8105d96d>] worker_thread+0x15d/0x400
+>>>>  [<ffffffff8109213d>] ? trace_hardirqs_on+0xd/0x10
+>>>>  [<ffffffff8105d810>] ? rescuer_thread+0x210/0x210
+>>>>  [<ffffffff81062bd6>] kthread+0xd6/0xe0
+>>>>  [<ffffffff8155a18b>] ? _raw_spin_unlock_irq+0x2b/0x50
+>>>>  [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
+>>>>  [<ffffffff8155ae6c>] ret_from_fork+0x7c/0xb0
+>>>>  [<ffffffff81062b00>] ? __init_kthread_worker+0x70/0x70
+>>>>
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
