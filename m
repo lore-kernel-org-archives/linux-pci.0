@@ -1,355 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v9 07/11] PCI, acpiphp: Move and enhance hotplug support of pci host bridge
-Date: Sun, 20 Jan 2013 23:55:39 +0100
-Message-ID: <9639993.DWkmFxRIH0@vostro.rjw.lan>
-In-Reply-To: <1358495602-22867-8-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <1358495602-22867-8-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:56903 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857Ab3AGSse (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2013 13:48:34 -0500
+Received: by mail-la0-f51.google.com with SMTP id fj20so16460063lab.24
+        for <linux-pci@vger.kernel.org>; Mon, 07 Jan 2013 10:48:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1356030701-16284-15-git-send-email-sasha.levin@oracle.com>
+References: <1356030701-16284-1-git-send-email-sasha.levin@oracle.com> <1356030701-16284-15-git-send-email-sasha.levin@oracle.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Jan 2013 11:48:12 -0700
+Message-ID: <CAErSpo7aj8WfH_aQQMQaQwYV2Y2R_e787rXQo4EVsKbOFq-DuA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: cpqphp: minor cleanup and removal of unreachable paths
+To: Sasha Levin <sasha.levin@oracle.com>
+Cc: Alan Cox <alan@linux.intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 17, 2013 11:53:18 PM Yinghai Lu wrote:
-> We have partial hot-add support in acpiphp driver, and it is confusing.
-> 
-> Move host bridge hot-add support to pci_root.c, and keep acpiphp simple,
-> also add hot-remove support in pci_root.c.
-> 
-> How to test it: if sci_emu patch is applied,
-> 
-> Find out root bus number to acpi root name mapping from dmesg or /sys
-> 
->   echo "\_SB.PCIB 3" > /sys/kernel/debug/acpi/sci_notify
-> to remove root bus
-> 
->   echo "\_SB.PCIB 1" > /sys/kernel/debug/acpi/sci_notify
-> to add back root bus
-> 
-> -v2: put back pci_root_hp change in one patch
-> -v3: add pcibios_resource_survey_bus() calling
-> -v4: remove not needed code with remove_bridge
-> -v5: put back support for acpiphp support for slots just on root bus.
-> -v6: change some functions to *_p2p_* to make it more clean.
-> -v7: split hot_added change out.
-> -v8: Move to pci_root.c instead of adding another file requested by Bjorn.
-> -v9: Fold three following patches into this one for easy review:
-> 	a: Add missing hot_remove support for root device.
-> 	b: Tang Chen noticed that hotplug through container will not update
-> 	   acpi_root_bridge list. After closely checking, we don't need
-> 	   that for struct for tracking and could use acpi_pci_root directly.
-> 	c: Tang Chen found handle_root_bridge_removal is very similiar to
-> 	   acpi_bus_hot_remove_device().  Change to handle_root_bridge_removal
-> 	   to use acpi_bus_hot_remove_device.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Thu, Dec 20, 2012 at 12:11 PM, Sasha Levin <sasha.levin@oracle.com> wrote:
+> Remove cases of redundant checks and remote unreachable paths.
+>
+> Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+
+Thanks, Sasha.  I applied this for v3.9.
+
 > ---
->  drivers/acpi/pci_root.c            |  139 ++++++++++++++++++++++++++++++++++++
->  drivers/pci/hotplug/acpiphp_glue.c |   59 ++++-----------
->  2 files changed, 154 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index bf5108a..3ce5d80 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -655,3 +655,142 @@ int __init acpi_pci_root_init(void)
->  
->  	return 0;
->  }
-> +
-> +/* Support root bridge hotplug */
-> +
-> +static void handle_root_bridge_insertion(acpi_handle handle)
-> +{
-> +	struct acpi_device *device, *pdevice;
-> +	acpi_handle phandle;
-> +	int ret_val;
-> +
-> +	acpi_get_parent(handle, &phandle);
-> +	if (acpi_bus_get_device(phandle, &pdevice)) {
-> +		printk(KERN_DEBUG "no parent device, assuming NULL\n");
-> +		pdevice = NULL;
-> +	}
-> +	if (!acpi_bus_get_device(handle, &device)) {
-> +		/* check if  pci root_bus is removed */
-> +		struct acpi_pci_root *root = acpi_driver_data(device);
-> +		if (pci_find_bus(root->segment, root->secondary.start))
-> +			return;
-> +
-> +		printk(KERN_DEBUG "bus exists... trim\n");
-> +		/* this shouldn't be in here, so remove
-> +		 * the bus then re-add it...
-> +		 */
-> +		ret_val = acpi_bus_trim(device);
-
-You said that this followed acpiphp, but the purpose of the trimming in there
-seems to be to handle surprise removal and re-insertion, which I'm not sure is
-OK with something like a host bridge.
-
-The drawback is that if we have a spurious ACPI_NOTIFY_BUS_CHECK or
-ACPI_NOTIFY_DEVICE_CHECK, we'll be trying to remove the whole bus here in
-response.  That doesn't sound quite right.
-
-> +		printk(KERN_DEBUG "acpi_bus_trim return %x\n", ret_val);
-> +	}
-> +	if (acpi_bus_add(handle))
-> +		printk(KERN_ERR "cannot add bridge to acpi list\n");
-> +}
-> +
-> +static void handle_root_bridge_removal(struct acpi_device *device)
-> +{
-> +	struct acpi_eject_event *ej_event;
-> +
-> +	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
-> +	if (!ej_event)
-
-Shouldn't we do acpi_evaluate_hotplug_ost() here?
-
-> +		return;
-> +
-> +	ej_event->device = device;
-> +	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
-> +
-> +	acpi_bus_hot_remove_device(ej_event);
-> +}
-> +
-> +static void _handle_hotplug_event_root(struct work_struct *work)
-> +{
-> +	struct acpi_pci_root *root;
-> +	char objname[64];
-> +	struct acpi_buffer buffer = { .length = sizeof(objname),
-> +				      .pointer = objname };
-> +	struct acpi_hp_work *hp_work;
-> +	acpi_handle handle;
-> +	u32 type;
-> +
-> +	hp_work = container_of(work, struct acpi_hp_work, work);
-> +	handle = hp_work->handle;
-> +	type = hp_work->type;
-> +
-> +	root = acpi_pci_find_root(handle);
-> +
-> +	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-
-Is the path guaranteed not to be longer than 64 characters?
-
-> +
-> +	switch (type) {
-> +	case ACPI_NOTIFY_BUS_CHECK:
-> +		/* bus enumerate */
-> +		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
-> +				 objname);
-
-pr_debug() would be nicer (and analogously below).
-
-> +		if (!root)
-> +			handle_root_bridge_insertion(handle);
-> +
-> +		break;
-> +
-> +	case ACPI_NOTIFY_DEVICE_CHECK:
-> +		/* device check */
-> +		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
-> +				 objname);
-> +		if (!root)
-> +			handle_root_bridge_insertion(handle);
-> +		break;
-> +
-> +	case ACPI_NOTIFY_EJECT_REQUEST:
-> +		/* request device eject */
-> +		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
-> +				 objname);
-> +		if (root)
-> +			handle_root_bridge_removal(root->device);
-> +		break;
-> +	default:
-> +		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
-> +				 type, objname);
-> +		break;
-> +	}
-> +
-> +	kfree(hp_work); /* allocated in handle_hotplug_event_bridge */
-> +}
-> +
-> +static void handle_hotplug_event_root(acpi_handle handle, u32 type,
-> +					void *context)
-> +{
-> +	alloc_acpi_hp_work(handle, type, context,
-> +				_handle_hotplug_event_root);
-> +}
-> +
-> +static acpi_status __init
-> +find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> +{
-> +	char objname[64];
-> +	struct acpi_buffer buffer = { .length = sizeof(objname),
-> +				      .pointer = objname };
-> +	int *count = (int *)context;
-> +
-> +	if (!acpi_is_root_bridge(handle))
-> +		return AE_OK;
-> +
-> +	(*count)++;
-> +
-> +	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
-> +
-> +	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> +				handle_hotplug_event_root, NULL);
-> +	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-> +
-> +	return AE_OK;
-> +}
-> +
-> +static int __init acpi_pci_root_hp_init(void)
-> +{
-> +	int num = 0;
-> +
-> +	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-> +		ACPI_UINT32_MAX, find_root_bridges, NULL, &num, NULL);
-> +
-> +	printk(KERN_DEBUG "Found %d acpi root devices\n", num);
-> +
-> +	return 0;
-> +}
-> +
-> +subsys_initcall(acpi_pci_root_hp_init);
-
-Why do we need a separate initcall here?  Is it not enough to call
-acpi_pci_root_hp_init() from acpi_init() or acpi_scan_init(), or
-acpi_pci_root_init() even?
-
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 55e03b6..45917a5 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -543,10 +543,13 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->  	acpi_status status;
->  	acpi_handle handle = bridge->handle;
->  
-> -	status = acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> +	if (bridge->type != BRIDGE_TYPE_HOST) {
-> +		status = acpi_remove_notify_handler(handle,
-> +					    ACPI_SYSTEM_NOTIFY,
->  					    handle_hotplug_event_bridge);
-> -	if (ACPI_FAILURE(status))
-> -		err("failed to remove notify handler\n");
-> +		if (ACPI_FAILURE(status))
-> +			err("failed to remove notify handler\n");
-> +	}
->  
->  	if ((bridge->type != BRIDGE_TYPE_HOST) &&
->  	    ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)) {
-> @@ -630,9 +633,6 @@ static void remove_bridge(struct acpi_pci_root *root)
->  	bridge = acpiphp_handle_to_bridge(handle);
->  	if (bridge)
->  		cleanup_bridge(bridge);
-> -	else
-> -		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> -					   handle_hotplug_event_bridge);
->  }
->  
->  static int power_on_slot(struct acpiphp_slot *slot)
-> @@ -1123,18 +1123,12 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
->  }
->  
->  /* Program resources in newly inserted bridge */
-> -static int acpiphp_configure_bridge (acpi_handle handle)
-> +static int acpiphp_configure_p2p_bridge(acpi_handle handle)
->  {
-> -	struct pci_bus *bus;
-> +	struct pci_dev *pdev = acpi_get_pci_dev(handle);
-> +	struct pci_bus *bus = pdev->subordinate;
->  
-> -	if (acpi_is_root_bridge(handle)) {
-> -		struct acpi_pci_root *root = acpi_pci_find_root(handle);
-> -		bus = root->bus;
-> -	} else {
-> -		struct pci_dev *pdev = acpi_get_pci_dev(handle);
-> -		bus = pdev->subordinate;
-> -		pci_dev_put(pdev);
-> -	}
-> +	pci_dev_put(pdev);
->  
->  	pci_bus_size_bridges(bus);
->  	pci_bus_assign_resources(bus);
-> @@ -1144,7 +1138,7 @@ static int acpiphp_configure_bridge (acpi_handle handle)
->  	return 0;
->  }
->  
-> -static void handle_bridge_insertion(acpi_handle handle, u32 type)
-> +static void handle_p2p_bridge_insertion(acpi_handle handle, u32 type)
->  {
->  	struct acpi_device *device;
->  
-> @@ -1162,8 +1156,8 @@ static void handle_bridge_insertion(acpi_handle handle, u32 type)
->  		err("ACPI device object missing\n");
->  		return;
->  	}
-> -	if (!acpiphp_configure_bridge(handle))
-> -		add_bridge(handle);
-> +	if (!acpiphp_configure_p2p_bridge(handle))
-> +		add_p2p_bridge(handle);
->  	else
->  		err("cannot configure and start bridge\n");
->  
-> @@ -1221,7 +1215,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
->  
->  	if (acpi_bus_get_device(handle, &device)) {
->  		/* This bridge must have just been physically inserted */
-> -		handle_bridge_insertion(handle, type);
-> +		handle_p2p_bridge_insertion(handle, type);
->  		goto out;
->  	}
->  
-> @@ -1396,21 +1390,6 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
->  	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
->  }
->  
-> -static acpi_status
-> -find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
-> -{
-> -	int *count = (int *)context;
+>  drivers/pci/hotplug/cpqphp_ctrl.c | 57 ++++++++++++++-------------------------
+>  1 file changed, 20 insertions(+), 37 deletions(-)
+>
+> diff --git a/drivers/pci/hotplug/cpqphp_ctrl.c b/drivers/pci/hotplug/cpqphp_ctrl.c
+> index 36112fe..d282019 100644
+> --- a/drivers/pci/hotplug/cpqphp_ctrl.c
+> +++ b/drivers/pci/hotplug/cpqphp_ctrl.c
+> @@ -1900,8 +1900,7 @@ static void interrupt_event_handler(struct controller *ctrl)
+>                                         dbg("power fault\n");
+>                                 } else {
+>                                         /* refresh notification */
+> -                                       if (p_slot)
+> -                                               update_slot_info(ctrl, p_slot);
+> +                                       update_slot_info(ctrl, p_slot);
+>                                 }
+>
+>                                 ctrl->event_queue[loop].event_type = 0;
+> @@ -2520,44 +2519,28 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+>
+>                 /* If we have IO resources copy them and fill in the bridge's
+>                  * IO range registers */
+> -               if (io_node) {
+> -                       memcpy(hold_IO_node, io_node, sizeof(struct pci_resource));
+> -                       io_node->next = NULL;
+> +               memcpy(hold_IO_node, io_node, sizeof(struct pci_resource));
+> +               io_node->next = NULL;
+>
+> -                       /* set IO base and Limit registers */
+> -                       temp_byte = io_node->base >> 8;
+> -                       rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_BASE, temp_byte);
+> +               /* set IO base and Limit registers */
+> +               temp_byte = io_node->base >> 8;
+> +               rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_BASE, temp_byte);
+>
+> -                       temp_byte = (io_node->base + io_node->length - 1) >> 8;
+> -                       rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_LIMIT, temp_byte);
+> -               } else {
+> -                       kfree(hold_IO_node);
+> -                       hold_IO_node = NULL;
+> -               }
 > -
-> -	if (!acpi_is_root_bridge(handle))
-> -		return AE_OK;
+> -               /* If we have memory resources copy them and fill in the
+> -                * bridge's memory range registers.  Otherwise, fill in the
+> -                * range registers with values that disable them. */
+> -               if (mem_node) {
+> -                       memcpy(hold_mem_node, mem_node, sizeof(struct pci_resource));
+> -                       mem_node->next = NULL;
 > -
-> -	(*count)++;
-> -	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> -				    handle_hotplug_event_bridge, NULL);
-> -
-> -	return AE_OK ;
-> -}
-> -
->  static struct acpi_pci_driver acpi_pci_hp_driver = {
->  	.add =		add_bridge,
->  	.remove =	remove_bridge,
-> @@ -1421,15 +1400,7 @@ static struct acpi_pci_driver acpi_pci_hp_driver = {
->   */
->  int __init acpiphp_glue_init(void)
->  {
-> -	int num = 0;
-> -
-> -	acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
-> -			ACPI_UINT32_MAX, find_root_bridges, NULL, &num, NULL);
-> -
-> -	if (num <= 0)
-> -		return -1;
-> -	else
-> -		acpi_pci_register_driver(&acpi_pci_hp_driver);
-> +	acpi_pci_register_driver(&acpi_pci_hp_driver);
->  
->  	return 0;
->  }
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+> -                       /* set Mem base and Limit registers */
+> -                       temp_word = mem_node->base >> 16;
+> -                       rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
+> +               temp_byte = (io_node->base + io_node->length - 1) >> 8;
+> +               rc = pci_bus_write_config_byte(pci_bus, devfn, PCI_IO_LIMIT, temp_byte);
+>
+> -                       temp_word = (mem_node->base + mem_node->length - 1) >> 16;
+> -                       rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
+> -               } else {
+> -                       temp_word = 0xFFFF;
+> -                       rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
+> +               /* Copy the memory resources and fill in the bridge's memory
+> +                * range registers.
+> +                */
+> +               memcpy(hold_mem_node, mem_node, sizeof(struct pci_resource));
+> +               mem_node->next = NULL;
+>
+> -                       temp_word = 0x0000;
+> -                       rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
+> +               /* set Mem base and Limit registers */
+> +               temp_word = mem_node->base >> 16;
+> +               rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_BASE, temp_word);
+>
+> -                       kfree(hold_mem_node);
+> -                       hold_mem_node = NULL;
+> -               }
+> +               temp_word = (mem_node->base + mem_node->length - 1) >> 16;
+> +               rc = pci_bus_write_config_word(pci_bus, devfn, PCI_MEMORY_LIMIT, temp_word);
+>
+>                 memcpy(hold_p_mem_node, p_mem_node, sizeof(struct pci_resource));
+>                 p_mem_node->next = NULL;
+> @@ -2627,7 +2610,7 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+>                 /* Return unused bus resources
+>                  * First use the temporary node to store information for
+>                  * the board */
+> -               if (hold_bus_node && bus_node && temp_resources.bus_head) {
+> +               if (bus_node && temp_resources.bus_head) {
+>                         hold_bus_node->length = bus_node->base - hold_bus_node->base;
+>
+>                         hold_bus_node->next = func->bus_head;
+> @@ -2751,7 +2734,7 @@ static int configure_new_function(struct controller *ctrl, struct pci_func *func
+>                 }
+>                 /* If we have prefetchable memory space available and there
+>                  * is some left at the end, return the unused portion */
+> -               if (hold_p_mem_node && temp_resources.p_mem_head) {
+> +               if (temp_resources.p_mem_head) {
+>                         p_mem_node = do_pre_bridge_resource_split(&(temp_resources.p_mem_head),
+>                                                                   &hold_p_mem_node, 0x100000);
+>
+> --
+> 1.8.0
+>
