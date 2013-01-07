@@ -1,213 +1,90 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>,
-	Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 04/22] PCI, ACPI: Update comments for find_bridge in acpi_bus_type
-Date: Sun, 27 Jan 2013 23:32:10 +0100
-Message-ID: <2327246.IIyGppobQo@vostro.rjw.lan>
-In-Reply-To: <1359314629-18651-5-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com> <1359314629-18651-1-git-send-email-yinghai@kernel.org> <1359314629-18651-5-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
+References: <20121030040237.GA10472@google.com> <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+ <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 7 Jan 2013 16:49:41 -0700
+Message-ID: <CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
+Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
+ hot-add root bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, January 27, 2013 11:23:31 AM Yinghai Lu wrote:
-> only device that does not have bus_type, will go to that path...
+[+cc David, Michal, Koichi, Ben, Paul]
 
-While I agree that the comment doesn't make sense any more, I also think that
-changing the comment alone is not sufficient, because what USB does with
-.find_bridge() is really disgusting to me and USB is the only real user of it
-(SATA just pretends to be one).
+On Fri, Dec 7, 2012 at 12:15 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Sat, Nov 3, 2012 at 9:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> For root bus hot add, fw could assign some resource for the devices for
+>> that root bus before notifying os via acpi, we should check and use those
+>> resources at first just like we do for booting path.
+>>
+>> At first, we need to refactor x86 pci pcibios_allocate related functions
+>> for booting path to take bus as parameter.
+>>
+>> After that, we could use the survey function for hot add root bus.
+>>
+>> based on pci/yinghai-for-pci-root-bus-hotplug
+>>
+>> could get from
+>>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-survey-resources
+>>
+>> Yinghai Lu (8):
+>>   PCI, x86: Separate out pcibios_allocate_bridge_resources()
+>>   PCI, x86: Separate out pcibios_allocate_dev_resources()
+>>   PCI, x86: Let pcibios_allocate_bus_resources() take bus instead
+>>   PCI, x86: Separate out rom resource claim
+>>   PCI, x86: Add pcibios_fw_addr_done
+>>   PCI, x86: Remove __init for hw/fw allocated functions
+>>   PCI, x86: Claim FW allocated resources in hot add path.
+>>   PCI, ACPI: reserve fw allocated resource for hot added root bus
+>>
+>>  arch/x86/pci/i386.c     |  185 +++++++++++++++++++++++++++++++----------------
+>>  drivers/acpi/pci_root.c |    4 +-
+>>  drivers/pci/bus.c       |    2 +
+>>  include/linux/pci.h     |    1 +
+>>  4 files changed, 127 insertions(+), 65 deletions(-)
+>>
+>
+> Bjorn,
+>
+> Can you queue those 8 patches for v3.9 in pci tree?
+>
+> So I  could resend out other pci root hotplug patches.
 
-So, instead of this change, I'd prefer to apply the appended patch some time
-in the second part of the 3.9 merge window, after integrating all of the
-ACPI and PCI changes already queued up.
+I'm really sorry that it's taken me so long to get to these.
 
-Thanks,
-Rafael
+I applied these to my pci/yinghai-survey-resources branch.  I
+re-ordered the last two and reworked some of the changelogs.
 
+In general these look good.  My main concern is that they only touch
+x86, without touching the similar code in frv, microblaze, mn10300,
+and powerpc.
 
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / glue: Drop .find_bridge() callback from struct acpi_bus_type
+This code (pcibios_resource_survey(), pcibios_assign_resources(),
+pcibios_allocate_resources(), pcibios_allocate_bus_resources()) was
+obviously copied from x86 originally, and I'd like to preserve the
+similarity between them.  It would be even better to refactor it so
+it's actually *shared*, but I don't think that's a requirement right
+now.
 
-After PCI has stopped using the .find_bridge() callback in
-struct acpi_bus_type, the only remaining users of it are SATA and
-USB.  However, SATA only pretends to be a user, because it points
-that callback to a stub always returning -ENODEV, and USB uses it
-incorrectly, because as a result of the way it is used by USB every
-device in the system that doesn't have a bus type or parent is
-passed to usb_acpi_find_device() for inspection.
+If we allow it to diverge now, it will make it harder to refactor and
+harder to notice when bug fixes should be applied to all of them.  For
+example, looking at pcibios_allocate_resources(), commit 575939cf5
+added some SR-IOV support to x86.  Should similar code be added for
+frv, microblaze, mn10300, and powerpc?
 
-What USB actually needs, though, is to call usb_acpi_find_device()
-for USB ports that don't have a bus type defined, but have
-usb_port_device_type as their device type.
+Anybody else have thoughts on this?
 
-To fix that add a device type field to struct acpi_bus_type and
-make acpi_get_bus_type() compare it with the device type fields of
-the device objects it inspects in addition to checking their bus
-types.  Next, make USB set the new type field in usb_acpi_bus to
-point to usb_port_device_type and stop abusing the .find_bridge()
-callback.
-
-In addition to that drop the SATA's dummy .find_bridge() callback,
-and remove .find_bridge(), which is not used any more, from struct
-acpi_bus_type entirely.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/glue.c         |   39 ++++++---------------------------------
- drivers/ata/libata-acpi.c   |    6 ------
- drivers/usb/core/usb-acpi.c |    2 +-
- include/acpi/acpi_bus.h     |    4 +---
- 4 files changed, 8 insertions(+), 43 deletions(-)
-
-Index: linux-pm/drivers/acpi/glue.c
-===================================================================
---- linux-pm.orig/drivers/acpi/glue.c
-+++ linux-pm/drivers/acpi/glue.c
-@@ -64,16 +64,17 @@ int unregister_acpi_bus_type(struct acpi
- }
- EXPORT_SYMBOL_GPL(unregister_acpi_bus_type);
- 
--static struct acpi_bus_type *acpi_get_bus_type(struct bus_type *type)
-+static struct acpi_bus_type *acpi_get_bus_type(struct device *dev)
- {
- 	struct acpi_bus_type *tmp, *ret = NULL;
- 
--	if (!type)
-+	if (!dev->bus && !dev->type)
- 		return NULL;
- 
- 	down_read(&bus_type_sem);
- 	list_for_each_entry(tmp, &bus_type_list, list) {
--		if (tmp->bus == type) {
-+		if ((tmp->bus && tmp->bus == dev->bus)
-+		    || (tmp->type && tmp->type == dev->type)) {
- 			ret = tmp;
- 			break;
- 		}
-@@ -82,22 +83,6 @@ static struct acpi_bus_type *acpi_get_bu
- 	return ret;
- }
- 
--static int acpi_find_bridge_device(struct device *dev, acpi_handle * handle)
--{
--	struct acpi_bus_type *tmp;
--	int ret = -ENODEV;
--
--	down_read(&bus_type_sem);
--	list_for_each_entry(tmp, &bus_type_list, list) {
--		if (tmp->find_bridge && !tmp->find_bridge(dev, handle)) {
--			ret = 0;
--			break;
--		}
--	}
--	up_read(&bus_type_sem);
--	return ret;
--}
--
- static acpi_status do_acpi_find_child(acpi_handle handle, u32 lvl_not_used,
- 				      void *addr_p, void **ret_p)
- {
-@@ -261,22 +246,11 @@ err:
- 
- static int acpi_platform_notify(struct device *dev)
- {
--	struct acpi_bus_type *type;
-+	struct acpi_bus_type *type = acpi_get_bus_type(dev);
- 	acpi_handle handle;
- 	int ret;
- 
- 	ret = acpi_bind_one(dev, NULL);
--	if (ret && (!dev->bus || !dev->parent)) {
--		/* bridge devices genernally haven't bus or parent */
--		ret = acpi_find_bridge_device(dev, &handle);
--		if (!ret) {
--			ret = acpi_bind_one(dev, handle);
--			if (ret)
--				goto out;
--		}
--	}
--
--	type = acpi_get_bus_type(dev->bus);
- 	if (ret) {
- 		if (!type || !type->find_device) {
- 			DBG("No ACPI bus support for %s\n", dev_name(dev));
-@@ -293,7 +267,6 @@ static int acpi_platform_notify(struct d
- 		if (ret)
- 			goto out;
- 	}
--
- 	if (type && type->setup)
- 		type->setup(dev);
- 
-@@ -316,7 +289,7 @@ static int acpi_platform_notify_remove(s
- {
- 	struct acpi_bus_type *type;
- 
--	type = acpi_get_bus_type(dev->bus);
-+	type = acpi_get_bus_type(dev);
- 	if (type && type->cleanup)
- 		type->cleanup(dev);
- 
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -412,10 +412,8 @@ void acpi_remove_dir(struct acpi_device
- struct acpi_bus_type {
- 	struct list_head list;
- 	struct bus_type *bus;
--	/* For general devices under the bus */
-+	struct device_type *type;
- 	int (*find_device) (struct device *, acpi_handle *);
--	/* For bridges, such as PCI root bridge, IDE controller */
--	int (*find_bridge) (struct device *, acpi_handle *);
- 	void (*setup)(struct device *);
- 	void (*cleanup)(struct device *);
- };
-Index: linux-pm/drivers/ata/libata-acpi.c
-===================================================================
---- linux-pm.orig/drivers/ata/libata-acpi.c
-+++ linux-pm/drivers/ata/libata-acpi.c
-@@ -1167,13 +1167,7 @@ static int ata_acpi_find_device(struct d
- 		return -ENODEV;
- }
- 
--static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
--{
--	return -ENODEV;
--}
--
- static struct acpi_bus_type ata_acpi_bus = {
--	.find_bridge = ata_acpi_find_dummy,
- 	.find_device = ata_acpi_find_device,
- };
- 
-Index: linux-pm/drivers/usb/core/usb-acpi.c
-===================================================================
---- linux-pm.orig/drivers/usb/core/usb-acpi.c
-+++ linux-pm/drivers/usb/core/usb-acpi.c
-@@ -212,7 +212,7 @@ static int usb_acpi_find_device(struct d
- 
- static struct acpi_bus_type usb_acpi_bus = {
- 	.bus = &usb_bus_type,
--	.find_bridge = usb_acpi_find_device,
-+	.type = &usb_port_device_type,
- 	.find_device = usb_acpi_find_device,
- };
- 
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Bjorn
