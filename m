@@ -1,72 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:34761 "EHLO quartz.orcorp.ca"
+Received: from mx1.redhat.com ([209.132.183.28]:5888 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754877Ab3A1WJE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 17:09:04 -0500
-Date: Mon, 28 Jan 2013 15:09:04 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130128220904.GA21446@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
- <201301282018.17714.arnd@arndb.de>
- <5106F5CB.8050304@wwwdotorg.org>
+	id S1756328Ab3AHRFn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Jan 2013 12:05:43 -0500
+Message-ID: <50EC51E3.6070306@redhat.com>
+Date: Tue, 08 Jan 2013 12:05:39 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5106F5CB.8050304@wwwdotorg.org>
+To: tadeusz.struk@intel.com
+CC: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: Make pci_find_upstream_pcie_bridge() handle non
+ PCIE VFs well
+References: <50ec2e19.EUrQfXEnsRJiPCTv%tadeusz.struk@intel.com>
+In-Reply-To: <50ec2e19.EUrQfXEnsRJiPCTv%tadeusz.struk@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 03:03:55PM -0700, Stephen Warren wrote:
-> On 01/28/2013 01:18 PM, Arnd Bergmann wrote:
-> > On Monday 28 January 2013, Thomas Petazzoni wrote:
-> >> From: Thierry Reding <thierry.reding@avionic-design.de>
-> >>
-> >> [Thomas Petazzoni:
-> >>  - Simplify capabilities handling.
-> >>  - Move to a separate file.
-> >>  - Fix mask used when writing a 4 bytes value.]
-> >>
-> >> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-> >> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > 
-> > Not even a description why this is needed?
-> > 
-> > This patch (together with patch 8) seems like the most controversial
-> > one of the series, so you should better provide a really good reason
-> > why we would emulate something in software rather than using whatever
-> > hardware is there.
-> 
-> At least on Tegra, there is no HW that exposes PCI configuration
-> registers for the host bridge itself. Only the root ports have exposed
-> PCI configuration registers. There was some debate re: whether a host
-> bridge device needed to exist or not. This patch makes such a device
-> exist if it's required.
+On 01/08/2013 09:32 AM, tadeusz.struk@intel.com wrote:
+> pci_find_upstream_pcie_bridge() doesn't handle well non PCIE VFs
+> that are part of a PCIE PF device.
+>
+> Signed-off-by: Tadeusz Struk<tadeusz.struk@intel.com>
+> ---
+>   drivers/pci/search.c |    6 ++++++
+>   1 files changed, 6 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index bf969ba..8ecdab2 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -23,6 +23,8 @@ EXPORT_SYMBOL_GPL(pci_bus_sem);
+>    * if the device isn't connected to a PCIe bridge (that is its parent is a
+>    * legacy PCI bridge and the bridge is directly connected to bus 0), return its
+>    * parent
+> + * if the device is a VF that doesn't have PCIe cap,
+> + * but the PF is a PCIE, return NULL
+>    */
+>   struct pci_dev *
+>   pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+> @@ -31,6 +33,10 @@ pci_find_upstream_pcie_bridge(struct pci_dev *pdev)
+>
+>   	if (pci_is_pcie(pdev))
+>   		return NULL;
+> +
+> +	if (pdev->is_virtfn&&  pci_is_pcie(pdev->physfn))
+> +		return NULL;
+> +
+>   	while (1) {
+>   		if (pci_is_root_bus(pdev->bus))
+>   			break;
 
-If Linux will discover properly (I strongly suspect it does) without
-the host bridge, then I would say to ditch this...
+The verbage/description is confusing, and
+the comment doesn't match the code:
+(a) no such thing as a non-PCIe VF -- all VFs
+     are PCIe-based.
+(b) code says to return null if VF doesn't have PCIe cap,
+     but the code checks if pdev is VF and if PF is PCIe,
+     which it must be! ...
 
-The PCI-E standard requires a host bridge device, but if Linux doesn't
-require it then there is no reason to emulate one.
+nack until a better &/or matching explanation of what
+the real problem is, and what the solution is trying to do.
 
-That would simplify the question of PCI IDs - for Marvell's case and
-the sw root port bridge we can just copy the IDs from the bogus config
-space of the HW.
+- Don
 
-Jason
