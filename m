@@ -1,113 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-Date: Sat, 19 Jan 2013 00:07:42 +0800
-Message-Id: <1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:59682 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753327Ab3AHDE6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2013 22:04:58 -0500
+MIME-Version: 1.0
+In-Reply-To: <3649945.08HKjS0y0c@hammer82.arch.suse.de>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<1593084.QhbTkmoq3N@hammer82.arch.suse.de>
+	<CAE9FiQWTiFu0+ymVroK84L-LCc7FBU1trdZAcaXqMGM2My6LzQ@mail.gmail.com>
+	<3649945.08HKjS0y0c@hammer82.arch.suse.de>
+Date: Mon, 7 Jan 2013 19:04:56 -0800
+Message-ID: <CAE9FiQUueTB6gc5uMUApqeS7FtzMESLLFEt3ZuOMJgXsnjFQ0A@mail.gmail.com>
+Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Renninger <trenn@suse.de>
+Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
-there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
-So change Kconfig and code to only support building pci_slot as
-built-in driver.
+On Mon, Jan 7, 2013 at 4:42 PM, Thomas Renninger <trenn@suse.de> wrote:
+> memmap=256M$3584M
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/Kconfig    |    5 +----
- drivers/acpi/internal.h |    5 +++++
- drivers/acpi/pci_slot.c |   13 +------------
- drivers/acpi/scan.c     |    1 +
- 4 files changed, 8 insertions(+), 16 deletions(-)
+may need to change to:
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 0300bf6..7efd0d0 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -299,7 +299,7 @@ config ACPI_DEBUG_FUNC_TRACE
- 	  is about half of the penalty and is rarely useful.
- 
- config ACPI_PCI_SLOT
--	tristate "PCI slot detection driver"
-+	bool "PCI slot detection driver"
- 	depends on SYSFS
- 	default n
- 	help
-@@ -308,9 +308,6 @@ config ACPI_PCI_SLOT
- 	  i.e., segment/bus/device/function tuples, with physical slots in
- 	  the system.  If you are unsure, say N.
- 
--	  To compile this driver as a module, choose M here:
--	  the module will be called pci_slot.
--
- config X86_PM_TIMER
- 	bool "Power Management Timer Support" if EXPERT
- 	depends on X86
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index e050254..7374cfc 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -67,6 +67,11 @@ struct acpi_ec {
- 
- extern struct acpi_ec *first_ec;
- 
-+#ifdef	CONFIG_ACPI_PCI_SLOT
-+void acpi_pci_slot_init(void);
-+#else
-+static inline void acpi_pci_slot_init(void) { }
-+#endif
- int acpi_pci_root_init(void);
- int acpi_ec_init(void);
- int acpi_ec_ecdt_probe(void);
-diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-index d22585f..a7d7e77 100644
---- a/drivers/acpi/pci_slot.c
-+++ b/drivers/acpi/pci_slot.c
-@@ -330,19 +330,8 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
- 	{}
- };
- 
--static int __init
--acpi_pci_slot_init(void)
-+void __init acpi_pci_slot_init(void)
- {
- 	dmi_check_system(acpi_pci_slot_dmi_table);
- 	acpi_pci_register_driver(&acpi_pci_slot_driver);
--	return 0;
- }
--
--static void __exit
--acpi_pci_slot_exit(void)
--{
--	acpi_pci_unregister_driver(&acpi_pci_slot_driver);
--}
--
--module_init(acpi_pci_slot_init);
--module_exit(acpi_pci_slot_exit);
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index f8a0d0f..cb964ac 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1732,6 +1732,7 @@ int __init acpi_scan_init(void)
- 
- 	acpi_power_init();
- 	acpi_pci_root_init();
-+	acpi_pci_slot_init();
- 
- 	/*
- 	 * Enumerate devices in the ACPI namespace.
--- 
-1.7.9.5
+memmap=256M\$\$3584M
 
+Thanks
+
+Yinghai
