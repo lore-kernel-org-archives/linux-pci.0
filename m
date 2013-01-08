@@ -1,83 +1,97 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <50F6108B.6070204@huawei.com>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-	<1357944049-29620-23-git-send-email-yinghai@kernel.org>
-	<50F6108B.6070204@huawei.com>
-Date: Tue, 15 Jan 2013 18:41:18 -0800
-Message-ID: <CAE9FiQVg5xJka9V_Aim4yzmC3PL9cx8wReV12-nPacPJXff5ZA@mail.gmail.com>
-Subject: Re: [PATCH v8 22/22] PCI: move device_add out of pci_bus_add_device()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 5/6] PCI/acpiphp: serialize access to the bridge_list list
+Date: Wed,  9 Jan 2013 00:52:24 +0800
+Message-Id: <1357663945-16054-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
+References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 15, 2013 at 6:29 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2013/1/12 6:40, Yinghai Lu wrote:
->> Move out device registering out of pci_bus_add_devices, so we could
->> put new created pci devices in device tree early.
->>
->> new pci_bus_add_devices will do the device_attach work to load pci drivers
->> instead.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/bus.c   |   47 +++--------------------------------------------
->>  drivers/pci/iov.c   |    7 -------
->>  drivers/pci/probe.c |   34 +++++++++++++++++++++++++++-------
->>  3 files changed, 30 insertions(+), 58 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 1f5916a..0a55845 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -178,22 +178,9 @@ static void pci_bus_attach_device(struct pci_dev *dev)
->>   */
->>  int pci_bus_add_device(struct pci_dev *dev)
->>  {
->> -     int retval;
->> -
->> -     pci_fixup_device(pci_fixup_final, dev);
->> -
->> -     retval = pcibios_add_device(dev);
->> -     if (retval)
->> -             return retval;
->> -
->> -     retval = device_add(&dev->dev);
->> -     if (retval)
->> -             return retval;
->> -
->>       pci_bus_attach_device(dev);
->>       dev->is_added = 1;
->> -     pci_proc_attach_device(dev);
->> -     pci_create_sysfs_dev_files(dev);
->> +
->>       return 0;
->>  }
->
->
-> Hi Yinghai,
->    Should change pci_bus_add_device() function to void return now? So some unnecessary ret check can remove.
->
+Serialize access to the bridge_list in the acpiphp driver.
 
-yeah, maybe later. this patch is already some kind of big now.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-also there is outside caller...
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 16fe692..884cbf4 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -53,6 +53,7 @@
+ #include "../pci.h"
+ #include "acpiphp.h"
+ 
++static DEFINE_MUTEX(bridge_mutex);
+ static LIST_HEAD(bridge_list);
+ 
+ #define MY_NAME "acpiphp_glue"
+@@ -519,8 +520,10 @@ static int add_bridge(struct acpi_pci_root *root)
+ 	}
+ 
+ 	/* search P2P bridges under this host bridge */
++	mutex_lock(&bridge_mutex);
+ 	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+ 				     find_p2p_bridge, NULL, NULL, NULL);
++	mutex_unlock(&bridge_mutex);
+ 
+ 	if (ACPI_FAILURE(status))
+ 		warn("find_p2p_bridge failed (error code = 0x%x)\n", status);
+@@ -618,6 +621,8 @@ static void remove_bridge(struct acpi_pci_root *root)
+ 	struct acpiphp_bridge *bridge;
+ 	acpi_handle handle = root->device->handle;
+ 
++	mutex_lock(&bridge_mutex);
++
+ 	/* cleanup p2p bridges under this host bridge
+ 	   in a depth-first manner */
+ 	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle,
+@@ -636,6 +641,8 @@ static void remove_bridge(struct acpi_pci_root *root)
+ 	else
+ 		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+ 					   handle_hotplug_event_bridge);
++
++	mutex_unlock(&bridge_mutex);
+ }
+ 
+ static int power_on_slot(struct acpiphp_slot *slot)
+@@ -1438,11 +1445,13 @@ static void acpiphp_hp_notify_add(struct pci_dev *dev)
+ 	if (!dev->subordinate || !handle)
+ 		return;
+ 
++	mutex_lock(&bridge_mutex);
+ 	/* check if this bridge has ejectable slots */
+ 	if (detect_ejectable_slots(handle) > 0) {
+ 		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
+ 		add_p2p_bridge(handle);
+ 	}
++	mutex_unlock(&bridge_mutex);
+ }
+ 
+ static void acpiphp_hp_notify_del(struct pci_dev *dev)
+@@ -1453,11 +1462,13 @@ static void acpiphp_hp_notify_del(struct pci_dev *dev)
+ 	if (!bus)
+ 		return;
+ 
++	mutex_lock(&bridge_mutex);
+ 	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
+ 		if (bridge->pci_bus == bus) {
+ 			cleanup_bridge(bridge);
+ 			break;
+ 		}
++	mutex_unlock(&bridge_mutex);
+ }
+ 
+ static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
+-- 
+1.7.9.5
 
-drivers/edac/i82875p_edac.c:            err = pci_bus_add_device(dev);
-drivers/platform/x86/asus-wmi.c:                                if
-(pci_bus_add_device(dev))
-drivers/platform/x86/eeepc-laptop.c:                            if
-(pci_bus_add_device(dev))
-
-so let change that later.
-
-Thanks
-
-Yinghai
