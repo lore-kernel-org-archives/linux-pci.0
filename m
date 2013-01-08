@@ -1,56 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59303 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754953Ab3A1WKG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:10:06 -0500
-Date: Mon, 28 Jan 2013 23:09:59 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130128230959.45cb503e@skate>
-In-Reply-To: <201301282018.17714.arnd@arndb.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301282018.17714.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from cantor2.suse.de ([195.135.220.15]:35655 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756633Ab3AHQr1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Jan 2013 11:47:27 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
+Date: Tue, 8 Jan 2013 17:47:17 +0100
+Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <3649945.08HKjS0y0c@hammer82.arch.suse.de> <CAE9FiQUueTB6gc5uMUApqeS7FtzMESLLFEt3ZuOMJgXsnjFQ0A@mail.gmail.com>
+In-Reply-To: <CAE9FiQUueTB6gc5uMUApqeS7FtzMESLLFEt3ZuOMJgXsnjFQ0A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201301081747.17853.trenn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
-
-On Mon, 28 Jan 2013 20:18:17 +0000, Arnd Bergmann wrote:
-
-> Not even a description why this is needed?
+On Tuesday, January 08, 2013 04:04:56 AM Yinghai Lu wrote:
+> On Mon, Jan 7, 2013 at 4:42 PM, Thomas Renninger <trenn@suse.de> wrote:
+> > memmap=256M$3584M
 > 
-> This patch (together with patch 8) seems like the most controversial
-> one of the series, so you should better provide a really good reason
-> why we would emulate something in software rather than using whatever
-> hardware is there.
+> may need to change to:
+> 
+> memmap=256M\$\$3584M
+The problem is (beside the special char $) that
+memmap=exactmap boot param resets all e820 maps every time the
+parameter is processed.
+And:
+/sbin/kexec -p xy --append="..." --initrd yx
+seem to magically add (append):
+memmap=exactmap memmap=640K@0K memmap=392556K@115328K elfcorehdr=507884K memmap=252K#3099760K
 
-Hum, you're right. In fact, the very reason why I'm adding an emulated
-host bridge and emulated PCI-to-PCI bridges is simply because this was
-one of the main suggestion raised during the review of the first
-revision of this patch set.
+therefore all memmap= I try to pass are voided out by:
+memmap=exactmap
+which is always added by kexec after my params.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I could come around with attached patch and passing:
+/sbin/kexec -p xy --append='... memmap=exactmap memmap=256M$3584M' --initrd yx
+
+Now mmconfig is working in kdump kernel.
+This would mean mmconfig is broken by design in kexec?
+
+Only way to fix this I can think of is to export
+mmconfig area through /sys  (../kernel/debug/mmconfig?, possibly
+already in X$Y format?) in the productive kernel and make kexec add it
+like the other memmap= params automatically.
+
+I'll attach the output in a separate mail.
+
+   Thomas
+
+---
+
+x86 e820: Do not reset e820 map twice, even if memmap=exactmap is passed as boot param several times
+
+This is needed to be able to explicitly pass (debug) e820
+modifications through kexec via memmap=.
+Otherwise those get voided by kexec appending memmap=exactmap always
+after the user defined boot parameters.
+
+Signed-off-by: Thomas Renninger <trenn@suse.de>
+
+ linux-2.6_t/arch/x86/kernel/e820.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+Index: git/linux-2.6_t/arch/x86/kernel/e820.c
+===================================================================
+--- git.orig/linux-2.6_t/arch/x86/kernel/e820.c
++++ git/linux-2.6_t/arch/x86/kernel/e820.c
+@@ -845,7 +845,9 @@ static int __init parse_memmap_opt(char
+ 
+ 	if (!strncmp(p, "exactmap", 8)) {
+ #ifdef CONFIG_CRASH_DUMP
+-		/*
++		/* memmap=exactmap passed twice, do not reset tables again */
++		if (saved_max_pfn)
++			return 0;		/*
+ 		 * If we are doing a crash dump, we still need to know
+ 		 * the real mem size before original memory map is
+ 		 * reset.
