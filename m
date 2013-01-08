@@ -1,154 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:61254 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756485Ab3AHRpF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 12:45:05 -0500
-Received: by mail-vc0-f174.google.com with SMTP id d16so670619vcd.33
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jan 2013 09:45:05 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:35198 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753568Ab3AHXYI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Jan 2013 18:24:08 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v3 2/6] PCI: split registration of PCI bus devices into two stages
+Date: Wed, 09 Jan 2013 00:29:50 +0100
+Message-ID: <31602902.kR8ehd6tSR@vostro.rjw.lan>
+In-Reply-To: <1357663945-16054-3-git-send-email-jiang.liu@huawei.com>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <1357663945-16054-3-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1350371420-7888-3-git-send-email-wangyijing@huawei.com>
-References: <1350371420-7888-1-git-send-email-wangyijing@huawei.com> <1350371420-7888-3-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Jan 2013 10:44:44 -0700
-Message-ID: <CAErSpo6to+9fpiQU2q59MGg0r8OQm7okLnaDAEaeFYAL5xZEUA@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] PCI, pciehp: ARI device hotplug support
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Yu Zhao <yu.zhao@intel.com>, kernel.openeuler@huawei.com,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Kenji]
-
-On Tue, Oct 16, 2012 at 1:10 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> ARI device supports up to 256 Functions, pciehp now only scan and configure
-> Functions from 0 to 7, this patch fix this problem for ARI device hotplug.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Wednesday, January 09, 2013 12:52:21 AM Jiang Liu wrote:
+> When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+> the notification handler can't hold reference count to the new PCI bus
+> because the device object for the new bus (pci_dev->subordinate->dev)
+> hasn't been initialized yet.
+> 
+> Split the registration of PCI bus device into two stages as below,
+> so that the event handler could hold reference count to the new PCI bus
+> when handling BUS_NOTIFY_ADD_DEVICE event.
+> 
+> 1) device_initialize(&pci_dev->dev)
+> 2) device_initialize(&pci_dev->subordinate->dev)
+> 3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+> 4) device_add(&pci_dev->dev)
+> 5) device_add(&pci_dev->subordinate->dev)
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  drivers/pci/hotplug/pciehp_pci.c |   40 ++++++++++++++++++++++++++-----------
->  1 files changed, 28 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 09cecaf..b37e8a0 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -39,7 +39,7 @@ int pciehp_configure_device(struct slot *p_slot)
->         struct pci_dev *dev;
->         struct pci_dev *bridge = p_slot->ctrl->pcie->port;
->         struct pci_bus *parent = bridge->subordinate;
-> -       int num, fn;
-> +       int num, fn = 0;
->         struct controller *ctrl = p_slot->ctrl;
->
->         dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
-> @@ -56,21 +56,31 @@ int pciehp_configure_device(struct slot *p_slot)
->                 ctrl_err(ctrl, "No new device found\n");
->                 return -ENODEV;
->         }
+>  drivers/pci/bus.c    |    2 +-
+>  drivers/pci/probe.c  |    4 +++-
+>  drivers/pci/remove.c |   10 +++++-----
+>  3 files changed, 9 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index ad6a8b6..2fea481 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -198,7 +198,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+>  	if (bus->bridge)
+>  		bus->dev.parent = bus->bridge;
+>  
+> -	retval = device_register(&bus->dev);
+> +	retval = device_add(&bus->dev);
+>  	if (retval)
+>  		return retval;
+>  
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index e557d6f..a8315c2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -642,6 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	 */
+>  	child->dev.class = &pcibus_class;
+>  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+> +	device_initialize(&child->dev);
+>  
+>  	/*
+>  	 * Set up the primary, secondary and subordinate
+> @@ -1678,7 +1679,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	b->dev.class = &pcibus_class;
+>  	b->dev.parent = b->bridge;
+>  	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+> -	error = device_register(&b->dev);
+> +	device_initialize(&b->dev);
+> +	error = device_add(&b->dev);
+
+Well, the change here isn't really necessary, as far as I can say.
+
+>  	if (error)
+>  		goto class_dev_reg_err;
+>  
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index fc38c48..a1fdd0f 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
+>  	list_del(&bus->node);
+>  	pci_bus_release_busn_res(bus);
+>  	up_write(&pci_bus_sem);
+> -	if (!bus->is_added)
+> -		return;
 > -
-> -       for (fn = 0; fn < 8; fn++) {
-> -               dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-> +
-> +       do {
-> +               if (pci_ari_enabled(parent))
-> +                       dev = pci_get_slot(parent, fn);
-> +               else
-> +                       dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-> +
-> +               fn = pci_next_fn(parent, PCI_DEVFN(0, fn));
-
-This doesn't make sense to me.  We just called pci_scan_slot(), which
-already  used pci_next_fn() to find all the functions.  We shouldn't
-have to have the ARI knowledge and pci_next_fn() looping here again
-(and yet again after pci_assign_unassigned_bridge_resources()).
-
-According to the pci_scan_slot() function comment, all the
-newly-discovered devices should be on the bus->devices list.  And in
-fact, the similar code in acpiphp (enable_device()) *does* use the
-bus->devices list.
-
-I think cpci_configure_slot(), pciehp_configure_device(),
-enable_slot() in sgi_hotplug.c, and shpchp_configure_device() should
-be changed to use the bus->devices list.  In addition, I think the
-refcount management (pci_get_slot()/pci_dev_put()) should be removed.
-
->                 if (!dev)
->                         continue;
->                 if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
->                                 (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
->                         pci_hp_add_bridge(dev);
->                 pci_dev_put(dev);
-> -       }
-> +       } while (fn);
->
->         pci_assign_unassigned_bridge_resources(bridge);
->
-> -       for (fn = 0; fn < 8; fn++) {
-> -               dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-> +       do {
-> +               if (pci_ari_enabled(parent))
-> +                       dev = pci_get_slot(parent, fn);
-> +               else
-> +                       dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
-> +
-> +               fn = pci_next_fn(parent, PCI_DEVFN(0, fn));
->                 if (!dev)
->                         continue;
->                 if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY) {
-> @@ -79,7 +89,7 @@ int pciehp_configure_device(struct slot *p_slot)
->                 }
->                 pci_configure_slot(dev);
->                 pci_dev_put(dev);
-> -       }
-> +       } while (fn);
->
->         pci_bus_add_devices(parent);
->
-> @@ -89,21 +99,27 @@ int pciehp_configure_device(struct slot *p_slot)
->  int pciehp_unconfigure_device(struct slot *p_slot)
->  {
->         int ret, rc = 0;
-> -       int j;
-> +       int fn = 0;
->         u8 bctl = 0;
->         u8 presence = 0;
->         struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
->         u16 command;
->         struct controller *ctrl = p_slot->ctrl;
-> +       struct pci_dev *temp;
->
->         ctrl_dbg(ctrl, "%s: domain:bus:dev = %04x:%02x:00\n",
->                  __func__, pci_domain_nr(parent), parent->number);
->         ret = pciehp_get_adapter_status(p_slot, &presence);
->         if (ret)
->                 presence = 0;
-> +
-> +       do {
-> +               if (pci_ari_enabled(parent))
-> +                       temp = pci_get_slot(parent, fn);
-> +               else
-> +                       temp = pci_get_slot(parent, PCI_DEVFN(0, fn));
->
-> -       for (j = 0; j < 8; j++) {
-> -               struct pci_dev *temp = pci_get_slot(parent, PCI_DEVFN(0, j));
-> +               fn = pci_next_fn(parent, PCI_DEVFN(0, fn));
->                 if (!temp)
->                         continue;
->                 if (temp->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-> @@ -129,7 +145,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->                         pci_write_config_word(temp, PCI_COMMAND, command);
->                 }
->                 pci_dev_put(temp);
-> -       }
-> +       } while (fn);
->
->         return rc;
+> -	pci_remove_legacy_files(bus);
+> -	device_unregister(&bus->dev);
+> +	if (bus->is_added) {
+> +		pci_remove_legacy_files(bus);
+> +		device_del(&bus->dev);
+> +	}
+> +	put_device(&bus->dev);
 >  }
-> --
-> 1.7.1
->
->
+>  EXPORT_SYMBOL(pci_remove_bus);
+>  
+> 
+
+Apart from the above
+
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
