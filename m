@@ -1,120 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:60902 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753759Ab3A2IAm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 03:00:42 -0500
-Date: Tue, 29 Jan 2013 09:00:36 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130129090036.64c76c25@skate>
-In-Reply-To: <20130129055508.GA3339@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
-	<20130129055508.GA3339@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-da0-f44.google.com ([209.85.210.44]:60186 "EHLO
+	mail-da0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756774Ab3AHQwo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 11:52:44 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 2/6] PCI: split registration of PCI bus devices into two stages
+Date: Wed,  9 Jan 2013 00:52:21 +0800
+Message-Id: <1357663945-16054-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
+References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Jason,
+When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+the notification handler can't hold reference count to the new PCI bus
+because the device object for the new bus (pci_dev->subordinate->dev)
+hasn't been initialized yet.
 
-On Mon, 28 Jan 2013 22:55:08 -0700, Jason Gunthorpe wrote:
+Split the registration of PCI bus device into two stages as below,
+so that the event handler could hold reference count to the new PCI bus
+when handling BUS_NOTIFY_ADD_DEVICE event.
 
-> > There's no Linux requirement that multiple PCIe interfaces appear to
-> > be in the same hierarchy.  You can just use pci_scan_root_bus()
-> > separately on each interface.  Each interface can be in its own domain
-> > if necessary.
-> 
-> What you suggest is basically what the Marvell driver did originally,
-> the probelm is that Linux requires a pre-assigned aperture for each
-> PCI domain/root bus, and these new chips have so many PCI-E ports that
-> they can exhaust the physical address space, and also a limited
-> internal HW resource for setting address routing.
-> 
-> Thus they require resource allocation that is sensitive to the devices
-> present downstream.
-> 
-> By far the simplest solution is to merge all the physical links into a
-> single domain and rely on existing PCI resource allocation code to
-> drive allocation of scarce physical address space and demand allocate
-> the HW routing resource (specifically there are enough resources to
-> accomidate MMIO only devices on every bus, but not enough to
-> accomidate MMIO and IO on every bus).
-> 
-> > > +/*
-> > > + * For a given PCIe interface (represented by a mvebu_pcie_port
-> > > + * structure), we read the PCI configuration space of the
-> > > + * corresponding PCI-to-PCI bridge in order to find out which range of
-> > > + * I/O addresses and memory addresses have been assigned to this PCIe
-> > > + * interface. Using these informations, we set up the appropriate
-> > > + * address decoding windows so that the physical address are actually
-> > > + * resolved to the right PCIe interface.
-> > > + */
-> > 
-> > Are you inferring the host bridge apertures by using the resources
-> > assigned to devices under the bridge, i.e., taking the union of all
-> 
-> The flow is different, a portion of physical address space is set
-> aside for use by PCI-E (via DT) and that portion is specified in the
-> struct resource's ultimately attached to the PCI domain for the bus
-> scan. You could call that the 'host bridge aperture' though it doesn't
-> reflect any HW configuration at all. The values come from the device
-> tree.
-> 
-> During the bus scan the Linux core code splits up that contiguous
-> space and assigns to the PCI-PCI bridges and devices under that domain.
-> 
-> Each physical PCI-E link on the chip is seen by Linux through the SW
-> emulated PCI-PCI bridge attached to bus 0. When Linux configures the
-> bridge windows it triggers this code here to copy that window
-> information from the PCI config space into non-standard internal HW
-> registers.
-> 
-> The purpose of the SW PCI-PCI bridge and this code here is to give
-> the Linux PCI core control over the window (MMIO,IO,busnr) assigned
-> to the PCI-E link.
-> 
-> This arrangement with PCI-PCI bridges controlling address routing is
-> part of the PCI-E standard, in this instance Marvell did not implement
-> the required config space in HW so the driver is working around that
-> deficiency.
-> 
-> Other drivers, like tegra have a similar design, but their hardware
-> does implement PCI-PCI bridge configuration space and does drive
-> address decoding through the HW PCI-PCI window registers.
-> 
-> Having PCI-E links be bridges, not domains/root_bus's is in-line with
-> the standard and works better with the Linux PCI resource allocator.
+1) device_initialize(&pci_dev->dev)
+2) device_initialize(&pci_dev->subordinate->dev)
+3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+4) device_add(&pci_dev->dev)
+5) device_add(&pci_dev->subordinate->dev)
 
-Thanks a lot Jason for this explanation, I couldn't have explained it
-as clearly as you did.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c    |    2 +-
+ drivers/pci/probe.c  |    4 +++-
+ drivers/pci/remove.c |   10 +++++-----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
-Bjorn, does Jason's reply answers your questions? Or do you need other
-details?
-
-Thanks!
-
-Thomas
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index ad6a8b6..2fea481 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -198,7 +198,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+ 	if (bus->bridge)
+ 		bus->dev.parent = bus->bridge;
+ 
+-	retval = device_register(&bus->dev);
++	retval = device_add(&bus->dev);
+ 	if (retval)
+ 		return retval;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e557d6f..a8315c2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -642,6 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	 */
+ 	child->dev.class = &pcibus_class;
+ 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
++	device_initialize(&child->dev);
+ 
+ 	/*
+ 	 * Set up the primary, secondary and subordinate
+@@ -1678,7 +1679,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+ 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+-	error = device_register(&b->dev);
++	device_initialize(&b->dev);
++	error = device_add(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+ 
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index fc38c48..a1fdd0f 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(bus);
+-	device_unregister(&bus->dev);
++	if (bus->is_added) {
++		pci_remove_legacy_files(bus);
++		device_del(&bus->dev);
++	}
++	put_device(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.9.5
+
