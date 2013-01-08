@@ -1,81 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31179 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755388Ab3A0TYZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:25 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
-	linux-altix@sgi.com
-Subject: [PATCH v3 14/22] PCI, ia64: Kill pci_find_next_bus
-Date: Sun, 27 Jan 2013 11:23:41 -0800
-Message-Id: <1359314629-18651-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com> <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com> <20130108181645.GA7972@core.coreip.homeip.net>
+In-Reply-To: <20130108181645.GA7972@core.coreip.homeip.net>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [PATCH 5/5] kfifo: log based kfifo API
+From: Andy Walls <awalls@md.metrocast.net>
+Date: Tue, 08 Jan 2013 16:10:07 -0500
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Yuanhan Liu <yuanhan.liu@linux.intel.com>
+CC: linux-kernel@vger.kernel.org,
+	Stefani Seibold <stefani@seibold.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-mm@kvack.org, dccp@vger.kernel.org,
+	linux-sctp@vger.kernel.org
+Message-ID: <f1be90be-ad99-4dff-8332-804383adc5c8@email.android.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace that with hotplug-safe version iteration.
+Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-altix@sgi.com
----
- arch/ia64/hp/common/sba_iommu.c |    7 ++++---
- arch/ia64/sn/kernel/io_common.c |    5 +++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+>Hi Yuanhan,
+>
+>On Tue, Jan 08, 2013 at 10:57:53PM +0800, Yuanhan Liu wrote:
+>> The current kfifo API take the kfifo size as input, while it rounds
+>>  _down_ the size to power of 2 at __kfifo_alloc. This may introduce
+>> potential issue.
+>> 
+>> Take the code at drivers/hid/hid-logitech-dj.c as example:
+>> 
+>> 	if (kfifo_alloc(&djrcv_dev->notif_fifo,
+>>                        DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct
+>dj_report),
+>>                        GFP_KERNEL)) {
+>> 
+>> Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct
+>dj_report)
+>> is 15.
+>> 
+>> Which means it wants to allocate a kfifo buffer which can store 8
+>> dj_report entries at once. The expected kfifo buffer size would be
+>> 8 * 15 = 120 then. While, in the end, __kfifo_alloc will turn the
+>> size to rounddown_power_of_2(120) =  64, and then allocate a buf
+>> with 64 bytes, which I don't think this is the original author want.
+>> 
+>> With the new log API, we can do like following:
+>> 
+>> 	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
+>> 					    sizeof(struct dj_report));
+>> 
+>> 	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order,
+>GFP_KERNEL)) {
+>> 
+>> This make sure we will allocate enough kfifo buffer for holding
+>> DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
+>
+>Why don't you simply change __kfifo_alloc to round the allocation up
+>instead of down?
+>
+>Thanks.
+>
+>-- 
+>Dmitry
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-media"
+>in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-index bcda5b2..0f27a37 100644
---- a/arch/ia64/hp/common/sba_iommu.c
-+++ b/arch/ia64/hp/common/sba_iommu.c
-@@ -2155,9 +2155,10 @@ sba_init(void)
+Hi Dmitry,
+
+I agree.   I don't see the benefit in pushing up the change to a kfifo internal decision/problem to many different places in the kernel.
+
+Regards,
+Andy
+
  
- #ifdef CONFIG_PCI
- 	{
--		struct pci_bus *b = NULL;
--		while ((b = pci_find_next_bus(b)) != NULL)
--			sba_connect_bus(b);
-+		struct pci_host_bridge *host_bridge = NULL;
-+
-+		for_each_pci_host_bridge(host_bridge)
-+			sba_connect_bus(host_bridge->bus);
- 	}
- #endif
- 
-diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
-index 8630875..131938b 100644
---- a/arch/ia64/sn/kernel/io_common.c
-+++ b/arch/ia64/sn/kernel/io_common.c
-@@ -516,6 +516,7 @@ arch_initcall(sn_io_early_init);
- int __init
- sn_io_late_init(void)
- {
-+	struct pci_host_bridge *host_bridge = NULL;
- 	struct pci_bus *bus;
- 	struct pcibus_bussoft *bussoft;
- 	cnodeid_t cnode;
-@@ -530,8 +531,8 @@ sn_io_late_init(void)
- 	 * PIC, TIOCP, TIOCE (TIOCA does it during bus fixup using
- 	 * info from the PROM).
- 	 */
--	bus = NULL;
--	while ((bus = pci_find_next_bus(bus)) != NULL) {
-+	for_each_pci_host_bridge(host_bridge) {
-+		bus = host_bridge->bus;
- 		bussoft = SN_PCIBUS_BUSSOFT(bus);
- 		nasid = NASID_GET(bussoft->bs_base);
- 		cnode = nasid_to_cnodeid(nasid);
--- 
-1.7.10.4
-
