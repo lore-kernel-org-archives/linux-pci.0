@@ -1,90 +1,164 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 21/22] PCI: add match_driver in struct pci_dev
-Date: Fri, 11 Jan 2013 14:40:48 -0800
-Message-Id: <1357944049-29620-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:41777 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757284Ab3AIG1m convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 01:27:42 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gleb Natapov <gleb@redhat.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
+ devices
+Date: Wed, 9 Jan 2013 06:26:24 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-with that we could move out attaching driver for pci device,
-out of device_add for pci hot add path.
+	- Create eventfd per vfio device assigned to a guest and register an
+          event handler
 
-pci_bus_attach_device() will attach driver to pci device.
+	- This fd is passed to the vfio_pci driver through a new ioctl
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+	- When the device encounters an error, the eventfd is signaled
+          and the qemu eventfd handler gets invoked.
+
+	- In the handler decide what action to take. Current action taken
+          is to terminate the guest.
+
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
 ---
- drivers/pci/bus.c        |   10 ++++++++++
- drivers/pci/pci-driver.c |    6 +++++-
- include/linux/pci.h      |    1 +
- 3 files changed, 16 insertions(+), 1 deletion(-)
+ hw/vfio_pci.c              | 56 ++++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |  9 ++++++++
+ 2 files changed, 65 insertions(+)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 5f9c728..1f5916a 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -160,6 +160,15 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
+index 28c8303..9c3c28b 100644
+--- a/hw/vfio_pci.c
++++ b/hw/vfio_pci.c
+@@ -38,6 +38,7 @@
+ #include "qemu/error-report.h"
+ #include "qemu/queue.h"
+ #include "qemu/range.h"
++#include "sysemu/sysemu.h"
  
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ /* #define DEBUG_VFIO */
+ #ifdef DEBUG_VFIO
+@@ -130,6 +131,8 @@ typedef struct VFIODevice {
+     QLIST_ENTRY(VFIODevice) next;
+     struct VFIOGroup *group;
+     bool reset_works;
++    EventNotifier errfd;
++    __u32 dev_info_flags;
+ } VFIODevice;
  
-+static void pci_bus_attach_device(struct pci_dev *dev)
-+{
-+	int ret;
+ typedef struct VFIOGroup {
+@@ -1805,6 +1808,8 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
+     DPRINTF("Device %s flags: %u, regions: %u, irgs: %u\n", name,
+             dev_info.flags, dev_info.num_regions, dev_info.num_irqs);
+ 
++    vdev->dev_info_flags = dev_info.flags;
 +
-+	dev->match_driver = true;
-+	ret = device_attach(&dev->dev);
-+	WARN_ON(ret < 0);
+     if (!(dev_info.flags & VFIO_DEVICE_FLAGS_PCI)) {
+         error_report("vfio: Um, this isn't a PCI device\n");
+         goto error;
+@@ -1900,6 +1905,55 @@ static void vfio_put_device(VFIODevice *vdev)
+     }
+ }
+ 
++static void vfio_errfd_handler(void *opaque)
++{
++    VFIODevice *vdev = opaque;
++
++    if (!event_notifier_test_and_clear(&vdev->errfd)) {
++        return;
++    }
++
++    /*
++     * TBD. Retrieve the error details and decide what action
++     * needs to be taken. One of the actions could be to pass
++     * the error to the guest and have the guest driver recover
++     * the error. This requires that PCIe capabilities be
++     * exposed to the guest. At present, we just terminate the
++     * guest to contain the error.
++     */
++    error_report("%s(%04x:%02x:%02x.%x) "
++        "Unrecoverable error detected... Terminating guest\n",
++        __func__, vdev->host.domain, vdev->host.bus, vdev->host.slot,
++        vdev->host.function);
++
++    qemu_system_shutdown_request();
++    return;
 +}
 +
- /**
-  * pci_bus_add_device - add a single device
-  * @dev: device to add
-@@ -181,6 +190,7 @@ int pci_bus_add_device(struct pci_dev *dev)
- 	if (retval)
- 		return retval;
- 
-+	pci_bus_attach_device(dev);
- 	dev->is_added = 1;
- 	pci_proc_attach_device(dev);
- 	pci_create_sysfs_dev_files(dev);
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index f79cbcd..acdcc3c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1186,9 +1186,13 @@ pci_dev_driver(const struct pci_dev *dev)
- static int pci_bus_match(struct device *dev, struct device_driver *drv)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	struct pci_driver *pci_drv = to_pci_driver(drv);
-+	struct pci_driver *pci_drv;
- 	const struct pci_device_id *found_id;
- 
-+	if (!pci_dev->match_driver)
-+		return 0;
++static void vfio_register_errfd(VFIODevice *vdev)
++{
++    int32_t pfd;
++    int ret;
 +
-+	pci_drv = to_pci_driver(drv);
- 	found_id = pci_match_device(pci_drv, pci_dev);
- 	if (found_id)
- 		return 1;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 907b455..d73af08 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -286,6 +286,7 @@ struct pci_dev {
- 	unsigned int	irq;
- 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
++    if (!(vdev->dev_info_flags & VFIO_DEVICE_FLAGS_AER_NOTIFY)) {
++        error_report("vfio: Warning: Error notification not supported for the device\n");
++        return;
++    }
++    if (event_notifier_init(&vdev->errfd, 0)) {
++        error_report("vfio: Warning: Unable to init event notifier for error detection\n");
++        return;
++    }
++    pfd = event_notifier_get_fd(&vdev->errfd);
++    qemu_set_fd_handler(pfd, vfio_errfd_handler, NULL, vdev);
++
++    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_ERRFD, pfd);
++    if (ret) {
++        error_report("vfio: Warning: Failed to setup error fd: %d\n", ret);
++        qemu_set_fd_handler(pfd, NULL, NULL, vdev);
++        event_notifier_cleanup(&vdev->errfd);
++    }
++    return;
++}
+ static int vfio_initfn(PCIDevice *pdev)
+ {
+     VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
+@@ -2010,6 +2064,8 @@ static int vfio_initfn(PCIDevice *pdev)
+         }
+     }
  
-+	bool match_driver;
- 	/* These fields are used by common fixups */
- 	unsigned int	transparent:1;	/* Transparent PCI bridge */
- 	unsigned int	multifunction:1;/* Part of multi-function device */
++    vfio_register_errfd(vdev);
++
+     return 0;
+ 
+ out_teardown:
+diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
+index 4758d1b..0ca4eeb 100644
+--- a/linux-headers/linux/vfio.h
++++ b/linux-headers/linux/vfio.h
+@@ -147,6 +147,7 @@ struct vfio_device_info {
+ 	__u32	flags;
+ #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
+ #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
++#define VFIO_DEVICE_FLAGS_AER_NOTIFY (1 << 2)   /* Supports aer notification */
+ 	__u32	num_regions;	/* Max region index + 1 */
+ 	__u32	num_irqs;	/* Max IRQ index + 1 */
+ };
+@@ -288,6 +289,14 @@ struct vfio_irq_set {
+  */
+ #define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 11)
+ 
++/**
++ * VFIO_DEVICE_SET_ERRFD - _IO(VFIO_TYPE, VFIO_BASE + 12)
++ *
++ * Pass the eventfd to the vfio-pci driver for signalling any device
++ * error notifications
++ */
++#define VFIO_DEVICE_SET_ERRFD           _IO(VFIO_TYPE, VFIO_BASE + 12)
++
+ /*
+  * The VFIO-PCI bus driver makes use of the following fixed region and
+  * IRQ index mapping.  Unimplemented regions return a size of zero.
 -- 
-1.7.10.4
+1.7.11.3
 
