@@ -1,50 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:58166 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754077Ab3AKSQF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 13:16:05 -0500
-Received: by mail-la0-f45.google.com with SMTP id ep20so2077799lab.18
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2013 10:16:04 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCH 11/14] ARM: tegra: tamonten: Add PCIe support
+Date: Wed, 9 Jan 2013 21:23:37 +0000
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-12-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-12-git-send-email-thierry.reding@avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <50EE1594.4070905@infradead.org>
-References: <50EE1594.4070905@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Jan 2013 11:15:43 -0700
-Message-ID: <CAErSpo6DCgCP44fyubP==x-V9qg6y+fs3R9wrmyL-WGHG+8gsw@mail.gmail.com>
-Subject: Re: [PATCH] pci: fix iov.c kernel-doc warnings
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301092123.37491.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 6:12 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
->
-> Fix kernel-doc warning in iov.c:
->
-> Warning(drivers/pci/iov.c:752): No description found for parameter 'numvfs'
->
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-
-Thanks, Randy.  I applied this to my for-linus branch and it will
-appear in v3.8 along with the code it applies to.
-
-Bjorn
-
+On Wednesday 09 January 2013, Thierry Reding wrote:
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 > ---
->  drivers/pci/iov.c |    2 +-
+>  arch/arm/boot/dts/tegra20-tamonten.dtsi | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> --- lnx-38-rc2.orig/drivers/pci/iov.c
-> +++ lnx-38-rc2/drivers/pci/iov.c
-> @@ -739,7 +739,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
->  /**
->   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
->   * @dev: the PCI PF device
-> - * numvfs: number that should be used for TotalVFs supported
-> + * @numvfs: number that should be used for TotalVFs supported
->   *
->   * Should be called from PF driver's probe routine with
->   * device's mutex held.
+
+It's not clear how this one-line patch adds PCIe support to the
+platform. Are you missing the actual change here?
+
+	Arnd
