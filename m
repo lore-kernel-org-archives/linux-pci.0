@@ -1,123 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47677 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755915Ab3A0Fik (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:40 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	linux-am33-list@redhat.com
-Subject: [PATCH v2 19/22] PCI, mn10300: Kill pci_root_buses in resources reservations
-Date: Sat, 26 Jan 2013 21:36:40 -0800
-Message-Id: <1359265003-16166-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:58625 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932935Ab3AIVyf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 16:54:35 -0500
+Date: Wed, 9 Jan 2013 22:54:28 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130109215428.GA13648@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <1357764194-12677-6-git-send-email-thierry.reding@avionic-design.de>
+ <201301092119.57067.arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+In-Reply-To: <201301092119.57067.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-Cc: linux-am33-list@redhat.com
----
- arch/mn10300/unit-asb2305/pci-asb2305.c |   62 ++++++++++++++++---------------
- 1 file changed, 33 insertions(+), 29 deletions(-)
 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index c4e2e79..87c945d 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -88,42 +88,42 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-  *	    requested by the user, configure expansion ROM address
-  *	    as well.
-  */
--static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
-+static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
- {
--	struct pci_bus *bus;
--	struct pci_dev *dev;
- 	int idx;
- 	struct resource *r;
- 
--	/* Depth-First Search on bus tree */
--	list_for_each_entry(bus, bus_list, node) {
--		dev = bus->self;
--		if (dev) {
--			for (idx = PCI_BRIDGE_RESOURCES;
--			     idx < PCI_NUM_RESOURCES;
--			     idx++) {
--				r = &dev->resource[idx];
--				if (!r->flags)
--					continue;
--				if (!r->start ||
--				    pci_claim_resource(dev, idx) < 0) {
--					printk(KERN_ERR "PCI:"
--					       " Cannot allocate resource"
--					       " region %d of bridge %s\n",
--					       idx, pci_name(dev));
--					/* Something is wrong with the region.
--					 * Invalidate the resource to prevent
--					 * child resource allocations in this
--					 * range. */
--					r->start = r->end = 0;
--					r->flags = 0;
--				}
--			}
-+	for (idx = PCI_BRIDGE_RESOURCES;
-+	     idx < PCI_NUM_RESOURCES;
-+	     idx++) {
-+		r = &dev->resource[idx];
-+		if (!r->flags)
-+			continue;
-+		if (!r->start ||
-+		    pci_claim_resource(dev, idx) < 0) {
-+			pr_err("PCI: Cannot allocate resource region %d of bridge %s\n",
-+			       idx, pci_name(dev));
-+			/* Something is wrong with the region.
-+			 * Invalidate the resource to prevent
-+			 * child resource allocations in this
-+			 * range. */
-+			r->start = r->end = 0;
-+			r->flags = 0;
- 		}
--		pcibios_allocate_bus_resources(&bus->children);
- 	}
- }
- 
-+static void pcibios_allocate_bus_resources(struct pci_bus *bus)
-+{
-+	struct pci_bus *child;
-+
-+	/* Depth-First Search on bus tree */
-+	if (bus->self)
-+		pcibios_allocate_bridge_resources(bus->self);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcibios_allocate_bus_resources(child);
-+}
-+
- static void __init pcibios_allocate_resources(int pass)
- {
- 	struct pci_dev *dev = NULL;
-@@ -207,8 +207,12 @@ fs_initcall(pcibios_assign_resources);
- 
- void __init pcibios_resource_survey(void)
- {
-+	struct pci_host_bridge *host_bridge = NULL;
-+
- 	DBG("PCI: Allocating resources\n");
--	pcibios_allocate_bus_resources(&pci_root_buses);
-+
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_allocate_bus_resources(host_bridge->bus);
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
- }
--- 
-1.7.10.4
+--LQksG6bCIzRHxTLp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Jan 09, 2013 at 09:19:56PM +0000, Arnd Bergmann wrote:
+> On Wednesday 09 January 2013, Thierry Reding wrote:
+> > The I/O map cache is used to map large regions of physical memory in
+> > smaller chunks to avoid running out of vmalloc()/ioremap() space.
+> >=20
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>=20
+> Can you explain why this is necessary and which problem it solves?
+> The implementation looks reasonable, but it's not clear to me if
+> we really need this new interface.
+>=20
+> In what cases does it actually save ioremap space?
+
+I briefly described this in the cover letter of this series and didn't
+realize I hadn't put more information in this patch's commit message.
+
+What happens on Tegra is that we need to map 256 MiB of physical memory
+to access all the PCIe extended configuration space. However, ioremap()
+on such a large region fails if not enough vmalloc() space is available.
+
+This was observed when somebody tested this on CardHu which has a 1 GiB
+of RAM and therefore remapping the full 256 MiB fails.
+
+Thierry
+
+--LQksG6bCIzRHxTLp
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ7ecUAAoJEN0jrNd/PrOhIvQQALeDgfHITFn5nEXC12ikivTh
+Ql9DWEKt8sqdDq8AQ6sDm6lnadmQyYB3OwvP0/I76s3GSJWzBRacjyTVRzQ4sBDb
+3cOKPl4BHcXzifQKQqYB04XljdPSGmDsoUqQGVCprFb7uYgWv0xwaJrk6g1iKxGs
+wWDUHv7aND2yqombVTzzEZFC2mHahmTVrxftuSUeP3+lvL8TIeBZS+vf0ztr0A4M
+vTMPqcp6RO9omSC1VoLnh7uNNOBEVKhst2z2HFbh8INqPjAi4HAnHisb1lhCu1bN
+1nP/hjV9lNglzViPvX5sf7CuAAzTlhHBvZU5yF3U7eNVtokNPRgs7m/RZFqzHTEy
+MuIGuhDrRpbYon8CpoDsgu/+TVNUmBvhrN5Eph8a/1bHI/65rQ1QY9n4/Ke8Gk+I
++R//AolhiCpw9FJnKTG94flrH9EKLRWQU11FK/mjw42l32hdvsMm15LSYa5OAm1O
+EwK7n0X3hUscAti/BHEmygXd5c65EkMN0/x8v3dAMCn0YrJm5CfaSP2uq8VTtCvp
+YuFOgvJLn5OVsYcVTFAro1e+6sNTNwaVSewGkBrJYUReLJujgSgYsKrfL/wiGm5d
+UCWluDJX9iE2HvRbB4NyLhg7XTtK5RBYsS8dviA/4I8sV1wq3cm0WYe63tsmjb70
+DFoD7KlRp+wWVH5K4IWR
+=EcR+
+-----END PGP SIGNATURE-----
+
+--LQksG6bCIzRHxTLp--
