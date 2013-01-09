@@ -1,84 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:57419 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754331Ab3A1WQu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 17:16:50 -0500
-Date: Mon, 28 Jan 2013 15:16:52 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
+Received: from moutng.kundenserver.de ([212.227.17.8]:55329 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934193Ab3AIUnf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:43:35 -0500
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Andrew Murray <andrew.murray@arm.com>,
+	Andrew Murray <Andrew.Murray@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 08/27] pci: implement an emulated PCI-to-PCI bridge
-Message-ID: <20130128221652.GB21446@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-9-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130128193516.GB17722@obsidianresearch.com>
- <20130128203947.07332698@skate>
- <20130128195501.GD17722@obsidianresearch.com>
- <5106F668.60605@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5106F668.60605@wwwdotorg.org>
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 01/14] of/pci: Provide support for parsing PCI DT ranges property
+Date: Wed,  9 Jan 2013 21:43:01 +0100
+Message-Id: <1357764194-12677-2-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 03:06:32PM -0700, Stephen Warren wrote:
-> On 01/28/2013 12:55 PM, Jason Gunthorpe wrote:
-> > On Mon, Jan 28, 2013 at 08:39:47PM +0100, Thomas Petazzoni wrote:
-> > 
-> >>> In the Marvell case, this capability can be constructed by pulling
-> >>> data from the the Express End Point capability of the PCI-E port:
-> >>
-> >> I am not sure what you mean by "pulling". Do you mean that I should get
-> >> informations from the real PCIe interface, from within the emulated
-> >> PCI-to-PCI bridge implementation? This would unfortunately not be
-> >> really nice, because until now, the PCI-to-PCI bridge emulation is
-> >> clearly separated from the Marvell PCIe driver itself. Of course, it
-> >> could register a hook or something like that, so that the emulated
-> >> PCI-to-PCI bridge could potentially call back into the Marvell PCIe
-> >> driver.
-> > 
-> > Yes, a callback would be needed to the main driver and IIRC the driver
-> > can read/write the end port link info config regsiters via MMIO. They
-> > probably need a bit of massaging to be in root port format, but
-> > otherwise it should be straightforward..
-> > 
-> >> I'll have to dig a little bit more about this capability to see how it
-> >> works exactly.
-> > 
-> > All ports have registers to report and control the link, but the root
-> > port and end port versions are a bit different, so the goal is to read
-> > the end port formatted registers and map them into the root port
-> > format so that userspace can properly see the link state and
-> > configuration.
-> 
-> Isn't the thing being emulated here a host bridge, which "contains" the
-> PCIe root ports underneath, which in turn "contain" the PCIe devices
-> underneath? At least on Tegra, there is no host bridge device that
-> exposes PCIe config registers, but the PCIe root ports do exist and do
-> expose PCIe config registers...
+From: Andrew Murray <andrew.murray@arm.com>
 
-Patch #7 create a SW emulated host bridge, which tegra and marvell
-lack in HW.
+DT bindings for PCI host bridges often use the ranges property to describe
+memory and IO ranges - this binding tends to be the same across architectures
+yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
+arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
+arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
+functionality provided by drivers/of/address.c.
 
-Patch #8 creates a SW emulated root port bridge, which tegra has
-properly in HW, while Marvell doesn't.
+This patch provides a common iterator-based parser for the ranges property, it
+is hoped this will reduce DT representation differences between architectures
+and that architectures will migrate in part to this new parser.
 
-Basically, on the Marvell chips, the PCI config space of the PCI
-complex is useless when used as a root complex - the config space is
-only usable when the device is configured as an end port.
+It is also hoped (and the motativation for the patch) that this patch will
+reduce duplication of code when writing host bridge drivers that are supported
+by multiple architectures.
 
-Jason
+This patch provides struct resources from a device tree node, e.g.:
+
+	u32 *last = NULL;
+	struct resource res;
+	while ((last = of_pci_process_ranges(np, res, last))) {
+		//do something with res
+	}
+
+Platforms with quirks can then do what they like with the resource or migrate
+common quirk handling to the parser. In an ideal world drivers can just request
+the obtained resources and pass them on (e.g. pci_add_resource_offset).
+
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ drivers/of/address.c       | 63 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |  9 +++++++
+ 2 files changed, 72 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 0125524..d659527 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -13,6 +13,7 @@
+ #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
+ 
+ static struct of_bus *of_match_bus(struct device_node *np);
++static struct of_bus *of_find_bus(const char *name);
+ static int __of_address_to_resource(struct device_node *dev,
+ 		const __be32 *addrp, u64 size, unsigned int flags,
+ 		const char *name, struct resource *r);
+@@ -227,6 +228,57 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ 	return __of_address_to_resource(dev, addrp, size, flags, NULL, r);
+ }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
++
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from)
++{
++	const __be32 *start, *end;
++	int na, ns, np, pna;
++	int rlen;
++	struct of_bus *bus;
++
++	WARN_ON(!res);
++
++	bus = of_find_bus("pci");
++	bus->count_cells(node, &na, &ns);
++	if (!OF_CHECK_COUNTS(na, ns)) {
++		pr_err("Bad cell count for %s\n", node->full_name);
++		return NULL;
++	}
++
++	pna = of_n_addr_cells(node);
++	np = pna + na + ns;
++
++	start = of_get_property(node, "ranges", &rlen);
++	if (start == NULL)
++		return NULL;
++
++	end = start + rlen / sizeof(__be32);
++
++	if (!from)
++		from = start;
++
++	while (from + np <= end) {
++		u64 cpu_addr, size;
++
++		cpu_addr = of_translate_address(node, from + na);
++		size = of_read_number(from + na + pna, ns);
++		res->flags = bus->get_flags(from);
++		from += np;
++
++		if (cpu_addr == OF_BAD_ADDR || size == 0)
++			continue;
++
++		res->name = node->full_name;
++		res->start = cpu_addr;
++		res->end = res->start + size - 1;
++		res->parent = res->child = res->sibling = NULL;
++		return from;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(of_pci_process_ranges);
+ #endif /* CONFIG_PCI */
+ 
+ /*
+@@ -337,6 +389,17 @@ static struct of_bus *of_match_bus(struct device_node *np)
+ 	return NULL;
+ }
+ 
++static struct of_bus *of_find_bus(const char *name)
++{
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(of_busses); i++)
++		if (strcmp(name, of_busses[i].name) == 0)
++			return &of_busses[i];
++
++	return NULL;
++}
++
+ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 			    struct of_bus *pbus, __be32 *addr,
+ 			    int na, int ns, int pna, const char *rprop)
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 0506eb5..751e889 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -27,6 +27,8 @@ static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
+ #define pci_address_to_pio pci_address_to_pio
+ #endif
+ 
++const __be32 *of_pci_process_ranges(struct device_node *node,
++				    struct resource *res, const __be32 *from);
+ #else /* CONFIG_OF_ADDRESS */
+ #ifndef of_address_to_resource
+ static inline int of_address_to_resource(struct device_node *dev, int index,
+@@ -53,6 +55,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ {
+ 	return NULL;
+ }
++
++static inline const __be32 *of_pci_process_ranges(struct device_node *node,
++						  struct resource *res,
++						  const __be32 *from)
++{
++	return NULL;
++}
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ 
+-- 
+1.8.1
+
