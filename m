@@ -1,103 +1,210 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:64974 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755698Ab3AJUU3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 15:20:29 -0500
-Date: Thu, 10 Jan 2013 21:20:07 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130110202007.GA26139@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130109231758.GA27065@obsidianresearch.com>
- <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
- <201301100917.19577.arnd@arndb.de>
- <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
- <20130110182007.GA28004@obsidianresearch.com>
- <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
- <20130110190327.GA23110@avionic-0098.adnet.avionic-design.de>
- <20130110192417.GA18478@obsidianresearch.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
-In-Reply-To: <20130110192417.GA18478@obsidianresearch.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39467 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932165Ab3AITFQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Jan 2013 14:05:16 -0500
+Message-ID: <1357758299.3224.785.camel@bling.home>
+Subject: Re: [PATCH 1/2] VFIO-AER: Vfio-pci driver changes for supporting AER
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gleb Natapov <gleb@redhat.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Wed, 09 Jan 2013 12:04:59 -0700
+In-Reply-To: <1357753953.3224.769.camel@bling.home>
+References: <F9E001219150CB45BEDC82A650F360C90149602F@G9W0717.americas.hpqcorp.net>
+	 <1357753953.3224.769.camel@bling.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, 2013-01-09 at 10:52 -0700, Alex Williamson wrote:
+> On Wed, 2013-01-09 at 06:26 +0000, Pandarathil, Vijaymohan R wrote:
+> > 	- New ioctl which is used to pass the eventfd that is signaled when
+> >           an error occurs in the vfio_pci_device
+> > 
+> > 	- Register pci_error_handler for the vfio_pci driver
+> > 
+> > 	- When the device encounters an error, the error handler registered by
+> >           the vfio_pci driver gets invoked by the AER infrastructure
+> > 
+> > 	- In the error handler, signal the eventfd registered for the device.
+> > 
+> > 	- This results in the qemu eventfd handler getting invoked and
+> >           appropriate action taken for the guest.
+> > 
+> > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+> > ---
+> >  drivers/vfio/pci/vfio_pci.c         | 29 +++++++++++++++++++++++++++++
+> >  drivers/vfio/pci/vfio_pci_private.h |  1 +
+> >  drivers/vfio/vfio.c                 |  8 ++++++++
+> >  include/linux/vfio.h                |  1 +
+> >  include/uapi/linux/vfio.h           |  9 +++++++++
+> >  5 files changed, 48 insertions(+)
+> > 
+> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> > index 6c11994..4ae9526 100644
+> > --- a/drivers/vfio/pci/vfio_pci.c
+> > +++ b/drivers/vfio/pci/vfio_pci.c
+> > @@ -207,6 +207,8 @@ static long vfio_pci_ioctl(void *device_data,
+> >  		if (vdev->reset_works)
+> >  			info.flags |= VFIO_DEVICE_FLAGS_RESET;
+> >  
+> > +		info.flags |= VFIO_DEVICE_FLAGS_AER_NOTIFY;
+> > +
+> 
+> This appears to be a PCI specific flag, so the name should include
+> _PCI_.  We also support non-PCIe devices and it seems like it would be
+> possible to not have AER support available, so shouldn't this be
+> conditional?
+> 
+> >  		info.num_regions = VFIO_PCI_NUM_REGIONS;
+> >  		info.num_irqs = VFIO_PCI_NUM_IRQS;
+> >  
+> > @@ -348,6 +350,19 @@ static long vfio_pci_ioctl(void *device_data,
+> >  
+> >  		return ret;
+> >  
+> > +	} else if (cmd == VFIO_DEVICE_SET_ERRFD) {
+> > +		int32_t fd = (int32_t)arg;
+> > +
+> > +		if (fd < 0)
+> > +			return -EINVAL;
+> > +
+> > +		vdev->err_trigger = eventfd_ctx_fdget(fd);
+> > +
+> > +		if (IS_ERR(vdev->err_trigger))
+> > +			return PTR_ERR(vdev->err_trigger);
+> > +
+> > +		return 0;
+> > +
+> 
+> I'm not sure why we wouldn't describe this as just another interrupt
+> from the device and configure it via SET_IRQ.  This ioctl has very
+> limited use and doesn't follow any of the conventions of all the other
+> vfio ioctls.
+> 
+> >  	} else if (cmd == VFIO_DEVICE_RESET)
+> >  		return vdev->reset_works ?
+> >  			pci_reset_function(vdev->pdev) : -EINVAL;
+> > @@ -527,11 +542,25 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+> >  	kfree(vdev);
+> >  }
+> >  
+> > +static pci_ers_result_t vfio_err_detected(struct pci_dev *pdev,
+> > +				pci_channel_state_t state)
+> > +{
+> > +	struct vfio_pci_device *vdev = vfio_get_vdev(&pdev->dev);
+> > +
+> > +	eventfd_signal(vdev->err_trigger, 1);
+> > +	return PCI_ERS_RESULT_CAN_RECOVER;
+> > +}
+> 
+> What if err_trigger hasn't been set?
+> 
+> > +
+> > +static const struct pci_error_handlers vfio_err_handlers = {
+> > +	.error_detected = vfio_err_detected,
+> > +};
+> > +
+> >  static struct pci_driver vfio_pci_driver = {
+> >  	.name		= "vfio-pci",
+> >  	.id_table	= NULL, /* only dynamic ids */
+> >  	.probe		= vfio_pci_probe,
+> >  	.remove		= vfio_pci_remove,
+> > +	.err_handler	= &vfio_err_handlers,
+> >  };
+> >  
+> >  static void __exit vfio_pci_cleanup(void)
+> > diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+> > index 611827c..daee62f 100644
+> > --- a/drivers/vfio/pci/vfio_pci_private.h
+> > +++ b/drivers/vfio/pci/vfio_pci_private.h
+> > @@ -55,6 +55,7 @@ struct vfio_pci_device {
+> >  	bool			bardirty;
+> >  	struct pci_saved_state	*pci_saved_state;
+> >  	atomic_t		refcnt;
+> > +	struct eventfd_ctx	*err_trigger;
+> >  };
+> >  
+> >  #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+> > diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> > index 56097c6..5ed5a54 100644
+> > --- a/drivers/vfio/vfio.c
+> > +++ b/drivers/vfio/vfio.c
+> > @@ -693,6 +693,14 @@ void *vfio_del_group_dev(struct device *dev)
+> >  }
+> >  EXPORT_SYMBOL_GPL(vfio_del_group_dev);
+> >  
+> > +void *vfio_get_vdev(struct device *dev)
+> > +{
+> > +	struct vfio_device *device = dev_get_drvdata(dev);
+> > +
+> > +	return device->device_data;
+> > +}
+> > +EXPORT_SYMBOL_GPL(vfio_get_vdev);
+> > +
+> 
+> This is unsafe.  How do we know dev is a vfio device?  How do we keep
+> that drvdata valid while you're using it?  I think you want to export
+> the existing vfio_group_get_device() and vfio_device_put().  Thanks,
 
---bg08WKrSYDhXBjb5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+vfio_group_get_device() isn't quite what you want either since it
+assumes a reference count on the group.  You'll want something like
+vfio_add_group_dev() or vfio_dev_present(), perhaps moving the
+iommu_group_get -> vfio_group_get_from_iommu -> vfio_group_get_device
+into a helper function.  Thanks,
 
-On Thu, Jan 10, 2013 at 12:24:17PM -0700, Jason Gunthorpe wrote:
-> On Thu, Jan 10, 2013 at 08:03:27PM +0100, Thierry Reding wrote:
->=20
-> > > > You'd piece a mapping together, each bus requires 16 64k mappings, a
-> > > > simple 2d array of busnr*16 of pointers would do the trick. A more
-> > > > clever solution would be to allocate contiguous virtual memory and
-> > > > split that up..
-> =20
-> > > Oh, I see. I'm not very familiar with the internals of remapping, so
-> > > I'll need to do some more reading. Thanks for the hints.
-> >=20
-> > I forgot to ask. What's the advantage of having a contiguous virtual
-> > memory area and splitting it up versus remapping each chunk separately?
->=20
-> Not alot, really, but it saves you from the pointer array and
-> associated overhead. IIRC it is fairly easy to do in the kernel.
+Alex
 
-I've been investigating this a bit, and one problem is that it will
-prevent the driver from ever building as a module because the necessary
-functions aren't exported and I'm not sure exporting them would be
-acceptable. Currently PCI host controller drivers with MSI support can't
-be built as modules because the MSI infrastructure requires it, but I
-briefly discussed this with Bjorn at some point and it should be easy to
-remove that requirement.
+> >  /**
+> >   * VFIO base fd, /dev/vfio/vfio
+> >   */
+> > diff --git a/include/linux/vfio.h b/include/linux/vfio.h
+> > index ab9e862..3c97b03 100644
+> > --- a/include/linux/vfio.h
+> > +++ b/include/linux/vfio.h
+> > @@ -45,6 +45,7 @@ extern int vfio_add_group_dev(struct device *dev,
+> >  			      void *device_data);
+> >  
+> >  extern void *vfio_del_group_dev(struct device *dev);
+> > +extern void *vfio_get_vdev(struct device *dev);
+> >  
+> >  /**
+> >   * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
+> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> > index 4758d1b..fa67213 100644
+> > --- a/include/uapi/linux/vfio.h
+> > +++ b/include/uapi/linux/vfio.h
+> > @@ -147,6 +147,7 @@ struct vfio_device_info {
+> >  	__u32	flags;
+> >  #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
+> >  #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
+> > +#define VFIO_DEVICE_FLAGS_AER_NOTIFY (1 << 2)	/* Supports aer notify */
+> >  	__u32	num_regions;	/* Max region index + 1 */
+> >  	__u32	num_irqs;	/* Max IRQ index + 1 */
+> >  };
+> > @@ -288,6 +289,14 @@ struct vfio_irq_set {
+> >   */
+> >  #define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 11)
+> >  
+> > +/**
+> > + * VFIO_DEVICE_SET_ERRFD - _IO(VFIO_TYPE, VFIO_BASE + 12)
+> > + *
+> > + * Pass the eventfd to the vfio-pci driver for signalling any device
+> > + * error notifications
+> > + */
+> > +#define VFIO_DEVICE_SET_ERRFD		_IO(VFIO_TYPE, VFIO_BASE + 12)
+> > +
+> >  /*
+> >   * The VFIO-PCI bus driver makes use of the following fixed region and
+> >   * IRQ index mapping.  Unimplemented regions return a size of zero.
+> 
+> 
 
-> Arnd's version is good too, but you would be restricted to aligned
-> powers of two for the bus number range in the DT, which is probably
-> not that big a deal either?
 
-Stephen suggested on IRC that we could try to keep a bit of dynamicity
-in the allocation scheme if we create the bus mapping when the first
-device on the bus is probed and discard the mapping if no devices are
-found.
 
-Sounds like a good plan to me. Does anybody see any potential pitfalls?
-
-Thierry
-
---bg08WKrSYDhXBjb5
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ7yJ3AAoJEN0jrNd/PrOhEg0QAJPCMtXWjZXnTSmq19nw7FHc
-BsHrbTN/Sp1W0Qp2qcLSP5fz6P4YmoTOsBQkzNOsrTgaXKt1CLid50/yMTcx7Gx/
-LOEaP1pQEpR/PlD4TB/nbrGGPTesQYZvqkfIec2Cl4S9TfSKB/EabXkPvguYDjf8
-8xi2IZMpPpjq52RV2jGeNopoDx1KcGSkSqSugdkO3vHdW3rJktEhGtctlZl3w/ez
-y8KevdheBGTeWItLoKK2bfDsFsdsacrlsVI+lfH+9H7s/GpMKeKF3lu0zW9gNn7Y
-i9By+Yui6asRjMG7IQtqAHqFsTdgfuxuLzI8C4GS4BdQZfv4GFCfbTrowVkVOhnf
-BCDy108ZeKMs+Ji6zgam1RdX9JDnCWmZGhLClNHfZBeHkHY4SPTQrY3Yj+xYmmHZ
-FSIYMeEF+aJSlvrSsjNYWGlw20XBZ+fdZ9u0jabVQd8TAfJQImNKeDj4PWqDQgVJ
-zViVDkIXR+fz7T8b0KRMmMJFOOeTghyLZiW3oMKrpJ7peSiQ+39TZK+PZXw7nk0v
-BUtooEnvOLgCYJ2NGBQH8Kz7X0g3/0T/NwVM8p+S97cnlPYjYKIx6tCJJMfoqThO
-qQpucmG+itb3GUqK/JDpevW93iiUyJXbmQ21VsDI2AIMaZebWhFLGI0AS0/w2utv
-0/Lj3UwnORhiJ4Yx8Wuj
-=iWfk
------END PGP SIGNATURE-----
-
---bg08WKrSYDhXBjb5--
