@@ -1,63 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-fa0-f74.google.com ([209.85.161.74]:39836 "EHLO
+	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932217Ab3AIRww (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:52:52 -0500
+Received: by mail-fa0-f74.google.com with SMTP id t1so133382fae.1
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:52:51 -0800 (PST)
+Subject: [PATCH 0/5] PCI trivial cleanups
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	x86@kernel.org
+Date: Wed, 09 Jan 2013 10:52:49 -0700
+Message-ID: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <2072996.JYmST9orI6@vostro.rjw.lan>
-References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-	<2072996.JYmST9orI6@vostro.rjw.lan>
-Date: Tue, 22 Jan 2013 14:19:56 -0800
-Message-ID: <CAE9FiQUS56KnvDCF7LUyCkNLcun+3zZ+xGiexca2ej30dRvrQg@mail.gmail.com>
-Subject: Re: [PATCH v10 00/11] PCI, ACPI: pci root bus hotplug support / pci match_driver
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 22, 2013 at 2:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Monday, January 21, 2013 01:20:41 PM Yinghai Lu wrote:
->> It includes
->> 1. preparing patches for pci root bus hotadd/hotremove support
->> 2. move root bus hotadd from acpiphp to pci_root.c
->> 3. add hot-remove support
->> 4. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
->> 5. add match_driver to add pci device to device tree early but
->>    not attach driver for hotplug path.
->>
->> based on pci/next + pm/acpi-scan
->>
->> could get from
->>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
->>
->> -v9: merges several patches together for easy review, requested by Rafael.
->> -v10: address comments from Rafael.
->>
->> Jiang Liu (2):
->>   PCI: Fix a device reference count leakage issue in pci_dev_present()
->>   PCI: make PCI device create/destroy logic symmetric
->>
->> Tang Chen (1):
->>   PCI, ACPI: debug print for installation of acpi root bridge's
->>     notifier
->>
->> Yinghai Lu (8):
->>   PCI, acpiphp: Add is_hotplug_bridge detection
->>   PCI: Add root bus children dev's res to fail list
->>   PCI: Set dev_node early for pci_dev
->>   PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
->>   PCI, acpiphp: Move and enhance hotplug support of pci host bridge
->>   PCI, acpiphp: Don't bailout even no slots found yet.
->>   PCI: Skip attaching driver in device_add()
->>   PCI: Put pci dev to device tree as early as possible
->
-> OK
->
-> Please feel free to add
->
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> to all of the patches in this series I haven't acked already.
+These are trivial cleanups headed for v3.9.
 
-Thanks a lot for reviewing.
+---
+
+Bjorn Helgaas (5):
+      x86/PCI: Remove unused pci_root_bus
+      frv/PCI: Remove unused pci_root_bus
+      mn10300/PCI: Remove unused pci_root_bus
+      PCI: Use "unsigned long" for __pci_enable_device_flags to match ioport.h
+      PCI: Drop "__" prefix on __pci_enable_device_flags()
+
+
+ arch/frv/mb93090-mb00/pci-frv.h         |    1 -
+ arch/frv/mb93090-mb00/pci-vdk.c         |    4 +---
+ arch/mn10300/unit-asb2305/pci-asb2305.h |    1 -
+ arch/mn10300/unit-asb2305/pci.c         |    4 +---
+ arch/x86/include/asm/pci_x86.h          |    1 -
+ arch/x86/pci/common.c                   |    1 -
+ arch/x86/pci/legacy.c                   |    2 +-
+ arch/x86/pci/numaq_32.c                 |    2 +-
+ drivers/pci/pci.c                       |    9 ++++-----
+ 9 files changed, 8 insertions(+), 17 deletions(-)
