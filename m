@@ -1,54 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45569 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754452Ab3AKSYy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jan 2013 13:24:54 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap case
-Date: Fri, 11 Jan 2013 19:24:41 +0100
-Message-ID: <1603289.LXteBtkifD@hammer82.arch.suse.de>
-In-Reply-To: <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <201301111333.49238.trenn@suse.de> <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 9 Jan 2013 22:25:17 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 00/14] Rewrite Tegra PCIe driver
+Message-ID: <20130109222517.3c590553@skate>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 08:16:52 AM Yinghai Lu wrote:
-> On Fri, Jan 11, 2013 at 4:33 AM, Thomas Renninger <trenn@suse.de> wrote:
-...
-> > -               e820.nr_map = 0;
-> > +               /*
-> > +                * Remove all usable memory (this is for kdump), usable
-> > +                * memory will be passed via memmap=X@Y parameter
-> > +                */
-> > +               e820_remove_range_type(E820_RAM);
-> 
-> We may need to keep exactmap intact.
-Why?
-Kexec/kdump should have been the only user?
-If older/current kexec calls still add ACPI maps via memmap=X#Y,
-they should already exist in the original e820 map and fall off or
-get glued to one region if (wrongly) overlapping via sanitize_map.
- 
-> but could add another one like exact_ram_map
-> or extend to have memmap=exactmap=ram or etc.
+Dear Thierry Reding,
 
-I would avoid that if anyhow possible because then you run into
-kexec vs kernel version problems.
+On Wed,  9 Jan 2013 21:43:00 +0100, Thierry Reding wrote:
+> This patch series contains an almost complete rewrite of the Tegra PCIe
+> driver. The code is moved to the drivers/pci/host directory and turned
+> into a proper platform driver, adding MSI and DT support while at it.
+> Other PCI host controller drivers can be added to that directory in an
+> attempt to make it easier to factor out common code.
 
-Maybe I should explicitly post (out of this thread) the patch to the
-kexec list.
-If nobody can come up with a strong reason, it should be ok?
+Thanks!
 
-   Thomas
+I have started basing the Marvell PCIe code on some of your earlier
+versions. But apparently in this final version, you no longer have the
+emulated Host bridge. Why so?
+
+For the Marvell PCIe code, I've used your emulated Host bridge, and
+added an emulated PCI-to-PCI bridge implementation, in order to get the
+following hierarchy:
+
+ + Host Bridge
+   + PCI-to-PCI bridge
+     + PCI Device
+   + PCI-to-PCI bridge
+     + PCI device
+
+So, I instantiate one unique emulated Host Bridge, and then one
+emulated PCI-to-PCI Bridge for each PCIe interface that I have.
+
+The nice thing about that is that I can then read the configuration
+space of the PCI-to-PCI bridge to find out how much I/O space and
+memory space is needed for the device connected to this interface, and
+at which address is has been mapped. This greatly helps my "address
+decoding" problem, and removes the ad-hoc virtual space allocator I had
+written.
+
+Is there a reason for having given up on this idea? Is there still a
+hope for a different PCIe implementation to use this idea?
+
+Thanks,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
