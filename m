@@ -1,73 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:48487 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008Ab3AXAXq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 19:23:46 -0500
-Message-ID: <51007EF2.3090208@jp.fujitsu.com>
-Date: Thu, 24 Jan 2013 09:23:14 +0900
-From: Takao Indoh <indou.takao@jp.fujitsu.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when PCI hotplug event happens
+Date: Wed, 09 Jan 2013 22:00:32 +0100
+Message-ID: <2444115.yc4aG06zuI@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5UD9362JVKzG4rcLJ6kKMLvMzdJ3kLRvRTSRdSqHOH9w@mail.gmail.com>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <16794957.TmlpVGsGIb@vostro.rjw.lan> <CAErSpo5UD9362JVKzG4rcLJ6kKMLvMzdJ3kLRvRTSRdSqHOH9w@mail.gmail.com>
 MIME-Version: 1.0
-To: trenn@suse.de
-CC: yinghai@kernel.org, muneda.takahiro@jp.fujitsu.com,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
-Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
- with iommu
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <1593084.QhbTkmoq3N@hammer82.arch.suse.de> <50FC95A8.6060402@jp.fujitsu.com> <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
-In-Reply-To: <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(2013/01/23 9:47), Thomas Renninger wrote:
-> On Monday, January 21, 2013 10:11:04 AM Takao Indoh wrote:
->> (2013/01/08 4:09), Thomas Renninger wrote:
-> ...
->>> I tried the provided patches first on 2.6.32, then I verfied with 3.8-rc2
->>> and in both cases the disk is not detected anymore in
->>> reset_devices (kexec'ed/kdump) case (but things work fine without these
->>> patches).
->>
->> So the problem that the disk is not detected was caused by exactmap
->> problem you guys are discussing? Or still not detected even if exactmap
->> problem is fixed?
-> This problem is related to the 5 PCI resetting patches.
-> Dumping worked with a 2.6.32 and a 3.8-rc2 kernel, adding the PCI resetting
-> patches broke both. I first tried 2.6.32 and verified with 3.8-rc2 to make sure
-> I didn't mess up the backport adjustings of the patches to 2.6.32.
+On Wednesday, January 09, 2013 01:44:23 PM Bjorn Helgaas wrote:
+> [+cc Myron]
+> 
+> On Wed, Jan 9, 2013 at 1:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Thursday, January 10, 2013 12:58:25 AM Jiang Liu wrote:
+> >> Hi Rafael,
+> >>       Thanks for your great efforts to review the patch.
+> >>
+> >> On 01/09/2013 08:01 AM, Rafael J. Wysocki wrote:
+> >> > Hi,
+> >> >
+> >> > On Wednesday, January 09, 2013 12:52:22 AM Jiang Liu wrote:
+> >> snip
+> >> >>
+> >> >> +static void acpi_pci_slot_notify_add(struct pci_dev *dev)
+> >> >> +{
+> >> >> +  acpi_handle handle;
+> >> >> +  struct callback_args context;
+> >> >> +
+> >> >> +  if (!dev->subordinate)
+> >> >> +          return;
+> >> >> +
+> >> >> +  mutex_lock(&slot_list_lock);
+> >> >> +  handle = DEVICE_ACPI_HANDLE(&dev->dev);
+> >> >> +  context.root_handle = acpi_find_root_bridge_handle(dev);
+> >> >
+> >> > There's a patch under discussion that removes this function.
+> >> >
+> >> > Isn't there any other way to do this?
+> >>       I will try to find a way to get rid of calling acpi_find_root_bridge_handle,
+> >> and it seems doable.
+> >>
+> >> >
+> >> >> +  if (handle && context.root_handle) {
+> >> >> +          context.pci_bus = dev->subordinate;
+> >> >> +          context.user_function = register_slot;
+> >> >> +          acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+> >> >
+> >> > You can just pass 1 here I think.  Does the compiler complain?
+> >> Thanks for reminder, the (u32) is unnecessary.
+> >>
+> >> >
+> >> >> +                              register_slot, NULL, &context, NULL);
+> >> >> +  }
+> >> >> +  mutex_unlock(&slot_list_lock);
+> >> >> +}
+> >> >> +
+> >> >> +static void acpi_pci_slot_notify_del(struct pci_dev *dev)
+> >> >> +{
+> >> >> +  struct acpi_pci_slot *slot, *tmp;
+> >> >> +  struct pci_bus *bus = dev->subordinate;
+> >> >> +
+> >> >> +  if (!bus)
+> >> >> +          return;
+> >> >> +
+> >> >> +  mutex_lock(&slot_list_lock);
+> >> >> +  list_for_each_entry_safe(slot, tmp, &slot_list, list)
+> >> >> +          if (slot->pci_slot && slot->pci_slot->bus == bus) {
+> >> >> +                  list_del(&slot->list);
+> >> >> +                  pci_destroy_slot(slot->pci_slot);
+> >> >> +                  put_device(&bus->dev);
+> >> >> +                  kfree(slot);
+> >> >> +          }
+> >> >> +  mutex_unlock(&slot_list_lock);
+> >> >> +}
+> >> >> +
+> >> >> +static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
+> >> >> +                             unsigned long event, void *data)
+> >> >> +{
+> >> >> +  struct device *dev = data;
+> >> >> +
+> >> >> +  switch (event) {
+> >> >> +  case BUS_NOTIFY_ADD_DEVICE:
+> >> >> +          acpi_pci_slot_notify_add(to_pci_dev(dev));
+> >> >> +          break;
+> >> >
+> >> > Do I think correctly that this is going to be called for every PCI device
+> >> > added to the system, even if it's not a bridge?
+> >> You are right. Function acpi_pci_slot_notify_add() and acpi_pci_slot_notify_del()
+> >> will check whether it's a bridge. If preferred, I will move the check up into
+> >> acpi_pci_slot_notify_fn().
+> >>
+> >> >
+> >> >> +  case BUS_NOTIFY_DEL_DEVICE:
+> >> >> +          acpi_pci_slot_notify_del(to_pci_dev(dev));
+> >> >> +          break;
+> >> >> +  default:
+> >> >> +          return NOTIFY_DONE;
+> >> >> +  }
+> >> >> +
+> >> >> +  return NOTIFY_OK;
+> >> >> +}
+> >> >> +
+> >> >> +static struct notifier_block acpi_pci_slot_notifier = {
+> >> >> +  .notifier_call = &acpi_pci_slot_notify_fn,
+> >> >> +};
+> >> >> +
+> >> >>  static int __init
+> >> >>  acpi_pci_slot_init(void)
+> >> >>  {
+> >> >>    dmi_check_system(acpi_pci_slot_dmi_table);
+> >> >>    acpi_pci_register_driver(&acpi_pci_slot_driver);
+> >> >> +  bus_register_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
+> >> >
+> >> > I wonder if/why this has to be so convoluted?
+> >> >
+> >> > We have found a PCI bridge in the ACPI namespace, so we've created a struct
+> >> > acpi_device for it and we've walked the namespace below it already.
+> >> >
+> >> > Now we're creating a struct pci_dev for it and while registering it we're
+> >> > going to walk the namespace below the bridge again to find and register its
+> >> > slots and that is done indirectly from a bus type notifier.
+> >> >
+> >> > Why can't we enumerate the slots directly upfront?
+> >> Do you mean to create the PCI slot devices when creating the ACPI devices?
+> >> I think there are two factors prevent us from doing that.
+> >> The first is that the ACPI pci_slot driver could be built as a module, so
+> >> we can't call into it from the ACPI core.
+> >
+> > I didn't say about calling the pci_slot driver from the ACPI core, but about
+> > enumerating slots in a way suitable for consumption by the pci_slot driver
+> > when it's ready.
+> >
+> > That said I really don't see a value in having a modular pci_slot driver.  It
+> > is part of the hotplug infrastructure and should always be presend for this
+> > reason, so we don't need to worry about the "pci_slot driver not present" case.
+> 
+> I agree that there's no value in supporting CONFIG_ACPI_PCI_SLOT=m.  I
+> think Myron has some patches that remove that case.
+> 
+> I'm not sure what the best way to merge them is.  We have a bunch of
+> stuff this cycle that touches both ACPI and PCI.
 
-If you have a chance please try again the patches with the latest
-firmware. I met another problem on megaraid_sas disk when I tested the
-patches and it did not occur after updated its firmware to the latest
-one.
-  
-> Unfortunately this Dell platform takes really long to boot.
-> I can give it the one or other test, but please do not bomb me with patches.
->
-> For info:
-> About the interrupt remapping error interrupt storm in kdump case I tried to
-> reproduce on this machine, but never could: The guys who saw that also cannot
-> reproduce this anymore.
->
-> Two ideas I had about this:
->    - As said already, (also) try to catch the error case and try to reset the
->      the device in AER/Specific iterrupt remapping error interrupt caught.
->    - Have a look at coreboot, these guys should know how to initialize the PCI
->      subsystem from scratch and might have some well tested PCI resetting
->      code in place already (no idea, just a thought).
+Well, is there a possibility to pull my acpi-scan branch into your tree?
 
-Ok, at first I'll take a look at AER code to check how it resets devices
-on PCIe error.
+Rafael
 
-Thanks,
-Takao Indoh
 
->
->      Thomas
->
->
-
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
