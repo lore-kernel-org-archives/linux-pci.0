@@ -1,113 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:34519 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988Ab3A2Np1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 08:45:27 -0500
-Date: Tue, 29 Jan 2013 14:45:22 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+Received: from moutng.kundenserver.de ([212.227.126.187]:49156 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934130Ab3AIUn0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:43:26 -0500
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130129144522.44ed7373@skate>
-In-Reply-To: <20130129132204.GA23886@arm.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129132204.GA23886@arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 06/14] ARM: pci: Keep pci_common_init() around after init
+Date: Wed,  9 Jan 2013 21:43:06 +0100
+Message-Id: <1357764194-12677-7-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Andrew Murray,
+When using deferred driver probing, PCI host controller drivers may
+actually require this function after the init stage.
 
-On Tue, 29 Jan 2013 13:22:04 +0000, Andrew Murray wrote:
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ arch/arm/kernel/bios32.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> > +static int __init mvebu_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> > +{
-> 
-> [snip]
-> 
-> > +
-> > +       /*
-> > +        * Build an laddr array that describes the PCI device in a DT
-> > +        * way
-> > +        */
-> > +       laddr[0] = cpu_to_be32(port->devfn << 8);
-> > +       laddr[1] = laddr[2] = 0;
-> > +       intspec = cpu_to_be32(pin);
-> > +
-> > +       ret = of_irq_map_raw(port->dn, &intspec, 1, laddr, &oirq);
-> > +       if (ret) {
-> > +               dev_err(&pcie->pdev->dev,
-> > +                       "%s: of_irq_map_raw() failed, %d\n",
-> > +                       __func__, ret);
-> > +               return ret;
-> > +       }
-> 
-> Are you able to replace the above code with a call to of_irq_map_pci? I'm not
-> sure which approach is better. The of_irq_map_pci function doesn't require the
-> pin argument and instead uses the DT and/or performs its own pin swizzling. I
-> guess this means that if there are PCIe devices in the DT tree that does any
-> thing strange with pins then it would be reflected in the IRQ you get. I've
-> found that you will also need to provide an implementation of
-> pcibios_get_phb_of_node for this to work correctly (see my RFC bios32 patch).
-
-I did try using the of_irq_map_pci() function, but unfortunately, it
-didn't work. IIRC, it didn't work because none of the pci_dev in my PCI
-tree had any 'struct device_node' associated to them, or at least not
-the one that had the right pdev->bus->number and pdev->devfn.
-
-But, I guess that your patch that implements pcibios_get_phb_of_node()
-should fix this problem. I'll try this. Thanks!
-
-> > +static int mvebu_pcie_init(void)
-> > +{
-> > +       return platform_driver_probe(&mvebu_pcie_driver,
-> > +                                    mvebu_pcie_probe);
-> > +}
-> 
-> If you have multiple 'mvebu-pcie' in your DT then you will end up
-> with multiple calls to
-> mvebu_pcie_probe/mvebu_pcie_enable/pci_common_init.
-
-Right. In practice, there will only ever be a single DT node, since all
-PCIe interfaces are sub-nodes of the PCI controller node. But I
-understand the theoretical problem.
-
-> However pci_common_init/pcibios_init_hw assumes it will only ever be called
-> once, and will thus result in trying to create multiple busses with the same
-> bus number. (The first root bus it creates is always zero provided you haven't
-> implemented hw->scan).
-> 
-> I noticed this in Thierry's patch set and posted an RFC patch which overcomes
-> this issue (patchwork.kernel.org/patch/2001171) and others. Perhaps you would
-> want to include this in your patchset?
-
-Sure, I'll give it a test, and report if it works for me.
-
-Thanks a lot!
-
-Thomas
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 379cf32..da7b0c9 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -413,7 +413,7 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return irq;
+ }
+ 
+-static int __init pcibios_init_resources(int busnr, struct pci_sys_data *sys)
++static int pcibios_init_resources(int busnr, struct pci_sys_data *sys)
+ {
+ 	int ret;
+ 	struct pci_host_bridge_window *window;
+@@ -445,7 +445,7 @@ static int __init pcibios_init_resources(int busnr, struct pci_sys_data *sys)
+ 	return 0;
+ }
+ 
+-static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
++static void pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ {
+ 	struct pci_sys_data *sys = NULL;
+ 	int ret;
+@@ -493,7 +493,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 	}
+ }
+ 
+-void __init pci_common_init(struct hw_pci *hw)
++void pci_common_init(struct hw_pci *hw)
+ {
+ 	struct pci_sys_data *sys;
+ 	LIST_HEAD(head);
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.8.1
+
