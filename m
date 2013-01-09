@@ -1,90 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 14/14] ARM: tegra: trimslice: Initialize PCIe from DT
-Date: Wed,  9 Jan 2013 21:43:14 +0100
-Message-Id: <1357764194-12677-15-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:25734 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756269Ab3AIJME (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 04:12:04 -0500
+Message-ID: <50ED344D.9010307@huawei.com>
+Date: Wed, 9 Jan 2013 17:11:41 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 0/6] Update PCI notification patchset to latest kernel
+ version
+References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com> <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQUKPcy5B2ThBw1AzNnsUJ9rLHKTJ1xRFO1rRuiFavw-2w@mail.gmail.com>
+In-Reply-To: <CAE9FiQUKPcy5B2ThBw1AzNnsUJ9rLHKTJ1xRFO1rRuiFavw-2w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the device tree support in place, probe the PCIe controller from
-the device tree and remove the corresponding workaround in the board
-file.
+On 2013/1/9 2:30, Yinghai Lu wrote:
+> On Tue, Jan 8, 2013 at 8:52 AM, Jiang Liu <liuj97@gmail.com> wrote:
+>> Hi Bjorn,
+>>         Rafael has developed a patchset targetting 3.9 merging window
+>> which outdates the fourth and fifth patches in my previous version,
+>> so I have just drop those two patches and updated the others to the
+>> latest code from your pci-next branch.
+>>         Thanks!
+>>
+>> Jiang Liu (5):
+>>   PCI: make PCI device create/destroy logic symmetric
+>>   PCI: split registration of PCI bus devices into two stages
+>>   ACPI/pci_slot: update PCI slot information when PCI hotplug event
+>>     happens
+>>   PCI/acpiphp: update ACPI hotplug slot information when PCI hotplug
+>>     happens
+>>   PCI/acpiphp: serialize access to the bridge_list list
+>>
+>> Yijing Wang (1):
+>>   PCI/AER: update AER configuration when PCI hotplug event happens
+>>
+> 
+> last time during my test before, looks there are some problems with last four.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
-Changes in v3:
-- update for new DT binding
+Hi Yinghai,
+   I will test the patchset again. Do you remember what problems occur during test the last four patches?
+So I can try to find out the flaw.
 
-Changes in v2:
-- new patch
----
- arch/arm/boot/dts/tegra20-trimslice.dts | 12 ++++++++++++
- arch/arm/mach-tegra/board-dt-tegra20.c  |  8 --------
- 2 files changed, 12 insertions(+), 8 deletions(-)
+Thanks!
+Yijing.
+> 
+> so I only put first two in my pci root bus hotplug branch.
+> 
+> maybe my memory is wrong. too long for those patches till now.
+> 
+> 
 
-diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
-index 4b6c486..ebb4c17 100644
---- a/arch/arm/boot/dts/tegra20-trimslice.dts
-+++ b/arch/arm/boot/dts/tegra20-trimslice.dts
-@@ -301,6 +301,18 @@
- 		};
- 	};
- 
-+	pcie-controller {
-+		status = "okay";
-+
-+		pci@0 {
-+			status = "okay";
-+		};
-+
-+		pci@1 {
-+			status = "okay";
-+		};
-+	};
-+
- 	usb@c5000000 {
- 		status = "okay";
- 		nvidia,vbus-gpio = <&gpio 170 0>; /* gpio PV2 */
-diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
-index 9e8256ab..67090fe 100644
---- a/arch/arm/mach-tegra/board-dt-tegra20.c
-+++ b/arch/arm/mach-tegra/board-dt-tegra20.c
-@@ -145,13 +145,6 @@ static void __init tegra_dt_init(void)
- 				tegra20_auxdata_lookup, NULL);
- }
- 
--static void __init trimslice_init(void)
--{
--#ifdef CONFIG_TEGRA_PCI
--	platform_device_register(&tegra_pcie_device);
--#endif
--}
--
- static void __init paz00_init(void)
- {
- 	tegra_paz00_wifikill_init();
-@@ -161,7 +154,6 @@ static struct {
- 	char *machine;
- 	void (*init)(void);
- } board_init_funcs[] = {
--	{ "compulab,trimslice", trimslice_init },
- 	{ "compal,paz00", paz00_init },
- };
- 
+
 -- 
-1.8.1
+Thanks!
+Yijing
 
