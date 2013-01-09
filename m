@@ -1,62 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59472 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755323Ab3A1Way (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:30:54 -0500
-Date: Mon, 28 Jan 2013 23:30:48 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130128233048.2ab6a6d2@skate>
-In-Reply-To: <20130128222348.GA21628@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301282018.17714.arnd@arndb.de>
-	<5106F5CB.8050304@wwwdotorg.org>
-	<20130128220904.GA21446@obsidianresearch.com>
-	<20130128231829.6b205c3c@skate>
-	<20130128222348.GA21628@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:35374 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932157Ab3AISju (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 13:39:50 -0500
+Received: by mail-lb0-f180.google.com with SMTP id gj3so1320999lbb.11
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 10:39:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQUxxjZmd3C33_ujSeL1EjcKHHSoGusQwfBD+Zd=cwCDZA@mail.gmail.com>
+References: <20121030040237.GA10472@google.com> <1352003971-22278-1-git-send-email-yinghai@kernel.org>
+ <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
+ <CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
+ <CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com>
+ <CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
+ <CAErSpo5vEb=63jGsqfau1G=f54oqq17pc3ZzcpzhL7hQrtYhng@mail.gmail.com> <CAE9FiQUxxjZmd3C33_ujSeL1EjcKHHSoGusQwfBD+Zd=cwCDZA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 9 Jan 2013 11:39:28 -0700
+Message-ID: <CAErSpo6qX3ih9DXLqxqJw141OAeTFu0YfSih6LyD0sd2gS-Vyg@mail.gmail.com>
+Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
+ hot-add root bus
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+On Wed, Jan 9, 2013 at 10:53 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jan 9, 2013 at 9:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> I don't know, that could be separated patcheset after we conclude
+>>> pci root bus hotplug support.
+>>
+>> The main reason I review patches before merging them is to identify
+>> issues that we can fix before they affect everybody.  It makes my life
+>> a lot easier if I don't have to keep track of pending unaddressed
+>> review comments.  Is there an advantage to waiting and doing this work
+>> later?
+>>
+>>>>> In general these look good.  My main concern is that they only touch
+>>>>> x86, without touching the similar code in frv, microblaze, mn10300,
+>>>>> and powerpc.
+>
+> the reason why we need to change those codes for x86, we want to make it support
+> pci root bus hotplug. So it would be reasonable for us to align other
+> platform to x86
+> changes after pci root bus hotplug change is completely done.
 
-On Mon, 28 Jan 2013 15:23:48 -0700, Jason Gunthorpe wrote:
-
-> I'm refering to your earlier question about what PCI IDs to use for
-> the SW emulated devices. If there is no need for the host bridge then
-> you only need 1 PCI ID (for the root port bridge) and you can probably
-> fairly safely re-use the one in the Marvell config space of the HW.
-
-Ah, ok, I see. But isn't a host bridge needed to bind all the
-PCI-to-PCI bridges under a single bus, in order to get the global
-resource assignment I was referring to?
-
-Regarding the PCI IDs, I have started to work with Marvell to see what
-is possible. I, unfortunately, haven't received the answer for now.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
+way to keep track of this consistency issue and merged
+pci/yinghai-survey-resources to my -next branch.
