@@ -1,74 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49242 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932720Ab3AJDWD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jan 2013 22:22:03 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Subject: Re: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
-Date: Thu, 10 Jan 2013 04:21:49 +0100
-Message-ID: <1586060.uJlkOEQfVW@hammer82.arch.suse.de>
-In-Reply-To: <CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <201301081747.17853.trenn@suse.de> <CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from moutng.kundenserver.de ([212.227.126.186]:57538 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933967Ab3AIUnj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:43:39 -0500
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 04/14] of/pci: Add of_pci_parse_bus_range() function
+Date: Wed,  9 Jan 2013 21:43:04 +0100
+Message-Id: <1357764194-12677-5-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 08, 2013 09:19:18 AM Yinghai Lu wrote:
-...
-> 
-> that exactmap logic still have problem:
-> We need to check exactmap at first, aka need to scan the whole comand line
-> to see if exactmap is there at first and reset e820 tables then handle
-> other memmap opt.
-> 
-> Also please update your patch after
-> 
-> tip/x86/mm2
-> 
-> I have one patch that process memmap= with "," there.
-> 
-> http://git.kernel.org/?p=linux/kernel/git/tip/tip.git;a=commitdiff;h=9710f58
-> 1bb4c35589ac046b0cfc0deb7f369fc85
-> 
-> We could put exactmap scanning in new parse_memmap_opt.
+This function can be used to parse a bus-range property as specified by
+device nodes representing PCI bridges.
 
-I still do not understand why:
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ drivers/of/of_pci.c    | 25 +++++++++++++++++++++++++
+ include/linux/of_pci.h |  1 +
+ 2 files changed, 26 insertions(+)
 
-Kexec (kexec/firmware_memmap.c) is setting up the e820 map from:
-/sys/firmware/memmap/*
-and pass it via bootloader structures.
-And this e820 table gets immediately voided by memmap=exactmap
-and a new one passed via boot parameters is set up.
-If I read this correctly, this is what happens?
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 7d5d2c3..c311166 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -85,3 +85,28 @@ int of_pci_get_devfn(struct device_node *np)
+ 	return (be32_to_cpup(reg) >> 8) & 0xff;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_devfn);
++
++/**
++ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
++ * @node: device node
++ * @res: address to a struct resource to return the bus-range
++ *
++ * Returns 0 on success or a negative error-code on failure.
++ */
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	const __be32 *values;
++	int len;
++
++	values = of_get_property(node, "bus-range", &len);
++	if (!values || len < sizeof(*values) * 2)
++		return -EINVAL;
++
++	res->name = node->name;
++	res->start = be32_to_cpup(values++);
++	res->end = be32_to_cpup(values);
++	res->flags = IORESOURCE_BUS;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 9118321..fb6e95e 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -12,5 +12,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_bus(struct device_node *np);
+ int of_pci_get_devfn(struct device_node *np);
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ 
+ #endif
+-- 
+1.8.1
 
-Can kexec simply pass the memory to use via memmap=X@Y
-Then take the original e820 table, but not the usable entries (those
-are coming from above memmap=X@Y).
-That would mean that the kexec kernel takes all the
-original ACPI, ACPI NVS, reserved, unusable (everthing but usable) entries
-from the original e820 table and identifies the usable memory from
-memmap boot param?
-
-This would be much smarter than trying to pass the mmconf reserved
-area and I could imagine other issues will show up if the reserved areas
-do not match the original ones in the kexec kernel.
-
-If this really can be done and memmap=exactmap was only used by kexec,
-it's logic could be redefined from "drop all e820 entries" to
-"drop all usable e820 entries" and no further adjustings in kexec/kernel are
-needed to get mmconf working (and other issues may be avoided before
-they happen). Beside that ACPI reserved aread is not needed anymore to get
-passed via memmap=X#Y by kexec.
-
-   Thomas
