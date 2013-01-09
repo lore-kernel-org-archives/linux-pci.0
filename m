@@ -1,120 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58176 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752172Ab3A1S4u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:50 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:43194 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933436Ab3AIVah (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 16:30:37 -0500
+Date: Wed, 9 Jan 2013 21:28:47 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
 	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Date: Mon, 28 Jan 2013 19:56:14 +0100
-Message-Id: <1359399397-29729-6-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130109212847.GT3931@n2100.arm.linux.org.uk>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-6-git-send-email-thierry.reding@avionic-design.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1357764194-12677-6-git-send-email-thierry.reding@avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications says that an I/O region must be aligned on a 4
-KB boundary, and a memory region aligned on a 1 MB boundary.
+On Wed, Jan 09, 2013 at 09:43:05PM +0100, Thierry Reding wrote:
+> The I/O map cache is used to map large regions of physical memory in
+> smaller chunks to avoid running out of vmalloc()/ioremap() space.
+> 
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 
-However, the Marvell PCIe interfaces rely on address decoding windows
-(which allow to associate a range of physical addresses with a given
-device). For PCIe memory windows, those windows are defined with a 1
-MB granularity (which matches the PCI specs), but PCIe I/O windows can
-only be defined with a 64 KB granularity, so they have to be 64 KB
-aligned. We therefore need to tell the PCI core about this special
-alignement requirement.
+We already have a means where we record the mappings which ioremap()
+creates.  If you look at /proc/vmallocinfo, you'll notice lines such
+as:
 
-The PCI core already calls pcibios_align_resource() in the ARM PCI
-core, specifically for such purposes. So this patch extends the ARM
-PCI core so that it calls a ->align_resource() hook registered by the
-PCI driver, exactly like the existing ->map_irq() and ->swizzle()
-hooks.
+0xf7b72000-0xf7b74000    8192 e1000_probe+0x291/0xa68 [e1000e] phys=fc025000 ioremap
 
-A particular PCI driver can register a align_resource() hook, and do
-its own specific alignement, depending on the specific constraints of
-the underlying hardware.
+which gives you the virtual address range, physical address and type
+of the mapping.  Why do we need a duplicated data structure?
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Russell King <linux@arm.linux.org.uk>
----
- arch/arm/include/asm/mach/pci.h |   11 +++++++++++
- arch/arm/kernel/bios32.c        |    6 ++++++
- 2 files changed, 17 insertions(+)
+Moreover, you seem to suggest that you want to break up a large
+ioremap() mapping into several smaller mappings.  Why?  The idea
+behind ioremap() is that this relationship holds true:
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 5cf2e97..7d2c3c8 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -30,6 +30,11 @@ struct hw_pci {
- 	void		(*postinit)(void);
- 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
- 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
-+	resource_size_t (*align_resource)(struct pci_dev *dev,
-+					  const struct resource *res,
-+					  resource_size_t start,
-+					  resource_size_t size,
-+					  resource_size_t align);
- };
- 
- /*
-@@ -51,6 +56,12 @@ struct pci_sys_data {
- 	u8		(*swizzle)(struct pci_dev *, u8 *);
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
-+					/* Resource alignement requirements	*/
-+	resource_size_t (*align_resource)(struct pci_dev *dev,
-+					  const struct resource *res,
-+					  resource_size_t start,
-+					  resource_size_t size,
-+					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 5401645..be2e6c9 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -462,6 +462,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
-+		sys->align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
-+	struct pci_dev *dev = data;
-+	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
-+	if (sys->align_resource)
-+		return sys->align_resource(dev, res, start, size, align);
-+
- 	return start;
- }
- 
--- 
-1.7.9.5
+	ptr = ioremap(cookie + n, size);
 
+For any 'n' in the range 0 .. size, the location shall be accessible
+via ptr + n when using the IO space accessors.  If you're going to
+break up a mapping into several smaller ones, this no longer holds
+true.
+
+If the problem is that you're ioremapping huge address ranges because
+you're passing larger-than-required resources to devices, then that's
+part of the problem too.
