@@ -1,78 +1,38 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"H. Peter Anvin" <hpa@zytor.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Sat, 05 Jan 2013 01:54:34 +0100
-Message-ID: <7114758.9n3BYUUJrs@vostro.rjw.lan>
-In-Reply-To: <CAErSpo6y6TmoGA6FXSoV2TZ5ihvC6d-j_EWqvzL1m84dhBYoJQ@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <CAE9FiQWzc+tYTnJx96po+dY-3k-Bbv_Sg943jvGJcbGPDLfMmA@mail.gmail.com> <CAErSpo6y6TmoGA6FXSoV2TZ5ihvC6d-j_EWqvzL1m84dhBYoJQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:56417 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757982Ab3AIWDh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 17:03:37 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Date: Wed, 9 Jan 2013 22:03:18 +0000
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <201301092122.08011.arnd@arndb.de> <20130109215815.GC13648@avionic-0098.adnet.avionic-design.de>
+In-Reply-To: <20130109215815.GC13648@avionic-0098.adnet.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301092203.18860.arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 04, 2013 05:36:55 PM Bjorn Helgaas wrote:
-> On Fri, Jan 4, 2013 at 5:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Fri, Jan 4, 2013 at 4:14 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> On Friday, January 04, 2013 04:03:01 PM Yinghai Lu wrote:
-> >>> On Fri, Jan 4, 2013 at 3:38 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >>> >> --- a/arch/x86/include/asm/pci.h
-> >>> >> +++ b/arch/x86/include/asm/pci.h
-> >>> >> @@ -14,6 +14,7 @@
-> >>> >>  struct pci_sysdata {
-> >>> >>       int             domain;         /* PCI domain */
-> >>> >>       int             node;           /* NUMA node */
-> >>> >> +     void            *acpi_handle;
-> >>> >>  #ifdef CONFIG_X86_64
-> >>> >>       void            *iommu;         /* IOMMU private data */
-> >>> >>  #endif
-> >>> >>
-> >>>
-> >>> acpi_handle is not good name and it is confusing.
-> >>
-> >> Well, what would be a better name in your opinion?
-> >>
-> >> I was going to put that into a #ifdef CONFIG_ACPI / #endif, so what about
-> >> calling it acpi_data?
-> >
-> > yes, with #ifdef, you can use acpi_handle type directly.
-> >
-> > it is acpi handle for pci_root.
-> >
-> > so would call int pci_root_acpi_handle ?
+On Wednesday 09 January 2013, Thierry Reding wrote:
+> Stephen suggested I post this as removal/addition because pretty much
+> everything changed. Reviewing the individual changes would be more
+> confusing than actually reviewing a new driver.
 > 
-> I just copied the name from the corresponding ia64 code.  I don't care
-> if you want to change it, but I think there is *some* value in keeping
-> the x86 and ia64 code as similar as possible because it would be nice
-> to converge it some day.
 
-Well, the corresponding data structure for ia64 is called struct pci_controller,
-so it is quite obvious what acpi_handle in there means. :-)
+Ok, fair enough.
 
-Since the data structure for x86 is called struct pci_sysdata and the data
-type for the field in question may be acpi_handle, perhaps we can call that
-field simply "root_handle"?
-
-Alternatively, in analogy with the iommu we could use void * as its data
-type and call it simply "acpi".
-
-That said I'm fine with using just "void *acpi_handle" as you did, but I would
-do the #ifdef CONFIG_ACPI / #endif around it anyway.
-
-I wonder what Peter thinks?
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+	Arnd
