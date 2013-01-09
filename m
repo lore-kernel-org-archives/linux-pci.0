@@ -1,81 +1,225 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 01/22] PCI, acpiphp: Add is_hotplug_bridge detection
-Date: Fri, 11 Jan 2013 14:40:28 -0800
-Message-Id: <1357944049-29620-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 13/14] ARM: tegra: harmony: Initialize PCIe from DT
+Date: Wed,  9 Jan 2013 21:43:13 +0100
+Message-Id: <1357764194-12677-14-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When system support hotplug bridge with children hotplug slots, we need
-to make sure that parent bridge get preallocated resource so later when
-device is plugged into children slot, those children devices will get
-resource allocated.
+With the device tree support in place, probe the PCIe controller from
+the device tree and remove the corresponding workaround in the board
+file.
 
-We do not meet this problem, because for pcie hotplug card, when acpiphp
-is used, pci_scan_bridge will set that for us when detect hotplug bit in
-slot cap.
-
-Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Jason Baron <jbaron@redhat.com>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
- 1 file changed, 26 insertions(+), 1 deletion(-)
+ arch/arm/boot/dts/tegra20-harmony.dts    | 20 ++++++--
+ arch/arm/mach-tegra/Makefile             |  2 -
+ arch/arm/mach-tegra/board-dt-tegra20.c   | 12 -----
+ arch/arm/mach-tegra/board-harmony-pcie.c | 88 --------------------------------
+ 4 files changed, 16 insertions(+), 106 deletions(-)
+ delete mode 100644 arch/arm/mach-tegra/board-harmony-pcie.c
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 91b5ad8..1e5c5df 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -797,6 +797,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
- 	}
+diff --git a/arch/arm/boot/dts/tegra20-harmony.dts b/arch/arm/boot/dts/tegra20-harmony.dts
+index b506de9..e5b3aec 100644
+--- a/arch/arm/boot/dts/tegra20-harmony.dts
++++ b/arch/arm/boot/dts/tegra20-harmony.dts
+@@ -335,7 +335,7 @@
+ 					regulator-always-on;
+ 				};
+ 
+-				ldo0 {
++				pci_clk_reg: ldo0 {
+ 					regulator-name = "vdd_ldo0,vddio_pex_clk";
+ 					regulator-min-microvolt = <3300000>;
+ 					regulator-max-microvolt = <3300000>;
+@@ -419,6 +419,20 @@
+ 		nvidia,invert-interrupt;
+ 	};
+ 
++	pcie-controller {
++		pex-clk-supply = <&pci_clk_reg>;
++		vdd-supply = <&pci_vdd_reg>;
++		status = "okay";
++
++		pci@1,0 {
++			status = "okay";
++		};
++
++		pci@2,0 {
++			status = "okay";
++		};
++	};
++
+ 	usb@c5000000 {
+ 		status = "okay";
+ 	};
+@@ -481,7 +495,7 @@
+ 			enable-active-high;
+ 		};
+ 
+-		regulator@3 {
++		pci_vdd_reg: regulator@3 {
+ 			compatible = "regulator-fixed";
+ 			reg = <3>;
+ 			regulator-name = "vdd_1v05";
+@@ -489,8 +503,6 @@
+ 			regulator-max-microvolt = <1050000>;
+ 			gpio = <&pmic 2 0>;
+ 			enable-active-high;
+-			/* Hack until board-harmony-pcie.c is removed */
+-			status = "disabled";
+ 		};
+ 
+ 		regulator@4 {
+diff --git a/arch/arm/mach-tegra/Makefile b/arch/arm/mach-tegra/Makefile
+index 463a77e..9003d05 100644
+--- a/arch/arm/mach-tegra/Makefile
++++ b/arch/arm/mach-tegra/Makefile
+@@ -33,6 +33,4 @@ obj-$(CONFIG_CPU_FREQ)                  += cpu-tegra.o
+ obj-$(CONFIG_ARCH_TEGRA_2x_SOC)		+= board-dt-tegra20.o
+ obj-$(CONFIG_ARCH_TEGRA_3x_SOC)		+= board-dt-tegra30.o
+ 
+-obj-$(CONFIG_ARCH_TEGRA_2x_SOC)		+= board-harmony-pcie.o
+-
+ obj-$(CONFIG_ARCH_TEGRA_2x_SOC)		+= board-paz00.o
+diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
+index 5644dfb..9e8256ab 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra20.c
++++ b/arch/arm/mach-tegra/board-dt-tegra20.c
+@@ -152,17 +152,6 @@ static void __init trimslice_init(void)
+ #endif
  }
  
-+static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
-+{
-+	struct acpiphp_func *func;
-+
-+	if (!dev->subordinate)
-+		return;
-+
-+	/* quirk, or pcie could set it already */
-+	if (dev->is_hotplug_bridge)
-+		return;
-+
-+	if (PCI_SLOT(dev->devfn) != slot->device)
-+		return;
-+
-+	list_for_each_entry(func, &slot->funcs, sibling) {
-+		if (PCI_FUNC(dev->devfn) == func->function) {
-+			/* check if this bridge has ejectable slots */
-+			if ((detect_ejectable_slots(func->handle) > 0))
-+				dev->is_hotplug_bridge = 1;
-+			break;
-+		}
-+	}
-+}
- /**
-  * enable_device - enable, configure a slot
-  * @slot: slot to be enabled
-@@ -831,8 +854,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
- 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
- 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
- 				max = pci_scan_bridge(bus, dev, max, pass);
--				if (pass && dev->subordinate)
-+				if (pass && dev->subordinate) {
-+					check_hotplug_bridge(slot, dev);
- 					pci_bus_size_bridges(dev->subordinate);
-+				}
- 			}
- 		}
- 	}
+-static void __init harmony_init(void)
+-{
+-#ifdef CONFIG_TEGRA_PCI
+-	int ret;
+-
+-	ret = harmony_pcie_init();
+-	if (ret)
+-		pr_err("harmony_pcie_init() failed: %d\n", ret);
+-#endif
+-}
+-
+ static void __init paz00_init(void)
+ {
+ 	tegra_paz00_wifikill_init();
+@@ -173,7 +162,6 @@ static struct {
+ 	void (*init)(void);
+ } board_init_funcs[] = {
+ 	{ "compulab,trimslice", trimslice_init },
+-	{ "nvidia,harmony", harmony_init },
+ 	{ "compal,paz00", paz00_init },
+ };
+ 
+diff --git a/arch/arm/mach-tegra/board-harmony-pcie.c b/arch/arm/mach-tegra/board-harmony-pcie.c
+deleted file mode 100644
+index 94c0529..0000000
+--- a/arch/arm/mach-tegra/board-harmony-pcie.c
++++ /dev/null
+@@ -1,88 +0,0 @@
+-/*
+- * arch/arm/mach-tegra/board-harmony-pcie.c
+- *
+- * Copyright (C) 2010 CompuLab, Ltd.
+- * Mike Rapoport <mike@compulab.co.il>
+- *
+- * This software is licensed under the terms of the GNU General Public
+- * License version 2, as published by the Free Software Foundation, and
+- * may be copied, distributed, and modified under those terms.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/gpio.h>
+-#include <linux/err.h>
+-#include <linux/of_gpio.h>
+-#include <linux/regulator/consumer.h>
+-
+-#include <asm/mach-types.h>
+-
+-#include <mach/pci-tegra.h>
+-
+-#include "board.h"
+-
+-#ifdef CONFIG_TEGRA_PCI
+-static int harmony_pcie_board_init(struct platform_device *pdev)
+-{
+-	struct device_node *np;
+-	int en_vdd_1v05;
+-	struct regulator *regulator = NULL;
+-	int err;
+-
+-	np = of_find_node_by_path("/regulators/regulator@3");
+-	if (!np) {
+-		pr_err("%s: of_find_node_by_path failed\n", __func__);
+-		return -ENODEV;
+-	}
+-
+-	en_vdd_1v05 = of_get_named_gpio(np, "gpio", 0);
+-	if (en_vdd_1v05 < 0) {
+-		pr_err("%s: of_get_named_gpio failed: %d\n", __func__,
+-		       en_vdd_1v05);
+-		return en_vdd_1v05;
+-	}
+-
+-	err = gpio_request(en_vdd_1v05, "EN_VDD_1V05");
+-	if (err) {
+-		pr_err("%s: gpio_request failed: %d\n", __func__, err);
+-		return err;
+-	}
+-
+-	gpio_direction_output(en_vdd_1v05, 1);
+-
+-	regulator = regulator_get(NULL, "vdd_ldo0,vddio_pex_clk");
+-	if (IS_ERR_OR_NULL(regulator)) {
+-		pr_err("%s: regulator_get failed: %d\n", __func__,
+-		       (int)PTR_ERR(regulator));
+-		goto err_reg;
+-	}
+-
+-	regulator_enable(regulator);
+-
+-	return 0;
+-
+-err_reg:
+-	gpio_free(en_vdd_1v05);
+-
+-	return err;
+-}
+-
+-int __init harmony_pcie_init(void)
+-{
+-	tegra_pcie_pdata.init = harmony_pcie_board_init;
+-	platform_device_register(&tegra_pcie_device);
+-
+-	return 0;
+-}
+-#else
+-int __init harmony_pcie_init(void)
+-{
+-	return 0;
+-}
+-#endif
 -- 
-1.7.10.4
+1.8.1
 
