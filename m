@@ -1,44 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:58917 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756059Ab3AIEsq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 23:48:46 -0500
-Message-ID: <50ECF6AB.30007@gmail.com>
-Date: Tue, 08 Jan 2013 22:48:43 -0600
-From: Robert Hancock <hancockrwd@gmail.com>
-MIME-Version: 1.0
-To: bl0 <bl0-052@playker.info>
-CC: linux-ide@vger.kernel.org, linux-pci@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
-Subject: Re: sata_sil data corruption, possible workarounds
-References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org> <50CEB13B.9010100@gmail.com> <kaq1n6$hqa$1@ger.gmane.org> <kb9pa2$mi8$1@ger.gmane.org>
-In-Reply-To: <kb9pa2$mi8$1@ger.gmane.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 14/14] ARM: tegra: trimslice: Initialize PCIe from DT
+Date: Wed,  9 Jan 2013 21:43:14 +0100
+Message-Id: <1357764194-12677-15-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/24/2012 08:37 AM, bl0 wrote:
-> On Tuesday 18 December 2012 16:23, bl0 wrote:
->
->> On Monday 17 December 2012 06:44, Robert Hancock wrote:
->>
->>> But it seems quite likely that
->>> whatever magic numbers this code is picking don't work on your system
->>> for some reason. It appears the root cause is likely a bug in the SiI
->>> chip. There shouldn't be any region why messing around with these values
->>> should cause data corruption other than that.
->>
->> Do you think something should be done about it in the linux sata_sil
->> driver? For a lack of a better solution, here is my suggestion. There is
->> already one option 'slow_down' for problematic disks. Another option, for
->> example 'cache_line_workaround', could be added for problematic
->> motherboards. If enabled, the most straightforward way is to set cache
->> line size to 0 and not worry about the fifo_cfg register.
->
-> Here is the code I currently have, attached as a diff. (This diff is not
-> against the latest git tree, it's against an older linux version which I
-> use.)
+With the device tree support in place, probe the PCIe controller from
+the device tree and remove the corresponding workaround in the board
+file.
 
-I wouldn't mind something like this as an option, anyway. Jeff, Tejun, 
-thoughts?
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+Changes in v3:
+- update for new DT binding
+
+Changes in v2:
+- new patch
+---
+ arch/arm/boot/dts/tegra20-trimslice.dts | 12 ++++++++++++
+ arch/arm/mach-tegra/board-dt-tegra20.c  |  8 --------
+ 2 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dts/tegra20-trimslice.dts
+index 4b6c486..ebb4c17 100644
+--- a/arch/arm/boot/dts/tegra20-trimslice.dts
++++ b/arch/arm/boot/dts/tegra20-trimslice.dts
+@@ -301,6 +301,18 @@
+ 		};
+ 	};
+ 
++	pcie-controller {
++		status = "okay";
++
++		pci@0 {
++			status = "okay";
++		};
++
++		pci@1 {
++			status = "okay";
++		};
++	};
++
+ 	usb@c5000000 {
+ 		status = "okay";
+ 		nvidia,vbus-gpio = <&gpio 170 0>; /* gpio PV2 */
+diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
+index 9e8256ab..67090fe 100644
+--- a/arch/arm/mach-tegra/board-dt-tegra20.c
++++ b/arch/arm/mach-tegra/board-dt-tegra20.c
+@@ -145,13 +145,6 @@ static void __init tegra_dt_init(void)
+ 				tegra20_auxdata_lookup, NULL);
+ }
+ 
+-static void __init trimslice_init(void)
+-{
+-#ifdef CONFIG_TEGRA_PCI
+-	platform_device_register(&tegra_pcie_device);
+-#endif
+-}
+-
+ static void __init paz00_init(void)
+ {
+ 	tegra_paz00_wifikill_init();
+@@ -161,7 +154,6 @@ static struct {
+ 	char *machine;
+ 	void (*init)(void);
+ } board_init_funcs[] = {
+-	{ "compulab,trimslice", trimslice_init },
+ 	{ "compal,paz00", paz00_init },
+ };
+ 
+-- 
+1.8.1
 
