@@ -1,67 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59361 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754331Ab3A1WSf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:18:35 -0500
-Date: Mon, 28 Jan 2013 23:18:29 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130128231829.6b205c3c@skate>
-In-Reply-To: <20130128220904.GA21446@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301282018.17714.arnd@arndb.de>
-	<5106F5CB.8050304@wwwdotorg.org>
-	<20130128220904.GA21446@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from avon.wwwdotorg.org ([70.85.31.133]:41848 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932173Ab3AIXMg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 18:12:36 -0500
+Message-ID: <50EDF95F.4070209@wwwdotorg.org>
+Date: Wed, 09 Jan 2013 16:12:31 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Thierry Reding <thierry.reding@avionic-design.de>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <201301092119.57067.arnd@arndb.de> <20130109215428.GA13648@avionic-0098.adnet.avionic-design.de> <201301092210.49452.arnd@arndb.de>
+In-Reply-To: <201301092210.49452.arnd@arndb.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+On 01/09/2013 03:10 PM, Arnd Bergmann wrote:
+> On Wednesday 09 January 2013, Thierry Reding wrote:
+>> What happens on Tegra is that we need to map 256 MiB of physical memory
+>> to access all the PCIe extended configuration space. However, ioremap()
+>> on such a large region fails if not enough vmalloc() space is available.
+>>
+>> This was observed when somebody tested this on CardHu which has a 1 GiB
+>> of RAM and therefore remapping the full 256 MiB fails.
+...
+> Have you checked if the hardware supports an alternative config
+> space access mechanism that does not depend on a huge address range?
+> A lot of them provide an index/data register pair somewhere, as the
+> original PC implementation did.
 
-On Mon, 28 Jan 2013 15:09:04 -0700, Jason Gunthorpe wrote:
-
-> If Linux will discover properly (I strongly suspect it does) without
-> the host bridge, then I would say to ditch this...
-> 
-> The PCI-E standard requires a host bridge device, but if Linux doesn't
-> require it then there is no reason to emulate one.
-> 
-> That would simplify the question of PCI IDs - for Marvell's case and
-> the sw root port bridge we can just copy the IDs from the bogus config
-> space of the HW.
-
-Not sure what you mean in this last paragraph. In this second version,
-I really rely on the emulated PCI-to-PCI bridges for the resource
-allocation. I give the Linux PCI core a global range of addresses for
-memory regions and a global range of addresses for I/O regions, and
-then I let Linux do the allocation of ranges on a per bridge basis,
-depending on the devices detected downstream. And at the end, I use
-those allocated ranges to set up the address decoding windows.
-
-This all comes from your suggestions during the review of the first
-revision of this patch set.
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+That would be nice, but I've talked to the HW engineers, and there's no
+indication that any alternative mechanism exists.
