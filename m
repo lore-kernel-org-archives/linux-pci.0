@@ -1,81 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:51013 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055Ab3APLwb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2013 06:52:31 -0500
-Date: Wed, 16 Jan 2013 12:52:25 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130116115225.GA15873@avionic-0098.adnet.avionic-design.de>
-References: <20130109231758.GA27065@obsidianresearch.com>
- <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
- <201301100917.19577.arnd@arndb.de>
- <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
- <20130110182007.GA28004@obsidianresearch.com>
- <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
- <20130110190327.GA23110@avionic-0098.adnet.avionic-design.de>
- <20130110192417.GA18478@obsidianresearch.com>
- <20130116101822.GA17706@avionic-0098.adnet.avionic-design.de>
- <20130116112556.GR23505@n2100.arm.linux.org.uk>
+Received: from mail-ye0-f201.google.com ([209.85.213.201]:45180 "EHLO
+	mail-ye0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758023Ab3AIRxM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:53:12 -0500
+Received: by mail-ye0-f201.google.com with SMTP id r11so263972yen.0
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:53:11 -0800 (PST)
+Subject: [PATCH 4/5] PCI: Use "unsigned long" for __pci_enable_device_flags to
+	match ioport.h
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	x86@kernel.org
+Date: Wed, 09 Jan 2013 10:53:11 -0700
+Message-ID: <20130109175310.13904.36783.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
-In-Reply-To: <20130116112556.GR23505@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+__pci_enable_device_flags() takes values like IORESOURCE_IO and
+IORESOURCE_MEM, which are values for struct resource.flags, which is
+"unsigned long", not "resource_size_t".
 
---opJtzjQTFsWo+cga
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Wed, Jan 16, 2013 at 11:25:56AM +0000, Russell King - ARM Linux wrote:
-> On Wed, Jan 16, 2013 at 11:18:22AM +0100, Thierry Reding wrote:
-> > 		err =3D ioremap_page_range(virt, virt + SZ_64K - 1, phys,
->=20
-> Why -1 here?
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5cb5820..d574fbd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1157,7 +1157,7 @@ int pci_reenable_device(struct pci_dev *dev)
+ }
+ 
+ static int __pci_enable_device_flags(struct pci_dev *dev,
+-				     resource_size_t flags)
++				     unsigned long flags)
+ {
+ 	int err;
+ 	int i, bars = 0;
 
-Right, I forgot that end in these functions always means one byte after
-the end. Removing the -1 seems to get past the remapping at least.
-Reading the configuration space through the mapping doesn't though. I'll
-investigate some more.
-
-Thanks for pointing this out Russell.
-
-Thierry
-
---opJtzjQTFsWo+cga
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ9pR5AAoJEN0jrNd/PrOhFAwP/RJbvVzV80bNgHLrp+Cm89Bt
-eWkJ0siumvDSyHm2o7GmgNN1AbgR2LlH7a5AVbBZo2HutMEWjMLe7dNNS4LPuhz/
-w+GmY9J3qlSjNRrClJrOu2p6vhhIIDYKKTCQTj0YTRT2fCa5RzM5oo2LlPVvLJRW
-vgUCDHBlA14NWPBGODjffpgyiH4Cv/jtV95o8rv2kCgce+Hr/VkhUxDtjdXN/WDL
-IQs7xwS5lj8ZAPG4ylv/Sp5OLDDpF3nHOrkikEeuBCZZwy89buiHta32JBVeRWo4
-Flz7/VGIOuaTdrVGbWqyN2PRsmeRco/c1R1ep0o8IVMykLx9DwzBRnOVpeh8gn7s
-0USCfRIRhIEhhV0GQNNbOLoMs55nu0nreBChWqmDfpu16ORDrcWyiB/+eFx/Kwvl
-yp+Y35n155CXmpWv5mpG/MxsS4nkJ0yAwpdtVDKykaN1wA14/Q0z0kj2Q4z9Vl+n
-LPXgDBnvQe1XQfsu/gIUR5qmhpcPQMFIQ3NskjpqgrNIGWMotZXYhh2vLFiyQCn9
-LVggn2ru7EE7erN6d4/HRxRpzYGfr1IDclGpbyHt6zfLlYjVWgE9wJQnji398NGZ
-wePCQc2hWTdOGAfkQHiJrqjSFiaMYzfDFFwu/cN/WIK37geQTF5DLr/krdyxHxOx
-3HvFjPjAwtgIeScXZXtj
-=b3tU
------END PGP SIGNATURE-----
-
---opJtzjQTFsWo+cga--
