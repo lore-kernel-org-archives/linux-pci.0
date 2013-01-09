@@ -1,58 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:57351 "EHLO hydra.sisk.pl"
+Received: from hydra.sisk.pl ([212.160.235.94]:36085 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756615Ab3A0WUJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 27 Jan 2013 17:20:09 -0500
+	id S932478Ab3AIUNd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Jan 2013 15:13:33 -0500
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
+To: Jiang Liu <liuj97@gmail.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Jiang Liu <jiang.liu@huawei.com>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 01/22] PCI: Rename pci_release_bus_bridge_dev to pci_release_host_bridge_dev
-Date: Sun, 27 Jan 2013 23:26:16 +0100
-Message-ID: <9382237.AQYEN5f655@vostro.rjw.lan>
-In-Reply-To: <1359265003-16166-2-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com> <1359265003-16166-1-git-send-email-yinghai@kernel.org> <1359265003-16166-2-git-send-email-yinghai@kernel.org>
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when PCI hotplug event happens
+Date: Wed, 09 Jan 2013 21:19:17 +0100
+Message-ID: <16794957.TmlpVGsGIb@vostro.rjw.lan>
+In-Reply-To: <50EDA1B1.3050501@gmail.com>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <9523101.J0n0M0VJmQ@vostro.rjw.lan> <50EDA1B1.3050501@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, January 26, 2013 09:36:22 PM Yinghai Lu wrote:
-> It is with host bridge, so change the name to reflect the fact.
+On Thursday, January 10, 2013 12:58:25 AM Jiang Liu wrote:
+> Hi Rafael,
+> 	Thanks for your great efforts to review the patch.	
 > 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> On 01/09/2013 08:01 AM, Rafael J. Wysocki wrote:
+> > Hi,
+> > 
+> > On Wednesday, January 09, 2013 12:52:22 AM Jiang Liu wrote:
+> snip
+> >>  
+> >> +static void acpi_pci_slot_notify_add(struct pci_dev *dev)
+> >> +{
+> >> +	acpi_handle handle;
+> >> +	struct callback_args context;
+> >> +
+> >> +	if (!dev->subordinate)
+> >> +		return;
+> >> +
+> >> +	mutex_lock(&slot_list_lock);
+> >> +	handle = DEVICE_ACPI_HANDLE(&dev->dev);
+> >> +	context.root_handle = acpi_find_root_bridge_handle(dev);
+> > 
+> > There's a patch under discussion that removes this function.
+> > 
+> > Isn't there any other way to do this?
+> 	I will try to find a way to get rid of calling acpi_find_root_bridge_handle,
+> and it seems doable.
+> 
+> > 
+> >> +	if (handle && context.root_handle) {
+> >> +		context.pci_bus = dev->subordinate;
+> >> +		context.user_function = register_slot;
+> >> +		acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+> > 
+> > You can just pass 1 here I think.  Does the compiler complain?
+> Thanks for reminder, the (u32) is unnecessary.
+> 
+> > 
+> >> +				    register_slot, NULL, &context, NULL);
+> >> +	}
+> >> +	mutex_unlock(&slot_list_lock);
+> >> +}
+> >> +
+> >> +static void acpi_pci_slot_notify_del(struct pci_dev *dev)
+> >> +{
+> >> +	struct acpi_pci_slot *slot, *tmp;
+> >> +	struct pci_bus *bus = dev->subordinate;
+> >> +
+> >> +	if (!bus)
+> >> +		return;
+> >> +
+> >> +	mutex_lock(&slot_list_lock);
+> >> +	list_for_each_entry_safe(slot, tmp, &slot_list, list)
+> >> +		if (slot->pci_slot && slot->pci_slot->bus == bus) {
+> >> +			list_del(&slot->list);
+> >> +			pci_destroy_slot(slot->pci_slot);
+> >> +			put_device(&bus->dev);
+> >> +			kfree(slot);
+> >> +		}
+> >> +	mutex_unlock(&slot_list_lock);
+> >> +}
+> >> +
+> >> +static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
+> >> +				   unsigned long event, void *data)
+> >> +{
+> >> +	struct device *dev = data;
+> >> +
+> >> +	switch (event) {
+> >> +	case BUS_NOTIFY_ADD_DEVICE:
+> >> +		acpi_pci_slot_notify_add(to_pci_dev(dev));
+> >> +		break;
+> > 
+> > Do I think correctly that this is going to be called for every PCI device
+> > added to the system, even if it's not a bridge?
+> You are right. Function acpi_pci_slot_notify_add() and acpi_pci_slot_notify_del()
+> will check whether it's a bridge. If preferred, I will move the check up into
+> acpi_pci_slot_notify_fn().
+> 
+> > 
+> >> +	case BUS_NOTIFY_DEL_DEVICE:
+> >> +		acpi_pci_slot_notify_del(to_pci_dev(dev));
+> >> +		break;
+> >> +	default:
+> >> +		return NOTIFY_DONE;
+> >> +	}
+> >> +
+> >> +	return NOTIFY_OK;
+> >> +}
+> >> +
+> >> +static struct notifier_block acpi_pci_slot_notifier = {
+> >> +	.notifier_call = &acpi_pci_slot_notify_fn,
+> >> +};
+> >> +
+> >>  static int __init
+> >>  acpi_pci_slot_init(void)
+> >>  {
+> >>  	dmi_check_system(acpi_pci_slot_dmi_table);
+> >>  	acpi_pci_register_driver(&acpi_pci_slot_driver);
+> >> +	bus_register_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
+> > 
+> > I wonder if/why this has to be so convoluted?
+> > 
+> > We have found a PCI bridge in the ACPI namespace, so we've created a struct
+> > acpi_device for it and we've walked the namespace below it already.
+> > 
+> > Now we're creating a struct pci_dev for it and while registering it we're
+> > going to walk the namespace below the bridge again to find and register its
+> > slots and that is done indirectly from a bus type notifier.
+> > 
+> > Why can't we enumerate the slots directly upfront?
+> Do you mean to create the PCI slot devices when creating the ACPI devices?
+> I think there are two factors prevent us from doing that.
+> The first is that the ACPI pci_slot driver could be built as a module, so
+> we can't call into it from the ACPI core.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+I didn't say about calling the pci_slot driver from the ACPI core, but about
+enumerating slots in a way suitable for consumption by the pci_slot driver
+when it's ready.
 
-> ---
->  drivers/pci/probe.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index b494066..ef50154 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1187,7 +1187,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
->  	return PCI_CFG_SPACE_SIZE;
->  }
->  
-> -static void pci_release_bus_bridge_dev(struct device *dev)
-> +static void pci_release_host_bridge_dev(struct device *dev)
->  {
->  	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
->  
-> @@ -1692,7 +1692,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  		goto err_out;
->  
->  	bridge->dev.parent = parent;
-> -	bridge->dev.release = pci_release_bus_bridge_dev;
-> +	bridge->dev.release = pci_release_host_bridge_dev;
->  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
->  	error = pcibios_root_bridge_prepare(bridge);
->  	if (error)
-> 
+That said I really don't see a value in having a modular pci_slot driver.  It
+is part of the hotplug infrastructure and should always be presend for this
+reason, so we don't need to worry about the "pci_slot driver not present" case.
+
+> The second reason is that the PCI slot is associated with a PCI bus, and the
+> bus is only available until the PCI device has been created.
+
+I suppose you mean "after"?  [I'm not sure if I agree with that, but whatever.]
+
+We know which devices have slots before that happens, though.
+
+Thanks,
+Rafael
+
+
 -- 
 I speak only for myself.
 Rafael J. Wysocki, Intel Open Source Technology Center.
