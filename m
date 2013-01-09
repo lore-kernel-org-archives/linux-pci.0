@@ -1,9 +1,9 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:61766 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.186]:50808 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171Ab3AJHK2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 02:10:28 -0500
-Date: Thu, 10 Jan 2013 08:10:01 +0100
+	with ESMTP id S932431Ab3AIV6f (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 16:58:35 -0500
+Date: Wed, 9 Jan 2013 22:58:15 +0100
 From: Thierry Reding <thierry.reding@avionic-design.de>
 To: Arnd Bergmann <arnd@arndb.de>
 Cc: linux-tegra@vger.kernel.org,
@@ -17,88 +17,65 @@ Cc: linux-tegra@vger.kernel.org,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130110071001.GD15212@avionic-0098.adnet.avionic-design.de>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130109215815.GC13648@avionic-0098.adnet.avionic-design.de>
 References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <201301092119.57067.arnd@arndb.de>
- <20130109215428.GA13648@avionic-0098.adnet.avionic-design.de>
- <201301092210.49452.arnd@arndb.de>
+ <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
+ <201301092122.08011.arnd@arndb.de>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jCrbxBqMcLqd4mOl"
-In-Reply-To: <201301092210.49452.arnd@arndb.de>
+	protocol="application/pgp-signature"; boundary="ZwgA9U+XZDXt4+m+"
+In-Reply-To: <201301092122.08011.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---jCrbxBqMcLqd4mOl
+--ZwgA9U+XZDXt4+m+
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 09, 2013 at 10:10:49PM +0000, Arnd Bergmann wrote:
+On Wed, Jan 09, 2013 at 09:22:07PM +0000, Arnd Bergmann wrote:
 > On Wednesday 09 January 2013, Thierry Reding wrote:
-> > What happens on Tegra is that we need to map 256 MiB of physical memory
-> > to access all the PCIe extended configuration space. However, ioremap()
-> > on such a large region fails if not enough vmalloc() space is available.
+> > Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
+> > directory. The motivation is to collect various host controller drivers
+> > in the same location in order to facilitate refactoring.
 > >=20
-> > This was observed when somebody tested this on CardHu which has a 1 GiB
-> > of RAM and therefore remapping the full 256 MiB fails.
+> > The Tegra PCIe driver has been largely rewritten, both in order to turn
+> > it into a proper platform driver and to add MSI (based on code by
+> > Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
+> >=20
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
 >=20
-> Hmm, config space accesses are fairly rare and generally not expected
-> to be fast, and 256 MB is really a huge waste of virtual address space,
-> so I agree that just ioremapping the entire space is not a good
-> solution.
->=20
-> However, it's not clear that a cache is necessary. Have you measured
-> a significant performance benefit of this implementation over just
-> iorempping and unmapping a single page for every config space access?
+> Can you split this patch into two patches, one that moves the file,
+> and another one that does all the changes? It's a little hard to
+> review when I can't easily see which code is actually new here.
 
-No, I had not actually implemented it that way because I figured I might
-just as well implement something generic with the added benefit that
-most remapping operations would be cached automatically since the PCI
-enumeration algorithms usually access the configuration space of a
-single device at a time, so it actually maps to the best case for an LRU
-based cache approach.
-
-> Even if we actually want a cache, how about a private implementation
-> that just remembers a single page in LRU? I doubt that there are
-> more drivers that would benefit from a generalized version that you
-> provide.
-
-I can move the code to the Tegra PCIe driver, but there's quite a bit of
-code that isn't actually related to the PCI functionality and I'd really
-like to avoid cluttering the driver with this implementation. Keeping it
-in a more central location will certainly increase the code's visibility
-and make it easier for other potential users to find.
-
-Also I just noticed that I hadn't actually added a parameter to the
-iomap_cache_create() function to specify the maximum number of pages, so
-currently the code only uses a single page anyway. It should be trivial
-to change. I guess performance was good enough with a single page that I
-didn't have a reason to increase the maximum number of pages.
+Stephen suggested I post this as removal/addition because pretty much
+everything changed. Reviewing the individual changes would be more
+confusing than actually reviewing a new driver.
 
 Thierry
 
---jCrbxBqMcLqd4mOl
+--ZwgA9U+XZDXt4+m+
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIcBAEBAgAGBQJQ7mlJAAoJEN0jrNd/PrOho4cQALbzSwxNCIfBwwmk9GtLE5XQ
-uqdn6xhQU/mO1BlT6UVa5/4RI84uTfVel0sedtV4BFrJDZJLht9J5TvxmkdzxvXz
-ISM0sZbgJ6MMjc3NasG6y0jDcS3qh+zx8zJHmEXE8HN+jud3oXYalSVJSfo80Jsx
-QAeK5yicCDkhgHYyZIQhMk8TvI04IhC6/UlejbBWRt14mNeXyq6a0IYVmYTVuMcT
-39k2j0VDsaAsnCXOv1cBHkArT7l/VwFZsELcuSmRhKbm4HcX7SotRsUe1J2CKaSo
-5HHUCSmkyPCG0fRqn6+g/qAX9QtXxpuieToNxp1po64yJy8ulviTlfD2o9YrBmul
-u1ns6gwvqoyKq3QlmKbFutMQKldGxsigQET94S+2fdqOwpx3O58EoFLqGqlV+zlS
-4kEvXCs3usAaTxmXQkJbDomcxiW67k4T2BbA6ZJfKZoRokLABdOmBs0wymr9QnjJ
-GzzRZqwFyoboJM9t89jn9hfKHnf0gCaZbrCApw4DH2LEceDtec7UeT1+bARDBbVT
-07gB797w2zRohZsWW7thGnFzahs7QGEHd3CGDjK9eqOx2pDRKmqryQ5ZH8kVLv6n
-UfP0em4az2L/LBw34q7jk/10aNzX6jfAi+2+roxxYQDAYAMF/hmKoudlLsQxsvsV
-s2WIjuw1xBKT2TGHtiyh
-=5aoQ
+iQIcBAEBAgAGBQJQ7ef2AAoJEN0jrNd/PrOhdEkP/2GUkig98fNrXYHKCPF9or9+
+cJisvvH8SPAGt09p5RYaO5XgBGJK4XnmAdGConWD3EtKP1pk2SEYCJ5pvjNgXftM
+T4QokPjKjttA1NYU8zVQhdYG1qr13is7mpNEEjCHD9q0b8TXYh1E7pvFf8KPvwKE
+uE0qpbOMMdd33UsrLEkJyVPJ1zfrCrCCHUrBbSwyYgknDPb66yxTlNYOVyR0t5UP
+6Nq/30GPGMiv+hl7sZeddZ9sLh5NzJE+QaElYQ0N0EW/iwzlKmKyFXUzBW9ZZB6Q
+4quSKUxZKgTSCi2Urjct/zP67/d6ZGw8eeaTxgp0Hy0K8jJ4MJ4+cL9w6vUGhS7C
+bqqC9TokrGVmlRyOj/wSkdoYWzbqGyIRSHcWBD3cioywfo8LQizJqcdXrgtqfa0Q
+iBNDS+S/2cG25lqiCbeTwv0Q7lYWRvQjPRc4Db9HpvA1E8aHucqGV0EUqaXQOZD1
+X/VSEyWVBefJiF1ta6DvCznJ0JJae4FBenlkPHYOSjF/3QJkX7PHb/3EqR6sOUw6
+tqypC0HMiKA1eAa2PT9tO1fno7c+rCKSwmHLasExTF1Q6E5o6c1/rzVNXACyvFXf
+isB2EcwOx/+9BJlz5UxBZNY5dmMGOOpfB/xsXMLAbe+CjIkt6XJGs8fJWuaorrf/
+uTEEPPGoykfodSDltlw2
+=GWfc
 -----END PGP SIGNATURE-----
 
---jCrbxBqMcLqd4mOl--
+--ZwgA9U+XZDXt4+m+--
