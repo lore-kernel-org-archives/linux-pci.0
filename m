@@ -1,125 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:62462 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754627Ab3AJSzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 13:55:11 -0500
-Date: Thu, 10 Jan 2013 19:55:05 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130109231758.GA27065@obsidianresearch.com>
- <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
- <201301100917.19577.arnd@arndb.de>
- <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
- <20130110182007.GA28004@obsidianresearch.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VbJkn9YxBvnuCH5J"
-In-Reply-To: <20130110182007.GA28004@obsidianresearch.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1910593.f2RrgAtJJO@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
+	<16795012.QL1jNHE7JM@vostro.rjw.lan>
+	<CAErSpo473rZOBERaMJV74rfGZXSuBdiPtX=mXmcLmO=CRB4P_g@mail.gmail.com>
+	<1910593.f2RrgAtJJO@vostro.rjw.lan>
+Date: Wed, 9 Jan 2013 15:27:29 -0800
+Message-ID: <CAE9FiQW4t17=gYC1dnyCVJUQ3rvV491uiA5U1ZjLWjraM=g9rQ@mail.gmail.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in
+ advance, v2
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, January 09, 2013 03:16:59 PM Bjorn Helgaas wrote:
+>> On Wed, Jan 9, 2013 at 2:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> >
+>> > The ACPI handles of PCI root bridges need to be known to
+>> > acpi_bind_one(), so that it can create the appropriate
+>> > "firmware_node" and "physical_node" files for them, but currently
+>> > the way it gets to know those handles is not exactly straightforward
+>> > (to put it lightly).
+>> >
+>> > This is how it works, roughly:
+>> >
+>> >   1. acpi_bus_scan() finds the handle of a PCI root bridge,
+>> >      creates a struct acpi_device object for it and passes that
+>> >      object to acpi_pci_root_add().
+>> >
+>> >   2. acpi_pci_root_add() creates a struct acpi_pci_root object,
+>> >      populates its "device" field with its argument's address
+>> >      (device->handle is the ACPI handle found in step 1).
+>> >
+>> >   3. The struct acpi_pci_root object created in step 2 is passed
+>> >      to pci_acpi_scan_root() and used to get resources that are
+>> >      passed to pci_create_root_bus().
+>> >
+>> >   4. pci_create_root_bus() creates a struct pci_host_bridge object
+>> >      and passes its "dev" member to device_register().
+>> >
+>> >   5. platform_notify(), which for systems with ACPI is set to
+>> >      acpi_platform_notify(), is called.
+>> >
+>> > So far, so good.  Now it starts to be "interesting".
+>> >
+>> >   6. acpi_find_bridge_device() is used to find the ACPI handle of
+>> >      the given device (which is the PCI root bridge) and executes
+>> >      acpi_pci_find_root_bridge(), among other things, for the
+>> >      given device object.
+>> >
+>> >   7. acpi_pci_find_root_bridge() uses the name (sic!) of the given
+>> >      device object to extract the segment and bus numbers of the PCI
+>> >      root bridge and passes them to acpi_get_pci_rootbridge_handle().
+>> >
+>> >   8. acpi_get_pci_rootbridge_handle() browses the list of ACPI PCI
+>> >      root bridges and finds the one that matches the given segment
+>> >      and bus numbers.  Its handle is then used to initialize the
+>> >      ACPI handle of the PCI root bridge's device object by
+>> >      acpi_bind_one().  However, this is *exactly* the ACPI handle we
+>> >      started with in step 1.
+>> >
+>> > Needless to say, this is quite embarassing, but it may be avoided
+>> > thanks to commit f3fd0c8 (ACPI: Allow ACPI handles of devices to be
+>> > initialized in advance), which makes it possible to initialize the
+>> > ACPI handle of a device before passing it to device_register().
+>> >
+>> > Accordingly, add a new __weak routine, pcibios_root_bridge_prepare(),
+>> > defaulting to an empty implementation that can be replaced by the
+>> > interested architecutres (x86 and ia64 at the moment) with functions
+>> > that will set the root bridge's ACPI handle before its dev member is
+>> > passed to device_register().  Make both x86 and ia64 provide such
+>> > implementations of pcibios_root_bridge_prepare() and remove
+>> > acpi_pci_find_root_bridge() and acpi_get_pci_rootbridge_handle() that
+>> > aren't necessary any more.
+>> >
+>> > Included is a fix for breakage on systems with non-ACPI PCI host
+>> > bridges from Bjorn Helgaas.
+>> >
+>> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> Looks good to me!
+>>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Thanks!
+>
+> I'll wait for comments from the others, if any, and put it into my acpi-scan
+> branch after a couple of days.  It doesn't need to be there technically, but
+> it's kind of related.
 
---VbJkn9YxBvnuCH5J
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I tested it with acpi-scan and pci-root-bus-hotplug patchset, and it works well.
+so
+Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-On Thu, Jan 10, 2013 at 11:20:07AM -0700, Jason Gunthorpe wrote:
-> On Thu, Jan 10, 2013 at 11:25:44AM +0100, Thierry Reding wrote:
-> > On Thu, Jan 10, 2013 at 09:17:19AM +0000, Arnd Bergmann wrote:
-> > > On Thursday 10 January 2013, Thierry Reding wrote:
-> > > > On Wed, Jan 09, 2013 at 04:17:58PM -0700, Jason Gunthorpe wrote:
-> > > > > On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
-> > > > > You could decrease the size of the mapping to only span the bus
-> > > > > numbers that are configured for use via DT.
-> > > >=20
-> > > > That won't work, unfortunately. The mapping is such that the bus nu=
-mber
-> > > > is not encoded in the uppermost bits, the extended register number =
-is.
-> > > > So the only thing that we could do is decrease the size of the exte=
-nded
-> > > > register space for *all* devices.
-> > >=20
-> > > But you could still a method to map 16 separate areas per bus, each 6=
-5536
-> > > bytes long, which results in 1MB per bus. That is probably ok, since
-> > > very few systems have more than a handful of buses in practice.
-> > >=20
-> > > In theory, doing static mappings on a per-page base would let you
-> > > do 16 devices at a time, but it's probably worth doing at this fine
-> > > granularity.
-> >=20
-> > I don't understand how this would help. The encoding is like this:
-> >=20
-> > 	[27:24] extended register number
-> > 	[23:16] bus number
-> > 	[15:11] device number
-> > 	[10: 8] function number
-> > 	[ 7: 0] register number
-> >=20
-> > So it doesn't matter whether I use separate areas per bus or not. As
-> > soon as the whole extended configuration space needs to be accessed a
-> > whopping 28 bits (256 MiB) are required.
->=20
-> You'd piece a mapping together, each bus requires 16 64k mappings, a
-> simple 2d array of busnr*16 of pointers would do the trick. A more
-> clever solution would be to allocate contiguous virtual memory and
-> split that up..
+BTW, found one left over of change about ->acpi_handle==> ACPI_HANDLE..
 
-Oh, I see. I'm not very familiar with the internals of remapping, so
-I'll need to do some more reading. Thanks for the hints.
+Index: linux-2.6/drivers/acpi/glue.c
+===================================================================
+--- linux-2.6.orig/drivers/acpi/glue.c
++++ linux-2.6/drivers/acpi/glue.c
+@@ -311,7 +311,7 @@ static int acpi_platform_notify(struct d
+        if (!ret) {
+                struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 
-> > > Actually, AER probably needs this, and I believe some broken devices=
-=20
-> > > need to mask interrupts using the PCI command word in the config spac=
-e,
-> > > it it can happen.
-> >=20
-> > Ugh... that would kill any such dynamic mapping approach. Perhaps if we
-> > could mark a device as requiring a static mapping we could pin that
-> > cache entry. But that doesn't sound very encouraging.
->=20
-> AER applies to pretty much every PCI-E device these days.
+-               acpi_get_name(dev->acpi_handle, ACPI_FULL_PATHNAME, &buffer);
++               acpi_get_name(ACPI_HANDLE(dev), ACPI_FULL_PATHNAME, &buffer);
+                DBG("Device %s -> %s\n", dev_name(dev), (char *)buffer.pointer);
+                kfree(buffer.pointer);
+        } else
 
-So given there's no way around a segmented static mapping as you
-suggested, right?
 
-Thierry
+otherwise will get compiling error when enable acpi glue debug.
 
---VbJkn9YxBvnuCH5J
-Content-Type: application/pgp-signature
+Thanks
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ7w6JAAoJEN0jrNd/PrOhPIEQAI+YHn8apatm07IyaSaF1RT2
-vtXnc//hV3lmQzwNjTewIIFYR19z7NLG1L/hct0VAa3RSKQHgU128Hle8cV/cxeR
-IaJzPJV8mJzhK3Ieh5vH/5ZTSpp+YG5LxK4JejTDajGECdhmqAKtehxwOcVZVMZC
-k3PX2146XGQwlITURLYmBwmwqc1tmFUJ3gjG2O8Hz00UviKzvD5iXgLhIUTseCXK
-fMRYAwSEqOT8Wxc5M4AygHdXvnRbmf8XMpfFQrAHazSL8zdUJ8gMbXOHVX95CVky
-neGps2EVTL8h5nUI7En2kxo6oawSIa2jKRbY8a9nB72XBCD4LBRy3U94N+B2nv9m
-+T+He6Q4qGQZzc02YdAWr6KvoHljpxPBNTMs2rEsesnye7QN313h+n/EV9DcfdTW
-yxiUnOUDlPApF7IenLaBvVVUGQhIN4jnUmgrrIuKcicLVW4lTdCdvTGk6R17T/V/
-fqeRs9lixSgs1Xs7u/QNAVdPCLf+Koi4g37/sjL/nQ73B3mNexHKRRp+MbsxkAS9
-0zzvu9wpM93RS6zHExH5rww7hOc0GABE3EAwxQEY91Uk3+qCJ/sBKv7cszvovTcU
-f4ymEAMPrW34TXek5xcnKyRKT9tm/jRaWOkv69J4acxsubD15Kf8Hy1w/OfBTob9
-K9DB7rAV1fatgSvaLPh5
-=lss6
------END PGP SIGNATURE-----
-
---VbJkn9YxBvnuCH5J--
+Yinghai
