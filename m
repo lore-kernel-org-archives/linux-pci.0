@@ -1,133 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 16/22] PCI, acpiphp: Don't bailout even no slots found yet.
-Date: Sun, 13 Jan 2013 00:43:53 +0100
-Message-ID: <1767472.DguSxT8x55@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-17-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-17-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH 02/14] of/pci: Add of_pci_get_devfn() function
+Date: Wed,  9 Jan 2013 21:43:02 +0100
+Message-Id: <1357764194-12677-3-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:43 PM Yinghai Lu wrote:
-> Could have root bus hot addde later and there may be slots that need acpiphp.
+This function can be used to parse the device and function number from a
+standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
+the returned value obtain the device and function numbers respectively.
 
-s/addde/added/
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+---
+ drivers/of/of_pci.c    | 32 ++++++++++++++++++++++++++++----
+ include/linux/of_pci.h |  1 +
+ 2 files changed, 29 insertions(+), 4 deletions(-)
 
-The changes look reasonable to me, but I'm not very familiar with the code in
-question.
-
-Thanks,
-Rafael
-
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/hotplug/acpiphp.h      |    1 -
->  drivers/pci/hotplug/acpiphp_core.c |   23 ++---------------------
->  drivers/pci/hotplug/acpiphp_glue.c |   22 ----------------------
->  3 files changed, 2 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-> index a1afb5b..b3ead7a 100644
-> --- a/drivers/pci/hotplug/acpiphp.h
-> +++ b/drivers/pci/hotplug/acpiphp.h
-> @@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
->  /* acpiphp_glue.c */
->  extern int acpiphp_glue_init (void);
->  extern void acpiphp_glue_exit (void);
-> -extern int acpiphp_get_num_slots (void);
->  typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
->  
->  extern int acpiphp_enable_slot (struct acpiphp_slot *slot);
-> diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-> index 96316b7..c2fd309 100644
-> --- a/drivers/pci/hotplug/acpiphp_core.c
-> +++ b/drivers/pci/hotplug/acpiphp_core.c
-> @@ -50,7 +50,6 @@
->  bool acpiphp_debug;
->  
->  /* local variables */
-> -static int num_slots;
->  static struct acpiphp_attention_info *attention_info;
->  
->  #define DRIVER_VERSION	"0.5"
-> @@ -272,25 +271,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
->  	return 0;
->  }
->  
-> -static int __init init_acpi(void)
-> -{
-> -	int retval;
-> -
-> -	/* initialize internal data structure etc. */
-> -	retval = acpiphp_glue_init();
-> -
-> -	/* read initial number of slots */
-> -	if (!retval) {
-> -		num_slots = acpiphp_get_num_slots();
-> -		if (num_slots == 0) {
-> -			acpiphp_glue_exit();
-> -			retval = -ENODEV;
-> -		}
-> -	}
-> -
-> -	return retval;
-> -}
-> -
->  /**
->   * release_slot - free up the memory used by a slot
->   * @hotplug_slot: slot to free
-> @@ -379,7 +359,8 @@ static int __init acpiphp_init(void)
->  		return 0;
->  
->  	/* read all the ACPI info from the system */
-> -	return init_acpi();
-> +	/* initialize internal data structure etc. */
-> +	return acpiphp_glue_init();
->  }
->  
->  
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 02c41ab..30467ec 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -1446,28 +1446,6 @@ void  acpiphp_glue_exit(void)
->  	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
->  }
->  
-> -
-> -/**
-> - * acpiphp_get_num_slots - count number of slots in a system
-> - */
-> -int __init acpiphp_get_num_slots(void)
-> -{
-> -	struct acpiphp_bridge *bridge;
-> -	int num_slots = 0;
-> -
-> -	list_for_each_entry(bridge, &bridge_list, list) {
-> -		dbg("Bus %04x:%02x has %d slot%s\n",
-> -				pci_domain_nr(bridge->pci_bus),
-> -				bridge->pci_bus->number, bridge->nr_slots,
-> -				bridge->nr_slots == 1 ? "" : "s");
-> -		num_slots += bridge->nr_slots;
-> -	}
-> -
-> -	dbg("Total %d slots\n", num_slots);
-> -	return num_slots;
-> -}
-> -
-> -
->  /**
->   * acpiphp_enable_slot - power on slot
->   * @slot: ACPI PHP slot
-> 
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 13e37e2..0dd52df 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -7,12 +7,13 @@
+ static inline int __of_pci_pci_compare(struct device_node *node,
+ 				       unsigned int devfn)
+ {
+-	unsigned int size;
+-	const __be32 *reg = of_get_property(node, "reg", &size);
++	int err;
+ 
+-	if (!reg || size < 5 * sizeof(__be32))
++	err = of_pci_get_devfn(node);
++	if (err < 0)
+ 		return 0;
+-	return ((be32_to_cpup(&reg[0]) >> 8) & 0xff) == devfn;
++
++	return devfn == err;
+ }
+ 
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+@@ -40,3 +41,26 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 	return NULL;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_find_child_device);
++
++/**
++ * of_pci_get_devfn() - Get device and function numbers for a device node
++ * @np: device node
++ *
++ * Parses a standard 5-cell PCI resource and returns an 8-bit value that can
++ * be passed to the PCI_SLOT() and PCI_FUNC() macros to extract the device
++ * and function numbers respectively. On error a negative error code is
++ * returned.
++ */
++int of_pci_get_devfn(struct device_node *np)
++{
++	unsigned int size;
++	const __be32 *reg;
++
++	reg = of_get_property(np, "reg", &size);
++
++	if (!reg || size < 5 * sizeof(__be32))
++		return -EINVAL;
++
++	return (be32_to_cpup(reg) >> 8) & 0xff;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_devfn);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index bb115de..91ec484 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -10,5 +10,6 @@ int of_irq_map_pci(const struct pci_dev *pdev, struct of_irq *out_irq);
+ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
++int of_pci_get_devfn(struct device_node *np);
+ 
+ #endif
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.8.1
+
