@@ -1,109 +1,165 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 Jan 2013 11:25:44 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.9]:53016 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933967Ab3AIUnx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:43:53 -0500
 From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
+To: linux-tegra@vger.kernel.org
+Cc: Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
+Subject: [PATCH 08/14] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+Date: Wed,  9 Jan 2013 21:43:08 +0100
+Message-Id: <1357764194-12677-9-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
 References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130109231758.GA27065@obsidianresearch.com>
- <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
- <201301100917.19577.arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="a8Wt8u1KmwUX3Y2C"
-In-Reply-To: <201301100917.19577.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The PMC code already accesses to PMC registers so it makes sense to
+move this function there as well. While at it, rename the function to
+tegra_pmc_pcie_xclk_clamp() for consistency.
 
---a8Wt8u1KmwUX3Y2C
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Acked-by: Stephen Warren <swarren@wwwdotorg.org>
+---
+Changes in v3:
+- none
 
-On Thu, Jan 10, 2013 at 09:17:19AM +0000, Arnd Bergmann wrote:
-> On Thursday 10 January 2013, Thierry Reding wrote:
-> > On Wed, Jan 09, 2013 at 04:17:58PM -0700, Jason Gunthorpe wrote:
-> > > On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
-> > > You could decrease the size of the mapping to only span the bus
-> > > numbers that are configured for use via DT.
-> >=20
-> > That won't work, unfortunately. The mapping is such that the bus number
-> > is not encoded in the uppermost bits, the extended register number is.
-> > So the only thing that we could do is decrease the size of the extended
-> > register space for *all* devices.
->=20
-> But you could still a method to map 16 separate areas per bus, each 65536
-> bytes long, which results in 1MB per bus. That is probably ok, since
-> very few systems have more than a handful of buses in practice.
->=20
-> In theory, doing static mappings on a per-page base would let you
-> do 16 devices at a time, but it's probably worth doing at this fine
-> granularity.
+Changes in v2:
+- none
+---
+ arch/arm/mach-tegra/pcie.c | 30 ++++--------------------------
+ arch/arm/mach-tegra/pmc.c  | 16 ++++++++++++++++
+ arch/arm/mach-tegra/pmc.h  |  1 +
+ 3 files changed, 21 insertions(+), 26 deletions(-)
 
-I don't understand how this would help. The encoding is like this:
+diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
+index bffcd64..c2d55f8 100644
+--- a/arch/arm/mach-tegra/pcie.c
++++ b/arch/arm/mach-tegra/pcie.c
+@@ -42,6 +42,7 @@
+ 
+ #include "board.h"
+ #include "iomap.h"
++#include "pmc.h"
+ 
+ /* Hack - need to parse this from DT */
+ #define INT_PCIE_INTR 130
+@@ -148,17 +149,6 @@
+ #define  PADS_PLL_CTL_TXCLKREF_DIV10		(0 << 20)
+ #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
+ 
+-/* PMC access is required for PCIE xclk (un)clamping */
+-#define PMC_SCRATCH42		0x144
+-#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
+-
+-static void __iomem *reg_pmc_base = IO_ADDRESS(TEGRA_PMC_BASE);
+-
+-#define pmc_writel(value, reg) \
+-	__raw_writel(value, reg_pmc_base + (reg))
+-#define pmc_readl(reg) \
+-	__raw_readl(reg_pmc_base + (reg))
+-
+ /*
+  * Tegra2 defines 1GB in the AXI address map for PCIe.
+  *
+@@ -640,18 +630,6 @@ static int tegra_pcie_enable_controller(void)
+ 	return 0;
+ }
+ 
+-static void tegra_pcie_xclk_clamp(bool clamp)
+-{
+-	u32 reg;
+-
+-	reg = pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
+-
+-	if (clamp)
+-		reg |= PMC_SCRATCH42_PCX_CLAMP;
+-
+-	pmc_writel(reg, PMC_SCRATCH42);
+-}
+-
+ static void tegra_pcie_power_off(void)
+ {
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+@@ -659,7 +637,7 @@ static void tegra_pcie_power_off(void)
+ 	tegra_periph_reset_assert(tegra_pcie.pex_clk);
+ 
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ }
+ 
+ static int tegra_pcie_power_regate(void)
+@@ -668,7 +646,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_pcie_power_off();
+ 
+-	tegra_pcie_xclk_clamp(true);
++	tegra_pmc_pcie_xclk_clamp(true);
+ 
+ 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
+ 	tegra_periph_reset_assert(tegra_pcie.afi_clk);
+@@ -682,7 +660,7 @@ static int tegra_pcie_power_regate(void)
+ 
+ 	tegra_periph_reset_deassert(tegra_pcie.afi_clk);
+ 
+-	tegra_pcie_xclk_clamp(false);
++	tegra_pmc_pcie_xclk_clamp(false);
+ 
+ 	clk_prepare_enable(tegra_pcie.afi_clk);
+ 	clk_prepare_enable(tegra_pcie.pex_clk);
+diff --git a/arch/arm/mach-tegra/pmc.c b/arch/arm/mach-tegra/pmc.c
+index d4fdb5f..a335a93 100644
+--- a/arch/arm/mach-tegra/pmc.c
++++ b/arch/arm/mach-tegra/pmc.c
+@@ -24,6 +24,10 @@
+ #define PMC_CTRL		0x0
+ #define PMC_CTRL_INTR_LOW	(1 << 17)
+ 
++/* PMC access is required for PCIE xclk (un)clamping */
++#define PMC_SCRATCH42		0x144
++#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
++
+ static inline u32 tegra_pmc_readl(u32 reg)
+ {
+ 	return readl(IO_ADDRESS(TEGRA_PMC_BASE + reg));
+@@ -74,3 +78,15 @@ void __init tegra_pmc_init(void)
+ 		val &= ~PMC_CTRL_INTR_LOW;
+ 	tegra_pmc_writel(val, PMC_CTRL);
+ }
++
++void tegra_pmc_pcie_xclk_clamp(bool clamp)
++{
++	u32 reg;
++
++	reg = tegra_pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
++
++	if (clamp)
++		reg |= PMC_SCRATCH42_PCX_CLAMP;
++
++	tegra_pmc_writel(reg, PMC_SCRATCH42);
++}
+diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
+index 8995ee4..2631c9a 100644
+--- a/arch/arm/mach-tegra/pmc.h
++++ b/arch/arm/mach-tegra/pmc.h
+@@ -19,5 +19,6 @@
+ #define __MACH_TEGRA_PMC_H
+ 
+ void tegra_pmc_init(void);
++void tegra_pmc_pcie_xclk_clamp(bool clamp);
+ 
+ #endif
+-- 
+1.8.1
 
-	[27:24] extended register number
-	[23:16] bus number
-	[15:11] device number
-	[10: 8] function number
-	[ 7: 0] register number
-
-So it doesn't matter whether I use separate areas per bus or not. As
-soon as the whole extended configuration space needs to be accessed a
-whopping 28 bits (256 MiB) are required.
-
-What you propose would work if only regular configuration space is
-supported. I'm not sure if that's an option.
-
-> > > Are there any concerns about these config registers being accessed
-> > > from a context where a new mapping can't be made? Interrupt? Machine
-> > > Check? PCI-E Advanced Error Reporting?
-> >=20
-> > I haven't checked but I would expect configuration space accesses to not
-> > happen in interrupt context. Usually they are limited to enumeration and
-> > driver probe.
->=20
-> Actually, AER probably needs this, and I believe some broken devices=20
-> need to mask interrupts using the PCI command word in the config space,
-> it it can happen.
-
-Ugh... that would kill any such dynamic mapping approach. Perhaps if we
-could mark a device as requiring a static mapping we could pin that
-cache entry. But that doesn't sound very encouraging.
-
-Thierry
-
---a8Wt8u1KmwUX3Y2C
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ7pcoAAoJEN0jrNd/PrOhzWAQAJU8h6+cUFml8Y/ItAuxpx7X
-4JokweZ46zAbLIRfTn7XVX7ICa80iPbgf0eJjno2w9mDpr1NA6DUvNg4/IWncM1t
-3yQngkKc98gz0rRV7wjpzlTav8q1W5KjTK4WexEX+n6Z6rsjAtlxIzViAvSPOekH
-Nr/oHRaAYirdndAH8dmL8aifZKayaHDKYtVCIJ2xQOXTyplwZYIN5DWFWs4pdHta
-IE5ZUTc5qf8djpvrlIcjBrPPVSxS6B/04uU9ovbFxbrqIGhnnwfqlYNiU+j+p57x
-sRV0QsXk0XwAPvAdD3JzQsSB2U6ZEKlDleOWNO3yhFWobFQrLF9zktzm4wIvooo6
-e4aekihXMHjCN2CjRl7dk/NXw2dyFY4AIc1YEdDuXXt3N8eUhamvDVV9RMvx80wK
-CiiKA1M1SuEqHRKK7CBPSrGMBo3alogKNwAtPPfqAjPaiELtkmgjOGa4x/rzmVBH
-M4VsH/C+p231Hg5vdQ+GKYgPEV0OYZ90BJpGUSZMeYliAroVenXgo37NDozD+Mdu
-hW8lmae/L10twv36bZu720P16aU9RF60Mqa7x/RpLePt112VgyAA6vTc5V0ARGF5
-Im4zjmaPp6vG67byaXXJb5aokg0sIfo1ezFnS6oMrqV8Wg+2clhWu8KQ7JTcDjPV
-UhtFN0S5FBlhiZigRKGN
-=sViQ
------END PGP SIGNATURE-----
-
---a8Wt8u1KmwUX3Y2C--
