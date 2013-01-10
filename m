@@ -1,37 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <510737B0.40903@huawei.com>
-Date: Tue, 29 Jan 2013 10:45:04 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-5-git-send-email-jiang.liu@huawei.com> <3500982.MUDp6kKU3R@vostro.rjw.lan> <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com> <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com> <CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com> <CAE9FiQXkrYubkgbbOXmrEXvGZBZXMZ6sh8kGTpF1_=tD3OMPJw@mail.gmail.com> <CAErSpo7vHXdh=ogvfZnxx9gqgiifWGa=XzS+ZKjXFFOPue4TTw@mail.gmail.com> <CAE9FiQU84OSQrQJEGAQTDzVv8kGCi+fmgM8+ycoMXMUfHsNe-g@mail.gmail.com> <51072EDA.2000704@huawei.com> <CAE9FiQVeFO5X0cRgty6T8OeLKpVweWw+cSk0eygC8ivJMAPM6A@mail.gmail.com>
-In-Reply-To: <CAE9FiQVeFO5X0cRgty6T8OeLKpVweWw+cSk0eygC8ivJMAPM6A@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <18607840.Is41JcgqAR@vostro.rjw.lan>
+References: <20121030040237.GA10472@google.com> <5274779.gJQ3WSr6QB@vostro.rjw.lan>
+ <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com> <18607840.Is41JcgqAR@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Jan 2013 07:49:46 -0700
+Message-ID: <CAErSpo7rnmSjtsMu1AJ81VmSQytBDdAL=qrJWJHQ15iaJRvuhw@mail.gmail.com>
+Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
+ hot-add root bus
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013-1-29 10:21, Yinghai Lu wrote:
-> On Mon, Jan 28, 2013 at 6:07 PM, Jiang Liu <jiang.liu@huawei.com> wrote:
->>         Could we use quirk to auto-disable PCIe native hotplug for
->> problematic platforms?
-> 
-> that is some kind of boot command line way?
-We could negotiate between acpiphp and pciehp if those problematic 
-platforms/chipsets could be identified by DMI info or PCI device ID.
+On Thu, Jan 10, 2013 at 6:07 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Wednesday, January 09, 2013 05:34:32 PM Bjorn Helgaas wrote:
+>> On Wed, Jan 9, 2013 at 1:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Wednesday, January 09, 2013 11:01:39 AM Yinghai Lu wrote:
+>> >> On Wed, Jan 9, 2013 at 10:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >> >> the reason why we need to change those codes for x86, we want to make it support
+>> >> >> pci root bus hotplug. So it would be reasonable for us to align other
+>> >> >> platform to x86
+>> >> >> changes after pci root bus hotplug change is completely done.
+>> >> >
+>> >> > OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
+>> >> > way to keep track of this consistency issue and merged
+>> >> > pci/yinghai-survey-resources to my -next branch.
+>> >>
+>> >> Thanks a lot. will send other pci root bus hotplug out.
+>> >>
+>> >> question: now Rafael's tree has acpi-scan branch and it touches pci-root.c.
+>> >>
+>> >> so is it ok for me to base patches on your pci/next and his pm/acpi-scan?
+>> >> how?
+>> >> can you two have some arrangement like you pulling Rafael's branch?
+>> >
+>> > My acpi-scan branch is not going to be rebased going forward, so it can be
+>> > pulled from safely if that helps.
+>>
+>> I'm happy to do that, but it is outside the scope of my limited git
+>> experience.  My guess is that I should do this (doing the pull into a
+>> branch which I later merge into my -next branch):
+>>
+>>   $ git checkout -b pci/yinghai-survey-resources+acpi-scan
+>> pci/yinghai-survey-resources
+>>   $ git pull --no-ff --log
+>> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+>> acpi-scan
+>>   $ vi drivers/acpi/pci_root.c    # resolve conflicts
+>>   $ git add drivers/acpi/pci_root.c
+>>   $ git commit
+>>
+>>   $ git checkout next
+>>   $ git merge --no-ff --log pci/yinghai-survey-resources+acpi-scan
+>>
+>> Is that reasonable?
+>
+> Yes, it looks reasonable.
+>
+>> This won't cause issues when both Rafael and I ask Linus to pull from our
+>> trees later?
+>
+> No, it won't, as long as I don't rebase the original acpi-scan branch (which
+> I'm not going to do) and you don't rebase your
+> pci/yinghai-survey-resources+acpi-scan branch going forward.
+>
+> The pull makes your tree contain the same commits (i.e. commit IDs along with
+> the data) that are in my acpi-scan branch, so when Linus merges them together,
+> git will notice that the commits are the same.
 
-> 
-> Yinghai
-> 
-> 
+OK, I did the above, merged it into my -next branch, and pushed it.
+Let me know if you see any issues.
 
-
+Bjorn
