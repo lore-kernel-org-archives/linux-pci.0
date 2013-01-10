@@ -1,109 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:41201 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755752Ab3A3Qip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 11:38:45 -0500
-Date: Wed, 30 Jan 2013 17:38:38 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130130173838.76114b4c@skate>
-In-Reply-To: <201301301617.38883.arnd@arndb.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301300955.49473.arnd@arndb.de>
-	<20130130124721.0ad0294e@skate>
-	<201301301617.38883.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from avon.wwwdotorg.org ([70.85.31.133]:48717 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563Ab3AJX6o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 18:58:44 -0500
+Message-ID: <50EF55B0.7030106@wwwdotorg.org>
+Date: Thu, 10 Jan 2013 16:58:40 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 13/14] ARM: tegra: harmony: Initialize PCIe from DT
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-14-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-14-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+On 01/09/2013 01:43 PM, Thierry Reding wrote:
+> With the device tree support in place, probe the PCIe controller from
+> the device tree and remove the corresponding workaround in the board
+> file.
 
-On Wed, 30 Jan 2013 16:17:38 +0000, Arnd Bergmann wrote:
+For some reason, the ports on Harmony fail to initialize correctly with
+this driver, although they do with plain next-20130109:
 
-> > However, one major drawback of my RFCv1 version is that since I didn't
-> > know how much I/O space and memory space was needed for each PCIe
-> > device, I had to oversize the address decoding windows. And also, I had
-> > to have a special allocator (certainly simple, but still) to find an
-> > available physical address to set up each address decoding window.
-> 
-> Well, for the I/O space, there is no oversizing because either way you
-> end up with exactly 64KB per root port, right?
+> [    2.698922] tegra-pcie 80003000.pcie-controller: link 0 down, retrying
+> [    2.925722] tegra-pcie 80003000.pcie-controller: link 0 down, retrying
+> [    3.155411] tegra-pcie 80003000.pcie-controller: link 0 down, retrying
+> [    3.178428] tegra-pcie 80003000.pcie-controller: link 0 down, ignoring
+> [    3.199713] tegra-pcie 80003000.pcie-controller: failed to add port pci: -19
 
-Correct I/O space is not an issue, of course. Only the memory windows
-are an issue (in terms of quantity of address space used).
+^^^ There's definitely something plugged into this port, and it's
+enumerated OK with the old driver.
 
-That said, the PCI-to-PCI bridge solution doesn't solve the fact that
-I/O addresses get assigned even though the driver will most likely use
-them. This means that one I/O window is consumed for each PCIe
-interface, even though it is not being used in practice. And see I have
-10 PCIe interfaces in this SoC, and only 20 windows available globally
-(not only for PCIe, but also for NAND, NOR, etc.). But for now, I'd
-like to leave this potential problem on the side, and get something
-working. If it seems useful to remove this problem later, we'll work on
-it.
+> [    3.433551] tegra-pcie 80003000.pcie-controller: link 1 down, retrying
+> [    3.667624] tegra-pcie 80003000.pcie-controller: link 1 down, retrying
+...
+> [    3.901493] tegra-pcie 80003000.pcie-controller: link 1 down, retrying
+> [    3.902589] tegra-pcie 80003000.pcie-controller: link 1 down, ignoring
+> [    3.902615] tegra-pcie 80003000.pcie-controller: failed to add port pci: -19
+> [    3.903780] tegra-pcie 80003000.pcie-controller: PCI host bridge to bus 0000:00
+> [    3.903815] pci_bus 0000:00: root bus resource [io  0x82000000-0x8200ffff]
+> [    3.903844] pci_bus 0000:00: root bus resource [mem 0xa0000000-0xafffffff]
+> [    3.903871] pci_bus 0000:00: root bus resource [mem 0xb0000000-0xbfffffff pref]
+> [    3.903901] pci_bus 0000:00: root bus resource [bus 00-ff]
 
-> > Emulating a PCI-to-PCI bridge very nicely allows to re-use the PCI core
-> > resource allocation code. I think it's really the main reason for
-> > emulated those PCI-to-PCI bridges, rather than willing to comply to
-> > some standards.
-> > 
-> > So what I'm going to do now is rework my patch series by removing the
-> > emulated host bridge (which is normally mandatory by PCIe standard, but
-> > Linux doesn't need it, so we don't care), but I'll keep the emulated
-> > PCI-to-PCI bridges in order to benefit for the PCI core resource
-> > allocation mechanisms.
-> > 
-> > Is this ok for you?
-> 
-> Using the Linux allocator for memory resources does sound useful,
-> so if that requires using the emulated PCI-to-PCI bridges, I guess
-> it's the best compromise.
-
-Yes, that was Jason's original idea when he suggested to use PCI-to-PCI
-bridges. And when I did the implementation, it really worked nicely.
-And this PCI-to-PCI bridge emulation stuff is really not a big deal,
-look at drivers/pci/sw-pci-pci-bridge.c: 185 lines in total, including
-10 lines of comment header at the top.
-
-> I'm sorry about this situation. Unfortunatly the way that such decisions
-> are made is not always straightforward, and what seems like a good idea
-> at one point turns out to be a mistake or more complex than anticipated
-> later. With the description of the first patch set, I did not think
-> it would be necessary to fake a bridge device and their config space.
-
-Sure, I understand this. I guess you also understand my slight
-frustration when I propose A, I'm told to do B, I propose B, and I'm
-then suggested to do A again :-) But I agree, it's part of the
-technical discussion, and we can't get it right on the first shot.
-
-> What I had guessed you could do was to call pci_scan_root_bus on
-> each of the ports, and then set up the memory space window for
-> the bus including all of its child devices.
-
-But where would I read how much space is needed for the I/O and memory
-regions of each bus?
-
-Thanks,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
