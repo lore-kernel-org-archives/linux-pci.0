@@ -1,115 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:35198 "EHLO hydra.sisk.pl"
+Received: from quartz.orcorp.ca ([184.70.90.242]:45796 "EHLO quartz.orcorp.ca"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753568Ab3AHXYI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Jan 2013 18:24:08 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jiang Liu <liuj97@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v3 2/6] PCI: split registration of PCI bus devices into two stages
-Date: Wed, 09 Jan 2013 00:29:50 +0100
-Message-ID: <31602902.kR8ehd6tSR@vostro.rjw.lan>
-In-Reply-To: <1357663945-16054-3-git-send-email-jiang.liu@huawei.com>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <1357663945-16054-3-git-send-email-jiang.liu@huawei.com>
+	id S1752388Ab3AJSU3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jan 2013 13:20:29 -0500
+Date: Thu, 10 Jan 2013 11:20:07 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130110182007.GA28004@obsidianresearch.com>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130109231758.GA27065@obsidianresearch.com>
+ <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
+ <201301100917.19577.arnd@arndb.de>
+ <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 09, 2013 12:52:21 AM Jiang Liu wrote:
-> When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
-> the notification handler can't hold reference count to the new PCI bus
-> because the device object for the new bus (pci_dev->subordinate->dev)
-> hasn't been initialized yet.
+On Thu, Jan 10, 2013 at 11:25:44AM +0100, Thierry Reding wrote:
+> On Thu, Jan 10, 2013 at 09:17:19AM +0000, Arnd Bergmann wrote:
+> > On Thursday 10 January 2013, Thierry Reding wrote:
+> > > On Wed, Jan 09, 2013 at 04:17:58PM -0700, Jason Gunthorpe wrote:
+> > > > On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
+> > > > You could decrease the size of the mapping to only span the bus
+> > > > numbers that are configured for use via DT.
+> > > 
+> > > That won't work, unfortunately. The mapping is such that the bus number
+> > > is not encoded in the uppermost bits, the extended register number is.
+> > > So the only thing that we could do is decrease the size of the extended
+> > > register space for *all* devices.
+> > 
+> > But you could still a method to map 16 separate areas per bus, each 65536
+> > bytes long, which results in 1MB per bus. That is probably ok, since
+> > very few systems have more than a handful of buses in practice.
+> > 
+> > In theory, doing static mappings on a per-page base would let you
+> > do 16 devices at a time, but it's probably worth doing at this fine
+> > granularity.
 > 
-> Split the registration of PCI bus device into two stages as below,
-> so that the event handler could hold reference count to the new PCI bus
-> when handling BUS_NOTIFY_ADD_DEVICE event.
+> I don't understand how this would help. The encoding is like this:
 > 
-> 1) device_initialize(&pci_dev->dev)
-> 2) device_initialize(&pci_dev->subordinate->dev)
-> 3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
-> 4) device_add(&pci_dev->dev)
-> 5) device_add(&pci_dev->subordinate->dev)
+> 	[27:24] extended register number
+> 	[23:16] bus number
+> 	[15:11] device number
+> 	[10: 8] function number
+> 	[ 7: 0] register number
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/bus.c    |    2 +-
->  drivers/pci/probe.c  |    4 +++-
->  drivers/pci/remove.c |   10 +++++-----
->  3 files changed, 9 insertions(+), 7 deletions(-)
+> So it doesn't matter whether I use separate areas per bus or not. As
+> soon as the whole extended configuration space needs to be accessed a
+> whopping 28 bits (256 MiB) are required.
+
+You'd piece a mapping together, each bus requires 16 64k mappings, a
+simple 2d array of busnr*16 of pointers would do the trick. A more
+clever solution would be to allocate contiguous virtual memory and
+split that up..
+
+> > Actually, AER probably needs this, and I believe some broken devices 
+> > need to mask interrupts using the PCI command word in the config space,
+> > it it can happen.
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index ad6a8b6..2fea481 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -198,7 +198,7 @@ int pci_bus_add_child(struct pci_bus *bus)
->  	if (bus->bridge)
->  		bus->dev.parent = bus->bridge;
->  
-> -	retval = device_register(&bus->dev);
-> +	retval = device_add(&bus->dev);
->  	if (retval)
->  		return retval;
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e557d6f..a8315c2 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -642,6 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	 */
->  	child->dev.class = &pcibus_class;
->  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> +	device_initialize(&child->dev);
->  
->  	/*
->  	 * Set up the primary, secondary and subordinate
-> @@ -1678,7 +1679,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	b->dev.class = &pcibus_class;
->  	b->dev.parent = b->bridge;
->  	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-> -	error = device_register(&b->dev);
-> +	device_initialize(&b->dev);
-> +	error = device_add(&b->dev);
+> Ugh... that would kill any such dynamic mapping approach. Perhaps if we
+> could mark a device as requiring a static mapping we could pin that
+> cache entry. But that doesn't sound very encouraging.
 
-Well, the change here isn't really necessary, as far as I can say.
+AER applies to pretty much every PCI-E device these days.
 
->  	if (error)
->  		goto class_dev_reg_err;
->  
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index fc38c48..a1fdd0f 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
->  	list_del(&bus->node);
->  	pci_bus_release_busn_res(bus);
->  	up_write(&pci_bus_sem);
-> -	if (!bus->is_added)
-> -		return;
-> -
-> -	pci_remove_legacy_files(bus);
-> -	device_unregister(&bus->dev);
-> +	if (bus->is_added) {
-> +		pci_remove_legacy_files(bus);
-> +		device_del(&bus->dev);
-> +	}
-> +	put_device(&bus->dev);
->  }
->  EXPORT_SYMBOL(pci_remove_bus);
->  
-> 
-
-Apart from the above
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Jason
