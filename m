@@ -1,65 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f202.google.com ([209.85.217.202]:51058 "EHLO
-	mail-lb0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217Ab3AIRxI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:53:08 -0500
-Received: by mail-lb0-f202.google.com with SMTP id s4so127026lbc.1
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:53:06 -0800 (PST)
-Subject: [PATCH 3/5] mn10300/PCI: Remove unused pci_root_bus
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	x86@kernel.org
-Date: Wed, 09 Jan 2013 10:53:05 -0700
-Message-ID: <20130109175305.13904.82833.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-References: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
+Received: from cantor2.suse.de ([195.135.220.15]:49242 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932720Ab3AJDWD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Jan 2013 22:22:03 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Subject: Re: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
+Date: Thu, 10 Jan 2013 04:21:49 +0100
+Message-ID: <1586060.uJlkOEQfVW@hammer82.arch.suse.de>
+In-Reply-To: <CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <201301081747.17853.trenn@suse.de> <CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_root_bus is unused, so remove all references to it.
+On Tuesday, January 08, 2013 09:19:18 AM Yinghai Lu wrote:
+...
+> 
+> that exactmap logic still have problem:
+> We need to check exactmap at first, aka need to scan the whole comand line
+> to see if exactmap is there at first and reset e820 tables then handle
+> other memmap opt.
+> 
+> Also please update your patch after
+> 
+> tip/x86/mm2
+> 
+> I have one patch that process memmap= with "," there.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/tip/tip.git;a=commitdiff;h=9710f58
+> 1bb4c35589ac046b0cfc0deb7f369fc85
+> 
+> We could put exactmap scanning in new parse_memmap_opt.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/mn10300/unit-asb2305/pci-asb2305.h |    1 -
- arch/mn10300/unit-asb2305/pci.c         |    4 +---
- 2 files changed, 1 insertions(+), 4 deletions(-)
+I still do not understand why:
 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
-index 1194fe4..7fa66a0 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.h
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
-@@ -36,7 +36,6 @@ extern void pcibios_resource_survey(void);
- /* pci.c */
- 
- extern int pcibios_last_bus;
--extern struct pci_bus *pci_root_bus;
- extern struct pci_ops *pci_root_ops;
- 
- extern struct irq_routing_table *pcibios_get_irq_routing_table(void);
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index e205948..426bf51 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -24,7 +24,6 @@
- unsigned int pci_probe = 1;
- 
- int pcibios_last_bus = -1;
--struct pci_bus *pci_root_bus;
- struct pci_ops *pci_root_ops;
- 
- /*
-@@ -377,8 +376,7 @@ static int __init pcibios_init(void)
- 
- 	pci_add_resource_offset(&resources, &pci_ioport_resource, io_offset);
- 	pci_add_resource_offset(&resources, &pci_iomem_resource, mem_offset);
--	pci_root_bus = pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL,
--					 &resources);
-+	pci_scan_root_bus(NULL, 0, &pci_direct_ampci, NULL, &resources);
- 
- 	pcibios_irq_init();
- 	pcibios_fixup_irqs();
+Kexec (kexec/firmware_memmap.c) is setting up the e820 map from:
+/sys/firmware/memmap/*
+and pass it via bootloader structures.
+And this e820 table gets immediately voided by memmap=exactmap
+and a new one passed via boot parameters is set up.
+If I read this correctly, this is what happens?
 
+Can kexec simply pass the memory to use via memmap=X@Y
+Then take the original e820 table, but not the usable entries (those
+are coming from above memmap=X@Y).
+That would mean that the kexec kernel takes all the
+original ACPI, ACPI NVS, reserved, unusable (everthing but usable) entries
+from the original e820 table and identifies the usable memory from
+memmap boot param?
+
+This would be much smarter than trying to pass the mmconf reserved
+area and I could imagine other issues will show up if the reserved areas
+do not match the original ones in the kexec kernel.
+
+If this really can be done and memmap=exactmap was only used by kexec,
+it's logic could be redefined from "drop all e820 entries" to
+"drop all usable e820 entries" and no further adjustings in kexec/kernel are
+needed to get mmconf working (and other issues may be avoided before
+they happen). Beside that ACPI reserved aread is not needed anymore to get
+passed via memmap=X#Y by kexec.
+
+   Thomas
