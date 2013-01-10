@@ -1,64 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:1311 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728Ab3A2CHn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 21:07:43 -0500
-Message-ID: <51072EDA.2000704@huawei.com>
-Date: Tue, 29 Jan 2013 10:07:22 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+Received: from hydra.sisk.pl ([212.160.235.94]:37128 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754496Ab3AJVpO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jan 2013 16:45:14 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Myron Stowe <mstowe@redhat.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
 	Yijing Wang <wangyijing@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-5-git-send-email-jiang.liu@huawei.com> <3500982.MUDp6kKU3R@vostro.rjw.lan> <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com> <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com> <CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com> <CAE9FiQXkrYubkgbbOXmrEXvGZBZXMZ6sh8kGTpF1_=tD3OMPJw@mail.gmail.com> <CAErSpo7vHXdh=ogvfZnxx9gqgiifWGa=XzS+ZKjXFFOPue4TTw@mail.gmail.com> <CAE9FiQU84OSQrQJEGAQTDzVv8kGCi+fmgM8+ycoMXMUfHsNe-g@mail.gmail.com>
-In-Reply-To: <CAE9FiQU84OSQrQJEGAQTDzVv8kGCi+fmgM8+ycoMXMUfHsNe-g@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>,
+	bhelgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when PCI hotplug event happens
+Date: Thu, 10 Jan 2013 22:50:59 +0100
+Message-ID: <2704169.6ID6mDVPAt@vostro.rjw.lan>
+In-Reply-To: <1357853063.2339.10.camel@zim.stowe>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <CAErSpo5UD9362JVKzG4rcLJ6kKMLvMzdJ3kLRvRTSRdSqHOH9w@mail.gmail.com> <1357853063.2339.10.camel@zim.stowe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013-1-29 6:58, Yinghai Lu wrote:
-> On Mon, Jan 28, 2013 at 2:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> CONFIG_ACPI_PCI_SLOT=y in RHEL6, so evidently they have this problem.
+On Thursday, January 10, 2013 02:24:23 PM Myron Stowe wrote:
+> [+cc Yinghai]
 > 
-> oh, I only checked opensuse that has that set to m.
+> On Wed, 2013-01-09 at 13:44 -0700, Bjorn Helgaas wrote:
+> > [+cc Myron]
+> > 
+> > On Wed, Jan 9, 2013 at 1:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Thursday, January 10, 2013 12:58:25 AM Jiang Liu wrote:
+> > >> Hi Rafael,
+> > >>       Thanks for your great efforts to review the patch.
+> > >>
+> > >> On 01/09/2013 08:01 AM, Rafael J. Wysocki wrote:
+> > >> > Hi,
+> > >> >
+> > >> > On Wednesday, January 09, 2013 12:52:22 AM Jiang Liu wrote:
+> > >> snip
+> > >> >>
+> > >> >> +static void acpi_pci_slot_notify_add(struct pci_dev *dev)
+> > >> >> +{
+> > >> >> +  acpi_handle handle;
+> > >> >> +  struct callback_args context;
+> > >> >> +
+> > >> >> +  if (!dev->subordinate)
+> > >> >> +          return;
+> > >> >> +
+> > >> >> +  mutex_lock(&slot_list_lock);
+> > >> >> +  handle = DEVICE_ACPI_HANDLE(&dev->dev);
+> > >> >> +  context.root_handle = acpi_find_root_bridge_handle(dev);
+> > >> >
+> > >> > There's a patch under discussion that removes this function.
+> > >> >
+> > >> > Isn't there any other way to do this?
+> > >>       I will try to find a way to get rid of calling acpi_find_root_bridge_handle,
+> > >> and it seems doable.
+> > >>
+> > >> >
+> > >> >> +  if (handle && context.root_handle) {
+> > >> >> +          context.pci_bus = dev->subordinate;
+> > >> >> +          context.user_function = register_slot;
+> > >> >> +          acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+> > >> >
+> > >> > You can just pass 1 here I think.  Does the compiler complain?
+> > >> Thanks for reminder, the (u32) is unnecessary.
+> > >>
+> > >> >
+> > >> >> +                              register_slot, NULL, &context, NULL);
+> > >> >> +  }
+> > >> >> +  mutex_unlock(&slot_list_lock);
+> > >> >> +}
+> > >> >> +
+> > >> >> +static void acpi_pci_slot_notify_del(struct pci_dev *dev)
+> > >> >> +{
+> > >> >> +  struct acpi_pci_slot *slot, *tmp;
+> > >> >> +  struct pci_bus *bus = dev->subordinate;
+> > >> >> +
+> > >> >> +  if (!bus)
+> > >> >> +          return;
+> > >> >> +
+> > >> >> +  mutex_lock(&slot_list_lock);
+> > >> >> +  list_for_each_entry_safe(slot, tmp, &slot_list, list)
+> > >> >> +          if (slot->pci_slot && slot->pci_slot->bus == bus) {
+> > >> >> +                  list_del(&slot->list);
+> > >> >> +                  pci_destroy_slot(slot->pci_slot);
+> > >> >> +                  put_device(&bus->dev);
+> > >> >> +                  kfree(slot);
+> > >> >> +          }
+> > >> >> +  mutex_unlock(&slot_list_lock);
+> > >> >> +}
+> > >> >> +
+> > >> >> +static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
+> > >> >> +                             unsigned long event, void *data)
+> > >> >> +{
+> > >> >> +  struct device *dev = data;
+> > >> >> +
+> > >> >> +  switch (event) {
+> > >> >> +  case BUS_NOTIFY_ADD_DEVICE:
+> > >> >> +          acpi_pci_slot_notify_add(to_pci_dev(dev));
+> > >> >> +          break;
+> > >> >
+> > >> > Do I think correctly that this is going to be called for every PCI device
+> > >> > added to the system, even if it's not a bridge?
+> > >> You are right. Function acpi_pci_slot_notify_add() and acpi_pci_slot_notify_del()
+> > >> will check whether it's a bridge. If preferred, I will move the check up into
+> > >> acpi_pci_slot_notify_fn().
+> > >>
+> > >> >
+> > >> >> +  case BUS_NOTIFY_DEL_DEVICE:
+> > >> >> +          acpi_pci_slot_notify_del(to_pci_dev(dev));
+> > >> >> +          break;
+> > >> >> +  default:
+> > >> >> +          return NOTIFY_DONE;
+> > >> >> +  }
+> > >> >> +
+> > >> >> +  return NOTIFY_OK;
+> > >> >> +}
+> > >> >> +
+> > >> >> +static struct notifier_block acpi_pci_slot_notifier = {
+> > >> >> +  .notifier_call = &acpi_pci_slot_notify_fn,
+> > >> >> +};
+> > >> >> +
+> > >> >>  static int __init
+> > >> >>  acpi_pci_slot_init(void)
+> > >> >>  {
+> > >> >>    dmi_check_system(acpi_pci_slot_dmi_table);
+> > >> >>    acpi_pci_register_driver(&acpi_pci_slot_driver);
+> > >> >> +  bus_register_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
+> > >> >
+> > >> > I wonder if/why this has to be so convoluted?
+> > >> >
+> > >> > We have found a PCI bridge in the ACPI namespace, so we've created a struct
+> > >> > acpi_device for it and we've walked the namespace below it already.
+> > >> >
+> > >> > Now we're creating a struct pci_dev for it and while registering it we're
+> > >> > going to walk the namespace below the bridge again to find and register its
+> > >> > slots and that is done indirectly from a bus type notifier.
+> > >> >
+> > >> > Why can't we enumerate the slots directly upfront?
+> > >> Do you mean to create the PCI slot devices when creating the ACPI devices?
+> > >> I think there are two factors prevent us from doing that.
+> > >> The first is that the ACPI pci_slot driver could be built as a module, so
+> > >> we can't call into it from the ACPI core.
+> > >
+> > > I didn't say about calling the pci_slot driver from the ACPI core, but about
+> > > enumerating slots in a way suitable for consumption by the pci_slot driver
+> > > when it's ready.
+> > >
+> > > That said I really don't see a value in having a modular pci_slot driver.  It
+> > > is part of the hotplug infrastructure and should always be presend for this
+> > > reason, so we don't need to worry about the "pci_slot driver not present" case.
+> > 
+> > I agree that there's no value in supporting CONFIG_ACPI_PCI_SLOT=m.  I
+> > think Myron has some patches that remove that case.
+> > 
+> > I'm not sure what the best way to merge them is.  We have a bunch of
+> > stuff this cycle that touches both ACPI and PCI.
 > 
->>
->> Asking users to edit module.conf by hand is not a solution, just like
->> asking users to boot with a command line option is not a solution.
->> That sort of stuff is fine for a hobbyist OS intended only for techie
->> geeks.  It's not fine for Linux.
+> Rafael:
 > 
-> not sure. add something in command line or conf files.
-> but recompile kernel is another story.
+> The series Bjorn mentions is at https://lkml.org/lkml/2012/12/7/11  It
+> converts both the "ACPI Hot Plug PCI Controller Driver ("acpiphp")" and
+> "ACPI PCI Slot Detection Driver ("pci_slot")" sub-drivers to built-in
+> drivers (i.e. no longer supported as modules).
 > 
->>
->> If you would give a concrete example of the ACPI namespace info and
->> device config, hotplug sequence, etc., required to show the problem,
->> we could have a useful discussion about ways to fix it.  But if all
->> you have is FUD about "this might break and users won't have the
->> ability to edit modules.conf," that doesn't help me see why this patch
->> is a bad idea.
+> Yinghai commented back - https://lkml.org/lkml/2012/12/7/29 - indicating
+> a possible issue with such but his response was too terse for me to get
+> anything from.  Also, I've noticed that a couple of the distros, debian
+> being one, have made similar changes so I'm a little skeptical about
+> Yinghai's concerns.
 > 
-> Never mind, We should save your bandwidth to more patches.
-Hi Yinghai,
-	Could we use quirk to auto-disable PCIe native hotplug for
-problematic platforms?
-Regards!
-Gerry
+> Since you have similar thoughts - "I really don't see a value in having
+> a modular pci_slot driver" - can you foresee any issues with such?
 
-> 
-> Yinghai
-> 
-> .
-> 
+Well, I don't see what functional problems that can bring.
+
+In theory people may want to have them as modules to avoid loading them on
+systems that don't use PCI hotplug, but honestly I think that the complexity
+this causes us to deal with is not worth it.
+
+Moreover, removing the modularity may actually allow us to solve some ordering
+issues once and for good.
+
+Thanks,
+Rafael
 
 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
