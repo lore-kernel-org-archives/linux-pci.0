@@ -1,283 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f48.google.com ([209.85.210.48]:52390 "EHLO
-	mail-da0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566Ab3AaPhN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 10:37:13 -0500
-Message-ID: <510A8F9C.5090306@gmail.com>
-Date: Thu, 31 Jan 2013 23:37:00 +0800
-From: Jiang Liu <liuj97@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:62462 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754627Ab3AJSzL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 13:55:11 -0500
+Date: Thu, 10 Jan 2013 19:55:05 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130109231758.GA27065@obsidianresearch.com>
+ <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
+ <201301100917.19577.arnd@arndb.de>
+ <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
+ <20130110182007.GA28004@obsidianresearch.com>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] acpiphp: remove dead code for PCI host bridge hotplug
-References: <1359562210-26536-1-git-send-email-jiang.liu@huawei.com> <1359562210-26536-2-git-send-email-jiang.liu@huawei.com> <CAE9FiQU2LvEjTpbjs+LUb=vU7XDC_76OEo5irR_Bn_DjvfgQ0w@mail.gmail.com>
-In-Reply-To: <CAE9FiQU2LvEjTpbjs+LUb=vU7XDC_76OEo5irR_Bn_DjvfgQ0w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VbJkn9YxBvnuCH5J"
+In-Reply-To: <20130110182007.GA28004@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/31/2013 01:27 AM, Yinghai Lu wrote:
-> On Wed, Jan 30, 2013 at 8:10 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->> Commit 668192b678201d2fff27c "PCI: acpiphp: Move host bridge hotplug
->> to pci_root.c" has moved PCI host bridge hotplug logic from acpiphp
->> to pci_root, but there is still PCI host bridge hotplug related
->> dead code left in acpiphp. So remove those dead code.
->>
->> Now companion ACPI devices are always created before corresponding
->> PCI devices. And the ACPI event handle_hotplug_event_bridge() will be
->> installed only if it has associated PCI device. So remove dead code to
->> handle bridge hot-adding in function handle_hotplug_event_bridge().
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> ---
->>  drivers/pci/hotplug/acpiphp.h      |   13 +---
->>  drivers/pci/hotplug/acpiphp_glue.c |  124 ++++--------------------------------
->>  2 files changed, 14 insertions(+), 123 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
->> index b3ead7a..b70ac00 100644
->> --- a/drivers/pci/hotplug/acpiphp.h
->> +++ b/drivers/pci/hotplug/acpiphp.h
->> @@ -79,7 +79,6 @@ struct acpiphp_bridge {
->>         /* Ejectable PCI-to-PCI bridge (PCI bridge and PCI function) */
->>         struct acpiphp_func *func;
->>
->> -       int type;
->>         int nr_slots;
->>
->>         u32 flags;
->> @@ -146,10 +145,6 @@ struct acpiphp_attention_info
->>  /* PCI bus bridge HID */
->>  #define ACPI_PCI_HOST_HID              "PNP0A03"
->>
->> -/* PCI BRIDGE type */
->> -#define BRIDGE_TYPE_HOST               0
->> -#define BRIDGE_TYPE_P2P                        1
->> -
->>  /* ACPI _STA method value (ignore bit 4; battery present) */
->>  #define ACPI_STA_PRESENT               (0x00000001)
->>  #define ACPI_STA_ENABLED               (0x00000002)
->> @@ -158,13 +153,7 @@ struct acpiphp_attention_info
->>  #define ACPI_STA_ALL                   (0x0000000f)
->>
->>  /* bridge flags */
->> -#define BRIDGE_HAS_STA         (0x00000001)
->> -#define BRIDGE_HAS_EJ0         (0x00000002)
->> -#define BRIDGE_HAS_HPP         (0x00000004)
->> -#define BRIDGE_HAS_PS0         (0x00000010)
->> -#define BRIDGE_HAS_PS1         (0x00000020)
->> -#define BRIDGE_HAS_PS2         (0x00000040)
->> -#define BRIDGE_HAS_PS3         (0x00000080)
->> +#define BRIDGE_HAS_EJ0         (0x00000001)
->>
->>  /* slot flags */
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index acb7af2..4681d2c 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -325,8 +325,8 @@ static void init_bridge_misc(struct acpiphp_bridge *bridge)
->>                 return;
->>         }
->>
->> -       /* install notify handler */
->> -       if (bridge->type != BRIDGE_TYPE_HOST) {
->> +       /* install notify handler for P2P bridges */
->> +       if (!pci_is_root_bus(bridge->pci_bus)) {
->>                 if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
->>                         status = acpi_remove_notify_handler(bridge->func->handle,
->>                                                 ACPI_SYSTEM_NOTIFY,
->> @@ -369,27 +369,12 @@ static struct acpiphp_func *acpiphp_bridge_handle_to_function(acpi_handle handle
->>  static inline void config_p2p_bridge_flags(struct acpiphp_bridge *bridge)
->>  {
->>         acpi_handle dummy_handle;
->> +       struct acpiphp_func *func;
->>
->>         if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
->> -                                       "_STA", &dummy_handle)))
->> -               bridge->flags |= BRIDGE_HAS_STA;
->> -
->> -       if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
->> -                                       "_EJ0", &dummy_handle)))
->> +                                       "_EJ0", &dummy_handle))) {
->>                 bridge->flags |= BRIDGE_HAS_EJ0;
->>
->> -       if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
->> -                                       "_PS0", &dummy_handle)))
->> -               bridge->flags |= BRIDGE_HAS_PS0;
->> -
->> -       if (ACPI_SUCCESS(acpi_get_handle(bridge->handle,
->> -                                       "_PS3", &dummy_handle)))
->> -               bridge->flags |= BRIDGE_HAS_PS3;
->> -
->> -       /* is this ejectable p2p bridge? */
->> -       if (bridge->flags & BRIDGE_HAS_EJ0) {
->> -               struct acpiphp_func *func;
->> -
->>                 dbg("found ejectable p2p bridge\n");
->>
->>                 /* make link between PCI bridge and PCI function */
->> @@ -412,7 +397,6 @@ static void add_host_bridge(struct acpi_pci_root *root)
->>         if (bridge == NULL)
->>                 return;
->>
->> -       bridge->type = BRIDGE_TYPE_HOST;
->>         bridge->handle = handle;
->>
->>         bridge->pci_bus = root->bus;
->> @@ -432,7 +416,6 @@ static void add_p2p_bridge(acpi_handle *handle)
->>                 return;
->>         }
->>
->> -       bridge->type = BRIDGE_TYPE_P2P;
->>         bridge->handle = handle;
->>         config_p2p_bridge_flags(bridge);
->>
->> @@ -543,7 +526,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->>         acpi_status status;
->>         acpi_handle handle = bridge->handle;
->>
->> -       if (bridge->type != BRIDGE_TYPE_HOST) {
->> +       if (!pci_is_root_bus(bridge->pci_bus)) {
->>                 status = acpi_remove_notify_handler(handle,
->>                                             ACPI_SYSTEM_NOTIFY,
->>                                             handle_hotplug_event_bridge);
->> @@ -551,8 +534,7 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->>                         err("failed to remove notify handler\n");
->>         }
->>
->> -       if ((bridge->type != BRIDGE_TYPE_HOST) &&
->> -           ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func)) {
->> +       if ((bridge->flags & BRIDGE_HAS_EJ0) && bridge->func) {
->>                 status = acpi_install_notify_handler(bridge->func->handle,
->>                                                 ACPI_SYSTEM_NOTIFY,
->>                                                 handle_hotplug_event_func,
->> @@ -1122,64 +1104,11 @@ static void acpiphp_sanitize_bus(struct pci_bus *bus)
->>         }
->>  }
->>
->> -/* Program resources in newly inserted bridge */
->> -static int acpiphp_configure_p2p_bridge(acpi_handle handle)
->> -{
->> -       struct pci_dev *pdev = acpi_get_pci_dev(handle);
->> -       struct pci_bus *bus = pdev->subordinate;
->> -
->> -       pci_dev_put(pdev);
->> -
->> -       pci_bus_size_bridges(bus);
->> -       pci_bus_assign_resources(bus);
->> -       acpiphp_sanitize_bus(bus);
->> -       acpiphp_set_hpp_values(bus);
->> -       pci_enable_bridges(bus);
->> -       return 0;
->> -}
->> -
->> -static void handle_p2p_bridge_insertion(acpi_handle handle, u32 type)
->> -{
->> -       struct acpi_device *device;
->> -
->> -       if ((type != ACPI_NOTIFY_BUS_CHECK) &&
->> -                       (type != ACPI_NOTIFY_DEVICE_CHECK)) {
->> -               err("unexpected notification type %d\n", type);
->> -               return;
->> -       }
->> -
->> -       if (acpi_bus_scan(handle)) {
->> -               err("cannot add bridge to acpi list\n");
->> -               return;
->> -       }
->> -       if (acpi_bus_get_device(handle, &device)) {
->> -               err("ACPI device object missing\n");
->> -               return;
->> -       }
->> -       if (!acpiphp_configure_p2p_bridge(handle))
->> -               add_p2p_bridge(handle);
->> -       else
->> -               err("cannot configure and start bridge\n");
->> -
->> -}
->> -
->>  /*
->>   * ACPI event handlers
->>   */
->>
->>  static acpi_status
->> -count_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->> -{
->> -       int *count = (int *)context;
->> -       struct acpiphp_bridge *bridge;
->> -
->> -       bridge = acpiphp_handle_to_bridge(handle);
->> -       if (bridge)
->> -               (*count)++;
->> -       return AE_OK ;
->> -}
->> -
->> -static acpi_status
->>  check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->>  {
->>         struct acpiphp_bridge *bridge;
->> @@ -1203,8 +1132,6 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
->>         char objname[64];
->>         struct acpi_buffer buffer = { .length = sizeof(objname),
->>                                       .pointer = objname };
->> -       struct acpi_device *device;
->> -       int num_sub_bridges = 0;
->>         struct acpi_hp_work *hp_work;
->>         acpi_handle handle;
->>         u32 type;
->> @@ -1212,23 +1139,7 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
->>         hp_work = container_of(work, struct acpi_hp_work, work);
->>         handle = hp_work->handle;
->>         type = hp_work->type;
->> -
->> -       if (acpi_bus_get_device(handle, &device)) {
->> -               /* This bridge must have just been physically inserted */
->> -               handle_p2p_bridge_insertion(handle, type);
->> -               goto out;
->> -       }
-> 
-> According to my understanding, for acpiphp we still need to support:
-> 
-> one slot is on root bus 0, and will take p2p bridge directly.
 
-Hi Yinghai,
-	I think the acpiphp driver still supports PCI hotplug slots directly attached
-to PCI host bridges with the patch applied. The situations are:
-1) The acpiphp driver won't install ACPI system event handler onto ACPI handles for
-   PCI/PCIe host bridges, otherwise it will conflict with the PCI host bridge hotplug
-   driver.
-2) If there's no PCI device attached to a PCI hotplug slot or the attached PCI device
-   is not a P2P bridge, acpiphp installs handle_hotplug_event_func() to handle ACPI
-   system events. Otherwise handle_hotplug_event_bridge() will be installed.
-3) When hot-adding a P2P bridge, acpiphp replaces handle_hotplug_event_func() with
-   handle_hotplug_event_bridge(), so hot-removal of P2P bridge will be handled by 
-   handle_hotplug_event_bridge().
-4) When hot-removing a P2P bridge, acpi replaces handle_hotplug_event_bridge() with
-   handle_hotplug_event_func(). So P2P bridge hot-add will always be handled by 
-   handle_hotplug_event_func() instead of handle_hotplug_event_bridge()
-5) The acpiphp driver still scans for hotplug slots directly attached to PCI host
-   bridges.
+--VbJkn9YxBvnuCH5J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So I think the code in handle_hotplug_event_bridge() to handle P2P hot-addition
-is dead. Yijing has helped to test the code by faking ACPI CUSTOM_METHOD, and it
-does work as expected.
+On Thu, Jan 10, 2013 at 11:20:07AM -0700, Jason Gunthorpe wrote:
+> On Thu, Jan 10, 2013 at 11:25:44AM +0100, Thierry Reding wrote:
+> > On Thu, Jan 10, 2013 at 09:17:19AM +0000, Arnd Bergmann wrote:
+> > > On Thursday 10 January 2013, Thierry Reding wrote:
+> > > > On Wed, Jan 09, 2013 at 04:17:58PM -0700, Jason Gunthorpe wrote:
+> > > > > On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
+> > > > > You could decrease the size of the mapping to only span the bus
+> > > > > numbers that are configured for use via DT.
+> > > >=20
+> > > > That won't work, unfortunately. The mapping is such that the bus nu=
+mber
+> > > > is not encoded in the uppermost bits, the extended register number =
+is.
+> > > > So the only thing that we could do is decrease the size of the exte=
+nded
+> > > > register space for *all* devices.
+> > >=20
+> > > But you could still a method to map 16 separate areas per bus, each 6=
+5536
+> > > bytes long, which results in 1MB per bus. That is probably ok, since
+> > > very few systems have more than a handful of buses in practice.
+> > >=20
+> > > In theory, doing static mappings on a per-page base would let you
+> > > do 16 devices at a time, but it's probably worth doing at this fine
+> > > granularity.
+> >=20
+> > I don't understand how this would help. The encoding is like this:
+> >=20
+> > 	[27:24] extended register number
+> > 	[23:16] bus number
+> > 	[15:11] device number
+> > 	[10: 8] function number
+> > 	[ 7: 0] register number
+> >=20
+> > So it doesn't matter whether I use separate areas per bus or not. As
+> > soon as the whole extended configuration space needs to be accessed a
+> > whopping 28 bits (256 MiB) are required.
+>=20
+> You'd piece a mapping together, each bus requires 16 64k mappings, a
+> simple 2d array of busnr*16 of pointers would do the trick. A more
+> clever solution would be to allocate contiguous virtual memory and
+> split that up..
 
-Regards!
-Gerry 
+Oh, I see. I'm not very familiar with the internals of remapping, so
+I'll need to do some more reading. Thanks for the hints.
 
-> 
-> I thought that I pointed this out when Yijing Wang or someone else
-> pose similar patch.
-> 
-> Thanks
-> 
-> Yinghai
-> 
+> > > Actually, AER probably needs this, and I believe some broken devices=
+=20
+> > > need to mask interrupts using the PCI command word in the config spac=
+e,
+> > > it it can happen.
+> >=20
+> > Ugh... that would kill any such dynamic mapping approach. Perhaps if we
+> > could mark a device as requiring a static mapping we could pin that
+> > cache entry. But that doesn't sound very encouraging.
+>=20
+> AER applies to pretty much every PCI-E device these days.
 
+So given there's no way around a segmented static mapping as you
+suggested, right?
+
+Thierry
+
+--VbJkn9YxBvnuCH5J
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ7w6JAAoJEN0jrNd/PrOhPIEQAI+YHn8apatm07IyaSaF1RT2
+vtXnc//hV3lmQzwNjTewIIFYR19z7NLG1L/hct0VAa3RSKQHgU128Hle8cV/cxeR
+IaJzPJV8mJzhK3Ieh5vH/5ZTSpp+YG5LxK4JejTDajGECdhmqAKtehxwOcVZVMZC
+k3PX2146XGQwlITURLYmBwmwqc1tmFUJ3gjG2O8Hz00UviKzvD5iXgLhIUTseCXK
+fMRYAwSEqOT8Wxc5M4AygHdXvnRbmf8XMpfFQrAHazSL8zdUJ8gMbXOHVX95CVky
+neGps2EVTL8h5nUI7En2kxo6oawSIa2jKRbY8a9nB72XBCD4LBRy3U94N+B2nv9m
++T+He6Q4qGQZzc02YdAWr6KvoHljpxPBNTMs2rEsesnye7QN313h+n/EV9DcfdTW
+yxiUnOUDlPApF7IenLaBvVVUGQhIN4jnUmgrrIuKcicLVW4lTdCdvTGk6R17T/V/
+fqeRs9lixSgs1Xs7u/QNAVdPCLf+Koi4g37/sjL/nQ73B3mNexHKRRp+MbsxkAS9
+0zzvu9wpM93RS6zHExH5rww7hOc0GABE3EAwxQEY91Uk3+qCJ/sBKv7cszvovTcU
+f4ymEAMPrW34TXek5xcnKyRKT9tm/jRaWOkv69J4acxsubD15Kf8Hy1w/OfBTob9
+K9DB7rAV1fatgSvaLPh5
+=lss6
+-----END PGP SIGNATURE-----
+
+--VbJkn9YxBvnuCH5J--
