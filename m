@@ -1,226 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:39191 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab3ALXd1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 12 Jan 2013 18:33:27 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 13/22] PCI, ACPI: remove acpi_root_bridge in pci_root_hp
-Date: Sun, 13 Jan 2013 00:39:15 +0100
-Message-ID: <1816148.huKL0kTigm@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-14-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-14-git-send-email-yinghai@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.171]:50515 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753Ab3AJUVn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 15:21:43 -0500
+Date: Thu, 10 Jan 2013 21:21:27 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 11/14] ARM: tegra: tamonten: Add PCIe support
+Message-ID: <20130110202127.GB26139@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <1357764194-12677-12-git-send-email-thierry.reding@avionic-design.de>
+ <201301092123.37491.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="RASg3xLB4tUQ4RcS"
+In-Reply-To: <201301092123.37491.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:40 PM Yinghai Lu wrote:
-> Tang noticed that hotplug through container will not update acpi_root_bridge
-> list.
-> 
-> After closely checking, we don't need that for struct for tracking and
-> could use acpi_pci_root directly.
 
-Well, precisely, so please modify your patches [08-09/22] accordingly instead
-of adding this one.
+--RASg3xLB4tUQ4RcS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Rafael
+On Wed, Jan 09, 2013 at 09:23:37PM +0000, Arnd Bergmann wrote:
+> On Wednesday 09 January 2013, Thierry Reding wrote:
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> > ---
+> >  arch/arm/boot/dts/tegra20-tamonten.dtsi | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> It's not clear how this one-line patch adds PCIe support to the
+> platform. Are you missing the actual change here?
 
+This is really just required to associate a name with the regulator, but
+I think I can achieve the same by adding an alias to the TEC DTSI.
 
-> Reported-by: Tang Chen <tangchen@cn.fujitsu.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/acpi/pci_root.c |  109 +++++++++--------------------------------------
->  1 file changed, 20 insertions(+), 89 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 862abcc..697ec65 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -679,73 +679,12 @@ int __init acpi_pci_root_init(void)
->   *	only support root bridge
->   */
->  
-> -static LIST_HEAD(acpi_root_bridge_list);
-> -struct acpi_root_bridge {
-> -	struct list_head list;
-> -	acpi_handle handle;
-> -	u32 flags;
-> -};
-> -
->  /* bridge flags */
->  #define ROOT_BRIDGE_HAS_EJ0	(0x00000002)
->  #define ROOT_BRIDGE_HAS_PS3	(0x00000080)
->  
->  #define ACPI_STA_FUNCTIONING	(0x00000008)
->  
-> -static struct acpi_root_bridge *acpi_root_handle_to_bridge(acpi_handle handle)
-> -{
-> -	struct acpi_root_bridge *bridge;
-> -
-> -	list_for_each_entry(bridge, &acpi_root_bridge_list, list)
-> -		if (bridge->handle == handle)
-> -			return bridge;
-> -
-> -	return NULL;
-> -}
-> -
-> -/* allocate and initialize host bridge data structure */
-> -static void add_acpi_root_bridge(acpi_handle handle)
-> -{
-> -	struct acpi_root_bridge *bridge;
-> -	acpi_handle dummy_handle;
-> -	acpi_status status;
-> -
-> -	/* if the bridge doesn't have _STA, we assume it is always there */
-> -	status = acpi_get_handle(handle, "_STA", &dummy_handle);
-> -	if (ACPI_SUCCESS(status)) {
-> -		unsigned long long tmp;
-> -
-> -		status = acpi_evaluate_integer(handle, "_STA", NULL, &tmp);
-> -		if (ACPI_FAILURE(status)) {
-> -			printk(KERN_DEBUG "%s: _STA evaluation failure\n",
-> -						 __func__);
-> -			return;
-> -		}
-> -		if ((tmp & ACPI_STA_FUNCTIONING) == 0)
-> -			/* don't register this object */
-> -			return;
-> -	}
-> -
-> -	bridge = kzalloc(sizeof(struct acpi_root_bridge), GFP_KERNEL);
-> -	if (!bridge)
-> -		return;
-> -
-> -	bridge->handle = handle;
-> -
-> -	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &dummy_handle)))
-> -		bridge->flags |= ROOT_BRIDGE_HAS_EJ0;
-> -	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &dummy_handle)))
-> -		bridge->flags |= ROOT_BRIDGE_HAS_PS3;
-> -
-> -	list_add(&bridge->list, &acpi_root_bridge_list);
-> -}
-> -
-> -static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
-> -{
-> -	list_del(&bridge->list);
-> -	kfree(bridge);
-> -}
-> -
->  struct acpi_root_hp_work {
->  	struct work_struct work;
->  	acpi_handle handle;
-> @@ -827,28 +766,25 @@ static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
->  	return 0;
->  }
->  
-> -static void handle_root_bridge_removal(acpi_handle handle,
-> -		 struct acpi_root_bridge *bridge)
-> +static void handle_root_bridge_removal(struct acpi_device *device)
->  {
-> +	int ret_val;
->  	u32 flags = 0;
-> -	struct acpi_device *device;
-> +	acpi_handle dummy_handle;
-> +	acpi_handle handle = device->handle;
->  
-> -	if (bridge) {
-> -		flags = bridge->flags;
-> -		remove_acpi_root_bridge(bridge);
-> -	}
-> +	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &dummy_handle)))
-> +		flags |= ROOT_BRIDGE_HAS_EJ0;
-> +	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &dummy_handle)))
-> +		flags |= ROOT_BRIDGE_HAS_PS3;
->  
-> -	if (!acpi_bus_get_device(handle, &device)) {
-> -		int ret_val;
-> +	/* remove pci devices at first */
-> +	ret_val = acpi_bus_trim(device, 0);
-> +	printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
->  
-> -		/* remove pci devices at first */
-> -		ret_val = acpi_bus_trim(device, 0);
-> -		printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
-> -
-> -		/* remove acpi devices */
-> -		ret_val = acpi_bus_trim(device, 1);
-> -		printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
-> -	}
-> +	/* remove acpi devices */
-> +	ret_val = acpi_bus_trim(device, 1);
-> +	printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
->  
->  	if (flags & ROOT_BRIDGE_HAS_PS3) {
->  		acpi_status status;
-> @@ -863,7 +799,7 @@ static void handle_root_bridge_removal(acpi_handle handle,
->  
->  static void _handle_hotplug_event_root(struct work_struct *work)
->  {
-> -	struct acpi_root_bridge *bridge;
-> +	struct acpi_pci_root *root;
->  	char objname[64];
->  	struct acpi_buffer buffer = { .length = sizeof(objname),
->  				      .pointer = objname };
-> @@ -875,7 +811,7 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  	handle = hp_work->handle;
->  	type = hp_work->type;
->  
-> -	bridge = acpi_root_handle_to_bridge(handle);
-> +	root = acpi_pci_find_root(handle);
->  
->  	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
->  
-> @@ -884,10 +820,8 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  		/* bus enumerate */
->  		printk(KERN_DEBUG "%s: Bus check notify on %s\n", __func__,
->  				 objname);
-> -		if (!bridge) {
-> +		if (!root)
->  			handle_root_bridge_insertion(handle);
-> -			add_acpi_root_bridge(handle);
-> -		}
->  
->  		break;
->  
-> @@ -895,17 +829,16 @@ static void _handle_hotplug_event_root(struct work_struct *work)
->  		/* device check */
->  		printk(KERN_DEBUG "%s: Device check notify on %s\n", __func__,
->  				 objname);
-> -		if (!bridge) {
-> +		if (!root)
->  			handle_root_bridge_insertion(handle);
-> -			add_acpi_root_bridge(handle);
-> -		}
->  		break;
->  
->  	case ACPI_NOTIFY_EJECT_REQUEST:
->  		/* request device eject */
->  		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
->  				 objname);
-> -		handle_root_bridge_removal(handle, bridge);
-> +		if (root)
-> +			handle_root_bridge_removal(root->device);
->  		break;
->  	default:
->  		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
-> @@ -965,8 +898,6 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
->  				 objname);
->  
-> -	add_acpi_root_bridge(handle);
-> -
->  	return AE_OK;
->  }
->  
-> 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thierry
+
+--RASg3xLB4tUQ4RcS
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ7yLHAAoJEN0jrNd/PrOhrnoP/juo2Zm53MQ6LlVa70kC7rW1
+LCGYxaQr1AJyxEqlBxHAS4w3M9+HJ9MF2MDUuT3pOm+umRLFcNR0cctObjCTUyfV
+6YeT1Om0H1mmHPpgHBi6sM11q8dumsDqePqDNIFiILEK70EzKnUQtOrJ2O8sEnx3
+j2twKGBTa2kQL+iyaoVC/2uszEwjH9WE89CVbEMnOS8wFnyyN4lrvB4KSLnkU/77
+qzZ6nejKbyF2jMpR0CNK1BFzgBWQGv6pLAnXK4gvKWhfwaYm6+u5CLl/lOsSTCtL
+cS49wDotsB92YgQae0i7Gj3ex4+zepIAtPDUT15klhN9g6Dx67IGQLEwsdzHN44i
+RXzhqHCDfo6HfM9zTf2LkWWJvpNSYMOvjSDQqQeubeDHJVhbQGp6DTypfUKpeOBh
+e5iw6DFDX3Vll7g+pXGIaWnXK/nK4uUVphGBK3YdmiNjPFinnWOeNqrwV5W52LsC
+xOo/diDOBVMOBaWPh3AyF1Sd5rAKysxmLpgv9jKCbY2Q++q/9Awac4rgVa2ObTOa
+jcn1W6HRDCgFYnwoe8akuOo5NZEOvef2JkOhXW0YvI8hPLKteHAxLzLlYREPWwyF
+o+w0vDVlRX0emP4vzsS+j0TuWusv4MU9TkUe5Z+8KN+drqcMfeI1ZEgQlg17GjMf
+dD4HO1wyDemBUgul7AZH
+=1MWh
+-----END PGP SIGNATURE-----
+
+--RASg3xLB4tUQ4RcS--
