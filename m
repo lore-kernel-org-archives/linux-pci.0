@@ -1,82 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:51235 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796Ab3A2RmG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 12:42:06 -0500
-Date: Tue, 29 Jan 2013 10:42:05 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Maen Suleiman <maen@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130129174205.GD25646@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
- <201301282018.17714.arnd@arndb.de>
- <5106F5CB.8050304@wwwdotorg.org>
- <20130128220904.GA21446@obsidianresearch.com>
- <20130128231829.6b205c3c@skate>
- <20130128222348.GA21628@obsidianresearch.com>
- <20130128233048.2ab6a6d2@skate>
- <20130128225105.GA21935@obsidianresearch.com>
- <20130129110119.07cb9ef3@skate>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:57783 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932720Ab3AJDX4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 22:23:56 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/2] PCI,shpchp: make every slot have its own workqueue to avoid deadlock
+Date: Thu, 10 Jan 2013 11:22:59 +0800
+Message-ID: <1357788179-9764-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1357788179-9764-1-git-send-email-wangyijing@huawei.com>
+References: <1357788179-9764-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130129110119.07cb9ef3@skate>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 11:01:19AM +0100, Thomas Petazzoni wrote:
-> Dear Jason Gunthorpe,
-> 
-> On Mon, 28 Jan 2013 15:51:05 -0700, Jason Gunthorpe wrote:
-> 
-> > > > I'm refering to your earlier question about what PCI IDs to use for
-> > > > the SW emulated devices. If there is no need for the host bridge then
-> > > > you only need 1 PCI ID (for the root port bridge) and you can probably
-> > > > fairly safely re-use the one in the Marvell config space of the HW.
-> > > 
-> > > Ah, ok, I see. But isn't a host bridge needed to bind all the
-> > > PCI-to-PCI bridges under a single bus, in order to get the global
-> > > resource assignment I was referring to?
-> > 
-> > The PCI-E spec requires it, but AFAIK it doesn't actually *do*
-> > anything on Linux, and Linux doesn't require it.
-> > 
-> > I thought Thierry did this experiment and decided it wasn't necessary:
-> 
-> Could you detail what would be visible PCI bus topology if I remove the
-> emulated PCI host bridge? (And keeping one PCI-to-PCI bridge per PCIe
-> interface) ?
+remove the global shpchp_wq,shpchp_ordered_wq and create a new workqueue
+for every slot to avoid deadlock when hot remove a pci iobox(which is
+slot--connected---slot).
 
-So if this is what you have now...
+call path:
+ button press
+   shpc_isr(interrupt handler)
+      shpchp_handle_attention_button
+         queue_interrupt_event
+            queue_work "interrupt_event_handler" into "shpchp_wq"
+                interrupt_event_handler
+                   handle_button_press_event
+                       queue_delayed_work "shpchp_queue_pushbutton_work" into "shpchp_wq"
+                          queue_work "shpchp_pushbutton_thread" into "shpchp_ordered_wq"
+                              shpchp_pushbutton_thread
+                                  shpchp_disable_slot
+                                     pci_stop_and_remove_bus_device
+                                       ......
+                                       shpc_remove()
+                                         hpc_release_ctlr
+                                           flush_workqueue(shpchp_wq);
+                                           flush_workqueue(shpchp_ordered_wq);
+In this call path, flush_workqueue task will hang, because shpchp_ordered_wq is running.
 
--[0000:00]-+-00.0 <- Host bridge
-           +-10.0 <- Bridge
-           +-11.0 <- Bridge
-           +-12.0 <- Bridge
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/shpchp.h      |    3 +--
+ drivers/pci/hotplug/shpchp_core.c |   34 +++++++++++++---------------------
+ drivers/pci/hotplug/shpchp_ctrl.c |    6 +++---
+ 3 files changed, 17 insertions(+), 26 deletions(-)
 
-Then removing the config space at 00.0 (ie the host bridge) will give
-you:
+diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
+index ca64932..b849f99 100644
+--- a/drivers/pci/hotplug/shpchp.h
++++ b/drivers/pci/hotplug/shpchp.h
+@@ -46,8 +46,6 @@
+ extern bool shpchp_poll_mode;
+ extern int shpchp_poll_time;
+ extern bool shpchp_debug;
+-extern struct workqueue_struct *shpchp_wq;
+-extern struct workqueue_struct *shpchp_ordered_wq;
+ 
+ #define dbg(format, arg...)						\
+ do {									\
+@@ -91,6 +89,7 @@ struct slot {
+ 	struct list_head	slot_list;
+ 	struct delayed_work work;	/* work for button event */
+ 	struct mutex lock;
++	struct workqueue_struct *wq;
+ 	u8 hp_slot;
+ };
+ 
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index b6de307..01d39cc 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -39,8 +39,6 @@
+ bool shpchp_debug;
+ bool shpchp_poll_mode;
+ int shpchp_poll_time;
+-struct workqueue_struct *shpchp_wq;
+-struct workqueue_struct *shpchp_ordered_wq;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+@@ -129,6 +127,14 @@ static int init_slots(struct controller *ctrl)
+ 		slot->device = ctrl->slot_device_offset + i;
+ 		slot->hpc_ops = ctrl->hpc_ops;
+ 		slot->number = ctrl->first_slot + (ctrl->slot_num_inc * i);
++
++		snprintf(name, sizeof(name), "shpchp-%d", slot->number);
++		slot->wq = alloc_workqueue(name, 0, 0);
++		if (!slot->wq) {
++			retval = -ENOMEM;
++			goto error_info;
++		}
++
+ 		mutex_init(&slot->lock);
+ 		INIT_DELAYED_WORK(&slot->work, shpchp_queue_pushbutton_work);
+ 
+@@ -148,7 +154,7 @@ static int init_slots(struct controller *ctrl)
+ 		if (retval) {
+ 			ctrl_err(ctrl, "pci_hp_register failed with error %d\n",
+ 				 retval);
+-			goto error_info;
++			goto error_slotwq;
+ 		}
+ 
+ 		get_power_status(hotplug_slot, &info->power_status);
+@@ -160,6 +166,8 @@ static int init_slots(struct controller *ctrl)
+ 	}
+ 
+ 	return 0;
++error_slotwq:
++	destroy_workqueue(slot->wq);
+ error_info:
+ 	kfree(info);
+ error_hpslot:
+@@ -180,8 +188,7 @@ void cleanup_slots(struct controller *ctrl)
+ 		slot = list_entry(tmp, struct slot, slot_list);
+ 		list_del(&slot->slot_list);
+ 		cancel_delayed_work(&slot->work);
+-		flush_workqueue(shpchp_wq);
+-		flush_workqueue(shpchp_ordered_wq);
++		destroy_workqueue(slot->wq);
+ 		pci_hp_deregister(slot->hotplug_slot);
+ 	}
+ }
+@@ -366,23 +373,10 @@ static int __init shpcd_init(void)
+ {
+ 	int retval = 0;
+ 
+-	shpchp_wq = alloc_ordered_workqueue("shpchp", 0);
+-	if (!shpchp_wq)
+-		return -ENOMEM;
+-
+-	shpchp_ordered_wq = alloc_ordered_workqueue("shpchp_ordered", 0);
+-	if (!shpchp_ordered_wq) {
+-		destroy_workqueue(shpchp_wq);
+-		return -ENOMEM;
+-	}
+-
+ 	retval = pci_register_driver(&shpc_driver);
+ 	dbg("%s: pci_register_driver = %d\n", __func__, retval);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+-	if (retval) {
+-		destroy_workqueue(shpchp_ordered_wq);
+-		destroy_workqueue(shpchp_wq);
+-	}
++
+ 	return retval;
+ }
+ 
+@@ -390,8 +384,6 @@ static void __exit shpcd_cleanup(void)
+ {
+ 	dbg("unload_shpchpd()\n");
+ 	pci_unregister_driver(&shpc_driver);
+-	destroy_workqueue(shpchp_ordered_wq);
+-	destroy_workqueue(shpchp_wq);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+ }
+ 
+diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+index f9b5a52..5849927 100644
+--- a/drivers/pci/hotplug/shpchp_ctrl.c
++++ b/drivers/pci/hotplug/shpchp_ctrl.c
+@@ -51,7 +51,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, interrupt_event_handler);
+ 
+-	queue_work(shpchp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+ 
+ 	return 0;
+ }
+@@ -453,7 +453,7 @@ void shpchp_queue_pushbutton_work(struct work_struct *work)
+ 		kfree(info);
+ 		goto out;
+ 	}
+-	queue_work(shpchp_ordered_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+  out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+@@ -501,7 +501,7 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		p_slot->hpc_ops->green_led_blink(p_slot);
+ 		p_slot->hpc_ops->set_attention_status(p_slot, 0);
+ 
+-		queue_delayed_work(shpchp_wq, &p_slot->work, 5*HZ);
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+-- 
+1.7.1
 
--[0000:00]-+-10.0 <- Bridge
-           +-11.0 <- Bridge
-           +-12.0 <- Bridge
 
-The 'host bridge' isn't a bridge in the PCI-PCI sense, it is just a
-normal device at bus 0, device 0, function 0.
-
-Jason
