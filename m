@@ -1,53 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47528 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816Ab3A0FiJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:09 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Doug Thompson <dougthompson@xmission.com>,
-	linux-edac@vger.kernel.org
-Subject: [PATCH v2 08/22] PCI, edac: Kill pci_find_next_bus in edac
-Date: Sat, 26 Jan 2013 21:36:29 -0800
-Message-Id: <1359265003-16166-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:15993 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752260Ab3AJRDB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jan 2013 12:03:01 -0500
+Date: Thu, 10 Jan 2013 12:01:47 -0500
+From: Vivek Goyal <vgoyal@redhat.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Thomas Renninger <trenn@suse.de>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, khalid@gonehiking.org, horms@verge.net.au
+Subject: Re: [PATCH] Only reset e820 once, even with multiple memmap=exactmap
+ params
+Message-ID: <20130110170147.GC32223@redhat.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+ <201301081747.17853.trenn@suse.de>
+ <CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
+ <1586060.uJlkOEQfVW@hammer82.arch.suse.de>
+ <20130110142643.GB32223@redhat.com>
+ <CAE9FiQUGHKqbGk_GNfDuinwd0AMDGKeno44KWCLw7hGZs5OaKQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQUGHKqbGk_GNfDuinwd0AMDGKeno44KWCLw7hGZs5OaKQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
-Cc: Doug Thompson <dougthompson@xmission.com>
-Cc: linux-edac@vger.kernel.org
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
----
- drivers/edac/i7core_edac.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Thu, Jan 10, 2013 at 08:53:18AM -0800, Yinghai Lu wrote:
+> On Thu, Jan 10, 2013 at 6:26 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> >
+> > This happens only in case of kdump and not kexec. In case of kdump
+> > we want second kernel to use only selected memory areas.
+> >
+> > In fact this is one improvement area. Instead of using memmap= entries
+> > in kdump case, we should probably modify the e820 map passed in
+> > zero page and get rid of memmap= entries.
+> 
+> then how the kdump kernel get saved_max_pfn?
+> 
 
-diff --git a/drivers/edac/i7core_edac.c b/drivers/edac/i7core_edac.c
-index 10c8c00..be6ef4f 100644
---- a/drivers/edac/i7core_edac.c
-+++ b/drivers/edac/i7core_edac.c
-@@ -1294,10 +1294,10 @@ static void __init i7core_xeon_pci_fixup(const struct pci_id_table *table)
- static unsigned i7core_pci_lastbus(void)
- {
- 	int last_bus = 0, bus;
--	struct pci_bus *b = NULL;
-+	struct pci_host_bridge *host_bridge = NULL;
- 
--	while ((b = pci_find_next_bus(b)) != NULL) {
--		bus = b->number;
-+	for_each_pci_host_bridge(host_bridge) {
-+		bus = host_bridge->bus->number;
- 		edac_dbg(0, "Found bus %d\n", bus);
- 		if (bus > last_bus)
- 			last_bus = bus;
--- 
-1.7.10.4
+Oh, I forgot about that. May be we can pass saved_max_pfn on command line
+instead of passing all memmap= entries.
 
+Thanks
+Vivek
