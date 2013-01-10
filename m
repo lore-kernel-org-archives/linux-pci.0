@@ -1,54 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:53209 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755495Ab3AKWSP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jan 2013 17:18:15 -0500
-Message-ID: <50F08F43.7080604@zytor.com>
-Date: Fri, 11 Jan 2013 14:16:35 -0800
-From: "H. Peter Anvin" <hpa@zytor.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <50EF54B6.6010100@wwwdotorg.org>
+Date: Thu, 10 Jan 2013 16:54:30 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Thomas Renninger <trenn@suse.de>,
-	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap
- case
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <201301111333.49238.trenn@suse.de> <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com> <1603289.LXteBtkifD@hammer82.arch.suse.de> <CAE9FiQU6RWH6cBKc9th3Eb2gCjcHfotbC1sYspQ7dU+cG=VMFA@mail.gmail.com> <50F070D8.2080109@zytor.com> <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
-In-Reply-To: <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/11/2013 01:09 PM, Yinghai Lu wrote:
-> On Fri, Jan 11, 2013 at 12:06 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->> On 01/11/2013 11:59 AM, Yinghai Lu wrote:
->>> On Fri, Jan 11, 2013 at 10:24 AM, Thomas Renninger <trenn@suse.de> wrote:
->>>>> We may need to keep exactmap intact.
->>>> Why?
->>>> Kexec/kdump should have been the only user?
->>>> If older/current kexec calls still add ACPI maps via memmap=X#Y,
->>>> they should already exist in the original e820 map and fall off or
->>>> get glued to one region if (wrongly) overlapping via sanitize_map.
->>>
->>> No, kexec/kdump is not the only user for memmap=exactmap.
->>>
->>
->> Who is using it then, since you seem to know?
+On 01/09/2013 01:43 PM, Thierry Reding wrote:
+> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
+> directory. The motivation is to collect various host controller drivers
+> in the same location in order to facilitate refactoring.
 > 
-> http://forums.gentoo.org/viewtopic-t-487476-highlight-proliant.html
-> 
-> http://forums.fedoraforum.org/archive/index.php/t-225347.html
-> 
+> The Tegra PCIe driver has been largely rewritten, both in order to turn
+> it into a proper platform driver and to add MSI (based on code by
+> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
 
-Hm... both of those seem to be someone trying memmap=exactmap to hack
-around a problem which really was elsewhere, with a different solution.
+This driver doesn't compile unless CONFIG_PCI_MSI is also enabled.
+Should it select that, or contain a few ifdefs?
 
-	-hpa
-
+drivers/pci/host/pci-tegra.c:900: undefined reference to `write_msi_msg'
