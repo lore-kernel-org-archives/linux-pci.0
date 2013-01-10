@@ -1,104 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f41.google.com ([209.85.212.41]:62262 "EHLO
-	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755349Ab3AaR0s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 12:26:48 -0500
-Received: by mail-vb0-f41.google.com with SMTP id l22so1933274vbn.0
-        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2013 09:26:47 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	David Howells <dhowells@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>
+Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for hot-add root bus
+Date: Thu, 10 Jan 2013 14:07:19 +0100
+Message-ID: <18607840.Is41JcgqAR@vostro.rjw.lan>
+In-Reply-To: <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com>
+References: <20121030040237.GA10472@google.com> <5274779.gJQ3WSr6QB@vostro.rjw.lan> <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1359510052-21360-1-git-send-email-wangyijing@huawei.com>
-References: <1359510052-21360-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Jan 2013 10:26:26 -0700
-Message-ID: <CAErSpo6pQm+ytk5BMR_1cxL0DGcaKFROYUrwYjwY4UVhdhsTeg@mail.gmail.com>
-Subject: Re: [PATCH v4] PCI: Document PCIE BUS MPS parameters
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Rob Landley <rob@landley.net>, Jon Mason <jdmason@kudzu.us>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 6:40 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> v0->v1: Update MPS parameters as non-arch and add MRRS
->                 description into pcie_bus_perf parameter suggested
->                 by Andrew Murray.
-> v1->v2: Update some semantic problems and add MPS and MRRS
->                 explanation suggested by Joe Lawrence and Randy Dunlap.
-> v2->v3: Update some semantic problems and the description
->                 of pcie_bus_safe and pcie_bus_peer2peer suggested
->                 by Bjorn Helgaas.
-> v3->v4: Update pcie_bus_safe description suggested by Jon Mason
->
-> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
-> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
-> These parameters were introduced by Jon Mason <jdmason@kudzu.us> at
-> commit 5f39e6705 and commit b03e7495a8.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  Documentation/kernel-parameters.txt |   14 ++++++++++++++
->  1 files changed, 14 insertions(+), 0 deletions(-)
->
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 363e348..6ad9b95 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2227,6 +2227,20 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->                                 This sorting is done to get a device
->                                 order compatible with older (<= 2.4) kernels.
->                 nobfsort        Don't sort PCI devices into breadth-first order.
-> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
-> +                               tuning and use the BIOS-configured MPS defaults.
-> +               pcie_bus_safe   Set every device's MPS to the largest MPSS
-> +                               (Max Payload Size Support) common to all devices
-> +                               below the root complex.
-> +               pcie_bus_perf   Configure device MPS to the largest
-> +                               allowable MPS based on its parent bus. Also set
-> +                               MRRS (Max Read Request Size) to the largest supported
-> +                               value (no larger than the MPS that the device or bus
-> +                               can support) for best performance.
-> +               pcie_bus_peer2peer      Set every device's MPS to 128B, which
-> +                               every device is guaranteed to support. This
-> +                               configuration allows peer-to-peer DMA between any pair
-> +                               of devices possibly at the cost of reduced performance.
->                 cbiosize=nn[KMG]        The fixed amount of bus space which is
->                                 reserved for the CardBus bridge's IO window.
->                                 The default value is 256 bytes.
+On Wednesday, January 09, 2013 05:34:32 PM Bjorn Helgaas wrote:
+> On Wed, Jan 9, 2013 at 1:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Wednesday, January 09, 2013 11:01:39 AM Yinghai Lu wrote:
+> >> On Wed, Jan 9, 2013 at 10:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> >> the reason why we need to change those codes for x86, we want to make it support
+> >> >> pci root bus hotplug. So it would be reasonable for us to align other
+> >> >> platform to x86
+> >> >> changes after pci root bus hotplug change is completely done.
+> >> >
+> >> > OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
+> >> > way to keep track of this consistency issue and merged
+> >> > pci/yinghai-survey-resources to my -next branch.
+> >>
+> >> Thanks a lot. will send other pci root bus hotplug out.
+> >>
+> >> question: now Rafael's tree has acpi-scan branch and it touches pci-root.c.
+> >>
+> >> so is it ok for me to base patches on your pci/next and his pm/acpi-scan?
+> >> how?
+> >> can you two have some arrangement like you pulling Rafael's branch?
+> >
+> > My acpi-scan branch is not going to be rebased going forward, so it can be
+> > pulled from safely if that helps.
+> 
+> I'm happy to do that, but it is outside the scope of my limited git
+> experience.  My guess is that I should do this (doing the pull into a
+> branch which I later merge into my -next branch):
+> 
+>   $ git checkout -b pci/yinghai-survey-resources+acpi-scan
+> pci/yinghai-survey-resources
+>   $ git pull --no-ff --log
+> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+> acpi-scan
+>   $ vi drivers/acpi/pci_root.c    # resolve conflicts
+>   $ git add drivers/acpi/pci_root.c
+>   $ git commit
+> 
+>   $ git checkout next
+>   $ git merge --no-ff --log pci/yinghai-survey-resources+acpi-scan
+> 
+> Is that reasonable?
 
-Added to pci/misc for v3.9 with the changes below.  If we need to
-change it more, let me know and I'll amend that branch.
+Yes, it looks reasonable.
 
-I tweaked the pcie_bus_safe text slightly.
+> This won't cause issues when both Rafael and I ask Linus to pull from our
+> trees later?
 
-The hot-plug case was mentioned in your early patches, but not in the
-v4 patch.  I think that's an important use case and we should provide
-some guidance if we can.  I know you have some patches in the works
-related to this, but as far as I can tell, the only want to ensure
-that hot-added devices will work correctly is to use
-pcie_bus_peer2peer so every MPS is set to 128.
+No, it won't, as long as I don't rebase the original acpi-scan branch (which
+I'm not going to do) and you don't rebase your
+pci/yinghai-survey-resources+acpi-scan branch going forward.
 
-The reason I think that is because in the pciehp_configure_device()
-path, where we configure MPS for newly-added devices, there's nothing
-that will change the MPS of any upstream bridges.  So we could have a
-root port with MPS=256 and we never change that, even if the new
-device only supports MPS=128.
+The pull makes your tree contain the same commits (i.e. commit IDs along with
+the data) that are in my acpi-scan branch, so when Linus merges them together,
+git will notice that the commits are the same.
 
-Hopefully we can make this smarter in the future, but the
-documentation should reflect the behavior of the current code.
+Thanks,
+Rafael
 
-So let me know if any of the below is inaccurate.
 
-+               pcie_bus_safe   Set every device's MPS to the largest value
-+                               supported by all devices below the root complex.
-
-+               pcie_bus_peer2peer      Set every device's MPS to 128B, which
-+                               every device is guaranteed to support. This
-+                               configuration allows peer-to-peer DMA between
-+                               any pair of devices, possibly at the cost of
-+                               reduced performance.  This also guarantees
-+                               that hot-added devices will work.
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
