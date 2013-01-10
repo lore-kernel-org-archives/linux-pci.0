@@ -1,59 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31233 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755408Ab3A0TYg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:36 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>, linux-alpha@vger.kernel.org
-Subject: [PATCH v3 15/22] PCI, alpha: Kill pci_root_buses
-Date: Sun, 27 Jan 2013 11:23:42 -0800
-Message-Id: <1359314629-18651-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+Received: from quartz.orcorp.ca ([184.70.90.242]:52515 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756136Ab3AJVGa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jan 2013 16:06:30 -0500
+Date: Thu, 10 Jan 2013 14:06:14 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130110210614.GA21836@obsidianresearch.com>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130109231758.GA27065@obsidianresearch.com>
+ <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
+ <201301100917.19577.arnd@arndb.de>
+ <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
+ <20130110182007.GA28004@obsidianresearch.com>
+ <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
+ <20130110190327.GA23110@avionic-0098.adnet.avionic-design.de>
+ <20130110192417.GA18478@obsidianresearch.com>
+ <20130110202007.GA26139@avionic-0098.adnet.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20130110202007.GA26139@avionic-0098.adnet.avionic-design.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace that with hotplug-safe version iteration.
+On Thu, Jan 10, 2013 at 09:20:07PM +0100, Thierry Reding wrote:
 
--v2: Fix typo that is found by Fengguang
+> > Arnd's version is good too, but you would be restricted to aligned
+> > powers of two for the bus number range in the DT, which is probably
+> > not that big a deal either?
+> 
+> Stephen suggested on IRC that we could try to keep a bit of dynamicity
+> in the allocation scheme if we create the bus mapping when the first
+> device on the bus is probed and discard the mapping if no devices are
+> found.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Matt Turner <mattst88@gmail.com>
-Cc: linux-alpha@vger.kernel.org
----
- arch/alpha/kernel/pci.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+You probably don't need to mess around with 'discard on empty' the
+kernel should only access bus numbers that are in the range of the
+subordinate busses of the bridges. So if you establish a mapping on a
+bus-by-bus basis at first access, it should be fine and very close to
+minimal..
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index ef75714..6c55e16 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -305,10 +305,10 @@ pcibios_claim_one_bus(struct pci_bus *b)
- static void __init
- pcibios_claim_console_setup(void)
- {
--	struct pci_bus *b;
-+	struct pci_host_bridge *host_bridge = NULL;
- 
--	list_for_each_entry(b, &pci_root_buses, node)
--		pcibios_claim_one_bus(b);
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_claim_one_bus(host_bridge->bus);
- }
- 
- void __init
--- 
-1.7.10.4
-
+Jason
