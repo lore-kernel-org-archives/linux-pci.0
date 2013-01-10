@@ -1,81 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:37190 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067Ab3A2V7s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 16:59:48 -0500
-Date: Tue, 29 Jan 2013 22:59:32 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130129225932.01efb45b@skate>
-In-Reply-To: <20130129213308.7e845064@skate>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301291645.08040.arnd@arndb.de>
-	<20130129180936.3737e550@skate>
-	<201301292015.21478.arnd@arndb.de>
-	<20130129213308.7e845064@skate>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bk0-f50.google.com ([209.85.214.50]:51894 "EHLO
+	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932224Ab3AJAkp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 19:40:45 -0500
+Received: by mail-bk0-f50.google.com with SMTP id jf3so1268477bkc.37
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 16:40:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <50EDF8FE.6040607@fold.natur.cuni.cz>
+References: <50EDF8FE.6040607@fold.natur.cuni.cz>
+Date: Wed, 9 Jan 2013 16:40:44 -0800
+Message-ID: <CAE9FiQXoEWifAoJQ9-aROBo3KJDcMGPb-5+PH=GiD2PD1Ze9bw@mail.gmail.com>
+Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
+ on kernel command-line for hotplug to work
+From: Yinghai Lu <yinghai@kernel.org>
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Arnd,
+On Wed, Jan 9, 2013 at 3:10 PM, Martin Mokrejs
+<mmokrejs@fold.natur.cuni.cz> wrote:
+> - pci0000:00: Requesting ACPI _OSC control (0x1d)
+> - pci0000:00: ACPI _OSC control (0x19) granted
+> + pci0000:00: Unable to request _OSC control (_OSC support mask: 0x19)
 
-On Tue, 29 Jan 2013 21:33:08 +0100, Thomas Petazzoni wrote:
+according to _OSC related game in acpi_pci_root_add()
+it will query_osc_support with flags |=
+                                OSC_EXT_PCI_CONFIG_SUPPORT \
+                                | OSC_ACTIVE_STATE_PWR_SUPPORT \
+                                | OSC_CLOCK_PWR_CAPABILITY_SUPPORT \
+                                | OSC_MSI_SUPPORT
+and the firmware should not return ACPI FAILURE, and if it return
+failure, flags will get reset.
 
-> Basically, I have currently two suggestions:
-> 
->  * From Jason Gunthorpe, to not use any host bridge, and instead use
->    only PCI-to-PCI bridges, one per PCIe interface.
-> 
->  * From you, to not use any PCI-to-PCI bridge, and use only host
->    bridges, one per PCIe interface.
+then if and only if flags keep there five bits, kernel will try to set control
+to _OSC for
+                        OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+                        | OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+                        | OSC_PCI_EXPRESS_PME_CONTROL;
+and may be AER.
 
-Thinking more about this, this solution (using one emulated host bridge
-per PCIe interface) would cause one problem: the PCIe device itself
-would no longer be in slot 0.
+that will let pciehp own the device <pciehp will claim that later...>
 
-If I'm correct, with one host bridge per PCIe interface, we would have
-the following topology:
+in acpiphp there is module that will check if port is owned by pciehp,
+and it will bail out early.
+in device_is_managed_by_native_pciehp...
 
- bus 0, slot 0: emulated host bridge 0
- bus 0, slot 1: PCIe device connected to PCIe interface 0
- bus 1, slot 0: emulated host bridge 1
- bus 1, slot 1: PCIe device connected to PCIe interface 1
- bus 2, slot 0: emulated host bridge 2
- bus 2, slot 1: PCIe device connected to PCIE interface 2
- etc.
+pcie_aspm=off will stop all _osc setting, like pciehp, pme and aer.
 
-However, one of the reason to use a PCI-to-PCI bridge was to ensure
-that the PCIe devices were all listed in slot 0. According to the
-Marvell engineers who work on the PCIe stuff, some new PCIe devices
-have this requirement. I don't have a lot of details about this, but I
-was told that most of the new Intel NICs require this, for example the
-Intel X520 fiber NIC. Maybe PCIe experts (Jason?) could provide more
-details about this, and confirm/infirm this statement.
+the checking in acpiphp is introduced by:
+commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a
+Author: Rafael J. Wysocki <rjw@sisk.pl>
+Date:   Sat Oct 22 00:43:38 2011 +0200
 
-The usage of PCI-to-PCI bridge allows to have each PCIe device on its
-own bus, at slot 0, which also solves this problem.
+    PCI / ACPI: Make acpiphp ignore root bridges using PCIe native hotplug
 
-Best regards,
+so it is a regression.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Rafael,
+
+can you fix that? otherwise user will have specify weird
+"pcie_aspm=off" to make acpiphp working.
+
+looks like we need to have other way to do handshaking between pciehp
+and acpiphp.
+
+Thanks
+
+Yinghai
