@@ -1,147 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g6t0187.atlanta.hp.com ([15.193.32.64]:1035 "EHLO
-	g6t0187.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757691Ab3APW4j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2013 17:56:39 -0500
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v10 2/3] aerdrv: Enhanced AER logging
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 16 Jan 2013 16:51:09 -0700
-Message-ID: <20130116235109.16015.71504.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
-References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+Received: from moutng.kundenserver.de ([212.227.126.171]:54124 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513Ab3AJS5q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 13:57:46 -0500
+Date: Thu, 10 Jan 2013 19:57:30 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130110185730.GB22944@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <201301100917.19577.arnd@arndb.de>
+ <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
+ <201301101826.56248.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="qcHopEYAB45HaUaB"
+In-Reply-To: <201301101826.56248.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch will provide a more reliable and easy way for user-space
-applications to have access to AER logs rather than reading them from the
-message buffer. It also provides a way to notify user-space when an AER
-event occurs.
 
-The aer driver is updated to generate a trace event of function 'aer_event'
-when a PCIe error is reported over the AER interface.  The trace event was
-added to both the interrupt based aer path and the firmware first path.
+--qcHopEYAB45HaUaB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-v2-v3 Update to new location of trace header. Update print to remove
-warning.
-v3-v4 Reworked logic when getting ready to call cper_print_aer
-v6-v7 Change print from pr_info to pr_err if !dev
-v7-v8 Add pfx argument back into call to cper_print_aer()
+On Thu, Jan 10, 2013 at 06:26:55PM +0000, Arnd Bergmann wrote:
+> On Thursday 10 January 2013, Thierry Reding wrote:
+> > I don't understand how this would help. The encoding is like this:
+> >=20
+> >         [27:24] extended register number
+> >         [23:16] bus number
+> >         [15:11] device number
+> >         [10: 8] function number
+> >         [ 7: 0] register number
+> >=20
+> > So it doesn't matter whether I use separate areas per bus or not. As
+> > soon as the whole extended configuration space needs to be accessed a
+> > whopping 28 bits (256 MiB) are required.
+> >=20
+> > What you propose would work if only regular configuration space is
+> > supported. I'm not sure if that's an option.
+>=20
+> I mean something like:
+>=20
+> struct tegra_bus_private {
+> 	...
+> 	void __iomem *config_space[16];
+> };
+>=20
+>=20
+> void tegra_scan_bus(struct pci_bus *bus)
+> {
+> 	int i;
+> 	struct tegra_bus_private *priv =3D bus->dev->private;
+>=20
+> 	for (i=3D0; i<16; i++)
+> 		priv->config_space[i] =3D ioremap(config_space_phys +
+> 				 65536 * bus->primary + i * SZ_1M, 65536);
+>=20
+> 	...
+> }
 
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
-Acked-by: Tony Luck <tony.luck@intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
+Okay, I see. It's a bit kludgy, but I guess so was the I/O map cache.
+It'll take some more time to work this out and test, but I'll give it
+a shot.
 
- drivers/acpi/apei/cper.c               |   19 ++++++++++++++++---
- drivers/pci/pcie/aer/aerdrv_errprint.c |    9 ++++++++-
- include/linux/aer.h                    |    4 ++--
- 3 files changed, 26 insertions(+), 6 deletions(-)
+Thierry
 
-diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-index e6defd8..1e5d8a4 100644
---- a/drivers/acpi/apei/cper.c
-+++ b/drivers/acpi/apei/cper.c
-@@ -29,6 +29,7 @@
- #include <linux/time.h>
- #include <linux/cper.h>
- #include <linux/acpi.h>
-+#include <linux/pci.h>
- #include <linux/aer.h>
- 
- /*
-@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
- static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 			    const struct acpi_hest_generic_data *gdata)
- {
-+#ifdef CONFIG_ACPI_APEI_PCIEAER
-+	struct pci_dev *dev;
-+#endif
-+
- 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
- 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
- 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-@@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
- 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
- #ifdef CONFIG_ACPI_APEI_PCIEAER
--	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
--		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
--		cper_print_aer(pfx, gdata->error_severity, aer_regs);
-+	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-+			pcie->device_id.bus, pcie->device_id.function);
-+	if (!dev) {
-+		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-+			pcie->device_id.segment, pcie->device_id.bus,
-+			pcie->device_id.slot, pcie->device_id.function);
-+		return;
- 	}
-+	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
-+		cper_print_aer(pfx, dev, gdata->error_severity,
-+				(struct aer_capability_regs *) pcie->aer_info);
-+	pci_dev_put(dev);
- #endif
- }
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 3ea5173..d3e5fc5 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -23,6 +23,9 @@
- 
- #include "aerdrv.h"
- 
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/ras.h>
-+
- #define AER_AGENT_RECEIVER		0
- #define AER_AGENT_REQUESTER		1
- #define AER_AGENT_COMPLETER		2
-@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 	if (info->id && info->error_dev_num > 1 && info->id == id)
- 		printk("%s""  Error of this Agent(%04x) is reported first\n",
- 			prefix, id);
-+	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
-+			info->severity);
- }
- 
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-@@ -217,7 +222,7 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- 
--void cper_print_aer(const char *prefix, int cper_severity,
-+void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
- 		    struct aer_capability_regs *aer)
- {
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
-@@ -259,5 +264,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
- 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
- 			*(tlp + 13), *(tlp + 12));
- 	}
-+	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
-+			aer_severity);
- }
- #endif
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 544abdb..ec10e1b 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -49,8 +49,8 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- #endif
- 
--extern void cper_print_aer(const char *prefix, int cper_severity,
--			   struct aer_capability_regs *aer);
-+extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-+			   int cper_severity, struct aer_capability_regs *aer);
- extern int cper_severity_to_aer(int cper_severity);
- extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
- 			      int severity);
+--qcHopEYAB45HaUaB
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ7w8aAAoJEN0jrNd/PrOhNLUP/AztOrBB2e4h5l0+VeuzpWxz
+4AiK84AP6TMOTGGgdgdCvpTWnZS4xLIL10c6QOiRIyT56gqN3aaVBtqQxph1W0mM
+2EvmiIGnQ4A9ub8FyF5kVpZvS4n5r8Ostb9trr7V7h1ISCe4WTLSm7+4zqV2lfFh
+xK6oOZCYIPf+yW6X2S5HVf/J4Aazci+wFfhdHYEE8jZn6Xi6Vi+PpCkUfiGncioq
+H+hIcumFGaJU+VgYWaW/vuy/rgiNrKejA4vBt68pQ8yNFbVWgr0ue5gLZVWKGbX2
+Cfok27eOITe3b+VA6SBZhWexafM92UzoB67VMzw9cMFsqRg7Mxc0wEqfrWiuup+8
+AG5RWCAaF2QY2lkRbF2die0Tbw0IVqU1tIOYQw4vaG9B8szeti4OFFIl8XYNVe8z
+jJpaj4H8992enDY0pDMAL2wfBEeTD+ZqIdfFsbM/h80UPWzr9bZDh5/rfhZ7GIwN
+ESbIpQa91OWEmr1hN7TcqfL4p4GMsVSqJHsB9TK1kHBlyOFPwGdm9V6U5lXMtXRj
+RVFw6UJ7Tvx0o4m4rXNQ0v9Z12ZDLSyLGwowVrRjXP2kuajr7bDU9I0eXDP1yq5Q
+Cnui+x9jJVwf3LfgOMxJgP1VvcrXLM3ORWkAinde9N68fj4eSNDvlctJZNSu41jZ
+xwvC4vWvB5CH8bBG2wxw
+=obUg
+-----END PGP SIGNATURE-----
+
+--qcHopEYAB45HaUaB--
