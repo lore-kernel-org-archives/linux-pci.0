@@ -1,100 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:60940 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752990Ab3A3EM3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 23:12:29 -0500
-Date: Tue, 29 Jan 2013 21:12:19 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 08/27] pci: implement an emulated PCI-to-PCI bridge
-Message-ID: <20130130041219.GA5734@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-9-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAErSpo6ajS87mh7u58sLeN6oL5ixiPhaD7O7BrH1Av28mTk=qQ@mail.gmail.com>
- <201301292306.14012.arnd@arndb.de>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36919 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538Ab3AJWyD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 17:54:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201301292306.14012.arnd@arndb.de>
+In-Reply-To: <1910593.f2RrgAtJJO@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan>
+	<16795012.QL1jNHE7JM@vostro.rjw.lan>
+	<CAErSpo473rZOBERaMJV74rfGZXSuBdiPtX=mXmcLmO=CRB4P_g@mail.gmail.com>
+	<1910593.f2RrgAtJJO@vostro.rjw.lan>
+Date: Thu, 10 Jan 2013 14:54:00 -0800
+Message-ID: <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in
+ advance, v2
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 11:06:13PM +0000, Arnd Bergmann wrote:
-> On Tuesday 29 January 2013, Bjorn Helgaas wrote:
-> > If you need this, it can be done in architecture code, can't it?  It's
-> > true that there's nothing architecture-specific in this patch (other
-> > than the fact that ARM is the only arch that needs it), but I'm not
-> > sure there's anything useful for sharing here.
-> 
-> Since we're moving the host bridge code to drivers/pci/host now, I think
-> this code should live in the same place. It's entirely possible that
-> it will be shared between arch/arm and arch/arm64, although I would
-> hope that we can do away with the emulated bridge code entirely.
+On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 
-This sounds right to me, this is part of the host bridge driver for
-various Marvell SOCs, so these days it should live in the
-drivers/pci/host or related, not arch/arm.
- 
-> > In fact, it seems like what you're after is not so much an emulated
-> > bridge that has no corresponding hardware, as it is a wrapper that
-> > presents a standard PCIe interface to hardware that exists but doesn't
-> > conform to the PCIe spec.  If you really do need to ultimately connect
-> > this pci_sw_pci_bridge to a piece of hardware, that will certainly be
-> > arch-specific.
-> 
-> As Jason Gunthorpe suggested, we might not need this at all, if the
-> Linux PCI code can be convinced not to need a configuration space
-> for the devices that in case of the Marvell hardware don't provide
-> one.
+ > arch/ia64/pci/pci.c        |    8 ++++++++
+ > arch/x86/include/asm/pci.h |    3 +++
+ >  arch/x86/pci/acpi.c        |    9 +++++++++
+ > drivers/acpi/pci_root.c    |   18 ------------------
+ > drivers/pci/pci-acpi.c     |   19 -------------------
+ >  drivers/pci/probe.c        |   16 ++++++++++++++++
+ >  include/acpi/acpi_bus.h    |    1 -
+ >  include/linux/pci.h        |    2 ++
+ >  8 files changed, 38 insertions(+), 38 deletions
+...
+> I'll wait for comments from the others, if any, and put it into my acpi-scan
+> branch after a couple of days.  It doesn't need to be there technically, but
+> it's kind of related.
 
-To be clear, that isn't what I was talking about.. Just to clarify a
-few things in the last couple emails:
+looks like you put it into acpi-scan-next instead.
 
-The PCI 'host bridge configuration space' software emulation code in
-patch #7 is not necessary. Bjorn and Thierry both confirm this.
+and it does touch pci code.
 
-In several places when Bjorn/Arnd talked about a 'host bridge' this is
-referring to (more or less) the PCI host *driver* and its attachment
-to the kernel interfaces. Specifically a configuration access
-mechanism and the resource ranges to allocate against. It has nothing
-to do with the bus 0, device 0, function 0 host bridge config space.
+can you put it in to acpi-scan ? so Bjorn could pull it again to pci/next.
 
-Arnd's suggestion to use multiple domains would be broadly equivilent
-to the first iteration of this driver - essentially the driver would
-manage one link and there would be multiple instances. This gets us
-back to where Thomas started - there is currently no code to do cross
-domain resource allocation, and static allocation is not possible with
-so many links on the chip.
+I like to rebase my patches on top of pci/next.
 
-Bjorn is quite right, the purpose of the PCI-PCI SW layer is to bind
-the non-standard registers in the Marvell SOC to the standard PCI-E
-config interface so the kernel can control it normally. This corrects
-what is, IMHO, a defect in the Marvell hardware.
+Thanks
 
-The alternative is to add some kind of cross-domain resource
-allocation (or similar) to the PCI core code - however this would
-*only* be required to support hardware broken in the same way as
-Marvell, so I feel a bit leery about doing that kind of work before we
-know if other chips require this. (early on in the discussion there
-was some thought that Tegra might also be similary broken, but it
-turned out to be pretty much fine, with a bit of driver work)
-
-So, I still think using a SW layer to provide a compliant PCI-PCI
-bridge configuration space for the Marvell hardware is the best way
-forward..
-
-Jason
+Yinghai
