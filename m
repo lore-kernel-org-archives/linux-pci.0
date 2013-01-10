@@ -1,65 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:32867 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753853Ab3A2IkT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 03:40:19 -0500
-Date: Tue, 29 Jan 2013 09:40:03 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Received: from moutng.kundenserver.de ([212.227.17.9]:55211 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932211Ab3AJHTp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 02:19:45 -0500
+Date: Thu, 10 Jan 2013 08:19:37 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
 To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>, linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Arnd Bergmann <arnd@arndb.de>, linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 18/27] arm: plat-orion: add more flexible PCI
- configuration space read/write functions
-Message-ID: <20130129094003.0ca7be89@skate>
-In-Reply-To: <20130128195111.GC17722@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-19-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130128195111.GC17722@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Andrew Murray <andrew.murray@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
+Message-ID: <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <201301092119.57067.arnd@arndb.de>
+ <20130109215428.GA13648@avionic-0098.adnet.avionic-design.de>
+ <201301092210.49452.arnd@arndb.de>
+ <50EDF95F.4070209@wwwdotorg.org>
+ <20130109231758.GA27065@obsidianresearch.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2NLGdgz3UMHa/lqP"
+In-Reply-To: <20130109231758.GA27065@obsidianresearch.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
 
-On Mon, 28 Jan 2013 12:51:11 -0700, Jason Gunthorpe wrote:
-> On Mon, Jan 28, 2013 at 07:56:27PM +0100, Thomas Petazzoni wrote:
-> 
-> > However, with the usage of the emulated PCI host bridge and emulated
-> > PCI-to-PCI bridges, this is not the case: bus number 0 is the emulated
-> > bus on which the emulated PCI-to-PCI bridges sit, so from the Linux
-> > point of view, the real busses start at bus 1, but from a hardware
-> > point of view, they start at bus 0.
-> 
-> Hum.. This is a bit funny sounding, can you confirm..
+--2NLGdgz3UMHa/lqP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Might be yes, but IIRC, when I try to enumerate the devices in the PCIe
-interface 0 (from a hardware point of view), passing a bus number of 1
-in the PCI configuration space access registers, then it simply doesn't
-work.
+On Wed, Jan 09, 2013 at 04:17:58PM -0700, Jason Gunthorpe wrote:
+> On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
+> > On 01/09/2013 03:10 PM, Arnd Bergmann wrote:
+> > > On Wednesday 09 January 2013, Thierry Reding wrote:
+> > >> What happens on Tegra is that we need to map 256 MiB of physical mem=
+ory
+> > >> to access all the PCIe extended configuration space. However, iorema=
+p()
+> > >> on such a large region fails if not enough vmalloc() space is availa=
+ble.
+> > >>
+> > >> This was observed when somebody tested this on CardHu which has a 1 =
+GiB
+> > >> of RAM and therefore remapping the full 256 MiB fails.
+> > ...
+> > > Have you checked if the hardware supports an alternative config
+> > > space access mechanism that does not depend on a huge address range?
+> > > A lot of them provide an index/data register pair somewhere, as the
+> > > original PC implementation did.
+> >=20
+> > That would be nice, but I've talked to the HW engineers, and there's no
+> > indication that any alternative mechanism exists.
+>=20
+> It seems to be convention that extended config space is often only
+> accessible through mmio space, that was true on x86 last I checked
+> too..
+>=20
+> You could decrease the size of the mapping to only span the bus
+> numbers that are configured for use via DT.
 
-> The bus number programmed into all the end points must match the Linux
-> number. Ie the PCI-E Link Description register of end point devices
+That won't work, unfortunately. The mapping is such that the bus number
+is not encoded in the uppermost bits, the extended register number is.
+So the only thing that we could do is decrease the size of the extended
+register space for *all* devices.
 
-What is this PCI-E Link Description register ? Where is it located ?
+> Are there any concerns about these config registers being accessed
+> from a context where a new mapping can't be made? Interrupt? Machine
+> Check? PCI-E Advanced Error Reporting?
 
-Thanks,
+I haven't checked but I would expect configuration space accesses to not
+happen in interrupt context. Usually they are limited to enumeration and
+driver probe.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Thierry
+
+--2NLGdgz3UMHa/lqP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ7muJAAoJEN0jrNd/PrOh2gIP/02NOmXXylPLiU2mox/a8mL2
+2YXDH6MTawsnD/e2IVVzp7v6mCzxF/y1BTBdlVOF12S7qCyfBUR/xW1cx/KoImt4
+KP5Sy/16An48VlFOt/qXG+xu3fs7TbkveA4NeRbt9spb1E9fh6ac0a4IKyBPMv5b
+vra+hbtPhBBdloN2RIsmyA54dQM8qXuLVuLTWjp97V5+HcJ4SRTsKML2AoPM2ioC
+DeT4l+bjH8Ga/K/oCztpy73UqcPNC8v6TGnZPkwvQAW6htH2Jdd7VeV1jp6MIlPi
+uEtoLvSrfwab5IcAMYIfbxJAxlv2hixG4ppD1uZ6qPJ66hLGvYvD9XIvR6m1MK50
+/QgbK97eM6Pd/1rlWGb+Mg3CQBOiFbmRfHn9ERkgIP+5BFKcAEqCY9xEMj+csiRW
+4VeN9DUsp5o8+ZhSOkTXLUiucOyddROvg2T8Dup0MWtRwXmlWSgC5oGXiahBjoZb
+wu2vebLe2z8O8nekHZ19BY9U0LGOkeWVfjgGZx5oV4b649LGCGi5lekHaMYP/XhP
+8o21HFtbMN2tkE6oMjJOeICRVPKgRJ/St/AzDgBRRZDCcBFqiDee6Dtdhwuh0IHm
+WNVQSetWgx8Z3kd7wPAzbZ8GrFuypBZ71vwMG9nfOGkiaDcXqCOJeFWhOl3WC4C5
+gasjBRZOjYnX/A4w+V4I
+=81U8
+-----END PGP SIGNATURE-----
+
+--2NLGdgz3UMHa/lqP--
