@@ -1,56 +1,44 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1357173594.25181.27.camel@joe-AO722>
-Subject: Re: [PATCH] checkpatch: prefer dev_<level>( to
- dev_printk(KERN_<LEVEL>
-From: Joe Perches <joe@perches.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Andy Whitcroft <apw@canonical.com>,
-	Lance Ortiz <lance.ortiz@hp.com>, lance_ortiz@hotmail.com,
-	jiang.liu@huawei.com, tony.luck@intel.com, bp@alien8.de,
-	rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 02 Jan 2013 16:39:54 -0800
-In-Reply-To: <CAErSpo51SUYBOj89RM7SSBPEEGW6dddjWUX53u0srZS_eqkbSA@mail.gmail.com>
-References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
-	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
-	 <1357171594.25181.19.camel@joe-AO722>
-	 <CAErSpo51SUYBOj89RM7SSBPEEGW6dddjWUX53u0srZS_eqkbSA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:62594 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755047Ab3AJQxU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 11:53:20 -0500
+MIME-Version: 1.0
+In-Reply-To: <20130110142643.GB32223@redhat.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<201301081747.17853.trenn@suse.de>
+	<CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
+	<1586060.uJlkOEQfVW@hammer82.arch.suse.de>
+	<20130110142643.GB32223@redhat.com>
+Date: Thu, 10 Jan 2013 08:53:18 -0800
+Message-ID: <CAE9FiQUGHKqbGk_GNfDuinwd0AMDGKeno44KWCLw7hGZs5OaKQ@mail.gmail.com>
+Subject: Re: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
+From: Yinghai Lu <yinghai@kernel.org>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Thomas Renninger <trenn@suse.de>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, khalid@gonehiking.org, horms@verge.net.au
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-01-02 at 18:34 -0600, Bjorn Helgaas wrote:
-> On Wed, Jan 2, 2013 at 6:06 PM, Joe Perches <joe@perches.com> wrote:
-> > Add YA check to printk style.
-> >
-> > dev_<level> uses are functions and generate smaller
-> > object code than dev_printk(KERN_<LEVEL>.
-[]
-> > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-[]
-> > @@ -2430,6 +2430,16 @@ sub process {
-> >                              "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
-> >                 }
-> >
-> > +               if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
-> > +                       my $orig = $1;
-> > +                       my $level = lc($orig);
-> > +                       $level = "warn" if ($level eq "warning");
-> > +                       my $level2 = $level;
-> > +                       $level2 = "dbg" if ($level eq "debug");
-> > +                       WARN("PREFER_DEV_LEVEL",
-> > +                            "Prefer dev_$level2(... to dev_printk(KERN_$orig, ...\n" . $herecurr);
-> 
-> This suggests dev_dbg() instead of dev_printk(KERN_DEBUG), doesn't it?
->  Those aren't equivalent (dev_printk() always does the printk, but in
-> many cases dev_dbg() does not, depending on CONFIG_DEBUG,
-> CONFIG_DYNAMIC_DEBUG, etc.)
+On Thu, Jan 10, 2013 at 6:26 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+>
+> This happens only in case of kdump and not kexec. In case of kdump
+> we want second kernel to use only selected memory areas.
+>
+> In fact this is one improvement area. Instead of using memmap= entries
+> in kdump case, we should probably modify the e820 map passed in
+> zero page and get rid of memmap= entries.
 
-True, I think the suggested change is appropriate though.
+then how the kdump kernel get saved_max_pfn?
 
-If people really want debug output in a specific file,
-then they should #define DEBUG and/or enable dynamic debug.
+may have problem for read_oldmem with crashed kernel.
 
+Yinghai
