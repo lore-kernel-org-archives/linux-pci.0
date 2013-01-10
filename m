@@ -1,99 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f41.google.com ([209.85.212.41]:40380 "EHLO
-	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953Ab3A2OSV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 09:18:21 -0500
-Received: by mail-vb0-f41.google.com with SMTP id l22so289705vbn.28
-        for <linux-pci@vger.kernel.org>; Tue, 29 Jan 2013 06:18:20 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
+Date: Thu, 10 Jan 2013 01:05:24 +0100
+Message-ID: <9771783.0zXIGEmDYn@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQW4t17=gYC1dnyCVJUQ3rvV491uiA5U1ZjLWjraM=g9rQ@mail.gmail.com>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1910593.f2RrgAtJJO@vostro.rjw.lan> <CAE9FiQW4t17=gYC1dnyCVJUQ3rvV491uiA5U1ZjLWjraM=g9rQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <51076787.1020201@huawei.com>
-References: <1359106615-17544-1-git-send-email-wangyijing@huawei.com>
-	<CAPoiz9zw-pVNGZC7Ox+Kf+=RNHJRCY5hoLejbrmWmjvHtUEihg@mail.gmail.com>
-	<51076787.1020201@huawei.com>
-Date: Tue, 29 Jan 2013 07:18:20 -0700
-Message-ID: <CAPoiz9zyms8y_bU56=i2UDRrEOgWEH2kzd275HOrz=FhuFQTJA@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: Document PCIE BUS MPS parameters
-From: Jon Mason <jdmason@kudzu.us>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 11:09 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2013/1/29 13:00, Jon Mason wrote:
->> On Fri, Jan 25, 2013 at 2:36 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->>> v0->v1: Update MPS parameters as non-arch and add MRRS
->>>                 description into pcie_bus_perf parameter suggested
->>>                 by Andrew Murray.
->>> v1->v2: Update some semantic problems and add MPS and MRRS
->>>                 explanation suggested by Joe Lawrence and Randy Dunlap.
->>> v2->v3: Update some semantic problems and the description
->>>                 of pcie_bus_safe and pcie_bus_peer2peer suggested
->>>                 by Bjorn Helgaas.
->>>
->>> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
->>> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
->>> These parameters were introduced by Jon Mason <mason@myri.com> at
->>> commit 5f39e6705 and commit b03e7495a8.
->>>
->>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>> ---
->>>  Documentation/kernel-parameters.txt |   13 +++++++++++++
->>>  1 files changed, 13 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->>> index 363e348..2997df2 100644
->>> --- a/Documentation/kernel-parameters.txt
->>> +++ b/Documentation/kernel-parameters.txt
->>> @@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>>                                 This sorting is done to get a device
->>>                                 order compatible with older (<= 2.4) kernels.
->>>                 nobfsort        Don't sort PCI devices into breadth-first order.
->>> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
->>> +                               tuning and use the BIOS-configured MPS defaults.
->>> +               pcie_bus_safe   Use the smallest supported MPS of any device
->>> +                               below a root complex.
->>
->> This isn't correct.  It should be something like "The largest MPS
->> common to all devices below the root complex".
->
-> Hi Jon,
->    Thanks for your review and comment!
-> What about "Set every device's MPS to the largest MPSS (Max Payload Size Support)
-> common to all devices below the root complex" ?
+On Wednesday, January 09, 2013 03:27:29 PM Yinghai Lu wrote:
+> On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Wednesday, January 09, 2013 03:16:59 PM Bjorn Helgaas wrote:
+> >> On Wed, Jan 9, 2013 at 2:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> >
+> >> > The ACPI handles of PCI root bridges need to be known to
+> >> > acpi_bind_one(), so that it can create the appropriate
+> >> > "firmware_node" and "physical_node" files for them, but currently
+> >> > the way it gets to know those handles is not exactly straightforward
+> >> > (to put it lightly).
+> >> >
+> >> > This is how it works, roughly:
+> >> >
+> >> >   1. acpi_bus_scan() finds the handle of a PCI root bridge,
+> >> >      creates a struct acpi_device object for it and passes that
+> >> >      object to acpi_pci_root_add().
+> >> >
+> >> >   2. acpi_pci_root_add() creates a struct acpi_pci_root object,
+> >> >      populates its "device" field with its argument's address
+> >> >      (device->handle is the ACPI handle found in step 1).
+> >> >
+> >> >   3. The struct acpi_pci_root object created in step 2 is passed
+> >> >      to pci_acpi_scan_root() and used to get resources that are
+> >> >      passed to pci_create_root_bus().
+> >> >
+> >> >   4. pci_create_root_bus() creates a struct pci_host_bridge object
+> >> >      and passes its "dev" member to device_register().
+> >> >
+> >> >   5. platform_notify(), which for systems with ACPI is set to
+> >> >      acpi_platform_notify(), is called.
+> >> >
+> >> > So far, so good.  Now it starts to be "interesting".
+> >> >
+> >> >   6. acpi_find_bridge_device() is used to find the ACPI handle of
+> >> >      the given device (which is the PCI root bridge) and executes
+> >> >      acpi_pci_find_root_bridge(), among other things, for the
+> >> >      given device object.
+> >> >
+> >> >   7. acpi_pci_find_root_bridge() uses the name (sic!) of the given
+> >> >      device object to extract the segment and bus numbers of the PCI
+> >> >      root bridge and passes them to acpi_get_pci_rootbridge_handle().
+> >> >
+> >> >   8. acpi_get_pci_rootbridge_handle() browses the list of ACPI PCI
+> >> >      root bridges and finds the one that matches the given segment
+> >> >      and bus numbers.  Its handle is then used to initialize the
+> >> >      ACPI handle of the PCI root bridge's device object by
+> >> >      acpi_bind_one().  However, this is *exactly* the ACPI handle we
+> >> >      started with in step 1.
+> >> >
+> >> > Needless to say, this is quite embarassing, but it may be avoided
+> >> > thanks to commit f3fd0c8 (ACPI: Allow ACPI handles of devices to be
+> >> > initialized in advance), which makes it possible to initialize the
+> >> > ACPI handle of a device before passing it to device_register().
+> >> >
+> >> > Accordingly, add a new __weak routine, pcibios_root_bridge_prepare(),
+> >> > defaulting to an empty implementation that can be replaced by the
+> >> > interested architecutres (x86 and ia64 at the moment) with functions
+> >> > that will set the root bridge's ACPI handle before its dev member is
+> >> > passed to device_register().  Make both x86 and ia64 provide such
+> >> > implementations of pcibios_root_bridge_prepare() and remove
+> >> > acpi_pci_find_root_bridge() and acpi_get_pci_rootbridge_handle() that
+> >> > aren't necessary any more.
+> >> >
+> >> > Included is a fix for breakage on systems with non-ACPI PCI host
+> >> > bridges from Bjorn Helgaas.
+> >> >
+> >> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>
+> >> Looks good to me!
+> >>
+> >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > Thanks!
+> >
+> > I'll wait for comments from the others, if any, and put it into my acpi-scan
+> > branch after a couple of days.  It doesn't need to be there technically, but
+> > it's kind of related.
+> 
+> I tested it with acpi-scan and pci-root-bus-hotplug patchset, and it works well.
+> so
+> Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-Sounds great!  Thanks so much for documenting this.
+Thanks!
 
->
->>
->>> +               pcie_bus_perf   Configure device MPS to the largest
->>> +                               allowable MPS based on its parent bus. Also set
->>> +                               MRRS (Max Read Request Size) to the largest supported
->>> +                               value (no larger than the MPS that the device or bus
->>> +                               can support) for best performance.
->>> +               pcie_bus_peer2peer      Set every device's MPS to 128B, which
->>> +                               every device is guaranteed to support. This
->>> +                               configuration allows peer-to-peer DMA between any pair
->>> +                               of devices possibly at the cost of reduced performance.
->>>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
->>>                                 reserved for the CardBus bridge's IO window.
->>>                                 The default value is 256 bytes.
->>> --
->>> 1.7.1
->>>
->>>
->>
->> .
->>
->
->
-> --
-> Thanks!
-> Yijing
->
+> BTW, found one left over of change about ->acpi_handle==> ACPI_HANDLE..
+
+Can you please submit that patch with a proper changelog?
+
+It is a mainline bug now (and a build regression for that matter), so I'd like to
+push the fix to Linus for v3.8-rc4.
+
+> Index: linux-2.6/drivers/acpi/glue.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/acpi/glue.c
+> +++ linux-2.6/drivers/acpi/glue.c
+> @@ -311,7 +311,7 @@ static int acpi_platform_notify(struct d
+>         if (!ret) {
+>                 struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+> 
+> -               acpi_get_name(dev->acpi_handle, ACPI_FULL_PATHNAME, &buffer);
+> +               acpi_get_name(ACPI_HANDLE(dev), ACPI_FULL_PATHNAME, &buffer);
+>                 DBG("Device %s -> %s\n", dev_name(dev), (char *)buffer.pointer);
+>                 kfree(buffer.pointer);
+>         } else
+> 
+> 
+> otherwise will get compiling error when enable acpi glue debug.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
