@@ -1,24 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:20512 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756517Ab3A2Eea (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 23:34:30 -0500
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [PATCH 0/4] PCI/PM: D3cold support for system suspend
-Date: Tue, 29 Jan 2013 12:34:14 +0800
-Message-Id: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
+Date: Fri, 11 Jan 2013 00:40:30 +0100
+Message-ID: <3595317.Eh4AyqPa3o@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1910593.f2RrgAtJJO@vostro.rjw.lan> <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[PATCH 1/4] PCI/ACPI: Add target state as parameter to pci_platform_pm_ops->run_wake
-[PATCH 2/4] PCI: Rename pci_dev->runtime_d3cold to pci_dev->set_d3cold
-[PATCH 3/4] PCI/PM: Set pci_dev->set_d3cold in pci_set_power_state
-[PATCH 4/4] PCI/PM: Enable D3cold support for system suspend
+On Thursday, January 10, 2013 02:54:00 PM Yinghai Lu wrote:
+> On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> 
+>  > arch/ia64/pci/pci.c        |    8 ++++++++
+>  > arch/x86/include/asm/pci.h |    3 +++
+>  >  arch/x86/pci/acpi.c        |    9 +++++++++
+>  > drivers/acpi/pci_root.c    |   18 ------------------
+>  > drivers/pci/pci-acpi.c     |   19 -------------------
+>  >  drivers/pci/probe.c        |   16 ++++++++++++++++
+>  >  include/acpi/acpi_bus.h    |    1 -
+>  >  include/linux/pci.h        |    2 ++
+>  >  8 files changed, 38 insertions(+), 38 deletions
+> ...
+> > I'll wait for comments from the others, if any, and put it into my acpi-scan
+> > branch after a couple of days.  It doesn't need to be there technically, but
+> > it's kind of related.
+> 
+> looks like you put it into acpi-scan-next instead.
+> 
+> and it does touch pci code.
+> 
+> can you put it in to acpi-scan ? so Bjorn could pull it again to pci/next.
 
-Huang Ying
-Best Regards,
+I will tomorrow.
+
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
