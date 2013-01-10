@@ -1,39 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:52944 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753533Ab3AaOXS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 09:23:18 -0500
-Date: Thu, 31 Jan 2013 14:23:03 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, thierry.reding@avionic-design.de,
-	thomas.petazzoni@free-electrons.com, rjw@sisk.pl,
-	jbarnes@virtuousgeek.org
-Subject: PME and dependency on ACPI
-Message-ID: <20130131142303.GA29628@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:30876 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751614Ab3AJWTX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Jan 2013 17:19:23 -0500
+Message-ID: <50EF3E65.3030302@redhat.com>
+Date: Thu, 10 Jan 2013 17:19:17 -0500
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
+To: Randy Dunlap <rdunlap@infradead.org>
+CC: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] pci: fix iov.c kernel-doc warnings
+References: <50EE1594.4070905@infradead.org>
+In-Reply-To: <50EE1594.4070905@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think that PME may place an unnecessary dependency on ACPI...
+On 01/09/2013 08:12 PM, Randy Dunlap wrote:
+> From: Randy Dunlap<rdunlap@infradead.org>
+>
+> Fix kernel-doc warning in iov.c:
+>
+> Warning(drivers/pci/iov.c:752): No description found for parameter 'numvfs'
+>
+> Signed-off-by: Randy Dunlap<rdunlap@infradead.org>
+> ---
+>   drivers/pci/iov.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- lnx-38-rc2.orig/drivers/pci/iov.c
+> +++ lnx-38-rc2/drivers/pci/iov.c
+> @@ -739,7 +739,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
+>   /**
+>    * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>    * @dev: the PCI PF device
+> - * numvfs: number that should be used for TotalVFs supported
+> + * @numvfs: number that should be used for TotalVFs supported
+>    *
+>    * Should be called from PF driver's probe routine with
+>    * device's mutex held.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-in drivers/pci/pcie/Kconfig:
-
-config PCIE_PME
-	def_bool y
-	depends on PCIEPORTBUS && PM_RUNTIME && ACPI
-
-
-and drivers/pci/pcie/pme.c:
-
-#include <linux/acpi.h>
-#include <linux/pci-acpi.h>
-
-On an ARM platform I can remove the #include's and remove the Kconfig
-dependency on ACPI and PME springs into life. 
-
-Is there any other reason why ACPI may be needed here?
-
-Andrew Murray
+Thanks for cleanup; /my bad.
+Should checkpatch report this issue?  if it does, then
+my (double-down) bad for missing that correction when I ran it against the patch.
 
