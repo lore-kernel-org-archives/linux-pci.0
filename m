@@ -1,45 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:59572 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260Ab3AJRL5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 12:11:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <20130110170147.GC32223@redhat.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<201301081747.17853.trenn@suse.de>
+	<CAE9FiQW=gT86Eo0gwPHi5iFi4sg=1SHkBohBAo2KXdoB_Ouqvw@mail.gmail.com>
+	<1586060.uJlkOEQfVW@hammer82.arch.suse.de>
+	<20130110142643.GB32223@redhat.com>
+	<CAE9FiQUGHKqbGk_GNfDuinwd0AMDGKeno44KWCLw7hGZs5OaKQ@mail.gmail.com>
+	<20130110170147.GC32223@redhat.com>
+Date: Thu, 10 Jan 2013 09:11:55 -0800
+Message-ID: <CAE9FiQXEJ-pYpo7rCg+DpYw9hAFTRz97gR1NgRHBheCxdt0+yw@mail.gmail.com>
+Subject: Re: [PATCH] Only reset e820 once, even with multiple memmap=exactmap params
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v3 04/22] PCI, ACPI: Update comments for find_bridge in acpi_bus_type
-Date: Sun, 27 Jan 2013 11:23:31 -0800
-Message-Id: <1359314629-18651-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Thomas Renninger <trenn@suse.de>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, hpa@zytor.com, bhelgaas@google.com,
+	tglx@linutronix.de, khalid@gonehiking.org, horms@verge.net.au
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-only device that does not have bus_type, will go to that path...
+On Thu, Jan 10, 2013 at 9:01 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+> On Thu, Jan 10, 2013 at 08:53:18AM -0800, Yinghai Lu wrote:
+>> On Thu, Jan 10, 2013 at 6:26 AM, Vivek Goyal <vgoyal@redhat.com> wrote:
+>> >
+>> > This happens only in case of kdump and not kexec. In case of kdump
+>> > we want second kernel to use only selected memory areas.
+>> >
+>> > In fact this is one improvement area. Instead of using memmap= entries
+>> > in kdump case, we should probably modify the e820 map passed in
+>> > zero page and get rid of memmap= entries.
+>>
+>> then how the kdump kernel get saved_max_pfn?
+>>
+>
+> Oh, I forgot about that. May be we can pass saved_max_pfn on command line
+> instead of passing all memmap= entries.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: Rafael J. Wysocki <rjw@sisk.pl>
-Cc: linux-acpi@vger.kernel.org
----
- include/acpi/acpi_bus.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+then we create another kernel version/kexec tools dependency.
 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 5ce8d5e8..c499d94 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -385,7 +385,7 @@ struct acpi_bus_type {
- 	struct bus_type *bus;
- 	/* For general devices under the bus */
- 	int (*find_device) (struct device *, acpi_handle *);
--	/* For bridges, such as PCI root bridge, IDE controller */
-+	/* For bridges that does not have bus_type, such as usb_port */
- 	int (*find_bridge) (struct device *, acpi_handle *);
- 	void (*setup)(struct device *);
- 	void (*cleanup)(struct device *);
--- 
-1.7.10.4
-
+kexec tools need to check kernel version, to see if saved_max_pfn= is supported.
