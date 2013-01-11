@@ -1,53 +1,100 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-	<1358525267-14268-5-git-send-email-jiang.liu@huawei.com>
-	<3500982.MUDp6kKU3R@vostro.rjw.lan>
-	<CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
-Date: Mon, 28 Jan 2013 13:29:20 -0800
-Message-ID: <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 15/22] ACPI, PCI: Simplify handle_root_bridge_removal()
+Date: Fri, 11 Jan 2013 14:40:42 -0800
+Message-Id: <1357944049-29620-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 1:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
->>> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
->>> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
->>> So change Kconfig and code to only support building pci_slot as
->>> built-in driver.
->>>
->>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->>
->> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I think we should eventually get rid of acpi_pci_register_driver() and
-> do this initialization directly from acpi_pci_root_add().  But
-> removing the module option here is a good first step.
->
-> Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
-> I can take it.
+Tang Chen found handle_root_bridge_removal is very similiar to
+acpi_bus_hot_remove_device().
+Only difference is that it call trim two times.
 
-If bios have messed up slot name or idx, we will get strange 1-1....
-other crazy name.
+Change to handle_root_bridge_removal to call trim one time and then
+use acpi_bus_hot_remove_device.
 
-if you really need to put it as built-in, may need to some command
-line that user could switch it off.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |   49 ++++++++---------------------------------------
+ 1 file changed, 8 insertions(+), 41 deletions(-)
 
-Yinghai
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 697ec65..8a0e2e2 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -745,56 +745,23 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+ 		printk(KERN_ERR "cannot add bridge to acpi list\n");
+ }
+ 
+-static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
+-{
+-	acpi_status status;
+-	struct acpi_object_list arg_list;
+-	union acpi_object arg;
+-
+-	arg_list.count = 1;
+-	arg_list.pointer = &arg;
+-	arg.type = ACPI_TYPE_INTEGER;
+-	arg.integer.value = val;
+-
+-	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
+-	if (ACPI_FAILURE(status)) {
+-		pr_warn("%s: %s to %d failed\n",
+-				 __func__, cmd, val);
+-		return -1;
+-	}
+-
+-	return 0;
+-}
+-
+ static void handle_root_bridge_removal(struct acpi_device *device)
+ {
+ 	int ret_val;
+-	u32 flags = 0;
+-	acpi_handle dummy_handle;
+-	acpi_handle handle = device->handle;
++	struct acpi_eject_event *ej_event;
++
++	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
++	if (!ej_event)
++		return;
+ 
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &dummy_handle)))
+-		flags |= ROOT_BRIDGE_HAS_EJ0;
+-	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &dummy_handle)))
+-		flags |= ROOT_BRIDGE_HAS_PS3;
++	ej_event->device = device;
++	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+ 
+ 	/* remove pci devices at first */
+ 	ret_val = acpi_bus_trim(device, 0);
+ 	printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
+ 
+-	/* remove acpi devices */
+-	ret_val = acpi_bus_trim(device, 1);
+-	printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
+-
+-	if (flags & ROOT_BRIDGE_HAS_PS3) {
+-		acpi_status status;
+-
+-		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
+-		if (ACPI_FAILURE(status))
+-			pr_warn("%s: _PS3 failed\n", __func__);
+-	}
+-	if (flags & ROOT_BRIDGE_HAS_EJ0)
+-		acpi_root_evaluate_object(handle, "_EJ0", 1);
++	acpi_bus_hot_remove_device(ej_event);
+ }
+ 
+ static void _handle_hotplug_event_root(struct work_struct *work)
+-- 
+1.7.10.4
+
