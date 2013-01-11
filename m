@@ -1,163 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:63631 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.186]:50831 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab3AKEfG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 23:35:06 -0500
-Date: Fri, 11 Jan 2013 05:34:37 +0100
+	with ESMTP id S1751800Ab3AKECP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 23:02:15 -0500
+Date: Fri, 11 Jan 2013 05:02:10 +0100
 From: Thierry Reding <thierry.reding@avionic-design.de>
 To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org,
+Cc: linux-tegra@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
 	Grant Likely <grant.likely@secretlab.ca>,
 	Rob Herring <rob.herring@calxeda.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
 	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 12/14] ARM: tegra: tec: Add PCIe support
-Message-ID: <20130111043437.GF28094@avionic-0098.adnet.avionic-design.de>
+Subject: Re: [PATCH 01/14] of/pci: Provide support for parsing PCI DT ranges
+ property
+Message-ID: <20130111040210.GC28094@avionic-0098.adnet.avionic-design.de>
 References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-13-git-send-email-thierry.reding@avionic-design.de>
- <50EF5B46.8010806@wwwdotorg.org>
+ <1357764194-12677-2-git-send-email-thierry.reding@avionic-design.de>
+ <50EF5798.6040405@wwwdotorg.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="rMWmSaSbD7nr+du9"
-In-Reply-To: <50EF5B46.8010806@wwwdotorg.org>
+	protocol="application/pgp-signature"; boundary="ZmUaFz6apKcXQszQ"
+In-Reply-To: <50EF5798.6040405@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---rMWmSaSbD7nr+du9
+--ZmUaFz6apKcXQszQ
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jan 10, 2013 at 05:22:30PM -0700, Stephen Warren wrote:
+On Thu, Jan 10, 2013 at 05:06:48PM -0700, Stephen Warren wrote:
 > On 01/09/2013 01:43 PM, Thierry Reding wrote:
-> > Enable the first PCIe root port which is connected to an FPGA on the
-> > Tamonten Evaluation Carrier and add device nodes for each of the PCI
-> > endpoints available in the standard configuration.
+> > From: Andrew Murray <andrew.murray@arm.com>
+> >=20
+> > DT bindings for PCI host bridges often use the ranges property to descr=
+ibe
+> > memory and IO ranges - this binding tends to be the same across archite=
+ctures
+> > yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
+> > arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
+> > arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
+> > functionality provided by drivers/of/address.c.
+> >=20
+> > This patch provides a common iterator-based parser for the ranges prope=
+rty, it
+> > is hoped this will reduce DT representation differences between archite=
+ctures
+> > and that architectures will migrate in part to this new parser.
+> ...
 >=20
-> > diff --git a/arch/arm/boot/dts/tegra20-tec.dts b/arch/arm/boot/dts/tegr=
-a20-tec.dts
+> > diff --git a/drivers/of/address.c b/drivers/of/address.c
 >=20
-> > +	pcie-controller {
-> > +		vdd-supply =3D <&pci_vdd_reg>;
-> > +		pex-clk-supply =3D <&pci_clk_reg>;
-> > +		status =3D "okay";
+> > +const __be32 *of_pci_process_ranges(struct device_node *node,
 >=20
-> Sorry this is also really picky. I'd prefer properties that exist in
-> /include/d files and are overidden here to appear first, followed by new
-> properties. In other words, move the status property to be first. I
-> believe/hope all the other (Tegra) .dts files follow this convention.
-
-Okay, I'll fix that.
-
-> > +		pci@1,0 {
-> > +			bus-range =3D <0x01 0x0a>;
-> > +			status =3D "okay";
+> > +	while (from + np <=3D end) {
+> > +		u64 cpu_addr, size;
 > > +
-> > +			pci@0,0 {
-> > +				reg =3D <0x010000 0 0 0 0>;
+> > +		cpu_addr =3D of_translate_address(node, from + na);
+> > +		size =3D of_read_number(from + na + pna, ns);
+> > +		res->flags =3D bus->get_flags(from);
+> > +		from +=3D np;
+> > +
+> > +		if (cpu_addr =3D=3D OF_BAD_ADDR || size =3D=3D 0)
+> > +			continue;
 >=20
-> Hmm. The unit address in that node name doesn't match the address in the
-> reg property, although I suppose there's nothing we can do about it
-> since those formats are both defined by the standard PCI binding?
+> Hmmm. That seems to just ignore bad entries in the ranges property. Is
+> that really the right thing to do? At least printing a diagnostic might
+> be a good idea, even if the code does just soldier on in the hope
+> everything still works.
 
-That's the standard encoding for unit addresses for PCI devices. The
-first cell in the reg property encodes bus/device/function (amongst
-other things) and the node name is supposed to be pci@<dev>,<fn>.
+That's true. However, erroring out here wouln't be useful either since a
+NULL return value is used to mark the end of the iteration and the
+caller would have to assume that no more ranges are present. Maybe
+that's better than continuing anyway, even if a message is printed.
 
-> What do the numbers "0,0" represent here; device/function? Is the same
-> true for the "0,0" in the child nodes?
+Alternatively, the of_pci_process_ranges() could be changed to return an
+ERR_PTR() encoded errno. This is one case where it makes a lot of sense.
+I have a feeling that Grant won't like that very much, though.
 
-Yes, exactly.
-
-> > +				bus-range =3D <0x02 0x0a>;
-> > +
-> > +				compatible =3D "plda,pcie";
->=20
-> Are there DT binding documents for all these devices; plda,pcie,
-> ad,pcie, ad,pcie-test, etc.?
-
-No. To be honest I don't quite know how to handle this. For the PLDA
-things aren't so bad since it has a proper PCI ID, but the other cores
-don't since they are custom IP or taken from opencores.org and made
-available via PCIe. We're still in the process of obtaining our own PCI
-vendor ID so that these can be properly assigned.
-
-Also, as you have guessed, most of these are not required. I just wanted
-to include them here for completeness (and maybe reference in case
-somebody else, myself included, needs a working example to base other
-work on).
-
-> > +				pci@4,0 {
-> > +					reg =3D <0x022000 0 0 0 0>;
-> > +					bus-range =3D <0x07 0x07>;
-> > +
-> > +					compatible =3D "ad,pcie";
-> > +					device_type =3D "pci";
-> > +
-> > +					#address-cells =3D <3>;
-> > +					#size-cells =3D <2>;
-> > +
-> > +					pci@0,0 {
-> > +						compatible =3D "opencores,uart";
-> > +						reg =3D <0x070000 0 0 0 0>;
-> > +					};
-> > +				};
->=20
-> Do you need to include a node for the UART; I can see you need to for
-> the SPI/I2C controllers so you can instantiate the appropriate devices
-> on non-probe-able buses, but I think you can just let regular PCI device
-> probing find the UART, Ethernet MAC, etc., can't you?
-
-Yes, that's correct. Only SPI and I2C actually require these nodes. I'm
-not sure if the PCI binding requires all nodes to be present or not.
-Other examples I've seen (e.g. arch/x86/platform/ce4100/falconfalls.dts)
-contain nodes for everything, most of which don't seem to be necessary
-for things to work.
-
-One other thing that I've seen is the usage of the more standard pci*
-values for the compatible property. None of them are very descriptive
-which is why I used a vendor,device type of value instead.
-
-Going over the PCI binding again, however, it looks like there's no
-requirement to make the node name pci@dev,fn and pci can be anything.
-Making it uart@0,0 and then adjusting the compatible value to be as the
-binding requires could be an option. In that case I suppose even the
-bindings documentation shouldn't be necessary.
-
-That doesn't cover the nodes where non-standard properties are needed
-(I2C and SPI), which do need binding documents. I wouldn't know how to
-name them, though. I'm not sure going with the current convention would
-be any good since it'll be hard to find the right document if you have
-to look it up by matching vendor and device IDs or PCI class.
+Another possibility would be to change away from an iterator-based
+approach and return an integer for the number of ranges and negative
+error code on failure while returning an allocated array of resources
+through an output parameter.
 
 Thierry
 
---rMWmSaSbD7nr+du9
+--ZmUaFz6apKcXQszQ
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.19 (GNU/Linux)
 
-iQIcBAEBAgAGBQJQ75ZdAAoJEN0jrNd/PrOhqLwP/jlhfvEttlemxr+BN6dQq33Q
-pnmmTFXKC8nV+Igo9yTlUWOxvIdz/9kLvgC3YdqT8VLJbZvPKAXDp/RyJ6tYn4LV
-VckkcH1ssxUjeYnyff5i+8x0pjP4XwS0EKubZPXYgl934SWZr0h6N8yzQFJ8zX3W
-vydrJj0iHgzmQEsnjZ7WG6WhwclAFz6e5bUe2Ra5R6yCPqIpKD9ceLp7gcVpFYt9
-BFrg60uBZp5wq0/zyPmwrylugQZZBrSdhwAiMcIpEygLpRyOw27L/5vxfzAQ4kd5
-8MB9PEKRTTsFkiFf/xuDdCJ3ppVdxZ0/aEyVwucH/D42cAb7SbzHkk8LHDE7auDX
-i42yG9GEYjzZkVQ+cIG45zz8Ke6VZzwMVzunuvWLUqyDAR9dIk+5G+S2V+yhq4yv
-hJ+QIfwmcu0SZbCLpHpq9UiqDaGPRB907jyq1NdMJMTHz4rrUagesPNzZJH2ApRc
-P9HDWubUjYI/4CLOsTpNShoJAMWq6p9vyQmzQoepubAEcdV7Kx0H7kZJdpM+x3Kp
-ty7r5sM9wdU+Eogn4jB2HUXBmr4Z5napV+ZlD2siGtq4N2yScw1a7K+QzEsKsM2s
-A+36wmjuOy3zzwvBd+XrCgivF1gU7qgG2B+BkQtHjRORqtDT4WpAAPyCMyURkjFH
-hRYo3V/CcibTyNeadZh5
-=rtWB
+iQIcBAEBAgAGBQJQ747CAAoJEN0jrNd/PrOh/bQP/0IiT1xF+Klj+SSKlmrwUhEX
+dgfuEscTyb+N1OHfVfvwDxRaRq0z2z+cwHdF/gjehUuwDkWBomvjonoPpauNs4uj
+h4Rv3wvx0skXscKOxJgNB6vNbIAnoKgzBlJ13Z20AtxdqkncdTC8ZW/dRHCuW9W8
+Cpv33q0Utl706pHpVAw/0KMlq3zrRYQz42cIYeSrMxwzaWlFAexk5HcEwem2/pUW
+1/1Y6EhHO3FAS7IhQyLnnjVWlR89Gd9DzvYeCndLnP9lXfQ2FyKm83hKq8QqGpVN
+g+54HeYMMGeQn2u4M9c+BJqUt7q8eiRnCMlZN0W02UI/9Vhq+znh6cAGGDruBXzZ
+atkaJOxM997lYzBDgZA5u8AjS9O+n35UWNpyDgKoSJ05E7SuSBh/tBJuu1XVRu4z
+ueE/HERCWFon2QodEYUk5iNvt+NDM66nrfxXh9BIOd045Al8eXdHQ4dhslLXS8Sz
+qHC3dwoNKozfIHWrq4vAat+ERW79s1WgOf/NPLwpugdn56/wGCXJEQdblEDK/6Mj
+BtgE7VlX88knrMx0i8CXeMsCJIwyZds4WhZNRJ1ao4F+e+Tjc15zDZb0geq047+j
+aCrHplrXuK9iKzWAHFmMuabYjGDyhsAKx8Ii7GACCO9CisJIz+tgT6sJZU6ypajw
+65VE+KSnz/gVtV2KSnc+
+=eyXO
 -----END PGP SIGNATURE-----
 
---rMWmSaSbD7nr+du9--
+--ZmUaFz6apKcXQszQ--
