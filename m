@@ -1,114 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:46001 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266Ab3AaOat (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 09:30:49 -0500
-Date: Thu, 31 Jan 2013 15:30:41 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
+Received: from avon.wwwdotorg.org ([70.85.31.133]:39905 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957Ab3AKAsv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 19:48:51 -0500
+Message-ID: <50EF616E.7040609@wwwdotorg.org>
+Date: Thu, 10 Jan 2013 17:48:46 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130131153041.35fa3b60@skate>
-In-Reply-To: <20130130154602.GL23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130130113245.GH23505@n2100.arm.linux.org.uk>
-	<20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<20130130150856.GJ23505@n2100.arm.linux.org.uk>
-	<20130130151934.GK23505@n2100.arm.linux.org.uk>
-	<20130130163659.75360dba@skate>
-	<20130130154602.GL23505@n2100.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Russell King - ARM Linux,
+On 01/09/2013 01:43 PM, Thierry Reding wrote:
+> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
+> directory. The motivation is to collect various host controller drivers
+> in the same location in order to facilitate refactoring.
+> 
+> The Tegra PCIe driver has been largely rewritten, both in order to turn
+> it into a proper platform driver and to add MSI (based on code by
+> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
 
-On Wed, 30 Jan 2013 15:46:02 +0000, Russell King - ARM Linux wrote:
+> diff --git a/arch/arm/mach-tegra/board-dt-tegra20.c b/arch/arm/mach-tegra/board-dt-tegra20.c
 
-> +resource_size_t pcibios_window_alignment(struct pci_bus *bus,
-> +					 unsigned long type)
+>  static void __init trimslice_init(void)
+>  {
+>  #ifdef CONFIG_TEGRA_PCI
+> -	int ret;
+> -
+> -	ret = tegra_pcie_init(true, true);
+> -	if (ret)
+> -		pr_err("tegra_pci_init() failed: %d\n", ret);
+> +	platform_device_register(&tegra_pcie_device);
+
+That struct doesn't actually exist anywhere; only an extern definition
+is added (and that extern definition isn't removed by patch 14 either).
+
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+
+> +config PCI_TEGRA
+> +	bool "NVIDIA Tegra PCIe controller"
+> +	depends on ARCH_TEGRA_2x_SOC
+
+Perhaps depend on ARCH_TEGRA; that will save churn once this is ported
+to Tegra30, and shouldn't cause any problems before then.
+
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+
+> +#define AFI_INTR_CODE		0xb8
+> +#define  AFI_INTR_CODE_MASK	0xf
+> +#define  AFI_INTR_MASTER_ABORT	4
+> +#define  AFI_INTR_LEGACY	6
+
+Adding defines for at least some other codes here, would help further
+below ...
+
+> +static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+
+> +	if (code == AFI_INTR_MASTER_ABORT) {
+> +		dev_dbg(pcie->dev, "%s, signature: %08x\n", err_msg[code],
+> +			signature);
+> +	} else
+> +		dev_err(pcie->dev, "%s, signature: %08x\n", err_msg[code],
+> +			signature);
+> +
+> +	if (code == 3 || code == 4 || code == 7) {
+
+... i.e. here.
+
+> +		u32 fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
+> +		u64 address = (u64)fpci << 32 | (signature & 0xfffffffc);
+> +		dev_dbg(pcie->dev, "  FPCI address: %10llx\n", address);
+
+I'd suggest making that dev_err(), or at least something higher than
+debug, since the message indicating the error happened is dev_err(), so
+the complete details may as well be available since they're small.
+
+> +static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
 > +{
-> +	struct pci_sys_data *sys = bus->sysdata;
+> +	unsigned int timeout;
+> +	unsigned long value;
 > +
-> +	/* Ignore downstream buses */
-> +	if (!bus->parent) {
-> +		if (type & IORESOURCE_MEM)
-> +			return sys->win_align_mem;
-> +		if (type & IORESOURCE_IO)
-> +			return sys->win_align_io;
+> +	/* enable dual controller and both ports */
+> +	value = afi_readl(pcie, AFI_PCIE_CONFIG);
+> +	value &= ~(AFI_PCIE_CONFIG_PCIEC0_DISABLE_DEVICE |
+> +		   AFI_PCIE_CONFIG_PCIEC1_DISABLE_DEVICE |
+> +		   AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_MASK);
+> +	value |= AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_DUAL;
+> +	afi_writel(pcie, value, AFI_PCIE_CONFIG);
+
+Eventually, we should probably derive the port enables from the state of
+the root port DT nodes, so that we can disable some and presumably save
+a little power. Also, I notice that the nvidia,num-lanes property isn't
+implemented yet. Still, we can probably take care of this later.
+
+> +static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+
+> +	if (!IS_ERR_OR_NULL(pcie->pex_clk_supply)) {
+
+Hmm. I think we should make supplies mandatory; it doesn't make sense
+for regulator support to be disabled on Tegra, and where a specific
+board doesn't actually have a regulator, you're supposed to provide a
+dummy fixed regulator so the driver doesn't have to care.
+
+The same comment obviously applies to tegra_pcie_power_on() and wherever
+regulator_get() happens.
+
+> +static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+
+> +	pcie->vdd_supply = devm_regulator_get(pcie->dev, "vdd");
+> +	if (IS_ERR(pcie->vdd_supply))
+> +		return PTR_ERR(pcie->vdd_supply);
+> +
+> +	pcie->pex_clk_supply = devm_regulator_get(pcie->dev, "pex-clk");
+> +	if (IS_ERR(pcie->pex_clk_supply))
+> +		return PTR_ERR(pcie->pex_clk_supply);
+
+Oh, I guess the regulator_get() calls are already strict.
+
+> +static int tegra_pcie_add_port(struct tegra_pcie *pcie, struct device_node *np)
+
+> +	port = devm_kzalloc(pcie->dev, sizeof(*port), GFP_KERNEL);
+> +	if (!port)
+> +		return -ENOMEM;
+> +
+> +	INIT_LIST_HEAD(&port->list);
+> +	port->index = index;
+> +	port->pcie = pcie;
+> +
+> +	port->base = devm_request_and_ioremap(pcie->dev, &regs);
+> +	if (!port->base)
+> +		return -EADDRNOTAVAIL;
+> +
+> +	if (!tegra_pcie_port_check_link(port)) {
+> +		dev_info(pcie->dev, "link %u down, ignoring\n", port->index);
+
+Perhaps devm_kfree(port)? Not a big leak, but equally if you don't, it's
+an unreferenced memory block.
+
+> +		return -ENODEV;
 > +	}
-> +	return 1;
-> +}
 > +
-
-Unfortunately, this doesn't work as is for me: the if (!bus->parent)
-prevents the thing from being effective. Here my lspci output:
-
-# /usr/sbin/lspci 
-00:00.0 Host bridge: Marvell Technology Group Ltd. Device 102d
-00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-00:04.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-00:05.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-00:06.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-03:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
-05:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) (rev 06)
-
-And the function pcibios_window_alignment() only gets called for bus 1,
-2, 3, 4, 5, 6 and never for bus 0. And therefore, the !bus->parent test
-is always false. So, if I keep your implementation, I have the following
-addresses assigned to my bridges:
-
-pci 0000:00:03.0: PCI bridge to [bus 03]
-pci 0000:00:03.0:   bridge window [io  0xc0000000-0xc0000fff]
-pci 0000:00:03.0:   bridge window [mem 0xc1000000-0xc10fffff]
-pci 0000:00:03.0:   bridge window [mem 0xc1100000-0xc11fffff pref]
-pci 0000:00:05.0: PCI bridge to [bus 05]
-pci 0000:00:05.0:   bridge window [io  0xc0001000-0xc0001fff]
-pci 0000:00:05.0:   bridge window [mem 0xc1200000-0xc12fffff]
-pci 0000:00:05.0:   bridge window [mem 0xc1300000-0xc13fffff pref]
-
-Notice how the io window of the second bridge starts 4K after the io
-window of the first bridge. Which cannot work on Marvell SoC, due to
-the 64KB alignment.
-
-If, however, I remove the !bus->parent test, the I/O addresses
-correctly take into account the 64K requirement:
-
-pci 0000:00:03.0: PCI bridge to [bus 03]
-pci 0000:00:03.0:   bridge window [io  0xc0000000-0xc000ffff]
-pci 0000:00:03.0:   bridge window [mem 0xc1000000-0xc10fffff]
-pci 0000:00:03.0:   bridge window [mem 0xc1100000-0xc11fffff pref]
-pci 0000:00:05.0: PCI bridge to [bus 05]
-pci 0000:00:05.0:   bridge window [io  0xc0010000-0xc001ffff]
-pci 0000:00:05.0:   bridge window [mem 0xc1200000-0xc12fffff]
-pci 0000:00:05.0:   bridge window [mem 0xc1300000-0xc13fffff pref]
-
-Any idea?
-
-Thanks,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+> +	list_add_tail(&port->list, &pcie->ports);
+> +
+> +	return 0;
+> +}
