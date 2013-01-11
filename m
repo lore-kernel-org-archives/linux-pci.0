@@ -1,56 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:47429 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754894Ab3A1WIv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:08:51 -0500
-Message-ID: <5106F6EE.4000101@wwwdotorg.org>
-Date: Mon, 28 Jan 2013 15:08:46 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
+Date: Fri, 11 Jan 2013 13:27:51 +0100
+Message-ID: <2117635.fU9qB3jgKg@vostro.rjw.lan>
+In-Reply-To: <3595317.Eh4AyqPa3o@vostro.rjw.lan>
+References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <CAE9FiQXmOyWYhkc2fbjBvUqBFh7Ktf5E9X6Z8x0HguUdm8+mRw@mail.gmail.com> <3595317.Eh4AyqPa3o@vostro.rjw.lan>
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: Re: [PATCH v2 11/27] clk: mvebu: create parent-child relation for
- PCIe clocks on Armada 370
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-12-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-12-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2013 11:56 AM, Thomas Petazzoni wrote:
-> The Armada 370 has two gatable clocks for each PCIe interface, and we
-> want both of them to be enabled. We therefore make one of the two
-> clocks a child of the other, as we did for the sataX and sataXlnk
-> clocks on Armada XP.
+On Friday, January 11, 2013 12:40:30 AM Rafael J. Wysocki wrote:
+> On Thursday, January 10, 2013 02:54:00 PM Yinghai Lu wrote:
+> > On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > 
+> >  > arch/ia64/pci/pci.c        |    8 ++++++++
+> >  > arch/x86/include/asm/pci.h |    3 +++
+> >  >  arch/x86/pci/acpi.c        |    9 +++++++++
+> >  > drivers/acpi/pci_root.c    |   18 ------------------
+> >  > drivers/pci/pci-acpi.c     |   19 -------------------
+> >  >  drivers/pci/probe.c        |   16 ++++++++++++++++
+> >  >  include/acpi/acpi_bus.h    |    1 -
+> >  >  include/linux/pci.h        |    2 ++
+> >  >  8 files changed, 38 insertions(+), 38 deletions
+> > ...
+> > > I'll wait for comments from the others, if any, and put it into my acpi-scan
+> > > branch after a couple of days.  It doesn't need to be there technically, but
+> > > it's kind of related.
+> > 
+> > looks like you put it into acpi-scan-next instead.
+> > 
+> > and it does touch pci code.
+> > 
+> > can you put it in to acpi-scan ? so Bjorn could pull it again to pci/next.
+> 
+> I will tomorrow.
 
-> diff --git a/drivers/clk/mvebu/clk-gating-ctrl.c b/drivers/clk/mvebu/clk-gating-ctrl.c
+There is a problem with this, because the acpi-scan branch is based on v3.8-rc2
+that doesn't the contain __devinit removal in arch/ia64/pci/pci.c which conflicts
+with the version of the $subject patch I have in linux-next.  If I put this
+patch into acpi-scan and Bjorn pulls from it, he will need to resolve that
+conflict going forward and I will have to resolve it too, so we'll end up with
+two merge commits resolving the same conflict.
 
-> @@ -119,8 +119,8 @@ static const struct mvebu_soc_descr __initconst armada_370_gating_descr[] = {
->  	{ "pex1_en", NULL,  2 },
->  	{ "ge1", NULL, 3 },
->  	{ "ge0", NULL, 4 },
-> -	{ "pex0", NULL, 5 },
-> -	{ "pex1", NULL, 9 },
-> +	{ "pex0", "pex0_en", 5 },
-> +	{ "pex1", "pex1_en", 9 },
+For this reason, I think it would be better if Bjorn took the $subject patch
+directly to his tree, so I've dropped it from my linux-next branch.
 
-I must admit, I know nothing about struct mvebu_soc_descr, but I'm
-having a hard time seeing how that code change makes one of those clock
-a parent of the other, since the pex0 entry doesn't reference anything
-"pex1"-related, nor vice-versa. Is more explanation in the commit
-message warranted here?
+Bjorn, can you please apply https://patchwork.kernel.org/patch/1956491/ directly?
+
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
