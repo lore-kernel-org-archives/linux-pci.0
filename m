@@ -1,38 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56417 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757982Ab3AIWDh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 17:03:37 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Date: Wed, 9 Jan 2013 22:03:18 +0000
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 11 Jan 2013 22:59:39 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <201301092122.08011.arnd@arndb.de> <20130109215815.GC13648@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20130109215815.GC13648@avionic-0098.adnet.avionic-design.de>
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH 1/16] ACPI: Separate adding ACPI device objects from
+ probing ACPI drivers
+Message-ID: <20130111205939.GD13897@intel.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+ <2859994.arbXorpfaz@vostro.rjw.lan>
+ <20130111203759.GC13897@intel.com>
+ <6935441.WoipOdx2kz@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201301092203.18860.arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6935441.WoipOdx2kz@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 09 January 2013, Thierry Reding wrote:
-> Stephen suggested I post this as removal/addition because pretty much
-> everything changed. Reviewing the individual changes would be more
-> confusing than actually reviewing a new driver.
+On Fri, Jan 11, 2013 at 09:58:50PM +0100, Rafael J. Wysocki wrote:
+> On Friday, January 11, 2013 10:37:59 PM Mika Westerberg wrote:
+> > On Fri, Jan 11, 2013 at 09:31:43PM +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > Subject: ACPI / scan: Fix check of device_attach() return value.
+> > > 
+> > > Since device_attach() returns 1 on success and 0 on failure,
+> > > the check against its return value in acpi_bus_device_attach()
+> > > should be reveresed.  Make it so.
+> > 
+> > Not sure if it matters but it returns 0 if no device was bound to a driver
+> > and -ENODEV in case of error. If we only want to terminate in case of
+> > error, following might be better.
+> > 
+> > 	} else if (device_attach(&device->dev) < 0) {
+> 
+> Yes, this check will be better.
+> 
+> Which means that the patch is actually yours, so I've just added the changelog. :-)
 > 
 
-Ok, fair enough.
-
-	Arnd
+Thanks! (and I've tested this, it works ;-))
