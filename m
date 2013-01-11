@@ -1,87 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ia0-f172.google.com ([209.85.210.172]:33340 "EHLO
-	mail-ia0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754596Ab3A0SWL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 13:22:11 -0500
-Received: by mail-ia0-f172.google.com with SMTP id u8so3137939iag.17
-        for <linux-pci@vger.kernel.org>; Sun, 27 Jan 2013 10:22:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20130127173816.GH23505@n2100.arm.linux.org.uk>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
-	<1359265003-16166-1-git-send-email-yinghai@kernel.org>
-	<1359265003-16166-17-git-send-email-yinghai@kernel.org>
-	<20130127173816.GH23505@n2100.arm.linux.org.uk>
-Date: Sun, 27 Jan 2013 10:22:10 -0800
-Message-ID: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
-Subject: Re: [PATCH v2 16/22] PCI, arm: Kill pci_root_buses
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 09/22] PCI, ACPI: Add pci_root_hp hot removal notification support.
+Date: Fri, 11 Jan 2013 14:40:36 -0800
+Message-Id: <1357944049-29620-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 27, 2013 at 9:38 AM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Sat, Jan 26, 2013 at 09:36:37PM -0800, Yinghai Lu wrote:
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Russell King <linux@arm.linux.org.uk>
->> Cc: linux-arm-kernel@lists.infradead.org
->
-> So... what's this about.  This email is all I've recieved, and the only
-> thing that I have to go on is one single subject line and not description
-> about what's going on.  I guess there's some other patch introducing this
-> for_each_pci_host_bridge() macro somewhere?  I guess that's part of this
-> patch set?
+Add missing hot_remove support for root device.
 
-yes.
+How to test it?
+Find out root bus number to acpi root name mapping from dmesg or /sys
 
-sorry for not put you in the cc list of the whole patchset. will do
-that next reversion.
+  echo "\_SB.PCIB 3" > /sys/kernel/debug/acpi/sci_notify
+to remove root bus
 
->
-> Yet... I guess you want an ack for this or something... which would be
-> irresponsible to give without knowing the purpose behind this, the
-> reasoning, or even being able to tell whether the replacement code is
-> functionally equivalent.
+-v2: separate stop and remove, so it will be safe for comingi
+	acpi_pci_bind_notify() changes.
 
-the purpose is to make iteration for root bus to be root-bus
-hotplug safe.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/pci_root.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 67 insertions(+)
 
-will update change log.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 5c1f462c..5ae36d8 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -740,6 +740,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
+ 	list_add(&bridge->list, &acpi_root_bridge_list);
+ }
+ 
++static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
++{
++	list_del(&bridge->list);
++	kfree(bridge);
++}
++
+ struct acpi_root_hp_work {
+ 	struct work_struct work;
+ 	acpi_handle handle;
+@@ -800,6 +806,61 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+ 		printk(KERN_ERR "cannot add bridge to acpi list\n");
+ }
+ 
++static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
++{
++	acpi_status status;
++	struct acpi_object_list arg_list;
++	union acpi_object arg;
++
++	arg_list.count = 1;
++	arg_list.pointer = &arg;
++	arg.type = ACPI_TYPE_INTEGER;
++	arg.integer.value = val;
++
++	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
++	if (ACPI_FAILURE(status)) {
++		pr_warn("%s: %s to %d failed\n",
++				 __func__, cmd, val);
++		return -1;
++	}
++
++	return 0;
++}
++
++static void handle_root_bridge_removal(acpi_handle handle,
++		 struct acpi_root_bridge *bridge)
++{
++	u32 flags = 0;
++	struct acpi_device *device;
++
++	if (bridge) {
++		flags = bridge->flags;
++		remove_acpi_root_bridge(bridge);
++	}
++
++	if (!acpi_bus_get_device(handle, &device)) {
++		int ret_val;
++
++		/* remove pci devices at first */
++		ret_val = acpi_bus_trim(device, 0);
++		printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
++
++		/* remove acpi devices */
++		ret_val = acpi_bus_trim(device, 1);
++		printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
++	}
++
++	if (flags & ROOT_BRIDGE_HAS_PS3) {
++		acpi_status status;
++
++		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
++		if (ACPI_FAILURE(status))
++			pr_warn("%s: _PS3 failed\n", __func__);
++	}
++	if (flags & ROOT_BRIDGE_HAS_EJ0)
++		acpi_root_evaluate_object(handle, "_EJ0", 1);
++}
++
+ static void _handle_hotplug_event_root(struct work_struct *work)
+ {
+ 	struct acpi_root_bridge *bridge;
+@@ -840,6 +901,12 @@ static void _handle_hotplug_event_root(struct work_struct *work)
+ 		}
+ 		break;
+ 
++	case ACPI_NOTIFY_EJECT_REQUEST:
++		/* request device eject */
++		printk(KERN_DEBUG "%s: Device eject notify on %s\n", __func__,
++				 objname);
++		handle_root_bridge_removal(handle, bridge);
++		break;
+ 	default:
+ 		printk(KERN_WARNING "notify_handler: unknown event type 0x%x for %s\n",
+ 				 type, objname);
+-- 
+1.7.10.4
 
->
-> So, no ack (or nack) at the moment.
->
->> ---
->>  arch/arm/kernel/bios32.c |    9 +++------
->>  1 file changed, 3 insertions(+), 6 deletions(-)
->>
->> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
->> index 9b72261..d0befe4 100644
->> --- a/arch/arm/kernel/bios32.c
->> +++ b/arch/arm/kernel/bios32.c
->> @@ -57,13 +57,10 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
->>
->>  void pcibios_report_status(u_int status_mask, int warn)
->>  {
->> -     struct list_head *l;
->> +     struct pci_host_bridge *host_bridge = NULL;
->>
->> -     list_for_each(l, &pci_root_buses) {
->> -             struct pci_bus *bus = pci_bus_b(l);
->> -
->> -             pcibios_bus_report_status(bus, status_mask, warn);
->> -     }
->> +     for_each_pci_host_bridge(host_bridge)
->> +             pcibios_bus_report_status(host_bridge->bus, status_mask, warn);
->>  }
->>
->>  /*
->> --
->> 1.7.10.4
->>
