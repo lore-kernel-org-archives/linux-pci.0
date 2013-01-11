@@ -1,87 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-References: <1357657073-27352-1-git-send-email-yuanhan.liu@linux.intel.com> <1357657073-27352-6-git-send-email-yuanhan.liu@linux.intel.com> <20130108181645.GA7972@core.coreip.homeip.net>
-In-Reply-To: <20130108181645.GA7972@core.coreip.homeip.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:38068 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755341Ab3AKUZ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jan 2013 15:25:58 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH 1/16] ACPI: Separate adding ACPI device objects from probing ACPI drivers
+Date: Fri, 11 Jan 2013 21:31:43 +0100
+Message-ID: <2859994.arbXorpfaz@vostro.rjw.lan>
+In-Reply-To: <20130111200046.GB13897@intel.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <23002897.6xbQGtPaGy@vostro.rjw.lan> <20130111200046.GB13897@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH 5/5] kfifo: log based kfifo API
-From: Andy Walls <awalls@md.metrocast.net>
-Date: Tue, 08 Jan 2013 16:10:07 -0500
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Yuanhan Liu <yuanhan.liu@linux.intel.com>
-CC: linux-kernel@vger.kernel.org,
-	Stefani Seibold <stefani@seibold.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	platform-driver-x86@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-mm@kvack.org, dccp@vger.kernel.org,
-	linux-sctp@vger.kernel.org
-Message-ID: <f1be90be-ad99-4dff-8332-804383adc5c8@email.android.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dmitry Torokhov <dmitry.torokhov@gmail.com> wrote:
+On Friday, January 11, 2013 10:00:46 PM Mika Westerberg wrote:
+> (Sorry to jump in late but I noticed one problem with this series while
+> testing).
+> 
+> On Thu, Dec 20, 2012 at 02:47:47AM +0100, Rafael J. Wysocki wrote:
+> > +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+> > +					void *context, void **not_used)
+> > +{
+> > +	struct acpi_bus_ops *ops = context;
+> > +	acpi_status status = AE_OK;
+> > +	struct acpi_device *device;
+> > +	unsigned long long sta_not_used;
+> > +	int type_not_used;
+> > +
+> > +	/*
+> > +	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
+> > +	 * namespace walks prematurely.
+> > +	 */
+> > +	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
+> > +		return AE_OK;
+> > +
+> > +	if (acpi_bus_get_device(handle, &device))
+> > +		return AE_CTRL_DEPTH;
+> > +
+> > +	if (ops->acpi_op_add) {
+> > +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+> > +			/* This is a known good platform device. */
+> > +			acpi_create_platform_device(device);
+> > +		} else if (device_attach(&device->dev)) {
+> 
+> device_attach() returns 1 if it succeeds to attach device to a driver. In
+> that case we should continue and not return AE_CTRL_DEPTH, right?
 
->Hi Yuanhan,
->
->On Tue, Jan 08, 2013 at 10:57:53PM +0800, Yuanhan Liu wrote:
->> The current kfifo API take the kfifo size as input, while it rounds
->>  _down_ the size to power of 2 at __kfifo_alloc. This may introduce
->> potential issue.
->> 
->> Take the code at drivers/hid/hid-logitech-dj.c as example:
->> 
->> 	if (kfifo_alloc(&djrcv_dev->notif_fifo,
->>                        DJ_MAX_NUMBER_NOTIFICATIONS * sizeof(struct
->dj_report),
->>                        GFP_KERNEL)) {
->> 
->> Where, DJ_MAX_NUMBER_NOTIFICATIONS is 8, and sizeo of(struct
->dj_report)
->> is 15.
->> 
->> Which means it wants to allocate a kfifo buffer which can store 8
->> dj_report entries at once. The expected kfifo buffer size would be
->> 8 * 15 = 120 then. While, in the end, __kfifo_alloc will turn the
->> size to rounddown_power_of_2(120) =  64, and then allocate a buf
->> with 64 bytes, which I don't think this is the original author want.
->> 
->> With the new log API, we can do like following:
->> 
->> 	int kfifo_size_order = order_base_2(DJ_MAX_NUMBER_NOTIFICATIONS *
->> 					    sizeof(struct dj_report));
->> 
->> 	if (kfifo_alloc(&djrcv_dev->notif_fifo, kfifo_size_order,
->GFP_KERNEL)) {
->> 
->> This make sure we will allocate enough kfifo buffer for holding
->> DJ_MAX_NUMBER_NOTIFICATIONS dj_report entries.
->
->Why don't you simply change __kfifo_alloc to round the allocation up
->instead of down?
->
->Thanks.
->
->-- 
->Dmitry
->--
->To unsubscribe from this list: send the line "unsubscribe linux-media"
->in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That's correct.  The check is reversed, so we need the appended patch on top
+of linux-pm.git/acpi-scan.
 
-Hi Dmitry,
+Thanks,
+Rafael
 
-I agree.   I don't see the benefit in pushing up the change to a kfifo internal decision/problem to many different places in the kernel.
 
-Regards,
-Andy
+---
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / scan: Fix check of device_attach() return value.
 
- 
+Since device_attach() returns 1 on success and 0 on failure,
+the check against its return value in acpi_bus_device_attach()
+should be reveresed.  Make it so.
+
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -1598,7 +1598,7 @@ static acpi_status acpi_bus_device_attac
+ 	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+ 		/* This is a known good platform device. */
+ 		acpi_create_platform_device(device);
+-	} else if (device_attach(&device->dev)) {
++	} else if (!device_attach(&device->dev)) {
+ 		status = AE_CTRL_DEPTH;
+ 	}
+ 	return status;
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
