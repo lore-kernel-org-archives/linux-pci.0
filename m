@@ -1,78 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [PATCH 3/4] PCI/PM: Set pci_dev->set_d3cold in pci_set_power_state
-Date: Tue, 29 Jan 2013 12:34:17 +0800
-Message-Id: <1359434058-15918-4-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
-References: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 21/22] PCI: add match_driver in struct pci_dev
+Date: Fri, 11 Jan 2013 14:40:48 -0800
+Message-Id: <1357944049-29620-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Because now pci_dev->set_d3cold is only used after
-pci_set_power_state(, PCI_D3cold) and before pci_set_power_state(,
-PCI_D0).  And we will use pci_dev->set_d3cold for D3cold support
-during system suspend too, but now pci_dev->set_d3cold is set only in
-runtime power management code path now.
+with that we could move out attaching driver for pci device,
+out of device_add for pci hot add path.
 
-Signed-off-by: Huang Ying <ying.huang@intel.com>
+pci_bus_attach_device() will attach driver to pci device.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci-driver.c |    2 --
- drivers/pci/pci.c        |   12 +++++++-----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/bus.c        |   10 ++++++++++
+ drivers/pci/pci-driver.c |    6 +++++-
+ include/linux/pci.h      |    1 +
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 5f9c728..1f5916a 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -160,6 +160,15 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ 
+ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
++static void pci_bus_attach_device(struct pci_dev *dev)
++{
++	int ret;
++
++	dev->match_driver = true;
++	ret = device_attach(&dev->dev);
++	WARN_ON(ret < 0);
++}
++
+ /**
+  * pci_bus_add_device - add a single device
+  * @dev: device to add
+@@ -181,6 +190,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+ 	if (retval)
+ 		return retval;
+ 
++	pci_bus_attach_device(dev);
+ 	dev->is_added = 1;
+ 	pci_proc_attach_device(dev);
+ 	pci_create_sysfs_dev_files(dev);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index f79cbcd..acdcc3c 100644
 --- a/drivers/pci/pci-driver.c
 +++ b/drivers/pci/pci-driver.c
-@@ -1036,8 +1036,6 @@ static int pci_pm_runtime_resume(struct
+@@ -1186,9 +1186,13 @@ pci_dev_driver(const struct pci_dev *dev)
+ static int pci_bus_match(struct device *dev, struct device_driver *drv)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+-	struct pci_driver *pci_drv = to_pci_driver(drv);
++	struct pci_driver *pci_drv;
+ 	const struct pci_device_id *found_id;
  
- 	rc = pm->runtime_resume(dev);
- 
--	pci_dev->set_d3cold = false;
--
- 	return rc;
- }
- 
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -775,6 +775,9 @@ int pci_set_power_state(struct pci_dev *
- 	if (dev->current_state == state)
- 		return 0;
- 
-+	if (state == PCI_D3cold)
-+		dev->set_d3cold = true;
++	if (!pci_dev->match_driver)
++		return 0;
 +
- 	__pci_start_power_transition(dev, state);
++	pci_drv = to_pci_driver(drv);
+ 	found_id = pci_match_device(pci_drv, pci_dev);
+ 	if (found_id)
+ 		return 1;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 907b455..d73af08 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -286,6 +286,7 @@ struct pci_dev {
+ 	unsigned int	irq;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
  
- 	/* This device is quirked not to be put into D3, so
-@@ -798,6 +801,9 @@ int pci_set_power_state(struct pci_dev *
- 	if (!error && dev->bus->self)
- 		pcie_aspm_powersave_config_link(dev->bus->self);
- 
-+	if (error || state != PCI_D3cold)
-+		dev->set_d3cold = false;
-+
- 	return error;
- }
- 
-@@ -1833,16 +1839,12 @@ int pci_finish_runtime_suspend(struct pc
- 	if (target_state == PCI_POWER_ERROR)
- 		return -EIO;
- 
--	dev->set_d3cold = target_state == PCI_D3cold;
--
- 	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
- 
- 	error = pci_set_power_state(dev, target_state);
- 
--	if (error) {
-+	if (error)
- 		__pci_enable_wake(dev, target_state, true, false);
--		dev->set_d3cold = false;
--	}
- 
- 	return error;
- }
++	bool match_driver;
+ 	/* These fields are used by common fixups */
+ 	unsigned int	transparent:1;	/* Transparent PCI bridge */
+ 	unsigned int	multifunction:1;/* Part of multi-function device */
+-- 
+1.7.10.4
+
