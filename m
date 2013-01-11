@@ -1,121 +1,65 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 16/22] PCI, acpiphp: Don't bailout even no slots found yet.
-Date: Fri, 11 Jan 2013 14:40:43 -0800
-Message-Id: <1357944049-29620-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Date: Fri, 11 Jan 2013 22:00:46 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH 1/16] ACPI: Separate adding ACPI device objects from
+ probing ACPI drivers
+Message-ID: <20130111200046.GB13897@intel.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan>
+ <4082842.31rfDviYHK@vostro.rjw.lan>
+ <1855256.SyhOJGYMIh@vostro.rjw.lan>
+ <23002897.6xbQGtPaGy@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <23002897.6xbQGtPaGy@vostro.rjw.lan>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Could have root bus hot addde later and there may be slots that need acpiphp.
+(Sorry to jump in late but I noticed one problem with this series while
+testing).
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_core.c |   23 ++---------------------
- drivers/pci/hotplug/acpiphp_glue.c |   22 ----------------------
- 3 files changed, 2 insertions(+), 44 deletions(-)
+On Thu, Dec 20, 2012 at 02:47:47AM +0100, Rafael J. Wysocki wrote:
+> +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
+> +					void *context, void **not_used)
+> +{
+> +	struct acpi_bus_ops *ops = context;
+> +	acpi_status status = AE_OK;
+> +	struct acpi_device *device;
+> +	unsigned long long sta_not_used;
+> +	int type_not_used;
+> +
+> +	/*
+> +	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
+> +	 * namespace walks prematurely.
+> +	 */
+> +	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
+> +		return AE_OK;
+> +
+> +	if (acpi_bus_get_device(handle, &device))
+> +		return AE_CTRL_DEPTH;
+> +
+> +	if (ops->acpi_op_add) {
+> +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+> +			/* This is a known good platform device. */
+> +			acpi_create_platform_device(device);
+> +		} else if (device_attach(&device->dev)) {
 
-diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
-index a1afb5b..b3ead7a 100644
---- a/drivers/pci/hotplug/acpiphp.h
-+++ b/drivers/pci/hotplug/acpiphp.h
-@@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
- /* acpiphp_glue.c */
- extern int acpiphp_glue_init (void);
- extern void acpiphp_glue_exit (void);
--extern int acpiphp_get_num_slots (void);
- typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
- 
- extern int acpiphp_enable_slot (struct acpiphp_slot *slot);
-diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-index 96316b7..c2fd309 100644
---- a/drivers/pci/hotplug/acpiphp_core.c
-+++ b/drivers/pci/hotplug/acpiphp_core.c
-@@ -50,7 +50,6 @@
- bool acpiphp_debug;
- 
- /* local variables */
--static int num_slots;
- static struct acpiphp_attention_info *attention_info;
- 
- #define DRIVER_VERSION	"0.5"
-@@ -272,25 +271,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
- 	return 0;
- }
- 
--static int __init init_acpi(void)
--{
--	int retval;
--
--	/* initialize internal data structure etc. */
--	retval = acpiphp_glue_init();
--
--	/* read initial number of slots */
--	if (!retval) {
--		num_slots = acpiphp_get_num_slots();
--		if (num_slots == 0) {
--			acpiphp_glue_exit();
--			retval = -ENODEV;
--		}
--	}
--
--	return retval;
--}
--
- /**
-  * release_slot - free up the memory used by a slot
-  * @hotplug_slot: slot to free
-@@ -379,7 +359,8 @@ static int __init acpiphp_init(void)
- 		return 0;
- 
- 	/* read all the ACPI info from the system */
--	return init_acpi();
-+	/* initialize internal data structure etc. */
-+	return acpiphp_glue_init();
- }
- 
- 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 02c41ab..30467ec 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -1446,28 +1446,6 @@ void  acpiphp_glue_exit(void)
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
- 
--
--/**
-- * acpiphp_get_num_slots - count number of slots in a system
-- */
--int __init acpiphp_get_num_slots(void)
--{
--	struct acpiphp_bridge *bridge;
--	int num_slots = 0;
--
--	list_for_each_entry(bridge, &bridge_list, list) {
--		dbg("Bus %04x:%02x has %d slot%s\n",
--				pci_domain_nr(bridge->pci_bus),
--				bridge->pci_bus->number, bridge->nr_slots,
--				bridge->nr_slots == 1 ? "" : "s");
--		num_slots += bridge->nr_slots;
--	}
--
--	dbg("Total %d slots\n", num_slots);
--	return num_slots;
--}
--
--
- /**
-  * acpiphp_enable_slot - power on slot
-  * @slot: ACPI PHP slot
--- 
-1.7.10.4
+device_attach() returns 1 if it succeeds to attach device to a driver. In
+that case we should continue and not return AE_CTRL_DEPTH, right?
 
+> +			status = AE_CTRL_DEPTH;
+> +		}
+> +	} else if (ops->acpi_op_start) {
+> +		if (ACPI_FAILURE(acpi_start_single_object(device)))
+> +			status = AE_CTRL_DEPTH;
+> +	}
+> +	return status;
+> +}
