@@ -1,91 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:36670 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681Ab3A2Nbp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 08:31:45 -0500
-Date: Tue, 29 Jan 2013 13:31:40 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130129133140.GA24193@arm.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130115154038.GA11241@arm.com>
- <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
- <201301161400.26587.arnd@arndb.de>
- <20130116161716.GA10630@arm.com>
- <20130116183101.GA28660@avionic-0098.adnet.avionic-design.de>
- <20130117154236.GA25943@arm.com>
- <20130117160501.GC2186@avionic-0098.adnet.avionic-design.de>
- <20130117162218.GA29016@arm.com>
- <20130122192901.GE30647@obsidianresearch.com>
+Received: from cantor2.suse.de ([195.135.220.15]:45569 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754452Ab3AKSYy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jan 2013 13:24:54 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap case
+Date: Fri, 11 Jan 2013 19:24:41 +0100
+Message-ID: <1603289.LXteBtkifD@hammer82.arch.suse.de>
+In-Reply-To: <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <201301111333.49238.trenn@suse.de> <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20130122192901.GE30647@obsidianresearch.com>
-Content-Type: text/plain; charset=WINDOWS-1252
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 22, 2013 at 07:29:01PM +0000, Jason Gunthorpe wrote:
-> On Thu, Jan 17, 2013 at 04:22:18PM +0000, Andrew Murray wrote:
+On Friday, January 11, 2013 08:16:52 AM Yinghai Lu wrote:
+> On Fri, Jan 11, 2013 at 4:33 AM, Thomas Renninger <trenn@suse.de> wrote:
+...
+> > -               e820.nr_map = 0;
+> > +               /*
+> > +                * Remove all usable memory (this is for kdump), usable
+> > +                * memory will be passed via memmap=X@Y parameter
+> > +                */
+> > +               e820_remove_range_type(E820_RAM);
 > 
-> > > In either of those cases, does it make sense to use the MSI support
-> > > outside the scope of the PCI infrastructure? That is, would devices
-> > > other than PCI devices be able to generate an MSI?
-> > 
-> > I've come around to your way of thinking. Your approach sounds good for
-> > registration of MSI ops - let the RC host driver do it (it probably has its
-> > own), or use a helper for following a phandle to get ops that are not part
-> > of the driver. MSIs won't be used outside of PCI devices.
-> 
-> Here is a bit of additional info on some MSI stuff..
-> 
-> This can be pretty complex. For instance on hyper transport systems
-> the PCI to HT bridge has an MSI controller that maps between PCI and
-> HT MSI formats, that mapping is configurable, so technically each
-> brige could be considered a MSI controller. Typically the mapping
-> controllers are all setup the same so there is not much problem with
-> this. However *native* HT devices can (which are super rare) can use a
-> different MSI format than PCI devices. From a linux perspective HT is
-> just a variant of PCI.
->  
-> On x86 the MSI is delivered to the CPU APIC complex which converts it
-> into a vectored interrupt - part of the value of MSI is that the MSI
-> data can vector the interrupt to a specific CPU, or group of CPUs or
-> whatever.
-> 
-> Presumably SMP ARMs will evolve similar MSI based interrupt vectoring
-> capabilities, and presumably on-chip, non-PCI peripherals will evolve
-> options to use MSI as well (ie multi-queue ethernet). So it might be
-> worth giving some thought to how things could migrate in that
-> direction someday.
-> 
-> I have a bit hacky MSI driver for Kirkwood, this work you have to
-> generalize the interface could let me actually upstream it :) The MSI
-> is built using the Host2CPU doorbell registers, so it is entirely
-> unrelated to the PCI-E RC driver.
-> 
-> However, my use of the MSI driver on kirkwood is to assign MSIs to a
-> PCI-E device via non-standard registers, more like an on chip
-> peripheral. This is because the Host2CPU doorbell doesn't fit 100%
-> perfectly with the standard PCI MSI stuff, and the hardware has funny
-> needs.. So an 'allocate a MSI interrupt' API would be snazzy too :)
+> We may need to keep exactmap intact.
+Why?
+Kexec/kdump should have been the only user?
+If older/current kexec calls still add ACPI maps via memmap=X#Y,
+they should already exist in the original e820 map and fall off or
+get glued to one region if (wrongly) overlapping via sanitize_map.
+ 
+> but could add another one like exact_ram_map
+> or extend to have memmap=exactmap=ram or etc.
 
-Thanks for this. I believe Thierry may be working on improving the MSI
-API - so perhaps we can see where that takes us.
+I would avoid that if anyhow possible because then you run into
+kexec vs kernel version problems.
 
-Andrew Murray
+Maybe I should explicitly post (out of this thread) the patch to the
+kexec list.
+If nobody can come up with a strong reason, it should be ok?
 
+   Thomas
