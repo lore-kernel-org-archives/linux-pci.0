@@ -1,69 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:64762 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963Ab3A1XpH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 18:45:07 -0500
-Received: by mail-vc0-f178.google.com with SMTP id m8so2258022vcd.37
-        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 15:45:06 -0800 (PST)
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:57375 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237Ab3AKK2t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 05:28:49 -0500
+Received: by mail-bk0-f44.google.com with SMTP id w11so814898bku.3
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2013 02:28:47 -0800 (PST)
+From: bl0 <bl0-052@playker.info>
+To: linux-ide@vger.kernel.org
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Fri, 11 Jan 2013 11:28:35 +0100
+Cc: linux-pci@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>,
+	Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
+References: <kahap3$mur$1@ger.gmane.org> <50ECF6AB.30007@gmail.com> <20130109191753.GQ3926@htj.dyndns.org>
+In-Reply-To: <20130109191753.GQ3926@htj.dyndns.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114225.6698.42016.stgit@zurg>
- <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Jan 2013 16:44:46 -0700
-Message-ID: <CAErSpo6WpF22FFwAvo=GUnPugT4WSeR88=mKN4ZpXDbJRWVdkg@mail.gmail.com>
-Subject: Re: [PATCH 4/5] PCI: don't touch enable_cnt in pci_device_shutdown()
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Khalid Aziz <hikerockies@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201301111128.35957.bl0-052@playker.info>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Khalid new email addr]
+On Wednesday 09 January 2013 20:17:53 Tejun Heo wrote:
+> Hello, Robert, bl0 (would be cool if this were your real name :)
+>
+> On Tue, Jan 08, 2013 at 10:48:43PM -0600, Robert Hancock wrote:
+> > I wouldn't mind something like this as an option, anyway. Jeff,
+> > Tejun, thoughts?
+>
+> I don't know.  This thread makes me want to eat obsessivly, cry in
+> fetal position and then puke and wet my pants.
+>
+> The issue has been there from the beginning.  The current code seems
+> to cope with, I hope, majority of configurations; unfortunately, for
+> the problematic ones, there hasn't been any sensible explanation or
+> reliable way to detect what is causing the problem.  I don't even know
+> how we should blacklist them.  Is it chipset-specific or
+> system-specific?  ie. Should we blacklist north/south bridges or DMI
+> system identifiers?
+>
+> Having a module option is easy and can be helpful for the very rare
+> cases where the admin is aware of the issue, but, in general, it
+> doesn't really help that much.
+>
+> So, let's throw in a module option.  Other than that, no idea.
+>
+> \pukes
 
-On Mon, Jan 28, 2013 at 4:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-> <khlebnikov@openvz.org> wrote:
->> comment in commit b566a22c23327f18ce941ffad0ca907e50a53d41
->> ("PCI: disable Bus Master on PCI device shutdown") says:
->>
->> | Disable Bus Master bit on the device in pci_device_shutdown() to ensure PCI
->> | devices do not continue to DMA data after shutdown.  This can cause memory
->> | corruption in case of a kexec where the current kernel shuts down and
->> | transfers control to a new kernel while a PCI device continues to DMA to
->> | memory that does not belong to it any more in the new kernel.
->>
->> Seems like pci_clear_master() must be used here instead of pci_disable_device(),
->> because it disables Bus Muster unconditionally and doesn't changes enable_cnt.
->>
->> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
->> Cc: linux-pci@vger.kernel.org
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Khalid Aziz <khalid.aziz@hp.com>
->> ---
->>  drivers/pci/pci-driver.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index 030dbf0..853d605 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -392,7 +392,7 @@ static void pci_device_shutdown(struct device *dev)
->>          * Turn off Bus Master bit on the device to tell it to not
->>          * continue to do DMA
->>          */
->> -       pci_disable_device(pci_dev);
->> +       pci_clear_master(pci_dev);
->
-> We currently only call pci_enable_device() and pci_disable_device()
-> from drivers, and I think that's a nice division that's worth keeping.
->  It keeps the core's mitts off device operation and helps preserve the
-> enable_cnt integrity.  So I like this change from that perspective.
->
-> Any objections to this, Khalid?
->
->>  }
->>
->>  #ifdef CONFIG_PM
->>
+Thanks for bringing much needed enthusiasm into this thread. I too would 
+like to know the root cause of this problem. Since the chances of finding 
+it are very low, the only thing that remains is to deal with data corruption 
+problem using the means available.
+
+Some people asked for help and posted relevant entries from their logs. Now 
+they would be able to find a hint about the module option in the logs. Some 
+people have set the slow_down option. The code i posted enables the 
+workaround for them too.
+
+As for blacklisting, I was thinking about maybe looking at the vendor and 
+device ID of the PCI bridge under which the sata_sil device is found.
