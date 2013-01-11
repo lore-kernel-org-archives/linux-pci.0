@@ -1,91 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:26712 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753774Ab3A2GKC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 01:10:02 -0500
-Message-ID: <51076787.1020201@huawei.com>
-Date: Tue, 29 Jan 2013 14:09:11 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-la0-f50.google.com ([209.85.215.50]:44769 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754156Ab3AKSGv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 13:06:51 -0500
+Received: by mail-la0-f50.google.com with SMTP id fs13so2013045lab.23
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2013 10:06:49 -0800 (PST)
 MIME-Version: 1.0
-To: Jon Mason <jdmason@kudzu.us>
-CC: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, Andrew Murray <andrew.murray@arm.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: Re: [PATCH v3] PCI: Document PCIE BUS MPS parameters
-References: <1359106615-17544-1-git-send-email-wangyijing@huawei.com> <CAPoiz9zw-pVNGZC7Ox+Kf+=RNHJRCY5hoLejbrmWmjvHtUEihg@mail.gmail.com>
-In-Reply-To: <CAPoiz9zw-pVNGZC7Ox+Kf+=RNHJRCY5hoLejbrmWmjvHtUEihg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <17637668.59BS4lW4dN@vostro.rjw.lan>
+References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
+ <1410202.K95a8u1BYT@vostro.rjw.lan> <CAE9FiQVmDW__C3A1_JJZpCZJwYWONZpHbzitMxsHZBxotw8VBA@mail.gmail.com>
+ <17637668.59BS4lW4dN@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Jan 2013 11:06:29 -0700
+Message-ID: <CAErSpo6eB=Gn6wPBK=_KYhP=NOi26AmuJd_rS-zAw+2ERdrcew@mail.gmail.com>
+Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when
+ PCI hotplug event happens
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Yinghai Lu <yinghai@kernel.org>, Myron Stowe <mstowe@redhat.com>,
+	Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/1/29 13:00, Jon Mason wrote:
-> On Fri, Jan 25, 2013 at 2:36 AM, Yijing Wang <wangyijing@huawei.com> wrote:
->> v0->v1: Update MPS parameters as non-arch and add MRRS
->>                 description into pcie_bus_perf parameter suggested
->>                 by Andrew Murray.
->> v1->v2: Update some semantic problems and add MPS and MRRS
->>                 explanation suggested by Joe Lawrence and Randy Dunlap.
->> v2->v3: Update some semantic problems and the description
->>                 of pcie_bus_safe and pcie_bus_peer2peer suggested
->>                 by Bjorn Helgaas.
+On Thu, Jan 10, 2013 at 4:59 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, January 10, 2013 03:40:45 PM Yinghai Lu wrote:
+>> On Thu, Jan 10, 2013 at 3:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> > On Thursday, January 10, 2013 03:03:53 PM Yinghai Lu wrote:
+>> >> On Thu, Jan 10, 2013 at 1:50 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> > Well, I don't see what functional problems that can bring.
+>> >> >
+>> >> > In theory people may want to have them as modules to avoid loading them on
+>> >> > systems that don't use PCI hotplug, but honestly I think that the complexity
+>> >> > this causes us to deal with is not worth it.
+>> >> >
+>> >> > Moreover, removing the modularity may actually allow us to solve some ordering
+>> >> > issues once and for good.
+>> >>
+>> >> No, the world is not really ideal yet.
+>> >>
+>> >> looks like laptops have problem with pci express cards.
+>> >>
+>> >> when pciehp is used, surprise insert/removal does not work because
+>> >> PresDect does not change properly, so no interrupt is generated.
+>> >> --- i suspects that is silicon problem.
+>> >>
+>> >> but when acpiphp is used, that surprise  insert/removal is working.
+>> >>
+>> >> some laptop like thinkpad, just don't give osc to kernel..
+>> >> [    0.505117]  pci0000:00: Requesting ACPI _OSC control (0x1d)
+>> >> [    0.505413]  pci0000:00: ACPI _OSC request failed (AE_SUPPORT),
+>> >> returned control mask: 0x0d
+>> >> [    0.505517] ACPI _OSC control for PCIe not granted, disabling ASPM
+>> >>
+>> >> and other laptop give that to kernel, in recent kernel will not give
+>> >> acpiphp to have that slot, because it want to hold that for pciehp.
+>> >> poor user have to pass 'pci_aspm=off" to disable _OSC for all.
+>> >> --- please check the mail that i forward to you yesterday.
+>> >
+>> > Yes, this is a bug, but I'm not sure how to fix it yet.
 >>
->> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
->> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
->> These parameters were introduced by Jon Mason <mason@myri.com> at
->> commit 5f39e6705 and commit b03e7495a8.
+>> add one command line to control it so do not claim that in osc_control?
+>
+> That's one option, although not very attractive so to speak.
+>
+>> >> Anyway, we do need to let the user to have choice to use acpiphp and pciehp.
+>> >> and it should be first come and first serve policy.
+>> >
+>> > And that's why you think they should be modules?  I disagree if so.
 >>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  Documentation/kernel-parameters.txt |   13 +++++++++++++
->>  1 files changed, 13 insertions(+), 0 deletions(-)
+>> Yes.
 >>
->> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->> index 363e348..2997df2 100644
->> --- a/Documentation/kernel-parameters.txt
->> +++ b/Documentation/kernel-parameters.txt
->> @@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>                                 This sorting is done to get a device
->>                                 order compatible with older (<= 2.4) kernels.
->>                 nobfsort        Don't sort PCI devices into breadth-first order.
->> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
->> +                               tuning and use the BIOS-configured MPS defaults.
->> +               pcie_bus_safe   Use the smallest supported MPS of any device
->> +                               below a root complex.
-> 
-> This isn't correct.  It should be something like "The largest MPS
-> common to all devices below the root complex".
-
-Hi Jon,
-   Thanks for your review and comment!
-What about "Set every device's MPS to the largest MPSS (Max Payload Size Support)
-common to all devices below the root complex" ?
-
-> 
->> +               pcie_bus_perf   Configure device MPS to the largest
->> +                               allowable MPS based on its parent bus. Also set
->> +                               MRRS (Max Read Request Size) to the largest supported
->> +                               value (no larger than the MPS that the device or bus
->> +                               can support) for best performance.
->> +               pcie_bus_peer2peer      Set every device's MPS to 128B, which
->> +                               every device is guaranteed to support. This
->> +                               configuration allows peer-to-peer DMA between any pair
->> +                               of devices possibly at the cost of reduced performance.
->>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
->>                                 reserved for the CardBus bridge's IO window.
->>                                 The default value is 256 bytes.
->> --
->> 1.7.1
+>> maybe we can have pci=nopciehp in command line just we pci=noaer...
 >>
->>
-> 
-> .
-> 
+>> that should handle some corner cases.
+>
+> Yes.  In any case the user should be able to say "I know better", but having
+> to express that through the "right" ordering of modules is somewhat less than
+> straightforward in my opinion.
 
+I think it's fine if a user *can* override the default ordering.
 
--- 
-Thanks!
-Yijing
+I am completely opposed to *requiring* a user to supply a command line
+option or change the order of module loading just to get hotplug to
+work.  There's no sane way to document that or communicate that
+information to users.
 
+Bjorn
