@@ -1,98 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:39174 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754444Ab3ALX2X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 12 Jan 2013 18:28:23 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 11/22] PCI: correctly detect ACPI PCI host bridge objects
-Date: Sun, 13 Jan 2013 00:34:10 +0100
-Message-ID: <2669837.JomPNBOLKK@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-12-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-12-git-send-email-yinghai@kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:13505 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751113Ab3AKNyj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 08:54:39 -0500
+Message-ID: <50F0199D.4090502@teksavvy.com>
+Date: Fri, 11 Jan 2013 08:54:37 -0500
+From: Mark Lord <kernel@teksavvy.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj@kernel.org>
+CC: Robert Hancock <hancockrwd@gmail.com>, bl0 <bl0-052@playker.info>,
+	linux-ide@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jeff Garzik <jeff@garzik.org>
+Subject: Re: sata_sil data corruption, possible workarounds
+References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org> <50CEB13B.9010100@gmail.com> <kaq1n6$hqa$1@ger.gmane.org> <kb9pa2$mi8$1@ger.gmane.org> <50ECF6AB.30007@gmail.com> <20130109191753.GQ3926@htj.dyndns.org> <50F01968.4030309@teksavvy.com>
+In-Reply-To: <50F01968.4030309@teksavvy.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:38 PM Yinghai Lu wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
+On 13-01-11 08:53 AM, Mark Lord wrote:
+> On 13-01-09 02:17 PM, Tejun Heo wrote:
+>>
+>> Having a module option is easy and can be helpful for the very rare
+>> cases where the admin is aware of the issue, but, in general, it
+>> doesn't really help that much.
 > 
-> The code in pci_root_hp.c depends on function acpi_is_root_bridge()
-> to check whether an ACPI object is a PCI host bridge or not.
-> If an ACPI device hasn't been created for the ACPI object yet,
-> function acpi_is_root_bridge() will return false even if the object
-> is a PCI host bridge object. That behavior will cause two issues:
-> 1) No ACPI notification handler installed for PCI host bridges absent
->    at startup, so hotplug events for those bridges won't be handled.
-> 2) rescan_root_bridge() can't reenumerate offlined PCI host bridges
->    because the ACPI devices have been already destroyed.
-> 
-> So use acpi_match_object_info_ids() to correctly detect PCI host bridges.
-> 
-> -v2: update to use acpi_match_object_info_ids() from Tang Chen  - Yinghai
-> -v3: drop the PNP0A008, according to Bjorn.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/acpi/pci_root.c |   19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 5ae36d8..d30fb94 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -923,6 +923,23 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
->  				_handle_hotplug_event_root);
->  }
->  
-> +static bool acpi_is_root_bridge_object(acpi_handle handle)
-> +{
-> +	struct acpi_device_info *info = NULL;
-> +	acpi_status status;
-> +	bool ret;
-> +
-> +	status = acpi_get_object_info(handle, &info);
-> +	if (ACPI_FAILURE(status))
-> +		return false;
-> +
-> +	ret = !acpi_match_object_info_ids(info, root_device_ids);
-> +
+> How about a sysfs attribute, rather than a boot option?
 
-Well, I kind of don't understand why don't we check info->flags
-against ACPI_PCI_ROOT_BRIDGE that acpi_get_object_info() sets for us if it
-finds a PCI root bridge?
-
-> +	kfree(info);
-> +
-> +	return ret;
-> +}
-> +
->  static acpi_status __init
->  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  {
-> @@ -931,7 +948,7 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  				      .pointer = objname };
->  	int *count = (int *)context;
->  
-> -	if (!acpi_is_root_bridge(handle))
-> +	if (!acpi_is_root_bridge_object(handle))
->  		return AE_OK;
->  
->  	(*count)++;
-> 
-
-Thanks,
-Rafael
+NAK that idea.. a boot-time module flag is the best way.
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
