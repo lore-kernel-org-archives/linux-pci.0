@@ -1,71 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Tang Chen <tangchen@cn.fujitsu.com>
-Subject: Re: [PATCH v9 08/11] PCI, ACPI: debug print for installation of acpi root bridge's notifier
-Date: Mon, 21 Jan 2013 00:00:57 +0100
-Message-ID: <2506887.8XgRPLTxfQ@vostro.rjw.lan>
-In-Reply-To: <1358495602-22867-9-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <1358495602-22867-9-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f45.google.com ([209.85.215.45]:58166 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754077Ab3AKSQF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 13:16:05 -0500
+Received: by mail-la0-f45.google.com with SMTP id ep20so2077799lab.18
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2013 10:16:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <50EE1594.4070905@infradead.org>
+References: <50EE1594.4070905@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Jan 2013 11:15:43 -0700
+Message-ID: <CAErSpo6DCgCP44fyubP==x-V9qg6y+fs3R9wrmyL-WGHG+8gsw@mail.gmail.com>
+Subject: Re: [PATCH] pci: fix iov.c kernel-doc warnings
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 17, 2013 11:53:19 PM Yinghai Lu wrote:
-> From: Tang Chen <tangchen@cn.fujitsu.com>
-> 
-> acpi_install_notify_handler() could fail. So check the exit status
-> and give a better debug info.
-> 
-> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Wed, Jan 9, 2013 at 6:12 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+>
+> Fix kernel-doc warning in iov.c:
+>
+> Warning(drivers/pci/iov.c:752): No description found for parameter 'numvfs'
+>
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+
+Thanks, Randy.  I applied this to my for-linus branch and it will
+appear in v3.8 along with the code it applies to.
+
+Bjorn
+
 > ---
->  drivers/acpi/pci_root.c |   12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 3ce5d80..f3ceb61 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -762,6 +762,7 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
->  static acpi_status __init
->  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  {
-> +	acpi_status status;
->  	char objname[64];
->  	struct acpi_buffer buffer = { .length = sizeof(objname),
->  				      .pointer = objname };
-> @@ -774,9 +775,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  
->  	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
->  
-> -	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> -				handle_hotplug_event_root, NULL);
-> -	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-> +	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-> +					handle_hotplug_event_root, NULL);
-> +	if (ACPI_FAILURE(status))
-> +		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-
-Can you break that line, please?  And use pr_debug()?
-
-> +				  objname, (unsigned int)status);
-> +	else
-> +		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-> +				 objname);
->  
->  	return AE_OK;
->  }
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>  drivers/pci/iov.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- lnx-38-rc2.orig/drivers/pci/iov.c
+> +++ lnx-38-rc2/drivers/pci/iov.c
+> @@ -739,7 +739,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
+>  /**
+>   * pci_sriov_set_totalvfs -- reduce the TotalVFs available
+>   * @dev: the PCI PF device
+> - * numvfs: number that should be used for TotalVFs supported
+> + * @numvfs: number that should be used for TotalVFs supported
+>   *
+>   * Should be called from PF driver's probe routine with
+>   * device's mutex held.
