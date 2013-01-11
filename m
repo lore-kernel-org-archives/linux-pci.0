@@ -1,44 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:41848 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932173Ab3AIXMg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 18:12:36 -0500
-Message-ID: <50EDF95F.4070209@wwwdotorg.org>
-Date: Wed, 09 Jan 2013 16:12:31 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mail-bk0-f53.google.com ([209.85.214.53]:53558 "EHLO
+	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754360Ab3AKVJp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 16:09:45 -0500
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <201301092119.57067.arnd@arndb.de> <20130109215428.GA13648@avionic-0098.adnet.avionic-design.de> <201301092210.49452.arnd@arndb.de>
-In-Reply-To: <201301092210.49452.arnd@arndb.de>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <50F070D8.2080109@zytor.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<201301111333.49238.trenn@suse.de>
+	<CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
+	<1603289.LXteBtkifD@hammer82.arch.suse.de>
+	<CAE9FiQU6RWH6cBKc9th3Eb2gCjcHfotbC1sYspQ7dU+cG=VMFA@mail.gmail.com>
+	<50F070D8.2080109@zytor.com>
+Date: Fri, 11 Jan 2013 13:09:43 -0800
+Message-ID: <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in
+ memmap=exactmap case
+From: Yinghai Lu <yinghai@kernel.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Thomas Renninger <trenn@suse.de>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/09/2013 03:10 PM, Arnd Bergmann wrote:
-> On Wednesday 09 January 2013, Thierry Reding wrote:
->> What happens on Tegra is that we need to map 256 MiB of physical memory
->> to access all the PCIe extended configuration space. However, ioremap()
->> on such a large region fails if not enough vmalloc() space is available.
+On Fri, Jan 11, 2013 at 12:06 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On 01/11/2013 11:59 AM, Yinghai Lu wrote:
+>> On Fri, Jan 11, 2013 at 10:24 AM, Thomas Renninger <trenn@suse.de> wrote:
+>>>> We may need to keep exactmap intact.
+>>> Why?
+>>> Kexec/kdump should have been the only user?
+>>> If older/current kexec calls still add ACPI maps via memmap=X#Y,
+>>> they should already exist in the original e820 map and fall off or
+>>> get glued to one region if (wrongly) overlapping via sanitize_map.
 >>
->> This was observed when somebody tested this on CardHu which has a 1 GiB
->> of RAM and therefore remapping the full 256 MiB fails.
-...
-> Have you checked if the hardware supports an alternative config
-> space access mechanism that does not depend on a huge address range?
-> A lot of them provide an index/data register pair somewhere, as the
-> original PC implementation did.
+>> No, kexec/kdump is not the only user for memmap=exactmap.
+>>
+>
+> Who is using it then, since you seem to know?
 
-That would be nice, but I've talked to the HW engineers, and there's no
-indication that any alternative mechanism exists.
+http://forums.gentoo.org/viewtopic-t-487476-highlight-proliant.html
+
+http://forums.fedoraforum.org/archive/index.php/t-225347.html
