@@ -1,184 +1,215 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1357754873.3224.777.camel@bling.home>
-Subject: Re: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
- devices
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gleb Natapov <gleb@redhat.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Wed, 09 Jan 2013 11:07:53 -0700
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:12870 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753427Ab3AKCZK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 21:25:10 -0500
+Message-ID: <50EF77EB.8080806@huawei.com>
+Date: Fri, 11 Jan 2013 10:24:43 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: Re: [PATCH 1/2] PCI, pciehp: make every slot have its own workqueue
+ to avoid deadlock
+References: <1357788179-9764-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1357788179-9764-1-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-01-09 at 06:26 +0000, Pandarathil, Vijaymohan R wrote:
-> 	- Create eventfd per vfio device assigned to a guest and register an
->           event handler
+I'm very sorry, forgeted to add Daniel J Blueman reported-by, I updated this patch to
+add reported-by and cc stable branch.
+
+
+Thanks!
+Yijing.
+
+On 2013/1/10 11:22, Yijing Wang wrote:
+> Currently, pciehp use global pciehp_wq to handle hotplug event from hardware.
+> Hot remove path will be blocked if a hotplug slot connected a IO-BOX(composed of PCIe
+> Switch and some slots which support hotplug). Because The hot removed work was queued
+> into pciehp_wq. But in the hot-remove path, pciehp driver would flush pciehp_wq when
+> the pcie port(support pciehp) was removed. In this case the hot-remove path blocked.
+> This patch remove the global pciehp_wq and create a new workqueue for every slot to
+> avoid above problem.
+> call path:
+> 1. Hot-removal request comes to slot A(eg. 0000:40:07.0 as bellow)
+> 2. Pciehp driver queue hot-remove work into global workqueue "pciehp_wq"
+> 3. Hot-remove work call pci_stop_and_remove_bus_device() to remove child devices.
+> 4. Unregister and remove Pcie port device slot B(eg. 0000:47:15.0).
+> 5. To remove pcie port device, flush_workqueue(pciehp_wq) will be called.
+> 6. Deaklock <== hot-removal work is in progress.
 > 
-> 	- This fd is passed to the vfio_pci driver through a new ioctl
+> -+-[0000:40]-+-00.0-[0000:41]--
+>  |           +-01.0-[0000:42]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+>  |           |                 \-00.1  Intel Corporation 82576 Gigabit Network Connection
+>  |           +-03.0-[0000:43]----00.0  LSI Logic / Symbios Logic SAS1064ET PCI-Express Fusion-MPT SAS
+>  |           +-04.0-[0000:44]--
+>  |           +-05.0-[0000:45]--
+>  |           +-07.0-[0000:46-4f]----00.0-[0000:47-4f]--+-04.0-[0000:48-49]----00.0-[0000:49]--
+>  |           |(slot A)                                 +-08.0-[0000:4a]--
+>  |           |                                         +-09.0-[0000:4b]--
+>  |           |                                         +-10.0-[0000:4c]--
+>  |           |                                         +-11.0-[0000:4d]--
+>  |           |                                         +-14.0-[0000:4e]--
+>  |           |                                         \-15.0-[0000:4f]--+-00.0  Intel Corporation 82576 Gigabit Network Connection
+>  |           |                                         (slot B)          \-00.1  Intel Corporation 82576 Gigabit Network Connection
 > 
-> 	- When the device encounters an error, the eventfd is signaled
->           and the qemu eventfd handler gets invoked.
-> 
-> 	- In the handler decide what action to take. Current action taken
->           is to terminate the guest.
-> 
-> Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+> Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 > ---
->  hw/vfio_pci.c              | 56 ++++++++++++++++++++++++++++++++++++++++++++++
->  linux-headers/linux/vfio.h |  9 ++++++++
->  2 files changed, 65 insertions(+)
+>  drivers/pci/hotplug/pciehp.h      |    2 +-
+>  drivers/pci/hotplug/pciehp_core.c |   11 ++---------
+>  drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
+>  drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++++++-
+>  4 files changed, 17 insertions(+), 15 deletions(-)
 > 
-> diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
-> index 28c8303..9c3c28b 100644
-> --- a/hw/vfio_pci.c
-> +++ b/hw/vfio_pci.c
-> @@ -38,6 +38,7 @@
->  #include "qemu/error-report.h"
->  #include "qemu/queue.h"
->  #include "qemu/range.h"
-> +#include "sysemu/sysemu.h"
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 26ffd3e..2c113de 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -44,7 +44,6 @@ extern bool pciehp_poll_mode;
+>  extern int pciehp_poll_time;
+>  extern bool pciehp_debug;
+>  extern bool pciehp_force;
+> -extern struct workqueue_struct *pciehp_wq;
 >  
->  /* #define DEBUG_VFIO */
->  #ifdef DEBUG_VFIO
-> @@ -130,6 +131,8 @@ typedef struct VFIODevice {
->      QLIST_ENTRY(VFIODevice) next;
->      struct VFIOGroup *group;
->      bool reset_works;
-> +    EventNotifier errfd;
-
-Misleading name, it's an EventNotifier not an fd.
-
-> +    __u32 dev_info_flags;
->  } VFIODevice;
+>  #define dbg(format, arg...)						\
+>  do {									\
+> @@ -78,6 +77,7 @@ struct slot {
+>  	struct hotplug_slot *hotplug_slot;
+>  	struct delayed_work work;	/* work for button event */
+>  	struct mutex lock;
+> +	struct workqueue_struct *wq;
+>  };
 >  
->  typedef struct VFIOGroup {
-> @@ -1805,6 +1808,8 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
->      DPRINTF("Device %s flags: %u, regions: %u, irgs: %u\n", name,
->              dev_info.flags, dev_info.num_regions, dev_info.num_irqs);
+>  struct event_info {
+> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+> index 916bf4f..939bd1d 100644
+> --- a/drivers/pci/hotplug/pciehp_core.c
+> +++ b/drivers/pci/hotplug/pciehp_core.c
+> @@ -42,7 +42,6 @@ bool pciehp_debug;
+>  bool pciehp_poll_mode;
+>  int pciehp_poll_time;
+>  bool pciehp_force;
+> -struct workqueue_struct *pciehp_wq;
 >  
-> +    vdev->dev_info_flags = dev_info.flags;
+>  #define DRIVER_VERSION	"0.4"
+>  #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+> @@ -340,18 +339,13 @@ static int __init pcied_init(void)
+>  {
+>  	int retval = 0;
+>  
+> -	pciehp_wq = alloc_workqueue("pciehp", 0, 0);
+> -	if (!pciehp_wq)
+> -		return -ENOMEM;
+> -
+>  	pciehp_firmware_init();
+>  	retval = pcie_port_service_register(&hpdriver_portdrv);
+>   	dbg("pcie_port_service_register = %d\n", retval);
+>    	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+> - 	if (retval) {
+> -		destroy_workqueue(pciehp_wq);
+> +	if (retval)
+>  		dbg("Failure to register service\n");
+> -	}
 > +
-
-We test the VFIO_DEVICE_FLAGS_RESET elsewhere by caching the bit into a
-variable, why not do that here too?
-
->      if (!(dev_info.flags & VFIO_DEVICE_FLAGS_PCI)) {
->          error_report("vfio: Um, this isn't a PCI device\n");
->          goto error;
-> @@ -1900,6 +1905,55 @@ static void vfio_put_device(VFIODevice *vdev)
->      }
+>  	return retval;
 >  }
 >  
-> +static void vfio_errfd_handler(void *opaque)
-> +{
-> +    VFIODevice *vdev = opaque;
-> +
-> +    if (!event_notifier_test_and_clear(&vdev->errfd)) {
-> +        return;
-> +    }
-> +
-> +    /*
-> +     * TBD. Retrieve the error details and decide what action
-> +     * needs to be taken. One of the actions could be to pass
-> +     * the error to the guest and have the guest driver recover
-> +     * the error. This requires that PCIe capabilities be
-> +     * exposed to the guest. At present, we just terminate the
-> +     * guest to contain the error.
-> +     */
-> +    error_report("%s(%04x:%02x:%02x.%x) "
-> +        "Unrecoverable error detected... Terminating guest\n",
-> +        __func__, vdev->host.domain, vdev->host.bus, vdev->host.slot,
-> +        vdev->host.function);
-> +
-> +    qemu_system_shutdown_request();
-
-I would have figured hw_error
-
-> +    return;
-> +}
-> +
-> +static void vfio_register_errfd(VFIODevice *vdev)
-> +{
-> +    int32_t pfd;
-
-"pfd" is used elsewhere in vfio as "Pointer to FD", this is just a fd.
-
-> +    int ret;
-> +
-> +    if (!(vdev->dev_info_flags & VFIO_DEVICE_FLAGS_AER_NOTIFY)) {
-> +        error_report("vfio: Warning: Error notification not supported for the device\n");
-
-This should probably just be a debug print.
-
-> +        return;
-> +    }
-> +    if (event_notifier_init(&vdev->errfd, 0)) {
-> +        error_report("vfio: Warning: Unable to init event notifier for error detection\n");
-> +        return;
-> +    }
-> +    pfd = event_notifier_get_fd(&vdev->errfd);
-> +    qemu_set_fd_handler(pfd, vfio_errfd_handler, NULL, vdev);
-> +
-> +    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_ERRFD, pfd);
-> +    if (ret) {
-> +        error_report("vfio: Warning: Failed to setup error fd: %d\n", ret);
-> +        qemu_set_fd_handler(pfd, NULL, NULL, vdev);
-> +        event_notifier_cleanup(&vdev->errfd);
-> +    }
-> +    return;
-> +}
->  static int vfio_initfn(PCIDevice *pdev)
+> @@ -359,7 +353,6 @@ static void __exit pcied_cleanup(void)
 >  {
->      VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
-> @@ -2010,6 +2064,8 @@ static int vfio_initfn(PCIDevice *pdev)
->          }
->      }
+>  	dbg("unload_pciehpd()\n");
+>  	pcie_port_service_unregister(&hpdriver_portdrv);
+> -	destroy_workqueue(pciehp_wq);
+>  	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+>  }
 >  
-> +    vfio_register_errfd(vdev);
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 27f4429..38f0186 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -49,7 +49,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
+>  	info->p_slot = p_slot;
+>  	INIT_WORK(&info->work, interrupt_event_handler);
+>  
+> -	queue_work(pciehp_wq, &info->work);
+> +	queue_work(p_slot->wq, &info->work);
+>  
+>  	return 0;
+>  }
+> @@ -344,7 +344,7 @@ void pciehp_queue_pushbutton_work(struct work_struct *work)
+>  		kfree(info);
+>  		goto out;
+>  	}
+> -	queue_work(pciehp_wq, &info->work);
+> +	queue_work(p_slot->wq, &info->work);
+>   out:
+>  	mutex_unlock(&p_slot->lock);
+>  }
+> @@ -377,7 +377,7 @@ static void handle_button_press_event(struct slot *p_slot)
+>  		if (ATTN_LED(ctrl))
+>  			pciehp_set_attention_status(p_slot, 0);
+>  
+> -		queue_delayed_work(pciehp_wq, &p_slot->work, 5*HZ);
+> +		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+>  		break;
+>  	case BLINKINGOFF_STATE:
+>  	case BLINKINGON_STATE:
+> @@ -439,7 +439,7 @@ static void handle_surprise_event(struct slot *p_slot)
+>  	else
+>  		p_slot->state = POWERON_STATE;
+>  
+> -	queue_work(pciehp_wq, &info->work);
+> +	queue_work(p_slot->wq, &info->work);
+>  }
+>  
+>  static void interrupt_event_handler(struct work_struct *work)
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 13b2eaf..5127f3f 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -773,23 +773,32 @@ static void pcie_shutdown_notification(struct controller *ctrl)
+>  static int pcie_init_slot(struct controller *ctrl)
+>  {
+>  	struct slot *slot;
+> +	char name[32];
+>  
+>  	slot = kzalloc(sizeof(*slot), GFP_KERNEL);
+>  	if (!slot)
+>  		return -ENOMEM;
+>  
+> +	snprintf(name, sizeof(name), "pciehp-%u", PSN(ctrl));
+> +	slot->wq = alloc_workqueue(name, 0, 0);
+> +	if (!slot->wq)
+> +		goto abort;
 > +
-
-No cleanup in exitfn?!  Thanks,
-
-Alex
-
->      return 0;
+>  	slot->ctrl = ctrl;
+>  	mutex_init(&slot->lock);
+>  	INIT_DELAYED_WORK(&slot->work, pciehp_queue_pushbutton_work);
+>  	ctrl->slot = slot;
+>  	return 0;
+> +abort:
+> +	kfree(slot);
+> +	return -ENOMEM;
+>  }
 >  
->  out_teardown:
-> diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
-> index 4758d1b..0ca4eeb 100644
-> --- a/linux-headers/linux/vfio.h
-> +++ b/linux-headers/linux/vfio.h
-> @@ -147,6 +147,7 @@ struct vfio_device_info {
->  	__u32	flags;
->  #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
->  #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
-> +#define VFIO_DEVICE_FLAGS_AER_NOTIFY (1 << 2)   /* Supports aer notification */
->  	__u32	num_regions;	/* Max region index + 1 */
->  	__u32	num_irqs;	/* Max IRQ index + 1 */
->  };
-> @@ -288,6 +289,14 @@ struct vfio_irq_set {
->   */
->  #define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 11)
+>  static void pcie_cleanup_slot(struct controller *ctrl)
+>  {
+>  	struct slot *slot = ctrl->slot;
+>  	cancel_delayed_work(&slot->work);
+> -	flush_workqueue(pciehp_wq);
+> +	destroy_workqueue(slot->wq);
+>  	kfree(slot);
+>  }
 >  
-> +/**
-> + * VFIO_DEVICE_SET_ERRFD - _IO(VFIO_TYPE, VFIO_BASE + 12)
-> + *
-> + * Pass the eventfd to the vfio-pci driver for signalling any device
-> + * error notifications
-> + */
-> +#define VFIO_DEVICE_SET_ERRFD           _IO(VFIO_TYPE, VFIO_BASE + 12)
-> +
->  /*
->   * The VFIO-PCI bus driver makes use of the following fixed region and
->   * IRQ index mapping.  Unimplemented regions return a size of zero.
+> 
 
 
+-- 
+Thanks!
+Yijing
 
