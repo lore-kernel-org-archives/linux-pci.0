@@ -1,47 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <51066B46.10409@fold.natur.cuni.cz>
-Date: Mon, 28 Jan 2013 13:12:54 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com>
-In-Reply-To: <51065FA6.4070208@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38450 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756053Ab3AKWlV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:21 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 11/22] PCI: correctly detect ACPI PCI host bridge objects
+Date: Fri, 11 Jan 2013 14:40:38 -0800
+Message-Id: <1357944049-29620-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Chris Clayton wrote:
-> 
-> [snip]
-> 
->> [chris:~]$ cat /proc/cmdline
->> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
->                      ^^
->                   **typo**
-> I've run the test again with pcie_ports=native and the directories now get populated. Even better though, is that when I plug in the card, hotplug **works** and the card's drivers are loaded.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-BTW, I have with acpiphp on 3.7.4:
+The code in pci_root_hp.c depends on function acpi_is_root_bridge()
+to check whether an ACPI object is a PCI host bridge or not.
+If an ACPI device hasn't been created for the ACPI object yet,
+function acpi_is_root_bridge() will return false even if the object
+is a PCI host bridge object. That behavior will cause two issues:
+1) No ACPI notification handler installed for PCI host bridges absent
+   at startup, so hotplug events for those bridges won't be handled.
+2) rescan_root_bridge() can't reenumerate offlined PCI host bridges
+   because the ACPI devices have been already destroyed.
 
-ls -la /sys/bus/pci_express/devices
-total 0
-drwxr-xr-x 2 root root 0 Jan 28 13:07 .
-drwxr-xr-x 4 root root 0 Jan 28 13:07 ..
-$ ls -la /sys/bus/pci/devices/slots
-ls: cannot access /sys/bus/pci/devices/slots: No such file or directory
-$
+So use acpi_match_object_info_ids() to correctly detect PCI host bridges.
 
-And for me hotplug also works (as far as I can tell). ;-)
+-v2: update to use acpi_match_object_info_ids() from Tang Chen  - Yinghai
+-v3: drop the PNP0A008, according to Bjorn.
 
-> 
-> Excellent! Thank you so much for your help (and patience) Martin and Yijing.
-> 
-> Now to solving why running scandvb doesn't find any TV channels.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/acpi/pci_root.c |   19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-Would be fine if you could re-do the PresDet checks and confirm whether it is also broken
-for you under pciehp.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 5ae36d8..d30fb94 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -923,6 +923,23 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+ 				_handle_hotplug_event_root);
+ }
+ 
++static bool acpi_is_root_bridge_object(acpi_handle handle)
++{
++	struct acpi_device_info *info = NULL;
++	acpi_status status;
++	bool ret;
++
++	status = acpi_get_object_info(handle, &info);
++	if (ACPI_FAILURE(status))
++		return false;
++
++	ret = !acpi_match_object_info_ids(info, root_device_ids);
++
++	kfree(info);
++
++	return ret;
++}
++
+ static acpi_status __init
+ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ {
+@@ -931,7 +948,7 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 				      .pointer = objname };
+ 	int *count = (int *)context;
+ 
+-	if (!acpi_is_root_bridge(handle))
++	if (!acpi_is_root_bridge_object(handle))
+ 		return AE_OK;
+ 
+ 	(*count)++;
+-- 
+1.7.10.4
 
-Martin
