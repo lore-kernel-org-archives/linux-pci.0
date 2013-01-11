@@ -1,69 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:59061 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753126Ab3A3PJI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 10:09:08 -0500
-Date: Wed, 30 Jan 2013 15:08:56 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
-	systems
-Message-ID: <20130130150856.GJ23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com> <20130130113245.GH23505@n2100.arm.linux.org.uk> <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
+Received: from terminus.zytor.com ([198.137.202.10]:53209 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755495Ab3AKWSP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jan 2013 17:18:15 -0500
+Message-ID: <50F08F43.7080604@zytor.com>
+Date: Fri, 11 Jan 2013 14:16:35 -0800
+From: "H. Peter Anvin" <hpa@zytor.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Thomas Renninger <trenn@suse.de>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap
+ case
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <201301111333.49238.trenn@suse.de> <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com> <1603289.LXteBtkifD@hammer82.arch.suse.de> <CAE9FiQU6RWH6cBKc9th3Eb2gCjcHfotbC1sYspQ7dU+cG=VMFA@mail.gmail.com> <50F070D8.2080109@zytor.com> <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
+In-Reply-To: <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 30, 2013 at 01:03:44PM +0100, Thierry Reding wrote:
-> On Wed, Jan 30, 2013 at 11:32:46AM +0000, Russell King - ARM Linux wrote:
-> > On Mon, Jan 28, 2013 at 07:56:28PM +0100, Thomas Petazzoni wrote:
-> > > +static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
-> > > +						 const struct resource *res,
-> > > +						 resource_size_t start,
-> > > +						 resource_size_t size,
-> > > +						 resource_size_t align)
-> > > +{
-> > > +	if (!(res->flags & IORESOURCE_IO))
-> > > +		return start;
-> > > +
-> > > +	/*
-> > > +	 * The I/O regions must be 64K aligned, because the
-> > > +	 * granularity of PCIe I/O address decoding windows is 64 K
-> > > +	 */
-> > > +	return round_up(start, SZ_64K);
-> > > +}
-> > 
-> > You do realise that this will result in all PCI I/O BARs being rounded
-> > up to 64K.
-> > 
-> > I've just been digging through the PCI code and have come across a
-> > function - pcibios_window_alignment() - which the PCI code allows to be
-> > overriden which allows you to increase the alignment requirement of
-> > bridge windows.  It takes the PCI bus and window type as arguments.
-> > 
-> > I'd suggest using that, and checking whether the bus which is passed
-> > corresponds with a bus which gives you problems, so that you don't
-> > impose the 64K requirement on downstream bridges.
+On 01/11/2013 01:09 PM, Yinghai Lu wrote:
+> On Fri, Jan 11, 2013 at 12:06 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>> On 01/11/2013 11:59 AM, Yinghai Lu wrote:
+>>> On Fri, Jan 11, 2013 at 10:24 AM, Thomas Renninger <trenn@suse.de> wrote:
+>>>>> We may need to keep exactmap intact.
+>>>> Why?
+>>>> Kexec/kdump should have been the only user?
+>>>> If older/current kexec calls still add ACPI maps via memmap=X#Y,
+>>>> they should already exist in the original e820 map and fall off or
+>>>> get glued to one region if (wrongly) overlapping via sanitize_map.
+>>>
+>>> No, kexec/kdump is not the only user for memmap=exactmap.
+>>>
+>>
+>> Who is using it then, since you seem to know?
 > 
-> That approach isn't going to work very well with multi-platform, though,
-> since the function can only be overridden on a per-architecture basis.
+> http://forums.gentoo.org/viewtopic-t-487476-highlight-proliant.html
+> 
+> http://forums.fedoraforum.org/archive/index.php/t-225347.html
+> 
 
-The same can be said of all the various other functions which the PCI
-stuff expects the arch to provide, yet we seem to cope just fine...
+Hm... both of those seem to be someone trying memmap=exactmap to hack
+around a problem which really was elsewhere, with a different solution.
+
+	-hpa
+
