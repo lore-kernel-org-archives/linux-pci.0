@@ -1,183 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55223 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753050Ab3AJVYd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Jan 2013 16:24:33 -0500
-Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when
- PCI hotplug event happens
-From: Myron Stowe <mstowe@redhat.com>
-To: rjw <rjw@sisk.pl>
-Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>,
-	bhelgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>
-In-Reply-To: <CAErSpo5UD9362JVKzG4rcLJ6kKMLvMzdJ3kLRvRTSRdSqHOH9w@mail.gmail.com>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-	 <9523101.J0n0M0VJmQ@vostro.rjw.lan> <50EDA1B1.3050501@gmail.com>
-	 <16794957.TmlpVGsGIb@vostro.rjw.lan>
-	 <CAErSpo5UD9362JVKzG4rcLJ6kKMLvMzdJ3kLRvRTSRdSqHOH9w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Jan 2013 14:24:23 -0700
-Message-ID: <1357853063.2339.10.camel@zim.stowe>
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [PATCH v8 05/22] PCI: make PCI device create/destroy logic symmetric
+Date: Fri, 11 Jan 2013 14:40:32 -0800
+Message-Id: <1357944049-29620-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+From: Jiang Liu <jiang.liu@huawei.com>
 
-On Wed, 2013-01-09 at 13:44 -0700, Bjorn Helgaas wrote:
-> [+cc Myron]
-> 
-> On Wed, Jan 9, 2013 at 1:19 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Thursday, January 10, 2013 12:58:25 AM Jiang Liu wrote:
-> >> Hi Rafael,
-> >>       Thanks for your great efforts to review the patch.
-> >>
-> >> On 01/09/2013 08:01 AM, Rafael J. Wysocki wrote:
-> >> > Hi,
-> >> >
-> >> > On Wednesday, January 09, 2013 12:52:22 AM Jiang Liu wrote:
-> >> snip
-> >> >>
-> >> >> +static void acpi_pci_slot_notify_add(struct pci_dev *dev)
-> >> >> +{
-> >> >> +  acpi_handle handle;
-> >> >> +  struct callback_args context;
-> >> >> +
-> >> >> +  if (!dev->subordinate)
-> >> >> +          return;
-> >> >> +
-> >> >> +  mutex_lock(&slot_list_lock);
-> >> >> +  handle = DEVICE_ACPI_HANDLE(&dev->dev);
-> >> >> +  context.root_handle = acpi_find_root_bridge_handle(dev);
-> >> >
-> >> > There's a patch under discussion that removes this function.
-> >> >
-> >> > Isn't there any other way to do this?
-> >>       I will try to find a way to get rid of calling acpi_find_root_bridge_handle,
-> >> and it seems doable.
-> >>
-> >> >
-> >> >> +  if (handle && context.root_handle) {
-> >> >> +          context.pci_bus = dev->subordinate;
-> >> >> +          context.user_function = register_slot;
-> >> >> +          acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
-> >> >
-> >> > You can just pass 1 here I think.  Does the compiler complain?
-> >> Thanks for reminder, the (u32) is unnecessary.
-> >>
-> >> >
-> >> >> +                              register_slot, NULL, &context, NULL);
-> >> >> +  }
-> >> >> +  mutex_unlock(&slot_list_lock);
-> >> >> +}
-> >> >> +
-> >> >> +static void acpi_pci_slot_notify_del(struct pci_dev *dev)
-> >> >> +{
-> >> >> +  struct acpi_pci_slot *slot, *tmp;
-> >> >> +  struct pci_bus *bus = dev->subordinate;
-> >> >> +
-> >> >> +  if (!bus)
-> >> >> +          return;
-> >> >> +
-> >> >> +  mutex_lock(&slot_list_lock);
-> >> >> +  list_for_each_entry_safe(slot, tmp, &slot_list, list)
-> >> >> +          if (slot->pci_slot && slot->pci_slot->bus == bus) {
-> >> >> +                  list_del(&slot->list);
-> >> >> +                  pci_destroy_slot(slot->pci_slot);
-> >> >> +                  put_device(&bus->dev);
-> >> >> +                  kfree(slot);
-> >> >> +          }
-> >> >> +  mutex_unlock(&slot_list_lock);
-> >> >> +}
-> >> >> +
-> >> >> +static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
-> >> >> +                             unsigned long event, void *data)
-> >> >> +{
-> >> >> +  struct device *dev = data;
-> >> >> +
-> >> >> +  switch (event) {
-> >> >> +  case BUS_NOTIFY_ADD_DEVICE:
-> >> >> +          acpi_pci_slot_notify_add(to_pci_dev(dev));
-> >> >> +          break;
-> >> >
-> >> > Do I think correctly that this is going to be called for every PCI device
-> >> > added to the system, even if it's not a bridge?
-> >> You are right. Function acpi_pci_slot_notify_add() and acpi_pci_slot_notify_del()
-> >> will check whether it's a bridge. If preferred, I will move the check up into
-> >> acpi_pci_slot_notify_fn().
-> >>
-> >> >
-> >> >> +  case BUS_NOTIFY_DEL_DEVICE:
-> >> >> +          acpi_pci_slot_notify_del(to_pci_dev(dev));
-> >> >> +          break;
-> >> >> +  default:
-> >> >> +          return NOTIFY_DONE;
-> >> >> +  }
-> >> >> +
-> >> >> +  return NOTIFY_OK;
-> >> >> +}
-> >> >> +
-> >> >> +static struct notifier_block acpi_pci_slot_notifier = {
-> >> >> +  .notifier_call = &acpi_pci_slot_notify_fn,
-> >> >> +};
-> >> >> +
-> >> >>  static int __init
-> >> >>  acpi_pci_slot_init(void)
-> >> >>  {
-> >> >>    dmi_check_system(acpi_pci_slot_dmi_table);
-> >> >>    acpi_pci_register_driver(&acpi_pci_slot_driver);
-> >> >> +  bus_register_notifier(&pci_bus_type, &acpi_pci_slot_notifier);
-> >> >
-> >> > I wonder if/why this has to be so convoluted?
-> >> >
-> >> > We have found a PCI bridge in the ACPI namespace, so we've created a struct
-> >> > acpi_device for it and we've walked the namespace below it already.
-> >> >
-> >> > Now we're creating a struct pci_dev for it and while registering it we're
-> >> > going to walk the namespace below the bridge again to find and register its
-> >> > slots and that is done indirectly from a bus type notifier.
-> >> >
-> >> > Why can't we enumerate the slots directly upfront?
-> >> Do you mean to create the PCI slot devices when creating the ACPI devices?
-> >> I think there are two factors prevent us from doing that.
-> >> The first is that the ACPI pci_slot driver could be built as a module, so
-> >> we can't call into it from the ACPI core.
-> >
-> > I didn't say about calling the pci_slot driver from the ACPI core, but about
-> > enumerating slots in a way suitable for consumption by the pci_slot driver
-> > when it's ready.
-> >
-> > That said I really don't see a value in having a modular pci_slot driver.  It
-> > is part of the hotplug infrastructure and should always be presend for this
-> > reason, so we don't need to worry about the "pci_slot driver not present" case.
-> 
-> I agree that there's no value in supporting CONFIG_ACPI_PCI_SLOT=m.  I
-> think Myron has some patches that remove that case.
-> 
-> I'm not sure what the best way to merge them is.  We have a bunch of
-> stuff this cycle that touches both ACPI and PCI.
+According to device model documentation, the way to create/destroy PCI
+devices should be symmetric.
 
-Rafael:
+/**
+ * device_del - delete device from system.
+ * @dev: device.
+ *
+ * This is the first part of the device unregistration
+ * sequence. This removes the device from the lists we control
+ * from here, has it removed from the other driver model
+ * subsystems it was added to in device_add(), and removes it
+ * from the kobject hierarchy.
+ *
+ * NOTE: this should be called manually _iff_ device_add() was
+ * also called manually.
+ */
 
-The series Bjorn mentions is at https://lkml.org/lkml/2012/12/7/11  It
-converts both the "ACPI Hot Plug PCI Controller Driver ("acpiphp")" and
-"ACPI PCI Slot Detection Driver ("pci_slot")" sub-drivers to built-in
-drivers (i.e. no longer supported as modules).
+The rule is to either use
+1) device_register()/device_unregister()
+or
+2) device_initialize()/device_add()/device_del()/put_device().
 
-Yinghai commented back - https://lkml.org/lkml/2012/12/7/29 - indicating
-a possible issue with such but his response was too terse for me to get
-anything from.  Also, I've noticed that a couple of the distros, debian
-being one, have made similar changes so I'm a little skeptical about
-Yinghai's concerns.
+So change PCI core logic to follow the rule and get rid of the redundant
+pci_dev_get()/pci_dev_put() pair.
 
-Since you have similar thoughts - "I really don't see a value in having
-a modular pci_slot driver" - can you foresee any issues with such?
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c  |    1 -
+ drivers/pci/remove.c |    4 ++--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-Thanks,
- Myron
-> 
-> Bjorn
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b97dea5..48b35e1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1298,7 +1298,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	device_initialize(&dev->dev);
+ 	dev->dev.release = pci_release_dev;
+-	pci_dev_get(dev);
+ 
+ 	set_dev_node(&dev->dev, pcibus_to_node(bus));
+ 	dev->dev.dma_mask = &dev->dma_mask;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 7c0fd92..fc38c48 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 	if (dev->is_added) {
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+-		device_unregister(&dev->dev);
++		device_del(&dev->dev);
+ 		dev->is_added = 0;
+ 	}
+ 
+@@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	up_write(&pci_bus_sem);
+ 
+ 	pci_free_resources(dev);
+-	pci_dev_put(dev);
++	put_device(&dev->dev);
+ }
+ 
+ void pci_remove_bus(struct pci_bus *bus)
+-- 
+1.7.10.4
 
