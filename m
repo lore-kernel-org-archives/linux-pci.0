@@ -1,266 +1,239 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 22/22] PCI: move device_add out of pci_bus_add_device()
-Date: Sun, 13 Jan 2013 00:54:16 +0100
-Message-ID: <1620774.KjdX6JUoJy@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-23-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-23-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38614 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753999Ab3AKPxL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jan 2013 10:53:11 -0500
+Message-ID: <1357919587.3224.824.camel@bling.home>
+Subject: Re: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
+ devices
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Gleb Natapov <gleb@redhat.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 11 Jan 2013 08:53:07 -0700
+In-Reply-To: <F9E001219150CB45BEDC82A650F360C901497698@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
+	 <1357754873.3224.777.camel@bling.home>
+	 <F9E001219150CB45BEDC82A650F360C901497698@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:49 PM Yinghai Lu wrote:
-> Move out device registering out of pci_bus_add_devices, so we could
-> put new created pci devices in device tree early.
+On Fri, 2013-01-11 at 08:53 +0000, Pandarathil, Vijaymohan R wrote:
 > 
-> new pci_bus_add_devices will do the device_attach work to load pci drivers
-> instead.
-
-I wonder what problem it solves?
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/bus.c   |   47 +++--------------------------------------------
->  drivers/pci/iov.c   |    7 -------
->  drivers/pci/probe.c |   34 +++++++++++++++++++++++++++-------
->  3 files changed, 30 insertions(+), 58 deletions(-)
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Wednesday, January 09, 2013 10:08 AM
+> > To: Pandarathil, Vijaymohan R
+> > Cc: Bjorn Helgaas; Gleb Natapov; kvm@vger.kernel.org; qemu-
+> > devel@nongnu.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
+> > devices
+> > 
+> > On Wed, 2013-01-09 at 06:26 +0000, Pandarathil, Vijaymohan R wrote:
+> > > 	- Create eventfd per vfio device assigned to a guest and register an
+> > >           event handler
+> > >
+> > > 	- This fd is passed to the vfio_pci driver through a new ioctl
+> > >
+> > > 	- When the device encounters an error, the eventfd is signaled
+> > >           and the qemu eventfd handler gets invoked.
+> > >
+> > > 	- In the handler decide what action to take. Current action taken
+> > >           is to terminate the guest.
+> > >
+> > > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+> > > ---
+> > >  hw/vfio_pci.c              | 56
+> > ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  linux-headers/linux/vfio.h |  9 ++++++++
+> > >  2 files changed, 65 insertions(+)
+> > >
+> > > diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
+> > > index 28c8303..9c3c28b 100644
+> > > --- a/hw/vfio_pci.c
+> > > +++ b/hw/vfio_pci.c
+> > > @@ -38,6 +38,7 @@
+> > >  #include "qemu/error-report.h"
+> > >  #include "qemu/queue.h"
+> > >  #include "qemu/range.h"
+> > > +#include "sysemu/sysemu.h"
+> > >
+> > >  /* #define DEBUG_VFIO */
+> > >  #ifdef DEBUG_VFIO
+> > > @@ -130,6 +131,8 @@ typedef struct VFIODevice {
+> > >      QLIST_ENTRY(VFIODevice) next;
+> > >      struct VFIOGroup *group;
+> > >      bool reset_works;
+> > > +    EventNotifier errfd;
+> > 
+> > Misleading name, it's an EventNotifier not an fd.
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 1f5916a..0a55845 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -178,22 +178,9 @@ static void pci_bus_attach_device(struct pci_dev *dev)
->   */
->  int pci_bus_add_device(struct pci_dev *dev)
->  {
-> -	int retval;
-> -
-> -	pci_fixup_device(pci_fixup_final, dev);
-> -
-> -	retval = pcibios_add_device(dev);
-> -	if (retval)
-> -		return retval;
-> -
-> -	retval = device_add(&dev->dev);
-> -	if (retval)
-> -		return retval;
-> -
->  	pci_bus_attach_device(dev);
->  	dev->is_added = 1;
-> -	pci_proc_attach_device(dev);
-> -	pci_create_sysfs_dev_files(dev);
-> +
->  	return 0;
->  }
->  
-> @@ -205,21 +192,9 @@ int pci_bus_add_device(struct pci_dev *dev)
->   */
->  int pci_bus_add_child(struct pci_bus *bus)
->  {
-> -	int retval;
-> -
-> -	if (bus->bridge)
-> -		bus->dev.parent = bus->bridge;
-> -
-> -	retval = device_add(&bus->dev);
-> -	if (retval)
-> -		return retval;
-> -
->  	bus->is_added = 1;
->  
-> -	/* Create legacy_io and legacy_mem files for this bus */
-> -	pci_create_legacy_files(bus);
-> -
-> -	return retval;
-> +	return 0;
->  }
->  
->  /**
-> @@ -245,36 +220,20 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->  		if (dev->is_added)
->  			continue;
->  		retval = pci_bus_add_device(dev);
-> -		if (retval)
-> -			dev_err(&dev->dev, "Error adding device, continuing\n");
->  	}
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		BUG_ON(!dev->is_added);
->  
->  		child = dev->subordinate;
-> -		/*
-> -		 * If there is an unattached subordinate bus, attach
-> -		 * it and then scan for unattached PCI devices.
-> -		 */
-> +
->  		if (!child)
->  			continue;
-> -		if (list_empty(&child->node)) {
-> -			down_write(&pci_bus_sem);
-> -			list_add_tail(&child->node, &dev->bus->children);
-> -			up_write(&pci_bus_sem);
-> -		}
->  		pci_bus_add_devices(child);
->  
-> -		/*
-> -		 * register the bus with sysfs as the parent is now
-> -		 * properly registered.
-> -		 */
->  		if (child->is_added)
->  			continue;
->  		retval = pci_bus_add_child(child);
-> -		if (retval)
-> -			dev_err(&dev->dev, "Error adding bus, continuing\n");
->  	}
->  }
->  
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index bafd2bb..dbad72e 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -48,12 +48,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
->  		return NULL;
->  
->  	pci_bus_insert_busn_res(child, busnr, busnr);
-> -	child->dev.parent = bus->bridge;
->  	rc = pci_bus_add_child(child);
-> -	if (rc) {
-> -		pci_remove_bus(child);
-> -		return NULL;
-> -	}
->  
->  	return child;
->  }
-> @@ -123,8 +118,6 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
->  	virtfn->is_virtfn = 1;
->  
->  	rc = pci_bus_add_device(virtfn);
-> -	if (rc)
-> -		goto failed1;
->  	sprintf(buf, "virtfn%u", id);
->  	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
->  	if (rc)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index dc4fde3..84c92a0 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -623,6 +623,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  {
->  	struct pci_bus *child;
->  	int i;
-> +	int ret;
->  
->  	/*
->  	 * Allocate a new bus, and inherit stuff from the parent..
-> @@ -637,8 +638,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	child->bus_flags = parent->bus_flags;
->  
->  	/* initialize some portions of the bus device, but don't register it
-> -	 * now as the parent is not properly set up yet.  This device will get
-> -	 * registered later in pci_bus_add_devices()
-> +	 * now as the parent is not properly set up yet.
->  	 */
->  	child->dev.class = &pcibus_class;
->  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> @@ -652,11 +652,14 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	child->primary = parent->busn_res.start;
->  	child->busn_res.end = 0xff;
->  
-> -	if (!bridge)
-> -		return child;
-> +	if (!bridge) {
-> +		child->dev.parent = parent->bridge;
-> +		goto add_dev;
-> +	}
->  
->  	child->self = bridge;
->  	child->bridge = get_device(&bridge->dev);
-> +	child->dev.parent = child->bridge;
->  	pci_set_bus_of_node(child);
->  	pci_set_bus_speed(child);
->  
-> @@ -667,6 +670,13 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->  	}
->  	bridge->subordinate = child;
->  
-> +add_dev:
-> +	ret = device_add(&child->dev);
-> +	WARN_ON(ret < 0);
-> +
-> +	/* Create legacy_io and legacy_mem files for this bus */
-> +	pci_create_legacy_files(child);
-> +
->  	return child;
->  }
->  
-> @@ -1297,6 +1307,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
-> +	int ret;
-> +
->  	device_initialize(&dev->dev);
->  	dev->dev.release = pci_release_dev;
->  
-> @@ -1327,6 +1339,16 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	down_write(&pci_bus_sem);
->  	list_add_tail(&dev->bus_list, &bus->devices);
->  	up_write(&pci_bus_sem);
-> +
-> +	pci_fixup_device(pci_fixup_final, dev);
-> +        ret = pcibios_add_device(dev);
+> Will make the change.
+> 
+> > 
+> > > +    __u32 dev_info_flags;
+> > >  } VFIODevice;
+> > >
+> > >  typedef struct VFIOGroup {
+> > > @@ -1805,6 +1808,8 @@ static int vfio_get_device(VFIOGroup *group, const
+> > char *name, VFIODevice *vdev)
+> > >      DPRINTF("Device %s flags: %u, regions: %u, irgs: %u\n", name,
+> > >              dev_info.flags, dev_info.num_regions, dev_info.num_irqs);
+> > >
+> > > +    vdev->dev_info_flags = dev_info.flags;
+> > > +
+> > 
+> > We test the VFIO_DEVICE_FLAGS_RESET elsewhere by caching the bit into a
+> > variable, why not do that here too?
+> 
+> I was wondering if there was any specific reason to cache the bit into
+> a separate variable. Wouldn't a flags field which can contain the
+> specific bit be more apt ?
 
-Broken whitespace?
+Then we have to mask it out ever time we want to reference it.  Qemu
+doesn't seem to like macros or inlines for that, so using a new variable
+keeps things neat.  Caching two fields to bools is still more space
+efficient than saving the whole thing and we can easily switch to named
+bits if we get enough to start caring about the space.  Thanks,
 
-> +	WARN_ON(ret < 0);
-> +	/* notifier could use pci capabilities */
-> +	ret = device_add(&dev->dev);
-> +	WARN_ON(ret < 0);
-
-These WARN_ON() things make me kind of nervous.
-
-> +
-> +	pci_proc_attach_device(dev);
-> +	pci_create_sysfs_dev_files(dev);
->  }
->  
->  struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
-> @@ -1645,13 +1667,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	char bus_addr[64];
->  	char *fmt;
->  
-> -
->  	b = pci_alloc_bus();
->  	if (!b)
->  		return NULL;
->  
->  	b->sysdata = sysdata;
->  	b->ops = ops;
-> +	b->number = b->busn_res.start = bus;
->  	b2 = pci_find_bus(pci_domain_nr(b), bus);
->  	if (b2) {
->  		/* If we already got to this bus through a different bridge, ignore it */
-> @@ -1687,8 +1709,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	/* Create legacy_io and legacy_mem files for this bus */
->  	pci_create_legacy_files(b);
->  
-> -	b->number = b->busn_res.start = bus;
-> -
->  	if (parent)
->  		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
->  	else
+Alex
+ 
+> > >      if (!(dev_info.flags & VFIO_DEVICE_FLAGS_PCI)) {
+> > >          error_report("vfio: Um, this isn't a PCI device\n");
+> > >          goto error;
+> > > @@ -1900,6 +1905,55 @@ static void vfio_put_device(VFIODevice *vdev)
+> > >      }
+> > >  }
+> > >
+> > > +static void vfio_errfd_handler(void *opaque)
+> > > +{
+> > > +    VFIODevice *vdev = opaque;
+> > > +
+> > > +    if (!event_notifier_test_and_clear(&vdev->errfd)) {
+> > > +        return;
+> > > +    }
+> > > +
+> > > +    /*
+> > > +     * TBD. Retrieve the error details and decide what action
+> > > +     * needs to be taken. One of the actions could be to pass
+> > > +     * the error to the guest and have the guest driver recover
+> > > +     * the error. This requires that PCIe capabilities be
+> > > +     * exposed to the guest. At present, we just terminate the
+> > > +     * guest to contain the error.
+> > > +     */
+> > > +    error_report("%s(%04x:%02x:%02x.%x) "
+> > > +        "Unrecoverable error detected... Terminating guest\n",
+> > > +        __func__, vdev->host.domain, vdev->host.bus, vdev->host.slot,
+> > > +        vdev->host.function);
+> > > +
+> > > +    qemu_system_shutdown_request();
+> > 
+> > I would have figured hw_error
+> 
+> Hw_error() is probably more appropriate. Will make the change.
+> 
+> > 
+> > > +    return;
+> > > +}
+> > > +
+> > > +static void vfio_register_errfd(VFIODevice *vdev)
+> > > +{
+> > > +    int32_t pfd;
+> > 
+> > "pfd" is used elsewhere in vfio as "Pointer to FD", this is just a fd.
+> 
+> Will change.
+> 
+> > 
+> > > +    int ret;
+> > > +
+> > > +    if (!(vdev->dev_info_flags & VFIO_DEVICE_FLAGS_AER_NOTIFY)) {
+> > > +        error_report("vfio: Warning: Error notification not supported
+> > for the device\n");
+> > 
+> > This should probably just be a debug print.
+> 
+> Okay.
+> 
+> > 
+> > > +        return;
+> > > +    }
+> > > +    if (event_notifier_init(&vdev->errfd, 0)) {
+> > > +        error_report("vfio: Warning: Unable to init event notifier for
+> > error detection\n");
+> > > +        return;
+> > > +    }
+> > > +    pfd = event_notifier_get_fd(&vdev->errfd);
+> > > +    qemu_set_fd_handler(pfd, vfio_errfd_handler, NULL, vdev);
+> > > +
+> > > +    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_ERRFD, pfd);
+> > > +    if (ret) {
+> > > +        error_report("vfio: Warning: Failed to setup error fd: %d\n",
+> > ret);
+> > > +        qemu_set_fd_handler(pfd, NULL, NULL, vdev);
+> > > +        event_notifier_cleanup(&vdev->errfd);
+> > > +    }
+> > > +    return;
+> > > +}
+> > >  static int vfio_initfn(PCIDevice *pdev)
+> > >  {
+> > >      VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
+> > > @@ -2010,6 +2064,8 @@ static int vfio_initfn(PCIDevice *pdev)
+> > >          }
+> > >      }
+> > >
+> > > +    vfio_register_errfd(vdev);
+> > > +
+> > 
+> > No cleanup in exitfn?!  Thanks,
+> 
+> Missed that. Will fix.
+> 
+> Vijay
+> 
+> > 
+> > Alex
+> > 
+> > >      return 0;
+> > >
+> > >  out_teardown:
+> > > diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
+> > > index 4758d1b..0ca4eeb 100644
+> > > --- a/linux-headers/linux/vfio.h
+> > > +++ b/linux-headers/linux/vfio.h
+> > > @@ -147,6 +147,7 @@ struct vfio_device_info {
+> > >  	__u32	flags;
+> > >  #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
+> > >  #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
+> > > +#define VFIO_DEVICE_FLAGS_AER_NOTIFY (1 << 2)   /* Supports aer
+> > notification */
+> > >  	__u32	num_regions;	/* Max region index + 1 */
+> > >  	__u32	num_irqs;	/* Max IRQ index + 1 */
+> > >  };
+> > > @@ -288,6 +289,14 @@ struct vfio_irq_set {
+> > >   */
+> > >  #define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 11)
+> > >
+> > > +/**
+> > > + * VFIO_DEVICE_SET_ERRFD - _IO(VFIO_TYPE, VFIO_BASE + 12)
+> > > + *
+> > > + * Pass the eventfd to the vfio-pci driver for signalling any device
+> > > + * error notifications
+> > > + */
+> > > +#define VFIO_DEVICE_SET_ERRFD           _IO(VFIO_TYPE, VFIO_BASE + 12)
+> > > +
+> > >  /*
+> > >   * The VFIO-PCI bus driver makes use of the following fixed region and
+> > >   * IRQ index mapping.  Unimplemented regions return a size of zero.
+> > 
+> > 
 > 
 
-Thanks,
-Rafael
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
