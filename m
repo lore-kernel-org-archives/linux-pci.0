@@ -1,147 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:46154 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753838Ab3AaO5n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 09:57:43 -0500
-Date: Thu, 31 Jan 2013 15:57:37 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130131155737.4ab97a0b@skate>
-In-Reply-To: <20130131145002.GZ23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130130113245.GH23505@n2100.arm.linux.org.uk>
-	<20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-	<20130130150856.GJ23505@n2100.arm.linux.org.uk>
-	<20130130151934.GK23505@n2100.arm.linux.org.uk>
-	<20130130163659.75360dba@skate>
-	<20130130154602.GL23505@n2100.arm.linux.org.uk>
-	<20130131153041.35fa3b60@skate>
-	<20130131145002.GZ23505@n2100.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bk0-f51.google.com ([209.85.214.51]:49707 "EHLO
+	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754797Ab3AKQQy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 11:16:54 -0500
+MIME-Version: 1.0
+In-Reply-To: <201301111333.49238.trenn@suse.de>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<1586060.uJlkOEQfVW@hammer82.arch.suse.de>
+	<CAE9FiQVLVxj07TM1N6F2kmZdBYMUiS6Xz2bD-JZPtvps3a5-xw@mail.gmail.com>
+	<201301111333.49238.trenn@suse.de>
+Date: Fri, 11 Jan 2013 08:16:52 -0800
+Message-ID: <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in
+ memmap=exactmap case
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Renninger <trenn@suse.de>
+Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Russell King - ARM Linux,
+On Fri, Jan 11, 2013 at 4:33 AM, Thomas Renninger <trenn@suse.de> wrote:
+>> yes, we have other user for debug  like simulating user memmap for some
+>> bugs.
+>> current problem for exactmap is that we don't scan that at first.
+>> attached patch could help that.
+>
+> Yep, this is what I would have come up as well or similar. I looked
+> at it, but I had no time for doing it and trying out.
+>
+> You may want to add:
+> Reviewed-by: Thomas Renninger <trenn@suse.de>
+> if someone reposts.
 
-On Thu, 31 Jan 2013 14:50:02 +0000, Russell King - ARM Linux wrote:
+ok, I will add wrap it up and add changelog and test it then post it
+with my for-x86-boot.
 
-> > > +	/* Ignore downstream buses */
-> > > +	if (!bus->parent) {
-> > > +		if (type & IORESOURCE_MEM)
-> > > +			return sys->win_align_mem;
-> > > +		if (type & IORESOURCE_IO)
-> > > +			return sys->win_align_io;
-> > > +	}
-> > > +	return 1;
-> > > +}
-> > > +
-> > 
-> > Unfortunately, this doesn't work as is for me: the if (!bus->parent)
-> > prevents the thing from being effective. Here my lspci output:
-> > 
-> > # /usr/sbin/lspci 
-> > 00:00.0 Host bridge: Marvell Technology Group Ltd. Device 102d
-> > 00:01.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-> > 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-> > 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-> > 00:04.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-> > 00:05.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-> > 00:06.0 PCI bridge: Marvell Technology Group Ltd. Device 1092
-> > 03:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
-> > 05:00.0 Ethernet controller: Intel Corporation 82572EI Gigabit Ethernet Controller (Copper) (rev 06)
-> > 
-> > And the function pcibios_window_alignment() only gets called for bus 1,
-> > 2, 3, 4, 5, 6 and never for bus 0.
-> 
-> That's the exact reverse of what I'd expect: the child buses should
-> have a non-NULL parent pointer.
+>
+>    Thomas
+>
+> -------------------
+> x86 e820: only void usable memory areas in memmap=exactmap case
+>
+> All unusable (reserved, ACPI, ACPI NVS,...) areas have to be
+> honored in kdump case.
+> Othwerise ACPI parts will quickly run into trouble when trying
+> to for example early_ioremap reserved areas which are not
+> declared reserved in kdump kernel.
+> mmconf area must also be a reserved mem region.
+> ...
+>
+> Passing unusable memory via memmap= is a design flaw as
+> this information is already (exactly for this purpose) passed
+> via bootloader structure.
+> In kdump case (when memmap=exactmap is passed), only void
+> (do not use) usable memory regions from the passed e820 table
+> and use memory areas defined via memmap=X@Y boot parameter instead.
+> But do still use the "unusable" memory regions from the original e820
+> table.
+>
+> Signed-off-by: Thomas Renninger <trenn@suse.de>
+>
+> ---
+>  arch/x86/kernel/e820.c |   19 ++++++++++++++++++-
+>  1 files changed, 18 insertions(+), 1 deletions(-)
+>
+> diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
+> index dc0b9f0..ae2d657 100644
+> --- a/arch/x86/kernel/e820.c
+> +++ b/arch/x86/kernel/e820.c
+> @@ -559,6 +559,19 @@ u64 __init e820_remove_range(u64 start, u64 size, unsigned old_type,
+>         return real_removed_size;
+>  }
+>
+> +static void __init e820_remove_range_type(u32 type)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; i < e820.nr_map; i++) {
+> +               struct e820entry *ei = &e820.map[i];
+> +               if (ei->type == type) {
+> +                       memset(ei, 0, sizeof(struct e820entry));
+> +                       continue;
+> +               }
+> +       }
+> +}
+> +
+>  void __init update_e820(void)
+>  {
+>         u32 nr_map;
+> @@ -858,7 +871,11 @@ static int __init parse_memmap_one(char *p)
+>                  */
+>                 saved_max_pfn = e820_end_of_ram_pfn();
+>  #endif
+> -               e820.nr_map = 0;
+> +               /*
+> +                * Remove all usable memory (this is for kdump), usable
+> +                * memory will be passed via memmap=X@Y parameter
+> +                */
+> +               e820_remove_range_type(E820_RAM);
 
-Indeed. But this function never gets called with bus->number == 0, only
-with bus->number = 1, 2, 3, 4, 5, 6. So those are child busses, and
-therefore they have a parent.
+We may need to keep exactmap intact.
 
-If I had a debug message in this pcibios_window_alignment() function
-(which gets shown unconditionally, i.e the debug message is outside the
-if condition we are discussing), then I get:
+but could add another one like exact_ram_map
+or extend to have memmap=exactmap=ram or etc.
 
-pcibios_window_alignment: called for bus ef371c00 (sysdata=ef2f6bc0), number 1
-pcibios_window_alignment: called for bus ef371c00 (sysdata=ef2f6bc0), number 1
-pcibios_window_alignment: called for bus ef371c00 (sysdata=ef2f6bc0), number 1
-pcibios_window_alignment: called for bus ef371a00 (sysdata=ef2f6bc0), number 2
-pcibios_window_alignment: called for bus ef371a00 (sysdata=ef2f6bc0), number 2
-pcibios_window_alignment: called for bus ef371a00 (sysdata=ef2f6bc0), number 2
-pcibios_window_alignment: called for bus ef371800 (sysdata=ef2f6bc0), number 3
-pcibios_window_alignment: called for bus ef371800 (sysdata=ef2f6bc0), number 3
-pcibios_window_alignment: called for bus ef371800 (sysdata=ef2f6bc0), number 3
-pcibios_window_alignment: called for bus ef371600 (sysdata=ef2f6bc0), number 4
-pcibios_window_alignment: called for bus ef371600 (sysdata=ef2f6bc0), number 4
-pcibios_window_alignment: called for bus ef371600 (sysdata=ef2f6bc0), number 4
-pcibios_window_alignment: called for bus ef371400 (sysdata=ef2f6bc0), number 5
-pcibios_window_alignment: called for bus ef371400 (sysdata=ef2f6bc0), number 5
-pcibios_window_alignment: called for bus ef371400 (sysdata=ef2f6bc0), number 5
-pcibios_window_alignment: called for bus ef371200 (sysdata=ef2f6bc0), number 6
-pcibios_window_alignment: called for bus ef371200 (sysdata=ef2f6bc0), number 6
-pcibios_window_alignment: called for bus ef371200 (sysdata=ef2f6bc0), number 6
-
-See, never called bus bus number 0.
-
-> Hmm.  Try changing that for !bus->self -
-> that should make it effective only on the host bridge.
-> 
-> But... hang on...
-> 
-> /*
->  * Returns true if the pci bus is root (behind host-pci bridge),
->  * false otherwise
->  */
-> static inline bool pci_is_root_bus(struct pci_bus *pbus)
-> {
->         return !(pbus->parent);
-> }
-> 
-> So the original test _is_ correct, and should only be triggered for
-> the _root_ bus, that being bus 0 in the above case.
-
-Except that this pcibios_window_alignement() function is apparently
-never called for the root bus.
-
-> 
-> But... wait a moment, what are you saying?  Which bridges need this
-> fixup?  The Marvell PCI-to-PCI bridges or the host bridge?
-
-I am talking about the PCI-to-PCI bridges. I want the I/O windows
-assigned to each PCI-to-PCI bridge to be 64K aligned. The PCI-to-PCI
-bridges are devices that sit on bus 0, each giving access to the child
-buses 1, 2, 3, 4, 5, 6.
-
-I have the impression that the pcibios_window_alignment() function is
-called on the *child* bus to know the requested alignments for the
-bridge that sits on the parent bus and gives access to this child bus.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+>                 userdef = 1;
+>                 return 0;
+>         }
