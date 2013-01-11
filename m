@@ -1,62 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:16813 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752917Ab3AXCVH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 21:21:07 -0500
-Message-ID: <51009A7F.6050104@huawei.com>
-Date: Thu, 24 Jan 2013 10:20:47 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Randy Dunlap <rdunlap@infradead.org>
-CC: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: Re: [Update][PATCH] PCI: Document PCIE BUS MPS parameters
-References: <1358944092-28884-1-git-send-email-wangyijing@huawei.com> <510074C7.6090203@infradead.org> <510094A4.3040806@huawei.com> <51009645.5040406@infradead.org>
-In-Reply-To: <51009645.5040406@infradead.org>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from userp1040.oracle.com ([156.151.31.81]:22775 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab3AKWlJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:09 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 00/22] PCI, ACPI: pci root bus hotplug support / pci match_driver
+Date: Fri, 11 Jan 2013 14:40:27 -0800
+Message-Id: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/1/24 10:02, Randy Dunlap wrote:
-> On 01/23/13 17:55, Yijing Wang wrote:
->> Hi Randy,
->>    Thanks for your review and comments! please refer to inlined comments below.
->>
->> On 2013/1/24 7:39, Randy Dunlap wrote:
->>> On 01/23/13 04:28, Yijing Wang wrote:
-> 
->>>
->>> What is (are) MRRS?
->>
->> MRRS is "Max Read Request Size" and MPS is "Max Payload Size".
->> Need use "Max Read Request Size" instead of MRRS ?
-> 
-> Where is MRRS documented?
+It includes
+1. preparing patches for pci root bus hotadd/hotremove support
+2. move root bus hotadd from acpiphp to pci_root.c
+3. add hot-remove support
+4. clean up hotadd/remove with common functions
+5. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
+6. add match_driver to add pci device to device tree early but
+   not attach driver for hotplug path.
 
-The description of MRRS can be found at PCIe Spec 2.0/3.0 7.8.4 Device Control Register.
+based on pci/next
 
-> 
-> I would probably do it like so:
-> 
-> Also set MRRS (Max Read Request Size) to the ....
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
 
-Hmm, I will explain MPS and MRRS when they appear first time like,
+After this patchset, will send out
+	 for_each_host_bridge support
+	 for_each_dev_addon_res
 
-pcie_bus_tune_off   Disable PCIe MPS (Max Payload Size) turning and using
-		the BIOS-configured MPS defaults.
+Jiang Liu (4):
+  PCI: Fix a device reference count leakage issue in pci_dev_present()
+  PCI: make PCI device create/destroy logic symmetric
+  PCI: split registration of PCI bus devices into two stages
+  PCI: correctly detect ACPI PCI host bridge objects
 
-pcie_bus_perf	......Also set MRRS (Max Read Request Size) to the......
+Tang Chen (2):
+  ACPI: Introduce a new acpi handle to determine HID match.
+  PCI, ACPI: debug print for installation of acpi root bridge's notifier
 
-Thanks!
-Yijing
+Yinghai Lu (16):
+  PCI, acpiphp: Add is_hotplug_bridge detection
+  PCI: Add root bus children dev's res to fail list
+  PCI: Set dev_node early for pci_dev
+  ACPI: Separate acpi_bus_trim to support two steps.
+  PCI, acpiphp: Separate out hot-add support of pci host bridge
+  PCI, ACPI: Add pci_root_hp hot removal notification support.
+  PCI, ACPI: remove acpi_root_bridge in pci_root_hp
+  ACPI: update ej_event interface to take acpi_device
+  ACPI, PCI: Simplify handle_root_bridge_removal()
+  PCI, acpiphp: Don't bailout even no slots found yet.
+  PCI, ACPI: Add alloc_acpi_hp_work()
+  PCI, acpiphp: Use acpi_hp_work
+  PCI, pci_root_hp: Use acpi_hp_work
+  PCI, ACPI: Make kacpi_hotplug_wq static
+  PCI: add match_driver in struct pci_dev
+  PCI: move device_add out of pci_bus_add_device()
 
-> 
-
+ drivers/acpi/acpi_memhotplug.c     |    2 +-
+ drivers/acpi/osl.c                 |   24 ++++-
+ drivers/acpi/pci_root.c            |  180 ++++++++++++++++++++++++++++++++++++
+ drivers/acpi/processor_driver.c    |    2 +-
+ drivers/acpi/scan.c                |   52 ++++++++---
+ drivers/pci/bus.c                  |   57 +++---------
+ drivers/pci/hotplug/acpiphp.h      |    1 -
+ drivers/pci/hotplug/acpiphp_core.c |   23 +----
+ drivers/pci/hotplug/acpiphp_glue.c |  150 ++++++++++--------------------
+ drivers/pci/iov.c                  |    7 --
+ drivers/pci/pci-driver.c           |    6 +-
+ drivers/pci/probe.c                |   40 ++++++--
+ drivers/pci/remove.c               |   14 +--
+ drivers/pci/search.c               |   10 +-
+ drivers/pci/setup-bus.c            |    2 +-
+ include/acpi/acpi_bus.h            |    4 +-
+ include/acpi/acpiosxf.h            |    9 +-
+ include/linux/pci.h                |    1 +
+ 18 files changed, 365 insertions(+), 219 deletions(-)
 
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
