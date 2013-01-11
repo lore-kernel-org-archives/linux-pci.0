@@ -1,315 +1,517 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59553 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753330Ab3AKMeC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Jan 2013 07:34:02 -0500
+From: Thomas Renninger <trenn@suse.de>
 To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 14/22] ACPI: update ej_event interface to take acpi_device
-Date: Wed, 16 Jan 2013 00:55:20 +0100
-Message-ID: <2102023.Itn3WlmlaN@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQW-efB2s1gdmVTy8k9NLSayAxfkTFvtzQhzL6MFBFSoWQ@mail.gmail.com>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <3209605.7vX7Iug6cS@vostro.rjw.lan> <CAE9FiQW-efB2s1gdmVTy8k9NLSayAxfkTFvtzQhzL6MFBFSoWQ@mail.gmail.com>
+Subject: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap case
+Date: Fri, 11 Jan 2013 13:33:48 +0100
+Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <1586060.uJlkOEQfVW@hammer82.arch.suse.de> <CAE9FiQVLVxj07TM1N6F2kmZdBYMUiS6Xz2bD-JZPtvps3a5-xw@mail.gmail.com>
+In-Reply-To: <CAE9FiQVLVxj07TM1N6F2kmZdBYMUiS6Xz2bD-JZPtvps3a5-xw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_taA8QmT0E35OkgI"
+Message-Id: <201301111333.49238.trenn@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 15, 2013 03:43:17 PM Yinghai Lu wrote:
-> On Tue, Jan 15, 2013 at 3:26 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Monday, January 14, 2013 10:55:49 PM Yinghai Lu wrote:
-> >> On Sat, Jan 12, 2013 at 3:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> > On Friday, January 11, 2013 02:40:41 PM Yinghai Lu wrote:
-> >> >> Should use acpi_device pointer directly instead of use handle and
-> >> >> get the device pointer again later.
-> >> >
-> >> > Looks good.
-> >> >
-> >> > I can take this one right now if you want.
-> >>
-> >> yes, in acpi-scan branch?
-> >>
-> >> othewise i can not base on pci/next again.
+--Boundary-00=_taA8QmT0E35OkgI
+Content-Type: Text/Plain;
+  charset="iso-8859-6"
+Content-Transfer-Encoding: 7bit
+
+On Friday, January 11, 2013 12:34:37 AM Yinghai Lu wrote:
+> On Wed, Jan 9, 2013 at 7:21 PM, Thomas Renninger <trenn@suse.de> wrote:
+...
+> > Can kexec simply pass the memory to use via memmap=X@Y
+> > Then take the original e820 table, but not the usable entries (those
+> > are coming from above memmap=X@Y).
+> > That would mean that the kexec kernel takes all the
+> > original ACPI, ACPI NVS, reserved, unusable (everthing but usable)
+> > entries from the original e820 table and identifies the usable memory
+> > from memmap boot param?
+> 
+> kdump scripts already do that for acpi regions, need to update it
+> to append that for mmconf.
+
+No, this must get fixed properly:
+Use "unusable (ACPI, reserved, whatever..)" regions from the e820 table
+passed through bootloader structure.
+
+Only replace "usable" memory areas with the ones passed via memmap=
+if memmap=exactmap is passed.
+
+Only taking mmconf area is wrong, kdump kernel has to honour *all*
+original reserved memory areas and the info is already there.
+I also do not see any kernel vs kexec version incompatibilities with
+my approach. Future kexec version can clean up and do not need to
+pass ACPI memory area/range via memmap=X#Y anymore.
+
+You find a suitable patch at the end.
+I just zeroed out the e820 usable entries (same as e820_remove_range()
+above), sanitize_e820_map() should fix that up and it's ensured that
+it is called in memmap=exactmap case.
+
+Find serial output of a try (same machine as with my previous posts).
+There you find the correctly modified e820 user defined table (all
+unusable entries, but usable entries are adjusted) until mmconf
+is used gracefully.
+
+> > This would be much smarter than trying to pass the mmconf reserved
+> > area and I could imagine other issues will show up if the reserved
+> > areas do not match the original ones in the kexec kernel.
 > >
-> > OK
-> >
-> > So I think there will be more patches in acpi-scan you'll need anyway, so
-> > I'll put this one on that branch too.
-> 
-> after updating pci root bus hotplug patches against your linux-next,
-> got panic during removal:
-> 
-> echo "PCI0 3" > /sys/kernel/debug/acpi/sci_notify
-> [   55.223155] ACPI: ACPI device name is <PCI0>, event code is <3>
-> [   55.226746] ACPI: Notify event is queued
-> [   55.228648] _handle_hotplug_event_root: Device eject notify on \_SB_.PCI0
-> 10:~ # [   55.340169] ACPI: Device 0000:00:03.0 -x-> \_SB_.PCI0.S03_
-> [   55.341040] ACPI: Device 0000:00:02.0 -x-> \_SB_.PCI0.VGA_
-> [   55.341711] i2c i2c-0: adapter [SMBus PIIX4 adapter at b100] unregistered
-> [   55.342585] i2c-dev: adapter [SMBus PIIX4 adapter at b100] unregistered
-> [   55.343522] ACPI: Device 0000:00:01.3 -x-> \_SB_.PCI0.PX13
-> [   55.344660] ata1.00: disabled
-> [   55.350377] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> [   55.352729] sd 0:0:0:0: [sda]
-> [   55.353405] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> [   55.354010] sd 0:0:0:0: [sda] Stopping disk
-> [   55.358144] sd 0:0:0:0: [sda] START_STOP FAILED
-> [   55.358660] sd 0:0:0:0: [sda]
-> [   55.359026] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> [   55.361348] ata2.00: disabled
-> [   55.371548] ACPI: Device 0000:00:01.0 -x-> \_SB_.PCI0.ISA_
-> [   55.372268] ACPI: Device pci0000:00 -x-> \_SB_.PCI0
-> [   55.372747]   remove_bridge is called for \_SB_.PCI0 ffff8801964661e0
-> [   55.373581] acpiphp: Slot [31] unregistered
-> [   55.374110] pci_hotplug: pci_hp_deregister: Removed slot 31 from the list
-> [   55.374720] acpiphp: release_slot - physical_slot = 31
-> [   55.375195] pci_bus 0000:00: dev 1f, dec refcount to 0
-> [   55.375781] pci_bus 0000:00: dev 1f, released physical slot 31
-> [   55.376370] acpiphp: Slot [30] unregistered
-> [   55.376839] pci_hotplug: pci_hp_deregister: Removed slot 30 from the list
-> [   55.377512] acpiphp: release_slot - physical_slot = 30
-> [   55.377968] pci_bus 0000:00: dev 1e, dec refcount to 0
-> [   55.378432] pci_bus 0000:00: dev 1e, released physical slot 30
-> [   55.378976] acpiphp: Slot [29] unregistered
-> [   55.379375] pci_hotplug: pci_hp_deregister: Removed slot 29 from the list
-> [   55.379977] acpiphp: release_slot - physical_slot = 29
-> [   55.380479] pci_bus 0000:00: dev 1d, dec refcount to 0
-> [   55.380967] pci_bus 0000:00: dev 1d, released physical slot 29
-> [   55.381484] acpiphp: Slot [28] unregistered
-> [   55.381860] pci_hotplug: pci_hp_deregister: Removed slot 28 from the list
-> [   55.382485] acpiphp: release_slot - physical_slot = 28
-> [   55.383067] pci_bus 0000:00: dev 1c, dec refcount to 0
-> [   55.384426] pci_bus 0000:00: dev 1c, released physical slot 28
-> [   55.385830] acpiphp: Slot [27] unregistered
-> [   55.386852] pci_hotplug: pci_hp_deregister: Removed slot 27 from the list
-> [   55.388511] acpiphp: release_slot - physical_slot = 27
-> [   55.389750] pci_bus 0000:00: dev 1b, dec refcount to 0
-> [   55.390994] pci_bus 0000:00: dev 1b, released physical slot 27
-> [   55.392418] acpiphp: Slot [26] unregistered
-> [   55.393419] pci_hotplug: pci_hp_deregister: Removed slot 26 from the list
-> [   55.395034] acpiphp: release_slot - physical_slot = 26
-> [   55.396283] pci_bus 0000:00: dev 1a, dec refcount to 0
-> [   55.397514] pci_bus 0000:00: dev 1a, released physical slot 26
-> [   55.398901] acpiphp: Slot [25] unregistered
-> [   55.399927] pci_hotplug: pci_hp_deregister: Removed slot 25 from the list
-> [   55.401059] acpiphp: release_slot - physical_slot = 25
-> [   55.401761] pci_bus 0000:00: dev 19, dec refcount to 0
-> [   55.402715] pci_bus 0000:00: dev 19, released physical slot 25
-> [   55.403838] acpiphp: Slot [24] unregistered
-> [   55.404892] pci_hotplug: pci_hp_deregister: Removed slot 24 from the list
-> [   55.406501] acpiphp: release_slot - physical_slot = 24
-> [   55.407720] pci_bus 0000:00: dev 18, dec refcount to 0
-> [   55.409001] pci_bus 0000:00: dev 18, released physical slot 24
-> [   55.410220] acpiphp: Slot [23] unregistered
-> [   55.410951] pci_hotplug: pci_hp_deregister: Removed slot 23 from the list
-> [   55.412601] acpiphp: release_slot - physical_slot = 23
-> [   55.413840] pci_bus 0000:00: dev 17, dec refcount to 0
-> [   55.415092] pci_bus 0000:00: dev 17, released physical slot 23
-> [   55.416510] acpiphp: Slot [22] unregistered
-> [   55.417529] pci_hotplug: pci_hp_deregister: Removed slot 22 from the list
-> [   55.419153] acpiphp: release_slot - physical_slot = 22
-> [   55.420415] pci_bus 0000:00: dev 16, dec refcount to 0
-> [   55.421665] pci_bus 0000:00: dev 16, released physical slot 22
-> [   55.423069] acpiphp: Slot [21] unregistered
-> [   55.424110] pci_hotplug: pci_hp_deregister: Removed slot 21 from the list
-> [   55.425722] acpiphp: release_slot - physical_slot = 21
-> [   55.426952] pci_bus 0000:00: dev 15, dec refcount to 0
-> [   55.428209] pci_bus 0000:00: dev 15, released physical slot 21
-> [   55.429578] acpiphp: Slot [20] unregistered
-> [   55.430219] pci_hotplug: pci_hp_deregister: Removed slot 20 from the list
-> [   55.431123] acpiphp: release_slot - physical_slot = 20
-> [   55.431796] pci_bus 0000:00: dev 14, dec refcount to 0
-> [   55.432986] pci_bus 0000:00: dev 14, released physical slot 20
-> [   55.434392] acpiphp: Slot [19] unregistered
-> [   55.435411] pci_hotplug: pci_hp_deregister: Removed slot 19 from the list
-> [   55.437051] acpiphp: release_slot - physical_slot = 19
-> [   55.438309] pci_bus 0000:00: dev 13, dec refcount to 0
-> [   55.439556] pci_bus 0000:00: dev 13, released physical slot 19
-> [   55.440987] acpiphp: Slot [18] unregistered
-> [   55.441993] pci_hotplug: pci_hp_deregister: Removed slot 18 from the list
-> [   55.443511] acpiphp: release_slot - physical_slot = 18
-> [   55.444269] pci_bus 0000:00: dev 12, dec refcount to 0
-> [   55.445522] pci_bus 0000:00: dev 12, released physical slot 18
-> [   55.446949] acpiphp: Slot [17] unregistered
-> [   55.447961] pci_hotplug: pci_hp_deregister: Removed slot 17 from the list
-> [   55.449610] acpiphp: release_slot - physical_slot = 17
-> [   55.450839] pci_bus 0000:00: dev 11, dec refcount to 0
-> [   55.452097] pci_bus 0000:00: dev 11, released physical slot 17
-> [   55.453501] acpiphp: Slot [16] unregistered
-> [   55.454509] pci_hotplug: pci_hp_deregister: Removed slot 16 from the list
-> [   55.456151] acpiphp: release_slot - physical_slot = 16
-> [   55.457370] pci_bus 0000:00: dev 10, dec refcount to 0
-> [   55.458601] pci_bus 0000:00: dev 10, released physical slot 16
-> [   55.459775] acpiphp: Slot [15] unregistered
-> [   55.460444] pci_hotplug: pci_hp_deregister: Removed slot 15 from the list
-> [   55.461354] acpiphp: release_slot - physical_slot = 15
-> [   55.462059] pci_bus 0000:00: dev 0f, dec refcount to 0
-> [   55.462985] pci_bus 0000:00: dev 0f, released physical slot 15
-> [   55.464475] acpiphp: Slot [14] unregistered
-> [   55.465481] pci_hotplug: pci_hp_deregister: Removed slot 14 from the list
-> [   55.467089] acpiphp: release_slot - physical_slot = 14
-> [   55.468351] pci_bus 0000:00: dev 0e, dec refcount to 0
-> [   55.469597] pci_bus 0000:00: dev 0e, released physical slot 14
-> [   55.470994] acpiphp: Slot [13] unregistered
-> [   55.472033] pci_hotplug: pci_hp_deregister: Removed slot 13 from the list
-> [   55.473650] acpiphp: release_slot - physical_slot = 13
-> [   55.474878] pci_bus 0000:00: dev 0d, dec refcount to 0
-> [   55.476144] pci_bus 0000:00: dev 0d, released physical slot 13
-> [   55.477198] acpiphp: Slot [12] unregistered
-> [   55.477926] pci_hotplug: pci_hp_deregister: Removed slot 12 from the list
-> [   55.479561] acpiphp: release_slot - physical_slot = 12
-> [   55.480816] pci_bus 0000:00: dev 0c, dec refcount to 0
-> [   55.482073] pci_bus 0000:00: dev 0c, released physical slot 12
-> [   55.483475] acpiphp: Slot [11] unregistered
-> [   55.484515] pci_hotplug: pci_hp_deregister: Removed slot 11 from the list
-> [   55.486123] acpiphp: release_slot - physical_slot = 11
-> [   55.487338] pci_bus 0000:00: dev 0b, dec refcount to 0
-> [   55.488597] pci_bus 0000:00: dev 0b, released physical slot 11
-> [   55.489670] acpiphp: Slot [10] unregistered
-> [   55.490285] pci_hotplug: pci_hp_deregister: Removed slot 10 from the list
-> [   55.491700] acpiphp: release_slot - physical_slot = 10
-> [   55.492975] pci_bus 0000:00: dev 0a, dec refcount to 0
-> [   55.493800] pci_bus 0000:00: dev 0a, released physical slot 10
-> [   55.495103] acpiphp: Slot [9] unregistered
-> [   55.496121] pci_hotplug: pci_hp_deregister: Removed slot 9 from the list
-> [   55.497715] acpiphp: release_slot - physical_slot = 9
-> [   55.498929] pci_bus 0000:00: dev 09, dec refcount to 0
-> [   55.500206] pci_bus 0000:00: dev 09, released physical slot 9
-> [   55.501588] acpiphp: Slot [8] unregistered
-> [   55.502584] pci_hotplug: pci_hp_deregister: Removed slot 8 from the list
-> [   55.504196] acpiphp: release_slot - physical_slot = 8
-> [   55.505405] pci_bus 0000:00: dev 08, dec refcount to 0
-> [   55.506652] pci_bus 0000:00: dev 08, released physical slot 8
-> [   55.508057] acpiphp: Slot [7] unregistered
-> [   55.509060] pci_hotplug: pci_hp_deregister: Removed slot 7 from the list
-> [   55.510639] acpiphp: release_slot - physical_slot = 7
-> [   55.511838] pci_bus 0000:00: dev 07, dec refcount to 0
-> [   55.513117] pci_bus 0000:00: dev 07, released physical slot 7
-> [   55.514496] acpiphp: Slot [6] unregistered
-> [   55.515486] pci_hotplug: pci_hp_deregister: Removed slot 6 from the list
-> [   55.517099] acpiphp: release_slot - physical_slot = 6
-> [   55.518283] pci_bus 0000:00: dev 06, dec refcount to 0
-> [   55.519504] pci_bus 0000:00: dev 06, released physical slot 6
-> [   55.520365] acpiphp: Slot [5] unregistered
-> [   55.522045] pci_hotplug: pci_hp_deregister: Removed slot 5 from the list
-> [   55.523383] acpiphp: release_slot - physical_slot = 5
-> [   55.524627] pci_bus 0000:00: dev 05, dec refcount to 0
-> [   55.525887] pci_bus 0000:00: dev 05, released physical slot 5
-> [   55.527122] acpiphp: Slot [4] unregistered
-> [   55.527770] pci_hotplug: pci_hp_deregister: Removed slot 4 from the list
-> [   55.529417] acpiphp: release_slot - physical_slot = 4
-> [   55.530620] pci_bus 0000:00: dev 04, dec refcount to 0
-> [   55.531912] pci_bus 0000:00: dev 04, released physical slot 4
-> [   55.533325] acpiphp: Slot [3] unregistered
-> [   55.534327] pci_hotplug: pci_hp_deregister: Removed slot 3 from the list
-> [   55.535915] acpiphp: release_slot - physical_slot = 3
-> [   55.537147] pci_bus 0000:00: dev 03, dec refcount to 0
-> [   55.538388] pci_bus 0000:00: dev 03, released physical slot 3
-> [   55.539763]   acpi_pci_iommu_remove is called for \_SB_.PCI0 ffff8801964661e0
-> [   55.541569]   acpi_pci_ioapic_remove is called for \_SB_.PCI0
-> ffff8801964661e0
-> [   55.543356] ACPI: Delete PCI Interrupt Routing Table for 0000:00
-> [   55.544848] pci 0000:00:00.0: freeing pci_dev info
-> [   55.546002] pci 0000:00:01.0: freeing pci_dev info
-> [   55.547148] pci 0000:00:01.1: freeing pci_dev info
-> [   55.548304] pci 0000:00:01.3: freeing pci_dev info
-> [   55.549346] pci 0000:00:02.0: freeing pci_dev info
-> [   55.550058] pci 0000:00:03.0: freeing pci_dev info
-> [   55.550707] pci_bus 0000:00: busn_res: [bus 00-ff] is released
-> [   55.552535] pci_bus 0000:00: freeing pci_bus info
-> [   55.553424] pci_host_bridge pci0000:00: freeing pci_host_bridge info
-> [   55.555303] BUG: unable to handle kernel NULL pointer dereference
-> at           (null)
-> [   55.556269] IP: [<ffffffff8153bf9a>] acpi_power_resources_list_free+0x15/0x3f
-> [   55.556269] PGD 0
-> [   55.556269] Oops: 0000 [#1] SMP
-> [   55.556269] Modules linked in:
-> [   55.556269] CPU 0
-> [   55.556269] Pid: 1036, comm: kworker/0:1 Not tainted
-> 3.8.0-rc3-yh-00703-gf602aca-dirty #1131 Bochs Bochs
-> [   55.556269] RIP: 0010:[<ffffffff8153bf9a>]  [<ffffffff8153bf9a>]
-> acpi_power_resources_list_free+0x15/0x3f
-> [   55.556269] RSP: 0018:ffff8801962479b8  EFLAGS: 00010292
-> [   55.556269] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000006
-> [   55.556269] RDX: 00000000000033a0 RSI: ffff8801960c2e18 RDI: ffff8801965db988
-> [   55.556269] RBP: ffff8801962479d8 R08: 0000000000000002 R09: 0000000000000000
-> [   55.556269] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000000
-> [   55.556269] R13: ffff8801965db988 R14: ffff8801965db9e0 R15: ffff880196466528
-> [   55.556269] FS:  0000000000000000(0000) GS:ffff880199200000(0000)
-> knlGS:0000000000000000
-> [   55.556269] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> [   55.556269] CR2: 0000000000000000 CR3: 0000000002c13000 CR4: 00000000000006f0
-> [   55.556269] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [   55.556269] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> [   55.556269] Process kworker/0:1 (pid: 1036, threadinfo
-> ffff880196246000, task ffff8801960c2500)
-> [   55.556269] Stack:
-> [   55.556269]  0000000000000000 ffff8801965db800 0000000000000000
-> ffff8801965db9d0
-> [   55.556269]  ffff880196247a08 ffffffff81536e2f ffffffff81536dff
-> ffff8801965db9e0
-> [   55.556269]  ffff8801965db9d0 ffff88019666de00 ffff880196247a38
-> ffffffff81710385
-> [   55.556269] Call Trace:
-> [   55.556269]  [<ffffffff81536e2f>] acpi_device_release+0x30/0x6a
-> [   55.556269]  [<ffffffff81536dff>] ? acpi_free_ids+0x50/0x50
-> [   55.556269]  [<ffffffff81710385>] device_release+0xa5/0x110
-> [   55.556269]  [<ffffffff814bda7f>] kobject_release+0x6f/0x90
-> [   55.556269]  [<ffffffff814bd93c>] kobject_put+0x4c/0x60
-> [   55.556269]  [<ffffffff81710087>] put_device+0x17/0x20
-> [   55.556269]  [<ffffffff8171133e>] device_unregister+0x1e/0x30
-> [   55.556269]  [<ffffffff815367ed>] acpi_device_unregister+0x162/0x177
-> [   55.556269]  [<ffffffff8153682d>] acpi_bus_remove+0x2b/0x2f
-> [   55.556269]  [<ffffffff815601c4>] acpi_ns_walk_namespace+0x114/0x250
-> [   55.556269]  [<ffffffff81536802>] ? acpi_device_unregister+0x177/0x177
-> [   55.556269]  [<ffffffff81536802>] ? acpi_device_unregister+0x177/0x177
-> [   55.556269]  [<ffffffff815607c5>] acpi_walk_namespace+0xee/0x137
-> [   55.556269]  [<ffffffff81536921>] acpi_bus_trim+0x64/0x7c
-> [   55.556269]  [<ffffffff815369b2>] acpi_bus_hot_remove_device+0x79/0x16d
-> [   55.556269]  [<ffffffff81196dc2>] ? kmem_cache_alloc_trace+0x42/0x150
-> [   55.556269]  [<ffffffff81539c18>] _handle_hotplug_event_root+0x108/0x149
-> [   55.556269]  [<ffffffff810a8b20>] ? process_one_work+0x270/0x560
-> [   55.556269]  [<ffffffff810a8b8d>] process_one_work+0x2dd/0x560
-> [   55.556269]  [<ffffffff810a8b20>] ? process_one_work+0x270/0x560
-> [   55.556269]  [<ffffffff810a9679>] ? worker_thread+0x59/0x3a0
-> [   55.556269]  [<ffffffff81539b10>] ? acpi_pci_find_root+0x3f/0x3f
-> [   55.556269]  [<ffffffff810a989a>] worker_thread+0x27a/0x3a0
-> [   55.556269]  [<ffffffff810e9f4d>] ? trace_hardirqs_on+0xd/0x10
-> [   55.556269]  [<ffffffff810a9620>] ? manage_workers+0x280/0x280
-> [   55.556269]  [<ffffffff810af088>] kthread+0xe8/0xf0
-> [   55.556269]  [<ffffffff810aefa0>] ? __init_kthread_worker+0x70/0x70
-> [   55.556269]  [<ffffffff8216d61c>] ret_from_fork+0x7c/0xb0
-> [   55.556269]  [<ffffffff810aefa0>] ? __init_kthread_worker+0x70/0x70
-> [   55.556269] Code: fe ff ff 48 8b 1b 4c 39 e3 75 ef 5b 5b 41 5c 44
-> 89 e8 41 5d 5d c3 0f 1f 44 00 00 55 48 89 e5 41 55 49 89 fd 41 54 53
-> 50 48 8b 1f <4c> 8b 23 eb 17 48 89 df e8 c9 34 f9 ff 48 89 df 4c 89 e3
-> e8 6e
-> 
-> 
-> looks like:
-> 
-> acpi_device_release+0x30
-> 0xffffffff81536e2f is in acpi_device_release (drivers/acpi/scan.c:524).
-> 519	static void acpi_free_power_resources_lists(struct acpi_device *device)
-> 520	{
-> 521		int i;
-> 522	
-> 523		acpi_power_resources_list_free(&device->wakeup.resources);
-> 524		if (!device->flags.power_manageable)
-> 525			return;
-> 526	
-> 527		for (i = ACPI_STATE_D0; i <= ACPI_STATE_D3_HOT; i++) {
-> 528			struct acpi_device_power_state *ps = &device->power.states[i];
-> 
-> wakeup.resources has problem?
+> > If this really can be done and memmap=exactmap was only used by kexec,
+> > it's logic could be redefined from "drop all e820 entries" to
+> > "drop all usable e820 entries" and no further adjustings in
+> > kexec/kernel are needed to get mmconf working (and other issues may be
+> > avoided before they happen). Beside that ACPI reserved aread is not
+> > needed anymore to get passed via memmap=X#Y by kexec.
 
-Yes, it seems to.
+> yes, we have other user for debug  like simulating user memmap for some
+> bugs.
+> current problem for exactmap is that we don't scan that at first.
+> attached patch could help that.
 
-Thanks for the report, looking into it.
+Yep, this is what I would have come up as well or similar. I looked
+at it, but I had no time for doing it and trying out.
 
-Rafael
+You may want to add:
+Reviewed-by: Thomas Renninger <trenn@suse.de>
+if someone reposts.
 
+   Thomas
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+-------------------
+x86 e820: only void usable memory areas in memmap=exactmap case
+
+All unusable (reserved, ACPI, ACPI NVS,...) areas have to be
+honored in kdump case.
+Othwerise ACPI parts will quickly run into trouble when trying
+to for example early_ioremap reserved areas which are not
+declared reserved in kdump kernel.
+mmconf area must also be a reserved mem region.
+...
+
+Passing unusable memory via memmap= is a design flaw as
+this information is already (exactly for this purpose) passed
+via bootloader structure.
+In kdump case (when memmap=exactmap is passed), only void
+(do not use) usable memory regions from the passed e820 table
+and use memory areas defined via memmap=X@Y boot parameter instead.
+But do still use the "unusable" memory regions from the original e820
+table.
+
+Signed-off-by: Thomas Renninger <trenn@suse.de>
+
+---
+ arch/x86/kernel/e820.c |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
+
+diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
+index dc0b9f0..ae2d657 100644
+--- a/arch/x86/kernel/e820.c
++++ b/arch/x86/kernel/e820.c
+@@ -559,6 +559,19 @@ u64 __init e820_remove_range(u64 start, u64 size, unsigned old_type,
+ 	return real_removed_size;
+ }
+ 
++static void __init e820_remove_range_type(u32 type)
++{
++	int i;
++
++	for (i = 0; i < e820.nr_map; i++) {
++		struct e820entry *ei = &e820.map[i];
++		if (ei->type == type) {
++			memset(ei, 0, sizeof(struct e820entry));
++			continue;
++		}
++	}
++}
++
+ void __init update_e820(void)
+ {
+ 	u32 nr_map;
+@@ -858,7 +871,11 @@ static int __init parse_memmap_one(char *p)
+ 		 */
+ 		saved_max_pfn = e820_end_of_ram_pfn();
+ #endif
+-		e820.nr_map = 0;
++		/*
++		 * Remove all usable memory (this is for kdump), usable
++		 * memory will be passed via memmap=X@Y parameter
++		 */
++		e820_remove_range_type(E820_RAM);
+ 		userdef = 1;
+ 		return 0;
+ 	}
+
+--Boundary-00=_taA8QmT0E35OkgI
+Content-Type: text/plain;
+  charset="UTF-8";
+  name="screen.xy"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="screen.xy"
+
+RIP  [<ffffffff813b05b1>] sysrq_handle_crash+0x11/0x20
+ RSP <ffff882f5ca71e38>
+CR2: 0000000000000000
+Initializing cgroup subsys cpuset
+Initializing cgroup subsys cpu
+Linux version 3.8.0-rc2-default+ (trenn@ett) (gcc version 4.5.1 20101208 [gcc-4_5-branch revision 167585] (SUSE Linux) ) #6 SMP Fri Jan 11 10:52:17 CET 2013
+Command line: root=/dev/disk/by-label/ROOT-BE2 resume=/dev/disk/by-id/scsi-36d4ae52076eef40017f5c9690b9c848e-part8 nmi_watchdog=0 elevator=noop log_buf_len=4M printk.time=0 udev_timeout=180 cgroup_disable=memory console=tty0 console=ttyS0,115200n elevator=deadline sysrq=yes reset_devices irqpoll maxcpus=1  sysrq=7 debug ignore_loglevel memmap=exactmap memmap=560K@64K memmap=392628K@114688K elfcorehdr=507316K memmap=252K#3099760K
+e820: BIOS-provided physical RAM map:
+BIOS-e820: [mem 0x0000000000000100-0x000000000009bfff] usable
+BIOS-e820: [mem 0x0000000000100000-0x00000000bd2effff] usable
+BIOS-e820: [mem 0x00000000bd2f0000-0x00000000bd31bfff] reserved
+BIOS-e820: [mem 0x00000000bd31c000-0x00000000bd35afff] ACPI data
+BIOS-e820: [mem 0x00000000bd35b000-0x00000000bfffffff] reserved
+BIOS-e820: [mem 0x00000000e0000000-0x00000000efffffff] reserved
+BIOS-e820: [mem 0x00000000fe000000-0x00000000ffffffff] reserved
+BIOS-e820: [mem 0x0000000100000000-0x000000603fffffff] usable
+debug: ignoring loglevel setting.
+e820: last_pfn = 0x6040000 max_arch_pfn = 0x400000000
+NX (Execute Disable) protection: active
+e820: user-defined physical RAM map:
+user: [mem 0x0000000000010000-0x000000000009bfff] usable
+user: [mem 0x0000000007000000-0x000000001ef6cfff] usable
+user: [mem 0x00000000bd2f0000-0x00000000bd31bfff] reserved
+user: [mem 0x00000000bd31c000-0x00000000bd35afff] ACPI data
+user: [mem 0x00000000bd35b000-0x00000000bfffffff] reserved
+user: [mem 0x00000000e0000000-0x00000000efffffff] reserved
+user: [mem 0x00000000fe000000-0x00000000ffffffff] reserved
+SMBIOS 2.7 present.
+DMI: Dell Inc. PowerEdge R720/0M1GCR, BIOS 0.3.35 12/15/2011
+e820: update [mem 0x00000000-0x0000ffff] usable ==> reserved
+e820: remove [mem 0x000a0000-0x000fffff] usable
+No AGP bridge found
+e820: last_pfn = 0x1ef6d max_arch_pfn = 0x400000000
+MTRR default type: uncachable
+MTRR fixed ranges enabled:
+  00000-9FFFF write-back
+  A0000-BFFFF uncachable
+  C0000-CBFFF write-protect
+  CC000-D7FFF write-back
+  D8000-EBFFF uncachable
+  EC000-FFFFF write-protect
+MTRR variable ranges enabled:
+  0 base 000000000000 mask 3FC000000000 write-back
+  1 base 004000000000 mask 3FE000000000 write-back
+  2 base 006000000000 mask 3FFFC0000000 write-back
+  3 base 0000C0000000 mask 3FFFC0000000 uncachable
+  4 disabled
+  5 disabled
+  6 disabled
+  7 disabled
+  8 disabled
+  9 disabled
+x86 PAT enabled: cpu 0, old 0x7010600070106, new 0x7010600070106
+e820: update [mem 0xc0000000-0xffffffff] usable ==> reserved
+found SMP MP-table at [mem 0x000fe710-0x000fe71f] mapped at [ffff8800000fe710]
+initial memory mapped: [mem 0x00000000-0x1fffffff]
+Base memory trampoline at [ffff880000096000] 96000 size 24576
+Using GB pages for direct mapping
+init_memory_mapping: [mem 0x00000000-0x1ef6cfff]
+ [mem 0x00000000-0x1edfffff] page 2M
+ [mem 0x1ee00000-0x1ef6cfff] page 4k
+kernel direct mapping tables up to 0x1ef6cfff @ [mem 0x1ef6a000-0x1ef6cfff]
+log_buf_len: 4194304
+early log buf free: 258076(98%)
+RAMDISK: [mem 0x1e9ac000-0x1ef5bfff]
+ACPI: RSDP 00000000000f10d0 00024 (v02 DELL  )
+ACPI: XSDT 00000000000f11d4 0009C (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: FACP 00000000bd34111c 000F4 (v03 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: DSDT 00000000bd31c000 05FCD (v01 DELL   PE_SC3   00000001 INTL 20110211)
+ACPI: FACS 00000000bd343000 00040
+ACPI: APIC 00000000bd340478 0016A (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: SPCR 00000000bd3405e4 00050 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: HPET 00000000bd340638 00038 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: DMAR 00000000bd340674 00158 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: MCFG 00000000bd340950 0003C (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: WD__ 00000000bd340990 00134 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: SLIC 00000000bd340ac8 00176 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: ERST 00000000bd322170 00270 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: HEST 00000000bd3223e0 0055C (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: BERT 00000000bd321fd0 00030 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: EINJ 00000000bd322000 00170 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: SRAT 00000000bd340cf0 003C0 (v01 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: TCPA 00000000bd3410b4 00064 (v02 DELL   PE_SC3   00000001 DELL 00000001)
+ACPI: SSDT 00000000bd344000 0AA14 (v01 INTEL  PPM RCM  80000001 INTL 20061109)
+ACPI: Local APIC address 0xfee00000
+SRAT: PXM 1 -> APIC 0x00 -> Node 0
+SRAT: PXM 2 -> APIC 0x20 -> Node 1
+SRAT: PXM 1 -> APIC 0x02 -> Node 0
+SRAT: PXM 2 -> APIC 0x22 -> Node 1
+SRAT: PXM 1 -> APIC 0x04 -> Node 0
+SRAT: PXM 2 -> APIC 0x24 -> Node 1
+SRAT: PXM 1 -> APIC 0x06 -> Node 0
+SRAT: PXM 2 -> APIC 0x26 -> Node 1
+SRAT: PXM 1 -> APIC 0x08 -> Node 0
+SRAT: PXM 2 -> APIC 0x28 -> Node 1
+SRAT: PXM 1 -> APIC 0x0a -> Node 0
+SRAT: PXM 2 -> APIC 0x2a -> Node 1
+SRAT: PXM 1 -> APIC 0x0c -> Node 0
+SRAT: PXM 2 -> APIC 0x2c -> Node 1
+SRAT: PXM 1 -> APIC 0x0e -> Node 0
+SRAT: PXM 2 -> APIC 0x2e -> Node 1
+SRAT: PXM 1 -> APIC 0x01 -> Node 0
+SRAT: PXM 2 -> APIC 0x21 -> Node 1
+SRAT: PXM 1 -> APIC 0x03 -> Node 0
+SRAT: PXM 2 -> APIC 0x23 -> Node 1
+SRAT: PXM 1 -> APIC 0x05 -> Node 0
+SRAT: PXM 2 -> APIC 0x25 -> Node 1
+SRAT: PXM 1 -> APIC 0x07 -> Node 0
+SRAT: PXM 2 -> APIC 0x27 -> Node 1
+SRAT: PXM 1 -> APIC 0x09 -> Node 0
+SRAT: PXM 2 -> APIC 0x29 -> Node 1
+SRAT: PXM 1 -> APIC 0x0b -> Node 0
+SRAT: PXM 2 -> APIC 0x2b -> Node 1
+SRAT: PXM 1 -> APIC 0x0d -> Node 0
+SRAT: PXM 2 -> APIC 0x2d -> Node 1
+SRAT: PXM 1 -> APIC 0x0f -> Node 0
+SRAT: PXM 2 -> APIC 0x2f -> Node 1
+SRAT: Node 0 PXM 1 [mem 0x00000000-0x303fffffff]
+SRAT: Node 1 PXM 2 [mem 0x3040000000-0x603fffffff]
+Initmem setup node 0 [mem 0x00000000-0x1ef6cfff]
+  NODE_DATA [mem 0x1e598000-0x1e5abfff]
+ [ffffea0000000000-ffffea00007fffff] PMD -> [ffff88001d400000-ffff88001dbfffff] on node 0
+Zone ranges:
+  DMA      [mem 0x00010000-0x00ffffff]
+  DMA32    [mem 0x01000000-0xffffffff]
+  Normal   empty
+Movable zone start for each node
+Early memory node ranges
+  node   0: [mem 0x00010000-0x0009bfff]
+  node   0: [mem 0x07000000-0x1ef6cfff]
+On node 0 totalpages: 98297
+  DMA zone: 3 pages used for memmap
+  DMA zone: 6 pages reserved
+  DMA zone: 131 pages, LIFO batch:0
+  DMA32 zone: 1534 pages used for memmap
+  DMA32 zone: 96623 pages, LIFO batch:31
+pci 0000:01:00.0 save state
+pci 0000:01:00.1 save state
+pci 0000:01:00.2 save state
+pci 0000:01:00.3 save state
+pci 0000:02:00.0 save state
+pci 0000:05:00.0 save state
+pci 0000:48:00.0 save state
+pci 0000:48:00.1 save state
+pci 0000:44:00.0 save state
+pci 0000:45:00.0 save state
+pci 0000:46:00.0 save state
+pci 0000:47:00.0 save state
+pci 0000:00:01.0 reset
+pci 0000:00:02.2 reset
+pci 0000:00:03.2 reset
+pci 0000:40:02.0 reset
+pci 0000:42:05.0 reset
+pci 0000:42:06.0 reset
+pci 0000:42:08.0 reset
+pci 0000:42:09.0 reset
+pci 0000:01:00.0 restore state
+pci 0000:01:00.1 restore state
+pci 0000:01:00.2 restore state
+pci 0000:01:00.3 restore state
+pci 0000:02:00.0 restore state
+pci 0000:05:00.0 restore state
+pci 0000:48:00.0 restore state
+pci 0000:48:00.1 restore state
+pci 0000:44:00.0 restore state
+pci 0000:45:00.0 restore state
+pci 0000:46:00.0 restore state
+pci 0000:47:00.0 restore state
+ACPI: PM-Timer IO Port: 0x808
+ACPI: Local APIC address 0xfee00000
+ACPI: LAPIC (acpi_id[0x01] lapic_id[0x00] enabled)
+ACPI: LAPIC (acpi_id[0x02] lapic_id[0x20] enabled)
+ACPI: LAPIC (acpi_id[0x03] lapic_id[0x02] enabled)
+ACPI: LAPIC (acpi_id[0x04] lapic_id[0x22] enabled)
+ACPI: LAPIC (acpi_id[0x05] lapic_id[0x04] enabled)
+ACPI: LAPIC (acpi_id[0x06] lapic_id[0x24] enabled)
+ACPI: LAPIC (acpi_id[0x07] lapic_id[0x06] enabled)
+ACPI: LAPIC (acpi_id[0x08] lapic_id[0x26] enabled)
+ACPI: LAPIC (acpi_id[0x09] lapic_id[0x08] enabled)
+ACPI: LAPIC (acpi_id[0x0a] lapic_id[0x28] enabled)
+ACPI: LAPIC (acpi_id[0x0b] lapic_id[0x0a] enabled)
+ACPI: LAPIC (acpi_id[0x0c] lapic_id[0x2a] enabled)
+ACPI: LAPIC (acpi_id[0x0d] lapic_id[0x0c] enabled)
+ACPI: LAPIC (acpi_id[0x0e] lapic_id[0x2c] enabled)
+ACPI: LAPIC (acpi_id[0x0f] lapic_id[0x0e] enabled)
+ACPI: LAPIC (acpi_id[0x10] lapic_id[0x2e] enabled)
+ACPI: LAPIC (acpi_id[0x11] lapic_id[0x01] enabled)
+ACPI: LAPIC (acpi_id[0x12] lapic_id[0x21] enabled)
+ACPI: LAPIC (acpi_id[0x13] lapic_id[0x03] enabled)
+ACPI: LAPIC (acpi_id[0x14] lapic_id[0x23] enabled)
+ACPI: LAPIC (acpi_id[0x15] lapic_id[0x05] enabled)
+ACPI: LAPIC (acpi_id[0x16] lapic_id[0x25] enabled)
+ACPI: LAPIC (acpi_id[0x17] lapic_id[0x07] enabled)
+ACPI: LAPIC (acpi_id[0x18] lapic_id[0x27] enabled)
+ACPI: LAPIC (acpi_id[0x19] lapic_id[0x09] enabled)
+ACPI: LAPIC (acpi_id[0x1a] lapic_id[0x29] enabled)
+ACPI: LAPIC (acpi_id[0x1b] lapic_id[0x0b] enabled)
+ACPI: LAPIC (acpi_id[0x1c] lapic_id[0x2b] enabled)
+ACPI: LAPIC (acpi_id[0x1d] lapic_id[0x0d] enabled)
+ACPI: LAPIC (acpi_id[0x1e] lapic_id[0x2d] enabled)
+ACPI: LAPIC (acpi_id[0x1f] lapic_id[0x0f] enabled)
+ACPI: LAPIC (acpi_id[0x20] lapic_id[0x2f] enabled)
+ACPI: LAPIC_NMI (acpi_id[0xff] high edge lint[0x1])
+ACPI: IOAPIC (id[0x00] address[0xfec00000] gsi_base[0])
+IOAPIC[0]: apic_id 0, version 32, address 0xfec00000, GSI 0-23
+ACPI: IOAPIC (id[0x01] address[0xfec3f000] gsi_base[32])
+IOAPIC[1]: apic_id 1, version 32, address 0xfec3f000, GSI 32-55
+ACPI: IOAPIC (id[0x02] address[0xfec7f000] gsi_base[64])
+IOAPIC[2]: apic_id 2, version 32, address 0xfec7f000, GSI 64-87
+ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+ACPI: IRQ0 used by override.
+ACPI: IRQ2 used by override.
+ACPI: IRQ9 used by override.
+Using ACPI (MADT) for SMP configuration information
+ACPI: HPET id: 0x8086a701 base: 0xfed00000
+smpboot: Allowing 32 CPUs, 0 hotplug CPUs
+nr_irqs_gsi: 104
+PM: Registered nosave memory: 000000000009c000 - 0000000007000000
+e820: [mem 0x1ef6d000-0xbd2effff] available for PCI devices
+Booting paravirtualized kernel on bare hardware
+setup_percpu: NR_CPUS:512 nr_cpumask_bits:512 nr_cpu_ids:32 nr_node_ids:2
+PERCPU: Embedded 27 pages/cpu @ffff88001e000000 s81728 r8192 d20672 u131072
+pcpu-alloc: s81728 r8192 d20672 u131072 alloc=1*2097152
+pcpu-alloc: [0] 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 
+pcpu-alloc: [0] 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 
+Built 1 zonelists in Node order, mobility grouping on.  Total pages: 96754
+Policy zone: DMA32
+Kernel command line: root=/dev/disk/by-label/ROOT-BE2 resume=/dev/disk/by-id/scsi-36d4ae52076eef40017f5c9690b9c848e-part8 nmi_watchdog=0 elevator=noop log_buf_len=4M printk.time=0 udev_timeout=180 cgroup_disable=memory console=tty0 console=ttyS0,115200n elevator=deadline sysrq=yes reset_devices irqpoll maxcpus=1  sysrq=7 debug ignore_loglevel memmap=exactmap memmap=560K@64K memmap=392628K@114688K elfcorehdr=507316K memmap=252K#3099760K
+Disabling memory control group subsystem
+Misrouted IRQ fixup and polling support enabled
+This may significantly impact system performance
+PID hash table entries: 2048 (order: 2, 16384 bytes)
+__ex_table already sorted, skipping sort
+xsave: enabled xstate_bv 0x7, cntxt size 0x340
+Checking aperture...
+No AGP bridge found
+Memory: 357760k/507316k available (5832k kernel code, 114128k absent, 35428k reserved, 5095k data, 1000k init)
+Hierarchical RCU implementation.
+	RCU dyntick-idle grace-period acceleration is enabled.
+	RCU restricting CPUs from NR_CPUS=512 to nr_cpu_ids=32.
+NR_IRQS:33024 nr_irqs:2024 16
+Extended CMOS year: 2000
+Spurious LAPIC timer interrupt on cpu 0
+do_IRQ: 0.231 No irq handler for vector (irq -1)
+do_IRQ: 0.230 No irq handler for vector (irq -1)
+do_IRQ: 0.229 No irq handler for vector (irq -1)
+do_IRQ: 0.223 No irq handler for vector (irq -1)
+do_IRQ: 0.199 No irq handler for vector (irq -1)
+do_IRQ: 0.183 No irq handler for vector (irq -1)
+do_IRQ: 0.182 No irq handler for vector (irq -1)
+do_IRQ: 0.181 No irq handler for vector (irq -1)
+do_IRQ: 0.176 No irq handler for vector (irq -1)
+do_IRQ: 0.160 No irq handler for vector (irq -1)
+Console: colour VGA+ 80x25
+console [tty0] enabled
+console [ttyS0] enabled
+Enabling automatic NUMA balancing. Configure with numa_balancing= or sysctl
+hpet clockevent registered
+tsc: Fast TSC calibration using PIT
+tsc: Detected 2699.986 MHz processor
+Calibrating delay loop (skipped), value calculated using timer frequency.. 5399.97 BogoMIPS (lpj=10799944)
+pid_max: default: 32768 minimum: 301
+Security Framework initialized
+AppArmor: AppArmor initialized
+Dentry cache hash table entries: 65536 (order: 7, 524288 bytes)
+Inode-cache hash table entries: 32768 (order: 6, 262144 bytes)
+Mount-cache hash table entries: 256
+Initializing cgroup subsys cpuacct
+Initializing cgroup subsys memory
+Initializing cgroup subsys devices
+Initializing cgroup subsys freezer
+Initializing cgroup subsys net_cls
+Initializing cgroup subsys blkio
+Initializing cgroup subsys perf_event
+Initializing cgroup subsys hugetlb
+CPU: Physical Processor ID: 0
+CPU: Processor Core ID: 0
+mce: CPU supports 20 MCE banks
+CPU0: Thermal LVT vector (0xfa) already installed
+process: using mwait in idle threads
+Last level iTLB entries: 4KB 512, 2MB 0, 4MB 0
+Last level dTLB entries: 4KB 512, 2MB 32, 4MB 32
+tlb_flushall_shift: 5
+ACPI: Core revision 20121018
+dmar: Host address width 46
+dmar: DRHD base: 0x000000d0d00000 flags: 0x0
+dmar: IOMMU 0: reg_base_addr d0d00000 ver 1:0 cap d2078c106f0462 ecap f020fe
+dmar: DRHD base: 0x000000dc900000 flags: 0x1
+dmar: IOMMU 1: reg_base_addr dc900000 ver 1:0 cap d2078c106f0462 ecap f020fe
+dmar: RMRR base: 0x000000bf458000 end: 0x000000bf46ffff
+dmar: RMRR base: 0x000000bf450000 end: 0x000000bf450fff
+dmar: RMRR base: 0x000000bf452000 end: 0x000000bf452fff
+dmar: ATSR flags: 0x0
+IOAPIC id 2 under DRHD base  0xd0d00000 IOMMU 0
+IOAPIC id 0 under DRHD base  0xdc900000 IOMMU 1
+IOAPIC id 1 under DRHD base  0xdc900000 IOMMU 1
+HPET id 0 under DRHD base 0xdc900000
+------------[ cut here ]------------
+WARNING: at drivers/iommu/intel_irq_remapping.c:542 intel_enable_irq_remapping+0x7d/0x26f()
+Hardware name: PowerEdge R720
+Your BIOS is broken and requested that x2apic be disabled
+This will leave your machine vulnerable to irq-injection attacks
+Use 'intremap=no_x2apic_optout' to override BIOS request
+Modules linked in:
+Pid: 1, comm: swapper/0 Not tainted 3.8.0-rc2-default+ #6
+Call Trace:
+ [<ffffffff81047e2a>] warn_slowpath_common+0x7a/0xb0
+ [<ffffffff81047f01>] warn_slowpath_fmt+0x41/0x50
+ [<ffffffff81afe84f>] intel_enable_irq_remapping+0x7d/0x26f
+ [<ffffffff81afeb93>] irq_remapping_enable+0x20/0x22
+ [<ffffffff81acf0eb>] enable_IR+0x5d/0x65
+ [<ffffffff81acf3d7>] enable_IR_x2apic+0x95/0x247
+ [<ffffffff81026099>] ? cpumask_next+0x19/0x20
+ [<ffffffff8159b9b8>] ? set_cpu_sibling_map+0x405/0x422
+ [<ffffffff81026831>] ? apic_write+0x11/0x20
+ [<ffffffff81ad1f26>] default_setup_apic_routing+0x15/0x6e
+ [<ffffffff81accfe6>] native_smp_prepare_cpus+0x137/0x234
+ [<ffffffff81ac1c8e>] kernel_init_freeable+0xa2/0x1e1
+ [<ffffffff815928b0>] ? rest_init+0x80/0x80
+ [<ffffffff815928b9>] kernel_init+0x9/0xf0
+ [<ffffffff815ae5bc>] ret_from_fork+0x7c/0xb0
+ [<ffffffff815928b0>] ? rest_init+0x80/0x80
+---[ end trace 3970bb530c07ade7 ]---
+Enabled IRQ remapping in xapic mode
+x2apic not enabled, IRQ remapping is in xapic mode
+Switched APIC routing to physical flat.
+..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+smpboot: CPU0: Genuine Intel(R) CPU  @ 2.70GHz (fam: 06, model: 2d, stepping: 05)
+TSC deadline timer enabled
+Performance Events: PEBS fmt1+, 16-deep LBR, SandyBridge events, Intel PMU driver.
+perf_event_intel: PEBS disabled due to CPU errata, please upgrade microcode
+... version:                3
+... bit width:              48
+... generic registers:      4
+... value mask:             0000ffffffffffff
+... max period:             000000007fffffff
+... fixed-purpose events:   3
+... event mask:             000000070000000f
+Brought up 1 CPUs
+smpboot: Total of 1 processors activated (5399.97 BogoMIPS)
+devtmpfs: initialized
+RTC time: 12:21:09, date: 01/11/13
+NET: Registered protocol family 16
+ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
+ACPI: bus type pci registered
+PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0xe0000000-0xefffffff] (base 0xe0000000)
+PCI: MMCONFIG at [mem 0xe0000000-0xefffffff] reserved in E820
+PCI: Using configuration type 1 for base access
+
+--Boundary-00=_taA8QmT0E35OkgI--
