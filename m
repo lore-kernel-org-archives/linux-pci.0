@@ -1,34 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f44.google.com ([209.85.214.44]:36128 "EHLO
-	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756273Ab3AOHos (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 02:44:48 -0500
-Received: by mail-bk0-f44.google.com with SMTP id w11so2389403bku.17
-        for <linux-pci@vger.kernel.org>; Mon, 14 Jan 2013 23:44:47 -0800 (PST)
-From: bl0 <bl0-052@playker.info>
-To: linux-ide@vger.kernel.org
-Subject: Re: sata_sil data corruption, possible workarounds
-Date: Tue, 15 Jan 2013 08:44:22 +0100
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <kernel@teksavvy.com>,
-	Tejun Heo <tj@kernel.org>,
-	Robert Hancock <hancockrwd@gmail.com>,
-	linux-pci@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
-References: <kahap3$mur$1@ger.gmane.org> <50F0199D.4090502@teksavvy.com> <50F4475F.9000509@pobox.com>
-In-Reply-To: <50F4475F.9000509@pobox.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:49208 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754293Ab3AKAJr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 19:09:47 -0500
+Message-ID: <50EF5847.7040507@wwwdotorg.org>
+Date: Thu, 10 Jan 2013 17:09:43 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201301150844.22693.bl0-052@playker.info>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+CC: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 02/14] of/pci: Add of_pci_get_devfn() function
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <1357764194-12677-3-git-send-email-thierry.reding@avionic-design.de>
+In-Reply-To: <1357764194-12677-3-git-send-email-thierry.reding@avionic-design.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 14 January 2013 18:58:55 Jeff Garzik wrote:
-> If the issue continues to be seen, 
+On 01/09/2013 01:43 PM, Thierry Reding wrote:
+> This function can be used to parse the device and function number from a
+> standard 5-cell PCI resource. PCI_SLOT() and PCI_FUNC() can be used on
+> the returned value obtain the device and function numbers respectively.
 
-You mean, more than it has been seen already?
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
 
-> a knob to enable an ugly solution is 
-> better than nothing, from the user's perspective.
+>  static inline int __of_pci_pci_compare(struct device_node *node,
+>  				       unsigned int devfn)
+>  {
+> +	int err;
+>  
+> +	err = of_pci_get_devfn(node);
+> +	if (err < 0)
+>  		return 0;
+> +
+> +	return devfn == err;
 
-Also, I fail to see how this is any more ugly than what the current code 
-does.
+I know this is really picky, but calling that "err" when it's hopefully
+not an error but rather a PCI device/function ID seems a little obscure.
+Perhaps node_devfn? I assume that fact that devfn is unsigned and err is
+signed won't be an issue.
