@@ -1,66 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58419 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988Ab3A1S5Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:25 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2 27/27] arm: mvebu: update defconfig with PCI and USB support
-Date: Mon, 28 Jan 2013 19:56:36 +0100
-Message-Id: <1359399397-29729-28-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:22798 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755939Ab3AKWlL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:11 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v8 03/22] PCI: Set dev_node early for pci_dev
+Date: Fri, 11 Jan 2013 14:40:30 -0800
+Message-Id: <1357944049-29620-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we have the necessary drivers and Device Tree informations to
-support PCIe on Armada 370 and Armada XP, enable the CONFIG_PCI
-option.
+Otherwise irq_desc for pci bridge with hot-added ioapic can not be on
+local node.
 
-Also, since the Armada 370 Mirabox has a built-in USB XHCI controller
-connected on the PCIe bus, enable the corresponding options as well.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/configs/mvebu_defconfig |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm/configs/mvebu_defconfig b/arch/arm/configs/mvebu_defconfig
-index b5bc96c..68ef50b 100644
---- a/arch/arm/configs/mvebu_defconfig
-+++ b/arch/arm/configs/mvebu_defconfig
-@@ -13,6 +13,7 @@ CONFIG_MACH_ARMADA_370=y
- CONFIG_MACH_ARMADA_XP=y
- # CONFIG_CACHE_L2X0 is not set
- # CONFIG_SWP_EMULATE is not set
-+CONFIG_PCI=y
- CONFIG_SMP=y
- # CONFIG_LOCAL_TIMERS is not set
- CONFIG_AEABI=y
-@@ -36,7 +37,8 @@ CONFIG_SERIAL_8250_CONSOLE=y
- CONFIG_SERIAL_8250_DW=y
- CONFIG_GPIOLIB=y
- CONFIG_GPIO_SYSFS=y
--# CONFIG_USB_SUPPORT is not set
-+CONFIG_USB=y
-+CONFIG_USB_XHCI_HCD=y
- CONFIG_RTC_CLASS=y
- CONFIG_RTC_DRV_S35390A=y
- CONFIG_DMADEVICES=y
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2dcd22d..b97dea5 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1300,6 +1300,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.release = pci_release_dev;
+ 	pci_dev_get(dev);
+ 
++	set_dev_node(&dev->dev, pcibus_to_node(bus));
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
 -- 
-1.7.9.5
+1.7.10.4
 
