@@ -1,84 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:59427 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750871Ab3A2VfC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 16:35:02 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Oliver Neukum <oneukum@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: pciehp: errors on resume
-Date: Tue, 29 Jan 2013 22:41:11 +0100
-Message-ID: <3112957.IGAg1VkqM8@vostro.rjw.lan>
-In-Reply-To: <5107E088.6030608@fold.natur.cuni.cz>
-References: <1359377173.1345.25.camel@x61.thuisdomein> <1359462737.1345.58.camel@x61.thuisdomein> <5107E088.6030608@fold.natur.cuni.cz>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH 1/16] ACPI: Separate adding ACPI device objects from probing ACPI drivers
+Date: Fri, 11 Jan 2013 21:58:50 +0100
+Message-ID: <6935441.WoipOdx2kz@vostro.rjw.lan>
+In-Reply-To: <20130111203759.GC13897@intel.com>
+References: <8498184.VilrUmatxI@vostro.rjw.lan> <2859994.arbXorpfaz@vostro.rjw.lan> <20130111203759.GC13897@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, January 29, 2013 03:45:28 PM Martin Mokrejs wrote:
-> Hi,
-> 
-> Paul Bolle wrote:
-> > On Tue, 2013-01-29 at 12:35 +0100, Rafael J. Wysocki wrote:
-> >> On Tuesday, January 29, 2013 11:35:32 AM Paul Bolle wrote:
-> >>> Thanks. So should the fix here be to actually suspend and remove this
-> >>> device? (Note that pciehp_suspend() is now basically a NOP.)
-> >>
-> >> I think it wouldn't be useful to remove devices on all suspends, but then there
-> >> are a few different situations that resume has to consider and handle correctly:
-> >>
-> >> 1) Device has been removed while suspended.
-> >> 2) Device was present before suspend and is still there.
-> >> 3) Device has been added while suspended.
+On Friday, January 11, 2013 10:37:59 PM Mika Westerberg wrote:
+> On Fri, Jan 11, 2013 at 09:31:43PM +0100, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Subject: ACPI / scan: Fix check of device_attach() return value.
 > > 
-> > Obviously, I care about situation 2) here. (It would be quite a feat to
-> > remove or add a wireless card while the laptop is suspended.)
+> > Since device_attach() returns 1 on success and 0 on failure,
+> > the check against its return value in acpi_bus_device_attach()
+> > should be reveresed.  Make it so.
 > 
->   I don't use suspend on my laptop to avoid possible problems with crashes
-> and data loss (so I rather quit my apps and shutdown). Therefore I have no
-> experience with that ... but it is my impression that the obvious use is to
-> close the lid, unplug an external mouse/keyboard and go elsewhere, maybe
-> re-plug the mouse/keyboard into different slots (hey, I can't remember
-> whether I had mouse in this or the other socket) and open the lid. Even
-> being unintentionally nasty to the OS and re-plugging the devices after
-> I opened the laptop lid! I understand one is in all these scenarios just
-> doing the bad thing and just asking for a trouble ... but that's why I
-> don't use that feature. My memory is leaky and my behavior is error-prone
-> so I am sure once I would screw the order. Maybe OS could force disconnect of all
-> external devices which are reasonably safe (mouse and keyboard while not
-> say external USB drive)?
+> Not sure if it matters but it returns 0 if no device was bound to a driver
+> and -ENODEV in case of error. If we only want to terminate in case of
+> error, following might be better.
 > 
->   Nevertheless, is it possible to have an external drive connection preserved
-> through suspend so that it survives under same device id? I don't know if this
-> a possible at all ... If not, then OS could could unplug even external drives.
+> 	} else if (device_attach(&device->dev) < 0) {
 
-This is possible for PCI devices.  The IDs won't change if the device is
-plugged in all the time.
+Yes, this check will be better.
 
-Moreover, in some cases there's no way to tell the difference between "internal"
-and "external".  The OS just has to handle all of the possible situations
-during resume correctly.  If it doesn't, then there is a bug that needs to be
-fixed.
-
-And avoiding a given feature just because you're scared of it doesn't lead to
-any progress.  If you instead use it and report problems with it, then chances
-are those problems will be addressed over time.
-
-I use suspend all the time and it works for me.  I don't have any PCIe hotplug
-devices, though, so any information on whether or not it works for people is
-quite valuable to me.
-
-I'll have a look at the pciehp driver's resume, but that's going to take some
-time.
+Which means that the patch is actually yours, so I've just added the changelog. :-)
 
 Thanks,
 Rafael
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+---
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: ACPI / scan: Fix check of device_attach() return value.
+
+Since device_attach() returns 1 on success (a driver has been bound
+to the device), the check against its return value in
+acpi_bus_device_attach() should modified to take that into accout.
+Make it so.
+
+[rjw: Subject and changelog.]
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/acpi/scan.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -1598,7 +1598,7 @@ static acpi_status acpi_bus_device_attac
+ 	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
+ 		/* This is a known good platform device. */
+ 		acpi_create_platform_device(device);
+-	} else if (device_attach(&device->dev)) {
++	} else if (device_attach(&device->dev) < 0) {
+ 		status = AE_CTRL_DEPTH;
+ 	}
+ 	return status;
+
