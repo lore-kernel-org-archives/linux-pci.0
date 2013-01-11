@@ -1,193 +1,166 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v9 06/11] PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
-Date: Sun, 20 Jan 2013 23:38:08 +0100
-Message-ID: <2123353.z1dtQmXUNo@vostro.rjw.lan>
-In-Reply-To: <1358495602-22867-7-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <1358495602-22867-7-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.171]:58405 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755136Ab3AKSsm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 13:48:42 -0500
+Date: Fri, 11 Jan 2013 19:48:19 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 14/14] ARM: tegra: trimslice: Initialize PCIe from DT
+Message-ID: <20130111184819.GA18717@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <1357764194-12677-15-git-send-email-thierry.reding@avionic-design.de>
+ <50EF5537.6080602@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
+In-Reply-To: <50EF5537.6080602@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 17, 2013 11:53:17 PM Yinghai Lu wrote:
-> Will need to use it for pci root bridge hotplug support, rename
-> *acpiphp* to *acpi* and move to osc.c.
-> Also make kacpi_hotplug_wq static after that.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/acpi/osl.c                 |   24 +++++++++++++++++++--
->  drivers/pci/hotplug/acpiphp_glue.c |   42 ++++++------------------------------
->  include/acpi/acpiosxf.h            |    9 +++++++-
->  3 files changed, 36 insertions(+), 39 deletions(-)
-> 
-> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-> index 3ff2678..afcce46 100644
-> --- a/drivers/acpi/osl.c
-> +++ b/drivers/acpi/osl.c
-> @@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
->  static void *acpi_irq_context;
->  static struct workqueue_struct *kacpid_wq;
->  static struct workqueue_struct *kacpi_notify_wq;
-> -struct workqueue_struct *kacpi_hotplug_wq;
-> -EXPORT_SYMBOL(kacpi_hotplug_wq);
-> +static struct workqueue_struct *kacpi_hotplug_wq;
->  
->  /*
->   * This list of permanent mappings is for memory that may be accessed from
-> @@ -1778,3 +1777,24 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
->  {
->  	__acpi_os_prepare_sleep = func;
->  }
-> +
-> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
-> +			void (*func)(struct work_struct *work))
-> +{
-> +	struct acpi_hp_work *hp_work;
-> +	int ret;
-> +
-> +	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-> +	if (!hp_work)
-> +		return;
-> +
-> +	hp_work->handle = handle;
-> +	hp_work->type = type;
-> +	hp_work->context = context;
-> +
-> +	INIT_WORK(&hp_work->work, func);
-> +	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-> +	if (!ret)
-> +		kfree(hp_work);
-> +}
-> +EXPORT_SYMBOL(alloc_acpi_hp_work);
 
-That should be EXPORT_SYMBOL_GPL().
+--Dxnq1zWXvFF0Q93v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 79db296..55e03b6 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -1203,34 +1203,6 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->  	return AE_OK ;
->  }
->  
-> -struct acpiphp_hp_work {
-> -	struct work_struct work;
-> -	acpi_handle handle;
-> -	u32 type;
-> -	void *context;
-> -};
-> -
-> -static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
-> -				  void *context,
-> -				  void (*func)(struct work_struct *work))
-> -{
-> -	struct acpiphp_hp_work *hp_work;
-> -	int ret;
-> -
-> -	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
-> -	if (!hp_work)
-> -		return;
-> -
-> -	hp_work->handle = handle;
-> -	hp_work->type = type;
-> -	hp_work->context = context;
-> -
-> -	INIT_WORK(&hp_work->work, func);
-> -	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
-> -	if (!ret)
-> -		kfree(hp_work);
-> -}
-> -
->  static void _handle_hotplug_event_bridge(struct work_struct *work)
->  {
->  	struct acpiphp_bridge *bridge;
-> @@ -1239,11 +1211,11 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
->  				      .pointer = objname };
->  	struct acpi_device *device;
->  	int num_sub_bridges = 0;
-> -	struct acpiphp_hp_work *hp_work;
-> +	struct acpi_hp_work *hp_work;
->  	acpi_handle handle;
->  	u32 type;
->  
-> -	hp_work = container_of(work, struct acpiphp_hp_work, work);
-> +	hp_work = container_of(work, struct acpi_hp_work, work);
->  	handle = hp_work->handle;
->  	type = hp_work->type;
->  
-> @@ -1346,8 +1318,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
->  	 * For now just re-add this work to the kacpi_hotplug_wq so we
->  	 * don't deadlock on hotplug actions.
->  	 */
-> -	alloc_acpiphp_hp_work(handle, type, context,
-> -			      _handle_hotplug_event_bridge);
-> +	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
->  }
->  
->  static void _handle_hotplug_event_func(struct work_struct *work)
-> @@ -1356,12 +1327,12 @@ static void _handle_hotplug_event_func(struct work_struct *work)
->  	char objname[64];
->  	struct acpi_buffer buffer = { .length = sizeof(objname),
->  				      .pointer = objname };
-> -	struct acpiphp_hp_work *hp_work;
-> +	struct acpi_hp_work *hp_work;
->  	acpi_handle handle;
->  	u32 type;
->  	void *context;
->  
-> -	hp_work = container_of(work, struct acpiphp_hp_work, work);
-> +	hp_work = container_of(work, struct acpi_hp_work, work);
->  	handle = hp_work->handle;
->  	type = hp_work->type;
->  	context = hp_work->context;
-> @@ -1422,8 +1393,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
->  	 * For now just re-add this work to the kacpi_hotplug_wq so we
->  	 * don't deadlock on hotplug actions.
->  	 */
-> -	alloc_acpiphp_hp_work(handle, type, context,
-> -			      _handle_hotplug_event_func);
-> +	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
->  }
->  
->  static acpi_status
-> diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
-> index 4315274..adab63c 100644
-> --- a/include/acpi/acpiosxf.h
-> +++ b/include/acpi/acpiosxf.h
-> @@ -193,7 +193,14 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
->  /*
->   * Threads and Scheduling
->   */
-> -extern struct workqueue_struct *kacpi_hotplug_wq;
+On Thu, Jan 10, 2013 at 04:56:39PM -0700, Stephen Warren wrote:
+> On 01/09/2013 01:43 PM, Thierry Reding wrote:
+> > With the device tree support in place, probe the PCIe controller from
+> > the device tree and remove the corresponding workaround in the board
+> > file.
+>=20
+> Thierry, there are a couple things missing from this patch; I include a
+> fixup for you to squash in, but also see beyond that for a problem.
+>=20
+> >  arch/arm/boot/dts/tegra20-trimslice.dts |   26 +++++++++++++++++++++--=
+---
+> >  1 file changed, 21 insertions(+), 5 deletions(-)
+> >=20
+> > diff --git a/arch/arm/boot/dts/tegra20-trimslice.dts b/arch/arm/boot/dt=
+s/tegra20-trimslice.dts
+> > index ebb4c17..41fc45b 100644
+> > --- a/arch/arm/boot/dts/tegra20-trimslice.dts
+> > +++ b/arch/arm/boot/dts/tegra20-trimslice.dts
+> > @@ -303,12 +303,10 @@
+> > =20
+> >  	pcie-controller {
+> >  		status =3D "okay";
+> > +		pex-clk-supply =3D <&pci_clk_reg>;
+> > +		vdd-supply =3D <&pci_vdd_reg>;
+> > =20
+> > -		pci@0 {
+> > -			status =3D "okay";
+> > -		};
+> > -
+> > -		pci@1 {
+> > +		pci@1,0 {
+> >  			status =3D "okay";
+> >  		};
+> >  	};
+> > @@ -366,6 +364,24 @@
+> >  			regulator-max-microvolt =3D <1800000>;
+> >  			regulator-always-on;
+> >  		};
+> > +
+> > +		pci_clk_reg: regulator@2 {
+> > +			compatible =3D "regulator-fixed";
+> > +			reg =3D <2>;
+> > +			regulator-name =3D "pci_clk";
+> > +			regulator-min-microvolt =3D <3300000>;
+> > +			regulator-max-microvolt =3D <3300000>;
+> > +			regulator-always-on;
+> > +		};
+> > +
+> > +		pci_vdd_reg: regulator@3 {
+> > +			compatible =3D "regulator-fixed";
+> > +			reg =3D <3>;
+> > +			regulator-name =3D "pci_vdd";
+> > +			regulator-min-microvolt =3D <1050000>;
+> > +			regulator-max-microvolt =3D <1050000>;
+> > +			regulator-always-on;
+> > +		};
+> >  	};
+> > =20
+> >  	sound {
+> > --=20
+> > 1.7.10.4
+>=20
+> However, PCIe still doesn't work on TrimSlice; the device enumeration
+> fails. The log is below:
+>=20
+> > [    0.790425] tegra-pcie 80003000.pcie-controller: link 0 down, retryi=
+ng
+> > [    0.801351] tegra-pcie 80003000.pcie-controller: PCI host bridge to =
+bus 0000:00
+> > [    0.808945] pci_bus 0000:00: root bus resource [io  0x82000000-0x820=
+0ffff]
+> > [    0.816109] pci_bus 0000:00: root bus resource [mem 0xa0000000-0xaff=
+fffff]
+> > [    0.823303] pci_bus 0000:00: root bus resource [mem 0xb0000000-0xbff=
+fffff pref]
+> > [    0.830893] pci_bus 0000:00: root bus resource [bus 00-ff]
+> > [    0.836728] pci 0000:00:01.0: [10de:0bf0] type 01 class 0x060000
+> > [    0.843097] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3c=
+old
+> > [    0.850047] PCI: bus0: Fast back to back transfers disabled
+> > [    0.855853] pci 0000:00:01.0: bridge configuration invalid ([bus 00-=
+00]), reconfiguring
+> > [    0.864308] tegra-pcie 80003000.pcie-controller: AXI response decodi=
+ng error, signature: 10010001
+> > [    0.873489] tegra-pcie 80003000.pcie-controller:   FPCI address: fe1=
+0010000
+>=20
+> ^^^ For some reason, the config register access fails.
+>=20
+> > [    0.880760] PCI: bus1: Fast back to back transfers enabled
+> > [    0.886482] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to=
+ 01
+> > [    0.893381] pci 0000:00:01.0: PCI bridge to [bus 01]
+> > [    0.898577] PCI: enabling device 0000:00:01.0 (0140 -> 0143)
+> > [    0.904535] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host=
+ bridge
+>=20
+> With plain next-20130109, the device enumeration succeeds.
 
-include/acpi/acpiosxf.h is related to ACPICA, so while removing kacpi_hotplug_wq
-from it should be OK, please put the rest into acpi_bus.h, preferably next to the
-definition of acpi_eject_event.
+That's very strange. I haven't seen that on my setup. Looks like I need
+to dig out the TrimSlice again and debug this. It'll take me a while and
+there are plenty of other requested changes already, so if I find a fix
+I can roll it into the next version.
 
-> +struct acpi_hp_work {
-> +	struct work_struct work;
-> +	acpi_handle handle;
-> +	u32 type;
-> +	void *context;
-> +};
-> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
-> +			void (*func)(struct work_struct *work));
->  
->  acpi_thread_id acpi_os_get_thread_id(void);
+Thanks for testing,
+Thierry
 
-Thanks,
-Rafael
+--Dxnq1zWXvFF0Q93v
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+iQIcBAEBAgAGBQJQ8F5zAAoJEN0jrNd/PrOhEMoP/2BFh+/9wwBhVAuVQ1RQXZ7Q
+pvWFIhuJ9EdZwPXGVHU8559hT0MV0e6MS61sQQ0YQzxHxTe4Taip8AeUWayget6L
+BKnO3/gc9P7zikFb0pr9p3u5pRUlLiG77XfQtas98X3YSFp4Ba6me0oA1Lw+9tr1
+os14griipvxRzLlTJKUYHyg13rZXyhrIETLns/sWguQeucb1InUKA/bkDm+3PnEM
+rjDk1W1ZRiM1e2dQsV8O8gpzIsELe6Zz7zYwM5UVtBHvT+NyNGqWFNzLWO6bqoZV
+uQ5pS5sYynry+Il+J+xkMVpivSR7627zNDAqgClHFBw9mhcG+XntzBjSVAgEIiLX
+qrKyik1skdDHW16HtEeanJ8lgfSB60Zc41D5PFsUVz4/xqIaHFZLqNlzz5bZRuXg
+nZXnOvcWmgBw6D8zxz+h+oev/Hzh/V3Y97w8g96Exy5DQFfwdEY4HtOJwilcJ67v
+hF6bEaKSvvvDT81qPmCx4uGi1jUyLLp4b8YFZQ0Fc/YO9XkcCqoCdFwBJ68ZGdGL
+zEZ5Y72/W6j5cGDZKceAPO1Mx1DkY4ENNJwK7y5jwQTXD0pwbz0IU5vE0xO/Er8X
+i9GO2oMug+IPkTr1+nMUEVJ3i16AgmTL28tMJsOiU7XTG5HJNicN/Ep9iCsKTd5z
+4NV/7TZ0frYQq/Rt7ZRY
+=8nAN
+-----END PGP SIGNATURE-----
+
+--Dxnq1zWXvFF0Q93v--
