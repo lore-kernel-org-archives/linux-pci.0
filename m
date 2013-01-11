@@ -1,251 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:33353 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640Ab3AHATe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2013 19:19:34 -0500
-Received: by mail-la0-f52.google.com with SMTP id fq12so17350405lab.39
-        for <linux-pci@vger.kernel.org>; Mon, 07 Jan 2013 16:19:33 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Blue Swirl <blauwirbel@gmail.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gleb Natapov <gleb@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [Qemu-devel] [PATCH 2/2] QEMU-AER: Qemu changes to support AER
+ for VFIO-PCI devices
+Date: Fri, 11 Jan 2013 08:55:13 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C9014976AA@G9W0717.americas.hpqcorp.net>
+References: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
+ <CAAu8pHt63J4h_c2HbwSDRxJCg4675WT7m_xmYwE69MTp_E=igg@mail.gmail.com>
+In-Reply-To: <CAAu8pHt63J4h_c2HbwSDRxJCg4675WT7m_xmYwE69MTp_E=igg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <50890028.8040604@huawei.com>
-References: <1350020155-3782-1-git-send-email-jdmason@kudzu.us>
- <1350020155-3782-4-git-send-email-jdmason@kudzu.us> <507B75D6.201@huawei.com>
- <CAPoiz9xbiC5NKb5ZXGOLdMuWxnngO9HC3HfsFWX6pBwRnMbVJA@mail.gmail.com> <50890028.8040604@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 7 Jan 2013 17:19:12 -0700
-Message-ID: <CAErSpo4YYW-wDyP3JzDFOpETc38dpVzvRYke=a4Czz0FkobAcA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: Add new default PCI-E MPS bus state
-To: Jon Mason <jdmason@kudzu.us>
-Cc: linux-pci@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jon,
-
-Sorry for neglecting this until it's now ancient history, but you
-mentioned earlier that "The print out shows a bug in the code (which I
-will push in a second version of the patch shortly)."
-
-I don't see a second version; did I miss it?  If we still need a fix
-here, can you re-post the three patches in this series?
-
-Bjorn
-
-On Thu, Oct 25, 2012 at 3:02 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> Hi Jon,
->    I think we can do a little more about inconsistent mps problem found in boot path(BIOS configure bug for mps)
-> or after hotplug device.As shown in your comment on line 1451, it's unsafe to modifying the MPS on the running devices.
-> Since bus child devices is not running when pcie_bus_configure_settings be called. So we can try to configure child device's
-> mps according to the mps of bus.
-> there are two situations:
-> 1、now current running bus mps is larger than child devices mpss can support;
-> 2、now cuurent running bus mps is smaller than child devices mpss can support;
->
-> We cannot modifying the MPS for 1, it's not safe; but we can show message to user to add boot parameter pci=pcie_bus_safe.
-> The second situation we can modify all child devices mps as the mps value of running bus, it's safe and can correct mps problem automatically
-> for users.
->
-> I wrote a draft patch about this solution, if there is some thing wrong with my understanding, let me know.
->
-> Thanks very much!
-> Yijing
->
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 5485883..59036a8 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -78,7 +78,7 @@ unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
->  unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
->  unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
->
-> -enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
-> +enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_AUTO;
->
->  /*
->   * The default CLS is used if arch didn't set CLS explicitly and not
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e8b7d5e..6cbfbe1 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1467,6 +1467,19 @@ static int pcie_find_smpss(struct pci_dev *dev, void *data)
->         return 0;
->  }
->
-> +static int pcie_find_min_mpss(struct pci_dev *dev, void *data)
-> +{
-> +       u8 *mpss = data;
-> +
-> +       if (!pci_is_pcie(dev))
-> +               return 0;
-> +
-> +       if (*mpss > dev->pcie_mpss)
-> +               *mpss = dev->pcie_mpss;
-> +
-> +       return 0;
-> +}
-> +
->  static void pcie_write_mps(struct pci_dev *dev, int mps)
->  {
->         int rc;
-> @@ -1560,6 +1573,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
->  void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->  {
->         u8 smpss;
-> +       u8 mps = pcie_get_mps(bus->self) >> 8;
->
->         if (!pci_is_pcie(bus->self))
->                 return;
-> @@ -1581,7 +1595,19 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->         case PCIE_BUS_PEER2PEER:
->                 smpss = 0;
->                 break;
-> -
-> +       case PCIE_BUS_AUTO:
-> +               smpss = bus->self->pcie_mpss;
-> +               pci_walk_bus(bus, pcie_find_min_mpss, &smpss);
-> +               if (mps > smpss) {
-> +                       dev_info(&bus->dev,
-> +                               "Current mps %d used in bus 0x%02x is larger than children devices mpss %d support\n"
-> +                               "Please use the pci=pcie_bus_safe boot parameter for safe\n",
-> +                               128 << mpss, bus->number, 128 << smpss);
-> +                       return;
-> +               }
-> +               else
-> +                       pci_walk_bus(bus, pcie_bus_configure_set, &mps);
-> +               return;
->         case PCIE_BUS_SAFE:
->                 smpss = mpss;
->
-> @@ -1594,8 +1620,6 @@ void pcie_bus_configure_settings(struct pci_bus *bus, u8 mpss)
->                 return;
->         }
->
-> -       }
-> -
->         pcie_bus_configure_set(bus->self, &smpss);
->         pci_walk_bus(bus, pcie_bus_configure_set, &smpss);
->  }
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7a451ff..539b7e4 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2787,7 +2787,8 @@ static void __devinit quirk_intel_mc_errata(struct pci_dev *dev)
->         int err;
->         u16 rcc;
->
-> -       if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
-> +       if (pcie_bus_config == PCIE_BUS_TUNE_OFF ||
-> +               pcie_bus_config == PCIE_AUTO_AUTO)
->                 return;
->
->         /* Intel errata specifies bits to change but does not say what they are.
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index be1de01..84c4ab1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -661,6 +661,7 @@ extern void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
->
->  enum pcie_bus_config_types {
->         PCIE_BUS_TUNE_OFF,
-> +       PCIE_BUS_AUTO,
->         PCIE_BUS_SAFE,
->         PCIE_BUS_PERFORMANCE,
->         PCIE_BUS_PEER2PEER,
-> --
-> 1.7.1
->
->
-> On 2012/10/24 6:57, Jon Mason wrote:
->>> pcieport 0000:47:09.0 device mps current is 256 and mpss is 1024;
->>> the newly hot added igb device 0000:4b:00.0 and 0000:4b:00.1 mps are 128 and mpss is 512;
->>> 1、"pci_bus 0000:4b: Non-optimal PCI-E Bus MPS value of 128 being used instead of 1024."  should ".......instead of 256(bridge mps)"？
->>
->> The print out shows a bug in the code (which I will push in a second
->> version of the patch shortly), but having 128 instead of 256 is a
->> separate issue.  That is an existing limitation due to the hotplug
->> slot not being connected to the root port.  See the comment on line
->> 1454.  Since PCIE_BUS_SAFE/PERFORMANCE is not being used, it is not
->> ratcheting down the MPS on the bus like it should (per the comment).
->>
->>> 2、“use the pci=pcie_bus_safe boot parameter for better performance”  should "....use pci=pcie_bus_safe for safe"?
->>
->> The reason for the user to add the boot parameter is to get better
->> performance than they would by default.  For theoretically best
->> performance, they would want to use "pcie_bus_performance".  With this
->> in mind, I believe "better" is the correct language.
->>
->>> 3、above logs is  duplicate.
->>
->> The duplicate log would only be caused by pcie_bus_configure_settings
->> being called twice.  Is this only being seen on hotplug devices or on
->> every device?
->>
->>>
->>> igb 0000:4b:00.0: enabling device (0100 -> 0102)
->>> igb 0000:4b:00.0: Intel(R) Gigabit Ethernet Network Connection
->>> igb 0000:4b:00.0: eth4: (PCIe:2.5Gb/s:Width x4) 00:0e:0c:ff:ff:ff
->>> igb 0000:4b:00.0: eth4: PBA No: FFFFFF-0FF
->>> igb 0000:4b:00.0: Using MSI-X interrupts. 8 rx queue(s), 8 tx queue(s)
->>> igb 0000:4b:00.1: enabling device (0100 -> 0102)
->>> GSI 63 (level, low) -> CPU 27 (0x3300) vector 137
->>> igb 0000:4b:00.1: Intel(R) Gigabit Ethernet Network Connection
->>> igb 0000:4b:00.1: eth4: (PCIe:2.5Gb/s:Width x4) 00:0e:0c:ff:ff:fe
->>> igb 0000:4b:00.1: eth4: PBA No: FFFFFF-0FF
->>> igb 0000:4b:00.1: Using MSI-X interrupts. 8 rx queue(s), 8 tx queue(s)
->>>
->>>
->>> Thanks!
->>> Yijing
->>>
->>>
->>>> +             return;
->>>>       }
->>>>
->>>>       pcie_bus_configure_set(bus->self, &smpss);
->>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>>> index 5155317..e4eede0 100644
->>>> --- a/drivers/pci/quirks.c
->>>> +++ b/drivers/pci/quirks.c
->>>> @@ -2787,7 +2787,8 @@ static void __devinit quirk_intel_mc_errata(struct pci_dev *dev)
->>>>       int err;
->>>>       u16 rcc;
->>>>
->>>> -     if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->>>> +     if (pcie_bus_config == PCIE_BUS_TUNE_OFF ||
->>>> +         pcie_bus_config == PCIE_BUS_WARN)
->>>>               return;
->>>>
->>>>       /* Intel errata specifies bits to change but does not say what they are.
->>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>>> index 5faa831..410eaf9 100644
->>>> --- a/include/linux/pci.h
->>>> +++ b/include/linux/pci.h
->>>> @@ -662,6 +662,7 @@ extern void pcie_bus_configure_settings(struct pci_bus *bus, u8 smpss);
->>>>
->>>>  enum pcie_bus_config_types {
->>>>       PCIE_BUS_TUNE_OFF,
->>>> +     PCIE_BUS_WARN,
->>>>       PCIE_BUS_SAFE,
->>>>       PCIE_BUS_PERFORMANCE,
->>>>       PCIE_BUS_PEER2PEER,
->>>>
->>>
->>>
->>> --
->>> Thanks!
->>> Yijing
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> .
->>
->
->
-> --
-> Thanks!
-> Yijing
->
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmx1ZSBTd2lybCBbbWFp
+bHRvOmJsYXV3aXJiZWxAZ21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIEphbnVhcnkgMDks
+IDIwMTMgMToyMyBQTQ0KPiBUbzogUGFuZGFyYXRoaWwsIFZpamF5bW9oYW4gUg0KPiBDYzogQWxl
+eCBXaWxsaWFtc29uOyBCam9ybiBIZWxnYWFzOyBHbGViIE5hdGFwb3Y7IGxpbnV4LQ0KPiBwY2lA
+dmdlci5rZXJuZWwub3JnOyBxZW11LWRldmVsQG5vbmdudS5vcmc7IGt2bUB2Z2VyLmtlcm5lbC5v
+cmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUWVt
+dS1kZXZlbF0gW1BBVENIIDIvMl0gUUVNVS1BRVI6IFFlbXUgY2hhbmdlcyB0byBzdXBwb3J0IEFF
+Ug0KPiBmb3IgVkZJTy1QQ0kgZGV2aWNlcw0KPiANCj4gT24gV2VkLCBKYW4gOSwgMjAxMyBhdCA2
+OjI2IEFNLCBQYW5kYXJhdGhpbCwgVmlqYXltb2hhbiBSDQo+IDx2aWpheW1vaGFuLnBhbmRhcmF0
+aGlsQGhwLmNvbT4gd3JvdGU6DQo+ID4gICAgICAgICAtIENyZWF0ZSBldmVudGZkIHBlciB2Zmlv
+IGRldmljZSBhc3NpZ25lZCB0byBhIGd1ZXN0IGFuZCByZWdpc3Rlcg0KPiBhbg0KPiA+ICAgICAg
+ICAgICBldmVudCBoYW5kbGVyDQo+ID4NCj4gPiAgICAgICAgIC0gVGhpcyBmZCBpcyBwYXNzZWQg
+dG8gdGhlIHZmaW9fcGNpIGRyaXZlciB0aHJvdWdoIGEgbmV3IGlvY3RsDQo+ID4NCj4gPiAgICAg
+ICAgIC0gV2hlbiB0aGUgZGV2aWNlIGVuY291bnRlcnMgYW4gZXJyb3IsIHRoZSBldmVudGZkIGlz
+IHNpZ25hbGVkDQo+ID4gICAgICAgICAgIGFuZCB0aGUgcWVtdSBldmVudGZkIGhhbmRsZXIgZ2V0
+cyBpbnZva2VkLg0KPiA+DQo+ID4gICAgICAgICAtIEluIHRoZSBoYW5kbGVyIGRlY2lkZSB3aGF0
+IGFjdGlvbiB0byB0YWtlLiBDdXJyZW50IGFjdGlvbiB0YWtlbg0KPiA+ICAgICAgICAgICBpcyB0
+byB0ZXJtaW5hdGUgdGhlIGd1ZXN0Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogVmlqYXkgTW9o
+YW4gUGFuZGFyYXRoaWwgPHZpamF5bW9oYW4ucGFuZGFyYXRoaWxAaHAuY29tPg0KPiA+IC0tLQ0K
+PiA+ICBody92ZmlvX3BjaS5jICAgICAgICAgICAgICB8IDU2DQo+ICsrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgbGludXgtaGVhZGVycy9saW51eC92
+ZmlvLmggfCAgOSArKysrKysrKw0KPiA+ICAyIGZpbGVzIGNoYW5nZWQsIDY1IGluc2VydGlvbnMo
+KykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9ody92ZmlvX3BjaS5jIGIvaHcvdmZpb19wY2kuYw0K
+PiA+IGluZGV4IDI4YzgzMDMuLjljM2MyOGIgMTAwNjQ0DQo+ID4gLS0tIGEvaHcvdmZpb19wY2ku
+Yw0KPiA+ICsrKyBiL2h3L3ZmaW9fcGNpLmMNCj4gPiBAQCAtMzgsNiArMzgsNyBAQA0KPiA+ICAj
+aW5jbHVkZSAicWVtdS9lcnJvci1yZXBvcnQuaCINCj4gPiAgI2luY2x1ZGUgInFlbXUvcXVldWUu
+aCINCj4gPiAgI2luY2x1ZGUgInFlbXUvcmFuZ2UuaCINCj4gPiArI2luY2x1ZGUgInN5c2VtdS9z
+eXNlbXUuaCINCj4gPg0KPiA+ICAvKiAjZGVmaW5lIERFQlVHX1ZGSU8gKi8NCj4gPiAgI2lmZGVm
+IERFQlVHX1ZGSU8NCj4gPiBAQCAtMTMwLDYgKzEzMSw4IEBAIHR5cGVkZWYgc3RydWN0IFZGSU9E
+ZXZpY2Ugew0KPiA+ICAgICAgUUxJU1RfRU5UUlkoVkZJT0RldmljZSkgbmV4dDsNCj4gPiAgICAg
+IHN0cnVjdCBWRklPR3JvdXAgKmdyb3VwOw0KPiA+ICAgICAgYm9vbCByZXNldF93b3JrczsNCj4g
+PiArICAgIEV2ZW50Tm90aWZpZXIgZXJyZmQ7DQo+ID4gKyAgICBfX3UzMiBkZXZfaW5mb19mbGFn
+czsNCj4gDQo+IFFFTVUgaXMgbm90IGtlcm5lbCBjb2RlLCBwbGVhc2UgdXNlIHVpbnQzMl90Lg0K
+DQpBcyB5b3Ugc2F3IGxhdGVyIGluIHRoZSBjb2RlLCBJIHdhcyB1c2luZyB0aGUgc2FtZSB0eXBl
+IGluIHRoZSBzdHJ1Y3R1cmUgDQpjb3BpZWQgZnJvbSB0aGUga2VybmVsLiBXaWxsIGNoYW5nZSB0
+aGlzIHRvIHVpbnQzMl90Lg0KDQpUaGFua3MNCg0KVmlqYXkNCg0KPiANCj4gPiAgfSBWRklPRGV2
+aWNlOw0KPiA+DQo+ID4gIHR5cGVkZWYgc3RydWN0IFZGSU9Hcm91cCB7DQo+ID4gQEAgLTE4MDUs
+NiArMTgwOCw4IEBAIHN0YXRpYyBpbnQgdmZpb19nZXRfZGV2aWNlKFZGSU9Hcm91cCAqZ3JvdXAs
+IGNvbnN0DQo+IGNoYXIgKm5hbWUsIFZGSU9EZXZpY2UgKnZkZXYpDQo+ID4gICAgICBEUFJJTlRG
+KCJEZXZpY2UgJXMgZmxhZ3M6ICV1LCByZWdpb25zOiAldSwgaXJnczogJXVcbiIsIG5hbWUsDQo+
+ID4gICAgICAgICAgICAgIGRldl9pbmZvLmZsYWdzLCBkZXZfaW5mby5udW1fcmVnaW9ucywgZGV2
+X2luZm8ubnVtX2lycXMpOw0KPiA+DQo+ID4gKyAgICB2ZGV2LT5kZXZfaW5mb19mbGFncyA9IGRl
+dl9pbmZvLmZsYWdzOw0KPiA+ICsNCj4gPiAgICAgIGlmICghKGRldl9pbmZvLmZsYWdzICYgVkZJ
+T19ERVZJQ0VfRkxBR1NfUENJKSkgew0KPiA+ICAgICAgICAgIGVycm9yX3JlcG9ydCgidmZpbzog
+VW0sIHRoaXMgaXNuJ3QgYSBQQ0kgZGV2aWNlXG4iKTsNCj4gPiAgICAgICAgICBnb3RvIGVycm9y
+Ow0KPiA+IEBAIC0xOTAwLDYgKzE5MDUsNTUgQEAgc3RhdGljIHZvaWQgdmZpb19wdXRfZGV2aWNl
+KFZGSU9EZXZpY2UgKnZkZXYpDQo+ID4gICAgICB9DQo+ID4gIH0NCj4gPg0KPiA+ICtzdGF0aWMg
+dm9pZCB2ZmlvX2VycmZkX2hhbmRsZXIodm9pZCAqb3BhcXVlKQ0KPiA+ICt7DQo+ID4gKyAgICBW
+RklPRGV2aWNlICp2ZGV2ID0gb3BhcXVlOw0KPiA+ICsNCj4gPiArICAgIGlmICghZXZlbnRfbm90
+aWZpZXJfdGVzdF9hbmRfY2xlYXIoJnZkZXYtPmVycmZkKSkgew0KPiA+ICsgICAgICAgIHJldHVy
+bjsNCj4gPiArICAgIH0NCj4gPiArDQo+ID4gKyAgICAvKg0KPiA+ICsgICAgICogVEJELiBSZXRy
+aWV2ZSB0aGUgZXJyb3IgZGV0YWlscyBhbmQgZGVjaWRlIHdoYXQgYWN0aW9uDQo+ID4gKyAgICAg
+KiBuZWVkcyB0byBiZSB0YWtlbi4gT25lIG9mIHRoZSBhY3Rpb25zIGNvdWxkIGJlIHRvIHBhc3MN
+Cj4gPiArICAgICAqIHRoZSBlcnJvciB0byB0aGUgZ3Vlc3QgYW5kIGhhdmUgdGhlIGd1ZXN0IGRy
+aXZlciByZWNvdmVyDQo+ID4gKyAgICAgKiB0aGUgZXJyb3IuIFRoaXMgcmVxdWlyZXMgdGhhdCBQ
+Q0llIGNhcGFiaWxpdGllcyBiZQ0KPiA+ICsgICAgICogZXhwb3NlZCB0byB0aGUgZ3Vlc3QuIEF0
+IHByZXNlbnQsIHdlIGp1c3QgdGVybWluYXRlIHRoZQ0KPiA+ICsgICAgICogZ3Vlc3QgdG8gY29u
+dGFpbiB0aGUgZXJyb3IuDQo+ID4gKyAgICAgKi8NCj4gPiArICAgIGVycm9yX3JlcG9ydCgiJXMo
+JTA0eDolMDJ4OiUwMnguJXgpICINCj4gPiArICAgICAgICAiVW5yZWNvdmVyYWJsZSBlcnJvciBk
+ZXRlY3RlZC4uLiBUZXJtaW5hdGluZyBndWVzdFxuIiwNCj4gPiArICAgICAgICBfX2Z1bmNfXywg
+dmRldi0+aG9zdC5kb21haW4sIHZkZXYtPmhvc3QuYnVzLCB2ZGV2LT5ob3N0LnNsb3QsDQo+ID4g
+KyAgICAgICAgdmRldi0+aG9zdC5mdW5jdGlvbik7DQo+ID4gKw0KPiA+ICsgICAgcWVtdV9zeXN0
+ZW1fc2h1dGRvd25fcmVxdWVzdCgpOw0KPiA+ICsgICAgcmV0dXJuOw0KPiA+ICt9DQo+ID4gKw0K
+PiA+ICtzdGF0aWMgdm9pZCB2ZmlvX3JlZ2lzdGVyX2VycmZkKFZGSU9EZXZpY2UgKnZkZXYpDQo+
+ID4gK3sNCj4gPiArICAgIGludDMyX3QgcGZkOw0KPiA+ICsgICAgaW50IHJldDsNCj4gPiArDQo+
+ID4gKyAgICBpZiAoISh2ZGV2LT5kZXZfaW5mb19mbGFncyAmIFZGSU9fREVWSUNFX0ZMQUdTX0FF
+Ul9OT1RJRlkpKSB7DQo+ID4gKyAgICAgICAgZXJyb3JfcmVwb3J0KCJ2ZmlvOiBXYXJuaW5nOiBF
+cnJvciBub3RpZmljYXRpb24gbm90IHN1cHBvcnRlZA0KPiBmb3IgdGhlIGRldmljZVxuIik7DQo+
+ID4gKyAgICAgICAgcmV0dXJuOw0KPiA+ICsgICAgfQ0KPiA+ICsgICAgaWYgKGV2ZW50X25vdGlm
+aWVyX2luaXQoJnZkZXYtPmVycmZkLCAwKSkgew0KPiA+ICsgICAgICAgIGVycm9yX3JlcG9ydCgi
+dmZpbzogV2FybmluZzogVW5hYmxlIHRvIGluaXQgZXZlbnQgbm90aWZpZXIgZm9yDQo+IGVycm9y
+IGRldGVjdGlvblxuIik7DQo+ID4gKyAgICAgICAgcmV0dXJuOw0KPiA+ICsgICAgfQ0KPiA+ICsg
+ICAgcGZkID0gZXZlbnRfbm90aWZpZXJfZ2V0X2ZkKCZ2ZGV2LT5lcnJmZCk7DQo+ID4gKyAgICBx
+ZW11X3NldF9mZF9oYW5kbGVyKHBmZCwgdmZpb19lcnJmZF9oYW5kbGVyLCBOVUxMLCB2ZGV2KTsN
+Cj4gPiArDQo+ID4gKyAgICByZXQgPSBpb2N0bCh2ZGV2LT5mZCwgVkZJT19ERVZJQ0VfU0VUX0VS
+UkZELCBwZmQpOw0KPiA+ICsgICAgaWYgKHJldCkgew0KPiA+ICsgICAgICAgIGVycm9yX3JlcG9y
+dCgidmZpbzogV2FybmluZzogRmFpbGVkIHRvIHNldHVwIGVycm9yIGZkOiAlZFxuIiwNCj4gcmV0
+KTsNCj4gPiArICAgICAgICBxZW11X3NldF9mZF9oYW5kbGVyKHBmZCwgTlVMTCwgTlVMTCwgdmRl
+dik7DQo+ID4gKyAgICAgICAgZXZlbnRfbm90aWZpZXJfY2xlYW51cCgmdmRldi0+ZXJyZmQpOw0K
+PiA+ICsgICAgfQ0KPiA+ICsgICAgcmV0dXJuOw0KPiA+ICt9DQo+ID4gIHN0YXRpYyBpbnQgdmZp
+b19pbml0Zm4oUENJRGV2aWNlICpwZGV2KQ0KPiA+ICB7DQo+ID4gICAgICBWRklPRGV2aWNlICpw
+dmRldiwgKnZkZXYgPSBET19VUENBU1QoVkZJT0RldmljZSwgcGRldiwgcGRldik7DQo+ID4gQEAg
+LTIwMTAsNiArMjA2NCw4IEBAIHN0YXRpYyBpbnQgdmZpb19pbml0Zm4oUENJRGV2aWNlICpwZGV2
+KQ0KPiA+ICAgICAgICAgIH0NCj4gPiAgICAgIH0NCj4gPg0KPiA+ICsgICAgdmZpb19yZWdpc3Rl
+cl9lcnJmZCh2ZGV2KTsNCj4gPiArDQo+ID4gICAgICByZXR1cm4gMDsNCj4gPg0KPiA+ICBvdXRf
+dGVhcmRvd246DQo+ID4gZGlmZiAtLWdpdCBhL2xpbnV4LWhlYWRlcnMvbGludXgvdmZpby5oIGIv
+bGludXgtaGVhZGVycy9saW51eC92ZmlvLmgNCj4gPiBpbmRleCA0NzU4ZDFiLi4wY2E0ZWViIDEw
+MDY0NA0KPiA+IC0tLSBhL2xpbnV4LWhlYWRlcnMvbGludXgvdmZpby5oDQo+ID4gKysrIGIvbGlu
+dXgtaGVhZGVycy9saW51eC92ZmlvLmgNCj4gPiBAQCAtMTQ3LDYgKzE0Nyw3IEBAIHN0cnVjdCB2
+ZmlvX2RldmljZV9pbmZvIHsNCj4gPiAgICAgICAgIF9fdTMyICAgZmxhZ3M7DQo+ID4gICNkZWZp
+bmUgVkZJT19ERVZJQ0VfRkxBR1NfUkVTRVQgICAgICAgICgxIDw8IDApICAgICAgICAvKiBEZXZp
+Y2UNCj4gc3VwcG9ydHMgcmVzZXQgKi8NCj4gPiAgI2RlZmluZSBWRklPX0RFVklDRV9GTEFHU19Q
+Q0kgICgxIDw8IDEpICAgICAgICAvKiB2ZmlvLXBjaSBkZXZpY2UgKi8NCj4gPiArI2RlZmluZSBW
+RklPX0RFVklDRV9GTEFHU19BRVJfTk9USUZZICgxIDw8IDIpICAgLyogU3VwcG9ydHMgYWVyDQo+
+IG5vdGlmaWNhdGlvbiAqLw0KPiA+ICAgICAgICAgX191MzIgICBudW1fcmVnaW9uczsgICAgLyog
+TWF4IHJlZ2lvbiBpbmRleCArIDEgKi8NCj4gPiAgICAgICAgIF9fdTMyICAgbnVtX2lycXM7ICAg
+ICAgIC8qIE1heCBJUlEgaW5kZXggKyAxICovDQo+IA0KPiBUaGVzZSBhcmUgdmVyYmF0aW0gY29w
+aWVzIG9mIGtlcm5lbCBoZWFkZXJzIHNvIGl0J3MgT0sgaGVyZS4NCj4gDQo+ID4gIH07DQo+ID4g
+QEAgLTI4OCw2ICsyODksMTQgQEAgc3RydWN0IHZmaW9faXJxX3NldCB7DQo+ID4gICAqLw0KPiA+
+ICAjZGVmaW5lIFZGSU9fREVWSUNFX1JFU0VUICAgICAgICAgICAgICBfSU8oVkZJT19UWVBFLCBW
+RklPX0JBU0UgKyAxMSkNCj4gPg0KPiA+ICsvKioNCj4gPiArICogVkZJT19ERVZJQ0VfU0VUX0VS
+UkZEIC0gX0lPKFZGSU9fVFlQRSwgVkZJT19CQVNFICsgMTIpDQo+ID4gKyAqDQo+ID4gKyAqIFBh
+c3MgdGhlIGV2ZW50ZmQgdG8gdGhlIHZmaW8tcGNpIGRyaXZlciBmb3Igc2lnbmFsbGluZyBhbnkg
+ZGV2aWNlDQo+ID4gKyAqIGVycm9yIG5vdGlmaWNhdGlvbnMNCj4gPiArICovDQo+ID4gKyNkZWZp
+bmUgVkZJT19ERVZJQ0VfU0VUX0VSUkZEICAgICAgICAgICBfSU8oVkZJT19UWVBFLCBWRklPX0JB
+U0UgKyAxMikNCj4gPiArDQo+ID4gIC8qDQo+ID4gICAqIFRoZSBWRklPLVBDSSBidXMgZHJpdmVy
+IG1ha2VzIHVzZSBvZiB0aGUgZm9sbG93aW5nIGZpeGVkIHJlZ2lvbiBhbmQNCj4gPiAgICogSVJR
+IGluZGV4IG1hcHBpbmcuICBVbmltcGxlbWVudGVkIHJlZ2lvbnMgcmV0dXJuIGEgc2l6ZSBvZiB6
+ZXJvLg0KPiA+IC0tDQo+ID4gMS43LjExLjMNCj4gPg0KPiA+DQo=
