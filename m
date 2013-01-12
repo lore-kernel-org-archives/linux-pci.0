@@ -1,150 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:64936 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751735Ab3ALMhP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jan 2013 07:37:15 -0500
+Date: Sat, 12 Jan 2013 13:36:40 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130112123640.GA22505@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <50EF54B6.6010100@wwwdotorg.org>
+ <20130111034015.GA28094@avionic-0098.adnet.avionic-design.de>
+ <201301111536.14799.arnd@arndb.de>
+ <20130111154516.GA25335@avionic-0098.adnet.avionic-design.de>
 MIME-Version: 1.0
-In-Reply-To: <1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 18 Jan 2013 10:35:46 -0700
-Message-ID: <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe
- native hotplug
-To: Jiang Liu <liuj97@gmail.com>
-Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
+In-Reply-To: <20130111154516.GA25335@avionic-0098.adnet.avionic-design.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 18, 2013 at 9:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
-> If user specifies "pci=nopciehp" on kernel boot command line, OSPM
-> won't claim PCIe native hotplug service from firmware and no PCIe
-> port devices will be created for PCIe native hotplug service.
 
-Why do we need this option?
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-If I understand correctly, there are machines where it *looks* like we
-should use pciehp, but pciehp doesn't work because we don't get the
-interrupts we expect.  On those machines, we have to use acpiphp
-instead.  It seems like many Dell XPS laptops have this issue with
-ExpressCard slots, e.g.,
-https://bugzilla.kernel.org/show_bug.cgi?id=40802 .
+On Fri, Jan 11, 2013 at 04:45:16PM +0100, Thierry Reding wrote:
+> On Fri, Jan 11, 2013 at 03:36:14PM +0000, Arnd Bergmann wrote:
+> > On Friday 11 January 2013, Thierry Reding wrote:
+> > > Right, it'll need #ifdefs around the arch_{setup,teardown}_msi_irq().=
+ Or
+> > > select PCI_MSI unconditionally. Once this is merged I was going to po=
+st
+> > > a patch that enables PCI_MSI in tegra_defconfig anyway. But it might =
+be
+> > > better to keep it optional anyway since the remainder of the code cop=
+es
+> > > with it properly.
+> > >=20
+> > Actually, we need something better than that. You cannot define
+> > arch_setup_msi_irq in a tegra specific pci host driver, because that
+> > will seriously mess up other platforms in multiplatform configurations
+> > by giving a link error when they also define this function, or with a
+> > run-time error when they don't support it.
+> >=20
+> > I think what we should do here is fix it the right way by adding
+> > a pci host specific callback rather than an architecture specific
+> > callback in drivers/pci/msi.c. There is already a default version
+> > of arch_setup_msi_irqs (with s), and we can probably do the
+> > same for arch_setup_msi_irq (without s) to fall back to the
+> > arch version for most architectures.
+> > Most architectures (at least powerpc, sparc, ia64 and x86) already
+> > multiplex the msi handlers internally, but ARM does not because
+> > there is only one implementation (iop33x) at the moment.
+> >=20
+> > We can add a generix multiplex and then move architectures over to
+> > use it.
+>=20
+> I already hinted at that in one of the other subthreads. Having such a
+> multiplex would also allow the driver to be built as a module. I had
+> already thought about this when I was working on an earlier version of
+> these patches. Basically these would be two ops attached to the host
+> bridge, and the generic arch_setup_msi_irq() could then look that up
+> given the struct pci_dev that is passed to it and call this new per-
+> host bridge .setup_msi_irq().
 
-If you want "pci=nopciehp" as a way for users to deal with this
-problem by forcing the use of acpiphp, I object.  Windows manages to
-make these slots work without having users do anything special, so we
-should be able to do it, too.
+struct pci_ops looks like a good place to put these. They'll be
+available from each struct pci_bus, so should be easy to call from
+arch_setup_msi_irq().
 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> ---
->  Documentation/kernel-parameters.txt |    2 ++
->  drivers/acpi/pci_root.c             |    3 ++-
->  drivers/pci/pci.c                   |    2 ++
->  drivers/pci/pcie/portdrv_core.c     |    5 +++--
->  drivers/pci/pcie/portdrv_pci.c      |    3 +++
->  include/linux/pci.h                 |    9 +++++++++
->  6 files changed, 21 insertions(+), 3 deletions(-)
->
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 9776f06..28dd0ad 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2106,6 +2106,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->                 noaer           [PCIE] If the PCIEAER kernel config parameter is
->                                 enabled, this kernel boot option can be used to
->                                 disable the use of PCIE advanced error reporting.
-> +               nopciehp        [PCIE] this kernel boot option can be used to
-> +                               disable PCIe native hotplug.
->                 nodomains       [PCI] Disable support for multiple PCI
->                                 root domains (aka PCI segments, in ACPI-speak).
->                 nommconf        [X86] Disable use of MMCONFIG for PCI
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index c6200ff..c37eedb 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -551,8 +551,9 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
->         if (!pcie_ports_disabled
->             && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
->                 flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
-> -                       | OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
->                         | OSC_PCI_EXPRESS_PME_CONTROL;
-> +               if (!pcie_native_hotplug_disabled)
-> +                       flags |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
->
->                 if (pci_aer_available()) {
->                         if (aer_acpi_firmware_first())
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2f8f4c6..34b2c83 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3869,6 +3869,8 @@ static int __init pci_setup(char *str)
->                                 pci_no_msi();
->                         } else if (!strcmp(str, "noaer")) {
->                                 pci_no_aer();
-> +                       } else if (!strcmp(str, "nopciehp")) {
-> +                               pcie_no_native_hotplug();
->                         } else if (!strncmp(str, "realloc=", 8)) {
->                                 pci_realloc_get_opt(str + 8);
->                         } else if (!strncmp(str, "realloc", 7)) {
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index ed129b4..e7e1679 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -263,8 +263,9 @@ static int get_port_device_capability(struct pci_dev *dev)
->
->         err = pcie_port_platform_notify(dev, &cap_mask);
->         if (!pcie_ports_auto) {
-> -               cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
-> -                               | PCIE_PORT_SERVICE_VC;
-> +               cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_VC;
-> +               if (!pcie_native_hotplug_disabled)
-> +                       cap_mask |= PCIE_PORT_SERVICE_HP;
->                 if (pci_aer_available())
->                         cap_mask |= PCIE_PORT_SERVICE_AER;
->         } else if (err) {
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 0761d90..018cee0 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -40,6 +40,9 @@ bool pcie_ports_disabled;
->   */
->  bool pcie_ports_auto = true;
->
-> +/* If set, the PCIe native hotplug will not be used. */
-> +bool pcie_native_hotplug_disabled;
-> +
->  static int __init pcie_port_setup(char *str)
->  {
->         if (!strncmp(str, "compat", 6)) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 12e5447..715e17b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1138,9 +1138,18 @@ extern int pci_msi_enabled(void);
->  #ifdef CONFIG_PCIEPORTBUS
->  extern bool pcie_ports_disabled;
->  extern bool pcie_ports_auto;
-> +extern bool pcie_native_hotplug_disabled;
-> +
-> +static inline void pcie_no_native_hotplug(void)
-> +{
-> +       pcie_native_hotplug_disabled = true;
-> +}
->  #else
->  #define pcie_ports_disabled    true
->  #define pcie_ports_auto                false
-> +#define pcie_native_hotplug_disabled   true
-> +
-> +static inline void pcie_no_native_hotplug(void) { }
->  #endif
->
->  #ifndef CONFIG_PCIEASPM
-> --
-> 1.7.9.5
->
+Any objections?
+
+Thierry
+
+--EVF5PPMfhYS0aIcm
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ8VjXAAoJEN0jrNd/PrOhFWsQAIIvLUhTrpqlNwFmzOoZiyRc
+pZzCDmOrad/vwXbThJuzn9752yAoN3YAE9tnGGlnCrc4YcptmrHZYfItYMUYZPe5
+lcLaj9M5v6lOpLZMBlUiRcKftPK/5DK3xd+wZsFUVKSewY+Pu1Jbd58AIpmPSZpA
+yOaIbme9ugbDO+TsJDQ70TLHX3wAmC+gyoSwT5JW21K4I0Ch7Ga7DpPl8XzpgGv5
+N7lNCT7fe+qkvmg8/5ONL34FPYP/qgE7mX+uxSrd2aop0PNDU9YDNmeZ4TmgLX5s
+aqFLMEivpJ/ALNbKlDqvCb2DesXKnT3fZpLFuZG4P6I881hxkU1a14ddB52zc3jH
+CJ/BLkX2r8lYUR7Z0H3FoR8/q1J/zbmEfVTobF5aC0XGUZnibs4j9YlZRUmgj7jw
+ZAHpba8/1uUt3VicgQawNF5xG2ct2qGKDj3XONHWwlpZzfvCcCVav73Uqbko8rVg
+7wkIxdEgNKeP9O9f1Z1uH6Ypg3dxWKnN4A3uq5GRUT8sORWBYytbopdO096AuCXA
+wmAYwHPLjCExTYI2M1jQuA+9WEuMJa2dF+/ofTqqUakhMERHVyjNvJNxYeC43+Jv
+8ezg3JzlLohRQ9gQJRQKQfbL0KJbEfFvzGb/9CAc9zTJPvWKmlqn5ruCouAQFyyl
+dxpC/IfYKv7nMfybBxN5
+=9Fax
+-----END PGP SIGNATURE-----
+
+--EVF5PPMfhYS0aIcm--
