@@ -1,51 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f53.google.com ([209.85.214.53]:53558 "EHLO
-	mail-bk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754360Ab3AKVJp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 16:09:45 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 21/22] PCI: add match_driver in struct pci_dev
+Date: Sun, 13 Jan 2013 00:49:10 +0100
+Message-ID: <29539918.9ng60fkCeb@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-22-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-22-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <50F070D8.2080109@zytor.com>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<201301111333.49238.trenn@suse.de>
-	<CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
-	<1603289.LXteBtkifD@hammer82.arch.suse.de>
-	<CAE9FiQU6RWH6cBKc9th3Eb2gCjcHfotbC1sYspQ7dU+cG=VMFA@mail.gmail.com>
-	<50F070D8.2080109@zytor.com>
-Date: Fri, 11 Jan 2013 13:09:43 -0800
-Message-ID: <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in
- memmap=exactmap case
-From: Yinghai Lu <yinghai@kernel.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Thomas Renninger <trenn@suse.de>,
-	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 11, 2013 at 12:06 PM, H. Peter Anvin <hpa@zytor.com> wrote:
-> On 01/11/2013 11:59 AM, Yinghai Lu wrote:
->> On Fri, Jan 11, 2013 at 10:24 AM, Thomas Renninger <trenn@suse.de> wrote:
->>>> We may need to keep exactmap intact.
->>> Why?
->>> Kexec/kdump should have been the only user?
->>> If older/current kexec calls still add ACPI maps via memmap=X#Y,
->>> they should already exist in the original e820 map and fall off or
->>> get glued to one region if (wrongly) overlapping via sanitize_map.
->>
->> No, kexec/kdump is not the only user for memmap=exactmap.
->>
->
-> Who is using it then, since you seem to know?
+On Friday, January 11, 2013 02:40:48 PM Yinghai Lu wrote:
+> with that we could move out attaching driver for pci device,
+> out of device_add for pci hot add path.
+> 
+> pci_bus_attach_device() will attach driver to pci device.
 
-http://forums.gentoo.org/viewtopic-t-487476-highlight-proliant.html
+Clever, but I wonder why exactly we need to do that?
 
-http://forums.fedoraforum.org/archive/index.php/t-225347.html
+Rafael
+
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/bus.c        |   10 ++++++++++
+>  drivers/pci/pci-driver.c |    6 +++++-
+>  include/linux/pci.h      |    1 +
+>  3 files changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 5f9c728..1f5916a 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -160,6 +160,15 @@ pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>  
+>  void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+>  
+> +static void pci_bus_attach_device(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +
+> +	dev->match_driver = true;
+> +	ret = device_attach(&dev->dev);
+> +	WARN_ON(ret < 0);
+> +}
+> +
+>  /**
+>   * pci_bus_add_device - add a single device
+>   * @dev: device to add
+> @@ -181,6 +190,7 @@ int pci_bus_add_device(struct pci_dev *dev)
+>  	if (retval)
+>  		return retval;
+>  
+> +	pci_bus_attach_device(dev);
+>  	dev->is_added = 1;
+>  	pci_proc_attach_device(dev);
+>  	pci_create_sysfs_dev_files(dev);
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f79cbcd..acdcc3c 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1186,9 +1186,13 @@ pci_dev_driver(const struct pci_dev *dev)
+>  static int pci_bus_match(struct device *dev, struct device_driver *drv)
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> -	struct pci_driver *pci_drv = to_pci_driver(drv);
+> +	struct pci_driver *pci_drv;
+>  	const struct pci_device_id *found_id;
+>  
+> +	if (!pci_dev->match_driver)
+> +		return 0;
+> +
+> +	pci_drv = to_pci_driver(drv);
+>  	found_id = pci_match_device(pci_drv, pci_dev);
+>  	if (found_id)
+>  		return 1;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 907b455..d73af08 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -286,6 +286,7 @@ struct pci_dev {
+>  	unsigned int	irq;
+>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+>  
+> +	bool match_driver;
+>  	/* These fields are used by common fixups */
+>  	unsigned int	transparent:1;	/* Transparent PCI bridge */
+>  	unsigned int	multifunction:1;/* Part of multi-function device */
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
