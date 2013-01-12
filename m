@@ -1,51 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:58458 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754174Ab3A1MqT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 07:46:19 -0500
-Message-ID: <1359377173.1345.25.camel@x61.thuisdomein>
-Subject: pciehp: errors on resume
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Oliver Neukum <oneukum@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Date: Mon, 28 Jan 2013 13:46:13 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from hydra.sisk.pl ([212.160.235.94]:39065 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753960Ab3ALVaH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 12 Jan 2013 16:30:07 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 01/22] PCI, acpiphp: Add is_hotplug_bridge detection
+Date: Sat, 12 Jan 2013 22:35:55 +0100
+Message-ID: <15994211.6fY1r0IKoV@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-2-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-2-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-0) Since release v3.7 a laptop I use prints these errors at every
-resume:
-    pciehp 0000:00:1c.1:pcie04: Device 0000:03:00.0 already exists at 0000:03:00, cannot hot-add
-    pciehp 0000:00:1c.1:pcie04: Cannot add device at 0000:03:00
+On Friday, January 11, 2013 02:40:28 PM Yinghai Lu wrote:
+> When system support hotplug bridge with children hotplug slots, we need
+> to make sure that parent bridge get preallocated resource so later when
+> device is plugged into children slot, those children devices will get
+> resource allocated.
+> 
+> We do not meet this problem, because for pcie hotplug card, when acpiphp
+> is used, pci_scan_bridge will set that for us when detect hotplug bit in
+> slot cap.
+> 
+> Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Acked-by: Jason Baron <jbaron@redhat.com>
 
-That must have been caused by commit
-87683e22c646e563061a91f4a0106e6913acebf8 ("PCI: pciehp: Always implement
-resume, regardless of pciehp_force param").
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-1) Those messages appear to be printed for the wireless card that is
-apparently attached to one of this laptop's two pcie ports:
-    lspci | grep -e 00:1c.1 -e 03:00.0
-    00:1c.1 PCI bridge: Intel Corporation 82801H (ICH8 Family) PCI Express Port 2 (rev 03)
-    03:00.0 Network controller: Intel Corporation PRO/Wireless 4965 AG or AGN [Kedron] Network Connection (rev 61)
-
-    lspci -vt | grep -e 1c.1 -e 03
-           +-1c.1-[03]----00.0  Intel Corporation PRO/Wireless 4965 AG or AGN [Kedron] Network Connection
-
-2) There are no apparent issues with this wireless card on all those
-resumes. So could these errors somehow be suppressed? 
-
-3) For what it's worth, the callchain that triggers these errors seems
-to be:
-    pciehp_resume()
-        pciehp_enable_slot()
-            board_added()
-                pciehp_configure_device()
-                    pci_get_slot()
-                    ctrl_err([...] "Device %s already exists " [...])
-                ctrl_err([...] "Cannot add device at [...]")
-
-
-Paul Bolle
-
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
+>  1 file changed, 26 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 91b5ad8..1e5c5df 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -797,6 +797,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+>  	}
+>  }
+>  
+> +static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
+> +{
+> +	struct acpiphp_func *func;
+> +
+> +	if (!dev->subordinate)
+> +		return;
+> +
+> +	/* quirk, or pcie could set it already */
+> +	if (dev->is_hotplug_bridge)
+> +		return;
+> +
+> +	if (PCI_SLOT(dev->devfn) != slot->device)
+> +		return;
+> +
+> +	list_for_each_entry(func, &slot->funcs, sibling) {
+> +		if (PCI_FUNC(dev->devfn) == func->function) {
+> +			/* check if this bridge has ejectable slots */
+> +			if ((detect_ejectable_slots(func->handle) > 0))
+> +				dev->is_hotplug_bridge = 1;
+> +			break;
+> +		}
+> +	}
+> +}
+>  /**
+>   * enable_device - enable, configure a slot
+>   * @slot: slot to be enabled
+> @@ -831,8 +854,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+>  			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+>  			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+>  				max = pci_scan_bridge(bus, dev, max, pass);
+> -				if (pass && dev->subordinate)
+> +				if (pass && dev->subordinate) {
+> +					check_hotplug_bridge(slot, dev);
+>  					pci_bus_size_bridges(dev->subordinate);
+> +				}
+>  			}
+>  		}
+>  	}
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
