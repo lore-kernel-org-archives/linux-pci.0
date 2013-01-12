@@ -1,102 +1,266 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Jan 2013 22:14:41 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130114095706.GA23467@arm.com>
- <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
- <201301151244.12767.arnd@arndb.de>
- <20130115154038.GA11241@arm.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 22/22] PCI: move device_add out of pci_bus_add_device()
+Date: Sun, 13 Jan 2013 00:54:16 +0100
+Message-ID: <1620774.KjdX6JUoJy@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-23-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-23-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
-In-Reply-To: <20130115154038.GA11241@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Friday, January 11, 2013 02:40:49 PM Yinghai Lu wrote:
+> Move out device registering out of pci_bus_add_devices, so we could
+> put new created pci devices in device tree early.
+> 
+> new pci_bus_add_devices will do the device_attach work to load pci drivers
+> instead.
 
---sdtB3X0nJg68CQEu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I wonder what problem it solves?
 
-On Tue, Jan 15, 2013 at 03:40:38PM +0000, Andrew Murray wrote:
-> On Tue, Jan 15, 2013 at 12:44:12PM +0000, Arnd Bergmann wrote:
-> > On Tuesday 15 January 2013, Thierry Reding wrote:
-> > > I'm not sure I follow you're reasoning here. Is it possible to use MS=
-Is
-> > > without PCI? If not then I think there's little sense in keeping the
-> > > implementations separate.
-> >=20
-> > Conceptually, you can use MSI for any device, but the Linux interfaces
-> > for MSI are tied to PCI. If you use an MSI controller for a non-PCI
-> > device, it would probably just appear as a regular interrupt controller.
-> >=20
-> > > Furthermore, if MSI controller and PCI host bridge are separate entit=
-ies
-> > > how do you look up the MSI controller given a PCI device?
-> >=20
-> > The host bridge can contain a pointer ot the MSI controller. You can
-> > have multiple host bridges sharing a single MSI controller or you
-> > can have separate ones for each host.
->=20
-> Yes and I hoped this relationship would be described by a device tree pha=
-ndle
-> as is done for relating devices to their interrupt-parent (where device t=
-rees
-> are used). This would provide (arguably unnecessarily) greater flexibilit=
-y,
-> e.g. if you have two PCI/MSI controller pairs, the MSIs only offer limite=
-d MSIs
-> and you only use one PCI fabric - you could service different parts of the
-> fabric by different MSI controllers (assuming you relate MSI controllers =
-to
-> part of the fabric and that you'd want to). Perhaps there would be benefi=
-ts for
-> virtualisation as well?
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/bus.c   |   47 +++--------------------------------------------
+>  drivers/pci/iov.c   |    7 -------
+>  drivers/pci/probe.c |   34 +++++++++++++++++++++++++++-------
+>  3 files changed, 30 insertions(+), 58 deletions(-)
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 1f5916a..0a55845 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -178,22 +178,9 @@ static void pci_bus_attach_device(struct pci_dev *dev)
+>   */
+>  int pci_bus_add_device(struct pci_dev *dev)
+>  {
+> -	int retval;
+> -
+> -	pci_fixup_device(pci_fixup_final, dev);
+> -
+> -	retval = pcibios_add_device(dev);
+> -	if (retval)
+> -		return retval;
+> -
+> -	retval = device_add(&dev->dev);
+> -	if (retval)
+> -		return retval;
+> -
+>  	pci_bus_attach_device(dev);
+>  	dev->is_added = 1;
+> -	pci_proc_attach_device(dev);
+> -	pci_create_sysfs_dev_files(dev);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -205,21 +192,9 @@ int pci_bus_add_device(struct pci_dev *dev)
+>   */
+>  int pci_bus_add_child(struct pci_bus *bus)
+>  {
+> -	int retval;
+> -
+> -	if (bus->bridge)
+> -		bus->dev.parent = bus->bridge;
+> -
+> -	retval = device_add(&bus->dev);
+> -	if (retval)
+> -		return retval;
+> -
+>  	bus->is_added = 1;
+>  
+> -	/* Create legacy_io and legacy_mem files for this bus */
+> -	pci_create_legacy_files(bus);
+> -
+> -	return retval;
+> +	return 0;
+>  }
+>  
+>  /**
+> @@ -245,36 +220,20 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>  		if (dev->is_added)
+>  			continue;
+>  		retval = pci_bus_add_device(dev);
+> -		if (retval)
+> -			dev_err(&dev->dev, "Error adding device, continuing\n");
+>  	}
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		BUG_ON(!dev->is_added);
+>  
+>  		child = dev->subordinate;
+> -		/*
+> -		 * If there is an unattached subordinate bus, attach
+> -		 * it and then scan for unattached PCI devices.
+> -		 */
+> +
+>  		if (!child)
+>  			continue;
+> -		if (list_empty(&child->node)) {
+> -			down_write(&pci_bus_sem);
+> -			list_add_tail(&child->node, &dev->bus->children);
+> -			up_write(&pci_bus_sem);
+> -		}
+>  		pci_bus_add_devices(child);
+>  
+> -		/*
+> -		 * register the bus with sysfs as the parent is now
+> -		 * properly registered.
+> -		 */
+>  		if (child->is_added)
+>  			continue;
+>  		retval = pci_bus_add_child(child);
+> -		if (retval)
+> -			dev_err(&dev->dev, "Error adding bus, continuing\n");
+>  	}
+>  }
+>  
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index bafd2bb..dbad72e 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -48,12 +48,7 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
+>  		return NULL;
+>  
+>  	pci_bus_insert_busn_res(child, busnr, busnr);
+> -	child->dev.parent = bus->bridge;
+>  	rc = pci_bus_add_child(child);
+> -	if (rc) {
+> -		pci_remove_bus(child);
+> -		return NULL;
+> -	}
+>  
+>  	return child;
+>  }
+> @@ -123,8 +118,6 @@ static int virtfn_add(struct pci_dev *dev, int id, int reset)
+>  	virtfn->is_virtfn = 1;
+>  
+>  	rc = pci_bus_add_device(virtfn);
+> -	if (rc)
+> -		goto failed1;
+>  	sprintf(buf, "virtfn%u", id);
+>  	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>  	if (rc)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index dc4fde3..84c92a0 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -623,6 +623,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  {
+>  	struct pci_bus *child;
+>  	int i;
+> +	int ret;
+>  
+>  	/*
+>  	 * Allocate a new bus, and inherit stuff from the parent..
+> @@ -637,8 +638,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	child->bus_flags = parent->bus_flags;
+>  
+>  	/* initialize some portions of the bus device, but don't register it
+> -	 * now as the parent is not properly set up yet.  This device will get
+> -	 * registered later in pci_bus_add_devices()
+> +	 * now as the parent is not properly set up yet.
+>  	 */
+>  	child->dev.class = &pcibus_class;
+>  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+> @@ -652,11 +652,14 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	child->primary = parent->busn_res.start;
+>  	child->busn_res.end = 0xff;
+>  
+> -	if (!bridge)
+> -		return child;
+> +	if (!bridge) {
+> +		child->dev.parent = parent->bridge;
+> +		goto add_dev;
+> +	}
+>  
+>  	child->self = bridge;
+>  	child->bridge = get_device(&bridge->dev);
+> +	child->dev.parent = child->bridge;
+>  	pci_set_bus_of_node(child);
+>  	pci_set_bus_speed(child);
+>  
+> @@ -667,6 +670,13 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>  	}
+>  	bridge->subordinate = child;
+>  
+> +add_dev:
+> +	ret = device_add(&child->dev);
+> +	WARN_ON(ret < 0);
+> +
+> +	/* Create legacy_io and legacy_mem files for this bus */
+> +	pci_create_legacy_files(child);
+> +
+>  	return child;
+>  }
+>  
+> @@ -1297,6 +1307,8 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>  
+>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+> +	int ret;
+> +
+>  	device_initialize(&dev->dev);
+>  	dev->dev.release = pci_release_dev;
+>  
+> @@ -1327,6 +1339,16 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  	down_write(&pci_bus_sem);
+>  	list_add_tail(&dev->bus_list, &bus->devices);
+>  	up_write(&pci_bus_sem);
+> +
+> +	pci_fixup_device(pci_fixup_final, dev);
+> +        ret = pcibios_add_device(dev);
 
-Is there actually hardware that supports this? I assumed that the MSI
-controller would have to be tightly coupled to the PCI host bridge in
-order to raise an interrupt when an MSI is received via PCI.
+Broken whitespace?
 
-Thierry
+> +	WARN_ON(ret < 0);
+> +	/* notifier could use pci capabilities */
+> +	ret = device_add(&dev->dev);
+> +	WARN_ON(ret < 0);
 
---sdtB3X0nJg68CQEu
-Content-Type: application/pgp-signature
+These WARN_ON() things make me kind of nervous.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
+> +
+> +	pci_proc_attach_device(dev);
+> +	pci_create_sysfs_dev_files(dev);
+>  }
+>  
+>  struct pci_dev *__ref pci_scan_single_device(struct pci_bus *bus, int devfn)
+> @@ -1645,13 +1667,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	char bus_addr[64];
+>  	char *fmt;
+>  
+> -
+>  	b = pci_alloc_bus();
+>  	if (!b)
+>  		return NULL;
+>  
+>  	b->sysdata = sysdata;
+>  	b->ops = ops;
+> +	b->number = b->busn_res.start = bus;
+>  	b2 = pci_find_bus(pci_domain_nr(b), bus);
+>  	if (b2) {
+>  		/* If we already got to this bus through a different bridge, ignore it */
+> @@ -1687,8 +1709,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>  	/* Create legacy_io and legacy_mem files for this bus */
+>  	pci_create_legacy_files(b);
+>  
+> -	b->number = b->busn_res.start = bus;
+> -
+>  	if (parent)
+>  		dev_info(parent, "PCI host bridge to bus %s\n", dev_name(&b->dev));
+>  	else
+> 
 
-iQIcBAEBAgAGBQJQ9cbBAAoJEN0jrNd/PrOhtl4P/jFRPjJMBYsIefiaxa04+iqT
-3x9QHWpfSoQabBZedImODOBW//x/WY95wzU1svRNSn9KRP57HNoI1dSetfx7dsxv
-UWJ5lklcJjfBCgj7m2WyG9V9Oh1YrZYJ006pie/Qi5i4YsVuLwAbXc5HyhwHHBzZ
-/Xm3QRPqAyXHY/mWLdqRDMMC0EntcfK6VxiM7vGyhYlFDu/0Vok7leXUXu1KB4/c
-yDVHB7miuzYAqX4BhrCk2Qvyt2vB7+EU40ZNOahWOJA0IYY9PcAHN36/WB6JKxFu
-6my0R/Hl9XqsLim6e8nEbE6oglNnDgSITjKD+GHrQ7Jk+crhUyLBWbJpRpDVCI3Z
-TqKhJgaHB5nOal4aCy3rCWx9Bzg6IT+LN3xGjLtzx3OxwCbDAdDjTO9knF4FEu3h
-QlRMcx0Nm/vKmXE8GSeDBvjbDIoz6fAILZoIhDYG7cAcjeshDuUYLa9ZKJDxrsZU
-VlVI51jMty+wLcAY9yVL3TYo/pPH96Iw4xNPC7gGSFe/QELh7coynxeEOjGxcC1C
-BuuJrVP3iN1ozDsdU4N5sBqJMnn2yiuIHxznScPifa/9TK44OcmDffKUFOOYOXTV
-raEZJjmFfCQqQf7FWdQcgK7KEYLB+5rAPhJxw+kdA5D5y8t6IFBTPn1faIf9e2XE
-SQaQ+rKu8bPN9+wyPtr3
-=JrIc
------END PGP SIGNATURE-----
+Thanks,
+Rafael
 
---sdtB3X0nJg68CQEu--
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
