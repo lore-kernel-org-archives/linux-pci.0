@@ -1,109 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f181.google.com ([209.85.220.181]:62225 "EHLO
-	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753775Ab3AYE6R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2013 23:58:17 -0500
-Received: by mail-vc0-f181.google.com with SMTP id d16so6976262vcd.12
-        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2013 20:58:17 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:39187 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754448Ab3ALXcK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 12 Jan 2013 18:32:10 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Tang Chen <tangchen@cn.fujitsu.com>
+Subject: Re: [PATCH v8 12/22] PCI, ACPI: debug print for installation of acpi root bridge's notifier
+Date: Sun, 13 Jan 2013 00:37:57 +0100
+Message-ID: <2183351.x1cn8B59bl@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-13-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-13-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1358996288-31200-1-git-send-email-wangyijing@huawei.com>
-References: <1358996288-31200-1-git-send-email-wangyijing@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 24 Jan 2013 21:57:55 -0700
-Message-ID: <CAErSpo6suRwkRoShnNUKxxHt4D4gFnMVqesoZO3t-aC8tvOwnA@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: Document PCIE BUS MPS parameters
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Rob Landley <rob@landley.net>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Andrew Murray <andrew.murray@arm.com>,
-	Joe Lawrence <Joe.Lawrence@stratus.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
-	Jon Mason <jdmason@kudzu.us>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jon, can you make sure this documentation is accurate?]
-
-On Wed, Jan 23, 2013 at 7:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> v0->v1: Update MPS parameters as non-arch and add MRRS
->                 description into pcie_bus_perf parameter suggested
->                 by Andrew Murray.
-> v1->v2: Update some semantic problems and add MPS and MRRS
->                 explanation suggested by Joe Lawrence and Randy Dunlap.
->
-> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
-> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
-> These parameters were introduced by Jon Mason <mason@myri.com> at
-> commit 5f39e6705 and commit b03e7495a8.
->
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+On Friday, January 11, 2013 02:40:39 PM Yinghai Lu wrote:
+> From: Tang Chen <tangchen@cn.fujitsu.com>
+> 
+> acpi_install_notify_handler() could fail. So check the exit status
+> and give a better debug info.
+> 
+> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  Documentation/kernel-parameters.txt |   16 ++++++++++++++++
->  1 files changed, 16 insertions(+), 0 deletions(-)
->
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 363e348..0bb279f 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2227,6 +2227,22 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->                                 This sorting is done to get a device
->                                 order compatible with older (<= 2.4) kernels.
->                 nobfsort        Don't sort PCI devices into breadth-first order.
-> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
-> +                               turning and using the BIOS-configured MPS defaults.
+>  drivers/acpi/pci_root.c |   12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d30fb94..862abcc 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -943,6 +943,7 @@ static bool acpi_is_root_bridge_object(acpi_handle handle)
+>  static acpi_status __init
+>  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>  {
+> +	acpi_status status;
+>  	char objname[64];
+>  	struct acpi_buffer buffer = { .length = sizeof(objname),
+>  				      .pointer = objname };
+> @@ -955,9 +956,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>  
+>  	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+>  
+> -	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+> -				handle_hotplug_event_root, NULL);
+> -	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
+> +	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+> +					handle_hotplug_event_root, NULL);
+> +	if (ACPI_FAILURE(status))
+> +		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
+> +				  objname, (unsigned int)status);
 
-s/turning/tuning/
-s/using/use/
+If we print a message on failure, I don't think we need one on success.
 
-> +               pcie_bus_safe   Use the smallest common denominator MPS
-> +                               of the entire tree below a root complex for every
-> +                               device on that fabric. Can avoid inconsistent MPS
-> +                               problem caused by hotplug.
+Besides, please use pr_debug().
 
-I'm not sure about this.  "smallest common denominator" is colloquial
-and not exact.  I think you probably mean "the smallest supported MPS
-of any device below a root complex."
+> +	else
+> +		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
+> +				 objname);
+>  
+>  	add_acpi_root_bridge(handle);
 
-I'm also not sure how this will avoid MPS problems caused by hotplug.
-I think you have to assume that a hot-added device may support only a
-128B MPS, which means the only way to guarantee that you can use that
-device is to set MPS=128 for any device that will send packets to the
-hot-added device.  Or we could reconfigure things at the time of the
-hot-add, but I don't think we do that today (except for the hot-added
-device itself).
+And I wonder what sens does this make to call add_acpi_root_bridge() here if we
+haven't installed the notify handler for handle?
 
-> +               pcie_bus_perf   Configure pcie device MPS to the largest
+Rafael
 
-Capitalize "PCIe" consistently.  Better yet, drop it completely since
-it's obvious that we're only talking about PCIe here.
 
-> +                               allowable MPS based on its parent bus. Also set
-> +                               MRRS (Max Read Request Size) to the largest supported
-> +                               value (no larger than the MPS that the device or bus
-> +                               can support) for Max performance.
-
-s/Max/best/
-
-> +               pcie_bus_peer2peer      Make the system-wide MPS the smallest
-> +                               possible value (128B). This configuration could prevent
-> +                               peer to peer DMA transmission from working by having
-> +                               the MPS on one root port different than the MPS on
-> +                               another.
-
-I think the idea is that pcie_bus_peer2peer would *allow* peer-to-peer
-DMA to work, which is the opposite of what you wrote.  Maybe something
-like this would be better:
-
-  Set every device's MPS to 128B, which every device is guaranteed to support.
-  This configuration allows peer-to-peer DMA between any pair of devices,
-  possibly at the cost of reduced performance.
-
->                 cbiosize=nn[KMG]        The fixed amount of bus space which is
->                                 reserved for the CardBus bridge's IO window.
->                                 The default value is 256 bytes.
-> --
-> 1.7.1
->
->
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
