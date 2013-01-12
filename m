@@ -1,67 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:65404 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029Ab3ACAfE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jan 2013 19:35:04 -0500
-Received: by mail-la0-f49.google.com with SMTP id fk20so7082457lab.36
-        for <linux-pci@vger.kernel.org>; Wed, 02 Jan 2013 16:35:02 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 15/22] ACPI, PCI: Simplify handle_root_bridge_removal()
+Date: Sun, 13 Jan 2013 00:42 +0100
+Message-ID: <6707251.OhcUoqp1Bb@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-16-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-16-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1357171594.25181.19.camel@joe-AO722>
-References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
- <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net> <1357171594.25181.19.camel@joe-AO722>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 2 Jan 2013 18:34:41 -0600
-Message-ID: <CAErSpo51SUYBOj89RM7SSBPEEGW6dddjWUX53u0srZS_eqkbSA@mail.gmail.com>
-Subject: Re: [PATCH] checkpatch: prefer dev_<level>( to dev_printk(KERN_<LEVEL>
-To: Joe Perches <joe@perches.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Andy Whitcroft <apw@canonical.com>,
-	Lance Ortiz <lance.ortiz@hp.com>, lance_ortiz@hotmail.com,
-	jiang.liu@huawei.com, tony.luck@intel.com, bp@alien8.de,
-	rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 2, 2013 at 6:06 PM, Joe Perches <joe@perches.com> wrote:
-> Add YA check to printk style.
->
-> dev_<level> uses are functions and generate smaller
-> object code than dev_printk(KERN_<LEVEL>.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+On Friday, January 11, 2013 02:40:42 PM Yinghai Lu wrote:
+> Tang Chen found handle_root_bridge_removal is very similiar to
+> acpi_bus_hot_remove_device().
+> Only difference is that it call trim two times.
+> 
+> Change to handle_root_bridge_removal to call trim one time and then
+> use acpi_bus_hot_remove_device.
+
+Please fold these changes into your previous patches instead of adding a new
+one to modify them.
+
+Thanks,
+Rafael
+
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  scripts/checkpatch.pl | 10 ++++++++++
->  1 file changed, 10 insertions(+)
->
-> diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-> index 4d2c7df..f50b32d 100755
-> --- a/scripts/checkpatch.pl
-> +++ b/scripts/checkpatch.pl
-> @@ -2430,6 +2430,16 @@ sub process {
->                              "Prefer pr_warn(... to pr_warning(...\n" . $herecurr);
->                 }
->
-> +               if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
-> +                       my $orig = $1;
-> +                       my $level = lc($orig);
-> +                       $level = "warn" if ($level eq "warning");
-> +                       my $level2 = $level;
-> +                       $level2 = "dbg" if ($level eq "debug");
-> +                       WARN("PREFER_DEV_LEVEL",
-> +                            "Prefer dev_$level2(... to dev_printk(KERN_$orig, ...\n" . $herecurr);
-
-This suggests dev_dbg() instead of dev_printk(KERN_DEBUG), doesn't it?
- Those aren't equivalent (dev_printk() always does the printk, but in
-many cases dev_dbg() does not, depending on CONFIG_DEBUG,
-CONFIG_DYNAMIC_DEBUG, etc.)
-
-> +               }
+>  drivers/acpi/pci_root.c |   49 ++++++++---------------------------------------
+>  1 file changed, 8 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 697ec65..8a0e2e2 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -745,56 +745,23 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+>  		printk(KERN_ERR "cannot add bridge to acpi list\n");
+>  }
+>  
+> -static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
+> -{
+> -	acpi_status status;
+> -	struct acpi_object_list arg_list;
+> -	union acpi_object arg;
+> -
+> -	arg_list.count = 1;
+> -	arg_list.pointer = &arg;
+> -	arg.type = ACPI_TYPE_INTEGER;
+> -	arg.integer.value = val;
+> -
+> -	status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
+> -	if (ACPI_FAILURE(status)) {
+> -		pr_warn("%s: %s to %d failed\n",
+> -				 __func__, cmd, val);
+> -		return -1;
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  static void handle_root_bridge_removal(struct acpi_device *device)
+>  {
+>  	int ret_val;
+> -	u32 flags = 0;
+> -	acpi_handle dummy_handle;
+> -	acpi_handle handle = device->handle;
+> +	struct acpi_eject_event *ej_event;
 > +
->  # function brace can't be on same line, except for #defines of do while,
->  # or if closed on same line
->                 if (($line=~/$Type\s*$Ident\(.*\).*\s{/) and
->
->
+> +	ej_event = kmalloc(sizeof(*ej_event), GFP_KERNEL);
+> +	if (!ej_event)
+> +		return;
+>  
+> -	if (ACPI_SUCCESS(acpi_get_handle(handle, "_EJ0", &dummy_handle)))
+> -		flags |= ROOT_BRIDGE_HAS_EJ0;
+> -	if (ACPI_SUCCESS(acpi_get_handle(handle, "_PS3", &dummy_handle)))
+> -		flags |= ROOT_BRIDGE_HAS_PS3;
+> +	ej_event->device = device;
+> +	ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+>  
+>  	/* remove pci devices at first */
+>  	ret_val = acpi_bus_trim(device, 0);
+>  	printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
+>  
+> -	/* remove acpi devices */
+> -	ret_val = acpi_bus_trim(device, 1);
+> -	printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
+> -
+> -	if (flags & ROOT_BRIDGE_HAS_PS3) {
+> -		acpi_status status;
+> -
+> -		status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
+> -		if (ACPI_FAILURE(status))
+> -			pr_warn("%s: _PS3 failed\n", __func__);
+> -	}
+> -	if (flags & ROOT_BRIDGE_HAS_EJ0)
+> -		acpi_root_evaluate_object(handle, "_EJ0", 1);
+> +	acpi_bus_hot_remove_device(ej_event);
+>  }
+>  
+>  static void _handle_hotplug_event_root(struct work_struct *work)
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
