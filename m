@@ -1,74 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:39005 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753537Ab3A3ITH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 03:19:07 -0500
-Date: Wed, 30 Jan 2013 09:19:02 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130130091902.4607b34d@skate>
-In-Reply-To: <20130130045655.GE5734@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129155820.GB23505@n2100.arm.linux.org.uk>
-	<20130129172055.0ca5f341@skate>
-	<201301291645.08040.arnd@arndb.de>
-	<20130130045655.GE5734@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from moutng.kundenserver.de ([212.227.17.10]:60751 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754406Ab3ALVMl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jan 2013 16:12:41 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Date: Sat, 12 Jan 2013 21:12:25 +0000
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <20130111154516.GA25335@avionic-0098.adnet.avionic-design.de> <20130112123640.GA22505@avionic-0098.adnet.avionic-design.de>
+In-Reply-To: <20130112123640.GA22505@avionic-0098.adnet.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301122112.25772.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
+On Saturday 12 January 2013, Thierry Reding wrote:
+> > I already hinted at that in one of the other subthreads. Having such a
+> > multiplex would also allow the driver to be built as a module. I had
+> > already thought about this when I was working on an earlier version of
+> > these patches. Basically these would be two ops attached to the host
+> > bridge, and the generic arch_setup_msi_irq() could then look that up
+> > given the struct pci_dev that is passed to it and call this new per-
+> > host bridge .setup_msi_irq().
+> 
+> struct pci_ops looks like a good place to put these. They'll be
+> available from each struct pci_bus, so should be easy to call from
+> arch_setup_msi_irq().
+> 
+> Any objections?
+> 
 
-On Tue, 29 Jan 2013 21:56:55 -0700, Jason Gunthorpe wrote:
+struct pci_ops has a long history of being specifically about
+config space read/write operations, so on the one hand it does
+not feel like the right place to put interrupt specific operations,
+but on the other hand, the name sounds appropriate and I cannot
+think of any other place to put this, so it's fine with me.
 
-> However, Thomas how did you recover the high bits of the
-> IO window address from the bridge configuration? Are you reading the
-> struct resource directly? That probably causes problems with
-> hotplug/etc...
+The only alternative I can think of is to introduce a new
+structure next to it in struct pci_bus, but that feels a bit
+pointless. Maybe Bjorn has a preference one way or the other.
 
-The PCI-to-PCI bridge configuration space has a register with the high
-bits of the I/O window address. If you look at the PCI-to-PCI emulation
-code, I set the bit that says "I'm a bridge capable of 32 bits
-addressing of I/O addresses", and then when setting up the windows, I
-reconstruct the full 32 bits address by reading the two I/O address
-registers.
-
-See 3.2.5.6 in the PCI-to-PCI bridge specification:
-
-  If the low four bits of the I/O Base and I/O Limit registers are 01h,
-  then the bridge supports 32-bit I/O address decoding, and the I/O
-  Base Upper 16 Bits and the I/O Limit Upper 16 Bits hold the upper 16
-  bits, corresponding to AD[31::16], of the 32-bit I/O Base and I/O
-  Limit addresses respectively. In this case, system configuration
-  software is permitted to locate the I/O address range supported by
-  the anywhere in the 4-GB I/O Space. Note that the 4-KB alignment and
-  granularity restrictions still apply when the bridge supports 32 -bit
-  I/O addressing.
-
-(And my code does ensure that the low four bits of the I/O Base and I/O
-Limit registers are 01h)
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+	Arnd
