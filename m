@@ -5,49 +5,121 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 07/22] ACPI: Separate acpi_bus_trim to support two steps.
-Date: Tue, 15 Jan 2013 12:22:47 +0100
-Message-ID: <13748380.3EEdbDmJs6@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQXDSjzXPudWCG9fkDDO0ksncWcSQon5nhA2NLagidO1qQ@mail.gmail.com>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <3028581.u7PNshx4kV@vostro.rjw.lan> <CAE9FiQXDSjzXPudWCG9fkDDO0ksncWcSQon5nhA2NLagidO1qQ@mail.gmail.com>
+Subject: Re: [PATCH v8 14/22] ACPI: update ej_event interface to take acpi_device
+Date: Sun, 13 Jan 2013 00:40:37 +0100
+Message-ID: <1908840.G1WFmde11m@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-15-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-15-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 14, 2013 10:31:35 PM Yinghai Lu wrote:
-> On Sat, Jan 12, 2013 at 2:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Friday, January 11, 2013 02:40:34 PM Yinghai Lu wrote:
-> >> Current all acpi_bus_trim callers have rmdevice to 1.
-> >> that means it will remove all acpi devices.
-> >>
-> >> When 0, is passed, it will keep the parent.
-> >>
-> >> For root bus hotremove support, we need to have pci device to be
-> >> removed before acpi devices.
-> >>
-> >> So try to keep all acpi devices, and only stop drivers with them.
-> >>
-> >> This change should be safe because all current callers all have 1 passed.
-> >
-> > I'm not sure how the chanelog is related to the patch itself.
-> >
-> > The patch modifies the behavior of acpi_bus_trim() to avoid removing all
-> > devices (not just the start point) for rmdevice==0, which doesn't really change
-> > the functionality, because all callers pass rmdevice=1 anyway.
-> >
-> > Yes, we can make this change, but why is it necessary?
-> >
-> > And why don't we remove the rmdevice argument from acpi_bus_trim() altogether?
-> 
-> this patch is not needed after your changes with acpi_bus_trim.
+On Friday, January 11, 2013 02:40:41 PM Yinghai Lu wrote:
+> Should use acpi_device pointer directly instead of use handle and
+> get the device pointer again later.
 
-OK, cool. :-)
+Looks good.
+
+I can take this one right now if you want.
 
 Thanks,
 Rafael
 
 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/acpi/acpi_memhotplug.c  |    2 +-
+>  drivers/acpi/processor_driver.c |    2 +-
+>  drivers/acpi/scan.c             |   14 ++++----------
+>  include/acpi/acpi_bus.h         |    2 +-
+>  4 files changed, 7 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
+> index 327ab44..eaddb7a 100644
+> --- a/drivers/acpi/acpi_memhotplug.c
+> +++ b/drivers/acpi/acpi_memhotplug.c
+> @@ -361,7 +361,7 @@ static void acpi_memory_device_notify(acpi_handle handle, u32 event, void *data)
+>  			break;
+>  		}
+>  
+> -		ej_event->handle = handle;
+> +		ej_event->device = device;
+>  		ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+>  		acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
+>  					(void *)ej_event);
+> diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
+> index 0777663..a24ee43 100644
+> --- a/drivers/acpi/processor_driver.c
+> +++ b/drivers/acpi/processor_driver.c
+> @@ -733,7 +733,7 @@ static void acpi_processor_hotplug_notify(acpi_handle handle,
+>  			break;
+>  		}
+>  
+> -		ej_event->handle = handle;
+> +		ej_event->device = device;
+>  		ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+>  		acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
+>  					(void *)ej_event);
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 8883539..f4c6305 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -116,20 +116,14 @@ static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
+>  void acpi_bus_hot_remove_device(void *context)
+>  {
+>  	struct acpi_eject_event *ej_event = (struct acpi_eject_event *) context;
+> -	struct acpi_device *device;
+> -	acpi_handle handle = ej_event->handle;
+> +	struct acpi_device *device = ej_event->device;
+> +	acpi_handle handle = device->handle;
+>  	acpi_handle temp;
+>  	struct acpi_object_list arg_list;
+>  	union acpi_object arg;
+>  	acpi_status status = AE_OK;
+>  	u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
+>  
+> -	if (acpi_bus_get_device(handle, &device))
+> -		goto err_out;
+> -
+> -	if (!device)
+> -		goto err_out;
+> -
+>  	ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+>  		"Hot-removing device %s...\n", dev_name(&device->dev)));
+>  
+> @@ -215,7 +209,7 @@ acpi_eject_store(struct device *d, struct device_attribute *attr,
+>  		goto err;
+>  	}
+>  
+> -	ej_event->handle = acpi_device->handle;
+> +	ej_event->device = acpi_device;
+>  	if (acpi_device->flags.eject_pending) {
+>  		/* event originated from ACPI eject notification */
+>  		ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
+> @@ -223,7 +217,7 @@ acpi_eject_store(struct device *d, struct device_attribute *attr,
+>  	} else {
+>  		/* event originated from user */
+>  		ej_event->event = ACPI_OST_EC_OSPM_EJECT;
+> -		(void) acpi_evaluate_hotplug_ost(ej_event->handle,
+> +		(void) acpi_evaluate_hotplug_ost(acpi_device->handle,
+>  			ej_event->event, ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
+>  	}
+>  
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 2246ba9..181ff2d 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -309,7 +309,7 @@ struct acpi_bus_event {
+>  };
+>  
+>  struct acpi_eject_event {
+> -	acpi_handle	handle;
+> +	struct acpi_device	*device;
+>  	u32		event;
+>  };
+>  
+> 
 -- 
 I speak only for myself.
 Rafael J. Wysocki, Intel Open Source Technology Center.
