@@ -1,100 +1,229 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:53152 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753845Ab3A3QSk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 11:18:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Date: Wed, 30 Jan 2013 16:17:38 +0000
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <201301300955.49473.arnd@arndb.de> <20130130124721.0ad0294e@skate>
-In-Reply-To: <20130130124721.0ad0294e@skate>
+Received: from cantor2.suse.de ([195.135.220.15]:41363 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752941Ab3ALLcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 12 Jan 2013 06:32:18 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap case
+Date: Sat, 12 Jan 2013 12:31:59 +0100
+Message-ID: <4068140.Uym9gOXymC@hammer82.arch.suse.de>
+In-Reply-To: <50F08F43.7080604@zytor.com>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com> <50F08F43.7080604@zytor.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201301301617.38883.arnd@arndb.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 30 January 2013, Thomas Petazzoni wrote:
-> Dear Arnd Bergmann,
-> 
-> On Wed, 30 Jan 2013 09:55:49 +0000, Arnd Bergmann wrote:
-> 
-> > I don't remember the kernel ever caring about whether hardware complies
-> > to a standard or not. The kernel's job is to make hardware work, based
-> > on the actual implementation of that hardware. In a lot of cases that
-> > means taking the standard document as a reference, and adding quirks
-> > for the devices that are different.
+On Friday, January 11, 2013 02:16:35 PM H. Peter Anvin wrote:
+> On 01/11/2013 01:09 PM, Yinghai Lu wrote:
+> > On Fri, Jan 11, 2013 at 12:06 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> >> On 01/11/2013 11:59 AM, Yinghai Lu wrote:
+> >>> On Fri, Jan 11, 2013 at 10:24 AM, Thomas Renninger <trenn@suse.de> wrote:
+> >>>>> We may need to keep exactmap intact.
+> >>>> 
+> >>>> Why?
+> >>>> Kexec/kdump should have been the only user?
+> >>>> If older/current kexec calls still add ACPI maps via memmap=X#Y,
+> >>>> they should already exist in the original e820 map and fall off or
+> >>>> get glued to one region if (wrongly) overlapping via sanitize_map.
+> >>> 
+> >>> No, kexec/kdump is not the only user for memmap=exactmap.
+> >> 
+> >> Who is using it then, since you seem to know?
 > > 
-> > In the end, it comes down to the impact on the code complexity, and
-> > the run-time overhead for whatever hardware is most common when adding
-> > those quirks.
+> > http://forums.gentoo.org/viewtopic-t-487476-highlight-proliant.html
+> > 
+> > http://forums.fedoraforum.org/archive/index.php/t-225347.html
 > 
-> This is not only about standards, it is also about re-using the PCI
-> resource allocation code.
-> 
-> In my RFCv1, sent December, 7th, I wasn't using any emulated PCI-to-PCI
-> bridge. So it *can* perfectly work without it.
+> Hm... both of those seem to be someone trying memmap=exactmap to hack
+> around a problem which really was elsewhere, with a different solution.
 
-Ok, Isee.
+Ok, boot params can be counted as "public interface" to the kernel that should/must
+not change.
+Generally there are several flavors of these:
+  1) Purely (low level) debug options
+  2) Workarounds for broken HW
+  3) Real interface that may make sense on productive systems and which
+      applications may pick up
 
-> However, one major drawback of my RFCv1 version is that since I didn't
-> know how much I/O space and memory space was needed for each PCIe
-> device, I had to oversize the address decoding windows. And also, I had
-> to have a special allocator (certainly simple, but still) to find an
-> available physical address to set up each address decoding window.
+In this case we have a mixture of all.
+Kexec/kdump would be the only one for 3. I expect.
 
-Well, for the I/O space, there is no oversizing because either way you
-end up with exactly 64KB per root port, right?
+IMO nobody should run memmap=exactmap on a productive machine.
+These have a sever BIOS (or whereever) bugs and will jump from one
+trap to the other trying to update the kernel and similar.
+This applies for above 2 links.
 
-> Emulating a PCI-to-PCI bridge very nicely allows to re-use the PCI core
-> resource allocation code. I think it's really the main reason for
-> emulated those PCI-to-PCI bridges, rather than willing to comply to
-> some standards.
-> 
-> So what I'm going to do now is rework my patch series by removing the
-> emulated host bridge (which is normally mandatory by PCIe standard, but
-> Linux doesn't need it, so we don't care), but I'll keep the emulated
-> PCI-to-PCI bridges in order to benefit for the PCI core resource
-> allocation mechanisms.
-> 
-> Is this ok for you?
+What is confusing for developers is if they used memmap=exactmap
+already to try a self made up e820 table and might get angry if he realizes
+after some time that its usage changed silently
 
-Using the Linux allocator for memory resources does sound useful,
-so if that requires using the emulated PCI-to-PCI bridges, I guess
-it's the best compromise.
+Still introducing another memmap=param would be very unfortunate because
+of the kexec version (and work) dependency to get this fixed properly.
 
-> I'd like to settle on the strategy to follow, because we're really
-> going a funny road here: on December 7th, I submit a series that
-> doesn't use any PCI-to-PCI bridge, and I'm told that I should emulate
-> some. I spent a long time working on an implementation that uses
-> emumlated PCI-to-PCI bridges, which I submitted on Monday, now to be
-> told that I should work really hard not to use PCI-to-PCI bridges. I
-> hope you can feel my little embarrassment here...
+Hm, whatabout this:
+Tell user that memmap=exactmap usage has changed in !kdump case.
+This would cover the very rare cases you mentioned.
 
-I'm sorry about this situation. Unfortunatly the way that such decisions
-are made is not always straightforward, and what seems like a good idea
-at one point turns out to be a mistake or more complex than anticipated
-later. With the description of the first patch set, I did not think
-it would be necessary to fake a bridge device and their config space.
+In kdump case passing an extra exactmap option was broken anyway.
+No need to bore the user with an additional message there.
 
-What I had guessed you could do was to call pci_scan_root_bus on
-each of the ports, and then set up the memory space window for
-the bus including all of its child devices.
+is_kdump_kernel() cannot be used because it's too early.
+But the check is exactly the same (will elfcorehdr_addr be set via
+the corresponding boot param).
 
-	Arnd
+Compile tested only:
+
+
+-----------------------------
+x86 e820: only void usable memory areas in memmap=exactmap case
+
+All unusable (reserved, ACPI, ACPI NVS,...) areas have to be
+honored in kdump case.
+Othwerise ACPI parts will quickly run into trouble when trying
+to for example early_ioremap reserved areas which are not
+declared reserved in kdump kernel.
+mmconf area must also be a reserved mem region.
+
+Passing unusable memory via memmap= is a design flaw as
+this information is already (exactly for this purpose) passed
+via bootloader structure.
+In kdump case (when memmap=exactmap is passed), only void
+(do not use) usable memory regions from the passed e820 table
+and use memory areas defined via memmap=X@Y boot parameter instead.
+But do still use the "unusable" memory regions from the original e820
+table.
+
+Rename exactmap_parsed to memmap checked as voidmap needs the same checking.
+
+Signed-off-by: Thomas Renninger <trenn@suse.de>
+
+---
+ Documentation/kernel-parameters.txt |   18 ++++++++++---
+ arch/x86/kernel/e820.c              |   46 ++++++++++++++++++++++++++++++++--
+ 2 files changed, 57 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 363e348..739b665 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -1510,10 +1510,20 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 			per-device physically contiguous DMA buffers.
+ 
+ 	memmap=exactmap	[KNL,X86] Enable setting of an exact
+-			E820 memory map, as specified by the user.
+-			Such memmap=exactmap lines can be constructed based on
+-			BIOS output or other requirements. See the memmap=nn@ss
+-			option description.
++			E820 usable memory map, as specified by the user.
++			All unusable (reserved, ACPI, NVS,...) ranges from the
++			original e820 table are preserved.
++			But the usable memory regions from the original e820
++			table are removed.
++			This parameter is explicitly for kdump usage:
++			The memory the kdump kernel is allowed to use must
++			be passed via below memmap=nn[KMG]@ss[KMG] param.
++			All reserved regions the kernel may use for ioremapping
++			and similar are still considered.
++
++	memmap=voidmap  [KNL,X86] Do not use any e820 ranges from BIOS or
++			bootloader. Instead you have to pass regions via
++			below memmap= options.
+ 
+ 	memmap=nn[KMG]@ss[KMG]
+ 			[KNL] Force usage of a specific region of memory
+diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
+index dc0b9f0..4a3803a 100644
+--- a/arch/x86/kernel/e820.c
++++ b/arch/x86/kernel/e820.c
+@@ -559,6 +559,19 @@ u64 __init e820_remove_range(u64 start, u64 size, unsigned old_type,
+ 	return real_removed_size;
+ }
+ 
++static void __init e820_remove_range_type(u32 type)
++{
++	int i;
++
++	for (i = 0; i < e820.nr_map; i++) {
++		struct e820entry *ei = &e820.map[i];
++		if (ei->type == type) {
++			memset(ei, 0, sizeof(struct e820entry));
++			continue;
++		}
++	}
++}
++
+ void __init update_e820(void)
+ {
+ 	u32 nr_map;
+@@ -835,21 +848,32 @@ static int __init parse_memopt(char *p)
+ }
+ early_param("mem", parse_memopt);
+ 
+-static bool __initdata exactmap_parsed;
++static bool __initdata memmap_checked;
+ 
+ static int __init parse_memmap_one(char *p)
+ {
+ 	char *oldp;
+ 	u64 start_at, mem_size;
++	char *cmdline = boot_command_line;
+ 
+ 	if (!p)
+ 		return -EINVAL;
+ 
+ 	if (!strncmp(p, "exactmap", 8)) {
+-		if (exactmap_parsed)
++		if (memmap_checked)
+ 			return 0;
+ 
+-		exactmap_parsed = true;
++		memmap_checked = true;
++		cmdline = strstr(cmdline, "elfcorehdr");
++		if (!cmdline)
++			/*
++			 * No kdump kernel, but exactmap used.
++			 * Tell user about exactmap changes.
++			 * Remove this after some kernel revisions.
++			 */
++			pr_info(
++		"memmap=exactmap changed, use voidmap for old behavior\n");
++
+ #ifdef CONFIG_CRASH_DUMP
+ 		/*
+ 		 * If we are doing a crash dump, we still need to know
+@@ -858,6 +882,22 @@ static int __init parse_memmap_one(char *p)
+ 		 */
+ 		saved_max_pfn = e820_end_of_ram_pfn();
+ #endif
++		/*
++		 * Remove all usable memory (this is for kdump), usable
++		 * memory will be passed via memmap=X@Y parameter
++		 */
++		e820_remove_range_type(E820_RAM);
++		userdef = 1;
++		return 0;
++	} else if (!strncmp(p, "voidmap", 7)) {
++		if (memmap_checked)
++			return 0;
++
++		memmap_checked = true;
++
++#ifdef CONFIG_CRASH_DUMP
++		saved_max_pfn = e820_end_of_ram_pfn();
++#endif
+ 		e820.nr_map = 0;
+ 		userdef = 1;
+ 		return 0;
+
