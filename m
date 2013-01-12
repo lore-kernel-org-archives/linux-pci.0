@@ -1,76 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:58756 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755441Ab3AaRNi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 12:13:38 -0500
-Received: by mail-vc0-f179.google.com with SMTP id gb23so1875803vcb.38
-        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2013 09:13:37 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:39211 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754448Ab3ALXjg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 12 Jan 2013 18:39:36 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 17/22] PCI, ACPI: Add alloc_acpi_hp_work()
+Date: Sun, 13 Jan 2013 00:45:24 +0100
+Message-ID: <3988288.MTBNr2Bzqb@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-18-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-18-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1359367251.883.13.camel@x61.thuisdomein>
-References: <1359367251.883.13.camel@x61.thuisdomein>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Jan 2013 10:13:17 -0700
-Message-ID: <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: pciehp: hide ENTRY messages behind ctrl_dbg()
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+On Friday, January 11, 2013 02:40:44 PM Yinghai Lu wrote:
+> Will use it with acpiphp and pci_root_hp events handling
 
-On Mon, Jan 28, 2013 at 3:00 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> In each suspend and resume cycle my laptop prints these messages at
-> KERN_INFO level:
->     pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
->     pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
->
-> and
->     pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
->     pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
->
-> Messages like these are probably only useful while debugging pciehp, so
-> let's hide them behind the ctrl_dbg() macro.
->
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+I think it would be better if you folded patches [17-20/22] together.
+
+Thanks,
+Rafael
+
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
 > ---
-> 0) Compile tested only!
->
-> 1) Perhaps a better solution is to drop these messages entirely.
->
->  drivers/pci/hotplug/pciehp_core.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> index 939bd1d..ed1702d 100644
-> --- a/drivers/pci/hotplug/pciehp_core.c
-> +++ b/drivers/pci/hotplug/pciehp_core.c
-> @@ -293,7 +293,8 @@ static void pciehp_remove(struct pcie_device *dev)
->  #ifdef CONFIG_PM
->  static int pciehp_suspend (struct pcie_device *dev)
+>  drivers/acpi/osl.c      |   21 +++++++++++++++++++++
+>  include/acpi/acpiosxf.h |    9 +++++++++
+>  2 files changed, 30 insertions(+)
+> 
+> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> index 3ff2678..e6539a3 100644
+> --- a/drivers/acpi/osl.c
+> +++ b/drivers/acpi/osl.c
+> @@ -1778,3 +1778,24 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
 >  {
-> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
-> +       struct controller *ctrl = get_service_data(dev);
-> +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
->         return 0;
-
-I'd propose to just drop these messages completely.  Rafael, would you
-have any objection to that?
-
+>  	__acpi_os_prepare_sleep = func;
 >  }
->
-> @@ -303,8 +304,8 @@ static int pciehp_resume (struct pcie_device *dev)
->         struct slot *slot;
->         u8 status;
->
-> -       dev_info(&dev->device, "%s ENTRY\n", __func__);
->         ctrl = get_service_data(dev);
-> +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
->
->         /* reinitialize the chipset's event detection logic */
->         pcie_enable_notification(ctrl);
-> --
-> 1.7.11.7
->
+> +
+> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+> +			void (*func)(struct work_struct *work))
+> +{
+> +	struct acpi_hp_work *hp_work;
+> +	int ret;
+> +
+> +	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+> +	if (!hp_work)
+> +		return;
+> +
+> +	hp_work->handle = handle;
+> +	hp_work->type = type;
+> +	hp_work->context = context;
+> +
+> +	INIT_WORK(&hp_work->work, func);
+> +	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+> +	if (!ret)
+> +		kfree(hp_work);
+> +}
+> +EXPORT_SYMBOL(alloc_acpi_hp_work);
+> diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
+> index 4315274..2a64da5 100644
+> --- a/include/acpi/acpiosxf.h
+> +++ b/include/acpi/acpiosxf.h
+> @@ -195,6 +195,15 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
+>   */
+>  extern struct workqueue_struct *kacpi_hotplug_wq;
+>  
+> +struct acpi_hp_work {
+> +	struct work_struct work;
+> +	acpi_handle handle;
+> +	u32 type;
+> +	void *context;
+> +};
+> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+> +			void (*func)(struct work_struct *work));
+> +
+>  acpi_thread_id acpi_os_get_thread_id(void);
+>  
+>  acpi_status
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
