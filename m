@@ -1,102 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:57570 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753074Ab3ACAfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Jan 2013 19:35:18 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Thu, 03 Jan 2013 01:40:52 +0100
-Message-ID: <1626213.gpPY5etSgn@vostro.rjw.lan>
-In-Reply-To: <20130102230732.GB31813@google.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <2816571.07LqOj3EJg@vostro.rjw.lan> <20130102230732.GB31813@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 16/22] PCI, acpiphp: Don't bailout even no slots found yet.
+Date: Sun, 13 Jan 2013 00:43:53 +0100
+Message-ID: <1767472.DguSxT8x55@vostro.rjw.lan>
+In-Reply-To: <1357944049-29620-17-git-send-email-yinghai@kernel.org>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-17-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 02, 2013 04:07:32 PM Bjorn Helgaas wrote:
-> On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
-> > To that end, split pci_create_root_bus() into two functions,
-> > pci_alloc_root() and pci_add_root(), that will allocate memory for
-> > the new PCI bus and bridge representations and register them with
-> > the driver core, respectively, and that may be called directly by
-> > the architectures that need to set the root bridge's ACPI handle
-> > before registering it.
-> 
-> I'm trying to *reduce* the interfaces for creating and scanning PCI
-> host bridges, and this is a step in the opposite direction.
+On Friday, January 11, 2013 02:40:43 PM Yinghai Lu wrote:
+> Could have root bus hot addde later and there may be slots that need acpiphp.
 
-Yes it is.
+s/addde/added/
 
-The alternative is to make the root bridge initialization code more complex.
-
-> > Next, Make both x86 and ia64 (the only architectures using ACPI at
-> > the moment) call pci_alloc_root(), set the root bridge's ACPI handle
-> > and then call pci_add_root() in their pci_acpi_scan_root() routines
-> > instead of calling pci_create_root_bus().  For the other code paths
-> > adding PCI root bridges define a new pci_create_root_bus() as a
-> > simple combination of pci_alloc_root() and pci_add_root().
-> 
-> pci_create_root_bus() takes a "struct device *parent" argument.  That
-> seems like a logical place to tell the PCI core about the host bridge
-> device, but x86 and ia64 currently pass NULL there.
-
-And there's a reason for that.  Namely, on these architectures PCI host
-bridges have no physical parents (well, at least in current practice).
-
-> The patch below shows what I'm thinking.  It does have the side-effect
-> of changing the sysfs topology from this:
-> 
->     /sys/devices/pci0000:00
->     /sys/devices/pci0000:00/0000:00:00.0
-> 
-> to this:
-> 
->     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
->     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
-> 
-> because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
-> rather than at the top level.
-
-Which is wrong.
-
-PNP0A08 is not a parent of the host bridge, but its ACPI "companion" (ie. ACPI
-namespace node representing the host bridge itself).
-
-> That seems like an improvement to me, but it *is* different.
-
-Well, then we should make every ACPI device node corresponding to a PCI device
-be a parent of that device's struct pci_dev and so on for other bus types.  It
-doesn't sound like an attractive idea. :-)  Moreover, it is impossible, because
-those things generally already have parents (struct pci_dev objects have them
-at least).
-
-That said the idea to pass something meaningful in the parent argument
-of pci_create_root_bus() can be implemented if we create a "physical" device
-object corresponding to "device:00" (which is an ACPI namespace node) in your
-example.
-
->From what I can tell, "device:00" always corresponds to the ACPI _SB scope
-(which is mandatory), so in principle we can create an abstract "physical"
-device object for it and call it something like "system_root".  Then, if we
-use it as the parent of pci0000:00 (the host bridge), then we'll have
-
-     /sys/devices/system_root/pci0000:00
-     /sys/devices/system_root/pci0000:00/0000:00:00.0
+The changes look reasonable to me, but I'm not very familiar with the code in
+question.
 
 Thanks,
 Rafael
 
 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/hotplug/acpiphp.h      |    1 -
+>  drivers/pci/hotplug/acpiphp_core.c |   23 ++---------------------
+>  drivers/pci/hotplug/acpiphp_glue.c |   22 ----------------------
+>  3 files changed, 2 insertions(+), 44 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+> index a1afb5b..b3ead7a 100644
+> --- a/drivers/pci/hotplug/acpiphp.h
+> +++ b/drivers/pci/hotplug/acpiphp.h
+> @@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+>  /* acpiphp_glue.c */
+>  extern int acpiphp_glue_init (void);
+>  extern void acpiphp_glue_exit (void);
+> -extern int acpiphp_get_num_slots (void);
+>  typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
+>  
+>  extern int acpiphp_enable_slot (struct acpiphp_slot *slot);
+> diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+> index 96316b7..c2fd309 100644
+> --- a/drivers/pci/hotplug/acpiphp_core.c
+> +++ b/drivers/pci/hotplug/acpiphp_core.c
+> @@ -50,7 +50,6 @@
+>  bool acpiphp_debug;
+>  
+>  /* local variables */
+> -static int num_slots;
+>  static struct acpiphp_attention_info *attention_info;
+>  
+>  #define DRIVER_VERSION	"0.5"
+> @@ -272,25 +271,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+>  	return 0;
+>  }
+>  
+> -static int __init init_acpi(void)
+> -{
+> -	int retval;
+> -
+> -	/* initialize internal data structure etc. */
+> -	retval = acpiphp_glue_init();
+> -
+> -	/* read initial number of slots */
+> -	if (!retval) {
+> -		num_slots = acpiphp_get_num_slots();
+> -		if (num_slots == 0) {
+> -			acpiphp_glue_exit();
+> -			retval = -ENODEV;
+> -		}
+> -	}
+> -
+> -	return retval;
+> -}
+> -
+>  /**
+>   * release_slot - free up the memory used by a slot
+>   * @hotplug_slot: slot to free
+> @@ -379,7 +359,8 @@ static int __init acpiphp_init(void)
+>  		return 0;
+>  
+>  	/* read all the ACPI info from the system */
+> -	return init_acpi();
+> +	/* initialize internal data structure etc. */
+> +	return acpiphp_glue_init();
+>  }
+>  
+>  
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 02c41ab..30467ec 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -1446,28 +1446,6 @@ void  acpiphp_glue_exit(void)
+>  	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+>  }
+>  
+> -
+> -/**
+> - * acpiphp_get_num_slots - count number of slots in a system
+> - */
+> -int __init acpiphp_get_num_slots(void)
+> -{
+> -	struct acpiphp_bridge *bridge;
+> -	int num_slots = 0;
+> -
+> -	list_for_each_entry(bridge, &bridge_list, list) {
+> -		dbg("Bus %04x:%02x has %d slot%s\n",
+> -				pci_domain_nr(bridge->pci_bus),
+> -				bridge->pci_bus->number, bridge->nr_slots,
+> -				bridge->nr_slots == 1 ? "" : "s");
+> -		num_slots += bridge->nr_slots;
+> -	}
+> -
+> -	dbg("Total %d slots\n", num_slots);
+> -	return num_slots;
+> -}
+> -
+> -
+>  /**
+>   * acpiphp_enable_slot - power on slot
+>   * @slot: ACPI PHP slot
+> 
 -- 
 I speak only for myself.
 Rafael J. Wysocki, Intel Open Source Technology Center.
