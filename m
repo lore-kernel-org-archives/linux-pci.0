@@ -1,139 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
-Date: Fri, 11 Jan 2013 22:53:31 +0100
-Message-ID: <4001131.iQGP87KxgR@vostro.rjw.lan>
-In-Reply-To: <9771783.0zXIGEmDYn@vostro.rjw.lan>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <CAE9FiQW4t17=gYC1dnyCVJUQ3rvV491uiA5U1ZjLWjraM=g9rQ@mail.gmail.com> <9771783.0zXIGEmDYn@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 13 Jan 2013 10:58:06 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130113095806.GA31966@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130111154516.GA25335@avionic-0098.adnet.avionic-design.de>
+ <20130112123640.GA22505@avionic-0098.adnet.avionic-design.de>
+ <201301122112.25772.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="C7zPtVaVf+AK4Oqc"
+In-Reply-To: <201301122112.25772.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 10, 2013 01:05:24 AM Rafael J. Wysocki wrote:
-> On Wednesday, January 09, 2013 03:27:29 PM Yinghai Lu wrote:
-> > On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > > On Wednesday, January 09, 2013 03:16:59 PM Bjorn Helgaas wrote:
-> > >> On Wed, Jan 9, 2013 at 2:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > >> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >> >
-> > >> > The ACPI handles of PCI root bridges need to be known to
-> > >> > acpi_bind_one(), so that it can create the appropriate
-> > >> > "firmware_node" and "physical_node" files for them, but currently
-> > >> > the way it gets to know those handles is not exactly straightforward
-> > >> > (to put it lightly).
-> > >> >
-> > >> > This is how it works, roughly:
-> > >> >
-> > >> >   1. acpi_bus_scan() finds the handle of a PCI root bridge,
-> > >> >      creates a struct acpi_device object for it and passes that
-> > >> >      object to acpi_pci_root_add().
-> > >> >
-> > >> >   2. acpi_pci_root_add() creates a struct acpi_pci_root object,
-> > >> >      populates its "device" field with its argument's address
-> > >> >      (device->handle is the ACPI handle found in step 1).
-> > >> >
-> > >> >   3. The struct acpi_pci_root object created in step 2 is passed
-> > >> >      to pci_acpi_scan_root() and used to get resources that are
-> > >> >      passed to pci_create_root_bus().
-> > >> >
-> > >> >   4. pci_create_root_bus() creates a struct pci_host_bridge object
-> > >> >      and passes its "dev" member to device_register().
-> > >> >
-> > >> >   5. platform_notify(), which for systems with ACPI is set to
-> > >> >      acpi_platform_notify(), is called.
-> > >> >
-> > >> > So far, so good.  Now it starts to be "interesting".
-> > >> >
-> > >> >   6. acpi_find_bridge_device() is used to find the ACPI handle of
-> > >> >      the given device (which is the PCI root bridge) and executes
-> > >> >      acpi_pci_find_root_bridge(), among other things, for the
-> > >> >      given device object.
-> > >> >
-> > >> >   7. acpi_pci_find_root_bridge() uses the name (sic!) of the given
-> > >> >      device object to extract the segment and bus numbers of the PCI
-> > >> >      root bridge and passes them to acpi_get_pci_rootbridge_handle().
-> > >> >
-> > >> >   8. acpi_get_pci_rootbridge_handle() browses the list of ACPI PCI
-> > >> >      root bridges and finds the one that matches the given segment
-> > >> >      and bus numbers.  Its handle is then used to initialize the
-> > >> >      ACPI handle of the PCI root bridge's device object by
-> > >> >      acpi_bind_one().  However, this is *exactly* the ACPI handle we
-> > >> >      started with in step 1.
-> > >> >
-> > >> > Needless to say, this is quite embarassing, but it may be avoided
-> > >> > thanks to commit f3fd0c8 (ACPI: Allow ACPI handles of devices to be
-> > >> > initialized in advance), which makes it possible to initialize the
-> > >> > ACPI handle of a device before passing it to device_register().
-> > >> >
-> > >> > Accordingly, add a new __weak routine, pcibios_root_bridge_prepare(),
-> > >> > defaulting to an empty implementation that can be replaced by the
-> > >> > interested architecutres (x86 and ia64 at the moment) with functions
-> > >> > that will set the root bridge's ACPI handle before its dev member is
-> > >> > passed to device_register().  Make both x86 and ia64 provide such
-> > >> > implementations of pcibios_root_bridge_prepare() and remove
-> > >> > acpi_pci_find_root_bridge() and acpi_get_pci_rootbridge_handle() that
-> > >> > aren't necessary any more.
-> > >> >
-> > >> > Included is a fix for breakage on systems with non-ACPI PCI host
-> > >> > bridges from Bjorn Helgaas.
-> > >> >
-> > >> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >>
-> > >> Looks good to me!
-> > >>
-> > >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >
-> > > Thanks!
-> > >
-> > > I'll wait for comments from the others, if any, and put it into my acpi-scan
-> > > branch after a couple of days.  It doesn't need to be there technically, but
-> > > it's kind of related.
-> > 
-> > I tested it with acpi-scan and pci-root-bus-hotplug patchset, and it works well.
-> > so
-> > Acked-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> Thanks!
-> 
-> > BTW, found one left over of change about ->acpi_handle==> ACPI_HANDLE..
-> 
-> Can you please submit that patch with a proper changelog?
-> 
-> It is a mainline bug now (and a build regression for that matter), so I'd like to
-> push the fix to Linus for v3.8-rc4.
 
-May I have your sign-off for the patch below at least?
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Rafael
+On Sat, Jan 12, 2013 at 09:12:25PM +0000, Arnd Bergmann wrote:
+> On Saturday 12 January 2013, Thierry Reding wrote:
+> > > I already hinted at that in one of the other subthreads. Having such a
+> > > multiplex would also allow the driver to be built as a module. I had
+> > > already thought about this when I was working on an earlier version of
+> > > these patches. Basically these would be two ops attached to the host
+> > > bridge, and the generic arch_setup_msi_irq() could then look that up
+> > > given the struct pci_dev that is passed to it and call this new per-
+> > > host bridge .setup_msi_irq().
+> >=20
+> > struct pci_ops looks like a good place to put these. They'll be
+> > available from each struct pci_bus, so should be easy to call from
+> > arch_setup_msi_irq().
+> >=20
+> > Any objections?
+> >=20
+>=20
+> struct pci_ops has a long history of being specifically about
+> config space read/write operations, so on the one hand it does
+> not feel like the right place to put interrupt specific operations,
+> but on the other hand, the name sounds appropriate and I cannot
+> think of any other place to put this, so it's fine with me.
+>=20
+> The only alternative I can think of is to introduce a new
+> structure next to it in struct pci_bus, but that feels a bit
+> pointless. Maybe Bjorn has a preference one way or the other.
 
+The name pci_ops is certainly generic enough. Also the comment above the
+structure declaration says "Low-level architecture-dependent routines",
+which applies to the MSI functions as well.
 
-> > Index: linux-2.6/drivers/acpi/glue.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/acpi/glue.c
-> > +++ linux-2.6/drivers/acpi/glue.c
-> > @@ -311,7 +311,7 @@ static int acpi_platform_notify(struct d
-> >         if (!ret) {
-> >                 struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-> > 
-> > -               acpi_get_name(dev->acpi_handle, ACPI_FULL_PATHNAME, &buffer);
-> > +               acpi_get_name(ACPI_HANDLE(dev), ACPI_FULL_PATHNAME, &buffer);
-> >                 DBG("Device %s -> %s\n", dev_name(dev), (char *)buffer.pointer);
-> >                 kfree(buffer.pointer);
-> >         } else
-> > 
-> > 
+Thierry
 
+--C7zPtVaVf+AK4Oqc
+Content-Type: application/pgp-signature
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ8oUuAAoJEN0jrNd/PrOh4rEQALfqOrL0OPHE/+YrdqpIq6A/
+ZXfhGd3dlplQUI44GPrIx+U4fPLbmE5pa3e1/ZhUMqXuSJ5a5Ps9d7wrR7Plnkpf
+6ecscHJ+jcJWrDH+CGPfofYsn745WPlYHU3oBFvaHr4ZPraDqLCKOuYldj0ZQgOj
+JzQf/zICnZ/dl0QW9ygvbUI6UIWiByPsDDlK4rMwFHuaB8XHGOy4oYk5XboMlxHJ
+Wr6+nasApwgKOq0QoDCAPTpT6Rc6N95nHX9/eOvm4H4eBb8UT/1WoZo//nKlXmc2
+XAxPmghJ2bTlCd7oJKfIvrS2Ae7QYfYpOQX+3DQXovC/jJfedBC7StASo/ZfO26G
+ciFjmHksOxcdN922CUrWdGg6hOvaprEUGKNt6KBwTWGHpyqxSgjAqQutUw24IZ9O
+blmaiI3hl1fg5bRThsyVwOMu1cT6uNGh63h2CZJbX0pPS1ohnAU75CHNnIKXbv8Y
+CjK1w/LruU6x55c6bonwHvnMGopMilcnYi1JHIkuik2+8pRzJlCi2D/D4zvIv2ew
+tskNSePxjeRSjeV/160EH2GCsBFUAs6eaaC7e/r6FicYRXUjGtyGY/7Py3Cx3Tno
+nPU4UyKjqmV0Uf8gF6SURmZUwgCvZafFgcmF67rNqGK+lqaZqes7cE5OaeGW87kV
+aow/6ojMlxL4WloM/g+i
+=Pkxr
+-----END PGP SIGNATURE-----
+
+--C7zPtVaVf+AK4Oqc--
