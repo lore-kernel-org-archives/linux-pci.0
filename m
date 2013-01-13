@@ -1,143 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative 2][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance
-Date: Thu, 03 Jan 2013 23:56:55 +0100
-Message-ID: <113112384.JZ1gZKlJRa@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7QFKm=teLDBqCUueZwVHZKbA+pfNhrVc-_hK8PmwK2JQ@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1635295.TkbrarASZn@vostro.rjw.lan> <CAErSpo7QFKm=teLDBqCUueZwVHZKbA+pfNhrVc-_hK8PmwK2JQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f73.google.com ([209.85.215.73]:62794 "EHLO
+	mail-la0-f73.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663Ab3AMXdY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 18:33:24 -0500
+Received: by mail-la0-f73.google.com with SMTP id fq13so214225lab.2
+        for <linux-pci@vger.kernel.org>; Sun, 13 Jan 2013 15:33:22 -0800 (PST)
+Subject: [PATCH v7 2/4] PCI: shpchp: Make shpchp_wq non-ordered
+To: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Daniel J Blueman <daniel@quora.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Date: Sun, 13 Jan 2013 16:27:43 -0700
+Message-ID: <20130113232743.7225.11180.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 03, 2013 03:13:31 PM Bjorn Helgaas wrote:
-> On Thu, Jan 3, 2013 at 2:23 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Thursday, January 03, 2013 01:11:30 PM Rafael J. Wysocki wrote:
-> >> On Thursday, January 03, 2013 01:40:52 AM Rafael J. Wysocki wrote:
-> >> > On Wednesday, January 02, 2013 04:07:32 PM Bjorn Helgaas wrote:
-> >> > > On Thu, Dec 27, 2012 at 10:32:13PM +0100, Rafael J. Wysocki wrote:
-> >> > > > To that end, split pci_create_root_bus() into two functions,
-> >> > > > pci_alloc_root() and pci_add_root(), that will allocate memory for
-> >> > > > the new PCI bus and bridge representations and register them with
-> >> > > > the driver core, respectively, and that may be called directly by
-> >> > > > the architectures that need to set the root bridge's ACPI handle
-> >> > > > before registering it.
-> >> > >
-> >> > > I'm trying to *reduce* the interfaces for creating and scanning PCI
-> >> > > host bridges, and this is a step in the opposite direction.
-> >> >
-> >> > Yes it is.
-> >> >
-> >> > The alternative is to make the root bridge initialization code more complex.
-> >>
-> >> Well, maybe not so much.
-> >>
-> >> What about adding an extra arg to pci_create_root_bus(), ie. the patch below
-> >> (changelog skipped for now)?
-> >>
-> >> I admit that having two void * args there is a little awkward, but at least
-> >> it's totally generic.
-> >>
-> >> > > > Next, Make both x86 and ia64 (the only architectures using ACPI at
-> >> > > > the moment) call pci_alloc_root(), set the root bridge's ACPI handle
-> >> > > > and then call pci_add_root() in their pci_acpi_scan_root() routines
-> >> > > > instead of calling pci_create_root_bus().  For the other code paths
-> >> > > > adding PCI root bridges define a new pci_create_root_bus() as a
-> >> > > > simple combination of pci_alloc_root() and pci_add_root().
-> >> > >
-> >> > > pci_create_root_bus() takes a "struct device *parent" argument.  That
-> >> > > seems like a logical place to tell the PCI core about the host bridge
-> >> > > device, but x86 and ia64 currently pass NULL there.
-> >> >
-> >> > And there's a reason for that.  Namely, on these architectures PCI host
-> >> > bridges have no physical parents (well, at least in current practice).
-> >> >
-> >> > > The patch below shows what I'm thinking.  It does have the side-effect
-> >> > > of changing the sysfs topology from this:
-> >> > >
-> >> > >     /sys/devices/pci0000:00
-> >> > >     /sys/devices/pci0000:00/0000:00:00.0
-> >> > >
-> >> > > to this:
-> >> > >
-> >> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00
-> >> > >     /sys/devices/LNXSYSTM:00/device:00/PNP0A08:00/pci0000:00/0000:00:00.0
-> >> > >
-> >> > > because it puts the PCI root bus (pci0000:00) under the PNP0A08 device
-> >> > > rather than at the top level.
-> >> >
-> >> > Which is wrong.
-> >> >
-> >> > PNP0A08 is not a parent of the host bridge, but its ACPI "companion" (ie. ACPI
-> >> > namespace node representing the host bridge itself).
-> >> >
-> >> > > That seems like an improvement to me, but it *is* different.
-> >> >
-> >> > Well, then we should make every ACPI device node corresponding to a PCI device
-> >> > be a parent of that device's struct pci_dev and so on for other bus types.  It
-> >> > doesn't sound like an attractive idea. :-)  Moreover, it is impossible, because
-> >> > those things generally already have parents (struct pci_dev objects have them
-> >> > at least).
-> >> >
-> >> > That said the idea to pass something meaningful in the parent argument
-> >> > of pci_create_root_bus() can be implemented if we create a "physical" device
-> >> > object corresponding to "device:00" (which is an ACPI namespace node) in your
-> >> > example.
-> >> >
-> >> > From what I can tell, "device:00" always corresponds to the ACPI _SB scope
-> >> > (which is mandatory), so in principle we can create an abstract "physical"
-> >> > device object for it and call it something like "system_root".  Then, if we
-> >> > use it as the parent of pci0000:00 (the host bridge), then we'll have
-> >> >
-> >> >      /sys/devices/system_root/pci0000:00
-> >> >      /sys/devices/system_root/pci0000:00/0000:00:00.0
-> >>
-> >> Having considered that a little more I don't really think it's a good idea.
-> >> It still would be going a little backwards, because we'd need to use the parent
-> >> to get an ACPI handle known already beforehand.
-> >
-> > One more thing.
-> >
-> > The sysfs locations of PCI devices shouldn't change if acpi=off is passed to
-> > the kernel, so the above is not a good idea at all, I'm afraid.
-> 
-> I don't think there's a requirement that sysfs with acpi=off be the
-> same as with it on.  acpi=off is only a debugging tool.  With acpi=off
-> we ignore all the topology information we get from ACPI, and the
-> location of PCI host bridges is part of that topology.  We shouldn't
-> cripple sysfs when we're using ACPI just so it matches the acpi=off
-> case.
-> 
-> Of course, we might not want to change this in sysfs anyway; I just
-> don't think acpi=off is a valid reason to avoid a change.
+e24dcbef93 ("shpchp: update workqueue usage") was described as adding
+non-ordered shpchp_wq, but it actually made it an *ordered* workqueue.
 
-Well, I don't think we'll agree on that one, sorry.
+This patch changes shpchp_wq to be non-ordered, as described in the
+e24dcbef93 commit log and as was done for pciehp by a827ea307b ("pciehp:
+update workqueue usage").
 
-OK, I now have sent no less than three working version of the patch that fixes
-the current code which _is_ insane.  You haven't even responded to the last
-one, but for the first two the reason why you didn't like them was something
-similar to "it may conflict with some future changes I'm planning".  Well,
-that might be used to reject prety much any change and I'm not considering it
-as a good enough reason for blocking a fix.  Sorry about that.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Tejun Heo <tj@kernel.org>
+---
+ drivers/pci/hotplug/shpchp_core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I easily could say I didn't care, but I feel I've spent too much time on that
-pretty much for no reason.
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index b6de307..59ca86c 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -366,7 +366,7 @@ static int __init shpcd_init(void)
+ {
+ 	int retval = 0;
+ 
+-	shpchp_wq = alloc_ordered_workqueue("shpchp", 0);
++	shpchp_wq = alloc_workqueue("shpchp", 0, 0);
+ 	if (!shpchp_wq)
+ 		return -ENOMEM;
+ 
 
-Please tell me, honestly, do you want the current code to be fixed at all?
-
-Disappointed,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
