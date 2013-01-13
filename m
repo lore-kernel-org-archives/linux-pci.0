@@ -1,107 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:59267 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299Ab3AOEpp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 23:45:45 -0500
+Received: from mail-wi0-f202.google.com ([209.85.212.202]:39341 "EHLO
+	mail-wi0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756356Ab3AMX14 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 18:27:56 -0500
+Received: by mail-wi0-f202.google.com with SMTP id hn17so89167wib.1
+        for <linux-pci@vger.kernel.org>; Sun, 13 Jan 2013 15:27:54 -0800 (PST)
+Subject: [PATCH v7 4/4] PCI: shpchp: Use per-slot workqueues to avoid deadlock
+To: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Daniel J Blueman <daniel@quora.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Date: Sun, 13 Jan 2013 16:27:53 -0700
+Message-ID: <20130113232753.7225.31932.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1824463.EWDqkMLC4N@hammer82.arch.suse.de>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<201301141605.43428.trenn@suse.de>
-	<CAE9FiQVQvj1TPokoCgx_jbp0VACC8cgtFibH4KoqOssEc6JSPw@mail.gmail.com>
-	<1824463.EWDqkMLC4N@hammer82.arch.suse.de>
-Date: Mon, 14 Jan 2013 20:45:43 -0800
-Message-ID: <CAE9FiQUgqRLO4O4HFBC_D5o8TQhnouEaDNq82wdwuu57=OsoZQ@mail.gmail.com>
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in
- memmap=exactmap case
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Content-Type: multipart/mixed; boundary=00151750e4c039d07904d34c6f6d
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---00151750e4c039d07904d34c6f6d
-Content-Type: text/plain; charset=ISO-8859-1
+When we have an SHPC-capable bridge with a second SHPC-capable bridge
+below it, pushing the upstream bridge's attention button causes a
+deadlock.
 
-On Mon, Jan 14, 2013 at 4:54 PM, Thomas Renninger <trenn@suse.de> wrote:
-> On Monday, January 14, 2013 11:04:36 AM Yinghai Lu wrote:
->> On Mon, Jan 14, 2013 at 7:05 AM, Thomas Renninger <trenn@suse.de> wrote:
->> > What is this for?:
->> > @@ -871,6 +879,11 @@ static int __init parse_memmap_one(char
->> >
->> >         userdef = 1;
->> >         if (*p == '@') {
->> >
->> >                 start_at = memparse(p+1, &p);
->> >
->> > +               if (exactusablemap_parsed) {
->> > +                       /* remove all range with other types */
->> > +                       e820_remove_range(start_at, mem_size,
->> > +                                                E820_RAM, 0);
->> > +               }
->> >
->> >                 e820_add_region(start_at, mem_size, E820_RAM);
->> >
->> >         } else if (*p == '#') {
->> >
->> >                 start_at = memparse(p+1, &p);
->>
->> remove all old renges before add E820_RAM, otherwise new add E820
->> ranges could be ignored.
-> But this is intended?
-> kexec must never request reserved memory to be used as ordinary E820_RAM
-> by the kdump kernel.
-> This also reverts what exactusablemap is all about:
-> Keep all reserved memory ranges of the original BIOS map.
->
-> Above would again wrongly remove the mmconf and other reserved regions
-> if kexec passes memmap=exactuseablemap,x@y
->
-> From what I can see the patch looks fine, but above part should
-> simply be left out.
+The deadlock happens because we use the shpchp_wq workqueue to run
+shpchp_pushbutton_thread(), which uses shpchp_disable_slot() to remove
+devices below the upstream bridge.  When we remove the downstream bridge,
+we call shpc_remove(), the shpchp driver's .remove() method.  That calls
+flush_workqueue(shpchp_wq), which deadlocks because the
+shpchp_pushbutton_thread() work item is still running.
 
-then, I would like to rename it to resetusablemap instead.
+This patch avoids the deadlock by creating a workqueue for every slot
+and removing the single shared workqueue.
 
-like attached.
+Here's the call path that leads to the deadlock:
 
-Thanks
+  shpchp_queue_pushbutton_work
+    queue_work(shpchp_wq)		# shpchp_pushbutton_thread
+    ...
 
-Yinghai
+  shpchp_pushbutton_thread
+    shpchp_disable_slot
+      remove_board
+        shpchp_unconfigure_device
+          pci_stop_and_remove_bus_device
+            ...
+              shpc_remove		# shpchp driver .remove method
+                hpc_release_ctlr
+                  cleanup_slots
+                    flush_workqueue(shpchp_wq)
 
---00151750e4c039d07904d34c6f6d
-Content-Type: application/octet-stream; name="e820_resetusablemap.patch"
-Content-Disposition: attachment; filename="e820_resetusablemap.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hbyk694g0
+This change is based on code inspection, since we don't have hardware
+with this topology.
 
-LS0tCiBhcmNoL3g4Ni9rZXJuZWwvZTgyMC5jIHwgICAxMyArKysrKysrKysrKy0tCiAxIGZpbGUg
-Y2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCkluZGV4OiBsaW51eC0y
-LjYvYXJjaC94ODYva2VybmVsL2U4MjAuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9h
-cmNoL3g4Ni9rZXJuZWwvZTgyMC5jCisrKyBsaW51eC0yLjYvYXJjaC94ODYva2VybmVsL2U4MjAu
-YwpAQCAtODQ1LDcgKzg0NSw3IEBAIHN0YXRpYyBpbnQgX19pbml0IHBhcnNlX21lbW1hcF9vbmUo
-Y2hhcgogCWlmICghcCkKIAkJcmV0dXJuIC1FSU5WQUw7CiAKLQlpZiAoIXN0cm5jbXAocCwgImV4
-YWN0bWFwIiwgOCkpIHsKKwlpZiAoIXN0cm5jbXAocCwgImV4YWN0bWFwIiwgOCkgfHwgIXN0cm5j
-bXAocCwgInJlc2V0dXNhYmxlbWFwIiwgMTQpKSB7CiAJCWlmIChleGFjdG1hcF9wYXJzZWQpCiAJ
-CQlyZXR1cm4gMDsKIApAQCAtODU4LDcgKzg1OCwxMSBAQCBzdGF0aWMgaW50IF9faW5pdCBwYXJz
-ZV9tZW1tYXBfb25lKGNoYXIKIAkJICovCiAJCXNhdmVkX21heF9wZm4gPSBlODIwX2VuZF9vZl9y
-YW1fcGZuKCk7CiAjZW5kaWYKLQkJZTgyMC5ucl9tYXAgPSAwOworCQlpZiAoIXN0cm5jbXAocCwg
-InJlc2V0dXNhYmxlbWFwIiwgMTQpKSB7CisJCQkvKiByZW1vdmUgYWxsIG9sZCBFODIwX1JBTSBy
-YW5nZXMgKi8KKwkJCWU4MjBfcmVtb3ZlX3JhbmdlKDAsIFVMTE9OR19NQVgsIEU4MjBfUkFNLCAx
-KTsKKwkJfSBlbHNlCisJCQllODIwLm5yX21hcCA9IDA7CiAJCXVzZXJkZWYgPSAxOwogCQlyZXR1
-cm4gMDsKIAl9CkBAIC04OTAsNiArODk0LDExIEBAIHN0YXRpYyBpbnQgX19pbml0IHBhcnNlX21l
-bW1hcF9vcHQoY2hhcgogCXAgPSBzdHJzdHIocCwgImV4YWN0bWFwIik7CiAJaWYgKHApCiAJCXBh
-cnNlX21lbW1hcF9vbmUoImV4YWN0bWFwIik7CisJZWxzZSB7CisJCXAgPSBzdHJzdHIoYm9vdF9j
-b21tYW5kX2xpbmUsICJyZXNldHVzYWJsZW1hcCIpOworCQlpZiAocCkKKwkJCXBhcnNlX21lbW1h
-cF9vbmUoInJlc2V0dXNhYmxlbWFwIik7CisJfQogCiAJd2hpbGUgKHN0cikgewogCQljaGFyICpr
-ID0gc3RyY2hyKHN0ciwgJywnKTsK
---00151750e4c039d07904d34c6f6d--
+Based-on-patch-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: stable@vger.kernel.org
+---
+ drivers/pci/hotplug/shpchp.h      |    2 +-
+ drivers/pci/hotplug/shpchp_core.c |   26 ++++++++++++++------------
+ drivers/pci/hotplug/shpchp_ctrl.c |    6 +++---
+ 3 files changed, 18 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
+index 1b69d95..b849f995 100644
+--- a/drivers/pci/hotplug/shpchp.h
++++ b/drivers/pci/hotplug/shpchp.h
+@@ -46,7 +46,6 @@
+ extern bool shpchp_poll_mode;
+ extern int shpchp_poll_time;
+ extern bool shpchp_debug;
+-extern struct workqueue_struct *shpchp_wq;
+ 
+ #define dbg(format, arg...)						\
+ do {									\
+@@ -90,6 +89,7 @@ struct slot {
+ 	struct list_head	slot_list;
+ 	struct delayed_work work;	/* work for button event */
+ 	struct mutex lock;
++	struct workqueue_struct *wq;
+ 	u8 hp_slot;
+ };
+ 
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 3774e0d..3100c52 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -39,7 +39,6 @@
+ bool shpchp_debug;
+ bool shpchp_poll_mode;
+ int shpchp_poll_time;
+-struct workqueue_struct *shpchp_wq;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+@@ -128,6 +127,14 @@ static int init_slots(struct controller *ctrl)
+ 		slot->device = ctrl->slot_device_offset + i;
+ 		slot->hpc_ops = ctrl->hpc_ops;
+ 		slot->number = ctrl->first_slot + (ctrl->slot_num_inc * i);
++
++		snprintf(name, sizeof(name), "shpchp-%d", slot->number);
++		slot->wq = alloc_workqueue(name, 0, 0);
++		if (!slot->wq) {
++			retval = -ENOMEM;
++			goto error_info;
++		}
++
+ 		mutex_init(&slot->lock);
+ 		INIT_DELAYED_WORK(&slot->work, shpchp_queue_pushbutton_work);
+ 
+@@ -147,7 +154,7 @@ static int init_slots(struct controller *ctrl)
+ 		if (retval) {
+ 			ctrl_err(ctrl, "pci_hp_register failed with error %d\n",
+ 				 retval);
+-			goto error_info;
++			goto error_slotwq;
+ 		}
+ 
+ 		get_power_status(hotplug_slot, &info->power_status);
+@@ -159,6 +166,8 @@ static int init_slots(struct controller *ctrl)
+ 	}
+ 
+ 	return 0;
++error_slotwq:
++	destroy_workqueue(slot->wq);
+ error_info:
+ 	kfree(info);
+ error_hpslot:
+@@ -179,7 +188,7 @@ void cleanup_slots(struct controller *ctrl)
+ 		slot = list_entry(tmp, struct slot, slot_list);
+ 		list_del(&slot->slot_list);
+ 		cancel_delayed_work(&slot->work);
+-		flush_workqueue(shpchp_wq);
++		destroy_workqueue(slot->wq);
+ 		pci_hp_deregister(slot->hotplug_slot);
+ 	}
+ }
+@@ -362,18 +371,12 @@ static struct pci_driver shpc_driver = {
+ 
+ static int __init shpcd_init(void)
+ {
+-	int retval = 0;
+-
+-	shpchp_wq = alloc_workqueue("shpchp", 0, 0);
+-	if (!shpchp_wq)
+-		return -ENOMEM;
++	int retval;
+ 
+ 	retval = pci_register_driver(&shpc_driver);
+ 	dbg("%s: pci_register_driver = %d\n", __func__, retval);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+-	if (retval) {
+-		destroy_workqueue(shpchp_wq);
+-	}
++
+ 	return retval;
+ }
+ 
+@@ -381,7 +384,6 @@ static void __exit shpcd_cleanup(void)
+ {
+ 	dbg("unload_shpchpd()\n");
+ 	pci_unregister_driver(&shpc_driver);
+-	destroy_workqueue(shpchp_wq);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+ }
+ 
+diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+index fd2cae9..5849927 100644
+--- a/drivers/pci/hotplug/shpchp_ctrl.c
++++ b/drivers/pci/hotplug/shpchp_ctrl.c
+@@ -51,7 +51,7 @@ static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, interrupt_event_handler);
+ 
+-	queue_work(shpchp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+ 
+ 	return 0;
+ }
+@@ -453,7 +453,7 @@ void shpchp_queue_pushbutton_work(struct work_struct *work)
+ 		kfree(info);
+ 		goto out;
+ 	}
+-	queue_work(shpchp_wq, &info->work);
++	queue_work(p_slot->wq, &info->work);
+  out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+@@ -501,7 +501,7 @@ static void handle_button_press_event(struct slot *p_slot)
+ 		p_slot->hpc_ops->green_led_blink(p_slot);
+ 		p_slot->hpc_ops->set_attention_status(p_slot, 0);
+ 
+-		queue_delayed_work(shpchp_wq, &p_slot->work, 5*HZ);
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		break;
+ 	case BLINKINGOFF_STATE:
+ 	case BLINKINGON_STATE:
+
