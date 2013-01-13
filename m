@@ -1,96 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f176.google.com ([209.85.128.176]:44665 "EHLO
-	mail-ve0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755953Ab3A3WAS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 17:00:18 -0500
-Received: by mail-ve0-f176.google.com with SMTP id jz10so1491518veb.21
-        for <linux-pci@vger.kernel.org>; Wed, 30 Jan 2013 14:00:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
-References: <20130116143853.339dd89b@nehalam.linuxnetplumber.net>
+Received: from mail-qc0-f202.google.com ([209.85.216.202]:41847 "EHLO
+	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756349Ab3AMX1t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 18:27:49 -0500
+Received: by mail-qc0-f202.google.com with SMTP id s25so431664qcq.5
+        for <linux-pci@vger.kernel.org>; Sun, 13 Jan 2013 15:27:48 -0800 (PST)
+Subject: [PATCH v7 3/4] PCI: shpchp: Handle push button event asynchronously
+To: Yijing Wang <wangyijing@huawei.com>, linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 30 Jan 2013 14:59:56 -0700
-Message-ID: <CAErSpo5eOE_=Ob2jN7ACy0eJBOa8k36XqCbHnGTCs-wfiy8tiw@mail.gmail.com>
-Subject: Re: PCI warning on boot 3.8.0-rc1
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-kernel@vger.kernel.org, Daniel J Blueman <daniel@quora.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Date: Sun, 13 Jan 2013 16:27:48 -0700
+Message-ID: <20130113232748.7225.66704.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
+References: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 16, 2013 at 3:38 PM, Stephen Hemminger
-<stephen@networkplumber.org> wrote:
-> I see this on boot in dmesg
->
-> [    0.574494] DMAR: No ATSR found
-> [    0.574549] IOMMU 0 0xfed90000: using Queued invalidation
-> [    0.574550] IOMMU 1 0xfed91000: using Queued invalidation
-> [    0.574554] IOMMU: Setting RMRR:
-> [    0.574583] IOMMU: Setting identity map for device 0000:00:02.0 [0xcf000000 -
->  0xdf1fffff]
-> [    0.575748] IOMMU: Setting identity map for device 0000:00:1d.0 [0xcd551000 -
->  0xcd56dfff]
-> [    0.575767] IOMMU: Setting identity map for device 0000:00:1a.0 [0xcd551000 -
->  0xcd56dfff]
-> [    0.575786] IOMMU: Setting identity map for device 0000:00:14.0 [0xcd551000 -
->  0xcd56dfff]
-> [    0.575797] IOMMU: Prepare 0-16MiB unity mapping for LPC
-> [    0.575806] IOMMU: Setting identity map for device 0000:00:1f.0 [0x0 - 0xffff
-> ff]
-> [    0.576186] PCI-DMA: Intel(R) Virtualization Technology for Directed I/O
-> [    0.576337] ------------[ cut here ]------------
-> [    0.576342] WARNING: at drivers/pci/search.c:46 pci_find_upstream_pcie_bridge
-> +0x59/0x71()
-> [    0.576343] Hardware name: System Product Name
-> [    0.576344] Modules linked in:
-> [    0.576347] Pid: 1, comm: swapper/0 Not tainted 3.8.0-rc1-net-next+ #4
-> [    0.576348] Call Trace:
-> [    0.576352]  [<ffffffff81074261>] warn_slowpath_common+0x83/0x9c
-> [    0.576355]  [<ffffffff813fae71>] ? bus_set_iommu+0x49/0x49
-> [    0.576357]  [<ffffffff81074294>] warn_slowpath_null+0x1a/0x1c
-> [    0.576360]  [<ffffffff812db618>] pci_find_upstream_pcie_bridge+0x59/0x71
-> [    0.576362]  [<ffffffff813fd247>] intel_iommu_add_device+0x4d/0x17a
-> [    0.576364]  [<ffffffff813faeab>] add_iommu_group+0x3a/0x48
-> [    0.576368]  [<ffffffff8135d490>] bus_for_each_dev+0x57/0x89
-> [    0.576370]  [<ffffffff813fae6a>] bus_set_iommu+0x42/0x49
-> [    0.576374]  [<ffffffff81b1b1a5>] intel_iommu_init+0xa27/0xb44
-> [    0.576377]  [<ffffffff8105dcf3>] ? free_init_pages+0xf5/0x10d
-> [    0.576379]  [<ffffffff81aeb87d>] ? maybe_link.part.2+0x10b/0x10b
-> [    0.576382]  [<ffffffff81aeef53>] ? memblock_find_dma_reserve+0x133/0x133
-> [    0.576384]  [<ffffffff81aeef66>] pci_iommu_init+0x13/0x3e
-> [    0.576387]  [<ffffffff8100023c>] do_one_initcall+0x7f/0x133
-> [    0.576390]  [<ffffffff814d0c2c>] kernel_init+0x146/0x29b
-> [    0.576393]  [<ffffffff81aea52f>] ? do_early_param+0x8c/0x8c
-> [    0.576395]  [<ffffffff814d0ae6>] ? rest_init+0xda/0xda
-> [    0.576398]  [<ffffffff814ed4dc>] ret_from_fork+0x7c/0xb0
-> [    0.576400]  [<ffffffff814d0ae6>] ? rest_init+0xda/0xda
-> [    0.576406] ---[ end trace f709d1eb2b66cbf5 ]---
->
-> $ sudo lspci -t -vv
-> -[0000:00]-+-00.0  Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor DRAM Controller
->            +-01.0-[01-02]----00.0  Intel Corporation Ethernet Controller 10-Gigabit X540-AT2
->            +-02.0  Intel Corporation Xeon E3-1200 v2/3rd Gen Core processor Graphics Controller
->            +-14.0  Intel Corporation 7 Series/C210 Series Chipset Family USB xHCI Host Controller
->            +-16.0  Intel Corporation 7 Series/C210 Series Chipset Family MEI Controller #1
->            +-1a.0  Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #2
->            +-1b.0  Intel Corporation 7 Series/C210 Series Chipset Family High Definition Audio Controller
->            +-1c.0-[03]--
->            +-1c.4-[04]----00.0  Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller
->            +-1c.5-[05-06]----00.0-[06]--
->            +-1d.0  Intel Corporation 7 Series/C210 Series Chipset Family USB Enhanced Host Controller #1
->            +-1f.0  Intel Corporation Z77 Express Chipset LPC Controller
->            +-1f.2  Intel Corporation 7 Series/C210 Series Chipset Family 6-port SATA Controller [AHCI mode]
->            \-1f.3  Intel Corporation 7 Series/C210 Series Chipset Family SMBus Controller
+Use non-ordered workqueue for attention button events.
 
-I think drivers/pci/search.c is identical between 3.7 and 3.8-rc1.  Is
-this the first time you've turned on the IOMMU on that box?
+Attention button events on each slot can be handled asynchronously. So
+we should use non-ordered workqueue. This patch also removes ordered
+workqueue in shpchp as a result.
 
-It's the same warning as in this bugzilla:
-https://bugzilla.kernel.org/show_bug.cgi?id=44881, and there's a patch
-there at https://bugzilla.kernel.org/show_bug.cgi?id=44881#c11, but
-it's just a quirk that turns off VT-d if we find certain broken
-bridges.  It doesn't look like you have any of those (although I don't
-know what you have at 05:00.0).
+486b10b9f4 ("PCI: pciehp: Handle push button event asynchronously") made
+the same change to pciehp.  I split this out from a patch by Yijing Wang
+<wangyijing@huawei.com> so we fix one thing at a time and to make the
+shpchp history correspond more closely with the pciehp history.
 
-Bjorn
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+---
+ drivers/pci/hotplug/shpchp.h      |    1 -
+ drivers/pci/hotplug/shpchp_core.c |   10 ----------
+ drivers/pci/hotplug/shpchp_ctrl.c |    2 +-
+ 3 files changed, 1 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/hotplug/shpchp.h b/drivers/pci/hotplug/shpchp.h
+index ca64932..1b69d95 100644
+--- a/drivers/pci/hotplug/shpchp.h
++++ b/drivers/pci/hotplug/shpchp.h
+@@ -47,7 +47,6 @@ extern bool shpchp_poll_mode;
+ extern int shpchp_poll_time;
+ extern bool shpchp_debug;
+ extern struct workqueue_struct *shpchp_wq;
+-extern struct workqueue_struct *shpchp_ordered_wq;
+ 
+ #define dbg(format, arg...)						\
+ do {									\
+diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
+index 59ca86c..3774e0d 100644
+--- a/drivers/pci/hotplug/shpchp_core.c
++++ b/drivers/pci/hotplug/shpchp_core.c
+@@ -40,7 +40,6 @@ bool shpchp_debug;
+ bool shpchp_poll_mode;
+ int shpchp_poll_time;
+ struct workqueue_struct *shpchp_wq;
+-struct workqueue_struct *shpchp_ordered_wq;
+ 
+ #define DRIVER_VERSION	"0.4"
+ #define DRIVER_AUTHOR	"Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>"
+@@ -181,7 +180,6 @@ void cleanup_slots(struct controller *ctrl)
+ 		list_del(&slot->slot_list);
+ 		cancel_delayed_work(&slot->work);
+ 		flush_workqueue(shpchp_wq);
+-		flush_workqueue(shpchp_ordered_wq);
+ 		pci_hp_deregister(slot->hotplug_slot);
+ 	}
+ }
+@@ -370,17 +368,10 @@ static int __init shpcd_init(void)
+ 	if (!shpchp_wq)
+ 		return -ENOMEM;
+ 
+-	shpchp_ordered_wq = alloc_ordered_workqueue("shpchp_ordered", 0);
+-	if (!shpchp_ordered_wq) {
+-		destroy_workqueue(shpchp_wq);
+-		return -ENOMEM;
+-	}
+-
+ 	retval = pci_register_driver(&shpc_driver);
+ 	dbg("%s: pci_register_driver = %d\n", __func__, retval);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION "\n");
+ 	if (retval) {
+-		destroy_workqueue(shpchp_ordered_wq);
+ 		destroy_workqueue(shpchp_wq);
+ 	}
+ 	return retval;
+@@ -390,7 +381,6 @@ static void __exit shpcd_cleanup(void)
+ {
+ 	dbg("unload_shpchpd()\n");
+ 	pci_unregister_driver(&shpc_driver);
+-	destroy_workqueue(shpchp_ordered_wq);
+ 	destroy_workqueue(shpchp_wq);
+ 	info(DRIVER_DESC " version: " DRIVER_VERSION " unloaded\n");
+ }
+diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
+index f9b5a52..fd2cae9 100644
+--- a/drivers/pci/hotplug/shpchp_ctrl.c
++++ b/drivers/pci/hotplug/shpchp_ctrl.c
+@@ -453,7 +453,7 @@ void shpchp_queue_pushbutton_work(struct work_struct *work)
+ 		kfree(info);
+ 		goto out;
+ 	}
+-	queue_work(shpchp_ordered_wq, &info->work);
++	queue_work(shpchp_wq, &info->work);
+  out:
+ 	mutex_unlock(&p_slot->lock);
+ }
+
