@@ -1,142 +1,127 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v8 2/3] aerdrv: Enhanced AER logging
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 02 Jan 2013 16:27:37 -0700
-Message-ID: <20130102232737.5706.64500.stgit@grignak.americas.hpqcorp.net>
-In-Reply-To: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
-References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-da0-f51.google.com ([209.85.210.51]:46267 "EHLO
+	mail-da0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755193Ab3AMPZ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 10:25:59 -0500
+Message-ID: <50F2D1FA.6000000@gmail.com>
+Date: Sun, 13 Jan 2013 23:25:46 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 06/22] PCI: split registration of PCI bus devices into
+ two stages
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-7-git-send-email-yinghai@kernel.org> <3931059.ZcnvRQRmKT@vostro.rjw.lan>
+In-Reply-To: <3931059.ZcnvRQRmKT@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch will provide a more reliable and easy way for user-space
-applications to have access to AER logs rather than reading them from the
-message buffer. It also provides a way to notify user-space when an AER
-event occurs.
+On 01/13/2013 06:34 AM, Rafael J. Wysocki wrote:
+> On Friday, January 11, 2013 02:40:33 PM Yinghai Lu wrote:
+>> From: Jiang Liu <jiang.liu@huawei.com>
+>>
+>> When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+>> the notification handler can't hold reference count to the new PCI bus
+>> because the device object for the new bus (pci_dev->subordinate->dev)
+>> hasn't been initialized yet.
+> 
+> It doesn't look like BUS_NOTIFY_ADD_DEVICE is used by the PCI bus type
+> in the mainline.
+> 
+> Is it in linux-next?
+> 
+> If not, then I don't see why we need this patch.
+Hi Rafael,
+	Originally it's a preparation patch for pci_slot/acpiphp/pci_bind
+related fixups. With recent work from you to remove bind/unbind from struct
+acpi_bus_type, we have no dependency on this patch anymore.
+Regards!
+Gerry
 
-The aer driver is updated to generate a trace event of function 'aer_event'
-when a PCIe error is reported over the AER interface.  The trace event was
-added to both the interrupt based aer path and the firmware first path.
-
-v1-v2 fix compile errors in ifdefs.
-v2-v3 Update to new location of trace header. Update print to remove
-warning.
-v3-v4 Reworked logic when getting ready to call cper_print_aer
-v6-v7 Change print from pr_info to pr_err if !dev
-v7-v8 Add pfx argument back into call to cper_print_aer()
-
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
----
-
- drivers/acpi/apei/cper.c               |   19 ++++++++++++++++---
- drivers/pci/pcie/aer/aerdrv_errprint.c |    9 ++++++++-
- include/linux/aer.h                    |    4 ++--
- 3 files changed, 26 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/acpi/apei/cper.c b/drivers/acpi/apei/cper.c
-index e6defd8..1e5d8a4 100644
---- a/drivers/acpi/apei/cper.c
-+++ b/drivers/acpi/apei/cper.c
-@@ -29,6 +29,7 @@
- #include <linux/time.h>
- #include <linux/cper.h>
- #include <linux/acpi.h>
-+#include <linux/pci.h>
- #include <linux/aer.h>
- 
- /*
-@@ -249,6 +250,10 @@ static const char *cper_pcie_port_type_strs[] = {
- static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 			    const struct acpi_hest_generic_data *gdata)
- {
-+#ifdef CONFIG_ACPI_APEI_PCIEAER
-+	struct pci_dev *dev;
-+#endif
-+
- 	if (pcie->validation_bits & CPER_PCIE_VALID_PORT_TYPE)
- 		printk("%s""port_type: %d, %s\n", pfx, pcie->port_type,
- 		       pcie->port_type < ARRAY_SIZE(cper_pcie_port_type_strs) ?
-@@ -281,10 +286,18 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
- 	"%s""bridge: secondary_status: 0x%04x, control: 0x%04x\n",
- 	pfx, pcie->bridge.secondary_status, pcie->bridge.control);
- #ifdef CONFIG_ACPI_APEI_PCIEAER
--	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO) {
--		struct aer_capability_regs *aer_regs = (void *)pcie->aer_info;
--		cper_print_aer(pfx, gdata->error_severity, aer_regs);
-+	dev = pci_get_domain_bus_and_slot(pcie->device_id.segment,
-+			pcie->device_id.bus, pcie->device_id.function);
-+	if (!dev) {
-+		pr_err("PCI AER Cannot get PCI device %04x:%02x:%02x.%d\n",
-+			pcie->device_id.segment, pcie->device_id.bus,
-+			pcie->device_id.slot, pcie->device_id.function);
-+		return;
- 	}
-+	if (pcie->validation_bits & CPER_PCIE_VALID_AER_INFO)
-+		cper_print_aer(pfx, dev, gdata->error_severity,
-+				(struct aer_capability_regs *) pcie->aer_info);
-+	pci_dev_put(dev);
- #endif
- }
- 
-diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-index 3ea5173..d3e5fc5 100644
---- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-+++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-@@ -23,6 +23,9 @@
- 
- #include "aerdrv.h"
- 
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/ras.h>
-+
- #define AER_AGENT_RECEIVER		0
- #define AER_AGENT_REQUESTER		1
- #define AER_AGENT_COMPLETER		2
-@@ -194,6 +197,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- 	if (info->id && info->error_dev_num > 1 && info->id == id)
- 		printk("%s""  Error of this Agent(%04x) is reported first\n",
- 			prefix, id);
-+	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
-+			info->severity);
- }
- 
- void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
-@@ -217,7 +222,7 @@ int cper_severity_to_aer(int cper_severity)
- }
- EXPORT_SYMBOL_GPL(cper_severity_to_aer);
- 
--void cper_print_aer(const char *prefix, int cper_severity,
-+void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
- 		    struct aer_capability_regs *aer)
- {
- 	int aer_severity, layer, agent, status_strs_size, tlp_header_valid = 0;
-@@ -259,5 +264,7 @@ void cper_print_aer(const char *prefix, int cper_severity,
- 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
- 			*(tlp + 13), *(tlp + 12));
- 	}
-+	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
-+			aer_severity);
- }
- #endif
-diff --git a/include/linux/aer.h b/include/linux/aer.h
-index 544abdb..ec10e1b 100644
---- a/include/linux/aer.h
-+++ b/include/linux/aer.h
-@@ -49,8 +49,8 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- }
- #endif
- 
--extern void cper_print_aer(const char *prefix, int cper_severity,
--			   struct aer_capability_regs *aer);
-+extern void cper_print_aer(const char *prefix, struct pci_dev *dev,
-+			   int cper_severity, struct aer_capability_regs *aer);
- extern int cper_severity_to_aer(int cper_severity);
- extern void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
- 			      int severity);
+> 
+> Thanks,
+> Rafael
+> 
+> 
+>> Split the registration of PCI bus device into two stages as below,
+>> so that the event handler could hold reference count to the new PCI bus
+>> when handling BUS_NOTIFY_ADD_DEVICE event.
+>>
+>> 1) device_initialize(&pci_dev->dev)
+>> 2) device_initialize(&pci_dev->subordinate->dev)
+>> 3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+>> 4) device_add(&pci_dev->dev)
+>> 5) device_add(&pci_dev->subordinate->dev)
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/pci/bus.c    |    2 +-
+>>  drivers/pci/probe.c  |    4 +++-
+>>  drivers/pci/remove.c |   10 +++++-----
+>>  3 files changed, 9 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index 847f3ca..5f9c728 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -200,7 +200,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+>>  	if (bus->bridge)
+>>  		bus->dev.parent = bus->bridge;
+>>  
+>> -	retval = device_register(&bus->dev);
+>> +	retval = device_add(&bus->dev);
+>>  	if (retval)
+>>  		return retval;
+>>  
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 48b35e1..dc4fde3 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -642,6 +642,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>>  	 */
+>>  	child->dev.class = &pcibus_class;
+>>  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+>> +	device_initialize(&child->dev);
+>>  
+>>  	/*
+>>  	 * Set up the primary, secondary and subordinate
+>> @@ -1678,7 +1679,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>  	b->dev.class = &pcibus_class;
+>>  	b->dev.parent = b->bridge;
+>>  	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+>> -	error = device_register(&b->dev);
+>> +	device_initialize(&b->dev);
+>> +	error = device_add(&b->dev);
+>>  	if (error)
+>>  		goto class_dev_reg_err;
+>>  
+>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>> index fc38c48..a1fdd0f 100644
+>> --- a/drivers/pci/remove.c
+>> +++ b/drivers/pci/remove.c
+>> @@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
+>>  	list_del(&bus->node);
+>>  	pci_bus_release_busn_res(bus);
+>>  	up_write(&pci_bus_sem);
+>> -	if (!bus->is_added)
+>> -		return;
+>> -
+>> -	pci_remove_legacy_files(bus);
+>> -	device_unregister(&bus->dev);
+>> +	if (bus->is_added) {
+>> +		pci_remove_legacy_files(bus);
+>> +		device_del(&bus->dev);
+>> +	}
+>> +	put_device(&bus->dev);
+>>  }
+>>  EXPORT_SYMBOL(pci_remove_bus);
+>>  
+>>
 
