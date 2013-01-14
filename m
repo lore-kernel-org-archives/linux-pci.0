@@ -1,61 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59530 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755095Ab3A1Woa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:44:30 -0500
-Date: Mon, 28 Jan 2013 23:44:23 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: Re: [PATCH v2 11/27] clk: mvebu: create parent-child relation for
- PCIe clocks on Armada 370
-Message-ID: <20130128234423.00bfd28e@skate>
-In-Reply-To: <5106FB47.9000508@wwwdotorg.org>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-12-git-send-email-thomas.petazzoni@free-electrons.com>
-	<5106F6EE.4000101@wwwdotorg.org>
-	<20130128232150.53b56e62@skate>
-	<5106FB47.9000508@wwwdotorg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:42681 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757069Ab3ANTEh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 14:04:37 -0500
+MIME-Version: 1.0
+In-Reply-To: <201301141605.43428.trenn@suse.de>
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
+	<2741365.qqWvlU8HGl@hammer82.arch.suse.de>
+	<CAE9FiQV+W21WcZuuWJYJKXhN4sf0mi=iAFgjX644c3EytPXptw@mail.gmail.com>
+	<201301141605.43428.trenn@suse.de>
+Date: Mon, 14 Jan 2013 11:04:36 -0800
+Message-ID: <CAE9FiQVQvj1TPokoCgx_jbp0VACC8cgtFibH4KoqOssEc6JSPw@mail.gmail.com>
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in
+ memmap=exactmap case
+From: Yinghai Lu <yinghai@kernel.org>
+To: Thomas Renninger <trenn@suse.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Stephen Warren,
+On Mon, Jan 14, 2013 at 7:05 AM, Thomas Renninger <trenn@suse.de> wrote:
+> What is this for?:
+> @@ -871,6 +879,11 @@ static int __init parse_memmap_one(char
+>         userdef = 1;
+>         if (*p == '@') {
+>                 start_at = memparse(p+1, &p);
+> +               if (exactusablemap_parsed) {
+> +                       /* remove all range with other types */
+> +                       e820_remove_range(start_at, mem_size,
+> +                                                E820_RAM, 0);
+> +               }
+>                 e820_add_region(start_at, mem_size, E820_RAM);
+>         } else if (*p == '#') {
+>                 start_at = memparse(p+1, &p);
 
-On Mon, 28 Jan 2013 15:27:19 -0700, Stephen Warren wrote:
-
-> Oh I see; I was confused by the patch description. The two clocks being
-> made child/parent are the two clocks for a port, and this relationship
-> is set up for each port; for some reason I thought there was a
-> requirement to make one port's clock a child of the other port's clock.
-
-Aah, ok, I understand the confusion now. Re-reading my commit log, I'm
-not sure where the confusion comes from, but english is not my native
-language, so maybe something that sounds clear to me is not clear in
-reality. I'll rephrase the commit log to make sure this confusion is
-clarified.
-
-Thanks!
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+remove all old renges before add E820_RAM, otherwise new add E820
+ranges could be ignored.
