@@ -1,60 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:41580 "EHLO gate.crashing.org"
+Received: from cantor2.suse.de ([195.135.220.15]:60032 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933751Ab3AIVFa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jan 2013 16:05:30 -0500
-Message-ID: <1357765188.4838.52.camel@pasglop>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Paul Mackerras <paulus@samba.org>
-Date: Thu, 10 Jan 2013 07:59:48 +1100
-In-Reply-To: <CAErSpo6qX3ih9DXLqxqJw141OAeTFu0YfSih6LyD0sd2gS-Vyg@mail.gmail.com>
-References: <20121030040237.GA10472@google.com>
-	 <1352003971-22278-1-git-send-email-yinghai@kernel.org>
-	 <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
-	 <CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
-	 <CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com>
-	 <CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
-	 <CAErSpo5vEb=63jGsqfau1G=f54oqq17pc3ZzcpzhL7hQrtYhng@mail.gmail.com>
-	 <CAE9FiQUxxjZmd3C33_ujSeL1EjcKHHSoGusQwfBD+Zd=cwCDZA@mail.gmail.com>
-	 <CAErSpo6qX3ih9DXLqxqJw141OAeTFu0YfSih6LyD0sd2gS-Vyg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753125Ab3ANPFy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Jan 2013 10:05:54 -0500
+From: Thomas Renninger <trenn@suse.de>
+To: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap case
+Date: Mon, 14 Jan 2013 16:05:43 +0100
+Cc: "H. Peter Anvin" <hpa@zytor.com>,
+	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
+	Takao Indoh <indou.takao@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
+	horms@verge.net.au
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <2741365.qqWvlU8HGl@hammer82.arch.suse.de> <CAE9FiQV+W21WcZuuWJYJKXhN4sf0mi=iAFgjX644c3EytPXptw@mail.gmail.com>
+In-Reply-To: <CAE9FiQV+W21WcZuuWJYJKXhN4sf0mi=iAFgjX644c3EytPXptw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-6"
+Message-Id: <201301141605.43428.trenn@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-01-09 at 11:39 -0700, Bjorn Helgaas wrote:
+On Monday, January 14, 2013 03:43:46 AM Yinghai Lu wrote:
+> On Sun, Jan 13, 2013 at 6:08 PM, Thomas Renninger <trenn@suse.de> wrote:
+> > On Saturday, January 12, 2013 09:07:12 AM Yinghai Lu wrote:
+...
+> everyone could understand it straightforward:
+> exactmap:  memmap will be specified, and it should be honored without
+> considering old any memmap.
+> exactusablemap: will make sure only old ram range get removed, and
+> specified usable ranges will become final usable
+> ranges in the final memmap. so we need to remove overlapping to old
+> reserved ranges.
 > 
-> > the reason why we need to change those codes for x86, we want to
-> make it support
-> > pci root bus hotplug. So it would be reasonable for us to align
-> other
-> > platform to x86
-> > changes after pci root bus hotplug change is completely done.
+> aka: exact means EXACT ...
+The naming is not my point...
+Anyway after a quick talk with Alexander Graf, I guess I won't have
+much of a chance: rule is rule and a boot param is a public interface
+which must not change just like that (deprecation phase, etc.).
+
+...
+ 
+> those just some kind of improvement without considering kdump.
+> because kdump/scripts already does good job to provide right exactmap
+> with usable and acpi reserved areas.
+No it's conceptional wrong to provide the reserved areas via memmap
+while the original ones are declared already via boot loader structures.
+
+There are store ACPI NVS memory in suspend/resume workarounds (suspend does not
+fit that much for kdump, but there may be more than this and mmconf).
+The reserved areas in kdump kernel should be the same than with the
+original e820 table to avoid any unforseen issues.
+And kdump got them already passed and should use this info.
+
+> for mmconf, some system that range reserved in e820, and some have that in ACPI.
+> and those systems will have that mmconf enabled in kdumped kernel.
+
+ 
+> attached is what I like to have with exactusablemap, but maybe is not
+> needed, and we can just stay with exactmap...
 > 
-> OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
-> way to keep track of this consistency issue and merged
-> pci/yinghai-survey-resources to my -next branch.
+> ps: we don't need to add e820_remove_type...
+I thought this tiny loop:
++       for (i = 0; i < e820.nr_map; i++) {
++               struct e820entry *ei = &e820.map[i];
++               if (ei->type == type) {
++                       memset(ei, 0, sizeof(struct e820entry));
++                       continue;
++               }
++       }
+would be easier to evaluate what it's doing (cmp to.
+e820_remove_range(0, ULLONG_MAX, E820_RAM, 1);)
+But I do not have a strong opinion on that.
 
-Hrm... that's going to be tricky. For example the SR-IOV stuff will not
-work for us, we are working on a different implementation, due to some
-of "interesting" bridge constraints etc...
+What is this for?:
+@@ -871,6 +879,11 @@ static int __init parse_memmap_one(char
+ 	userdef = 1;
+ 	if (*p == '@') {
+ 		start_at = memparse(p+1, &p);
++		if (exactusablemap_parsed) {
++			/* remove all range with other types */
++			e820_remove_range(start_at, mem_size,
++						 E820_RAM, 0);
++		}
+ 		e820_add_region(start_at, mem_size, E820_RAM);
+ 	} else if (*p == '#') {
+ 		start_at = memparse(p+1, &p);
 
-It would be nice to get more of the resource survey in common, our
-original code was actually completely different and I reconciled it a
-lot with x86 in the past few years, but I'm sure we can do better.
-However there are still going to be corner cases....
 
-Ben.
-
-
+    Thomas
