@@ -1,89 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:39955 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754213Ab3A3Lrg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 06:47:36 -0500
-Date: Wed, 30 Jan 2013 12:47:21 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	"Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130130124721.0ad0294e@skate>
-In-Reply-To: <201301300955.49473.arnd@arndb.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301292254.01069.arnd@arndb.de>
-	<20130130042103.GB5734@obsidianresearch.com>
-	<201301300955.49473.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga01-in.huawei.com ([119.145.14.64]:15702 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755659Ab3ANBa5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 20:30:57 -0500
+Message-ID: <50F35FC0.2000507@huawei.com>
+Date: Mon, 14 Jan 2013 09:30:40 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Daniel J Blueman <daniel@quora.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Tejun Heo <tj@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <liuj97@gmail.com>
+Subject: Re: [PATCH v7 0/4] PCI: pciehp, shpchp deadlock fixes
+References: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
+In-Reply-To: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
-
-On Wed, 30 Jan 2013 09:55:49 +0000, Arnd Bergmann wrote:
-
-> I don't remember the kernel ever caring about whether hardware complies
-> to a standard or not. The kernel's job is to make hardware work, based
-> on the actual implementation of that hardware. In a lot of cases that
-> means taking the standard document as a reference, and adding quirks
-> for the devices that are different.
+On 2013/1/14 7:27, Bjorn Helgaas wrote:
+> This is v7 of Yijing Wang's pciehp deadlock fix.  Here's the history of
+> previous postings:
 > 
-> In the end, it comes down to the impact on the code complexity, and
-> the run-time overhead for whatever hardware is most common when adding
-> those quirks.
+>     RFC Oct 31 2012
+>     v2  Nov  9 2012  use slot name, not device name
+>     v3  Nov 12 2012  create workqueues in pcie_init_slot(), pciehp-%u format
+>     v4  Nov 13 2012  use alloc_workqueue(name, 0, 0) again
+>     v5  Jan  9 2013  fix similar problem in shpchp
+>     v6  Jan 10 2013  add pciehp backtrace from Daniel 
+> 
+> This v7 series is functionally identical to v6.  In v7, I split the single
+> shpchp patch into three:
+> 
+>     PCI: shpchp: Make shpchp_wq non-ordered
+>     PCI: shpchp: Handle push button event asynchronously
+>     PCI: shpchp: Use per-slot workqueues to avoid deadlock
+> 
 
-This is not only about standards, it is also about re-using the PCI
-resource allocation code.
+Nice, split the single patch into three will make the log clearer about the
+code changes.
 
-In my RFCv1, sent December, 7th, I wasn't using any emulated PCI-to-PCI
-bridge. So it *can* perfectly work without it.
+> The first fixes what appears to be an error in e24dcbef93 ("shpchp: update
+> workqueue usage").  I split this out so Tejun could easily review it by itself.
+> 
+> I split the second out because it corresponds to a pciehp bugfix, 486b10b9f4
+> ("PCI: pciehp: Handle push button event asynchronously"), that also affects
+> shpchp.
+> 
+> The "PCI: shpchp: Use per-slot workqueues to avoid deadlock" that remains
+> then corresponds exactly to Yijing's original pciehp deadlock fix.
+> 
+> I also rewrote the changelogs.
+> 
+> I propose to push the entire series for inclusion in v3.8, since it
+> fixes an easy-to-cause deadlock with Thunderbolt adapters.
+> 
+> ---
+> 
+> Bjorn Helgaas (3):
+>       PCI: shpchp: Make shpchp_wq non-ordered
+>       PCI: shpchp: Handle push button event asynchronously
+>       PCI: shpchp: Use per-slot workqueues to avoid deadlock
+> 
+> Yijing Wang (1):
+>       PCI: pciehp: Use per-slot workqueues to avoid deadlock
+> 
+> 
+>  drivers/pci/hotplug/pciehp.h      |    2 +-
+>  drivers/pci/hotplug/pciehp_core.c |   11 ++---------
+>  drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
+>  drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++++++-
+>  drivers/pci/hotplug/shpchp.h      |    3 +--
+>  drivers/pci/hotplug/shpchp_core.c |   36 ++++++++++++++----------------------
+>  drivers/pci/hotplug/shpchp_ctrl.c |    6 +++---
+>  7 files changed, 35 insertions(+), 42 deletions(-)
+> 
+> 
 
-However, one major drawback of my RFCv1 version is that since I didn't
-know how much I/O space and memory space was needed for each PCIe
-device, I had to oversize the address decoding windows. And also, I had
-to have a special allocator (certainly simple, but still) to find an
-available physical address to set up each address decoding window.
 
-Emulating a PCI-to-PCI bridge very nicely allows to re-use the PCI core
-resource allocation code. I think it's really the main reason for
-emulated those PCI-to-PCI bridges, rather than willing to comply to
-some standards.
-
-So what I'm going to do now is rework my patch series by removing the
-emulated host bridge (which is normally mandatory by PCIe standard, but
-Linux doesn't need it, so we don't care), but I'll keep the emulated
-PCI-to-PCI bridges in order to benefit for the PCI core resource
-allocation mechanisms.
-
-Is this ok for you?
-
-I'd like to settle on the strategy to follow, because we're really
-going a funny road here: on December 7th, I submit a series that
-doesn't use any PCI-to-PCI bridge, and I'm told that I should emulate
-some. I spent a long time working on an implementation that uses
-emumlated PCI-to-PCI bridges, which I submitted on Monday, now to be
-told that I should work really hard not to use PCI-to-PCI bridges. I
-hope you can feel my little embarrassment here...
-
-Thanks,
-
-Thomas
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Thanks!
+Yijing
+
