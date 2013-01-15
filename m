@@ -1,165 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:53016 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.186]:64015 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933967Ab3AIUnx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:43:53 -0500
+	with ESMTP id S1751636Ab3AOMJV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 07:09:21 -0500
+Date: Tue, 15 Jan 2013 13:08:55 +0100
 From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 08/14] ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
-Date: Wed,  9 Jan 2013 21:43:08 +0100
-Message-Id: <1357764194-12677-9-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
 References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130111154516.GA25335@avionic-0098.adnet.avionic-design.de>
+ <20130112123640.GA22505@avionic-0098.adnet.avionic-design.de>
+ <201301122112.25772.arnd@arndb.de>
+ <20130113095806.GA31966@avionic-0098.adnet.avionic-design.de>
+ <20130114095706.GA23467@arm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
+In-Reply-To: <20130114095706.GA23467@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PMC code already accesses to PMC registers so it makes sense to
-move this function there as well. While at it, rename the function to
-tegra_pmc_pcie_xclk_clamp() for consistency.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Acked-by: Stephen Warren <swarren@wwwdotorg.org>
----
-Changes in v3:
-- none
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Changes in v2:
-- none
----
- arch/arm/mach-tegra/pcie.c | 30 ++++--------------------------
- arch/arm/mach-tegra/pmc.c  | 16 ++++++++++++++++
- arch/arm/mach-tegra/pmc.h  |  1 +
- 3 files changed, 21 insertions(+), 26 deletions(-)
+On Mon, Jan 14, 2013 at 09:57:07AM +0000, Andrew Murray wrote:
+> On Sun, Jan 13, 2013 at 09:58:06AM +0000, Thierry Reding wrote:
+> > On Sat, Jan 12, 2013 at 09:12:25PM +0000, Arnd Bergmann wrote:
+> > > On Saturday 12 January 2013, Thierry Reding wrote:
+> > > > > I already hinted at that in one of the other subthreads. Having s=
+uch a
+> > > > > multiplex would also allow the driver to be built as a module. I =
+had
+> > > > > already thought about this when I was working on an earlier versi=
+on of
+> > > > > these patches. Basically these would be two ops attached to the h=
+ost
+> > > > > bridge, and the generic arch_setup_msi_irq() could then look that=
+ up
+> > > > > given the struct pci_dev that is passed to it and call this new p=
+er-
+> > > > > host bridge .setup_msi_irq().
+> > > >=20
+> > > > struct pci_ops looks like a good place to put these. They'll be
+> > > > available from each struct pci_bus, so should be easy to call from
+> > > > arch_setup_msi_irq().
+> > > >=20
+> > > > Any objections?
+> > > >=20
+> > >=20
+> > > struct pci_ops has a long history of being specifically about
+> > > config space read/write operations, so on the one hand it does
+> > > not feel like the right place to put interrupt specific operations,
+> > > but on the other hand, the name sounds appropriate and I cannot
+> > > think of any other place to put this, so it's fine with me.
+> > >=20
+> > > The only alternative I can think of is to introduce a new
+> > > structure next to it in struct pci_bus, but that feels a bit
+> > > pointless. Maybe Bjorn has a preference one way or the other.
+> >=20
+> > The name pci_ops is certainly generic enough. Also the comment above the
+> > structure declaration says "Low-level architecture-dependent routines",
+> > which applies to the MSI functions as well.
+>=20
+> I've previously looked into this. It seems that architectures handle this
+> in different ways, some use vector tables, others use a multiplex and oth=
+ers
+> just let the end user implement the callback directly.
+>=20
+> I've made an attempt to find a more common way. Though my implementation,=
+ which
+> I will try to share later today for reference provides a registration fun=
+ction
+> in drivers/pci/msi.c to provide implementations of the
+> (setup|teardown)_msi_irq(s) ops. This seems slightly better than the curr=
+ent
+> approach and doesn't break existing users - but is still ugly.
+>=20
+> At present the PCI and MSI frameworks are largely uncoupled from each oth=
+er and
+> so I was keen to not pollute PCI structures (e.g. pci_ops) with MSI ops. =
+Just
+> because most PCI host bridges also provide MSI support I don't think ther=
+e is a
+> reason why they should always come as a pair or be provided by the same c=
+hip.
+>=20
+> Perhaps the solution is to support MSI controller drivers and a means to
+> associate them with PCI host controller drivers?
 
-diff --git a/arch/arm/mach-tegra/pcie.c b/arch/arm/mach-tegra/pcie.c
-index bffcd64..c2d55f8 100644
---- a/arch/arm/mach-tegra/pcie.c
-+++ b/arch/arm/mach-tegra/pcie.c
-@@ -42,6 +42,7 @@
- 
- #include "board.h"
- #include "iomap.h"
-+#include "pmc.h"
- 
- /* Hack - need to parse this from DT */
- #define INT_PCIE_INTR 130
-@@ -148,17 +149,6 @@
- #define  PADS_PLL_CTL_TXCLKREF_DIV10		(0 << 20)
- #define  PADS_PLL_CTL_TXCLKREF_DIV5		(1 << 20)
- 
--/* PMC access is required for PCIE xclk (un)clamping */
--#define PMC_SCRATCH42		0x144
--#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
--
--static void __iomem *reg_pmc_base = IO_ADDRESS(TEGRA_PMC_BASE);
--
--#define pmc_writel(value, reg) \
--	__raw_writel(value, reg_pmc_base + (reg))
--#define pmc_readl(reg) \
--	__raw_readl(reg_pmc_base + (reg))
--
- /*
-  * Tegra2 defines 1GB in the AXI address map for PCIe.
-  *
-@@ -640,18 +630,6 @@ static int tegra_pcie_enable_controller(void)
- 	return 0;
- }
- 
--static void tegra_pcie_xclk_clamp(bool clamp)
--{
--	u32 reg;
--
--	reg = pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
--
--	if (clamp)
--		reg |= PMC_SCRATCH42_PCX_CLAMP;
--
--	pmc_writel(reg, PMC_SCRATCH42);
--}
--
- static void tegra_pcie_power_off(void)
- {
- 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
-@@ -659,7 +637,7 @@ static void tegra_pcie_power_off(void)
- 	tegra_periph_reset_assert(tegra_pcie.pex_clk);
- 
- 	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
--	tegra_pcie_xclk_clamp(true);
-+	tegra_pmc_pcie_xclk_clamp(true);
- }
- 
- static int tegra_pcie_power_regate(void)
-@@ -668,7 +646,7 @@ static int tegra_pcie_power_regate(void)
- 
- 	tegra_pcie_power_off();
- 
--	tegra_pcie_xclk_clamp(true);
-+	tegra_pmc_pcie_xclk_clamp(true);
- 
- 	tegra_periph_reset_assert(tegra_pcie.pcie_xclk);
- 	tegra_periph_reset_assert(tegra_pcie.afi_clk);
-@@ -682,7 +660,7 @@ static int tegra_pcie_power_regate(void)
- 
- 	tegra_periph_reset_deassert(tegra_pcie.afi_clk);
- 
--	tegra_pcie_xclk_clamp(false);
-+	tegra_pmc_pcie_xclk_clamp(false);
- 
- 	clk_prepare_enable(tegra_pcie.afi_clk);
- 	clk_prepare_enable(tegra_pcie.pex_clk);
-diff --git a/arch/arm/mach-tegra/pmc.c b/arch/arm/mach-tegra/pmc.c
-index d4fdb5f..a335a93 100644
---- a/arch/arm/mach-tegra/pmc.c
-+++ b/arch/arm/mach-tegra/pmc.c
-@@ -24,6 +24,10 @@
- #define PMC_CTRL		0x0
- #define PMC_CTRL_INTR_LOW	(1 << 17)
- 
-+/* PMC access is required for PCIE xclk (un)clamping */
-+#define PMC_SCRATCH42		0x144
-+#define PMC_SCRATCH42_PCX_CLAMP	(1 << 0)
-+
- static inline u32 tegra_pmc_readl(u32 reg)
- {
- 	return readl(IO_ADDRESS(TEGRA_PMC_BASE + reg));
-@@ -74,3 +78,15 @@ void __init tegra_pmc_init(void)
- 		val &= ~PMC_CTRL_INTR_LOW;
- 	tegra_pmc_writel(val, PMC_CTRL);
- }
-+
-+void tegra_pmc_pcie_xclk_clamp(bool clamp)
-+{
-+	u32 reg;
-+
-+	reg = tegra_pmc_readl(PMC_SCRATCH42) & ~PMC_SCRATCH42_PCX_CLAMP;
-+
-+	if (clamp)
-+		reg |= PMC_SCRATCH42_PCX_CLAMP;
-+
-+	tegra_pmc_writel(reg, PMC_SCRATCH42);
-+}
-diff --git a/arch/arm/mach-tegra/pmc.h b/arch/arm/mach-tegra/pmc.h
-index 8995ee4..2631c9a 100644
---- a/arch/arm/mach-tegra/pmc.h
-+++ b/arch/arm/mach-tegra/pmc.h
-@@ -19,5 +19,6 @@
- #define __MACH_TEGRA_PMC_H
- 
- void tegra_pmc_init(void);
-+void tegra_pmc_pcie_xclk_clamp(bool clamp);
- 
- #endif
--- 
-1.8.1
+I'm not sure I follow you're reasoning here. Is it possible to use MSIs
+without PCI? If not then I think there's little sense in keeping the
+implementations separate.
 
+Furthermore, if MSI controller and PCI host bridge are separate entities
+how do you look up the MSI controller given a PCI device?
+
+Thierry
+
+--zYM0uCDKw75PZbzx
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ9UbXAAoJEN0jrNd/PrOhPUMQAKNhspoQI51u1sXnZ0ln3ibR
+FLBRqTURtkSryRPqcuc+trnITfOMi7McsACOGsPVRzU3NwZpxrH+vENZuIWEtMjP
+pt++wG60l2oiOBVKkumxD/qDS/q7FBPC+0eD6vaXq5Nk8zG/NDSzvgCY0EY7kfnD
+rgNXAFhHZTGN3srxM7ZVc3IkMZt43Q5F5yaCiy1GOhR9dnpUK/taOwo821rcx+Tf
+0agNyrafnD3nfP51cAIzjAWIeaPt467L0xU3O1byrh+BnOufwlMhUQmMOrgXtmf4
+XQBg0Al9JCS382heYvArCIcj/UI2EILtMdJp9V567vQ3dIA1k0pQ7IiZRez3zjFW
+3uhzUrI2W2MFR/kBOVkf3LoWxx+L+ja0Ur70KOR5BtH/tp4qAQmkWy2HJMh7WmL9
+UlvSsmNqL5FkU470tv7+uPDgJYmhVnWUhn/e2CskagT60ngfmvGo3s5xGDKMKWUt
+aGL36UR1G0xWzJTC2dgfggMfvWV0fq+HXRMe5wF7wW5ftxqnW2t8V8Q+gjLF/+k1
+faCMJld6ueA0h0sz0zVKlacBgo0ocT5Q8KxlMFnTSsvizvmHe5MYIxXDGb6zC8gL
+jZfF+VeG4WXtMTl/eO3UbOi5lEg/rH1PVbGMSW0Tg65BBEGGldMu0l2DIsMsyBCd
+Fv0lXQVkotmB8gKfpzss
+=0RFY
+-----END PGP SIGNATURE-----
+
+--zYM0uCDKw75PZbzx--
