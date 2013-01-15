@@ -1,75 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f45.google.com ([209.85.214.45]:49922 "EHLO
-	mail-bk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756936Ab3AHS12 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 13:27:28 -0500
+Received: from service87.mimecast.com ([91.220.42.44]:46203 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752734Ab3AOPko convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 10:40:44 -0500
+Date: Tue, 15 Jan 2013 15:40:38 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130115154038.GA11241@arm.com>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130114095706.GA23467@arm.com>
+ <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
+ <201301151244.12767.arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com>
-References: <20121030040237.GA10472@google.com>
-	<1352003971-22278-1-git-send-email-yinghai@kernel.org>
-	<CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
-	<CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
-	<CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com>
-Date: Tue, 8 Jan 2013 10:27:25 -0800
-Message-ID: <CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201301151244.12767.arnd@arndb.de>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 8, 2013 at 9:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I'm really sorry that it's taken me so long to get to these.
->>
->> I applied these to my pci/yinghai-survey-resources branch.  I
->> re-ordered the last two and reworked some of the changelogs.
->
-> To be clear about this, the pci/yinghai-survey-resources branch I
-> mentioned is a staging branch that just gets build test coverage.  I
-> don't plan to actually merge this or put it into -next until the
-> questions below are resolved.
->
-> My inclination, until I'm persuaded otherwise, is to wait for patches
-> that preserve the similarities among these architectures.
+On Tue, Jan 15, 2013 at 12:44:12PM +0000, Arnd Bergmann wrote:
+> On Tuesday 15 January 2013, Thierry Reding wrote:
+> > I'm not sure I follow you're reasoning here. Is it possible to use MSIs
+> > without PCI? If not then I think there's little sense in keeping the
+> > implementations separate.
+> 
+> Conceptually, you can use MSI for any device, but the Linux interfaces
+> for MSI are tied to PCI. If you use an MSI controller for a non-PCI
+> device, it would probably just appear as a regular interrupt controller.
+> 
+> > Furthermore, if MSI controller and PCI host bridge are separate entities
+> > how do you look up the MSI controller given a PCI device?
+> 
+> The host bridge can contain a pointer ot the MSI controller. You can
+> have multiple host bridges sharing a single MSI controller or you
+> can have separate ones for each host.
 
-I don't know, that could be separated patcheset after we conclude
-pci root bus hotplug support.
+Yes and I hoped this relationship would be described by a device tree phandle
+as is done for relating devices to their interrupt-parent (where device trees
+are used). This would provide (arguably unnecessarily) greater flexibility,
+e.g. if you have two PCI/MSI controller pairs, the MSIs only offer limited MSIs
+and you only use one PCI fabric - you could service different parts of the
+fabric by different MSI controllers (assuming you relate MSI controllers to
+part of the fabric and that you'd want to). Perhaps there would be benefits for
+virtualisation as well?
 
->
->> In general these look good.  My main concern is that they only touch
->> x86, without touching the similar code in frv, microblaze, mn10300,
->> and powerpc.
->>
->> This code (pcibios_resource_survey(), pcibios_assign_resources(),
->> pcibios_allocate_resources(), pcibios_allocate_bus_resources()) was
->> obviously copied from x86 originally, and I'd like to preserve the
->> similarity between them.  It would be even better to refactor it so
->> it's actually *shared*, but I don't think that's a requirement right
->> now.
+Andrew Murray
 
-yes, should be moved to drivers/pci
-
->>
->> If we allow it to diverge now, it will make it harder to refactor and
->> harder to notice when bug fixes should be applied to all of them.  For
->> example, looking at pcibios_allocate_resources(), commit 575939cf5
->> added some SR-IOV support to x86.  Should similar code be added for
->> frv, microblaze, mn10300, and powerpc?
-
-should be treated the same.
-
->>
->> Anybody else have thoughts on this?
->>
->> Bjorn
