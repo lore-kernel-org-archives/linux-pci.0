@@ -1,73 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f43.google.com ([209.85.212.43]:51950 "EHLO
-	mail-vb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978Ab3A1XJ7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 18:09:59 -0500
-Received: by mail-vb0-f43.google.com with SMTP id fr13so2248477vbb.2
-        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 15:09:58 -0800 (PST)
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4731 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab3AODOz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:14:55 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Scott Murray <scott@spiteful.org>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v3 2/7] PCI: Rename pci_enable_ari to pci_configure_ari
+Date: Tue, 15 Jan 2013 11:12:17 +0800
+Message-ID: <1358219542-16880-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
+References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20130118114218.6698.42484.stgit@zurg>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114218.6698.42484.stgit@zurg>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 28 Jan 2013 16:09:38 -0700
-Message-ID: <CAErSpo5Cfi0KbOqDr4TfnzjWFy7V-oi0bOY-vf8Y16_RPtEGdQ@mail.gmail.com>
-Subject: Re: [PATCH 2/5] e1000e: fix pci device enable counter balance
-To: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+pci_enable_ari now support enable or disable ARI forwarding.
+So rename pci_enable_ari() to pci_configure_ari for easy
+understanding.
 
-On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-<khlebnikov@openvz.org> wrote:
-> __e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
-> should call pci_enable_device_mem() to keep enable counter in balance.
->
-> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
-> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
->
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-> Cc: e1000-devel@lists.sourceforge.net
-> Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> Cc: Bruce Allan <bruce.w.allan@intel.com>
-> ---
->  drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-> index 2853c11..6bce796 100644
-> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
-> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-> @@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
->         pci_restore_state(pdev);
->         pci_save_state(pdev);
->
-> +       err = pci_enable_device_mem(pdev);
-> +       if (err) {
-> +               dev_err(&pdev->dev,
-> +                       "Cannot re-enable PCI device after suspend.\n");
-> +               return err;
-> +       }
+No functional change.
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/pci.c   |    4 ++--
+ drivers/pci/pci.h   |    2 +-
+ drivers/pci/probe.c |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Seems right to me, and the other users I looked at (igb, azx,
-virtio_pci) call pci_disable_device() in .suspend() and call
-pci_enable_device() in .resume() as you propose to do here.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a17129f..d921900 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2067,10 +2067,10 @@ void pci_free_cap_save_buffers(struct pci_dev *dev)
+ }
+ 
+ /**
+- * pci_enable_ari - enable ARI forwarding if hardware support it
++ * pci_configure_ari - enable or disable ARI forwarding
+  * @dev: the PCI device
+  */
+-void pci_enable_ari(struct pci_dev *dev)
++void pci_configure_ari(struct pci_dev *dev)
+ {
+ 	u32 cap;
+ 	struct pci_dev *bridge;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e851829..19043cb 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -209,7 +209,7 @@ extern int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ extern int pci_resource_bar(struct pci_dev *dev, int resno,
+ 			    enum pci_bar_type *type);
+ extern int pci_bus_add_child(struct pci_bus *bus);
+-extern void pci_enable_ari(struct pci_dev *dev);
++extern void pci_configure_ari(struct pci_dev *dev);
+ /**
+  * pci_ari_enabled - query ARI forwarding status
+  * @bus: the PCI bus
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6186f03..7b9e691 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1286,7 +1286,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_vpd_pci22_init(dev);
+ 
+ 	/* Alternative Routing-ID Forwarding */
+-	pci_enable_ari(dev);
++	pci_configure_ari(dev);
+ 
+ 	/* Single Root I/O Virtualization */
+ 	pci_iov_init(dev);
+-- 
+1.7.1
 
-I assume the e1000 folks will handle this patch (and the previous one).
 
-> +
->         e1000e_set_interrupt_capability(adapter);
->         if (netif_running(netdev)) {
->                 err = e1000_request_irq(adapter);
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
