@@ -1,45 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:49013 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845Ab2LFGTN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Dec 2012 01:19:13 -0500
-Date: Thu, 6 Dec 2012 06:19:03 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-efi@vger.kernel.org, mfleming@intel.com, dwmw2@infradead.org,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Subject: Re: Use PCI ROMs from EFI boot services
-Message-ID: <20121206061903.GA3068@srcf.ucam.org>
-References: <20121203200241.GG5906@thinkpad-t410>
- <CAE9FiQVdpmmExrPrLf7HYVuo0cTY9Xjn6bWzObbuSSeQ-e1PbA@mail.gmail.com>
- <20121206001819.GA30527@srcf.ucam.org>
- <50BFE50C.8030008@zytor.com>
- <CAE9FiQX+M+VynyERC0W3y8rvr1tBxWnuBqJ6E-ywC_=HvJE66g@mail.gmail.com>
- <50BFE890.5070109@zytor.com>
- <d8d553fb-1571-4fdc-833c-92b80e15bc25@email.android.com>
- <50BFEF09.9000408@zytor.com>
- <cd3b2e67-92af-494d-ba2d-4179ead6e06b@email.android.com>
- <50BFF328.5030406@zytor.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:49198 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754869Ab3AODPj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:15:39 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Scott Murray <scott@spiteful.org>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v3 4/7] PCI,pciehp: use bus->devices list intead of traditional traversal
+Date: Tue, 15 Jan 2013 11:12:19 +0800
+Message-ID: <1358219542-16880-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
+References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50BFF328.5030406@zytor.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 05, 2012 at 05:21:44PM -0800, H. Peter Anvin wrote:
-> On 12/05/2012 05:13 PM, Matthew Garrett wrote:
-> >Yeah, it needs to be hidden from root - but ideally we'd be passing it to the second kernel if we kexec. Alternative would be for it to be capability bounded to a trusted signed kexec binary if we implement Vivek's IMA-based approach.
-> >
-> 
-> Either way a security flag in the type field makes sense.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I've no objection to that, although I'm not sure there's any real reason 
-to expose an incomplete setup_data to userspace. Any scenario in which 
-kexec can't read the full data is one where kexec won't be able to 
-call sys_kexec() anyway.
+pciehp driver traverses pci function deivces by for(fn = 0; fn < 8; fn++) to
+configure every pci device when enable or disable slot.
+If the pci device to be add/remove is an ARI device, this traversal may
+miss some function device configuration, because ari device function
+number is up to 255. This patch fix this problem by traversing bus->devices
+list to configure pci device.
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/pciehp_pci.c |   46 ++++++++++++++------------------------
+ 1 files changed, 17 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 09cecaf..0cc1977 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -39,7 +39,7 @@ int pciehp_configure_device(struct slot *p_slot)
+ 	struct pci_dev *dev;
+ 	struct pci_dev *bridge = p_slot->ctrl->pcie->port;
+ 	struct pci_bus *parent = bridge->subordinate;
+-	int num, fn;
++	int num;
+ 	struct controller *ctrl = p_slot->ctrl;
+ 
+ 	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
+@@ -57,28 +57,18 @@ int pciehp_configure_device(struct slot *p_slot)
+ 		return -ENODEV;
+ 	}
+ 
+-	for (fn = 0; fn < 8; fn++) {
+-		dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
+-		if (!dev)
+-			continue;
++	list_for_each_entry(dev, &parent->devices, bus_list)
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+ 				(dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
+ 			pci_hp_add_bridge(dev);
+-		pci_dev_put(dev);
+-	}
+-
++
+ 	pci_assign_unassigned_bridge_resources(bridge);
+ 
+-	for (fn = 0; fn < 8; fn++) {
+-		dev = pci_get_slot(parent, PCI_DEVFN(0, fn));
+-		if (!dev)
+-			continue;
+-		if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY) {
+-			pci_dev_put(dev);
++	list_for_each_entry(dev, &parent->devices, bus_list) {
++		if ((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY)
+ 			continue;
+-		}
++
+ 		pci_configure_slot(dev);
+-		pci_dev_put(dev);
+ 	}
+ 
+ 	pci_bus_add_devices(parent);
+@@ -89,9 +79,9 @@ int pciehp_configure_device(struct slot *p_slot)
+ int pciehp_unconfigure_device(struct slot *p_slot)
+ {
+ 	int ret, rc = 0;
+-	int j;
+ 	u8 bctl = 0;
+ 	u8 presence = 0;
++	struct pci_dev *dev, *temp;
+ 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+ 	u16 command;
+ 	struct controller *ctrl = p_slot->ctrl;
+@@ -102,33 +92,31 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 	if (ret)
+ 		presence = 0;
+ 
+-	for (j = 0; j < 8; j++) {
+-		struct pci_dev *temp = pci_get_slot(parent, PCI_DEVFN(0, j));
+-		if (!temp)
+-			continue;
+-		if (temp->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+-			pci_read_config_byte(temp, PCI_BRIDGE_CONTROL, &bctl);
++	list_for_each_entry_safe(dev, temp, &parent->devices, bus_list) {
++		pci_dev_get(dev);
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
++			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+ 			if (bctl & PCI_BRIDGE_CTL_VGA) {
+ 				ctrl_err(ctrl,
+ 					 "Cannot remove display device %s\n",
+-					 pci_name(temp));
+-				pci_dev_put(temp);
++					 pci_name(dev));
++				pci_dev_put(dev);
+ 				rc = -EINVAL;
+ 				break;
+ 			}
+ 		}
+-		pci_stop_and_remove_bus_device(temp);
++		pci_stop_and_remove_bus_device(dev);
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
+ 		 * the device.
+ 		 */
+ 		if (presence) {
+-			pci_read_config_word(temp, PCI_COMMAND, &command);
++			pci_read_config_word(dev, PCI_COMMAND, &command);
+ 			command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+ 			command |= PCI_COMMAND_INTX_DISABLE;
+-			pci_write_config_word(temp, PCI_COMMAND, command);
++			pci_write_config_word(dev, PCI_COMMAND, command);
+ 		}
+-		pci_dev_put(temp);
++		pci_dev_put(dev);
+ 	}
+ 
+ 	return rc;
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.1
+
+
