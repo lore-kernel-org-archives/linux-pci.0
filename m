@@ -1,50 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:52933 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755624Ab3AOMo6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 07:44:58 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Date: Tue, 15 Jan 2013 12:44:12 +0000
-Cc: Andrew Murray <andrew.murray@arm.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <20130114095706.GA23467@arm.com> <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
+Received: from mail-bk0-f44.google.com ([209.85.214.44]:36128 "EHLO
+	mail-bk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756273Ab3AOHos (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 02:44:48 -0500
+Received: by mail-bk0-f44.google.com with SMTP id w11so2389403bku.17
+        for <linux-pci@vger.kernel.org>; Mon, 14 Jan 2013 23:44:47 -0800 (PST)
+From: bl0 <bl0-052@playker.info>
+To: linux-ide@vger.kernel.org
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Tue, 15 Jan 2013 08:44:22 +0100
+Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <kernel@teksavvy.com>,
+	Tejun Heo <tj@kernel.org>,
+	Robert Hancock <hancockrwd@gmail.com>,
+	linux-pci@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+References: <kahap3$mur$1@ger.gmane.org> <50F0199D.4090502@teksavvy.com> <50F4475F.9000509@pobox.com>
+In-Reply-To: <50F4475F.9000509@pobox.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201301151244.12767.arnd@arndb.de>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201301150844.22693.bl0-052@playker.info>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 15 January 2013, Thierry Reding wrote:
-> I'm not sure I follow you're reasoning here. Is it possible to use MSIs
-> without PCI? If not then I think there's little sense in keeping the
-> implementations separate.
+On Monday 14 January 2013 18:58:55 Jeff Garzik wrote:
+> If the issue continues to be seen, 
 
-Conceptually, you can use MSI for any device, but the Linux interfaces
-for MSI are tied to PCI. If you use an MSI controller for a non-PCI
-device, it would probably just appear as a regular interrupt controller.
+You mean, more than it has been seen already?
 
-> Furthermore, if MSI controller and PCI host bridge are separate entities
-> how do you look up the MSI controller given a PCI device?
+> a knob to enable an ugly solution is 
+> better than nothing, from the user's perspective.
 
-The host bridge can contain a pointer ot the MSI controller. You can
-have multiple host bridges sharing a single MSI controller or you
-can have separate ones for each host.
-
-	Arnd
+Also, I fail to see how this is any more ugly than what the current code 
+does.
