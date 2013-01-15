@@ -1,133 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4758 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab3AODO5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:14:57 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Scott Murray <scott@spiteful.org>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v3 5/7] PCI,cpcihp: use bus->devices list instead of traditional traversal
+Date: Tue, 15 Jan 2013 11:12:20 +0800
+Message-ID: <1358219542-16880-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
+References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1908840.G1WFmde11m@vostro.rjw.lan>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-	<1357944049-29620-15-git-send-email-yinghai@kernel.org>
-	<1908840.G1WFmde11m@vostro.rjw.lan>
-Date: Mon, 14 Jan 2013 22:55:49 -0800
-Message-ID: <CAE9FiQUb7d2Sud6gGkqW+aJ-rVi2nUF=nGK6_Afzf8VE7K-dDw@mail.gmail.com>
-Subject: Re: [PATCH v8 14/22] ACPI: update ej_event interface to take acpi_device
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 12, 2013 at 3:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Friday, January 11, 2013 02:40:41 PM Yinghai Lu wrote:
->> Should use acpi_device pointer directly instead of use handle and
->> get the device pointer again later.
->
-> Looks good.
->
-> I can take this one right now if you want.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-yes, in acpi-scan branch?
+Use bus->devices list to traverse the pci function devices when
+configure or unconfigure the slot like other pci hotplug drivers.
 
-othewise i can not base on pci/next again.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/cpci_hotplug_pci.c |   13 +++----------
+ 1 files changed, 3 insertions(+), 10 deletions(-)
 
->
-> Thanks,
-> Rafael
->
->
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/acpi/acpi_memhotplug.c  |    2 +-
->>  drivers/acpi/processor_driver.c |    2 +-
->>  drivers/acpi/scan.c             |   14 ++++----------
->>  include/acpi/acpi_bus.h         |    2 +-
->>  4 files changed, 7 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/acpi/acpi_memhotplug.c b/drivers/acpi/acpi_memhotplug.c
->> index 327ab44..eaddb7a 100644
->> --- a/drivers/acpi/acpi_memhotplug.c
->> +++ b/drivers/acpi/acpi_memhotplug.c
->> @@ -361,7 +361,7 @@ static void acpi_memory_device_notify(acpi_handle handle, u32 event, void *data)
->>                       break;
->>               }
->>
->> -             ej_event->handle = handle;
->> +             ej_event->device = device;
->>               ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
->>               acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
->>                                       (void *)ej_event);
->> diff --git a/drivers/acpi/processor_driver.c b/drivers/acpi/processor_driver.c
->> index 0777663..a24ee43 100644
->> --- a/drivers/acpi/processor_driver.c
->> +++ b/drivers/acpi/processor_driver.c
->> @@ -733,7 +733,7 @@ static void acpi_processor_hotplug_notify(acpi_handle handle,
->>                       break;
->>               }
->>
->> -             ej_event->handle = handle;
->> +             ej_event->device = device;
->>               ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
->>               acpi_os_hotplug_execute(acpi_bus_hot_remove_device,
->>                                       (void *)ej_event);
->> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
->> index 8883539..f4c6305 100644
->> --- a/drivers/acpi/scan.c
->> +++ b/drivers/acpi/scan.c
->> @@ -116,20 +116,14 @@ static DEVICE_ATTR(modalias, 0444, acpi_device_modalias_show, NULL);
->>  void acpi_bus_hot_remove_device(void *context)
->>  {
->>       struct acpi_eject_event *ej_event = (struct acpi_eject_event *) context;
->> -     struct acpi_device *device;
->> -     acpi_handle handle = ej_event->handle;
->> +     struct acpi_device *device = ej_event->device;
->> +     acpi_handle handle = device->handle;
->>       acpi_handle temp;
->>       struct acpi_object_list arg_list;
->>       union acpi_object arg;
->>       acpi_status status = AE_OK;
->>       u32 ost_code = ACPI_OST_SC_NON_SPECIFIC_FAILURE; /* default */
->>
->> -     if (acpi_bus_get_device(handle, &device))
->> -             goto err_out;
->> -
->> -     if (!device)
->> -             goto err_out;
->> -
->>       ACPI_DEBUG_PRINT((ACPI_DB_INFO,
->>               "Hot-removing device %s...\n", dev_name(&device->dev)));
->>
->> @@ -215,7 +209,7 @@ acpi_eject_store(struct device *d, struct device_attribute *attr,
->>               goto err;
->>       }
->>
->> -     ej_event->handle = acpi_device->handle;
->> +     ej_event->device = acpi_device;
->>       if (acpi_device->flags.eject_pending) {
->>               /* event originated from ACPI eject notification */
->>               ej_event->event = ACPI_NOTIFY_EJECT_REQUEST;
->> @@ -223,7 +217,7 @@ acpi_eject_store(struct device *d, struct device_attribute *attr,
->>       } else {
->>               /* event originated from user */
->>               ej_event->event = ACPI_OST_EC_OSPM_EJECT;
->> -             (void) acpi_evaluate_hotplug_ost(ej_event->handle,
->> +             (void) acpi_evaluate_hotplug_ost(acpi_device->handle,
->>                       ej_event->event, ACPI_OST_SC_EJECT_IN_PROGRESS, NULL);
->>       }
->>
->> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
->> index 2246ba9..181ff2d 100644
->> --- a/include/acpi/acpi_bus.h
->> +++ b/include/acpi/acpi_bus.h
->> @@ -309,7 +309,7 @@ struct acpi_bus_event {
->>  };
->>
->>  struct acpi_eject_event {
->> -     acpi_handle     handle;
->> +     struct acpi_device      *device;
->>       u32             event;
->>  };
->>
->>
-> --
-> I speak only for myself.
-> Rafael J. Wysocki, Intel Open Source Technology Center.
+diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
+index dcc75c7..9329642 100644
+--- a/drivers/pci/hotplug/cpci_hotplug_pci.c
++++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
+@@ -252,8 +252,8 @@ int cpci_led_off(struct slot* slot)
+ 
+ int __ref cpci_configure_slot(struct slot *slot)
+ {
++	struct pci_dev *dev;
+ 	struct pci_bus *parent;
+-	int fn;
+ 
+ 	dbg("%s - enter", __func__);
+ 
+@@ -282,18 +282,11 @@ int __ref cpci_configure_slot(struct slot *slot)
+ 	}
+ 	parent = slot->dev->bus;
+ 
+-	for (fn = 0; fn < 8; fn++) {
+-		struct pci_dev *dev;
+-
+-		dev = pci_get_slot(parent,
+-				   PCI_DEVFN(PCI_SLOT(slot->devfn), fn));
+-		if (!dev)
+-			continue;
++	list_for_each_entry(dev, &parent->devices, bus_list)
+ 		if ((dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) ||
+ 		    (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS))
+ 			pci_hp_add_bridge(dev);
+-		pci_dev_put(dev);
+-	}
++
+ 
+ 	pci_assign_unassigned_bridge_resources(parent->self);
+ 
+-- 
+1.7.1
+
+
