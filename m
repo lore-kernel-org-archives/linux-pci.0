@@ -1,74 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:39627 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754471Ab3AWJVz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 04:21:55 -0500
-Date: Wed, 23 Jan 2013 09:21:50 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 15 Jan 2013 22:14:41 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
-Subject: Re: [PATCH] PCI: Document PCIE BUS MPS parameters
-Message-ID: <20130123092150.GA25603@arm.com>
-References: <1358928096-29008-1-git-send-email-wangyijing@huawei.com>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130114095706.GA23467@arm.com>
+ <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
+ <201301151244.12767.arnd@arndb.de>
+ <20130115154038.GA11241@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1358928096-29008-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sdtB3X0nJg68CQEu"
+In-Reply-To: <20130115154038.GA11241@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 23, 2013 at 08:01:36AM +0000, Yijing Wang wrote:
-> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
-> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
-> These parameters were introduced by Jon Mason <mason@myri.com> at
-> commit 5f39e6705 and commit b03e7495a8. Document these into 
-> kernel-parameters.txt help users to understand and use the parameters.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  Documentation/kernel-parameters.txt |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 363e348..4dfa8d2 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				This sorting is done to get a device
->  				order compatible with older (<= 2.4) kernels.
->  		nobfsort	Don't sort PCI devices into breadth-first order.
-> +		pcie_bus_tune_off	[X86] Disable PCI-E MPS turning and using
-> +				the BIOS configured MPS defaults.
-> +		pcie_bus_safe	[X86] Use the smallest common denominator MPS
-> +				of the entire tree below a root complex for every device
-> +				on that fabric. Can avoid inconsistent mps problem caused
-> +				by hotplug.
-> +		pcie_bus_perf	[X86] Configure pcie device MPS to the largest
-> +				allowable MPS based on its parent bus.Improve performance
-> +				as much as possible.
-> +		pcie_bus_peer2peer	[X86] Make the system wide MPS the smallest
-> +				possible value (128B).This configuration could prevent it
-> +				from working by having the MPS on one root port different
-> +				than the MPS on another.
->  		cbiosize=nn[KMG]	The fixed amount of bus space which is
->  				reserved for the CardBus bridge's IO window.
->  				The default value is 256 bytes.
->
-I was searching for documentation on this the other day.
 
-It's not just X86 that use these options, PowerPC and Tile also use them (grep
-for users of pcie_bus_configure_settings). I've also noticed a call to it from
-hotplug as well...
+--sdtB3X0nJg68CQEu
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-In addition these options also have an effect on MRRS - I've not figured out
-what effect they have, but you can look in drivers/pci/probe.c at the
-pcie_write_mrrs function.
+On Tue, Jan 15, 2013 at 03:40:38PM +0000, Andrew Murray wrote:
+> On Tue, Jan 15, 2013 at 12:44:12PM +0000, Arnd Bergmann wrote:
+> > On Tuesday 15 January 2013, Thierry Reding wrote:
+> > > I'm not sure I follow you're reasoning here. Is it possible to use MS=
+Is
+> > > without PCI? If not then I think there's little sense in keeping the
+> > > implementations separate.
+> >=20
+> > Conceptually, you can use MSI for any device, but the Linux interfaces
+> > for MSI are tied to PCI. If you use an MSI controller for a non-PCI
+> > device, it would probably just appear as a regular interrupt controller.
+> >=20
+> > > Furthermore, if MSI controller and PCI host bridge are separate entit=
+ies
+> > > how do you look up the MSI controller given a PCI device?
+> >=20
+> > The host bridge can contain a pointer ot the MSI controller. You can
+> > have multiple host bridges sharing a single MSI controller or you
+> > can have separate ones for each host.
+>=20
+> Yes and I hoped this relationship would be described by a device tree pha=
+ndle
+> as is done for relating devices to their interrupt-parent (where device t=
+rees
+> are used). This would provide (arguably unnecessarily) greater flexibilit=
+y,
+> e.g. if you have two PCI/MSI controller pairs, the MSIs only offer limite=
+d MSIs
+> and you only use one PCI fabric - you could service different parts of the
+> fabric by different MSI controllers (assuming you relate MSI controllers =
+to
+> part of the fabric and that you'd want to). Perhaps there would be benefi=
+ts for
+> virtualisation as well?
 
-Andrew Murray
- 
+Is there actually hardware that supports this? I assumed that the MSI
+controller would have to be tightly coupled to the PCI host bridge in
+order to raise an interrupt when an MSI is received via PCI.
 
+Thierry
+
+--sdtB3X0nJg68CQEu
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ9cbBAAoJEN0jrNd/PrOhtl4P/jFRPjJMBYsIefiaxa04+iqT
+3x9QHWpfSoQabBZedImODOBW//x/WY95wzU1svRNSn9KRP57HNoI1dSetfx7dsxv
+UWJ5lklcJjfBCgj7m2WyG9V9Oh1YrZYJ006pie/Qi5i4YsVuLwAbXc5HyhwHHBzZ
+/Xm3QRPqAyXHY/mWLdqRDMMC0EntcfK6VxiM7vGyhYlFDu/0Vok7leXUXu1KB4/c
+yDVHB7miuzYAqX4BhrCk2Qvyt2vB7+EU40ZNOahWOJA0IYY9PcAHN36/WB6JKxFu
+6my0R/Hl9XqsLim6e8nEbE6oglNnDgSITjKD+GHrQ7Jk+crhUyLBWbJpRpDVCI3Z
+TqKhJgaHB5nOal4aCy3rCWx9Bzg6IT+LN3xGjLtzx3OxwCbDAdDjTO9knF4FEu3h
+QlRMcx0Nm/vKmXE8GSeDBvjbDIoz6fAILZoIhDYG7cAcjeshDuUYLa9ZKJDxrsZU
+VlVI51jMty+wLcAY9yVL3TYo/pPH96Iw4xNPC7gGSFe/QELh7coynxeEOjGxcC1C
+BuuJrVP3iN1ozDsdU4N5sBqJMnn2yiuIHxznScPifa/9TK44OcmDffKUFOOYOXTV
+raEZJjmFfCQqQf7FWdQcgK7KEYLB+5rAPhJxw+kdA5D5y8t6IFBTPn1faIf9e2XE
+SQaQ+rKu8bPN9+wyPtr3
+=JrIc
+-----END PGP SIGNATURE-----
+
+--sdtB3X0nJg68CQEu--
