@@ -1,55 +1,47 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <50F2D1FA.6000000@gmail.com>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+	<1357944049-29620-7-git-send-email-yinghai@kernel.org>
+	<3931059.ZcnvRQRmKT@vostro.rjw.lan>
+	<50F2D1FA.6000000@gmail.com>
+Date: Mon, 14 Jan 2013 22:29:48 -0800
+Message-ID: <CAE9FiQVdnys7+bXhHCW6CXYkA9TrKf52Kww60_QhmZke3rYwoA@mail.gmail.com>
+Subject: Re: [PATCH v8 06/22] PCI: split registration of PCI bus devices into
+ two stages
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 04/11] PCI: Fix a device reference count leakage issue in pci_dev_present()
-Date: Thu, 17 Jan 2013 23:53:15 -0800
-Message-Id: <1358495602-22867-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Sun, Jan 13, 2013 at 7:25 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> On 01/13/2013 06:34 AM, Rafael J. Wysocki wrote:
+>> On Friday, January 11, 2013 02:40:33 PM Yinghai Lu wrote:
+>>> From: Jiang Liu <jiang.liu@huawei.com>
+>>>
+>>> When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+>>> the notification handler can't hold reference count to the new PCI bus
+>>> because the device object for the new bus (pci_dev->subordinate->dev)
+>>> hasn't been initialized yet.
+>>
+>> It doesn't look like BUS_NOTIFY_ADD_DEVICE is used by the PCI bus type
+>> in the mainline.
+>>
+>> Is it in linux-next?
+>>
+>> If not, then I don't see why we need this patch.
+> Hi Rafael,
+>         Originally it's a preparation patch for pci_slot/acpiphp/pci_bind
+> related fixups. With recent work from you to remove bind/unbind from struct
+> acpi_bus_type, we have no dependency on this patch anymore.
 
-Function pci_get_dev_by_id() will hold a reference count on the pci device
-returned, so pci_dev_present() should release the corresponding reference
-count to avoid memory leakage.
+ok, will drop this one.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/search.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index bf969ba..d0627fa 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -319,13 +319,13 @@ int pci_dev_present(const struct pci_device_id *ids)
- 	WARN_ON(in_interrupt());
- 	while (ids->vendor || ids->subvendor || ids->class_mask) {
- 		found = pci_get_dev_by_id(ids, NULL);
--		if (found)
--			goto exit;
-+		if (found) {
-+			pci_dev_put(found);
-+			return 1;
-+		}
- 		ids++;
- 	}
--exit:
--	if (found)
--		return 1;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(pci_dev_present);
--- 
-1.7.10.4
-
+Yinghai
