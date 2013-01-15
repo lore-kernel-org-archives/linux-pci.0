@@ -1,64 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:49713 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750906Ab3A1Ty6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 14:54:58 -0500
-Date: Mon, 28 Jan 2013 12:55:01 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 08/27] pci: implement an emulated PCI-to-PCI bridge
-Message-ID: <20130128195501.GD17722@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-9-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130128193516.GB17722@obsidianresearch.com>
- <20130128203947.07332698@skate>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 17/22] PCI, ACPI: Add alloc_acpi_hp_work()
+Date: Tue, 15 Jan 2013 12:27:04 +0100
+Message-ID: <5134894.kiC8yZAa7S@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQU_jokR9b2+G7P77aUfxsE6H1HFtO3k5XjqxyD2JZPpFQ@mail.gmail.com>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <3988288.MTBNr2Bzqb@vostro.rjw.lan> <CAE9FiQU_jokR9b2+G7P77aUfxsE6H1HFtO3k5XjqxyD2JZPpFQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130128203947.07332698@skate>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 08:39:47PM +0100, Thomas Petazzoni wrote:
-
-> > In the Marvell case, this capability can be constructed by pulling
-> > data from the the Express End Point capability of the PCI-E port:
+On Monday, January 14, 2013 10:59:28 PM Yinghai Lu wrote:
+> On Sat, Jan 12, 2013 at 3:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Friday, January 11, 2013 02:40:44 PM Yinghai Lu wrote:
+> >> Will use it with acpiphp and pci_root_hp events handling
+> >
+> > I think it would be better if you folded patches [17-20/22] together.
 > 
-> I am not sure what you mean by "pulling". Do you mean that I should get
-> informations from the real PCIe interface, from within the emulated
-> PCI-to-PCI bridge implementation? This would unfortunately not be
-> really nice, because until now, the PCI-to-PCI bridge emulation is
-> clearly separated from the Marvell PCIe driver itself. Of course, it
-> could register a hook or something like that, so that the emulated
-> PCI-to-PCI bridge could potentially call back into the Marvell PCIe
-> driver.
+> just want to make move/split more simple. so could separate out old
+> code in acpiphp is
+> moved at first, then apply change etc.
 
-Yes, a callback would be needed to the main driver and IIRC the driver
-can read/write the end port link info config regsiters via MMIO. They
-probably need a bit of massaging to be in root port format, but
-otherwise it should be straightforward..
+Well, OK.
 
-> I'll have to dig a little bit more about this capability to see how it
-> works exactly.
+Thanks,
+Rafael
 
-All ports have registers to report and control the link, but the root
-port and end port versions are a bit different, so the goal is to read
-the end port formatted registers and map them into the root port
-format so that userspace can properly see the link state and
-configuration.
 
-Jason
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
