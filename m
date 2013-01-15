@@ -1,53 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:64515 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466Ab3ARLmW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 06:42:22 -0500
-Subject: [PATCH 2/5] e1000e: fix pci device enable counter balance
-To: linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Date: Fri, 18 Jan 2013 15:42:18 +0400
-Message-ID: <20130118114218.6698.42484.stgit@zurg>
-In-Reply-To: <20130118113019.6698.25941.stgit@zurg>
-References: <20130118113019.6698.25941.stgit@zurg>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:5447 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754869Ab3AODPl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:15:41 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Scott Murray <scott@spiteful.org>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v3 1/7] PCI: rework pci_enable_ari to support disable ari forwarding
+Date: Tue, 15 Jan 2013 11:12:16 +0800
+Message-ID: <1358219542-16880-2-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
+References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
-should call pci_enable_device_mem() to keep enable counter in balance.
+pci_enable_ari will set the pci bridge ARI Forwarding Enable bit in Device
+Control 2 Register when a ARI pcie device connected found. But the bridge ARI
+Forwarding Enable bit will never be cleared when the ARI device hot removed.
 
-Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
-("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
+As PCIe Spec 2.0(6.13/441) recommends:
+"Following a hot-plug event below a Downstream Port, it is strongly recommended
+that software Clear the ARI Forwarding Enable bit in the Downstream Port until
+software determines that a newly added component is in fact an ARI Device"
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: e1000-devel@lists.sourceforge.net
-Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: Bruce Allan <bruce.w.allan@intel.com>
+This patch rework pci_enable_ari to support disable ARI Forwarding whenever found
+the new pci device is a non-ari device.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/pci.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-index 2853c11..6bce796 100644
---- a/drivers/net/ethernet/intel/e1000e/netdev.c
-+++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-@@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
- 	pci_restore_state(pdev);
- 	pci_save_state(pdev);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 5cb5820..a17129f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2078,9 +2078,6 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
+ 		return;
  
-+	err = pci_enable_device_mem(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev,
-+			"Cannot re-enable PCI device after suspend.\n");
-+		return err;
-+	}
+-	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
+-		return;
+-
+ 	bridge = dev->bus->self;
+ 	if (!bridge)
+ 		return;
+@@ -2088,9 +2085,16 @@ void pci_enable_ari(struct pci_dev *dev)
+ 	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+ 	if (!(cap & PCI_EXP_DEVCAP2_ARI))
+ 		return;
+-
+-	pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
+-	bridge->ari_enabled = 1;
 +
- 	e1000e_set_interrupt_capability(adapter);
- 	if (netif_running(netdev)) {
- 		err = e1000_request_irq(adapter);
++	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
++		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
++				PCI_EXP_DEVCTL2_ARI);
++		bridge->ari_enabled = 1;
++	} else {
++		pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
++				PCI_EXP_DEVCTL2_ARI);
++		bridge->ari_enabled = 0;
++	}
+ }
+ 
+ /**
+-- 
+1.7.1
+
 
