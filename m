@@ -1,114 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58278 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752281Ab3A1S5D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:03 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2 14/27] arm: plat-orion: refactor the orion_disable_wins() function
-Date: Mon, 28 Jan 2013 19:56:23 +0100
-Message-Id: <1359399397-29729-15-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <4095307.lo3tHnmrev@vostro.rjw.lan>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+	<1620774.KjdX6JUoJy@vostro.rjw.lan>
+	<CAE9FiQVrUkMTP8yFcXVgq3SW9tv6r0WBxfHbV=yT0vYbO=zmFQ@mail.gmail.com>
+	<4095307.lo3tHnmrev@vostro.rjw.lan>
+Date: Tue, 15 Jan 2013 07:45:04 -0800
+Message-ID: <CAE9FiQVYUZorCAJ5GzxvQb4cdtzEpptwfGP6Cbi0wTfH1G0sSw@mail.gmail.com>
+Subject: Re: [PATCH v8 22/22] PCI: move device_add out of pci_bus_add_device()
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the address decoding code, the orion_disable_wins() function is
-used at boot time to disable all address decoding windows, before
-configuring only the ones that are needed. This allows to make sure
-that no configuration is left from the bootloader.
+On Tue, Jan 15, 2013 at 3:19 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Monday, January 14, 2013 11:10:36 PM Yinghai Lu wrote:
+>> On Sat, Jan 12, 2013 at 3:54 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>> >> Move out device registering out of pci_bus_add_devices, so we could
+>> >> put new created pci devices in device tree early.
+>> >>
+>> >> new pci_bus_add_devices will do the device_attach work to load pci drivers
+>> >> instead.
+>> >
+>> > I wonder what problem it solves?
+>>
+>> we want to put created pci device in the device tree as soon as possible.
+>> so for_pci_dev will not miss them.
+>>
+>> but at that time, we can not load driver for them yet. need to after
+>> pci_assign_unsigned_resources etc to make sure all pci devices get
+>> resource allocated at first.
+>>
+>> so only move adding to device tree early, and leave loading driver on
+>> the old places.
+>
+> I see, thanks.
+>
+> Perhaps you can put that explanation into the changelog? It would help people
+> to understand the reason for the change in the future.
 
-As a preparation for the introduction of address decoding window
-allocation/deallocation function, we refactor this function into an
-orion_disable_cpu_win() which disables a single window.
-
-The orion_config_wins() function is changed to call
-orion_disable_cpu_win() in a loop, to preserve an identical behavior.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/plat-orion/addr-map.c |   35 +++++++++++++++++------------------
- 1 file changed, 17 insertions(+), 18 deletions(-)
-
-diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
-index 4dec3db..dd98638 100644
---- a/arch/arm/plat-orion/addr-map.c
-+++ b/arch/arm/plat-orion/addr-map.c
-@@ -95,6 +95,19 @@ void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
- 	}
- }
- 
-+static void __init orion_disable_cpu_win(const struct orion_addr_map_cfg *cfg,
-+					 const int win)
-+{
-+	void __iomem *addr = cfg->win_cfg_base(cfg, win);
-+
-+	writel(0, addr + WIN_BASE_OFF);
-+	writel(0, addr + WIN_CTRL_OFF);
-+	if (cfg->cpu_win_can_remap(cfg, win)) {
-+		writel(0, addr + WIN_REMAP_LO_OFF);
-+		writel(0, addr + WIN_REMAP_HI_OFF);
-+	}
-+}
-+
- /*
-  * Configure a number of windows.
-  */
-@@ -108,36 +121,22 @@ static void __init orion_setup_cpu_wins(const struct orion_addr_map_cfg * cfg,
- 	}
- }
- 
--static void __init orion_disable_wins(const struct orion_addr_map_cfg * cfg)
--{
--	void __iomem *addr;
--	int i;
--
--	for (i = 0; i < cfg->num_wins; i++) {
--		addr = cfg->win_cfg_base(cfg, i);
--
--		writel(0, addr + WIN_BASE_OFF);
--		writel(0, addr + WIN_CTRL_OFF);
--		if (cfg->cpu_win_can_remap(cfg, i)) {
--			writel(0, addr + WIN_REMAP_LO_OFF);
--			writel(0, addr + WIN_REMAP_HI_OFF);
--		}
--	}
--}
--
- /*
-  * Disable, clear and configure windows.
-  */
- void __init orion_config_wins(struct orion_addr_map_cfg * cfg,
- 			      const struct orion_addr_map_info *info)
- {
-+	int win;
-+
- 	if (!cfg->cpu_win_can_remap)
- 		cfg->cpu_win_can_remap = orion_cpu_win_can_remap;
- 
- 	if (!cfg->win_cfg_base)
- 		cfg->win_cfg_base = orion_win_cfg_base;
- 
--	orion_disable_wins(cfg);
-+	for (win = 0; win < cfg->num_wins; win++)
-+		orion_disable_cpu_win(cfg, win);
- 
- 	if (info)
- 		orion_setup_cpu_wins(cfg, info);
--- 
-1.7.9.5
-
+ok
