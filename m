@@ -1,86 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:15702 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755659Ab3ANBa5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 20:30:57 -0500
-Message-ID: <50F35FC0.2000507@huawei.com>
-Date: Mon, 14 Jan 2013 09:30:40 +0800
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4736 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369Ab3AODOz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:14:55 -0500
 From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
+CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Scott Murray <scott@spiteful.org>,
+	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH -v3 6/7] PCI,sgihp: use bus->devices list intead of traditional traversal
+Date: Tue, 15 Jan 2013 11:12:21 +0800
+Message-ID: <1358219542-16880-7-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
+References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Daniel J Blueman <daniel@quora.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Tejun Heo <tj@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH v7 0/4] PCI: pciehp, shpchp deadlock fixes
-References: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20130113232606.7225.94802.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/1/14 7:27, Bjorn Helgaas wrote:
-> This is v7 of Yijing Wang's pciehp deadlock fix.  Here's the history of
-> previous postings:
-> 
->     RFC Oct 31 2012
->     v2  Nov  9 2012  use slot name, not device name
->     v3  Nov 12 2012  create workqueues in pcie_init_slot(), pciehp-%u format
->     v4  Nov 13 2012  use alloc_workqueue(name, 0, 0) again
->     v5  Jan  9 2013  fix similar problem in shpchp
->     v6  Jan 10 2013  add pciehp backtrace from Daniel 
-> 
-> This v7 series is functionally identical to v6.  In v7, I split the single
-> shpchp patch into three:
-> 
->     PCI: shpchp: Make shpchp_wq non-ordered
->     PCI: shpchp: Handle push button event asynchronously
->     PCI: shpchp: Use per-slot workqueues to avoid deadlock
-> 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Nice, split the single patch into three will make the log clearer about the
-code changes.
+Use bus->devices list to traverse the pci function devices when
+configure or unconfigure the slot like other pci hotplug drivers.
 
-> The first fixes what appears to be an error in e24dcbef93 ("shpchp: update
-> workqueue usage").  I split this out so Tejun could easily review it by itself.
-> 
-> I split the second out because it corresponds to a pciehp bugfix, 486b10b9f4
-> ("PCI: pciehp: Handle push button event asynchronously"), that also affects
-> shpchp.
-> 
-> The "PCI: shpchp: Use per-slot workqueues to avoid deadlock" that remains
-> then corresponds exactly to Yijing's original pciehp deadlock fix.
-> 
-> I also rewrote the changelogs.
-> 
-> I propose to push the entire series for inclusion in v3.8, since it
-> fixes an easy-to-cause deadlock with Thunderbolt adapters.
-> 
-> ---
-> 
-> Bjorn Helgaas (3):
->       PCI: shpchp: Make shpchp_wq non-ordered
->       PCI: shpchp: Handle push button event asynchronously
->       PCI: shpchp: Use per-slot workqueues to avoid deadlock
-> 
-> Yijing Wang (1):
->       PCI: pciehp: Use per-slot workqueues to avoid deadlock
-> 
-> 
->  drivers/pci/hotplug/pciehp.h      |    2 +-
->  drivers/pci/hotplug/pciehp_core.c |   11 ++---------
->  drivers/pci/hotplug/pciehp_ctrl.c |    8 ++++----
->  drivers/pci/hotplug/pciehp_hpc.c  |   11 ++++++++++-
->  drivers/pci/hotplug/shpchp.h      |    3 +--
->  drivers/pci/hotplug/shpchp_core.c |   36 ++++++++++++++----------------------
->  drivers/pci/hotplug/shpchp_ctrl.c |    6 +++---
->  7 files changed, 35 insertions(+), 42 deletions(-)
-> 
-> 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/sgi_hotplug.c |   40 +++++++++++++++---------------------
+ 1 files changed, 17 insertions(+), 23 deletions(-)
 
-
+diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+index f64ca92..45966b8 100644
+--- a/drivers/pci/hotplug/sgi_hotplug.c
++++ b/drivers/pci/hotplug/sgi_hotplug.c
+@@ -334,7 +334,7 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
+ 	struct slot *slot = bss_hotplug_slot->private;
+ 	struct pci_bus *new_bus = NULL;
+ 	struct pci_dev *dev;
+-	int func, num_funcs;
++	int num_funcs;
+ 	int new_ppb = 0;
+ 	int rc;
+ 	char *ssdt = NULL;
+@@ -381,29 +381,23 @@ static int enable_slot(struct hotplug_slot *bss_hotplug_slot)
+ 	 * to the Linux PCI interface and tell the drivers
+ 	 * about them.
+ 	 */
+-	for (func = 0; func < num_funcs;  func++) {
+-		dev = pci_get_slot(slot->pci_bus,
+-				   PCI_DEVFN(slot->device_num + 1,
+-					     PCI_FUNC(func)));
+-		if (dev) {
+-			/* Need to do slot fixup on PPB before fixup of children
+-			 * (PPB's pcidev_info needs to be in pcidev_info list
+-			 * before child's SN_PCIDEV_INFO() call to setup
+-			 * pdi_host_pcidev_info).
+-			 */
+-			pcibios_fixup_device_resources(dev);
+-			if (SN_ACPI_BASE_SUPPORT())
+-				sn_acpi_slot_fixup(dev);
+-			else
+-				sn_io_slot_fixup(dev);
+-			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+-				pci_hp_add_bridge(dev);
+-				if (dev->subordinate) {
+-					new_bus = dev->subordinate;
+-					new_ppb = 1;
+-				}
++	list_for_each_entry(dev, &slot->pci_bus->devices, bus_list) {
++		/* Need to do slot fixup on PPB before fixup of children
++		 * (PPB's pcidev_info needs to be in pcidev_info list
++		 * before child's SN_PCIDEV_INFO() call to setup
++		 * pdi_host_pcidev_info).
++	 */
++		pcibios_fixup_device_resources(dev);
++		if (SN_ACPI_BASE_SUPPORT())
++			sn_acpi_slot_fixup(dev);
++		else
++			sn_io_slot_fixup(dev);
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++			pci_hp_add_bridge(dev);
++			if (dev->subordinate) {
++				new_bus = dev->subordinate;
++				new_ppb = 1;
+ 			}
+-			pci_dev_put(dev);
+ 		}
+ 	}
+ 
 -- 
-Thanks!
-Yijing
+1.7.1
+
 
