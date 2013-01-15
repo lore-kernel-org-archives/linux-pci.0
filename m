@@ -1,98 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:55535 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753272Ab3BAAel (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 19:34:41 -0500
-Message-ID: <510B0D9C.1000101@wwwdotorg.org>
-Date: Thu, 31 Jan 2013 17:34:36 -0700
-From: Stephen Warren <swarren@wwwdotorg.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v8 08/22] PCI, acpiphp: Separate out hot-add support of pci host bridge
+Date: Tue, 15 Jan 2013 23:00:25 +0100
+Message-ID: <2763397.yFrgeYvBXr@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQWCg9ZF8mXF-fMKUhOXF=EDeS07BWKvUSDxWUxikrQu4w@mail.gmail.com>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <CAE9FiQX6q-tbQuq_0mc0kBFC-bb0zKRDyg=aGLkrAeh5Y7FkYg@mail.gmail.com> <CAE9FiQWCg9ZF8mXF-fMKUhOXF=EDeS07BWKvUSDxWUxikrQu4w@mail.gmail.com>
 MIME-Version: 1.0
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/28/2013 11:56 AM, Thomas Petazzoni wrote:
-> This driver implements the support for the PCIe interfaces on the
-> Marvell Armada 370/XP ARM SoCs. In the future, it might be extended to
-> cover earlier families of Marvell SoCs, such as Dove, Orion and
-> Kirkwood.
+On Tuesday, January 15, 2013 07:54:22 AM Yinghai Lu wrote:
+> On Mon, Jan 14, 2013 at 10:44 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Sat, Jan 12, 2013 at 3:18 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> >>> @@ -673,3 +673,223 @@ int __init acpi_pci_root_init(void)
+> >>>
+> >>>       return 0;
+> >>>  }
+> >>> +
+> >>> +/*
+> >>> + * Separated from drivers/pci/hotplug/acpiphp_glue.c
+> >>> + *   only support root bridge
+> >>> + */
+> >>
+> >> This comment will be useless after applying the patch.
+> >>
+> >>> +
+> >>> +static LIST_HEAD(acpi_root_bridge_list);
+> >>> +struct acpi_root_bridge {
+> >>> +     struct list_head list;
+> >>> +     acpi_handle handle;
+> >>> +     u32 flags;
+> >>> +};
+> >>
+> >> We have struct acpi_pci_root already.  Why do we need this in addition?
+> >
+> > will address that in following patch.
+> 
+> please check if you are ok with merging attached 5 patches in to one
+> patches instead.
 
-Bjorn and I happen to live very close, so we got together today and
-talked about PCIe on ARM.
+Do I understand correctly that you're asking whether to merge the attached
+patches together, so as to obtain one combined patch?
 
-One of the questions he asked is: why does the window management on the
-Marvell SoCs need to be dynamic?
+If so, yes, I'd like that to be done.
 
-(Sorry if this was covered earlier; I vaguely recall some discussion on
-the topic, but couldn't find it quickly)
+Thanks,
+Rafael
 
-As background, PCIe enumeration in Linux usually works like:
 
-1) You start off with some CPU physical address regions that generate
-transactions on the PCIe bus.
-
-2) You enumerate all the PCIe devices, and assign an address to each BAR
-found, carved out of the PCIe address range corresponding to the regions
-you knew from (1).
-
-However, it sounds like the Marvell code wants to:
-
-1) Start off with no real knowledge of the CPU physical address that
-will generate transactions on the PCIe bus, since you want to assign
-that later.
-
-2) You enumerate all the PCIe devices, and assign an address. But, what
-address range do you use?
-
-3) Then you program the SoC's windows to set up the CPU->PCIe address
-translations.
-
-Am I recalling what you're trying to do correctly, or am I completely
-confused?
-
-Now, I recall that a related issue was that you are tight on CPU
-physical address space, and the second algorithm above would allow the
-size of the PCIe controller's window configuration to be as small as
-possible, and hence there would be more CPU physical address space
-available to fit in other peripherals.
-
-However, why does this need to be dynamic? On a particular board, you
-know all the other (non-PCIe) peripherals that you need to fit into the
-CPU physical address space, so you know how much is left over for PCIe,
-so why not always make the PCIe window fill up all the available space,
-and use the first algorithm I described above? And also, I think you
-always know the exact set of PCIe devices that are attached to the
-boards, so you know the exact BAR size requirements there (or are there
-user-accessible PCIe devices; I don't think so from your recent comments
-about PCIe<->PCIe bridges not needing to be supported since the user
-couldn't plug one in?)
-
-Note that with DT, you can easily specify the window location/size in
-the board .dts file rather than the SoC .dtsi file, so it can easily be
-customized based on how much physical address space is taken up by RAM,
-directly mapped NOR flash, etc.
-
-With a static window configuration in DT, you'd end up with a system
-that worked much like any x86 system or Tegra, with some static memory
-range available to PCIe. It's just that in your case, the region
-location/size could change from boot to boot based on DT, whereas it's
-hard-coded in HW for Tegra and I assume x86 too.
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
