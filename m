@@ -1,210 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39467 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932165Ab3AITFQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jan 2013 14:05:16 -0500
-Message-ID: <1357758299.3224.785.camel@bling.home>
-Subject: Re: [PATCH 1/2] VFIO-AER: Vfio-pci driver changes for supporting AER
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gleb Natapov <gleb@redhat.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Wed, 09 Jan 2013 12:04:59 -0700
-In-Reply-To: <1357753953.3224.769.camel@bling.home>
-References: <F9E001219150CB45BEDC82A650F360C90149602F@G9W0717.americas.hpqcorp.net>
-	 <1357753953.3224.769.camel@bling.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <2032314.LPbgrOarU3@vostro.rjw.lan>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+	<1357944049-29620-10-git-send-email-yinghai@kernel.org>
+	<2032314.LPbgrOarU3@vostro.rjw.lan>
+Date: Mon, 14 Jan 2013 22:45:02 -0800
+Message-ID: <CAE9FiQUdXWxrM9Mk4rPG4fb5DKEP46Oa84219y8KC+kOaLB67w@mail.gmail.com>
+Subject: Re: [PATCH v8 09/22] PCI, ACPI: Add pci_root_hp hot removal
+ notification support.
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-01-09 at 10:52 -0700, Alex Williamson wrote:
-> On Wed, 2013-01-09 at 06:26 +0000, Pandarathil, Vijaymohan R wrote:
-> > 	- New ioctl which is used to pass the eventfd that is signaled when
-> >           an error occurs in the vfio_pci_device
-> > 
-> > 	- Register pci_error_handler for the vfio_pci driver
-> > 
-> > 	- When the device encounters an error, the error handler registered by
-> >           the vfio_pci driver gets invoked by the AER infrastructure
-> > 
-> > 	- In the error handler, signal the eventfd registered for the device.
-> > 
-> > 	- This results in the qemu eventfd handler getting invoked and
-> >           appropriate action taken for the guest.
-> > 
-> > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> > ---
-> >  drivers/vfio/pci/vfio_pci.c         | 29 +++++++++++++++++++++++++++++
-> >  drivers/vfio/pci/vfio_pci_private.h |  1 +
-> >  drivers/vfio/vfio.c                 |  8 ++++++++
-> >  include/linux/vfio.h                |  1 +
-> >  include/uapi/linux/vfio.h           |  9 +++++++++
-> >  5 files changed, 48 insertions(+)
-> > 
-> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > index 6c11994..4ae9526 100644
-> > --- a/drivers/vfio/pci/vfio_pci.c
-> > +++ b/drivers/vfio/pci/vfio_pci.c
-> > @@ -207,6 +207,8 @@ static long vfio_pci_ioctl(void *device_data,
-> >  		if (vdev->reset_works)
-> >  			info.flags |= VFIO_DEVICE_FLAGS_RESET;
-> >  
-> > +		info.flags |= VFIO_DEVICE_FLAGS_AER_NOTIFY;
-> > +
-> 
-> This appears to be a PCI specific flag, so the name should include
-> _PCI_.  We also support non-PCIe devices and it seems like it would be
-> possible to not have AER support available, so shouldn't this be
-> conditional?
-> 
-> >  		info.num_regions = VFIO_PCI_NUM_REGIONS;
-> >  		info.num_irqs = VFIO_PCI_NUM_IRQS;
-> >  
-> > @@ -348,6 +350,19 @@ static long vfio_pci_ioctl(void *device_data,
-> >  
-> >  		return ret;
-> >  
-> > +	} else if (cmd == VFIO_DEVICE_SET_ERRFD) {
-> > +		int32_t fd = (int32_t)arg;
-> > +
-> > +		if (fd < 0)
-> > +			return -EINVAL;
-> > +
-> > +		vdev->err_trigger = eventfd_ctx_fdget(fd);
-> > +
-> > +		if (IS_ERR(vdev->err_trigger))
-> > +			return PTR_ERR(vdev->err_trigger);
-> > +
-> > +		return 0;
-> > +
-> 
-> I'm not sure why we wouldn't describe this as just another interrupt
-> from the device and configure it via SET_IRQ.  This ioctl has very
-> limited use and doesn't follow any of the conventions of all the other
-> vfio ioctls.
-> 
-> >  	} else if (cmd == VFIO_DEVICE_RESET)
-> >  		return vdev->reset_works ?
-> >  			pci_reset_function(vdev->pdev) : -EINVAL;
-> > @@ -527,11 +542,25 @@ static void vfio_pci_remove(struct pci_dev *pdev)
-> >  	kfree(vdev);
-> >  }
-> >  
-> > +static pci_ers_result_t vfio_err_detected(struct pci_dev *pdev,
-> > +				pci_channel_state_t state)
-> > +{
-> > +	struct vfio_pci_device *vdev = vfio_get_vdev(&pdev->dev);
-> > +
-> > +	eventfd_signal(vdev->err_trigger, 1);
-> > +	return PCI_ERS_RESULT_CAN_RECOVER;
-> > +}
-> 
-> What if err_trigger hasn't been set?
-> 
-> > +
-> > +static const struct pci_error_handlers vfio_err_handlers = {
-> > +	.error_detected = vfio_err_detected,
-> > +};
-> > +
-> >  static struct pci_driver vfio_pci_driver = {
-> >  	.name		= "vfio-pci",
-> >  	.id_table	= NULL, /* only dynamic ids */
-> >  	.probe		= vfio_pci_probe,
-> >  	.remove		= vfio_pci_remove,
-> > +	.err_handler	= &vfio_err_handlers,
-> >  };
-> >  
-> >  static void __exit vfio_pci_cleanup(void)
-> > diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-> > index 611827c..daee62f 100644
-> > --- a/drivers/vfio/pci/vfio_pci_private.h
-> > +++ b/drivers/vfio/pci/vfio_pci_private.h
-> > @@ -55,6 +55,7 @@ struct vfio_pci_device {
-> >  	bool			bardirty;
-> >  	struct pci_saved_state	*pci_saved_state;
-> >  	atomic_t		refcnt;
-> > +	struct eventfd_ctx	*err_trigger;
-> >  };
-> >  
-> >  #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
-> > diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
-> > index 56097c6..5ed5a54 100644
-> > --- a/drivers/vfio/vfio.c
-> > +++ b/drivers/vfio/vfio.c
-> > @@ -693,6 +693,14 @@ void *vfio_del_group_dev(struct device *dev)
-> >  }
-> >  EXPORT_SYMBOL_GPL(vfio_del_group_dev);
-> >  
-> > +void *vfio_get_vdev(struct device *dev)
-> > +{
-> > +	struct vfio_device *device = dev_get_drvdata(dev);
-> > +
-> > +	return device->device_data;
-> > +}
-> > +EXPORT_SYMBOL_GPL(vfio_get_vdev);
-> > +
-> 
-> This is unsafe.  How do we know dev is a vfio device?  How do we keep
-> that drvdata valid while you're using it?  I think you want to export
-> the existing vfio_group_get_device() and vfio_device_put().  Thanks,
+On Sat, Jan 12, 2013 at 3:26 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Friday, January 11, 2013 02:40:36 PM Yinghai Lu wrote:
+>> Add missing hot_remove support for root device.
+>>
+>> How to test it?
+>> Find out root bus number to acpi root name mapping from dmesg or /sys
+>>
+>>   echo "\_SB.PCIB 3" > /sys/kernel/debug/acpi/sci_notify
+>> to remove root bus
+>>
+>> -v2: separate stop and remove, so it will be safe for comingi
+>>       acpi_pci_bind_notify() changes.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Len Brown <lenb@kernel.org>
+>> Cc: linux-acpi@vger.kernel.org
+>> ---
+>>  drivers/acpi/pci_root.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 67 insertions(+)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 5c1f462c..5ae36d8 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -740,6 +740,12 @@ static void add_acpi_root_bridge(acpi_handle handle)
+>>       list_add(&bridge->list, &acpi_root_bridge_list);
+>>  }
+>>
+>> +static void remove_acpi_root_bridge(struct acpi_root_bridge *bridge)
+>> +{
+>> +     list_del(&bridge->list);
+>> +     kfree(bridge);
+>> +}
+>> +
+>>  struct acpi_root_hp_work {
+>>       struct work_struct work;
+>>       acpi_handle handle;
+>> @@ -800,6 +806,61 @@ static void handle_root_bridge_insertion(acpi_handle handle)
+>>               printk(KERN_ERR "cannot add bridge to acpi list\n");
+>>  }
+>>
+>> +static int acpi_root_evaluate_object(acpi_handle handle, char *cmd, int val)
+>> +{
+>> +     acpi_status status;
+>> +     struct acpi_object_list arg_list;
+>> +     union acpi_object arg;
+>> +
+>> +     arg_list.count = 1;
+>> +     arg_list.pointer = &arg;
+>> +     arg.type = ACPI_TYPE_INTEGER;
+>> +     arg.integer.value = val;
+>> +
+>> +     status = acpi_evaluate_object(handle, cmd, &arg_list, NULL);
+>> +     if (ACPI_FAILURE(status)) {
+>> +             pr_warn("%s: %s to %d failed\n",
+>> +                              __func__, cmd, val);
+>> +             return -1;
+>
+> Please use a meaningful error code.
+>
+>> +     }
+>> +
+>> +     return 0;
+>> +}
+>> +
+>> +static void handle_root_bridge_removal(acpi_handle handle,
+>> +              struct acpi_root_bridge *bridge)
+>> +{
+>> +     u32 flags = 0;
+>> +     struct acpi_device *device;
+>> +
+>> +     if (bridge) {
+>> +             flags = bridge->flags;
+>> +             remove_acpi_root_bridge(bridge);
+>> +     }
+>> +
+>> +     if (!acpi_bus_get_device(handle, &device)) {
+>> +             int ret_val;
+>> +
+>> +             /* remove pci devices at first */
+>> +             ret_val = acpi_bus_trim(device, 0);
+>> +             printk(KERN_DEBUG "acpi_bus_trim stop return %x\n", ret_val);
+>> +
+>> +             /* remove acpi devices */
+>> +             ret_val = acpi_bus_trim(device, 1);
+>> +             printk(KERN_DEBUG "acpi_bus_trim remove return %x\n", ret_val);
+>
+> First of all, I don't agree with the way acpi_bus_trim() is used here, as
+> I said in the previous message.
+>
+> Second, this code duplicates the code you're adding on [08/22] almost exactly.
+> Please put it into a one separate function instead of duplicating it like this.
+>
+>> +     }
+>> +
+>> +     if (flags & ROOT_BRIDGE_HAS_PS3) {
+>> +             acpi_status status;
+>> +
+>> +             status = acpi_evaluate_object(handle, "_PS3", NULL, NULL);
+>> +             if (ACPI_FAILURE(status))
+>> +                     pr_warn("%s: _PS3 failed\n", __func__);
+>
+> No, please.  acpi_device_set_power() is for that.
+>
+>> +     }
+>> +     if (flags & ROOT_BRIDGE_HAS_EJ0)
+>> +             acpi_root_evaluate_object(handle, "_EJ0", 1);
+>
+> That seems to duplicate some code from scan.c.
 
-vfio_group_get_device() isn't quite what you want either since it
-assumes a reference count on the group.  You'll want something like
-vfio_add_group_dev() or vfio_dev_present(), perhaps moving the
-iommu_group_get -> vfio_group_get_from_iommu -> vfio_group_get_device
-into a helper function.  Thanks,
-
-Alex
-
-> >  /**
-> >   * VFIO base fd, /dev/vfio/vfio
-> >   */
-> > diff --git a/include/linux/vfio.h b/include/linux/vfio.h
-> > index ab9e862..3c97b03 100644
-> > --- a/include/linux/vfio.h
-> > +++ b/include/linux/vfio.h
-> > @@ -45,6 +45,7 @@ extern int vfio_add_group_dev(struct device *dev,
-> >  			      void *device_data);
-> >  
-> >  extern void *vfio_del_group_dev(struct device *dev);
-> > +extern void *vfio_get_vdev(struct device *dev);
-> >  
-> >  /**
-> >   * struct vfio_iommu_driver_ops - VFIO IOMMU driver callbacks
-> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> > index 4758d1b..fa67213 100644
-> > --- a/include/uapi/linux/vfio.h
-> > +++ b/include/uapi/linux/vfio.h
-> > @@ -147,6 +147,7 @@ struct vfio_device_info {
-> >  	__u32	flags;
-> >  #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
-> >  #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
-> > +#define VFIO_DEVICE_FLAGS_AER_NOTIFY (1 << 2)	/* Supports aer notify */
-> >  	__u32	num_regions;	/* Max region index + 1 */
-> >  	__u32	num_irqs;	/* Max IRQ index + 1 */
-> >  };
-> > @@ -288,6 +289,14 @@ struct vfio_irq_set {
-> >   */
-> >  #define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 11)
-> >  
-> > +/**
-> > + * VFIO_DEVICE_SET_ERRFD - _IO(VFIO_TYPE, VFIO_BASE + 12)
-> > + *
-> > + * Pass the eventfd to the vfio-pci driver for signalling any device
-> > + * error notifications
-> > + */
-> > +#define VFIO_DEVICE_SET_ERRFD		_IO(VFIO_TYPE, VFIO_BASE + 12)
-> > +
-> >  /*
-> >   * The VFIO-PCI bus driver makes use of the following fixed region and
-> >   * IRQ index mapping.  Unimplemented regions return a size of zero.
-> 
-> 
-
-
-
+yes, will address in the following patch.
