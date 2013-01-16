@@ -1,73 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:47647 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750878Ab3ARHxi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 02:53:38 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 00/11] PCI, ACPI: pci root bus hotplug support / pci match_driver
-Date: Thu, 17 Jan 2013 23:53:11 -0800
-Message-Id: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Date: Wed, 16 Jan 2013 14:00:26 +0000
+Cc: Andrew Murray <andrew.murray@arm.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <20130115154038.GA11241@arm.com> <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
+In-Reply-To: <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301161400.26587.arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It includes
-1. preparing patches for pci root bus hotadd/hotremove support
-2. move root bus hotadd from acpiphp to pci_root.c
-3. add hot-remove support
-4. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
-5. add match_driver to add pci device to device tree early but
-   not attach driver for hotplug path.
+On Tuesday 15 January 2013, Thierry Reding wrote:
+> Is there actually hardware that supports this? I assumed that the MSI
+> controller would have to be tightly coupled to the PCI host bridge in
+> order to raise an interrupt when an MSI is received via PCI.
 
-based on pci/next + pm/acpi-scan
+No, as long as it's guaranteed that the MSI notification won't arrive
+at the CPU before any inbound DMA data before it, the MSI controller
+can be anywhere. Typically, the MSI controller is actually closer to
+the CPU core than to the PCI bridge. On X86, I believe the MSI address
+is on normally on the the "local APIC" on each CPU.
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
-
--v9: merges several patches together for easy review, requested by Rafael.
-
-After this patchset, will send out
-         for_each_host_bridge support
-         for_each_dev_addon_res
-
-Jiang Liu (2):
-  PCI: Fix a device reference count leakage issue in pci_dev_present()
-  PCI: make PCI device create/destroy logic symmetric
-
-Tang Chen (1):
-  PCI, ACPI: debug print for installation of acpi root bridge's notifier
-
-Yinghai Lu (8):
-  PCI, acpiphp: Add is_hotplug_bridge detection
-  PCI: Add root bus children dev's res to fail list
-  PCI: Set dev_node early for pci_dev
-  PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
-  PCI, acpiphp: Move and enhance hotplug support of pci host bridge
-  PCI, acpiphp: Don't bailout even no slots found yet.
-  PCI: Add match_driver in struct pci_dev
-  PCI: Put pci dev to device tree as early as possible
-
- drivers/acpi/osl.c                 |   24 +++++-
- drivers/acpi/pci_root.c            |  145 ++++++++++++++++++++++++++++++++++
- drivers/pci/bus.c                  |   57 ++++----------
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_core.c |   23 +-----
- drivers/pci/hotplug/acpiphp_glue.c |  150 +++++++++++-------------------------
- drivers/pci/iov.c                  |    7 --
- drivers/pci/pci-driver.c           |    6 +-
- drivers/pci/probe.c                |   36 +++++++--
- drivers/pci/remove.c               |    4 +-
- drivers/pci/search.c               |   10 +--
- drivers/pci/setup-bus.c            |    2 +-
- include/acpi/acpiosxf.h            |    9 ++-
- include/linux/pci.h                |    1 +
- 14 files changed, 279 insertions(+), 196 deletions(-)
-
--- 
-1.7.10.4
-
+	Arnd
