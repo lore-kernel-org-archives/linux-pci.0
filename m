@@ -1,86 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f54.google.com ([209.85.212.54]:43221 "EHLO
-	mail-vb0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484Ab3ADTeU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:34:20 -0500
-Received: by mail-vb0-f54.google.com with SMTP id l1so16930498vba.27
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:34:17 -0800 (PST)
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:43265 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757691Ab3APW4q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2013 17:56:46 -0500
+From: Lance Ortiz <lance.ortiz@hp.com>
+Subject: [PATCH v10 3/3] aerdrv: Cleanup log output for AER
+To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
+	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
+	mchehab@redhat.com, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 16 Jan 2013 16:51:16 -0700
+Message-ID: <20130116235116.16015.62519.stgit@grignak.americas.hpqcorp.net>
+In-Reply-To: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
+References: <20130116235102.16015.77379.stgit@grignak.americas.hpqcorp.net>
 MIME-Version: 1.0
-In-Reply-To: <1354746272.2355.102.camel@jtkirshe-mobl>
-References: <20121205205724.13851.50508.stgit@bhelgaas.mtv.corp.google.com>
- <20121205205755.13851.77284.stgit@bhelgaas.mtv.corp.google.com>
- <1354745132.2355.98.camel@jtkirshe-mobl> <CAErSpo5EfAY7BTNFtq3DWggDhBisBPGhevOsZXa19jRLT4+b6Q@mail.gmail.com>
- <1354746272.2355.102.camel@jtkirshe-mobl>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 4 Jan 2013 12:33:57 -0700
-Message-ID: <CAErSpo5K_Utkbc8eJANA9OUnBkSWka8-cSFAWLpL+35SLnQYBQ@mail.gmail.com>
-Subject: Re: [PATCH 07/12] e1000e: Use standard #defines for PCIe Capability
- ASPM fields
-To: jeffrey.t.kirsher@intel.com
-Cc: linux-pci@vger.kernel.org,
-	Alex Duyck <alexander.h.duyck@intel.com>,
-	e1000-devel@lists.sourceforge.net,
-	Don Skidmore <donald.c.skidmore@intel.com>,
-	Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Greg Rose <gregory.v.rose@intel.com>,
-	John Ronciak <john.ronciak@intel.com>,
-	Carolyn Wyborny <carolyn.wyborny@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 5, 2012 at 3:24 PM, Jeff Kirsher
-<jeffrey.t.kirsher@intel.com> wrote:
-> On Wed, 2012-12-05 at 15:07 -0700, Bjorn Helgaas wrote:
->> On Wed, Dec 5, 2012 at 3:05 PM, Jeff Kirsher
->> <jeffrey.t.kirsher@intel.com> wrote:
->> > On Wed, 2012-12-05 at 13:57 -0700, Bjorn Helgaas wrote:
->> >> Use the standard #defines for PCIe Capability ASPM fields.
->> >>
->> >> Previously we used PCIE_LINK_STATE_L0S and PCIE_LINK_STATE_L1
->> >> directly, but
->> >> these are defined for the Linux ASPM interfaces, e.g.,
->> >> pci_disable_link_state(), and only coincidentally match the actual
->> >> register
->> >> bits.  PCIE_LINK_STATE_CLKPM, also part of that interface, does not
->> >> match
->> >> the register bit.
->> >>
->> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> >> CC: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
->> >> CC: Jesse Brandeburg <jesse.brandeburg@intel.com>
->> >> CC: Bruce Allan <bruce.w.allan@intel.com>
->> >> CC: Carolyn Wyborny <carolyn.wyborny@intel.com>
->> >> CC: Don Skidmore <donald.c.skidmore@intel.com>
->> >> CC: Greg Rose <gregory.v.rose@intel.com>
->> >> CC: Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>
->> >> CC: Alex Duyck <alexander.h.duyck@intel.com>
->> >> CC: John Ronciak <john.ronciak@intel.com>
->> >> CC: e1000-devel@lists.sourceforge.net
->> >> ---
->> >>  drivers/net/ethernet/intel/e1000e/netdev.c |   11 +++++++++--
->> >>  1 files changed, 9 insertions(+), 2 deletions(-)
->> >
->> > Thanks I will add this patch to my queue for e1000e.  Since this is
->> > patch 7 of 12, are there PCI dependent patches in the series that need
->> > to be applied before?
->>
->> Yes.  It does depend on a previous patch that adds the #defines to
->> include/uapi/linux/pci_regs.h
->> (http://marc.info/?l=linux-pci&m=135474107109010&w=2).
->>
->> I plan to merge that during the v3.8 merge window, so you can merge it
->> after that.  Or, if it won't cause you conflicts, I can include the
->> e1000e change in my PCI tree.
->>
->> Bjorn
->
-> yeah, it does not apply cleanly (because of patches currently in the
-> queue from Bruce).  So I will take care of pushing your e1000e patch
-> through Dave's tree.
+These changes make cper_print_aer more consistent with aer_print_error
+and clean things up by eliminating the use of the prefix variable and
+replacing it with dev_printk.
 
-The pci_regs.h change this depends on appeared in v3.8-rc2, so this
-patch can be merged any time, at least as far as that particular
-issue.
+v3-v4 remove agent id stuff and kept print the same to avoid
+compatibility issues
+v7-v8 Updated to use dev_printk instated of prefix. Changed
+log levels to KERN_ERR as per Mauro's suggestion.
+v8-v9 Changed dev_printk to dev_err since all log levels are KERN_ERR.
+
+Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
+Acked-by: Tony Luck <tony.luck@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+
+ drivers/pci/pcie/aer/aerdrv_errprint.c |   54 +++++++++++++++-----------------
+ 1 files changed, 26 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index d3e5fc5..5ab1425 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -124,12 +124,11 @@ static const char *aer_agent_string[] = {
+ 	"Transmitter ID"
+ };
+ 
+-static void __aer_print_error(const char *prefix,
++static void __aer_print_error(struct pci_dev *dev,
+ 			      struct aer_err_info *info)
+ {
+ 	int i, status;
+ 	const char *errmsg = NULL;
+-
+ 	status = (info->status & ~info->mask);
+ 
+ 	for (i = 0; i < 32; i++) {
+@@ -144,26 +143,22 @@ static void __aer_print_error(const char *prefix,
+ 				aer_uncorrectable_error_string[i] : NULL;
+ 
+ 		if (errmsg)
+-			printk("%s""   [%2d] %-22s%s\n", prefix, i, errmsg,
++			dev_err(&dev->dev, "   [%2d] %-22s%s\n", i, errmsg,
+ 				info->first_error == i ? " (First)" : "");
+ 		else
+-			printk("%s""   [%2d] Unknown Error Bit%s\n", prefix, i,
+-				info->first_error == i ? " (First)" : "");
++			dev_err(&dev->dev, "   [%2d] Unknown Error Bit%s\n",
++				i, info->first_error == i ? " (First)" : "");
+ 	}
+ }
+ 
+ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ {
+ 	int id = ((dev->bus->number << 8) | dev->devfn);
+-	char prefix[44];
+-
+-	snprintf(prefix, sizeof(prefix), "%s%s %s: ",
+-		 (info->severity == AER_CORRECTABLE) ? KERN_WARNING : KERN_ERR,
+-		 dev_driver_string(&dev->dev), dev_name(&dev->dev));
+ 
+ 	if (info->status == 0) {
+-		printk("%s""PCIe Bus Error: severity=%s, type=Unaccessible, "
+-			"id=%04x(Unregistered Agent ID)\n", prefix,
++		dev_err(&dev->dev,
++			"PCIe Bus Error: severity=%s, type=Unaccessible, "
++			"id=%04x(Unregistered Agent ID)\n",
+ 			aer_error_severity_string[info->severity], id);
+ 	} else {
+ 		int layer, agent;
+@@ -171,22 +166,24 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 		layer = AER_GET_LAYER_ERROR(info->severity, info->status);
+ 		agent = AER_GET_AGENT(info->severity, info->status);
+ 
+-		printk("%s""PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
+-			prefix, aer_error_severity_string[info->severity],
++		dev_err(&dev->dev,
++			"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
++			aer_error_severity_string[info->severity],
+ 			aer_error_layer[layer], id, aer_agent_string[agent]);
+ 
+-		printk("%s""  device [%04x:%04x] error status/mask=%08x/%08x\n",
+-			prefix, dev->vendor, dev->device,
++		dev_err(&dev->dev,
++			"  device [%04x:%04x] error status/mask=%08x/%08x\n",
++			dev->vendor, dev->device,
+ 			info->status, info->mask);
+ 
+-		__aer_print_error(prefix, info);
++		__aer_print_error(dev, info);
+ 
+ 		if (info->tlp_header_valid) {
+ 			unsigned char *tlp = (unsigned char *) &info->tlp;
+-			printk("%s""  TLP Header:"
++			dev_err(&dev->dev, "  TLP Header:"
+ 				" %02x%02x%02x%02x %02x%02x%02x%02x"
+ 				" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+-				prefix, *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
++				*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
+ 				*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
+ 				*(tlp + 11), *(tlp + 10), *(tlp + 9),
+ 				*(tlp + 8), *(tlp + 15), *(tlp + 14),
+@@ -195,8 +192,9 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	}
+ 
+ 	if (info->id && info->error_dev_num > 1 && info->id == id)
+-		printk("%s""  Error of this Agent(%04x) is reported first\n",
+-			prefix, id);
++		dev_err(&dev->dev,
++			   "  Error of this Agent(%04x) is reported first\n",
++			id);
+ 	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+ 			info->severity);
+ }
+@@ -244,21 +242,21 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
+ 	}
+ 	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+ 	agent = AER_GET_AGENT(aer_severity, status);
+-	printk("%s""aer_status: 0x%08x, aer_mask: 0x%08x\n",
+-	       prefix, status, mask);
++	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
++	       status, mask);
+ 	cper_print_bits(prefix, status, status_strs, status_strs_size);
+-	printk("%s""aer_layer=%s, aer_agent=%s\n", prefix,
++	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
+ 	       aer_error_layer[layer], aer_agent_string[agent]);
+ 	if (aer_severity != AER_CORRECTABLE)
+-		printk("%s""aer_uncor_severity: 0x%08x\n",
+-		       prefix, aer->uncor_severity);
++		dev_err(&dev->dev, "aer_uncor_severity: 0x%08x\n",
++		       aer->uncor_severity);
+ 	if (tlp_header_valid) {
+ 		const unsigned char *tlp;
+ 		tlp = (const unsigned char *)&aer->header_log;
+-		printk("%s""aer_tlp_header:"
++		dev_err(&dev->dev, "aer_tlp_header:"
+ 			" %02x%02x%02x%02x %02x%02x%02x%02x"
+ 			" %02x%02x%02x%02x %02x%02x%02x%02x\n",
+-			prefix, *(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
++			*(tlp + 3), *(tlp + 2), *(tlp + 1), *tlp,
+ 			*(tlp + 7), *(tlp + 6), *(tlp + 5), *(tlp + 4),
+ 			*(tlp + 11), *(tlp + 10), *(tlp + 9),
+ 			*(tlp + 8), *(tlp + 15), *(tlp + 14),
+
