@@ -1,56 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49214 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751374Ab3AWAsG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Jan 2013 19:48:06 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Takao Indoh <indou.takao@jp.fujitsu.com>
-Cc: yinghai@kernel.org, muneda.takahiro@jp.fujitsu.com,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
-Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump with iommu
-Date: Wed, 23 Jan 2013 01:47:56 +0100
-Message-ID: <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
-In-Reply-To: <50FC95A8.6060402@jp.fujitsu.com>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <1593084.QhbTkmoq3N@hammer82.arch.suse.de> <50FC95A8.6060402@jp.fujitsu.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 16 Jan 2013 16:17:16 +0000
+From: Andrew Murray <andrew.murray@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thierry Reding <thierry.reding@avionic-design.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130116161716.GA10630@arm.com>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130115154038.GA11241@arm.com>
+ <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
+ <201301161400.26587.arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <201301161400.26587.arnd@arndb.de>
+Content-Type: text/plain; charset=WINDOWS-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 21, 2013 10:11:04 AM Takao Indoh wrote:
-> (2013/01/08 4:09), Thomas Renninger wrote:
-...
-> > I tried the provided patches first on 2.6.32, then I verfied with 3.8-rc2
-> > and in both cases the disk is not detected anymore in
-> > reset_devices (kexec'ed/kdump) case (but things work fine without these
-> > patches).
+On Wed, Jan 16, 2013 at 02:00:26PM +0000, Arnd Bergmann wrote:
+> On Tuesday 15 January 2013, Thierry Reding wrote:
+> > Is there actually hardware that supports this? I assumed that the MSI
+> > controller would have to be tightly coupled to the PCI host bridge in
+> > order to raise an interrupt when an MSI is received via PCI.
 > 
-> So the problem that the disk is not detected was caused by exactmap
-> problem you guys are discussing? Or still not detected even if exactmap
-> problem is fixed?
-This problem is related to the 5 PCI resetting patches.
-Dumping worked with a 2.6.32 and a 3.8-rc2 kernel, adding the PCI resetting
-patches broke both. I first tried 2.6.32 and verified with 3.8-rc2 to make sure
-I didn't mess up the backport adjustings of the patches to 2.6.32.
+> No, as long as it's guaranteed that the MSI notification won't arrive
+> at the CPU before any inbound DMA data before it, the MSI controller
+> can be anywhere. Typically, the MSI controller is actually closer to
+> the CPU core than to the PCI bridge. On X86, I believe the MSI address
+> is on normally on the the "local APIC" on each CPU.
 
-Unfortunately this Dell platform takes really long to boot.
-I can give it the one or other test, but please do not bomb me with patches.
+MSIs are indistinguishable from other memory-write transactions originating
+from the RC other than the address they target. Anything that can capture
+that write in the address space (even a page fault) could be an MSI controller
+and call interrupt handlers. And so the RC / MSI controllers don't need to
+be aware of each other.
 
-For info:
-About the interrupt remapping error interrupt storm in kdump case I tried to 
-reproduce on this machine, but never could: The guys who saw that also cannot 
-reproduce this anymore.
+Andrew Murray
 
-Two ideas I had about this:
-  - As said already, (also) try to catch the error case and try to reset the
-    the device in AER/Specific iterrupt remapping error interrupt caught.
-  - Have a look at coreboot, these guys should know how to initialize the PCI
-    subsystem from scratch and might have some well tested PCI resetting
-    code in place already (no idea, just a thought).
-
-    Thomas
