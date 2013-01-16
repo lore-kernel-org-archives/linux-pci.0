@@ -1,101 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <2123353.z1dtQmXUNo@vostro.rjw.lan>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-	<1358495602-22867-7-git-send-email-yinghai@kernel.org>
-	<2123353.z1dtQmXUNo@vostro.rjw.lan>
-Date: Sun, 20 Jan 2013 17:54:14 -0800
-Message-ID: <CAE9FiQVxwm43bkpRYEkSy5sL-FAkE49NE5nFQvXKWPSfoY+oEw@mail.gmail.com>
-Subject: Re: [PATCH v9 06/11] PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work()
- to alloc_acpi_hp_work
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:41541 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758469Ab3APAQn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Jan 2013 19:16:43 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
 	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: Re: [PATCH v8 14/22] ACPI: update ej_event interface to take acpi_device
+Date: Wed, 16 Jan 2013 01:22:35 +0100
+Message-ID: <3905799.Wx2ixLIOL7@vostro.rjw.lan>
+In-Reply-To: <2102023.Itn3WlmlaN@vostro.rjw.lan>
+References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <CAE9FiQW-efB2s1gdmVTy8k9NLSayAxfkTFvtzQhzL6MFBFSoWQ@mail.gmail.com> <2102023.Itn3WlmlaN@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 20, 2013 at 2:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, January 17, 2013 11:53:17 PM Yinghai Lu wrote:
->> Will need to use it for pci root bridge hotplug support, rename
->> *acpiphp* to *acpi* and move to osc.c.
->> Also make kacpi_hotplug_wq static after that.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Len Brown <lenb@kernel.org>
->> Cc: linux-acpi@vger.kernel.org
->> ---
->>  drivers/acpi/osl.c                 |   24 +++++++++++++++++++--
->>  drivers/pci/hotplug/acpiphp_glue.c |   42 ++++++------------------------------
->>  include/acpi/acpiosxf.h            |    9 +++++++-
->>  3 files changed, 36 insertions(+), 39 deletions(-)
->>
->> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
->> index 3ff2678..afcce46 100644
->> --- a/drivers/acpi/osl.c
->> +++ b/drivers/acpi/osl.c
->> @@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
->>  static void *acpi_irq_context;
->>  static struct workqueue_struct *kacpid_wq;
->>  static struct workqueue_struct *kacpi_notify_wq;
->> -struct workqueue_struct *kacpi_hotplug_wq;
->> -EXPORT_SYMBOL(kacpi_hotplug_wq);
->> +static struct workqueue_struct *kacpi_hotplug_wq;
->>
->>  /*
->>   * This list of permanent mappings is for memory that may be accessed from
->> @@ -1778,3 +1777,24 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
->>  {
->>       __acpi_os_prepare_sleep = func;
->>  }
->> +
->> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
->> +                     void (*func)(struct work_struct *work))
->> +{
->> +     struct acpi_hp_work *hp_work;
->> +     int ret;
->> +
->> +     hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
->> +     if (!hp_work)
->> +             return;
->> +
->> +     hp_work->handle = handle;
->> +     hp_work->type = type;
->> +     hp_work->context = context;
->> +
->> +     INIT_WORK(&hp_work->work, func);
->> +     ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
->> +     if (!ret)
->> +             kfree(hp_work);
->> +}
->> +EXPORT_SYMBOL(alloc_acpi_hp_work);
->
-> That should be EXPORT_SYMBOL_GPL().
+On Wednesday, January 16, 2013 12:55:20 AM Rafael J. Wysocki wrote:
+> On Tuesday, January 15, 2013 03:43:17 PM Yinghai Lu wrote:
+> > On Tue, Jan 15, 2013 at 3:26 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > On Monday, January 14, 2013 10:55:49 PM Yinghai Lu wrote:
+[...]
+> > 
+> > 
+> > looks like:
+> > 
+> > acpi_device_release+0x30
+> > 0xffffffff81536e2f is in acpi_device_release (drivers/acpi/scan.c:524).
+> > 519	static void acpi_free_power_resources_lists(struct acpi_device *device)
+> > 520	{
+> > 521		int i;
+> > 522	
+> > 523		acpi_power_resources_list_free(&device->wakeup.resources);
+> > 524		if (!device->flags.power_manageable)
+> > 525			return;
+> > 526	
+> > 527		for (i = ACPI_STATE_D0; i <= ACPI_STATE_D3_HOT; i++) {
+> > 528			struct acpi_device_power_state *ps = &device->power.states[i];
+> > 
+> > wakeup.resources has problem?
+> 
+> Yes, it seems to.
+> 
+> Thanks for the report, looking into it.
 
-Ok.
+Found a bug, fixed it and updated the tree (device->flags.wakeup.valid should
+be checked before the acpi_power_resources_list_free(&device->wakeup.resources),
+otherwise the list may not be initialized).
 
-Chose that because kacpi_hotplug_wq does not have _GPL.
+Thanks,
+Rafael
 
->
-...
->> diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
->> index 4315274..adab63c 100644
->> --- a/include/acpi/acpiosxf.h
->> +++ b/include/acpi/acpiosxf.h
->> @@ -193,7 +193,14 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
->>  /*
->>   * Threads and Scheduling
->>   */
->> -extern struct workqueue_struct *kacpi_hotplug_wq;
->
-> include/acpi/acpiosxf.h is related to ACPICA, so while removing kacpi_hotplug_wq
-> from it should be OK, please put the rest into acpi_bus.h, preferably next to the
-> definition of acpi_eject_event.
->
 
-Ok.
-
-Thanks
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
