@@ -1,88 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58149 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab3A1S4r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:47 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2 03/27] of/pci: Add of_pci_parse_bus_range() function
-Date: Mon, 28 Jan 2013 19:56:12 +0100
-Message-Id: <1359399397-29729-4-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1358391258-1771-57-git-send-email-keescook@chromium.org>
+References: <1358391258-1771-1-git-send-email-keescook@chromium.org> <1358391258-1771-57-git-send-email-keescook@chromium.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 17 Jan 2013 16:25:32 -0700
+Message-ID: <CAErSpo7XmLcNjfh22JuQ71+hybZ-WCfn_XKzc4aiRde00AOdvg@mail.gmail.com>
+Subject: Re: [PATCH 56/86] drivers/pci/pcie: remove depends on CONFIG_EXPERIMENTAL
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@avionic-design.de>
+[+cc linux-pci]
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
+On Wed, Jan 16, 2013 at 7:53 PM, Kees Cook <keescook@chromium.org> wrote:
+> The CONFIG_EXPERIMENTAL config item has not carried much meaning for a
+> while now and is almost always enabled by default. As agreed during the
+> Linux kernel summit, remove it from any "depends on" lines in Kconfigs.
+>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Jesse Barnes <jbarnes@virtuousgeek.org>
+> CC: Matthew Garrett <mjg@redhat.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
- include/linux/of_pci.h |    1 +
- 2 files changed, 26 insertions(+)
+I missed this the first time you posted it, so thanks for resending
+it.  I applied it to my for-linus branch, headed for v3.8.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 0dd52df..3ea0e84 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
- 	return (be32_to_cpup(reg) >> 8) & 0xff;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 91ec484..7a04826 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -11,5 +11,6 @@ struct device_node;
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_devfn(struct device_node *np);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- 
- #endif
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/pcie/Kconfig |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index 6c8bc58..fde4a32 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -82,4 +82,4 @@ endchoice
+>
+>  config PCIE_PME
+>         def_bool y
+> -       depends on PCIEPORTBUS && PM_RUNTIME && EXPERIMENTAL && ACPI
+> +       depends on PCIEPORTBUS && PM_RUNTIME && ACPI
+> --
+> 1.7.9.5
+>
