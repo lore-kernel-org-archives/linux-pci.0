@@ -1,91 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:44769 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754156Ab3AKSGv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 13:06:51 -0500
-Received: by mail-la0-f50.google.com with SMTP id fs13so2013045lab.23
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2013 10:06:49 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.171]:56846 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757138Ab3AQQGE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2013 11:06:04 -0500
+Date: Thu, 17 Jan 2013 17:05:02 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130117160501.GC2186@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <20130115154038.GA11241@arm.com>
+ <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
+ <201301161400.26587.arnd@arndb.de>
+ <20130116161716.GA10630@arm.com>
+ <20130116183101.GA28660@avionic-0098.adnet.avionic-design.de>
+ <20130117154236.GA25943@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <17637668.59BS4lW4dN@vostro.rjw.lan>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
- <1410202.K95a8u1BYT@vostro.rjw.lan> <CAE9FiQVmDW__C3A1_JJZpCZJwYWONZpHbzitMxsHZBxotw8VBA@mail.gmail.com>
- <17637668.59BS4lW4dN@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Jan 2013 11:06:29 -0700
-Message-ID: <CAErSpo6eB=Gn6wPBK=_KYhP=NOi26AmuJd_rS-zAw+2ERdrcew@mail.gmail.com>
-Subject: Re: [PATCH v3 3/6] ACPI/pci_slot: update PCI slot information when
- PCI hotplug event happens
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>, Myron Stowe <mstowe@redhat.com>,
-	Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2JFBq9zoW8cOFH7v"
+In-Reply-To: <20130117154236.GA25943@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 10, 2013 at 4:59 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Thursday, January 10, 2013 03:40:45 PM Yinghai Lu wrote:
->> On Thu, Jan 10, 2013 at 3:39 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > On Thursday, January 10, 2013 03:03:53 PM Yinghai Lu wrote:
->> >> On Thu, Jan 10, 2013 at 1:50 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> >> > Well, I don't see what functional problems that can bring.
->> >> >
->> >> > In theory people may want to have them as modules to avoid loading them on
->> >> > systems that don't use PCI hotplug, but honestly I think that the complexity
->> >> > this causes us to deal with is not worth it.
->> >> >
->> >> > Moreover, removing the modularity may actually allow us to solve some ordering
->> >> > issues once and for good.
->> >>
->> >> No, the world is not really ideal yet.
->> >>
->> >> looks like laptops have problem with pci express cards.
->> >>
->> >> when pciehp is used, surprise insert/removal does not work because
->> >> PresDect does not change properly, so no interrupt is generated.
->> >> --- i suspects that is silicon problem.
->> >>
->> >> but when acpiphp is used, that surprise  insert/removal is working.
->> >>
->> >> some laptop like thinkpad, just don't give osc to kernel..
->> >> [    0.505117]  pci0000:00: Requesting ACPI _OSC control (0x1d)
->> >> [    0.505413]  pci0000:00: ACPI _OSC request failed (AE_SUPPORT),
->> >> returned control mask: 0x0d
->> >> [    0.505517] ACPI _OSC control for PCIe not granted, disabling ASPM
->> >>
->> >> and other laptop give that to kernel, in recent kernel will not give
->> >> acpiphp to have that slot, because it want to hold that for pciehp.
->> >> poor user have to pass 'pci_aspm=off" to disable _OSC for all.
->> >> --- please check the mail that i forward to you yesterday.
->> >
->> > Yes, this is a bug, but I'm not sure how to fix it yet.
->>
->> add one command line to control it so do not claim that in osc_control?
->
-> That's one option, although not very attractive so to speak.
->
->> >> Anyway, we do need to let the user to have choice to use acpiphp and pciehp.
->> >> and it should be first come and first serve policy.
->> >
->> > And that's why you think they should be modules?  I disagree if so.
->>
->> Yes.
->>
->> maybe we can have pci=nopciehp in command line just we pci=noaer...
->>
->> that should handle some corner cases.
->
-> Yes.  In any case the user should be able to say "I know better", but having
-> to express that through the "right" ordering of modules is somewhat less than
-> straightforward in my opinion.
 
-I think it's fine if a user *can* override the default ordering.
+--2JFBq9zoW8cOFH7v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I am completely opposed to *requiring* a user to supply a command line
-option or change the order of module loading just to get hotplug to
-work.  There's no sane way to document that or communicate that
-information to users.
+On Thu, Jan 17, 2013 at 03:42:36PM +0000, Andrew Murray wrote:
+> On Wed, Jan 16, 2013 at 06:31:01PM +0000, Thierry Reding wrote:
+> > Alright, putting the functions into pci_ops doesn't sound like a very
+> > good idea then. Or perhaps it would make sense for hardware where the
+> > root complex and the MSI controller are handled by the same driver.
+> > Basically it could be done as a shortcut and if those are not filled
+> > in, the drivers could still opt to look up an MSI controller from a
+> > phandle specified in DT.
+> >=20
+> > Even another alternative would be to keep the functions within the
+> > struct pci_ops and use generic ones if an external MSI controller is
+> > used. Just tossing around ideas.
+>=20
+> I think an ideal solution would be for additional logic in drivers/msi.c
+> (e.g. in functions like msi_capability_init) to determine (based on the
+> passed in pci_dev) which MSI controller ops to use. I'm not sure the best
+> way to implement an association between an MSI controller and PCI busses
+> (I believe arch/sparc does something like this - perhaps there will be
+> inspiration there).
+>=20
+> As you've pointed out, most RCs will have their own MSI controllers - so
+> it should be easy to register and associate both together.
+>=20
+> I've submitted my previous work on MSI controller registration, but it
+> doesn't quite solve this problem - perhaps it can be a starting point?
 
-Bjorn
+We basically have two cases:
+
+  - The PCI host bridge contains registers for MSI support. In that case
+    it makes little sense to uncouple the MSI implementation from the
+    host bridge driver.
+
+  - An MSI controller exists outside of the PCI host bridge. The PCI
+    host bridge would in that case have to lookup an MSI controller (via
+    DT phandle or some other method).
+
+In either of those cases, does it make sense to use the MSI support
+outside the scope of the PCI infrastructure? That is, would devices
+other than PCI devices be able to generate an MSI?
+
+Thierry
+
+--2JFBq9zoW8cOFH7v
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ+CEtAAoJEN0jrNd/PrOhVKwQAJaDTjXx1NQRUhFQU8TpJTW7
+ldgQIySDQLUC9qo21QLUyfk7IeNL+av2WtmabqVc3eb1vLAoMH+EU5VRQjpD9XgO
+fErTEhZcykifUcqHPDHOXQAMBGz9SRZ4K2644r+6tWO6kt5VtFTNNpeFxPVKzfAK
+3y5rtwK9gnqaIHOizl+4rA4cRD8PPkcH1scd8A2WS8BioSuowDx2I/gSWZeNAFJb
+oKsUixZa9kUwjJm9HEZRbaDf89PEOfNhu4uDqHXMyqGXeKgKYflcBPwPCusTtYOO
+e/nEF1/oJJHqmwR8HLHXV8O74oCVmN++9yuvGjCC0oOAS0EbZdTJffeLwWDJZz7y
++Hmag0ZvGgkSKqdK8Sylf2y2uYzwTnMCWCh0USuI5yhpnZGAUR/8Tj1oqM29RL6q
+rkC/1EnPryWU6EzHd/MBdzFCloBVH+x6Aw5LHrJEUv5Laj4gdSp7RmIA8fddo9VF
+tuJbpjBGCpC0HFNyquX/dudScG1KOA1KC5fUMrCto4x0Ulr5s3+eVm696UkSdr3S
+de0Dxvs97v7H0kbZ4FAUCFAW42wbvO8Cg8xIq6y6fAxe+hHb+UMBvxR28iWudXPT
+gXMM0XdVlNfeWCZmzjvaUrLHGnismWw3hqcAiOwCR1Mhj4ctFIP3KQY833dT79og
+5tXAg1HPR/mQe/KqPpfo
+=Og++
+-----END PGP SIGNATURE-----
+
+--2JFBq9zoW8cOFH7v--
