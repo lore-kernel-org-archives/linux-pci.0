@@ -1,81 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Jan 2013 12:29:01 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130122192901.GE30647@obsidianresearch.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130115154038.GA11241@arm.com>
- <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
- <201301161400.26587.arnd@arndb.de>
- <20130116161716.GA10630@arm.com>
- <20130116183101.GA28660@avionic-0098.adnet.avionic-design.de>
- <20130117154236.GA25943@arm.com>
- <20130117160501.GC2186@avionic-0098.adnet.avionic-design.de>
- <20130117162218.GA29016@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130117162218.GA29016@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 04/11] PCI: Fix a device reference count leakage issue in pci_dev_present()
+Date: Thu, 17 Jan 2013 23:53:15 -0800
+Message-Id: <1358495602-22867-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 17, 2013 at 04:22:18PM +0000, Andrew Murray wrote:
+From: Jiang Liu <jiang.liu@huawei.com>
 
-> > In either of those cases, does it make sense to use the MSI support
-> > outside the scope of the PCI infrastructure? That is, would devices
-> > other than PCI devices be able to generate an MSI?
-> 
-> I've come around to your way of thinking. Your approach sounds good for
-> registration of MSI ops - let the RC host driver do it (it probably has its
-> own), or use a helper for following a phandle to get ops that are not part
-> of the driver. MSIs won't be used outside of PCI devices.
+Function pci_get_dev_by_id() will hold a reference count on the pci device
+returned, so pci_dev_present() should release the corresponding reference
+count to avoid memory leakage.
 
-Here is a bit of additional info on some MSI stuff..
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/search.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-This can be pretty complex. For instance on hyper transport systems
-the PCI to HT bridge has an MSI controller that maps between PCI and
-HT MSI formats, that mapping is configurable, so technically each
-brige could be considered a MSI controller. Typically the mapping
-controllers are all setup the same so there is not much problem with
-this. However *native* HT devices can (which are super rare) can use a
-different MSI format than PCI devices. From a linux perspective HT is
-just a variant of PCI.
- 
-On x86 the MSI is delivered to the CPU APIC complex which converts it
-into a vectored interrupt - part of the value of MSI is that the MSI
-data can vector the interrupt to a specific CPU, or group of CPUs or
-whatever.
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index bf969ba..d0627fa 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -319,13 +319,13 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	WARN_ON(in_interrupt());
+ 	while (ids->vendor || ids->subvendor || ids->class_mask) {
+ 		found = pci_get_dev_by_id(ids, NULL);
+-		if (found)
+-			goto exit;
++		if (found) {
++			pci_dev_put(found);
++			return 1;
++		}
+ 		ids++;
+ 	}
+-exit:
+-	if (found)
+-		return 1;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(pci_dev_present);
+-- 
+1.7.10.4
 
-Presumably SMP ARMs will evolve similar MSI based interrupt vectoring
-capabilities, and presumably on-chip, non-PCI peripherals will evolve
-options to use MSI as well (ie multi-queue ethernet). So it might be
-worth giving some thought to how things could migrate in that
-direction someday.
-
-I have a bit hacky MSI driver for Kirkwood, this work you have to
-generalize the interface could let me actually upstream it :) The MSI
-is built using the Host2CPU doorbell registers, so it is entirely
-unrelated to the PCI-E RC driver.
-
-However, my use of the MSI driver on kirkwood is to assign MSIs to a
-PCI-E device via non-standard registers, more like an on chip
-peripheral. This is because the Host2CPU doorbell doesn't fit 100%
-perfectly with the standard PCI MSI stuff, and the hardware has funny
-needs.. So an 'allocate a MSI interrupt' API would be snazzy too :)
-
-Jason
