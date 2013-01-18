@@ -1,76 +1,150 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
-References: <20121030040237.GA10472@google.com> <1352003971-22278-1-git-send-email-yinghai@kernel.org>
- <CAE9FiQUn=bcgOLFzBwsBT1-O1poRNy9qYTb0w9EAya3_inKqAw@mail.gmail.com>
- <CAErSpo5Z57asEXbfesOjXMEPj4WM3YMbzQH3s-v_NBrnPNmuVQ@mail.gmail.com>
- <CAErSpo4LS7ShCbeOm1s9ob1MjPfUSWn9J96UHRBP6van54swQA@mail.gmail.com> <CAE9FiQV5x1S1BNHrXq0wMRDx7PD5BoCh3fOnq2vS_AOAGL8Rrw@mail.gmail.com>
+In-Reply-To: <1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Jan 2013 10:35:48 -0700
-Message-ID: <CAErSpo5vEb=63jGsqfau1G=f54oqq17pc3ZzcpzhL7hQrtYhng@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
+Date: Fri, 18 Jan 2013 10:35:46 -0700
+Message-ID: <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe
+ native hotplug
+To: Jiang Liu <liuj97@gmail.com>
+Cc: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 8, 2013 at 11:27 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Tue, Jan 8, 2013 at 9:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> I'm really sorry that it's taken me so long to get to these.
->>>
->>> I applied these to my pci/yinghai-survey-resources branch.  I
->>> re-ordered the last two and reworked some of the changelogs.
->>
->> To be clear about this, the pci/yinghai-survey-resources branch I
->> mentioned is a staging branch that just gets build test coverage.  I
->> don't plan to actually merge this or put it into -next until the
->> questions below are resolved.
->>
->> My inclination, until I'm persuaded otherwise, is to wait for patches
->> that preserve the similarities among these architectures.
->
-> I don't know, that could be separated patcheset after we conclude
-> pci root bus hotplug support.
+On Fri, Jan 18, 2013 at 9:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> If user specifies "pci=nopciehp" on kernel boot command line, OSPM
+> won't claim PCIe native hotplug service from firmware and no PCIe
+> port devices will be created for PCIe native hotplug service.
 
-The main reason I review patches before merging them is to identify
-issues that we can fix before they affect everybody.  It makes my life
-a lot easier if I don't have to keep track of pending unaddressed
-review comments.  Is there an advantage to waiting and doing this work
-later?
+Why do we need this option?
 
->>> In general these look good.  My main concern is that they only touch
->>> x86, without touching the similar code in frv, microblaze, mn10300,
->>> and powerpc.
->>>
->>> This code (pcibios_resource_survey(), pcibios_assign_resources(),
->>> pcibios_allocate_resources(), pcibios_allocate_bus_resources()) was
->>> obviously copied from x86 originally, and I'd like to preserve the
->>> similarity between them.  It would be even better to refactor it so
->>> it's actually *shared*, but I don't think that's a requirement right
->>> now.
+If I understand correctly, there are machines where it *looks* like we
+should use pciehp, but pciehp doesn't work because we don't get the
+interrupts we expect.  On those machines, we have to use acpiphp
+instead.  It seems like many Dell XPS laptops have this issue with
+ExpressCard slots, e.g.,
+https://bugzilla.kernel.org/show_bug.cgi?id=40802 .
+
+If you want "pci=nopciehp" as a way for users to deal with this
+problem by forcing the use of acpiphp, I object.  Windows manages to
+make these slots work without having users do anything special, so we
+should be able to do it, too.
+
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> ---
+>  Documentation/kernel-parameters.txt |    2 ++
+>  drivers/acpi/pci_root.c             |    3 ++-
+>  drivers/pci/pci.c                   |    2 ++
+>  drivers/pci/pcie/portdrv_core.c     |    5 +++--
+>  drivers/pci/pcie/portdrv_pci.c      |    3 +++
+>  include/linux/pci.h                 |    9 +++++++++
+>  6 files changed, 21 insertions(+), 3 deletions(-)
 >
-> yes, should be moved to drivers/pci
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 9776f06..28dd0ad 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2106,6 +2106,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>                 noaer           [PCIE] If the PCIEAER kernel config parameter is
+>                                 enabled, this kernel boot option can be used to
+>                                 disable the use of PCIE advanced error reporting.
+> +               nopciehp        [PCIE] this kernel boot option can be used to
+> +                               disable PCIe native hotplug.
+>                 nodomains       [PCI] Disable support for multiple PCI
+>                                 root domains (aka PCI segments, in ACPI-speak).
+>                 nommconf        [X86] Disable use of MMCONFIG for PCI
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index c6200ff..c37eedb 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -551,8 +551,9 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+>         if (!pcie_ports_disabled
+>             && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+>                 flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+> -                       | OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+>                         | OSC_PCI_EXPRESS_PME_CONTROL;
+> +               if (!pcie_native_hotplug_disabled)
+> +                       flags |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
 >
->>>
->>> If we allow it to diverge now, it will make it harder to refactor and
->>> harder to notice when bug fixes should be applied to all of them.  For
->>> example, looking at pcibios_allocate_resources(), commit 575939cf5
->>> added some SR-IOV support to x86.  Should similar code be added for
->>> frv, microblaze, mn10300, and powerpc?
+>                 if (pci_aer_available()) {
+>                         if (aer_acpi_firmware_first())
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2f8f4c6..34b2c83 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3869,6 +3869,8 @@ static int __init pci_setup(char *str)
+>                                 pci_no_msi();
+>                         } else if (!strcmp(str, "noaer")) {
+>                                 pci_no_aer();
+> +                       } else if (!strcmp(str, "nopciehp")) {
+> +                               pcie_no_native_hotplug();
+>                         } else if (!strncmp(str, "realloc=", 8)) {
+>                                 pci_realloc_get_opt(str + 8);
+>                         } else if (!strncmp(str, "realloc", 7)) {
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index ed129b4..e7e1679 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -263,8 +263,9 @@ static int get_port_device_capability(struct pci_dev *dev)
 >
-> should be treated the same.
+>         err = pcie_port_platform_notify(dev, &cap_mask);
+>         if (!pcie_ports_auto) {
+> -               cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+> -                               | PCIE_PORT_SERVICE_VC;
+> +               cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_VC;
+> +               if (!pcie_native_hotplug_disabled)
+> +                       cap_mask |= PCIE_PORT_SERVICE_HP;
+>                 if (pci_aer_available())
+>                         cap_mask |= PCIE_PORT_SERVICE_AER;
+>         } else if (err) {
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 0761d90..018cee0 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -40,6 +40,9 @@ bool pcie_ports_disabled;
+>   */
+>  bool pcie_ports_auto = true;
 >
->>>
->>> Anybody else have thoughts on this?
->>>
->>> Bjorn
+> +/* If set, the PCIe native hotplug will not be used. */
+> +bool pcie_native_hotplug_disabled;
+> +
+>  static int __init pcie_port_setup(char *str)
+>  {
+>         if (!strncmp(str, "compat", 6)) {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 12e5447..715e17b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1138,9 +1138,18 @@ extern int pci_msi_enabled(void);
+>  #ifdef CONFIG_PCIEPORTBUS
+>  extern bool pcie_ports_disabled;
+>  extern bool pcie_ports_auto;
+> +extern bool pcie_native_hotplug_disabled;
+> +
+> +static inline void pcie_no_native_hotplug(void)
+> +{
+> +       pcie_native_hotplug_disabled = true;
+> +}
+>  #else
+>  #define pcie_ports_disabled    true
+>  #define pcie_ports_auto                false
+> +#define pcie_native_hotplug_disabled   true
+> +
+> +static inline void pcie_no_native_hotplug(void) { }
+>  #endif
+>
+>  #ifndef CONFIG_PCIEASPM
+> --
+> 1.7.9.5
+>
