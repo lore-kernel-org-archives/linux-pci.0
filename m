@@ -1,84 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:36644 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753547Ab3AaRrt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jan 2013 12:47:49 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: pciehp: hide ENTRY messages behind ctrl_dbg()
-Date: Thu, 31 Jan 2013 18:54:01 +0100
-Message-ID: <1450113.teKM2dvJbO@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
-References: <1359367251.883.13.camel@x61.thuisdomein> <CAErSpo7grYijCUZGWGM4jao+MUqXYQ66q1az6bbKPMX4_Jwcyg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 6/8] pci_slot: replace printk(KERN_xxx) with pr_xxx()
+Date: Sat, 19 Jan 2013 00:07:44 +0800
+Message-Id: <1358525267-14268-7-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 31, 2013 10:13:17 AM Bjorn Helgaas wrote:
-> [+cc Rafael]
-> 
-> On Mon, Jan 28, 2013 at 3:00 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> > In each suspend and resume cycle my laptop prints these messages at
-> > KERN_INFO level:
-> >     pciehp 0000:00:1c.1:pcie04: pciehp_suspend ENTRY
-> >     pciehp 0000:00:1c.0:pcie04: pciehp_suspend ENTRY
-> >
-> > and
-> >     pciehp 0000:00:1c.0:pcie04: pciehp_resume ENTRY
-> >     pciehp 0000:00:1c.1:pcie04: pciehp_resume ENTRY
-> >
-> > Messages like these are probably only useful while debugging pciehp, so
-> > let's hide them behind the ctrl_dbg() macro.
-> >
-> > Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> > ---
-> > 0) Compile tested only!
-> >
-> > 1) Perhaps a better solution is to drop these messages entirely.
-> >
-> >  drivers/pci/hotplug/pciehp_core.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-> > index 939bd1d..ed1702d 100644
-> > --- a/drivers/pci/hotplug/pciehp_core.c
-> > +++ b/drivers/pci/hotplug/pciehp_core.c
-> > @@ -293,7 +293,8 @@ static void pciehp_remove(struct pcie_device *dev)
-> >  #ifdef CONFIG_PM
-> >  static int pciehp_suspend (struct pcie_device *dev)
-> >  {
-> > -       dev_info(&dev->device, "%s ENTRY\n", __func__);
-> > +       struct controller *ctrl = get_service_data(dev);
-> > +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
-> >         return 0;
-> 
-> I'd propose to just drop these messages completely.  Rafael, would you
-> have any objection to that?
+Trivial changes to replace printk(KERN_xxx) with pr_xxx().
 
-No, I wouldn't.
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+---
+ drivers/acpi/pci_slot.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-> 
-> >  }
-> >
-> > @@ -303,8 +304,8 @@ static int pciehp_resume (struct pcie_device *dev)
-> >         struct slot *slot;
-> >         u8 status;
-> >
-> > -       dev_info(&dev->device, "%s ENTRY\n", __func__);
-> >         ctrl = get_service_data(dev);
-> > +       ctrl_dbg(ctrl, "%s ENTRY\n", __func__);
-> >
-> >         /* reinitialize the chipset's event detection logic */
-> >         pcie_enable_notification(ctrl);
-> > --
-
-Thanks,
-Rafael
-
-
+diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+index 2b38f4d..3b821db 100644
+--- a/drivers/acpi/pci_slot.c
++++ b/drivers/acpi/pci_slot.c
+@@ -52,13 +52,12 @@ module_param(debug, bool, 0644);
+ ACPI_MODULE_NAME("pci_slot");
+ 
+ #define MY_NAME "pci_slot"
+-#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
+-#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
++#define err(format, arg...) pr_err("%s: " format , MY_NAME , ## arg)
++#define info(format, arg...) pr_info("%s: " format , MY_NAME , ## arg)
+ #define dbg(format, arg...)					\
+ 	do {							\
+ 		if (debug)					\
+-			printk(KERN_DEBUG "%s: " format,	\
+-				MY_NAME , ## arg);		\
++			pr_debug("%s: " format,	MY_NAME , ## arg); \
+ 	} while (0)
+ 
+ #define SLOT_NAME_SIZE 21		/* Inspired by #define in acpiphp.h */
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
