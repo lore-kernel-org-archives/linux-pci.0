@@ -1,116 +1,157 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
+Date: Fri, 18 Jan 2013 11:40:19 +0000
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
 	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
 	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 00/14] Rewrite Tegra PCIe driver
-Date: Wed,  9 Jan 2013 21:43:00 +0100
-Message-Id: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH RFC 2/2] Improve bios32 support for DT PCI host bridge
+ controllers
+Message-ID: <20130118114019.GA9034@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series contains an almost complete rewrite of the Tegra PCIe
-driver. The code is moved to the drivers/pci/host directory and turned
-into a proper platform driver, adding MSI and DT support while at it.
-Other PCI host controller drivers can be added to that directory in an
-attempt to make it easier to factor out common code.
+Continuing from discussion with Thierry (lkml.org/lkml/2013/1/18/107) perhaps
+this will be useful to fold into your patchset - you may wish to remove the
+overlap. 
+---
+This patch attempts to overcome two difficulities when providing DT PCI host
+bridge controllers:
 
-Patches 1 to 4 add generic OF helpers to parse a PCI node's ranges
-property as well as obtain the bus, device and function numbers from a
-node's reg property.
+At present PCI controllers are registered via the pci_common_init call, this
+results in callbacks (arch/arm/include/asm/mach/pci.h) which are used to setup
+the controller. However there is no trivial way to pass a device_node to the
+callbacks which is known at the time of calling pci_common_init. This is
+required in order to add pci resources (pci_add_resource_offset) based on
+information obtained from the device tree. This patch updates the hw_pci and
+pci_sys_data structures such that drivers can provide a device_node to
+pci_common_init and access it through the pci_sys_data argument of the
+callbacks.
 
-Patch 5 provides an implementation of a cache for I/O mappings. This can
-be used in situations where a large physical memory region needs to be
-ioremap()'ed. On Tegra, the PCIe standard and extended configuration
-spaces can be accessed through a 256 MiB window. Mapping that in one
-chunk is wasteful and may not always work because the vmalloc area may
-not be large enough. The implementation in this patch uses an LRU based
-approach to map a limited amount of pages on an as-needed basis.
+Additionally bios32 makes an assumption that all host controllers are
+registered at the same time and handled by the same driver. This patch provides
+support for calling pci_common_init multiple times to allow for one at a time
+registration of PCI host controllers.
 
-Patches 6 and 7 prepare the ARM PCI code to enable PCI host controller
-drivers to load after the init stage, which can happen due to deferred
-probing, and to allow private data to be passed for each controller.
+It also adds support for setting up of PCIe MPS and MRRS.
 
-Patches 8 and 9 move some of the Tegra specific code around to allow it
-to be used from outside the arch/arm/mach-tegra directory.
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ arch/arm/include/asm/mach/pci.h |    2 ++
+ arch/arm/kernel/bios32.c        |   29 ++++++++++++++++++++++++-----
+ 2 files changed, 26 insertions(+), 5 deletions(-)
 
-Patch 10 moves the Tegra PCIe controller driver to the drivers/pci/host
-directory and turns it into a proper platform driver. It also adds MSI
-(based on patches by NVIDIA) and DT support.
-
-Patches 11 to 14 add device tree based probing for the TEC, Harmony and
-TrimSlice boards.
-
-Thierry
-
-Andrew Murray (1):
-  of/pci: Provide support for parsing PCI DT ranges property
-
-Thierry Reding (13):
-  of/pci: Add of_pci_get_devfn() function
-  of/pci: Add of_pci_get_bus() function
-  of/pci: Add of_pci_parse_bus_range() function
-  lib: Add I/O map cache implementation
-  ARM: pci: Keep pci_common_init() around after init
-  ARM: pci: Allow passing per-controller private data
-  ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
-  ARM: tegra: Move pmc.h to include/mach
-  PCI: tegra: Move PCIe driver to drivers/pci/host
-  ARM: tegra: tamonten: Add PCIe support
-  ARM: tegra: tec: Add PCIe support
-  ARM: tegra: harmony: Initialize PCIe from DT
-  ARM: tegra: trimslice: Initialize PCIe from DT
-
- .../bindings/pci/nvidia,tegra20-pcie.txt           |  115 ++
- arch/arm/Kconfig                                   |    2 +
- arch/arm/boot/dts/tegra20-harmony.dts              |   20 +-
- arch/arm/boot/dts/tegra20-tamonten.dtsi            |    2 +-
- arch/arm/boot/dts/tegra20-tec.dts                  |  198 +++
- arch/arm/boot/dts/tegra20-trimslice.dts            |   12 +
- arch/arm/boot/dts/tegra20.dtsi                     |   45 +
- arch/arm/include/asm/mach/pci.h                    |    1 +
- arch/arm/kernel/bios32.c                           |    9 +-
- arch/arm/mach-tegra/Kconfig                        |    5 -
- arch/arm/mach-tegra/Makefile                       |    3 -
- arch/arm/mach-tegra/board-dt-tegra20.c             |   24 -
- arch/arm/mach-tegra/board-harmony-pcie.c           |   84 --
- arch/arm/mach-tegra/board.h                        |    4 +-
- arch/arm/mach-tegra/common.c                       |    2 +-
- arch/arm/mach-tegra/include/mach/pmc.h             |   24 +
- arch/arm/mach-tegra/iomap.h                        |    3 -
- arch/arm/mach-tegra/pcie.c                         |  887 -------------
- arch/arm/mach-tegra/pmc.c                          |   16 +
- arch/arm/mach-tegra/pmc.h                          |   23 -
- drivers/of/address.c                               |   63 +
- drivers/of/of_pci.c                                |   78 +-
- drivers/pci/Kconfig                                |    2 +
- drivers/pci/Makefile                               |    3 +
- drivers/pci/host/Kconfig                           |    8 +
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-tegra.c                       | 1322 ++++++++++++++++++++
- include/linux/io.h                                 |   12 +
- include/linux/of_address.h                         |    9 +
- include/linux/of_pci.h                             |    3 +
- lib/ioremap.c                                      |  266 ++++
- 31 files changed, 2203 insertions(+), 1043 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
- delete mode 100644 arch/arm/mach-tegra/board-harmony-pcie.c
- create mode 100644 arch/arm/mach-tegra/include/mach/pmc.h
- delete mode 100644 arch/arm/mach-tegra/pcie.c
- delete mode 100644 arch/arm/mach-tegra/pmc.h
- create mode 100644 drivers/pci/host/Kconfig
- create mode 100644 drivers/pci/host/Makefile
- create mode 100644 drivers/pci/host/pci-tegra.c
-
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 26c511f..845a6b7 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -27,6 +27,7 @@ struct hw_pci {
+ 	void		(*postinit)(void);
+ 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
+ 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
++	struct device_node *of_node;
+ };
+ 
+ /*
+@@ -47,6 +48,7 @@ struct pci_sys_data {
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
+ 	void		*private_data;	/* platform controller private data	*/
++	struct device_node *of_node;	/* device tree node			*/
+ };
+ 
+ /*
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 2b2f25e..bde4630 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -11,6 +11,7 @@
+ #include <linux/slab.h>
+ #include <linux/init.h>
+ #include <linux/io.h>
++#include <linux/of.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/pci.h>
+@@ -426,10 +427,10 @@ static int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ {
+ 	struct pci_sys_data *sys = NULL;
++	static int busnr;
+ 	int ret;
+-	int nr, busnr;
+-
+-	for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
++	int nr;
++	for (nr = 0; nr < hw->nr_controllers; nr++) {
+ 		sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
+ 		if (!sys)
+ 			panic("PCI: unable to allocate sys data!");
+@@ -440,6 +441,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
++		sys->of_node = hw->of_node;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		ret = hw->setup(nr, sys);
+@@ -484,10 +486,11 @@ void __init pci_common_init(struct hw_pci *hw)
+ 	if (hw->postinit)
+ 		hw->postinit();
+ 
+-	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+-
+ 	list_for_each_entry(sys, &head, node) {
+ 		struct pci_bus *bus = sys->bus;
++		struct pci_bus *child;
++
++		pci_bus_fixup_irqs(bus, pcibios_swizzle, pcibios_map_irq);
+ 
+ 		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 			/*
+@@ -504,6 +507,16 @@ void __init pci_common_init(struct hw_pci *hw)
+ 			 * Enable bridges
+ 			 */
+ 			pci_enable_bridges(bus);
++
++			/*
++			 * Configure children (MPS, MRRS)
++			 */
++			list_for_each_entry(child, &bus->children, node) {
++				struct pci_dev *self = child->self;
++				if (!self)
++					continue;
++				pcie_bus_configure_settings(child, self->pcie_mpss);
++			}
+ 		}
+ 
+ 		/*
+@@ -627,3 +640,9 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 
+ 	return 0;
+ }
++
++struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
++{
++	struct pci_sys_data *sys = bus->sysdata;
++	return of_node_get(sys->of_node);
++}
 -- 
-1.8.1
+1.7.0.4
+
 
