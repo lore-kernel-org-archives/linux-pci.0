@@ -1,77 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:58094 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948Ab3A2BFP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 20:05:15 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-pci@vger.kernel.org, Bruce Allan <bruce.w.allan@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
-Date: Tue, 29 Jan 2013 02:11:23 +0100
-Message-ID: <12263202.uQHxo0zU24@vostro.rjw.lan>
-In-Reply-To: <CAErSpo4G=hQ79KJg_6QgoO9nmG-B5xA_ooph7G6Uu-9wGkrnTQ@mail.gmail.com>
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114214.6698.24975.stgit@zurg> <CAErSpo4G=hQ79KJg_6QgoO9nmG-B5xA_ooph7G6Uu-9wGkrnTQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-da0-f45.google.com ([209.85.210.45]:64202 "EHLO
+	mail-da0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686Ab3ARQIG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 11:08:06 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 1/8] PCI: make PCI device create/destroy logic symmetric
+Date: Sat, 19 Jan 2013 00:07:39 +0800
+Message-Id: <1358525267-14268-2-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 28, 2013 04:05:33 PM Bjorn Helgaas wrote:
-> [+cc Rafael, author of patch you cited]
-> 
-> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
-> <khlebnikov@openvz.org> wrote:
-> > Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
-> > ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
-> >
-> > Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-> > Cc: e1000-devel@lists.sourceforge.net
-> > Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-> > Cc: Bruce Allan <bruce.w.allan@intel.com>
-> > ---
-> >  drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
-> >  1 file changed, 8 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
-> > index fbf75fd..2853c11 100644
-> > --- a/drivers/net/ethernet/intel/e1000e/netdev.c
-> > +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
-> > @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
-> >         struct pci_dev *pdev = to_pci_dev(dev);
-> >         struct net_device *netdev = pci_get_drvdata(pdev);
-> >         struct e1000_adapter *adapter = netdev_priv(netdev);
-> > +       int retval;
-> > +       bool wake;
-> >
-> > -       if (e1000e_pm_ready(adapter)) {
-> > -               bool wake;
-> > +       if (!e1000e_pm_ready(adapter))
-> > +               return 0;
-> >
-> > -               __e1000_shutdown(pdev, &wake, true);
-> > -       }
-> > +       retval = __e1000_shutdown(pdev, &wake, true);
-> > +       if (!retval)
-> > +               e1000_power_off(pdev, true, wake);
-> >
-> > -       return 0;
-> > +       return retval;
-> >  }
-> >
-> >  static int e1000_idle(struct device *dev)
-> >
+According to device model documentation, the way to create/destroy PCI
+devices should be symmetric.
 
-I'd like the changelog to say what the bug is and how it is being fixed in
-general terms.
+/**
+ * device_del - delete device from system.
+ * @dev: device.
+ *
+ * This is the first part of the device unregistration
+ * sequence. This removes the device from the lists we control
+ * from here, has it removed from the other driver model
+ * subsystems it was added to in device_add(), and removes it
+ * from the kobject hierarchy.
+ *
+ * NOTE: this should be called manually _iff_ device_add() was
+ * also called manually.
+ */
 
-Thanks,
-Rafael
+The rule is to either use
+1) device_register()/device_unregister()
+or
+2) device_initialize()/device_add()/device_del()/put_device().
 
+So change PCI core logic to follow the rule and get rid of the redundant
+pci_dev_get()/pci_dev_put() pair.
 
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c  |    1 -
+ drivers/pci/remove.c |    4 ++--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4f7f963..ec5d28f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	device_initialize(&dev->dev);
+ 	dev->dev.release = pci_release_dev;
+-	pci_dev_get(dev);
+ 
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 513972f..10693f5 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 	if (dev->is_added) {
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
+-		device_unregister(&dev->dev);
++		device_del(&dev->dev);
+ 		dev->is_added = 0;
+ 	}
+ 
+@@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	up_write(&pci_bus_sem);
+ 
+ 	pci_free_resources(dev);
+-	pci_dev_put(dev);
++	put_device(&dev->dev);
+ }
+ 
+ void pci_remove_bus(struct pci_bus *bus)
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
