@@ -1,169 +1,332 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:59925 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751279Ab3ARJ4X convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 04:56:23 -0500
-Date: Fri, 18 Jan 2013 09:56:20 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130118095620.GA7552@arm.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
-MIME-Version: 1.0
-In-Reply-To: <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 5/8] PCI, ACPI: hook PCI bus notifications to create/destroy PCI slots
+Date: Sat, 19 Jan 2013 00:07:43 +0800
+Message-Id: <1358525267-14268-6-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 09, 2013 at 08:43:10PM +0000, Thierry Reding wrote:
-> Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
-> directory. The motivation is to collect various host controller drivers
-> in the same location in order to facilitate refactoring.
-> 
-> The Tegra PCIe driver has been largely rewritten, both in order to turn
-> it into a proper platform driver and to add MSI (based on code by
-> Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
-> 
-> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Currently the pci_slot driver doesn't update PCI slot information
+when PCI device hotplug event happens, which may cause memory leak
+and returning stale information to user.
 
-[snip]
+By hooking PCI bus notifications, this patch unifies the way to
+create/destroy PCI slots when:
+1) create PCI hierarchy at boot time
+2) create PCI hierarchy for PCI root bridge hot-adding
+3) create PCI hierarchy for PCI device hotplug hot-adding
+4) destroy PCI hierarchy for PCI root bridge hot-removal
+4) destroy PCI hierarchy for PCI device hot-removal
 
-> +static int tegra_pcie_enable(struct tegra_pcie *pcie)
-> +{
-> +       struct hw_pci hw;
-> +
-> +       memset(&hw, 0, sizeof(hw));
-> +
-> +       hw.nr_controllers = 1;
-> +       hw.private_data = (void **)&pcie;
-> +       hw.setup = tegra_pcie_setup;
-> +       hw.scan = tegra_pcie_scan_bus;
-> +       hw.map_irq = tegra_pcie_map_irq;
-> +
-> +       pci_common_init(&hw);
-> +
-> +       return 0;
-> +}
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/acpi/pci_slot.c |  197 +++++++++++++----------------------------------
+ 1 file changed, 54 insertions(+), 143 deletions(-)
 
-[snip]
-
-> +static int tegra_pcie_probe(struct platform_device *pdev)
-> +{
-> +       struct device_node *port;
-> +       struct tegra_pcie *pcie;
-> +       int err;
-> +
-> +       pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +       if (!pcie)
-> +               return -ENOMEM;
-> +
-> +       INIT_LIST_HEAD(&pcie->ports);
-> +       pcie->dev = &pdev->dev;
-> +
-> +       err = tegra_pcie_parse_dt(pcie);
-> +       if (err < 0)
-> +               return err;
-> +
-> +       pcibios_min_mem = 0;
-> +
-> +       err = tegra_pcie_get_resources(pcie);
-> +       if (err < 0) {
-> +               dev_err(&pdev->dev, "failed to request resources: %d\n", err);
-> +               return err;
-> +       }
-> +
-> +       err = tegra_pcie_enable_controller(pcie);
-> +       if (err)
-> +               goto put_resources;
-> +
-> +       /* probe root ports */
-> +       for_each_child_of_node(pdev->dev.of_node, port) {
-> +               if (!of_device_is_available(port))
-> +                       continue;
-> +
-> +               err = tegra_pcie_add_port(pcie, port);
-> +               if (err < 0) {
-> +                       dev_err(&pdev->dev, "failed to add port %s: %d\n",
-> +                               port->name, err);
-> +               }
-> +       }
-> +
-> +       /* setup the AFI address translations */
-> +       tegra_pcie_setup_translations(pcie);
-> +
-> +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> +               err = tegra_pcie_enable_msi(pcie);
-> +               if (err < 0) {
-> +                       dev_err(&pdev->dev,
-> +                               "failed to enable MSI support: %d\n",
-> +                               err);
-> +                       goto put_resources;
-> +               }
-> +       }
-> +
-> +       err = tegra_pcie_enable(pcie);
-> +       if (err < 0) {
-> +               dev_err(&pdev->dev, "failed to enable PCIe ports: %d\n", err);
-> +               goto disable_msi;
-> +       }
-> +
-> +       platform_set_drvdata(pdev, pcie);
-> +       return 0;
-> +
-> +disable_msi:
-> +       if (IS_ENABLED(CONFIG_PCI_MSI))
-> +               tegra_pcie_disable_msi(pcie);
-> +put_resources:
-> +       tegra_pcie_put_resources(pcie);
-> +       return err;
-> +}
-> +
-
-[snip]
-
-> +
-> +static const struct of_device_id tegra_pcie_of_match[] = {
-> +       { .compatible = "nvidia,tegra20-pcie", },
-> +       { },
-> +};
-> +
-> +static struct platform_driver tegra_pcie_driver = {
-> +       .driver = {
-> +               .name = "tegra-pcie",
-> +               .owner = THIS_MODULE,
-> +               .of_match_table = tegra_pcie_of_match,
-> +       },
-> +       .probe = tegra_pcie_probe,
-> +       .remove = tegra_pcie_remove,
-> +};
-> +module_platform_driver(tegra_pcie_driver);
-
-If you have multiple 'nvidia,tegra20-pcie's in your DT then you will end up
-with multiple calls to tegra_pcie_probe/tegra_pcie_enable/pci_common_init.
-
-However pci_common_init/pcibios_init_hw assumes it will only ever be called
-once, and will thus result in trying to create multiple busses with the same
-bus number. (The first root bus it creates is always zero provided you haven't
-implemented hw->scan).
-
-I have a patch for this if you want to fold it into your series? (I see you've
-made changes to bios32 for per-controller data).
-
-Andrew Murray
+diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+index a7d7e77..2b38f4d 100644
+--- a/drivers/acpi/pci_slot.c
++++ b/drivers/acpi/pci_slot.c
+@@ -9,6 +9,9 @@
+  *  Copyright (C) 2007-2008 Hewlett-Packard Development Company, L.P.
+  *  	Alex Chiang <achiang@hp.com>
+  *
++ *  Copyright (C) 2013 Huawei Tech. Co., Ltd.
++ *	Jiang Liu <jiang.liu@huawei.com>
++ *
+  *  This program is free software; you can redistribute it and/or modify it
+  *  under the terms and conditions of the GNU General Public License,
+  *  version 2, as published by the Free Software Foundation.
+@@ -28,10 +31,9 @@
+ #include <linux/init.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
+-#include <acpi/acpi_bus.h>
+-#include <acpi/acpi_drivers.h>
+ #include <linux/dmi.h>
+ 
+ static bool debug;
+@@ -62,20 +64,12 @@ ACPI_MODULE_NAME("pci_slot");
+ #define SLOT_NAME_SIZE 21		/* Inspired by #define in acpiphp.h */
+ 
+ struct acpi_pci_slot {
+-	acpi_handle root_handle;	/* handle of the root bridge */
+ 	struct pci_slot *pci_slot;	/* corresponding pci_slot */
+ 	struct list_head list;		/* node in the list of slots */
+ };
+ 
+-static int acpi_pci_slot_add(struct acpi_pci_root *root);
+-static void acpi_pci_slot_remove(struct acpi_pci_root *root);
+-
+ static LIST_HEAD(slot_list);
+ static DEFINE_MUTEX(slot_list_lock);
+-static struct acpi_pci_driver acpi_pci_slot_driver = {
+-	.add = acpi_pci_slot_add,
+-	.remove = acpi_pci_slot_remove,
+-};
+ 
+ static int
+ check_slot(acpi_handle handle, unsigned long long *sun)
+@@ -114,21 +108,8 @@ out:
+ 	return device;
+ }
+ 
+-struct callback_args {
+-	acpi_walk_callback	user_function;	/* only for walk_p2p_bridge */
+-	struct pci_bus		*pci_bus;
+-	acpi_handle		root_handle;
+-};
+-
+ /*
+- * register_slot
+- *
+- * Called once for each SxFy object in the namespace. Don't worry about
+- * calling pci_create_slot multiple times for the same pci_bus:device,
+- * since each subsequent call simply bumps the refcount on the pci_slot.
+- *
+- * The number of calls to pci_destroy_slot from unregister_slot is
+- * symmetrical.
++ * Check whether handle has an associated slot and create PCI slot if it has.
+  */
+ static acpi_status
+ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+@@ -138,13 +119,23 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	char name[SLOT_NAME_SIZE];
+ 	struct acpi_pci_slot *slot;
+ 	struct pci_slot *pci_slot;
+-	struct callback_args *parent_context = context;
+-	struct pci_bus *pci_bus = parent_context->pci_bus;
++	struct pci_bus *pci_bus = context;
+ 
+ 	device = check_slot(handle, &sun);
+ 	if (device < 0)
+ 		return AE_OK;
+ 
++	/*
++	 * There may be multiple PCI functions associated with the same slot.
++	 * Check whether PCI slot has already been created for this PCI device.
++	 */
++	list_for_each_entry(slot, &slot_list, list) {
++		pci_slot = slot->pci_slot;
++		if (pci_slot->bus == pci_bus && pci_slot->number == device) {
++			return AE_OK;
++		}
++	}
++
+ 	slot = kmalloc(sizeof(*slot), GFP_KERNEL);
+ 	if (!slot) {
+ 		err("%s: cannot allocate memory\n", __func__);
+@@ -159,12 +150,9 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 		return AE_OK;
+ 	}
+ 
+-	slot->root_handle = parent_context->root_handle;
+ 	slot->pci_slot = pci_slot;
+ 	INIT_LIST_HEAD(&slot->list);
+-	mutex_lock(&slot_list_lock);
+ 	list_add(&slot->list, &slot_list);
+-	mutex_unlock(&slot_list_lock);
+ 
+ 	get_device(&pci_bus->dev);
+ 
+@@ -174,137 +162,60 @@ register_slot(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 	return AE_OK;
+ }
+ 
+-/*
+- * walk_p2p_bridge - discover and walk p2p bridges
+- * @handle: points to an acpi_pci_root
+- * @context: p2p_bridge_context pointer
+- *
+- * Note that when we call ourselves recursively, we pass a different
+- * value of pci_bus in the child_context.
+- */
+-static acpi_status
+-walk_p2p_bridge(acpi_handle handle, u32 lvl, void *context, void **rv)
+-{
+-	int device, function;
+-	unsigned long long adr;
+-	acpi_status status;
+-	acpi_handle dummy_handle;
+-	acpi_walk_callback user_function;
+-
+-	struct pci_dev *dev;
+-	struct pci_bus *pci_bus;
+-	struct callback_args child_context;
+-	struct callback_args *parent_context = context;
+-
+-	pci_bus = parent_context->pci_bus;
+-	user_function = parent_context->user_function;
+-
+-	status = acpi_get_handle(handle, "_ADR", &dummy_handle);
+-	if (ACPI_FAILURE(status))
+-		return AE_OK;
+-
+-	status = acpi_evaluate_integer(handle, "_ADR", NULL, &adr);
+-	if (ACPI_FAILURE(status))
+-		return AE_OK;
+-
+-	device = (adr >> 16) & 0xffff;
+-	function = adr & 0xffff;
+-
+-	dev = pci_get_slot(pci_bus, PCI_DEVFN(device, function));
+-	if (!dev || !dev->subordinate)
+-		goto out;
+-
+-	child_context.pci_bus = dev->subordinate;
+-	child_context.user_function = user_function;
+-	child_context.root_handle = parent_context->root_handle;
+-
+-	dbg("p2p bridge walk, pci_bus = %x\n", dev->subordinate->number);
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+-				     user_function, NULL, &child_context, NULL);
+-	if (ACPI_FAILURE(status))
+-		goto out;
+-
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+-				     walk_p2p_bridge, NULL, &child_context, NULL);
+-out:
+-	pci_dev_put(dev);
+-	return AE_OK;
+-}
+-
+-/*
+- * walk_root_bridge - generic root bridge walker
+- * @root: poiner of an acpi_pci_root
+- * @user_function: user callback for slot objects
+- *
+- * Call user_function for all objects underneath this root bridge.
+- * Walk p2p bridges underneath us and call user_function on those too.
+- */
+-static int
+-walk_root_bridge(struct acpi_pci_root *root, acpi_walk_callback user_function)
++static void acpi_pci_slot_notify_add(struct pci_bus *bus)
+ {
+-	acpi_status status;
+-	acpi_handle handle = root->device->handle;
+-	struct pci_bus *pci_bus = root->bus;
+-	struct callback_args context;
+-
+-	context.pci_bus = pci_bus;
+-	context.user_function = user_function;
+-	context.root_handle = handle;
+-
+-	dbg("root bridge walk, pci_bus = %x\n", pci_bus->number);
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+-				     user_function, NULL, &context, NULL);
+-	if (ACPI_FAILURE(status))
+-		return status;
+-
+-	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, (u32)1,
+-				     walk_p2p_bridge, NULL, &context, NULL);
+-	if (ACPI_FAILURE(status))
+-		err("%s: walk_p2p_bridge failure - %d\n", __func__, status);
+-
+-	return status;
+-}
++	acpi_handle handle = NULL;
+ 
+-/*
+- * acpi_pci_slot_add
+- * @handle: points to an acpi_pci_root
+- */
+-static int
+-acpi_pci_slot_add(struct acpi_pci_root *root)
+-{
+-	acpi_status status;
+-
+-	status = walk_root_bridge(root, register_slot);
+-	if (ACPI_FAILURE(status))
+-		err("%s: register_slot failure - %d\n", __func__, status);
++	if (bus->bridge)
++		handle = DEVICE_ACPI_HANDLE(bus->bridge);
++	if (!handle)
++		return;
+ 
+-	return status;
++	mutex_lock(&slot_list_lock);
++	acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
++			    register_slot, NULL, bus, NULL);
++	mutex_unlock(&slot_list_lock);
+ }
+ 
+-/*
+- * acpi_pci_slot_remove
+- * @handle: points to an acpi_pci_root
+- */
+-static void
+-acpi_pci_slot_remove(struct acpi_pci_root *root)
++static void acpi_pci_slot_notify_del(struct pci_bus *bus)
+ {
+ 	struct acpi_pci_slot *slot, *tmp;
+-	struct pci_bus *pbus;
+-	acpi_handle handle = root->device->handle;
+ 
+ 	mutex_lock(&slot_list_lock);
+ 	list_for_each_entry_safe(slot, tmp, &slot_list, list) {
+-		if (slot->root_handle == handle) {
++		if (slot->pci_slot->bus == bus) {
+ 			list_del(&slot->list);
+-			pbus = slot->pci_slot->bus;
+ 			pci_destroy_slot(slot->pci_slot);
+-			put_device(&pbus->dev);
++			put_device(&bus->dev);
+ 			kfree(slot);
+ 		}
+ 	}
+ 	mutex_unlock(&slot_list_lock);
+ }
+ 
++static int acpi_pci_slot_notify_fn(struct notifier_block *nb,
++				   unsigned long event, void *data)
++{
++	struct pci_bus *bus = data;
++
++	switch (event) {
++	case PCI_NOTIFY_POST_BUS_ADD:
++		acpi_pci_slot_notify_add(bus);
++		break;
++	case PCI_NOTIFY_PRE_BUS_DEL:
++		acpi_pci_slot_notify_del(bus);
++		break;
++	default:
++		return NOTIFY_DONE;
++	}
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block acpi_pci_slot_notifier = {
++	.notifier_call = &acpi_pci_slot_notify_fn,
++};
++
+ static int do_sta_before_sun(const struct dmi_system_id *d)
+ {
+ 	info("%s detected: will evaluate _STA before calling _SUN\n", d->ident);
+@@ -333,5 +244,5 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
+ void __init acpi_pci_slot_init(void)
+ {
+ 	dmi_check_system(acpi_pci_slot_dmi_table);
+-	acpi_pci_register_driver(&acpi_pci_slot_driver);
++	pci_bus_register_notifier(&acpi_pci_slot_notifier);
+ }
+-- 
+1.7.9.5
 
