@@ -1,100 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:51609 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757042Ab3AQQWY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2013 11:22:24 -0500
-Date: Thu, 17 Jan 2013 16:22:18 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130117162218.GA29016@arm.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130115154038.GA11241@arm.com>
- <20130115211441.GA13139@avionic-0098.adnet.avionic-design.de>
- <201301161400.26587.arnd@arndb.de>
- <20130116161716.GA10630@arm.com>
- <20130116183101.GA28660@avionic-0098.adnet.avionic-design.de>
- <20130117154236.GA25943@arm.com>
- <20130117160501.GC2186@avionic-0098.adnet.avionic-design.de>
-MIME-Version: 1.0
-In-Reply-To: <20130117160501.GC2186@avionic-0098.adnet.avionic-design.de>
-Content-Type: text/plain; charset=WINDOWS-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 01/11] PCI, acpiphp: Add is_hotplug_bridge detection
+Date: Thu, 17 Jan 2013 23:53:12 -0800
+Message-Id: <1358495602-22867-2-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 17, 2013 at 04:05:02PM +0000, Thierry Reding wrote:
-> On Thu, Jan 17, 2013 at 03:42:36PM +0000, Andrew Murray wrote:
-> > On Wed, Jan 16, 2013 at 06:31:01PM +0000, Thierry Reding wrote:
-> > > Alright, putting the functions into pci_ops doesn't sound like a very
-> > > good idea then. Or perhaps it would make sense for hardware where the
-> > > root complex and the MSI controller are handled by the same driver.
-> > > Basically it could be done as a shortcut and if those are not filled
-> > > in, the drivers could still opt to look up an MSI controller from a
-> > > phandle specified in DT.
-> > > 
-> > > Even another alternative would be to keep the functions within the
-> > > struct pci_ops and use generic ones if an external MSI controller is
-> > > used. Just tossing around ideas.
-> > 
-> > I think an ideal solution would be for additional logic in drivers/msi.c
-> > (e.g. in functions like msi_capability_init) to determine (based on the
-> > passed in pci_dev) which MSI controller ops to use. I'm not sure the best
-> > way to implement an association between an MSI controller and PCI busses
-> > (I believe arch/sparc does something like this - perhaps there will be
-> > inspiration there).
-> > 
-> > As you've pointed out, most RCs will have their own MSI controllers - so
-> > it should be easy to register and associate both together.
-> > 
-> > I've submitted my previous work on MSI controller registration, but it
-> > doesn't quite solve this problem - perhaps it can be a starting point?
-> 
-> We basically have two cases:
-> 
->   - The PCI host bridge contains registers for MSI support. In that case
->     it makes little sense to uncouple the MSI implementation from the
->     host bridge driver.
-> 
->   - An MSI controller exists outside of the PCI host bridge. The PCI
->     host bridge would in that case have to lookup an MSI controller (via
->     DT phandle or some other method).
-> 
-> In either of those cases, does it make sense to use the MSI support
-> outside the scope of the PCI infrastructure? That is, would devices
-> other than PCI devices be able to generate an MSI?
+When system support hotplug bridge with children hotplug slots, we need
+to make sure that parent bridge get preallocated resource so later when
+device is plugged into children slot, those children devices will get
+resource allocated.
 
-I've come around to your way of thinking. Your approach sounds good for
-registration of MSI ops - let the RC host driver do it (it probably has its
-own), or use a helper for following a phandle to get ops that are not part
-of the driver. MSIs won't be used outside of PCI devices.
+We do not meet this problem, because for pcie hotplug card, when acpiphp
+is used, pci_scan_bridge will set that for us when detect hotplug bit in
+slot cap.
 
-Though existing drivers will use MSI framework functions to request MSIs, that
-will result in callbacks to the arch_setup_msi_irqs type functions. These
-functions would need to be updated to find these new ops if they exist, i.e. by
-traversing the pci_dev structure up to the RC and finding a suitable structure.
+Reported-and-tested-by: Jason Baron <jbaron@redhat.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Jason Baron <jbaron@redhat.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c |   27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
 
-Perhaps the msi ops could live alongside pci_ops in the pci_bus structure. This
-way when traversing up the buses from the provided pci_dev - the first bus with
-msi ops populated would be used?
-
-If no ops are found, the standard arch callbacks can be called - thus preserving
-exiting functionality.
-
-Andrew Murray
-
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 22006f2..79db296 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -797,6 +797,29 @@ static void acpiphp_set_acpi_region(struct acpiphp_slot *slot)
+ 	}
+ }
+ 
++static void check_hotplug_bridge(struct acpiphp_slot *slot, struct pci_dev *dev)
++{
++	struct acpiphp_func *func;
++
++	if (!dev->subordinate)
++		return;
++
++	/* quirk, or pcie could set it already */
++	if (dev->is_hotplug_bridge)
++		return;
++
++	if (PCI_SLOT(dev->devfn) != slot->device)
++		return;
++
++	list_for_each_entry(func, &slot->funcs, sibling) {
++		if (PCI_FUNC(dev->devfn) == func->function) {
++			/* check if this bridge has ejectable slots */
++			if ((detect_ejectable_slots(func->handle) > 0))
++				dev->is_hotplug_bridge = 1;
++			break;
++		}
++	}
++}
+ /**
+  * enable_device - enable, configure a slot
+  * @slot: slot to be enabled
+@@ -831,8 +854,10 @@ static int __ref enable_device(struct acpiphp_slot *slot)
+ 			if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE ||
+ 			    dev->hdr_type == PCI_HEADER_TYPE_CARDBUS) {
+ 				max = pci_scan_bridge(bus, dev, max, pass);
+-				if (pass && dev->subordinate)
++				if (pass && dev->subordinate) {
++					check_hotplug_bridge(slot, dev);
+ 					pci_bus_size_bridges(dev->subordinate);
++				}
+ 			}
+ 		}
+ 	}
+-- 
+1.7.10.4
 
