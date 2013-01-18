@@ -1,87 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22775 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753202Ab3AKWlJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:09 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 00/22] PCI, ACPI: pci root bus hotplug support / pci match_driver
-Date: Fri, 11 Jan 2013 14:40:27 -0800
-Message-Id: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Received: from hydra.sisk.pl ([212.160.235.94]:45862 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755200Ab3ARWCL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Jan 2013 17:02:11 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <liuj97@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe native hotplug
+Date: Fri, 18 Jan 2013 23:08:07 +0100
+Message-ID: <1449960.YISN9L5GZD@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQU6K1M=rbnhPLsAkhK5dZw8CAoQzAi=YLjtz722jCix-w@mail.gmail.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com> <CAE9FiQU6K1M=rbnhPLsAkhK5dZw8CAoQzAi=YLjtz722jCix-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It includes
-1. preparing patches for pci root bus hotadd/hotremove support
-2. move root bus hotadd from acpiphp to pci_root.c
-3. add hot-remove support
-4. clean up hotadd/remove with common functions
-5. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
-6. add match_driver to add pci device to device tree early but
-   not attach driver for hotplug path.
+On Friday, January 18, 2013 09:50:59 AM Yinghai Lu wrote:
+> On Fri, Jan 18, 2013 at 9:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > If you want "pci=nopciehp" as a way for users to deal with this
+> > problem by forcing the use of acpiphp, I object.  Windows manages to
+> > make these slots work without having users do anything special, so we
+> > should be able to do it, too.
+> 
+> Agreed.
+> 
+> We need to think that more.
+> 
+> I think that we should fix acpiphp, and should follow first come and
+> first serve for acpiphp and pciehp.
 
-based on pci/next
+That would introduce regressions for some users, though.
 
-could get from
-        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+I actually think we should merge acpiphp with pciehp and make one driver that
+can use both types of signalling.  There would be a problem with getting
+notifications for the same event from both sources, but that doesn't seem to
+be unsolvable.
 
-After this patchset, will send out
-	 for_each_host_bridge support
-	 for_each_dev_addon_res
+And I don't think that that one combined driver should be modular.
 
-Jiang Liu (4):
-  PCI: Fix a device reference count leakage issue in pci_dev_present()
-  PCI: make PCI device create/destroy logic symmetric
-  PCI: split registration of PCI bus devices into two stages
-  PCI: correctly detect ACPI PCI host bridge objects
+Thanks,
+Rafael
 
-Tang Chen (2):
-  ACPI: Introduce a new acpi handle to determine HID match.
-  PCI, ACPI: debug print for installation of acpi root bridge's notifier
-
-Yinghai Lu (16):
-  PCI, acpiphp: Add is_hotplug_bridge detection
-  PCI: Add root bus children dev's res to fail list
-  PCI: Set dev_node early for pci_dev
-  ACPI: Separate acpi_bus_trim to support two steps.
-  PCI, acpiphp: Separate out hot-add support of pci host bridge
-  PCI, ACPI: Add pci_root_hp hot removal notification support.
-  PCI, ACPI: remove acpi_root_bridge in pci_root_hp
-  ACPI: update ej_event interface to take acpi_device
-  ACPI, PCI: Simplify handle_root_bridge_removal()
-  PCI, acpiphp: Don't bailout even no slots found yet.
-  PCI, ACPI: Add alloc_acpi_hp_work()
-  PCI, acpiphp: Use acpi_hp_work
-  PCI, pci_root_hp: Use acpi_hp_work
-  PCI, ACPI: Make kacpi_hotplug_wq static
-  PCI: add match_driver in struct pci_dev
-  PCI: move device_add out of pci_bus_add_device()
-
- drivers/acpi/acpi_memhotplug.c     |    2 +-
- drivers/acpi/osl.c                 |   24 ++++-
- drivers/acpi/pci_root.c            |  180 ++++++++++++++++++++++++++++++++++++
- drivers/acpi/processor_driver.c    |    2 +-
- drivers/acpi/scan.c                |   52 ++++++++---
- drivers/pci/bus.c                  |   57 +++---------
- drivers/pci/hotplug/acpiphp.h      |    1 -
- drivers/pci/hotplug/acpiphp_core.c |   23 +----
- drivers/pci/hotplug/acpiphp_glue.c |  150 ++++++++++--------------------
- drivers/pci/iov.c                  |    7 --
- drivers/pci/pci-driver.c           |    6 +-
- drivers/pci/probe.c                |   40 ++++++--
- drivers/pci/remove.c               |   14 +--
- drivers/pci/search.c               |   10 +-
- drivers/pci/setup-bus.c            |    2 +-
- include/acpi/acpi_bus.h            |    4 +-
- include/acpi/acpiosxf.h            |    9 +-
- include/linux/pci.h                |    1 +
- 18 files changed, 365 insertions(+), 219 deletions(-)
 
 -- 
-1.7.10.4
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
