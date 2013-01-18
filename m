@@ -1,64 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:25734 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756269Ab3AIJME (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 04:12:04 -0500
-Message-ID: <50ED344D.9010307@huawei.com>
-Date: Wed, 9 Jan 2013 17:11:41 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Jiang Liu <liuj97@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 0/6] Update PCI notification patchset to latest kernel
- version
-References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com> <1357663945-16054-1-git-send-email-jiang.liu@huawei.com> <CAE9FiQUKPcy5B2ThBw1AzNnsUJ9rLHKTJ1xRFO1rRuiFavw-2w@mail.gmail.com>
-In-Reply-To: <CAE9FiQUKPcy5B2ThBw1AzNnsUJ9rLHKTJ1xRFO1rRuiFavw-2w@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from aserp1040.oracle.com ([141.146.126.69]:47724 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751358Ab3ARHxw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 02:53:52 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Tang Chen <tangchen@cn.fujitsu.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v9 08/11] PCI, ACPI: debug print for installation of acpi root bridge's notifier
+Date: Thu, 17 Jan 2013 23:53:19 -0800
+Message-Id: <1358495602-22867-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/1/9 2:30, Yinghai Lu wrote:
-> On Tue, Jan 8, 2013 at 8:52 AM, Jiang Liu <liuj97@gmail.com> wrote:
->> Hi Bjorn,
->>         Rafael has developed a patchset targetting 3.9 merging window
->> which outdates the fourth and fifth patches in my previous version,
->> so I have just drop those two patches and updated the others to the
->> latest code from your pci-next branch.
->>         Thanks!
->>
->> Jiang Liu (5):
->>   PCI: make PCI device create/destroy logic symmetric
->>   PCI: split registration of PCI bus devices into two stages
->>   ACPI/pci_slot: update PCI slot information when PCI hotplug event
->>     happens
->>   PCI/acpiphp: update ACPI hotplug slot information when PCI hotplug
->>     happens
->>   PCI/acpiphp: serialize access to the bridge_list list
->>
->> Yijing Wang (1):
->>   PCI/AER: update AER configuration when PCI hotplug event happens
->>
-> 
-> last time during my test before, looks there are some problems with last four.
+From: Tang Chen <tangchen@cn.fujitsu.com>
 
-Hi Yinghai,
-   I will test the patchset again. Do you remember what problems occur during test the last four patches?
-So I can try to find out the flaw.
+acpi_install_notify_handler() could fail. So check the exit status
+and give a better debug info.
 
-Thanks!
-Yijing.
-> 
-> so I only put first two in my pci root bus hotplug branch.
-> 
-> maybe my memory is wrong. too long for those patches till now.
-> 
-> 
+Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/acpi/pci_root.c |   12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 3ce5d80..f3ceb61 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -762,6 +762,7 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+ static acpi_status __init
+ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ {
++	acpi_status status;
+ 	char objname[64];
+ 	struct acpi_buffer buffer = { .length = sizeof(objname),
+ 				      .pointer = objname };
+@@ -774,9 +775,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+ 
+ 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+ 
+-	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+-				handle_hotplug_event_root, NULL);
+-	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
++	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++					handle_hotplug_event_root, NULL);
++	if (ACPI_FAILURE(status))
++		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
++				  objname, (unsigned int)status);
++	else
++		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
++				 objname);
+ 
+ 	return AE_OK;
+ }
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
