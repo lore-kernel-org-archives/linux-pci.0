@@ -1,44 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v9 02/11] PCI: Add root bus children dev's res to fail list
-Date: Thu, 17 Jan 2013 23:53:13 -0800
-Message-Id: <1358495602-22867-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:64515 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab3ARLmW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 06:42:22 -0500
+Subject: [PATCH 2/5] e1000e: fix pci device enable counter balance
+To: linux-kernel@vger.kernel.org
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
+	Bruce Allan <bruce.w.allan@intel.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Fri, 18 Jan 2013 15:42:18 +0400
+Message-ID: <20130118114218.6698.42484.stgit@zurg>
+In-Reply-To: <20130118113019.6698.25941.stgit@zurg>
+References: <20130118113019.6698.25941.stgit@zurg>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can stop trying according to try_number now and do not need to use
-root_bus checking as stop sign.
+__e1000_shutdown() calls pci_disable_device() at the end, thus __e1000_resume()
+should call pci_enable_device_mem() to keep enable counter in balance.
 
-In extreme case we could need to reallocate resource for device just
-under root bus. For pci root bus hot-add, we need to retry to assign
-resources to pci devices just under pci root bus.
+Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
+("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: e1000-devel@lists.sourceforge.net
+Cc: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Bruce Allan <bruce.w.allan@intel.com>
 ---
- drivers/pci/setup-bus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/intel/e1000e/netdev.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6d3591d..7e8739e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -283,7 +283,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head && !pci_is_root_bus(dev_res->dev->bus)) {
-+			if (fail_head) {
- 				/*
- 				 * if the failed res is for ROM BAR, and it will
- 				 * be enabled later, don't add it to the list
--- 
-1.7.10.4
+diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
+index 2853c11..6bce796 100644
+--- a/drivers/net/ethernet/intel/e1000e/netdev.c
++++ b/drivers/net/ethernet/intel/e1000e/netdev.c
+@@ -5598,6 +5598,13 @@ static int __e1000_resume(struct pci_dev *pdev)
+ 	pci_restore_state(pdev);
+ 	pci_save_state(pdev);
+ 
++	err = pci_enable_device_mem(pdev);
++	if (err) {
++		dev_err(&pdev->dev,
++			"Cannot re-enable PCI device after suspend.\n");
++		return err;
++	}
++
+ 	e1000e_set_interrupt_capability(adapter);
+ 	if (netif_running(netdev)) {
+ 		err = e1000_request_irq(adapter);
 
