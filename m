@@ -1,74 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38112 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753494Ab3AKVFj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jan 2013 16:05:39 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
 	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force' on kernel command-line for hotplug to work
-Date: Fri, 11 Jan 2013 22:11:26 +0100
-Message-ID: <1429112.6nE7RrQN1L@vostro.rjw.lan>
-In-Reply-To: <50EE21AA.2090004@fold.natur.cuni.cz>
-References: <50EDF8FE.6040607@fold.natur.cuni.cz> <CAE9FiQXoEWifAoJQ9-aROBo3KJDcMGPb-5+PH=GiD2PD1Ze9bw@mail.gmail.com> <50EE21AA.2090004@fold.natur.cuni.cz>
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe native hotplug
+Date: Fri, 18 Jan 2013 23:01:16 +0100
+Message-ID: <1576807.oaVfmTuWNZ@vostro.rjw.lan>
+In-Reply-To: <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-8-git-send-email-jiang.liu@huawei.com> <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 10, 2013 03:04:26 AM Martin Mokrejs wrote:
-> Hi Yinghai,
->   thank you for you answer, it is way too late here but a quick answer ...
+On Friday, January 18, 2013 10:35:46 AM Bjorn Helgaas wrote:
+> On Fri, Jan 18, 2013 at 9:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> > If user specifies "pci=nopciehp" on kernel boot command line, OSPM
+> > won't claim PCIe native hotplug service from firmware and no PCIe
+> > port devices will be created for PCIe native hotplug service.
 > 
-> Yinghai Lu wrote:
-> > On Wed, Jan 9, 2013 at 3:10 PM, Martin Mokrejs
-> > <mmokrejs@fold.natur.cuni.cz> wrote:
-> >> - pci0000:00: Requesting ACPI _OSC control (0x1d)
-> >> - pci0000:00: ACPI _OSC control (0x19) granted
-> >> + pci0000:00: Unable to request _OSC control (_OSC support mask: 0x19)
-> > 
-> > according to _OSC related game in acpi_pci_root_add()
-> > it will query_osc_support with flags |=
-> >                                 OSC_EXT_PCI_CONFIG_SUPPORT \
-> >                                 | OSC_ACTIVE_STATE_PWR_SUPPORT \
-> >                                 | OSC_CLOCK_PWR_CAPABILITY_SUPPORT \
-> >                                 | OSC_MSI_SUPPORT
-> > and the firmware should not return ACPI FAILURE, and if it return
-> > failure, flags will get reset.
-> > 
-> > then if and only if flags keep there five bits, kernel will try to set control
-> > to _OSC for
-> >                         OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
-> >                         | OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
-> >                         | OSC_PCI_EXPRESS_PME_CONTROL;
-> > and may be AER.
-> > 
-> > that will let pciehp own the device <pciehp will claim that later...>
-> > 
-> > in acpiphp there is module that will check if port is owned by pciehp,
-> > and it will bail out early.
-> > in device_is_managed_by_native_pciehp...
-> > 
-> > pcie_aspm=off will stop all _osc setting, like pciehp, pme and aer.
-> > 
-> > the checking in acpiphp is introduced by:
-> > commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a
-> > Author: Rafael J. Wysocki <rjw@sisk.pl>
-> > Date:   Sat Oct 22 00:43:38 2011 +0200
-> > 
-> >     PCI / ACPI: Make acpiphp ignore root bridges using PCIe native hotplug
-> > 
-> > so it is a regression.
+> Why do we need this option?
 > 
-> It is true that since the time around 3.3.x when I reported the problem I had in
-> grub.conf kept pcie_aspm=force.
+> If I understand correctly, there are machines where it *looks* like we
+> should use pciehp, but pciehp doesn't work because we don't get the
+> interrupts we expect.  On those machines, we have to use acpiphp
+> instead.  It seems like many Dell XPS laptops have this issue with
+> ExpressCard slots, e.g.,
+> https://bugzilla.kernel.org/show_bug.cgi?id=40802 .
+> 
+> If you want "pci=nopciehp" as a way for users to deal with this
+> problem by forcing the use of acpiphp, I object.  Windows manages to
+> make these slots work without having users do anything special, so we
+> should be able to do it, too.
 
-Have you tried pcie_ports=compat?
-
-This is the command line option to use in such cases, in theory.
+And one can use pcie_ports=compat to work around these problems anyway.
 
 Thanks,
 Rafael
