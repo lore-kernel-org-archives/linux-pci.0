@@ -1,56 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32288 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755311Ab3A0TYQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:16 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Toshi Kani <toshi.kani@hp.com>
-Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 06/22] PCI, hotplug: Kill pci_find_next_bus in sgi_hotplug
-Date: Sun, 27 Jan 2013 11:23:33 -0800
-Message-Id: <1359314629-18651-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33924 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755598Ab3ARQIf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 11:08:35 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 8/8] PCI/PCIe: only claim PME from firmware when CONFIG_PCIE_PME is enabled
+Date: Sat, 19 Jan 2013 00:07:46 +0800
+Message-Id: <1358525267-14268-9-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace that with hotplug-safe version for iteration.
+If CONFIG_PCIE_PME is not defined, system should avoid claiming PME from
+firmware so firmware could still manage PME events for those devices.
+Also don't create PCIe port device for PME service if CONFIG_PCIE_PME
+is not defined.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- drivers/pci/hotplug/sgi_hotplug.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_root.c         |    5 +++--
+ drivers/pci/pcie/portdrv_core.c |    4 +++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
-index 180e760..ea81618 100644
---- a/drivers/pci/hotplug/sgi_hotplug.c
-+++ b/drivers/pci/hotplug/sgi_hotplug.c
-@@ -669,7 +669,7 @@ alloc_err:
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index c37eedb..7f7e464 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -550,8 +550,9 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
  
- static int __init sn_pci_hotplug_init(void)
- {
--	struct pci_bus *pci_bus = NULL;
-+	struct pci_host_bridge *host_bridge = NULL;
- 	int rc;
- 	int registered = 0;
+ 	if (!pcie_ports_disabled
+ 	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+-		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+-			| OSC_PCI_EXPRESS_PME_CONTROL;
++		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL;
++		if (IS_ENABLED(CONFIG_PCIE_PME))
++			flags |= OSC_PCI_EXPRESS_PME_CONTROL;
+ 		if (!pcie_native_hotplug_disabled)
+ 			flags |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
  
-@@ -681,7 +681,9 @@ static int __init sn_pci_hotplug_init(void)
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e7e1679..7e6546f 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -263,7 +263,9 @@ static int get_port_device_capability(struct pci_dev *dev)
  
- 	INIT_LIST_HEAD(&sn_hp_list);
- 
--	while ((pci_bus = pci_find_next_bus(pci_bus))) {
-+	for_each_pci_host_bridge(host_bridge) {
-+		struct pci_bus *pci_bus = host_bridge->bus;
-+
- 		if (!pci_bus->sysdata)
- 			continue;
- 
+ 	err = pcie_port_platform_notify(dev, &cap_mask);
+ 	if (!pcie_ports_auto) {
+-		cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_VC;
++		cap_mask = PCIE_PORT_SERVICE_VC;
++		if (IS_ENABLED(CONFIG_PCIE_PME))
++			cap_mask |= PCIE_PORT_SERVICE_PME;
+ 		if (!pcie_native_hotplug_disabled)
+ 			cap_mask |= PCIE_PORT_SERVICE_HP;
+ 		if (pci_aer_available())
 -- 
-1.7.10.4
+1.7.9.5
 
