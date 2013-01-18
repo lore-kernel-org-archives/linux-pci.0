@@ -1,137 +1,219 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
-Date: Thu, 10 Jan 2013 01:05:24 +0100
-Message-ID: <9771783.0zXIGEmDYn@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQW4t17=gYC1dnyCVJUQ3rvV491uiA5U1ZjLWjraM=g9rQ@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <1910593.f2RrgAtJJO@vostro.rjw.lan> <CAE9FiQW4t17=gYC1dnyCVJUQ3rvV491uiA5U1ZjLWjraM=g9rQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:54938 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751324Ab3ARKJ7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 05:09:59 -0500
+Date: Fri, 18 Jan 2013 11:09:50 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Andrew Murray <andrew.murray@arm.com>
+Cc: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
+Message-ID: <20130118100950.GA7596@avionic-0098.adnet.avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+ <1357764194-12677-11-git-send-email-thierry.reding@avionic-design.de>
+ <20130118095620.GA7552@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Dxnq1zWXvFF0Q93v"
+In-Reply-To: <20130118095620.GA7552@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 09, 2013 03:27:29 PM Yinghai Lu wrote:
-> On Wed, Jan 9, 2013 at 3:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Wednesday, January 09, 2013 03:16:59 PM Bjorn Helgaas wrote:
-> >> On Wed, Jan 9, 2013 at 2:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> >> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> >
-> >> > The ACPI handles of PCI root bridges need to be known to
-> >> > acpi_bind_one(), so that it can create the appropriate
-> >> > "firmware_node" and "physical_node" files for them, but currently
-> >> > the way it gets to know those handles is not exactly straightforward
-> >> > (to put it lightly).
-> >> >
-> >> > This is how it works, roughly:
-> >> >
-> >> >   1. acpi_bus_scan() finds the handle of a PCI root bridge,
-> >> >      creates a struct acpi_device object for it and passes that
-> >> >      object to acpi_pci_root_add().
-> >> >
-> >> >   2. acpi_pci_root_add() creates a struct acpi_pci_root object,
-> >> >      populates its "device" field with its argument's address
-> >> >      (device->handle is the ACPI handle found in step 1).
-> >> >
-> >> >   3. The struct acpi_pci_root object created in step 2 is passed
-> >> >      to pci_acpi_scan_root() and used to get resources that are
-> >> >      passed to pci_create_root_bus().
-> >> >
-> >> >   4. pci_create_root_bus() creates a struct pci_host_bridge object
-> >> >      and passes its "dev" member to device_register().
-> >> >
-> >> >   5. platform_notify(), which for systems with ACPI is set to
-> >> >      acpi_platform_notify(), is called.
-> >> >
-> >> > So far, so good.  Now it starts to be "interesting".
-> >> >
-> >> >   6. acpi_find_bridge_device() is used to find the ACPI handle of
-> >> >      the given device (which is the PCI root bridge) and executes
-> >> >      acpi_pci_find_root_bridge(), among other things, for the
-> >> >      given device object.
-> >> >
-> >> >   7. acpi_pci_find_root_bridge() uses the name (sic!) of the given
-> >> >      device object to extract the segment and bus numbers of the PCI
-> >> >      root bridge and passes them to acpi_get_pci_rootbridge_handle().
-> >> >
-> >> >   8. acpi_get_pci_rootbridge_handle() browses the list of ACPI PCI
-> >> >      root bridges and finds the one that matches the given segment
-> >> >      and bus numbers.  Its handle is then used to initialize the
-> >> >      ACPI handle of the PCI root bridge's device object by
-> >> >      acpi_bind_one().  However, this is *exactly* the ACPI handle we
-> >> >      started with in step 1.
-> >> >
-> >> > Needless to say, this is quite embarassing, but it may be avoided
-> >> > thanks to commit f3fd0c8 (ACPI: Allow ACPI handles of devices to be
-> >> > initialized in advance), which makes it possible to initialize the
-> >> > ACPI handle of a device before passing it to device_register().
-> >> >
-> >> > Accordingly, add a new __weak routine, pcibios_root_bridge_prepare(),
-> >> > defaulting to an empty implementation that can be replaced by the
-> >> > interested architecutres (x86 and ia64 at the moment) with functions
-> >> > that will set the root bridge's ACPI handle before its dev member is
-> >> > passed to device_register().  Make both x86 and ia64 provide such
-> >> > implementations of pcibios_root_bridge_prepare() and remove
-> >> > acpi_pci_find_root_bridge() and acpi_get_pci_rootbridge_handle() that
-> >> > aren't necessary any more.
-> >> >
-> >> > Included is a fix for breakage on systems with non-ACPI PCI host
-> >> > bridges from Bjorn Helgaas.
-> >> >
-> >> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >>
-> >> Looks good to me!
-> >>
-> >> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > Thanks!
-> >
-> > I'll wait for comments from the others, if any, and put it into my acpi-scan
-> > branch after a couple of days.  It doesn't need to be there technically, but
-> > it's kind of related.
-> 
-> I tested it with acpi-scan and pci-root-bus-hotplug patchset, and it works well.
-> so
-> Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-Thanks!
+--Dxnq1zWXvFF0Q93v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> BTW, found one left over of change about ->acpi_handle==> ACPI_HANDLE..
+On Fri, Jan 18, 2013 at 09:56:20AM +0000, Andrew Murray wrote:
+> On Wed, Jan 09, 2013 at 08:43:10PM +0000, Thierry Reding wrote:
+> > Move the PCIe driver from arch/arm/mach-tegra into the drivers/pci/host
+> > directory. The motivation is to collect various host controller drivers
+> > in the same location in order to facilitate refactoring.
+> >=20
+> > The Tegra PCIe driver has been largely rewritten, both in order to turn
+> > it into a proper platform driver and to add MSI (based on code by
+> > Krishna Kishore <kthota@nvidia.com>) as well as device tree support.
+> >=20
+> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+>=20
+> [snip]
+>=20
+> > +static int tegra_pcie_enable(struct tegra_pcie *pcie)
+> > +{
+> > +       struct hw_pci hw;
+> > +
+> > +       memset(&hw, 0, sizeof(hw));
+> > +
+> > +       hw.nr_controllers =3D 1;
+> > +       hw.private_data =3D (void **)&pcie;
+> > +       hw.setup =3D tegra_pcie_setup;
+> > +       hw.scan =3D tegra_pcie_scan_bus;
+> > +       hw.map_irq =3D tegra_pcie_map_irq;
+> > +
+> > +       pci_common_init(&hw);
+> > +
+> > +       return 0;
+> > +}
+>=20
+> [snip]
+>=20
+> > +static int tegra_pcie_probe(struct platform_device *pdev)
+> > +{
+> > +       struct device_node *port;
+> > +       struct tegra_pcie *pcie;
+> > +       int err;
+> > +
+> > +       pcie =3D devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+> > +       if (!pcie)
+> > +               return -ENOMEM;
+> > +
+> > +       INIT_LIST_HEAD(&pcie->ports);
+> > +       pcie->dev =3D &pdev->dev;
+> > +
+> > +       err =3D tegra_pcie_parse_dt(pcie);
+> > +       if (err < 0)
+> > +               return err;
+> > +
+> > +       pcibios_min_mem =3D 0;
+> > +
+> > +       err =3D tegra_pcie_get_resources(pcie);
+> > +       if (err < 0) {
+> > +               dev_err(&pdev->dev, "failed to request resources: %d\n"=
+, err);
+> > +               return err;
+> > +       }
+> > +
+> > +       err =3D tegra_pcie_enable_controller(pcie);
+> > +       if (err)
+> > +               goto put_resources;
+> > +
+> > +       /* probe root ports */
+> > +       for_each_child_of_node(pdev->dev.of_node, port) {
+> > +               if (!of_device_is_available(port))
+> > +                       continue;
+> > +
+> > +               err =3D tegra_pcie_add_port(pcie, port);
+> > +               if (err < 0) {
+> > +                       dev_err(&pdev->dev, "failed to add port %s: %d\=
+n",
+> > +                               port->name, err);
+> > +               }
+> > +       }
+> > +
+> > +       /* setup the AFI address translations */
+> > +       tegra_pcie_setup_translations(pcie);
+> > +
+> > +       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> > +               err =3D tegra_pcie_enable_msi(pcie);
+> > +               if (err < 0) {
+> > +                       dev_err(&pdev->dev,
+> > +                               "failed to enable MSI support: %d\n",
+> > +                               err);
+> > +                       goto put_resources;
+> > +               }
+> > +       }
+> > +
+> > +       err =3D tegra_pcie_enable(pcie);
+> > +       if (err < 0) {
+> > +               dev_err(&pdev->dev, "failed to enable PCIe ports: %d\n"=
+, err);
+> > +               goto disable_msi;
+> > +       }
+> > +
+> > +       platform_set_drvdata(pdev, pcie);
+> > +       return 0;
+> > +
+> > +disable_msi:
+> > +       if (IS_ENABLED(CONFIG_PCI_MSI))
+> > +               tegra_pcie_disable_msi(pcie);
+> > +put_resources:
+> > +       tegra_pcie_put_resources(pcie);
+> > +       return err;
+> > +}
+> > +
+>=20
+> [snip]
+>=20
+> > +
+> > +static const struct of_device_id tegra_pcie_of_match[] =3D {
+> > +       { .compatible =3D "nvidia,tegra20-pcie", },
+> > +       { },
+> > +};
+> > +
+> > +static struct platform_driver tegra_pcie_driver =3D {
+> > +       .driver =3D {
+> > +               .name =3D "tegra-pcie",
+> > +               .owner =3D THIS_MODULE,
+> > +               .of_match_table =3D tegra_pcie_of_match,
+> > +       },
+> > +       .probe =3D tegra_pcie_probe,
+> > +       .remove =3D tegra_pcie_remove,
+> > +};
+> > +module_platform_driver(tegra_pcie_driver);
+>=20
+> If you have multiple 'nvidia,tegra20-pcie's in your DT then you will end =
+up
+> with multiple calls to tegra_pcie_probe/tegra_pcie_enable/pci_common_init.
+>=20
+> However pci_common_init/pcibios_init_hw assumes it will only ever be call=
+ed
+> once, and will thus result in trying to create multiple busses with the s=
+ame
+> bus number. (The first root bus it creates is always zero provided you ha=
+ven't
+> implemented hw->scan).
 
-Can you please submit that patch with a proper changelog?
+Right, I hadn't noticed. There's currently no hardware that actually has
+two PCIe host bridges but I wanted to keep the driver properly prepared
+in case this ever happened.
 
-It is a mainline bug now (and a build regression for that matter), so I'd like to
-push the fix to Linus for v3.8-rc4.
+Actually I've reimplemented hw->scan, but it still forwards the bus
+number setup by pcibios_init_hw() (sys->busnr) to pci_create_root_bus()
+so it will still break. I wonder, though, if a better approach would be
+to take this number from the bus-range property in DT instead.
 
-> Index: linux-2.6/drivers/acpi/glue.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/acpi/glue.c
-> +++ linux-2.6/drivers/acpi/glue.c
-> @@ -311,7 +311,7 @@ static int acpi_platform_notify(struct d
->         if (!ret) {
->                 struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-> 
-> -               acpi_get_name(dev->acpi_handle, ACPI_FULL_PATHNAME, &buffer);
-> +               acpi_get_name(ACPI_HANDLE(dev), ACPI_FULL_PATHNAME, &buffer);
->                 DBG("Device %s -> %s\n", dev_name(dev), (char *)buffer.pointer);
->                 kfree(buffer.pointer);
->         } else
-> 
-> 
-> otherwise will get compiling error when enable acpi glue debug.
+> I have a patch for this if you want to fold it into your series? (I see y=
+ou've
+> made changes to bios32 for per-controller data).
 
-Thanks,
-Rafael
+I would certainly like to take a look at it.
 
+Thierry
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+--Dxnq1zWXvFF0Q93v
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQIcBAEBAgAGBQJQ+R9uAAoJEN0jrNd/PrOh0XoP/39mLPpEs/z9yZX3rN8jyhvD
+hk7cjTeFJ9I6Umy9VslOG6u1wwAmetmdniBWBjhRCnVSmZbpJzdPVGse1+DkQOOk
+JlbMYAql6JO+M97u4bDleIdNNNbhno9/r/Q6aX6x6q83MNeskNK8uGno9AUVzrEJ
+WpWJHYWSUGVsETCYpYA4Dn4u+LCrpIrldqh89N+SqvsL1THR0oFj8e88W+mfpcsW
+oK19FsDOsQnDjnglN/XPHUDWzdZjyE/Jb6ZDK0u46b0tcdZafLO7NAVgRC+KBnts
+0ydO1ODPNtiqXTI+ZSuNEcVLIKzH7eevvF1BmcL6X6OfOXFsYe48cYQnbhEl1yCS
+KE2L0qpc5+/F9rHzNbqr/KzeOue9LsqQ96qi2si/gqtnP79IulruYHiRY4H+yV/S
+W/GJBxiqSZ5Ga4fIe5bswKH9PI77ur+G+NPfUukjJO5Ze9N3daAJoHZJ6/rmsbnV
+KKsKFqECk4GgMEfG+S8UCv0GOCDNdQQPfL7my33aG4cn4y/ICque2bXcdd3I7+gN
+fb4I+FD8lKdsxuRoa03LKZmsK4BiWH/QbzZjB0M89flNgEnqc/e8N+JreXf8H//t
+NaTyly/T7k15acmpFy10D+k3W1Y+gLb9MH/F5JtMn0zIRgn+36QIRXBuhx6WVVBR
+zAUZIGcAJOk0xpUzRnD+
+=E00m
+-----END PGP SIGNATURE-----
+
+--Dxnq1zWXvFF0Q93v--
