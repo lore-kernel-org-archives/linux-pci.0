@@ -1,83 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f73.google.com ([209.85.212.73]:34911 "EHLO
-	mail-vb0-f73.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932316Ab3AIR7F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:59:05 -0500
-Received: by mail-vb0-f73.google.com with SMTP id l1so264483vba.2
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:59:04 -0800 (PST)
-Subject: [PATCH 1/5] x86/PCI: Remove unused pci_root_bus
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	x86@kernel.org
-Date: Wed, 09 Jan 2013 10:52:55 -0700
-Message-ID: <20130109175255.13904.16833.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-References: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:65527 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755345Ab3ARQIb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 11:08:31 -0500
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe native hotplug
+Date: Sat, 19 Jan 2013 00:07:45 +0800
+Message-Id: <1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_root_bus is unused, so remove all references to it.
+If user specifies "pci=nopciehp" on kernel boot command line, OSPM
+won't claim PCIe native hotplug service from firmware and no PCIe
+port devices will be created for PCIe native hotplug service.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
 ---
- arch/x86/include/asm/pci_x86.h |    1 -
- arch/x86/pci/common.c          |    1 -
- arch/x86/pci/legacy.c          |    2 +-
- arch/x86/pci/numaq_32.c        |    2 +-
- 4 files changed, 2 insertions(+), 4 deletions(-)
+ Documentation/kernel-parameters.txt |    2 ++
+ drivers/acpi/pci_root.c             |    3 ++-
+ drivers/pci/pci.c                   |    2 ++
+ drivers/pci/pcie/portdrv_core.c     |    5 +++--
+ drivers/pci/pcie/portdrv_pci.c      |    3 +++
+ include/linux/pci.h                 |    9 +++++++++
+ 6 files changed, 21 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 73e8eef..0126f10 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -54,7 +54,6 @@ void pcibios_set_cache_line_size(void);
- /* pci-pc.c */
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 9776f06..28dd0ad 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2106,6 +2106,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 		noaer		[PCIE] If the PCIEAER kernel config parameter is
+ 				enabled, this kernel boot option can be used to
+ 				disable the use of PCIE advanced error reporting.
++		nopciehp	[PCIE] this kernel boot option can be used to
++				disable PCIe native hotplug.
+ 		nodomains	[PCI] Disable support for multiple PCI
+ 				root domains (aka PCI segments, in ACPI-speak).
+ 		nommconf	[X86] Disable use of MMCONFIG for PCI
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index c6200ff..c37eedb 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -551,8 +551,9 @@ static int __devinit acpi_pci_root_add(struct acpi_device *device)
+ 	if (!pcie_ports_disabled
+ 	    && (flags & ACPI_PCIE_REQ_SUPPORT) == ACPI_PCIE_REQ_SUPPORT) {
+ 		flags = OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
+-			| OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+ 			| OSC_PCI_EXPRESS_PME_CONTROL;
++		if (!pcie_native_hotplug_disabled)
++			flags |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
  
- extern int pcibios_last_bus;
--extern struct pci_bus *pci_root_bus;
- extern struct pci_ops pci_root_ops;
+ 		if (pci_aer_available()) {
+ 			if (aer_acpi_firmware_first())
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2f8f4c6..34b2c83 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3869,6 +3869,8 @@ static int __init pci_setup(char *str)
+ 				pci_no_msi();
+ 			} else if (!strcmp(str, "noaer")) {
+ 				pci_no_aer();
++			} else if (!strcmp(str, "nopciehp")) {
++				pcie_no_native_hotplug();
+ 			} else if (!strncmp(str, "realloc=", 8)) {
+ 				pci_realloc_get_opt(str + 8);
+ 			} else if (!strncmp(str, "realloc", 7)) {
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index ed129b4..e7e1679 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -263,8 +263,9 @@ static int get_port_device_capability(struct pci_dev *dev)
  
- void pcibios_scan_specific_bus(int busn);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 412e128..505731b 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -34,7 +34,6 @@ int noioapicreroute = 1;
+ 	err = pcie_port_platform_notify(dev, &cap_mask);
+ 	if (!pcie_ports_auto) {
+-		cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+-				| PCIE_PORT_SERVICE_VC;
++		cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_VC;
++		if (!pcie_native_hotplug_disabled)
++			cap_mask |= PCIE_PORT_SERVICE_HP;
+ 		if (pci_aer_available())
+ 			cap_mask |= PCIE_PORT_SERVICE_AER;
+ 	} else if (err) {
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 0761d90..018cee0 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -40,6 +40,9 @@ bool pcie_ports_disabled;
+  */
+ bool pcie_ports_auto = true;
+ 
++/* If set, the PCIe native hotplug will not be used. */
++bool pcie_native_hotplug_disabled;
++
+ static int __init pcie_port_setup(char *str)
+ {
+ 	if (!strncmp(str, "compat", 6)) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 12e5447..715e17b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1138,9 +1138,18 @@ extern int pci_msi_enabled(void);
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
+ extern bool pcie_ports_auto;
++extern bool pcie_native_hotplug_disabled;
++
++static inline void pcie_no_native_hotplug(void)
++{
++	pcie_native_hotplug_disabled = true;
++}
+ #else
+ #define pcie_ports_disabled	true
+ #define pcie_ports_auto		false
++#define pcie_native_hotplug_disabled	true
++
++static inline void pcie_no_native_hotplug(void) { }
  #endif
- int pcibios_last_bus = -1;
- unsigned long pirq_table_addr;
--struct pci_bus *pci_root_bus;
- const struct pci_raw_ops *__read_mostly raw_pci_ops;
- const struct pci_raw_ops *__read_mostly raw_pci_ext_ops;
  
-diff --git a/arch/x86/pci/legacy.c b/arch/x86/pci/legacy.c
-index a1df191..a9e8308 100644
---- a/arch/x86/pci/legacy.c
-+++ b/arch/x86/pci/legacy.c
-@@ -30,7 +30,7 @@ int __init pci_legacy_init(void)
- 	}
- 
- 	printk("PCI: Probing PCI hardware\n");
--	pci_root_bus = pcibios_scan_root(0);
-+	pcibios_scan_root(0);
- 	return 0;
- }
- 
-diff --git a/arch/x86/pci/numaq_32.c b/arch/x86/pci/numaq_32.c
-index 83e125b..00edfe6 100644
---- a/arch/x86/pci/numaq_32.c
-+++ b/arch/x86/pci/numaq_32.c
-@@ -152,7 +152,7 @@ int __init pci_numaq_init(void)
- 
- 	raw_pci_ops = &pci_direct_conf1_mq;
- 
--	pci_root_bus = pcibios_scan_root(0);
-+	pcibios_scan_root(0);
- 	if (num_online_nodes() > 1)
- 		for_each_online_node(quad) {
- 			if (quad == 0)
+ #ifndef CONFIG_PCIEASPM
+-- 
+1.7.9.5
 
