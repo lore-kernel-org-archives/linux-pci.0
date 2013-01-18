@@ -1,54 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34748 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413Ab3AGEL3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Jan 2013 23:11:29 -0500
-Message-ID: <50EA4AEE.1050401@gmail.com>
-Date: Sun, 06 Jan 2013 22:11:26 -0600
-From: Robert Hancock <hancockrwd@gmail.com>
-MIME-Version: 1.0
-To: bl0 <bl0-052@playker.info>
-CC: linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: sata_sil data corruption, possible workarounds
-References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org> <50CEB13B.9010100@gmail.com> <kaq1n6$hqa$1@ger.gmane.org> <50D13831.9040105@gmail.com> <kaujmk$op$1@ger.gmane.org>
-In-Reply-To: <kaujmk$op$1@ger.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 2/8] PCI: split registration of PCI bus devices into two stages
+Date: Sat, 19 Jan 2013 00:07:40 +0800
+Message-Id: <1358525267-14268-3-git-send-email-jiang.liu@huawei.com>
+In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/20/2012 02:54 AM, bl0 wrote:
-> On Wednesday 19 December 2012 04:44, Robert Hancock wrote:
->
->> On 12/18/2012 09:23 AM, bl0 wrote:
->>> Do you think something should be done about it in the linux sata_sil
->>> driver? For a lack of a better solution, here is my suggestion. There is
->>> already one option 'slow_down' for problematic disks. Another option, for
->>> example 'cache_line_workaround', could be added for problematic
->>> motherboards. If enabled, the most straightforward way is to set cache
->>> line size to 0 and not worry about the fifo_cfg register. If someone else
->>> confirms that it solves the problem for them, this option could be
->>> enabled automatically if certain motherboard chipset is detected.
->>
->> We'd have to somehow narrow down which chipsets were involved, which
->> might be a hard task. Do you have an idea of how much the performance is
->> hurt by these workarounds? If it's not a lot, it might make sense to do
->> it by default.
->
-> After setting cache line size to 0, write speed as shown by 'dd
-> if=/tmpfs/testfile of=/dev/sdc9 bs=1M count=256' goes down from about
-> 45 MB/s to 17 MB/s. Personally I don't care about performance, reliability
-> and data safety are more important to me.
+When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
+the notification handler can't hold reference count to the new PCI bus
+because the device object for the new bus (pci_dev->subordinate->dev)
+hasn't been initialized yet.
 
-Yeah, cutting performance by 2/3rds is fairly bad though.
+Split the registration of PCI bus device into two stages as below,
+so that the event handler could hold reference count to the new PCI bus
+when handling BUS_NOTIFY_ADD_DEVICE event.
 
->
-> The other workaround is to increase cache line size to 64 bytes, if
-> necessary, and set fifo_cfg to 0. No difference in performance measured.
-> This workaround is more of a hit or miss. It seems to contradict that code
-> commit made back in 2005, which was also about data corruption. In the
-> worst case, what solves data corruption problem on some motherboards might
-> introduce this problem on some other motherboards.
+1) device_initialize(&pci_dev->dev)
+2) device_initialize(&pci_dev->subordinate->dev)
+3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
+4) device_add(&pci_dev->dev)
+5) device_add(&pci_dev->subordinate->dev)
 
-That's possible, which is why I suspect that someone from Silicon Image 
-would have to confirm a possible fix - might be hard to get their 
-attention about this old chipset..
+Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/bus.c    |    2 +-
+ drivers/pci/probe.c  |    4 +++-
+ drivers/pci/remove.c |   10 +++++-----
+ 3 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index a543746..4c843cd 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -193,7 +193,7 @@ int pci_bus_add_child(struct pci_bus *bus)
+ 	if (bus->bridge)
+ 		bus->dev.parent = bus->bridge;
+ 
+-	retval = device_register(&bus->dev);
++	retval = device_add(&bus->dev);
+ 	if (retval)
+ 		return retval;
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ec5d28f..adb77c6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -639,6 +639,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	 */
+ 	child->dev.class = &pcibus_class;
+ 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
++	device_initialize(&child->dev);
+ 
+ 	/*
+ 	 * Set up the primary, secondary and subordinate
+@@ -1673,7 +1674,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+ 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
+-	error = device_register(&b->dev);
++	device_initialize(&b->dev);
++	error = device_add(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
+ 
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 10693f5..0d03026 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	list_del(&bus->node);
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+-	if (!bus->is_added)
+-		return;
+-
+-	pci_remove_legacy_files(bus);
+-	device_unregister(&bus->dev);
++	if (bus->is_added) {
++		pci_remove_legacy_files(bus);
++		device_del(&bus->dev);
++	}
++	put_device(&bus->dev);
+ }
+ EXPORT_SYMBOL(pci_remove_bus);
+ 
+-- 
+1.7.9.5
+
