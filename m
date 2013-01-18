@@ -1,61 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48899 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613Ab3AKAwo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 19:52:44 -0500
-Message-ID: <50EF62A1.5070306@infradead.org>
-Date: Thu, 10 Jan 2013 16:53:53 -0800
-From: Randy Dunlap <rdunlap@infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 0/5] pci/e1000e: return runtime-pm back to work
+To: linux-kernel@vger.kernel.org
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org
+Date: Fri, 18 Jan 2013 15:42:08 +0400
+Message-ID: <20130118113019.6698.25941.stgit@zurg>
 MIME-Version: 1.0
-To: Don Dutile <ddutile@redhat.com>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] pci: fix iov.c kernel-doc warnings
-References: <50EE1594.4070905@infradead.org> <50EF3E65.3030302@redhat.com>
-In-Reply-To: <50EF3E65.3030302@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/10/13 14:19, Don Dutile wrote:
-> On 01/09/2013 08:12 PM, Randy Dunlap wrote:
->> From: Randy Dunlap<rdunlap@infradead.org>
->>
->> Fix kernel-doc warning in iov.c:
->>
->> Warning(drivers/pci/iov.c:752): No description found for parameter 'numvfs'
->>
->> Signed-off-by: Randy Dunlap<rdunlap@infradead.org>
->> ---
->>   drivers/pci/iov.c |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> --- lnx-38-rc2.orig/drivers/pci/iov.c
->> +++ lnx-38-rc2/drivers/pci/iov.c
->> @@ -739,7 +739,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
->>   /**
->>    * pci_sriov_set_totalvfs -- reduce the TotalVFs available
->>    * @dev: the PCI PF device
->> - * numvfs: number that should be used for TotalVFs supported
->> + * @numvfs: number that should be used for TotalVFs supported
->>    *
->>    * Should be called from PF driver's probe routine with
->>    * device's mutex held.
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Thanks for cleanup; /my bad.
-> Should checkpatch report this issue?  if it does, then
-> my (double-down) bad for missing that correction when I ran it against the patch.
+This patchset contains some fixes for e1000e diver (broken since v2.6.35)
+and some related fixes for PCI code (more fresh bugs).
+Last patch adds simple debug for catching device-enable-cointer underflows.
 
-checkpatch doesn't check for missing kernel-doc notation.
-I run 'make htmldocs' on each kernel to look for kernel-doc errors
-and warnings.
+All together this fixes my regression report for v3.8-rc1:
+https://lkml.org/lkml/2013/1/1/25
+
+---
+
+Konstantin Khlebnikov (5):
+      e1000e: fix resuming from runtime-suspend
+      e1000e: fix pci device enable counter balance
+      PCI: revert preparing for wakeup in runtime-suspend finalization
+      PCI: don't touch enable_cnt in pci_device_shutdown()
+      PCI: catch enable-counter underflows
 
 
+ drivers/net/ethernet/intel/e1000e/netdev.c |   20 +++++++++++++++-----
+ drivers/pci/pci-driver.c                   |    7 ++++---
+ drivers/pci/pci.c                          |    3 +++
+ 3 files changed, 22 insertions(+), 8 deletions(-)
 
 -- 
-~Randy
+Signature
