@@ -1,68 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:50396 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753736Ab3ALRHO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 12 Jan 2013 12:07:14 -0500
+Received: from mail.kernel.org ([198.145.19.201]:51508 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753294Ab3ARDM5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Jan 2013 22:12:57 -0500
+Date: Thu, 17 Jan 2013 19:14:04 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jon Mason <jon.mason@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+	Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: Re: [PATCH v6 1/2] PCI-Express Non-Transparent Bridge Support
+Message-ID: <20130118031404.GA13239@kroah.com>
+References: <1353119233-32752-1-git-send-email-jon.mason@intel.com>
+ <1353119233-32752-2-git-send-email-jon.mason@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <4068140.Uym9gOXymC@hammer82.arch.suse.de>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<CAE9FiQWEan4Vq-pbp6sgMWVFHwWygQ4Hq2wRsPH166+7w7L2yg@mail.gmail.com>
-	<50F08F43.7080604@zytor.com>
-	<4068140.Uym9gOXymC@hammer82.arch.suse.de>
-Date: Sat, 12 Jan 2013 09:07:12 -0800
-Message-ID: <CAE9FiQWNRS6rBzx+fbX+O9_L+Z-4T-oBWZUdzR0sS=P22ctZ0w@mail.gmail.com>
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in
- memmap=exactmap case
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1353119233-32752-2-git-send-email-jon.mason@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 12, 2013 at 3:31 AM, Thomas Renninger <trenn@suse.de> wrote:
->         memmap=exactmap [KNL,X86] Enable setting of an exact
-> -                       E820 memory map, as specified by the user.
-> -                       Such memmap=exactmap lines can be constructed based on
-> -                       BIOS output or other requirements. See the memmap=nn@ss
-> -                       option description.
-> +                       E820 usable memory map, as specified by the user.
-> +                       All unusable (reserved, ACPI, NVS,...) ranges from the
-> +                       original e820 table are preserved.
-> +                       But the usable memory regions from the original e820
-> +                       table are removed.
-> +                       This parameter is explicitly for kdump usage:
-> +                       The memory the kdump kernel is allowed to use must
-> +                       be passed via below memmap=nn[KMG]@ss[KMG] param.
-> +                       All reserved regions the kernel may use for ioremapping
-> +                       and similar are still considered.
-> +
-> +       memmap=voidmap  [KNL,X86] Do not use any e820 ranges from BIOS or
-> +                       bootloader. Instead you have to pass regions via
-> +                       below memmap= options.
+On Fri, Nov 16, 2012 at 07:27:12PM -0700, Jon Mason wrote:
+> A PCI-Express non-transparent bridge (NTB) is a point-to-point PCIe bus
+> connecting 2 systems, providing electrical isolation between the two subsystems.
+> A non-transparent bridge is functionally similar to a transparent bridge except
+> that both sides of the bridge have their own independent address domains.  The
+> host on one side of the bridge will not have the visibility of the complete
+> memory or I/O space on the other side of the bridge.  To communicate across the
+> non-transparent bridge, each NTB endpoint has one (or more) apertures exposed to
+> the local system.  Writes to these apertures are mirrored to memory on the
+> remote system.  Communications can also occur through the use of doorbell
+> registers that initiate interrupts to the alternate domain, and scratch-pad
+> registers accessible from both sides.
+> 
+> The NTB device driver is needed to configure these memory windows, doorbell, and
+> scratch-pad registers as well as use them in such a way as they can be turned
+> into a viable communication channel to the remote system.  ntb_hw.[ch]
+> determines the usage model (NTB to NTB or NTB to Root Port) and abstracts away
+> the underlying hardware to provide access and a common interface to the doorbell
+> registers, scratch pads, and memory windows.  These hardware interfaces are
+> exported so that other, non-mainlined kernel drivers can access these.
+> ntb_transport.[ch] also uses the exported interfaces in ntb_hw.[ch] to setup a
+> communication channel(s) and provide a reliable way of transferring data from
+> one side to the other, which it then exports so that "client" drivers can access
+> them.  These client drivers are used to provide a standard kernel interface
+> (i.e., Ethernet device) to NTB, such that Linux can transfer data from one
+> system to the other in a standard way.
+> 
+> Signed-off-by: Jon Mason <jon.mason@intel.com>
+> Reviewed-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
-I would suggest to keep memmap=exactmap meaning not changed, and add
-memmap=exactusablemap
-instead.
+Sorry for the very long delay, I've now applied these two patches,
+thanks for the cleanups and changes from the original versions.
 
-kexec-tools could be updated to support exactusablemap with
-kernelversion checking for kdump.
+But, I now get the following build warning, so can you send a follow-on
+patch that fixes it up before you start getting angry emails from the
+0-day build bot?
 
-also we need to double check to make sure:
-1. exactmap should override exactusablemap, even the out of order sequence.
-2. when exactusablemap is used, not just remove old usable type range,
-also need to remove overlapped range
-with new usable range.
+drivers/ntb/ntb_transport.c: In function ‘ntb_transport_rx’:
+drivers/ntb/ntb_transport.c:895:7: warning: ‘offset’ may be used uninitialized in this function [-Wuninitialized]
+drivers/ntb/ntb_transport.c:891:8: note: ‘offset’ was declared here
 
-Thanks
 
-Yinghai
+thanks,
+
+greg k-h
