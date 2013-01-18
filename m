@@ -1,60 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:46944 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752779Ab3A3E5B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 23:57:01 -0500
-Date: Tue, 29 Jan 2013 21:56:55 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
+Received: from service87.mimecast.com ([91.220.42.44]:42352 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587Ab3ARLhq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 06:37:46 -0500
+Date: Fri, 18 Jan 2013 11:37:42 +0000
+From: Andrew Murray <Andrew.Murray@arm.com>
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
 	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130130045655.GE5734@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <20130129155820.GB23505@n2100.arm.linux.org.uk>
- <20130129172055.0ca5f341@skate>
- <201301291645.08040.arnd@arndb.de>
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Grant Likely <grant.likely@secretlab.ca>,
+	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	"devicetree-discuss@lists.ozlabs.org"
+	<devicetree-discuss@lists.ozlabs.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: [PATCH RFC 1/2] Implementation of pci_fixup_irqs for descendants
+ of a specified bus
+Message-ID: <20130118113742.GA9006@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201301291645.08040.arnd@arndb.de>
+Content-Type: text/plain; charset=WINDOWS-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 04:45:07PM +0000, Arnd Bergmann wrote:
-> On Tuesday 29 January 2013, Thomas Petazzoni wrote:
-> > And the Linux PCI resource allocation code complies with this, so that
-> > if I have two PCI-to-PCI bridges (each having downstream a device with
-> > an I/O BAR), then the first PCI-to-PCI bridge gets its I/O base address
-> > register set to ADDR + 0x0, and the second bridge gets its I/O base
-> > address set to ADDR + 0x1000. And this doesn't play well with the
-> > requirements of Marvell address decoding windows for PCIe I/O regions,
-> > which must be 64 KB aligned.
-> 
-> But we normally only assign a 64 KB I/O window to each PCI host bridge.
-> Requiring PCI bridges to be space 64 KB apart would mean that we cannot
-> actually support bridges at all.
+Continuing from discussion with Thierry (lkml.org/lkml/2013/1/18/107) perhaps
+this will be useful to fold into your patchset. 
+---
+This patch provides pci_bus_fixup_irqs which performs the same
+function as pci_fixup_irqs but only to descendants of the specified
+bus.
 
-The PCI resource code uses full 32 bit integers when it handles IO
-addresses, so this actually does sort of work out.
+This can reduce unnecessary fixing up of device irqs when new buses
+are added.
 
-However, Thomas how did you recover the high bits of the
-IO window address from the bridge configuration? Are you reading the
-struct resource directly? That probably causes problems with
-hotplug/etc...
+Signed-off-by: Andrew Murray <Andrew.Murray@arm.com>
+Signed-off-by: Liviu Dudau <Liviu.Dudau@arm.com>
+---
+ drivers/pci/setup-irq.c |   15 +++++++++++++++
+ include/linux/pci.h     |    3 +++
+ 2 files changed, 18 insertions(+), 0 deletions(-)
 
-If you look back in your old emails I outlined a solution to this
-using the MMU.
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index eb219a1..ea91874 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -62,3 +62,18 @@ pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 	for_each_pci_dev(dev)
+ 		pdev_fixup_irq(dev, swizzle, map_irq);
+ }
++
++void __init
++pci_bus_fixup_irqs(struct pci_bus *bus,
++		u8 (*swizzle)(struct pci_dev *, u8 *),
++		int (*map_irq)(const struct pci_dev *, u8, u8))
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pdev_fixup_irq(dev, swizzle, map_irq);
++
++		if (dev->subordinate)
++			pci_bus_fixup_irqs(dev->subordinate, swizzle, map_irq);
++	}
++}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5faa831..1b3c2eb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -953,6 +953,9 @@ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(const struct pci_dev *, u8, u8));
++void pci_bus_fixup_irqs(struct pci_bus *bus,
++		u8 (*swizzle)(struct pci_dev *, u8 *),
++		int (*map_irq)(const struct pci_dev *, u8, u8));
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+-- 
+1.7.0.4
 
-Jason
+
