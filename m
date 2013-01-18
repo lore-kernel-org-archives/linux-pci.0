@@ -1,84 +1,67 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for hot-add root bus
-Date: Thu, 10 Jan 2013 14:07:19 +0100
-Message-ID: <18607840.Is41JcgqAR@vostro.rjw.lan>
-In-Reply-To: <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com>
-References: <20121030040237.GA10472@google.com> <5274779.gJQ3WSr6QB@vostro.rjw.lan> <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Jiang Liu <liuj97@gmail.com>
+To: "Rafael J . Wysocki" <rjw@sisk.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: [RFC PATCH v5 0/8] introduce PCI bus notifier chain to get rid of the ACPI PCI subdriver interfaces
+Date: Sat, 19 Jan 2013 00:07:38 +0800
+Message-Id: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 09, 2013 05:34:32 PM Bjorn Helgaas wrote:
-> On Wed, Jan 9, 2013 at 1:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Wednesday, January 09, 2013 11:01:39 AM Yinghai Lu wrote:
-> >> On Wed, Jan 9, 2013 at 10:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> >> the reason why we need to change those codes for x86, we want to make it support
-> >> >> pci root bus hotplug. So it would be reasonable for us to align other
-> >> >> platform to x86
-> >> >> changes after pci root bus hotplug change is completely done.
-> >> >
-> >> > OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
-> >> > way to keep track of this consistency issue and merged
-> >> > pci/yinghai-survey-resources to my -next branch.
-> >>
-> >> Thanks a lot. will send other pci root bus hotplug out.
-> >>
-> >> question: now Rafael's tree has acpi-scan branch and it touches pci-root.c.
-> >>
-> >> so is it ok for me to base patches on your pci/next and his pm/acpi-scan?
-> >> how?
-> >> can you two have some arrangement like you pulling Rafael's branch?
-> >
-> > My acpi-scan branch is not going to be rebased going forward, so it can be
-> > pulled from safely if that helps.
-> 
-> I'm happy to do that, but it is outside the scope of my limited git
-> experience.  My guess is that I should do this (doing the pull into a
-> branch which I later merge into my -next branch):
-> 
->   $ git checkout -b pci/yinghai-survey-resources+acpi-scan
-> pci/yinghai-survey-resources
->   $ git pull --no-ff --log
-> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
-> acpi-scan
->   $ vi drivers/acpi/pci_root.c    # resolve conflicts
->   $ git add drivers/acpi/pci_root.c
->   $ git commit
-> 
->   $ git checkout next
->   $ git merge --no-ff --log pci/yinghai-survey-resources+acpi-scan
-> 
-> Is that reasonable?
+This is an RFC patchset to address review comments in thread at:
+https://patchwork.kernel.org/patch/1946851/. The patch just pasts
+compilation. If no objection to the new implementation, I will
+go on to modify acpiphp driver and conduct tests.
 
-Yes, it looks reasonable.
+The main changes from V4 to V5 includes:
+1) introduce a dedicated notifier chain for PCI buses
+2) change pci_slot as built-in driver
+3) unify the way to create/destroy PCI slots
+4) introduce a kernel option to disable PCIe native hotplug
 
-> This won't cause issues when both Rafael and I ask Linus to pull from our
-> trees later?
+TODO:
+1) change acpiphp as built-in and unify the way to create/destroy ACPI
+   based hotplug slots.
+2) change other ACPI PCI subdriver in Yinghai's root bridge hotplug series
+   to use the PCI bus notifier chain.
+3) Remove the ACPI PCI subdriver interface eventaully.
 
-No, it won't, as long as I don't rebase the original acpi-scan branch (which
-I'm not going to do) and you don't rebase your
-pci/yinghai-survey-resources+acpi-scan branch going forward.
+Jiang Liu (8):
+  PCI: make PCI device create/destroy logic symmetric
+  PCI: split registration of PCI bus devices into two stages
+  PCI: add a blocking notifier chain for PCI bus addition/removal
+  ACPI, PCI: avoid building pci_slot as module
+  PCI, ACPI: hook PCI bus notifications to create/destroy PCI slots
+  pci_slot: replace printk(KERN_xxx) with pr_xxx()
+  PCI/PCIe: add "pci=nopciehp" to disable PCIe native hotplug
+  PCI/PCIe: only claim PME from firmware when CONFIG_PCIE_PME is
+    enabled
 
-The pull makes your tree contain the same commits (i.e. commit IDs along with
-the data) that are in my acpi-scan branch, so when Linus merges them together,
-git will notice that the commits are the same.
-
-Thanks,
-Rafael
-
+ Documentation/kernel-parameters.txt |    2 +
+ drivers/acpi/Kconfig                |    5 +-
+ drivers/acpi/internal.h             |    5 +
+ drivers/acpi/pci_root.c             |    8 +-
+ drivers/acpi/pci_slot.c             |  217 ++++++++++-------------------------
+ drivers/acpi/scan.c                 |    1 +
+ drivers/pci/bus.c                   |   26 ++++-
+ drivers/pci/pci.c                   |    2 +
+ drivers/pci/pci.h                   |    1 +
+ drivers/pci/pcie/portdrv_core.c     |    7 +-
+ drivers/pci/pcie/portdrv_pci.c      |    3 +
+ drivers/pci/probe.c                 |    7 +-
+ drivers/pci/remove.c                |   15 +--
+ include/linux/pci.h                 |   21 ++++
+ 14 files changed, 142 insertions(+), 178 deletions(-)
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
