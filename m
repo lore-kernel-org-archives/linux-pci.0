@@ -1,98 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f172.google.com ([209.85.128.172]:57437 "EHLO
-	mail-ve0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375Ab3AaQa2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 11:30:28 -0500
-Received: by mail-ve0-f172.google.com with SMTP id cz11so635310veb.17
-        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2013 08:30:27 -0800 (PST)
+Received: from mailhub4.stratus.com ([134.111.1.17]:35604 "EHLO
+	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754817Ab3ARTJ2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 14:09:28 -0500
+Date: Fri, 18 Jan 2013 13:24:55 -0500 (EST)
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+To: Joe Lawrence <Joe.Lawrence@stratus.com>
+cc: linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	David Bulkow <david.bulkow@stratus.com>
+Subject: [PATCH 2/2] PCI: Don't touch ASPM if forcibly disabled
+In-Reply-To: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
+Message-ID: <alpine.DEB.2.02.1301181324010.31163@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
 MIME-Version: 1.0
-In-Reply-To: <20130131170401.4b3bfbbf@skate>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
- <20130129055508.GA3339@obsidianresearch.com> <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
- <20130129184157.GA29274@obsidianresearch.com> <CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
- <20130129191853.GB29274@obsidianresearch.com> <CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
- <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
- <20130130103501.1873d39c@skate> <CAErSpo5NTyrHv8AQkw3hYpJRiZsk1HKHP3jP_MMpEVVhCgjKYg@mail.gmail.com>
- <20130131170401.4b3bfbbf@skate>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 31 Jan 2013 09:30:07 -0700
-Message-ID: <CAErSpo7fPzrF_OZSL7Ss0LT70Qz+veXLW-ihA7fAXCwsn142cQ@mail.gmail.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 31, 2013 at 9:04 AM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
-> Dear Bjorn Helgaas,
->
-> On Wed, 30 Jan 2013 11:52:15 -0700, Bjorn Helgaas wrote:
->
->> The secondary/subordinate registers effectively define a bus number
->> aperture that tells the bridge which transactions to claim and forward
->> downstream.  When enumerating devices, we may update the subordinate
->> bus number to widen the aperture so we can enumerate an arbitrary tree
->> behind the bridge.  When we're finished, we'll probably narrow it by
->> updating the subordinate again, so the unused bus number space can be
->> used for other bridges.  I don't know the exact details of the
->> algorithm, and they're likely to change anyway, but pci_scan_bridge()
->> is where most of it happens.
->>
->> It looks like your current system doesn't support trees below the
->> bridges, but hopefully we can make it so the generic enumeration
->> algorithms still work.
->
-> The PCI-to-PCI bridge specification says that the Primary Bus Number
-> Register, Secondary Bus Number Register and Subordinate Bus Number
-> Register of the PCI configuration space of a PCI-to-PCI bridge should
-> all be set to 0 after reset.
->
-> Until now, I was forcing a specific value of the Secondary Bus Number
-> and Subordinate Bus Number (1 for my first bridge, 2 for my second
-> bridge, etc.).
->
-> Following you're recommendation, I've changed this, and left those
-> values initialized to 0 by default, in order to let Linux set correct
-> values. Yes, Linux does assign appropriate values in the Secondary Bus
-> Number Register. But before that Linux also complains loudly that the
-> bridge configuration is invalid:
->
-> pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:00:02.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:00:03.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:00:04.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:00:05.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> pci 0000:00:06.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+>From 108cca7bee5b04f45d9712507d14b5f3fbc22c29 Mon Sep 17 00:00:00 2001
+From: Joe Lawrence <joe.lawrence@stratus.com>
+Date: Tue, 15 Jan 2013 15:31:28 -0500
+Subject: [PATCH 2/2] PCI: Don't touch ASPM if forcibly disabled
 
-Linux makes the unwarranted assumption that the PCI hierarchy has
-already been configured by firmware.  If the only problem is the
-messages above, I think we could just rework the message so it doesn't
-look like an error.  I would guess that we probably also see the same
-distressing message when we hot-add a card with a bridge on it,
-because firmware won't have initialized the bridge.
+Don't allocate and track PCIe ASPM state when "pcie_aspm=off" is specified on
+the kernel parameter list.
 
-My rule of thumb is that I like to note something in dmesg about the
-initial configuration of bus/mem/io apertures and BARs, as well as
-indications when we update them.  That way, the dmesg log should
-contain enough information to debug most enumeration and configuration
-defects.  pci_scan_bridge() is somewhat lacking in this regard.
+Based-on-patch-from: Matthew Garrett <mjg59@srcf.ucam.org>
+Reviewed-by: David Bulkow <david.bulkow@stratus.com>
+Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+---
+ drivers/pci/pcie/aspm.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Bjorn
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 6122447..f912a93 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -556,6 +556,9 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	struct pcie_link_state *link;
+ 	int blacklist = !!pcie_aspm_sanity_check(pdev);
+ 
++	if (!aspm_support_enabled)
++		return;
++
+ 	if (!pci_is_pcie(pdev) || pdev->link_state)
+ 		return;
+ 	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
+-- 
+1.8.0.2
+
