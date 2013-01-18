@@ -1,118 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:49707 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754797Ab3AKQQy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 11:16:54 -0500
+Received: from cn.fujitsu.com ([222.73.24.84]:8529 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750829Ab3ARFe0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Jan 2013 00:34:26 -0500
+Message-ID: <50F8DEE9.9060905@cn.fujitsu.com>
+Date: Fri, 18 Jan 2013 13:34:33 +0800
+From: Gu Zheng <guz.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <201301111333.49238.trenn@suse.de>
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local>
-	<1586060.uJlkOEQfVW@hammer82.arch.suse.de>
-	<CAE9FiQVLVxj07TM1N6F2kmZdBYMUiS6Xz2bD-JZPtvps3a5-xw@mail.gmail.com>
-	<201301111333.49238.trenn@suse.de>
-Date: Fri, 11 Jan 2013 08:16:52 -0800
-Message-ID: <CAE9FiQWPJdER++ZrkKx7cQpF0QvwBeghNjpFqK18pMNC0w20tw@mail.gmail.com>
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in
- memmap=exactmap case
-From: Yinghai Lu <yinghai@kernel.org>
-To: Thomas Renninger <trenn@suse.de>
-Cc: MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+CC: guz.fnst@cn.fujitsu.com, tangchen@cn.fujitsu.com,
+	laijs@cn.fujitsu.com, wency@cn.fujitsu.com,
+	izumi.taku@jp.fujitsu.com, Lin Feng <linfeng@cn.fujitsu.com>,
+	Jiang Liu <liuj97@gmail.com>, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH RESEND] pci-sysfs: replace mutex_lock with mutex_trylock to
+ avoid potential deadlock situation
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 11, 2013 at 4:33 AM, Thomas Renninger <trenn@suse.de> wrote:
->> yes, we have other user for debug  like simulating user memmap for some
->> bugs.
->> current problem for exactmap is that we don't scan that at first.
->> attached patch could help that.
->
-> Yep, this is what I would have come up as well or similar. I looked
-> at it, but I had no time for doing it and trying out.
->
-> You may want to add:
-> Reviewed-by: Thomas Renninger <trenn@suse.de>
-> if someone reposts.
+There is a potential deadlock situation when we manipulate the pci-sysfs user
+interfaces from different bus hierarchy simultaneously, described as following:
 
-ok, I will add wrap it up and add changelog and test it then post it
-with my for-x86-boot.
+path1: sysfs remove device:             | path2: sysfs rescan device: 
+sysfs_schedule_callback_work()          | sysfs_write_file() 
+  remove_callback()                     |   flush_write_buffer()
+*1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd) 
+      ...                               |     dev_attr_store() 
+        device_remove_file()            |       dev_rescan_store()
+          ...                           |*4*      mutex_lock(&pci_remove_rescan_mutex)
+*3*       sysfs_deactivate(sd)          |     ...
+            wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
+*6* mutex_unlock(&pci_remove_rescan_mutex)
 
->
->    Thomas
->
-> -------------------
-> x86 e820: only void usable memory areas in memmap=exactmap case
->
-> All unusable (reserved, ACPI, ACPI NVS,...) areas have to be
-> honored in kdump case.
-> Othwerise ACPI parts will quickly run into trouble when trying
-> to for example early_ioremap reserved areas which are not
-> declared reserved in kdump kernel.
-> mmconf area must also be a reserved mem region.
-> ...
->
-> Passing unusable memory via memmap= is a design flaw as
-> this information is already (exactly for this purpose) passed
-> via bootloader structure.
-> In kdump case (when memmap=exactmap is passed), only void
-> (do not use) usable memory regions from the passed e820 table
-> and use memory areas defined via memmap=X@Y boot parameter instead.
-> But do still use the "unusable" memory regions from the original e820
-> table.
->
-> Signed-off-by: Thomas Renninger <trenn@suse.de>
->
-> ---
->  arch/x86/kernel/e820.c |   19 ++++++++++++++++++-
->  1 files changed, 18 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/x86/kernel/e820.c b/arch/x86/kernel/e820.c
-> index dc0b9f0..ae2d657 100644
-> --- a/arch/x86/kernel/e820.c
-> +++ b/arch/x86/kernel/e820.c
-> @@ -559,6 +559,19 @@ u64 __init e820_remove_range(u64 start, u64 size, unsigned old_type,
->         return real_removed_size;
->  }
->
-> +static void __init e820_remove_range_type(u32 type)
-> +{
-> +       int i;
-> +
-> +       for (i = 0; i < e820.nr_map; i++) {
-> +               struct e820entry *ei = &e820.map[i];
-> +               if (ei->type == type) {
-> +                       memset(ei, 0, sizeof(struct e820entry));
-> +                       continue;
-> +               }
-> +       }
-> +}
-> +
->  void __init update_e820(void)
->  {
->         u32 nr_map;
-> @@ -858,7 +871,11 @@ static int __init parse_memmap_one(char *p)
->                  */
->                 saved_max_pfn = e820_end_of_ram_pfn();
->  #endif
-> -               e820.nr_map = 0;
-> +               /*
-> +                * Remove all usable memory (this is for kdump), usable
-> +                * memory will be passed via memmap=X@Y parameter
-> +                */
-> +               e820_remove_range_type(E820_RAM);
+If path1 firstly holds the pci_remove_rescan_mutex at *1*, then another path 
+called path2 actived and runs to *2* before path1 runs to *3*, we now runs
+to a deadlock situation:
+Path1 holds the mutex waiting path2 to decrease sysfs_dirent's s_active
+counter at *5*, but path2 is blocked at *4* when trying to get the 
+pci_remove_rescan_mutex. The mutex won't be put by path1 until it reach
+*6*, but it's now blocked at *3*.
 
-We may need to keep exactmap intact.
+The circumvent approach is if we find someone else is manipulating the pci-tree we
+simply abort current operation to avoid deadlock.
 
-but could add another one like exact_ram_map
-or extend to have memmap=exactmap=ram or etc.
+*dmesg ifno*:
+(snip)
+1000e 0000:1c:00.0: eth9: Intel(R) PRO/1000 Network Connection
+sd 13:2:0:0: [sdb] Attached SCSI disk
+e1000e 0000:1c:00.0: eth9: MAC: 0, PHY: 4, PBA No: D50228-005
+e1000e 0000:1c:00.1: Disabling ASPM  L1
+e1000e 0000:1c:00.1: Interrupt Throttling Rate (ints/sec) set to dynamic conservative mode
+e1000e 0000:1c:00.1: irq 143 for MSI/MSI-X
+e1000e 0000:1c:00.1: eth10: (PCI Express:2.5GT/s:Width x4) 00:15:17:cd:96:bf
+e1000e 0000:1c:00.1: eth10: Intel(R) PRO/1000 Network Connection
+e1000e 0000:1c:00.1: eth10: MAC: 0, PHY: 4, PBA No: D50228-005
+INFO: task bash:62982 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+bash            D 0000000000000000     0 62982  62978 0x00000080
+ ffff88038b277db8 0000000000000082 ffff88038b277fd8 0000000000013940
+ ffff88038b276010 0000000000013940 0000000000013940 0000000000013940
+ ffff88038b277fd8 0000000000013940 ffff880377449e30 ffff8806e822c670
+Call Trace:
+ [<ffffffff8151ba79>] schedule+0x29/0x70
+ [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+ [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+ [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+ [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+ [<ffffffff81341800>] dev_attr_store+0x20/0x30
+ [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+ [<ffffffff81173d08>] vfs_write+0xc8/0x190
+ [<ffffffff81173ed1>] sys_write+0x51/0x90
+ [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+INFO: task bash:64141 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+bash            D ffffffff81610460     0 64141  64136 0x00000080
+ ffff8803540e9db8 0000000000000086 ffff8803540e9fd8 0000000000013940
+ ffff8803540e8010 0000000000013940 0000000000013940 0000000000013940
+ ffff8803540e9fd8 0000000000013940 ffff8807db338a10 ffff8806f09abc60
+Call Trace:
+ [<ffffffff8151ba79>] schedule+0x29/0x70
+ [<ffffffff8151bd6e>] schedule_preempt_disabled+0xe/0x10
+ [<ffffffff8151a4e3>] __mutex_lock_slowpath+0xd3/0x150
+ [<ffffffff8151a3eb>] mutex_lock+0x2b/0x50
+ [<ffffffff812821dc>] dev_rescan_store+0x5c/0x80
+ [<ffffffff81341800>] dev_attr_store+0x20/0x30
+ [<ffffffff811e3eef>] sysfs_write_file+0xef/0x170
+ [<ffffffff81173d08>] vfs_write+0xc8/0x190
+ [<ffffffff81173ed1>] sys_write+0x51/0x90
+ [<ffffffff81524b29>] system_call_fastpath+0x16/0x1b
+INFO: task kworker/u:3:64451 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kworker/u:3     D ffffffff81610460     0 64451      2 0x00000080
+ ffff8807d51b7a30 0000000000000046 ffff8807d51b7fd8 0000000000013940
+ ffff8807d51b6010 0000000000013940 0000000000013940 0000000000013940
+ ffff8807d51b7fd8 0000000000013940 ffff8807db339420 ffff88037744b250
+Call Trace:
+ [<ffffffff8151ba79>] schedule+0x29/0x70
+ [<ffffffff81519ded>] schedule_timeout+0x19d/0x220
+ [<ffffffff81165f92>] ? __slab_free+0x1f2/0x2f0
+ [<ffffffff8151b8fe>] wait_for_common+0x11e/0x190
+ [<ffffffff8108a6e0>] ? try_to_wake_up+0x2c0/0x2c0
+ [<ffffffff8151ba4d>] wait_for_completion+0x1d/0x20
+ [<ffffffff811e53e8>] sysfs_addrm_finish+0xb8/0xd0
+ [<ffffffff811e4320>] ? sysfs_schedule_callback+0x1e0/0x1e0
+ [<ffffffff811e33f0>] sysfs_hash_and_remove+0x60/0xb0
+ [<ffffffff811e43c9>] sysfs_remove_file+0x39/0x50
+ [<ffffffff81342cb7>] device_remove_file+0x17/0x20
+ [<ffffffff8134505c>] bus_remove_device+0xdc/0x180
+ [<ffffffff81342eb0>] device_del+0x120/0x1d0
+ [<ffffffff81342f82>] device_unregister+0x22/0x60
+ [<ffffffff8127ade4>] pci_stop_bus_device+0x94/0xa0
+ [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+ [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+ [<ffffffff8127ad90>] pci_stop_bus_device+0x40/0xa0
+ [<ffffffff8127af66>] pci_stop_and_remove_bus_device+0x16/0x30
+ [<ffffffff81282359>] remove_callback+0x29/0x40
+ [<ffffffff811e4344>] sysfs_schedule_callback_work+0x24/0x70
+ [<ffffffff81070009>] process_one_work+0x179/0x4b0
+ [<ffffffff8107210e>] worker_thread+0x12e/0x330
+ [<ffffffff81071fe0>] ? manage_workers+0x110/0x110
+ [<ffffffff8107705e>] kthread+0x9e/0xb0
+ [<ffffffff81525bc4>] kernel_thread_helper+0x4/0x10
+ [<ffffffff81076fc0>] ? kthread_freezable_should_stop+0x70/0x70
+ [<ffffffff81525bc0>] ? gs_change+0x13/0x13
 
->                 userdef = 1;
->                 return 0;
->         }
+Reported-by: Taku Izumi <izumi.taku@jp.fujitsu.com> 
+Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+---
+ drivers/pci/pci-sysfs.c |   42 ++++++++++++++++++++++++++----------------
+ 1 files changed, 26 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 05b78b1..d2efbb0 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -295,10 +295,13 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 		return -EINVAL;
+ 
+ 	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		while ((b = pci_find_next_bus(b)) != NULL)
+-			pci_rescan_bus(b);
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		if (mutex_trylock(&pci_remove_rescan_mutex)) {
++			while ((b = pci_find_next_bus(b)) != NULL)
++				pci_rescan_bus(b);
++			mutex_unlock(&pci_remove_rescan_mutex);
++		} else {
++			return 0;
++		}
+ 	}
+ 	return count;
+ }
+@@ -319,9 +322,12 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 
+ 	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		pci_rescan_bus(pdev->bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		if (mutex_trylock(&pci_remove_rescan_mutex)) {
++			pci_rescan_bus(pdev->bus);
++			mutex_unlock(&pci_remove_rescan_mutex);
++		} else {
++			return 0;
++		}
+ 	}
+ 	return count;
+ }
+@@ -330,9 +336,10 @@ static void remove_callback(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	mutex_lock(&pci_remove_rescan_mutex);
+-	pci_stop_and_remove_bus_device(pdev);
+-	mutex_unlock(&pci_remove_rescan_mutex);
++	if (mutex_trylock(&pci_remove_rescan_mutex)) {
++		pci_stop_and_remove_bus_device(pdev);
++		mutex_unlock(&pci_remove_rescan_mutex);
++	}
+ }
+ 
+ static ssize_t
+@@ -366,12 +373,15 @@ dev_bus_rescan_store(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 
+ 	if (val) {
+-		mutex_lock(&pci_remove_rescan_mutex);
+-		if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+-			pci_rescan_bus_bridge_resize(bus->self);
+-		else
+-			pci_rescan_bus(bus);
+-		mutex_unlock(&pci_remove_rescan_mutex);
++		if (mutex_trylock(&pci_remove_rescan_mutex)) {
++			if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
++				pci_rescan_bus_bridge_resize(bus->self);
++			else
++				pci_rescan_bus(bus);
++			mutex_unlock(&pci_remove_rescan_mutex);
++		} else {
++			return 0;
++		}
+ 	}
+ 	return count;
+ }
+-- 
+1.7.1
+
+
