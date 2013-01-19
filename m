@@ -1,52 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [RFC PATCH v5 6/8] pci_slot: replace printk(KERN_xxx) with pr_xxx()
-Date: Sat, 19 Jan 2013 00:07:44 +0800
-Message-Id: <1358525267-14268-7-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailhub.stratus.com ([134.111.1.17]:37433 "EHLO
+	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570Ab3ASBHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 20:07:37 -0500
+Date: Fri, 18 Jan 2013 20:03:24 -0500 (EST)
+From: Joe Lawrence <Joe.Lawrence@stratus.com>
+To: Myron Stowe <myron.stowe@gmail.com>
+cc: Joe Lawrence <Joe.Lawrence@stratus.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Myron Stowe <mstowe@redhat.com>,
+	David Bulkow <david.bulkow@stratus.com>, shli@kernel.org,
+	shli@fusionio.com, kaneshige.kenji@jp.fujitsu.com
+Subject: Re: PCIe ASPM crash on device removal
+In-Reply-To: <CAL-B5D2k6RdRGbedgbSAZfMumWR9ypMcDwyEGTt9X1_eO=qQuw@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1301181946010.21091@jlaw-desktop.mno.stratus.com>
+References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com> <CAL-B5D0+6uO7WDYR7inmZKdU0h8-bpkOs_CzbF0bD2b9i6=1ZA@mail.gmail.com> <alpine.DEB.2.02.1301181449440.31163@jlaw-desktop.mno.stratus.com> <CAL-B5D2-=x+Y-f9x+QyX+3j3F=CbfY6mRGE6mnmvuhM-zMKGnw@mail.gmail.com>
+ <CAL-B5D2k6RdRGbedgbSAZfMumWR9ypMcDwyEGTt9X1_eO=qQuw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Trivial changes to replace printk(KERN_xxx) with pr_xxx().
+On Fri, 18 Jan 2013, Myron Stowe wrote:
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- drivers/acpi/pci_slot.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+> [+cc Shaohua and Kenji]
+> 
+> On Fri, Jan 18, 2013 at 4:15 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
+> > Joe:
+> >
+> > Thanks for the data.  So the downstream port of interest has ASPM link
+> > capability but it's currently not enabled - see LnkCap and LnkCtl
+> > above.
+> >
+> > I'm still do not understand if PCI Express links would even be
+> > involved in a topology where all the devices connected below the
+> > downstream port are PCI and not PCI Express.  Seems as if the ASPM
+> > code is going to a lot of work to put link state structures in place
+> > for all these devices that would not be capable of supporting ASPM.
+> >
+> > I'm still trying to come up to speed understanding ASPM so hopefully
+> > someone knowledgeable can help clue me in.
+> >
+> > Myron
 
-diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
-index 2b38f4d..3b821db 100644
---- a/drivers/acpi/pci_slot.c
-+++ b/drivers/acpi/pci_slot.c
-@@ -52,13 +52,12 @@ module_param(debug, bool, 0644);
- ACPI_MODULE_NAME("pci_slot");
- 
- #define MY_NAME "pci_slot"
--#define err(format, arg...) printk(KERN_ERR "%s: " format , MY_NAME , ## arg)
--#define info(format, arg...) printk(KERN_INFO "%s: " format , MY_NAME , ## arg)
-+#define err(format, arg...) pr_err("%s: " format , MY_NAME , ## arg)
-+#define info(format, arg...) pr_info("%s: " format , MY_NAME , ## arg)
- #define dbg(format, arg...)					\
- 	do {							\
- 		if (debug)					\
--			printk(KERN_DEBUG "%s: " format,	\
--				MY_NAME , ## arg);		\
-+			pr_debug("%s: " format,	MY_NAME , ## arg); \
- 	} while (0)
- 
- #define SLOT_NAME_SIZE 21		/* Inspired by #define in acpiphp.h */
--- 
-1.7.9.5
+Scratch my earlier worry about link_state for a device without any 
+subordinate devices for pcie_aspm_exit_link_state to clean up.  I forgot 
+the check that pcie_aspm_init_link_state makes on the subordinate device 
+list before allocating link_state.
 
+What is confusing to me is the asymmetry between these two routines and 
+how the pcie_aspm_sanity_check return value (blacklist, introduced in 
+commit 46bbdfa4) is handled.  I wonder if pcie_aspm_init_link_state could 
+simply skip any device who's subordinate device list contains no pcie 
+devices.  (Actually one of the things that pcie_aspm_sanity_check looks 
+for.)
+
+Regards,
+
+-- Joe
