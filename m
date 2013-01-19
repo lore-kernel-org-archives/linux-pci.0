@@ -1,73 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:60517 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932303Ab3AJAex (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 19:34:53 -0500
-Received: by mail-lb0-f169.google.com with SMTP id gk1so61892lbb.14
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 16:34:52 -0800 (PST)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 19 Jan 2013 06:51:47 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Yijing Wang <wangyijing0307@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <liuj97@gmail.com>,
+	"Rafael J . Wysocki" <rjw@sisk.pl>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe
+ native hotplug
+Message-ID: <20130119145147.GB2491@kroah.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+ <1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
+ <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
+ <50F9FD48.20509@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <5274779.gJQ3WSr6QB@vostro.rjw.lan>
-References: <20121030040237.GA10472@google.com> <CAErSpo6qX3ih9DXLqxqJw141OAeTFu0YfSih6LyD0sd2gS-Vyg@mail.gmail.com>
- <CAE9FiQWm6=1JXA7EB-a0aqgTFQ5ZeCxz_gAU+ABUce1Ovn1Siw@mail.gmail.com> <5274779.gJQ3WSr6QB@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Jan 2013 17:34:32 -0700
-Message-ID: <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <50F9FD48.20509@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 1:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, January 09, 2013 11:01:39 AM Yinghai Lu wrote:
->> On Wed, Jan 9, 2013 at 10:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >> the reason why we need to change those codes for x86, we want to make it support
->> >> pci root bus hotplug. So it would be reasonable for us to align other
->> >> platform to x86
->> >> changes after pci root bus hotplug change is completely done.
->> >
->> > OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
->> > way to keep track of this consistency issue and merged
->> > pci/yinghai-survey-resources to my -next branch.
->>
->> Thanks a lot. will send other pci root bus hotplug out.
->>
->> question: now Rafael's tree has acpi-scan branch and it touches pci-root.c.
->>
->> so is it ok for me to base patches on your pci/next and his pm/acpi-scan?
->> how?
->> can you two have some arrangement like you pulling Rafael's branch?
->
-> My acpi-scan branch is not going to be rebased going forward, so it can be
-> pulled from safely if that helps.
+On Sat, Jan 19, 2013 at 09:56:24AM +0800, Yijing Wang wrote:
+> 于 2013-01-19 1:35, Bjorn Helgaas 写道:
+> > On Fri, Jan 18, 2013 at 9:07 AM, Jiang Liu <liuj97@gmail.com> wrote:
+> >> If user specifies "pci=nopciehp" on kernel boot command line, OSPM
+> >> won't claim PCIe native hotplug service from firmware and no PCIe
+> >> port devices will be created for PCIe native hotplug service.
+> > 
+> > Why do we need this option?
+> > 
+> > If I understand correctly, there are machines where it *looks* like we
+> > should use pciehp, but pciehp doesn't work because we don't get the
+> > interrupts we expect.  On those machines, we have to use acpiphp
+> > instead.  It seems like many Dell XPS laptops have this issue with
+> > ExpressCard slots, e.g.,
+> > https://bugzilla.kernel.org/show_bug.cgi?id=40802 .
+> 
+> What about use modprobe pciehp pciehp_poll_mode=1?
+> If just cannot receive the interrupt, maybe this module parameter will fix it.
 
-I'm happy to do that, but it is outside the scope of my limited git
-experience.  My guess is that I should do this (doing the pull into a
-branch which I later merge into my -next branch):
+You can't add a new option that you now force hardware that was working
+with a different module to now define and use.  It needs to be
+"automatic".
 
-  $ git checkout -b pci/yinghai-survey-resources+acpi-scan
-pci/yinghai-survey-resources
-  $ git pull --no-ff --log
-git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
-acpi-scan
-  $ vi drivers/acpi/pci_root.c    # resolve conflicts
-  $ git add drivers/acpi/pci_root.c
-  $ git commit
+> > If you want "pci=nopciehp" as a way for users to deal with this
+> > problem by forcing the use of acpiphp, I object.  Windows manages to
+> > make these slots work without having users do anything special, so we
+> > should be able to do it, too.
+> 
+> In fact, pcie native hotplug may not be implemented perfectly,
 
-  $ git checkout next
-  $ git merge --no-ff --log pci/yinghai-survey-resources+acpi-scan
+Oh, we know that is true, it's the problem here.  Fixing BIOSes would be
+nice, but we can't do that :(
 
-Is that reasonable?  This won't cause issues when both Rafael and I
-ask Linus to pull from our trees later?
-
-Bjorn
+greg k-h
