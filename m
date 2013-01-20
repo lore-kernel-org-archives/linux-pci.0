@@ -1,59 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 9 Jan 2013 16:17:58 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130109231758.GA27065@obsidianresearch.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <201301092119.57067.arnd@arndb.de>
- <20130109215428.GA13648@avionic-0098.adnet.avionic-design.de>
- <201301092210.49452.arnd@arndb.de>
- <50EDF95F.4070209@wwwdotorg.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jiang Liu <liuj97@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 1/8] PCI: make PCI device create/destroy logic symmetric
+Date: Mon, 21 Jan 2013 00:35:35 +0100
+Message-ID: <4306778.V6LZtQIM99@vostro.rjw.lan>
+In-Reply-To: <1358525267-14268-2-git-send-email-jiang.liu@huawei.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-2-git-send-email-jiang.liu@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50EDF95F.4070209@wwwdotorg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
-> On 01/09/2013 03:10 PM, Arnd Bergmann wrote:
-> > On Wednesday 09 January 2013, Thierry Reding wrote:
-> >> What happens on Tegra is that we need to map 256 MiB of physical memory
-> >> to access all the PCIe extended configuration space. However, ioremap()
-> >> on such a large region fails if not enough vmalloc() space is available.
-> >>
-> >> This was observed when somebody tested this on CardHu which has a 1 GiB
-> >> of RAM and therefore remapping the full 256 MiB fails.
-> ...
-> > Have you checked if the hardware supports an alternative config
-> > space access mechanism that does not depend on a huge address range?
-> > A lot of them provide an index/data register pair somewhere, as the
-> > original PC implementation did.
+On Saturday, January 19, 2013 12:07:39 AM Jiang Liu wrote:
+> According to device model documentation, the way to create/destroy PCI
+> devices should be symmetric.
 > 
-> That would be nice, but I've talked to the HW engineers, and there's no
-> indication that any alternative mechanism exists.
+> /**
+>  * device_del - delete device from system.
+>  * @dev: device.
+>  *
+>  * This is the first part of the device unregistration
+>  * sequence. This removes the device from the lists we control
+>  * from here, has it removed from the other driver model
+>  * subsystems it was added to in device_add(), and removes it
+>  * from the kobject hierarchy.
+>  *
+>  * NOTE: this should be called manually _iff_ device_add() was
+>  * also called manually.
+>  */
+> 
+> The rule is to either use
+> 1) device_register()/device_unregister()
+> or
+> 2) device_initialize()/device_add()/device_del()/put_device().
+> 
+> So change PCI core logic to follow the rule and get rid of the redundant
+> pci_dev_get()/pci_dev_put() pair.
 
-It seems to be convention that extended config space is often only
-accessible through mmio space, that was true on x86 last I checked
-too..
+This seems to be the same as https://patchwork.kernel.org/patch/2000051/
 
-You could decrease the size of the mapping to only span the bus
-numbers that are configured for use via DT.
+Can you please avoid sending duplicates?
 
-Are there any concerns about these config registers being accessed
-from a context where a new mapping can't be made? Interrupt? Machine
-Check? PCI-E Advanced Error Reporting?
+Rafael
 
-Cheers,
-Jason
+
+> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Reviewed-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/probe.c  |    1 -
+>  drivers/pci/remove.c |    4 ++--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 4f7f963..ec5d28f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1294,7 +1294,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>  {
+>  	device_initialize(&dev->dev);
+>  	dev->dev.release = pci_release_dev;
+> -	pci_dev_get(dev);
+>  
+>  	dev->dev.dma_mask = &dev->dma_mask;
+>  	dev->dev.dma_parms = &dev->dma_parms;
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 513972f..10693f5 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+>  	if (dev->is_added) {
+>  		pci_proc_detach_device(dev);
+>  		pci_remove_sysfs_dev_files(dev);
+> -		device_unregister(&dev->dev);
+> +		device_del(&dev->dev);
+>  		dev->is_added = 0;
+>  	}
+>  
+> @@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+>  	up_write(&pci_bus_sem);
+>  
+>  	pci_free_resources(dev);
+> -	pci_dev_put(dev);
+> +	put_device(&dev->dev);
+>  }
+>  
+>  void pci_remove_bus(struct pci_bus *bus)
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
