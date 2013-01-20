@@ -1,140 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:64015 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636Ab3AOMJV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 07:09:21 -0500
-Date: Tue, 15 Jan 2013 13:08:55 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Andrew Murray <andrew.murray@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130111154516.GA25335@avionic-0098.adnet.avionic-design.de>
- <20130112123640.GA22505@avionic-0098.adnet.avionic-design.de>
- <201301122112.25772.arnd@arndb.de>
- <20130113095806.GA31966@avionic-0098.adnet.avionic-design.de>
- <20130114095706.GA23467@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v9 06/11] PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
+Date: Sun, 20 Jan 2013 23:38:08 +0100
+Message-ID: <2123353.z1dtQmXUNo@vostro.rjw.lan>
+In-Reply-To: <1358495602-22867-7-git-send-email-yinghai@kernel.org>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <1358495602-22867-7-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
-In-Reply-To: <20130114095706.GA23467@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, January 17, 2013 11:53:17 PM Yinghai Lu wrote:
+> Will need to use it for pci root bridge hotplug support, rename
+> *acpiphp* to *acpi* and move to osc.c.
+> Also make kacpi_hotplug_wq static after that.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+>  drivers/acpi/osl.c                 |   24 +++++++++++++++++++--
+>  drivers/pci/hotplug/acpiphp_glue.c |   42 ++++++------------------------------
+>  include/acpi/acpiosxf.h            |    9 +++++++-
+>  3 files changed, 36 insertions(+), 39 deletions(-)
+> 
+> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> index 3ff2678..afcce46 100644
+> --- a/drivers/acpi/osl.c
+> +++ b/drivers/acpi/osl.c
+> @@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
+>  static void *acpi_irq_context;
+>  static struct workqueue_struct *kacpid_wq;
+>  static struct workqueue_struct *kacpi_notify_wq;
+> -struct workqueue_struct *kacpi_hotplug_wq;
+> -EXPORT_SYMBOL(kacpi_hotplug_wq);
+> +static struct workqueue_struct *kacpi_hotplug_wq;
+>  
+>  /*
+>   * This list of permanent mappings is for memory that may be accessed from
+> @@ -1778,3 +1777,24 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
+>  {
+>  	__acpi_os_prepare_sleep = func;
+>  }
+> +
+> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+> +			void (*func)(struct work_struct *work))
+> +{
+> +	struct acpi_hp_work *hp_work;
+> +	int ret;
+> +
+> +	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+> +	if (!hp_work)
+> +		return;
+> +
+> +	hp_work->handle = handle;
+> +	hp_work->type = type;
+> +	hp_work->context = context;
+> +
+> +	INIT_WORK(&hp_work->work, func);
+> +	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+> +	if (!ret)
+> +		kfree(hp_work);
+> +}
+> +EXPORT_SYMBOL(alloc_acpi_hp_work);
 
---zYM0uCDKw75PZbzx
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+That should be EXPORT_SYMBOL_GPL().
 
-On Mon, Jan 14, 2013 at 09:57:07AM +0000, Andrew Murray wrote:
-> On Sun, Jan 13, 2013 at 09:58:06AM +0000, Thierry Reding wrote:
-> > On Sat, Jan 12, 2013 at 09:12:25PM +0000, Arnd Bergmann wrote:
-> > > On Saturday 12 January 2013, Thierry Reding wrote:
-> > > > > I already hinted at that in one of the other subthreads. Having s=
-uch a
-> > > > > multiplex would also allow the driver to be built as a module. I =
-had
-> > > > > already thought about this when I was working on an earlier versi=
-on of
-> > > > > these patches. Basically these would be two ops attached to the h=
-ost
-> > > > > bridge, and the generic arch_setup_msi_irq() could then look that=
- up
-> > > > > given the struct pci_dev that is passed to it and call this new p=
-er-
-> > > > > host bridge .setup_msi_irq().
-> > > >=20
-> > > > struct pci_ops looks like a good place to put these. They'll be
-> > > > available from each struct pci_bus, so should be easy to call from
-> > > > arch_setup_msi_irq().
-> > > >=20
-> > > > Any objections?
-> > > >=20
-> > >=20
-> > > struct pci_ops has a long history of being specifically about
-> > > config space read/write operations, so on the one hand it does
-> > > not feel like the right place to put interrupt specific operations,
-> > > but on the other hand, the name sounds appropriate and I cannot
-> > > think of any other place to put this, so it's fine with me.
-> > >=20
-> > > The only alternative I can think of is to introduce a new
-> > > structure next to it in struct pci_bus, but that feels a bit
-> > > pointless. Maybe Bjorn has a preference one way or the other.
-> >=20
-> > The name pci_ops is certainly generic enough. Also the comment above the
-> > structure declaration says "Low-level architecture-dependent routines",
-> > which applies to the MSI functions as well.
->=20
-> I've previously looked into this. It seems that architectures handle this
-> in different ways, some use vector tables, others use a multiplex and oth=
-ers
-> just let the end user implement the callback directly.
->=20
-> I've made an attempt to find a more common way. Though my implementation,=
- which
-> I will try to share later today for reference provides a registration fun=
-ction
-> in drivers/pci/msi.c to provide implementations of the
-> (setup|teardown)_msi_irq(s) ops. This seems slightly better than the curr=
-ent
-> approach and doesn't break existing users - but is still ugly.
->=20
-> At present the PCI and MSI frameworks are largely uncoupled from each oth=
-er and
-> so I was keen to not pollute PCI structures (e.g. pci_ops) with MSI ops. =
-Just
-> because most PCI host bridges also provide MSI support I don't think ther=
-e is a
-> reason why they should always come as a pair or be provided by the same c=
-hip.
->=20
-> Perhaps the solution is to support MSI controller drivers and a means to
-> associate them with PCI host controller drivers?
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 79db296..55e03b6 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -1203,34 +1203,6 @@ check_sub_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>  	return AE_OK ;
+>  }
+>  
+> -struct acpiphp_hp_work {
+> -	struct work_struct work;
+> -	acpi_handle handle;
+> -	u32 type;
+> -	void *context;
+> -};
+> -
+> -static void alloc_acpiphp_hp_work(acpi_handle handle, u32 type,
+> -				  void *context,
+> -				  void (*func)(struct work_struct *work))
+> -{
+> -	struct acpiphp_hp_work *hp_work;
+> -	int ret;
+> -
+> -	hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+> -	if (!hp_work)
+> -		return;
+> -
+> -	hp_work->handle = handle;
+> -	hp_work->type = type;
+> -	hp_work->context = context;
+> -
+> -	INIT_WORK(&hp_work->work, func);
+> -	ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+> -	if (!ret)
+> -		kfree(hp_work);
+> -}
+> -
+>  static void _handle_hotplug_event_bridge(struct work_struct *work)
+>  {
+>  	struct acpiphp_bridge *bridge;
+> @@ -1239,11 +1211,11 @@ static void _handle_hotplug_event_bridge(struct work_struct *work)
+>  				      .pointer = objname };
+>  	struct acpi_device *device;
+>  	int num_sub_bridges = 0;
+> -	struct acpiphp_hp_work *hp_work;
+> +	struct acpi_hp_work *hp_work;
+>  	acpi_handle handle;
+>  	u32 type;
+>  
+> -	hp_work = container_of(work, struct acpiphp_hp_work, work);
+> +	hp_work = container_of(work, struct acpi_hp_work, work);
+>  	handle = hp_work->handle;
+>  	type = hp_work->type;
+>  
+> @@ -1346,8 +1318,7 @@ static void handle_hotplug_event_bridge(acpi_handle handle, u32 type,
+>  	 * For now just re-add this work to the kacpi_hotplug_wq so we
+>  	 * don't deadlock on hotplug actions.
+>  	 */
+> -	alloc_acpiphp_hp_work(handle, type, context,
+> -			      _handle_hotplug_event_bridge);
+> +	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_bridge);
+>  }
+>  
+>  static void _handle_hotplug_event_func(struct work_struct *work)
+> @@ -1356,12 +1327,12 @@ static void _handle_hotplug_event_func(struct work_struct *work)
+>  	char objname[64];
+>  	struct acpi_buffer buffer = { .length = sizeof(objname),
+>  				      .pointer = objname };
+> -	struct acpiphp_hp_work *hp_work;
+> +	struct acpi_hp_work *hp_work;
+>  	acpi_handle handle;
+>  	u32 type;
+>  	void *context;
+>  
+> -	hp_work = container_of(work, struct acpiphp_hp_work, work);
+> +	hp_work = container_of(work, struct acpi_hp_work, work);
+>  	handle = hp_work->handle;
+>  	type = hp_work->type;
+>  	context = hp_work->context;
+> @@ -1422,8 +1393,7 @@ static void handle_hotplug_event_func(acpi_handle handle, u32 type,
+>  	 * For now just re-add this work to the kacpi_hotplug_wq so we
+>  	 * don't deadlock on hotplug actions.
+>  	 */
+> -	alloc_acpiphp_hp_work(handle, type, context,
+> -			      _handle_hotplug_event_func);
+> +	alloc_acpi_hp_work(handle, type, context, _handle_hotplug_event_func);
+>  }
+>  
+>  static acpi_status
+> diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
+> index 4315274..adab63c 100644
+> --- a/include/acpi/acpiosxf.h
+> +++ b/include/acpi/acpiosxf.h
+> @@ -193,7 +193,14 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
+>  /*
+>   * Threads and Scheduling
+>   */
+> -extern struct workqueue_struct *kacpi_hotplug_wq;
 
-I'm not sure I follow you're reasoning here. Is it possible to use MSIs
-without PCI? If not then I think there's little sense in keeping the
-implementations separate.
+include/acpi/acpiosxf.h is related to ACPICA, so while removing kacpi_hotplug_wq
+from it should be OK, please put the rest into acpi_bus.h, preferably next to the
+definition of acpi_eject_event.
 
-Furthermore, if MSI controller and PCI host bridge are separate entities
-how do you look up the MSI controller given a PCI device?
+> +struct acpi_hp_work {
+> +	struct work_struct work;
+> +	acpi_handle handle;
+> +	u32 type;
+> +	void *context;
+> +};
+> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+> +			void (*func)(struct work_struct *work));
+>  
+>  acpi_thread_id acpi_os_get_thread_id(void);
 
-Thierry
+Thanks,
+Rafael
 
---zYM0uCDKw75PZbzx
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ9UbXAAoJEN0jrNd/PrOhPUMQAKNhspoQI51u1sXnZ0ln3ibR
-FLBRqTURtkSryRPqcuc+trnITfOMi7McsACOGsPVRzU3NwZpxrH+vENZuIWEtMjP
-pt++wG60l2oiOBVKkumxD/qDS/q7FBPC+0eD6vaXq5Nk8zG/NDSzvgCY0EY7kfnD
-rgNXAFhHZTGN3srxM7ZVc3IkMZt43Q5F5yaCiy1GOhR9dnpUK/taOwo821rcx+Tf
-0agNyrafnD3nfP51cAIzjAWIeaPt467L0xU3O1byrh+BnOufwlMhUQmMOrgXtmf4
-XQBg0Al9JCS382heYvArCIcj/UI2EILtMdJp9V567vQ3dIA1k0pQ7IiZRez3zjFW
-3uhzUrI2W2MFR/kBOVkf3LoWxx+L+ja0Ur70KOR5BtH/tp4qAQmkWy2HJMh7WmL9
-UlvSsmNqL5FkU470tv7+uPDgJYmhVnWUhn/e2CskagT60ngfmvGo3s5xGDKMKWUt
-aGL36UR1G0xWzJTC2dgfggMfvWV0fq+HXRMe5wF7wW5ftxqnW2t8V8Q+gjLF/+k1
-faCMJld6ueA0h0sz0zVKlacBgo0ocT5Q8KxlMFnTSsvizvmHe5MYIxXDGb6zC8gL
-jZfF+VeG4WXtMTl/eO3UbOi5lEg/rH1PVbGMSW0Tg65BBEGGldMu0l2DIsMsyBCd
-Fv0lXQVkotmB8gKfpzss
-=0RFY
------END PGP SIGNATURE-----
-
---zYM0uCDKw75PZbzx--
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
