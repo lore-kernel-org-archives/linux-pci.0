@@ -1,63 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:34723 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755998Ab3A2O3o (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 09:29:44 -0500
-Date: Tue, 29 Jan 2013 15:29:37 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Andrew Murray <andrew.murray@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130129152937.53ec9a9b@skate>
-In-Reply-To: <20130129142015.GA23640@avionic-0098.mockup.avionic-design.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130129132204.GA23886@arm.com>
-	<20130129144522.44ed7373@skate>
-	<20130129140522.GA24310@arm.com>
-	<20130129142015.GA23640@avionic-0098.mockup.avionic-design.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v9 09/11] PCI, acpiphp: Don't bailout even no slots found yet.
+Date: Mon, 21 Jan 2013 00:08:54 +0100
+Message-ID: <14158003.3rfOuOmdG2@vostro.rjw.lan>
+In-Reply-To: <1358495602-22867-10-git-send-email-yinghai@kernel.org>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <1358495602-22867-10-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+On Thursday, January 17, 2013 11:53:20 PM Yinghai Lu wrote:
+> Could have root bus hot added later and there may be slots that need acpiphp.
 
-On Tue, 29 Jan 2013 15:20:15 +0100, Thierry Reding wrote:
+The patch implies that acpiphp_get_num_slots() is not necessary any more,
+but the changelog above doesn't really explain why that is so.
 
-> If at all possible I think the right thing to do is reuse the generic
-> pcibios_get_phb_of_node() implementation. On Tegra this turned out to
-> require a minimal change to the DT bindings of the root port nodes to
-> make sure they provide the correct address in the reg property.
+Do I guess correctly that the bridge the slots are under may not be in
+bridge_list yet at the moment and so we don't really know whether or not
+we will need acpiphp_glue going forward?
 
-Could you detail the change that was needed? The DT bindings I use for
-the Marvell PCIe driver are very, very similar to the ones you use for
-Tegra, since I basically inspired my entire DT binding on your work.
-And still, I think of_irq_map_pci() wasn't working for me.
+If that's the case:
 
-Best regards,
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thomas
+but please say something like this in the changelog:
+
+"The result returned by acpiphp_get_num_slots() is meaningless, because
+ the bridge the slots are under may be added after this function has been
+ called, so drop acpiphp_get_num_slots() and the code using it."
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/hotplug/acpiphp.h      |    1 -
+>  drivers/pci/hotplug/acpiphp_core.c |   23 ++---------------------
+>  drivers/pci/hotplug/acpiphp_glue.c |   22 ----------------------
+>  3 files changed, 2 insertions(+), 44 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp.h b/drivers/pci/hotplug/acpiphp.h
+> index a1afb5b..b3ead7a 100644
+> --- a/drivers/pci/hotplug/acpiphp.h
+> +++ b/drivers/pci/hotplug/acpiphp.h
+> @@ -193,7 +193,6 @@ extern void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *slot);
+>  /* acpiphp_glue.c */
+>  extern int acpiphp_glue_init (void);
+>  extern void acpiphp_glue_exit (void);
+> -extern int acpiphp_get_num_slots (void);
+>  typedef int (*acpiphp_callback)(struct acpiphp_slot *slot, void *data);
+>  
+>  extern int acpiphp_enable_slot (struct acpiphp_slot *slot);
+> diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+> index 96316b7..c2fd309 100644
+> --- a/drivers/pci/hotplug/acpiphp_core.c
+> +++ b/drivers/pci/hotplug/acpiphp_core.c
+> @@ -50,7 +50,6 @@
+>  bool acpiphp_debug;
+>  
+>  /* local variables */
+> -static int num_slots;
+>  static struct acpiphp_attention_info *attention_info;
+>  
+>  #define DRIVER_VERSION	"0.5"
+> @@ -272,25 +271,6 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+>  	return 0;
+>  }
+>  
+> -static int __init init_acpi(void)
+> -{
+> -	int retval;
+> -
+> -	/* initialize internal data structure etc. */
+> -	retval = acpiphp_glue_init();
+> -
+> -	/* read initial number of slots */
+> -	if (!retval) {
+> -		num_slots = acpiphp_get_num_slots();
+> -		if (num_slots == 0) {
+> -			acpiphp_glue_exit();
+> -			retval = -ENODEV;
+> -		}
+> -	}
+> -
+> -	return retval;
+> -}
+> -
+>  /**
+>   * release_slot - free up the memory used by a slot
+>   * @hotplug_slot: slot to free
+> @@ -379,7 +359,8 @@ static int __init acpiphp_init(void)
+>  		return 0;
+>  
+>  	/* read all the ACPI info from the system */
+> -	return init_acpi();
+> +	/* initialize internal data structure etc. */
+> +	return acpiphp_glue_init();
+>  }
+>  
+>  
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 45917a5..25d6918 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -1416,28 +1416,6 @@ void  acpiphp_glue_exit(void)
+>  	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
+>  }
+>  
+> -
+> -/**
+> - * acpiphp_get_num_slots - count number of slots in a system
+> - */
+> -int __init acpiphp_get_num_slots(void)
+> -{
+> -	struct acpiphp_bridge *bridge;
+> -	int num_slots = 0;
+> -
+> -	list_for_each_entry(bridge, &bridge_list, list) {
+> -		dbg("Bus %04x:%02x has %d slot%s\n",
+> -				pci_domain_nr(bridge->pci_bus),
+> -				bridge->pci_bus->number, bridge->nr_slots,
+> -				bridge->nr_slots == 1 ? "" : "s");
+> -		num_slots += bridge->nr_slots;
+> -	}
+> -
+> -	dbg("Total %d slots\n", num_slots);
+> -	return num_slots;
+> -}
+> -
+> -
+>  /**
+>   * acpiphp_enable_slot - power on slot
+>   * @slot: ACPI PHP slot
+> 
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
