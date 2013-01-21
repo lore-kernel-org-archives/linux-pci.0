@@ -1,78 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:5447 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754869Ab3AODPl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2013 22:15:41 -0500
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Yu Zhao <yu.zhao@intel.com>
-CC: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Scott Murray <scott@spiteful.org>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH -v3 1/7] PCI: rework pci_enable_ari to support disable ari forwarding
-Date: Tue, 15 Jan 2013 11:12:16 +0800
-Message-ID: <1358219542-16880-2-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
-References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aserp1040.oracle.com ([141.146.126.69]:38455 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756400Ab3AUVV2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2013 16:21:28 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 04/11] PCI: Fix a device reference count leakage issue in pci_dev_present()
+Date: Mon, 21 Jan 2013 13:20:45 -0800
+Message-Id: <1358803252-20639-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
+References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_enable_ari will set the pci bridge ARI Forwarding Enable bit in Device
-Control 2 Register when a ARI pcie device connected found. But the bridge ARI
-Forwarding Enable bit will never be cleared when the ARI device hot removed.
+From: Jiang Liu <jiang.liu@huawei.com>
 
-As PCIe Spec 2.0(6.13/441) recommends:
-"Following a hot-plug event below a Downstream Port, it is strongly recommended
-that software Clear the ARI Forwarding Enable bit in the Downstream Port until
-software determines that a newly added component is in fact an ARI Device"
+Function pci_get_dev_by_id() will hold a reference count on the pci device
+returned, so pci_dev_present() should release the corresponding reference
+count to avoid memory leakage.
 
-This patch rework pci_enable_ari to support disable ARI Forwarding whenever found
-the new pci device is a non-ari device.
-
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/pci/search.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..a17129f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2078,9 +2078,6 @@ void pci_enable_ari(struct pci_dev *dev)
- 	if (pcie_ari_disabled || !pci_is_pcie(dev) || dev->devfn)
- 		return;
- 
--	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI))
--		return;
--
- 	bridge = dev->bus->self;
- 	if (!bridge)
- 		return;
-@@ -2088,9 +2085,16 @@ void pci_enable_ari(struct pci_dev *dev)
- 	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
- 	if (!(cap & PCI_EXP_DEVCAP2_ARI))
- 		return;
--
--	pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_ARI);
--	bridge->ari_enabled = 1;
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index bf969ba..d0627fa 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -319,13 +319,13 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	WARN_ON(in_interrupt());
+ 	while (ids->vendor || ids->subvendor || ids->class_mask) {
+ 		found = pci_get_dev_by_id(ids, NULL);
+-		if (found)
+-			goto exit;
++		if (found) {
++			pci_dev_put(found);
++			return 1;
++		}
+ 		ids++;
+ 	}
+-exit:
+-	if (found)
+-		return 1;
 +
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
-+		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_ARI);
-+		bridge->ari_enabled = 1;
-+	} else {
-+		pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
-+				PCI_EXP_DEVCTL2_ARI);
-+		bridge->ari_enabled = 0;
-+	}
+ 	return 0;
  }
- 
- /**
+ EXPORT_SYMBOL(pci_dev_present);
 -- 
-1.7.1
-
+1.7.10.4
 
