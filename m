@@ -1,85 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38450 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756053Ab3AKWlV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:21 -0500
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:35336 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885Ab3AUFWF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2013 00:22:05 -0500
+MIME-Version: 1.0
+In-Reply-To: <2129071.O9G31gJZfd@vostro.rjw.lan>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+	<1358495602-22867-11-git-send-email-yinghai@kernel.org>
+	<2129071.O9G31gJZfd@vostro.rjw.lan>
+Date: Sun, 20 Jan 2013 21:22:04 -0800
+Message-ID: <CAE9FiQWaiPDpmdxm34YPoxcGVMUV+rgFqFZVBZsQy7JOaA4yXQ@mail.gmail.com>
+Subject: Re: [PATCH v9 10/11] PCI: Add match_driver in struct pci_dev
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 11/22] PCI: correctly detect ACPI PCI host bridge objects
-Date: Fri, 11 Jan 2013 14:40:38 -0800
-Message-Id: <1357944049-29620-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiang Liu <jiang.liu@huawei.com>
+On Sun, Jan 20, 2013 at 3:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, January 17, 2013 11:53:21 PM Yinghai Lu wrote:
+>> with that we could move out attaching driver for pci device,
+>> out of device_add for pci hot add path.
+>>
+>> pci_bus_attach_device() will attach driver to pci device.
+>
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> for the code, but you still aren't saying in the changelog why the change
+> is needed.
 
-The code in pci_root_hp.c depends on function acpi_is_root_bridge()
-to check whether an ACPI object is a PCI host bridge or not.
-If an ACPI device hasn't been created for the ACPI object yet,
-function acpi_is_root_bridge() will return false even if the object
-is a PCI host bridge object. That behavior will cause two issues:
-1) No ACPI notification handler installed for PCI host bridges absent
-   at startup, so hotplug events for those bridges won't be handled.
-2) rescan_root_bridge() can't reenumerate offlined PCI host bridges
-   because the ACPI devices have been already destroyed.
+Thanks.
 
-So use acpi_match_object_info_ids() to correctly detect PCI host bridges.
+Please check if the changelog is good to you.
 
--v2: update to use acpi_match_object_info_ids() from Tang Chen  - Yinghai
--v3: drop the PNP0A008, according to Bjorn.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/acpi/pci_root.c |   19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+Subject: [PATCH] PCI: Skip attaching driver in device_add()
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 5ae36d8..d30fb94 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -923,6 +923,23 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
- 				_handle_hotplug_event_root);
- }
- 
-+static bool acpi_is_root_bridge_object(acpi_handle handle)
-+{
-+	struct acpi_device_info *info = NULL;
-+	acpi_status status;
-+	bool ret;
-+
-+	status = acpi_get_object_info(handle, &info);
-+	if (ACPI_FAILURE(status))
-+		return false;
-+
-+	ret = !acpi_match_object_info_ids(info, root_device_ids);
-+
-+	kfree(info);
-+
-+	return ret;
-+}
-+
- static acpi_status __init
- find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- {
-@@ -931,7 +948,7 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 				      .pointer = objname };
- 	int *count = (int *)context;
- 
--	if (!acpi_is_root_bridge(handle))
-+	if (!acpi_is_root_bridge_object(handle))
- 		return AE_OK;
- 
- 	(*count)++;
--- 
-1.7.10.4
+We want to add pci device to device tree as early as possible but
+delay attach driver in next following path.
 
+To make that patch smaller, in this patch:
+
+We add match_driver field in pci_dev and default vaule is false, it will
+make pci_bus_match fail, so device_add  will skip attaching driver,
+then pci_bus_attach_device() will set match_driver to true so
+pci_bus_match will return true and device_attach will attach driver
+to pci device.
+
+---
