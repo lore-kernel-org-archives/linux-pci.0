@@ -1,63 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:46203 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734Ab3AOPko convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 10:40:44 -0500
-Date: Tue, 15 Jan 2013 15:40:38 +0000
-From: Andrew Murray <andrew.murray@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thierry Reding <thierry.reding@avionic-design.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	"rob.herring@calxeda.com" <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	"devicetree-discuss@lists.ozlabs.org"
-	<devicetree-discuss@lists.ozlabs.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 10/14] PCI: tegra: Move PCIe driver to drivers/pci/host
-Message-ID: <20130115154038.GA11241@arm.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130114095706.GA23467@arm.com>
- <20130115120855.GA5637@avionic-0098.adnet.avionic-design.de>
- <201301151244.12767.arnd@arndb.de>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:52561 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753958Ab3AUQTA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2013 11:19:00 -0500
+Message-ID: <50FD6A6F.1080408@gmail.com>
+Date: Tue, 22 Jan 2013 00:18:55 +0800
+From: Jiang Liu <liuj97@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201301151244.12767.arnd@arndb.de>
-Content-Type: text/plain; charset=WINDOWS-1252
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Subject: Re: [RFC PATCH v5 3/8] PCI: add a blocking notifier chain for PCI
+ bus addition/removal
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com> <1358525267-14268-4-git-send-email-jiang.liu@huawei.com> <3583141.yG8QGivRYt@vostro.rjw.lan>
+In-Reply-To: <3583141.yG8QGivRYt@vostro.rjw.lan>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 15, 2013 at 12:44:12PM +0000, Arnd Bergmann wrote:
-> On Tuesday 15 January 2013, Thierry Reding wrote:
-> > I'm not sure I follow you're reasoning here. Is it possible to use MSIs
-> > without PCI? If not then I think there's little sense in keeping the
-> > implementations separate.
+On 01/21/2013 07:54 AM, Rafael J. Wysocki wrote:
+> On Saturday, January 19, 2013 12:07:41 AM Jiang Liu wrote:
+>> When adding/removing a PCI bus, some other components want to be
+snip
+>> +
+>> +void pci_bus_call_notifier(struct pci_bus *bus, unsigned long code)
+>> +{
+>> +	int ret;
+>> +
+>> +	ret = blocking_notifier_call_chain(&pci_bus_notifier_chain,
+>> +					   code, bus);
+>> +	WARN_ON(ret != NOTIFY_DONE && ret != NOTIFY_OK);
 > 
-> Conceptually, you can use MSI for any device, but the Linux interfaces
-> for MSI are tied to PCI. If you use an MSI controller for a non-PCI
-> device, it would probably just appear as a regular interrupt controller.
-> 
-> > Furthermore, if MSI controller and PCI host bridge are separate entities
-> > how do you look up the MSI controller given a PCI device?
-> 
-> The host bridge can contain a pointer ot the MSI controller. You can
-> have multiple host bridges sharing a single MSI controller or you
-> can have separate ones for each host.
+> I'm not sure if this is a good idea.  WARN_ON() is quite a heavy tool.
+Hi Rafael,
+	How about WARN_ONCE() here?
 
-Yes and I hoped this relationship would be described by a device tree phandle
-as is done for relating devices to their interrupt-parent (where device trees
-are used). This would provide (arguably unnecessarily) greater flexibility,
-e.g. if you have two PCI/MSI controller pairs, the MSIs only offer limited MSIs
-and you only use one PCI fabric - you could service different parts of the
-fabric by different MSI controllers (assuming you relate MSI controllers to
-part of the fabric and that you'd want to). Perhaps there would be benefits for
-virtualisation as well?
+> 
+>> +}
+>> +
+>>  void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+>>  			     resource_size_t offset)
+>>  {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index ee21795..12e5447 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1033,6 +1033,18 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+>>  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+>>  		    int pass);
+>>  
+>> +/*
+>> + * All notifiers below get called with the target struct pci_bus *bus as
+>> + * an argument.
+>> + * Note: all PCI bus notifier must return success. Currently there's no
+>> + * error handling if any notifier returns error code.
+>> + */
+>> +#define	PCI_NOTIFY_POST_BUS_ADD		0x00000001 /* PCI bus has been added */
+>> +#define	PCI_NOTIFY_PRE_BUS_DEL		0x00000002 /* PCI bus will be deleted */
+> 
+> I would call them PCI_EVENT_BUS_ADDED and PCI_EVENT_BUS_REMOVE, respectively.
+Sure, will use them in next version.
 
-Andrew Murray
+> 
+>> +
+>> +int pci_bus_register_notifier(struct notifier_block *nb);
+>> +int pci_bus_unregister_notifier(struct notifier_block *nb);
+>> +
+>>  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+>>  		  void *userdata);
+>>  int pci_cfg_space_size_ext(struct pci_dev *dev);
+> 
+> Apart from the nitpicks above, looks good.
+Thanks for review!
+
+Regards!
+Gerry
+> 
+> Thanks,
+> Rafael
+> 
+> 
 
