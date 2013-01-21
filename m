@@ -1,74 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f50.google.com ([209.85.214.50]:51894 "EHLO
-	mail-bk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932224Ab3AJAkp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 19:40:45 -0500
-Received: by mail-bk0-f50.google.com with SMTP id jf3so1268477bkc.37
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 16:40:44 -0800 (PST)
+Received: from hydra.sisk.pl ([212.160.235.94]:48174 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752015Ab3AUMgA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Jan 2013 07:36:00 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v9 10/11] PCI: Add match_driver in struct pci_dev
+Date: Mon, 21 Jan 2013 13:41:59 +0100
+Message-ID: <2498419.CI4NCxq5bO@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQWaiPDpmdxm34YPoxcGVMUV+rgFqFZVBZsQy7JOaA4yXQ@mail.gmail.com>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org> <2129071.O9G31gJZfd@vostro.rjw.lan> <CAE9FiQWaiPDpmdxm34YPoxcGVMUV+rgFqFZVBZsQy7JOaA4yXQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <50EDF8FE.6040607@fold.natur.cuni.cz>
-References: <50EDF8FE.6040607@fold.natur.cuni.cz>
-Date: Wed, 9 Jan 2013 16:40:44 -0800
-Message-ID: <CAE9FiQXoEWifAoJQ9-aROBo3KJDcMGPb-5+PH=GiD2PD1Ze9bw@mail.gmail.com>
-Subject: Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force'
- on kernel command-line for hotplug to work
-From: Yinghai Lu <yinghai@kernel.org>
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 9, 2013 at 3:10 PM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> - pci0000:00: Requesting ACPI _OSC control (0x1d)
-> - pci0000:00: ACPI _OSC control (0x19) granted
-> + pci0000:00: Unable to request _OSC control (_OSC support mask: 0x19)
+On Sunday, January 20, 2013 09:22:04 PM Yinghai Lu wrote:
+> On Sun, Jan 20, 2013 at 3:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Thursday, January 17, 2013 11:53:21 PM Yinghai Lu wrote:
+> >> with that we could move out attaching driver for pci device,
+> >> out of device_add for pci hot add path.
+> >>
+> >> pci_bus_attach_device() will attach driver to pci device.
+> >
+> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > for the code, but you still aren't saying in the changelog why the change
+> > is needed.
+> 
+> Thanks.
+> 
+> Please check if the changelog is good to you.
 
-according to _OSC related game in acpi_pci_root_add()
-it will query_osc_support with flags |=
-                                OSC_EXT_PCI_CONFIG_SUPPORT \
-                                | OSC_ACTIVE_STATE_PWR_SUPPORT \
-                                | OSC_CLOCK_PWR_CAPABILITY_SUPPORT \
-                                | OSC_MSI_SUPPORT
-and the firmware should not return ACPI FAILURE, and if it return
-failure, flags will get reset.
+It's fine by me.
 
-then if and only if flags keep there five bits, kernel will try to set control
-to _OSC for
-                        OSC_PCI_EXPRESS_CAP_STRUCTURE_CONTROL
-                        | OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
-                        | OSC_PCI_EXPRESS_PME_CONTROL;
-and may be AER.
+Thanks,
+Rafael
 
-that will let pciehp own the device <pciehp will claim that later...>
 
-in acpiphp there is module that will check if port is owned by pciehp,
-and it will bail out early.
-in device_is_managed_by_native_pciehp...
-
-pcie_aspm=off will stop all _osc setting, like pciehp, pme and aer.
-
-the checking in acpiphp is introduced by:
-commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a
-Author: Rafael J. Wysocki <rjw@sisk.pl>
-Date:   Sat Oct 22 00:43:38 2011 +0200
-
-    PCI / ACPI: Make acpiphp ignore root bridges using PCIe native hotplug
-
-so it is a regression.
-
-Rafael,
-
-can you fix that? otherwise user will have specify weird
-"pcie_aspm=off" to make acpiphp working.
-
-looks like we need to have other way to do handshaking between pciehp
-and acpiphp.
-
-Thanks
-
-Yinghai
+> ---
+> Subject: [PATCH] PCI: Skip attaching driver in device_add()
+> 
+> We want to add pci device to device tree as early as possible but
+> delay attach driver in next following path.
+> 
+> To make that patch smaller, in this patch:
+> 
+> We add match_driver field in pci_dev and default vaule is false, it will
+> make pci_bus_match fail, so device_add  will skip attaching driver,
+> then pci_bus_attach_device() will set match_driver to true so
+> pci_bus_match will return true and device_attach will attach driver
+> to pci device.
+> 
+> ---
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
