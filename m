@@ -1,116 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:50831 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751800Ab3AKECP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 23:02:15 -0500
-Date: Fri, 11 Jan 2013 05:02:10 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: linux-tegra@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 01/14] of/pci: Provide support for parsing PCI DT ranges
- property
-Message-ID: <20130111040210.GC28094@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-2-git-send-email-thierry.reding@avionic-design.de>
- <50EF5798.6040405@wwwdotorg.org>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:43892 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752625Ab3AUCiA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Jan 2013 21:38:00 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZmUaFz6apKcXQszQ"
-In-Reply-To: <50EF5798.6040405@wwwdotorg.org>
+In-Reply-To: <2506887.8XgRPLTxfQ@vostro.rjw.lan>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+	<1358495602-22867-9-git-send-email-yinghai@kernel.org>
+	<2506887.8XgRPLTxfQ@vostro.rjw.lan>
+Date: Sun, 20 Jan 2013 18:37:59 -0800
+Message-ID: <CAE9FiQXW7xkSEtxr7Wa4DQpEhdAsas7g=0bYkC+vUKp_7=Qj_A@mail.gmail.com>
+Subject: Re: [PATCH v9 08/11] PCI, ACPI: debug print for installation of acpi
+ root bridge's notifier
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Tang Chen <tangchen@cn.fujitsu.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sun, Jan 20, 2013 at 3:00 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, January 17, 2013 11:53:19 PM Yinghai Lu wrote:
+>> From: Tang Chen <tangchen@cn.fujitsu.com>
+>>
+>> acpi_install_notify_handler() could fail. So check the exit status
+>> and give a better debug info.
+>>
+>> Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> ---
+>>  drivers/acpi/pci_root.c |   12 +++++++++---
+>>  1 file changed, 9 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index 3ce5d80..f3ceb61 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -762,6 +762,7 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
+>>  static acpi_status __init
+>>  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>>  {
+>> +     acpi_status status;
+>>       char objname[64];
+>>       struct acpi_buffer buffer = { .length = sizeof(objname),
+>>                                     .pointer = objname };
+>> @@ -774,9 +775,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
+>>
+>>       acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
+>>
+>> -     acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+>> -                             handle_hotplug_event_root, NULL);
+>> -     printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
+>> +     status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
+>> +                                     handle_hotplug_event_root, NULL);
+>> +     if (ACPI_FAILURE(status))
+>> +             printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
+>
+> Can you break that line, please?  And use pr_debug()?
 
---ZmUaFz6apKcXQszQ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Long line should be ok, and checkpatch.pl is not complaining about that.
 
-On Thu, Jan 10, 2013 at 05:06:48PM -0700, Stephen Warren wrote:
-> On 01/09/2013 01:43 PM, Thierry Reding wrote:
-> > From: Andrew Murray <andrew.murray@arm.com>
-> >=20
-> > DT bindings for PCI host bridges often use the ranges property to descr=
-ibe
-> > memory and IO ranges - this binding tends to be the same across archite=
-ctures
-> > yet several parsing implementations exist, e.g. arch/mips/pci/pci.c,
-> > arch/powerpc/kernel/pci-common.c, arch/sparc/kernel/pci.c and
-> > arch/microblaze/pci/pci-common.c (clone of PPC). Some of these duplicate
-> > functionality provided by drivers/of/address.c.
-> >=20
-> > This patch provides a common iterator-based parser for the ranges prope=
-rty, it
-> > is hoped this will reduce DT representation differences between archite=
-ctures
-> > and that architectures will migrate in part to this new parser.
-> ...
->=20
-> > diff --git a/drivers/of/address.c b/drivers/of/address.c
->=20
-> > +const __be32 *of_pci_process_ranges(struct device_node *node,
->=20
-> > +	while (from + np <=3D end) {
-> > +		u64 cpu_addr, size;
-> > +
-> > +		cpu_addr =3D of_translate_address(node, from + na);
-> > +		size =3D of_read_number(from + na + pna, ns);
-> > +		res->flags =3D bus->get_flags(from);
-> > +		from +=3D np;
-> > +
-> > +		if (cpu_addr =3D=3D OF_BAD_ADDR || size =3D=3D 0)
-> > +			continue;
->=20
-> Hmmm. That seems to just ignore bad entries in the ranges property. Is
-> that really the right thing to do? At least printing a diagnostic might
-> be a good idea, even if the code does just soldier on in the hope
-> everything still works.
+Also keep the complete print out in one line, could make git grep find
+that code exactly.
 
-That's true. However, erroring out here wouln't be useful either since a
-NULL return value is used to mark the end of the iteration and the
-caller would have to assume that no more ranges are present. Maybe
-that's better than continuing anyway, even if a message is printed.
+Actually I really hate pr_debug(), that will make the generated code
+different with DEBUG
+defined or not. And need to end user to recompile kernel to get debug
+output if needed.
 
-Alternatively, the of_pci_process_ranges() could be changed to return an
-ERR_PTR() encoded errno. This is one case where it makes a lot of sense.
-I have a feeling that Grant won't like that very much, though.
+Thanks
 
-Another possibility would be to change away from an iterator-based
-approach and return an integer for the number of ranges and negative
-error code on failure while returning an allocated array of resources
-through an output parameter.
-
-Thierry
-
---ZmUaFz6apKcXQszQ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ747CAAoJEN0jrNd/PrOh/bQP/0IiT1xF+Klj+SSKlmrwUhEX
-dgfuEscTyb+N1OHfVfvwDxRaRq0z2z+cwHdF/gjehUuwDkWBomvjonoPpauNs4uj
-h4Rv3wvx0skXscKOxJgNB6vNbIAnoKgzBlJ13Z20AtxdqkncdTC8ZW/dRHCuW9W8
-Cpv33q0Utl706pHpVAw/0KMlq3zrRYQz42cIYeSrMxwzaWlFAexk5HcEwem2/pUW
-1/1Y6EhHO3FAS7IhQyLnnjVWlR89Gd9DzvYeCndLnP9lXfQ2FyKm83hKq8QqGpVN
-g+54HeYMMGeQn2u4M9c+BJqUt7q8eiRnCMlZN0W02UI/9Vhq+znh6cAGGDruBXzZ
-atkaJOxM997lYzBDgZA5u8AjS9O+n35UWNpyDgKoSJ05E7SuSBh/tBJuu1XVRu4z
-ueE/HERCWFon2QodEYUk5iNvt+NDM66nrfxXh9BIOd045Al8eXdHQ4dhslLXS8Sz
-qHC3dwoNKozfIHWrq4vAat+ERW79s1WgOf/NPLwpugdn56/wGCXJEQdblEDK/6Mj
-BtgE7VlX88knrMx0i8CXeMsCJIwyZds4WhZNRJ1ao4F+e+Tjc15zDZb0geq047+j
-aCrHplrXuK9iKzWAHFmMuabYjGDyhsAKx8Ii7GACCO9CisJIz+tgT6sJZU6ypajw
-65VE+KSnz/gVtV2KSnc+
-=eyXO
------END PGP SIGNATURE-----
-
---ZmUaFz6apKcXQszQ--
+Yinghai
