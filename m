@@ -1,117 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:64472 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302Ab3AJGzr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 01:55:47 -0500
-Date: Thu, 10 Jan 2013 07:55:37 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 00/14] Rewrite Tegra PCIe driver
-Message-ID: <20130110065537.GC15212@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130109222517.3c590553@skate>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kfjH4zxOES6UT95V"
-In-Reply-To: <20130109222517.3c590553@skate>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 00/11] PCI, ACPI: pci root bus hotplug support / pci match_driver
+Date: Mon, 21 Jan 2013 13:20:41 -0800
+Message-Id: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+It includes
+1. preparing patches for pci root bus hotadd/hotremove support
+2. move root bus hotadd from acpiphp to pci_root.c
+3. add hot-remove support
+4. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
+5. add match_driver to add pci device to device tree early but
+   not attach driver for hotplug path.
 
---kfjH4zxOES6UT95V
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+based on pci/next + pm/acpi-scan
 
-On Wed, Jan 09, 2013 at 10:25:17PM +0100, Thomas Petazzoni wrote:
-> Dear Thierry Reding,
->=20
-> On Wed,  9 Jan 2013 21:43:00 +0100, Thierry Reding wrote:
-> > This patch series contains an almost complete rewrite of the Tegra PCIe
-> > driver. The code is moved to the drivers/pci/host directory and turned
-> > into a proper platform driver, adding MSI and DT support while at it.
-> > Other PCI host controller drivers can be added to that directory in an
-> > attempt to make it easier to factor out common code.
->=20
-> Thanks!
->=20
-> I have started basing the Marvell PCIe code on some of your earlier
-> versions. But apparently in this final version, you no longer have the
-> emulated Host bridge. Why so?
+could get from
+        git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
 
-The reason is that with the latest bindings the matching of root ports
-to device tree nodes works as-is and nothing else indicates that the
-emulated host bridge is actually required to make any of this work. So
-in order not to introduce unneeded code I've left it out for now. If
-somebody decides that we actually need this host bridge (for standards
-compliance or whatnot) it could easily be added back.
+-v9: merges several patches together for easy review, requested by Rafael.
+-v10: address comments from Rafael.
 
-However, before the emulated bridge implementation can be merged I think
-the PCI ID issue needs to be resolved.
+Jiang Liu (2):
+  PCI: Fix a device reference count leakage issue in pci_dev_present()
+  PCI: make PCI device create/destroy logic symmetric
 
-> For the Marvell PCIe code, I've used your emulated Host bridge, and
-> added an emulated PCI-to-PCI bridge implementation, in order to get the
-> following hierarchy:
->=20
->  + Host Bridge
->    + PCI-to-PCI bridge
->      + PCI Device
->    + PCI-to-PCI bridge
->      + PCI device
->=20
-> So, I instantiate one unique emulated Host Bridge, and then one
-> emulated PCI-to-PCI Bridge for each PCIe interface that I have.
+Tang Chen (1):
+  PCI, ACPI: debug print for installation of acpi root bridge's
+    notifier
 
-Oh dear, that's even worse than on Tegra. The Marvell hardware doesn't
-even expose the root ports as PCI devices on the bus?
+Yinghai Lu (8):
+  PCI, acpiphp: Add is_hotplug_bridge detection
+  PCI: Add root bus children dev's res to fail list
+  PCI: Set dev_node early for pci_dev
+  PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
+  PCI, acpiphp: Move and enhance hotplug support of pci host bridge
+  PCI, acpiphp: Don't bailout even no slots found yet.
+  PCI: Skip attaching driver in device_add()
+  PCI: Put pci dev to device tree as early as possible
 
-> The nice thing about that is that I can then read the configuration
-> space of the PCI-to-PCI bridge to find out how much I/O space and
-> memory space is needed for the device connected to this interface, and
-> at which address is has been mapped. This greatly helps my "address
-> decoding" problem, and removes the ad-hoc virtual space allocator I had
-> written.
->=20
-> Is there a reason for having given up on this idea? Is there still a
-> hope for a different PCIe implementation to use this idea?
+ drivers/acpi/internal.h            |    1 +
+ drivers/acpi/osl.c                 |   24 +++++-
+ drivers/acpi/pci_root.c            |  130 +++++++++++++++++++++++++++++++
+ drivers/acpi/scan.c                |    3 +
+ drivers/pci/bus.c                  |   87 +++++----------------
+ drivers/pci/hotplug/acpiphp.h      |    1 -
+ drivers/pci/hotplug/acpiphp_core.c |   23 +-----
+ drivers/pci/hotplug/acpiphp_glue.c |  150 +++++++++++-------------------------
+ drivers/pci/iov.c                  |    9 +--
+ drivers/pci/pci-driver.c           |    6 +-
+ drivers/pci/pci.h                  |    1 -
+ drivers/pci/probe.c                |   35 +++++++--
+ drivers/pci/remove.c               |    4 +-
+ drivers/pci/search.c               |   10 +--
+ drivers/pci/setup-bus.c            |    2 +-
+ include/acpi/acpi_bus.h            |    9 +++
+ include/acpi/acpiosxf.h            |    2 -
+ include/linux/pci.h                |    1 +
+ 18 files changed, 277 insertions(+), 221 deletions(-)
 
-I suppose that in your case it really makes sense because you already
-need the emulated PCI-to-PCI bridges and therefore adding an emulated
-host bridge doesn't add much. As I said, for Tegra everything still
-works without, so I didn't see a reason to add needless code.
+-- 
+1.7.10.4
 
-Thierry
-
---kfjH4zxOES6UT95V
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ7mXpAAoJEN0jrNd/PrOhlVsP/jcXpyH5rON/7kzJSE1glNvK
-jFGOLe3BWaBkZyDyQ9XtsJ5xOgci8I0D4iVXJgY5jcJeS+fwNMwwPSXx3HlsM5v9
-bka1yhkobFAJRO1wsEC5sCa+FBq6QkbrvC32fUZiNpfC1tq5Rpc0HvkHcKefxaAP
-Jw3xuJOgS4B/W9VWahtgtXZUFyRik7w4yGkHJFT/25EtbP1AiqGPxJNc+PVaQgq+
-bXqh489xB6phdZT/04IvDijaVleoMJ/DOb1HE4VT6unM/blCkmccM+TpuQQsFPm/
-QGvtaSyePTI4ks8f3QIB98MC/2arTYSkeJdgLBhZuEZh93zXW0hn8yT4ZDVGYSNX
-kGSIaEwThR3OjwtFti8lucIFjB1akAO5dSf57rU9KbbnH9ahh/pmb1aR7mmTrdNi
-XArGZ8SucR2b28gLNZRV4CcmQfg0pA/sfiPLDKAutZy/JHsWgUJ3ZtU3P7mswUSu
-blnuyTe1dO9lSt5lLQ3KkOImWta4TO7+EVxzz9lQ4s17aXJsXl0AZAx6xPkEeutU
-9qymt/qkiGufU0d40uSMIZHF9k2jx39MrzU5WKbEJF4q0BrywJUt5SxhL8xM5+KZ
-hmqbXvWSqk+p/ezzL55oC99EYZKnHuuxRXOYzrMRH7qJA+nSoXVuBamOt7NP5QC+
-rNG12Dyn9WobzrH25JQ3
-=VwsQ
------END PGP SIGNATURE-----
-
---kfjH4zxOES6UT95V--
