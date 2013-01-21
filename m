@@ -1,39 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:39868 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932323Ab3AJBLl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 20:11:41 -0500
-Message-ID: <50EE1594.4070905@infradead.org>
-Date: Wed, 09 Jan 2013 17:12:52 -0800
-From: Randy Dunlap <rdunlap@infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: [PATCH] pci: fix iov.c kernel-doc warnings
+In-Reply-To: <2123353.z1dtQmXUNo@vostro.rjw.lan>
+References: <1358495602-22867-1-git-send-email-yinghai@kernel.org>
+	<1358495602-22867-7-git-send-email-yinghai@kernel.org>
+	<2123353.z1dtQmXUNo@vostro.rjw.lan>
+Date: Sun, 20 Jan 2013 17:54:14 -0800
+Message-ID: <CAE9FiQVxwm43bkpRYEkSy5sL-FAkE49NE5nFQvXKWPSfoY+oEw@mail.gmail.com>
+Subject: Re: [PATCH v9 06/11] PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work()
+ to alloc_acpi_hp_work
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
+On Sun, Jan 20, 2013 at 2:38 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Thursday, January 17, 2013 11:53:17 PM Yinghai Lu wrote:
+>> Will need to use it for pci root bridge hotplug support, rename
+>> *acpiphp* to *acpi* and move to osc.c.
+>> Also make kacpi_hotplug_wq static after that.
+>>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: Len Brown <lenb@kernel.org>
+>> Cc: linux-acpi@vger.kernel.org
+>> ---
+>>  drivers/acpi/osl.c                 |   24 +++++++++++++++++++--
+>>  drivers/pci/hotplug/acpiphp_glue.c |   42 ++++++------------------------------
+>>  include/acpi/acpiosxf.h            |    9 +++++++-
+>>  3 files changed, 36 insertions(+), 39 deletions(-)
+>>
+>> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+>> index 3ff2678..afcce46 100644
+>> --- a/drivers/acpi/osl.c
+>> +++ b/drivers/acpi/osl.c
+>> @@ -84,8 +84,7 @@ static acpi_osd_handler acpi_irq_handler;
+>>  static void *acpi_irq_context;
+>>  static struct workqueue_struct *kacpid_wq;
+>>  static struct workqueue_struct *kacpi_notify_wq;
+>> -struct workqueue_struct *kacpi_hotplug_wq;
+>> -EXPORT_SYMBOL(kacpi_hotplug_wq);
+>> +static struct workqueue_struct *kacpi_hotplug_wq;
+>>
+>>  /*
+>>   * This list of permanent mappings is for memory that may be accessed from
+>> @@ -1778,3 +1777,24 @@ void acpi_os_set_prepare_sleep(int (*func)(u8 sleep_state,
+>>  {
+>>       __acpi_os_prepare_sleep = func;
+>>  }
+>> +
+>> +void alloc_acpi_hp_work(acpi_handle handle, u32 type, void *context,
+>> +                     void (*func)(struct work_struct *work))
+>> +{
+>> +     struct acpi_hp_work *hp_work;
+>> +     int ret;
+>> +
+>> +     hp_work = kmalloc(sizeof(*hp_work), GFP_KERNEL);
+>> +     if (!hp_work)
+>> +             return;
+>> +
+>> +     hp_work->handle = handle;
+>> +     hp_work->type = type;
+>> +     hp_work->context = context;
+>> +
+>> +     INIT_WORK(&hp_work->work, func);
+>> +     ret = queue_work(kacpi_hotplug_wq, &hp_work->work);
+>> +     if (!ret)
+>> +             kfree(hp_work);
+>> +}
+>> +EXPORT_SYMBOL(alloc_acpi_hp_work);
+>
+> That should be EXPORT_SYMBOL_GPL().
 
-Fix kernel-doc warning in iov.c:
+Ok.
 
-Warning(drivers/pci/iov.c:752): No description found for parameter 'numvfs'
+Chose that because kacpi_hotplug_wq does not have _GPL.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
- drivers/pci/iov.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+...
+>> diff --git a/include/acpi/acpiosxf.h b/include/acpi/acpiosxf.h
+>> index 4315274..adab63c 100644
+>> --- a/include/acpi/acpiosxf.h
+>> +++ b/include/acpi/acpiosxf.h
+>> @@ -193,7 +193,14 @@ void acpi_os_fixed_event_count(u32 fixed_event_number);
+>>  /*
+>>   * Threads and Scheduling
+>>   */
+>> -extern struct workqueue_struct *kacpi_hotplug_wq;
+>
+> include/acpi/acpiosxf.h is related to ACPICA, so while removing kacpi_hotplug_wq
+> from it should be OK, please put the rest into acpi_bus.h, preferably next to the
+> definition of acpi_eject_event.
+>
 
---- lnx-38-rc2.orig/drivers/pci/iov.c
-+++ lnx-38-rc2/drivers/pci/iov.c
-@@ -739,7 +739,7 @@ EXPORT_SYMBOL_GPL(pci_num_vf);
- /**
-  * pci_sriov_set_totalvfs -- reduce the TotalVFs available
-  * @dev: the PCI PF device
-- * numvfs: number that should be used for TotalVFs supported
-+ * @numvfs: number that should be used for TotalVFs supported
-  *
-  * Should be called from PF driver's probe routine with
-  * device's mutex held.
+Ok.
+
+Thanks
