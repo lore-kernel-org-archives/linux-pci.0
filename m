@@ -1,61 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.32.191]:60622 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059Ab3ACPKF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2013 10:10:05 -0500
-Date: Thu, 3 Jan 2013 16:09:58 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Lior Amsalem <alior@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robherring2@gmail.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [RFC v1] PCIe support for the Armada 370 and Armada XP SoCs
-Message-ID: <20130103160958.3edf3005@skate>
-In-Reply-To: <20130103143931.GA28451@avionic-0098.adnet.avionic-design.de>
-References: <1354917879-32073-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130103143931.GA28451@avionic-0098.adnet.avionic-design.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from hydra.sisk.pl ([212.160.235.94]:50687 "EHLO hydra.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750837Ab3AVWDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Jan 2013 17:03:39 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v10 00/11] PCI, ACPI: pci root bus hotplug support / pci match_driver
+Date: Tue, 22 Jan 2013 23:09:40 +0100
+Message-ID: <2072996.JYmST9orI6@vostro.rjw.lan>
+In-Reply-To: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
+References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
-
-On Thu, 3 Jan 2013 15:39:31 +0100, Thierry Reding wrote:
-
-> Thomas' RFC series incited me to put in some more work on the Tegra
-> PCIe controller driver. This in turn brought up an old issue: should
-> we move PCIe controller drivers to some central location rather than
-> keeping them in machine-specific directories? Last time I brought
-> this up there was no consensus but I really think there's some value
-> in keeping these drivers in a common location, especially now that a
-> few people are starting to work on similar problems. It may also
-> provide some more momentum to get the various DT implementations
-> factored out of various architectures.
+On Monday, January 21, 2013 01:20:41 PM Yinghai Lu wrote:
+> It includes
+> 1. preparing patches for pci root bus hotadd/hotremove support
+> 2. move root bus hotadd from acpiphp to pci_root.c
+> 3. add hot-remove support
+> 4. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
+> 5. add match_driver to add pci device to device tree early but
+>    not attach driver for hotplug path.
 > 
-> Stephen proposed drivers/pci/host on IRC and I second that.
+> based on pci/next + pm/acpi-scan
+> 
+> could get from
+>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+> 
+> -v9: merges several patches together for easy review, requested by Rafael.
+> -v10: address comments from Rafael.
+> 
+> Jiang Liu (2):
+>   PCI: Fix a device reference count leakage issue in pci_dev_present()
+>   PCI: make PCI device create/destroy logic symmetric
+> 
+> Tang Chen (1):
+>   PCI, ACPI: debug print for installation of acpi root bridge's
+>     notifier
+> 
+> Yinghai Lu (8):
+>   PCI, acpiphp: Add is_hotplug_bridge detection
+>   PCI: Add root bus children dev's res to fail list
+>   PCI: Set dev_node early for pci_dev
+>   PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
+>   PCI, acpiphp: Move and enhance hotplug support of pci host bridge
+>   PCI, acpiphp: Don't bailout even no slots found yet.
+>   PCI: Skip attaching driver in device_add()
+>   PCI: Put pci dev to device tree as early as possible
 
-I for sure would be interested in a direction such as this one being
-taken for PCI support. Having drivers in a common directory will help
-comparing them, extracting common patterns, etc.
+OK
 
-Best regards,
+Please feel free to add
 
-Thomas
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+to all of the patches in this series I haven't acked already.
+
+Thanks,
+Rafael
+
+
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
