@@ -1,101 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:42240 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753907Ab3A2GcS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 01:32:18 -0500
-Message-ID: <51076CEE.8050706@openvz.org>
-Date: Tue, 29 Jan 2013 10:32:14 +0400
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:1050 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755387Ab3AWM2x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 07:28:53 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [Update][PATCH] PCI: Document PCIE BUS MPS parameters
+Date: Wed, 23 Jan 2013 20:28:12 +0800
+Message-ID: <1358944092-28884-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Bruce Allan <bruce.w.allan@intel.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 1/5] e1000e: fix resuming from runtime-suspend
-References: <20130118113019.6698.25941.stgit@zurg> <20130118114214.6698.24975.stgit@zurg> <CAErSpo4G=hQ79KJg_6QgoO9nmG-B5xA_ooph7G6Uu-9wGkrnTQ@mail.gmail.com> <12263202.uQHxo0zU24@vostro.rjw.lan>
-In-Reply-To: <12263202.uQHxo0zU24@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rafael J. Wysocki wrote:
-> On Monday, January 28, 2013 04:05:33 PM Bjorn Helgaas wrote:
->> [+cc Rafael, author of patch you cited]
->>
->> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
->> <khlebnikov@openvz.org>  wrote:
->>> Bug was introduced in commit 23606cf5d1192c2b17912cb2ef6e62f9b11de133
->>> ("e1000e / PCI / PM: Add basic runtime PM support (rev. 4)") in v2.6.35
->>>
->>> Signed-off-by: Konstantin Khlebnikov<khlebnikov@openvz.org>
->>> Cc: e1000-devel@lists.sourceforge.net
->>> Cc: Jeff Kirsher<jeffrey.t.kirsher@intel.com>
->>> Cc: Bruce Allan<bruce.w.allan@intel.com>
->>> ---
->>>   drivers/net/ethernet/intel/e1000e/netdev.c |   13 ++++++++-----
->>>   1 file changed, 8 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
->>> index fbf75fd..2853c11 100644
->>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
->>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
->>> @@ -5691,14 +5691,17 @@ static int e1000_runtime_suspend(struct device *dev)
->>>          struct pci_dev *pdev = to_pci_dev(dev);
->>>          struct net_device *netdev = pci_get_drvdata(pdev);
->>>          struct e1000_adapter *adapter = netdev_priv(netdev);
->>> +       int retval;
->>> +       bool wake;
->>>
->>> -       if (e1000e_pm_ready(adapter)) {
->>> -               bool wake;
->>> +       if (!e1000e_pm_ready(adapter))
->>> +               return 0;
->>>
->>> -               __e1000_shutdown(pdev,&wake, true);
->>> -       }
->>> +       retval = __e1000_shutdown(pdev,&wake, true);
->>> +       if (!retval)
->>> +               e1000_power_off(pdev, true, wake);
->>>
->>> -       return 0;
->>> +       return retval;
->>>   }
->>>
->>>   static int e1000_idle(struct device *dev)
->>>
->
-> I'd like the changelog to say what the bug is and how it is being fixed in
-> general terms.
+Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+These parameters were introduced by Jon Mason <mason@myri.com> at
+commit 5f39e6705 and commit b03e7495a8. Document these into
+kernel-parameters.txt can help users to understand and use the parameters.
 
-Ok, my bad.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ Documentation/kernel-parameters.txt |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-Problem: ethernet device does not work (no carrier signal).
-Right after boot it goes to runtime-suspend and never wake up.
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 363e348..1fb269b 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2227,6 +2227,21 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				This sorting is done to get a device
+ 				order compatible with older (<= 2.4) kernels.
+ 		nobfsort	Don't sort PCI devices into breadth-first order.
++		pcie_bus_tune_off	Disable PCI-E MPS turning and using
++				the BIOS configured MPS defaults.
++		pcie_bus_safe	Use the smallest common denominator MPS
++				of the entire tree below a root complex for every device
++				on that fabric. Can avoid inconsistent mps problem caused
++				by hotplug.
++		pcie_bus_perf	Configure pcie device MPS to the largest allowable
++				MPS based on its parent bus. And also set MRRS to the
++				largest supported value but cannot be configured larger
++				than the MPS the device or the bus can support for Max
++				performance.
++		pcie_bus_peer2peer	Make the system wide MPS the smallest
++				possible value (128B).This configuration could prevent it
++				from working by having the MPS on one root port different
++				than the MPS on another.
+ 		cbiosize=nn[KMG]	The fixed amount of bus space which is
+ 				reserved for the CardBus bridge's IO window.
+ 				The default value is 256 bytes.
+-- 
+1.7.1
 
-Original code (before your commit) calls pci_prepare_to_sleep() and it
-calls pci_enable_wake() and switches device to one of D3 state.
-
-It seems redundant, because pci_pm_runtime_suspend() do the same thing
-after calling ->runtime_suspend callback. Or rather it did it before commit
-42eca2302146fed51335b95128e949ee6f54478f ("PCI: Don't touch card regs after
-runtime suspend D3") and third patch aimed fix this damage.
-
-More over seems like calling pci_enable_wake() from e1000e isn't enough for my case,
-because my enthernet cannot wakeup from runtime-suspend without third patch.
-Seems like it's because pci_enable_wake() and pci_finish_runtime_suspend()
-calls different pratform-pm callbacks -- platform_pci_run_wake() /
-platform_pci_sleep_wake().
-
-All this looks messy and I don't know how it should work.
-
-If you prefer to minimize changes -- I can test how it would work without
-first (this) patch. Probably fine.
-
->
-> Thanks,
-> Rafael
->
->
 
