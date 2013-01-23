@@ -1,84 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: Document PCIE BUS MPS parameters
+Date: Wed, 23 Jan 2013 16:01:36 +0800
+Message-ID: <1358928096-29008-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <18607840.Is41JcgqAR@vostro.rjw.lan>
-References: <20121030040237.GA10472@google.com> <5274779.gJQ3WSr6QB@vostro.rjw.lan>
- <CAErSpo7QBNzaMKOGpkrPxop+WN+RMAoeOBUPiFDi9HFyH+UoOQ@mail.gmail.com> <18607840.Is41JcgqAR@vostro.rjw.lan>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Jan 2013 07:49:46 -0700
-Message-ID: <CAErSpo7rnmSjtsMu1AJ81VmSQytBDdAL=qrJWJHQ15iaJRvuhw@mail.gmail.com>
-Subject: Re: [PATCH 0/8] PCI, ACPI, x86: Reserve fw allocated resource for
- hot-add root bus
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Yinghai Lu <yinghai@kernel.org>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	David Howells <dhowells@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 10, 2013 at 6:07 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Wednesday, January 09, 2013 05:34:32 PM Bjorn Helgaas wrote:
->> On Wed, Jan 9, 2013 at 1:10 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> > On Wednesday, January 09, 2013 11:01:39 AM Yinghai Lu wrote:
->> >> On Wed, Jan 9, 2013 at 10:39 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> >> >> the reason why we need to change those codes for x86, we want to make it support
->> >> >> pci root bus hotplug. So it would be reasonable for us to align other
->> >> >> platform to x86
->> >> >> changes after pci root bus hotplug change is completely done.
->> >> >
->> >> > OK, I opened https://bugzilla.kernel.org/show_bug.cgi?id=52531 as a
->> >> > way to keep track of this consistency issue and merged
->> >> > pci/yinghai-survey-resources to my -next branch.
->> >>
->> >> Thanks a lot. will send other pci root bus hotplug out.
->> >>
->> >> question: now Rafael's tree has acpi-scan branch and it touches pci-root.c.
->> >>
->> >> so is it ok for me to base patches on your pci/next and his pm/acpi-scan?
->> >> how?
->> >> can you two have some arrangement like you pulling Rafael's branch?
->> >
->> > My acpi-scan branch is not going to be rebased going forward, so it can be
->> > pulled from safely if that helps.
->>
->> I'm happy to do that, but it is outside the scope of my limited git
->> experience.  My guess is that I should do this (doing the pull into a
->> branch which I later merge into my -next branch):
->>
->>   $ git checkout -b pci/yinghai-survey-resources+acpi-scan
->> pci/yinghai-survey-resources
->>   $ git pull --no-ff --log
->> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
->> acpi-scan
->>   $ vi drivers/acpi/pci_root.c    # resolve conflicts
->>   $ git add drivers/acpi/pci_root.c
->>   $ git commit
->>
->>   $ git checkout next
->>   $ git merge --no-ff --log pci/yinghai-survey-resources+acpi-scan
->>
->> Is that reasonable?
->
-> Yes, it looks reasonable.
->
->> This won't cause issues when both Rafael and I ask Linus to pull from our
->> trees later?
->
-> No, it won't, as long as I don't rebase the original acpi-scan branch (which
-> I'm not going to do) and you don't rebase your
-> pci/yinghai-survey-resources+acpi-scan branch going forward.
->
-> The pull makes your tree contain the same commits (i.e. commit IDs along with
-> the data) that are in my acpi-scan branch, so when Linus merges them together,
-> git will notice that the commits are the same.
+Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+These parameters were introduced by Jon Mason <mason@myri.com> at
+commit 5f39e6705 and commit b03e7495a8. Document these into 
+kernel-parameters.txt help users to understand and use the parameters.
 
-OK, I did the above, merged it into my -next branch, and pushed it.
-Let me know if you see any issues.
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ Documentation/kernel-parameters.txt |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-Bjorn
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 363e348..4dfa8d2 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				This sorting is done to get a device
+ 				order compatible with older (<= 2.4) kernels.
+ 		nobfsort	Don't sort PCI devices into breadth-first order.
++		pcie_bus_tune_off	[X86] Disable PCI-E MPS turning and using
++				the BIOS configured MPS defaults.
++		pcie_bus_safe	[X86] Use the smallest common denominator MPS
++				of the entire tree below a root complex for every device
++				on that fabric. Can avoid inconsistent mps problem caused
++				by hotplug.
++		pcie_bus_perf	[X86] Configure pcie device MPS to the largest
++				allowable MPS based on its parent bus.Improve performance
++				as much as possible.
++		pcie_bus_peer2peer	[X86] Make the system wide MPS the smallest
++				possible value (128B).This configuration could prevent it
++				from working by having the MPS on one root port different
++				than the MPS on another.
+ 		cbiosize=nn[KMG]	The fixed amount of bus space which is
+ 				reserved for the CardBus bridge's IO window.
+ 				The default value is 256 bytes.
+-- 
+1.7.1
+
+
