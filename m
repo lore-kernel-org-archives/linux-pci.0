@@ -1,98 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 05/22] PCI: make PCI device create/destroy logic symmetric
-Date: Sat, 12 Jan 2013 22:40:14 +0100
-Message-ID: <1689874.eC9grEviHZ@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-6-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-6-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:49586 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241Ab3AXB4M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 20:56:12 -0500
+Message-ID: <510094A4.3040806@huawei.com>
+Date: Thu, 24 Jan 2013 09:55:48 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+CC: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, <linux-pci@vger.kernel.org>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: Re: [Update][PATCH] PCI: Document PCIE BUS MPS parameters
+References: <1358944092-28884-1-git-send-email-wangyijing@huawei.com> <510074C7.6090203@infradead.org>
+In-Reply-To: <510074C7.6090203@infradead.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:32 PM Yinghai Lu wrote:
-> From: Jiang Liu <jiang.liu@huawei.com>
-> 
-> According to device model documentation, the way to create/destroy PCI
-> devices should be symmetric.
-> 
-> /**
->  * device_del - delete device from system.
->  * @dev: device.
->  *
->  * This is the first part of the device unregistration
->  * sequence. This removes the device from the lists we control
->  * from here, has it removed from the other driver model
->  * subsystems it was added to in device_add(), and removes it
->  * from the kobject hierarchy.
->  *
->  * NOTE: this should be called manually _iff_ device_add() was
->  * also called manually.
->  */
-> 
-> The rule is to either use
-> 1) device_register()/device_unregister()
-> or
-> 2) device_initialize()/device_add()/device_del()/put_device().
-> 
-> So change PCI core logic to follow the rule and get rid of the redundant
-> pci_dev_get()/pci_dev_put() pair.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-by: Yinghai Lu <yinghai@kernel.org>
+Hi Randy,
+   Thanks for your review and comments! please refer to inlined comments below.
 
-Signed-off-by I suppose?
-
-Apart from this:
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-> ---
->  drivers/pci/probe.c  |    1 -
->  drivers/pci/remove.c |    4 ++--
->  2 files changed, 2 insertions(+), 3 deletions(-)
+On 2013/1/24 7:39, Randy Dunlap wrote:
+> On 01/23/13 04:28, Yijing Wang wrote:
+>> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+>> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+>> These parameters were introduced by Jon Mason <mason@myri.com> at
+>> commit 5f39e6705 and commit b03e7495a8. Document these into
+>> kernel-parameters.txt can help users to understand and use the parameters.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  Documentation/kernel-parameters.txt |   15 +++++++++++++++
+>>  1 files changed, 15 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+>> index 363e348..1fb269b 100644
+>> --- a/Documentation/kernel-parameters.txt
+>> +++ b/Documentation/kernel-parameters.txt
+>> @@ -2227,6 +2227,21 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>  				This sorting is done to get a device
+>>  				order compatible with older (<= 2.4) kernels.
+>>  		nobfsort	Don't sort PCI devices into breadth-first order.
+>> +		pcie_bus_tune_off	Disable PCI-E MPS turning and using
+>> +				the BIOS configured MPS defaults.
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index b97dea5..48b35e1 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1298,7 +1298,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->  	device_initialize(&dev->dev);
->  	dev->dev.release = pci_release_dev;
-> -	pci_dev_get(dev);
->  
->  	set_dev_node(&dev->dev, pcibus_to_node(bus));
->  	dev->dev.dma_mask = &dev->dma_mask;
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 7c0fd92..fc38c48 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -22,7 +22,7 @@ static void pci_stop_dev(struct pci_dev *dev)
->  	if (dev->is_added) {
->  		pci_proc_detach_device(dev);
->  		pci_remove_sysfs_dev_files(dev);
-> -		device_unregister(&dev->dev);
-> +		device_del(&dev->dev);
->  		dev->is_added = 0;
->  	}
->  
-> @@ -37,7 +37,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
->  	up_write(&pci_bus_sem);
->  
->  	pci_free_resources(dev);
-> -	pci_dev_put(dev);
-> +	put_device(&dev->dev);
->  }
->  
->  void pci_remove_bus(struct pci_bus *bus)
+> 				    BIOS-configured
+
+Will update it.
+
 > 
+>> +		pcie_bus_safe	Use the smallest common denominator MPS
+>> +				of the entire tree below a root complex for every device
+>> +				on that fabric. Can avoid inconsistent mps problem caused
+> 
+> s/mps/MPS/
+> i.e., use "MPS" consistently.
+
+Will use mps consistently.
+
+> 
+>> +				by hotplug.
+>> +		pcie_bus_perf	Configure pcie device MPS to the largest allowable
+>> +				MPS based on its parent bus. And also set MRRS to the
+> 
+> "And also" is redundant.  Just say Also.
+
+Ok.
+
+> 
+> What is (are) MRRS?
+
+MRRS is "Max Read Request Size" and MPS is "Max Payload Size".
+Need use "Max Read Request Size" instead of MRRS ?
+
+> 
+>> +				largest supported value but cannot be configured larger
+>> +				than the MPS the device or the bus can support for Max
+>> +				performance.
+>> +		pcie_bus_peer2peer	Make the system wide MPS the smallest
+> 
+> 					         system-wide
+
+Will update it.
+
+> 
+>> +				possible value (128B).This configuration could prevent it
+> 
+> 				                      ^ Space before "This"
+> 
+
+Thanks for reminder.
+
+>> +				from working by having the MPS on one root port different
+>> +				than the MPS on another.
+>>  		cbiosize=nn[KMG]	The fixed amount of bus space which is
+>>  				reserved for the CardBus bridge's IO window.
+>>  				The default value is 256 bytes.
+>>
+> 
+> 
+
+
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Thanks!
+Yijing
+
