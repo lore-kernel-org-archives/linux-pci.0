@@ -1,239 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38614 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753999Ab3AKPxL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jan 2013 10:53:11 -0500
-Message-ID: <1357919587.3224.824.camel@bling.home>
-Subject: Re: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
- devices
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Gleb Natapov <gleb@redhat.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Fri, 11 Jan 2013 08:53:07 -0700
-In-Reply-To: <F9E001219150CB45BEDC82A650F360C901497698@G9W0717.americas.hpqcorp.net>
-References: <F9E001219150CB45BEDC82A650F360C901496034@G9W0717.americas.hpqcorp.net>
-	 <1357754873.3224.777.camel@bling.home>
-	 <F9E001219150CB45BEDC82A650F360C901497698@G9W0717.americas.hpqcorp.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:48487 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008Ab3AXAXq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 19:23:46 -0500
+Message-ID: <51007EF2.3090208@jp.fujitsu.com>
+Date: Thu, 24 Jan 2013 09:23:14 +0900
+From: Takao Indoh <indou.takao@jp.fujitsu.com>
+MIME-Version: 1.0
+To: trenn@suse.de
+CC: yinghai@kernel.org, muneda.takahiro@jp.fujitsu.com,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, andi@firstfloor.org,
+	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
+	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
+	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com, hpa@zytor.com,
+	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org
+Subject: Re: [PATCH v7 0/5] Reset PCIe devices to address DMA problem on kdump
+ with iommu
+References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <1593084.QhbTkmoq3N@hammer82.arch.suse.de> <50FC95A8.6060402@jp.fujitsu.com> <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
+In-Reply-To: <1508535.gXZDAVy6sT@hammer82.arch.suse.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-01-11 at 08:53 +0000, Pandarathil, Vijaymohan R wrote:
-> 
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Wednesday, January 09, 2013 10:08 AM
-> > To: Pandarathil, Vijaymohan R
-> > Cc: Bjorn Helgaas; Gleb Natapov; kvm@vger.kernel.org; qemu-
-> > devel@nongnu.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> > Subject: Re: [PATCH 2/2] QEMU-AER: Qemu changes to support AER for VFIO-PCI
-> > devices
-> > 
-> > On Wed, 2013-01-09 at 06:26 +0000, Pandarathil, Vijaymohan R wrote:
-> > > 	- Create eventfd per vfio device assigned to a guest and register an
-> > >           event handler
-> > >
-> > > 	- This fd is passed to the vfio_pci driver through a new ioctl
-> > >
-> > > 	- When the device encounters an error, the eventfd is signaled
-> > >           and the qemu eventfd handler gets invoked.
-> > >
-> > > 	- In the handler decide what action to take. Current action taken
-> > >           is to terminate the guest.
-> > >
-> > > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> > > ---
-> > >  hw/vfio_pci.c              | 56
-> > ++++++++++++++++++++++++++++++++++++++++++++++
-> > >  linux-headers/linux/vfio.h |  9 ++++++++
-> > >  2 files changed, 65 insertions(+)
-> > >
-> > > diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
-> > > index 28c8303..9c3c28b 100644
-> > > --- a/hw/vfio_pci.c
-> > > +++ b/hw/vfio_pci.c
-> > > @@ -38,6 +38,7 @@
-> > >  #include "qemu/error-report.h"
-> > >  #include "qemu/queue.h"
-> > >  #include "qemu/range.h"
-> > > +#include "sysemu/sysemu.h"
-> > >
-> > >  /* #define DEBUG_VFIO */
-> > >  #ifdef DEBUG_VFIO
-> > > @@ -130,6 +131,8 @@ typedef struct VFIODevice {
-> > >      QLIST_ENTRY(VFIODevice) next;
-> > >      struct VFIOGroup *group;
-> > >      bool reset_works;
-> > > +    EventNotifier errfd;
-> > 
-> > Misleading name, it's an EventNotifier not an fd.
-> 
-> Will make the change.
-> 
-> > 
-> > > +    __u32 dev_info_flags;
-> > >  } VFIODevice;
-> > >
-> > >  typedef struct VFIOGroup {
-> > > @@ -1805,6 +1808,8 @@ static int vfio_get_device(VFIOGroup *group, const
-> > char *name, VFIODevice *vdev)
-> > >      DPRINTF("Device %s flags: %u, regions: %u, irgs: %u\n", name,
-> > >              dev_info.flags, dev_info.num_regions, dev_info.num_irqs);
-> > >
-> > > +    vdev->dev_info_flags = dev_info.flags;
-> > > +
-> > 
-> > We test the VFIO_DEVICE_FLAGS_RESET elsewhere by caching the bit into a
-> > variable, why not do that here too?
-> 
-> I was wondering if there was any specific reason to cache the bit into
-> a separate variable. Wouldn't a flags field which can contain the
-> specific bit be more apt ?
+(2013/01/23 9:47), Thomas Renninger wrote:
+> On Monday, January 21, 2013 10:11:04 AM Takao Indoh wrote:
+>> (2013/01/08 4:09), Thomas Renninger wrote:
+> ...
+>>> I tried the provided patches first on 2.6.32, then I verfied with 3.8-rc2
+>>> and in both cases the disk is not detected anymore in
+>>> reset_devices (kexec'ed/kdump) case (but things work fine without these
+>>> patches).
+>>
+>> So the problem that the disk is not detected was caused by exactmap
+>> problem you guys are discussing? Or still not detected even if exactmap
+>> problem is fixed?
+> This problem is related to the 5 PCI resetting patches.
+> Dumping worked with a 2.6.32 and a 3.8-rc2 kernel, adding the PCI resetting
+> patches broke both. I first tried 2.6.32 and verified with 3.8-rc2 to make sure
+> I didn't mess up the backport adjustings of the patches to 2.6.32.
 
-Then we have to mask it out ever time we want to reference it.  Qemu
-doesn't seem to like macros or inlines for that, so using a new variable
-keeps things neat.  Caching two fields to bools is still more space
-efficient than saving the whole thing and we can easily switch to named
-bits if we get enough to start caring about the space.  Thanks,
+If you have a chance please try again the patches with the latest
+firmware. I met another problem on megaraid_sas disk when I tested the
+patches and it did not occur after updated its firmware to the latest
+one.
+  
+> Unfortunately this Dell platform takes really long to boot.
+> I can give it the one or other test, but please do not bomb me with patches.
+>
+> For info:
+> About the interrupt remapping error interrupt storm in kdump case I tried to
+> reproduce on this machine, but never could: The guys who saw that also cannot
+> reproduce this anymore.
+>
+> Two ideas I had about this:
+>    - As said already, (also) try to catch the error case and try to reset the
+>      the device in AER/Specific iterrupt remapping error interrupt caught.
+>    - Have a look at coreboot, these guys should know how to initialize the PCI
+>      subsystem from scratch and might have some well tested PCI resetting
+>      code in place already (no idea, just a thought).
 
-Alex
- 
-> > >      if (!(dev_info.flags & VFIO_DEVICE_FLAGS_PCI)) {
-> > >          error_report("vfio: Um, this isn't a PCI device\n");
-> > >          goto error;
-> > > @@ -1900,6 +1905,55 @@ static void vfio_put_device(VFIODevice *vdev)
-> > >      }
-> > >  }
-> > >
-> > > +static void vfio_errfd_handler(void *opaque)
-> > > +{
-> > > +    VFIODevice *vdev = opaque;
-> > > +
-> > > +    if (!event_notifier_test_and_clear(&vdev->errfd)) {
-> > > +        return;
-> > > +    }
-> > > +
-> > > +    /*
-> > > +     * TBD. Retrieve the error details and decide what action
-> > > +     * needs to be taken. One of the actions could be to pass
-> > > +     * the error to the guest and have the guest driver recover
-> > > +     * the error. This requires that PCIe capabilities be
-> > > +     * exposed to the guest. At present, we just terminate the
-> > > +     * guest to contain the error.
-> > > +     */
-> > > +    error_report("%s(%04x:%02x:%02x.%x) "
-> > > +        "Unrecoverable error detected... Terminating guest\n",
-> > > +        __func__, vdev->host.domain, vdev->host.bus, vdev->host.slot,
-> > > +        vdev->host.function);
-> > > +
-> > > +    qemu_system_shutdown_request();
-> > 
-> > I would have figured hw_error
-> 
-> Hw_error() is probably more appropriate. Will make the change.
-> 
-> > 
-> > > +    return;
-> > > +}
-> > > +
-> > > +static void vfio_register_errfd(VFIODevice *vdev)
-> > > +{
-> > > +    int32_t pfd;
-> > 
-> > "pfd" is used elsewhere in vfio as "Pointer to FD", this is just a fd.
-> 
-> Will change.
-> 
-> > 
-> > > +    int ret;
-> > > +
-> > > +    if (!(vdev->dev_info_flags & VFIO_DEVICE_FLAGS_AER_NOTIFY)) {
-> > > +        error_report("vfio: Warning: Error notification not supported
-> > for the device\n");
-> > 
-> > This should probably just be a debug print.
-> 
-> Okay.
-> 
-> > 
-> > > +        return;
-> > > +    }
-> > > +    if (event_notifier_init(&vdev->errfd, 0)) {
-> > > +        error_report("vfio: Warning: Unable to init event notifier for
-> > error detection\n");
-> > > +        return;
-> > > +    }
-> > > +    pfd = event_notifier_get_fd(&vdev->errfd);
-> > > +    qemu_set_fd_handler(pfd, vfio_errfd_handler, NULL, vdev);
-> > > +
-> > > +    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_ERRFD, pfd);
-> > > +    if (ret) {
-> > > +        error_report("vfio: Warning: Failed to setup error fd: %d\n",
-> > ret);
-> > > +        qemu_set_fd_handler(pfd, NULL, NULL, vdev);
-> > > +        event_notifier_cleanup(&vdev->errfd);
-> > > +    }
-> > > +    return;
-> > > +}
-> > >  static int vfio_initfn(PCIDevice *pdev)
-> > >  {
-> > >      VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
-> > > @@ -2010,6 +2064,8 @@ static int vfio_initfn(PCIDevice *pdev)
-> > >          }
-> > >      }
-> > >
-> > > +    vfio_register_errfd(vdev);
-> > > +
-> > 
-> > No cleanup in exitfn?!  Thanks,
-> 
-> Missed that. Will fix.
-> 
-> Vijay
-> 
-> > 
-> > Alex
-> > 
-> > >      return 0;
-> > >
-> > >  out_teardown:
-> > > diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
-> > > index 4758d1b..0ca4eeb 100644
-> > > --- a/linux-headers/linux/vfio.h
-> > > +++ b/linux-headers/linux/vfio.h
-> > > @@ -147,6 +147,7 @@ struct vfio_device_info {
-> > >  	__u32	flags;
-> > >  #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
-> > >  #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
-> > > +#define VFIO_DEVICE_FLAGS_AER_NOTIFY (1 << 2)   /* Supports aer
-> > notification */
-> > >  	__u32	num_regions;	/* Max region index + 1 */
-> > >  	__u32	num_irqs;	/* Max IRQ index + 1 */
-> > >  };
-> > > @@ -288,6 +289,14 @@ struct vfio_irq_set {
-> > >   */
-> > >  #define VFIO_DEVICE_RESET		_IO(VFIO_TYPE, VFIO_BASE + 11)
-> > >
-> > > +/**
-> > > + * VFIO_DEVICE_SET_ERRFD - _IO(VFIO_TYPE, VFIO_BASE + 12)
-> > > + *
-> > > + * Pass the eventfd to the vfio-pci driver for signalling any device
-> > > + * error notifications
-> > > + */
-> > > +#define VFIO_DEVICE_SET_ERRFD           _IO(VFIO_TYPE, VFIO_BASE + 12)
-> > > +
-> > >  /*
-> > >   * The VFIO-PCI bus driver makes use of the following fixed region and
-> > >   * IRQ index mapping.  Unimplemented regions return a size of zero.
-> > 
-> > 
-> 
+Ok, at first I'll take a look at AER code to check how it resets devices
+on PCIe error.
 
+Thanks,
+Takao Indoh
 
+>
+>      Thomas
+>
+>
 
