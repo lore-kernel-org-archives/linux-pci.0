@@ -1,108 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:25177 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754945Ab3A1LRo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 06:17:44 -0500
-Message-ID: <510659CD.4090400@huawei.com>
-Date: Mon, 28 Jan 2013 18:58:21 +0800
+Received: from szxga01-in.huawei.com ([119.145.14.64]:4041 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752944Ab3AXC6t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 21:58:49 -0500
 From: Yijing Wang <wangyijing@huawei.com>
+To: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Andrew Murray <andrew.murray@arm.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v2] PCI: Document PCIE BUS MPS parameters
+Date: Thu, 24 Jan 2013 10:58:08 +0800
+Message-ID: <1358996288-31200-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	<linux-media@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com>
-In-Reply-To: <51064F1A.1020909@googlemail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> Then use #modprobe pciehp pciehp_force=1 pciehp_debug=1 to load pciehp modules.
->> After above actions, enter /sys/bus/pci_express/devices/ directory and /sys/bus/pci/slots/
->> Some slots and pcie port devices should be there now.
->>
-> Sorry, I've tried your suggestion, but the two directories are still empty.
-> 
-> I verified the test environment as follows:
-> 
-> [chris:~]$ uname -a
-> Linux laptop 3.7.4 #15 SMP PREEMPT Mon Jan 28 09:43:57 GMT 2013 i686 GNU/Linux
-> [chris:~]$ grep acpiphp /boot/System.map-3.7.4
-> [chris:~]$ modinfo acpiphp
-> modinfo: ERROR: Module acpiphp not found.
-> [chris:~]$ modinfo pciehp
-> filename:       /lib/modules/3.7.4/kernel/drivers/pci/hotplug/pciehp.ko
-> license:        GPL
-> description:    PCI Express Hot Plug Controller Driver
-> author:         Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>
-> depends:
-> intree:         Y
-> vermagic:       3.7.4 SMP preempt mod_unload CORE2
-> parm:           pciehp_detect_mode:Slot detection mode: pcie, acpi, auto
->   pcie          - Use PCIe based slot detection
->   acpi          - Use ACPI for slot detection
->   auto(default) - Auto select mode. Use acpi option if duplicate
->                   slot ids are found. Otherwise, use pcie option
->  (charp)
-> parm:           pciehp_debug:Debugging mode enabled or not (bool)
-> parm:           pciehp_poll_mode:Using polling mechanism for hot-plug events or not (bool)
-> parm:           pciehp_poll_time:Polling mechanism frequency, in seconds (int)
-> parm:           pciehp_force:Force pciehp, even if OSHP is missing (bool)
-> [chris:~]$ cat /proc/cmdline
-> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
-> [chris:~]$ sudo modprobe pciehp pciehp_force=1 pciehp_debug=1
-> [chris:~]$ lsmod
-> Module                  Size  Used by
-> pciehp                 19907  0
-> [...]
-> 
-> You will notice that the kernel I have used is 3.7.4. I hope that's a suitable kernel for your tests. I've moved away from the 3.8 development kernel onto one that's stable and on which Martin has identified a solution. I see Greg KH released 3.7.5 yesterday and it includes a pciehp change. I'll upgrade to that, run the tests again and report back.
-> 
-> One question - should I include the (acpi) pci_slot driver in the kernel build or does pciehp populate the directories without pci_slot?
+v0->v1: Update MPS parameters as non-arch and add MRRS
+		description into pcie_bus_perf parameter suggested
+		by Andrew Murray.
+v1->v2: Update some semantic problems and add MPS and MRRS
+		explanation suggested by Joe Lawrence and Randy Dunlap.
 
-Hi Chris,
-   pci_slot driver is not necessary, I think empty directory under /sys/bus/pci_express/devices is the main problem,
-Because no pcie port devices found in the system, so pciehp driver can not bind any devices when loading it.
-Then no slot will created under /sys/bus/pci/devices/slots.
+Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+These parameters were introduced by Jon Mason <mason@myri.com> at
+commit 5f39e6705 and commit b03e7495a8.
 
-> 
-> Thanks again.
-> 
->> /sys/bus/pci_express/devices:
->> total 0
->>
->> /sys/bus/pci_express/drivers:
->> total 0
->> drwxr-xr-x 2 root root 0 Jan 27 13:17 pciehp/
->>
->>
->> On 2013/1/28 6:53, Chris Clayton wrote:
->>> Thanks again, Martin.
->>>
->>> Firstly, maybe we should remove the linux-media list from the copy list. I imagine this hotplug stuff is just noise to them.
->>>
->>> [snip]
->>>> Do you have any other express card around to try if it works at all? Try that always after a cold boot.
->>>>
->>> Not at the moment, but I ordered at USB3 expresscard yesterday, so I will have one soon.
->>>
->>>> Posting a diff result of the below procedure might help:
->>>>
->>>> # lspci -vvvxxx > lspci.before_insertion.txt
->>>>
->>>> [plug your card into the slot]
->>>>
->>>> # lspci -vvvxxx > lspci.after_insertion.txt
->>>>
->>>> [ unplug your card]
->>>>
->>>> # lspci -vvvxxx > lspci.after_1st_removal.txt
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ Documentation/kernel-parameters.txt |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 363e348..0bb279f 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2227,6 +2227,22 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				This sorting is done to get a device
+ 				order compatible with older (<= 2.4) kernels.
+ 		nobfsort	Don't sort PCI devices into breadth-first order.
++		pcie_bus_tune_off	Disable PCIe MPS (Max Payload Size)
++				turning and using the BIOS-configured MPS defaults.
++		pcie_bus_safe	Use the smallest common denominator MPS
++				of the entire tree below a root complex for every
++				device on that fabric. Can avoid inconsistent MPS
++				problem caused by hotplug.
++		pcie_bus_perf	Configure pcie device MPS to the largest
++				allowable MPS based on its parent bus. Also set
++				MRRS (Max Read Request Size) to the largest supported
++				value (no larger than the MPS that the device or bus
++				can support) for Max performance.
++		pcie_bus_peer2peer	Make the system-wide MPS the smallest
++				possible value (128B). This configuration could prevent
++				peer to peer DMA transmission from working by having
++				the MPS on one root port different than the MPS on
++				another.
+ 		cbiosize=nn[KMG]	The fixed amount of bus space which is
+ 				reserved for the CardBus bridge's IO window.
+ 				The default value is 256 bytes.
 -- 
-Thanks!
-Yijing
+1.7.1
+
 
