@@ -1,39 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 5/5] PCI: catch enable-counter underflows
-To: linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 18 Jan 2013 15:42:30 +0400
-Message-ID: <20130118114230.6698.1881.stgit@zurg>
-In-Reply-To: <20130118113019.6698.25941.stgit@zurg>
-References: <20130118113019.6698.25941.stgit@zurg>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:19819 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753414Ab3AYJhU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 04:37:20 -0500
+From: Yijing Wang <wangyijing@huawei.com>
+To: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Mason <jdmason@kudzu.us>
+CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Andrew Murray <andrew.murray@arm.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH v3] PCI: Document PCIE BUS MPS parameters
+Date: Fri, 25 Jan 2013 17:36:55 +0800
+Message-ID: <1359106615-17544-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds single WARN_ONCE() check for catching 'enable_cnt' imbalances.
+v0->v1: Update MPS parameters as non-arch and add MRRS
+		description into pcie_bus_perf parameter suggested
+		by Andrew Murray.
+v1->v2: Update some semantic problems and add MPS and MRRS
+		explanation suggested by Joe Lawrence and Randy Dunlap.
+v2->v3: Update some semantic problems and the description
+		of pcie_bus_safe and pcie_bus_peer2peer suggested
+		by Bjorn Helgaas.
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+These parameters were introduced by Jon Mason <mason@myri.com> at
+commit 5f39e6705 and commit b03e7495a8.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/pci.c |    3 +++
- 1 file changed, 3 insertions(+)
+ Documentation/kernel-parameters.txt |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5cb5820..ff93f8f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1401,6 +1401,9 @@ pci_disable_device(struct pci_dev *dev)
- 	if (dr)
- 		dr->enabled = 0;
- 
-+	dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
-+			"enable counter underflow");
-+
- 	if (atomic_sub_return(1, &dev->enable_cnt) != 0)
- 		return;
- 
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 363e348..2997df2 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				This sorting is done to get a device
+ 				order compatible with older (<= 2.4) kernels.
+ 		nobfsort	Don't sort PCI devices into breadth-first order.
++		pcie_bus_tune_off	Disable PCIe MPS (Max Payload Size)
++				tuning and use the BIOS-configured MPS defaults.
++		pcie_bus_safe	Use the smallest supported MPS of any device
++				below a root complex.
++		pcie_bus_perf	Configure device MPS to the largest
++				allowable MPS based on its parent bus. Also set
++				MRRS (Max Read Request Size) to the largest supported
++				value (no larger than the MPS that the device or bus
++				can support) for best performance.
++		pcie_bus_peer2peer	Set every device's MPS to 128B, which
++				every device is guaranteed to support. This
++				configuration allows peer-to-peer DMA between any pair
++				of devices possibly at the cost of reduced performance.
+ 		cbiosize=nn[KMG]	The fixed amount of bus space which is
+ 				reserved for the CardBus bridge's IO window.
+ 				The default value is 256 bytes.
+-- 
+1.7.1
+
 
