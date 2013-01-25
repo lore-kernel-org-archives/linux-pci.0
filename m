@@ -1,52 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 Jan 2013 12:24:17 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130110192417.GA18478@obsidianresearch.com>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <20130109231758.GA27065@obsidianresearch.com>
- <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
- <201301100917.19577.arnd@arndb.de>
- <20130110102544.GA5546@avionic-0098.adnet.avionic-design.de>
- <20130110182007.GA28004@obsidianresearch.com>
- <20130110185505.GA22944@avionic-0098.adnet.avionic-design.de>
- <20130110190327.GA23110@avionic-0098.adnet.avionic-design.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ia0-f170.google.com ([209.85.210.170]:57528 "EHLO
+	mail-ia0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756667Ab3AYS57 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 13:57:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130110190327.GA23110@avionic-0098.adnet.avionic-design.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo58qUuwd+8bGMWQHQ6KrfQMvHGb+REVkpJqQdrfAQe3Qw@mail.gmail.com>
+References: <1356594177-29453-1-git-send-email-linfeng@cn.fujitsu.com>
+	<CAErSpo7EmvDaK11P6r-PKxPBqHQBPaGvZj=zvNZ8w=KFbdFgYA@mail.gmail.com>
+	<5102583E.4030109@cn.fujitsu.com>
+	<CAErSpo58qUuwd+8bGMWQHQ6KrfQMvHGb+REVkpJqQdrfAQe3Qw@mail.gmail.com>
+Date: Fri, 25 Jan 2013 10:57:58 -0800
+Message-ID: <CAE9FiQUP71TJgP21SRre4Mb2PrnUg+7KLzXnxHUviqCuNSL44w@mail.gmail.com>
+Subject: Re: [PATCH] pci-sysfs: replace mutex_lock with mutex_trylock to avoid
+ potential deadlock situation
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com,
+	laijs@cn.fujitsu.com, wency@cn.fujitsu.com,
+	izumi.taku@jp.fujitsu.com, Don Dutile <ddutile@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 10, 2013 at 08:03:27PM +0100, Thierry Reding wrote:
+On Fri, Jan 25, 2013 at 9:44 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc Yinghai]
+>
+> On Fri, Jan 25, 2013 at 3:02 AM, Gu Zheng
 
-> > > You'd piece a mapping together, each bus requires 16 64k mappings, a
-> > > simple 2d array of busnr*16 of pointers would do the trick. A more
-> > > clever solution would be to allocate contiguous virtual memory and
-> > > split that up..
- 
-> > Oh, I see. I'm not very familiar with the internals of remapping, so
-> > I'll need to do some more reading. Thanks for the hints.
-> 
-> I forgot to ask. What's the advantage of having a contiguous virtual
-> memory area and splitting it up versus remapping each chunk separately?
+Hi, Gu,
 
-Not alot, really, but it saves you from the pointer array and
-associated overhead. IIRC it is fairly easy to do in the kernel.
+Can you check if two patches in
 
-Arnd's version is good too, but you would be restricted to aligned
-powers of two for the bus number range in the DT, which is probably
-not that big a deal either?
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part3
 
-Jason
+could solve your problem?
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=277df390baeab7ba6aa136356b677a096c890c0c
+
+PCI: Rescan bus using callback method too
+
+
+http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=282e2db3b58d56b5236ee755e1527574df0d298e
+
+PCI, sysfs: Clean up rescan/remove with scheule_callback
+
+Thanks
+
+Yinghai
