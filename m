@@ -1,132 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58286 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523Ab3A1S5F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:05 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2 15/27] arm: plat-orion: introduce orion_{alloc,free}_cpu_win() functions
-Date: Mon, 28 Jan 2013 19:56:24 +0100
-Message-Id: <1359399397-29729-16-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:38460 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754910Ab3AYJOY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 04:14:24 -0500
+Message-ID: <51024CD4.10807@huawei.com>
+Date: Fri, 25 Jan 2013 17:13:56 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, Jon Mason <jdmason@kudzu.us>
+CC: Rob Landley <rob@landley.net>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
+Subject: Re: [PATCH v2] PCI: Document PCIE BUS MPS parameters
+References: <1358996288-31200-1-git-send-email-wangyijing@huawei.com> <CAErSpo6suRwkRoShnNUKxxHt4D4gFnMVqesoZO3t-aC8tvOwnA@mail.gmail.com>
+In-Reply-To: <CAErSpo6suRwkRoShnNUKxxHt4D4gFnMVqesoZO3t-aC8tvOwnA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the address decoding code, we implement two new functions:
-orion_alloc_cpu_win() and orion_free_cpu_win(). The first function
-finds an unused address decoding window, and configures it according
-to the given arguments (in terms of base address, size, target,
-attributes). The second function frees an address decoding window,
-given a physical base address.
+Hi Bjorn,
+   Thanks for your review and comments! Please refer to inlined comment bellow.
 
-Those two new functions will be used by the PCIe code, which needs to
-dynamically register address decoding windows depending on the PCIe
-devices that are detected.
+On 2013/1/25 12:57, Bjorn Helgaas wrote:
+> [+cc Jon, can you make sure this documentation is accurate?]
+> 
+>>
+>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+>> index 363e348..0bb279f 100644
+>> --- a/Documentation/kernel-parameters.txt
+>> +++ b/Documentation/kernel-parameters.txt
+>> @@ -2227,6 +2227,22 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>                                 This sorting is done to get a device
+>>                                 order compatible with older (<= 2.4) kernels.
+>>                 nobfsort        Don't sort PCI devices into breadth-first order.
+>> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
+>> +                               turning and using the BIOS-configured MPS defaults.
+> 
+> s/turning/tuning/
+> s/using/use/
 
-The orion_free_cpu_win() function is only here to handle error cases
-in the PCIe devices initialization, in the normal case, address
-decoding windows are never freed.
+Will update it.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/plat-orion/addr-map.c              |   50 +++++++++++++++++++++++++++
- arch/arm/plat-orion/include/plat/addr-map.h |    7 ++++
- 2 files changed, 57 insertions(+)
+> 
+>> +               pcie_bus_safe   Use the smallest common denominator MPS
+>> +                               of the entire tree below a root complex for every
+>> +                               device on that fabric. Can avoid inconsistent MPS
+>> +                               problem caused by hotplug.
+> 
+> I'm not sure about this.  "smallest common denominator" is colloquial
+> and not exact.  I think you probably mean "the smallest supported MPS
+> of any device below a root complex."
 
-diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
-index dd98638..8f4ef82 100644
---- a/arch/arm/plat-orion/addr-map.c
-+++ b/arch/arm/plat-orion/addr-map.c
-@@ -109,6 +109,56 @@ static void __init orion_disable_cpu_win(const struct orion_addr_map_cfg *cfg,
- }
- 
- /*
-+ * Find an unused address decoding window, and enable it according to
-+ * the arguments passed (base, size, target, attributes, remap).
-+ */
-+int __init orion_alloc_cpu_win(const struct orion_addr_map_cfg *cfg,
-+			       const u32 base, const u32 size,
-+			       const u8 target, const u8 attr, const int remap)
-+{
-+	int win;
-+
-+	for (win = 0; win < cfg->num_wins; win++) {
-+		void __iomem *addr = cfg->win_cfg_base(cfg, win);
-+		u32 ctrl = readl(addr + WIN_CTRL_OFF);
-+		if (!(ctrl & WIN_CTRL_ENABLE))
-+			break;
-+	}
-+
-+	/* No more windows available */
-+	if (win == cfg->num_wins)
-+		return -ENOMEM;
-+
-+	orion_setup_cpu_win(cfg, win, base, size, target, attr, remap);
-+	return 0;
-+}
-+
-+/*
-+ * Free an address decoding window, given its base address.
-+ */
-+int __init orion_free_cpu_win(const struct orion_addr_map_cfg *cfg,
-+			      const u32 base)
-+{
-+	int win;
-+
-+	for (win = 0; win < cfg->num_wins; win++) {
-+		void __iomem *addr = cfg->win_cfg_base(cfg, win);
-+		u32 winbase = readl(addr + WIN_BASE_OFF);
-+		u32 ctrl = readl(addr + WIN_CTRL_OFF);
-+
-+		if (!(ctrl & WIN_CTRL_ENABLE))
-+			continue;
-+
-+		if (winbase == (base & 0xffff0000)) {
-+			orion_disable_cpu_win(cfg, win);
-+			return 0;
-+		}
-+	}
-+
-+	return -EINVAL;
-+}
-+
-+/*
-  * Configure a number of windows.
-  */
- static void __init orion_setup_cpu_wins(const struct orion_addr_map_cfg * cfg,
-diff --git a/arch/arm/plat-orion/include/plat/addr-map.h b/arch/arm/plat-orion/include/plat/addr-map.h
-index b76c065..f8bb539 100644
---- a/arch/arm/plat-orion/include/plat/addr-map.h
-+++ b/arch/arm/plat-orion/include/plat/addr-map.h
-@@ -49,6 +49,13 @@ void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
- 				const u32 size, const u8 target,
- 				const u8 attr, const int remap);
- 
-+int __init orion_alloc_cpu_win(const struct orion_addr_map_cfg *cfg,
-+			       const u32 base, const u32 size,
-+			       const u8 target, const u8 attr, const int remap);
-+
-+int __init orion_free_cpu_win(const struct orion_addr_map_cfg *cfg,
-+			      const u32 base);
-+
- void __init orion_setup_cpu_mbus_target(const struct orion_addr_map_cfg *cfg,
- 					const void __iomem *ddr_window_cpu_base);
- #endif
+Yes, will update it.
+
+> 
+> I'm also not sure how this will avoid MPS problems caused by hotplug.
+> I think you have to assume that a hot-added device may support only a
+> 128B MPS, which means the only way to guarantee that you can use that
+> device is to set MPS=128 for any device that will send packets to the
+> hot-added device.  Or we could reconfigure things at the time of the
+> hot-add, but I don't think we do that today (except for the hot-added
+> device itself).
+
+Actually, I'm working a new patch to fix this problem. I will send out the patch as soon.
+Because system default use pcie_bus_tune_off, after do pci hotplug,
+we never configure newly added pcie device mps. The default mps (128B) of
+added pcie device maybe smaller than upstream port mps (maybe 256B default),
+so this device can not work normally.
+We can separate it in two:
+1、Hotplug slot directly connected to root port:
+  In this case, we can reconfigure root port and newly added pcie device mps.
+  We can configure their mps to largest allowable vaule or conservatively just modify
+  added device mps, make it equal to mps value in root port (consider peer to peer DMA).
+
+2、Hotplug slot not connected to root port:
+  In this case, we can try to configure newly added device mps equal to upsteam port.
+  If newly added device mpss smaller than mps in upstream port. We need to print warning
+  info, let user know what to do next step.
+
+> 
+>> +               pcie_bus_perf   Configure pcie device MPS to the largest
+> 
+> Capitalize "PCIe" consistently.  Better yet, drop it completely since
+> it's obvious that we're only talking about PCIe here.
+
+Ok, drop it.
+
+> 
+>> +                               allowable MPS based on its parent bus. Also set
+>> +                               MRRS (Max Read Request Size) to the largest supported
+>> +                               value (no larger than the MPS that the device or bus
+>> +                               can support) for Max performance.
+> 
+> s/Max/best/
+
+Will update it.
+
+> 
+>> +               pcie_bus_peer2peer      Make the system-wide MPS the smallest
+>> +                               possible value (128B). This configuration could prevent
+>> +                               peer to peer DMA transmission from working by having
+>> +                               the MPS on one root port different than the MPS on
+>> +                               another.
+> 
+> I think the idea is that pcie_bus_peer2peer would *allow* peer-to-peer
+> DMA to work, which is the opposite of what you wrote.  Maybe something
+> like this would be better:
+> 
+>   Set every device's MPS to 128B, which every device is guaranteed to support.
+>   This configuration allows peer-to-peer DMA between any pair of devices,
+>   possibly at the cost of reduced performance.
+This description is good.
+
+Very sorry, that's my fault. I will update it.
+
+> 
+>>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
+>>                                 reserved for the CardBus bridge's IO window.
+>>                                 The default value is 256 bytes.
+>> --
+>> 1.7.1
+>>
+>>
+> 
+> .
+> 
+
+
 -- 
-1.7.9.5
+Thanks!
+Yijing
 
