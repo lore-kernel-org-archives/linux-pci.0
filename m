@@ -1,318 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:36206 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758100Ab3AIXBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Jan 2013 18:01:11 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Jiang Liu <liuj97@gmail.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [Alternative][PATCH] ACPI / PCI: Set root bridge ACPI handle in advance, v2
-Date: Thu, 10 Jan 2013 00:06:53 +0100
-Message-ID: <1910593.f2RrgAtJJO@vostro.rjw.lan>
-In-Reply-To: <CAErSpo473rZOBERaMJV74rfGZXSuBdiPtX=mXmcLmO=CRB4P_g@mail.gmail.com>
-References: <1558789.gX8cmBgyDV@vostro.rjw.lan> <16795012.QL1jNHE7JM@vostro.rjw.lan> <CAErSpo473rZOBERaMJV74rfGZXSuBdiPtX=mXmcLmO=CRB4P_g@mail.gmail.com>
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:47455 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932179Ab3AYRpV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 12:45:21 -0500
+Received: by mail-ve0-f175.google.com with SMTP id db12so313855veb.34
+        for <linux-pci@vger.kernel.org>; Fri, 25 Jan 2013 09:45:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <5102583E.4030109@cn.fujitsu.com>
+References: <1356594177-29453-1-git-send-email-linfeng@cn.fujitsu.com>
+ <CAErSpo7EmvDaK11P6r-PKxPBqHQBPaGvZj=zvNZ8w=KFbdFgYA@mail.gmail.com> <5102583E.4030109@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 25 Jan 2013 10:44:59 -0700
+Message-ID: <CAErSpo58qUuwd+8bGMWQHQ6KrfQMvHGb+REVkpJqQdrfAQe3Qw@mail.gmail.com>
+Subject: Re: [PATCH] pci-sysfs: replace mutex_lock with mutex_trylock to avoid
+ potential deadlock situation
+To: Gu Zheng <guz.fnst@cn.fujitsu.com>
+Cc: Lin Feng <linfeng@cn.fujitsu.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com,
+	laijs@cn.fujitsu.com, wency@cn.fujitsu.com,
+	izumi.taku@jp.fujitsu.com, Don Dutile <ddutile@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, January 09, 2013 03:16:59 PM Bjorn Helgaas wrote:
-> On Wed, Jan 9, 2013 at 2:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > The ACPI handles of PCI root bridges need to be known to
-> > acpi_bind_one(), so that it can create the appropriate
-> > "firmware_node" and "physical_node" files for them, but currently
-> > the way it gets to know those handles is not exactly straightforward
-> > (to put it lightly).
-> >
-> > This is how it works, roughly:
-> >
-> >   1. acpi_bus_scan() finds the handle of a PCI root bridge,
-> >      creates a struct acpi_device object for it and passes that
-> >      object to acpi_pci_root_add().
-> >
-> >   2. acpi_pci_root_add() creates a struct acpi_pci_root object,
-> >      populates its "device" field with its argument's address
-> >      (device->handle is the ACPI handle found in step 1).
-> >
-> >   3. The struct acpi_pci_root object created in step 2 is passed
-> >      to pci_acpi_scan_root() and used to get resources that are
-> >      passed to pci_create_root_bus().
-> >
-> >   4. pci_create_root_bus() creates a struct pci_host_bridge object
-> >      and passes its "dev" member to device_register().
-> >
-> >   5. platform_notify(), which for systems with ACPI is set to
-> >      acpi_platform_notify(), is called.
-> >
-> > So far, so good.  Now it starts to be "interesting".
-> >
-> >   6. acpi_find_bridge_device() is used to find the ACPI handle of
-> >      the given device (which is the PCI root bridge) and executes
-> >      acpi_pci_find_root_bridge(), among other things, for the
-> >      given device object.
-> >
-> >   7. acpi_pci_find_root_bridge() uses the name (sic!) of the given
-> >      device object to extract the segment and bus numbers of the PCI
-> >      root bridge and passes them to acpi_get_pci_rootbridge_handle().
-> >
-> >   8. acpi_get_pci_rootbridge_handle() browses the list of ACPI PCI
-> >      root bridges and finds the one that matches the given segment
-> >      and bus numbers.  Its handle is then used to initialize the
-> >      ACPI handle of the PCI root bridge's device object by
-> >      acpi_bind_one().  However, this is *exactly* the ACPI handle we
-> >      started with in step 1.
-> >
-> > Needless to say, this is quite embarassing, but it may be avoided
-> > thanks to commit f3fd0c8 (ACPI: Allow ACPI handles of devices to be
-> > initialized in advance), which makes it possible to initialize the
-> > ACPI handle of a device before passing it to device_register().
-> >
-> > Accordingly, add a new __weak routine, pcibios_root_bridge_prepare(),
-> > defaulting to an empty implementation that can be replaced by the
-> > interested architecutres (x86 and ia64 at the moment) with functions
-> > that will set the root bridge's ACPI handle before its dev member is
-> > passed to device_register().  Make both x86 and ia64 provide such
-> > implementations of pcibios_root_bridge_prepare() and remove
-> > acpi_pci_find_root_bridge() and acpi_get_pci_rootbridge_handle() that
-> > aren't necessary any more.
-> >
-> > Included is a fix for breakage on systems with non-ACPI PCI host
-> > bridges from Bjorn Helgaas.
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Looks good to me!
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+[+cc Yinghai]
 
-Thanks!
+On Fri, Jan 25, 2013 at 3:02 AM, Gu Zheng <guz.fnst@cn.fujitsu.com> wrote:
+> Hi Bjorn,
+>         Thanks for your review and comments! Please refer to inlined comments below.
+>
+> On 01/25/2013 07:12 AM, Bjorn Helgaas wrote:
+>
+>> On Thu, Dec 27, 2012 at 12:42 AM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+>>> There is a potential deadlock situation when we manipulate the pci-sysfs user
+>>> interfaces from different bus hierarchy simultaneously, described as following:
+>>>
+>>> path1: sysfs remove device:             | path2: sysfs rescan device:
+>>> sysfs_schedule_callback_work()          | sysfs_write_file()
+>>>   remove_callback()                     |   flush_write_buffer()
+>>> *1* mutex_lock(&pci_remove_rescan_mutex)|*2*  sysfs_get_active(attr_sd)
+>>>       ...                               |     dev_attr_store()
+>>>         device_remove_file()            |       dev_rescan_store()
+>>>           ...                           |*4*      mutex_lock(&pci_remove_rescan_mutex)
+>>> *3*       sysfs_deactivate(sd)          |     ...
+>>>             wait_for_completion()       |*5*  sysfs_put_active(attr_sd)
+>>> *6* mutex_unlock(&pci_remove_rescan_mutex)
+> ...snip...
+>>> Reported-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+>>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+>>> Signed-off-by: Gu Zheng <guz.fnst@cn.fujitsu.com>
+>>> ---
+>>>  drivers/pci/pci-sysfs.c |   42 ++++++++++++++++++++++++++----------------
+>>>  1 files changed, 26 insertions(+), 16 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>>> index 05b78b1..d2efbb0 100644
+>>> --- a/drivers/pci/pci-sysfs.c
+>>> +++ b/drivers/pci/pci-sysfs.c
+>>> @@ -295,10 +295,13 @@ static ssize_t bus_rescan_store(struct bus_type *bus,
+> const char *buf,
+>>>                 return -EINVAL;
+>>>
+>>>         if (val) {
+>>> -               mutex_lock(&pci_remove_rescan_mutex);
+>>> -               while ((b = pci_find_next_bus(b)) != NULL)
+>>> -                       pci_rescan_bus(b);
+>>> -               mutex_unlock(&pci_remove_rescan_mutex);
+>>> +               if (mutex_trylock(&pci_remove_rescan_mutex)) {
+>>> +                       while ((b = pci_find_next_bus(b)) != NULL)
+>>> +                               pci_rescan_bus(b);
+>>> +                       mutex_unlock(&pci_remove_rescan_mutex);
+>>> +               } else {
+>>> +                       return 0;
+>> What are the semantics of returning 0 from a sysfs store function?
+>> Does the user's write just get dropped?  I would think we'd return
+>> "count" for that case.
+>
+> Oh, yes, return "count" seems suitable here, although we did not reach the
+> user's target goal(rescan the bus), but the user's write has been flushed yet.
+> But the user still can not judge whether pci_rescan_bus() was successfully done
+> only by the return value. Shall we return a suitable error here to tell the user
+> that his write was written, but pci_rescan_bus() was not done ?
+>
+>> Is there some sort of automatic retry in libc
+>> or something if we return zero?
+>
+> No, there is not any extra operations in libc if we return zero indeed.
+>
+>> Are you relying on the user code to
+>> notice that nothing was written and do its own retry?
+>>
+>
+> Yes, but it seems impractical.
+>
+>> The last seems most likely, but that seems like it complicates the
+>> user's life unnecessarily.
+>>
+>>> +               }
+>>>         }
+>>>         return count;
+>>>  }
+>>> @@ -319,9 +322,12 @@ dev_rescan_store(struct device *dev, struct device_attribute *attr,
+>>>                 return -EINVAL;
+>>>
+>>>         if (val) {
+>>> -               mutex_lock(&pci_remove_rescan_mutex);
+>>> -               pci_rescan_bus(pdev->bus);
+>>> -               mutex_unlock(&pci_remove_rescan_mutex);
+>>> +               if (mutex_trylock(&pci_remove_rescan_mutex)) {
+>>> +                       pci_rescan_bus(pdev->bus);
+>>> +                       mutex_unlock(&pci_remove_rescan_mutex);
+>>> +               } else {
+>>> +                       return 0;
+>>> +               }
+>>>         }
+>>>         return count;
+>>>  }
+>>> @@ -330,9 +336,10 @@ static void remove_callback(struct device *dev)
+>>>  {
+>>>         struct pci_dev *pdev = to_pci_dev(dev);
+>>>
+>>> -       mutex_lock(&pci_remove_rescan_mutex);
+>>> -       pci_stop_and_remove_bus_device(pdev);
+>>> -       mutex_unlock(&pci_remove_rescan_mutex);
+>>> +       if (mutex_trylock(&pci_remove_rescan_mutex)) {
+>>> +               pci_stop_and_remove_bus_device(pdev);
+>>> +               mutex_unlock(&pci_remove_rescan_mutex);
+>>> +       }
+>> In the other cases, I think the user will at least get some
+>> indication, e.g., a write() that returns zero, when we abort.  But
+>> here, we silently skip the pci_stop_and_remove_bus_device().  That
+>> sounds wrong to me.  What actually happens here, and why is it OK to
+>> skip it?
+>
+> Yeah, the hasty skip seems not suitable. We should give out some information
+> here, if we can not do pci_stop_and_remove_bus_device().
+>
+>> Can we avoid the deadlock by queuing these in a workqueue instead of
+>> using the mutex_trylock() approach?
+>>
+>
+> No, I think use a workqueue to queue the rescan routine into workqueue as the
+> remove is not suitable.
+> After we queue the scan-bus work into workqueue, the rescan routine can
+> return directly(case1) or wait until work is completed(case2).
+> case1:
+> If we return directly after we queue the scan-bus work into workqueue.
+> Maybe this work will be scheduled some time later. If there is a
+> user's routine want to use a new-added device before the scan-bus work is
+> successfully done will fail. It can avoid the deadlock, but the rescan routine
+> is executed asynchronously.
+> case2:
+> If we wait until work is completed after we queue the scan-bus work into
+> workqueue. The s_active of the sys_dirent is still hold by us, so this approach
+> could not avoid the deadlock.
 
-I'll wait for comments from the others, if any, and put it into my acpi-scan
-branch after a couple of days.  It doesn't need to be there technically, but
-it's kind of related.
+I don't think the asynchronous nature of case 1 is a fatal problem.
+I'm not sure we can guarantee that a specific device is added and
+ready for use when the sysfs write completes, so I'm dubious about
+user space making assumptions about a device being ready.  It should
+probably use a different mechanism, like udev, to learn about a new
+device.
 
-Thanks,
-Rafael
+I'm sorry that you tripped over this deadlock, because now I'm worried
+about related locking issues outside sysfs :)  The mutex you're
+fiddling with is only in sysfs, but the routines *protected* by that
+mutex are used in other places, too.  So what happens when a hotplug
+driver does a rescan at the same time a user does a rescan or remove
+via sysfs?  I don't even know what the rules are for protecting
+scan/remove, but I don't have confidence that the issue you're fixing
+is the only one.
 
+Bjorn
 
-> > ---
-> >
-> > Well, I guess it's time to resend this one before everybody forgets it. :-)
-> >
-> > Bjorn, Yinghai,
-> >
-> > For arch/x86/include/asm/pci.h is used the iommu convention and called the
-> > new pointer "acpi".
-> >
-> > Thanks,
-> > Rafael
-> >
-> > ---
-> >  arch/ia64/pci/pci.c        |    8 ++++++++
-> >  arch/x86/include/asm/pci.h |    3 +++
-> >  arch/x86/pci/acpi.c        |    9 +++++++++
-> >  drivers/acpi/pci_root.c    |   18 ------------------
-> >  drivers/pci/pci-acpi.c     |   19 -------------------
-> >  drivers/pci/probe.c        |   16 ++++++++++++++++
-> >  include/acpi/acpi_bus.h    |    1 -
-> >  include/linux/pci.h        |    2 ++
-> >  8 files changed, 38 insertions(+), 38 deletions(-)
-> >
-> > Index: linux-pm/drivers/pci/probe.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/probe.c
-> > +++ linux-pm/drivers/pci/probe.c
-> > @@ -1632,6 +1632,18 @@ unsigned int pci_scan_child_bus(struct p
-> >         return max;
-> >  }
-> >
-> > +/**
-> > + * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
-> > + * @bridge: Host bridge to set up.
-> > + *
-> > + * Default empty implementation.  Replace with an architecture-specific setup
-> > + * routine, if necessary.
-> > + */
-> > +int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> > +{
-> > +       return 0;
-> > +}
-> > +
-> >  struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> >                 struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> >  {
-> > @@ -1665,6 +1677,10 @@ struct pci_bus *pci_create_root_bus(stru
-> >         bridge->dev.parent = parent;
-> >         bridge->dev.release = pci_release_bus_bridge_dev;
-> >         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > +       error = pcibios_root_bridge_prepare(bridge);
-> > +       if (error)
-> > +               goto bridge_dev_reg_err;
-> > +
-> >         error = device_register(&bridge->dev);
-> >         if (error)
-> >                 goto bridge_dev_reg_err;
-> > Index: linux-pm/include/linux/pci.h
-> > ===================================================================
-> > --- linux-pm.orig/include/linux/pci.h
-> > +++ linux-pm/include/linux/pci.h
-> > @@ -378,6 +378,8 @@ void pci_set_host_bridge_release(struct
-> >                      void (*release_fn)(struct pci_host_bridge *),
-> >                      void *release_data);
-> >
-> > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
-> > +
-> >  /*
-> >   * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
-> >   * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
-> > Index: linux-pm/arch/x86/pci/acpi.c
-> > ===================================================================
-> > --- linux-pm.orig/arch/x86/pci/acpi.c
-> > +++ linux-pm/arch/x86/pci/acpi.c
-> > @@ -521,6 +521,7 @@ struct pci_bus *pci_acpi_scan_root(struc
-> >         sd = &info->sd;
-> >         sd->domain = domain;
-> >         sd->node = node;
-> > +       sd->acpi = device->handle;
-> >         /*
-> >          * Maybe the desired pci bus has been already scanned. In such case
-> >          * it is unnecessary to scan the pci bus with the given domain,busnum.
-> > @@ -592,6 +593,14 @@ struct pci_bus *pci_acpi_scan_root(struc
-> >         return bus;
-> >  }
-> >
-> > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> > +{
-> > +       struct pci_sysdata *sd = bridge->bus->sysdata;
-> > +
-> > +       ACPI_HANDLE_SET(&bridge->dev, sd->acpi);
-> > +       return 0;
-> > +}
-> > +
-> >  int __init pci_acpi_init(void)
-> >  {
-> >         struct pci_dev *dev = NULL;
-> > Index: linux-pm/arch/ia64/pci/pci.c
-> > ===================================================================
-> > --- linux-pm.orig/arch/ia64/pci/pci.c
-> > +++ linux-pm/arch/ia64/pci/pci.c
-> > @@ -393,6 +393,14 @@ out1:
-> >         return NULL;
-> >  }
-> >
-> > +int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> > +{
-> > +       struct pci_controller *controller = bridge->bus->sysdata;
-> > +
-> > +       ACPI_HANDLE_SET(&bridge->dev, controller->acpi_handle);
-> > +       return 0;
-> > +}
-> > +
-> >  static int is_valid_resource(struct pci_dev *dev, int idx)
-> >  {
-> >         unsigned int i, type_mask = IORESOURCE_IO | IORESOURCE_MEM;
-> > Index: linux-pm/drivers/pci/pci-acpi.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/pci/pci-acpi.c
-> > +++ linux-pm/drivers/pci/pci-acpi.c
-> > @@ -302,24 +302,6 @@ static int acpi_pci_find_device(struct d
-> >         return 0;
-> >  }
-> >
-> > -static int acpi_pci_find_root_bridge(struct device *dev, acpi_handle *handle)
-> > -{
-> > -       int num;
-> > -       unsigned int seg, bus;
-> > -
-> > -       /*
-> > -        * The string should be the same as root bridge's name
-> > -        * Please look at 'pci_scan_bus_parented'
-> > -        */
-> > -       num = sscanf(dev_name(dev), "pci%04x:%02x", &seg, &bus);
-> > -       if (num != 2)
-> > -               return -ENODEV;
-> > -       *handle = acpi_get_pci_rootbridge_handle(seg, bus);
-> > -       if (!*handle)
-> > -               return -ENODEV;
-> > -       return 0;
-> > -}
-> > -
-> >  static void pci_acpi_setup(struct device *dev)
-> >  {
-> >         struct pci_dev *pci_dev = to_pci_dev(dev);
-> > @@ -376,7 +358,6 @@ static void pci_acpi_cleanup(struct devi
-> >  static struct acpi_bus_type acpi_pci_bus = {
-> >         .bus = &pci_bus_type,
-> >         .find_device = acpi_pci_find_device,
-> > -       .find_bridge = acpi_pci_find_root_bridge,
-> >         .setup = pci_acpi_setup,
-> >         .cleanup = pci_acpi_cleanup,
-> >  };
-> > Index: linux-pm/drivers/acpi/pci_root.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/acpi/pci_root.c
-> > +++ linux-pm/drivers/acpi/pci_root.c
-> > @@ -107,24 +107,6 @@ void acpi_pci_unregister_driver(struct a
-> >  }
-> >  EXPORT_SYMBOL(acpi_pci_unregister_driver);
-> >
-> > -acpi_handle acpi_get_pci_rootbridge_handle(unsigned int seg, unsigned int bus)
-> > -{
-> > -       struct acpi_pci_root *root;
-> > -       acpi_handle handle = NULL;
-> > -
-> > -       mutex_lock(&acpi_pci_root_lock);
-> > -       list_for_each_entry(root, &acpi_pci_roots, node)
-> > -               if ((root->segment == (u16) seg) &&
-> > -                   (root->secondary.start == (u16) bus)) {
-> > -                       handle = root->device->handle;
-> > -                       break;
-> > -               }
-> > -       mutex_unlock(&acpi_pci_root_lock);
-> > -       return handle;
-> > -}
-> > -
-> > -EXPORT_SYMBOL_GPL(acpi_get_pci_rootbridge_handle);
-> > -
-> >  /**
-> >   * acpi_is_root_bridge - determine whether an ACPI CA node is a PCI root bridge
-> >   * @handle - the ACPI CA node in question.
-> > Index: linux-pm/include/acpi/acpi_bus.h
-> > ===================================================================
-> > --- linux-pm.orig/include/acpi/acpi_bus.h
-> > +++ linux-pm/include/acpi/acpi_bus.h
-> > @@ -441,7 +441,6 @@ struct acpi_pci_root {
-> >  /* helper */
-> >  acpi_handle acpi_get_child(acpi_handle, u64);
-> >  int acpi_is_root_bridge(acpi_handle);
-> > -acpi_handle acpi_get_pci_rootbridge_handle(unsigned int, unsigned int);
-> >  struct acpi_pci_root *acpi_pci_find_root(acpi_handle handle);
-> >  #define DEVICE_ACPI_HANDLE(dev) ((acpi_handle)ACPI_HANDLE(dev))
-> >
-> > Index: linux-pm/arch/x86/include/asm/pci.h
-> > ===================================================================
-> > --- linux-pm.orig/arch/x86/include/asm/pci.h
-> > +++ linux-pm/arch/x86/include/asm/pci.h
-> > @@ -14,6 +14,9 @@
-> >  struct pci_sysdata {
-> >         int             domain;         /* PCI domain */
-> >         int             node;           /* NUMA node */
-> > +#ifdef CONFIG_ACPI
-> > +       void            *acpi;          /* ACPI-specific data */
-> > +#endif
-> >  #ifdef CONFIG_X86_64
-> >         void            *iommu;         /* IOMMU private data */
-> >  #endif
-> >
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+>>>  }
+>>>
+>>>  static ssize_t
+>>> @@ -366,12 +373,15 @@ dev_bus_rescan_store(struct device *dev, struct
+> device_attribute *attr,
+>>>                 return -EINVAL;
+>>>
+>>>         if (val) {
+>>> -               mutex_lock(&pci_remove_rescan_mutex);
+>>> -               if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>>> -                       pci_rescan_bus_bridge_resize(bus->self);
+>>> -               else
+>>> -                       pci_rescan_bus(bus);
+>>> -               mutex_unlock(&pci_remove_rescan_mutex);
+>>> +               if (mutex_trylock(&pci_remove_rescan_mutex)) {
+>>> +                       if (!pci_is_root_bus(bus) && list_empty(&bus->devices))
+>>> +                               pci_rescan_bus_bridge_resize(bus->self);
+>>> +                       else
+>>> +                               pci_rescan_bus(bus);
+>>> +                       mutex_unlock(&pci_remove_rescan_mutex);
+>>> +               } else {
+>>> +                       return 0;
+>>> +               }
+>>>         }
+>>>         return count;
+>>>  }
+>>> --
+>>> 1.7.1
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
