@@ -1,61 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:49910 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373Ab3AJJRm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Jan 2013 04:17:42 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Date: Thu, 10 Jan 2013 09:17:19 +0000
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de> <20130109231758.GA27065@obsidianresearch.com> <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
-In-Reply-To: <20130110071937.GG15212@avionic-0098.adnet.avionic-design.de>
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:60596 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755551Ab3AYEXh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2013 23:23:37 -0500
+Received: by mail-vc0-f179.google.com with SMTP id gb23so2027250vcb.10
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2013 20:23:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201301100917.19577.arnd@arndb.de>
+In-Reply-To: <50DD5E8A.5050205@cn.fujitsu.com>
+References: <1356679902-4266-1-git-send-email-linfeng@cn.fujitsu.com>
+ <CAE9FiQU1YM32pb+iGJHj1m3W-nGUbHh5f8Qkx5bRsfptgGParw@mail.gmail.com> <50DD5E8A.5050205@cn.fujitsu.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 24 Jan 2013 21:23:16 -0700
+Message-ID: <CAErSpo5VofkxRDvDc3q5xF5nq4Wy+5RAYwkQ6BdSftRXPPF3kw@mail.gmail.com>
+Subject: Re: [PATCH] pci: remove redundant function calls in pci_reassigndev_resource_alignment()
+To: Lin Feng <linfeng@cn.fujitsu.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 10 January 2013, Thierry Reding wrote:
-> On Wed, Jan 09, 2013 at 04:17:58PM -0700, Jason Gunthorpe wrote:
-> > On Wed, Jan 09, 2013 at 04:12:31PM -0700, Stephen Warren wrote:
-> > You could decrease the size of the mapping to only span the bus
-> > numbers that are configured for use via DT.
-> 
-> That won't work, unfortunately. The mapping is such that the bus number
-> is not encoded in the uppermost bits, the extended register number is.
-> So the only thing that we could do is decrease the size of the extended
-> register space for *all* devices.
+On Fri, Dec 28, 2012 at 1:55 AM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+>
+>
+> On 12/28/2012 03:45 PM, Yinghai Lu wrote:
+>> On Thu, Dec 27, 2012 at 11:31 PM, Lin Feng <linfeng@cn.fujitsu.com> wrote:
+>>> pci_reassigndev_resource_alignment() potentially calls
+>>> pci_specified_resource_alignment() twice, which is redundant.
+>>>
+>>> pci_is_reassigndev() is only called in pci_reassigndev_resource_alignment(),
+>>> and from sematic/functionality aspects pci_specified_resource_alignment() is
+>>> sufficient to substitute, so also make some cleanup.
+>>>
+>>> Signed-off-by: Lin Feng <linfeng@cn.fujitsu.com>
+>>> Cc: Yinghai Lu <yinghai@kernel.org>
+>>> ---
+>>>  drivers/pci/pci.c |   16 ++--------------
+>>>  1 files changed, 2 insertions(+), 14 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 5cb5820..789f401 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -3766,18 +3766,6 @@ resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>>>         return align;
+>>>  }
+>>>
+>>> -/**
+>>> - * pci_is_reassigndev - check if specified PCI is target device to reassign
+>>> - * @dev: the PCI device to check
+>>> - *
+>>> - * RETURNS: non-zero for PCI device is a target device to reassign,
+>>> - *          or zero is not.
+>>> - */
+>>> -int pci_is_reassigndev(struct pci_dev *dev)
+>>> -{
+>>> -       return (pci_specified_resource_alignment(dev) != 0);
+>>> -}
+>>> -
+>>>  /*
+>>>   * This function disables memory decoding and releases memory resources
+>>>   * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
+>>> @@ -3792,7 +3780,8 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>>         resource_size_t align, size;
+>>>         u16 command;
+>>>
+>>> -       if (!pci_is_reassigndev(dev))
+>>> +       align = pci_specified_resource_alignment(dev);
+>>> +       if (!align)
+>>>                 return;
+>>>
+>>>         if (dev->hdr_type == PCI_HEADER_TYPE_NORMAL &&
+>>> @@ -3808,7 +3797,6 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>>>         command &= ~PCI_COMMAND_MEMORY;
+>>>         pci_write_config_word(dev, PCI_COMMAND, command);
+>>>
+>>> -       align = pci_specified_resource_alignment(dev);
+>>>         for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+>>>                 r = &dev->resource[i];
+>>>                 if (!(r->flags & IORESOURCE_MEM))
+>>> --
+>>> 1.7.1
+>>>
+>>
+>> looks the same as the one that i posted 6 months ago.
+>>
+>> http://copilotco.com/mail-archives/linux-kernel.2012/msg18498.html
+> Sorry, I didn't notice your patchset before :)
+> Yes, they are the same. But why does nobody care this?
 
-But you could still a method to map 16 separate areas per bus, each 65536
-bytes long, which results in 1MB per bus. That is probably ok, since
-very few systems have more than a handful of buses in practice.
+I applied Yinghai's patch to my pci/misc branch, headed for v3.9.
 
-In theory, doing static mappings on a per-page base would let you
-do 16 devices at a time, but it's probably worth doing at this fine
-granularity.
-
-> > Are there any concerns about these config registers being accessed
-> > from a context where a new mapping can't be made? Interrupt? Machine
-> > Check? PCI-E Advanced Error Reporting?
-> 
-> I haven't checked but I would expect configuration space accesses to not
-> happen in interrupt context. Usually they are limited to enumeration and
-> driver probe.
-
-Actually, AER probably needs this, and I believe some broken devices 
-need to mask interrupts using the PCI command word in the config space,
-it it can happen.
-
-	Arnd
+Bjorn
