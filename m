@@ -1,53 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:52099 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754060Ab3ADTTW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:19:22 -0500
-Received: by mail-vc0-f180.google.com with SMTP id p16so17010287vcq.11
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:19:21 -0800 (PST)
+Received: from mail-vc0-f181.google.com ([209.85.220.181]:62225 "EHLO
+	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753775Ab3AYE6R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2013 23:58:17 -0500
+Received: by mail-vc0-f181.google.com with SMTP id d16so6976262vcd.12
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2013 20:58:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
-References: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
-Date: Fri, 4 Jan 2013 14:19:21 -0500
-Message-ID: <CADnq5_MYtqg=JHs+-cXCigRCba4g59a7zwpQmswSGgMPWDocLQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] drm_pcie_get_speed_cap_mask() cleanups
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, Betty Dall <betty.dall@hp.com>,
-	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
-	Alex Deucher <alexander.deucher@amd.com>
+In-Reply-To: <1358996288-31200-1-git-send-email-wangyijing@huawei.com>
+References: <1358996288-31200-1-git-send-email-wangyijing@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 24 Jan 2013 21:57:55 -0700
+Message-ID: <CAErSpo6suRwkRoShnNUKxxHt4D4gFnMVqesoZO3t-aC8tvOwnA@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: Document PCIE BUS MPS parameters
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Rob Landley <rob@landley.net>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Andrew Murray <andrew.murray@arm.com>,
+	Joe Lawrence <Joe.Lawrence@stratus.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com,
+	Jon Mason <jdmason@kudzu.us>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 4, 2013 at 2:10 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> These are minor cleanups for drm_pcie_get_speed_cap_mask() to use
-> standard #defines and PCIe capability accessors.  They depend on
-> a pci_regs.h change (130f1b8f35) that appeared in v3.8-rc2.
->
-> They don't address the issue of DRM devices directly below a host
-> bridge that doesn't appear as a PCI device (the issue Lucas has
-> been working on).
->
-> I'm a little skeptical about the premise of drm_pcie_get_speed_cap_mask()
-> to begin with.  Link speed seems like something fairly generic that should
-> be handled in the core, not in individual drivers.  Sec 6.11, "Link Speed
-> Management", in the PCIe 3.0 spec seems relevant and suggests that the
-> hardware should automatically use the highest speed supported by both ends
-> of the link unless software sets a lower maximum via Target Link Speed.
->
-> But I can't match up the code, e.g., evergreen_pcie_gen2_enable(), to
-> anything in the generic PCIe specs, so maybe this driver code is
-> essentially quirks for misbehaving hardware?
+[+cc Jon, can you make sure this documentation is accurate?]
 
-At least for radeon, there is an asic specific sequence required to
-change the PCIE gen link speed at runtime.  Depending on the bios, the
-board may come up in the highest mode supported by either side or
-something lower.  If it comes up at a lower speed than the hardware is
-capable of, we can increase it in the driver to improve performance.
-Additionally, you can select a lower link speed to save power.  I
-don't know if there is a generic non-asic specific way to change the
-link speed of a device at runtime, but I'm not really a PCI expert.
+On Wed, Jan 23, 2013 at 7:58 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> v0->v1: Update MPS parameters as non-arch and add MRRS
+>                 description into pcie_bus_perf parameter suggested
+>                 by Andrew Murray.
+> v1->v2: Update some semantic problems and add MPS and MRRS
+>                 explanation suggested by Joe Lawrence and Randy Dunlap.
+>
+> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
+> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
+> These parameters were introduced by Jon Mason <mason@myri.com> at
+> commit 5f39e6705 and commit b03e7495a8.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  Documentation/kernel-parameters.txt |   16 ++++++++++++++++
+>  1 files changed, 16 insertions(+), 0 deletions(-)
+>
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 363e348..0bb279f 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2227,6 +2227,22 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>                                 This sorting is done to get a device
+>                                 order compatible with older (<= 2.4) kernels.
+>                 nobfsort        Don't sort PCI devices into breadth-first order.
+> +               pcie_bus_tune_off       Disable PCIe MPS (Max Payload Size)
+> +                               turning and using the BIOS-configured MPS defaults.
 
-Alex
+s/turning/tuning/
+s/using/use/
+
+> +               pcie_bus_safe   Use the smallest common denominator MPS
+> +                               of the entire tree below a root complex for every
+> +                               device on that fabric. Can avoid inconsistent MPS
+> +                               problem caused by hotplug.
+
+I'm not sure about this.  "smallest common denominator" is colloquial
+and not exact.  I think you probably mean "the smallest supported MPS
+of any device below a root complex."
+
+I'm also not sure how this will avoid MPS problems caused by hotplug.
+I think you have to assume that a hot-added device may support only a
+128B MPS, which means the only way to guarantee that you can use that
+device is to set MPS=128 for any device that will send packets to the
+hot-added device.  Or we could reconfigure things at the time of the
+hot-add, but I don't think we do that today (except for the hot-added
+device itself).
+
+> +               pcie_bus_perf   Configure pcie device MPS to the largest
+
+Capitalize "PCIe" consistently.  Better yet, drop it completely since
+it's obvious that we're only talking about PCIe here.
+
+> +                               allowable MPS based on its parent bus. Also set
+> +                               MRRS (Max Read Request Size) to the largest supported
+> +                               value (no larger than the MPS that the device or bus
+> +                               can support) for Max performance.
+
+s/Max/best/
+
+> +               pcie_bus_peer2peer      Make the system-wide MPS the smallest
+> +                               possible value (128B). This configuration could prevent
+> +                               peer to peer DMA transmission from working by having
+> +                               the MPS on one root port different than the MPS on
+> +                               another.
+
+I think the idea is that pcie_bus_peer2peer would *allow* peer-to-peer
+DMA to work, which is the opposite of what you wrote.  Maybe something
+like this would be better:
+
+  Set every device's MPS to 128B, which every device is guaranteed to support.
+  This configuration allows peer-to-peer DMA between any pair of devices,
+  possibly at the cost of reduced performance.
+
+>                 cbiosize=nn[KMG]        The fixed amount of bus space which is
+>                                 reserved for the CardBus bridge's IO window.
+>                                 The default value is 256 bytes.
+> --
+> 1.7.1
+>
+>
