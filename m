@@ -1,57 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:40187 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621Ab3A3NHr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 08:07:47 -0500
-Date: Wed, 30 Jan 2013 14:07:30 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130130140730.240b18c1@skate>
-In-Reply-To: <20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20130130113245.GH23505@n2100.arm.linux.org.uk>
-	<20130130120344.GA29490@avionic-0098.mockup.avionic-design.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga02-in.huawei.com ([119.145.14.65]:57417 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281Ab3AZBZI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 20:25:08 -0500
+Message-ID: <51033057.1080908@huawei.com>
+Date: Sat, 26 Jan 2013 09:24:39 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Len Brown <lenb@kernel.org>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v10 00/11] PCI, ACPI: pci root bus hotplug support / pci
+ match_driver
+References: <1358803252-20639-1-git-send-email-yinghai@kernel.org> <2072996.JYmST9orI6@vostro.rjw.lan> <CAE9FiQUS56KnvDCF7LUyCkNLcun+3zZ+xGiexca2ej30dRvrQg@mail.gmail.com> <CAErSpo7-XabKQh_Lia9zS9i4Mm=eBV6rRw0ArjXAZBiWYx4uYA@mail.gmail.com>
+In-Reply-To: <CAErSpo7-XabKQh_Lia9zS9i4Mm=eBV6rRw0ArjXAZBiWYx4uYA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Thierry Reding,
+On 2013-1-26 8:04, Bjorn Helgaas wrote:
+> On Tue, Jan 22, 2013 at 3:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Tue, Jan 22, 2013 at 2:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>> On Monday, January 21, 2013 01:20:41 PM Yinghai Lu wrote:
+>>>> It includes
+>>>> 1. preparing patches for pci root bus hotadd/hotremove support
+>>>> 2. move root bus hotadd from acpiphp to pci_root.c
+>>>> 3. add hot-remove support
+>>>> 4. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
+>>>> 5. add match_driver to add pci device to device tree early but
+>>>>    not attach driver for hotplug path.
+>>>>
+>>>> based on pci/next + pm/acpi-scan
+>>>>
+>>>> could get from
+>>>>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
+>>>>
+>>>> -v9: merges several patches together for easy review, requested by Rafael.
+>>>> -v10: address comments from Rafael.
+>>>>
+>>>> Jiang Liu (2):
+>>>>   PCI: Fix a device reference count leakage issue in pci_dev_present()
+>>>>   PCI: make PCI device create/destroy logic symmetric
+>>>>
+>>>> Tang Chen (1):
+>>>>   PCI, ACPI: debug print for installation of acpi root bridge's
+>>>>     notifier
+>>>>
+>>>> Yinghai Lu (8):
+>>>>   PCI, acpiphp: Add is_hotplug_bridge detection
+>>>>   PCI: Add root bus children dev's res to fail list
+>>>>   PCI: Set dev_node early for pci_dev
+>>>>   PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
+>>>>   PCI, acpiphp: Move and enhance hotplug support of pci host bridge
+>>>>   PCI, acpiphp: Don't bailout even no slots found yet.
+>>>>   PCI: Skip attaching driver in device_add()
+>>>>   PCI: Put pci dev to device tree as early as possible
+>>>
+>>> OK
+>>>
+>>> Please feel free to add
+>>>
+>>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>
+>>> to all of the patches in this series I haven't acked already.
+> 
+> I first pulled in
+> "git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+> acpi-scan" again (to pci/acpi-scan2), added your acks, Rafael, and put
+> this series on a pci/yinghai-root-bus branch based on pci/acpi-scan2.
+> 
+> I reworked some of the changelogs a bit, but I don't think I made any
+> code changes except that in [10/11] I just inlined the
+> pci_bus_attach_device() code rather than making a new function, since
+> it's small, there's only one caller, and I didn't think we needed any
+> more pci_* and pci_bus_* functions than we already have.
+> 
+> Let me know if I messed anything up.
+Great, so I could rebase my PCI notification related work to this branch.
+I'm trying to resolve conflicts between acpi-scan and pci-root-bus-hotplug
+last night.
 
-On Wed, 30 Jan 2013 13:03:44 +0100, Thierry Reding wrote:
+Thanks!
 
-> That approach isn't going to work very well with multi-platform,
-> though, since the function can only be overridden on a
-> per-architecture basis.
+> 
+> Bjorn
+> 
+> .
+> 
 
-I can do like is done for pcibios_align_resource(): put a single
-implementation of the function in arch/arm/kernel/bios32.c, and make it
-call a hook registered in the hw_pci structure, or even directly use a
-numerical value in hw_pci, as Russell suggested earlier.
 
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
