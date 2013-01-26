@@ -1,92 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:58350 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229Ab3A1S5P (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:15 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2 21/27] arm: mvebu: add PCIe Device Tree informations for Armada 370
-Date: Mon, 28 Jan 2013 19:56:30 +0100
-Message-Id: <1359399397-29729-22-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:53274 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754128Ab3AZVOu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Jan 2013 16:14:50 -0500
+Message-ID: <51044746.6030503@fold.natur.cuni.cz>
+Date: Sat, 26 Jan 2013 22:14:46 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: Chris Clayton <chris2553@googlemail.com>
+CC: linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com>
+In-Reply-To: <5104427D.2050002@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
-necessary Device Tree informations to make these interfaces availabel.
+Hi Chris,
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/arm/boot/dts/armada-370.dtsi |   42 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+Chris Clayton wrote:
+> Hi Martin,
+> 
+> On 01/24/13 19:21, Martin Mokrejs wrote:
+>> Hi Chris,
+>>    try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
+>> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+>>
+> 
+> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
+> 
+>>    The best would if you subscribe to linux-pci, and read my recent threads
+>> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
+>> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
+>> archives of linux-pci and see the pacthes and the discussion.
+> 
+> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
+> 
+> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
 
-diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
-index 636cf7d..a66e371 100644
---- a/arch/arm/boot/dts/armada-370.dtsi
-+++ b/arch/arm/boot/dts/armada-370.dtsi
-@@ -132,5 +132,47 @@
- 				dmacap,memset;
- 			};
- 		};
-+
-+		pcie-controller {
-+			compatible = "marvell,armada-370-xp-pcie";
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			bus-range = <0x00 0xff>;
-+
-+			ranges = <0x00000800 0 0xd0040000 0xd0040000 0 0x00002000   /* port 0.0 registers */
-+				  0x00001000 0 0xd0080000 0xd0080000 0 0x00002000   /* port 1.0 registers */
-+				  0x81000000 0 0	  0xc0000000 0 0x00010000   /* downstream I/O */
-+				  0x82000000 0 0	  0xc1000000 0 0x08000000>; /* non-prefetchable memory */
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0xf800 0 0 1>;
-+			interrupt-map = <0x0800 0 0 1 &mpic 58 /* port 0.0 */
-+					 0x1000 0 0 1 &mpic 62>; /* port 1.0 */
-+
-+			pcie@0,0 {
-+				device_type = "pciex";
-+				reg = <0x0800 0 0xd0040000 0 0x2000>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				marvell,pcie-port = <0>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 5>;
-+				status = "disabled";
-+			};
-+
-+			pcie@1,0 {
-+				device_type = "pciex";
-+				reg = <0x1000 0 0xd0080000 0 0x2000>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				marvell,pcie-port = <1>;
-+				marvell,pcie-lane = <0>;
-+				clocks = <&gateclk 9>;
-+				status = "disabled";
-+			};
-+		};
- 	};
- };
--- 
-1.7.9.5
+That's what I suspected. Compile in statically acpiphp, no pciehp at all (not even as a module).
+Then it might work for you -- at least it does for me, provided I use "pcie_aspm=off".
 
+Martin
+
+> 
+> Thanks again.
+> 
+> Chris
+> 
+>> Martin
+>>
+>> Chris Clayton wrote:
+>>> Hi,
+>>>
+>>> I've today taken delivery of a WinTV-HVR-1400 expresscard TV Tuner and got an Oops when I removed from the expresscard slot in my laptop. I will quite understand if the response to this report is "don't do that!", but in that case, how should one remove one of these cards?
+>>>
+>>> I have attached three files:
+>>>
+>>> 1. the dmesg output from when I rebooted the machine after the oops. I have turned debugging on in the dib700p and cx23885 modules via modules options in /etc/modprobe.d/hvr1400.conf;
+>>>
+>>> 2. the .config file for the kernel that oopsed.
+>>>
+>>> 3. the text of the oops message. I've typed this up from a photograph of the screen because the laptop was locked up and there was nothing in the log files. Apologies for any typos, but I have tried to be careful.
+>>>
+>>> Assuming the answer isn't don't do that, let me know if I can provide any additional diagnostics, test any patches, etc. Please, however, cc me as I'm not subscribed.
+>>>
+>>> Chris
+> 
+> 
