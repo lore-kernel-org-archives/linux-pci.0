@@ -1,127 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f41.google.com ([209.85.212.41]:38617 "EHLO
-	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756865Ab3AHSLp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 13:11:45 -0500
-Received: by mail-vb0-f41.google.com with SMTP id l22so690893vbn.14
-        for <linux-pci@vger.kernel.org>; Tue, 08 Jan 2013 10:11:44 -0800 (PST)
+Received: from mail-ee0-f42.google.com ([74.125.83.42]:64565 "EHLO
+	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754292Ab3AZUy2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Jan 2013 15:54:28 -0500
+Message-ID: <5104427D.2050002@googlemail.com>
+Date: Sat, 26 Jan 2013 20:54:21 +0000
+From: Chris Clayton <chris2553@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <50E96A59.1080602@huawei.com>
-References: <CAMVG2ssiRgcTD1bej2tkUUfsWmpL5eNtPcNif9va2-Gzb2u8nQ@mail.gmail.com>
- <50E5A6A1.5040508@gmail.com> <CAErSpo6KJvEkiqkU--sF_vySk2YUgL_9t1OEYAAGBp9Ebom26w@mail.gmail.com>
- <CAErSpo6vTS6MnWoHJgXgmVtq=jqrudOHW47+8hVpc8GfiY100A@mail.gmail.com> <50E96A59.1080602@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 8 Jan 2013 11:11:24 -0700
-Message-ID: <CAErSpo7Qo_=d1dLqEFwFcpYjkncST-c1Lx8=3fThtLOaG_P8tQ@mail.gmail.com>
-Subject: Re: 3.8-rc2: pciehp waitqueue hang...
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Jiang Liu <liuj97@gmail.com>, Daniel J Blueman <daniel@quora.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz>
+In-Reply-To: <510189B1.606@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 6, 2013 at 5:13 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2013/1/5 5:50, Bjorn Helgaas wrote:
->> [+to Yijing, +cc Kenji]
+Hi Martin,
+
+On 01/24/13 19:21, Martin Mokrejs wrote:
+> Hi Chris,
+>    try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
+> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+>
+
+Thanks for the tip. I had the pciehp driver installed, but it was a 
+module and not loaded. I didn't have acpiphp enabled at all. Building 
+them both in statically, appears to have papered over the cracks of the 
+oops :-)
+
+>    The best would if you subscribe to linux-pci, and read my recent threads
+> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
+> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
+> archives of linux-pci and see the pacthes and the discussion.
+
+Those discussions are way above my level of knowledge. I guess all this 
+work will be merged into mainline in due course, so I'll watch for them 
+in 3.9 or later. Unless, of course, there is a tree I could clone and 
+help test the changes with my laptop and expresscard.
+
+Hotplug isn't working at all on my Fujitsu laptop, so I can only get the 
+card recognised by rebooting with the card inserted (or by writing 1 
+to/sys/bus/pci/rescan). There seem to be a few reports on this in the 
+kernel bugzilla, so I'll look through them and see what's being done.
+
+Thanks again.
+
+Chris
+
+> Martin
+>
+> Chris Clayton wrote:
+>> Hi,
 >>
->> On Fri, Jan 4, 2013 at 1:01 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Thu, Jan 3, 2013 at 8:41 AM, Jiang Liu <liuj97@gmail.com> wrote:
->>>> Hi Daniel,
->>>>         It seems like an issue caused by recursive PCIe HPC.
->>>> Could you please help to try the patch from:
->>>> http://www.spinics.net/lists/linux-pci/msg18625.html
->>>
->>> Hi Gerry,
->>>
->>> I'm working on merging this patch.  Seems like something that might be
->>> appropriate for stable as well.
->>>
->>> Did you look for similar problems in other hotplug drivers?
+>> I've today taken delivery of a WinTV-HVR-1400 expresscard TV Tuner and got an Oops when I removed from the expresscard slot in my laptop. I will quite understand if the response to this report is "don't do that!", but in that case, how should one remove one of these cards?
 >>
->> Oops, sorry, I forgot that Yijing is the author of the patch in question.
+>> I have attached three files:
 >>
->> Yijing, please check for the same problem in other hotplug drivers.
->> Questions I have after a quick look:
+>> 1. the dmesg output from when I rebooted the machine after the oops. I have turned debugging on in the dib700p and cx23885 modules via modules options in /etc/modprobe.d/hvr1400.conf;
 >>
->
-> Hi Bjorn,
->    Sorry for delay reply. There are some busy work these days.
->
->>   - shpchp_wq looks like it might have the same deadlock issue.
->
-> shpchp driver uses two workqueues shpchp_wq and shpchp_ordered_wq, they are created by alloc_ordered_workqueue
-> which set the "max_active" parameter to 1. So only one pci hotplug slot can do hotplug at the same time.
-> shpchp introduced these workqueue to remove the use of flush_scheduled_work() which is deprecated and scheduled for removal.
->
-> hot remove path is:
->  button press
->        shpc_isr(interrupt handler)
->             shpchp_handle_attention_button
->                 queue_interrupt_event
->                    queue_work "interrupt_event_handler" into "shpchp_wq"
->                        interrupt_event_handler
->                              handle_button_press_event
->                                    queue_delayed_work "shpchp_queue_pushbutton_work" into "shpchp_wq"
->                                          queue_work "shpchp_pushbutton_thread" into "shpchp_ordered_wq"
->                                                shpchp_pushbutton_thread
->                                                       shpchp_disable_slot
->                                                             pci_stop_and_remove_bus_device
->                                                                 ......
->                                                                shpc_remove()   if the hotplug slot connected a iobox which contains some hotplug pcieport, shpc_remove will be called when remove pcie port device.
->                                                                    hpc_release_ctlr
->                                                                        flush_workqueue(shpchp_wq);
->                                                                        flush_workqueue(shpchp_ordered_wq);
->                                                                        So hotplug task hang.
-> shpchp driver has the same deadlock issue like pciehp driver, I think we should fix the issue, I will send out the patch if you agree this, but I have no machine support shpchp hotplug,
-> so I can't test this patch in real machine.
-
-That's OK.  You've tested pciehp, and I don't want to leave shpchp
-broken the same way just because we can't test a similar fix there, so
-please do send the shpchp patch, too.
-
->>   - pciehp_wq (and your per-slot replacement) are allocated with
->> alloc_workqueue().  shpchp_wq is allocated with
->> alloc_ordered_workqueue().  Why the difference?
->
-> alloc_workqueue(name, 0, 0) set max_active to 0(0 is default value used and support 256 work items of the wq can be executing at the same time per CPU).
-> So pciehp driver can handle push button event asynchronously.
->
-> alloc_ordered_workqueue can only one handle push button event at the same time.
-
-pciehp and shpchp should work the same in this respect unless there's
-a reason they can't, so it sounds like we should make shpchp work like
-pciehp.
-
->>   - The alloc/alloc_ordered difference might be related to 486b10b9f4,
->> where Kenji removed alloc_ordered from pciehp.  Should a similar
->> change be made to shpchp?
->
-> Yes, I agree, we can use per-slot workqueue to fix this issue.
->
+>> 2. the .config file for the kernel that oopsed.
 >>
->>   - acpiphp uses the global kacpi_hotplug_wq.  We never flush or drain
->> kacpi_hotplug_wq, so I doubt there's a deadlock issue, but I wonder if
->> there are any ordering issues there because we *don't* ever wait for
->> things in that queue to be completed.
->
-> acpiphp driver is not attach to a pci device, so when hot remove pci device, driver will not to flush or drain kacpi_hotplug_wq.
-> But if we do acpiphp hot remove in sequence like this, there maybe cause some unexpected errors, I think.
-> slot(A)------pcie port----slot(B)
-> slot A and slot B both support acpiphp hotplug.
-> 1、press attention button on slot A;
-> 2、press attention button on slot B quickly after step 1;
-> Because kacpi_hotplug_wq is a ordered workqueue, slot B hot remove won't run unless slot A hot remove action completed.
-> After Slot B hot remove completed, some resources of slot A also has been destroyed. So slot B hot remove will cause some unexpected errors.
-> Because my hotplug machine's bios don't support iobox hotplug(slot-connected-slot), I can't verify this situation.
-
-Hmm.  That definitely sounds like a potential problem.  But I think
-it's beyond the scope of the issue you're trying to fix, and any fix
-would look much different from your current pciehp patch, so I think
-we can treat it separately.
-
-Bjorn
+>> 3. the text of the oops message. I've typed this up from a photograph of the screen because the laptop was locked up and there was nothing in the log files. Apologies for any typos, but I have tried to be careful.
+>>
+>> Assuming the answer isn't don't do that, let me know if I can provide any additional diagnostics, test any patches, etc. Please, however, cc me as I'm not subscribed.
+>>
+>> Chris
