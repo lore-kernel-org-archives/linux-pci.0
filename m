@@ -1,69 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:44001 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753846Ab3ARLm0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 06:42:26 -0500
-Subject: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend
- finalization
-To: linux-kernel@vger.kernel.org
-From: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: e1000-devel@lists.sourceforge.net, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Airlie <airlied@redhat.com>
-Date: Fri, 18 Jan 2013 15:42:22 +0400
-Message-ID: <20130118114222.6698.7103.stgit@zurg>
-In-Reply-To: <20130118113019.6698.25941.stgit@zurg>
-References: <20130118113019.6698.25941.stgit@zurg>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:47495 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816Ab3A0Fhr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:37:47 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 06/22] PCI, hotplug: Kill pci_find_next_bus in sgi_hotplug
+Date: Sat, 26 Jan 2013 21:36:27 -0800
+Message-Id: <1359265003-16166-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
-("PCI: Don't touch card regs after runtime suspend D3")
-
-| This patch checks whether the pci state is saved and doesn't attempt to hit
-| any registers after that point if it is.
-
-This seems completely wrong. Yes, PCI configuration space has been saved by
-driver, but this doesn't means that all job is done and device has been
-suspended and ready for waking up in the future.
-
-For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
-but device cannot wakeup after that, because it needs some ACPI callbacks
-which usually called from pci_finish_runtime_suspend().
-
-| Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
-| unfortunately enter it on normal D3 transitions via the ACPI callback.
-
-Hardware which disappears from the bus unexpectedly is exception, so let's
-handle it as an exception. Its driver should set device state to D3cold and
-the rest code will handle it properly.
-
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dave Airlie <airlied@redhat.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci-driver.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/sgi_hotplug.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index f79cbcd..030dbf0 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1005,10 +1005,11 @@ static int pci_pm_runtime_suspend(struct device *dev)
- 		return 0;
- 	}
+diff --git a/drivers/pci/hotplug/sgi_hotplug.c b/drivers/pci/hotplug/sgi_hotplug.c
+index 180e760..ea81618 100644
+--- a/drivers/pci/hotplug/sgi_hotplug.c
++++ b/drivers/pci/hotplug/sgi_hotplug.c
+@@ -669,7 +669,7 @@ alloc_err:
  
--	if (!pci_dev->state_saved) {
-+	if (!pci_dev->state_saved)
- 		pci_save_state(pci_dev);
+ static int __init sn_pci_hotplug_init(void)
+ {
+-	struct pci_bus *pci_bus = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
+ 	int rc;
+ 	int registered = 0;
+ 
+@@ -681,7 +681,9 @@ static int __init sn_pci_hotplug_init(void)
+ 
+ 	INIT_LIST_HEAD(&sn_hp_list);
+ 
+-	while ((pci_bus = pci_find_next_bus(pci_bus))) {
++	for_each_pci_host_bridge(host_bridge) {
++		struct pci_bus *pci_bus = host_bridge->bus;
 +
-+	if (pci_dev->current_state != PCI_D3cold)
- 		pci_finish_runtime_suspend(pci_dev);
--	}
+ 		if (!pci_bus->sysdata)
+ 			continue;
  
- 	return 0;
- }
+-- 
+1.7.10.4
 
