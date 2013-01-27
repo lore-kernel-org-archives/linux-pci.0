@@ -1,65 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vc0-f201.google.com ([209.85.220.201]:59282 "EHLO
-	mail-vc0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217Ab3AIRxB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:53:01 -0500
-Received: by mail-vc0-f201.google.com with SMTP id p1so263045vcq.2
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:53:01 -0800 (PST)
-Subject: [PATCH 2/5] frv/PCI: Remove unused pci_root_bus
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	x86@kernel.org
-Date: Wed, 09 Jan 2013 10:53:00 -0700
-Message-ID: <20130109175300.13904.34950.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-References: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:32341 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755429Ab3A0TYc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:32 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Michal Simek <monstr@monstr.eu>,
+	microblaze-uclinux@itee.uq.edu.au
+Subject: [PATCH v3 18/22] PCI, microblaze: Kill pci_root_buses in resources reservations
+Date: Sun, 27 Jan 2013 11:23:45 -0800
+Message-Id: <1359314629-18651-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_root_bus is unused, so remove all references to it.
+Replace that with hotplug-safe version iteration.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: microblaze-uclinux@itee.uq.edu.au
 ---
- arch/frv/mb93090-mb00/pci-frv.h |    1 -
- arch/frv/mb93090-mb00/pci-vdk.c |    4 +---
- 2 files changed, 1 insertions(+), 4 deletions(-)
+ arch/microblaze/pci/pci-common.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-index 089eeba..76c4e73 100644
---- a/arch/frv/mb93090-mb00/pci-frv.h
-+++ b/arch/frv/mb93090-mb00/pci-frv.h
-@@ -31,7 +31,6 @@ void pcibios_resource_survey(void);
- /* pci-vdk.c */
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index a1c5b99..51f6651 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1323,13 +1323,13 @@ static void __init pcibios_reserve_legacy_regions(struct pci_bus *bus)
  
- extern int __nongpreldata pcibios_last_bus;
--extern struct pci_bus *__nongpreldata pci_root_bus;
- extern struct pci_ops *__nongpreldata pci_root_ops;
+ void __init pcibios_resource_survey(void)
+ {
+-	struct pci_bus *b;
++	struct pci_host_bridge *host_bridge = NULL;
  
- /* pci-irq.c */
-diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-index 71e9bcf..1152a1e 100644
---- a/arch/frv/mb93090-mb00/pci-vdk.c
-+++ b/arch/frv/mb93090-mb00/pci-vdk.c
-@@ -26,7 +26,6 @@
- unsigned int __nongpreldata pci_probe = 1;
+ 	/* Allocate and assign resources. If we re-assign everything, then
+ 	 * we skip the allocate phase
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
+-		pcibios_allocate_bus_resources(b);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
  
- int  __nongpreldata pcibios_last_bus = -1;
--struct pci_bus *__nongpreldata pci_root_bus;
- struct pci_ops *__nongpreldata pci_root_ops;
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+@@ -1338,8 +1338,8 @@ void __init pcibios_resource_survey(void)
+ 	 * the low IO area and the VGA memory area if they intersect the
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
+-		pcibios_reserve_legacy_regions(b);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_reserve_legacy_regions(host_bridge->bus);
  
- /*
-@@ -416,8 +415,7 @@ int __init pcibios_init(void)
- 	printk("PCI: Probing PCI hardware\n");
- 	pci_add_resource(&resources, &pci_ioport_resource);
- 	pci_add_resource(&resources, &pci_iomem_resource);
--	pci_root_bus = pci_scan_root_bus(NULL, 0, pci_root_ops, NULL,
--					 &resources);
-+	pci_scan_root_bus(NULL, 0, pci_root_ops, NULL, &resources);
- 
- 	pcibios_irq_init();
- 	pcibios_fixup_peer_bridges();
+ 	/* Now proceed to assigning things that were left unassigned */
+ 	pr_debug("PCI: Assigning unassigned resources...\n");
+-- 
+1.7.10.4
 
