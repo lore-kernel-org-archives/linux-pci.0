@@ -1,52 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47643 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816Ab3A0Fic (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:32 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>, sparclinux@vger.kernel.org
-Subject: [PATCH v2 13/22] PCI, sparc: Kill pci_find_next_bus
-Date: Sat, 26 Jan 2013 21:36:34 -0800
-Message-Id: <1359265003-16166-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ea0-f177.google.com ([209.85.215.177]:47725 "EHLO
+	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756325Ab3A0J5z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 04:57:55 -0500
+Message-ID: <5104FA1E.1010809@googlemail.com>
+Date: Sun, 27 Jan 2013 09:57:50 +0000
+From: Chris Clayton <chris2553@googlemail.com>
+MIME-Version: 1.0
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, wangyijing0307@gmail.com
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <51044746.6030503@fold.natur.cuni.cz>
+In-Reply-To: <51044746.6030503@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Acked-by: David S. Miller <davem@davemloft.net>
----
- arch/sparc/kernel/pci.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Hi Martin,
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 75b31bc..403f6e0 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -997,11 +997,13 @@ static void __devinit pci_bus_slot_names(struct device_node *node,
- 
- static int __init of_pci_slot_init(void)
- {
--	struct pci_bus *pbus = NULL;
-+	struct pci_host_bridge *host_bridge = NULL;
-+	struct pci_bus *pbus;
- 
--	while ((pbus = pci_find_next_bus(pbus)) != NULL) {
-+	for_each_pci_host_bridge(host_bridge) {
- 		struct device_node *node;
- 
-+		pbus = host_bridge->bus;
- 		if (pbus->self) {
- 			/* PCI->PCI bridge */
- 			node = pbus->self->dev.of_node;
--- 
-1.7.10.4
+On 01/26/13 21:14, Martin Mokrejs wrote:
+> Hi Chris,
+>
+> Chris Clayton wrote:
+>> Hi Martin,
+>>
+>> On 01/24/13 19:21, Martin Mokrejs wrote:
+>>> Hi Chris,
+>>>     try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
+>>> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+>>>
+>>
+>> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
+>>
+>>>     The best would if you subscribe to linux-pci, and read my recent threads
+>>> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
+>>> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
+>>> archives of linux-pci and see the pacthes and the discussion.
+>>
+>> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
+>>
+>> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
+>
+> That's what I suspected. Compile in statically acpiphp, no pciehp at all (not even as a module).
+> Then it might work for you -- at least it does for me, provided I use "pcie_aspm=off".
+>
+Thanks again for the suggestion. Unfortunately, that doesn't fix the 
+problem on my laptop.
 
+You may have seen the suggestion I've had from Yijing. I'm just building 
+the kernel to test that out.
+
+Chris
+> Martin
+>
+>>
+>> Thanks again.
+>>
+>> Chris
+>>
+>>> Martin
+>>>
+>>> Chris Clayton wrote:
+>>>> Hi,
+>>>>
+>>>> I've today taken delivery of a WinTV-HVR-1400 expresscard TV Tuner and got an Oops when I removed from the expresscard slot in my laptop. I will quite understand if the response to this report is "don't do that!", but in that case, how should one remove one of these cards?
+>>>>
+>>>> I have attached three files:
+>>>>
+>>>> 1. the dmesg output from when I rebooted the machine after the oops. I have turned debugging on in the dib700p and cx23885 modules via modules options in /etc/modprobe.d/hvr1400.conf;
+>>>>
+>>>> 2. the .config file for the kernel that oopsed.
+>>>>
+>>>> 3. the text of the oops message. I've typed this up from a photograph of the screen because the laptop was locked up and there was nothing in the log files. Apologies for any typos, but I have tried to be careful.
+>>>>
+>>>> Assuming the answer isn't don't do that, let me know if I can provide any additional diagnostics, test any patches, etc. Please, however, cc me as I'm not subscribed.
+>>>>
+>>>> Chris
+>>
+>>
