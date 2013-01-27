@@ -1,146 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f52.google.com ([209.85.210.52]:53773 "EHLO
-	mail-da0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756774Ab3AHQwt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2013 11:52:49 -0500
-From: Jiang Liu <liuj97@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J . Wysocki" <rjw@sisk.pl>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 4/6] PCI/acpiphp: update ACPI hotplug slot information when PCI hotplug happens
-Date: Wed,  9 Jan 2013 00:52:23 +0800
-Message-Id: <1357663945-16054-5-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-References: <1357663945-16054-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
-References: <CAErSpo4G9FQxh1vPjDDnjYrkfV8MNFvBK-ECMeiPnCVGA5Lgjg@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:31312 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755315Ab3A0TZI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:25:08 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v3 20/22] PCI, powerpc: Kill pci_root_buses in resources reservations
+Date: Sun, 27 Jan 2013 11:23:47 -0800
+Message-Id: <1359314629-18651-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the acpiphp driver fails to update hotplug slot information under
-several conditions, such as:
-1) The bridge device is removed through /sys/bus/pci/devices/.../remove
-2) The bridge device is added/removed by PCI hotplug driver other than the
-   acpiphp driver itself. For example, if an IO expansion box with ACPI
-   hotplug slots available is hot-added by the pciehp driver, all ACPI
-   hotplug slots won't be discovered by the acpiphp driver.
+Replace that with hotplug-safe version iteration.
 
-So hook the BUS_NOTIFY_ADD_DEVICE/BUS_NOTIFY_DEL_DEVICE events to
-update ACPI hotplug slot information when PCI hotplug event happens.
-
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |   62 ++++++++++++++++++++++++++++++++++--
- 1 file changed, 60 insertions(+), 2 deletions(-)
+ arch/powerpc/kernel/pci-common.c |   13 ++++++-------
+ arch/powerpc/kernel/pci_64.c     |    8 ++++----
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index 3d6d4fd..16fe692 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -61,6 +61,7 @@ static void handle_hotplug_event_bridge (acpi_handle, u32, void *);
- static void acpiphp_sanitize_bus(struct pci_bus *bus);
- static void acpiphp_set_hpp_values(struct pci_bus *bus);
- static void handle_hotplug_event_func(acpi_handle handle, u32 type, void *context);
-+static struct acpiphp_bridge *acpiphp_handle_to_bridge(acpi_handle handle);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index abc0d08..9ccecbe 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1398,11 +1398,11 @@ static void __init pcibios_reserve_legacy_regions(struct pci_bus *bus)
  
- /* callback routine to check for the existence of a pci dock device */
- static acpi_status
-@@ -420,12 +421,14 @@ static void add_host_bridge(struct acpi_pci_root *root)
- 	init_bridge_misc(bridge);
- }
- 
--
- /* allocate and initialize PCI-to-PCI bridge data structure */
--static void add_p2p_bridge(acpi_handle *handle)
-+static void add_p2p_bridge(acpi_handle handle)
+ void __init pcibios_resource_survey(void)
  {
- 	struct acpiphp_bridge *bridge;
+-	struct pci_bus *b;
++	struct pci_host_bridge *host_bridge = NULL;
  
-+	if (acpiphp_handle_to_bridge(handle))
-+		return;
-+
- 	bridge = kzalloc(sizeof(struct acpiphp_bridge), GFP_KERNEL);
- 	if (bridge == NULL) {
- 		err("out of memory\n");
-@@ -1428,6 +1431,58 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 	return AE_OK ;
- }
+ 	/* Allocate and assign resources */
+-	list_for_each_entry(b, &pci_root_buses, node)
+-		pcibios_allocate_bus_resources(b);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
  
-+static void acpiphp_hp_notify_add(struct pci_dev *dev)
-+{
-+	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->dev);
-+
-+	if (!dev->subordinate || !handle)
-+		return;
-+
-+	/* check if this bridge has ejectable slots */
-+	if (detect_ejectable_slots(handle) > 0) {
-+		dbg("found PCI-to-PCI bridge at PCI %s\n", pci_name(dev));
-+		add_p2p_bridge(handle);
-+	}
-+}
-+
-+static void acpiphp_hp_notify_del(struct pci_dev *dev)
-+{
-+	struct acpiphp_bridge *bridge, *tmp;
-+	struct pci_bus *bus = dev->subordinate;
-+
-+	if (!bus)
-+		return;
-+
-+	list_for_each_entry_safe(bridge, tmp, &bridge_list, list)
-+		if (bridge->pci_bus == bus) {
-+			cleanup_bridge(bridge);
-+			break;
-+		}
-+}
-+
-+static int acpi_pci_hp_notify_fn(struct notifier_block *nb,
-+				 unsigned long event, void *data)
-+{
-+	struct device *dev = data;
-+
-+	switch (event) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		acpiphp_hp_notify_add(to_pci_dev(dev));
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		acpiphp_hp_notify_del(to_pci_dev(dev));
-+		break;
-+	default:
-+		return NOTIFY_DONE;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block acpi_pci_hp_notifier = {
-+	.notifier_call = &acpi_pci_hp_notify_fn,
-+};
-+
- static struct acpi_pci_driver acpi_pci_hp_driver = {
- 	.add =		add_bridge,
- 	.remove =	remove_bridge,
-@@ -1448,6 +1503,8 @@ int __init acpiphp_glue_init(void)
- 	else
- 		acpi_pci_register_driver(&acpi_pci_hp_driver);
+@@ -1410,10 +1410,9 @@ void __init pcibios_resource_survey(void)
+ 	 * the low IO area and the VGA memory area if they intersect the
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		list_for_each_entry(b, &pci_root_buses, node)
+-			pcibios_reserve_legacy_regions(b);
+-	}
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		for_each_pci_host_bridge(host_bridge)
++			pcibios_reserve_legacy_regions(host_bridge->bus);
  
-+	bus_register_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
-+
- 	return 0;
- }
- 
-@@ -1459,6 +1516,7 @@ int __init acpiphp_glue_init(void)
-  */
- void  acpiphp_glue_exit(void)
+ 	/* Now, if the platform didn't decide to blindly trust the firmware,
+ 	 * we proceed to assigning things that were left unassigned
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index 2cbe676..f848325 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -208,9 +208,9 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
+ 			  unsigned long in_devfn)
  {
-+	bus_unregister_notifier(&pci_bus_type, &acpi_pci_hp_notifier);
- 	acpi_pci_unregister_driver(&acpi_pci_hp_driver);
- }
+ 	struct pci_controller* hose;
+-	struct list_head *ln;
+-	struct pci_bus *bus = NULL;
++	struct pci_bus *bus;
+ 	struct device_node *hose_node;
++	struct pci_host_bridge *host_bridge = NULL;
  
+ 	/* Argh ! Please forgive me for that hack, but that's the
+ 	 * simplest way to get existing XFree to not lockup on some
+@@ -230,8 +230,8 @@ long sys_pciconfig_iobase(long which, unsigned long in_bus,
+ 	 * used on pre-domains setup. We return the first match
+ 	 */
+ 
+-	for (ln = pci_root_buses.next; ln != &pci_root_buses; ln = ln->next) {
+-		bus = pci_bus_b(ln);
++	for_each_pci_host_bridge(host_bridge) {
++		bus = host_bridge->bus;
+ 		if (in_bus >= bus->number && in_bus <= bus->busn_res.end)
+ 			break;
+ 		bus = NULL;
 -- 
-1.7.9.5
+1.7.10.4
 
