@@ -1,54 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vb0-f74.google.com ([209.85.212.74]:40869 "EHLO
-	mail-vb0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754013Ab3ADTSw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2013 14:18:52 -0500
-Received: by mail-vb0-f74.google.com with SMTP id s24so1786732vbi.1
-        for <linux-pci@vger.kernel.org>; Fri, 04 Jan 2013 11:18:52 -0800 (PST)
-Subject: [PATCH 2/3] drm/pci: Set all supported speeds in speed cap mask for
-	pre-3.0 devices
-To: David Airlie <airlied@linux.ie>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Betty Dall <betty.dall@hp.com>,
-	Lucas Kannebley Tavares <lucaskt@linux.vnet.ibm.com>,
-	Ilija Hadzic <ihadzic@research.bell-labs.com>
-Date: Fri, 04 Jan 2013 12:10:37 -0700
-Message-ID: <20130104191037.4586.96280.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
-References: <20130104190833.4586.16520.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:47665 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816Ab3A0Fig (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:36 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+	linux-altix@sgi.com
+Subject: [PATCH v2 14/22] PCI, ia64: Kill pci_find_next_bus
+Date: Sat, 26 Jan 2013 21:36:35 -0800
+Message-Id: <1359265003-16166-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For devices that conform to PCIe r3.0 and have a Link Capabilities 2
-register, we test and report every bit in the Supported Link Speeds Vector
-field.  For a device that supports both 2.5GT/s and 5.0GT/s, we set both
-DRM_PCIE_SPEED_25 and DRM_PCIE_SPEED_50 in the returned mask.
-
-For pre-r3.0 devices, the Link Capabilities 0010b encoding
-(PCI_EXP_LNKCAP_SLS_5_0GB) means that both 5.0GT/s and 2.5GT/s are
-supported, so set both DRM_PCIE_SPEED_25 and DRM_PCIE_SPEED_50 in this
-case as well.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-altix@sgi.com
 ---
- drivers/gpu/drm/drm_pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ arch/ia64/hp/common/sba_iommu.c |    7 ++++---
+ arch/ia64/sn/kernel/io_common.c |    5 +++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/gpu/drm/drm_pci.c b/drivers/gpu/drm/drm_pci.c
-index 11c8add..50e26f2 100644
---- a/drivers/gpu/drm/drm_pci.c
-+++ b/drivers/gpu/drm/drm_pci.c
-@@ -507,7 +507,7 @@ int drm_pcie_get_speed_cap_mask(struct drm_device *dev, u32 *mask)
- 		if (lnkcap & PCI_EXP_LNKCAP_SLS_2_5GB)
- 			*mask |= DRM_PCIE_SPEED_25;
- 		if (lnkcap & PCI_EXP_LNKCAP_SLS_5_0GB)
--			*mask |= DRM_PCIE_SPEED_50;
-+			*mask |= (DRM_PCIE_SPEED_25 | DRM_PCIE_SPEED_50);
- 	}
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index bcda5b2..0f27a37 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -2155,9 +2155,10 @@ sba_init(void)
  
- 	DRM_INFO("probing gen 2 caps for device %x:%x = %x/%x\n", root->vendor, root->device, lnkcap, lnkcap2);
+ #ifdef CONFIG_PCI
+ 	{
+-		struct pci_bus *b = NULL;
+-		while ((b = pci_find_next_bus(b)) != NULL)
+-			sba_connect_bus(b);
++		struct pci_host_bridge *host_bridge = NULL;
++
++		for_each_pci_host_bridge(host_bridge)
++			sba_connect_bus(host_bridge->bus);
+ 	}
+ #endif
+ 
+diff --git a/arch/ia64/sn/kernel/io_common.c b/arch/ia64/sn/kernel/io_common.c
+index 8630875..131938b 100644
+--- a/arch/ia64/sn/kernel/io_common.c
++++ b/arch/ia64/sn/kernel/io_common.c
+@@ -516,6 +516,7 @@ arch_initcall(sn_io_early_init);
+ int __init
+ sn_io_late_init(void)
+ {
++	struct pci_host_bridge *host_bridge = NULL;
+ 	struct pci_bus *bus;
+ 	struct pcibus_bussoft *bussoft;
+ 	cnodeid_t cnode;
+@@ -530,8 +531,8 @@ sn_io_late_init(void)
+ 	 * PIC, TIOCP, TIOCE (TIOCA does it during bus fixup using
+ 	 * info from the PROM).
+ 	 */
+-	bus = NULL;
+-	while ((bus = pci_find_next_bus(bus)) != NULL) {
++	for_each_pci_host_bridge(host_bridge) {
++		bus = host_bridge->bus;
+ 		bussoft = SN_PCIBUS_BUSSOFT(bus);
+ 		nasid = NASID_GET(bussoft->bs_base);
+ 		cnode = nasid_to_cnodeid(nasid);
+-- 
+1.7.10.4
 
