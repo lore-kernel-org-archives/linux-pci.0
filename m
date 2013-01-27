@@ -1,63 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([222.73.24.84]:37421 "EHLO song.cn.fujitsu.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1752908Ab3AaGr1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Jan 2013 01:47:27 -0500
-Message-ID: <510A1376.4020601@cn.fujitsu.com>
-Date: Thu, 31 Jan 2013 14:47:18 +0800
-From: Gu Zheng <guz.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Oliver Neukum <oneukum@suse.de>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: pciehp: errors on resume
-References: <1359377173.1345.25.camel@x61.thuisdomein>   <51072F83.7040102@cn.fujitsu.com>  <1359455732.1345.46.camel@x61.thuisdomein>  <51088EAE.5050200@cn.fujitsu.com> <1359534681.1345.74.camel@x61.thuisdomein>
-In-Reply-To: <1359534681.1345.74.camel@x61.thuisdomein>
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:47687 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755947Ab3A0Fio (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:44 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Michal Simek <monstr@monstr.eu>,
+	microblaze-uclinux@itee.uq.edu.au
+Subject: [PATCH v2 18/22] PCI, microblaze: Kill pci_root_buses in resources reservations
+Date: Sat, 26 Jan 2013 21:36:39 -0800
+Message-Id: <1359265003-16166-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/30/2013 04:31 PM, Paul Bolle wrote:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: microblaze-uclinux@itee.uq.edu.au
+---
+ arch/microblaze/pci/pci-common.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-> On Wed, 2013-01-30 at 11:08 +0800, Gu Zheng wrote:
->> On 01/29/2013 06:35 PM, Paul Bolle wrote:
->>> So should the fix here be to actually suspend and remove this
->>> device? (Note that pciehp_suspend() is now basically a NOP.)
->> 	The resume routine should handle all possible situations here. As Rafael said, 
->> in some cases there's no way to tell the difference between "internal" and "external".
->> If this problem seriously disturbs you, you can avoid this feature.
-> 
-> 0) Actually, before v3.7 I was unaware of pciehp. And if these errors
-> hadn't shown up I would still be. I'm only using pciehp because Fedora
-> 17 has CONFIG_HOTPLUG_PCI_PCIE enabled in its kernel config. 
-> 
->>  But the better way is
->> reporting a bug report on the bugzilla, it can call more developers to fix this issue.
-> 
-> 1) Fine with me, though my experience is that kernel bugs should first
-> be discussed on the appropriate mailinglist.
-> 
-> 2) Regarding the errors I see at resume: it seems that if a device
-> already exists when board_added() is called, this almost certainly means
-> we're resuming with the same device we suspended with. So there's no
-> reason to send errors to the log.
-
-
-No, It's hard to detect whether the existed device is the one you want to resume.
-Maybe the existed device was added during suspend, and the one you really want to
-resume was removed. 
-
-> 
-> Is there any other way that a device could already exist when
-> board_added() is called?
-
-
-It's hard to say, the pcie device is a typical one.
-
-> 
-> 
-> Paul Bolle
-> 
-> 
-
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index a1c5b99..51f6651 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -1323,13 +1323,13 @@ static void __init pcibios_reserve_legacy_regions(struct pci_bus *bus)
+ 
+ void __init pcibios_resource_survey(void)
+ {
+-	struct pci_bus *b;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+ 	/* Allocate and assign resources. If we re-assign everything, then
+ 	 * we skip the allocate phase
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
+-		pcibios_allocate_bus_resources(b);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+@@ -1338,8 +1338,8 @@ void __init pcibios_resource_survey(void)
+ 	 * the low IO area and the VGA memory area if they intersect the
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+-	list_for_each_entry(b, &pci_root_buses, node)
+-		pcibios_reserve_legacy_regions(b);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_reserve_legacy_regions(host_bridge->bus);
+ 
+ 	/* Now proceed to assigning things that were left unassigned */
+ 	pr_debug("PCI: Assigning unassigned resources...\n");
+-- 
+1.7.10.4
 
