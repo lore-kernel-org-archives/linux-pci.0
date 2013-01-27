@@ -1,79 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <510074C7.6090203@infradead.org>
-Date: Wed, 23 Jan 2013 15:39:51 -0800
-From: Randy Dunlap <rdunlap@infradead.org>
-MIME-Version: 1.0
-To: Yijing Wang <wangyijing@huawei.com>
-CC: Rob Landley <rob@landley.net>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>, linux-pci@vger.kernel.org,
-	Andrew Murray <andrew.murray@arm.com>,
-	Hanjun Guo <guohanjun@huawei.com>, jiang.liu@huawei.com
-Subject: Re: [Update][PATCH] PCI: Document PCIE BUS MPS parameters
-References: <1358944092-28884-1-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1358944092-28884-1-git-send-email-wangyijing@huawei.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v3 04/22] PCI, ACPI: Update comments for find_bridge in acpi_bus_type
+Date: Sun, 27 Jan 2013 11:23:31 -0800
+Message-Id: <1359314629-18651-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/23/13 04:28, Yijing Wang wrote:
-> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
-> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
-> These parameters were introduced by Jon Mason <mason@myri.com> at
-> commit 5f39e6705 and commit b03e7495a8. Document these into
-> kernel-parameters.txt can help users to understand and use the parameters.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  Documentation/kernel-parameters.txt |   15 +++++++++++++++
->  1 files changed, 15 insertions(+), 0 deletions(-)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 363e348..1fb269b 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2227,6 +2227,21 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				This sorting is done to get a device
->  				order compatible with older (<= 2.4) kernels.
->  		nobfsort	Don't sort PCI devices into breadth-first order.
-> +		pcie_bus_tune_off	Disable PCI-E MPS turning and using
-> +				the BIOS configured MPS defaults.
+only device that does not have bus_type, will go to that path...
 
-				    BIOS-configured
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: Rafael J. Wysocki <rjw@sisk.pl>
+Cc: linux-acpi@vger.kernel.org
+---
+ include/acpi/acpi_bus.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +		pcie_bus_safe	Use the smallest common denominator MPS
-> +				of the entire tree below a root complex for every device
-> +				on that fabric. Can avoid inconsistent mps problem caused
-
-s/mps/MPS/
-i.e., use "MPS" consistently.
-
-> +				by hotplug.
-> +		pcie_bus_perf	Configure pcie device MPS to the largest allowable
-> +				MPS based on its parent bus. And also set MRRS to the
-
-"And also" is redundant.  Just say Also.
-
-What is (are) MRRS?
-
-> +				largest supported value but cannot be configured larger
-> +				than the MPS the device or the bus can support for Max
-> +				performance.
-> +		pcie_bus_peer2peer	Make the system wide MPS the smallest
-
-					         system-wide
-
-> +				possible value (128B).This configuration could prevent it
-
-				                      ^ Space before "This"
-
-> +				from working by having the MPS on one root port different
-> +				than the MPS on another.
->  		cbiosize=nn[KMG]	The fixed amount of bus space which is
->  				reserved for the CardBus bridge's IO window.
->  				The default value is 256 bytes.
-> 
-
-
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 5ce8d5e8..c499d94 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -385,7 +385,7 @@ struct acpi_bus_type {
+ 	struct bus_type *bus;
+ 	/* For general devices under the bus */
+ 	int (*find_device) (struct device *, acpi_handle *);
+-	/* For bridges, such as PCI root bridge, IDE controller */
++	/* For bridges that does not have bus_type, such as usb_port */
+ 	int (*find_bridge) (struct device *, acpi_handle *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
 -- 
-~Randy
+1.7.10.4
+
