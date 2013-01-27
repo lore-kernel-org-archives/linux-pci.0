@@ -1,71 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:40745 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751736Ab3A2Sl4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Jan 2013 13:41:56 -0500
-Date: Tue, 29 Jan 2013 11:41:57 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130129184157.GA29274@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
- <CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
- <20130129055508.GA3339@obsidianresearch.com>
- <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:31220 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755408Ab3A0TYd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:33 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH v3 19/22] PCI, mn10300: Kill pci_root_buses in resources reservations
+Date: Sun, 27 Jan 2013 11:23:46 -0800
+Message-Id: <1359314629-18651-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 10:47:09AM -0700, Bjorn Helgaas wrote:
+Replace that with hotplug-safe version iteration.
 
-> As I understand it, the DT is a description of the hardware, so in
-> that sense, the DT can't set aside physical address space.  It can
-> describe what the hardware does with the address space, and I assume
-> that's what you mean.  Maybe the hardware isn't configurable, e.g., it
-> is hard-wired to route certain address ranges to PCIe?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-am33-list@redhat.com
+---
+ arch/mn10300/unit-asb2305/pci-asb2305.c |   62 ++++++++++++++++---------------
+ 1 file changed, 33 insertions(+), 29 deletions(-)
 
-The DT is largely a description of the hardware, but when it comes to
-addresses, particularly HW programmable addresess, there is an general
-expectation that the driver/bootloader will program HW address
-decoders to either match the addresses given in the DT, or to new
-values guided by the DT addresses.
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index c4e2e79..87c945d 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -88,42 +88,42 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+  *	    requested by the user, configure expansion ROM address
+  *	    as well.
+  */
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 	int idx;
+ 	struct resource *r;
+ 
+-	/* Depth-First Search on bus tree */
+-	list_for_each_entry(bus, bus_list, node) {
+-		dev = bus->self;
+-		if (dev) {
+-			for (idx = PCI_BRIDGE_RESOURCES;
+-			     idx < PCI_NUM_RESOURCES;
+-			     idx++) {
+-				r = &dev->resource[idx];
+-				if (!r->flags)
+-					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					printk(KERN_ERR "PCI:"
+-					       " Cannot allocate resource"
+-					       " region %d of bridge %s\n",
+-					       idx, pci_name(dev));
+-					/* Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range. */
+-					r->start = r->end = 0;
+-					r->flags = 0;
+-				}
+-			}
++	for (idx = PCI_BRIDGE_RESOURCES;
++	     idx < PCI_NUM_RESOURCES;
++	     idx++) {
++		r = &dev->resource[idx];
++		if (!r->flags)
++			continue;
++		if (!r->start ||
++		    pci_claim_resource(dev, idx) < 0) {
++			pr_err("PCI: Cannot allocate resource region %d of bridge %s\n",
++			       idx, pci_name(dev));
++			/* Something is wrong with the region.
++			 * Invalidate the resource to prevent
++			 * child resource allocations in this
++			 * range. */
++			r->start = r->end = 0;
++			r->flags = 0;
+ 		}
+-		pcibios_allocate_bus_resources(&bus->children);
+ 	}
+ }
+ 
++static void pcibios_allocate_bus_resources(struct pci_bus *bus)
++{
++	struct pci_bus *child;
++
++	/* Depth-First Search on bus tree */
++	if (bus->self)
++		pcibios_allocate_bridge_resources(bus->self);
++	list_for_each_entry(child, &bus->children, node)
++		pcibios_allocate_bus_resources(child);
++}
++
+ static void __init pcibios_allocate_resources(int pass)
+ {
+ 	struct pci_dev *dev = NULL;
+@@ -207,8 +207,12 @@ fs_initcall(pcibios_assign_resources);
+ 
+ void __init pcibios_resource_survey(void)
+ {
++	struct pci_host_bridge *host_bridge = NULL;
++
+ 	DBG("PCI: Allocating resources\n");
+-	pcibios_allocate_bus_resources(&pci_root_buses);
++
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+ }
+-- 
+1.7.10.4
 
-In a real sense that means the DT also describes the physical address
-map the kernel should use.
-
-In the PCI-E case the DT PCI-E HW description includes physical
-address ranges to use for the MMIO/IO/PREFETCH PCI-E interface windows
-and the driver is expected to program the internal HW address decoders
-based on those address ranges.
-
-The catch is that the hardware decoders are on a link-by-link basis,
-not on a root-complex basis, so the programming can only take place
-once the Linux kernel has done PCI resource assignment.
-
-So when I say set aside, I mean for instance, the PCI-E entry in DT
-has 128M of physical address space marked for PCI MMIO use. The kernel
-does PCI resource allocation and the HW decoders in each link will be
-set to claim some portion of the 128M - based on the MMIO windows
-programmed on the PCI-PCI root port bridges. The reamining part of the
-128M is dead address space, not claimed by any hardware block at all.
-
-Jason
