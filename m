@@ -1,49 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1357230494.25181.55.camel@joe-AO722>
-Subject: Re: [PATCH] checkpatch: prefer dev_<level>( to
- dev_printk(KERN_<LEVEL>
-From: Joe Perches <joe@perches.com>
-To: Andy Whitcroft <apw@canonical.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Lance Ortiz <lance.ortiz@hp.com>, bhelgaas@google.com,
-	lance_ortiz@hotmail.com, jiang.liu@huawei.com, tony.luck@intel.com,
-	bp@alien8.de, rostedt@goodmis.org, mchehab@redhat.com,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 03 Jan 2013 08:28:14 -0800
-In-Reply-To: <20130103100808.GG2649@dm>
-References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
-	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
-	 <1357171594.25181.19.camel@joe-AO722> <20130103100808.GG2649@dm>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:47677 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755915Ab3A0Fik (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:40 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	David Howells <dhowells@redhat.com>,
+	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
+	linux-am33-list@redhat.com
+Subject: [PATCH v2 19/22] PCI, mn10300: Kill pci_root_buses in resources reservations
+Date: Sat, 26 Jan 2013 21:36:40 -0800
+Message-Id: <1359265003-16166-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2013-01-03 at 10:08 +0000, Andy Whitcroft wrote:
-> On Wed, Jan 02, 2013 at 04:06:34PM -0800, Joe Perches wrote:
-> > Add YA check to printk style.
-> > 
-> > dev_<level> uses are functions and generate smaller
-> > object code than dev_printk(KERN_<LEVEL>.
-[]
-> > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-[]
-> > +		if ($line =~ /\bdev_printk\s*\(\s*KERN_([A-Z]+)/) {
-> > +			my $orig = $1;
-> > +			my $level = lc($orig);
-> > +			$level = "warn" if ($level eq "warning");
-> > +			my $level2 = $level;
-> > +			$level2 = "dbg" if ($level eq "debug");
-> 
-> Is there some sublty I am not seeing here such that level2 is necessary?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
+Cc: linux-am33-list@redhat.com
+---
+ arch/mn10300/unit-asb2305/pci-asb2305.c |   62 ++++++++++++++++---------------
+ 1 file changed, 33 insertions(+), 29 deletions(-)
 
-No, your vision is 20/20, it's not necessary.
-
-It was a copy/paste from the pr_<level> conversion above it
-where 2 styles to convert to (dev_dbg and pr_debug) are used.
-
-Here there is just one form and your review is appreciated.
-I'll submit a V2 later.
-
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index c4e2e79..87c945d 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -88,42 +88,42 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+  *	    requested by the user, configure expansion ROM address
+  *	    as well.
+  */
+-static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
++static void __init pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ {
+-	struct pci_bus *bus;
+-	struct pci_dev *dev;
+ 	int idx;
+ 	struct resource *r;
+ 
+-	/* Depth-First Search on bus tree */
+-	list_for_each_entry(bus, bus_list, node) {
+-		dev = bus->self;
+-		if (dev) {
+-			for (idx = PCI_BRIDGE_RESOURCES;
+-			     idx < PCI_NUM_RESOURCES;
+-			     idx++) {
+-				r = &dev->resource[idx];
+-				if (!r->flags)
+-					continue;
+-				if (!r->start ||
+-				    pci_claim_resource(dev, idx) < 0) {
+-					printk(KERN_ERR "PCI:"
+-					       " Cannot allocate resource"
+-					       " region %d of bridge %s\n",
+-					       idx, pci_name(dev));
+-					/* Something is wrong with the region.
+-					 * Invalidate the resource to prevent
+-					 * child resource allocations in this
+-					 * range. */
+-					r->start = r->end = 0;
+-					r->flags = 0;
+-				}
+-			}
++	for (idx = PCI_BRIDGE_RESOURCES;
++	     idx < PCI_NUM_RESOURCES;
++	     idx++) {
++		r = &dev->resource[idx];
++		if (!r->flags)
++			continue;
++		if (!r->start ||
++		    pci_claim_resource(dev, idx) < 0) {
++			pr_err("PCI: Cannot allocate resource region %d of bridge %s\n",
++			       idx, pci_name(dev));
++			/* Something is wrong with the region.
++			 * Invalidate the resource to prevent
++			 * child resource allocations in this
++			 * range. */
++			r->start = r->end = 0;
++			r->flags = 0;
+ 		}
+-		pcibios_allocate_bus_resources(&bus->children);
+ 	}
+ }
+ 
++static void pcibios_allocate_bus_resources(struct pci_bus *bus)
++{
++	struct pci_bus *child;
++
++	/* Depth-First Search on bus tree */
++	if (bus->self)
++		pcibios_allocate_bridge_resources(bus->self);
++	list_for_each_entry(child, &bus->children, node)
++		pcibios_allocate_bus_resources(child);
++}
++
+ static void __init pcibios_allocate_resources(int pass)
+ {
+ 	struct pci_dev *dev = NULL;
+@@ -207,8 +207,12 @@ fs_initcall(pcibios_assign_resources);
+ 
+ void __init pcibios_resource_survey(void)
+ {
++	struct pci_host_bridge *host_bridge = NULL;
++
+ 	DBG("PCI: Allocating resources\n");
+-	pcibios_allocate_bus_resources(&pci_root_buses);
++
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+ }
+-- 
+1.7.10.4
 
