@@ -1,62 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQUP71TJgP21SRre4Mb2PrnUg+7KLzXnxHUviqCuNSL44w@mail.gmail.com>
-References: <1356594177-29453-1-git-send-email-linfeng@cn.fujitsu.com>
- <CAErSpo7EmvDaK11P6r-PKxPBqHQBPaGvZj=zvNZ8w=KFbdFgYA@mail.gmail.com>
- <5102583E.4030109@cn.fujitsu.com> <CAErSpo58qUuwd+8bGMWQHQ6KrfQMvHGb+REVkpJqQdrfAQe3Qw@mail.gmail.com>
- <CAE9FiQUP71TJgP21SRre4Mb2PrnUg+7KLzXnxHUviqCuNSL44w@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 Jan 2013 13:30:36 -0700
-Message-ID: <CAErSpo4_iz29b9Tj8W4D9YqdGPV4P+rFZ463eZ1S4J2gL_6qyw@mail.gmail.com>
-Subject: Re: [PATCH] pci-sysfs: replace mutex_lock with mutex_trylock to avoid
- potential deadlock situation
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Gu Zheng <guz.fnst@cn.fujitsu.com>,
-	Lin Feng <linfeng@cn.fujitsu.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, tangchen@cn.fujitsu.com,
-	laijs@cn.fujitsu.com, wency@cn.fujitsu.com,
-	izumi.taku@jp.fujitsu.com, Don Dutile <ddutile@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:47676 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816Ab3A0Fij (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:39 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 21/22] PCI: Kill pci_find_next_bus
+Date: Sat, 26 Jan 2013 21:36:42 -0800
+Message-Id: <1359265003-16166-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 25, 2013 at 11:57 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Fri, Jan 25, 2013 at 9:44 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> [+cc Yinghai]
->>
->> On Fri, Jan 25, 2013 at 3:02 AM, Gu Zheng
->
-> Hi, Gu,
->
-> Can you check if two patches in
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=shortlog;h=refs/heads/for-pci-root-bus-hotplug-part3
->
-> could solve your problem?
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=277df390baeab7ba6aa136356b677a096c890c0c
->
-> PCI: Rescan bus using callback method too
->
->
-> http://git.kernel.org/?p=linux/kernel/git/yinghai/linux-yinghai.git;a=commitdiff;h=282e2db3b58d56b5236ee755e1527574df0d298e
->
-> PCI, sysfs: Clean up rescan/remove with scheule_callback
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/search.c |   37 +++++++------------------------------
+ include/linux/pci.h  |    4 ----
+ 2 files changed, 7 insertions(+), 34 deletions(-)
 
-You ignored and clipped my concerns about similar synchronization
-issues outside sysfs, so let me quote it again here:
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index db0c3a9..329c533 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -79,44 +79,22 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+  */
+ struct pci_bus * pci_find_bus(int domain, int busnr)
+ {
+-	struct pci_bus *bus = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
+ 	struct pci_bus *tmp_bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+-		if (pci_domain_nr(bus) != domain)
++	for_each_pci_host_bridge(host_bridge) {
++		if (pci_domain_nr(host_bridge->bus) != domain)
+ 			continue;
+-		tmp_bus = pci_do_find_bus(bus, busnr);
+-		if (tmp_bus)
++		tmp_bus = pci_do_find_bus(host_bridge->bus, busnr);
++		if (tmp_bus) {
++			put_device(&host_bridge->dev);
+ 			return tmp_bus;
++		}
+ 	}
+ 	return NULL;
+ }
+ 
+ /**
+- * pci_find_next_bus - begin or continue searching for a PCI bus
+- * @from: Previous PCI bus found, or %NULL for new search.
+- *
+- * Iterates through the list of known PCI busses.  A new search is
+- * initiated by passing %NULL as the @from argument.  Otherwise if
+- * @from is not %NULL, searches continue from next device on the
+- * global list.
+- */
+-struct pci_bus * 
+-pci_find_next_bus(const struct pci_bus *from)
+-{
+-	struct list_head *n;
+-	struct pci_bus *b = NULL;
+-
+-	WARN_ON(in_interrupt());
+-	down_read(&pci_bus_sem);
+-	n = from ? from->node.next : pci_root_buses.next;
+-	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
+-	up_read(&pci_bus_sem);
+-	return b;
+-}
+-
+-/**
+  * pci_get_slot - locate PCI device for a given PCI slot
+  * @bus: PCI bus on which desired PCI device resides
+  * @devfn: encodes number of PCI slot in which the desired PCI 
+@@ -356,7 +334,6 @@ EXPORT_SYMBOL(pci_dev_present);
+ 
+ /* For boot time work */
+ EXPORT_SYMBOL(pci_find_bus);
+-EXPORT_SYMBOL(pci_find_next_bus);
+ /* For everyone */
+ EXPORT_SYMBOL(pci_get_device);
+ EXPORT_SYMBOL(pci_get_subsys);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 67879cb..bb07db2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -763,7 +763,6 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+-struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
+ struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+@@ -1404,9 +1403,6 @@ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ { }
+ 
+-static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+-{ return NULL; }
+-
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
+-- 
+1.7.10.4
 
-I'm sorry that you tripped over this deadlock, because now I'm worried
-about related locking issues outside sysfs :)  The mutex you're
-fiddling with is only in sysfs, but the routines *protected* by that
-mutex are used in other places, too.  So what happens when a hotplug
-driver does a rescan at the same time a user does a rescan or remove
-via sysfs?  I don't even know what the rules are for protecting
-scan/remove, but I don't have confidence that the issue you're fixing
-is the only one.
-
-If we're going to fix the sysfs deadlock (and we should), I want to
-either see an argument for why we don't have a problem outside of
-sysfs, or I want to fix sysfs and non-sysfs at the same time.
-
-Bjorn
