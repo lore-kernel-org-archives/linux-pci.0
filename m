@@ -1,62 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52033 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092Ab3ARWyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Jan 2013 17:54:17 -0500
-Subject: Re: [PATCH 2/2] PCI: Don't touch ASPM if forcibly disabled
-From: Myron Stowe <mstowe@redhat.com>
-To: Joe Lawrence <Joe.Lawrence@stratus.com>
-Cc: linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	David Bulkow <david.bulkow@stratus.com>
-In-Reply-To: <alpine.DEB.2.02.1301181324010.31163@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com>
-	 <alpine.DEB.2.02.1301181324010.31163@jlaw-desktop.mno.stratus.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Jan 2013 15:54:05 -0700
-Message-ID: <1358549645.2393.3.camel@zim.stowe>
-Mime-Version: 1.0
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:56172 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab3A0Rim (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 12:38:42 -0500
+Date: Sun, 27 Jan 2013 17:38:17 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 16/22] PCI, arm: Kill pci_root_buses
+Message-ID: <20130127173816.GH23505@n2100.arm.linux.org.uk>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com> <1359265003-16166-1-git-send-email-yinghai@kernel.org> <1359265003-16166-17-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1359265003-16166-17-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2013-01-18 at 13:24 -0500, Joe Lawrence wrote:
-> From 108cca7bee5b04f45d9712507d14b5f3fbc22c29 Mon Sep 17 00:00:00 2001
-> From: Joe Lawrence <joe.lawrence@stratus.com>
-> Date: Tue, 15 Jan 2013 15:31:28 -0500
-> Subject: [PATCH 2/2] PCI: Don't touch ASPM if forcibly disabled
-> 
-> Don't allocate and track PCIe ASPM state when "pcie_aspm=off" is specified on
-> the kernel parameter list.
-> 
-> Based-on-patch-from: Matthew Garrett <mjg59@srcf.ucam.org>
-> Reviewed-by: David Bulkow <david.bulkow@stratus.com>
-> Signed-off-by: Joe Lawrence <joe.lawrence@stratus.com>
+On Sat, Jan 26, 2013 at 09:36:37PM -0800, Yinghai Lu wrote:
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: linux-arm-kernel@lists.infradead.org
+
+So... what's this about.  This email is all I've recieved, and the only
+thing that I have to go on is one single subject line and not description
+about what's going on.  I guess there's some other patch introducing this
+for_each_pci_host_bridge() macro somewhere?  I guess that's part of this
+patch set?
+
+Yet... I guess you want an ack for this or something... which would be
+irresponsible to give without knowing the purpose behind this, the
+reasoning, or even being able to tell whether the replacement code is
+functionally equivalent.
+
+So, no ack (or nack) at the moment.
+
 > ---
->  drivers/pci/pcie/aspm.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  arch/arm/kernel/bios32.c |    9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 6122447..f912a93 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -556,6 +556,9 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
->  	struct pcie_link_state *link;
->  	int blacklist = !!pcie_aspm_sanity_check(pdev);
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 9b72261..d0befe4 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -57,13 +57,10 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
 >  
-> +	if (!aspm_support_enabled)
-> +		return;
-> +
->  	if (!pci_is_pcie(pdev) || pdev->link_state)
->  		return;
->  	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ROOT_PORT &&
-
-I was considering whether putting in a similar check in the
-pcie_aspm_exit_link_state() would be best in order to "short circuit"
-all the unnecessary processing that still occurs with ASPM turned off
-and also for symmetry.  Bjorn suggested just sticking with the fix in
-pcie_aspm_init_link_state() since adding something similar in
-pcie_aspm_exit_link_state() may create other issues and does not help
-with simplifying ASPM's implementation.
-
-Acked-by: Myron Stowe <myron.stowe@redhat.com>
-
-
+>  void pcibios_report_status(u_int status_mask, int warn)
+>  {
+> -	struct list_head *l;
+> +	struct pci_host_bridge *host_bridge = NULL;
+>  
+> -	list_for_each(l, &pci_root_buses) {
+> -		struct pci_bus *bus = pci_bus_b(l);
+> -
+> -		pcibios_bus_report_status(bus, status_mask, warn);
+> -	}
+> +	for_each_pci_host_bridge(host_bridge)
+> +		pcibios_bus_report_status(host_bridge->bus, status_mask, warn);
+>  }
+>  
+>  /*
+> -- 
+> 1.7.10.4
+> 
