@@ -1,100 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:62532 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932576Ab3AIV5S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 16:57:18 -0500
-Date: Wed, 9 Jan 2013 22:57:09 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: linux-tegra@vger.kernel.org,
-	Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 05/14] lib: Add I/O map cache implementation
-Message-ID: <20130109215709.GB13648@avionic-0098.adnet.avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
- <1357764194-12677-6-git-send-email-thierry.reding@avionic-design.de>
- <20130109212847.GT3931@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="BwCQnh7xodEAoBMC"
-In-Reply-To: <20130109212847.GT3931@n2100.arm.linux.org.uk>
+Received: from userp1040.oracle.com ([156.151.31.81]:47583 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816Ab3A0FiW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:22 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	x86@kernel.org
+Subject: [PATCH v2 10/22] PCI, x86: Kill pci_root_buses in resources reservations
+Date: Sat, 26 Jan 2013 21:36:31 -0800
+Message-Id: <1359265003-16166-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: x86@kernel.org
+---
+ arch/x86/pci/i386.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
---BwCQnh7xodEAoBMC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 94919e3..b13e0af 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -340,11 +340,11 @@ static void pcibios_allocate_rom_resources(struct pci_bus *bus)
+ 
+ static int __init pcibios_assign_resources(void)
+ {
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+ 	if (!(pci_probe & PCI_ASSIGN_ROMS))
+-		list_for_each_entry(bus, &pci_root_buses, node)
+-			pcibios_allocate_rom_resources(bus);
++		for_each_pci_host_bridge(host_bridge)
++			pcibios_allocate_rom_resources(host_bridge->bus);
+ 
+ 	pci_assign_unassigned_resources();
+ 	pcibios_fw_addr_list_del();
+@@ -367,17 +367,17 @@ void pcibios_resource_survey_bus(struct pci_bus *bus)
+ 
+ void __init pcibios_resource_survey(void)
+ {
+-	struct pci_bus *bus;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+ 	DBG("PCI: Allocating resources\n");
+ 
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pcibios_allocate_bus_resources(bus);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_bus_resources(host_bridge->bus);
+ 
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pcibios_allocate_resources(bus, 0);
+-	list_for_each_entry(bus, &pci_root_buses, node)
+-		pcibios_allocate_resources(bus, 1);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_resources(host_bridge->bus, 0);
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_allocate_resources(host_bridge->bus, 1);
+ 
+ 	e820_reserve_resources_late();
+ 	/*
+-- 
+1.7.10.4
 
-On Wed, Jan 09, 2013 at 09:28:47PM +0000, Russell King - ARM Linux wrote:
-> On Wed, Jan 09, 2013 at 09:43:05PM +0100, Thierry Reding wrote:
-> > The I/O map cache is used to map large regions of physical memory in
-> > smaller chunks to avoid running out of vmalloc()/ioremap() space.
-> >=20
-> > Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
->=20
-> We already have a means where we record the mappings which ioremap()
-> creates.  If you look at /proc/vmallocinfo, you'll notice lines such
-> as:
->=20
-> 0xf7b72000-0xf7b74000    8192 e1000_probe+0x291/0xa68 [e1000e] phys=3Dfc0=
-25000 ioremap
->=20
-> which gives you the virtual address range, physical address and type
-> of the mapping.  Why do we need a duplicated data structure?
->=20
-> Moreover, you seem to suggest that you want to break up a large
-> ioremap() mapping into several smaller mappings.  Why?  The idea
-> behind ioremap() is that this relationship holds true:
->=20
-> 	ptr =3D ioremap(cookie + n, size);
->=20
-> For any 'n' in the range 0 .. size, the location shall be accessible
-> via ptr + n when using the IO space accessors.  If you're going to
-> break up a mapping into several smaller ones, this no longer holds
-> true.
->=20
-> If the problem is that you're ioremapping huge address ranges because
-> you're passing larger-than-required resources to devices, then that's
-> part of the problem too.
-
-The resource is not larger than required. It's just that in order to
-address the extended configuration space of all PCI devices we require a
-full 256 MiB window.
-
-What this patch tries to achieve is allow a driver to take a large
-region and ioremap() it page by page on an as needed basis.
-
-Thierry
-
---BwCQnh7xodEAoBMC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQIcBAEBAgAGBQJQ7ee1AAoJEN0jrNd/PrOhOR8QALpJ5WTlmh+6oJQPNzCj0qvX
-IQ9mDhcWeNfUXC/6qZzZrzQ9fIQl2BalXFnS+baGZ/3e+3+7DPCC+zipFfNb7r1t
-2WgZFgHDSwDqFOtHzpEV6Q2sDMchefFqmCXiAY+kg3yfu6jK02NdMigm7Sxi0dwd
-j9h4rq+FLZ4HDKBmDOxPlR8Wzgy7raXpKPY07Qi+2jaXQ/pCPxNf7zhi/wRu8GOW
-0h5/K6QVs8MvjkAnbMep3SBp4xNCh4NdsB+fTc1q2rO5xXa0+7m4f+/CQ6qqGsOv
-NIxTQS9/A16dNYlpdW/VrhjCzcALStwLwqd76y9lFeFiBdjBBLhLbVnrivTZq1sk
-wen8pXvPcMNSWMHuaSiQwWOelloI4dYaH4ygE5O5L27t/wrFmhdrQEDV9nuxyQtX
-npR9kLQyKSAdlJElLa3icmqwd5rwNHnqEUwG6Kp8HSQ/jTYmICPyj2xuf7HbM7uQ
-P7Fh21QQ8mZBu7a1fz5HEiC8Hqx3XHD4VR0cnFdb2P9ai8lknYJg29BbXnXBQ0fq
-l4nTVFEsxEEp2UoDPwO22Nk9pOiSGMfB/NdDgtj0lhjpKwpArPzmhekgrQW8kze3
-DE57yTPS1KvIRLrnNjrdiM6EEscJV4up8nfNzA07pIn2nlqxRa1blKE6SWYG/7ld
-7ogVxXsA3J3RVOEFO4HD
-=zQeU
------END PGP SIGNATURE-----
-
---BwCQnh7xodEAoBMC--
