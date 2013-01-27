@@ -1,96 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60032 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753125Ab3ANPFy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Jan 2013 10:05:54 -0500
-From: Thomas Renninger <trenn@suse.de>
-To: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] x86 e820: only void usable memory areas in memmap=exactmap case
-Date: Mon, 14 Jan 2013 16:05:43 +0100
-Cc: "H. Peter Anvin" <hpa@zytor.com>,
-	MUNEDA Takahiro <muneda.takahiro@jp.fujitsu.com>,
-	Takao Indoh <indou.takao@jp.fujitsu.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, andi@firstfloor.org,
-	tokunaga.keiich@jp.fujitsu.com, kexec@lists.infradead.org,
-	hbabu@us.ibm.com, mingo@redhat.com, ddutile@redhat.com,
-	vgoyal@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, tglx@linutronix.de, khalid@gonehiking.org,
-	horms@verge.net.au
-References: <20121127004144.3604.61708.sendpatchset@tindoh.g01.fujitsu.local> <2741365.qqWvlU8HGl@hammer82.arch.suse.de> <CAE9FiQV+W21WcZuuWJYJKXhN4sf0mi=iAFgjX644c3EytPXptw@mail.gmail.com>
-In-Reply-To: <CAE9FiQV+W21WcZuuWJYJKXhN4sf0mi=iAFgjX644c3EytPXptw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-6"
-Message-Id: <201301141605.43428.trenn@suse.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37712 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755915Ab3A0Fik (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:40 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 22/22] PCI: Kill pci_root_buses
+Date: Sat, 26 Jan 2013 21:36:43 -0800
+Message-Id: <1359265003-16166-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, January 14, 2013 03:43:46 AM Yinghai Lu wrote:
-> On Sun, Jan 13, 2013 at 6:08 PM, Thomas Renninger <trenn@suse.de> wrote:
-> > On Saturday, January 12, 2013 09:07:12 AM Yinghai Lu wrote:
-...
-> everyone could understand it straightforward:
-> exactmap:  memmap will be specified, and it should be honored without
-> considering old any memmap.
-> exactusablemap: will make sure only old ram range get removed, and
-> specified usable ranges will become final usable
-> ranges in the final memmap. so we need to remove overlapping to old
-> reserved ranges.
-> 
-> aka: exact means EXACT ...
-The naming is not my point...
-Anyway after a quick talk with Alexander Graf, I guess I won't have
-much of a chance: rule is rule and a boot param is a public interface
-which must not change just like that (deprecation phase, etc.).
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c |    8 --------
+ include/linux/pci.h |    3 ---
+ 2 files changed, 11 deletions(-)
 
-...
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 04ecf0d..8420b9d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -23,10 +23,6 @@ struct resource busn_resource = {
+ 	.flags	= IORESOURCE_BUS,
+ };
  
-> those just some kind of improvement without considering kdump.
-> because kdump/scripts already does good job to provide right exactmap
-> with usable and acpi reserved areas.
-No it's conceptional wrong to provide the reserved areas via memmap
-while the original ones are declared already via boot loader structures.
-
-There are store ACPI NVS memory in suspend/resume workarounds (suspend does not
-fit that much for kdump, but there may be more than this and mmconf).
-The reserved areas in kdump kernel should be the same than with the
-original e820 table to avoid any unforseen issues.
-And kdump got them already passed and should use this info.
-
-> for mmconf, some system that range reserved in e820, and some have that in ACPI.
-> and those systems will have that mmconf enabled in kdumped kernel.
-
+-/* Ugh.  Need to stop exporting this to modules. */
+-LIST_HEAD(pci_root_buses);
+-EXPORT_SYMBOL(pci_root_buses);
+-
+ static LIST_HEAD(pci_domain_busn_res_list);
  
-> attached is what I like to have with exactusablemap, but maybe is not
-> needed, and we can just stay with exactmap...
-> 
-> ps: we don't need to add e820_remove_type...
-I thought this tiny loop:
-+       for (i = 0; i < e820.nr_map; i++) {
-+               struct e820entry *ei = &e820.map[i];
-+               if (ei->type == type) {
-+                       memset(ei, 0, sizeof(struct e820entry));
-+                       continue;
-+               }
-+       }
-would be easier to evaluate what it's doing (cmp to.
-e820_remove_range(0, ULLONG_MAX, E820_RAM, 1);)
-But I do not have a strong opinion on that.
+ struct pci_domain_busn_res {
+@@ -1746,10 +1742,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+ 	}
+ 
+-	down_write(&pci_bus_sem);
+-	list_add_tail(&b->node, &pci_root_buses);
+-	up_write(&pci_bus_sem);
+-
+ 	return b;
+ 
+ class_dev_reg_err:
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bb07db2..b42721b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -674,9 +674,6 @@ extern enum pcie_bus_config_types pcie_bus_config;
+ extern struct bus_type pci_host_bridge_bus_type;
+ extern struct bus_type pci_bus_type;
+ 
+-/* Do NOT directly access these two variables, unless you are arch specific pci
+- * code, or pci core code. */
+-extern struct list_head pci_root_buses;	/* list of all known PCI buses */
+ /* Some device drivers need know if pci is initiated */
+ extern int no_pci_devices(void);
+ 
+-- 
+1.7.10.4
 
-What is this for?:
-@@ -871,6 +879,11 @@ static int __init parse_memmap_one(char
- 	userdef = 1;
- 	if (*p == '@') {
- 		start_at = memparse(p+1, &p);
-+		if (exactusablemap_parsed) {
-+			/* remove all range with other types */
-+			e820_remove_range(start_at, mem_size,
-+						 E820_RAM, 0);
-+		}
- 		e820_add_region(start_at, mem_size, E820_RAM);
- 	} else if (*p == '#') {
- 		start_at = memparse(p+1, &p);
-
-
-    Thomas
