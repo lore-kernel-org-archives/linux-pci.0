@@ -1,94 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:57417 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754281Ab3AZBZI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 20:25:08 -0500
-Message-ID: <51033057.1080908@huawei.com>
-Date: Sat, 26 Jan 2013 09:24:39 +0800
-From: Jiang Liu <jiang.liu@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <510558CE.9000600@fold.natur.cuni.cz>
+Date: Sun, 27 Jan 2013 17:41:50 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v10 00/11] PCI, ACPI: pci root bus hotplug support / pci
- match_driver
-References: <1358803252-20639-1-git-send-email-yinghai@kernel.org> <2072996.JYmST9orI6@vostro.rjw.lan> <CAE9FiQUS56KnvDCF7LUyCkNLcun+3zZ+xGiexca2ej30dRvrQg@mail.gmail.com> <CAErSpo7-XabKQh_Lia9zS9i4Mm=eBV6rRw0ArjXAZBiWYx4uYA@mail.gmail.com>
-In-Reply-To: <CAErSpo7-XabKQh_Lia9zS9i4Mm=eBV6rRw0ArjXAZBiWYx4uYA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+To: Chris Clayton <chris2553@googlemail.com>
+CC: Yijing Wang <wangyijing0307@gmail.com>,
+	linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com>
+In-Reply-To: <5105491E.9050907@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013-1-26 8:04, Bjorn Helgaas wrote:
-> On Tue, Jan 22, 2013 at 3:19 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->> On Tue, Jan 22, 2013 at 2:09 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->>> On Monday, January 21, 2013 01:20:41 PM Yinghai Lu wrote:
->>>> It includes
->>>> 1. preparing patches for pci root bus hotadd/hotremove support
->>>> 2. move root bus hotadd from acpiphp to pci_root.c
->>>> 3. add hot-remove support
->>>> 4. add acpi_hp_work to be shared with acpiphp and root-bus hotplug
->>>> 5. add match_driver to add pci device to device tree early but
->>>>    not attach driver for hotplug path.
->>>>
->>>> based on pci/next + pm/acpi-scan
->>>>
->>>> could get from
->>>>         git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-root-bus-hotplug
->>>>
->>>> -v9: merges several patches together for easy review, requested by Rafael.
->>>> -v10: address comments from Rafael.
->>>>
->>>> Jiang Liu (2):
->>>>   PCI: Fix a device reference count leakage issue in pci_dev_present()
->>>>   PCI: make PCI device create/destroy logic symmetric
->>>>
->>>> Tang Chen (1):
->>>>   PCI, ACPI: debug print for installation of acpi root bridge's
->>>>     notifier
->>>>
->>>> Yinghai Lu (8):
->>>>   PCI, acpiphp: Add is_hotplug_bridge detection
->>>>   PCI: Add root bus children dev's res to fail list
->>>>   PCI: Set dev_node early for pci_dev
->>>>   PCI, ACPI, acpiphp: Rename alloc_acpiphp_hp_work() to alloc_acpi_hp_work
->>>>   PCI, acpiphp: Move and enhance hotplug support of pci host bridge
->>>>   PCI, acpiphp: Don't bailout even no slots found yet.
->>>>   PCI: Skip attaching driver in device_add()
->>>>   PCI: Put pci dev to device tree as early as possible
+Chris Clayton wrote:
+> 
+> 
+> On 01/27/13 14:26, Martin Mokrejs wrote:
+>> Chris Clayton wrote:
 >>>
->>> OK
 >>>
->>> Please feel free to add
+>>> On 01/27/13 12:18, Yijing Wang wrote:
+>>>> 于 2013-01-27 19:19, Chris Clayton 写道:
+>>>>> Hi Yijing
+>>>>>
+>>>>> On 01/27/13 02:45, Yijing Wang wrote:
+>>>>>> 于 2013-01-27 4:54, Chris Clayton 写道:
+>>>>>>> Hi Martin,
+>>>>>>>
+>>>>>>> On 01/24/13 19:21, Martin Mokrejs wrote:
+>>>>>>>> Hi Chris,
+>>>>>>>>       try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
+>>>>>>>> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+>>>>>>>>
+>>>>>>>
+>>>>>>> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
+>>>>>>
+>>>>>> Not loaded pciehp driver? Remove the device from this slot without poweroff ?
+>>>>>>
+>>>>>
+>>>>> That's correct. When I first encountered the oops, I did not have the pciehp driver loaded and removing the device from the slot whilst the laptop was powered on resulted in the oops.
+>>>>
+>>>> Hmm, that's unsafe and dangerous, because device now may be running.
+>>>> There are two ways to trigger pci hot-add or hot-remove in linux, after loaded pciehp or acpiphp module
+>>>> (the two modules only one can loaded into system at the same time). You can trigger hot-add/hot-remove by
+>>>> sysfs interface under /sys/bus/pci/slots/[slot-name]/power or attention button on hardware (if your laptop supports that).
+>>>>
 >>>
->>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>> OK, thanks for the advice.
 >>>
->>> to all of the patches in this series I haven't acked already.
-> 
-> I first pulled in
-> "git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
-> acpi-scan" again (to pci/acpi-scan2), added your acks, Rafael, and put
-> this series on a pci/yinghai-root-bus branch based on pci/acpi-scan2.
-> 
-> I reworked some of the changelogs a bit, but I don't think I made any
-> code changes except that in [10/11] I just inlined the
-> pci_bus_attach_device() code rather than making a new function, since
-> it's small, there's only one caller, and I didn't think we needed any
-> more pci_* and pci_bus_* functions than we already have.
-> 
-> Let me know if I messed anything up.
-Great, so I could rebase my PCI notification related work to this branch.
-I'm trying to resolve conflicts between acpi-scan and pci-root-bus-hotplug
-last night.
+>>>>>>>
+>>>>>>>>       The best would if you subscribe to linux-pci, and read my recent threads
+>>>>>>>> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
+>>>>>>>> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
+>>>>>>>> archives of linux-pci and see the pacthes and the discussion.
+>>>>>>>
+>>>>>>> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
+>>>>>>>
+>>>>>>> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
+>>>>>>
+>>>>>> Hi Chris,
+>>>>>>       What about use #modprobe pciehp pciehp_debug=1 pciehp_poll_mode=1 pciehp_poll_time=1 ?
+>>>>>>
+>>>>>> Can you resend the dmesg log and "lspci -vvv" info after hotplug device from your Fujitsu laptop with above module parameters?
+>>>>>>
+>>>>>
+>>>>> I wasn't sure whether or not the pciehp driver should be loaded on its own or with the acpiphp driver also loaded. So I built them both as modules and planned to try both, pciehp only and acpiphp only. However, I've found that acpiphp will not load (regardless of whether or not pciehp is already loaded). What I get is:
+>>>>>
+>>>>> [chris:~]$ sudo modprobe acpiphp debug=1
+>>>>> modprobe: ERROR: could not insert 'acpiphp': No such device
+>>
+>> Are you sure you had pciehp already loaded?
+>>
+> Yes, I'm sure it was.
 
-Thanks!
+Ah, sorry, wanted to say "Are you sure you had NOT pciehp already loaded (loaded before)?". If you retry without loading it ever you might succeed with acpiphp.
 
+>>>>>
+>>>>
+>>>> Currently, If your hardware support pciehp native hotplug, acpiphp driver will be rejected when loading it in system
+>>>> (you can force loading it by add boot parameter pcie_aspm=off as Martin said).
+>>>>
+>>>
+>>> OK, thanks again for the advice. I've disabled the acpiphp driver.
+>>
+>> Pitty. For me only with acpiphp works detection of express card in the slot. With pciehp
+>> the PresDet is not updated properly upon removal/insertion and sometimes, probably as a result
+>> of the previous, PresDet on the SltSta: line of lspci is not correct. So I moved away from pciehp.
+>> I have a SandyBridge based laptop so I was hoping with your i5-based laptop you have also great
+>> chance to get rid of pciehp issues.
+>>
 > 
-> Bjorn
-> 
-> .
-> 
+> I've just (very carefully) set this up again (i.e. no pciehp driver (module or builtin), acpiphp driver built in and pcie_aspm=off on the kernel command line (via grub). My card is not detected on insertion. :-(
+
+Do you have any other express card around to try if it works at all? Try that always after a cold boot.
+
+Posting a diff result of the below procedure might help:
+
+# lspci -vvvxxx > lspci.before_insertion.txt
+
+[plug your card into the slot]
+
+# lspci -vvvxxx > lspci.after_insertion.txt
+
+[ unplug your card]
+
+# lspci -vvvxxx > lspci.after_1st_removal.txt
+
+[re-plug your card into the slot]
+
+# lspci -vvvxxx > lspci.after_1st_re-insertion.txt
+
+[ unplug your card]
+
+# lspci -vvvxxx > lspci.after_2nd_removal.txt
+
+Then compare them using diff. These should have no difference:
+
+diff lspci.after_insertion.txt lspci.after_1st_re-insertion.txt
+diff lspci.after_1st_removal.txt lspci.after_2nd_removal.txt
 
 
+These may have only little difference, or none:
+
+diff lspci.before_insertion.txt lspci.after_1st_removal.txt
+diff lspci.after_1st_removal.txt lspci.after_2nd_removal.txt
+
+
+
+Finally, these should confirm whether the PresDet works for you (for me NOT with pciehp but does work with acpiphp).
+You should see PresDet- to PresDet+ changes in:
+
+diff lspci.before_insertion.txt lspci.after_insertion.txt
+diff lspci.after_1st_removal.txt lspci.after_1st_re-insertion.txt
+
+You should see PresDet+ to PresDet- changes in:
+diff lspci.after_insertion.txt lspci.after_1st_removal.txt
+diff lspci.after_1st_re-insertion.txt lspci.after_2nd_removal.txt
+
+
+I did plenty of these with my laptop using 3.3.x and 3.7.1 and the conclusion was
+that pciehp got broken since some 3.6? (commit 0d52f54e2ef64c189dedc332e680b2eb4a34590a)
+but I can live on 3.7.x with acpiphp and pcie_aspm=off. The above test could tell you what
+works in your case. Of course, you can try separately pciehp and acpiphp. With 3.4
+series I lived with pciehp and pcie_aspm=force.
+
+
+Martin
+BTW: Re-post your dmesg output so that we can see if you those OSC errors
+(for details see "Re: Dell Vostro 3550: pci_hotplug+acpiphp require 'pcie_aspm=force' on kernel command-line for hotplug to work" thread).
