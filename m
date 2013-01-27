@@ -1,67 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from quartz.orcorp.ca ([184.70.90.242]:47776 "EHLO quartz.orcorp.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754894Ab3A1WvH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 28 Jan 2013 17:51:07 -0500
-Date: Mon, 28 Jan 2013 15:51:05 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130128225105.GA21935@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
- <201301282018.17714.arnd@arndb.de>
- <5106F5CB.8050304@wwwdotorg.org>
- <20130128220904.GA21446@obsidianresearch.com>
- <20130128231829.6b205c3c@skate>
- <20130128222348.GA21628@obsidianresearch.com>
- <20130128233048.2ab6a6d2@skate>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130128233048.2ab6a6d2@skate>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37560 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755352Ab3A0Fh0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:37:26 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 02/22] PCI: Add dummy bus_type for pci_host_bridge
+Date: Sat, 26 Jan 2013 21:36:23 -0800
+Message-Id: <1359265003-16166-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 28, 2013 at 11:30:48PM +0100, Thomas Petazzoni wrote:
-> Dear Jason Gunthorpe,
-> 
-> On Mon, 28 Jan 2013 15:23:48 -0700, Jason Gunthorpe wrote:
-> 
-> > I'm refering to your earlier question about what PCI IDs to use for
-> > the SW emulated devices. If there is no need for the host bridge then
-> > you only need 1 PCI ID (for the root port bridge) and you can probably
-> > fairly safely re-use the one in the Marvell config space of the HW.
-> 
-> Ah, ok, I see. But isn't a host bridge needed to bind all the
-> PCI-to-PCI bridges under a single bus, in order to get the global
-> resource assignment I was referring to?
+Need to use it for looping registered host_bridge, and kill root_bus list.
 
-The PCI-E spec requires it, but AFAIK it doesn't actually *do*
-anything on Linux, and Linux doesn't require it.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-driver.c |   11 ++++++++++-
+ drivers/pci/probe.c      |    1 +
+ include/linux/pci.h      |    2 ++
+ 3 files changed, 13 insertions(+), 1 deletion(-)
 
-I thought Thierry did this experiment and decided it wasn't necessary:
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index acdcc3c..9fb004b 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1278,11 +1278,20 @@ struct bus_type pci_bus_type = {
+ 	.pm		= PCI_PM_OPS_PTR,
+ };
+ 
++struct bus_type pci_host_bridge_bus_type = {
++	.name           = "pci_host_bridge",
++};
++
++static int __init pci_host_bridge_driver_init(void)
++{
++	return bus_register(&pci_host_bridge_bus_type);
++}
++postcore_initcall(pci_host_bridge_driver_init);
++
+ static int __init pci_driver_init(void)
+ {
+ 	return bus_register(&pci_bus_type);
+ }
+-
+ postcore_initcall(pci_driver_init);
+ 
+ EXPORT_SYMBOL_GPL(pci_add_dynid);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index ef50154..04ecf0d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1692,6 +1692,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		goto err_out;
+ 
+ 	bridge->dev.parent = parent;
++	bridge->dev.bus = &pci_host_bridge_bus_type;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+ 	error = pcibios_root_bridge_prepare(bridge);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 056d3d6..9da06ec 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -669,6 +669,7 @@ enum pcie_bus_config_types {
+ 
+ extern enum pcie_bus_config_types pcie_bus_config;
+ 
++extern struct bus_type pci_host_bridge_bus_type;
+ extern struct bus_type pci_bus_type;
+ 
+ /* Do NOT directly access these two variables, unless you are arch specific pci
+@@ -740,6 +741,7 @@ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ extern void pci_sort_breadthfirst(void);
++#define dev_is_pci_host_bridge(d) ((d)->bus == &pci_host_bridge_bus_type)
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+ #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
+ #define dev_num_vf(d) ((dev_is_pci(d) ? pci_num_vf(to_pci_dev(d)) : 0))
+-- 
+1.7.10.4
 
-> The reason is that with the latest bindings the matching of root
-> ports to device tree nodes works as-is and nothing else indicates
-> that the emulated host bridge is actually required to make any of
-> this work. So in order not to introduce unneeded code I've left it
-> out for now. If somebody decides that we actually need this host
-> bridge (for standards compliance or whatnot) it could easily be
-> added back.
-
-Jason
