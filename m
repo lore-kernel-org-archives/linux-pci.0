@@ -1,43 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:38210 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab3ARRvA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 12:51:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-	<1358525267-14268-8-git-send-email-jiang.liu@huawei.com>
-	<CAErSpo6E0SrY8_JOU6pmrCt9opfKe_jJ6b0E0daNAbpX5KtFuQ@mail.gmail.com>
-Date: Fri, 18 Jan 2013 09:50:59 -0800
-Message-ID: <CAE9FiQU6K1M=rbnhPLsAkhK5dZw8CAoQzAi=YLjtz722jCix-w@mail.gmail.com>
-Subject: Re: [RFC PATCH v5 7/8] PCI/PCIe: add "pci=nopciehp" to disable PCIe
- native hotplug
+Received: from aserp1040.oracle.com ([141.146.126.69]:37735 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755947Ab3A0Fis (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:48 -0500
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <liuj97@gmail.com>, "Rafael J . Wysocki" <rjw@sisk.pl>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Jiang Liu <jiang.liu@huawei.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 16/22] PCI, arm: Kill pci_root_buses
+Date: Sat, 26 Jan 2013 21:36:37 -0800
+Message-Id: <1359265003-16166-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 18, 2013 at 9:35 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> If you want "pci=nopciehp" as a way for users to deal with this
-> problem by forcing the use of acpiphp, I object.  Windows manages to
-> make these slots work without having users do anything special, so we
-> should be able to do it, too.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ arch/arm/kernel/bios32.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-Agreed.
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 9b72261..d0befe4 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -57,13 +57,10 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
+ 
+ void pcibios_report_status(u_int status_mask, int warn)
+ {
+-	struct list_head *l;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+-	list_for_each(l, &pci_root_buses) {
+-		struct pci_bus *bus = pci_bus_b(l);
+-
+-		pcibios_bus_report_status(bus, status_mask, warn);
+-	}
++	for_each_pci_host_bridge(host_bridge)
++		pcibios_bus_report_status(host_bridge->bus, status_mask, warn);
+ }
+ 
+ /*
+-- 
+1.7.10.4
 
-We need to think that more.
-
-I think that we should fix acpiphp, and should follow first come and
-first serve for acpiphp and pciehp.
-
-Yinghai
