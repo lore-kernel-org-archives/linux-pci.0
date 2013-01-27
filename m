@@ -1,45 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 03/22] PCI: Set dev_node early for pci_dev
-Date: Sat, 12 Jan 2013 22:38:35 +0100
-Message-ID: <1734275.u3W5EUlAAy@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-4-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-4-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37576 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755727Ab3A0Fhc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:37:32 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v2 04/22] PCI, ACPI: Update comments for find_bridge in acpi_bus_type
+Date: Sat, 26 Jan 2013 21:36:25 -0800
+Message-Id: <1359265003-16166-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:30 PM Yinghai Lu wrote:
-> Otherwise irq_desc for pci bridge with hot-added ioapic can not be on
-> local node.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+only device that does not have bus_type, will go to that path...
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ include/acpi/acpi_bus.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  drivers/pci/probe.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 2dcd22d..b97dea5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1300,6 +1300,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	dev->dev.release = pci_release_dev;
->  	pci_dev_get(dev);
->  
-> +	set_dev_node(&dev->dev, pcibus_to_node(bus));
->  	dev->dev.dma_mask = &dev->dma_mask;
->  	dev->dev.dma_parms = &dev->dma_parms;
->  	dev->dev.coherent_dma_mask = 0xffffffffull;
-> 
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 5ce8d5e8..c499d94 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -385,7 +385,7 @@ struct acpi_bus_type {
+ 	struct bus_type *bus;
+ 	/* For general devices under the bus */
+ 	int (*find_device) (struct device *, acpi_handle *);
+-	/* For bridges, such as PCI root bridge, IDE controller */
++	/* For bridges that does not have bus_type, such as usb_port */
+ 	int (*find_bridge) (struct device *, acpi_handle *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
