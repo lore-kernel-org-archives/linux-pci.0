@@ -1,66 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 2 Jan 2013 11:48:21 -0700
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andy Lutomirski <luto@amacapital.net>,
-	Huang Ying <ying.huang@intel.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [GIT PULL] PCI updates for v3.8
-Message-ID: <20130102184821.GA31813@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37606 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816Ab3A0Fh4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:37:56 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 07/22] PCI: Kill pci_find_next_bus in pci_sysfs
+Date: Sat, 26 Jan 2013 21:36:28 -0800
+Message-Id: <1359265003-16166-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
+ <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/pci-sysfs.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Here are some fixes for v3.8.  They include a fix for the new SR-IOV
-sysfs management support, an expanded quirk for Ricoh SD card readers,
-a Stratus DMI quirk fix, and a PME polling fix.
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 9c6e9bb..6f41daf 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -289,15 +289,15 @@ static ssize_t bus_rescan_store(struct bus_type *bus, const char *buf,
+ 				size_t count)
+ {
+ 	unsigned long val;
+-	struct pci_bus *b = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
+ 
+ 	if (strict_strtoul(buf, 0, &val) < 0)
+ 		return -EINVAL;
+ 
+ 	if (val) {
+ 		mutex_lock(&pci_remove_rescan_mutex);
+-		while ((b = pci_find_next_bus(b)) != NULL)
+-			pci_rescan_bus(b);
++		for_each_pci_host_bridge(host_bridge)
++			pci_rescan_bus(host_bridge->bus);
+ 		mutex_unlock(&pci_remove_rescan_mutex);
+ 	}
+ 	return count;
+-- 
+1.7.10.4
 
-Bjorn
-
-
-The following changes since commit a49f0d1ea3ec94fc7cf33a7c36a16343b74bd565:
-
-  Linux 3.8-rc1 (2012-12-21 17:19:00 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/3.8-pci-fixes
-
-for you to fetch changes up to 812089e01b9f65f90fc8fc670d8cce72a0e01fbb:
-
-  PCI: Reduce Ricoh 0xe822 SD card reader base clock frequency to 50MHz (2012-12-26 10:43:06 -0700)
-
-----------------------------------------------------------------
-PCI updates for v3.8:
-
-  PCI: Reduce Ricoh 0xe822 SD card reader base clock frequency to 50MHz
-  PCI: Remove spurious error for sriov_numvfs store and simplify flow
-  PCI: Add PCIe Link Capability link speed and width names
-  PCI/PM: Do not suspend port if any subordinate device needs PME polling
-  PCI: Work around Stratus ftServer broken PCIe hierarchy (fix DMI check)
-
-----------------------------------------------------------------
-Andy Lutomirski (1):
-      PCI: Reduce Ricoh 0xe822 SD card reader base clock frequency to 50MHz
-
-Bjorn Helgaas (2):
-      PCI: Remove spurious error for sriov_numvfs store and simplify flow
-      PCI: Add PCIe Link Capability link speed and width names
-
-Huang Ying (1):
-      PCI/PM: Do not suspend port if any subordinate device needs PME polling
-
-Myron Stowe (1):
-      PCI: Work around Stratus ftServer broken PCIe hierarchy (fix DMI check)
-
- arch/x86/pci/common.c          |  3 +-
- drivers/pci/pci-sysfs.c        | 85 +++++++++++++++++-------------------------
- drivers/pci/pcie/portdrv_pci.c | 20 +++++++++-
- drivers/pci/quirks.c           |  7 +++-
- include/linux/pci_ids.h        |  1 +
- include/uapi/linux/pci_regs.h  |  2 +
- 6 files changed, 63 insertions(+), 55 deletions(-)
