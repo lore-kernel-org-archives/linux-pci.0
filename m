@@ -1,43 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46166 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752132Ab3ABRI0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Jan 2013 12:08:26 -0500
-Message-ID: <50E4697F.70408@redhat.com>
-Date: Wed, 02 Jan 2013 12:08:15 -0500
-From: Don Dutile <ddutile@redhat.com>
+Received: from mail-bk0-f42.google.com ([209.85.214.42]:38505 "EHLO
+	mail-bk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185Ab3A0PfA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 10:35:00 -0500
+Message-ID: <5105491E.9050907@googlemail.com>
+Date: Sun, 27 Jan 2013 15:34:54 +0000
+From: Chris Clayton <chris2553@googlemail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "Rose, Gregory V" <gregory.v.rose@intel.com>,
-	linux-pci@vger.kernel.org, Yuval Mintz <yuvalmin@broadcom.com>,
-	bhutchings@solarflare.com, yinghai@kernel.org, davem@davemloft.net
-Subject: Re: [PATCH v2] PCI SRIOV device enable and disable via sysfs
-References: <1352146841-64458-1-git-send-email-ddutile@redhat.com> <CAErSpo7OS=iuVFDnBEDz8Bx4GmVisw=UGvuv27OgU6JOeZHhrw@mail.gmail.com> <20121214101911.00002f59@unknown> <50CF7993.9040606@redhat.com> <20121217232439.GA9746@google.com> <50D24355.1050100@redhat.com> <CAErSpo7PUZgbD+=wXiQehHgoVtmn-9SLKvDJxQz9Mn18Fmx0TQ@mail.gmail.com> <CAErSpo7cj4hdk+PznobkmxoM5pqpSzhoM0_RKSbGo4xq2imHaQ@mail.gmail.com>
-In-Reply-To: <CAErSpo7cj4hdk+PznobkmxoM5pqpSzhoM0_RKSbGo4xq2imHaQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: Yijing Wang <wangyijing0307@gmail.com>,
+	linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz>
+In-Reply-To: <51053917.6060400@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/21/2012 02:49 PM, Bjorn Helgaas wrote:
-> On Thu, Dec 20, 2012 at 2:47 PM, Bjorn Helgaas<bhelgaas@google.com>  wrote:
->
->> I made the -EPERM change suggested by Greg and added this to my
->> pci/for-3.8 branch.  I'll ask Linus to pull it soon after v3.8-rc1.
->
-> After a little off-list discussion about the merits of EINVAL, EPERM,
-> EBUSY, etc., I adopted Ben's suggestion of EBUSY for this case:
->
-> +       if (pdev->sriov->num_VFs) {
-> +               dev_warn(&pdev->dev, "%d VFs already enabled. Disable
-> before enabling %d VFs\n",
-> +                        pdev->sriov->num_VFs, num_vfs);
-> +               return -EBUSY;
->
-> where the idea is "the device is already busy providing N VFs, so you
-> can't configure it to serve M VFs"
->
-> Does that sound agreeable to everybody?
->
-> Bjorn
-Ack!
 
+
+On 01/27/13 14:26, Martin Mokrejs wrote:
+> Chris Clayton wrote:
+>>
+>>
+>> On 01/27/13 12:18, Yijing Wang wrote:
+>>> 于 2013-01-27 19:19, Chris Clayton 写道:
+>>>> Hi Yijing
+>>>>
+>>>> On 01/27/13 02:45, Yijing Wang wrote:
+>>>>> 于 2013-01-27 4:54, Chris Clayton 写道:
+>>>>>> Hi Martin,
+>>>>>>
+>>>>>> On 01/24/13 19:21, Martin Mokrejs wrote:
+>>>>>>> Hi Chris,
+>>>>>>>       try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
+>>>>>>> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+>>>>>>>
+>>>>>>
+>>>>>> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
+>>>>>
+>>>>> Not loaded pciehp driver? Remove the device from this slot without poweroff ?
+>>>>>
+>>>>
+>>>> That's correct. When I first encountered the oops, I did not have the pciehp driver loaded and removing the device from the slot whilst the laptop was powered on resulted in the oops.
+>>>
+>>> Hmm, that's unsafe and dangerous, because device now may be running.
+>>> There are two ways to trigger pci hot-add or hot-remove in linux, after loaded pciehp or acpiphp module
+>>> (the two modules only one can loaded into system at the same time). You can trigger hot-add/hot-remove by
+>>> sysfs interface under /sys/bus/pci/slots/[slot-name]/power or attention button on hardware (if your laptop supports that).
+>>>
+>>
+>> OK, thanks for the advice.
+>>
+>>>>>>
+>>>>>>>       The best would if you subscribe to linux-pci, and read my recent threads
+>>>>>>> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
+>>>>>>> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
+>>>>>>> archives of linux-pci and see the pacthes and the discussion.
+>>>>>>
+>>>>>> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
+>>>>>>
+>>>>>> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
+>>>>>
+>>>>> Hi Chris,
+>>>>>       What about use #modprobe pciehp pciehp_debug=1 pciehp_poll_mode=1 pciehp_poll_time=1 ?
+>>>>>
+>>>>> Can you resend the dmesg log and "lspci -vvv" info after hotplug device from your Fujitsu laptop with above module parameters?
+>>>>>
+>>>>
+>>>> I wasn't sure whether or not the pciehp driver should be loaded on its own or with the acpiphp driver also loaded. So I built them both as modules and planned to try both, pciehp only and acpiphp only. However, I've found that acpiphp will not load (regardless of whether or not pciehp is already loaded). What I get is:
+>>>>
+>>>> [chris:~]$ sudo modprobe acpiphp debug=1
+>>>> modprobe: ERROR: could not insert 'acpiphp': No such device
+>
+> Are you sure you had pciehp already loaded?
+>
+Yes, I'm sure it was.
+>>>>
+>>>
+>>> Currently, If your hardware support pciehp native hotplug, acpiphp driver will be rejected when loading it in system
+>>> (you can force loading it by add boot parameter pcie_aspm=off as Martin said).
+>>>
+>>
+>> OK, thanks again for the advice. I've disabled the acpiphp driver.
+>
+> Pitty. For me only with acpiphp works detection of express card in the slot. With pciehp
+> the PresDet is not updated properly upon removal/insertion and sometimes, probably as a result
+> of the previous, PresDet on the SltSta: line of lspci is not correct. So I moved away from pciehp.
+> I have a SandyBridge based laptop so I was hoping with your i5-based laptop you have also great
+> chance to get rid of pciehp issues.
+>
+
+I've just (very carefully) set this up again (i.e. no pciehp driver 
+(module or builtin), acpiphp driver built in and pcie_aspm=off on the 
+kernel command line (via grub). My card is not detected on insertion. :-(
+
+Thanks for your suggestions, Martin. I am grateful.
+
+Chris
+> Martin
+>
