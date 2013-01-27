@@ -1,70 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:38258 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755326Ab3A0TYS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 14:24:18 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
 	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 07/22] ACPI: Separate acpi_bus_trim to support two steps.
-Date: Sat, 12 Jan 2013 23:40:32 +0100
-Message-ID: <3028581.u7PNshx4kV@vostro.rjw.lan>
-In-Reply-To: <1357944049-29620-8-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-8-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+	Toshi Kani <toshi.kani@hp.com>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	x86@kernel.org
+Subject: [PATCH v3 09/22] PCI, x86: Kill pci_find_next_bus in pcibios_scan_root
+Date: Sun, 27 Jan 2013 11:23:36 -0800
+Message-Id: <1359314629-18651-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 02:40:34 PM Yinghai Lu wrote:
-> Current all acpi_bus_trim callers have rmdevice to 1.
-> that means it will remove all acpi devices.
-> 
-> When 0, is passed, it will keep the parent.
-> 
-> For root bus hotremove support, we need to have pci device to be
-> removed before acpi devices.
-> 
-> So try to keep all acpi devices, and only stop drivers with them.
-> 
-> This change should be safe because all current callers all have 1 passed.
+Replace that with hotplug-safe version for iteration.
 
-I'm not sure how the chanelog is related to the patch itself.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: x86@kernel.org
+---
+ arch/x86/pci/common.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-The patch modifies the behavior of acpi_bus_trim() to avoid removing all
-devices (not just the start point) for rmdevice==0, which doesn't really change
-the functionality, because all callers pass rmdevice=1 anyway.
-
-Yes, we can make this change, but why is it necessary?
-
-And why don't we remove the rmdevice argument from acpi_bus_trim() altogether?
-
-Rafael
-
-
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/acpi/scan.c |    5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index e380345..db7664e 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -1669,10 +1669,7 @@ int acpi_bus_trim(struct acpi_device *start, int rmdevice)
->  			child = parent;
->  			parent = parent->parent;
->  
-> -			if (level == 0)
-> -				err = acpi_bus_remove(child, rmdevice);
-> -			else
-> -				err = acpi_bus_remove(child, 1);
-> +			err = acpi_bus_remove(child, rmdevice);
->  
->  			continue;
->  		}
-> 
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 505731b..b4b4032 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -447,11 +447,14 @@ void __init dmi_check_pciprobe(void)
+ 
+ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+ {
+-	struct pci_bus *bus = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
++	struct pci_bus *bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL) {
+-		if (bus->number == busnum) {
++	for_each_pci_host_bridge(host_bridge) {
++		if (host_bridge->bus->number == busnum) {
+ 			/* Already scanned */
++			bus = host_bridge->bus;
++			put_device(&host_bridge->dev);
+ 			return bus;
+ 		}
+ 	}
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.10.4
+
