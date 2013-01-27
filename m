@@ -1,74 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:33363 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343Ab3A2KB0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 05:01:26 -0500
-Date: Tue, 29 Jan 2013 11:01:19 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Maen Suleiman <maen@marvell.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	linux-pci@vger.kernel.org,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
-Message-ID: <20130129110119.07cb9ef3@skate>
-In-Reply-To: <20130128225105.GA21935@obsidianresearch.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301282018.17714.arnd@arndb.de>
-	<5106F5CB.8050304@wwwdotorg.org>
-	<20130128220904.GA21446@obsidianresearch.com>
-	<20130128231829.6b205c3c@skate>
-	<20130128222348.GA21628@obsidianresearch.com>
-	<20130128233048.2ab6a6d2@skate>
-	<20130128225105.GA21935@obsidianresearch.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from fold.natur.cuni.cz ([195.113.57.32]:60033 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755015Ab3A0O0e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 09:26:34 -0500
+Message-ID: <51053917.6060400@fold.natur.cuni.cz>
+Date: Sun, 27 Jan 2013 15:26:31 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: Chris Clayton <chris2553@googlemail.com>
+CC: Yijing Wang <wangyijing0307@gmail.com>,
+	linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com>
+In-Reply-To: <51052DB2.4090702@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Jason Gunthorpe,
-
-On Mon, 28 Jan 2013 15:51:05 -0700, Jason Gunthorpe wrote:
-
-> > > I'm refering to your earlier question about what PCI IDs to use for
-> > > the SW emulated devices. If there is no need for the host bridge then
-> > > you only need 1 PCI ID (for the root port bridge) and you can probably
-> > > fairly safely re-use the one in the Marvell config space of the HW.
-> > 
-> > Ah, ok, I see. But isn't a host bridge needed to bind all the
-> > PCI-to-PCI bridges under a single bus, in order to get the global
-> > resource assignment I was referring to?
+Chris Clayton wrote:
 > 
-> The PCI-E spec requires it, but AFAIK it doesn't actually *do*
-> anything on Linux, and Linux doesn't require it.
 > 
-> I thought Thierry did this experiment and decided it wasn't necessary:
+> On 01/27/13 12:18, Yijing Wang wrote:
+>> 于 2013-01-27 19:19, Chris Clayton 写道:
+>>> Hi Yijing
+>>>
+>>> On 01/27/13 02:45, Yijing Wang wrote:
+>>>> 于 2013-01-27 4:54, Chris Clayton 写道:
+>>>>> Hi Martin,
+>>>>>
+>>>>> On 01/24/13 19:21, Martin Mokrejs wrote:
+>>>>>> Hi Chris,
+>>>>>>      try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
+>>>>>> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+>>>>>>
+>>>>>
+>>>>> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
+>>>>
+>>>> Not loaded pciehp driver? Remove the device from this slot without poweroff ?
+>>>>
+>>>
+>>> That's correct. When I first encountered the oops, I did not have the pciehp driver loaded and removing the device from the slot whilst the laptop was powered on resulted in the oops.
+>>
+>> Hmm, that's unsafe and dangerous, because device now may be running.
+>> There are two ways to trigger pci hot-add or hot-remove in linux, after loaded pciehp or acpiphp module
+>> (the two modules only one can loaded into system at the same time). You can trigger hot-add/hot-remove by
+>> sysfs interface under /sys/bus/pci/slots/[slot-name]/power or attention button on hardware (if your laptop supports that).
+>>
+> 
+> OK, thanks for the advice.
+> 
+>>>>>
+>>>>>>      The best would if you subscribe to linux-pci, and read my recent threads
+>>>>>> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
+>>>>>> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
+>>>>>> archives of linux-pci and see the pacthes and the discussion.
+>>>>>
+>>>>> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
+>>>>>
+>>>>> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
+>>>>
+>>>> Hi Chris,
+>>>>      What about use #modprobe pciehp pciehp_debug=1 pciehp_poll_mode=1 pciehp_poll_time=1 ?
+>>>>
+>>>> Can you resend the dmesg log and "lspci -vvv" info after hotplug device from your Fujitsu laptop with above module parameters?
+>>>>
+>>>
+>>> I wasn't sure whether or not the pciehp driver should be loaded on its own or with the acpiphp driver also loaded. So I built them both as modules and planned to try both, pciehp only and acpiphp only. However, I've found that acpiphp will not load (regardless of whether or not pciehp is already loaded). What I get is:
+>>>
+>>> [chris:~]$ sudo modprobe acpiphp debug=1
+>>> modprobe: ERROR: could not insert 'acpiphp': No such device
 
-Could you detail what would be visible PCI bus topology if I remove the
-emulated PCI host bridge? (And keeping one PCI-to-PCI bridge per PCIe
-interface) ?
+Are you sure you had pciehp already loaded?
 
-I'm just trying to understand what it would look like, in terms of
-"lspci -t" output, because for now, it's not clear to me how everything
-would fit together with the emulated host bridge.
+>>>
+>>
+>> Currently, If your hardware support pciehp native hotplug, acpiphp driver will be rejected when loading it in system
+>> (you can force loading it by add boot parameter pcie_aspm=off as Martin said).
+>>
+> 
+> OK, thanks again for the advice. I've disabled the acpiphp driver.
 
-Thanks,
+Pitty. For me only with acpiphp works detection of express card in the slot. With pciehp
+the PresDet is not updated properly upon removal/insertion and sometimes, probably as a result
+of the previous, PresDet on the SltSta: line of lspci is not correct. So I moved away from pciehp.
+I have a SandyBridge based laptop so I was hoping with your i5-based laptop you have also great
+chance to get rid of pciehp issues.
 
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+Martin
