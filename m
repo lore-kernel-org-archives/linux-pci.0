@@ -1,130 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lance Ortiz <lance.ortiz@hp.com>
-Subject: [PATCH v9 1/3] aerdrv: Trace Event for AER
-To: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 03 Jan 2013 15:34:01 -0700
-Message-ID: <20130103223401.10751.1838.stgit@grignak.americas.hpqcorp.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20130118114222.6698.7103.stgit@zurg>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114222.6698.7103.stgit@zurg>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Jan 2013 16:17:42 -0700
+Message-ID: <CAErSpo4sEv-Qw1iztGn-SsPKZ=Y+st-tPAFOvsp17MUo6X=xrA@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: revert preparing for wakeup in runtime-suspend finalization
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Dave Airlie <airlied@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This header file will define a new trace event that will be triggered when
-a AER event occurs.  The following data will be provided to the trace
-event.
+[+cc Rafael]
 
-char * dev_name - The name of the slot where the device resides
-                  ([domain:]bus:device.function).
+On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+<khlebnikov@openvz.org> wrote:
+> This patch effectively reverts commit 42eca2302146fed51335b95128e949ee6f54478f
+> ("PCI: Don't touch card regs after runtime suspend D3")
+>
+> | This patch checks whether the pci state is saved and doesn't attempt to hit
+> | any registers after that point if it is.
+>
+> This seems completely wrong. Yes, PCI configuration space has been saved by
+> driver, but this doesn't means that all job is done and device has been
+> suspended and ready for waking up in the future.
+>
+> For example driver e1000e for ethernet in my thinkpad x220 saves pci-state
+> but device cannot wakeup after that, because it needs some ACPI callbacks
+> which usually called from pci_finish_runtime_suspend().
+>
+> | Optimus (dual-gpu) laptops seem to have their own form of D3cold, but
+> | unfortunately enter it on normal D3 transitions via the ACPI callback.
+>
+> Hardware which disappears from the bus unexpectedly is exception, so let's
+> handle it as an exception. Its driver should set device state to D3cold and
+> the rest code will handle it properly.
 
-u32 status - Either the correctable or uncorrectable register
-             indicating what error or errors have been see.
+Functions in D3cold don't have power, so it's completely expected that
+they would disappear from the bus and not respond to config accesses.
+Maybe Dave was referring to D3hot, where functions *should* respond to
+config accesses.  I dunno.
 
-u8 severity - error severity 0:NONFATAL 1:FATAL 2:CORRECTED
+Just to be clear, it sounds like 42eca230 caused a regression on your
+e1000e device?  If so, I guess we should revert it unless you and Dave
+can figure out a better patch that fixes both your e1000e device and
+the Optimus issue.
 
-The trace event will also provide a trace string that may look like:
-
-"0000:05:00.0 PCIe Bus Error:severity=Uncorrected (Non-Fatal), Poisoned
-TLP"
-
-v1-v2 Move header from include/ras/aer_event.h to
-include/trace/events/ras.h
-v3-v4 Cleaned up comments and commit header
-v4-v5 More cleanup remove () from if statement in print.
-      Renamed string define to be more specific.
-v5-v6 change TRACE_SYSTEM define to be ras and not aer.
-Signed-off-by: Lance Ortiz <lance.ortiz@hp.com>
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
-Acked-by: Tony Luck <tony.luck@intel.com>
----
-
- include/trace/events/ras.h |   77 ++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 77 insertions(+), 0 deletions(-)
- create mode 100644 include/trace/events/ras.h
-
-diff --git a/include/trace/events/ras.h b/include/trace/events/ras.h
-new file mode 100644
-index 0000000..88b8783
---- /dev/null
-+++ b/include/trace/events/ras.h
-@@ -0,0 +1,77 @@
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM ras
-+
-+#if !defined(_TRACE_AER_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_AER_H
-+
-+#include <linux/tracepoint.h>
-+#include <linux/edac.h>
-+
-+
-+/*
-+ * PCIe AER Trace event
-+ *
-+ * These events are generated when hardware detects a corrected or
-+ * uncorrected event on a PCIe device. The event report has
-+ * the following structure:
-+ *
-+ * char * dev_name -	The name of the slot where the device resides
-+ *			([domain:]bus:device.function).
-+ * u32 status -		Either the correctable or uncorrectable register
-+ *			indicating what error or errors have been seen
-+ * u8 severity -	error severity 0:NONFATAL 1:FATAL 2:CORRECTED
-+ */
-+
-+#define aer_correctable_errors		\
-+	{BIT(0),	"Receiver Error"},		\
-+	{BIT(6),	"Bad TLP"},			\
-+	{BIT(7),	"Bad DLLP"},			\
-+	{BIT(8),	"RELAY_NUM Rollover"},		\
-+	{BIT(12),	"Replay Timer Timeout"},	\
-+	{BIT(13),	"Advisory Non-Fatal"}
-+
-+#define aer_uncorrectable_errors		\
-+	{BIT(4),	"Data Link Protocol"},		\
-+	{BIT(12),	"Poisoned TLP"},		\
-+	{BIT(13),	"Flow Control Protocol"},	\
-+	{BIT(14),	"Completion Timeout"},		\
-+	{BIT(15),	"Completer Abort"},		\
-+	{BIT(16),	"Unexpected Completion"},	\
-+	{BIT(17),	"Receiver Overflow"},		\
-+	{BIT(18),	"Malformed TLP"},		\
-+	{BIT(19),	"ECRC"},			\
-+	{BIT(20),	"Unsupported Request"}
-+
-+TRACE_EVENT(aer_event,
-+	TP_PROTO(const char *dev_name,
-+		 const u32 status,
-+		 const u8 severity),
-+
-+	TP_ARGS(dev_name, status, severity),
-+
-+	TP_STRUCT__entry(
-+		__string(	dev_name,	dev_name	)
-+		__field(	u32,		status		)
-+		__field(	u8,		severity	)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(dev_name, dev_name);
-+		__entry->status		= status;
-+		__entry->severity	= severity;
-+	),
-+
-+	TP_printk("%s PCIe Bus Error: severity=%s, %s\n",
-+		__get_str(dev_name),
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ? "Corrected" :
-+			__entry->severity == HW_EVENT_ERR_FATAL ?
-+			"Fatal" : "Uncorrected",
-+		__entry->severity == HW_EVENT_ERR_CORRECTED ?
-+		__print_flags(__entry->status, "|", aer_correctable_errors) :
-+		__print_flags(__entry->status, "|", aer_uncorrectable_errors))
-+);
-+
-+#endif /* _TRACE_AER_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Dave Airlie <airlied@redhat.com>
+> ---
+>  drivers/pci/pci-driver.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index f79cbcd..030dbf0 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1005,10 +1005,11 @@ static int pci_pm_runtime_suspend(struct device *dev)
+>                 return 0;
+>         }
+>
+> -       if (!pci_dev->state_saved) {
+> +       if (!pci_dev->state_saved)
+>                 pci_save_state(pci_dev);
+> +
+> +       if (pci_dev->current_state != PCI_D3cold)
+>                 pci_finish_runtime_suspend(pci_dev);
+> -       }
+>
+>         return 0;
+>  }
+>
