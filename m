@@ -1,82 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:57538 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933967Ab3AIUnj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 15:43:39 -0500
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: linux-tegra@vger.kernel.org
-Cc: Grant Likely <grant.likely@secretlab.ca>,
-	Rob Herring <rob.herring@calxeda.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Murray <andrew.murray@arm.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: [PATCH 04/14] of/pci: Add of_pci_parse_bus_range() function
-Date: Wed,  9 Jan 2013 21:43:04 +0100
-Message-Id: <1357764194-12677-5-git-send-email-thierry.reding@avionic-design.de>
-In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
-References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+Received: from fold.natur.cuni.cz ([195.113.57.32]:50954 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751035Ab3A1K4m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 05:56:42 -0500
+Message-ID: <51065965.9010806@fold.natur.cuni.cz>
+Date: Mon, 28 Jan 2013 11:56:37 +0100
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: Chris Clayton <chris2553@googlemail.com>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com>
+In-Reply-To: <51064F1A.1020909@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This function can be used to parse a bus-range property as specified by
-device nodes representing PCI bridges.
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
----
- drivers/of/of_pci.c    | 25 +++++++++++++++++++++++++
- include/linux/of_pci.h |  1 +
- 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 7d5d2c3..c311166 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -85,3 +85,28 @@ int of_pci_get_devfn(struct device_node *np)
- 	return (be32_to_cpup(reg) >> 8) & 0xff;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_devfn);
-+
-+/**
-+ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
-+ * @node: device node
-+ * @res: address to a struct resource to return the bus-range
-+ *
-+ * Returns 0 on success or a negative error-code on failure.
-+ */
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
-+{
-+	const __be32 *values;
-+	int len;
-+
-+	values = of_get_property(node, "bus-range", &len);
-+	if (!values || len < sizeof(*values) * 2)
-+		return -EINVAL;
-+
-+	res->name = node->name;
-+	res->start = be32_to_cpup(values++);
-+	res->end = be32_to_cpup(values);
-+	res->flags = IORESOURCE_BUS;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 9118321..fb6e95e 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -12,5 +12,6 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
- int of_pci_get_bus(struct device_node *np);
- int of_pci_get_devfn(struct device_node *np);
-+int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- 
- #endif
--- 
-1.8.1
+Chris Clayton wrote:
+> Hi Yijing,
+> 
+> On 01/28/13 02:40, Yijing Wang wrote:
+>> Hi Chris,
+>>     Sorry for the delay reply. It seems like my reply last night was missed.
+>>
+>>  From the sysinfo you provide, there are no pcie port devices under /sys/bus/pci_express/devices.
+>> Maybe because there are some problems with _OSC in your laptop, so pcie port driver won't create pcie port device
+>> for hotplug, aer and so on.
+>>
+>> Maybe you can add boot parameter "pcie_ports=native" and reboot your laptop.
+>> Then use #modprobe pciehp pciehp_force=1 pciehp_debug=1 to load pciehp modules.
+>> After above actions, enter /sys/bus/pci_express/devices/ directory and /sys/bus/pci/slots/
+>> Some slots and pcie port devices should be there now.
+>>
+> Sorry, I've tried your suggestion, but the two directories are still empty.
+> 
+> I verified the test environment as follows:
+> 
+> [chris:~]$ uname -a
+> Linux laptop 3.7.4 #15 SMP PREEMPT Mon Jan 28 09:43:57 GMT 2013 i686 GNU/Linux
+> [chris:~]$ grep acpiphp /boot/System.map-3.7.4
+> [chris:~]$ modinfo acpiphp
+> modinfo: ERROR: Module acpiphp not found.
+> [chris:~]$ modinfo pciehp
+> filename:       /lib/modules/3.7.4/kernel/drivers/pci/hotplug/pciehp.ko
+> license:        GPL
+> description:    PCI Express Hot Plug Controller Driver
+> author:         Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>
+> depends:
+> intree:         Y
+> vermagic:       3.7.4 SMP preempt mod_unload CORE2
+> parm:           pciehp_detect_mode:Slot detection mode: pcie, acpi, auto
+>   pcie          - Use PCIe based slot detection
+>   acpi          - Use ACPI for slot detection
+>   auto(default) - Auto select mode. Use acpi option if duplicate
+>                   slot ids are found. Otherwise, use pcie option
+>  (charp)
+> parm:           pciehp_debug:Debugging mode enabled or not (bool)
+> parm:           pciehp_poll_mode:Using polling mechanism for hot-plug events or not (bool)
+> parm:           pciehp_poll_time:Polling mechanism frequency, in seconds (int)
+> parm:           pciehp_force:Force pciehp, even if OSHP is missing (bool)
+> [chris:~]$ cat /proc/cmdline
+> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
+> [chris:~]$ sudo modprobe pciehp pciehp_force=1 pciehp_debug=1
+> [chris:~]$ lsmod
+> Module                  Size  Used by
+> pciehp                 19907  0
+> [...]
+> 
+> You will notice that the kernel I have used is 3.7.4. I hope that's a suitable kernel for your tests. I've moved away from the 3.8 development kernel onto one that's stable and on which Martin has identified a solution. I see Greg KH released 3.7.5 yesterday and it includes a pciehp change. I'll upgrade to that, run the tests again and report back.
+> 
+> One question - should I include the (acpi) pci_slot driver in the kernel build or does pciehp populate the directories without pci_slot?
+
+Hi Chris,
+  I am not a kernel developer but from the other threads at linux-pci I gathered there are in some
+scenarios problems with improper loading of the hotplug modules. Therefore, the patches floating
+now around are to disable hotplug module availability. Therefore, I suggested you to try only
+only static kernel support for hotplug. That way you don't hit the issue. That is for sure not
+addressed in 3.7.5, seems that it is probably in -next.
+Martin
 
