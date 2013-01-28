@@ -1,107 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:39371 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754305Ab3A3JfH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 04:35:07 -0500
-Date: Wed, 30 Jan 2013 10:35:01 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP
- systems
-Message-ID: <20130130103501.1873d39c@skate>
-In-Reply-To: <CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
-	<CAErSpo5H08j=dZx9zapDaf1c9x6VUfuJ5oB=J0M1UFF55pg=mw@mail.gmail.com>
-	<20130129055508.GA3339@obsidianresearch.com>
-	<CAErSpo7gCFfLB6+ebvANQjkr7Bii8Jqt3y5YqExD-DcnBG7hgA@mail.gmail.com>
-	<20130129184157.GA29274@obsidianresearch.com>
-	<CAErSpo5K8yKqjzQ6s+imb3d5wLSkhvWp-d=pPv9CZk+o67kyaQ@mail.gmail.com>
-	<20130129191853.GB29274@obsidianresearch.com>
-	<CAErSpo4Zvy7=ROajygecfsEFVJxy-yNbSntdQdDFcQBPz=Qgfg@mail.gmail.com>
-	<CAErSpo41TbWTZ_6m0_uv-EaKnnqMR9jpqsarOJLGYZ31mrdkiw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:64762 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963Ab3A1XpH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 18:45:07 -0500
+Received: by mail-vc0-f178.google.com with SMTP id m8so2258022vcd.37
+        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 15:45:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114225.6698.42016.stgit@zurg>
+ <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Jan 2013 16:44:46 -0700
+Message-ID: <CAErSpo6WpF22FFwAvo=GUnPugT4WSeR88=mKN4ZpXDbJRWVdkg@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI: don't touch enable_cnt in pci_device_shutdown()
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Khalid Aziz <hikerockies@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn Helgaas,
+[+cc Khalid new email addr]
 
-On Tue, 29 Jan 2013 15:27:43 -0700, Bjorn Helgaas wrote:
-
-> I'm not sure the existing emulation in these patches is sufficient.
-> For example, pci_sw_pci_bridge_write() updates bridge->membase when we
-> write to the window register, but I don't see anything that updates
-> the actual hardware decoder.  That might be done in
-> mvebu_pcie_window_config_port() via armada_370_xp_alloc_pcie_window(),
-> but that looks like it's only done once.
-
-That's correct. I currently let the Linux PCI core enumerate the
-real PCIe devices, allocate the resources, and set the appropriate
-values in the emulated PCI-to-PCI bridge registers. Once this is all
-done, the Marvell PCIe driver looks at each PCI-to-PCI bridge, reads
-the membase and iobase registers, and creates address decoding windows
-so that the physical addresses assigned by the Linux PCI core actually
-resolve to the right PCIe interface. This is done once for all.
-
-> If the PCI core updates a root port window later, I don't see where the hardware
-> decoder will be updated.
-
-It will not be updated.
-
-> Maybe you're counting on the window assignments to be static?  The PCI
-> core doesn't guarantee anything like that, though in the absence of
-> hotplug I don't know any reason why it would change things.
-
-Right. Is supporting hotplug a show-stopper to get this included? I
-think it could be added later, if it happens to be needed, no?
-
-I could of course do it, but the patch series is already quite large
-and complicated, so if we could merge a simple, but working, version
-first, and then improve on top of it when needed, it would be nice.
-
-> I also forgot about the bus number munging in mvebu_pcie_rd_conf().
-> The PCI core can update the bridge secondary/subordinate registers.
-> It looks like you don't support writing to them, and the read path
-> (pci_sw_pci_bridge_read()) looks like it doesn't do any translation
-> between the hardware and Linux bus numbers.  I don't understand the
-> system well enough to know if this is an issue.
-
-Right. Could you explain a little bit for what reasons the PCI core
-could update the secondary/subordinate registers, and to what values it
-sets them?
-
-For now, I statically assign the secondary bus register value to be
-X+1, where X is the number of the PCIe interface, since X=0 is reserved
-for the root bus (which has the host bridge and the PCI-to-PCI
-bridges).
-
-Also, could you detail what kind of translation I should be doing when
-reading the hardware and Linux bus numbers?
-
-I apologize for asking so many, probably silly, questions, but I am
-still learning all those internal PCI mechanisms.
-
-Thanks,
-
-Thomas
--- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+On Mon, Jan 28, 2013 at 4:40 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+> <khlebnikov@openvz.org> wrote:
+>> comment in commit b566a22c23327f18ce941ffad0ca907e50a53d41
+>> ("PCI: disable Bus Master on PCI device shutdown") says:
+>>
+>> | Disable Bus Master bit on the device in pci_device_shutdown() to ensure PCI
+>> | devices do not continue to DMA data after shutdown.  This can cause memory
+>> | corruption in case of a kexec where the current kernel shuts down and
+>> | transfers control to a new kernel while a PCI device continues to DMA to
+>> | memory that does not belong to it any more in the new kernel.
+>>
+>> Seems like pci_clear_master() must be used here instead of pci_disable_device(),
+>> because it disables Bus Muster unconditionally and doesn't changes enable_cnt.
+>>
+>> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Khalid Aziz <khalid.aziz@hp.com>
+>> ---
+>>  drivers/pci/pci-driver.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index 030dbf0..853d605 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -392,7 +392,7 @@ static void pci_device_shutdown(struct device *dev)
+>>          * Turn off Bus Master bit on the device to tell it to not
+>>          * continue to do DMA
+>>          */
+>> -       pci_disable_device(pci_dev);
+>> +       pci_clear_master(pci_dev);
+>
+> We currently only call pci_enable_device() and pci_disable_device()
+> from drivers, and I think that's a nice division that's worth keeping.
+>  It keeps the core's mitts off device operation and helps preserve the
+> enable_cnt integrity.  So I like this change from that perspective.
+>
+> Any objections to this, Khalid?
+>
+>>  }
+>>
+>>  #ifdef CONFIG_PM
+>>
