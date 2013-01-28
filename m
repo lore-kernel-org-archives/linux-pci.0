@@ -1,61 +1,307 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailhub.stratus.com ([134.111.1.17]:37433 "EHLO
-	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570Ab3ASBHh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2013 20:07:37 -0500
-Date: Fri, 18 Jan 2013 20:03:24 -0500 (EST)
-From: Joe Lawrence <Joe.Lawrence@stratus.com>
-To: Myron Stowe <myron.stowe@gmail.com>
-cc: Joe Lawrence <Joe.Lawrence@stratus.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Myron Stowe <mstowe@redhat.com>,
-	David Bulkow <david.bulkow@stratus.com>, shli@kernel.org,
-	shli@fusionio.com, kaneshige.kenji@jp.fujitsu.com
-Subject: Re: PCIe ASPM crash on device removal
-In-Reply-To: <CAL-B5D2k6RdRGbedgbSAZfMumWR9ypMcDwyEGTt9X1_eO=qQuw@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1301181946010.21091@jlaw-desktop.mno.stratus.com>
-References: <alpine.DEB.2.02.1301181302260.31163@jlaw-desktop.mno.stratus.com> <CAL-B5D0+6uO7WDYR7inmZKdU0h8-bpkOs_CzbF0bD2b9i6=1ZA@mail.gmail.com> <alpine.DEB.2.02.1301181449440.31163@jlaw-desktop.mno.stratus.com> <CAL-B5D2-=x+Y-f9x+QyX+3j3F=CbfY6mRGE6mnmvuhM-zMKGnw@mail.gmail.com>
- <CAL-B5D2k6RdRGbedgbSAZfMumWR9ypMcDwyEGTt9X1_eO=qQuw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail.free-electrons.com ([94.23.35.102]:58217 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753013Ab3A1S4z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:55 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 08/27] pci: implement an emulated PCI-to-PCI bridge
+Date: Mon, 28 Jan 2013 19:56:17 +0100
+Message-Id: <1359399397-29729-9-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 18 Jan 2013, Myron Stowe wrote:
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/Kconfig             |    3 +
+ drivers/pci/Makefile            |    1 +
+ drivers/pci/sw-pci-pci-bridge.c |  185 +++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h             |   43 +++++++++
+ 4 files changed, 232 insertions(+)
+ create mode 100644 drivers/pci/sw-pci-pci-bridge.c
 
-> [+cc Shaohua and Kenji]
-> 
-> On Fri, Jan 18, 2013 at 4:15 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
-> > Joe:
-> >
-> > Thanks for the data.  So the downstream port of interest has ASPM link
-> > capability but it's currently not enabled - see LnkCap and LnkCtl
-> > above.
-> >
-> > I'm still do not understand if PCI Express links would even be
-> > involved in a topology where all the devices connected below the
-> > downstream port are PCI and not PCI Express.  Seems as if the ASPM
-> > code is going to a lot of work to put link state structures in place
-> > for all these devices that would not be capable of supporting ASPM.
-> >
-> > I'm still trying to come up to speed understanding ASPM so hopefully
-> > someone knowledgeable can help clue me in.
-> >
-> > Myron
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index f7548e2..6ed3db1 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -122,3 +122,6 @@ config PCI_LABEL
+ 
+ config PCI_SW_HOST_BRIDGE
+ 	bool
++
++config PCI_SW_PCI_PCI_BRIDGE
++	bool
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 44ce914..5b48961 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -17,6 +17,7 @@ obj-$(CONFIG_PCI_IOAPIC) += ioapic.o
+ 
+ # Emulated PCI elements
+ obj-$(CONFIG_PCI_SW_HOST_BRIDGE) += sw-host-bridge.o
++obj-$(CONFIG_PCI_SW_PCI_PCI_BRIDGE) += sw-pci-pci-bridge.o
+ 
+ # Build the PCI Hotplug drivers if we were asked to
+ obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
+diff --git a/drivers/pci/sw-pci-pci-bridge.c b/drivers/pci/sw-pci-pci-bridge.c
+new file mode 100644
+index 0000000..25679cc
+--- /dev/null
++++ b/drivers/pci/sw-pci-pci-bridge.c
+@@ -0,0 +1,185 @@
++/*
++ * Implementation of a simple emulated PCI-to-PCI bridge.
++ *
++ * Thierry Reding <thierry.reding@avionic-design.de>
++ * Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2.  This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/pci.h>
++#include <linux/module.h>
++
++int pci_sw_pci_bridge_init(struct pci_sw_pci_bridge *bridge)
++{
++	if (!bridge)
++		return -EINVAL;
++
++	memset(bridge, 0, sizeof(struct pci_sw_pci_bridge));
++
++	bridge->status = PCI_STATUS_CAP_LIST;
++	bridge->class = PCI_CLASS_BRIDGE_PCI;
++	bridge->header_type = PCI_HEADER_TYPE_BRIDGE;
++	bridge->cache_line_size = 0x10;
++
++	/* We support 32 bits I/O addressing */
++	bridge->iobase = PCI_IO_RANGE_TYPE_32;
++	bridge->iolimit = PCI_IO_RANGE_TYPE_32;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pci_sw_pci_bridge_init);
++
++int pci_sw_pci_bridge_read(struct pci_sw_pci_bridge *bridge,
++			   unsigned int where, int size, u32 *value)
++{
++	switch (where & ~3) {
++	case PCI_VENDOR_ID:
++		*value = bridge->device << 16 | bridge->vendor;
++		break;
++
++	case PCI_COMMAND:
++		*value = bridge->status << 16 | bridge->command;
++		break;
++
++	case PCI_CLASS_REVISION:
++		*value = bridge->class << 16 | bridge->interface << 8 |
++			 bridge->revision;
++		break;
++
++	case PCI_CACHE_LINE_SIZE:
++		*value = bridge->bist << 24 | bridge->header_type << 16 |
++			 bridge->latency_timer << 8 | bridge->cache_line_size;
++		break;
++
++	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
++		*value = bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4];
++		break;
++
++	case PCI_PRIMARY_BUS:
++		*value = (bridge->secondary_latency_timer << 24 |
++			  bridge->subordinate_bus         << 16 |
++			  bridge->secondary_bus           <<  8 |
++			  bridge->primary_bus);
++		break;
++
++	case PCI_IO_BASE:
++		*value = (bridge->secondary_status << 16 |
++			  bridge->iolimit          <<  8 |
++			  bridge->iobase);
++		break;
++
++	case PCI_MEMORY_BASE:
++		*value = (bridge->memlimit << 16 | bridge->membase);
++		break;
++
++	case PCI_PREF_MEMORY_BASE:
++		*value = (bridge->prefmemlimit << 16 | bridge->prefmembase);
++		break;
++
++	case PCI_PREF_BASE_UPPER32:
++		*value = bridge->prefbaseupper;
++		break;
++
++	case PCI_PREF_LIMIT_UPPER32:
++		*value = bridge->preflimitupper;
++		break;
++
++	case PCI_IO_BASE_UPPER16:
++		*value = (bridge->iolimitupper << 16 | bridge->iobaseupper);
++		break;
++
++	case PCI_ROM_ADDRESS1:
++		*value = 0;
++		break;
++
++	default:
++		*value = 0xffffffff;
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	}
++
++	if (size == 2)
++		*value = (*value >> (8 * (where & 3))) & 0xffff;
++	else if (size == 1)
++		*value = (*value >> (8 * (where & 3))) & 0xff;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_sw_pci_bridge_read);
++
++int pci_sw_pci_bridge_write(struct pci_sw_pci_bridge *bridge,
++			    unsigned int where, int size, u32 value)
++{
++	u32 mask, reg;
++	int err;
++
++	if (size == 4)
++		mask = 0x0;
++	else if (size == 2)
++		mask = ~(0xffff << ((where & 3) * 8));
++	else if (size == 1)
++		mask = ~(0xff << ((where & 3) * 8));
++	else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	err = pci_sw_pci_bridge_read(bridge, where & ~3, 4, &reg);
++	if (err)
++		return err;
++
++	value = (reg & mask) | value << ((where & 3) * 8);
++
++	switch (where & ~3) {
++	case PCI_COMMAND:
++		bridge->command = value & 0xffff;
++		bridge->status = value >> 16;
++		break;
++
++	case PCI_BASE_ADDRESS_0 ... PCI_BASE_ADDRESS_1:
++		bridge->bar[((where & ~3) - PCI_BASE_ADDRESS_0) / 4] = value;
++		break;
++
++	case PCI_IO_BASE:
++		/*
++		 * We also keep bit 1 set, it is a read-only bit that
++		 * indicates we support 32 bits addressing for the
++		 * I/O
++		 */
++		bridge->iobase = (value & 0xff) | PCI_IO_RANGE_TYPE_32;
++		bridge->iolimit = ((value >> 8) & 0xff) | PCI_IO_RANGE_TYPE_32;
++		bridge->secondary_status = value >> 16;
++		break;
++
++	case PCI_MEMORY_BASE:
++		bridge->membase = value & 0xffff;
++		bridge->memlimit = value >> 16;
++		break;
++
++	case PCI_PREF_MEMORY_BASE:
++		bridge->prefmembase = value & 0xffff;
++		bridge->prefmemlimit = value >> 16;
++		break;
++
++	case PCI_PREF_BASE_UPPER32:
++		bridge->prefbaseupper = value;
++		break;
++
++	case PCI_PREF_LIMIT_UPPER32:
++		bridge->preflimitupper = value;
++		break;
++
++	case PCI_IO_BASE_UPPER16:
++		bridge->iobaseupper = value & 0xffff;
++		bridge->iolimitupper = value >> 16;
++		break;
++
++	default:
++		break;
++	}
++
++	return PCIBIOS_SUCCESSFUL;
++}
++EXPORT_SYMBOL_GPL(pci_sw_pci_bridge_write);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c93e258..b83b4c8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1864,4 +1864,47 @@ extern int pci_sw_host_bridge_read(struct pci_sw_host_bridge *bridge,
+ extern int pci_sw_host_bridge_write(struct pci_sw_host_bridge *bridge,
+ 				    unsigned int where, int size, u32 value);
+ 
++struct pci_sw_pci_bridge {
++	u16 vendor;
++	u16 device;
++	u16 command;
++	u16 status;
++	u16 class;
++	u8 interface;
++	u8 revision;
++	u8 bist;
++	u8 header_type;
++	u8 latency_timer;
++	u8 cache_line_size;
++	u32 bar[2];
++	u8 primary_bus;
++	u8 secondary_bus;
++	u8 subordinate_bus;
++	u8 secondary_latency_timer;
++	u8 iobase;
++	u8 iolimit;
++	u16 secondary_status;
++	u16 membase;
++	u16 memlimit;
++	u16 prefmembase;
++	u16 prefmemlimit;
++	u32 prefbaseupper;
++	u32 preflimitupper;
++	u16 iobaseupper;
++	u16 iolimitupper;
++	u8 cappointer;
++	u8 reserved1;
++	u16 reserved2;
++	u32 romaddr;
++	u8 intline;
++	u8 intpin;
++	u16 bridgectrl;
++};
++
++extern int pci_sw_pci_bridge_init(struct pci_sw_pci_bridge *bridge);
++extern int pci_sw_pci_bridge_read(struct pci_sw_pci_bridge *bridge,
++				  unsigned int where, int size, u32 *value);
++extern int pci_sw_pci_bridge_write(struct pci_sw_pci_bridge *bridge,
++				   unsigned int where, int size, u32 value);
++
+ #endif /* LINUX_PCI_H */
+-- 
+1.7.9.5
 
-Scratch my earlier worry about link_state for a device without any 
-subordinate devices for pcie_aspm_exit_link_state to clean up.  I forgot 
-the check that pcie_aspm_init_link_state makes on the subordinate device 
-list before allocating link_state.
-
-What is confusing to me is the asymmetry between these two routines and 
-how the pcie_aspm_sanity_check return value (blacklist, introduced in 
-commit 46bbdfa4) is handled.  I wonder if pcie_aspm_init_link_state could 
-simply skip any device who's subordinate device list contains no pcie 
-devices.  (Actually one of the things that pcie_aspm_sanity_check looks 
-for.)
-
-Regards,
-
--- Joe
