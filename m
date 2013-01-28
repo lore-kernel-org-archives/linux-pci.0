@@ -1,103 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:36863 "EHLO
+Received: from mail.free-electrons.com ([94.23.35.102]:58278 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab3A2UdO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 15:33:14 -0500
-Date: Tue, 29 Jan 2013 21:33:08 +0100
+	with ESMTP id S1752281Ab3A1S5D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:03 -0500
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "Russell King - ARM Linux" <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	"Eran Ben-Avi" <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
 	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
 	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130129213308.7e845064@skate>
-In-Reply-To: <201301292015.21478.arnd@arndb.de>
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 14/27] arm: plat-orion: refactor the orion_disable_wins() function
+Date: Mon, 28 Jan 2013 19:56:23 +0100
+Message-Id: <1359399397-29729-15-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<201301291645.08040.arnd@arndb.de>
-	<20130129180936.3737e550@skate>
-	<201301292015.21478.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Arnd Bergmann,
+In the address decoding code, the orion_disable_wins() function is
+used at boot time to disable all address decoding windows, before
+configuring only the ones that are needed. This allows to make sure
+that no configuration is left from the bootloader.
 
-On Tue, 29 Jan 2013 20:15:21 +0000, Arnd Bergmann wrote:
+As a preparation for the introduction of address decoding window
+allocation/deallocation function, we refactor this function into an
+orion_disable_cpu_win() which disables a single window.
 
-> I mean you could make each root port look like a separate host
-> bridge that is not related to the others, and not have any
-> emulated PCI-to-PCI bridges at all.
+The orion_config_wins() function is changed to call
+orion_disable_cpu_win() in a loop, to preserve an identical behavior.
 
-Ok.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/plat-orion/addr-map.c |   35 +++++++++++++++++------------------
+ 1 file changed, 17 insertions(+), 18 deletions(-)
 
-> > Remember that the very reason to use emulated PCI-to-PCI bridges is
-> > that we want to assign a global range of addresses of I/O regions
-> > and a global range of addresses of memory regions, and let the
-> > Linux PCI core allocate from those two ranges to the different
-> > devices connected downstream of the PCI-to-PCI bridges. This gives
-> > us for free the rather complex allocation of addresses we need to
-> > set up our address decoding windows.
-> > 
-> > If we have have separate domains for each of our hardware PCIe
-> > interface, can we still benefit from this allocation of resources
-> > from a globally defined range of I/O addresses and memory addresses?
-> 
-> My interpretation of what you told me in the previous mail is that
-> each root port has 
-> 
-> * A separate configuration space
-> * A separate 64KB I/O window that is not shared with the other ports,
->   or potentially multiple 64KB windows, which we would not want to use
-> * A configurable range of the memory space that does not overlap
->   with the other ports
-> 
-> Is the above a correct description?
-> 
-> If so, I think it would be most sensible to not try to put all ports
-> into the same domain, but give each port the full view of its own
-> 256 buses, and 64KB I/O space. The memory space can still be directly
-> mapped, if you only set up the physical address window for that after
-> the bus scan is complete.
-
-Does this still allows me to give the Linux PCI *one* global range of
-addresses for I/O space, and *one* global range of addresses for memory
-space, and the the Linux PCI core assign ranges, within those global
-ranges, to each host bridge?
-
-This is absolutely essential for me, as I then read those allocated
-ranges to configure the address decoding windows.
-
-Basically, I have currently two suggestions:
-
- * From Jason Gunthorpe, to not use any host bridge, and instead use
-   only PCI-to-PCI bridges, one per PCIe interface.
-
- * From you, to not use any PCI-to-PCI bridge, and use only host
-   bridges, one per PCIe interface.
-
-Would it be possible to get some consensus on this? In the review of
-RFCv1, I was already told to use one global host bridge, and then one
-PCI-to-PCI bridge per PCIe interface, and now we're talking about doing
-something different. I'd like to avoid having to try gazillions of
-different possible implementations :-)
-
-Best regards,
-
-Thomas
+diff --git a/arch/arm/plat-orion/addr-map.c b/arch/arm/plat-orion/addr-map.c
+index 4dec3db..dd98638 100644
+--- a/arch/arm/plat-orion/addr-map.c
++++ b/arch/arm/plat-orion/addr-map.c
+@@ -95,6 +95,19 @@ void __init orion_setup_cpu_win(const struct orion_addr_map_cfg *cfg,
+ 	}
+ }
+ 
++static void __init orion_disable_cpu_win(const struct orion_addr_map_cfg *cfg,
++					 const int win)
++{
++	void __iomem *addr = cfg->win_cfg_base(cfg, win);
++
++	writel(0, addr + WIN_BASE_OFF);
++	writel(0, addr + WIN_CTRL_OFF);
++	if (cfg->cpu_win_can_remap(cfg, win)) {
++		writel(0, addr + WIN_REMAP_LO_OFF);
++		writel(0, addr + WIN_REMAP_HI_OFF);
++	}
++}
++
+ /*
+  * Configure a number of windows.
+  */
+@@ -108,36 +121,22 @@ static void __init orion_setup_cpu_wins(const struct orion_addr_map_cfg * cfg,
+ 	}
+ }
+ 
+-static void __init orion_disable_wins(const struct orion_addr_map_cfg * cfg)
+-{
+-	void __iomem *addr;
+-	int i;
+-
+-	for (i = 0; i < cfg->num_wins; i++) {
+-		addr = cfg->win_cfg_base(cfg, i);
+-
+-		writel(0, addr + WIN_BASE_OFF);
+-		writel(0, addr + WIN_CTRL_OFF);
+-		if (cfg->cpu_win_can_remap(cfg, i)) {
+-			writel(0, addr + WIN_REMAP_LO_OFF);
+-			writel(0, addr + WIN_REMAP_HI_OFF);
+-		}
+-	}
+-}
+-
+ /*
+  * Disable, clear and configure windows.
+  */
+ void __init orion_config_wins(struct orion_addr_map_cfg * cfg,
+ 			      const struct orion_addr_map_info *info)
+ {
++	int win;
++
+ 	if (!cfg->cpu_win_can_remap)
+ 		cfg->cpu_win_can_remap = orion_cpu_win_can_remap;
+ 
+ 	if (!cfg->win_cfg_base)
+ 		cfg->win_cfg_base = orion_win_cfg_base;
+ 
+-	orion_disable_wins(cfg);
++	for (win = 0; win < cfg->num_wins; win++)
++		orion_disable_cpu_win(cfg, win);
+ 
+ 	if (info)
+ 		orion_setup_cpu_wins(cfg, info);
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.9.5
+
