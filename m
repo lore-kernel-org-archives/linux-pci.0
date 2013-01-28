@@ -1,65 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38498 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756837Ab3AUVVf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2013 16:21:35 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Tang Chen <tangchen@cn.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 08/11] PCI, ACPI: debug print for installation of acpi root bridge's notifier
-Date: Mon, 21 Jan 2013 13:20:49 -0800
-Message-Id: <1358803252-20639-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
-References: <1358803252-20639-1-git-send-email-yinghai@kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:58149 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751580Ab3A1S4r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:47 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 03/27] of/pci: Add of_pci_parse_bus_range() function
+Date: Mon, 28 Jan 2013 19:56:12 +0100
+Message-Id: <1359399397-29729-4-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tang Chen <tangchen@cn.fujitsu.com>
+From: Thierry Reding <thierry.reding@avionic-design.de>
 
-acpi_install_notify_handler() could fail. So check the exit status
-and give a better debug info.
+This function can be used to parse a bus-range property as specified by
+device nodes representing PCI bridges.
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/acpi/pci_root.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/of/of_pci.c    |   25 +++++++++++++++++++++++++
+ include/linux/of_pci.h |    1 +
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index a2d2c4c..417487a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -751,6 +751,7 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
- static acpi_status __init
- find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- {
-+	acpi_status status;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
-@@ -763,9 +764,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
--	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				handle_hotplug_event_root, NULL);
--	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-+	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+					handle_hotplug_event_root, NULL);
-+	if (ACPI_FAILURE(status))
-+		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-+				  objname, (unsigned int)status);
-+	else
-+		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-+				 objname);
- 
- 	return AE_OK;
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 0dd52df..3ea0e84 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -64,3 +64,28 @@ int of_pci_get_devfn(struct device_node *np)
+ 	return (be32_to_cpup(reg) >> 8) & 0xff;
  }
+ EXPORT_SYMBOL_GPL(of_pci_get_devfn);
++
++/**
++ * of_pci_parse_bus_range() - parse the bus-range property of a PCI device
++ * @node: device node
++ * @res: address to a struct resource to return the bus-range
++ *
++ * Returns 0 on success or a negative error-code on failure.
++ */
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res)
++{
++	const __be32 *values;
++	int len;
++
++	values = of_get_property(node, "bus-range", &len);
++	if (!values || len < sizeof(*values) * 2)
++		return -EINVAL;
++
++	res->name = node->name;
++	res->start = be32_to_cpup(values++);
++	res->end = be32_to_cpup(values);
++	res->flags = IORESOURCE_BUS;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(of_pci_parse_bus_range);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 91ec484..7a04826 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -11,5 +11,6 @@ struct device_node;
+ struct device_node *of_pci_find_child_device(struct device_node *parent,
+ 					     unsigned int devfn);
+ int of_pci_get_devfn(struct device_node *np);
++int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ 
+ #endif
 -- 
-1.7.10.4
+1.7.9.5
 
