@@ -1,96 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:38068 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755341Ab3AKUZ6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Jan 2013 15:25:58 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: Re: [PATCH 1/16] ACPI: Separate adding ACPI device objects from probing ACPI drivers
-Date: Fri, 11 Jan 2013 21:31:43 +0100
-Message-ID: <2859994.arbXorpfaz@vostro.rjw.lan>
-In-Reply-To: <20130111200046.GB13897@intel.com>
-References: <8498184.VilrUmatxI@vostro.rjw.lan> <23002897.6xbQGtPaGy@vostro.rjw.lan> <20130111200046.GB13897@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:58240 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281Ab3A1S46 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:58 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 10/27] arm: mvebu: fix address-cells in mpic DT node
+Date: Mon, 28 Jan 2013 19:56:19 +0100
+Message-Id: <1359399397-29729-11-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 11, 2013 10:00:46 PM Mika Westerberg wrote:
-> (Sorry to jump in late but I noticed one problem with this series while
-> testing).
-> 
-> On Thu, Dec 20, 2012 at 02:47:47AM +0100, Rafael J. Wysocki wrote:
-> > +static acpi_status acpi_bus_probe_start(acpi_handle handle, u32 lvl,
-> > +					void *context, void **not_used)
-> > +{
-> > +	struct acpi_bus_ops *ops = context;
-> > +	acpi_status status = AE_OK;
-> > +	struct acpi_device *device;
-> > +	unsigned long long sta_not_used;
-> > +	int type_not_used;
-> > +
-> > +	/*
-> > +	 * Ignore errors ignored by acpi_bus_check_add() to avoid terminating
-> > +	 * namespace walks prematurely.
-> > +	 */
-> > +	if (acpi_bus_type_and_status(handle, &type_not_used, &sta_not_used))
-> > +		return AE_OK;
-> > +
-> > +	if (acpi_bus_get_device(handle, &device))
-> > +		return AE_CTRL_DEPTH;
-> > +
-> > +	if (ops->acpi_op_add) {
-> > +		if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
-> > +			/* This is a known good platform device. */
-> > +			acpi_create_platform_device(device);
-> > +		} else if (device_attach(&device->dev)) {
-> 
-> device_attach() returns 1 if it succeeds to attach device to a driver. In
-> that case we should continue and not return AE_CTRL_DEPTH, right?
+There is no need to have a #address-cells property in the MPIC Device
+Tree node, and more than that, having it confuses the of_irq_map_raw()
+logic, which will be used by the Marvell PCIe driver.
 
-That's correct.  The check is reversed, so we need the appended patch on top
-of linux-pm.git/acpi-scan.
-
-Thanks,
-Rafael
-
-
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / scan: Fix check of device_attach() return value.
+ arch/arm/boot/dts/armada-370-xp.dtsi |    1 -
+ 1 file changed, 1 deletion(-)
 
-Since device_attach() returns 1 on success and 0 on failure,
-the check against its return value in acpi_bus_device_attach()
-should be reveresed.  Make it so.
-
-Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/scan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -1598,7 +1598,7 @@ static acpi_status acpi_bus_device_attac
- 	if (!acpi_match_device_ids(device, acpi_platform_device_ids)) {
- 		/* This is a known good platform device. */
- 		acpi_create_platform_device(device);
--	} else if (device_attach(&device->dev)) {
-+	} else if (!device_attach(&device->dev)) {
- 		status = AE_CTRL_DEPTH;
- 	}
- 	return status;
-
+diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
+index 4c0abe8..1dcdae9 100644
+--- a/arch/arm/boot/dts/armada-370-xp.dtsi
++++ b/arch/arm/boot/dts/armada-370-xp.dtsi
+@@ -31,7 +31,6 @@
+ 	mpic: interrupt-controller@d0020000 {
+ 	      compatible = "marvell,mpic";
+ 	      #interrupt-cells = <1>;
+-	      #address-cells = <1>;
+ 	      #size-cells = <1>;
+ 	      interrupt-controller;
+ 	};
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.9.5
+
