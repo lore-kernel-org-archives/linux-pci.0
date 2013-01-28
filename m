@@ -1,48 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-da0-f41.google.com ([209.85.210.41]:36563 "EHLO
-	mail-da0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754893Ab3AMOSt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Jan 2013 09:18:49 -0500
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	Jiang Liu <liuj97@gmail.com>
-Subject: [PATCH] ACPI: remove unused acpi_op_bind and acpi_op_unbind
-Date: Sun, 13 Jan 2013 22:16:42 +0800
-Message-Id: <1358086602-32538-1-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <2326457.ZgAhayTgyl@vostro.rjw.lan>
-References: <2326457.ZgAhayTgyl@vostro.rjw.lan>
+Received: from moutng.kundenserver.de ([212.227.126.171]:58121 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166Ab3A1USY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 15:18:24 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Date: Mon, 28 Jan 2013 20:18:17 +0000
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201301282018.17714.arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Monday 28 January 2013, Thomas Petazzoni wrote:
+> From: Thierry Reding <thierry.reding@avionic-design.de>
+> 
+> [Thomas Petazzoni:
+>  - Simplify capabilities handling.
+>  - Move to a separate file.
+>  - Fix mask used when writing a 4 bytes value.]
+> 
+> Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-With commit f2a33cde55a03 "ACPI: Drop ACPI device .bind() and .unbind()
-callbacks", acpi_op_bind and acpi_op_unbind are not used any more. So
-remove them.
+Not even a description why this is needed?
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
----
- include/acpi/acpi_bus.h |    2 --
- 1 file changed, 2 deletions(-)
+This patch (together with patch 8) seems like the most controversial
+one of the series, so you should better provide a really good reason
+why we would emulate something in software rather than using whatever
+hardware is there.
 
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 6e9a73e..ef539eb 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -91,8 +91,6 @@ struct acpi_device;
- typedef int (*acpi_op_add) (struct acpi_device * device);
- typedef int (*acpi_op_remove) (struct acpi_device * device, int type);
- typedef int (*acpi_op_start) (struct acpi_device * device);
--typedef int (*acpi_op_bind) (struct acpi_device * device);
--typedef int (*acpi_op_unbind) (struct acpi_device * device);
- typedef void (*acpi_op_notify) (struct acpi_device * device, u32 event);
- 
- struct acpi_device_ops {
--- 
-1.7.9.5
-
+	Arnd
