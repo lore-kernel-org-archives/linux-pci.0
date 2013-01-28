@@ -1,42 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:39836 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217Ab3AIRww (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2013 12:52:52 -0500
-Received: by mail-fa0-f74.google.com with SMTP id t1so133382fae.1
-        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2013 09:52:51 -0800 (PST)
-Subject: [PATCH 0/5] PCI trivial cleanups
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	x86@kernel.org
-Date: Wed, 09 Jan 2013 10:52:49 -0700
-Message-ID: <20130109175151.13904.84252.stgit@bhelgaas.mtv.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.free-electrons.com ([94.23.35.102]:58184 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab3A1S4v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:51 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 06/27] lib: devres: don't enclose pcim_*() functions in CONFIG_HAS_IOPORT
+Date: Mon, 28 Jan 2013 19:56:15 +0100
+Message-Id: <1359399397-29729-7-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are trivial cleanups headed for v3.9.
+The pcim_*() functions are used by the libata-sff subsystem, and this
+subsystem is used for many SATA drivers on ARM platforms that do not
+necessarily have I/O ports.
 
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-kernel@vger.kernel.org
 ---
+ lib/devres.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Bjorn Helgaas (5):
-      x86/PCI: Remove unused pci_root_bus
-      frv/PCI: Remove unused pci_root_bus
-      mn10300/PCI: Remove unused pci_root_bus
-      PCI: Use "unsigned long" for __pci_enable_device_flags to match ioport.h
-      PCI: Drop "__" prefix on __pci_enable_device_flags()
+diff --git a/lib/devres.c b/lib/devres.c
+index 80b9c76..5639c3e 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -195,6 +195,7 @@ void devm_ioport_unmap(struct device *dev, void __iomem *addr)
+ 			       devm_ioport_map_match, (void *)addr));
+ }
+ EXPORT_SYMBOL(devm_ioport_unmap);
++#endif /* CONFIG_HAS_IOPORT */
+ 
+ #ifdef CONFIG_PCI
+ /*
+@@ -400,4 +401,3 @@ void pcim_iounmap_regions(struct pci_dev *pdev, int mask)
+ }
+ EXPORT_SYMBOL(pcim_iounmap_regions);
+ #endif /* CONFIG_PCI */
+-#endif /* CONFIG_HAS_IOPORT */
+-- 
+1.7.9.5
 
-
- arch/frv/mb93090-mb00/pci-frv.h         |    1 -
- arch/frv/mb93090-mb00/pci-vdk.c         |    4 +---
- arch/mn10300/unit-asb2305/pci-asb2305.h |    1 -
- arch/mn10300/unit-asb2305/pci.c         |    4 +---
- arch/x86/include/asm/pci_x86.h          |    1 -
- arch/x86/pci/common.c                   |    1 -
- arch/x86/pci/legacy.c                   |    2 +-
- arch/x86/pci/numaq_32.c                 |    2 +-
- drivers/pci/pci.c                       |    9 ++++-----
- 9 files changed, 8 insertions(+), 17 deletions(-)
