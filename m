@@ -1,100 +1,120 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <50F2D3A3.6080602@gmail.com>
-Date: Sun, 13 Jan 2013 23:32:51 +0800
-From: Jiang Liu <liuj97@gmail.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v8 11/22] PCI: correctly detect ACPI PCI host bridge objects
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org> <1357944049-29620-12-git-send-email-yinghai@kernel.org> <2669837.JomPNBOLKK@vostro.rjw.lan>
-In-Reply-To: <2669837.JomPNBOLKK@vostro.rjw.lan>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:58176 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172Ab3A1S4u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:56:50 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 05/27] arm: pci: add a align_resource hook
+Date: Mon, 28 Jan 2013 19:56:14 +0100
+Message-Id: <1359399397-29729-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/13/2013 07:34 AM, Rafael J. Wysocki wrote:
-> On Friday, January 11, 2013 02:40:38 PM Yinghai Lu wrote:
->> From: Jiang Liu <jiang.liu@huawei.com>
->>
->> The code in pci_root_hp.c depends on function acpi_is_root_bridge()
->> to check whether an ACPI object is a PCI host bridge or not.
->> If an ACPI device hasn't been created for the ACPI object yet,
->> function acpi_is_root_bridge() will return false even if the object
->> is a PCI host bridge object. That behavior will cause two issues:
->> 1) No ACPI notification handler installed for PCI host bridges absent
->>    at startup, so hotplug events for those bridges won't be handled.
->> 2) rescan_root_bridge() can't reenumerate offlined PCI host bridges
->>    because the ACPI devices have been already destroyed.
->>
->> So use acpi_match_object_info_ids() to correctly detect PCI host bridges.
->>
->> -v2: update to use acpi_match_object_info_ids() from Tang Chen  - Yinghai
->> -v3: drop the PNP0A008, according to Bjorn.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: Len Brown <lenb@kernel.org>
->> Cc: linux-acpi@vger.kernel.org
->> ---
->>  drivers/acpi/pci_root.c |   19 ++++++++++++++++++-
->>  1 file changed, 18 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 5ae36d8..d30fb94 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -923,6 +923,23 @@ static void handle_hotplug_event_root(acpi_handle handle, u32 type,
->>  				_handle_hotplug_event_root);
->>  }
->>  
->> +static bool acpi_is_root_bridge_object(acpi_handle handle)
->> +{
->> +	struct acpi_device_info *info = NULL;
->> +	acpi_status status;
->> +	bool ret;
->> +
->> +	status = acpi_get_object_info(handle, &info);
->> +	if (ACPI_FAILURE(status))
->> +		return false;
->> +
->> +	ret = !acpi_match_object_info_ids(info, root_device_ids);
->> +
-> 
-> Well, I kind of don't understand why don't we check info->flags
-> against ACPI_PCI_ROOT_BRIDGE that acpi_get_object_info() sets for us if it
-> finds a PCI root bridge?
-Hi Rafael,
-	Thanks for reminder, we should test ACPI_PCI_ROOT_BRIDGE flag
-instead of a redundant calling to acpi_match_object_info_ids(). To be honest,
-I don't know the existence of ACPI_PCI_ROOT_BRIDGE flag before:(
+The PCI specifications says that an I/O region must be aligned on a 4
+KB boundary, and a memory region aligned on a 1 MB boundary.
 
-> 
->> +	kfree(info);
->> +
->> +	return ret;
->> +}
->> +
->>  static acpi_status __init
->>  find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->>  {
->> @@ -931,7 +948,7 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
->>  				      .pointer = objname };
->>  	int *count = (int *)context;
->>  
->> -	if (!acpi_is_root_bridge(handle))
->> +	if (!acpi_is_root_bridge_object(handle))
->>  		return AE_OK;
->>  
->>  	(*count)++;
->>
-> 
-> Thanks,
-> Rafael
-> 
-> 
+However, the Marvell PCIe interfaces rely on address decoding windows
+(which allow to associate a range of physical addresses with a given
+device). For PCIe memory windows, those windows are defined with a 1
+MB granularity (which matches the PCI specs), but PCIe I/O windows can
+only be defined with a 64 KB granularity, so they have to be 64 KB
+aligned. We therefore need to tell the PCI core about this special
+alignement requirement.
+
+The PCI core already calls pcibios_align_resource() in the ARM PCI
+core, specifically for such purposes. So this patch extends the ARM
+PCI core so that it calls a ->align_resource() hook registered by the
+PCI driver, exactly like the existing ->map_irq() and ->swizzle()
+hooks.
+
+A particular PCI driver can register a align_resource() hook, and do
+its own specific alignement, depending on the specific constraints of
+the underlying hardware.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+---
+ arch/arm/include/asm/mach/pci.h |   11 +++++++++++
+ arch/arm/kernel/bios32.c        |    6 ++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 5cf2e97..7d2c3c8 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -30,6 +30,11 @@ struct hw_pci {
+ 	void		(*postinit)(void);
+ 	u8		(*swizzle)(struct pci_dev *dev, u8 *pin);
+ 	int		(*map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
+ };
+ 
+ /*
+@@ -51,6 +56,12 @@ struct pci_sys_data {
+ 	u8		(*swizzle)(struct pci_dev *, u8 *);
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
++					/* Resource alignement requirements	*/
++	resource_size_t (*align_resource)(struct pci_dev *dev,
++					  const struct resource *res,
++					  resource_size_t start,
++					  resource_size_t size,
++					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 5401645..be2e6c9 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -462,6 +462,7 @@ static void __init pcibios_init_hw(struct hw_pci *hw, struct list_head *head)
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
++		sys->align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -574,6 +575,8 @@ char * __init pcibios_setup(char *str)
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
++	struct pci_dev *dev = data;
++	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -581,6 +584,9 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
++	if (sys->align_resource)
++		return sys->align_resource(dev, res, start, size, align);
++
+ 	return start;
+ }
+ 
+-- 
+1.7.9.5
 
