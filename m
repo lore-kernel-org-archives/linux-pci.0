@@ -1,43 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f49.google.com ([209.85.214.49]:58121 "EHLO
-	mail-bk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971Ab3AOHKi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 02:10:38 -0500
+Received: from quartz.orcorp.ca ([184.70.90.242]:57419 "EHLO quartz.orcorp.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754331Ab3A1WQu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 28 Jan 2013 17:16:50 -0500
+Date: Mon, 28 Jan 2013 15:16:52 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 08/27] pci: implement an emulated PCI-to-PCI bridge
+Message-ID: <20130128221652.GB21446@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1359399397-29729-9-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20130128193516.GB17722@obsidianresearch.com>
+ <20130128203947.07332698@skate>
+ <20130128195501.GD17722@obsidianresearch.com>
+ <5106F668.60605@wwwdotorg.org>
 MIME-Version: 1.0
-In-Reply-To: <1620774.KjdX6JUoJy@vostro.rjw.lan>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-	<1357944049-29620-23-git-send-email-yinghai@kernel.org>
-	<1620774.KjdX6JUoJy@vostro.rjw.lan>
-Date: Mon, 14 Jan 2013 23:10:36 -0800
-Message-ID: <CAE9FiQVrUkMTP8yFcXVgq3SW9tv6r0WBxfHbV=yT0vYbO=zmFQ@mail.gmail.com>
-Subject: Re: [PATCH v8 22/22] PCI: move device_add out of pci_bus_add_device()
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5106F668.60605@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 12, 2013 at 3:54 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> Move out device registering out of pci_bus_add_devices, so we could
->> put new created pci devices in device tree early.
->>
->> new pci_bus_add_devices will do the device_attach work to load pci drivers
->> instead.
->
-> I wonder what problem it solves?
+On Mon, Jan 28, 2013 at 03:06:32PM -0700, Stephen Warren wrote:
+> On 01/28/2013 12:55 PM, Jason Gunthorpe wrote:
+> > On Mon, Jan 28, 2013 at 08:39:47PM +0100, Thomas Petazzoni wrote:
+> > 
+> >>> In the Marvell case, this capability can be constructed by pulling
+> >>> data from the the Express End Point capability of the PCI-E port:
+> >>
+> >> I am not sure what you mean by "pulling". Do you mean that I should get
+> >> informations from the real PCIe interface, from within the emulated
+> >> PCI-to-PCI bridge implementation? This would unfortunately not be
+> >> really nice, because until now, the PCI-to-PCI bridge emulation is
+> >> clearly separated from the Marvell PCIe driver itself. Of course, it
+> >> could register a hook or something like that, so that the emulated
+> >> PCI-to-PCI bridge could potentially call back into the Marvell PCIe
+> >> driver.
+> > 
+> > Yes, a callback would be needed to the main driver and IIRC the driver
+> > can read/write the end port link info config regsiters via MMIO. They
+> > probably need a bit of massaging to be in root port format, but
+> > otherwise it should be straightforward..
+> > 
+> >> I'll have to dig a little bit more about this capability to see how it
+> >> works exactly.
+> > 
+> > All ports have registers to report and control the link, but the root
+> > port and end port versions are a bit different, so the goal is to read
+> > the end port formatted registers and map them into the root port
+> > format so that userspace can properly see the link state and
+> > configuration.
+> 
+> Isn't the thing being emulated here a host bridge, which "contains" the
+> PCIe root ports underneath, which in turn "contain" the PCIe devices
+> underneath? At least on Tegra, there is no host bridge device that
+> exposes PCIe config registers, but the PCIe root ports do exist and do
+> expose PCIe config registers...
 
-we want to put created pci device in the device tree as soon as possible.
-so for_pci_dev will not miss them.
+Patch #7 create a SW emulated host bridge, which tegra and marvell
+lack in HW.
 
-but at that time, we can not load driver for them yet. need to after
-pci_assign_unsigned_resources etc to make sure all pci devices get
-resource allocated at first.
+Patch #8 creates a SW emulated root port bridge, which tegra has
+properly in HW, while Marvell doesn't.
 
-so only move adding to device tree early, and leave loading driver on
-the old places.
+Basically, on the Marvell chips, the PCI config space of the PCI
+complex is useless when used as a root complex - the config space is
+only usable when the device is configured as an end port.
 
-Yinghai
+Jason
