@@ -1,50 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bk0-f52.google.com ([209.85.214.52]:60352 "EHLO
-	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902Ab3AOGbh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Jan 2013 01:31:37 -0500
+Received: from szxga02-in.huawei.com ([119.145.14.65]:4300 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753166Ab3A1Hi0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 02:38:26 -0500
+Message-ID: <51062ADA.6080903@huawei.com>
+Date: Mon, 28 Jan 2013 15:38:02 +0800
+From: Jiang Liu <jiang.liu@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <3028581.u7PNshx4kV@vostro.rjw.lan>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-	<1357944049-29620-8-git-send-email-yinghai@kernel.org>
-	<3028581.u7PNshx4kV@vostro.rjw.lan>
-Date: Mon, 14 Jan 2013 22:31:35 -0800
-Message-ID: <CAE9FiQXDSjzXPudWCG9fkDDO0ksncWcSQon5nhA2NLagidO1qQ@mail.gmail.com>
-Subject: Re: [PATCH v8 07/22] ACPI: Separate acpi_bus_trim to support two steps.
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Gu Zheng <guz.fnst@cn.fujitsu.com>,
+	Lin Feng <linfeng@cn.fujitsu.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <tangchen@cn.fujitsu.com>,
+	<laijs@cn.fujitsu.com>, <wency@cn.fujitsu.com>,
+	<izumi.taku@jp.fujitsu.com>, Don Dutile <ddutile@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] pci-sysfs: replace mutex_lock with mutex_trylock to avoid
+ potential deadlock situation
+References: <1356594177-29453-1-git-send-email-linfeng@cn.fujitsu.com> <CAErSpo7EmvDaK11P6r-PKxPBqHQBPaGvZj=zvNZ8w=KFbdFgYA@mail.gmail.com> <5102583E.4030109@cn.fujitsu.com> <CAErSpo58qUuwd+8bGMWQHQ6KrfQMvHGb+REVkpJqQdrfAQe3Qw@mail.gmail.com> <CAE9FiQUP71TJgP21SRre4Mb2PrnUg+7KLzXnxHUviqCuNSL44w@mail.gmail.com> <CAErSpo4_iz29b9Tj8W4D9YqdGPV4P+rFZ463eZ1S4J2gL_6qyw@mail.gmail.com> <CAE9FiQVV20XktXTfQ2OKQeprL1V2rGORpUf8VBOyDB4Y+VOCNQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQVV20XktXTfQ2OKQeprL1V2rGORpUf8VBOyDB4Y+VOCNQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 12, 2013 at 2:40 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Friday, January 11, 2013 02:40:34 PM Yinghai Lu wrote:
->> Current all acpi_bus_trim callers have rmdevice to 1.
->> that means it will remove all acpi devices.
->>
->> When 0, is passed, it will keep the parent.
->>
->> For root bus hotremove support, we need to have pci device to be
->> removed before acpi devices.
->>
->> So try to keep all acpi devices, and only stop drivers with them.
->>
->> This change should be safe because all current callers all have 1 passed.
->
-> I'm not sure how the chanelog is related to the patch itself.
->
-> The patch modifies the behavior of acpi_bus_trim() to avoid removing all
-> devices (not just the start point) for rmdevice==0, which doesn't really change
-> the functionality, because all callers pass rmdevice=1 anyway.
->
-> Yes, we can make this change, but why is it necessary?
->
-> And why don't we remove the rmdevice argument from acpi_bus_trim() altogether?
+Hi all,
+	I have worked out a draft patch set to serialize hotplug operations,
+but encountered some obstacles when dealing with PCI root buses. I will
+try to rebase the patch set onto "PCI: Iterate pci host bridge instead of
+pci root bus" from Yinghai. And also need to fix bugs reported by Lin Feng
+too.
 
-this patch is not needed after your changes with acpi_bus_trim.
+Regards!
+Gerry
 
-Yinghai
+On 2013-1-26 4:59, Yinghai Lu wrote:
+> On Fri, Jan 25, 2013 at 12:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+>> If we're going to fix the sysfs deadlock (and we should), I want to
+>> either see an argument for why we don't have a problem outside of
+>> sysfs, or I want to fix sysfs and non-sysfs at the same time.
+> 
+> Sure.
+> 
+> Jiang should have one patches to address that?
+> 
+> Yinghai
+> 
+> 
+
+
