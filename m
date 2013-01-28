@@ -1,102 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Huang Ying <ying.huang@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Huang Ying <ying.huang@intel.com>
-Subject: [PATCH 1/4] PCI/ACPI: Add target state as parameter to pci_platform_pm_ops->run_wake
-Date: Tue, 29 Jan 2013 12:34:15 +0800
-Message-Id: <1359434058-15918-2-git-send-email-ying.huang@intel.com>
-In-Reply-To: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
-References: <1359434058-15918-1-git-send-email-ying.huang@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:59472 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755323Ab3A1Way (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:30:54 -0500
+Date: Mon, 28 Jan 2013 23:30:48 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Message-ID: <20130128233048.2ab6a6d2@skate>
+In-Reply-To: <20130128222348.GA21628@obsidianresearch.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201301282018.17714.arnd@arndb.de>
+	<5106F5CB.8050304@wwwdotorg.org>
+	<20130128220904.GA21446@obsidianresearch.com>
+	<20130128231829.6b205c3c@skate>
+	<20130128222348.GA21628@obsidianresearch.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Normally, if PCI device uses native PME interrupt for runtime wake up,
-platform need not to do anything for runtime wake up.
+Dear Jason Gunthorpe,
 
-But per PCI Express Base Specification Revision 2.0 section 5.3.3.2
-Link Wakeup, platform support is needed for D3cold waking up to power
-on the main link even if there is native PME interrupt support for
-D3cold.
+On Mon, 28 Jan 2013 15:23:48 -0700, Jason Gunthorpe wrote:
 
-So the needed work for platform runtime wake up is different among
-different target state.  Originally, pci_dev->runtime_d3cold flag is
-used for that, but we want to restrict its usage.  Now the target
-state is added as parameter to pci_platform_pm_ops->run_wake to solve
-the issue.
+> I'm refering to your earlier question about what PCI IDs to use for
+> the SW emulated devices. If there is no need for the host bridge then
+> you only need 1 PCI ID (for the root port bridge) and you can probably
+> fairly safely re-use the one in the Marvell config space of the HW.
 
-Signed-off-by: Huang Ying <ying.huang@intel.com>
----
- drivers/pci/pci-acpi.c |    5 +++--
- drivers/pci/pci.c      |    9 +++++----
- drivers/pci/pci.h      |    2 +-
- 3 files changed, 9 insertions(+), 7 deletions(-)
+Ah, ok, I see. But isn't a host bridge needed to bind all the
+PCI-to-PCI bridges under a single bus, in order to get the global
+resource assignment I was referring to?
 
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -261,7 +261,8 @@ static void acpi_pci_propagate_run_wake(
- 		acpi_pm_device_run_wake(bus->bridge, enable);
- }
- 
--static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
-+static int acpi_pci_run_wake(struct pci_dev *dev, bool enable,
-+			     pci_power_t state)
- {
- 	/*
- 	 * Per PCI Express Base Specification Revision 2.0 section
-@@ -269,7 +270,7 @@ static int acpi_pci_run_wake(struct pci_
- 	 * waking up to power on the main link even if there is PME
- 	 * support for D3cold
- 	 */
--	if (dev->pme_interrupt && !dev->runtime_d3cold)
-+	if (dev->pme_interrupt && state != PCI_D3cold)
- 		return 0;
- 
- 	if (!acpi_pm_device_run_wake(&dev->dev, enable))
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -484,10 +484,11 @@ static inline int platform_pci_sleep_wak
- 			pci_platform_pm->sleep_wake(dev, enable) : -ENODEV;
- }
- 
--static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable)
-+static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable,
-+					pci_power_t state)
- {
- 	return pci_platform_pm ?
--			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
-+			pci_platform_pm->run_wake(dev, enable, state) : -ENODEV;
- }
- 
- /**
-@@ -1687,7 +1688,7 @@ int __pci_enable_wake(struct pci_dev *de
- 			pci_pme_active(dev, true);
- 		else
- 			ret = 1;
--		error = runtime ? platform_pci_run_wake(dev, true) :
-+		error = runtime ? platform_pci_run_wake(dev, true, state) :
- 					platform_pci_sleep_wake(dev, true);
- 		if (ret)
- 			ret = error;
-@@ -1695,7 +1696,7 @@ int __pci_enable_wake(struct pci_dev *de
- 			dev->wakeup_prepared = true;
- 	} else {
- 		if (runtime)
--			platform_pci_run_wake(dev, false);
-+			platform_pci_run_wake(dev, false, state);
- 		else
- 			platform_pci_sleep_wake(dev, false);
- 		pci_pme_active(dev, false);
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -61,7 +61,7 @@ struct pci_platform_pm_ops {
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
- 	bool (*can_wakeup)(struct pci_dev *dev);
- 	int (*sleep_wake)(struct pci_dev *dev, bool enable);
--	int (*run_wake)(struct pci_dev *dev, bool enable);
-+	int (*run_wake)(struct pci_dev *dev, bool enable, pci_power_t state);
- };
- 
- extern int pci_set_platform_pm(struct pci_platform_pm_ops *ops);
+Regarding the PCI IDs, I have started to work with Marvell to see what
+is possible. I, unfortunately, haven't received the answer for now.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
