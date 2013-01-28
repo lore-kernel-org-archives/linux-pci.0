@@ -1,56 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve0-f174.google.com ([209.85.128.174]:46592 "EHLO
-	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169Ab3A3Usy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2013 15:48:54 -0500
-Received: by mail-ve0-f174.google.com with SMTP id c13so1464227vea.33
-        for <linux-pci@vger.kernel.org>; Wed, 30 Jan 2013 12:48:53 -0800 (PST)
+Received: from mail-la0-f54.google.com ([209.85.215.54]:42309 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773Ab3A1LCB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 06:02:01 -0500
+Message-ID: <51065AA4.6000700@googlemail.com>
+Date: Mon, 28 Jan 2013 11:01:56 +0000
+From: Chris Clayton <chris2553@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <20130130124721.0ad0294e@skate>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <201301292254.01069.arnd@arndb.de> <20130130042103.GB5734@obsidianresearch.com>
- <201301300955.49473.arnd@arndb.de> <20130130124721.0ad0294e@skate>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 30 Jan 2013 13:48:33 -0700
-Message-ID: <CAErSpo4GKimzwTBB8aN4aj7ms=8pfkoV1=j8mstPDCxc-+gPxQ@mail.gmail.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+CC: Yijing Wang <wangyijing@huawei.com>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065965.9010806@fold.natur.cuni.cz>
+In-Reply-To: <51065965.9010806@fold.natur.cuni.cz>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 30, 2013 at 4:47 AM, Thomas Petazzoni
-<thomas.petazzoni@free-electrons.com> wrote:
+[no one screamed, so linux-media ml dropped]
 
-> So what I'm going to do now is rework my patch series by removing the
-> emulated host bridge (which is normally mandatory by PCIe standard, but
-> Linux doesn't need it, so we don't care), ...
+Hi Martin,
 
-This is a tangent since you're removing the emulated host bridge
-anyway, but it's been mentioned a couple of times, and I'd like to
-understand this.  Jason mentioned earlier in the [07/27] emulated host
-bridge thread that the PCIe spec requires a host bridge at 00:00.0.
-I've never seen that mentioned in the spec; can somebody point me to
-the actual requirement that host bridges appear in config space?
+On 01/28/13 10:56, Martin Mokrejs wrote:
+>
+>
+> Chris Clayton wrote:
+>> Hi Yijing,
+>>
+>> On 01/28/13 02:40, Yijing Wang wrote:
+>>> Hi Chris,
+>>>      Sorry for the delay reply. It seems like my reply last night was missed.
+>>>
+>>>   From the sysinfo you provide, there are no pcie port devices under /sys/bus/pci_express/devices.
+>>> Maybe because there are some problems with _OSC in your laptop, so pcie port driver won't create pcie port device
+>>> for hotplug, aer and so on.
+>>>
+>>> Maybe you can add boot parameter "pcie_ports=native" and reboot your laptop.
+>>> Then use #modprobe pciehp pciehp_force=1 pciehp_debug=1 to load pciehp modules.
+>>> After above actions, enter /sys/bus/pci_express/devices/ directory and /sys/bus/pci/slots/
+>>> Some slots and pcie port devices should be there now.
+>>>
+>> Sorry, I've tried your suggestion, but the two directories are still empty.
+>>
+>> I verified the test environment as follows:
+>>
+>> [chris:~]$ uname -a
+>> Linux laptop 3.7.4 #15 SMP PREEMPT Mon Jan 28 09:43:57 GMT 2013 i686 GNU/Linux
+>> [chris:~]$ grep acpiphp /boot/System.map-3.7.4
+>> [chris:~]$ modinfo acpiphp
+>> modinfo: ERROR: Module acpiphp not found.
+>> [chris:~]$ modinfo pciehp
+>> filename:       /lib/modules/3.7.4/kernel/drivers/pci/hotplug/pciehp.ko
+>> license:        GPL
+>> description:    PCI Express Hot Plug Controller Driver
+>> author:         Dan Zink <dan.zink@compaq.com>, Greg Kroah-Hartman <greg@kroah.com>, Dely Sy <dely.l.sy@intel.com>
+>> depends:
+>> intree:         Y
+>> vermagic:       3.7.4 SMP preempt mod_unload CORE2
+>> parm:           pciehp_detect_mode:Slot detection mode: pcie, acpi, auto
+>>    pcie          - Use PCIe based slot detection
+>>    acpi          - Use ACPI for slot detection
+>>    auto(default) - Auto select mode. Use acpi option if duplicate
+>>                    slot ids are found. Otherwise, use pcie option
+>>   (charp)
+>> parm:           pciehp_debug:Debugging mode enabled or not (bool)
+>> parm:           pciehp_poll_mode:Using polling mechanism for hot-plug events or not (bool)
+>> parm:           pciehp_poll_time:Polling mechanism frequency, in seconds (int)
+>> parm:           pciehp_force:Force pciehp, even if OSHP is missing (bool)
+>> [chris:~]$ cat /proc/cmdline
+>> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
+>> [chris:~]$ sudo modprobe pciehp pciehp_force=1 pciehp_debug=1
+>> [chris:~]$ lsmod
+>> Module                  Size  Used by
+>> pciehp                 19907  0
+>> [...]
+>>
+>> You will notice that the kernel I have used is 3.7.4. I hope that's a suitable kernel for your tests. I've moved away from the 3.8 development kernel onto one that's stable and on which Martin has identified a solution. I see Greg KH released 3.7.5 yesterday and it includes a pciehp change. I'll upgrade to that, run the tests again and report back.
+>>
+>> One question - should I include the (acpi) pci_slot driver in the kernel build or does pciehp populate the directories without pci_slot?
+>
+> Hi Chris,
+>    I am not a kernel developer but from the other threads at linux-pci I gathered there are in some
+> scenarios problems with improper loading of the hotplug modules. Therefore, the patches floating
+> now around are to disable hotplug module availability. Therefore, I suggested you to try only
+> only static kernel support for hotplug. That way you don't hit the issue. That is for sure not
+> addressed in 3.7.5, seems that it is probably in -next.
+> Martin
+>
+In a few minutes I'll be sending out another reply to Yijing's 
+suggestions because I noticed a typo in the parameter I added to the 
+kernel command line. I'm now going back through email to remember why we 
+were trying to get those /sys/bus/pci... directories populated.
 
-My understanding has been that host bridges, whether PCI or PCIe, are
-required to *exist*, but that the way you enumerate them and configure
-them is outside the scope of the PCI/PCIe specs.  I know that many
-chips, especially for x86, *do* make the host bridge appear in config
-space, but I've never seen a requirement for that.
+Watch this space! :-)
+Chris
 
-Bjorn
