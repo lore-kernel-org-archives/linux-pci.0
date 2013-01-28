@@ -1,104 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <liuj97@gmail.com>
-To: "Rafael J . Wysocki" <rjw@sisk.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@huawei.com>, Yinghai Lu <yinghai@kernel.org>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Jiang Liu <liuj97@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: [RFC PATCH v5 2/8] PCI: split registration of PCI bus devices into two stages
-Date: Sat, 19 Jan 2013 00:07:40 +0800
-Message-Id: <1358525267-14268-3-git-send-email-jiang.liu@huawei.com>
-In-Reply-To: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:59530 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755095Ab3A1Woa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:44:30 -0500
+Date: Mon, 28 Jan 2013 23:44:23 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Mike Turquette <mturquette@linaro.org>
+Subject: Re: [PATCH v2 11/27] clk: mvebu: create parent-child relation for
+ PCIe clocks on Armada 370
+Message-ID: <20130128234423.00bfd28e@skate>
+In-Reply-To: <5106FB47.9000508@wwwdotorg.org>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-12-git-send-email-thomas.petazzoni@free-electrons.com>
+	<5106F6EE.4000101@wwwdotorg.org>
+	<20130128232150.53b56e62@skate>
+	<5106FB47.9000508@wwwdotorg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When handling BUS_NOTIFY_ADD_DEVICE event for a PCI bridge device,
-the notification handler can't hold reference count to the new PCI bus
-because the device object for the new bus (pci_dev->subordinate->dev)
-hasn't been initialized yet.
+Dear Stephen Warren,
 
-Split the registration of PCI bus device into two stages as below,
-so that the event handler could hold reference count to the new PCI bus
-when handling BUS_NOTIFY_ADD_DEVICE event.
+On Mon, 28 Jan 2013 15:27:19 -0700, Stephen Warren wrote:
 
-1) device_initialize(&pci_dev->dev)
-2) device_initialize(&pci_dev->subordinate->dev)
-3) notify BUS_NOTIFY_ADD_DEVICE event for pci_dev
-4) device_add(&pci_dev->dev)
-5) device_add(&pci_dev->subordinate->dev)
+> Oh I see; I was confused by the patch description. The two clocks being
+> made child/parent are the two clocks for a port, and this relationship
+> is set up for each port; for some reason I thought there was a
+> requirement to make one port's clock a child of the other port's clock.
 
-Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/bus.c    |    2 +-
- drivers/pci/probe.c  |    4 +++-
- drivers/pci/remove.c |   10 +++++-----
- 3 files changed, 9 insertions(+), 7 deletions(-)
+Aah, ok, I understand the confusion now. Re-reading my commit log, I'm
+not sure where the confusion comes from, but english is not my native
+language, so maybe something that sounds clear to me is not clear in
+reality. I'll rephrase the commit log to make sure this confusion is
+clarified.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index a543746..4c843cd 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -193,7 +193,7 @@ int pci_bus_add_child(struct pci_bus *bus)
- 	if (bus->bridge)
- 		bus->dev.parent = bus->bridge;
- 
--	retval = device_register(&bus->dev);
-+	retval = device_add(&bus->dev);
- 	if (retval)
- 		return retval;
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ec5d28f..adb77c6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -639,6 +639,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	 */
- 	child->dev.class = &pcibus_class;
- 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-+	device_initialize(&child->dev);
- 
- 	/*
- 	 * Set up the primary, secondary and subordinate
-@@ -1673,7 +1674,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
- 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
--	error = device_register(&b->dev);
-+	device_initialize(&b->dev);
-+	error = device_add(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
- 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 10693f5..0d03026 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -48,11 +48,11 @@ void pci_remove_bus(struct pci_bus *bus)
- 	list_del(&bus->node);
- 	pci_bus_release_busn_res(bus);
- 	up_write(&pci_bus_sem);
--	if (!bus->is_added)
--		return;
--
--	pci_remove_legacy_files(bus);
--	device_unregister(&bus->dev);
-+	if (bus->is_added) {
-+		pci_remove_legacy_files(bus);
-+		device_del(&bus->dev);
-+	}
-+	put_device(&bus->dev);
- }
- EXPORT_SYMBOL(pci_remove_bus);
- 
+Thanks!
+
+Thomas
 -- 
-1.7.9.5
-
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
