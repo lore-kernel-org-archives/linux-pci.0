@@ -1,86 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1357169259.25181.9.camel@joe-AO722>
-Subject: Re: [PATCH v8 3/3] aerdrv: Cleanup log output for AER
-From: Joe Perches <joe@perches.com>
-To: Lance Ortiz <lance.ortiz@hp.com>
-Cc: bhelgaas@google.com, lance_ortiz@hotmail.com, jiang.liu@huawei.com,
-	tony.luck@intel.com, bp@alien8.de, rostedt@goodmis.org,
-	mchehab@redhat.com, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 02 Jan 2013 15:27:39 -0800
-In-Reply-To: <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
-References: <20130102232730.5706.82243.stgit@grignak.americas.hpqcorp.net>
-	 <20130102232743.5706.63153.stgit@grignak.americas.hpqcorp.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:55394 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755282Ab3A1WVv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:21:51 -0500
+Message-ID: <5106F9F9.3010905@wwwdotorg.org>
+Date: Mon, 28 Jan 2013 15:21:45 -0700
+From: Stephen Warren <swarren@wwwdotorg.org>
+MIME-Version: 1.0
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 19/27] pci: PCIe driver for Marvell Armada 370/XP systems
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-20-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2013-01-02 at 16:27 -0700, Lance Ortiz wrote:
-> These changes make cper_print_aer more consistent with aer_print_error
-> and clean things up by elimiating the use of the prefix variable and
-> replacing it with dev_printk.
-[]
-> v7-v8 Updated to use dev_printk instated of prefix. Changed
-> log levels to KERN_ERR as per Mauro's suggestion
+On 01/28/2013 11:56 AM, Thomas Petazzoni wrote:
+> This driver implements the support for the PCIe interfaces on the
+> Marvell Armada 370/XP ARM SoCs. In the future, it might be extended to
+> cover earlier families of Marvell SoCs, such as Dove, Orion and
+> Kirkwood.
+> 
+> The driver implements the hw_pci operations needed by the core ARM PCI
+> code to setup PCI devices and get their corresponding IRQs, and the
+> pci_ops operations that are used by the PCI core to read/write the
+> configuration space of PCI devices.
+> 
+> Since the PCIe interfaces of Marvell SoCs are completely separate and
+> not linked together in a bus, this driver sets up an emulated PCI host
+> bridge, with one PCI-to-PCI bridge as child for each hardware PCIe
+> interface.
+> 
+> In addition, this driver enumerates the different PCIe slots, and for
+> those having a device plugged in, it sets up the necessary address
+> decoding windows, using the new armada_370_xp_alloc_pcie_window()
+> function from mach-mvebu/addr-map.c.
 
-Just use dev_err( instead of dev_printk(KERN_ERR,
-It's a function and it makes the object code smaller.
+> diff --git a/Documentation/devicetree/bindings/pci/armada-370-xp-pcie.txt b/Documentation/devicetree/bindings/pci/armada-370-xp-pcie.txt
 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-[]
-> @@ -144,26 +143,24 @@ static void __aer_print_error(const char *prefix,
->  				aer_uncorrectable_error_string[i] : NULL;
->  
->  		if (errmsg)
-> -			printk("%s""   [%2d] %-22s%s\n", prefix, i, errmsg,
-> +			dev_printk(KERN_ERR, &dev->dev,
-> +				"   [%2d] %-22s%s\n", i, errmsg,
->  				info->first_error == i ? " (First)" : "");
->  		else
-> -			printk("%s""   [%2d] Unknown Error Bit%s\n", prefix, i,
-> -				info->first_error == i ? " (First)" : "");
-> +			dev_printk(KERN_ERR, &dev->dev,
-> +				"   [%2d] Unknown Error Bit%s\n",
-> +				i, info->first_error == i ? " (First)" : "");
->  	}
-[]
->  	if (info->status == 0) {
-> -		printk("%s""PCIe Bus Error: severity=%s, type=Unaccessible, "
-> -			"id=%04x(Unregistered Agent ID)\n", prefix,
-> +		dev_printk(KERN_ERR, &dev->dev,
-> +			"PCIe Bus Error: severity=%s, type=Unaccessible, "
-> +			"id=%04x(Unregistered Agent ID)\n",
-[]
-> @@ -171,22 +168,24 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
-[]
-> +		dev_printk(KERN_ERR, &dev->dev,
-> +			"PCIe Bus Error: severity=%s, type=%s, id=%04x(%s)\n",
-> +			aer_error_severity_string[info->severity],
-[]
-> +		dev_printk(KERN_ERR, &dev->dev,
-> +			"  device [%04x:%04x] error status/mask=%08x/%08x\n",
-> +			dev->vendor, dev->device,
->  			info->status, info->mask);
-[]
-> +			dev_printk(KERN_ERR, &dev->dev, "  TLP Header:"
->  				" %02x%02x%02x%02x %02x%02x%02x%02x"
->  				" %02x%02x%02x%02x %02x%02x%02x%02x\n",
-[]
-> @@ -195,8 +194,9 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
-[]
-> +		dev_printk(KERN_ERR, &dev->dev,
-> +			   "  Error of this Agent(%04x) is reported first\n",
-> +			id);
-[]
-> @@ -244,21 +244,21 @@ void cper_print_aer(const char *prefix, struct pci_dev *dev, int cper_severity,
-[]
-> +	dev_printk(KERN_ERR, &dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
-> +	       status, mask);
-[]
-> +	dev_printk(KERN_ERR, &dev->dev, "aer_layer=%s, aer_agent=%s\n",
->  	       aer_error_layer[layer], aer_agent_string[agent]);
-[]
-> +		dev_printk(KERN_ERR, &dev->dev, "aer_tlp_header:"
+> +Mandatory properties:
+> +- compatible: must be "marvell,armada-370-xp-pcie"
+> +- status: either "disabled" or "okay"
 
+status is a standard DT property; I certainly wouldn't expect its
+presence to be mandatory (there's a defined default), nor would I expect
+each device's binding to redefine this property.
 
+> +In addition, the Device Tree node must have sub-nodes describing each
+> +PCIe interface, having the following mandatory properties:
+
+> +- marvell,pcie-port: the physical PCIe port number
+
+Should the standardized cell-index property be used here instead? Or,
+perhaps that property is deprecated/discouraged...
+
+> +- status: either "disabled" or "okay"
+
+Similar comment as above.
+
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+
+> +obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> +ccflags-$(CONFIG_PCI_MVEBU) += \
+> +	-I$(srctree)/arch/arm/plat-orion/include \
+> +	-I$(srctree)/arch/arm/mach-mvebu/include
+
+That seems a little dangerous w.r.t. multi-platform zImage. Can the
+required headers be moved out to somewhere more public to avoid this?
+
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+
+> +/*
+> + * Those are the product IDs used for the emulated PCI Host bridge and
+> + * emulated PCI-to-PCI bridges. They are temporary until we get
+> + * official IDs assigned.
+> + */
+> +#define MARVELL_EMULATED_HOST_BRIDGE_ID    4141
+> +#define MARVELL_EMULATED_PCI_PCI_BRIDGE_ID 4242
+
+I assume that means we can't merge this driver yet. The cover letter
+mentioned a desire to merge this for 3.9; there's not much time to get
+official IDs assigned, then.
+
+> +static int mvebu_pcie_init(void)
+> +{
+> +	return platform_driver_probe(&mvebu_pcie_driver,
+> +				     mvebu_pcie_probe);
+> +}
+> +
+> +subsys_initcall(mvebu_pcie_init);
+
+Why isn't that just platform_driver_register()?
+
+> +MODULE_LICENSE("GPL");
+
+"GPL v2".
