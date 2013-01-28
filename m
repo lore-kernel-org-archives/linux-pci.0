@@ -1,74 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47583 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816Ab3A0FiW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 00:38:22 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@huawei.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	x86@kernel.org
-Subject: [PATCH v2 10/22] PCI, x86: Kill pci_root_buses in resources reservations
-Date: Sat, 26 Jan 2013 21:36:31 -0800
-Message-Id: <1359265003-16166-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Received: from mail.free-electrons.com ([94.23.35.102]:58350 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753229Ab3A1S5P (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:57:15 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	Eran Ben-Avi <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH v2 21/27] arm: mvebu: add PCIe Device Tree informations for Armada 370
+Date: Mon, 28 Jan 2013 19:56:30 +0100
+Message-Id: <1359399397-29729-22-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: x86@kernel.org
----
- arch/x86/pci/i386.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+The Armada 370 SoC has two 1x PCIe 2.0 interfaces, so we add the
+necessary Device Tree informations to make these interfaces availabel.
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 94919e3..b13e0af 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -340,11 +340,11 @@ static void pcibios_allocate_rom_resources(struct pci_bus *bus)
- 
- static int __init pcibios_assign_resources(void)
- {
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host_bridge = NULL;
- 
- 	if (!(pci_probe & PCI_ASSIGN_ROMS))
--		list_for_each_entry(bus, &pci_root_buses, node)
--			pcibios_allocate_rom_resources(bus);
-+		for_each_pci_host_bridge(host_bridge)
-+			pcibios_allocate_rom_resources(host_bridge->bus);
- 
- 	pci_assign_unassigned_resources();
- 	pcibios_fw_addr_list_del();
-@@ -367,17 +367,17 @@ void pcibios_resource_survey_bus(struct pci_bus *bus)
- 
- void __init pcibios_resource_survey(void)
- {
--	struct pci_bus *bus;
-+	struct pci_host_bridge *host_bridge = NULL;
- 
- 	DBG("PCI: Allocating resources\n");
- 
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pcibios_allocate_bus_resources(bus);
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_allocate_bus_resources(host_bridge->bus);
- 
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pcibios_allocate_resources(bus, 0);
--	list_for_each_entry(bus, &pci_root_buses, node)
--		pcibios_allocate_resources(bus, 1);
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_allocate_resources(host_bridge->bus, 0);
-+	for_each_pci_host_bridge(host_bridge)
-+		pcibios_allocate_resources(host_bridge->bus, 1);
- 
- 	e820_reserve_resources_late();
- 	/*
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-370.dtsi |   42 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/arch/arm/boot/dts/armada-370.dtsi b/arch/arm/boot/dts/armada-370.dtsi
+index 636cf7d..a66e371 100644
+--- a/arch/arm/boot/dts/armada-370.dtsi
++++ b/arch/arm/boot/dts/armada-370.dtsi
+@@ -132,5 +132,47 @@
+ 				dmacap,memset;
+ 			};
+ 		};
++
++		pcie-controller {
++			compatible = "marvell,armada-370-xp-pcie";
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++
++			bus-range = <0x00 0xff>;
++
++			ranges = <0x00000800 0 0xd0040000 0xd0040000 0 0x00002000   /* port 0.0 registers */
++				  0x00001000 0 0xd0080000 0xd0080000 0 0x00002000   /* port 1.0 registers */
++				  0x81000000 0 0	  0xc0000000 0 0x00010000   /* downstream I/O */
++				  0x82000000 0 0	  0xc1000000 0 0x08000000>; /* non-prefetchable memory */
++
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0xf800 0 0 1>;
++			interrupt-map = <0x0800 0 0 1 &mpic 58 /* port 0.0 */
++					 0x1000 0 0 1 &mpic 62>; /* port 1.0 */
++
++			pcie@0,0 {
++				device_type = "pciex";
++				reg = <0x0800 0 0xd0040000 0 0x2000>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				marvell,pcie-port = <0>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 5>;
++				status = "disabled";
++			};
++
++			pcie@1,0 {
++				device_type = "pciex";
++				reg = <0x1000 0 0xd0080000 0 0x2000>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				marvell,pcie-port = <1>;
++				marvell,pcie-lane = <0>;
++				clocks = <&gateclk 9>;
++				status = "disabled";
++			};
++		};
+ 	};
+ };
 -- 
-1.7.10.4
+1.7.9.5
 
