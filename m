@@ -1,84 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:57940 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576Ab3A2P61 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2013 10:58:27 -0500
-Date: Tue, 29 Jan 2013 15:58:20 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Maen Suleiman <maen@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [PATCH v2 05/27] arm: pci: add a align_resource hook
-Message-ID: <20130129155820.GB23505@n2100.arm.linux.org.uk>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com> <1359399397-29729-6-git-send-email-thomas.petazzoni@free-electrons.com> <20130129161211.7bb8cada@skate>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20130129161211.7bb8cada@skate>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3500982.MUDp6kKU3R@vostro.rjw.lan>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+ <1358525267-14268-5-git-send-email-jiang.liu@huawei.com> <3500982.MUDp6kKU3R@vostro.rjw.lan>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Jan 2013 14:09:22 -0700
+Message-ID: <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jiang Liu <liuj97@gmail.com>, Jiang Liu <jiang.liu@huawei.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 29, 2013 at 04:12:11PM +0100, Thomas Petazzoni wrote:
-> On Mon, 28 Jan 2013 19:56:14 +0100, Thomas Petazzoni wrote:
-> > The PCI specifications says that an I/O region must be aligned on a 4
-> > KB boundary, and a memory region aligned on a 1 MB boundary.
+On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
+>> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
+>> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
+>> So change Kconfig and code to only support building pci_slot as
+>> built-in driver.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-BTW, this, as a general statement, is wrong - though it really depends
-what you mean by "region".
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Remember that BARs can be set where-ever provided that they satisify
-their _individual_ alignment requirements.  So, an IO bar which
-occupies 16 bytes must be set to a 16-byte boundary.
+I think we should eventually get rid of acpi_pci_register_driver() and
+do this initialization directly from acpi_pci_root_add().  But
+removing the module option here is a good first step.
 
-Now, there's an additional complication there which occurs if you have
-ISA devices sharing the PCI IO space: ISA devices used to only decode
-10 bits of IO space, which means that their registers repeat throughout
-the IO space.
+Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
+I can take it.
 
-Therefore, it is generally accepted that within any 1K block, only the
-first 256 locations are only usable.
-
-Moreover, some PCI cards have taken advantage of this, particularly VGA
-cards.  For example, S3 VGA cards put different registers on 1K
-multiples of the standard PC VGA IO addresses...
-
-Also, another reason why I suspect your statement is wrong if I were
-to interpret "region" as "BAR" is that consider a bunch of PCI peripherals
-behind a PCI bridge.  The total number of IO BARs on the peripherals
-is 16.
-
-If you allocate each of those IO BARs to be 4K aligned, then you
-consume all 64K of IO space behind one bridge, which leaves no space
-for any other IO peripherals elsewhere in the bus structure.
-
-Last reason I think that intepretation is wrong is, on this PC, I see:
-
-        Region 4: I/O ports at 1800 [size=8]
-        Region 0: I/O ports at 1830 [size=8]
-        Region 2: I/O ports at 1840 [size=32]
-        Region 4: I/O ports at 1860 [size=32]
-        Region 4: I/O ports at 1880 [size=32]
-        Region 4: I/O ports at 18a0 [size=32]
-        Region 4: I/O ports at 18c0 [size=32]
-        Region 4: I/O ports at 18e0 [size=32]
-        Region 4: I/O ports at 1c00 [size=32]
-        Region 0: I/O ports at 1c48 [size=8]
-        Region 1: I/O ports at 183c [size=4]
-        Region 2: I/O ports at 1c40 [size=8]
-        Region 3: I/O ports at 1838 [size=4]
-        Region 4: I/O ports at 1c20 [size=32]
-        Region 4: I/O ports at 1c60 [size=32]
-
-which doesn't follow - and I can pull out other examples on other
-x86 platforms where IO BARs aren't aligned to 4K...
+>> ---
+>>  drivers/acpi/Kconfig    |    5 +----
+>>  drivers/acpi/internal.h |    5 +++++
+>>  drivers/acpi/pci_slot.c |   13 +------------
+>>  drivers/acpi/scan.c     |    1 +
+>>  4 files changed, 8 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+>> index 0300bf6..7efd0d0 100644
+>> --- a/drivers/acpi/Kconfig
+>> +++ b/drivers/acpi/Kconfig
+>> @@ -299,7 +299,7 @@ config ACPI_DEBUG_FUNC_TRACE
+>>         is about half of the penalty and is rarely useful.
+>>
+>>  config ACPI_PCI_SLOT
+>> -     tristate "PCI slot detection driver"
+>> +     bool "PCI slot detection driver"
+>>       depends on SYSFS
+>>       default n
+>>       help
+>> @@ -308,9 +308,6 @@ config ACPI_PCI_SLOT
+>>         i.e., segment/bus/device/function tuples, with physical slots in
+>>         the system.  If you are unsure, say N.
+>>
+>> -       To compile this driver as a module, choose M here:
+>> -       the module will be called pci_slot.
+>> -
+>>  config X86_PM_TIMER
+>>       bool "Power Management Timer Support" if EXPERT
+>>       depends on X86
+>> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+>> index e050254..7374cfc 100644
+>> --- a/drivers/acpi/internal.h
+>> +++ b/drivers/acpi/internal.h
+>> @@ -67,6 +67,11 @@ struct acpi_ec {
+>>
+>>  extern struct acpi_ec *first_ec;
+>>
+>> +#ifdef       CONFIG_ACPI_PCI_SLOT
+>> +void acpi_pci_slot_init(void);
+>> +#else
+>> +static inline void acpi_pci_slot_init(void) { }
+>> +#endif
+>>  int acpi_pci_root_init(void);
+>>  int acpi_ec_init(void);
+>>  int acpi_ec_ecdt_probe(void);
+>> diff --git a/drivers/acpi/pci_slot.c b/drivers/acpi/pci_slot.c
+>> index d22585f..a7d7e77 100644
+>> --- a/drivers/acpi/pci_slot.c
+>> +++ b/drivers/acpi/pci_slot.c
+>> @@ -330,19 +330,8 @@ static struct dmi_system_id acpi_pci_slot_dmi_table[] __initdata = {
+>>       {}
+>>  };
+>>
+>> -static int __init
+>> -acpi_pci_slot_init(void)
+>> +void __init acpi_pci_slot_init(void)
+>>  {
+>>       dmi_check_system(acpi_pci_slot_dmi_table);
+>>       acpi_pci_register_driver(&acpi_pci_slot_driver);
+>> -     return 0;
+>>  }
+>> -
+>> -static void __exit
+>> -acpi_pci_slot_exit(void)
+>> -{
+>> -     acpi_pci_unregister_driver(&acpi_pci_slot_driver);
+>> -}
+>> -
+>> -module_init(acpi_pci_slot_init);
+>> -module_exit(acpi_pci_slot_exit);
+>> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+>> index f8a0d0f..cb964ac 100644
+>> --- a/drivers/acpi/scan.c
+>> +++ b/drivers/acpi/scan.c
+>> @@ -1732,6 +1732,7 @@ int __init acpi_scan_init(void)
+>>
+>>       acpi_power_init();
+>>       acpi_pci_root_init();
+>> +     acpi_pci_slot_init();
+>>
+>>       /*
+>>        * Enumerate devices in the ACPI namespace.
+>>
+> --
+> I speak only for myself.
+> Rafael J. Wysocki, Intel Open Source Technology Center.
