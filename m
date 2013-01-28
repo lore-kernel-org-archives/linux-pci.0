@@ -1,80 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:39461 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753841Ab3AaNGC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2013 08:06:02 -0500
-Message-ID: <510A6C36.1010906@fold.natur.cuni.cz>
-Date: Thu, 31 Jan 2013 14:05:58 +0100
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Received: from mail-ia0-f169.google.com ([209.85.210.169]:34832 "EHLO
+	mail-ia0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368Ab3A1DfW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 22:35:22 -0500
+Received: by mail-ia0-f169.google.com with SMTP id j5so3605572iaf.14
+        for <linux-pci@vger.kernel.org>; Sun, 27 Jan 2013 19:35:22 -0800 (PST)
 MIME-Version: 1.0
-To: Chris Clayton <chris2553@googlemail.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Yijing Wang <wangyijing0307@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com> <51065FA6.4070208@googlemail.com> <51066B46.10409@fold.natur.cuni.cz> <5106CD6C.4070009@googlemail.com> <5106E770.9070602@fold.natur.cuni.cz> <510A5F0E.6010100@googlemail.com>
-In-Reply-To: <510A5F0E.6010100@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5105EEA6.3020703@huawei.com>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+	<1359314629-18651-1-git-send-email-yinghai@kernel.org>
+	<1359314629-18651-12-git-send-email-yinghai@kernel.org>
+	<5105EEA6.3020703@huawei.com>
+Date: Sun, 27 Jan 2013 19:35:22 -0800
+Message-ID: <CAE9FiQW42SvwXB-b0LKH8HT0Q1mAOMiUfSrm316N39vPOnUgwQ@mail.gmail.com>
+Subject: Re: [PATCH v3 11/22] PCI, drm: Kill pci_root_buses in alpha hose setting
+From: Yinghai Lu <yinghai@kernel.org>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, David Airlie <airlied@linux.ie>,
+	dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chris,
-
-Chris Clayton wrote:
-> Hi Martin,
-> 
-> On 01/28/13 21:02, Martin Mokrejs wrote:
->> Hi Chris,
+On Sun, Jan 27, 2013 at 7:21 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2013/1/28 3:23, Yinghai Lu wrote:
+>> Replace that with hotplug-safe version.
 >>
->> Chris Clayton wrote:
->>> Hi Martin,
->>>
->>> On 01/28/13 12:12, Martin Mokrejs wrote:
->>>> Chris Clayton wrote:
-
->>>
->>> I've struggled with this a little. For some reason, the expresscard
->>> doesn't always stay properly inserted in the slot when I insert it.
->>> Now that hotplug is working, the modules are being loaded and when
->>> the card pops out again, I get an oops because, of course, the driver
->>> is running and the card disappears. Perhaps the driver can be made a
->>> bit more robust to sudden disappearance of the card. I'll report the
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>> Cc: David Airlie <airlied@linux.ie>
+>> Cc: dri-devel@lists.freedesktop.org
+>> ---
+>>  drivers/gpu/drm/drm_fops.c |   10 +++++++---
+>>  1 file changed, 7 insertions(+), 3 deletions(-)
 >>
->> Yes, I had or maybe still have same issues here. I used to get an Oops
->> for sata_sil24 card weird behavior for USB3.0 NEC-based card. It was
->> fine always for a VIA-based firewire card and serial PL2303-based one.
->> I found out it is better if a usb device is connected to the USB card
->> because if that slips out then the libata layer quickly realizes that.
->> If there was no device connected, the usb waits too long before it removes
->> the usb hub from the system. And if you plugin the card meanwhile
->> back into the slot, weird thing happen.
->>
-> My usb3 expresscard device has arrived and I get an oops with that
-> too, if I remove it without unloading the driver first. I guess it
-> shouldn't be a surprise that the driver isn't expecting the device to
-> disappear.
+>> diff --git a/drivers/gpu/drm/drm_fops.c b/drivers/gpu/drm/drm_fops.c
+>> index 133b413..b92a9cc 100644
+>> --- a/drivers/gpu/drm/drm_fops.c
+>> +++ b/drivers/gpu/drm/drm_fops.c
+>> @@ -356,9 +356,13 @@ static int drm_open_helper(struct inode *inode, struct file *filp,
+>>                       pci_dev_put(pci_dev);
+>>               }
+>>               if (!dev->hose) {
+>> -                     struct pci_bus *b = pci_bus_b(pci_root_buses.next);
+>> -                     if (b)
+>> -                             dev->hose = b->sysdata;
+>> +                     struct pci_host_bridge *host_bridge;
+>> +
+>> +                     host_bridge = pci_next_host_bridge(NULL);
+>
+> pci_get_next_host_bridge() ?
+>
 
-I avoided the oopses when a USB device to connected to the express card.
-Nevertheless, you should report it to linux-usb and linux-pci mailing lists,
-along with the oops stacktrace (under a new thread). Maybe you suffer from
-another Oops.
+Fixed.
 
-> 
-> As I mentioned, I have some trouble with the WinTV-HVR-1400 card,
-> which sometimes pops out again, if I push it into the slot too hard
-> (but I'm geeting better at that with practice). So what I've done
-> (with the usb3 card too) to avoid the oopsen is blacklist the driver
-> in /etc/modprobe.d/blacklist.conf and then load them when I'm sure
-> the card is properly inserted. Not exactly hotplug, but at least I
-> don't have to reboot because of an oops- and it's not something I'm
-> doing several times an hour.
-
-Yeah, i also my way around - not fiddle much with the cards and if they
-slip out during insertion, don't re-plug them too quickly (at least with
-the USB3 card and SATA card I had problems).
-
-BTW, if you remove a card, you are supposed to push the card into the slot
-so it gets ejected. Do not just pull it out (what I did in the beginnings).
-I was told that is not the right way (probably affects the PresDet status).
-
-Martin
+Thanks.
