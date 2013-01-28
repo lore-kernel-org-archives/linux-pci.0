@@ -1,124 +1,211 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 11 Jan 2013 16:48:38 -0200
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:18345 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755442Ab3A1JzP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 04:55:15 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
 	Gleb Natapov <gleb@redhat.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Blue Swirl <blauwirbel@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
 	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] VFIO-AER: Vfio-pci driver changes for supporting AER
-Message-ID: <20130111184838.GB15113@amt.cnet>
-References: <F9E001219150CB45BEDC82A650F360C90149602F@G9W0717.americas.hpqcorp.net>
- <1357753953.3224.769.camel@bling.home>
- <1357758299.3224.785.camel@bling.home>
- <F9E001219150CB45BEDC82A650F360C901497684@G9W0717.americas.hpqcorp.net>
- <1357919195.3224.818.camel@bling.home>
+Subject: [PATCH v2 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI
+ devices
+Date: Mon, 28 Jan 2013 09:54:52 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C9014A7BDF@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1357919195.3224.818.camel@bling.home>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 11, 2013 at 08:46:35AM -0700, Alex Williamson wrote:
-> On Fri, 2013-01-11 at 08:45 +0000, Pandarathil, Vijaymohan R wrote:
-> > 
-> > > -----Original Message-----
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Wednesday, January 09, 2013 11:05 AM
-> > > To: Pandarathil, Vijaymohan R
-> > > Cc: Bjorn Helgaas; Gleb Natapov; kvm@vger.kernel.org; qemu-
-> > > devel@nongnu.org; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> > > Subject: Re: [PATCH 1/2] VFIO-AER: Vfio-pci driver changes for supporting
-> > > AER
-> > > 
-> > > On Wed, 2013-01-09 at 10:52 -0700, Alex Williamson wrote:
-> > > > On Wed, 2013-01-09 at 06:26 +0000, Pandarathil, Vijaymohan R wrote:
-> > > > > 	- New ioctl which is used to pass the eventfd that is signaled when
-> > > > >           an error occurs in the vfio_pci_device
-> > > > >
-> > > > > 	- Register pci_error_handler for the vfio_pci driver
-> > > > >
-> > > > > 	- When the device encounters an error, the error handler registered
-> > > by
-> > > > >           the vfio_pci driver gets invoked by the AER infrastructure
-> > > > >
-> > > > > 	- In the error handler, signal the eventfd registered for the device.
-> > > > >
-> > > > > 	- This results in the qemu eventfd handler getting invoked and
-> > > > >           appropriate action taken for the guest.
-> > > > >
-> > > > > Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
-> > > > > ---
-> > > > >  drivers/vfio/pci/vfio_pci.c         | 29 +++++++++++++++++++++++++++++
-> > > > >  drivers/vfio/pci/vfio_pci_private.h |  1 +
-> > > > >  drivers/vfio/vfio.c                 |  8 ++++++++
-> > > > >  include/linux/vfio.h                |  1 +
-> > > > >  include/uapi/linux/vfio.h           |  9 +++++++++
-> > > > >  5 files changed, 48 insertions(+)
-> > > > >
-> > > > > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > > > > index 6c11994..4ae9526 100644
-> > > > > --- a/drivers/vfio/pci/vfio_pci.c
-> > > > > +++ b/drivers/vfio/pci/vfio_pci.c
-> > > > > @@ -207,6 +207,8 @@ static long vfio_pci_ioctl(void *device_data,
-> > > > >  		if (vdev->reset_works)
-> > > > >  			info.flags |= VFIO_DEVICE_FLAGS_RESET;
-> > > > >
-> > > > > +		info.flags |= VFIO_DEVICE_FLAGS_AER_NOTIFY;
-> > > > > +
-> > > >
-> > > > This appears to be a PCI specific flag, so the name should include
-> > > > _PCI_.  We also support non-PCIe devices and it seems like it would be
-> > > > possible to not have AER support available, so shouldn't this be
-> > > > conditional?
-> > 
-> > Will do that.
-> > 
-> > > >
-> > > > >  		info.num_regions = VFIO_PCI_NUM_REGIONS;
-> > > > >  		info.num_irqs = VFIO_PCI_NUM_IRQS;
-> > > > >
-> > > > > @@ -348,6 +350,19 @@ static long vfio_pci_ioctl(void *device_data,
-> > > > >
-> > > > >  		return ret;
-> > > > >
-> > > > > +	} else if (cmd == VFIO_DEVICE_SET_ERRFD) {
-> > > > > +		int32_t fd = (int32_t)arg;
-> > > > > +
-> > > > > +		if (fd < 0)
-> > > > > +			return -EINVAL;
-> > > > > +
-> > > > > +		vdev->err_trigger = eventfd_ctx_fdget(fd);
-> > > > > +
-> > > > > +		if (IS_ERR(vdev->err_trigger))
-> > > > > +			return PTR_ERR(vdev->err_trigger);
-> > > > > +
-> > > > > +		return 0;
-> > > > > +
-> > > >
-> > > > I'm not sure why we wouldn't describe this as just another interrupt
-> > > > from the device and configure it via SET_IRQ.  This ioctl has very
-> > > > limited use and doesn't follow any of the conventions of all the other
-> > > > vfio ioctls.
-> > 
-> > I thought this was a fairly simple ioctl to implement this way. Moreover, 
-> > there is no device interrupt involved. Let me know if you really want to 
-> > model it as a SET_IRQ ioctl.
-> 
-> I'd like to see something else for sure.  We're trying to do AER
-> piecemeal but this ioctl leaves no room for anything else.  Seems like a
-> soon to be wasted ioctl number.  Note that there isn't even a de-assign
-> interface, nor a flag to set to indicate de-assignment.  The SET_IRQ
-> ioctl already handles these in a very similar way to how we'd want to
-> handle it for error signaling.  It doesn't seem like that much of a
-> stretch to me to include it there, but I'd also entertain other ideas.
-> Thanks,
-> 
-> Alex
 
-Yes it would be good to have a picture of the dependencies necessary to
-implement passthrough, before introducing an incompatible interface.
+	- Create eventfd per vfio device assigned to a guest and register an
+          event handler
+
+	- This fd is passed to the vfio_pci driver through the SET_IRQ ioctl
+
+	- When the device encounters an error, the eventfd is signalled
+          and the qemu eventfd handler gets invoked.
+
+	- In the handler decide what action to take. Current action taken
+          is to terminate the guest.
+
+Signed-off-by: Vijay Mohan Pandarathil <vijaymohan.pandarathil@hp.com>
+---
+ hw/vfio_pci.c              | 106 +++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |   3 ++
+ 2 files changed, 109 insertions(+)
+
+diff --git a/hw/vfio_pci.c b/hw/vfio_pci.c
+index c51ae67..c4a6aec 100644
+--- a/hw/vfio_pci.c
++++ b/hw/vfio_pci.c
+@@ -130,6 +130,8 @@ typedef struct VFIODevice {
+     QLIST_ENTRY(VFIODevice) next;
+     struct VFIOGroup *group;
+     bool reset_works;
++    bool pci_aer_notify_cap;
++    EventNotifier err_notifier;
+ } VFIODevice;
+ 
+ typedef struct VFIOGroup {
+@@ -1837,6 +1839,10 @@ static int vfio_get_device(VFIOGroup *group, const char *name, VFIODevice *vdev)
+         error_report("Warning, device %s does not support reset\n", name);
+     }
+ 
++    vdev->pci_aer_notify_cap = !!(dev_info.flags &
++                                    (VFIO_DEVICE_FLAGS_PCI_AER |
++                                    VFIO_DEVICE_FLAGS_PCI_AER_NOTIFY));
++
+     if (dev_info.num_regions < VFIO_PCI_CONFIG_REGION_INDEX + 1) {
+         error_report("vfio: unexpected number of io regions %u\n",
+                      dev_info.num_regions);
+@@ -1922,6 +1928,103 @@ static void vfio_put_device(VFIODevice *vdev)
+     }
+ }
+ 
++static void vfio_err_notifier_handler(void *opaque)
++{
++    VFIODevice *vdev = opaque;
++
++    if (!event_notifier_test_and_clear(&vdev->err_notifier)) {
++        return;
++    }
++
++    /*
++     * TBD. Retrieve the error details and decide what action
++     * needs to be taken. One of the actions could be to pass
++     * the error to the guest and have the guest driver recover
++     * from the error. This requires that PCIe capabilities be
++     * exposed to the guest. At present, we just terminate the
++     * guest to contain the error.
++     */
++
++    error_report("%s (%04x:%02x:%02x.%x)"
++        "Unrecoverable error detected... Terminating guest\n",
++        __func__, vdev->host.domain, vdev->host.bus,
++        vdev->host.slot, vdev->host.function);
++
++    hw_error("(%04x:%02x:%02x.%x) Unrecoverable device error\n",
++        vdev->host.domain, vdev->host.bus,
++        vdev->host.slot, vdev->host.function);
++
++    return;
++}
++
++static void vfio_register_err_notifier(VFIODevice *vdev)
++{
++    int ret;
++    int argsz;
++    struct vfio_irq_set *irq_set;
++    int32_t *pfd;
++
++    if (!(vdev->pci_aer_notify_cap)) {
++        DPRINTF("vfio: Error notification not supported for the device\n");
++        return;
++    }
++    if (event_notifier_init(&vdev->err_notifier, 0)) {
++        error_report("vfio: Warning: Unable to init event notifier for error detection\n");
++        return;
++    }
++
++    argsz = sizeof(*irq_set) + sizeof(*pfd);
++
++    irq_set = g_malloc0(argsz);
++    irq_set->argsz = argsz;
++    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
++                     VFIO_IRQ_SET_ACTION_TRIGGER;
++    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
++    irq_set->start = 0;
++    irq_set->count = 1;
++    pfd = (int32_t *)&irq_set->data;
++
++    *pfd = event_notifier_get_fd(&vdev->err_notifier);
++    qemu_set_fd_handler(*pfd, vfio_err_notifier_handler, NULL, vdev);
++
++    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
++    if (ret) {
++        error_report("vfio: Warning: Failed to setup error fd: %d\n", ret);
++        qemu_set_fd_handler(*pfd, NULL, NULL, vdev);
++        event_notifier_cleanup(&vdev->err_notifier);
++    }
++    g_free(irq_set);
++    return;
++}
++static void vfio_unregister_err_notifier(VFIODevice *vdev)
++{
++    int argsz;
++    struct vfio_irq_set *irq_set;
++    int32_t *pfd;
++    int ret;
++
++    argsz = sizeof(*irq_set) + sizeof(*pfd);
++
++    irq_set = g_malloc0(argsz);
++    irq_set->argsz = argsz;
++    irq_set->flags = VFIO_IRQ_SET_DATA_EVENTFD |
++                     VFIO_IRQ_SET_ACTION_TRIGGER;
++    irq_set->index = VFIO_PCI_ERR_IRQ_INDEX;
++    irq_set->start = 0;
++    irq_set->count = 1;
++    pfd = (int32_t *)&irq_set->data;
++    *pfd = -1;
++
++    ret = ioctl(vdev->fd, VFIO_DEVICE_SET_IRQS, irq_set);
++    if (ret) {
++        DPRINTF("vfio: Failed to de-assign error fd: %d\n", ret);
++    }
++    g_free(irq_set);
++    qemu_set_fd_handler(event_notifier_get_fd(&vdev->err_notifier),
++                        NULL, NULL, vdev);
++    event_notifier_cleanup(&vdev->err_notifier);
++    return;
++}
+ static int vfio_initfn(PCIDevice *pdev)
+ {
+     VFIODevice *pvdev, *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
+@@ -2032,6 +2135,8 @@ static int vfio_initfn(PCIDevice *pdev)
+         }
+     }
+ 
++    vfio_register_err_notifier(vdev);
++
+     return 0;
+ 
+ out_teardown:
+@@ -2049,6 +2154,7 @@ static void vfio_exitfn(PCIDevice *pdev)
+     VFIODevice *vdev = DO_UPCAST(VFIODevice, pdev, pdev);
+     VFIOGroup *group = vdev->group;
+ 
++    vfio_unregister_err_notifier(vdev);
+     pci_device_set_intx_routing_notifier(&vdev->pdev, NULL);
+     vfio_disable_interrupts(vdev);
+     if (vdev->intx.mmap_timer) {
+diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
+index f787b72..ed87792 100644
+--- a/linux-headers/linux/vfio.h
++++ b/linux-headers/linux/vfio.h
+@@ -147,6 +147,8 @@ struct vfio_device_info {
+ 	__u32	flags;
+ #define VFIO_DEVICE_FLAGS_RESET	(1 << 0)	/* Device supports reset */
+ #define VFIO_DEVICE_FLAGS_PCI	(1 << 1)	/* vfio-pci device */
++#define VFIO_DEVICE_FLAGS_PCI_AER (1 << 2)      /* AER capable */
++#define VFIO_DEVICE_FLAGS_PCI_AER_NOTIFY (1 << 3)   /* Supports aer notify */
+ 	__u32	num_regions;	/* Max region index + 1 */
+ 	__u32	num_irqs;	/* Max IRQ index + 1 */
+ };
+@@ -310,6 +312,7 @@ enum {
+ 	VFIO_PCI_INTX_IRQ_INDEX,
+ 	VFIO_PCI_MSI_IRQ_INDEX,
+ 	VFIO_PCI_MSIX_IRQ_INDEX,
++	VFIO_PCI_ERR_IRQ_INDEX,
+ 	VFIO_PCI_NUM_IRQS
+ };
+ 
+-- 
+1.7.11.3
 
