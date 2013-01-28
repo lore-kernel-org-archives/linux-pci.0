@@ -1,106 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38483 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756092Ab3AKWlY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:24 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Tang Chen <tangchen@cn.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 10/22] ACPI: Introduce a new acpi handle to determine HID match.
-Date: Fri, 11 Jan 2013 14:40:37 -0800
-Message-Id: <1357944049-29620-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com>
+References: <1358525267-14268-1-git-send-email-jiang.liu@huawei.com>
+ <1358525267-14268-5-git-send-email-jiang.liu@huawei.com> <3500982.MUDp6kKU3R@vostro.rjw.lan>
+ <CAErSpo4fbNzFaBxH+eKD+BKVgghyCJEYLDMzc6_gdxABAPe3QQ@mail.gmail.com> <CAE9FiQVM4+Wirpb3_D0Zxi4r1p9SAMi4ZrNYr=-eas-C6pKJYA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Jan 2013 14:52:05 -0700
+Message-ID: <CAErSpo7WbbzZ8cKfLvuE331ofWir2vswUnYaxVLBBYGFowedXQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v5 4/8] ACPI, PCI: avoid building pci_slot as module
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jiang Liu <liuj97@gmail.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tang Chen <tangchen@cn.fujitsu.com>
+On Mon, Jan 28, 2013 at 2:29 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Jan 28, 2013 at 1:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Sun, Jan 20, 2013 at 5:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+>>> On Saturday, January 19, 2013 12:07:42 AM Jiang Liu wrote:
+>>>> As discussed in thread at https://patchwork.kernel.org/patch/1946851/,
+>>>> there's no value in supporting CONFIG_ACPI_PCI_SLOT=m any more.
+>>>> So change Kconfig and code to only support building pci_slot as
+>>>> built-in driver.
+>>>>
+>>>> Signed-off-by: Jiang Liu <jiang.liu@huawei.com>
+>>>
+>>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> I think we should eventually get rid of acpi_pci_register_driver() and
+>> do this initialization directly from acpi_pci_root_add().  But
+>> removing the module option here is a good first step.
+>>
+>> Rafael, do you want to apply this (and [6/8]) via your tree?  If not,
+>> I can take it.
+>
+> If bios have messed up slot name or idx, we will get strange 1-1....
+> other crazy name.
+>
+> if you really need to put it as built-in, may need to some command
+> line that user could switch it off.
 
-We need to find out if one handle is for root bridge, and install notify
-handler for it to handle pci root bus hot add.
-At that time, root bridge acpi device is not created yet.
+It would save us all a lot of time if you gave an example and worked
+through the scenario where this is a problem.
 
-So acpi_match_device_ids() will not work.
+We already have the choice of having pci_slot built-in, so if there's
+a bug in that config, we already have the bug.  This patch merely
+removes a config where the bug might be covered up.
 
-This patch add a function to check if new acpi handle's HID matches a list
-of IDs.  The new api use acpi_device_info instead acpi_device.
+I don't know why "adding a command line switch" appeals to you as the
+solution to every problem.  As far as I'm concerned that's not a
+solution to ANY problem.  It might be a band-aid to enable users to
+limp along while we figure out a correct solution, but it's certainly
+not a resolution.
 
--v2: updated changelog, also check length for string info...
-     change checking sequence by moving string comaring close to for loop.
-					- Yinghai
--v3: change to _GPL according to Rafael
-
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/acpi/scan.c     |   33 +++++++++++++++++++++++++++++++++
- include/acpi/acpi_bus.h |    2 ++
- 2 files changed, 35 insertions(+)
-
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index db7664e..8883539 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -470,6 +470,39 @@ int acpi_match_device_ids(struct acpi_device *device,
- }
- EXPORT_SYMBOL(acpi_match_device_ids);
- 
-+int acpi_match_object_info_ids(struct acpi_device_info *info,
-+			       const struct acpi_device_id *ids)
-+{
-+	const struct acpi_device_id *id;
-+	char *str;
-+	u32 len;
-+	int i;
-+
-+	len = info->hardware_id.length;
-+	if (len) {
-+		str = info->hardware_id.string;
-+		if (str)
-+			for (id = ids; id->id[0]; id++)
-+				if (!strcmp((char *)id->id, str))
-+					return 0;
-+	}
-+
-+	for (i = 0; i < info->compatible_id_list.count; i++) {
-+		len = info->compatible_id_list.ids[i].length;
-+		if (!len)
-+			continue;
-+		str = info->compatible_id_list.ids[i].string;
-+		if (!str)
-+			continue;
-+		for (id = ids; id->id[0]; id++)
-+			if (!strcmp((char *)id->id, str))
-+				return 0;
-+	}
-+
-+	return -ENOENT;
-+}
-+EXPORT_SYMBOL_GPL(acpi_match_object_info_ids);
-+
- static void acpi_free_ids(struct acpi_device *device)
- {
- 	struct acpi_hardware_id *id, *tmp;
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index a9e1421..2246ba9 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -355,6 +355,8 @@ int acpi_bus_trim(struct acpi_device *start, int rmdevice);
- acpi_status acpi_bus_get_ejd(acpi_handle handle, acpi_handle * ejd);
- int acpi_match_device_ids(struct acpi_device *device,
- 			  const struct acpi_device_id *ids);
-+int acpi_match_object_info_ids(struct acpi_device_info *info,
-+			       const struct acpi_device_id *ids);
- int acpi_create_dir(struct acpi_device *);
- void acpi_remove_dir(struct acpi_device *);
- 
--- 
-1.7.10.4
-
+Bjorn
