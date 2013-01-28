@@ -1,114 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:43571 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755192Ab3AWLp3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2013 06:45:29 -0500
-Message-ID: <50FFCD3B.8000704@huawei.com>
-Date: Wed, 23 Jan 2013 19:44:59 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-vc0-f172.google.com ([209.85.220.172]:55528 "EHLO
+	mail-vc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757551Ab3A1SPz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 13:15:55 -0500
+Received: by mail-vc0-f172.google.com with SMTP id l6so2101165vcl.3
+        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 10:15:54 -0800 (PST)
 MIME-Version: 1.0
-To: Andrew Murray <andrew.murray@arm.com>, Jon Mason <jdmason@kudzu.us>
-CC: Yijing Wang <wangyijing0307@gmail.com>,
-	Rob Landley <rob@landley.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"jiang.liu@huawei.com" <jiang.liu@huawei.com>
-Subject: Re: [PATCH] PCI: Document PCIE BUS MPS parameters
-References: <1358928096-29008-1-git-send-email-wangyijing@huawei.com> <20130123092150.GA25603@arm.com> <50FFB7AE.6050304@gmail.com> <20130123103006.GA26856@arm.com>
-In-Reply-To: <20130123103006.GA26856@arm.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+References: <1357764194-12677-1-git-send-email-thierry.reding@avionic-design.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Jan 2013 11:15:34 -0700
+Message-ID: <CAErSpo7qk9mnY8x=WXeWAWf6NT-Ky=0eTprupAfZ48F7yjDBng@mail.gmail.com>
+Subject: Re: [PATCH 00/14] Rewrite Tegra PCIe driver
+To: Thierry Reding <thierry.reding@avionic-design.de>
+Cc: linux-tegra@vger.kernel.org,
+	Grant Likely <grant.likely@secretlab.ca>,
+	Rob Herring <rob.herring@calxeda.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Andrew Murray <andrew.murray@arm.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2013/1/23 18:30, Andrew Murray wrote:
-> On Wed, Jan 23, 2013 at 10:13:02AM +0000, Yijing Wang wrote:
->> ??? 2013-01-23 17:21, Andrew Murray ??????:
->>> On Wed, Jan 23, 2013 at 08:01:36AM +0000, Yijing Wang wrote:
->>>> Document PCIE BUS MPS parameters pcie_bus_tune_off, pcie_bus_safe,
->>>> pcie_bus_peer2peer, pcie_bus_perf into Documentation/kernel-parameters.txt.
->>>> These parameters were introduced by Jon Mason <mason@myri.com> at
->>>> commit 5f39e6705 and commit b03e7495a8. Document these into 
->>>> kernel-parameters.txt help users to understand and use the parameters.
->>>>
->>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->>>> ---
->>>>  Documentation/kernel-parameters.txt |   13 +++++++++++++
->>>>  1 files changed, 13 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->>>> index 363e348..4dfa8d2 100644
->>>> --- a/Documentation/kernel-parameters.txt
->>>> +++ b/Documentation/kernel-parameters.txt
->>>> @@ -2227,6 +2227,19 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>>>  				This sorting is done to get a device
->>>>  				order compatible with older (<= 2.4) kernels.
->>>>  		nobfsort	Don't sort PCI devices into breadth-first order.
->>>> +		pcie_bus_tune_off	[X86] Disable PCI-E MPS turning and using
->>>> +				the BIOS configured MPS defaults.
->>>> +		pcie_bus_safe	[X86] Use the smallest common denominator MPS
->>>> +				of the entire tree below a root complex for every device
->>>> +				on that fabric. Can avoid inconsistent mps problem caused
->>>> +				by hotplug.
->>>> +		pcie_bus_perf	[X86] Configure pcie device MPS to the largest
->>>> +				allowable MPS based on its parent bus.Improve performance
->>>> +				as much as possible.
->>>> +		pcie_bus_peer2peer	[X86] Make the system wide MPS the smallest
->>>> +				possible value (128B).This configuration could prevent it
->>>> +				from working by having the MPS on one root port different
->>>> +				than the MPS on another.
->>>>  		cbiosize=nn[KMG]	The fixed amount of bus space which is
->>>>  				reserved for the CardBus bridge's IO window.
->>>>  				The default value is 256 bytes.
->>>>
->>> I was searching for documentation on this the other day.
->>>
->>> It's not just X86 that use these options, PowerPC and Tile also use them (grep
->>> for users of pcie_bus_configure_settings). I've also noticed a call to it from
->>> hotplug as well...
->>
->> Hi Andrew,
->>    Thanks for reminder! I will update this patch right now.
->>
->>>
->>> In addition these options also have an effect on MRRS - I've not figured out
->>> what effect they have, but you can look in drivers/pci/probe.c at the
->>> pcie_write_mrrs function.
->>
->> This is a separate issue, Andrew, can you provide the effetct problem log or detail information?
->> That will helps us to analyze this issue.
-> 
-> No this isn't a bug. When pcie_bus_perf is set, not only does it change the MPS
-> as described in your documentation - but it also changes the MRRS for better
-> performance. I felt this should also be included in your documentation of
-> pcie_bus_perf.
+On Wed, Jan 9, 2013 at 1:43 PM, Thierry Reding
+<thierry.reding@avionic-design.de> wrote:
+> This patch series contains an almost complete rewrite of the Tegra PCIe
+> driver. The code is moved to the drivers/pci/host directory and turned
+> into a proper platform driver, adding MSI and DT support while at it.
+> Other PCI host controller drivers can be added to that directory in an
+> attempt to make it easier to factor out common code.
+>
+> Patches 1 to 4 add generic OF helpers to parse a PCI node's ranges
+> property as well as obtain the bus, device and function numbers from a
+> node's reg property.
+>
+> Patch 5 provides an implementation of a cache for I/O mappings. This can
+> be used in situations where a large physical memory region needs to be
+> ioremap()'ed. On Tegra, the PCIe standard and extended configuration
+> spaces can be accessed through a 256 MiB window. Mapping that in one
+> chunk is wasteful and may not always work because the vmalloc area may
+> not be large enough. The implementation in this patch uses an LRU based
+> approach to map a limited amount of pages on an as-needed basis.
+>
+> Patches 6 and 7 prepare the ARM PCI code to enable PCI host controller
+> drivers to load after the init stage, which can happen due to deferred
+> probing, and to allow private data to be passed for each controller.
+>
+> Patches 8 and 9 move some of the Tegra specific code around to allow it
+> to be used from outside the arch/arm/mach-tegra directory.
+>
+> Patch 10 moves the Tegra PCIe controller driver to the drivers/pci/host
+> directory and turns it into a proper platform driver. It also adds MSI
+> (based on patches by NVIDIA) and DT support.
+>
+> Patches 11 to 14 add device tree based probing for the TEC, Harmony and
+> TrimSlice boards.
+>
+> Thierry
+>
+> Andrew Murray (1):
+>   of/pci: Provide support for parsing PCI DT ranges property
+>
+> Thierry Reding (13):
+>   of/pci: Add of_pci_get_devfn() function
+>   of/pci: Add of_pci_get_bus() function
+>   of/pci: Add of_pci_parse_bus_range() function
+>   lib: Add I/O map cache implementation
+>   ARM: pci: Keep pci_common_init() around after init
+>   ARM: pci: Allow passing per-controller private data
+>   ARM: tegra: Move tegra_pcie_xclk_clamp() to PMC
+>   ARM: tegra: Move pmc.h to include/mach
+>   PCI: tegra: Move PCIe driver to drivers/pci/host
+>   ARM: tegra: tamonten: Add PCIe support
+>   ARM: tegra: tec: Add PCIe support
+>   ARM: tegra: harmony: Initialize PCIe from DT
+>   ARM: tegra: trimslice: Initialize PCIe from DT
+>
+>  .../bindings/pci/nvidia,tegra20-pcie.txt           |  115 ++
+>  arch/arm/Kconfig                                   |    2 +
+>  arch/arm/boot/dts/tegra20-harmony.dts              |   20 +-
+>  arch/arm/boot/dts/tegra20-tamonten.dtsi            |    2 +-
+>  arch/arm/boot/dts/tegra20-tec.dts                  |  198 +++
+>  arch/arm/boot/dts/tegra20-trimslice.dts            |   12 +
+>  arch/arm/boot/dts/tegra20.dtsi                     |   45 +
+>  arch/arm/include/asm/mach/pci.h                    |    1 +
+>  arch/arm/kernel/bios32.c                           |    9 +-
+>  arch/arm/mach-tegra/Kconfig                        |    5 -
+>  arch/arm/mach-tegra/Makefile                       |    3 -
+>  arch/arm/mach-tegra/board-dt-tegra20.c             |   24 -
+>  arch/arm/mach-tegra/board-harmony-pcie.c           |   84 --
+>  arch/arm/mach-tegra/board.h                        |    4 +-
+>  arch/arm/mach-tegra/common.c                       |    2 +-
+>  arch/arm/mach-tegra/include/mach/pmc.h             |   24 +
+>  arch/arm/mach-tegra/iomap.h                        |    3 -
+>  arch/arm/mach-tegra/pcie.c                         |  887 -------------
+>  arch/arm/mach-tegra/pmc.c                          |   16 +
+>  arch/arm/mach-tegra/pmc.h                          |   23 -
+>  drivers/of/address.c                               |   63 +
+>  drivers/of/of_pci.c                                |   78 +-
+>  drivers/pci/Kconfig                                |    2 +
+>  drivers/pci/Makefile                               |    3 +
+>  drivers/pci/host/Kconfig                           |    8 +
+>  drivers/pci/host/Makefile                          |    1 +
+>  drivers/pci/host/pci-tegra.c                       | 1322 ++++++++++++++++++++
+>  include/linux/io.h                                 |   12 +
+>  include/linux/of_address.h                         |    9 +
+>  include/linux/of_pci.h                             |    3 +
+>  lib/ioremap.c                                      |  266 ++++
+>  31 files changed, 2203 insertions(+), 1043 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>  delete mode 100644 arch/arm/mach-tegra/board-harmony-pcie.c
+>  create mode 100644 arch/arm/mach-tegra/include/mach/pmc.h
+>  delete mode 100644 arch/arm/mach-tegra/pcie.c
+>  delete mode 100644 arch/arm/mach-tegra/pmc.h
+>  create mode 100644 drivers/pci/host/Kconfig
+>  create mode 100644 drivers/pci/host/Makefile
+>  create mode 100644 drivers/pci/host/pci-tegra.c
 
-Will add it.
+Hi Thierry,
 
-> 
-> The pcie_write_mrrs function uses pcie_bus_config to determine if a change to
-> the MRRS should be made.
-> 
-> (What I don't understand is that the comments in this function suggest the MRRS
-> cannot be larger than the MPS - I thought it could be?)
+Since the bulk of this series affects ARM, I'm assuming this will be
+merged via the ARM tree or at least some non-PCI route.  It looks like
+[10/14] is the only one that touches drivers/pci, and since it's only
+adding new stuff (the rewrite of the Tegra PCIe driver, if I
+understand correctly), that's fine with me.
 
-I trace the change log about pcie_write_mrrs() function, my understanding for comment
-"it cannot be configured larger than the MPS the device or the bus can support" is that
-jon assume "device will never generate packets larger than MPS", so we can focus on upstream
-requests. If not, we should also concern the downstream request packet whether can be received by upstream
-device normally, maybe upstream mps is smaller than downstream device's mrrs.
+There have been enough comments that I assume you'll be posting an
+updated series soon.  I'll watch for it and review and ack the
+drivers/pci parts.  Let me know if you want me to do anything else.
 
-> 
-> Andrew Murray 
-> 
-> 
-> .
-> 
-
-
--- 
-Thanks!
-Yijing
-
+Bjorn
