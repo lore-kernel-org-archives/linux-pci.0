@@ -1,65 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38448 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756052Ab3AKWlV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2013 17:41:21 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>,
-	Taku Izumi <izumi.taku@jp.fujitsu.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Tang Chen <tangchen@cn.fujitsu.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v8 12/22] PCI, ACPI: debug print for installation of acpi root bridge's notifier
-Date: Fri, 11 Jan 2013 14:40:39 -0800
-Message-Id: <1357944049-29620-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
-References: <1357944049-29620-1-git-send-email-yinghai@kernel.org>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:51408 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035Ab3A1LXX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 06:23:23 -0500
+Message-ID: <51065FA6.4070208@googlemail.com>
+Date: Mon, 28 Jan 2013 11:23:18 +0000
+From: Chris Clayton <chris2553@googlemail.com>
+MIME-Version: 1.0
+To: Yijing Wang <wangyijing@huawei.com>
+CC: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>,
+	Yijing Wang <wangyijing0307@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
+References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <510494D6.1010000@gmail.com> <51050D43.2050703@googlemail.com> <51051B1B.3080105@gmail.com> <51052DB2.4090702@googlemail.com> <51053917.6060400@fold.natur.cuni.cz> <5105491E.9050907@googlemail.com> <510558CE.9000600@fold.natur.cuni.cz> <5105AFDB.9000200@googlemail.com> <5105E51D.2020606@huawei.com> <51064F1A.1020909@googlemail.com>
+In-Reply-To: <51064F1A.1020909@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tang Chen <tangchen@cn.fujitsu.com>
 
-acpi_install_notify_handler() could fail. So check the exit status
-and give a better debug info.
+[snip]
 
-Signed-off-by: Tang Chen <tangchen@cn.fujitsu.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/acpi/pci_root.c |   12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+> [chris:~]$ cat /proc/cmdline
+> root=/dev/sda5 pciehp_ports=native ro resume=/dev/sda6
+                      ^^
+                   **typo**
+I've run the test again with pcie_ports=native and the directories now 
+get populated. Even better though, is that when I plug in the card, 
+hotplug **works** and the card's drivers are loaded.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index d30fb94..862abcc 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -943,6 +943,7 @@ static bool acpi_is_root_bridge_object(acpi_handle handle)
- static acpi_status __init
- find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- {
-+	acpi_status status;
- 	char objname[64];
- 	struct acpi_buffer buffer = { .length = sizeof(objname),
- 				      .pointer = objname };
-@@ -955,9 +956,14 @@ find_root_bridges(acpi_handle handle, u32 lvl, void *context, void **rv)
- 
- 	acpi_get_name(handle, ACPI_FULL_PATHNAME, &buffer);
- 
--	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--				handle_hotplug_event_root, NULL);
--	printk(KERN_DEBUG "acpi root: %s notify handler installed\n", objname);
-+	status = acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+					handle_hotplug_event_root, NULL);
-+	if (ACPI_FAILURE(status))
-+		printk(KERN_DEBUG "acpi root: %s notify handler is not installed, exit status: %u\n",
-+				  objname, (unsigned int)status);
-+	else
-+		printk(KERN_DEBUG "acpi root: %s notify handler is installed\n",
-+				 objname);
- 
- 	add_acpi_root_bridge(handle);
- 
--- 
-1.7.10.4
+Excellent! Thank you so much for your help (and patience) Martin and Yijing.
 
+Now to solving why running scandvb doesn't find any TV channels.
+
+Chris
+
+[snip]
