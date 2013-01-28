@@ -1,81 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ea0-f177.google.com ([209.85.215.177]:47725 "EHLO
-	mail-ea0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756325Ab3A0J5z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 04:57:55 -0500
-Message-ID: <5104FA1E.1010809@googlemail.com>
-Date: Sun, 27 Jan 2013 09:57:50 +0000
-From: Chris Clayton <chris2553@googlemail.com>
-MIME-Version: 1.0
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-CC: linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, wangyijing0307@gmail.com
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz> <5104427D.2050002@googlemail.com> <51044746.6030503@fold.natur.cuni.cz>
-In-Reply-To: <51044746.6030503@fold.natur.cuni.cz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail.free-electrons.com ([94.23.35.102]:59303 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754953Ab3A1WKG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:10:06 -0500
+Date: Mon, 28 Jan 2013 23:09:59 +0100
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Maen Suleiman <maen@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Thierry Reding <thierry.reding@avionic-design.de>,
+	"Eran Ben-Avi" <benavi@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Shadi Ammouri <shadi@marvell.com>,
+	Tawfik Bayouk <tawfik@marvell.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	"Russell King - ARM Linux" <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 07/27] PCI: Add software-emulated host bridge
+Message-ID: <20130128230959.45cb503e@skate>
+In-Reply-To: <201301282018.17714.arnd@arndb.de>
+References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1359399397-29729-8-git-send-email-thomas.petazzoni@free-electrons.com>
+	<201301282018.17714.arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
+Dear Arnd Bergmann,
 
-On 01/26/13 21:14, Martin Mokrejs wrote:
-> Hi Chris,
->
-> Chris Clayton wrote:
->> Hi Martin,
->>
->> On 01/24/13 19:21, Martin Mokrejs wrote:
->>> Hi Chris,
->>>     try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
->>> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
->>>
->>
->> Thanks for the tip. I had the pciehp driver installed, but it was a module and not loaded. I didn't have acpiphp enabled at all. Building them both in statically, appears to have papered over the cracks of the oops :-)
->>
->>>     The best would if you subscribe to linux-pci, and read my recent threads
->>> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
->>> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
->>> archives of linux-pci and see the pacthes and the discussion.
->>
->> Those discussions are way above my level of knowledge. I guess all this work will be merged into mainline in due course, so I'll watch for them in 3.9 or later. Unless, of course, there is a tree I could clone and help test the changes with my laptop and expresscard.
->>
->> Hotplug isn't working at all on my Fujitsu laptop, so I can only get the card recognised by rebooting with the card inserted (or by writing 1 to/sys/bus/pci/rescan). There seem to be a few reports on this in the kernel bugzilla, so I'll look through them and see what's being done.
->
-> That's what I suspected. Compile in statically acpiphp, no pciehp at all (not even as a module).
-> Then it might work for you -- at least it does for me, provided I use "pcie_aspm=off".
->
-Thanks again for the suggestion. Unfortunately, that doesn't fix the 
-problem on my laptop.
+On Mon, 28 Jan 2013 20:18:17 +0000, Arnd Bergmann wrote:
 
-You may have seen the suggestion I've had from Yijing. I'm just building 
-the kernel to test that out.
+> Not even a description why this is needed?
+> 
+> This patch (together with patch 8) seems like the most controversial
+> one of the series, so you should better provide a really good reason
+> why we would emulate something in software rather than using whatever
+> hardware is there.
 
-Chris
-> Martin
->
->>
->> Thanks again.
->>
->> Chris
->>
->>> Martin
->>>
->>> Chris Clayton wrote:
->>>> Hi,
->>>>
->>>> I've today taken delivery of a WinTV-HVR-1400 expresscard TV Tuner and got an Oops when I removed from the expresscard slot in my laptop. I will quite understand if the response to this report is "don't do that!", but in that case, how should one remove one of these cards?
->>>>
->>>> I have attached three files:
->>>>
->>>> 1. the dmesg output from when I rebooted the machine after the oops. I have turned debugging on in the dib700p and cx23885 modules via modules options in /etc/modprobe.d/hvr1400.conf;
->>>>
->>>> 2. the .config file for the kernel that oopsed.
->>>>
->>>> 3. the text of the oops message. I've typed this up from a photograph of the screen because the laptop was locked up and there was nothing in the log files. Apologies for any typos, but I have tried to be careful.
->>>>
->>>> Assuming the answer isn't don't do that, let me know if I can provide any additional diagnostics, test any patches, etc. Please, however, cc me as I'm not subscribed.
->>>>
->>>> Chris
->>
->>
+Hum, you're right. In fact, the very reason why I'm adding an emulated
+host bridge and emulated PCI-to-PCI bridges is simply because this was
+one of the main suggestion raised during the review of the first
+revision of this patch set.
+
+Thomas
+-- 
+Thomas Petazzoni, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
