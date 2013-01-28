@@ -1,69 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ee0-f42.google.com ([74.125.83.42]:64565 "EHLO
-	mail-ee0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754292Ab3AZUy2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 26 Jan 2013 15:54:28 -0500
-Message-ID: <5104427D.2050002@googlemail.com>
-Date: Sat, 26 Jan 2013 20:54:21 +0000
-From: Chris Clayton <chris2553@googlemail.com>
+Received: from mail-vb0-f52.google.com ([209.85.212.52]:64960 "EHLO
+	mail-vb0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab3A1Xke (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 18:40:34 -0500
+Received: by mail-vb0-f52.google.com with SMTP id fa15so2276380vbb.11
+        for <linux-pci@vger.kernel.org>; Mon, 28 Jan 2013 15:40:34 -0800 (PST)
 MIME-Version: 1.0
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-CC: linux-media@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: 3.8.0-rc4+ - Oops on removing WinTV-HVR-1400 expresscard TV Tuner
-References: <51016937.1020202@googlemail.com> <510189B1.606@fold.natur.cuni.cz>
-In-Reply-To: <510189B1.606@fold.natur.cuni.cz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20130118114225.6698.42016.stgit@zurg>
+References: <20130118113019.6698.25941.stgit@zurg> <20130118114225.6698.42016.stgit@zurg>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 Jan 2013 16:40:13 -0700
+Message-ID: <CAErSpo4Z-qz18T0WQ3M8MHTGz_S1SAtK9KeTMBDvM2X4Ohs-tA@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI: don't touch enable_cnt in pci_device_shutdown()
+To: Konstantin Khlebnikov <khlebnikov@openvz.org>
+Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-pci@vger.kernel.org, Khalid Aziz <khalid.aziz@hp.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
-
-On 01/24/13 19:21, Martin Mokrejs wrote:
-> Hi Chris,
->    try to include in kernel only acpiphp and omit pciehp. Don't use modules but include
-> them statically. And try, in addition, check whether "pcie_aspm=off" in grub.conf helped.
+On Fri, Jan 18, 2013 at 4:42 AM, Konstantin Khlebnikov
+<khlebnikov@openvz.org> wrote:
+> comment in commit b566a22c23327f18ce941ffad0ca907e50a53d41
+> ("PCI: disable Bus Master on PCI device shutdown") says:
 >
-
-Thanks for the tip. I had the pciehp driver installed, but it was a 
-module and not loaded. I didn't have acpiphp enabled at all. Building 
-them both in statically, appears to have papered over the cracks of the 
-oops :-)
-
->    The best would if you subscribe to linux-pci, and read my recent threads
-> about similar issues I had with express cards with Dell Vostro 3550. Further, there is
-> a lot of changes to PCI hotplug done by Yingahi Liu and Rafael Wysockij, just browse the
-> archives of linux-pci and see the pacthes and the discussion.
-
-Those discussions are way above my level of knowledge. I guess all this 
-work will be merged into mainline in due course, so I'll watch for them 
-in 3.9 or later. Unless, of course, there is a tree I could clone and 
-help test the changes with my laptop and expresscard.
-
-Hotplug isn't working at all on my Fujitsu laptop, so I can only get the 
-card recognised by rebooting with the card inserted (or by writing 1 
-to/sys/bus/pci/rescan). There seem to be a few reports on this in the 
-kernel bugzilla, so I'll look through them and see what's being done.
-
-Thanks again.
-
-Chris
-
-> Martin
+> | Disable Bus Master bit on the device in pci_device_shutdown() to ensure PCI
+> | devices do not continue to DMA data after shutdown.  This can cause memory
+> | corruption in case of a kexec where the current kernel shuts down and
+> | transfers control to a new kernel while a PCI device continues to DMA to
+> | memory that does not belong to it any more in the new kernel.
 >
-> Chris Clayton wrote:
->> Hi,
->>
->> I've today taken delivery of a WinTV-HVR-1400 expresscard TV Tuner and got an Oops when I removed from the expresscard slot in my laptop. I will quite understand if the response to this report is "don't do that!", but in that case, how should one remove one of these cards?
->>
->> I have attached three files:
->>
->> 1. the dmesg output from when I rebooted the machine after the oops. I have turned debugging on in the dib700p and cx23885 modules via modules options in /etc/modprobe.d/hvr1400.conf;
->>
->> 2. the .config file for the kernel that oopsed.
->>
->> 3. the text of the oops message. I've typed this up from a photograph of the screen because the laptop was locked up and there was nothing in the log files. Apologies for any typos, but I have tried to be careful.
->>
->> Assuming the answer isn't don't do that, let me know if I can provide any additional diagnostics, test any patches, etc. Please, however, cc me as I'm not subscribed.
->>
->> Chris
+> Seems like pci_clear_master() must be used here instead of pci_disable_device(),
+> because it disables Bus Muster unconditionally and doesn't changes enable_cnt.
+>
+> Signed-off-by: Konstantin Khlebnikov <khlebnikov@openvz.org>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Khalid Aziz <khalid.aziz@hp.com>
+> ---
+>  drivers/pci/pci-driver.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 030dbf0..853d605 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -392,7 +392,7 @@ static void pci_device_shutdown(struct device *dev)
+>          * Turn off Bus Master bit on the device to tell it to not
+>          * continue to do DMA
+>          */
+> -       pci_disable_device(pci_dev);
+> +       pci_clear_master(pci_dev);
+
+We currently only call pci_enable_device() and pci_disable_device()
+from drivers, and I think that's a nice division that's worth keeping.
+ It keeps the core's mitts off device operation and helps preserve the
+enable_cnt integrity.  So I like this change from that perspective.
+
+Any objections to this, Khalid?
+
+>  }
+>
+>  #ifdef CONFIG_PM
+>
