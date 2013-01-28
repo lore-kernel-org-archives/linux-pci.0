@@ -1,79 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:59393 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755282Ab3A1WV5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 17:21:57 -0500
-Date: Mon, 28 Jan 2013 23:21:50 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Maen Suleiman <maen@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Thierry Reding <thierry.reding@avionic-design.de>,
-	Eran Ben-Avi <benavi@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Shadi Ammouri <shadi@marvell.com>,
-	Tawfik Bayouk <tawfik@marvell.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Mike Turquette <mturquette@linaro.org>
-Subject: Re: [PATCH v2 11/27] clk: mvebu: create parent-child relation for
- PCIe clocks on Armada 370
-Message-ID: <20130128232150.53b56e62@skate>
-In-Reply-To: <5106F6EE.4000101@wwwdotorg.org>
-References: <1359399397-29729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1359399397-29729-12-git-send-email-thomas.petazzoni@free-electrons.com>
-	<5106F6EE.4000101@wwwdotorg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from aserp1040.oracle.com ([141.146.126.69]:42819 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756457Ab3A1Bye (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Jan 2013 20:54:34 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@huawei.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Taku Izumi <izumi.taku@jp.fujitsu.com>,
+	Toshi Kani <toshi.kani@hp.com>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 21/22] PCI: Kill pci_find_next_bus
+Date: Sun, 27 Jan 2013 17:54:09 -0800
+Message-Id: <1359338050-22735-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1359338050-22735-1-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359338050-22735-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Stephen Warren,
+No user now, remove it.
 
-On Mon, 28 Jan 2013 15:08:46 -0700, Stephen Warren wrote:
+That name is misleading as it only for root buses.
 
-> I must admit, I know nothing about struct mvebu_soc_descr, but I'm
-> having a hard time seeing how that code change makes one of those clock
-> a parent of the other, since the pex0 entry doesn't reference anything
-> "pex1"-related, nor vice-versa. Is more explanation in the commit
-> message warranted here?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-See the definition of mvebu_soc_descr:
+---
+ drivers/pci/search.c |   37 +++++++------------------------------
+ include/linux/pci.h  |    4 ----
+ 2 files changed, 7 insertions(+), 34 deletions(-)
 
-struct mvebu_soc_descr {
-        const char *name;
-        const char *parent;
-        int bit_idx;
-};
-
-It simply registers the pex0 clock with the pex0_en clock as its
-parents. Those clocks are normal gatable clocks, registered with
-clk_register_gate(). This ensures that whenever the pex0 clock is
-enabled, its parent clock pex0_en gets enabled as well. We do the same
-for SATA clocks on Armada XP, for example:
-
-static const struct mvebu_soc_descr __initconst
-armada_xp_gating_descr[] = { { "audio", NULL, 0 },
-[...]
-        { "sata0lnk", NULL, 14 },
-        { "sata0", "sata0lnk", 15 },
-[...]
-        { "sata1lnk", NULL, 29 },
-        { "sata1", "sata1lnk", 30 },
-        { }
-};
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index db0c3a9..329c533 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -79,44 +79,22 @@ static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
+  */
+ struct pci_bus * pci_find_bus(int domain, int busnr)
+ {
+-	struct pci_bus *bus = NULL;
++	struct pci_host_bridge *host_bridge = NULL;
+ 	struct pci_bus *tmp_bus;
+ 
+-	while ((bus = pci_find_next_bus(bus)) != NULL)  {
+-		if (pci_domain_nr(bus) != domain)
++	for_each_pci_host_bridge(host_bridge) {
++		if (pci_domain_nr(host_bridge->bus) != domain)
+ 			continue;
+-		tmp_bus = pci_do_find_bus(bus, busnr);
+-		if (tmp_bus)
++		tmp_bus = pci_do_find_bus(host_bridge->bus, busnr);
++		if (tmp_bus) {
++			put_device(&host_bridge->dev);
+ 			return tmp_bus;
++		}
+ 	}
+ 	return NULL;
+ }
+ 
+ /**
+- * pci_find_next_bus - begin or continue searching for a PCI bus
+- * @from: Previous PCI bus found, or %NULL for new search.
+- *
+- * Iterates through the list of known PCI busses.  A new search is
+- * initiated by passing %NULL as the @from argument.  Otherwise if
+- * @from is not %NULL, searches continue from next device on the
+- * global list.
+- */
+-struct pci_bus * 
+-pci_find_next_bus(const struct pci_bus *from)
+-{
+-	struct list_head *n;
+-	struct pci_bus *b = NULL;
+-
+-	WARN_ON(in_interrupt());
+-	down_read(&pci_bus_sem);
+-	n = from ? from->node.next : pci_root_buses.next;
+-	if (n != &pci_root_buses)
+-		b = pci_bus_b(n);
+-	up_read(&pci_bus_sem);
+-	return b;
+-}
+-
+-/**
+  * pci_get_slot - locate PCI device for a given PCI slot
+  * @bus: PCI bus on which desired PCI device resides
+  * @devfn: encodes number of PCI slot in which the desired PCI 
+@@ -356,7 +334,6 @@ EXPORT_SYMBOL(pci_dev_present);
+ 
+ /* For boot time work */
+ EXPORT_SYMBOL(pci_find_bus);
+-EXPORT_SYMBOL(pci_find_next_bus);
+ /* For everyone */
+ EXPORT_SYMBOL(pci_get_device);
+ EXPORT_SYMBOL(pci_get_subsys);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 67879cb..bb07db2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -763,7 +763,6 @@ int pci_find_ext_capability(struct pci_dev *dev, int cap);
+ int pci_find_next_ext_capability(struct pci_dev *dev, int pos, int cap);
+ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+-struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
+ struct pci_host_bridge *pci_get_next_host_bridge(struct pci_host_bridge *from);
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+@@ -1404,9 +1403,6 @@ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ static inline void pci_unblock_cfg_access(struct pci_dev *dev)
+ { }
+ 
+-static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+-{ return NULL; }
+-
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
 -- 
-Thomas Petazzoni, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.7.10.4
+
