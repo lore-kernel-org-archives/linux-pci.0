@@ -1,44 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:48713 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352Ab3AZBBM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2013 20:01:12 -0500
-Message-ID: <51032A92.8090500@huawei.com>
-Date: Sat, 26 Jan 2013 09:00:02 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:20308 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640Ab3A1Jys convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2013 04:54:48 -0500
+From: "Pandarathil, Vijaymohan R" <vijaymohan.pandarathil@hp.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	Gleb Natapov <gleb@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Blue Swirl <blauwirbel@gmail.com>,
+	"Ortiz, Lance E" <lance.oritz@hp.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"qemu-devel@nongnu.org" <qemu-devel@nongnu.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 0/3] AER-KVM: Error containment of VFIO devices assigned
+ to KVM guests
+Date: Mon, 28 Jan 2013 09:54:24 +0000
+Message-ID: <F9E001219150CB45BEDC82A650F360C9014A7BD0@G9W0717.americas.hpqcorp.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yu Zhao <yu.zhao@intel.com>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Scott Murray <scott@spiteful.org>,
-	Yinghai Lu <yinghai@kernel.org>, <linux-pci@vger.kernel.org>,
-	Hanjun Guo <guohanjun@huawei.com>, <jiang.liu@huawei.com>
-Subject: Re: [PATCH -v3 0/7] ARI device hotplug support
-References: <1358219542-16880-1-git-send-email-wangyijing@huawei.com> <CAErSpo6NaQK-BcoadBbVS4LTFzDdDu_JWWGpb8QAFUJ0aU3+gw@mail.gmail.com> <51024A2F.2000005@huawei.com> <CAErSpo4UV=ZYN+KctP88hyUs3BhFxZL+Yj42r_4p+m0P=Hq8Wg@mail.gmail.com>
-In-Reply-To: <CAErSpo4UV=ZYN+KctP88hyUs3BhFxZL+Yj42r_4p+m0P=Hq8Wg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>
->> Yes, exactly.
-> 
-> OK, I made these tweaks and updated my pci/yijing-ari branch.
-> 
-> I'll merge that branch into "next" as soon as Jiang confirms that his
-> Signed-off-by is still valid, given that I made significant changes
-> since your first posting.
+Add support for error containment when a VFIO device assigned to a KVM
+guest encounters an error. This is for PCIe devices/drivers that support AER
+functionality. When the host OS is notified of an error in a device either
+through the firmware first approach or through an interrupt handled by the AER
+root port driver, the error handler registered by the vfio-pci driver gets
+invoked. The qemu process is signaled through an eventfd registered per
+VFIO device by the qemu process. In the eventfd handler, qemu decides on
+what action to take. In this implementation, guest is brought down to
+contain the error.
 
-Ok, thanks!
+v2:
+ - Rebased to latest upstream stable bits
+ - Changed the new ioctl to be part of VFIO_SET_IRQs ioctl
+ - Added a new patch to get/put reference to a vfio device from struct device
+ - Incorporated all other feedback.
 
-> 
-> Bjorn
-> 
-> .
-> 
+---
+Vijay Mohan Pandarathil(3):
+
+[PATCH 1/3] VFIO: Wrappers for getting/putting reference to vfio_device
+[PATCH 2/3] VFIO-AER: Vfio-pci driver changes for supporting AER
+[PATCH 3/3] QEMU-AER: Qemu changes to support AER for VFIO-PCI devices
+
+Kernel files changed
+
+ drivers/vfio/vfio.c  | 47 +++++++++++++++++++++++++++++++++++++++++------
+ include/linux/vfio.h |  3 +++
+ 2 files changed, 44 insertions(+), 6 deletions(-)
+
+ drivers/vfio/pci/vfio_pci.c         | 44 ++++++++++++++++++++++++++++++++++++-
+ drivers/vfio/pci/vfio_pci_intrs.c   | 32 +++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_private.h |  1 +
+ include/uapi/linux/vfio.h           |  3 +++
+ 4 files changed, 79 insertions(+), 1 deletion(-)
 
 
--- 
-Thanks!
-Yijing
+Qemu files changed
 
+ hw/vfio_pci.c              | 106 +++++++++++++++++++++++++++++++++++++++++++++
+ linux-headers/linux/vfio.h |   3 ++
+ 2 files changed, 109 insertions(+)
